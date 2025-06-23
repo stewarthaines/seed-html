@@ -7,15 +7,9 @@
 
 import { ZipWriter, downloadBlob } from '../zip/index.js';
 import { FileStorageAPI } from '../storage/index.js';
+import { OPFUtils, type EPUBMetadata } from './opf-utils.js';
 
-export interface EPUBMetadata {
-	title: string;
-	author?: string;
-	language: string;
-	identifier: string;
-	publisher?: string;
-	date?: string;
-}
+export { type EPUBMetadata } from './opf-utils.js';
 
 export interface WorkspaceFile {
 	path: string;
@@ -180,7 +174,7 @@ export class EPUBPackager {
 
 		const decoder = new TextDecoder();
 		const containerContent = decoder.decode(containerFile.content);
-		const rootfilePath = this.parseRootfilePath(containerContent);
+		const rootfilePath = OPFUtils.parseRootfilePath(containerContent);
 
 		// 2. Find and read the OPF file
 		const opfFile = files.find(f => f.path === rootfilePath);
@@ -189,48 +183,9 @@ export class EPUBPackager {
 		}
 
 		const opfContent = decoder.decode(opfFile.content);
-		return this.parseOPFMetadata(opfContent);
+		return OPFUtils.parseOPFMetadata(opfContent);
 	}
 
-	private parseRootfilePath(containerContent: string): string {
-		const rootfileMatch = containerContent.match(/<rootfile[^>]+full-path\s*=\s*["']([^"']+)["'][^>]*>/i);
-		if (!rootfileMatch) {
-			throw new Error('Could not find rootfile path in container.xml');
-		}
-		return rootfileMatch[1];
-	}
-
-	private parseOPFMetadata(opfContent: string): EPUBMetadata {
-		// Extract required metadata fields
-		const titleMatch = opfContent.match(/<dc:title[^>]*>(.*?)<\/dc:title>/i);
-		const languageMatch = opfContent.match(/<dc:language[^>]*>(.*?)<\/dc:language>/i);
-		const identifierMatch = opfContent.match(/<dc:identifier[^>]*>(.*?)<\/dc:identifier>/i);
-
-		// Check for required fields
-		if (!titleMatch) {
-			throw new Error('Missing required dc:title in OPF metadata');
-		}
-		if (!languageMatch) {
-			throw new Error('Missing required dc:language in OPF metadata');
-		}
-		if (!identifierMatch) {
-			throw new Error('Missing required dc:identifier in OPF metadata');
-		}
-
-		// Extract optional fields
-		const authorMatch = opfContent.match(/<dc:creator[^>]*>(.*?)<\/dc:creator>/i);
-		const publisherMatch = opfContent.match(/<dc:publisher[^>]*>(.*?)<\/dc:publisher>/i);
-		const dateMatch = opfContent.match(/<dc:date[^>]*>(.*?)<\/dc:date>/i);
-
-		return {
-			title: titleMatch[1].trim(),
-			author: authorMatch?.[1]?.trim(),
-			language: languageMatch[1].trim(),
-			identifier: identifierMatch[1].trim(),
-			publisher: publisherMatch?.[1]?.trim(),
-			date: dateMatch?.[1]?.trim()
-		};
-	}
 
 	optimizeCompression(fileName: string, _data: ArrayBuffer): CompressionSettings {
 		// mimetype file must be uncompressed and first (handled by ZipWriter)

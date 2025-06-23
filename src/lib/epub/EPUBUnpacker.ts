@@ -7,6 +7,7 @@
 
 import { Zip } from '../zip/index.js';
 import { FileStorageAPI } from '../storage/index.js';
+import { OPFUtils } from './opf-utils.js';
 
 export interface UnpackResult {
 	success: boolean;
@@ -129,11 +130,11 @@ export class EPUBUnpacker {
 					const containerXml = await blob.text();
 					
 					// Validate container.xml structure first
-					const xmlValidation = this.validateXML(containerXml);
+					const xmlValidation = OPFUtils.validateXML(containerXml);
 					if (!xmlValidation.isValid) {
 						errors.push(`Invalid XML in container.xml: ${xmlValidation.error}`);
 					} else {
-						const rootfileInfo = this.parseContainerXml(containerXml);
+						const rootfileInfo = OPFUtils.parseContainerXml(containerXml);
 						if (rootfileInfo.error) {
 							errors.push(rootfileInfo.error);
 						} else if (rootfileInfo.rootfilePath) {
@@ -181,11 +182,11 @@ export class EPUBUnpacker {
 					const opfContent = await blob.text();
 					
 					// Validate OPF XML structure
-					const xmlValidation = this.validateXML(opfContent);
+					const xmlValidation = OPFUtils.validateXML(opfContent);
 					if (!xmlValidation.isValid) {
 						errors.push(`Invalid XML in OPF file (${rootfilePath}): ${xmlValidation.error}`);
 					} else {
-						detectedVersion = this.detectEPUBVersion(opfContent);
+						detectedVersion = OPFUtils.detectEPUBVersion(opfContent);
 						if (!detectedVersion) {
 							warnings.push('Could not detect EPUB version from OPF file');
 						}
@@ -214,113 +215,6 @@ export class EPUBUnpacker {
 		};
 	}
 
-	/**
-	 * Parses container.xml to extract rootfile path using DOMParser
-	 */
-	private parseContainerXml(containerXml: string): { rootfilePath?: string; error?: string } {
-		try {
-			if (!globalThis.DOMParser) {
-			return { error: 'DOMParser not available' };
-		}
-		const parser = new DOMParser();
-			const doc = parser.parseFromString(containerXml, 'application/xml');
-			
-			// Check for XML parsing errors
-			const parserError = doc.querySelector('parsererror');
-			if (parserError) {
-				return { error: 'Invalid XML in container.xml' };
-			}
-
-			// Find the rootfile element and extract full-path attribute
-			const rootfileElement = doc.querySelector('rootfile');
-			if (!rootfileElement) {
-				return { error: 'No rootfile element found in container.xml' };
-			}
-
-			const rootfilePath = rootfileElement.getAttribute('full-path');
-			if (!rootfilePath) {
-				return { error: 'No full-path attribute found in rootfile element' };
-			}
-
-			// Validate that it's an OPF file
-			if (!rootfilePath.endsWith('.opf')) {
-				return { error: `Rootfile does not appear to be an OPF file: ${rootfilePath}` };
-			}
-
-			return { rootfilePath };
-		} catch (err) {
-			return { error: `Failed to parse container.xml: ${err instanceof Error ? err.message : 'Unknown error'}` };
-		}
-	}
-
-	/**
-	 * Validates XML content using DOMParser
-	 */
-	private validateXML(xmlContent: string): { isValid: boolean; error?: string } {
-		try {
-			if (!globalThis.DOMParser) {
-				return { isValid: false, error: 'DOMParser not available' };
-			}
-			
-			const parser = new DOMParser();
-			const doc = parser.parseFromString(xmlContent, 'application/xml');
-			
-			// Check for XML parsing errors
-			const parserError = doc.querySelector('parsererror');
-			if (parserError) {
-				const errorText = parserError.textContent || 'Unknown XML parsing error';
-				return { isValid: false, error: errorText };
-			}
-			
-			return { isValid: true };
-		} catch (error) {
-			return { isValid: false, error: error instanceof Error ? error.message : 'XML validation failed' };
-		}
-	}
-
-	/**
-	 * Detects EPUB version from OPF content using DOMParser
-	 */
-	private detectEPUBVersion(opfContent: string): string | undefined {
-		try {
-			if (!globalThis.DOMParser) {
-				return undefined;
-			}
-			const parser = new DOMParser();
-			const doc = parser.parseFromString(opfContent, 'application/xml');
-			
-			// Check for XML parsing errors
-			const parserError = doc.querySelector('parsererror');
-			if (parserError) {
-				return undefined;
-			}
-
-			// Look for version attribute in package element
-			const packageElement = doc.querySelector('package');
-			if (packageElement) {
-				const version = packageElement.getAttribute('version');
-				if (version) {
-					if (version.startsWith('2.')) {
-						return 'EPUB 2.0';
-					} else if (version.startsWith('3.')) {
-						return 'EPUB 3.0';
-					} else {
-						return `EPUB ${version}`;
-					}
-				}
-			}
-
-			// Fallback: look for EPUB 3 specific elements
-			if (doc.querySelector('[properties]') || doc.querySelector('[epub\\:type]')) {
-				return 'EPUB 3.0';
-			}
-
-			// Default assumption
-			return 'EPUB 2.0';
-		} catch {
-			return undefined;
-		}
-	}
 
 	/**
 	 * Extracts all ZIP entries to the specified workspace

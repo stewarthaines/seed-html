@@ -5,6 +5,7 @@
 // Main classes
 export { EPUBUnpacker } from './EPUBUnpacker.js';
 export { EPUBPackager } from './EPUBPackager.js';
+export { OPFUtils } from './opf-utils.js';
 
 // Type definitions
 export type {
@@ -21,3 +22,12 @@ export type {
 	PackageOptions,
 	PackageResult
 } from './EPUBPackager.js';
+
+export type {
+	OPFDocument,
+	ManifestItem,
+	SpineItem,
+	GuideItem,
+	ContainerInfo,
+	XMLValidationResult
+} from './opf-utils.js';
