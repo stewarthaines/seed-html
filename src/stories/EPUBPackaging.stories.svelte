@@ -1,6 +1,6 @@
 <script module>
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import EPUBPackagingDemo from './EPUBPackaging/EPUBPackagingDemo.svelte';
+  import EPUBPackagingDemo from './EPUBPackagingDemo.svelte';
 
   const { Story } = defineMeta({
     title: 'Features/EPUB Packaging',

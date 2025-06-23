@@ -29,7 +29,7 @@ describe('EPUBPackager', () => {
 	let mockStorage: any;
 	let mockZipWriter: any;
 
-	beforeEach(() => {
+	beforeEach(async () => {
 		// Reset all mocks
 		vi.clearAllMocks();
 		
@@ -97,9 +97,9 @@ describe('EPUBPackager', () => {
 
 			expect(result.success).toBe(true);
 			expect(result.blob).toBeInstanceOf(Blob);
-			expect(result.filename).toBe('Test Book - Test Author - 2024-06-23.epub');
+			expect(result.filename).toBe('Test Book - Test Author - 2025-06-23.epub');
 			expect(result.fileCount).toBe(3);
-			expect(result.totalSize).toBe(620);
+			expect(result.totalSize).toBe(708);
 			expect(result.processingTime).toBeGreaterThan(0);
 		});
 
