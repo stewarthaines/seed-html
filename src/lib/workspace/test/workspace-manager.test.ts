@@ -162,7 +162,7 @@ describe('WorkspaceManager', () => {
   describe('createEPUBWorkspace', () => {
     it('should create workspace and return UUID', async () => {
       const expectedId = 'workspace-new-123';
-      vi.spyOn(crypto, 'randomUUID').mockReturnValue(expectedId);
+      vi.spyOn(globalThis.crypto, 'randomUUID').mockReturnValue(expectedId);
       
       mockStorage.createWorkspace.mockResolvedValue(undefined);
       mockStorage.writeTextFile.mockResolvedValue(undefined);
@@ -183,7 +183,7 @@ describe('WorkspaceManager', () => {
 
     it('should generate initial content.opf with metadata', async () => {
       const workspaceId = 'workspace-new-123';
-      vi.spyOn(crypto, 'randomUUID').mockReturnValue(workspaceId);
+      vi.spyOn(globalThis.crypto, 'randomUUID').mockReturnValue(workspaceId);
 
       const { OPFUtils } = await import('../../epub/index.js');
       OPFUtils.generateOPFXML.mockReturnValue('<package></package>');

@@ -19,7 +19,7 @@ const mockStorage = {
 // Mock DOMParser for Node.js environment
 beforeAll(() => {
   if (!globalThis.DOMParser) {
-    // @ts-ignore - Mock DOMParser for testing
+    // @ts-expect-error - Mock DOMParser for testing
     globalThis.DOMParser = class MockDOMParser {
       parseFromString(xmlStr: string, contentType: string) {
         // Simple mock that handles our test cases
@@ -60,7 +60,7 @@ beforeAll(() => {
 
   // Mock CSSStyleSheet for CSSOM testing
   if (!globalThis.CSSStyleSheet) {
-    // @ts-ignore - Mock CSSStyleSheet for testing
+    // @ts-expect-error - Mock CSSStyleSheet for testing
     globalThis.CSSStyleSheet = class MockCSSStyleSheet {
       cssRules: any[] = [];
       
@@ -282,7 +282,7 @@ body { background-image: url(fallback.jpg); }`;
 
         // Mock CSSOM to throw error
         const originalCSSStyleSheet = globalThis.CSSStyleSheet;
-        // @ts-ignore
+        // @ts-expect-error - Mock CSS failure for testing
         globalThis.CSSStyleSheet = class {
           async replace() {
             throw new Error('CSS parsing failed');
@@ -309,7 +309,7 @@ body { background-image: url(fallback.jpg); }`;
 
         // Use regex fallback for this test to ensure quote handling
         const originalCSSStyleSheet = globalThis.CSSStyleSheet;
-        // @ts-ignore
+        // @ts-expect-error - Force regex fallback for testing
         globalThis.CSSStyleSheet = class {
           async replace() {
             throw new Error('Force regex fallback');
@@ -336,7 +336,7 @@ body { background-image: url(fallback.jpg); }`;
 
         // Force regex fallback to test URL filtering
         const originalCSSStyleSheet = globalThis.CSSStyleSheet;
-        // @ts-ignore
+        // @ts-expect-error - Force regex fallback for URL filtering test
         globalThis.CSSStyleSheet = class {
           async replace() {
             throw new Error('Force regex fallback');
@@ -534,7 +534,7 @@ body { background-image: url(fallback.jpg); }`;
 
       // Temporarily remove CSSStyleSheet
       const originalCSSStyleSheet = globalThis.CSSStyleSheet;
-      // @ts-ignore
+      // @ts-expect-error - Temporarily remove CSSStyleSheet for testing
       delete globalThis.CSSStyleSheet;
 
       const dependencies = await tracker.findDependencies(workspaceId, cssItem);
@@ -556,7 +556,7 @@ body { background-image: url(fallback.jpg); }`;
 
       // Temporarily remove DOMParser
       const originalDOMParser = globalThis.DOMParser;
-      // @ts-ignore
+      // @ts-expect-error - Temporarily remove DOMParser for testing
       delete globalThis.DOMParser;
 
       const dependencies = await tracker.findDependencies(workspaceId, xhtmlItem);
