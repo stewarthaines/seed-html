@@ -16,23 +16,27 @@ This is a Svelte-based EPUB editor that runs in modern browsers, replacing a pre
 ## Technical Architecture
 
 ### Browser Support
+
 - Modern browsers only (recent Safari, Chromium, Firefox, Edge)
 - Supports both web server and file:// scheme URLs
 - No external library dependencies in core app
 - All static resources inlined by Vite build system
 
 ### Storage Strategy
+
 - OPFS (Origin Private File System) for performance
 - IndexedDB fallback for broader browser support
 - Feature detection for `.createWritable()` support
 - Workspace-based organization with unique IDs
 
 ### Text Processing Pipeline
+
 ```
 Plain text source → transformText.js → transformDom.js → XHTML → Preview
 ```
 
 ### Key Features
+
 - EPUB unpacking/packaging using Compression Streams API
 - Real-time plain text to XHTML transformation
 - Multi-device preview (iPhone, iPad, Pixel phone variants)
@@ -42,29 +46,34 @@ Plain text source → transformText.js → transformDom.js → XHTML → Preview
 ## Development Phases
 
 ### Phase 1: Foundation
+
 1. File Storage API (OPFS + IndexedDB fallback)
 2. EPUB Unpacking (Compression Streams)
 3. EPUB Packaging (ZIP creation)
 4. Workspace Management
 
 ### Phase 2: Data & UI
+
 5. Content.opf Parser/Generator
 6. Blob URL Manager
 7. Layout System (resizable panels)
 8. Navigation Router
 
 ### Phase 3: Content Management
+
 9. Manifest View (file listing)
 10. Metadata Editor (form-based)
 11. Spine Item Manager (chapter ordering)
 12. Theme System (light/dark mode)
 
 ### Phase 4: Text Processing
+
 13. Transform Pipeline (dynamic function execution)
 14. Text Editor (debounced preview updates)
 15. Error Handling (transform failures)
 
 ### Phase 5: Preview & Polish
+
 16. Device Preview (responsive + multi-device)
 17. Preview Iframe (blob URL substitution)
 18. Navigation Editor (TOC editing)
@@ -74,6 +83,7 @@ Plain text source → transformText.js → transformDom.js → XHTML → Preview
 ## Active EPUB Format
 
 Extension to standard EPUB structure:
+
 ```
 mimetype
 META-INF/content.opf
@@ -88,11 +98,13 @@ EDITME/ (editor-specific files)
 ## Commands
 
 ### Development
+
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
 
 ### Testing
+
 - `npm test` - Run unit tests once
 - `npm run test:watch` - Run tests in watch mode
 - `npm run test:coverage` - Run tests with coverage report
@@ -100,13 +112,15 @@ EDITME/ (editor-specific files)
 - `npm run screenshots` - Capture component screenshots
 
 ### Storybook
+
 - `npm run storybook` - Start Storybook development server
 - `npm run build-storybook` - Build Storybook for production
 - See `STORYBOOK.md` for backend feature demonstration patterns
 
 ### Linting
+
 - `npm run lint` - ESLint check
-- `npm run typecheck` - TypeScript validation
+- `npm run check` - TypeScript validation
 
 ## ZIP Library Implementation
 
@@ -115,13 +129,15 @@ EDITME/ (editor-specific files)
 The ZIP library is complete and fully tested, ready for Features 02 & 03 implementation.
 
 #### Core Files:
+
 - **`zip-reader.ts`** - ZIP parsing and extraction using DecompressionStream
-- **`zip-writer.ts`** - ZIP creation with EPUB compliance using CompressionStream  
+- **`zip-writer.ts`** - ZIP creation with EPUB compliance using CompressionStream
 - **`utils.ts`** - Stream conversion, downloads, data reading utilities
 - **`types.ts`** - Complete TypeScript interfaces and type definitions
 - **`index.ts`** - Clean API exports
 
 #### Key Features:
+
 - Browser-native Compression Streams API (no external dependencies)
 - EPUB-compliant ZIP handling (mimetype file first, uncompressed)
 - Memory-efficient streaming for large files
@@ -130,30 +146,33 @@ The ZIP library is complete and fully tested, ready for Features 02 & 03 impleme
 - Unicode filename support and error handling
 
 #### Usage Examples:
+
 ```typescript
 // Reading ZIP files
-import { Zip } from '$lib/zip';
+import { Zip } from "$lib/zip";
 const zip = new Zip(arrayBuffer);
 for (const entry of zip.entries) {
   const blob = await entry.extract();
 }
 
-// Creating ZIP files  
-import { ZipWriter } from '$lib/zip';
+// Creating ZIP files
+import { ZipWriter } from "$lib/zip";
 const writer = new ZipWriter();
-await writer.addFile('mimetype', 'application/epub+zip');
-await writer.addFile('content.txt', 'Hello World');
+await writer.addFile("mimetype", "application/epub+zip");
+await writer.addFile("content.txt", "Hello World");
 const zipBlob = await writer.buildBlob();
 ```
 
 #### Testing:
+
 - **64 comprehensive tests** across utils, reader, and writer
 - Browser API mocking (document, window, URL, Compression Streams)
 - Edge cases, error handling, and EPUB workflow scenarios
 - Run with: `npm test src/lib/zip`
 
 ### Integration Notes:
+
 - Ready for File Storage API integration (Feature 01)
-- Supports OPFS and IndexedDB storage backends  
+- Supports OPFS and IndexedDB storage backends
 - Handles workspace-based file organization
 - Compatible with blob URL management for previews
