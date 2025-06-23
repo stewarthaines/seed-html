@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Service Worker Preview Spike - EDITME</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #007acc;
+            padding-bottom: 10px;
+        }
+        
+        .controls {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        button:hover {
+            background: #005999;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .preview-container {
+            margin: 20px 0;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            background: white;
+        }
+        
+        .preview-header {
+            background: #f8f9fa;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            font-weight: bold;
+        }
+        
+        #preview-iframe {
+            width: 100%;
+            height: 400px;
+            border: none;
+        }
+        
+        .log {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        
+        .log-entry {
+            margin: 2px 0;
+        }
+        
+        .log-entry.info {
+            color: #63b3ed;
+        }
+        
+        .log-entry.success {
+            color: #68d391;
+        }
+        
+        .log-entry.error {
+            color: #fc8181;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Service Worker Preview Spike</h1>
+        <p>Testing service worker asset interception for EPUB preview iframes with relative URLs.</p>
+        
+        <div class="controls">
+            <button id="init-btn" onclick="initializeSpike()">1. Initialize Storage & Service Worker</button>
+            <button id="preview-btn" onclick="createPreview()" disabled>2. Create Preview Iframe</button>
+            <button id="test-btn" onclick="runTests()" disabled>3. Run Asset Tests</button>
+            <button id="clear-btn" onclick="clearAll()">Clear All</button>
+        </div>
+        
+        <div id="status"></div>
+        
+        <div class="preview-container">
+            <div class="preview-header">Preview Iframe (will load /preview/test/chapter.xhtml)</div>
+            <iframe id="preview-iframe" style="display: none;"></iframe>
+        </div>
+        
+        <div class="log" id="log"></div>
+    </div>
+
+    <!-- Service Worker Script Template -->
+    <script id="service-worker-script" type="text/plain">
+// Service Worker for EPUB Asset Interception
+const DB_NAME = 'epub-workspace';
+const DB_VERSION = 1;
+const STORE_NAME = 'manifest-items';
+
+// MIME type detection
+const MIME_TYPES = {
+    '.css': 'text/css',
+    '.js': 'application/javascript',
+    '.svg': 'image/svg+xml',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.html': 'text/html',
+    '.xhtml': 'application/xhtml+xml'
+};
+
+function getMimeType(filePath) {
+    const ext = filePath.match(/\.[^.]*$/)?.[0];
+    return MIME_TYPES[ext] || 'text/plain';
+}
+
+// IndexedDB helper for service worker
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { keyPath: 'path' });
+            }
+        };
+    });
+}
+
+async function getFromIndexedDB(path) {
+    try {
+        const db = await openDB();
+        const transaction = db.transaction([STORE_NAME], 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.get(path);
+        
+        return new Promise((resolve, reject) => {
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => {
+                const result = request.result;
+                resolve(result ? result.content : null);
+            };
+        });
+    } catch (error) {
+        console.error('IndexedDB error:', error);
+        return null;
+    }
+}
+
+// Service Worker event listeners
+self.addEventListener('fetch', event => {
+    const url = new URL(event.request.url);
+    
+    // Only intercept requests to /preview/ paths
+    if (url.pathname.startsWith('/preview/')) {
+        event.respondWith(handlePreviewRequest(event.request));
+    }
+});
+
+async function handlePreviewRequest(request) {
+    const url = new URL(request.url);
+    console.log('[SW] Intercepting request:', url.pathname);
+    
+    // Extract asset path from URL like /preview/test/styles/page.css
+    const pathMatch = url.pathname.match(/^\/preview\/[^\/]+\/(.+)$/);
+    if (!pathMatch) {
+        console.log('[SW] No path match, fetching normally');
+        return fetch(request);
+    }
+    
+    const assetPath = pathMatch[1];
+    const manifestPath = `OEBPS/${assetPath}`;
+    
+    console.log('[SW] Looking for asset:', manifestPath);
+    
+    // Get content from IndexedDB
+    const content = await getFromIndexedDB(manifestPath);
+    if (!content) {
+        console.log('[SW] Asset not found:', manifestPath);
+        return new Response('Asset not found', { 
+            status: 404,
+            statusText: 'Not Found'
+        });
+    }
+    
+    console.log('[SW] Serving asset:', manifestPath);
+    
+    return new Response(content, {
+        headers: {
+            'Content-Type': getMimeType(assetPath),
+            'Cache-Control': 'max-age=3600',
+            'Access-Control-Allow-Origin': '*'
+        }
+    });
+}
+
+self.addEventListener('install', event => {
+    console.log('[SW] Service Worker installed');
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', event => {
+    console.log('[SW] Service Worker activated');
+    event.waitUntil(self.clients.claim());
+});
+    </script>
+
+    <script>
+        // Main application logic
+        const DB_NAME = 'epub-workspace';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'manifest-items';
+        
+        let db = null;
+        let serviceWorkerRegistered = false;
+        
+        // Mock EPUB manifest items
+        const mockManifestItems = {
+            'OEBPS/styles/page.css': `
+                body { 
+                    font-family: Georgia, serif; 
+                    color: #2c3e50; 
+                    line-height: 1.6;
+                    padding: 20px;
+                    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                }
+                h1 { 
+                    color: #e74c3c; 
+                    border-bottom: 3px solid #3498db;
+                    padding-bottom: 10px;
+                }
+                .epub-content {
+                    background: white;
+                    padding: 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                }
+                img {
+                    max-width: 100px;
+                    margin: 10px;
+                }
+            `,
+            'OEBPS/scripts/responsive.js': `
+                console.log('📚 EPUB script loaded successfully!');
+                document.addEventListener('DOMContentLoaded', function() {
+                    console.log('📄 EPUB chapter content loaded');
+                    const content = document.querySelector('.epub-content');
+                    if (content) {
+                        content.style.transform = 'scale(1)';
+                        content.style.transition = 'transform 0.3s ease';
+                        setTimeout(() => {
+                            content.style.transform = 'scale(1.02)';
+                            setTimeout(() => content.style.transform = 'scale(1)', 200);
+                        }, 500);
+                    }
+                });
+            `,
+            'OEBPS/images/play.svg': `
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" fill="#3498db" stroke="#2980b9" stroke-width="2"/>
+                    <polygon fill="white" points="10,8 16,12 10,16"/>
+                </svg>
+            `,
+            'OEBPS/chapter1.xhtml': `<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Test Chapter</title>
+    <link rel="stylesheet" href="styles/page.css">
+    <script src="scripts/responsive.js"><\/script>
+</head>
+<body>
+    <div class="epub-content">
+        <h1>EPUB Chapter with Assets</h1>
+        <p>This chapter demonstrates loading CSS, JavaScript, and SVG assets through a service worker.</p>
+        <img src="images/play.svg" alt="Play button">
+        <p>If you can see styled text, the play button SVG, and console messages, the service worker is working!</p>
+        <p><strong>Check the browser console for JavaScript execution logs.</strong></p>
+    </div>
+</body>
+</html>`
+        };
+        
+        function log(message, type = 'info') {
+            const logEl = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logEl.appendChild(entry);
+            logEl.scrollTop = logEl.scrollHeight;
+            console.log(message);
+        }
+        
+        function setStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status');
+            statusEl.className = `status ${type}`;
+            statusEl.textContent = message;
+        }
+        
+        async function openIndexedDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'path' });
+                    }
+                };
+            });
+        }
+        
+        async function storeManifestItems() {
+            try {
+                db = await openIndexedDB();
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                
+                for (const [path, content] of Object.entries(mockManifestItems)) {
+                    await new Promise((resolve, reject) => {
+                        const request = store.put({ path, content });
+                        request.onerror = () => reject(request.error);
+                        request.onsuccess = () => resolve();
+                    });
+                }
+                
+                log('Mock manifest items stored in IndexedDB', 'success');
+                return true;
+            } catch (error) {
+                log(`Failed to store manifest items: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        async function registerServiceWorker() {
+            if (!('serviceWorker' in navigator)) {
+                log('Service Worker not supported', 'error');
+                return false;
+            }
+            
+            try {
+                // Get service worker script content
+                const swScript = document.getElementById('service-worker-script').textContent;
+                const swBlob = new Blob([swScript], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(swBlob);
+                
+                // Register service worker
+                const registration = await navigator.serviceWorker.register(swUrl, { 
+                    scope: '/preview/' 
+                });
+                
+                log('Service Worker registered successfully', 'success');
+                
+                // Wait for service worker to be active
+                if (registration.active) {
+                    serviceWorkerRegistered = true;
+                    return true;
+                } else {
+                    return new Promise((resolve) => {
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'activated') {
+                                    serviceWorkerRegistered = true;
+                                    log('Service Worker activated', 'success');
+                                    resolve(true);
+                                }
+                            });
+                        });
+                    });
+                }
+            } catch (error) {
+                log(`Service Worker registration failed: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        async function initializeSpike() {
+            setStatus('Initializing...', 'info');
+            log('Starting spike initialization...');
+            
+            // Store mock data
+            const storageSuccess = await storeManifestItems();
+            if (!storageSuccess) {
+                setStatus('Failed to initialize storage', 'error');
+                return;
+            }
+            
+            // Register service worker
+            const swSuccess = await registerServiceWorker();
+            if (!swSuccess) {
+                setStatus('Failed to register Service Worker', 'error');
+                return;
+            }
+            
+            setStatus('Initialization complete!', 'success');
+            document.getElementById('init-btn').disabled = true;
+            document.getElementById('preview-btn').disabled = false;
+            log('Spike initialized successfully', 'success');
+        }
+        
+        function createPreview() {
+            if (!serviceWorkerRegistered) {
+                setStatus('Service Worker not ready', 'error');
+                return;
+            }
+            
+            const iframe = document.getElementById('preview-iframe');
+            const chapterContent = mockManifestItems['OEBPS/chapter1.xhtml'];
+            
+            // Create a blob URL for the chapter content
+            const chapterBlob = new Blob([chapterContent], { type: 'text/html' });
+            const chapterUrl = URL.createObjectURL(chapterBlob);
+            
+            // Modify the URL to look like /preview/test/chapter.xhtml
+            // This is a bit hacky but works for the spike
+            const fakePreviewUrl = window.location.origin + '/preview/test/chapter.xhtml';
+            
+            // We'll use srcdoc instead to simulate the preview environment
+            iframe.srcdoc = chapterContent;
+            iframe.style.display = 'block';
+            
+            log('Preview iframe created with mock chapter content', 'success');
+            document.getElementById('preview-btn').disabled = true;
+            document.getElementById('test-btn').disabled = false;
+            setStatus('Preview created! Check if assets loaded correctly.', 'success');
+        }
+        
+        async function runTests() {
+            log('Running asset loading tests...');
+            
+            const tests = [
+                { name: 'CSS Loading', path: 'OEBPS/styles/page.css' },
+                { name: 'JavaScript Loading', path: 'OEBPS/scripts/responsive.js' },
+                { name: 'SVG Loading', path: 'OEBPS/images/play.svg' }
+            ];
+            
+            for (const test of tests) {
+                try {
+                    // Simulate a fetch request to test service worker
+                    const response = await fetch(`/preview/test/${test.path.replace('OEBPS/', '')}`);
+                    if (response.ok) {
+                        log(`✅ ${test.name}: Service worker intercept successful`, 'success');
+                    } else {
+                        log(`❌ ${test.name}: Failed (${response.status})`, 'error');
+                    }
+                } catch (error) {
+                    log(`❌ ${test.name}: Error - ${error.message}`, 'error');
+                }
+            }
+            
+            setStatus('Tests completed! Check console and network tab.', 'info');
+            log('Asset loading tests completed', 'info');
+        }
+        
+        async function clearAll() {
+            try {
+                // Clear IndexedDB
+                if (db) {
+                    db.close();
+                }
+                const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+                await new Promise((resolve, reject) => {
+                    deleteRequest.onerror = () => reject(deleteRequest.error);
+                    deleteRequest.onsuccess = () => resolve();
+                });
+                
+                // Unregister service worker
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (const registration of registrations) {
+                        await registration.unregister();
+                    }
+                }
+                
+                // Reset UI
+                document.getElementById('init-btn').disabled = false;
+                document.getElementById('preview-btn').disabled = true;
+                document.getElementById('test-btn').disabled = true;
+                document.getElementById('preview-iframe').style.display = 'none';
+                document.getElementById('log').innerHTML = '';
+                
+                serviceWorkerRegistered = false;
+                setStatus('Cleared all data and service workers', 'success');
+                log('All data cleared successfully', 'success');
+            } catch (error) {
+                setStatus(`Clear failed: ${error.message}`, 'error');
+                log(`Clear operation failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Initialize logging
+        document.addEventListener('DOMContentLoaded', () => {
+            log('Service Worker Preview Spike loaded');
+            log('Click "Initialize" to begin the test');
+        });
+    </script>
+</body>
+</html>
