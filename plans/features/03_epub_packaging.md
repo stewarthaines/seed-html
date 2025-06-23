@@ -91,7 +91,7 @@ class EPUBPackager {
       // 1. Read all workspace files using File Storage API
       const files = await this.readWorkspaceFiles(workspaceId);
       
-      // 2. Extract metadata from content.opf
+      // 2. Extract metadata from container.xml → OPF file
       const metadata = await this.extractMetadata(files);
       
       // 3. Create ZIP writer with EPUB-compliant structure
@@ -134,18 +134,22 @@ class EPUBPackager {
   }
 
   async readWorkspaceFiles(workspaceId: string): Promise<WorkspaceFile[]> {
-    const fileStorage = new FileStorageAPI();
-    const filePaths = await fileStorage.listFiles(workspaceId);
+    const filePaths = await this.fileStorage.listFiles(workspaceId);
     const files = [];
 
     for (const path of filePaths) {
-      const content = await fileStorage.readFile(workspaceId, path);
-      files.push({
-        path,
-        content,
-        size: content.byteLength,
-        mimeType: this.getMimeType(path)
-      });
+      try {
+        const content = await this.fileStorage.readFile(workspaceId, path);
+        files.push({
+          path,
+          content,
+          size: content.byteLength,
+          mimeType: this.getMimeType(path)
+        });
+      } catch (error) {
+        // Skip files that can't be read but don't fail the entire operation
+        console.warn(`Failed to read file ${path}:`, error);
+      }
     }
 
     return files;
@@ -286,8 +290,8 @@ optimizeCompression(fileName: string): CompressionSettings {
 ## Implementation Files
 
 ### Primary Implementation
-- **File**: `src/lib/epub/EPUBPackager.js`
-- **Dependencies**: `src/lib/zip/zip-writer.js`, `src/lib/storage/FileStorageAPI.js`
+- **File**: `src/lib/epub/EPUBPackager.ts`
+- **Dependencies**: `src/lib/zip/index.ts`, `src/lib/storage/index.ts`
 - **Export**: `EPUBPackager` class
 - **Usage**: `import { EPUBPackager } from '$lib/epub'`
 
@@ -304,3 +308,19 @@ optimizeCompression(fileName: string): CompressionSettings {
 - **EPUB-specific optimizations**: Builds on ZIP library's automatic mimetype handling
 - **Unified utilities**: Uses shared download and utility functions
 - **Performance benefits**: Inherits streaming and memory efficiency features
+
+## Implementation Differences from Plan
+
+### Key Changes Made
+1. **Metadata Extraction**: Implemented proper container.xml parsing to find OPF rootfile path instead of searching for .opf files
+2. **Error Handling**: No fallback metadata - throws errors for missing required fields (title, language, identifier)
+3. **File Reading**: Added error handling to skip unreadable files without failing entire operation
+4. **Storage Initialization**: Added check for storage initialization state before processing
+5. **TypeScript**: Implemented in TypeScript (.ts) instead of JavaScript (.js) for better type safety
+6. **Testing**: Created comprehensive test suite with ES module imports and mocked dependencies
+
+### Validation Improvements
+- **EPUB Structure**: Validates presence of META-INF/container.xml
+- **OPF File**: Validates OPF file exists at the path specified in container.xml
+- **Required Metadata**: Strict validation of dc:title, dc:language, and dc:identifier
+- **Empty Workspace**: Proper error handling for workspaces with no files
