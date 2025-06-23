@@ -22,6 +22,10 @@ This is a Svelte-based EPUB editor that runs in modern browsers, replacing a pre
 - No external library dependencies in core app
 - All static resources inlined by Vite build system
 
+### Code Style Preferences
+- **XML/HTML Parsing**: Use `DOMParser` and `querySelector` instead of regular expressions for robust parsing
+- Browser-native APIs preferred over regex for structured data handling
+
 ### Storage Strategy
 
 - OPFS (Origin Private File System) for performance
