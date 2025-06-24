@@ -37,7 +37,11 @@ const MIME_TYPES: Record<string, string> = {
   // Video formats
   'mp4': 'video/mp4',
   'webm': 'video/webm',
-  'ogv': 'video/ogg'
+  'ogv': 'video/ogg',
+  
+  // Archive formats
+  'gz': 'application/gzip',
+  'zip': 'application/zip'
 };
 
 /**

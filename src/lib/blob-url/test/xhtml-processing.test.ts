@@ -4,7 +4,7 @@
  * Tests for processXHTMLForPreview() method and asset element detection
  */
 
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
 import { BlobURLManager } from '../blob-url-manager.js';
 import { XHTMLProcessingError, BlobURLCapacityError } from '../types.js';
 import type { BlobURLManagerConfig } from '../types.js';

@@ -794,6 +794,36 @@ export class FileStorageAPI {
 	}
 
 	/**
+	 * OPFS optimization methods for blob URL creation
+	 */
+	supportsDirectBlobURLs(): boolean {
+		const backendType = this.manager.getBackendType();
+		return backendType === 'opfs-async' || backendType === 'opfs-sync';
+	}
+
+	async getFile(workspaceId: string, filePath: string): Promise<File> {
+		if (!this.manager.isInitialized()) {
+			throw new Error('Storage manager not initialized');
+		}
+
+		const backendType = this.manager.getBackendType();
+		
+		if (backendType === 'opfs-async') {
+			// Direct file access for OPFS async backend
+			const backend = (this.manager as any).backend as OPFSAsyncBackend;
+			const fileHandle = await (backend as any).getFileHandle(workspaceId, filePath, false);
+			return await fileHandle.getFile();
+		} else if (backendType === 'opfs-sync') {
+			// For OPFS sync backend, fall back to reading content and creating File
+			const content = await this.readFile(workspaceId, filePath);
+			const fileName = filePath.split('/').pop() || 'file';
+			return new File([content], fileName);
+		} else {
+			throw new Error('Direct file access not supported for IndexedDB backend');
+		}
+	}
+
+	/**
 	 * Clean up resources
 	 */
 	destroy(): void {

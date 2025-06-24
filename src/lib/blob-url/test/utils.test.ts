@@ -4,7 +4,7 @@
  * Tests for utility functions, path resolution, and edge cases
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { BlobURLManager } from '../blob-url-manager.js';
 import type { BlobURLManagerConfig } from '../types.js';
 
@@ -279,9 +279,9 @@ describe('Blob URL Manager Utilities', () => {
         
         // Empty and whitespace
         { path: '', expected: false },
-        { path: ' ', expected: true }, // Space is a valid filename character
-        { path: '\t', expected: true },
-        { path: '\n', expected: true }
+        { path: ' ', expected: false }, // Empty after trim
+        { path: '\t', expected: false },
+        { path: '\n', expected: false }
       ];
 
       edgeCases.forEach(({ path, expected }) => {
