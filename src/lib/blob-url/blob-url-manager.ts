@@ -98,7 +98,7 @@ export class BlobURLManager {
       return blobURL;
     } catch (error) {
       throw new BlobURLError(
-        `Failed to create blob URL for ${filePath}: ${error.message}`, 
+        `Failed to create blob URL for ${filePath}: ${error instanceof Error ? error.message : String(error)}`, 
         'CREATION_FAILED'
       );
     }
@@ -147,7 +147,7 @@ export class BlobURLManager {
       if (error instanceof BlobURLError) {
         throw error;
       }
-      throw new XHTMLProcessingError(`XHTML processing failed: ${error.message}`, error);
+      throw new XHTMLProcessingError(`XHTML processing failed: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error : new Error(String(error)));
     }
   }
 
@@ -256,7 +256,7 @@ export class BlobURLManager {
    * Process a single asset element
    */
   private async processAssetElement(element: Element): Promise<void> {
-    const tagName = element.tagName.toLowerCase();
+    const _tagName = element.tagName.toLowerCase();
     
     // Determine attribute name
     let attr: string;
