@@ -120,7 +120,12 @@ EDITME/ (editor-specific files)
 
 - `npm run storybook` - Start Storybook development server
 - `npm run build-storybook` - Build Storybook for production
-- See `STORYBOOK.md` for backend feature demonstration patterns
+- **Story Development**: See `STORYBOOK.md` section "Storybook Story Development Guidelines" for:
+  - ✅ Component separation patterns (component → story → css)
+  - ❌ Common anti-patterns that cause parsing errors
+  - 🔧 Backend feature demo patterns
+  - 📋 Development checklist for new stories
+- **Backend Demos**: See `STORYBOOK.md` for interactive backend feature demonstration patterns
 
 ### Linting
 
