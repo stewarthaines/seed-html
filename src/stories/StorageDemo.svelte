@@ -82,11 +82,13 @@
       await storage.writeTextFile(currentWorkspace, 'META-INF/container.xml', 
         `<?xml version="1.0"?>\n<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">\n  <rootfiles>\n    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>\n  </rootfiles>\n</container>`);
       await storage.writeTextFile(currentWorkspace, 'OEBPS/content.opf',
-        `<?xml version="1.0" encoding="UTF-8"?>\n<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookId" version="3.0">\n  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">\n    <dc:title>Demo EPUB</dc:title>\n    <dc:creator>Storage API Demo</dc:creator>\n    <dc:identifier id="BookId">demo-epub-123</dc:identifier>\n    <dc:language>en</dc:language>\n  </metadata>\n  <manifest>\n    <item id="chapter1" href="chapter1.xhtml" media-type="application/xhtml+xml"/>\n  </manifest>\n  <spine>\n    <itemref idref="chapter1"/>\n  </spine>\n</package>`);
+        `<?xml version="1.0" encoding="UTF-8"?>\n<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookId" version="3.0">\n  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">\n    <dc:title>Demo EPUB</dc:title>\n    <dc:creator>Storage API Demo</dc:creator>\n    <dc:identifier id="BookId">demo-epub-123</dc:identifier>\n    <dc:language>en</dc:language>\n  </metadata>\n  <manifest>\n    <item id="chapter1" href="chapter1.xhtml" media-type="application/xhtml+xml"/>\n    <item id="style1" href="styles.css" media-type="text/css"/>\n  </manifest>\n  <spine>\n    <itemref idref="chapter1"/>\n  </spine>\n</package>`);
       await storage.writeTextFile(currentWorkspace, 'OEBPS/chapter1.xhtml',
-        `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE html>\n<html xmlns="http://www.w3.org/1999/xhtml">\n<head>\n  <title>Chapter 1</title>\n</head>\n<body>\n  <h1>Chapter 1</h1>\n  <p>This is a demo chapter created by the Storage API.</p>\n</body>\n</html>`);
+        `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE html>\n<html xmlns="http://www.w3.org/1999/xhtml">\n<head>\n  <title>Chapter 1</title>\n  <link rel="stylesheet" type="text/css" href="styles.css"/>\n</head>\n<body>\n  <h1>Chapter 1</h1>\n  <p>This is a demo chapter created by the Storage API.</p>\n</body>\n</html>`);
+      await storage.writeTextFile(currentWorkspace, 'OEBPS/styles.css',
+        `body {\n  font-family: serif;\n  margin: 2em;\n}\nh1 {\n  color: #333;\n  border-bottom: 1px solid #ccc;\n}`);
       
-      addLog('success', 'Added sample EPUB files (mimetype, container.xml, content.opf, chapter1.xhtml)');
+      addLog('success', 'Added sample EPUB files (mimetype, container.xml, content.opf, chapter1.xhtml, styles.css)');
       await refreshData();
     } catch (error: unknown) {
       addLog('error', `Failed to add EPUB files: ${error.message}`);

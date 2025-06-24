@@ -43,7 +43,8 @@ vi.mock('../../epub/index.js', () => ({
     generateOPFXML: vi.fn(),
     parseOPFMetadata: vi.fn(),
     validateXML: vi.fn(() => ({ isValid: true })),
-    generateContainerXML: vi.fn(() => '<container></container>')
+    generateContainerXML: vi.fn(() => '<container></container>'),
+    parseContainerXml: vi.fn(() => ({ rootfilePath: 'OEBPS/content.opf' }))
   }
 }));
 
@@ -91,6 +92,17 @@ describe('WorkspaceManager', () => {
     vi.clearAllMocks();
     workspaceManager = new WorkspaceManager();
     mockStorage = (workspaceManager as any).storage;
+    
+    // Mock container.xml content for path resolution
+    mockStorage.readTextFile.mockImplementation((workspaceId: string, path: string) => {
+      if (path === 'META-INF/container.xml') {
+        return Promise.resolve('<container><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>');
+      }
+      if (path === 'OEBPS/content.opf') {
+        return Promise.resolve('<package></package>');
+      }
+      return Promise.resolve('mock file content');
+    });
   });
 
   afterEach(() => {
