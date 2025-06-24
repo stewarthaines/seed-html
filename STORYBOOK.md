@@ -426,3 +426,187 @@ async function demonstrateTransformation() {
 ```
 
 This pattern enables rich, interactive documentation for backend features while maintaining the benefits of automated testing and visual documentation through Storybook.
+
+## Storybook Story Development Guidelines
+
+### ✅ DO: Follow Component Separation Pattern
+
+**Correct Structure:**
+```
+src/stories/
+├── FeatureDemo.stories.svelte    # Story definitions only
+├── FeatureDemo.svelte            # Component logic  
+└── feature-demo.css              # Component styles
+```
+
+**Stories File (`*.stories.svelte`):**
+- Use `defineMeta` from `@storybook/addon-svelte-csf`
+- Import component from separate `.svelte` file
+- Keep story definitions minimal and focused
+- NO component logic or large `<script>` blocks
+
+**Component File (`*.svelte`):**
+- Contains all component logic, state, and interactions
+- Import dedicated CSS file for styles
+- Follow TypeScript patterns with proper type annotations
+- Handle all business logic and API calls
+
+**CSS File (`*.css`):**
+- Dedicated styling following project design system
+- Responsive design patterns
+- Accessibility-focused styles
+
+### ❌ DON'T: Common Anti-Patterns
+
+**Never mix export default with defineMeta:**
+```svelte
+<!-- ❌ WRONG -->
+<script context="module">
+export default { title: '...' };  // Don't do this
+</script>
+```
+
+**Never put component logic in stories file:**
+```svelte
+<!-- ❌ WRONG -->
+<script>
+  let complexState = {};
+  async function handleComplexLogic() { /* ... */ }
+  // 100+ lines of component code
+</script>
+```
+
+**Never embed large style blocks:**
+```svelte
+<!-- ❌ WRONG -->
+<style>
+  /* 500+ lines of CSS */
+</style>
+```
+
+### 🔧 Backend Feature Demo Pattern
+
+For backend feature demonstrations, use this proven pattern:
+
+1. **Create Component First:**
+   ```bash
+   src/stories/BackendFeatureDemo.svelte  # Component logic
+   src/stories/backend-feature-demo.css   # Styles
+   ```
+
+2. **Then Create Story:**
+   ```svelte
+   <!-- BackendFeatureDemo.stories.svelte -->
+   <script module>
+     import { defineMeta } from '@storybook/addon-svelte-csf';
+     import BackendFeatureDemo from './BackendFeatureDemo.svelte';
+
+     const { Story } = defineMeta({
+       title: 'Backend Features/Feature Name',
+       component: BackendFeatureDemo,
+       tags: ['autodocs'],
+       parameters: {
+         docs: {
+           description: {
+             component: `# Feature Documentation...`
+           }
+         }
+       }
+     });
+   </script>
+
+   <Story name="Interactive Demo">
+     <BackendFeatureDemo />
+   </Story>
+   ```
+
+### 🧪 Testing Your Story
+
+Before committing, verify:
+```bash
+npm run storybook                    # Should start without parsing errors
+npm run build-storybook             # Should build successfully
+npm run test:stories                # Should pass story tests
+```
+
+### 🚀 Performance Best Practices
+
+- **Lazy load** heavy backend operations in `onMount`
+- **Debounce** user interactions that trigger API calls
+- **Error boundaries** for backend failures
+- **Loading states** for async operations
+- **Memory cleanup** in component destruction
+
+### 📚 Reference Examples
+
+- ✅ `StorageDemo.stories.svelte` - Correct backend demo pattern
+- ✅ `EPUBUnpackerDemo.stories.svelte` - Complex feature demo
+- ✅ `WorkspaceOPFDemo.stories.svelte` - Comprehensive backend showcase
+- ❌ Avoid mixing patterns from different CSF versions
+
+### 🔍 Common Failure Scenarios & Solutions
+
+#### **Problem: "Failed to fetch dynamically imported module"**
+**Cause**: Mixed CSF patterns or component/reference mismatches
+**Solution**: 
+1. Use `defineMeta` consistently
+2. Ensure component file exists before referencing
+3. Check import paths are correct
+
+#### **Problem: "Storybook stories indexer parser threw an unrecognized error"**
+**Cause**: Component logic embedded in stories file
+**Solution**:
+1. Extract component logic to separate `.svelte` file
+2. Keep stories file minimal with only `defineMeta` and `<Story>` components
+3. Import component from separate file
+
+#### **Problem: Validation errors in Storybook demo**
+**Cause**: Backend features showing false positive errors
+**Solution**:
+1. Implement proper path resolution in validation logic
+2. Exclude system files (cache files, etc.) from validation
+3. Use dynamic container.xml parsing for robust path handling
+
+### 📋 Development Checklist
+
+When creating a new Storybook story:
+
+**Pre-Development:**
+- [ ] Identify if this is a UI component or backend feature demo
+- [ ] Plan component separation (stories/component/css files)
+- [ ] Review existing similar patterns for consistency
+
+**Component Creation:**
+- [ ] Create component file first (`FeatureDemo.svelte`)
+- [ ] Add TypeScript types and proper error handling
+- [ ] Create dedicated CSS file (`feature-demo.css`)
+- [ ] Test component independently
+
+**Story Creation:**
+- [ ] Use `defineMeta` from `@storybook/addon-svelte-csf`
+- [ ] Import component from separate file
+- [ ] Add comprehensive documentation in story description
+- [ ] Keep story definition minimal and focused
+
+**Verification:**
+- [ ] `npm run storybook` starts without errors
+- [ ] Story loads and displays correctly
+- [ ] Interactive features work as expected
+- [ ] No console errors or warnings
+- [ ] Responsive design works across screen sizes
+
+**Integration:**
+- [ ] Add to appropriate story category
+- [ ] Update documentation if needed
+- [ ] Run screenshot capture if applicable
+- [ ] Test automated story interactions (play functions)
+
+### 🎯 Key Prevention Strategies
+
+1. **Always start with component creation first, then story**
+2. **Follow existing successful patterns** (StorageDemo, EPUBUnpackerDemo, WorkspaceOPFDemo)
+3. **Keep stories minimal** - just configuration and story definitions
+4. **Separate concerns**: Component logic ≠ Story configuration
+5. **Test early and often** with `npm run storybook` during development
+6. **Use TypeScript** for better error detection and IDE support
+7. **Plan for error states** - backend demos should handle failures gracefully
