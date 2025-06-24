@@ -25,6 +25,7 @@ This is a Svelte-based EPUB editor that runs in modern browsers, replacing a pre
 ### Code Style Preferences
 
 - **XML/HTML Parsing**: Use `DOMParser` and `querySelector` instead of regular expressions for robust parsing
+- **CSS & Styling**: Use the comprehensive design system in `src/styles/` - see `plans/features/css_design_system.md` for full documentation
 - Browser-native APIs preferred over regex for structured data handling
 
 ### Storage Strategy
@@ -131,6 +132,26 @@ EDITME/ (editor-specific files)
 
 - `npm run lint` - ESLint check
 - `npm run check` - TypeScript validation
+
+## CSS Design System
+
+Complete design token system with utilities and themes for consistent styling. Key features:
+
+- **Design Tokens**: Semantic color palette, spacing scale, typography system, elevation levels
+- **Theme Support**: Light/dark mode with automatic system preference detection
+- **Utility Classes**: Atomic layout utilities (flexbox, grid, spacing, colors)
+- **Svelte Optimized**: Component-scoped CSS patterns leveraging Svelte's built-in scoping
+
+**Documentation**: See `plans/features/css_design_system.md` for complete system overview
+**Location**: All CSS files are in `src/styles/` with organized token/utility/theme structure
+
+### Usage Guidelines
+
+1. **Import design system**: `@import './styles/index.css';` in your main CSS file
+2. **Use semantic tokens**: `color: var(--color-text-primary);` instead of hardcoded colors
+3. **Apply utility classes**: `class="flex items-center gap-4"` for common patterns
+4. **Component styles**: Use Svelte `<style>` blocks with design tokens for component-specific CSS
+5. **Theme switching**: Apply `data-theme="dark"` attribute to root element
 
 ## ZIP Library
 
