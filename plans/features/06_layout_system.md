@@ -6,7 +6,7 @@ The Layout System provides the core UI structure for the EDITME.html EPUB editor
 
 Based on user requirements:
 - Maximize main content space, header only in left sidebar, no right sidebar
-- Sidebar: workspace switcher, metadata, manifest, spine items, settings (bottom)
+- Sidebar: workspace switcher, metadata, manifest, navigation (toc), spine items, settings (bottom)
 - Two panes left/right split with draggable border resize
 - 250px sidebar when expanded, collapsed state with icons
 - 50/50 initial split, 250px right minimum, 25% left minimum
@@ -36,7 +36,7 @@ Collapsible left sidebar containing workspace navigation and controls.
 interface SidebarState {
   isExpanded: boolean;
   width: number;
-  activeSection: 'workspace' | 'metadata' | 'manifest' | 'spine' | 'settings';
+  activeSection: 'workspace' | 'metadata' | 'manifest' | 'nav' | 'spine' | 'settings';
 }
 
 interface SidebarSection {
@@ -50,6 +50,7 @@ const SIDEBAR_SECTIONS: SidebarSection[] = [
   { id: 'workspace', icon: '🏠', label: 'Workspace' },
   { id: 'metadata', icon: '📄', label: 'Metadata' },
   { id: 'manifest', icon: '📋', label: 'Manifest' },
+  { id: 'nav', icon: '📖', label: 'Navigation' },
   { id: 'spine', icon: '📖', label: 'Spine Items' },
   { id: 'settings', icon: '⚙️', label: 'Settings' }
 ];
@@ -127,17 +128,18 @@ interface LayoutActions {
 
 ### Layout Structure
 ```
-┌─────────────┬─────────────────────────────────┐
-│   Sidebar   │        Content Panes            │
-│ (250px)     │  ┌─────────────┬─────────────┐   │
-│             │  │    Left     │    Right    │   │
-│ 🏠 Workspace│  │    Pane     │    Pane     │   │
-│ 📄 Metadata │  │   (Editor)  │  (Preview)  │   │
-│ 📋 Manifest │  │             │             │   │
-│ 📖 Spine    │  │             │             │   │
+┌──────────────┬─────────────────────────────────┐
+│   Sidebar    │        Content Panes            │
+│ (250px)      │  ┌─────────────┬─────────────┐   │
+│              │  │    Left     │    Right    │   │
+│ 🏠 Workspace │  │    Pane     │    Pane     │   │
+│ 📄 Metadata  │  │   (Editor)  │  (Preview)  │   │
+│ 📋 Manifest  │  │             │             │   │
+│ 📖 Navigation│  │             │             │   │
+│ 📖 Spine     │  │             │             │   │
 │ ⚙️ Settings  │  │             │             │   │
-│             │  └─────────────┴─────────────┘   │
-└─────────────┴─────────────────────────────────┘
+│              │  └─────────────┴─────────────┘   │
+└──────────────┴─────────────────────────────────┘
 ```
 
 ### Collapsed State (~40px width for icons)
@@ -147,6 +149,7 @@ interface LayoutActions {
 │📄│  ┌─────────────────┬─────────────────┐   │
 │📋│  │    Left Pane    │   Right Pane    │   │
 │📖│  │    (Editor)     │   (Preview)     │   │
+│📖│  │                 │                 │   │
 │⚙️│  │                 │    (250px min)  │   │
 │▶️│  │   (25% min)     │                 │   │
 └──┴──────────────────────────────────────────┘
@@ -485,7 +488,6 @@ const DEFAULT_STATE = {
 - CSS transitions for smooth state changes (no JavaScript animations)
 - Throttled resize events during drag operations (requestAnimationFrame)
 - Minimal DOM updates during live resize
-- Component-scoped CSS to prevent style leakage
 - Efficient event listener management with proper cleanup
 
 ### Memory Management
@@ -506,7 +508,6 @@ const DEFAULT_STATE = {
 ### Graceful Degradation
 - Falls back to default state if localStorage unavailable
 - Mouse-only operation if touch events not supported
-- Fixed layout if CSS Grid not available
 - Progressive enhancement approach
 
 ## Error Handling

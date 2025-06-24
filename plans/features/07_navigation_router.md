@@ -1,10 +1,10 @@
 # 07. Navigation Router
 
 ## Overview
-Manages navigation between different views (manifest, metadata, spine, navigation) with state management, transitions, and active state indicators.
+Manages navigation between different views (manifest, metadata, spine, navigation, settings) with state management, transitions, and active state indicators.
 
 ## Requirements
-- Switch between views: manifest, metadata, spine, navigation
+- Switch between views: manifest, metadata, spine, navigation, settings
 - URL state management (if applicable)
 - View transition handling
 - Active state indicators
@@ -13,7 +13,7 @@ Manages navigation between different views (manifest, metadata, spine, navigatio
 - None (can be developed in parallel with data layer)
 
 ## Technical Approach
-- Client-side routing with hash or state-based navigation
+- Client-side routing with hash-based navigation compatible with file: protocol
 - Svelte stores for view state management
 - Transition animations between views
 - Navigation menu with active state styling
@@ -39,7 +39,7 @@ interface NavigationRouter {
   getViewTitle(view: ViewType): string
 }
 
-type ViewType = 'manifest' | 'metadata' | 'spine' | 'navigation' | 'workspace-list'
+type ViewType = 'manifest' | 'metadata' | 'spine' | 'navigation' | 'workspace-list' | 'settings'
 
 interface ViewState {
   type: ViewType
@@ -82,6 +82,11 @@ const VIEWS = {
     title: 'Table of Contents',
     component: NavigationView,
     icon: 'format-list-bulleted'
+  },
+  'settings': {
+    title: 'Settings',
+    component: SettingsView,
+    icon: 'gear'
   }
 }
 ```
