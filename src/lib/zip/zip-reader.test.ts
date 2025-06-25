@@ -1,4 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
+import { readFile } from 'fs/promises';
+import { fileURLToPath } from 'url';
+import path from 'path';
 import { Zip } from './zip-reader.js';
 
 // Mock the utils module

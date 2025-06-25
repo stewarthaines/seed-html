@@ -20,7 +20,7 @@ export default defineConfig({
         test: {
           name: "unit",
           include: ["src/**/*.{test,spec}.{js,ts}"],
-          environment: "jsdom",
+          environment: "happy-dom",
         },
       },
       // Storybook tests
