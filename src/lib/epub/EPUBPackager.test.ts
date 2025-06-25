@@ -27,7 +27,6 @@ vi.mock('../storage/index.js', () => ({
 describe('EPUBPackager', () => {
 	let packager: EPUBPackager;
 	let mockStorage: any;
-	let mockZipWriter: any;
 
 	beforeEach(async () => {
 		// Reset all mocks
@@ -35,10 +34,6 @@ describe('EPUBPackager', () => {
 		
 		packager = new EPUBPackager();
 		mockStorage = (packager as any).fileStorage;
-		
-		// Get the mocked ZipWriter class
-		const { ZipWriter } = await import('../zip/index.js');
-		mockZipWriter = new ZipWriter();
 	});
 
 	afterEach(() => {
@@ -51,7 +46,7 @@ describe('EPUBPackager', () => {
 		const mockValidFiles: WorkspaceFile[] = [
 			{
 				path: 'mimetype',
-				content: new TextEncoder().encode('application/epub+zip').buffer,
+				content: new TextEncoder().encode('application/epub+zip').buffer as ArrayBuffer,
 				size: 20,
 				mimeType: 'application/epub+zip'
 			},
@@ -62,7 +57,7 @@ describe('EPUBPackager', () => {
 	<rootfiles>
 		<rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
 	</rootfiles>
-</container>`).buffer,
+</container>`).buffer as ArrayBuffer,
 				size: 200,
 				mimeType: 'application/xml'
 			},
@@ -78,7 +73,7 @@ describe('EPUBPackager', () => {
 		<dc:publisher>Test Publisher</dc:publisher>
 		<dc:date>2024-01-01</dc:date>
 	</metadata>
-</package>`).buffer,
+</package>`).buffer as ArrayBuffer,
 				size: 400,
 				mimeType: 'application/oebps-package+xml'
 			}
