@@ -27,7 +27,7 @@ Based on the overview specification, here's a breakdown of features that can be 
 - Download trigger for packaged EPUB
 - **Storybook**: Basic packaging demos with different workspace configurations
 
-### 4. Workspace & OPF Manager
+### 4. Workspace & OPF Manager ✅ COMPLETE
 
 - High-level workspace operations with EPUB-aware metadata
 - Content.opf parsing, generation, and manipulation
@@ -37,14 +37,14 @@ Based on the overview specification, here's a breakdown of features that can be 
 
 ## UI & Presentation Layer (Can start after #4)
 
-### 5. Blob URL Manager
+### 5. Blob URL Manager ✅ COMPLETE
 
 - Convert manifest items to blob URLs for preview
 - Handle different content types (text, image, audio, video)
 - Resource cleanup and memory management
 - URL substitution for preview iframe
 
-### 6. Layout System
+### 6. Layout System ✅ COMPLETE
 
 - Collapsible left sidebar
 - Resizable panels with mouse and touch support
@@ -167,14 +167,14 @@ Based on the overview specification, here's a breakdown of features that can be 
 1. File Storage API ✅ COMPLETE
 2. EPUB Unpacking ✅ COMPLETE
 3. EPUB Packaging ✅ COMPLETE
-4. Workspace & OPF Manager
+4. Workspace & OPF Manager ✅ COMPLETE
 
 **Goal**: Complete EPUB workspace management with metadata handling
 
 ### Phase 2: UI & Presentation
 
-5. Blob URL Manager
-6. Layout System
+5. Blob URL Manager ✅ COMPLETE
+6. Layout System ✅ COMPLETE
 7. Navigation Router
 8. Theme System
 
