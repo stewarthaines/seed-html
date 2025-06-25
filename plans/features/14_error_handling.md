@@ -1,84 +1,90 @@
 # 14. Error Handling
 
 ## Overview
+
 Comprehensive error detection, reporting, and recovery system for transform failures and other application errors with user-friendly messaging.
 
 ## Requirements
+
 - Transform failure detection
 - Informative error messages in preview iframe
 - Graceful degradation when transforms fail
 - User-friendly error reporting
 
 ## Dependencies
+
 - **#5 Blob URL Manager** - for error page blob creation
 
 ## Technical Approach
+
 - Centralized error handling system
 - Error categorization and severity levels
 - User-friendly error messages with recovery suggestions
 - Fallback rendering for preview failures
 
 ## API Design
+
 ```typescript
 interface ErrorHandler {
   // Error reporting
-  reportError(error: AppError): void
-  reportTransformError(error: TransformError, context: ErrorContext): void
-  
+  reportError(error: AppError): void;
+  reportTransformError(error: TransformError, context: ErrorContext): void;
+
   // Error recovery
-  attemptRecovery(error: AppError): Promise<boolean>
-  suggestRecoveryActions(error: AppError): RecoveryAction[]
-  
+  attemptRecovery(error: AppError): Promise<boolean>;
+  suggestRecoveryActions(error: AppError): RecoveryAction[];
+
   // Error display
-  displayErrorInPreview(error: TransformError, targetIframe: HTMLIFrameElement): void
-  showErrorNotification(error: AppError): void
-  
+  displayErrorInPreview(error: TransformError, targetIframe: HTMLIFrameElement): void;
+  showErrorNotification(error: AppError): void;
+
   // Error logging
-  logError(error: AppError): void
-  getErrorHistory(): AppError[]
-  clearErrorHistory(): void
+  logError(error: AppError): void;
+  getErrorHistory(): AppError[];
+  clearErrorHistory(): void;
 }
 
 interface AppError {
-  id: string
-  type: ErrorType
-  severity: ErrorSeverity
-  message: string
-  details?: string
-  timestamp: Date
-  context?: ErrorContext
-  stack?: string
-  recovered?: boolean
+  id: string;
+  type: ErrorType;
+  severity: ErrorSeverity;
+  message: string;
+  details?: string;
+  timestamp: Date;
+  context?: ErrorContext;
+  stack?: string;
+  recovered?: boolean;
 }
 
-type ErrorType = 
+type ErrorType =
   | 'transform-text'
-  | 'transform-dom' 
+  | 'transform-dom'
   | 'file-storage'
   | 'epub-parsing'
   | 'network'
   | 'validation'
   | 'ui'
-  | 'unknown'
+  | 'unknown';
 
-type ErrorSeverity = 'info' | 'warning' | 'error' | 'critical'
+type ErrorSeverity = 'info' | 'warning' | 'error' | 'critical';
 
 interface ErrorContext {
-  workspaceId?: string
-  spineItemId?: string
-  filePath?: string
-  operation?: string
-  userAction?: string
+  workspaceId?: string;
+  spineItemId?: string;
+  filePath?: string;
+  operation?: string;
+  userAction?: string;
 }
 
 interface RecoveryAction {
-  label: string
-  action: () => Promise<void>
-  description?: string
+  label: string;
+  action: () => Promise<void>;
+  description?: string;
 }
 ```
 
 ## Error Display Components
+
 ```svelte
 <!-- ErrorPreview.svelte -->
 <div class="error-preview">
@@ -86,20 +92,20 @@ interface RecoveryAction {
     <Icon name="alert-circle" class="error-icon" />
     <h2>Transform Error</h2>
   </div>
-  
+
   <div class="error-content">
     <div class="error-summary">
       <strong>{getErrorTitle(error)}</strong>
       <p>{error.message}</p>
     </div>
-    
+
     {#if error.details}
       <details class="error-details">
         <summary>Technical Details</summary>
         <pre>{error.details}</pre>
       </details>
     {/if}
-    
+
     {#if error.suggestions}
       <div class="error-suggestions">
         <h3>Suggested Solutions:</h3>
@@ -110,17 +116,11 @@ interface RecoveryAction {
         </ul>
       </div>
     {/if}
-    
+
     <div class="error-actions">
-      <button on:click={retryTransform} class="primary">
-        Retry Transform
-      </button>
-      <button on:click={showRawContent}>
-        Show Raw Content
-      </button>
-      <button on:click={resetToDefault}>
-        Reset Transform Scripts
-      </button>
+      <button on:click={retryTransform} class="primary"> Retry Transform </button>
+      <button on:click={showRawContent}> Show Raw Content </button>
+      <button on:click={resetToDefault}> Reset Transform Scripts </button>
     </div>
   </div>
 </div>
@@ -135,7 +135,7 @@ interface RecoveryAction {
     border-radius: 8px;
     border: 2px solid var(--error-color);
   }
-  
+
   .error-header {
     display: flex;
     align-items: center;
@@ -143,30 +143,30 @@ interface RecoveryAction {
     margin-bottom: 1rem;
     color: var(--error-color);
   }
-  
+
   .error-icon {
     font-size: 1.5rem;
   }
-  
+
   .error-details {
     margin: 1rem 0;
     background: var(--bg-secondary);
     padding: 1rem;
     border-radius: 4px;
   }
-  
+
   .error-details pre {
     font-size: 0.875rem;
     overflow-x: auto;
   }
-  
+
   .error-suggestions {
     margin: 1rem 0;
     padding: 1rem;
     background: var(--bg-tertiary);
     border-radius: 4px;
   }
-  
+
   .error-actions {
     display: flex;
     gap: 0.5rem;
@@ -176,17 +176,17 @@ interface RecoveryAction {
 ```
 
 ## Transform Error Detection
+
 ```typescript
 const executeTransformWithErrorHandling = async (
   plainText: string,
   workspaceId: string,
   spineItemId: string
 ): Promise<TransformResult> => {
-  
   try {
     // Load transform scripts
-    const scripts = await loadTransformScripts(workspaceId)
-    
+    const scripts = await loadTransformScripts(workspaceId);
+
     if (!scripts.transformText) {
       throw new TransformError({
         stage: 'text',
@@ -194,15 +194,15 @@ const executeTransformWithErrorHandling = async (
         suggestions: [
           'Create a transformText.js file in EDITME/scripts/',
           'Use the default markdown transform',
-          'Check that your EPUB includes transform scripts'
-        ]
-      })
+          'Check that your EPUB includes transform scripts',
+        ],
+      });
     }
-    
+
     // Execute text transform
-    let transformedText: string
+    let transformedText: string;
     try {
-      transformedText = await executeTransformText(plainText, scripts.transformText, workspaceId)
+      transformedText = await executeTransformText(plainText, scripts.transformText, workspaceId);
     } catch (error) {
       throw new TransformError({
         stage: 'text',
@@ -212,27 +212,26 @@ const executeTransformWithErrorHandling = async (
         suggestions: [
           'Check your transformText.js syntax',
           'Ensure all required libraries are loaded',
-          'Test your transform script with simple input'
-        ]
-      })
+          'Test your transform script with simple input',
+        ],
+      });
     }
-    
+
     // Generate XHTML document
-    let xhtmlDoc: Document
+    let xhtmlDoc: Document;
     try {
       const xhtmlString = generateXHTMLTemplate(transformedText, {
         title: getSpineItemTitle(spineItemId),
         language: await getWorkspaceLanguage(workspaceId),
         stylesheets: await getWorkspaceStylesheets(workspaceId),
-        scripts: await getWorkspaceScripts(workspaceId)
-      })
-      
-      xhtmlDoc = new DOMParser().parseFromString(xhtmlString, 'application/xml')
-      
+        scripts: await getWorkspaceScripts(workspaceId),
+      });
+
+      xhtmlDoc = new DOMParser().parseFromString(xhtmlString, 'application/xml');
+
       if (xhtmlDoc.documentElement.tagName === 'parsererror') {
-        throw new Error('Invalid XHTML generated')
+        throw new Error('Invalid XHTML generated');
       }
-      
     } catch (error) {
       throw new TransformError({
         stage: 'template',
@@ -240,15 +239,15 @@ const executeTransformWithErrorHandling = async (
         suggestions: [
           'Check that transform output is valid HTML',
           'Ensure special characters are properly escaped',
-          'Verify template syntax'
-        ]
-      })
+          'Verify template syntax',
+        ],
+      });
     }
-    
+
     // Execute DOM transform if available
     if (scripts.transformDom) {
       try {
-        xhtmlDoc = await executeTransformDom(xhtmlDoc, scripts.transformDom, workspaceId)
+        xhtmlDoc = await executeTransformDom(xhtmlDoc, scripts.transformDom, workspaceId);
       } catch (error) {
         throw new TransformError({
           stage: 'dom',
@@ -257,32 +256,35 @@ const executeTransformWithErrorHandling = async (
           suggestions: [
             'Check your transformDom.js syntax',
             'Ensure DOM modifications are valid',
-            'Test DOM transform with simple documents'
-          ]
-        })
+            'Test DOM transform with simple documents',
+          ],
+        });
       }
     }
-    
+
     return {
       success: true,
       transformedText,
-      xhtmlDocument: xhtmlDoc
-    }
-    
+      xhtmlDocument: xhtmlDoc,
+    };
   } catch (error) {
     return {
       success: false,
-      error: error instanceof TransformError ? error : new TransformError({
-        stage: 'unknown',
-        message: error.message,
-        details: error.stack
-      })
-    }
+      error:
+        error instanceof TransformError
+          ? error
+          : new TransformError({
+              stage: 'unknown',
+              message: error.message,
+              details: error.stack,
+            }),
+    };
   }
-}
+};
 ```
 
 ## Error Page Generation
+
 ```typescript
 const generateErrorPage = (error: TransformError): string => {
   const errorPageHTML = `
@@ -377,21 +379,29 @@ const generateErrorPage = (error: TransformError): string => {
           ${error.line ? `<br><small>Line ${error.line}${error.column ? `, Column ${error.column}` : ''}</small>` : ''}
         </div>
         
-        ${error.details ? `
+        ${
+          error.details
+            ? `
           <details>
             <summary>Technical Details</summary>
             <div class="error-details">${escapeHTML(error.details)}</div>
           </details>
-        ` : ''}
+        `
+            : ''
+        }
         
-        ${error.suggestions ? `
+        ${
+          error.suggestions
+            ? `
           <div class="suggestions">
             <strong>Suggested Solutions:</strong>
             <ul>
               ${error.suggestions.map(s => `<li>${escapeHTML(s)}</li>`).join('')}
             </ul>
           </div>
-        ` : ''}
+        `
+            : ''
+        }
         
         <button class="retry-button" onclick="window.parent.postMessage({type: 'retry-transform'}, '*')">
           Retry Transform
@@ -399,89 +409,91 @@ const generateErrorPage = (error: TransformError): string => {
       </div>
     </body>
     </html>
-  `
-  
-  return errorPageHTML
-}
+  `;
+
+  return errorPageHTML;
+};
 ```
 
 ## Error Recovery Strategies
+
 ```typescript
 const attemptErrorRecovery = async (error: TransformError): Promise<boolean> => {
   switch (error.stage) {
     case 'text':
       // Try with default markdown transform
       if (error.message.includes('not found') || error.message.includes('undefined')) {
-        return await useDefaultTransform('markdown')
+        return await useDefaultTransform('markdown');
       }
-      break
-      
+      break;
+
     case 'dom':
       // Skip DOM transform and use text-only result
-      return await skipDomTransform()
-      
+      return await skipDomTransform();
+
     case 'template':
       // Use simplified template
-      return await useSimpleTemplate()
-      
+      return await useSimpleTemplate();
+
     default:
-      return false
+      return false;
   }
-  
-  return false
-}
+
+  return false;
+};
 
 const getRecoveryActions = (error: TransformError): RecoveryAction[] => {
-  const actions: RecoveryAction[] = []
-  
+  const actions: RecoveryAction[] = [];
+
   // Always available
   actions.push({
     label: 'Retry Transform',
     action: () => retryTransform(),
-    description: 'Attempt the transformation again'
-  })
-  
+    description: 'Attempt the transformation again',
+  });
+
   actions.push({
     label: 'Show Raw Content',
     action: () => showRawContent(),
-    description: 'Display the plain text content without transformation'
-  })
-  
+    description: 'Display the plain text content without transformation',
+  });
+
   // Stage-specific actions
   switch (error.stage) {
     case 'text':
       actions.push({
         label: 'Use Default Markdown',
         action: () => useDefaultTransform('markdown'),
-        description: 'Replace transform script with default markdown processor'
-      })
-      break
-      
+        description: 'Replace transform script with default markdown processor',
+      });
+      break;
+
     case 'dom':
       actions.push({
         label: 'Skip DOM Transform',
         action: () => skipDomTransform(),
-        description: 'Use text transform result without DOM processing'
-      })
-      break
+        description: 'Use text transform result without DOM processing',
+      });
+      break;
   }
-  
+
   actions.push({
     label: 'Reset Transform Scripts',
     action: () => resetTransformScripts(),
-    description: 'Restore default transform scripts'
-  })
-  
-  return actions
-}
+    description: 'Restore default transform scripts',
+  });
+
+  return actions;
+};
 ```
 
 ## Error Notification System
+
 ```svelte
 <!-- ErrorNotification.svelte -->
 <div class="error-notifications">
   {#each $errorStore.notifications as notification (notification.id)}
-    <div 
+    <div
       class="notification"
       class:error={notification.severity === 'error'}
       class:warning={notification.severity === 'warning'}
@@ -494,10 +506,7 @@ const getRecoveryActions = (error: TransformError): RecoveryAction[] => {
         <div class="notification-title">{notification.title}</div>
         <div class="notification-message">{notification.message}</div>
       </div>
-      <button 
-        class="notification-close"
-        on:click={() => dismissNotification(notification.id)}
-      >
+      <button class="notification-close" on:click={() => dismissNotification(notification.id)}>
         ×
       </button>
     </div>
@@ -506,32 +515,34 @@ const getRecoveryActions = (error: TransformError): RecoveryAction[] => {
 ```
 
 ## Error Analytics
+
 ```typescript
 const trackError = (error: AppError) => {
   // Log to console for development
-  console.error('App Error:', error)
-  
+  console.error('App Error:', error);
+
   // Store in error history
-  errorHistory.push(error)
-  
+  errorHistory.push(error);
+
   // Keep only last 100 errors
   if (errorHistory.length > 100) {
-    errorHistory.shift()
+    errorHistory.shift();
   }
-  
+
   // Send to analytics (if enabled)
   if (analyticsEnabled) {
     analytics.track('error', {
       type: error.type,
       severity: error.severity,
       stage: error.context?.operation,
-      recovered: error.recovered
-    })
+      recovered: error.recovered,
+    });
   }
-}
+};
 ```
 
 ## Testing Considerations
+
 - Test error detection accuracy
 - Test error message clarity
 - Test recovery action effectiveness
@@ -540,6 +551,7 @@ const trackError = (error: AppError) => {
 - Test with various error scenarios
 
 ## Implementation Notes
+
 - Start with basic error detection
 - Add recovery mechanisms incrementally
 - Test error messages with real users

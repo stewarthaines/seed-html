@@ -289,15 +289,15 @@
     grid-template-columns: 1fr;
     gap: 20px;
   }
-  
+
   .storage-demo {
     padding: 15px;
   }
-  
+
   .button-group {
     flex-direction: column;
   }
-  
+
   .workspace-item {
     flex-direction: column;
     align-items: stretch;

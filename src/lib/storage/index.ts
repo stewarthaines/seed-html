@@ -1,6 +1,6 @@
 /**
  * File Storage API - Main Exports
- * 
+ *
  * This file contains the actual implementation of the storage backends
  * supporting OPFS with IndexedDB fallback for cross-browser compatibility.
  */
@@ -10,680 +10,706 @@ import { OPFSWorkerManager } from './worker-manager.js';
 import { FeatureDetector } from './feature-detector.js';
 
 // Export types for public API
-export type { 
-	StorageBackend, 
-	BackendType, 
-	StorageQuota,
-	StorageCapabilities,
-	StorageError,
-	StorageErrorCode
+export type {
+  StorageBackend,
+  BackendType,
+  StorageQuota,
+  StorageCapabilities,
+  StorageError,
+  StorageErrorCode,
 } from './types.js';
 
 export class StorageBackendFactory {
-	private static featureDetector = new FeatureDetector();
+  private static featureDetector = new FeatureDetector();
 
-	static async detectStorageBackend(): Promise<BackendType> {
-		return await this.featureDetector.detectOptimalBackend();
-	}
+  static async detectStorageBackend(): Promise<BackendType> {
+    return await this.featureDetector.detectOptimalBackend();
+  }
 
-	static async testWorkerSyncAccessHandle(): Promise<boolean> {
-		return await this.featureDetector.testOPFSSyncWorker();
-	}
+  static async testWorkerSyncAccessHandle(): Promise<boolean> {
+    return await this.featureDetector.testOPFSSyncWorker();
+  }
 
-	static async create(): Promise<StorageBackend> {
-		const backendType = await this.detectStorageBackend();
-		
-		let backend: StorageBackend;
-		switch (backendType) {
-			case 'opfs-sync':
-				backend = new OPFSSyncBackend();
-				break;
-			case 'opfs-async':
-				backend = new OPFSAsyncBackend();
-				await backend.init?.();
-				break;
-			case 'indexeddb':
-				backend = new IndexedDBBackend();
-				await backend.init?.();
-				break;
-			default:
-				throw new Error(`Unsupported backend: ${backendType}`);
-		}
-		
-		return backend;
-	}
+  static async create(): Promise<StorageBackend> {
+    const backendType = await this.detectStorageBackend();
 
-	/**
-	 * Get detailed capability information for debugging
-	 */
-	static async getCapabilities() {
-		return await this.featureDetector.detectCapabilities();
-	}
+    let backend: StorageBackend;
+    switch (backendType) {
+      case 'opfs-sync':
+        backend = new OPFSSyncBackend();
+        break;
+      case 'opfs-async':
+        backend = new OPFSAsyncBackend();
+        await backend.init?.();
+        break;
+      case 'indexeddb':
+        backend = new IndexedDBBackend();
+        await backend.init?.();
+        break;
+      default:
+        throw new Error(`Unsupported backend: ${backendType}`);
+    }
 
-	/**
-	 * Clear feature detection cache
-	 */
-	static clearCache(): void {
-		this.featureDetector.clearCache();
-	}
+    return backend;
+  }
+
+  /**
+   * Get detailed capability information for debugging
+   */
+  static async getCapabilities() {
+    return await this.featureDetector.detectCapabilities();
+  }
+
+  /**
+   * Clear feature detection cache
+   */
+  static clearCache(): void {
+    this.featureDetector.clearCache();
+  }
 }
 
 export class OPFSAsyncBackend implements StorageBackend {
-	private root: FileSystemDirectoryHandle | null = null;
+  private root: FileSystemDirectoryHandle | null = null;
 
-	async init(): Promise<void> {
-		if (!('storage' in navigator && 'getDirectory' in navigator.storage)) {
-			throw new Error('OPFS not available');
-		}
-		
-		this.root = await navigator.storage.getDirectory();
-	}
+  async init(): Promise<void> {
+    if (!('storage' in navigator && 'getDirectory' in navigator.storage)) {
+      throw new Error('OPFS not available');
+    }
 
-	private async ensureWorkspaceDirectory(workspaceId: string): Promise<FileSystemDirectoryHandle> {
-		if (!this.root) {
-			throw new Error('Backend not initialized');
-		}
+    this.root = await navigator.storage.getDirectory();
+  }
 
-		const workspacesDir = await this.root.getDirectoryHandle('workspaces', { create: true });
-		return await workspacesDir.getDirectoryHandle(workspaceId, { create: true });
-	}
+  private async ensureWorkspaceDirectory(workspaceId: string): Promise<FileSystemDirectoryHandle> {
+    if (!this.root) {
+      throw new Error('Backend not initialized');
+    }
 
-	private async ensureDirectoryPath(baseHandle: FileSystemDirectoryHandle, path: string): Promise<FileSystemDirectoryHandle> {
-		const pathParts = path.split('/').filter(part => part.length > 0);
-		let currentHandle = baseHandle;
+    const workspacesDir = await this.root.getDirectoryHandle('workspaces', { create: true });
+    return await workspacesDir.getDirectoryHandle(workspaceId, { create: true });
+  }
 
-		for (const part of pathParts) {
-			currentHandle = await currentHandle.getDirectoryHandle(part, { create: true });
-		}
+  private async ensureDirectoryPath(
+    baseHandle: FileSystemDirectoryHandle,
+    path: string
+  ): Promise<FileSystemDirectoryHandle> {
+    const pathParts = path.split('/').filter(part => part.length > 0);
+    let currentHandle = baseHandle;
 
-		return currentHandle;
-	}
+    for (const part of pathParts) {
+      currentHandle = await currentHandle.getDirectoryHandle(part, { create: true });
+    }
 
-	private async getFileHandle(workspaceId: string, path: string, create: boolean = false): Promise<FileSystemFileHandle> {
-		const workspaceHandle = await this.ensureWorkspaceDirectory(workspaceId);
-		
-		const pathParts = path.split('/');
-		const fileName = pathParts.pop()!;
-		const dirPath = pathParts.join('/');
+    return currentHandle;
+  }
 
-		let targetDir = workspaceHandle;
-		if (dirPath) {
-			targetDir = await this.ensureDirectoryPath(workspaceHandle, dirPath);
-		}
+  private async getFileHandle(
+    workspaceId: string,
+    path: string,
+    create: boolean = false
+  ): Promise<FileSystemFileHandle> {
+    const workspaceHandle = await this.ensureWorkspaceDirectory(workspaceId);
 
-		return await targetDir.getFileHandle(fileName, { create });
-	}
+    const pathParts = path.split('/');
+    const fileName = pathParts.pop()!;
+    const dirPath = pathParts.join('/');
 
-	async createWorkspace(id: string): Promise<void> {
-		await this.ensureWorkspaceDirectory(id);
-	}
+    let targetDir = workspaceHandle;
+    if (dirPath) {
+      targetDir = await this.ensureDirectoryPath(workspaceHandle, dirPath);
+    }
 
-	async deleteWorkspace(id: string): Promise<void> {
-		if (!this.root) {
-			throw new Error('Backend not initialized');
-		}
+    return await targetDir.getFileHandle(fileName, { create });
+  }
 
-		try {
-			const workspacesDir = await this.root.getDirectoryHandle('workspaces');
-			await workspacesDir.removeEntry(id, { recursive: true });
-		} catch (error) {
-			if ((error as DOMException).name !== 'NotFoundError') {
-				throw error;
-			}
-		}
-	}
+  async createWorkspace(id: string): Promise<void> {
+    await this.ensureWorkspaceDirectory(id);
+  }
 
-	async listWorkspaces(): Promise<string[]> {
-		if (!this.root) {
-			throw new Error('Backend not initialized');
-		}
+  async deleteWorkspace(id: string): Promise<void> {
+    if (!this.root) {
+      throw new Error('Backend not initialized');
+    }
 
-		try {
-			const workspacesDir = await this.root.getDirectoryHandle('workspaces');
-			const workspaces: string[] = [];
+    try {
+      const workspacesDir = await this.root.getDirectoryHandle('workspaces');
+      await workspacesDir.removeEntry(id, { recursive: true });
+    } catch (error) {
+      if ((error as DOMException).name !== 'NotFoundError') {
+        throw error;
+      }
+    }
+  }
 
-			for await (const [name, handle] of workspacesDir.entries()) {
-				if (handle.kind === 'directory') {
-					workspaces.push(name);
-				}
-			}
+  async listWorkspaces(): Promise<string[]> {
+    if (!this.root) {
+      throw new Error('Backend not initialized');
+    }
 
-			return workspaces.sort();
-		} catch (error) {
-			if ((error as DOMException).name === 'NotFoundError') {
-				return [];
-			}
-			throw error;
-		}
-	}
+    try {
+      const workspacesDir = await this.root.getDirectoryHandle('workspaces');
+      const workspaces: string[] = [];
 
-	async writeFile(workspaceId: string, path: string, content: ArrayBuffer): Promise<void> {
-		const fileHandle = await this.getFileHandle(workspaceId, path, true);
-		await this.writeFileWithFallback(fileHandle, content);
-	}
+      for await (const [name, handle] of workspacesDir.entries()) {
+        if (handle.kind === 'directory') {
+          workspaces.push(name);
+        }
+      }
 
-	private async writeFileWithFallback(fileHandle: FileSystemFileHandle, content: ArrayBuffer): Promise<void> {
-		try {
-			// Try createWritable first (Chrome, Firefox, Edge)
-			const writable = await fileHandle.createWritable();
-			try {
-				await writable.write(content);
-			} finally {
-				await writable.close();
-			}
-		} catch (error) {
-			// Fallback to createSyncAccessHandle (Safari)
-			if ('createSyncAccessHandle' in fileHandle) {
-				const syncHandle = await (fileHandle as any).createSyncAccessHandle();
-				try {
-					syncHandle.write(content, { at: 0 });
-					syncHandle.flush();
-				} finally {
-					syncHandle.close();
-				}
-			} else {
-				throw error;
-			}
-		}
-	}
+      return workspaces.sort();
+    } catch (error) {
+      if ((error as DOMException).name === 'NotFoundError') {
+        return [];
+      }
+      throw error;
+    }
+  }
 
-	async readFile(workspaceId: string, path: string): Promise<ArrayBuffer> {
-		const fileHandle = await this.getFileHandle(workspaceId, path, false);
-		const file = await fileHandle.getFile();
-		return await file.arrayBuffer();
-	}
+  async writeFile(workspaceId: string, path: string, content: ArrayBuffer): Promise<void> {
+    const fileHandle = await this.getFileHandle(workspaceId, path, true);
+    await this.writeFileWithFallback(fileHandle, content);
+  }
 
-	async deleteFile(workspaceId: string, path: string): Promise<void> {
-		const workspaceHandle = await this.ensureWorkspaceDirectory(workspaceId);
-		
-		const pathParts = path.split('/');
-		const fileName = pathParts.pop()!;
-		const dirPath = pathParts.join('/');
+  private async writeFileWithFallback(
+    fileHandle: FileSystemFileHandle,
+    content: ArrayBuffer
+  ): Promise<void> {
+    try {
+      // Try createWritable first (Chrome, Firefox, Edge)
+      const writable = await fileHandle.createWritable();
+      try {
+        await writable.write(content);
+      } finally {
+        await writable.close();
+      }
+    } catch (error) {
+      // Fallback to createSyncAccessHandle (Safari)
+      if ('createSyncAccessHandle' in fileHandle) {
+        const syncHandle = await (fileHandle as any).createSyncAccessHandle();
+        try {
+          syncHandle.write(content, { at: 0 });
+          syncHandle.flush();
+        } finally {
+          syncHandle.close();
+        }
+      } else {
+        throw error;
+      }
+    }
+  }
 
-		let targetDir = workspaceHandle;
-		if (dirPath) {
-			targetDir = await this.ensureDirectoryPath(workspaceHandle, dirPath);
-		}
+  async readFile(workspaceId: string, path: string): Promise<ArrayBuffer> {
+    const fileHandle = await this.getFileHandle(workspaceId, path, false);
+    const file = await fileHandle.getFile();
+    return await file.arrayBuffer();
+  }
 
-		await targetDir.removeEntry(fileName);
-	}
+  async deleteFile(workspaceId: string, path: string): Promise<void> {
+    const workspaceHandle = await this.ensureWorkspaceDirectory(workspaceId);
 
-	async listFiles(workspaceId: string, basePath?: string): Promise<string[]> {
-		const workspaceHandle = await this.ensureWorkspaceDirectory(workspaceId);
-		let targetDir = workspaceHandle;
+    const pathParts = path.split('/');
+    const fileName = pathParts.pop()!;
+    const dirPath = pathParts.join('/');
 
-		if (basePath) {
-			try {
-				targetDir = await this.ensureDirectoryPath(workspaceHandle, basePath);
-			} catch (error) {
-				if ((error as DOMException).name === 'NotFoundError') {
-					return [];
-				}
-				throw error;
-			}
-		}
+    let targetDir = workspaceHandle;
+    if (dirPath) {
+      targetDir = await this.ensureDirectoryPath(workspaceHandle, dirPath);
+    }
 
-		const files: string[] = [];
-		await this.collectFiles(targetDir, basePath || '', files);
-		return files.sort();
-	}
+    await targetDir.removeEntry(fileName);
+  }
 
-	private async collectFiles(dirHandle: FileSystemDirectoryHandle, currentPath: string, files: string[]): Promise<void> {
-		for await (const [name, handle] of dirHandle.entries()) {
-			const fullPath = currentPath ? `${currentPath}/${name}` : name;
-			
-			if (handle.kind === 'file') {
-				files.push(fullPath);
-			} else if (handle.kind === 'directory') {
-				await this.collectFiles(handle as FileSystemDirectoryHandle, fullPath, files);
-			}
-		}
-	}
+  async listFiles(workspaceId: string, basePath?: string): Promise<string[]> {
+    const workspaceHandle = await this.ensureWorkspaceDirectory(workspaceId);
+    let targetDir = workspaceHandle;
 
-	async getQuota(): Promise<StorageQuota> {
-		if ('storage' in navigator && 'estimate' in navigator.storage) {
-			const estimate = await navigator.storage.estimate();
-			return {
-				used: estimate.usage || 0,
-				available: (estimate.quota || 0) - (estimate.usage || 0)
-			};
-		}
+    if (basePath) {
+      try {
+        targetDir = await this.ensureDirectoryPath(workspaceHandle, basePath);
+      } catch (error) {
+        if ((error as DOMException).name === 'NotFoundError') {
+          return [];
+        }
+        throw error;
+      }
+    }
 
-		return { used: 0, available: 0 };
-	}
+    const files: string[] = [];
+    await this.collectFiles(targetDir, basePath || '', files);
+    return files.sort();
+  }
 
-	getBackendType(): BackendType {
-		return 'opfs-async';
-	}
+  private async collectFiles(
+    dirHandle: FileSystemDirectoryHandle,
+    currentPath: string,
+    files: string[]
+  ): Promise<void> {
+    for await (const [name, handle] of dirHandle.entries()) {
+      const fullPath = currentPath ? `${currentPath}/${name}` : name;
+
+      if (handle.kind === 'file') {
+        files.push(fullPath);
+      } else if (handle.kind === 'directory') {
+        await this.collectFiles(handle as FileSystemDirectoryHandle, fullPath, files);
+      }
+    }
+  }
+
+  async getQuota(): Promise<StorageQuota> {
+    if ('storage' in navigator && 'estimate' in navigator.storage) {
+      const estimate = await navigator.storage.estimate();
+      return {
+        used: estimate.usage || 0,
+        available: (estimate.quota || 0) - (estimate.usage || 0),
+      };
+    }
+
+    return { used: 0, available: 0 };
+  }
+
+  getBackendType(): BackendType {
+    return 'opfs-async';
+  }
 }
 
 export class OPFSSyncBackend implements StorageBackend {
-	private workerManager: OPFSWorkerManager;
+  private workerManager: OPFSWorkerManager;
 
-	constructor() {
-		this.workerManager = new OPFSWorkerManager();
-	}
+  constructor() {
+    this.workerManager = new OPFSWorkerManager();
+  }
 
-	async sendMessage(type: string, data?: any): Promise<any> {
-		return await this.workerManager.sendMessage(type, data);
-	}
+  async sendMessage(type: string, data?: any): Promise<any> {
+    return await this.workerManager.sendMessage(type, data);
+  }
 
-	destroy(): void {
-		this.workerManager.destroy();
-	}
+  destroy(): void {
+    this.workerManager.destroy();
+  }
 
-	async createWorkspace(id: string): Promise<void> {
-		const result = await this.workerManager.createWorkspace(id);
-		if (!result.success) {
-			throw new Error(result.error || 'Failed to create workspace');
-		}
-	}
+  async createWorkspace(id: string): Promise<void> {
+    const result = await this.workerManager.createWorkspace(id);
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to create workspace');
+    }
+  }
 
-	async deleteWorkspace(id: string): Promise<void> {
-		const result = await this.workerManager.deleteWorkspace(id);
-		if (!result.success) {
-			throw new Error(result.error || 'Failed to delete workspace');
-		}
-	}
+  async deleteWorkspace(id: string): Promise<void> {
+    const result = await this.workerManager.deleteWorkspace(id);
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to delete workspace');
+    }
+  }
 
-	async listWorkspaces(): Promise<string[]> {
-		const result = await this.workerManager.listWorkspaces();
-		if (!result.success) {
-			throw new Error(result.error || 'Failed to list workspaces');
-		}
-		return result.workspaces || [];
-	}
+  async listWorkspaces(): Promise<string[]> {
+    const result = await this.workerManager.listWorkspaces();
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to list workspaces');
+    }
+    return result.workspaces || [];
+  }
 
-	async writeFile(workspaceId: string, path: string, content: ArrayBuffer): Promise<void> {
-		const result = await this.workerManager.writeFile(workspaceId, path, content);
-		if (!result.success) {
-			throw new Error(result.error || 'Failed to write file');
-		}
-	}
+  async writeFile(workspaceId: string, path: string, content: ArrayBuffer): Promise<void> {
+    const result = await this.workerManager.writeFile(workspaceId, path, content);
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to write file');
+    }
+  }
 
-	async readFile(workspaceId: string, path: string): Promise<ArrayBuffer> {
-		const result = await this.workerManager.readFile(workspaceId, path);
-		if (!result.success) {
-			throw new Error(result.error || 'Failed to read file');
-		}
-		return result.content;
-	}
+  async readFile(workspaceId: string, path: string): Promise<ArrayBuffer> {
+    const result = await this.workerManager.readFile(workspaceId, path);
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to read file');
+    }
+    return result.content;
+  }
 
-	async deleteFile(workspaceId: string, path: string): Promise<void> {
-		const result = await this.workerManager.deleteFile(workspaceId, path);
-		if (!result.success) {
-			throw new Error(result.error || 'Failed to delete file');
-		}
-	}
+  async deleteFile(workspaceId: string, path: string): Promise<void> {
+    const result = await this.workerManager.deleteFile(workspaceId, path);
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to delete file');
+    }
+  }
 
-	async listFiles(workspaceId: string, path?: string): Promise<string[]> {
-		const result = await this.workerManager.listFiles(workspaceId, path);
-		if (!result.success) {
-			throw new Error(result.error || 'Failed to list files');
-		}
-		return result.files || [];
-	}
+  async listFiles(workspaceId: string, path?: string): Promise<string[]> {
+    const result = await this.workerManager.listFiles(workspaceId, path);
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to list files');
+    }
+    return result.files || [];
+  }
 
-	async getQuota(): Promise<StorageQuota> {
-		const result = await this.workerManager.getQuota();
-		if (!result.success) {
-			throw new Error(result.error || 'Failed to get quota');
-		}
-		return result.quota;
-	}
+  async getQuota(): Promise<StorageQuota> {
+    const result = await this.workerManager.getQuota();
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to get quota');
+    }
+    return result.quota;
+  }
 
-	getBackendType(): BackendType {
-		return 'opfs-sync';
-	}
+  getBackendType(): BackendType {
+    return 'opfs-sync';
+  }
 }
 
 export class IndexedDBBackend implements StorageBackend {
-	private db: IDBDatabase | null = null;
-	private readonly dbName = 'editme-storage';
-	private readonly version = 1;
+  private db: IDBDatabase | null = null;
+  private readonly dbName = 'editme-storage';
+  private readonly version = 1;
 
-	async init(): Promise<void> {
-		return new Promise((resolve, reject) => {
-			if (!('indexedDB' in globalThis)) {
-				reject(new Error('IndexedDB not available'));
-				return;
-			}
+  async init(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!('indexedDB' in globalThis)) {
+        reject(new Error('IndexedDB not available'));
+        return;
+      }
 
-			const request = indexedDB.open(this.dbName, this.version);
-			
-			request.onerror = () => {
-				reject(new Error(`Failed to open IndexedDB: ${request.error?.message}`));
-			};
-			
-			request.onsuccess = () => {
-				this.db = request.result;
-				resolve();
-			};
-			
-			request.onupgradeneeded = (event) => {
-				const db = (event.target as IDBOpenDBRequest).result;
-				
-				// Create workspaces object store
-				if (!db.objectStoreNames.contains('workspaces')) {
-					const workspaceStore = db.createObjectStore('workspaces', { keyPath: 'id' });
-					workspaceStore.createIndex('created', 'created', { unique: false });
-				}
-				
-				// Create files object store  
-				if (!db.objectStoreNames.contains('files')) {
-					const fileStore = db.createObjectStore('files', { keyPath: ['workspaceId', 'path'] });
-					fileStore.createIndex('workspaceId', 'workspaceId', { unique: false });
-					fileStore.createIndex('modified', 'modified', { unique: false });
-				}
-			};
-		});
-	}
+      const request = indexedDB.open(this.dbName, this.version);
 
-	private async transaction<T>(
-		stores: string[], 
-		mode: IDBTransactionMode, 
-		operation: (transaction: IDBTransaction) => Promise<T>
-	): Promise<T> {
-		if (!this.db) {
-			throw new Error('Database not initialized');
-		}
+      request.onerror = () => {
+        reject(new Error(`Failed to open IndexedDB: ${request.error?.message}`));
+      };
 
-		return new Promise((resolve, reject) => {
-			const transaction = this.db!.transaction(stores, mode);
-			
-			transaction.onerror = () => {
-				reject(new Error(`Transaction failed: ${transaction.error?.message}`));
-			};
+      request.onsuccess = () => {
+        this.db = request.result;
+        resolve();
+      };
 
-			operation(transaction).then(resolve).catch(reject);
-		});
-	}
+      request.onupgradeneeded = event => {
+        const db = (event.target as IDBOpenDBRequest).result;
 
-	private async putRecord(store: IDBObjectStore, record: any): Promise<void> {
-		return new Promise((resolve, reject) => {
-			const request = store.put(record);
-			request.onsuccess = () => resolve();
-			request.onerror = () => reject(new Error(`Put failed: ${request.error?.message}`));
-		});
-	}
+        // Create workspaces object store
+        if (!db.objectStoreNames.contains('workspaces')) {
+          const workspaceStore = db.createObjectStore('workspaces', { keyPath: 'id' });
+          workspaceStore.createIndex('created', 'created', { unique: false });
+        }
 
-	private async getRecord<T>(store: IDBObjectStore, key: any): Promise<T | undefined> {
-		return new Promise((resolve, reject) => {
-			const request = store.get(key);
-			request.onsuccess = () => resolve(request.result);
-			request.onerror = () => reject(new Error(`Get failed: ${request.error?.message}`));
-		});
-	}
+        // Create files object store
+        if (!db.objectStoreNames.contains('files')) {
+          const fileStore = db.createObjectStore('files', { keyPath: ['workspaceId', 'path'] });
+          fileStore.createIndex('workspaceId', 'workspaceId', { unique: false });
+          fileStore.createIndex('modified', 'modified', { unique: false });
+        }
+      };
+    });
+  }
 
-	private async deleteRecord(store: IDBObjectStore, key: any): Promise<void> {
-		return new Promise((resolve, reject) => {
-			const request = store.delete(key);
-			request.onsuccess = () => resolve();
-			request.onerror = () => reject(new Error(`Delete failed: ${request.error?.message}`));
-		});
-	}
+  private async transaction<T>(
+    stores: string[],
+    mode: IDBTransactionMode,
+    operation: (transaction: IDBTransaction) => Promise<T>
+  ): Promise<T> {
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
 
-	private async getAllRecords<T>(store: IDBObjectStore | IDBIndex, query?: IDBValidKey | IDBKeyRange): Promise<T[]> {
-		return new Promise((resolve, reject) => {
-			const request = store.getAll(query);
-			request.onsuccess = () => resolve(request.result);
-			request.onerror = () => reject(new Error(`GetAll failed: ${request.error?.message}`));
-		});
-	}
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(stores, mode);
 
-	async createWorkspace(id: string): Promise<void> {
-		await this.transaction(['workspaces'], 'readwrite', async (transaction) => {
-			const store = transaction.objectStore('workspaces');
-			await this.putRecord(store, {
-				id,
-				created: Date.now()
-			});
-		});
-	}
+      transaction.onerror = () => {
+        reject(new Error(`Transaction failed: ${transaction.error?.message}`));
+      };
 
-	async deleteWorkspace(id: string): Promise<void> {
-		await this.transaction(['workspaces', 'files'], 'readwrite', async (transaction) => {
-			const workspaceStore = transaction.objectStore('workspaces');
-			const fileStore = transaction.objectStore('files');
-			
-			// Delete all files in the workspace first
-			const index = fileStore.index('workspaceId');
-			const files = await this.getAllRecords<{workspaceId: string; path: string}>(index, IDBKeyRange.only(id));
-			
-			for (const file of files) {
-				await this.deleteRecord(fileStore, [file.workspaceId, file.path]);
-			}
-			
-			// Delete the workspace record
-			await this.deleteRecord(workspaceStore, id);
-		});
-	}
+      operation(transaction).then(resolve).catch(reject);
+    });
+  }
 
-	async listWorkspaces(): Promise<string[]> {
-		return await this.transaction(['workspaces'], 'readonly', async (transaction) => {
-			const store = transaction.objectStore('workspaces');
-			const workspaces = await this.getAllRecords<{ id: string }>(store);
-			return workspaces.map(w => w.id).sort();
-		});
-	}
+  private async putRecord(store: IDBObjectStore, record: any): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const request = store.put(record);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(new Error(`Put failed: ${request.error?.message}`));
+    });
+  }
 
-	async writeFile(workspaceId: string, path: string, content: ArrayBuffer): Promise<void> {
-		await this.transaction(['files'], 'readwrite', async (transaction) => {
-			const store = transaction.objectStore('files');
-			await this.putRecord(store, {
-				workspaceId,
-				path,
-				content,
-				modified: Date.now()
-			});
-		});
-	}
+  private async getRecord<T>(store: IDBObjectStore, key: any): Promise<T | undefined> {
+    return new Promise((resolve, reject) => {
+      const request = store.get(key);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(new Error(`Get failed: ${request.error?.message}`));
+    });
+  }
 
-	async readFile(workspaceId: string, path: string): Promise<ArrayBuffer> {
-		return await this.transaction(['files'], 'readonly', async (transaction) => {
-			const store = transaction.objectStore('files');
-			const record = await this.getRecord<{ content: ArrayBuffer }>(store, [workspaceId, path]);
-			
-			if (!record) {
-				throw new Error('File not found');
-			}
-			
-			return record.content;
-		});
-	}
+  private async deleteRecord(store: IDBObjectStore, key: any): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const request = store.delete(key);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(new Error(`Delete failed: ${request.error?.message}`));
+    });
+  }
 
-	async deleteFile(workspaceId: string, path: string): Promise<void> {
-		await this.transaction(['files'], 'readwrite', async (transaction) => {
-			const store = transaction.objectStore('files');
-			await this.deleteRecord(store, [workspaceId, path]);
-		});
-	}
+  private async getAllRecords<T>(
+    store: IDBObjectStore | IDBIndex,
+    query?: IDBValidKey | IDBKeyRange
+  ): Promise<T[]> {
+    return new Promise((resolve, reject) => {
+      const request = store.getAll(query);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(new Error(`GetAll failed: ${request.error?.message}`));
+    });
+  }
 
-	async listFiles(workspaceId: string, basePath?: string): Promise<string[]> {
-		return await this.transaction(['files'], 'readonly', async (transaction) => {
-			const store = transaction.objectStore('files');
-			const index = store.index('workspaceId');
-			const files = await this.getAllRecords<{ path: string }>(index, IDBKeyRange.only(workspaceId));
-			
-			let paths = files.map(f => f.path);
-			
-			if (basePath) {
-				const prefix = basePath.endsWith('/') ? basePath : basePath + '/';
-				paths = paths.filter(path => path.startsWith(prefix));
-			}
-			
-			return paths.sort();
-		});
-	}
+  async createWorkspace(id: string): Promise<void> {
+    await this.transaction(['workspaces'], 'readwrite', async transaction => {
+      const store = transaction.objectStore('workspaces');
+      await this.putRecord(store, {
+        id,
+        created: Date.now(),
+      });
+    });
+  }
 
-	async getQuota(): Promise<StorageQuota> {
-		if ('storage' in navigator && 'estimate' in navigator.storage) {
-			try {
-				const estimate = await navigator.storage.estimate();
-				return {
-					used: estimate.usage || 0,
-					available: (estimate.quota || 0) - (estimate.usage || 0)
-				};
-			} catch {
-				// Fall through to default
-			}
-		}
+  async deleteWorkspace(id: string): Promise<void> {
+    await this.transaction(['workspaces', 'files'], 'readwrite', async transaction => {
+      const workspaceStore = transaction.objectStore('workspaces');
+      const fileStore = transaction.objectStore('files');
 
-		return { used: 0, available: 0 };
-	}
+      // Delete all files in the workspace first
+      const index = fileStore.index('workspaceId');
+      const files = await this.getAllRecords<{ workspaceId: string; path: string }>(
+        index,
+        IDBKeyRange.only(id)
+      );
 
-	getBackendType(): BackendType {
-		return 'indexeddb';
-	}
+      for (const file of files) {
+        await this.deleteRecord(fileStore, [file.workspaceId, file.path]);
+      }
+
+      // Delete the workspace record
+      await this.deleteRecord(workspaceStore, id);
+    });
+  }
+
+  async listWorkspaces(): Promise<string[]> {
+    return await this.transaction(['workspaces'], 'readonly', async transaction => {
+      const store = transaction.objectStore('workspaces');
+      const workspaces = await this.getAllRecords<{ id: string }>(store);
+      return workspaces.map(w => w.id).sort();
+    });
+  }
+
+  async writeFile(workspaceId: string, path: string, content: ArrayBuffer): Promise<void> {
+    await this.transaction(['files'], 'readwrite', async transaction => {
+      const store = transaction.objectStore('files');
+      await this.putRecord(store, {
+        workspaceId,
+        path,
+        content,
+        modified: Date.now(),
+      });
+    });
+  }
+
+  async readFile(workspaceId: string, path: string): Promise<ArrayBuffer> {
+    return await this.transaction(['files'], 'readonly', async transaction => {
+      const store = transaction.objectStore('files');
+      const record = await this.getRecord<{ content: ArrayBuffer }>(store, [workspaceId, path]);
+
+      if (!record) {
+        throw new Error('File not found');
+      }
+
+      return record.content;
+    });
+  }
+
+  async deleteFile(workspaceId: string, path: string): Promise<void> {
+    await this.transaction(['files'], 'readwrite', async transaction => {
+      const store = transaction.objectStore('files');
+      await this.deleteRecord(store, [workspaceId, path]);
+    });
+  }
+
+  async listFiles(workspaceId: string, basePath?: string): Promise<string[]> {
+    return await this.transaction(['files'], 'readonly', async transaction => {
+      const store = transaction.objectStore('files');
+      const index = store.index('workspaceId');
+      const files = await this.getAllRecords<{ path: string }>(
+        index,
+        IDBKeyRange.only(workspaceId)
+      );
+
+      let paths = files.map(f => f.path);
+
+      if (basePath) {
+        const prefix = basePath.endsWith('/') ? basePath : basePath + '/';
+        paths = paths.filter(path => path.startsWith(prefix));
+      }
+
+      return paths.sort();
+    });
+  }
+
+  async getQuota(): Promise<StorageQuota> {
+    if ('storage' in navigator && 'estimate' in navigator.storage) {
+      try {
+        const estimate = await navigator.storage.estimate();
+        return {
+          used: estimate.usage || 0,
+          available: (estimate.quota || 0) - (estimate.usage || 0),
+        };
+      } catch {
+        // Fall through to default
+      }
+    }
+
+    return { used: 0, available: 0 };
+  }
+
+  getBackendType(): BackendType {
+    return 'indexeddb';
+  }
 }
 
 export class StorageManager {
-	private backend: StorageBackend | null = null;
-	private initialized = false;
+  private backend: StorageBackend | null = null;
+  private initialized = false;
 
-	async init(): Promise<void> {
-		if (this.initialized) {
-			return;
-		}
+  async init(): Promise<void> {
+    if (this.initialized) {
+      return;
+    }
 
-		this.backend = await StorageBackendFactory.create();
-		this.initialized = true;
-	}
+    this.backend = await StorageBackendFactory.create();
+    this.initialized = true;
+  }
 
-	isInitialized(): boolean {
-		return this.initialized && this.backend !== null;
-	}
+  isInitialized(): boolean {
+    return this.initialized && this.backend !== null;
+  }
 
-	getBackendType(): BackendType {
-		if (!this.backend) {
-			throw new Error('Storage manager not initialized');
-		}
-		return this.backend.getBackendType();
-	}
+  getBackendType(): BackendType {
+    if (!this.backend) {
+      throw new Error('Storage manager not initialized');
+    }
+    return this.backend.getBackendType();
+  }
 
-	private generateWorkspaceId(): string {
-		// Generate UUID v4
-		return 'workspace-' + 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-			const r = Math.random() * 16 | 0;
-			const v = c === 'x' ? r : (r & 0x3 | 0x8);
-			return v.toString(16);
-		});
-	}
+  private generateWorkspaceId(): string {
+    // Generate UUID v4
+    return (
+      'workspace-' +
+      'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      })
+    );
+  }
 
-	async createWorkspace(id?: string): Promise<string> {
-		if (!this.backend) {
-			throw new Error('Storage manager not initialized');
-		}
+  async createWorkspace(id?: string): Promise<string> {
+    if (!this.backend) {
+      throw new Error('Storage manager not initialized');
+    }
 
-		const workspaceId = id || this.generateWorkspaceId();
-		await this.backend.createWorkspace(workspaceId);
-		return workspaceId;
-	}
+    const workspaceId = id || this.generateWorkspaceId();
+    await this.backend.createWorkspace(workspaceId);
+    return workspaceId;
+  }
 
-	async deleteWorkspace(id: string): Promise<void> {
-		if (!this.backend) {
-			throw new Error('Storage manager not initialized');
-		}
+  async deleteWorkspace(id: string): Promise<void> {
+    if (!this.backend) {
+      throw new Error('Storage manager not initialized');
+    }
 
-		await this.backend.deleteWorkspace(id);
-	}
+    await this.backend.deleteWorkspace(id);
+  }
 
-	async listWorkspaces(): Promise<string[]> {
-		if (!this.backend) {
-			throw new Error('Storage manager not initialized');
-		}
+  async listWorkspaces(): Promise<string[]> {
+    if (!this.backend) {
+      throw new Error('Storage manager not initialized');
+    }
 
-		return await this.backend.listWorkspaces();
-	}
+    return await this.backend.listWorkspaces();
+  }
 
-	async writeFile(workspaceId: string, path: string, content: ArrayBuffer): Promise<void> {
-		if (!this.backend) {
-			throw new Error('Storage manager not initialized');
-		}
+  async writeFile(workspaceId: string, path: string, content: ArrayBuffer): Promise<void> {
+    if (!this.backend) {
+      throw new Error('Storage manager not initialized');
+    }
 
-		await this.backend.writeFile(workspaceId, path, content);
-	}
+    await this.backend.writeFile(workspaceId, path, content);
+  }
 
-	async readFile(workspaceId: string, path: string): Promise<ArrayBuffer> {
-		if (!this.backend) {
-			throw new Error('Storage manager not initialized');
-		}
+  async readFile(workspaceId: string, path: string): Promise<ArrayBuffer> {
+    if (!this.backend) {
+      throw new Error('Storage manager not initialized');
+    }
 
-		return await this.backend.readFile(workspaceId, path);
-	}
+    return await this.backend.readFile(workspaceId, path);
+  }
 
-	async deleteFile(workspaceId: string, path: string): Promise<void> {
-		if (!this.backend) {
-			throw new Error('Storage manager not initialized');
-		}
+  async deleteFile(workspaceId: string, path: string): Promise<void> {
+    if (!this.backend) {
+      throw new Error('Storage manager not initialized');
+    }
 
-		await this.backend.deleteFile(workspaceId, path);
-	}
+    await this.backend.deleteFile(workspaceId, path);
+  }
 
-	async listFiles(workspaceId: string, path?: string): Promise<string[]> {
-		if (!this.backend) {
-			throw new Error('Storage manager not initialized');
-		}
+  async listFiles(workspaceId: string, path?: string): Promise<string[]> {
+    if (!this.backend) {
+      throw new Error('Storage manager not initialized');
+    }
 
-		return await this.backend.listFiles(workspaceId, path);
-	}
+    return await this.backend.listFiles(workspaceId, path);
+  }
 
-	async getQuota(): Promise<StorageQuota> {
-		if (!this.backend) {
-			throw new Error('Storage manager not initialized');
-		}
+  async getQuota(): Promise<StorageQuota> {
+    if (!this.backend) {
+      throw new Error('Storage manager not initialized');
+    }
 
-		return await this.backend.getQuota();
-	}
+    return await this.backend.getQuota();
+  }
 
-	/**
-	 * Utility method to write text files
-	 */
-	async writeTextFile(workspaceId: string, path: string, content: string): Promise<void> {
-		const encoder = new TextEncoder();
-		const buffer = encoder.encode(content).buffer as ArrayBuffer;
-		await this.writeFile(workspaceId, path, buffer);
-	}
+  /**
+   * Utility method to write text files
+   */
+  async writeTextFile(workspaceId: string, path: string, content: string): Promise<void> {
+    const encoder = new TextEncoder();
+    const buffer = encoder.encode(content).buffer as ArrayBuffer;
+    await this.writeFile(workspaceId, path, buffer);
+  }
 
-	/**
-	 * Utility method to read text files
-	 */
-	async readTextFile(workspaceId: string, path: string): Promise<string> {
-		const buffer = await this.readFile(workspaceId, path);
-		const decoder = new TextDecoder();
-		return decoder.decode(buffer);
-	}
+  /**
+   * Utility method to read text files
+   */
+  async readTextFile(workspaceId: string, path: string): Promise<string> {
+    const buffer = await this.readFile(workspaceId, path);
+    const decoder = new TextDecoder();
+    return decoder.decode(buffer);
+  }
 
-	/**
-	 * Check if a file exists
-	 */
-	async fileExists(workspaceId: string, path: string): Promise<boolean> {
-		try {
-			await this.readFile(workspaceId, path);
-			return true;
-		} catch {
-			return false;
-		}
-	}
+  /**
+   * Check if a file exists
+   */
+  async fileExists(workspaceId: string, path: string): Promise<boolean> {
+    try {
+      await this.readFile(workspaceId, path);
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
-	/**
-	 * Get file size without reading full content
-	 */
-	async getFileSize(workspaceId: string, path: string): Promise<number> {
-		const buffer = await this.readFile(workspaceId, path);
-		return buffer.byteLength;
-	}
+  /**
+   * Get file size without reading full content
+   */
+  async getFileSize(workspaceId: string, path: string): Promise<number> {
+    const buffer = await this.readFile(workspaceId, path);
+    return buffer.byteLength;
+  }
 
-	/**
-	 * Clean up resources (mainly for OPFS sync backend)
-	 */
-	destroy(): void {
-		if (this.backend && 'destroy' in this.backend) {
-			(this.backend as any).destroy();
-		}
-		this.backend = null;
-		this.initialized = false;
-	}
+  /**
+   * Clean up resources (mainly for OPFS sync backend)
+   */
+  destroy(): void {
+    if (this.backend && 'destroy' in this.backend) {
+      (this.backend as any).destroy();
+    }
+    this.backend = null;
+    this.initialized = false;
+  }
 }
 
 /**
@@ -691,142 +717,142 @@ export class StorageManager {
  * Provides a clean interface matching the API design specification
  */
 export class FileStorageAPI {
-	private manager: StorageManager;
+  private manager: StorageManager;
 
-	constructor() {
-		this.manager = new StorageManager();
-	}
+  constructor() {
+    this.manager = new StorageManager();
+  }
 
-	/**
-	 * Initialize the storage system
-	 */
-	async init(): Promise<void> {
-		await this.manager.init();
-	}
+  /**
+   * Initialize the storage system
+   */
+  async init(): Promise<void> {
+    await this.manager.init();
+  }
 
-	/**
-	 * Check if storage is initialized
-	 */
-	isInitialized(): boolean {
-		return this.manager.isInitialized();
-	}
+  /**
+   * Check if storage is initialized
+   */
+  isInitialized(): boolean {
+    return this.manager.isInitialized();
+  }
 
-	/**
-	 * Get the active backend type
-	 */
-	getBackendType(): BackendType {
-		return this.manager.getBackendType();
-	}
+  /**
+   * Get the active backend type
+   */
+  getBackendType(): BackendType {
+    return this.manager.getBackendType();
+  }
 
-	// Workspace management
-	async createWorkspace(id?: string): Promise<string> {
-		return await this.manager.createWorkspace(id);
-	}
+  // Workspace management
+  async createWorkspace(id?: string): Promise<string> {
+    return await this.manager.createWorkspace(id);
+  }
 
-	async deleteWorkspace(id: string): Promise<void> {
-		await this.manager.deleteWorkspace(id);
-	}
+  async deleteWorkspace(id: string): Promise<void> {
+    await this.manager.deleteWorkspace(id);
+  }
 
-	async listWorkspaces(): Promise<string[]> {
-		return await this.manager.listWorkspaces();
-	}
+  async listWorkspaces(): Promise<string[]> {
+    return await this.manager.listWorkspaces();
+  }
 
-	// File operations
-	async writeFile(workspaceId: string, path: string, content: ArrayBuffer): Promise<void> {
-		await this.manager.writeFile(workspaceId, path, content);
-	}
+  // File operations
+  async writeFile(workspaceId: string, path: string, content: ArrayBuffer): Promise<void> {
+    await this.manager.writeFile(workspaceId, path, content);
+  }
 
-	async readFile(workspaceId: string, path: string): Promise<ArrayBuffer> {
-		return await this.manager.readFile(workspaceId, path);
-	}
+  async readFile(workspaceId: string, path: string): Promise<ArrayBuffer> {
+    return await this.manager.readFile(workspaceId, path);
+  }
 
-	async deleteFile(workspaceId: string, path: string): Promise<void> {
-		await this.manager.deleteFile(workspaceId, path);
-	}
+  async deleteFile(workspaceId: string, path: string): Promise<void> {
+    await this.manager.deleteFile(workspaceId, path);
+  }
 
-	async renameFile(workspaceId: string, oldPath: string, newPath: string): Promise<void> {
-		// Read the file content
-		const content = await this.manager.readFile(workspaceId, oldPath);
-		// Write to new location
-		await this.manager.writeFile(workspaceId, newPath, content);
-		// Delete old file
-		await this.manager.deleteFile(workspaceId, oldPath);
-	}
+  async renameFile(workspaceId: string, oldPath: string, newPath: string): Promise<void> {
+    // Read the file content
+    const content = await this.manager.readFile(workspaceId, oldPath);
+    // Write to new location
+    await this.manager.writeFile(workspaceId, newPath, content);
+    // Delete old file
+    await this.manager.deleteFile(workspaceId, oldPath);
+  }
 
-	async listFiles(workspaceId: string, path?: string): Promise<string[]> {
-		return await this.manager.listFiles(workspaceId, path);
-	}
+  async listFiles(workspaceId: string, path?: string): Promise<string[]> {
+    return await this.manager.listFiles(workspaceId, path);
+  }
 
-	// Storage monitoring
-	async getQuota(): Promise<{ used: number; available: number }> {
-		return await this.manager.getQuota();
-	}
+  // Storage monitoring
+  async getQuota(): Promise<{ used: number; available: number }> {
+    return await this.manager.getQuota();
+  }
 
-	async estimateWorkspaceSize(workspaceId: string): Promise<number> {
-		const files = await this.manager.listFiles(workspaceId);
-		let totalSize = 0;
-		
-		for (const filePath of files) {
-			try {
-				const size = await this.manager.getFileSize(workspaceId, filePath);
-				totalSize += size;
-			} catch {
-				// Skip files that can't be read
-			}
-		}
-		
-		return totalSize;
-	}
+  async estimateWorkspaceSize(workspaceId: string): Promise<number> {
+    const files = await this.manager.listFiles(workspaceId);
+    let totalSize = 0;
 
-	/**
-	 * Utility methods
-	 */
-	async writeTextFile(workspaceId: string, path: string, content: string): Promise<void> {
-		await this.manager.writeTextFile(workspaceId, path, content);
-	}
+    for (const filePath of files) {
+      try {
+        const size = await this.manager.getFileSize(workspaceId, filePath);
+        totalSize += size;
+      } catch {
+        // Skip files that can't be read
+      }
+    }
 
-	async readTextFile(workspaceId: string, path: string): Promise<string> {
-		return await this.manager.readTextFile(workspaceId, path);
-	}
+    return totalSize;
+  }
 
-	async fileExists(workspaceId: string, path: string): Promise<boolean> {
-		return await this.manager.fileExists(workspaceId, path);
-	}
+  /**
+   * Utility methods
+   */
+  async writeTextFile(workspaceId: string, path: string, content: string): Promise<void> {
+    await this.manager.writeTextFile(workspaceId, path, content);
+  }
 
-	/**
-	 * OPFS optimization methods for blob URL creation
-	 */
-	supportsDirectBlobURLs(): boolean {
-		const backendType = this.manager.getBackendType();
-		return backendType === 'opfs-async' || backendType === 'opfs-sync';
-	}
+  async readTextFile(workspaceId: string, path: string): Promise<string> {
+    return await this.manager.readTextFile(workspaceId, path);
+  }
 
-	async getFile(workspaceId: string, filePath: string): Promise<File> {
-		if (!this.manager.isInitialized()) {
-			throw new Error('Storage manager not initialized');
-		}
+  async fileExists(workspaceId: string, path: string): Promise<boolean> {
+    return await this.manager.fileExists(workspaceId, path);
+  }
 
-		const backendType = this.manager.getBackendType();
-		
-		if (backendType === 'opfs-async') {
-			// Direct file access for OPFS async backend
-			const backend = (this.manager as any).backend as OPFSAsyncBackend;
-			const fileHandle = await (backend as any).getFileHandle(workspaceId, filePath, false);
-			return await fileHandle.getFile();
-		} else if (backendType === 'opfs-sync') {
-			// For OPFS sync backend, fall back to reading content and creating File
-			const content = await this.readFile(workspaceId, filePath);
-			const fileName = filePath.split('/').pop() || 'file';
-			return new File([content], fileName);
-		} else {
-			throw new Error('Direct file access not supported for IndexedDB backend');
-		}
-	}
+  /**
+   * OPFS optimization methods for blob URL creation
+   */
+  supportsDirectBlobURLs(): boolean {
+    const backendType = this.manager.getBackendType();
+    return backendType === 'opfs-async' || backendType === 'opfs-sync';
+  }
 
-	/**
-	 * Clean up resources
-	 */
-	destroy(): void {
-		this.manager.destroy();
-	}
+  async getFile(workspaceId: string, filePath: string): Promise<File> {
+    if (!this.manager.isInitialized()) {
+      throw new Error('Storage manager not initialized');
+    }
+
+    const backendType = this.manager.getBackendType();
+
+    if (backendType === 'opfs-async') {
+      // Direct file access for OPFS async backend
+      const backend = (this.manager as any).backend as OPFSAsyncBackend;
+      const fileHandle = await (backend as any).getFileHandle(workspaceId, filePath, false);
+      return await fileHandle.getFile();
+    } else if (backendType === 'opfs-sync') {
+      // For OPFS sync backend, fall back to reading content and creating File
+      const content = await this.readFile(workspaceId, filePath);
+      const fileName = filePath.split('/').pop() || 'file';
+      return new File([content], fileName);
+    } else {
+      throw new Error('Direct file access not supported for IndexedDB backend');
+    }
+  }
+
+  /**
+   * Clean up resources
+   */
+  destroy(): void {
+    this.manager.destroy();
+  }
 }

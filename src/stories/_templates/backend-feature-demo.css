@@ -8,7 +8,10 @@
 */
 
 .backend-feature-demo {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   max-width: 1200px;
   margin: 0 auto;
   padding: 1rem;
@@ -247,19 +250,19 @@
   .backend-feature-demo {
     padding: 0.5rem;
   }
-  
+
   .demo-content {
     gap: 1rem;
   }
-  
+
   .control-panel {
     padding: 1rem;
   }
-  
+
   .button-group {
     flex-direction: column;
   }
-  
+
   .button-group button {
     width: 100%;
   }

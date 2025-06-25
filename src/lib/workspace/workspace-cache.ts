@@ -1,15 +1,15 @@
 /**
  * WorkspaceMetadataCache Class
- * 
+ *
  * Two-tier caching system for workspace metadata with memory cache (fast) and disk cache (persistent).
  */
 
 import type { FileStorageAPI } from '../storage/index.js';
-import type { 
-  WorkspaceCacheEntry, 
-  WorkspaceCache, 
+import type {
+  WorkspaceCacheEntry,
+  WorkspaceCache,
   WorkspaceInfo,
-  WorkspaceConfig 
+  WorkspaceConfig,
 } from './types.js';
 import { CacheError } from './types.js';
 
@@ -25,7 +25,7 @@ export class WorkspaceMetadataCache {
     this.config = config || {
       ttl: 24 * 60 * 60 * 1000, // 24 hours
       maxEntries: 100,
-      enableDiskCache: true
+      enableDiskCache: true,
     };
   }
 
@@ -43,7 +43,7 @@ export class WorkspaceMetadataCache {
     if (this.config.enableDiskCache) {
       try {
         const cacheEntry = await this.loadDiskCache(workspaceId);
-        if (cacheEntry && await this.isCacheFresh(workspaceId, cacheEntry)) {
+        if (cacheEntry && (await this.isCacheFresh(workspaceId, cacheEntry))) {
           const workspaceInfo = this.cacheEntryToWorkspaceInfo(cacheEntry);
           // Update memory cache
           this.memoryCache.set(workspaceId, workspaceInfo);
@@ -83,11 +83,11 @@ export class WorkspaceMetadataCache {
             title: workspaceInfo.title,
             language: workspaceInfo.language,
             identifier: `workspace-${workspaceId}`,
-            creator: workspaceInfo.author ? [workspaceInfo.author] : undefined
+            creator: workspaceInfo.author ? [workspaceInfo.author] : undefined,
           },
           fileCount: workspaceInfo.fileCount,
           totalSize: workspaceInfo.totalSize,
-          epubVersion: workspaceInfo.epubVersion
+          epubVersion: workspaceInfo.epubVersion,
         };
 
         await this.storage.writeTextFile(workspaceId, this.CACHE_FILE, JSON.stringify(cacheEntry));
@@ -123,7 +123,6 @@ export class WorkspaceMetadataCache {
 
     return null;
   }
-
 
   /**
    * Update cache with fresh workspace information
@@ -209,11 +208,11 @@ export class WorkspaceMetadataCache {
       try {
         // In tests, mock storage might not have getFileStats, so try readFile as fallback
         if ('getFileStats' in this.storage && typeof this.storage.getFileStats === 'function') {
-          const stats = await this.storage.getFileStats(workspaceId, "OEBPS/content.opf");
+          const stats = await this.storage.getFileStats(workspaceId, 'OEBPS/content.opf');
           return stats.lastModified <= cacheEntry.opfFileModified;
         } else {
           // Fallback: just check if file exists
-          await this.storage.readFile(workspaceId, "OEBPS/content.opf");
+          await this.storage.readFile(workspaceId, 'OEBPS/content.opf');
           return true; // File exists and is readable
         }
       } catch {
@@ -236,7 +235,7 @@ export class WorkspaceMetadataCache {
       lastModified: new Date(entry.lastCacheUpdate),
       fileCount: entry.fileCount,
       totalSize: entry.totalSize,
-      epubVersion: entry.epubVersion
+      epubVersion: entry.epubVersion,
     };
   }
 
@@ -273,7 +272,7 @@ export class WorkspaceMetadataCache {
   } {
     return {
       memoryEntries: this.memoryCache.size,
-      maxEntries: this.config.maxEntries
+      maxEntries: this.config.maxEntries,
       // TODO: Add hit rate tracking
     };
   }
@@ -284,7 +283,7 @@ export class WorkspaceMetadataCache {
     try {
       const cacheContent = await this.storage.readTextFile(workspaceId, this.CACHE_FILE);
       const cacheData: WorkspaceCache = JSON.parse(cacheContent);
-      
+
       const entry = cacheData[workspaceId];
       if (!entry) {
         return null;
@@ -300,7 +299,7 @@ export class WorkspaceMetadataCache {
       if (error instanceof CacheError) {
         throw error;
       }
-      
+
       // File not found or parse error
       return null;
     }
@@ -327,18 +326,22 @@ export class WorkspaceMetadataCache {
           title: workspaceInfo.title,
           language: workspaceInfo.language,
           identifier: `workspace-${workspaceId}`,
-          creator: workspaceInfo.author ? [workspaceInfo.author] : undefined
+          creator: workspaceInfo.author ? [workspaceInfo.author] : undefined,
         },
         fileCount: workspaceInfo.fileCount,
         totalSize: workspaceInfo.totalSize,
-        epubVersion: workspaceInfo.epubVersion
+        epubVersion: workspaceInfo.epubVersion,
       };
 
       // Update cache data
       cacheData[workspaceId] = cacheEntry;
 
       // Save to disk
-      await this.storage.writeTextFile(workspaceId, this.CACHE_FILE, JSON.stringify(cacheData, null, 2));
+      await this.storage.writeTextFile(
+        workspaceId,
+        this.CACHE_FILE,
+        JSON.stringify(cacheData, null, 2)
+      );
     } catch (error) {
       throw new CacheError(
         `Failed to save disk cache: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -353,7 +356,7 @@ export class WorkspaceMetadataCache {
       // Load existing cache data
       const existingContent = await this.storage.readTextFile(workspaceId, this.CACHE_FILE);
       const cacheData: WorkspaceCache = JSON.parse(existingContent);
-      
+
       // Remove the workspace entry
       delete cacheData[workspaceId];
 
@@ -365,7 +368,11 @@ export class WorkspaceMetadataCache {
           // File might not exist
         }
       } else {
-        await this.storage.writeTextFile(workspaceId, this.CACHE_FILE, JSON.stringify(cacheData, null, 2));
+        await this.storage.writeTextFile(
+          workspaceId,
+          this.CACHE_FILE,
+          JSON.stringify(cacheData, null, 2)
+        );
       }
     } catch {
       // Cache file doesn't exist or is corrupted - nothing to remove
@@ -401,11 +408,11 @@ export class WorkspaceMetadataCache {
         title: workspaceInfo.title,
         language: workspaceInfo.language,
         identifier: `workspace-${workspaceInfo.id}`,
-        creator: workspaceInfo.author ? [workspaceInfo.author] : undefined
+        creator: workspaceInfo.author ? [workspaceInfo.author] : undefined,
       },
       fileCount: workspaceInfo.fileCount,
       totalSize: workspaceInfo.totalSize,
-      epubVersion: workspaceInfo.epubVersion
+      epubVersion: workspaceInfo.epubVersion,
     };
   }
 }

@@ -42,7 +42,7 @@ init(): Promise<void>
 ```typescript
 const storage = new FileStorageAPI();
 await storage.init();
-console.log("Storage initialized with backend:", storage.getBackendType());
+console.log('Storage initialized with backend:', storage.getBackendType());
 ```
 
 #### createWorkspace()
@@ -66,7 +66,7 @@ createWorkspace(id?: string): Promise<string>
 const workspaceId = await storage.createWorkspace();
 
 // Use specific workspace ID
-const customId = await storage.createWorkspace("my-epub-project");
+const customId = await storage.createWorkspace('my-epub-project');
 ```
 
 #### deleteWorkspace()
@@ -86,7 +86,7 @@ deleteWorkspace(id: string): Promise<void>
 **Usage:**
 
 ```typescript
-await storage.deleteWorkspace("old-workspace-id");
+await storage.deleteWorkspace('old-workspace-id');
 ```
 
 #### listWorkspaces()
@@ -105,7 +105,7 @@ listWorkspaces(): Promise<string[]>
 
 ```typescript
 const workspaces = await storage.listWorkspaces();
-console.log("Available workspaces:", workspaces);
+console.log('Available workspaces:', workspaces);
 ```
 
 #### writeFile()
@@ -131,11 +131,11 @@ writeFile(workspaceId: string, path: string, content: ArrayBuffer): Promise<void
 **Usage:**
 
 ```typescript
-const content = new TextEncoder().encode("Hello World");
-await storage.writeFile("workspace-id", "OEBPS/chapter1.xhtml", content.buffer);
+const content = new TextEncoder().encode('Hello World');
+await storage.writeFile('workspace-id', 'OEBPS/chapter1.xhtml', content.buffer);
 
 // Nested path - creates directories automatically
-await storage.writeFile("workspace-id", "OEBPS/images/cover.jpg", imageBuffer);
+await storage.writeFile('workspace-id', 'OEBPS/images/cover.jpg', imageBuffer);
 ```
 
 #### readFile()
@@ -156,9 +156,9 @@ readFile(workspaceId: string, path: string): Promise<ArrayBuffer>
 **Usage:**
 
 ```typescript
-const buffer = await storage.readFile("workspace-id", "OEBPS/content.opf");
+const buffer = await storage.readFile('workspace-id', 'OEBPS/content.opf');
 const text = new TextDecoder().decode(buffer);
-console.log("OPF content:", text);
+console.log('OPF content:', text);
 ```
 
 #### deleteFile()
@@ -179,7 +179,7 @@ deleteFile(workspaceId: string, path: string): Promise<void>
 **Usage:**
 
 ```typescript
-await storage.deleteFile("workspace-id", "OEBPS/old-chapter.xhtml");
+await storage.deleteFile('workspace-id', 'OEBPS/old-chapter.xhtml');
 ```
 
 #### listFiles()
@@ -201,10 +201,10 @@ listFiles(workspaceId: string, path?: string): Promise<string[]>
 
 ```typescript
 // List all files in workspace
-const allFiles = await storage.listFiles("workspace-id");
+const allFiles = await storage.listFiles('workspace-id');
 
 // List files in specific directory
-const imageFiles = await storage.listFiles("workspace-id", "OEBPS/images");
+const imageFiles = await storage.listFiles('workspace-id', 'OEBPS/images');
 ```
 
 #### getQuota()
@@ -242,7 +242,7 @@ getBackendType(): BackendType
 
 ```typescript
 const backendType = storage.getBackendType();
-console.log("Using storage backend:", backendType); // 'opfs-async' | 'opfs-sync' | 'indexeddb'
+console.log('Using storage backend:', backendType); // 'opfs-async' | 'opfs-sync' | 'indexeddb'
 ```
 
 ### Convenience Methods
@@ -258,7 +258,7 @@ Helper method for writing text files. Automatically encodes string to ArrayBuffe
 **Usage:**
 
 ```typescript
-await storage.writeTextFile("workspace-id", "OEBPS/content.opf", opfXmlString);
+await storage.writeTextFile('workspace-id', 'OEBPS/content.opf', opfXmlString);
 ```
 
 #### readTextFile()
@@ -272,10 +272,7 @@ Helper method for reading text files. Automatically decodes ArrayBuffer to strin
 **Usage:**
 
 ```typescript
-const opfContent = await storage.readTextFile(
-  "workspace-id",
-  "OEBPS/content.opf"
-);
+const opfContent = await storage.readTextFile('workspace-id', 'OEBPS/content.opf');
 ```
 
 ## StorageBackendFactory
@@ -312,7 +309,7 @@ interface StorageQuota {
 ### BackendType
 
 ```typescript
-type BackendType = "opfs-async" | "opfs-sync" | "indexeddb";
+type BackendType = 'opfs-async' | 'opfs-sync' | 'indexeddb';
 ```
 
 ### StorageError
@@ -324,14 +321,14 @@ class StorageError extends Error {
 }
 
 enum StorageErrorCode {
-  NOT_INITIALIZED = "NOT_INITIALIZED",
-  BACKEND_UNAVAILABLE = "BACKEND_UNAVAILABLE",
-  QUOTA_EXCEEDED = "QUOTA_EXCEEDED",
-  PERMISSION_DENIED = "PERMISSION_DENIED",
-  FILE_NOT_FOUND = "FILE_NOT_FOUND",
-  WORKSPACE_NOT_FOUND = "WORKSPACE_NOT_FOUND",
-  INVALID_PATH = "INVALID_PATH",
-  OPERATION_TIMEOUT = "OPERATION_TIMEOUT",
+  NOT_INITIALIZED = 'NOT_INITIALIZED',
+  BACKEND_UNAVAILABLE = 'BACKEND_UNAVAILABLE',
+  QUOTA_EXCEEDED = 'QUOTA_EXCEEDED',
+  PERMISSION_DENIED = 'PERMISSION_DENIED',
+  FILE_NOT_FOUND = 'FILE_NOT_FOUND',
+  WORKSPACE_NOT_FOUND = 'WORKSPACE_NOT_FOUND',
+  INVALID_PATH = 'INVALID_PATH',
+  OPERATION_TIMEOUT = 'OPERATION_TIMEOUT',
 }
 ```
 
@@ -347,13 +344,9 @@ await storage.init();
 const workspaceId = await storage.createWorkspace();
 
 // Add EPUB structure files
-await storage.writeTextFile(workspaceId, "mimetype", "application/epub+zip");
-await storage.writeTextFile(
-  workspaceId,
-  "META-INF/container.xml",
-  containerXml
-);
-await storage.writeTextFile(workspaceId, "OEBPS/content.opf", opfXml);
+await storage.writeTextFile(workspaceId, 'mimetype', 'application/epub+zip');
+await storage.writeTextFile(workspaceId, 'META-INF/container.xml', containerXml);
+await storage.writeTextFile(workspaceId, 'OEBPS/content.opf', opfXml);
 ```
 
 ### File Management
@@ -361,19 +354,15 @@ await storage.writeTextFile(workspaceId, "OEBPS/content.opf", opfXml);
 ```typescript
 // Check what files exist
 const files = await storage.listFiles(workspaceId);
-console.log("Workspace contains:", files);
+console.log('Workspace contains:', files);
 
 // Read and modify content
-const content = await storage.readTextFile(workspaceId, "OEBPS/chapter1.xhtml");
-const modifiedContent = content.replace("old text", "new text");
-await storage.writeTextFile(
-  workspaceId,
-  "OEBPS/chapter1.xhtml",
-  modifiedContent
-);
+const content = await storage.readTextFile(workspaceId, 'OEBPS/chapter1.xhtml');
+const modifiedContent = content.replace('old text', 'new text');
+await storage.writeTextFile(workspaceId, 'OEBPS/chapter1.xhtml', modifiedContent);
 
 // Clean up old files
-await storage.deleteFile(workspaceId, "OEBPS/unused-chapter.xhtml");
+await storage.deleteFile(workspaceId, 'OEBPS/unused-chapter.xhtml');
 ```
 
 ### Storage Monitoring
@@ -386,13 +375,13 @@ const availableMB = quota.available / (1024 * 1024);
 
 if (quota.available < 10 * 1024 * 1024) {
   // Less than 10MB available
-  console.warn("Low storage space available");
+  console.warn('Low storage space available');
 }
 
 // Check backend type for feature availability
 const backend = storage.getBackendType();
-if (backend === "indexeddb") {
-  console.info("Using IndexedDB fallback - some features may be slower");
+if (backend === 'indexeddb') {
+  console.info('Using IndexedDB fallback - some features may be slower');
 }
 ```
 
@@ -402,21 +391,21 @@ All methods can throw `StorageError` with specific error codes:
 
 ```typescript
 try {
-  await storage.readFile("workspace-id", "nonexistent-file.txt");
+  await storage.readFile('workspace-id', 'nonexistent-file.txt');
 } catch (error) {
   if (error instanceof StorageError) {
     switch (error.code) {
       case StorageErrorCode.FILE_NOT_FOUND:
-        console.log("File does not exist");
+        console.log('File does not exist');
         break;
       case StorageErrorCode.WORKSPACE_NOT_FOUND:
-        console.log("Workspace does not exist");
+        console.log('Workspace does not exist');
         break;
       case StorageErrorCode.QUOTA_EXCEEDED:
-        console.log("Storage quota exceeded");
+        console.log('Storage quota exceeded');
         break;
       default:
-        console.error("Storage error:", error.message);
+        console.error('Storage error:', error.message);
     }
   }
 }

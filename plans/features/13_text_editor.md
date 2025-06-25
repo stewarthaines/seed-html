@@ -1,9 +1,11 @@
 # 13. Text Editor
 
 ## Overview
+
 Provides a flexible editor pane system supporting single or dual-pane editing of text sources, CSS, and JavaScript files with validation, synchronized scrolling, and real-time preview updates.
 
 ## Requirements
+
 - Single/dual pane iframe-based editor with configurable layout
 - Source file selection from current spine item and manifest resources
 - Real-time content validation for CSS and JavaScript
@@ -13,11 +15,13 @@ Provides a flexible editor pane system supporting single or dual-pane editing of
 - Per-pane error display with line number references
 
 ## Dependencies
+
 - **#12 Transform Pipeline** - for converting text to preview
 - **#04 Workspace & OPF Manager** - for manifest file listings
 - **#05 Blob URL Manager** - for preview URL generation
 
 ## Technical Approach
+
 - Flexible pane system with configurable single/dual iframe layout
 - Source dropdown populated from spine item text + manifest CSS/JS files
 - Real-time syntax validation for CSS and JavaScript content
@@ -28,148 +32,150 @@ Provides a flexible editor pane system supporting single or dual-pane editing of
 - Auto-save with conflict resolution and validation gates
 
 ## API Design
+
 ```typescript
 interface EditorPane {
   // Pane management
-  loadFile(filePath: string): Promise<void>
-  saveContent(): Promise<boolean>
-  getContent(): string
-  setContent(content: string): void
-  getFileType(): 'text' | 'css' | 'javascript'
-  
+  loadFile(filePath: string): Promise<void>;
+  saveContent(): Promise<boolean>;
+  getContent(): string;
+  setContent(content: string): void;
+  getFileType(): 'text' | 'css' | 'javascript';
+
   // Validation
-  validateContent(): ValidationResult
-  hasValidContent(): boolean
-  getValidationErrors(): ParseError[]
-  
+  validateContent(): ValidationResult;
+  hasValidContent(): boolean;
+  getValidationErrors(): ParseError[];
+
   // Editor state
-  focus(): void
-  blur(): void
-  setReadOnly(readOnly: boolean): void
-  getCursorPosition(): { line: number, column: number }
-  
+  focus(): void;
+  blur(): void;
+  setReadOnly(readOnly: boolean): void;
+  getCursorPosition(): { line: number; column: number };
+
   // Events
-  onContentChange(callback: (content: string, isValid: boolean) => void): () => void
-  onValidationChange(callback: (errors: ParseError[]) => void): () => void
+  onContentChange(callback: (content: string, isValid: boolean) => void): () => void;
+  onValidationChange(callback: (errors: ParseError[]) => void): () => void;
 }
 
 interface TextEditor {
   // Pane configuration
-  setPaneMode(mode: 'single' | 'dual'): void
-  setSplitOrientation(orientation: 'horizontal' | 'vertical'): void
-  getPaneMode(): 'single' | 'dual'
-  getSplitOrientation(): 'horizontal' | 'vertical'
-  
+  setPaneMode(mode: 'single' | 'dual'): void;
+  setSplitOrientation(orientation: 'horizontal' | 'vertical'): void;
+  getPaneMode(): 'single' | 'dual';
+  getSplitOrientation(): 'horizontal' | 'vertical';
+
   // File management
-  loadSpineItem(spineItemId: string): Promise<void>
-  getAvailableFiles(): ManifestFile[]
-  getSelectedFiles(): { pane1?: string, pane2?: string }
-  setFileForPane(paneIndex: 1 | 2, filePath: string): Promise<void>
-  
+  loadSpineItem(spineItemId: string): Promise<void>;
+  getAvailableFiles(): ManifestFile[];
+  getSelectedFiles(): { pane1?: string; pane2?: string };
+  setFileForPane(paneIndex: 1 | 2, filePath: string): Promise<void>;
+
   // Editor access
-  getPane(index: 1 | 2): EditorPane | null
-  getPrimaryPane(): EditorPane
-  getSecondaryPane(): EditorPane | null
-  
+  getPane(index: 1 | 2): EditorPane | null;
+  getPrimaryPane(): EditorPane;
+  getSecondaryPane(): EditorPane | null;
+
   // Auto-save
-  enableAutoSave(interval?: number): void
-  disableAutoSave(): void
-  getAutoSaveStatus(): AutoSaveStatus
-  
+  enableAutoSave(interval?: number): void;
+  disableAutoSave(): void;
+  getAutoSaveStatus(): AutoSaveStatus;
+
   // Session persistence
-  saveLayoutPreferences(): void
-  loadLayoutPreferences(): void
-  
+  saveLayoutPreferences(): void;
+  loadLayoutPreferences(): void;
+
   // Events
-  onPreviewUpdate(callback: (hasValidChanges: boolean) => void): () => void
-  onLayoutChange(callback: (mode: PaneMode, orientation: SplitOrientation) => void): () => void
+  onPreviewUpdate(callback: (hasValidChanges: boolean) => void): () => void;
+  onLayoutChange(callback: (mode: PaneMode, orientation: SplitOrientation) => void): () => void;
 }
 
 interface ValidationResult {
-  isValid: boolean
-  errors: ParseError[]
-  warnings?: ParseWarning[]
+  isValid: boolean;
+  errors: ParseError[];
+  warnings?: ParseWarning[];
 }
 
 interface ParseError {
-  line: number
-  column: number
-  message: string
-  severity: 'error' | 'warning'
-  source: string
+  line: number;
+  column: number;
+  message: string;
+  severity: 'error' | 'warning';
+  source: string;
 }
 
 interface ManifestFile {
-  path: string
-  type: 'text' | 'css' | 'javascript'
-  title?: string
-  isSpineItem: boolean
+  path: string;
+  type: 'text' | 'css' | 'javascript';
+  title?: string;
+  isSpineItem: boolean;
 }
 
 interface AutoSaveStatus {
-  enabled: boolean
-  interval: number
-  lastSaved: Date | null
-  isProcessing: boolean
-  error?: string
+  enabled: boolean;
+  interval: number;
+  lastSaved: Date | null;
+  isProcessing: boolean;
+  error?: string;
 }
 
 interface EditorState {
-  paneMode: 'single' | 'dual'
-  splitOrientation: 'horizontal' | 'vertical'
-  selectedFiles: { pane1?: string, pane2?: string }
-  hasUnsavedChanges: boolean
-  validationErrors: { pane1: ParseError[], pane2: ParseError[] }
-  isLoading: boolean
+  paneMode: 'single' | 'dual';
+  splitOrientation: 'horizontal' | 'vertical';
+  selectedFiles: { pane1?: string; pane2?: string };
+  hasUnsavedChanges: boolean;
+  validationErrors: { pane1: ParseError[]; pane2: ParseError[] };
+  isLoading: boolean;
 }
 
-type PaneMode = 'single' | 'dual'
-type SplitOrientation = 'horizontal' | 'vertical'
+type PaneMode = 'single' | 'dual';
+type SplitOrientation = 'horizontal' | 'vertical';
 ```
 
 ## Editor Component Structure
+
 ```svelte
 <script>
-  import { onMount, onDestroy } from 'svelte'
-  import { createEventDispatcher } from 'svelte'
-  
-  const dispatch = createEventDispatcher()
-  
-  export let spineItemId = ''
-  export let readOnly = false
-  export let autoSaveInterval = 2000
-  
-  let paneMode = 'single'
-  let splitOrientation = 'horizontal'
-  let selectedFiles = { pane1: null, pane2: null }
-  let availableFiles = []
-  let pane1Frame, pane2Frame
-  let validationErrors = { pane1: [], pane2: [] }
-  let hasUnsavedChanges = false
-  let autoSaveEnabled = true
-  let lastSaved = null
+  import { onMount, onDestroy } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
+
+  const dispatch = createEventDispatcher();
+
+  export let spineItemId = '';
+  export let readOnly = false;
+  export let autoSaveInterval = 2000;
+
+  let paneMode = 'single';
+  let splitOrientation = 'horizontal';
+  let selectedFiles = { pane1: null, pane2: null };
+  let availableFiles = [];
+  let pane1Frame, pane2Frame;
+  let validationErrors = { pane1: [], pane2: [] };
+  let hasUnsavedChanges = false;
+  let autoSaveEnabled = true;
+  let lastSaved = null;
 </script>
 
 <div class="text-editor-container">
   <div class="editor-toolbar">
     <div class="layout-controls">
-      <button 
-        class="pane-toggle" 
+      <button
+        class="pane-toggle"
         class:active={paneMode === 'single'}
         on:click={() => setPaneMode('single')}
       >
         Single
       </button>
-      <button 
-        class="pane-toggle" 
+      <button
+        class="pane-toggle"
         class:active={paneMode === 'dual'}
         on:click={() => setPaneMode('dual')}
       >
         Dual
       </button>
-      
+
       {#if paneMode === 'dual'}
-        <button 
+        <button
           class="split-toggle"
           on:click={toggleSplitOrientation}
           title="Toggle split orientation"
@@ -178,11 +184,9 @@ type SplitOrientation = 'horizontal' | 'vertical'
         </button>
       {/if}
     </div>
-    
+
     <div class="editor-actions">
-      <button on:click={saveAllPanes} disabled={!hasUnsavedChanges || readOnly}>
-        Save All
-      </button>
+      <button on:click={saveAllPanes} disabled={!hasUnsavedChanges || readOnly}> Save All </button>
       <button on:click={toggleAutoSave}>
         Auto-save: {autoSaveEnabled ? 'On' : 'Off'}
       </button>
@@ -191,14 +195,18 @@ type SplitOrientation = 'horizontal' | 'vertical'
       {/if}
     </div>
   </div>
-  
-  <div class="editor-content" class:dual-pane={paneMode === 'dual'} class:vertical-split={splitOrientation === 'vertical'}>
+
+  <div
+    class="editor-content"
+    class:dual-pane={paneMode === 'dual'}
+    class:vertical-split={splitOrientation === 'vertical'}
+  >
     <!-- Primary Pane -->
     <div class="editor-pane" class:pane-1={true}>
       <div class="pane-header">
-        <select 
-          bind:value={selectedFiles.pane1} 
-          on:change={(e) => loadFileInPane(1, e.target.value)}
+        <select
+          bind:value={selectedFiles.pane1}
+          on:change={e => loadFileInPane(1, e.target.value)}
           class="file-selector"
         >
           <option value="">Select file...</option>
@@ -208,12 +216,12 @@ type SplitOrientation = 'horizontal' | 'vertical'
             </option>
           {/each}
         </select>
-        
+
         {#if hasUnsavedChanges}
           <span class="unsaved-indicator">●</span>
         {/if}
       </div>
-      
+
       <div class="pane-content">
         <iframe
           bind:this={pane1Frame}
@@ -222,7 +230,7 @@ type SplitOrientation = 'horizontal' | 'vertical'
           title="Editor Pane 1"
           on:load={() => initializePane(1)}
         ></iframe>
-        
+
         {#if validationErrors.pane1.length > 0}
           <div class="error-panel">
             {#each validationErrors.pane1 as error}
@@ -235,16 +243,16 @@ type SplitOrientation = 'horizontal' | 'vertical'
         {/if}
       </div>
     </div>
-    
+
     <!-- Secondary Pane (dual mode only) -->
     {#if paneMode === 'dual'}
       <div class="pane-splitter"></div>
-      
+
       <div class="editor-pane" class:pane-2={true}>
         <div class="pane-header">
-          <select 
-            bind:value={selectedFiles.pane2} 
-            on:change={(e) => loadFileInPane(2, e.target.value)}
+          <select
+            bind:value={selectedFiles.pane2}
+            on:change={e => loadFileInPane(2, e.target.value)}
             class="file-selector"
           >
             <option value="">Select file...</option>
@@ -254,12 +262,12 @@ type SplitOrientation = 'horizontal' | 'vertical'
               </option>
             {/each}
           </select>
-          
+
           {#if hasUnsavedChanges}
             <span class="unsaved-indicator">●</span>
           {/if}
         </div>
-        
+
         <div class="pane-content">
           <iframe
             bind:this={pane2Frame}
@@ -268,7 +276,7 @@ type SplitOrientation = 'horizontal' | 'vertical'
             title="Editor Pane 2"
             on:load={() => initializePane(2)}
           ></iframe>
-          
+
           {#if validationErrors.pane2.length > 0}
             <div class="error-panel">
               {#each validationErrors.pane2 as error}
@@ -287,140 +295,143 @@ type SplitOrientation = 'horizontal' | 'vertical'
 ```
 
 ## Pane Management Implementation
+
 ```typescript
 const setPaneMode = (mode: PaneMode) => {
-  paneMode = mode
-  
+  paneMode = mode;
+
   if (mode === 'single' && selectedFiles.pane2) {
     // Clear secondary pane when switching to single mode
-    selectedFiles.pane2 = null
+    selectedFiles.pane2 = null;
   }
-  
+
   // Save layout preference
-  saveLayoutPreferences()
-  
-  dispatch('layout-change', { mode, orientation: splitOrientation })
-}
+  saveLayoutPreferences();
+
+  dispatch('layout-change', { mode, orientation: splitOrientation });
+};
 
 const toggleSplitOrientation = () => {
-  splitOrientation = splitOrientation === 'horizontal' ? 'vertical' : 'horizontal'
-  saveLayoutPreferences()
-  dispatch('layout-change', { mode: paneMode, orientation: splitOrientation })
-}
+  splitOrientation = splitOrientation === 'horizontal' ? 'vertical' : 'horizontal';
+  saveLayoutPreferences();
+  dispatch('layout-change', { mode: paneMode, orientation: splitOrientation });
+};
 
 const getAvailableFilesForPane = (paneIndex: 1 | 2): ManifestFile[] => {
   return availableFiles.filter(file => {
     // Exclude files already selected in other panes
-    const otherPaneFile = paneIndex === 1 ? selectedFiles.pane2 : selectedFiles.pane1
-    return file.path !== otherPaneFile
-  })
-}
+    const otherPaneFile = paneIndex === 1 ? selectedFiles.pane2 : selectedFiles.pane1;
+    return file.path !== otherPaneFile;
+  });
+};
 
 const loadFileInPane = async (paneIndex: 1 | 2, filePath: string) => {
-  if (!filePath) return
-  
+  if (!filePath) return;
+
   try {
-    const fileContent = await fileStorage.readFile(currentWorkspaceId, filePath)
-    const paneKey = `pane${paneIndex}` as keyof typeof selectedFiles
-    
-    selectedFiles[paneKey] = filePath
-    
+    const fileContent = await fileStorage.readFile(currentWorkspaceId, filePath);
+    const paneKey = `pane${paneIndex}` as keyof typeof selectedFiles;
+
+    selectedFiles[paneKey] = filePath;
+
     // Initialize the iframe for this pane
-    const iframe = paneIndex === 1 ? pane1Frame : pane2Frame
+    const iframe = paneIndex === 1 ? pane1Frame : pane2Frame;
     if (iframe) {
-      await initializePaneContent(iframe, filePath, fileContent)
+      await initializePaneContent(iframe, filePath, fileContent);
     }
-    
+
     // Clear validation errors for this pane
-    validationErrors[paneKey] = []
-    
+    validationErrors[paneKey] = [];
   } catch (error) {
-    console.error(`Failed to load file ${filePath}:`, error)
+    console.error(`Failed to load file ${filePath}:`, error);
     // Show error notification
   }
-}
+};
 ```
 
 ## Content Validation System
+
 ```typescript
-const validateContent = (content: string, fileType: 'text' | 'css' | 'javascript'): ValidationResult => {
-  const errors: ParseError[] = []
-  
+const validateContent = (
+  content: string,
+  fileType: 'text' | 'css' | 'javascript'
+): ValidationResult => {
+  const errors: ParseError[] = [];
+
   if (fileType === 'css') {
     try {
       // Simple CSS syntax validation
-      const testStyle = document.createElement('style')
-      testStyle.textContent = content
-      document.head.appendChild(testStyle)
-      
+      const testStyle = document.createElement('style');
+      testStyle.textContent = content;
+      document.head.appendChild(testStyle);
+
       // Check if CSS was parsed successfully
       if (testStyle.sheet?.cssRules) {
         // CSS is valid
       }
-      
-      document.head.removeChild(testStyle)
-      
+
+      document.head.removeChild(testStyle);
     } catch (error) {
       errors.push({
         line: extractLineNumber(error),
         column: 0,
         message: error.message,
         severity: 'error',
-        source: 'css-parser'
-      })
+        source: 'css-parser',
+      });
     }
   }
-  
+
   if (fileType === 'javascript') {
     try {
       // JavaScript syntax validation using Function constructor
-      new Function(content)
-      
+      new Function(content);
     } catch (error) {
-      const lineMatch = error.stack?.match(/Function:(\d+):(\d+)/)
+      const lineMatch = error.stack?.match(/Function:(\d+):(\d+)/);
       errors.push({
         line: lineMatch ? parseInt(lineMatch[1]) : 1,
         column: lineMatch ? parseInt(lineMatch[2]) : 0,
         message: error.message,
         severity: 'error',
-        source: 'js-parser'
-      })
+        source: 'js-parser',
+      });
     }
   }
-  
+
   return {
     isValid: errors.length === 0,
-    errors
-  }
-}
+    errors,
+  };
+};
 
 const handleContentChange = (paneIndex: 1 | 2, content: string, fileType: string) => {
-  const paneKey = `pane${paneIndex}` as keyof typeof validationErrors
-  
+  const paneKey = `pane${paneIndex}` as keyof typeof validationErrors;
+
   // Always allow text content changes
   if (fileType === 'text') {
-    validationErrors[paneKey] = []
-    triggerPreviewUpdate()
-    return
+    validationErrors[paneKey] = [];
+    triggerPreviewUpdate();
+    return;
   }
-  
+
   // Validate CSS and JavaScript
-  const validation = validateContent(content, fileType as 'css' | 'javascript')
-  validationErrors[paneKey] = validation.errors
-  
+  const validation = validateContent(content, fileType as 'css' | 'javascript');
+  validationErrors[paneKey] = validation.errors;
+
   // Only update preview if content is valid
   if (validation.isValid) {
-    triggerPreviewUpdate()
+    triggerPreviewUpdate();
   }
-  
+
   // Update auto-save if enabled
   if (autoSaveEnabled && validation.isValid) {
-    debouncedSave(paneIndex, content)
+    debouncedSave(paneIndex, content);
   }
-}
+};
 ```
 
 ## Layout CSS Implementation
+
 ```css
 .text-editor-container {
   display: flex;
@@ -557,42 +568,44 @@ const handleContentChange = (paneIndex: 1 | 2, content: string, fileType: string
 ```
 
 ## Session Persistence
+
 ```typescript
 const saveLayoutPreferences = () => {
   const preferences = {
     paneMode,
     splitOrientation,
-    selectedFiles: { ...selectedFiles }
-  }
-  
-  localStorage.setItem(`editor-layout-${spineItemId}`, JSON.stringify(preferences))
-}
+    selectedFiles: { ...selectedFiles },
+  };
+
+  localStorage.setItem(`editor-layout-${spineItemId}`, JSON.stringify(preferences));
+};
 
 const loadLayoutPreferences = () => {
   try {
-    const stored = localStorage.getItem(`editor-layout-${spineItemId}`)
+    const stored = localStorage.getItem(`editor-layout-${spineItemId}`);
     if (stored) {
-      const preferences = JSON.parse(stored)
-      paneMode = preferences.paneMode || 'single'
-      splitOrientation = preferences.splitOrientation || 'horizontal'
-      
+      const preferences = JSON.parse(stored);
+      paneMode = preferences.paneMode || 'single';
+      splitOrientation = preferences.splitOrientation || 'horizontal';
+
       // Restore file selections if files still exist
       if (preferences.selectedFiles) {
-        Object.assign(selectedFiles, preferences.selectedFiles)
+        Object.assign(selectedFiles, preferences.selectedFiles);
       }
     }
   } catch (error) {
-    console.warn('Failed to load layout preferences:', error)
+    console.warn('Failed to load layout preferences:', error);
   }
-}
+};
 ```
 
 ## Iframe Editor Implementation
+
 ```typescript
 const initializeEditor = () => {
-  const iframeDoc = editorFrame.contentDocument
-  
-  iframeDoc.open()
+  const iframeDoc = editorFrame.contentDocument;
+
+  iframeDoc.open();
   iframeDoc.write(`
     <!DOCTYPE html>
     <html>
@@ -682,83 +695,81 @@ const initializeEditor = () => {
       </script>
     </body>
     </html>
-  `)
-  iframeDoc.close()
-  
+  `);
+  iframeDoc.close();
+
   // Set up message handling
-  window.addEventListener('message', handleEditorMessage)
-  
+  window.addEventListener('message', handleEditorMessage);
+
   // Load initial content
-  loadInitialContent()
-}
+  loadInitialContent();
+};
 ```
 
 ## Debounced Change Handling
+
 ```typescript
-let changeTimeout: number
-let previewTimeout: number
+let changeTimeout: number;
+let previewTimeout: number;
 
 const handleContentChange = (newContent: string) => {
-  content = newContent
-  hasUnsavedChanges = true
-  
+  content = newContent;
+  hasUnsavedChanges = true;
+
   // Debounced auto-save
   if (autoSaveEnabled) {
-    clearTimeout(changeTimeout)
+    clearTimeout(changeTimeout);
     changeTimeout = setTimeout(() => {
-      saveContent()
-    }, autoSaveInterval)
+      saveContent();
+    }, autoSaveInterval);
   }
-  
+
   // Debounced preview update
-  clearTimeout(previewTimeout)
+  clearTimeout(previewTimeout);
   previewTimeout = setTimeout(() => {
-    updatePreview(newContent)
-  }, 500)
-  
-  dispatch('content-change', { content: newContent })
-}
+    updatePreview(newContent);
+  }, 500);
+
+  dispatch('content-change', { content: newContent });
+};
 ```
 
 ## Auto-Save Implementation
+
 ```typescript
 const saveContent = async (): Promise<boolean> => {
-  if (!hasUnsavedChanges || readOnly) return true
-  
+  if (!hasUnsavedChanges || readOnly) return true;
+
   try {
     // Save to file storage
-    await fileStorage.writeFile(
-      currentWorkspaceId,
-      sourceFilePath,
-      content
-    )
-    
+    await fileStorage.writeFile(currentWorkspaceId, sourceFilePath, content);
+
     // Update modification timestamp
-    lastSaved = new Date()
-    hasUnsavedChanges = false
-    
-    dispatch('save', { success: true, timestamp: lastSaved })
-    return true
-    
+    lastSaved = new Date();
+    hasUnsavedChanges = false;
+
+    dispatch('save', { success: true, timestamp: lastSaved });
+    return true;
   } catch (error) {
-    console.error('Failed to save content:', error)
-    dispatch('save', { success: false, error: error.message })
-    return false
+    console.error('Failed to save content:', error);
+    dispatch('save', { success: false, error: error.message });
+    return false;
   }
-}
+};
 
 const enableAutoSave = (interval = 2000) => {
-  autoSaveInterval = interval
-  autoSaveEnabled = true
-}
+  autoSaveInterval = interval;
+  autoSaveEnabled = true;
+};
 
 const disableAutoSave = () => {
-  autoSaveEnabled = false
-  clearTimeout(changeTimeout)
-}
+  autoSaveEnabled = false;
+  clearTimeout(changeTimeout);
+};
 ```
 
 ## Preview Integration
+
 ```typescript
 const updatePreview = async (content: string) => {
   try {
@@ -766,41 +777,41 @@ const updatePreview = async (content: string) => {
       content,
       currentWorkspaceId,
       spineItemId
-    )
-    
+    );
+
     if (transformResult.success) {
       dispatch('preview-update', {
         xhtml: transformResult.xhtmlDocument,
-        content: transformResult.transformedText
-      })
+        content: transformResult.transformedText,
+      });
     } else {
       dispatch('preview-error', {
-        error: transformResult.error
-      })
+        error: transformResult.error,
+      });
     }
-    
   } catch (error) {
     dispatch('preview-error', {
-      error: { message: error.message, stage: 'text' }
-    })
+      error: { message: error.message, stage: 'text' },
+    });
   }
-}
+};
 ```
 
 ## Editor State Management
+
 ```svelte
 <script>
-  import { writable } from 'svelte/store'
-  
+  import { writable } from 'svelte/store';
+
   interface EditorState {
-    content: string
-    hasChanges: boolean
-    cursorPosition: { start: number, end: number }
-    scrollPosition: number
-    isLoading: boolean
-    lastSaved: Date | null
+    content: string;
+    hasChanges: boolean;
+    cursorPosition: { start: number; end: number };
+    scrollPosition: number;
+    isLoading: boolean;
+    lastSaved: Date | null;
   }
-  
+
   const createEditorStore = () => {
     const { subscribe, set, update } = writable<EditorState>({
       content: '',
@@ -808,61 +819,65 @@ const updatePreview = async (content: string) => {
       cursorPosition: { start: 0, end: 0 },
       scrollPosition: 0,
       isLoading: true,
-      lastSaved: null
-    })
-    
+      lastSaved: null,
+    });
+
     return {
       subscribe,
-      setContent: (content: string) => update(state => ({ 
-        ...state, 
-        content, 
-        hasChanges: content !== state.content 
-      })),
-      markSaved: () => update(state => ({ 
-        ...state, 
-        hasChanges: false, 
-        lastSaved: new Date() 
-      })),
-      setCursorPosition: (start: number, end: number) => update(state => ({
-        ...state,
-        cursorPosition: { start, end }
-      }))
-    }
-  }
-  
-  export const editorStore = createEditorStore()
+      setContent: (content: string) =>
+        update(state => ({
+          ...state,
+          content,
+          hasChanges: content !== state.content,
+        })),
+      markSaved: () =>
+        update(state => ({
+          ...state,
+          hasChanges: false,
+          lastSaved: new Date(),
+        })),
+      setCursorPosition: (start: number, end: number) =>
+        update(state => ({
+          ...state,
+          cursorPosition: { start, end },
+        })),
+    };
+  };
+
+  export const editorStore = createEditorStore();
 </script>
 ```
 
 ## Conflict Resolution
+
 ```typescript
 const handleSaveConflict = async (
   localContent: string,
   remoteContent: string
 ): Promise<'local' | 'remote' | 'merge'> => {
-  
   // Show conflict resolution dialog
   const choice = await showConflictDialog({
     local: localContent,
     remote: remoteContent,
-    lastSaved: lastSaved
-  })
-  
+    lastSaved: lastSaved,
+  });
+
   switch (choice) {
     case 'keep-local':
-      return 'local'
+      return 'local';
     case 'use-remote':
-      setContent(remoteContent)
-      return 'remote'
+      setContent(remoteContent);
+      return 'remote';
     case 'merge':
-      const merged = await showMergeDialog(localContent, remoteContent)
-      setContent(merged)
-      return 'merge'
+      const merged = await showMergeDialog(localContent, remoteContent);
+      setContent(merged);
+      return 'merge';
   }
-}
+};
 ```
 
 ## Keyboard Shortcuts
+
 ```typescript
 const KEYBOARD_SHORTCUTS = {
   'Ctrl+S': () => saveContent(),
@@ -870,21 +885,22 @@ const KEYBOARD_SHORTCUTS = {
   'Ctrl+Y': () => redo(),
   'Ctrl+F': () => showFindDialog(),
   'Ctrl+H': () => showReplaceDialog(),
-  'F11': () => toggleFullscreen()
-}
+  F11: () => toggleFullscreen(),
+};
 
 const handleKeyboardShortcut = (event: KeyboardEvent) => {
-  const key = `${event.ctrlKey ? 'Ctrl+' : ''}${event.key}`
-  const handler = KEYBOARD_SHORTCUTS[key]
-  
+  const key = `${event.ctrlKey ? 'Ctrl+' : ''}${event.key}`;
+  const handler = KEYBOARD_SHORTCUTS[key];
+
   if (handler) {
-    event.preventDefault()
-    handler()
+    event.preventDefault();
+    handler();
   }
-}
+};
 ```
 
 ## Error Handling
+
 - File loading failures
 - Save operation errors
 - Preview generation failures
@@ -893,6 +909,7 @@ const handleKeyboardShortcut = (event: KeyboardEvent) => {
 - Invalid content encoding
 
 ## Testing Considerations
+
 - Test auto-save functionality
 - Test debounced change handling
 - Test keyboard shortcuts
@@ -904,17 +921,18 @@ const handleKeyboardShortcut = (event: KeyboardEvent) => {
 ## Line-Numbered Editor Architecture
 
 ### Layout Structure
+
 ```css
 .line-numbered-editor {
   display: flex;
-  overflow: hidden;  /* Prevents scrollbar overlap */
+  overflow: hidden; /* Prevents scrollbar overlap */
   position: relative;
 }
 
 .line-numbers-gutter {
   width: 50px;
-  flex-shrink: 0;    /* Prevents compression */
-  z-index: 1;        /* Stays above textarea */
+  flex-shrink: 0; /* Prevents compression */
+  z-index: 1; /* Stays above textarea */
   background: #f8f9fa;
   border-right: 1px solid #dee2e6;
   overflow: hidden;
@@ -924,16 +942,17 @@ const handleKeyboardShortcut = (event: KeyboardEvent) => {
 .textarea-container {
   flex: 1;
   position: relative;
-  overflow: hidden;   /* Contains scrollbars within textarea */
+  overflow: hidden; /* Contains scrollbars within textarea */
 }
 
 #editor {
-  box-sizing: border-box;  /* Predictable sizing */
-  overflow: auto;          /* Scrollbars only on textarea */
+  box-sizing: border-box; /* Predictable sizing */
+  overflow: auto; /* Scrollbars only on textarea */
 }
 ```
 
 ### Key Design Principles
+
 - **Fixed gutter width** prevents layout shifts during editing
 - **Flex-shrink: 0** on gutter ensures consistent 50px width
 - **Overflow containment** keeps scrollbars within textarea area
@@ -943,14 +962,15 @@ const handleKeyboardShortcut = (event: KeyboardEvent) => {
 ## Synchronization Implementation
 
 ### Core Functions
+
 ```typescript
 function updateLineNumbers() {
   if (!lineNumbersElement || !editorElement) return;
-  
+
   const content = editorElement.value;
   const lines = content.split('\n');
   const lineCount = lines.length;
-  
+
   const lineNumbers = Array.from({ length: lineCount }, (_, i) => i + 1).join('\n');
   lineNumbersElement.textContent = lineNumbers;
 }
@@ -962,17 +982,18 @@ function syncScroll() {
 ```
 
 ### Event Management
+
 ```typescript
 function initializeLineNumbers() {
   // Initial line numbers
   updateLineNumbers();
-  
+
   // Sync scroll events
   editorElement.addEventListener('scroll', syncScroll);
-  
+
   // Update line numbers on content change
   editorElement.addEventListener('input', updateLineNumbers);
-  
+
   // Handle font mode changes
   const observer = new MutationObserver(() => {
     updateLineNumbers();
@@ -982,6 +1003,7 @@ function initializeLineNumbers() {
 ```
 
 ### Performance Considerations
+
 - **Debounced updates** for input events (300ms)
 - **RequestAnimationFrame** for smooth scroll synchronization
 - **MutationObserver** for efficient class change detection
@@ -990,6 +1012,7 @@ function initializeLineNumbers() {
 ## CSS Best Practices
 
 ### Scrollbar Containment
+
 ```css
 /* Main container prevents any overflow */
 .line-numbered-editor {
@@ -1007,11 +1030,12 @@ function initializeLineNumbers() {
 }
 
 #editor {
-  overflow: auto;  /* Scrollbars contained here */
+  overflow: auto; /* Scrollbars contained here */
 }
 ```
 
 ### Font Consistency
+
 ```css
 /* Shared font properties for alignment */
 .line-numbers-gutter,
@@ -1029,12 +1053,14 @@ function initializeLineNumbers() {
 ```
 
 ### Responsive Considerations
+
 - **Fixed gutter width** works on all screen sizes
 - **Flex layout** adapts to container changes
 - **Z-index stacking** prevents mobile scroll issues
 - **Touch-friendly** line number area (non-selectable)
 
 ## Implementation Notes
+
 - Implement iframe security carefully
 - Test auto-save with various intervals
 - Handle browser refresh/close gracefully

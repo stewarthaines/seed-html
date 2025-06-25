@@ -1,10 +1,10 @@
 /**
  * Blob URL Manager - Core Implementation
- * 
+ *
  * Converts manifest items from storage into blob URLs and substitutes them
  * in XHTML content for preview iframe usage. Includes OPFS optimization
  * for zero-copy blob creation.
- * 
+ *
  * Concurrency Note: This manager is designed for serial usage where blob URL
  * creation calls are made sequentially. Concurrent calls for the same resource
  * may result in duplicate blob URLs. The primary usage through XHTML processing
@@ -13,15 +13,8 @@
 
 import { getMimeType } from '../utils/mime-types.js';
 import type { FileStorageAPI } from '../storage/index.js';
-import type {
-  BlobURLManagerConfig,
-  BlobURLRegistry
-} from './types.js';
-import {
-  BlobURLError,
-  BlobURLCapacityError,
-  XHTMLProcessingError
-} from './types.js';
+import type { BlobURLManagerConfig, BlobURLRegistry } from './types.js';
+import { BlobURLError, BlobURLCapacityError, XHTMLProcessingError } from './types.js';
 
 export class BlobURLManager {
   private activeWorkspaceId: string | null = null;
@@ -35,15 +28,15 @@ export class BlobURLManager {
     this.fileStorage = config.fileStorage;
     this.basePath = config.basePath;
     this.onCapacityReached = config.onCapacityReached;
-    
+
     // Initialize registry
     this.registry = {
       urls: new Map<string, string>(),
       created: new Map<string, Date>(),
       count: 0,
-      maxCount: config.maxBlobURLs || 100
+      maxCount: config.maxBlobURLs || 100,
     };
-    
+
     // Cache backend capability detection
     this.supportsDirectBlobs = this.fileStorage.supportsDirectBlobURLs();
   }
@@ -60,10 +53,10 @@ export class BlobURLManager {
 
   /**
    * Create blob URL for a file using optimal backend path
-   * 
+   *
    * Note: This method is designed for serial usage (one call at a time per resource).
-   * Concurrent calls for the same resource may result in duplicate blob URLs and 
-   * multiple file fetches. In practice, calls are serialized through the XHTML 
+   * Concurrent calls for the same resource may result in duplicate blob URLs and
+   * multiple file fetches. In practice, calls are serialized through the XHTML
    * processing pipeline which loops through elements sequentially.
    */
   async createBlobURL(filePath: string): Promise<string> {
@@ -104,11 +97,11 @@ export class BlobURLManager {
 
       // Register for cleanup
       this.addToRegistry(filePath, blobURL);
-      
+
       return blobURL;
     } catch (error) {
       throw new BlobURLError(
-        `Failed to create blob URL for ${filePath}: ${error instanceof Error ? error.message : String(error)}`, 
+        `Failed to create blob URL for ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
         'CREATION_FAILED'
       );
     }
@@ -158,7 +151,10 @@ export class BlobURLManager {
       if (error instanceof BlobURLError) {
         throw error;
       }
-      throw new XHTMLProcessingError(`XHTML processing failed: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error : new Error(String(error)));
+      throw new XHTMLProcessingError(
+        `XHTML processing failed: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
   }
 
@@ -178,7 +174,7 @@ export class BlobURLManager {
     for (const blobURL of this.registry.urls.values()) {
       URL.revokeObjectURL(blobURL);
     }
-    
+
     // Clear registry
     this.registry.urls.clear();
     this.registry.created.clear();
@@ -196,18 +192,20 @@ export class BlobURLManager {
    * Check if URL is a relative resource path
    */
   isResourcePath(href: string): boolean {
-    return !href.startsWith('http') && 
-           !href.startsWith('data:') && 
-           !href.startsWith('blob:') &&
-           !href.startsWith('/') && // Absolute paths
-           !href.startsWith('ftp:') &&
-           !href.startsWith('mailto:') &&
-           !href.startsWith('tel:') &&
-           !href.startsWith('file:') &&
-           !href.startsWith('about:') &&
-           !href.startsWith('javascript:') &&
-           !href.startsWith('//') && // Protocol-relative URLs
-           href.trim().length > 0;
+    return (
+      !href.startsWith('http') &&
+      !href.startsWith('data:') &&
+      !href.startsWith('blob:') &&
+      !href.startsWith('/') && // Absolute paths
+      !href.startsWith('ftp:') &&
+      !href.startsWith('mailto:') &&
+      !href.startsWith('tel:') &&
+      !href.startsWith('file:') &&
+      !href.startsWith('about:') &&
+      !href.startsWith('javascript:') &&
+      !href.startsWith('//') && // Protocol-relative URLs
+      href.trim().length > 0
+    );
   }
 
   /**
@@ -230,7 +228,7 @@ export class BlobURLManager {
   private resolveManifestPath(href: string): string {
     // Handle OPF in container root (empty basePath)
     if (!this.basePath) return href;
-    
+
     // Standard case: basePath + href
     return `${this.basePath}/${href}`;
   }
@@ -240,7 +238,7 @@ export class BlobURLManager {
    */
   private findAssetElements(doc: Document): Element[] {
     const elements: Element[] = [];
-    
+
     // Asset selectors from types.ts
     const selectors = [
       'script[src]',
@@ -252,7 +250,7 @@ export class BlobURLManager {
       'img[src]',
       'object[data]',
       'image[href]', // SVG
-      '*[data-src]'
+      '*[data-src]',
     ];
 
     for (const selector of selectors) {
@@ -268,7 +266,7 @@ export class BlobURLManager {
    */
   private async processAssetElement(element: Element): Promise<void> {
     const _tagName = element.tagName.toLowerCase();
-    
+
     // Determine attribute name
     let attr: string;
     if (element.hasAttribute('src')) {
@@ -315,13 +313,16 @@ export class BlobURLManager {
     if (['img', 'video', 'audio', 'object', 'image'].includes(tagName)) {
       // eslint-disable-next-line no-console
       console.warn(`Missing image: ${resolvedPath} (referenced by <${tagName}> element)`);
-      
+
       // Set error icon and descriptive alt text
-      const attr = element.hasAttribute('src') ? 'src' : 
-                   element.hasAttribute('href') ? 'href' : 'data';
+      const attr = element.hasAttribute('src')
+        ? 'src'
+        : element.hasAttribute('href')
+          ? 'href'
+          : 'data';
       element.setAttribute(attr, this.getErrorIconSVG());
       element.setAttribute('alt', `Missing: ${href}`);
-    } 
+    }
     // Non-visual assets preserve original URL
     else if (['script', 'link'].includes(tagName)) {
       // eslint-disable-next-line no-console

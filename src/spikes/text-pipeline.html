@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <title>Text Pipeline Spike</title>
@@ -10,8 +10,7 @@
 
       body {
         margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         background: #f8f9fa;
       }
 
@@ -120,7 +119,7 @@
 
       .error {
         margin-bottom: 8px;
-        font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+        font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
         font-size: 13px;
       }
 
@@ -587,7 +586,7 @@ return document;<\/script>
       class TextPipelineSpike {
         constructor() {
           this.state = {
-            currentMode: "text",
+            currentMode: 'text',
           };
           this.iframe = null;
           this.iframeReady = false;
@@ -601,30 +600,30 @@ return document;<\/script>
         }
 
         createIframe() {
-          const container = document.getElementById("iframe-container");
-          this.iframe = document.createElement("iframe");
-          this.iframe.style.width = "100%";
-          this.iframe.style.height = "100%";
-          this.iframe.style.border = "none";
+          const container = document.getElementById('iframe-container');
+          this.iframe = document.createElement('iframe');
+          this.iframe.style.width = '100%';
+          this.iframe.style.height = '100%';
+          this.iframe.style.border = 'none';
 
           // Use blob URL to embed iframe content
-          const blob = new Blob([IFRAME_TEMPLATE], { type: "text/html" });
+          const blob = new Blob([IFRAME_TEMPLATE], { type: 'text/html' });
           const blobURL = URL.createObjectURL(blob);
           this.iframe.src = blobURL;
 
           container.appendChild(this.iframe);
 
           // Clean up blob URL when iframe is removed (optional)
-          this.iframe.addEventListener("load", () => {
+          this.iframe.addEventListener('load', () => {
             URL.revokeObjectURL(blobURL);
           });
 
-          this.iframe.addEventListener("error", (e) => {
-            console.error("Iframe failed to load:", e);
+          this.iframe.addEventListener('error', e => {
+            console.error('Iframe failed to load:', e);
           });
 
           // Setup iframe communication
-          window.addEventListener("message", (event) => {
+          window.addEventListener('message', event => {
             this.handleIframeMessage(event.data);
           });
         }
@@ -633,19 +632,19 @@ return document;<\/script>
           const { type, payload } = message;
 
           switch (type) {
-            case "READY":
+            case 'READY':
               this.iframeReady = true;
-              this.sendToIframe("SET_MODE", this.state.currentMode);
-              this.updateMainStatus("Ready");
+              this.sendToIframe('SET_MODE', this.state.currentMode);
+              this.updateMainStatus('Ready');
               // Trigger initial pipeline run
               setTimeout(() => {
-                this.sendToIframe("RUN_PIPELINE");
+                this.sendToIframe('RUN_PIPELINE');
               }, 100);
               break;
 
-            case "RESULT":
+            case 'RESULT':
               if (!payload.success) {
-                console.error("Transform failed with errors:", payload.errors);
+                console.error('Transform failed with errors:', payload.errors);
                 payload.errors.forEach((error, index) => {
                   console.error(`Error ${index + 1}:`, error);
                 });
@@ -657,39 +656,36 @@ return document;<\/script>
 
         sendToIframe(type, payload) {
           if (this.iframe && this.iframe.contentWindow && this.iframeReady) {
-            this.iframe.contentWindow.postMessage({ type, payload }, "*");
+            this.iframe.contentWindow.postMessage({ type, payload }, '*');
           }
         }
 
         setupEventListeners() {
           // Mode switching buttons
-          document.querySelectorAll("[data-mode]").forEach((button) => {
-            button.addEventListener("click", () => {
+          document.querySelectorAll('[data-mode]').forEach(button => {
+            button.addEventListener('click', () => {
               this.switchMode(button.dataset.mode);
             });
           });
         }
 
         setupSplitter() {
-          const splitter = document.querySelector(".splitter");
-          const leftPane = document.querySelector(".left-pane");
-          const rightPane = document.querySelector(".right-pane");
+          const splitter = document.querySelector('.splitter');
+          const leftPane = document.querySelector('.left-pane');
+          const rightPane = document.querySelector('.right-pane');
           let isResizing = false;
 
-          splitter.addEventListener("mousedown", (e) => {
+          splitter.addEventListener('mousedown', e => {
             isResizing = true;
-            document.body.style.cursor = "col-resize";
+            document.body.style.cursor = 'col-resize';
             e.preventDefault();
           });
 
-          document.addEventListener("mousemove", (e) => {
+          document.addEventListener('mousemove', e => {
             if (!isResizing) return;
 
-            const containerRect = document
-              .querySelector(".main-content")
-              .getBoundingClientRect();
-            const leftWidth =
-              ((e.clientX - containerRect.left) / containerRect.width) * 100;
+            const containerRect = document.querySelector('.main-content').getBoundingClientRect();
+            const leftWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
 
             if (leftWidth > 20 && leftWidth < 80) {
               leftPane.style.flex = `0 0 ${leftWidth}%`;
@@ -697,9 +693,9 @@ return document;<\/script>
             }
           });
 
-          document.addEventListener("mouseup", () => {
+          document.addEventListener('mouseup', () => {
             isResizing = false;
-            document.body.style.cursor = "";
+            document.body.style.cursor = '';
           });
         }
 
@@ -707,49 +703,47 @@ return document;<\/script>
           this.state.currentMode = mode;
 
           // Update button states
-          document.querySelectorAll("[data-mode]").forEach((btn) => {
-            btn.classList.toggle("active", btn.dataset.mode === mode);
+          document.querySelectorAll('[data-mode]').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mode === mode);
           });
 
           // Update iframe
-          this.sendToIframe("SET_MODE", mode);
+          this.sendToIframe('SET_MODE', mode);
 
           // Update main status
           const modeNames = {
-            text: "Text Editor",
-            transformText: "Transform Text Script",
-            transformDOM: "Transform DOM Script",
+            text: 'Text Editor',
+            transformText: 'Transform Text Script',
+            transformDOM: 'Transform DOM Script',
           };
           this.updateMainStatus(`Mode: ${modeNames[mode]}`);
         }
 
         updateMainStatus(message) {
-          document.getElementById("main-status").textContent = message;
+          document.getElementById('main-status').textContent = message;
         }
 
         updatePreview(result) {
-          const preview = document.getElementById("preview");
-          const errorPanel = document.getElementById("error-panel");
+          const preview = document.getElementById('preview');
+          const errorPanel = document.getElementById('error-panel');
 
           if (result.success) {
-            preview.innerHTML =
-              result.html || "<p><em>No content to display</em></p>";
-            errorPanel.classList.remove("visible");
-            this.updateMainStatus("Transform complete");
+            preview.innerHTML = result.html || '<p><em>No content to display</em></p>';
+            errorPanel.classList.remove('visible');
+            this.updateMainStatus('Transform complete');
           } else {
-            preview.innerHTML =
-              "<p><em>Transform failed - see errors below</em></p>";
-            errorPanel.classList.add("visible");
+            preview.innerHTML = '<p><em>Transform failed - see errors below</em></p>';
+            errorPanel.classList.add('visible');
             errorPanel.innerHTML = result.errors
-              .map((err) => {
+              .map(err => {
                 let errorMsg = `<strong>${err.stage} transform error:</strong> ${err.message}`;
                 if (err.line) {
                   errorMsg += ` (line ${err.line})`;
                 }
                 return `<div class="error">${errorMsg}</div>`;
               })
-              .join("");
-            this.updateMainStatus("Transform failed");
+              .join('');
+            this.updateMainStatus('Transform failed');
           }
 
           // Handle warnings
@@ -760,7 +754,7 @@ return document;<\/script>
       }
 
       // Initialize when DOM is ready
-      document.addEventListener("DOMContentLoaded", () => {
+      document.addEventListener('DOMContentLoaded', () => {
         new TextPipelineSpike();
       });
     </script>

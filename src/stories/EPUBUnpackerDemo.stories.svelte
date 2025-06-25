@@ -54,10 +54,10 @@ Interactive demonstration of EPUB unpacking and analysis capabilities.
 - **Error Recovery**: Continues processing despite individual file failures
 
 This demonstrates the complete EPUB processing workflow and validates functionality in a real browser environment.
-          `
-        }
-      }
-    }
+          `,
+        },
+      },
+    },
   });
 </script>
 
@@ -67,7 +67,7 @@ This demonstrates the complete EPUB processing workflow and validates functional
 </Story>
 
 <!-- Automated Demo with Sample Data -->
-<Story 
+<Story
   name="Demo with Sample Data"
   play={async ({ canvasElement }) => {
     const { within } = await import('@testing-library/dom');

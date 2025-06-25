@@ -1,6 +1,6 @@
 /**
  * ManifestDependencyTracker Unit Tests
- * 
+ *
  * Tests dependency analysis using CSSOM + regex fallback for CSS
  * and DOM parsing for XHTML files.
  */
@@ -13,7 +13,7 @@ import type { ManifestItem } from '../types.js';
 const mockStorage = {
   readTextFile: vi.fn(),
   listFiles: vi.fn(),
-  getFileStats: vi.fn()
+  getFileStats: vi.fn(),
 };
 
 // Mock DOMParser for Node.js environment
@@ -27,32 +27,41 @@ beforeAll(() => {
           querySelectorAll: (selector: string) => {
             if (selector === 'link[rel="stylesheet"]') {
               if (xmlStr.includes('href="../Styles/style.css"')) {
-                return [{ getAttribute: (attr: string) => 
-                  attr === 'href' ? '../Styles/style.css' : null }];
+                return [
+                  {
+                    getAttribute: (attr: string) =>
+                      attr === 'href' ? '../Styles/style.css' : null,
+                  },
+                ];
               }
               if (xmlStr.includes('href="style.css"')) {
-                return [{ getAttribute: (attr: string) => 
-                  attr === 'href' ? 'style.css' : null }];
+                return [{ getAttribute: (attr: string) => (attr === 'href' ? 'style.css' : null) }];
               }
             }
             if (selector === 'img') {
               if (xmlStr.includes('src="../Images/cover.jpg"')) {
-                return [{ getAttribute: (attr: string) => 
-                  attr === 'src' ? '../Images/cover.jpg' : null }];
+                return [
+                  {
+                    getAttribute: (attr: string) => (attr === 'src' ? '../Images/cover.jpg' : null),
+                  },
+                ];
               }
               if (xmlStr.includes('src="image.png"')) {
-                return [{ getAttribute: (attr: string) => 
-                  attr === 'src' ? 'image.png' : null }];
+                return [{ getAttribute: (attr: string) => (attr === 'src' ? 'image.png' : null) }];
               }
             }
             if (selector === 'audio source, video source') {
               if (xmlStr.includes('src="../Audio/narration.mp3"')) {
-                return [{ getAttribute: (attr: string) => 
-                  attr === 'src' ? '../Audio/narration.mp3' : null }];
+                return [
+                  {
+                    getAttribute: (attr: string) =>
+                      attr === 'src' ? '../Audio/narration.mp3' : null,
+                  },
+                ];
               }
             }
             return [];
-          }
+          },
         };
       }
     };
@@ -63,18 +72,18 @@ beforeAll(() => {
     // @ts-expect-error - Mock CSSStyleSheet for testing
     globalThis.CSSStyleSheet = class MockCSSStyleSheet {
       cssRules: any[] = [];
-      
+
       async replace(content: string) {
         this.cssRules = [];
-        
+
         // Mock CSS parsing for test cases
         if (content.includes('@import "fonts.css"')) {
           this.cssRules.push({
             type: 3, // CSSRule.IMPORT_RULE
-            href: 'fonts.css'
+            href: 'fonts.css',
           });
         }
-        
+
         if (content.includes('background-image: url(bg.jpg)')) {
           this.cssRules.push({
             type: 1, // CSSRule.STYLE_RULE
@@ -82,11 +91,11 @@ beforeAll(() => {
               getPropertyValue: (prop: string) => {
                 if (prop === 'background-image') return 'url(bg.jpg)';
                 return '';
-              }
-            }
+              },
+            },
           });
         }
-        
+
         if (content.includes('src: url(font.ttf)')) {
           this.cssRules.push({
             type: 1,
@@ -94,11 +103,11 @@ beforeAll(() => {
               getPropertyValue: (prop: string) => {
                 if (prop === 'src') return 'url(font.ttf)';
                 return '';
-              }
-            }
+              },
+            },
           });
         }
-        
+
         return this;
       }
     };
@@ -107,13 +116,17 @@ beforeAll(() => {
     globalThis.CSSImportRule = class {
       type = 3;
       href: string;
-      constructor(href: string) { this.href = href; }
+      constructor(href: string) {
+        this.href = href;
+      }
     };
 
     globalThis.CSSStyleRule = class {
       type = 1;
       style: any;
-      constructor(style: any) { this.style = style; }
+      constructor(style: any) {
+        this.style = style;
+      }
     };
   }
 });
@@ -136,7 +149,7 @@ describe('ManifestDependencyTracker', () => {
       const xhtmlItem: ManifestItem = {
         id: 'chapter1',
         href: 'OEBPS/Text/chapter1.xhtml',
-        mediaType: 'application/xhtml+xml'
+        mediaType: 'application/xhtml+xml',
       };
 
       it('should extract CSS dependencies from XHTML', async () => {
@@ -157,7 +170,8 @@ describe('ManifestDependencyTracker', () => {
 
         expect(dependencies).toContain('OEBPS/Styles/style.css');
         expect(mockStorage.readTextFile).toHaveBeenCalledWith(
-          workspaceId, 'OEBPS/Text/chapter1.xhtml'
+          workspaceId,
+          'OEBPS/Text/chapter1.xhtml'
         );
       });
 
@@ -244,7 +258,7 @@ describe('ManifestDependencyTracker', () => {
       const cssItem: ManifestItem = {
         id: 'stylesheet',
         href: 'OEBPS/Styles/style.css',
-        mediaType: 'text/css'
+        mediaType: 'text/css',
       };
 
       // Skip: CSSOM API not fully supported in happy-dom test environment
@@ -360,7 +374,7 @@ body { background-image: url(fallback.jpg); }`;
         const imageItem: ManifestItem = {
           id: 'cover',
           href: 'OEBPS/Images/cover.jpg',
-          mediaType: 'image/jpeg'
+          mediaType: 'image/jpeg',
         };
 
         const dependencies = await tracker.findDependencies(workspaceId, imageItem);
@@ -373,7 +387,7 @@ body { background-image: url(fallback.jpg); }`;
         const audioItem: ManifestItem = {
           id: 'narration',
           href: 'OEBPS/Audio/narration.mp3',
-          mediaType: 'audio/mpeg'
+          mediaType: 'audio/mpeg',
         };
 
         const dependencies = await tracker.findDependencies(workspaceId, audioItem);
@@ -385,7 +399,7 @@ body { background-image: url(fallback.jpg); }`;
         const fontItem: ManifestItem = {
           id: 'custom-font',
           href: 'OEBPS/Fonts/custom.ttf',
-          mediaType: 'font/ttf'
+          mediaType: 'font/ttf',
         };
 
         const dependencies = await tracker.findDependencies(workspaceId, fontItem);
@@ -398,45 +412,45 @@ body { background-image: url(fallback.jpg); }`;
       it('should resolve relative paths correctly', () => {
         const basePath = 'OEBPS/Text/chapter1.xhtml';
         const relativePath = '../Styles/style.css';
-        
+
         const resolved = (tracker as any).resolveRelativePath(basePath, relativePath);
-        
+
         expect(resolved).toBe('OEBPS/Styles/style.css');
       });
 
       it('should handle same-directory references', () => {
         const basePath = 'OEBPS/Text/chapter1.xhtml';
         const relativePath = 'image.png';
-        
+
         const resolved = (tracker as any).resolveRelativePath(basePath, relativePath);
-        
+
         expect(resolved).toBe('OEBPS/Text/image.png');
       });
 
       it('should handle multiple directory traversals', () => {
         const basePath = 'OEBPS/Text/Parts/chapter1.xhtml';
         const relativePath = '../../Images/cover.jpg';
-        
+
         const resolved = (tracker as any).resolveRelativePath(basePath, relativePath);
-        
+
         expect(resolved).toBe('OEBPS/Images/cover.jpg');
       });
 
       it('should handle root-level files', () => {
         const basePath = 'OEBPS/content.opf';
         const relativePath = 'Text/chapter1.xhtml';
-        
+
         const resolved = (tracker as any).resolveRelativePath(basePath, relativePath);
-        
+
         expect(resolved).toBe('OEBPS/Text/chapter1.xhtml');
       });
 
       it('should normalize path separators', () => {
         const basePath = 'OEBPS/Text/chapter1.xhtml';
         const relativePath = './././../Styles/style.css';
-        
+
         const resolved = (tracker as any).resolveRelativePath(basePath, relativePath);
-        
+
         expect(resolved).toBe('OEBPS/Styles/style.css');
       });
     });
@@ -444,8 +458,8 @@ body { background-image: url(fallback.jpg); }`;
     describe('error handling', () => {
       const xhtmlItem: ManifestItem = {
         id: 'chapter1',
-        href: 'OEBPS/Text/chapter1.xhtml', 
-        mediaType: 'application/xhtml+xml'
+        href: 'OEBPS/Text/chapter1.xhtml',
+        mediaType: 'application/xhtml+xml',
       };
 
       it('should handle file read errors gracefully', async () => {
@@ -481,13 +495,13 @@ body { background-image: url(fallback.jpg); }`;
             const values: Record<string, string> = {
               'background-image': 'url("background.jpg")',
               'border-image': 'url(border.png)',
-              'list-style-image': 'url(\'bullet.gif\')',
-              'content': 'url(icon.svg)',
-              'cursor': 'url(cursor.cur), pointer',
-              'src': 'url(font.woff2)' // for @font-face
+              'list-style-image': "url('bullet.gif')",
+              content: 'url(icon.svg)',
+              cursor: 'url(cursor.cur), pointer',
+              src: 'url(font.woff2)', // for @font-face
             };
             return values[prop] || '';
-          })
+          }),
         };
 
         const urls = (tracker as any).extractUrlsFromStyle(mockStyle);
@@ -505,12 +519,12 @@ body { background-image: url(fallback.jpg); }`;
           getPropertyValue: vi.fn((prop: string) => {
             const values: Record<string, string> = {
               'background-image': 'url("http://example.com/bg.jpg")',
-              'content': 'url("data:image/svg+xml,<svg></svg>")',
-              'cursor': 'url("#cursor")',
-              'list-style-image': 'url("local.png")'
+              content: 'url("data:image/svg+xml,<svg></svg>")',
+              cursor: 'url("#cursor")',
+              'list-style-image': 'url("local.png")',
             };
             return values[prop] || '';
-          })
+          }),
         };
 
         const urls = (tracker as any).extractUrlsFromStyle(mockStyle);
@@ -528,7 +542,7 @@ body { background-image: url(fallback.jpg); }`;
       const cssItem: ManifestItem = {
         id: 'style',
         href: 'OEBPS/Styles/style.css',
-        mediaType: 'text/css'
+        mediaType: 'text/css',
       };
 
       const cssContent = 'body { background: url(bg.jpg); }';
@@ -551,7 +565,7 @@ body { background-image: url(fallback.jpg); }`;
       const xhtmlItem: ManifestItem = {
         id: 'chapter',
         href: 'OEBPS/Text/chapter.xhtml',
-        mediaType: 'application/xhtml+xml'
+        mediaType: 'application/xhtml+xml',
       };
 
       mockStorage.readTextFile.mockResolvedValue('<html></html>');

@@ -1,6 +1,6 @@
 /**
  * Blob URL Manager Utilities
- * 
+ *
  * Helper functions for URL classification, path resolution, and XHTML processing
  */
 
@@ -8,13 +8,15 @@
  * Check if a URL is a relative resource path that should be processed
  */
 export function isRelativeResourceURL(url: string): boolean {
-  return !url.startsWith('http') && 
-         !url.startsWith('data:') && 
-         !url.startsWith('blob:') &&
-         !url.startsWith('/') && // Absolute paths
-         !url.startsWith('#') && // Fragment URLs
-         !url.startsWith('mailto:') && // Email URLs
-         url.trim().length > 0; // Non-empty
+  return (
+    !url.startsWith('http') &&
+    !url.startsWith('data:') &&
+    !url.startsWith('blob:') &&
+    !url.startsWith('/') && // Absolute paths
+    !url.startsWith('#') && // Fragment URLs
+    !url.startsWith('mailto:') && // Email URLs
+    url.trim().length > 0
+  ); // Non-empty
 }
 
 /**
@@ -23,7 +25,7 @@ export function isRelativeResourceURL(url: string): boolean {
 export function resolveManifestPath(href: string, basePath: string): string {
   // Handle OPF in container root (empty basePath)
   if (!basePath) return href;
-  
+
   // Standard case: basePath + href
   // Examples: "OEBPS" + "images/cover.jpg" → "OEBPS/images/cover.jpg"
   return `${basePath}/${href}`;
@@ -35,12 +37,12 @@ export function resolveManifestPath(href: string, basePath: string): string {
 export function getFileExtension(filePath: string): string {
   const lastDot = filePath.lastIndexOf('.');
   const lastSlash = filePath.lastIndexOf('/');
-  
+
   // No extension or dot is part of directory name
   if (lastDot === -1 || lastDot < lastSlash) {
     return '';
   }
-  
+
   return filePath.substring(lastDot + 1).toLowerCase();
 }
 
@@ -87,7 +89,7 @@ export function createErrorIconSVG(): string {
       <text x="12" y="16" text-anchor="middle" fill="white" font-size="12">!</text>
     </svg>
   `;
-  
+
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
@@ -95,16 +97,16 @@ export function createErrorIconSVG(): string {
  * Asset element selectors for XHTML processing
  */
 export const ASSET_SELECTORS = [
-  'script[src]',         // JavaScript files
-  'link[href]',          // Stylesheets, icons
-  'a[href]',             // Navigation links
-  'audio[src]',          // Audio files
-  'video[src]',          // Video files
-  'video[poster]',       // Video poster images
-  'img[src]',            // Images
-  'object[data]',        // Embedded objects
-  'image[href]',         // SVG image elements
-  '*[data-src]'          // Custom lazy-loading attributes
+  'script[src]', // JavaScript files
+  'link[href]', // Stylesheets, icons
+  'a[href]', // Navigation links
+  'audio[src]', // Audio files
+  'video[src]', // Video files
+  'video[poster]', // Video poster images
+  'img[src]', // Images
+  'object[data]', // Embedded objects
+  'image[href]', // SVG image elements
+  '*[data-src]', // Custom lazy-loading attributes
 ];
 
 /**
@@ -112,12 +114,12 @@ export const ASSET_SELECTORS = [
  */
 export function findAssetElements(doc: Document): Element[] {
   const elements: Element[] = [];
-  
+
   for (const selector of ASSET_SELECTORS) {
     const found = doc.querySelectorAll(selector);
     elements.push(...Array.from(found));
   }
-  
+
   return elements;
 }
 
@@ -127,13 +129,13 @@ export function findAssetElements(doc: Document): Element[] {
 export function parseXHTML(xhtmlContent: string): Document {
   const parser = new DOMParser();
   const doc = parser.parseFromString(xhtmlContent, 'application/xhtml+xml');
-  
+
   // Check for parsing errors
   const errorElement = doc.querySelector('parsererror');
   if (errorElement) {
     throw new Error('Invalid XHTML content: ' + errorElement.textContent);
   }
-  
+
   return doc;
 }
 
@@ -153,9 +155,9 @@ export function validateXHTML(xhtmlContent: string): { valid: boolean; error?: s
     parseXHTML(xhtmlContent);
     return { valid: true };
   } catch (_error) {
-    return { 
-      valid: false, 
-      error: _error instanceof Error ? _error.message : 'Unknown parsing error'
+    return {
+      valid: false,
+      error: _error instanceof Error ? _error.message : 'Unknown parsing error',
     };
   }
 }
@@ -168,7 +170,7 @@ export function extractAssetReferences(xhtmlContent: string): string[] {
     const doc = parseXHTML(xhtmlContent);
     const elements = findAssetElements(doc);
     const references: string[] = [];
-    
+
     for (const element of elements) {
       const attr = getAssetAttribute(element);
       if (attr) {
@@ -178,7 +180,7 @@ export function extractAssetReferences(xhtmlContent: string): string[] {
         }
       }
     }
-    
+
     // Remove duplicates
     return [...new Set(references)];
   } catch (_error) {

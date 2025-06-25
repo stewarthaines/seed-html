@@ -45,10 +45,10 @@ The sample EPUB includes:
 - \`OEBPS/chapter1.xhtml\` - Sample chapter content
 
 This demonstrates the complete workspace isolation and file organization used by the EPUB editor.
-          `
-        }
-      }
-    }
+          `,
+        },
+      },
+    },
   });
 </script>
 
@@ -58,7 +58,7 @@ This demonstrates the complete workspace isolation and file organization used by
 </Story>
 
 <!-- Demo with Sample Data (Automated Interactions) -->
-<Story 
+<Story
   name="Demo with Sample Data"
   play={async ({ canvasElement }) => {
     // Use proper testing library imports

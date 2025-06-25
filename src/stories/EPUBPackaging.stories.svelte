@@ -40,20 +40,20 @@ The demo uses a minimal but complete EPUB structure:
 4. Click "Download EPUB" to download the generated file
 
 The generated EPUB can be opened in any standard EPUB reader.
-          `
-        }
-      }
+          `,
+        },
+      },
     },
     argTypes: {
       showProgress: {
         control: 'boolean',
-        description: 'Show progress indicator during packaging'
+        description: 'Show progress indicator during packaging',
       },
       allowDownload: {
         control: 'boolean',
-        description: 'Enable download button for generated EPUB'
-      }
-    }
+        description: 'Enable download button for generated EPUB',
+      },
+    },
   });
 </script>
 

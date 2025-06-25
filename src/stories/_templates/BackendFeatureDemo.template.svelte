@@ -23,7 +23,7 @@
   let api: unknown; // Replace with: YourFeatureAPI;
   let logs: LogEntry[] = [];
   let isLoading = false;
-  
+
   // Add feature-specific state variables here
   let featureState: unknown = null;
   let operationResults: unknown[] = [];
@@ -47,7 +47,7 @@
 
   async function refreshData() {
     if (!api) return;
-    
+
     try {
       // Refresh any data from your API
       // featureState = await api.getCurrentState();
@@ -62,7 +62,7 @@
     if (!api || isLoading) return;
     isLoading = true;
     addLog('action', 'Performing example operation...');
-    
+
     try {
       // Replace with actual API call
       // const result = await api.performOperation();
@@ -81,7 +81,7 @@
     if (!api || isLoading) return;
     isLoading = true;
     addLog('action', 'Performing another operation...');
-    
+
     try {
       // Your operation logic here
       addLog('success', 'Another operation complete');
@@ -97,15 +97,15 @@
     if (!api || isLoading) return;
     isLoading = true;
     addLog('action', 'Resetting demo...');
-    
+
     try {
       // Clear any persistent state in your API
       // await api.reset();
-      
+
       // Reset component state
       featureState = null;
       operationResults = [];
-      
+
       addLog('success', 'Demo reset complete');
       await refreshData();
     } catch (error: unknown) {
@@ -146,12 +146,8 @@
           <button on:click={performAnotherOperation} disabled={isLoading}>
             Another Operation
           </button>
-          <button on:click={() => refreshData()} disabled={isLoading}>
-            Refresh Data
-          </button>
-          <button on:click={resetDemo} disabled={isLoading}>
-            Reset Demo
-          </button>
+          <button on:click={() => refreshData()} disabled={isLoading}> Refresh Data </button>
+          <button on:click={resetDemo} disabled={isLoading}> Reset Demo </button>
         </div>
       </div>
 

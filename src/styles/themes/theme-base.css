@@ -32,11 +32,11 @@
   color-scheme: light;
 }
 
-[data-theme="dark"] {
+[data-theme='dark'] {
   color-scheme: dark;
 }
 
-[data-theme="auto"] {
+[data-theme='auto'] {
   color-scheme: light dark;
 }
 
@@ -103,7 +103,7 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
-[role="button"]:focus-visible,
+[role='button']:focus-visible,
 [tabindex]:focus-visible {
   box-shadow: var(--shadow-focus-primary);
 }
@@ -121,8 +121,8 @@ textarea:focus-visible,
     --color-border-default: var(--color-neutral-900);
     --color-border-focus: var(--color-primary-900);
   }
-  
-  [data-theme="dark"] {
+
+  [data-theme='dark'] {
     --color-text-primary: var(--color-white);
     --color-text-secondary: var(--color-neutral-200);
     --color-bg-primary: var(--color-black);
@@ -142,12 +142,12 @@ textarea:focus-visible,
     background: white !important;
     box-shadow: none !important;
   }
-  
+
   /* Hide interactive elements in print */
   button,
   .nav,
   .sidebar,
-  [role="navigation"] {
+  [role='navigation'] {
     display: none !important;
   }
 }
@@ -164,7 +164,7 @@ textarea:focus-visible,
     transition: none !important;
     animation: none !important;
   }
-  
+
   /* Keep only essential transitions */
   *:focus-visible {
     transition: box-shadow 0.1s ease !important;
@@ -215,7 +215,7 @@ button,
 input,
 select,
 textarea,
-[role="button"] {
+[role='button'] {
   border: var(--border-width-1) solid var(--color-border-default);
 }
 
@@ -225,8 +225,8 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
-[role="button"]:focus-visible,
-[tabindex="0"]:focus-visible {
+[role='button']:focus-visible,
+[tabindex='0']:focus-visible {
   outline: 2px solid var(--color-border-focus);
   outline-offset: 2px;
 }

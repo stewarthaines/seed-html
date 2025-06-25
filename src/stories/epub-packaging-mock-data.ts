@@ -3,39 +3,39 @@
  */
 
 export interface MockFile {
-	path: string;
-	content: string;
-	mimeType: string;
+  path: string;
+  content: string;
+  mimeType: string;
 }
 
 export interface MockWorkspace {
-	id: string;
-	name: string;
-	files: MockFile[];
+  id: string;
+  name: string;
+  files: MockFile[];
 }
 
 export const BASIC_EPUB_WORKSPACE: MockWorkspace = {
-	id: 'demo-workspace',
-	name: 'Basic EPUB Demo',
-	files: [
-		{
-			path: 'mimetype',
-			content: 'application/epub+zip',
-			mimeType: 'application/epub+zip'
-		},
-		{
-			path: 'META-INF/container.xml',
-			content: `<?xml version="1.0" encoding="UTF-8"?>
+  id: 'demo-workspace',
+  name: 'Basic EPUB Demo',
+  files: [
+    {
+      path: 'mimetype',
+      content: 'application/epub+zip',
+      mimeType: 'application/epub+zip',
+    },
+    {
+      path: 'META-INF/container.xml',
+      content: `<?xml version="1.0" encoding="UTF-8"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
 	<rootfiles>
 		<rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
 	</rootfiles>
 </container>`,
-			mimeType: 'application/xml'
-		},
-		{
-			path: 'OEBPS/content.opf',
-			content: `<?xml version="1.0" encoding="UTF-8"?>
+      mimeType: 'application/xml',
+    },
+    {
+      path: 'OEBPS/content.opf',
+      content: `<?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uid">
 	<metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/">
 		<dc:title>Demo EPUB Book</dc:title>
@@ -55,11 +55,11 @@ export const BASIC_EPUB_WORKSPACE: MockWorkspace = {
 		<itemref idref="chapter1"/>
 	</spine>
 </package>`,
-			mimeType: 'application/oebps-package+xml'
-		},
-		{
-			path: 'OEBPS/nav.xhtml',
-			content: `<?xml version="1.0" encoding="UTF-8"?>
+      mimeType: 'application/oebps-package+xml',
+    },
+    {
+      path: 'OEBPS/nav.xhtml',
+      content: `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
 <head>
@@ -75,11 +75,11 @@ export const BASIC_EPUB_WORKSPACE: MockWorkspace = {
 	</nav>
 </body>
 </html>`,
-			mimeType: 'application/xhtml+xml'
-		},
-		{
-			path: 'OEBPS/chapter1.xhtml',
-			content: `<?xml version="1.0" encoding="UTF-8"?>
+      mimeType: 'application/xhtml+xml',
+    },
+    {
+      path: 'OEBPS/chapter1.xhtml',
+      content: `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -100,11 +100,11 @@ export const BASIC_EPUB_WORKSPACE: MockWorkspace = {
 	</ul>
 </body>
 </html>`,
-			mimeType: 'application/xhtml+xml'
-		},
-		{
-			path: 'OEBPS/styles.css',
-			content: `body {
+      mimeType: 'application/xhtml+xml',
+    },
+    {
+      path: 'OEBPS/styles.css',
+      content: `body {
 	font-family: Georgia, serif;
 	line-height: 1.6;
 	margin: 2em;
@@ -134,44 +134,44 @@ ul {
 li {
 	margin-bottom: 0.5em;
 }`,
-			mimeType: 'text/css'
-		}
-	]
+      mimeType: 'text/css',
+    },
+  ],
 };
 
 /**
  * Mock FileStorageAPI for demo purposes
  */
 export class MockFileStorageAPI {
-	private workspace: MockWorkspace;
+  private workspace: MockWorkspace;
 
-	constructor(workspace: MockWorkspace) {
-		this.workspace = workspace;
-	}
+  constructor(workspace: MockWorkspace) {
+    this.workspace = workspace;
+  }
 
-	async init(): Promise<void> {
-		// Mock initialization
-	}
+  async init(): Promise<void> {
+    // Mock initialization
+  }
 
-	isInitialized(): boolean {
-		return true;
-	}
+  isInitialized(): boolean {
+    return true;
+  }
 
-	async listFiles(_workspaceId: string): Promise<string[]> {
-		return this.workspace.files.map(f => f.path);
-	}
+  async listFiles(_workspaceId: string): Promise<string[]> {
+    return this.workspace.files.map(f => f.path);
+  }
 
-	async readFile(_workspaceId: string, path: string): Promise<ArrayBuffer> {
-		const file = this.workspace.files.find(f => f.path === path);
-		if (!file) {
-			throw new Error(`File not found: ${path}`);
-		}
-		
-		const encoder = new TextEncoder();
-		return encoder.encode(file.content).buffer;
-	}
+  async readFile(_workspaceId: string, path: string): Promise<ArrayBuffer> {
+    const file = this.workspace.files.find(f => f.path === path);
+    if (!file) {
+      throw new Error(`File not found: ${path}`);
+    }
 
-	getBackendType() {
-		return 'mock';
-	}
+    const encoder = new TextEncoder();
+    return encoder.encode(file.content).buffer;
+  }
+
+  getBackendType() {
+    return 'mock';
+  }
 }

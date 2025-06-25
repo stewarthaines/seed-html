@@ -14,12 +14,15 @@ This project uses **Prettier** and **ESLint** to enforce consistent code style a
 ## 🛠 **VS Code Setup**
 
 ### Required Extensions
+
 - **Prettier - Code formatter** (`esbenp.prettier-vscode`)
 - **Svelte for VS Code** (`svelte.svelte-vscode`)
 - **ESLint** (`dbaeumer.vscode-eslint`)
 
 ### Auto-Setup
+
 VS Code settings are already configured in `.vscode/settings.json`:
+
 - Format on save enabled
 - Prettier as default formatter
 - ESLint auto-fix on save
@@ -44,10 +47,12 @@ npm run lint:fix
 ## 🚀 **For Developers**
 
 ### First Time Setup
+
 1. Install recommended VS Code extensions (you'll get a prompt)
 2. That's it! Formatting will happen automatically on save
 
 ### Manual Formatting
+
 ```bash
 # Format all files
 npm run format

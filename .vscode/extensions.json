@@ -6,7 +6,5 @@
     "bradlc.vscode-tailwindcss",
     "ms-vscode.vscode-typescript-next"
   ],
-  "unwantedRecommendations": [
-    "ms-vscode.vscode-json"
-  ]
+  "unwantedRecommendations": ["ms-vscode.vscode-json"]
 }

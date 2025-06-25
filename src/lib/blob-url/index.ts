@@ -1,6 +1,6 @@
 /**
  * Blob URL Manager - Main Exports
- * 
+ *
  * Public API for the Blob URL Manager feature, providing blob URL creation
  * and XHTML processing for EPUB preview iframes.
  */
@@ -15,7 +15,7 @@ export type {
   AssetSelector,
   XHTMLProcessingResult,
   AssetProcessingError,
-  ExtendedFileStorageAPI
+  ExtendedFileStorageAPI,
 } from './types.js';
 
 // Error classes
@@ -27,7 +27,7 @@ export {
   ERROR_ICON_SVG,
   VISUAL_ASSET_ELEMENTS,
   NON_VISUAL_ASSET_ELEMENTS,
-  NAVIGATION_ELEMENTS
+  NAVIGATION_ELEMENTS,
 } from './types.js';
 
 // Utility functions
@@ -45,7 +45,7 @@ export {
   serializeXHTML,
   validateXHTML,
   extractAssetReferences,
-  countAssetReferences
+  countAssetReferences,
 } from './utils.js';
 
 // Re-export MIME type utility for convenience

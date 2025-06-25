@@ -60,24 +60,16 @@ interface FileStorageAPI {
   listWorkspaces(): Promise<string[]>;
 
   // File operations
-  writeFile(
-    workspaceId: string,
-    path: string,
-    content: ArrayBuffer
-  ): Promise<void>;
+  writeFile(workspaceId: string, path: string, content: ArrayBuffer): Promise<void>;
   readFile(workspaceId: string, path: string): Promise<ArrayBuffer>;
   deleteFile(workspaceId: string, path: string): Promise<void>;
-  renameFile(
-    workspaceId: string,
-    oldPath: string,
-    newPath: string
-  ): Promise<void>;
+  renameFile(workspaceId: string, oldPath: string, newPath: string): Promise<void>;
   listFiles(workspaceId: string, path?: string): Promise<string[]>;
 
   // Storage monitoring
   getQuota(): Promise<{ used: number; available: number }>;
   estimateWorkspaceSize(workspaceId: string): Promise<number>;
-  
+
   // Utility methods
   writeTextFile(workspaceId: string, path: string, content: string): Promise<void>;
   readTextFile(workspaceId: string, path: string): Promise<string>;
@@ -111,10 +103,7 @@ interface FileStorageAPI {
 ### Dual API with Fallback Strategy
 
 ```typescript
-async function writeFileWithFallback(
-  fileHandle: FileSystemFileHandle,
-  content: ArrayBuffer
-) {
+async function writeFileWithFallback(fileHandle: FileSystemFileHandle, content: ArrayBuffer) {
   try {
     // Try createWritable first (Chrome, Firefox, Edge)
     const writable = await fileHandle.createWritable();
@@ -134,15 +123,12 @@ async function writeFileWithFallback(
 
 ```typescript
 function isOPFSSupported(): boolean {
-  return "storage" in navigator && "getDirectory" in navigator.storage;
+  return 'storage' in navigator && 'getDirectory' in navigator.storage;
 }
 
 // Usage: Check basic support, handle failures during actual operations
 if (!isOPFSSupported()) {
-  throw new FileStorageError(
-    ErrorCodes.OPFS_NOT_SUPPORTED,
-    "OPFS not supported in this browser"
-  );
+  throw new FileStorageError(ErrorCodes.OPFS_NOT_SUPPORTED, 'OPFS not supported in this browser');
 }
 ```
 
@@ -153,7 +139,7 @@ if (!isOPFSSupported()) {
 ```typescript
 // Workspace operations
 const root = await navigator.storage.getDirectory();
-const workspacesDir = await root.getDirectoryHandle("workspaces", {
+const workspacesDir = await root.getDirectoryHandle('workspaces', {
   create: true,
 });
 const workspaceDir = await workspacesDir.getDirectoryHandle(workspaceId, {
@@ -167,7 +153,7 @@ const content = await file.arrayBuffer();
 
 // List operations - all browsers support async iteration
 for await (const [name, handle] of workspaceDir.entries()) {
-  if (handle.kind === "file") {
+  if (handle.kind === 'file') {
     // Process file
   }
 }
@@ -178,7 +164,7 @@ await workspaceDir.removeEntry(fileName);
 // List workspaces
 const workspaceIds = [];
 for await (const [name, handle] of workspacesDir.entries()) {
-  if (handle.kind === "directory") {
+  if (handle.kind === 'directory') {
     workspaceIds.push(name);
   }
 }
@@ -207,9 +193,10 @@ class StorageBackendFactory {
 
 **Purpose**: Automatically detects optimal storage backend and creates appropriate implementation.
 
-**Backend Priority**: 
+**Backend Priority**:
+
 1. OPFS Async (Chrome/Firefox/Edge main thread)
-2. OPFS Sync Worker (Safari, file:// restrictions)  
+2. OPFS Sync Worker (Safari, file:// restrictions)
 3. IndexedDB (Universal fallback)
 
 ### Feature Detection System
@@ -229,6 +216,7 @@ class FeatureDetector {
 ```
 
 **Features**:
+
 - Parallel capability testing for performance
 - Real browser testing with actual API calls
 - Capability result caching
@@ -241,7 +229,11 @@ class FeatureDetector {
 // Worker Manager (main thread)
 class OPFSWorkerManager {
   async createWorkspace(id: string): Promise<OperationResult>;
-  async writeFile(workspaceId: string, path: string, content: ArrayBuffer): Promise<OperationResult>;
+  async writeFile(
+    workspaceId: string,
+    path: string,
+    content: ArrayBuffer
+  ): Promise<OperationResult>;
   async readFile(workspaceId: string, path: string): Promise<OperationResult>;
   // ... other operations
   destroy(): void;
@@ -254,12 +246,14 @@ import workerScript from './opfs-worker.js?raw';
 **Purpose**: Manages Web Worker for OPFS sync access handle operations (Safari).
 
 **Architecture**:
+
 - **Separate JavaScript Worker File**: `opfs-worker.js` (plain JavaScript for browser compatibility)
 - **Vite `?raw` Import**: Worker script imported as string at build time
 - **Blob URL Creation**: Dynamic worker creation from imported JavaScript
 - **Type-Safe Communication**: Structured message/response interfaces (TypeScript types in main thread)
 
 **Implementation Pattern**:
+
 ```typescript
 // Worker Manager imports JavaScript worker as raw string
 import workerScript from './opfs-worker.js?raw';
@@ -275,6 +269,7 @@ class OPFSWorkerManager {
 ```
 
 **Features**:
+
 - **Message-based communication** with type safety
 - **Operation timeouts** and error handling
 - **Resource cleanup** and worker lifecycle management
@@ -317,8 +312,13 @@ class TestDataGenerator {
 }
 
 class PerformanceTestHelpers {
-  static async measureTime<T>(operation: () => Promise<T>): Promise<{ result: T; duration: number }>;
-  static async runConcurrent<T>(operations: (() => Promise<T>)[], maxConcurrency: number): Promise<T[]>;
+  static async measureTime<T>(
+    operation: () => Promise<T>
+  ): Promise<{ result: T; duration: number }>;
+  static async runConcurrent<T>(
+    operations: (() => Promise<T>)[],
+    maxConcurrency: number
+  ): Promise<T[]>;
   // ... other performance utilities
 }
 ```
@@ -331,9 +331,13 @@ class PerformanceTestHelpers {
 
 ```typescript
 class FileStorageError extends Error {
-  constructor(public code: string, message: string, public cause?: Error) {
+  constructor(
+    public code: string,
+    message: string,
+    public cause?: Error
+  ) {
     super(message);
-    this.name = "FileStorageError";
+    this.name = 'FileStorageError';
   }
 }
 
@@ -348,7 +352,7 @@ enum StorageErrorCode {
   INVALID_PATH = 'INVALID_PATH',
   OPERATION_TIMEOUT = 'OPERATION_TIMEOUT',
   NETWORK_ERROR = 'NETWORK_ERROR',
-  UNKNOWN_ERROR = 'UNKNOWN_ERROR'
+  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
 }
 ```
 
@@ -356,7 +360,7 @@ enum StorageErrorCode {
 
 ```typescript
 try {
-  await fileStorage.writeFile("workspace-123", "OEBPS/chapter1.xhtml", content);
+  await fileStorage.writeFile('workspace-123', 'OEBPS/chapter1.xhtml', content);
 } catch (error) {
   if (error instanceof FileStorageError) {
     switch (error.code) {
@@ -378,6 +382,7 @@ if (quota.used / quota.available > 0.9) {
 ## Testing Considerations
 
 ### Comprehensive Test Coverage (52 Tests)
+
 - **Core API Functionality**: All storage operations across backends
 - **Feature Detection Logic**: Capability testing with browser simulation
 - **Cross-Browser Scenarios**: Chrome, Firefox, Safari, Edge compatibility
@@ -390,13 +395,15 @@ if (quota.used / quota.available > 0.9) {
 - **Build System Integration**: Vite `?raw` import testing with JavaScript worker files
 
 ### Test Files Structure
+
 - `file-storage.test.ts` - Core functionality and data handling (14 tests)
-- `feature-detection.test.ts` - Backend selection and capability logic (13 tests)  
+- `feature-detection.test.ts` - Backend selection and capability logic (13 tests)
 - `integration.test.ts` - Cross-browser integration scenarios (13 tests)
 - `opfs-worker.test.ts` - Worker script functionality and importability (9 tests)
 - `worker.test.ts` - Worker manager lifecycle and communication (3 tests)
 
 ### Worker Testing Architecture
+
 ```typescript
 // Test JavaScript worker import
 const workerScript = await import('./opfs-worker.js?raw');
@@ -428,6 +435,7 @@ const simulateMessageHandler = (messageType: string, data: any, id: number) => {
 ## Implementation Notes
 
 ### Development Approach
+
 - **Factory Pattern**: StorageBackendFactory automatically selects optimal backend
 - **Feature Detection First**: Comprehensive capability testing before backend creation
 - **Worker Fallback**: OPFS sync worker for Safari and file:// protocol restrictions
@@ -437,6 +445,7 @@ const simulateMessageHandler = (messageType: string, data: any, id: number) => {
 - **Build System Integration**: Vite `?raw` imports for JavaScript worker files
 
 ### Build System Integration
+
 ```typescript
 // TypeScript declarations for raw imports
 declare module '*.js?raw' {
@@ -459,6 +468,7 @@ class OPFSWorkerManager {
 ```
 
 **Benefits**:
+
 - **Browser Compatibility**: Plain JavaScript avoids TypeScript interface syntax errors in workers
 - **Direct Import**: No compilation needed - JavaScript files imported as-is
 - **Type Safety in Main Thread**: TypeScript interfaces used for message communication from main thread
@@ -468,6 +478,7 @@ class OPFSWorkerManager {
 **Important Note**: The worker script must be plain JavaScript (`.js`) rather than TypeScript (`.ts`) because when imported as raw text and executed in a Web Worker, browsers cannot parse TypeScript interfaces. TypeScript type safety is maintained in the main thread through proper interface definitions for worker communication.
 
 ### Production Considerations
+
 - **Automatic Fallback**: Graceful degradation from OPFS → IndexedDB
 - **Resource Management**: Proper cleanup of workers and event listeners
 - **Error Recovery**: Structured error handling with specific recovery strategies
@@ -478,11 +489,7 @@ class OPFSWorkerManager {
 
 ```typescript
 class FileStorageAPI {
-  async writeFile(
-    workspaceId: string,
-    path: string,
-    content: ArrayBuffer
-  ): Promise<void> {
+  async writeFile(workspaceId: string, path: string, content: ArrayBuffer): Promise<void> {
     const root = await navigator.storage.getDirectory();
     const workspaceDir = await this.ensureWorkspaceDirectory(root, workspaceId);
     const fileHandle = await this.ensureFileHandle(workspaceDir, path);
@@ -491,10 +498,7 @@ class FileStorageAPI {
     await this.writeFileWithFallback(fileHandle, content);
   }
 
-  private async writeFileWithFallback(
-    fileHandle: FileSystemFileHandle,
-    content: ArrayBuffer
-  ) {
+  private async writeFileWithFallback(fileHandle: FileSystemFileHandle, content: ArrayBuffer) {
     try {
       // Try createWritable first (Chrome, Firefox, Edge)
       const writable = await fileHandle.createWritable();
@@ -511,7 +515,7 @@ class FileStorageAPI {
 
   async createWorkspace(workspaceId: string) {
     const root = await navigator.storage.getDirectory();
-    const workspacesDir = await root.getDirectoryHandle("workspaces", {
+    const workspacesDir = await root.getDirectoryHandle('workspaces', {
       create: true,
     });
     await workspacesDir.getDirectoryHandle(workspaceId, { create: true });
@@ -519,24 +523,21 @@ class FileStorageAPI {
 
   async listWorkspaces(): Promise<string[]> {
     const root = await navigator.storage.getDirectory();
-    const workspacesDir = await root.getDirectoryHandle("workspaces", {
+    const workspacesDir = await root.getDirectoryHandle('workspaces', {
       create: true,
     });
 
     const workspaceIds: string[] = [];
     for await (const [name, handle] of workspacesDir.entries()) {
-      if (handle.kind === "directory") {
+      if (handle.kind === 'directory') {
         workspaceIds.push(name);
       }
     }
     return workspaceIds;
   }
 
-  private async ensureFileHandle(
-    workspaceDir: FileSystemDirectoryHandle,
-    path: string
-  ) {
-    const pathParts = path.split("/");
+  private async ensureFileHandle(workspaceDir: FileSystemDirectoryHandle, path: string) {
+    const pathParts = path.split('/');
     const fileName = pathParts.pop();
 
     if (pathParts.length > 0) {
@@ -547,10 +548,7 @@ class FileStorageAPI {
     return await workspaceDir.getFileHandle(fileName, { create: true });
   }
 
-  private async ensureDirectoryPath(
-    baseDir: FileSystemDirectoryHandle,
-    pathParts: string[]
-  ) {
+  private async ensureDirectoryPath(baseDir: FileSystemDirectoryHandle, pathParts: string[]) {
     let currentDir = baseDir;
     for (const part of pathParts) {
       currentDir = await currentDir.getDirectoryHandle(part, { create: true });
@@ -564,34 +562,30 @@ class FileStorageAPI {
 
 ```typescript
 // Example: Loading an EPUB workspace
-import { FileStorageAPI } from "$lib/storage";
+import { FileStorageAPI } from '$lib/storage';
 const storage = new FileStorageAPI();
 async function loadEPUBWorkspace(workspaceId: string) {
   try {
-    const package = await storage.readFile(workspaceId, "OEBPS/content.opf");
+    const package = await storage.readFile(workspaceId, 'OEBPS/content.opf');
     const decoder = new TextDecoder();
     const packageContent = decoder.decode(package);
     const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlContent, "application/xml");
-    const title = doc.querySelector("metadata dc:title").value;
-    const author = doc.querySelector("metadata dc:creator").value;
+    const doc = parser.parseFromString(htmlContent, 'application/xml');
+    const title = doc.querySelector('metadata dc:title').value;
+    const author = doc.querySelector('metadata dc:creator').value;
 
     // process content.opf to extract book title and author from metadata...
   } catch (error) {
-    console.error("Failed to handle file:", error);
+    console.error('Failed to handle file:', error);
   }
 }
 
 // Example: Saving editor content
-async function saveChapterContent(
-  workspaceId: string,
-  chapterPath: string,
-  content: string
-) {
+async function saveChapterContent(workspaceId: string, chapterPath: string, content: string) {
   try {
     await storage.writeFile(workspaceId, chapterPath, encoder.encode(chapter1));
   } catch (error) {
-    console.error("Failed to update chapter", error);
+    console.error('Failed to update chapter', error);
   }
 }
 ```

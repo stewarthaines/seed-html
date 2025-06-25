@@ -10,132 +10,132 @@
      SPACING SCALE
      Base unit: 4px (0.25rem) - all spacing is multiple of this
      ============================================ */
-  
+
   --space-0: 0;
   --space-px: 1px;
-  --space-0-5: 0.125rem;  /* 2px */
-  --space-1: 0.25rem;     /* 4px */
-  --space-1-5: 0.375rem;  /* 6px */
-  --space-2: 0.5rem;      /* 8px */
-  --space-2-5: 0.625rem;  /* 10px */
-  --space-3: 0.75rem;     /* 12px */
-  --space-3-5: 0.875rem;  /* 14px */
-  --space-4: 1rem;        /* 16px */
-  --space-5: 1.25rem;     /* 20px */
-  --space-6: 1.5rem;      /* 24px */
-  --space-7: 1.75rem;     /* 28px */
-  --space-8: 2rem;        /* 32px */
-  --space-9: 2.25rem;     /* 36px */
-  --space-10: 2.5rem;     /* 40px */
-  --space-11: 2.75rem;    /* 44px */
-  --space-12: 3rem;       /* 48px */
-  --space-14: 3.5rem;     /* 56px */
-  --space-16: 4rem;       /* 64px */
-  --space-20: 5rem;       /* 80px */
-  --space-24: 6rem;       /* 96px */
-  --space-28: 7rem;       /* 112px */
-  --space-32: 8rem;       /* 128px */
-  --space-36: 9rem;       /* 144px */
-  --space-40: 10rem;      /* 160px */
-  --space-44: 11rem;      /* 176px */
-  --space-48: 12rem;      /* 192px */
-  --space-52: 13rem;      /* 208px */
-  --space-56: 14rem;      /* 224px */
-  --space-60: 15rem;      /* 240px */
-  --space-64: 16rem;      /* 256px */
-  --space-72: 18rem;      /* 288px */
-  --space-80: 20rem;      /* 320px */
-  --space-96: 24rem;      /* 384px */
-  
+  --space-0-5: 0.125rem; /* 2px */
+  --space-1: 0.25rem; /* 4px */
+  --space-1-5: 0.375rem; /* 6px */
+  --space-2: 0.5rem; /* 8px */
+  --space-2-5: 0.625rem; /* 10px */
+  --space-3: 0.75rem; /* 12px */
+  --space-3-5: 0.875rem; /* 14px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem; /* 24px */
+  --space-7: 1.75rem; /* 28px */
+  --space-8: 2rem; /* 32px */
+  --space-9: 2.25rem; /* 36px */
+  --space-10: 2.5rem; /* 40px */
+  --space-11: 2.75rem; /* 44px */
+  --space-12: 3rem; /* 48px */
+  --space-14: 3.5rem; /* 56px */
+  --space-16: 4rem; /* 64px */
+  --space-20: 5rem; /* 80px */
+  --space-24: 6rem; /* 96px */
+  --space-28: 7rem; /* 112px */
+  --space-32: 8rem; /* 128px */
+  --space-36: 9rem; /* 144px */
+  --space-40: 10rem; /* 160px */
+  --space-44: 11rem; /* 176px */
+  --space-48: 12rem; /* 192px */
+  --space-52: 13rem; /* 208px */
+  --space-56: 14rem; /* 224px */
+  --space-60: 15rem; /* 240px */
+  --space-64: 16rem; /* 256px */
+  --space-72: 18rem; /* 288px */
+  --space-80: 20rem; /* 320px */
+  --space-96: 24rem; /* 384px */
+
   /* ============================================
      SEMANTIC SPACING
      Named spacing for specific use cases
      ============================================ */
-  
+
   /* Component internal spacing */
-  --spacing-component-xs: var(--space-1);    /* 4px - tight internal spacing */
-  --spacing-component-sm: var(--space-2);    /* 8px - small internal spacing */
-  --spacing-component-md: var(--space-3);    /* 12px - medium internal spacing */
-  --spacing-component-lg: var(--space-4);    /* 16px - large internal spacing */
-  --spacing-component-xl: var(--space-6);    /* 24px - extra large internal spacing */
-  
+  --spacing-component-xs: var(--space-1); /* 4px - tight internal spacing */
+  --spacing-component-sm: var(--space-2); /* 8px - small internal spacing */
+  --spacing-component-md: var(--space-3); /* 12px - medium internal spacing */
+  --spacing-component-lg: var(--space-4); /* 16px - large internal spacing */
+  --spacing-component-xl: var(--space-6); /* 24px - extra large internal spacing */
+
   /* Layout spacing */
-  --spacing-layout-xs: var(--space-2);       /* 8px - minimal layout spacing */
-  --spacing-layout-sm: var(--space-4);       /* 16px - small layout spacing */
-  --spacing-layout-md: var(--space-6);       /* 24px - medium layout spacing */
-  --spacing-layout-lg: var(--space-8);       /* 32px - large layout spacing */
-  --spacing-layout-xl: var(--space-12);      /* 48px - extra large layout spacing */
-  
+  --spacing-layout-xs: var(--space-2); /* 8px - minimal layout spacing */
+  --spacing-layout-sm: var(--space-4); /* 16px - small layout spacing */
+  --spacing-layout-md: var(--space-6); /* 24px - medium layout spacing */
+  --spacing-layout-lg: var(--space-8); /* 32px - large layout spacing */
+  --spacing-layout-xl: var(--space-12); /* 48px - extra large layout spacing */
+
   /* Content spacing */
-  --spacing-content-xs: var(--space-3);      /* 12px - tight content spacing */
-  --spacing-content-sm: var(--space-4);      /* 16px - small content spacing */
-  --spacing-content-md: var(--space-6);      /* 24px - medium content spacing */
-  --spacing-content-lg: var(--space-8);      /* 32px - large content spacing */
-  --spacing-content-xl: var(--space-12);     /* 48px - extra large content spacing */
-  
+  --spacing-content-xs: var(--space-3); /* 12px - tight content spacing */
+  --spacing-content-sm: var(--space-4); /* 16px - small content spacing */
+  --spacing-content-md: var(--space-6); /* 24px - medium content spacing */
+  --spacing-content-lg: var(--space-8); /* 32px - large content spacing */
+  --spacing-content-xl: var(--space-12); /* 48px - extra large content spacing */
+
   /* ============================================
      LAYOUT-SPECIFIC MEASUREMENTS
      Fixed dimensions for layout components
      ============================================ */
-  
+
   /* Sidebar dimensions */
   --layout-sidebar-width-expanded: 250px;
   --layout-sidebar-width-collapsed: 40px;
   --layout-sidebar-transition-duration: 0.2s;
-  
+
   /* Header dimensions */
   --layout-header-height: 60px;
   --layout-header-padding: var(--space-4);
-  
+
   /* Content area */
   --layout-content-padding: var(--space-6);
   --layout-content-max-width: 1200px;
   --layout-content-gap: var(--space-4);
-  
+
   /* Panel spacing */
   --layout-panel-padding: var(--space-6);
   --layout-panel-gap: var(--space-4);
   --layout-panel-border-radius: var(--radius-md);
-  
+
   /* Resize handle */
   --layout-resize-handle-width: 4px;
   --layout-resize-handle-hover-width: 6px;
-  
+
   /* Form spacing */
   --form-field-spacing: var(--space-4);
   --form-group-spacing: var(--space-6);
   --form-section-spacing: var(--space-8);
-  
+
   /* List spacing */
   --list-item-padding: var(--space-3);
   --list-item-gap: var(--space-2);
   --list-section-gap: var(--space-6);
-  
+
   /* Card spacing */
   --card-padding: var(--space-6);
   --card-gap: var(--space-4);
   --card-header-padding: var(--space-4);
-  
+
   /* Button spacing */
   --button-padding-x: var(--space-4);
   --button-padding-y: var(--space-2);
   --button-gap: var(--space-2);
-  
+
   /* ============================================
      BORDER RADIUS
      Consistent rounding for components
      ============================================ */
-  
+
   --radius-none: 0;
-  --radius-xs: 0.125rem;    /* 2px */
-  --radius-sm: 0.25rem;     /* 4px */
-  --radius-md: 0.375rem;    /* 6px */
-  --radius-lg: 0.5rem;      /* 8px */
-  --radius-xl: 0.75rem;     /* 12px */
-  --radius-2xl: 1rem;       /* 16px */
-  --radius-3xl: 1.5rem;     /* 24px */
-  --radius-full: 9999px;    /* Full rounding */
-  
+  --radius-xs: 0.125rem; /* 2px */
+  --radius-sm: 0.25rem; /* 4px */
+  --radius-md: 0.375rem; /* 6px */
+  --radius-lg: 0.5rem; /* 8px */
+  --radius-xl: 0.75rem; /* 12px */
+  --radius-2xl: 1rem; /* 16px */
+  --radius-3xl: 1.5rem; /* 24px */
+  --radius-full: 9999px; /* Full rounding */
+
   /* Semantic radius values */
   --radius-button: var(--radius-md);
   --radius-input: var(--radius-md);
@@ -143,23 +143,23 @@
   --radius-panel: var(--radius-lg);
   --radius-modal: var(--radius-xl);
   --radius-tooltip: var(--radius-sm);
-  
+
   /* ============================================
      BREAKPOINTS
      Responsive design breakpoints
      ============================================ */
-  
+
   --breakpoint-sm: 640px;
   --breakpoint-md: 768px;
   --breakpoint-lg: 1024px;
   --breakpoint-xl: 1280px;
   --breakpoint-2xl: 1536px;
-  
+
   /* ============================================
      CONTAINER SIZES
      Maximum widths for content containers
      ============================================ */
-  
+
   --container-sm: 640px;
   --container-md: 768px;
   --container-lg: 1024px;

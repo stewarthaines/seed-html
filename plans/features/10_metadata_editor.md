@@ -1,18 +1,22 @@
 # 10. Metadata Editor
 
 ## Overview
+
 Form-based interface for editing EPUB metadata with grouped fields, immediate mode editing, and proper validation for required fields.
 
 ## Requirements
+
 - Form-based editing with grouped fields (Basic, Advanced, Accessibility)
 - Immediate mode editing with blur event updates
 - Dropdown selections for fixed layout and accessibility
 - Required field validation (Title, Language, Identifier)
 
 ## Dependencies
+
 - **#4 Workspace & OPF Manager** - for metadata structure and validation
 
 ## Technical Approach
+
 - Grouped form layout with collapsible sections
 - **Immediate persistence**: Changes saved to content.opf on every field update
 - Real-time validation and saving on blur events
@@ -26,6 +30,7 @@ Form-based interface for editing EPUB metadata with grouped fields, immediate mo
 **Decision**: Save metadata changes immediately to content.opf file on every field update, rather than keeping changes in memory until manual save.
 
 **Rationale**:
+
 - **Data safety**: Users create content over long periods, data loss risk is high
 - **Web UX expectations**: Modern web forms auto-save, users expect persistence
 - **Low performance cost**: content.opf files are small (2-10KB), minimal I/O overhead
@@ -33,6 +38,7 @@ Form-based interface for editing EPUB metadata with grouped fields, immediate mo
 - **EPUB characteristics**: Metadata changes are infrequent compared to content editing
 
 **Performance Analysis**:
+
 - **OPFS**: Very fast for small files, <1ms typical write time
 - **IndexedDB**: Slightly slower but still acceptable, <10ms typical
 - **File size**: content.opf rarely exceeds 10KB, negligible storage impact
@@ -41,74 +47,75 @@ Form-based interface for editing EPUB metadata with grouped fields, immediate mo
 **Alternative considered**: In-memory editing with manual save was rejected due to high data loss risk and poor web UX.
 
 ## API Design
+
 ```typescript
 interface MetadataEditor {
   // Data management with immediate persistence
-  loadMetadata(workspaceId: string): Promise<EPUBMetadata>
-  updateField(workspaceId: string, field: string, value: string | string[]): Promise<void>
-  validateMetadata(metadata: EPUBMetadata): ValidationResult[]
-  
+  loadMetadata(workspaceId: string): Promise<EPUBMetadata>;
+  updateField(workspaceId: string, field: string, value: string | string[]): Promise<void>;
+  validateMetadata(metadata: EPUBMetadata): ValidationResult[];
+
   // Field operations with auto-save
-  addCreator(workspaceId: string): Promise<void>
-  removeCreator(workspaceId: string, index: number): Promise<void>
-  addSubject(workspaceId: string): Promise<void>
-  removeSubject(workspaceId: string, index: number): Promise<void>
-  
+  addCreator(workspaceId: string): Promise<void>;
+  removeCreator(workspaceId: string, index: number): Promise<void>;
+  addSubject(workspaceId: string): Promise<void>;
+  removeSubject(workspaceId: string, index: number): Promise<void>;
+
   // Utilities
-  generateIdentifier(): string
-  getCurrentDate(): string
-  getLanguageCodes(): LanguageOption[]
-  
+  generateIdentifier(): string;
+  getCurrentDate(): string;
+  getLanguageCodes(): LanguageOption[];
+
   // Performance monitoring
-  getPerformanceMetrics(): PersistenceMetrics
+  getPerformanceMetrics(): PersistenceMetrics;
 }
 
 interface PersistenceMetrics {
-  averageSaveTime: number
-  totalSaves: number
-  failedSaves: number
-  lastSaveTime: number
+  averageSaveTime: number;
+  totalSaves: number;
+  failedSaves: number;
+  lastSaveTime: number;
 }
 
 // Workspace Manager integration
 interface WorkspaceManager {
-  updateMetadata(workspaceId: string, field: string, value: any): Promise<void>
-  updateMetadataField(workspaceId: string, field: string, value: any): Promise<void>
-  regenerateOPF(workspaceId: string): Promise<void>
+  updateMetadata(workspaceId: string, field: string, value: any): Promise<void>;
+  updateMetadataField(workspaceId: string, field: string, value: any): Promise<void>;
+  regenerateOPF(workspaceId: string): Promise<void>;
 }
 
 interface EPUBMetadata {
   // Required fields
-  title: string
-  language: string
-  identifier: string
-  
+  title: string;
+  language: string;
+  identifier: string;
+
   // Optional fields
-  creator?: string[]
-  contributor?: string[]
-  publisher?: string
-  date?: string
-  description?: string
-  subject?: string[]
-  rights?: string
-  source?: string
-  relation?: string
-  coverage?: string
-  type?: string
-  format?: string
-  
+  creator?: string[];
+  contributor?: string[];
+  publisher?: string;
+  date?: string;
+  description?: string;
+  subject?: string[];
+  rights?: string;
+  source?: string;
+  relation?: string;
+  coverage?: string;
+  type?: string;
+  format?: string;
+
   // EPUB 3 accessibility
-  accessMode?: string[]
-  accessModeSufficient?: string[]
-  accessibilityFeature?: string[]
-  accessibilityHazard?: string[]
-  accessibilitySummary?: string
+  accessMode?: string[];
+  accessModeSufficient?: string[];
+  accessibilityFeature?: string[];
+  accessibilityHazard?: string[];
+  accessibilitySummary?: string;
 }
 
 interface ValidationResult {
-  field: string
-  message: string
-  severity: 'error' | 'warning'
+  field: string;
+  message: string;
+  severity: 'error' | 'warning';
 }
 ```
 
@@ -118,47 +125,48 @@ interface ValidationResult {
 
 ```typescript
 class MetadataEditor {
-  private workspaceManager: WorkspaceManager
+  private workspaceManager: WorkspaceManager;
   private performanceMetrics: PersistenceMetrics = {
     averageSaveTime: 0,
     totalSaves: 0,
     failedSaves: 0,
-    lastSaveTime: 0
-  }
+    lastSaveTime: 0,
+  };
 
   async updateField(workspaceId: string, field: string, value: string | string[]): Promise<void> {
-    const startTime = performance.now()
-    
+    const startTime = performance.now();
+
     try {
       // Update in workspace manager (updates in-memory cache + persists to file)
-      await this.workspaceManager.updateMetadataField(workspaceId, field, value)
-      
+      await this.workspaceManager.updateMetadataField(workspaceId, field, value);
+
       // Update performance metrics
-      const duration = performance.now() - startTime
-      this.updateMetrics(duration, true)
-      
+      const duration = performance.now() - startTime;
+      this.updateMetrics(duration, true);
+
       // Log slow operations
       if (duration > 100) {
-        console.warn(`Slow metadata save: ${field} took ${duration}ms`)
+        console.warn(`Slow metadata save: ${field} took ${duration}ms`);
       }
-      
     } catch (error) {
-      this.updateMetrics(performance.now() - startTime, false)
-      console.error(`Failed to save metadata field ${field}:`, error)
-      throw error
+      this.updateMetrics(performance.now() - startTime, false);
+      console.error(`Failed to save metadata field ${field}:`, error);
+      throw error;
     }
   }
 
   private updateMetrics(duration: number, success: boolean): void {
-    this.performanceMetrics.totalSaves++
-    this.performanceMetrics.lastSaveTime = duration
-    
+    this.performanceMetrics.totalSaves++;
+    this.performanceMetrics.lastSaveTime = duration;
+
     if (success) {
       // Update rolling average
-      const total = this.performanceMetrics.averageSaveTime * (this.performanceMetrics.totalSaves - 1)
-      this.performanceMetrics.averageSaveTime = (total + duration) / this.performanceMetrics.totalSaves
+      const total =
+        this.performanceMetrics.averageSaveTime * (this.performanceMetrics.totalSaves - 1);
+      this.performanceMetrics.averageSaveTime =
+        (total + duration) / this.performanceMetrics.totalSaves;
     } else {
-      this.performanceMetrics.failedSaves++
+      this.performanceMetrics.failedSaves++;
     }
   }
 }
@@ -168,25 +176,25 @@ class MetadataEditor {
 
 ```typescript
 class WorkspaceManager {
-  private opfCache = new Map<string, OPFDocument>()
-  
+  private opfCache = new Map<string, OPFDocument>();
+
   async updateMetadataField(workspaceId: string, field: string, value: any): Promise<void> {
     // Get current OPF (from cache or load from file)
-    const opf = await this.getWorkspaceOPF(workspaceId)
-    
+    const opf = await this.getWorkspaceOPF(workspaceId);
+
     // Update the specific field
-    opf.metadata[field] = value
-    
+    opf.metadata[field] = value;
+
     // Update cache
-    this.opfCache.set(workspaceId, opf)
-    
+    this.opfCache.set(workspaceId, opf);
+
     // Immediately persist to content.opf file
-    await this.saveOPF(workspaceId, opf)
+    await this.saveOPF(workspaceId, opf);
   }
-  
+
   private async saveOPF(workspaceId: string, opf: OPFDocument): Promise<void> {
-    const xml = this.generateOPFXML(opf)
-    await this.storage.writeTextFile(workspaceId, 'OEBPS/content.opf', xml)
+    const xml = this.generateOPFXML(opf);
+    await this.storage.writeTextFile(workspaceId, 'OEBPS/content.opf', xml);
   }
 }
 ```
@@ -196,26 +204,27 @@ class WorkspaceManager {
 ```typescript
 // Optional: Use for rapid typing scenarios
 const debouncedUpdateField = debounce(async (workspaceId: string, field: string, value: string) => {
-  await metadataEditor.updateField(workspaceId, field, value)
-}, 500) // 500ms delay
+  await metadataEditor.updateField(workspaceId, field, value);
+}, 500); // 500ms delay
 
 // Use in component for text inputs that might change rapidly
 const handleFieldChange = (field: string, value: string) => {
   // Immediate UI update
-  metadata[field] = value
-  
+  metadata[field] = value;
+
   // Debounced persistence
-  debouncedUpdateField(workspaceId, field, value)
-}
+  debouncedUpdateField(workspaceId, field, value);
+};
 ```
 
 ## Form Layout Structure
+
 ```svelte
 <div class="metadata-editor">
   <div class="metadata-sidebar">
     <nav class="metadata-groups">
       {#each metadataGroups as group}
-        <button 
+        <button
           class="group-button"
           class:active={activeGroup === group.id}
           on:click={() => setActiveGroup(group.id)}
@@ -228,7 +237,7 @@ const handleFieldChange = (field: string, value: string) => {
       {/each}
     </nav>
   </div>
-  
+
   <form class="metadata-form" on:submit|preventDefault>
     {#if activeGroup === 'basic'}
       <BasicMetadataFields bind:metadata />
@@ -242,47 +251,50 @@ const handleFieldChange = (field: string, value: string) => {
 ```
 
 ## Basic Metadata Fields
+
 ```svelte
 <script>
-  import { createEventDispatcher } from 'svelte'
-  
-  const dispatch = createEventDispatcher()
-  
-  export let metadata = {}
-  export let workspaceId = ''
-  export let metadataEditor = null
-  
-  let saving = false
-  let saveStatus = {}
-  
+  import { createEventDispatcher } from 'svelte';
+
+  const dispatch = createEventDispatcher();
+
+  export let metadata = {};
+  export let workspaceId = '';
+  export let metadataEditor = null;
+
+  let saving = false;
+  let saveStatus = {};
+
   const saveField = async (field, value) => {
-    if (!metadataEditor || !workspaceId) return
-    
-    saving = true
-    saveStatus[field] = 'saving'
-    
+    if (!metadataEditor || !workspaceId) return;
+
+    saving = true;
+    saveStatus[field] = 'saving';
+
     try {
-      await metadataEditor.updateField(workspaceId, field, value)
-      saveStatus[field] = 'saved'
-      setTimeout(() => { saveStatus[field] = null }, 2000)
+      await metadataEditor.updateField(workspaceId, field, value);
+      saveStatus[field] = 'saved';
+      setTimeout(() => {
+        saveStatus[field] = null;
+      }, 2000);
     } catch (error) {
-      saveStatus[field] = 'error'
-      console.error(`Failed to save ${field}:`, error)
+      saveStatus[field] = 'error';
+      console.error(`Failed to save ${field}:`, error);
     } finally {
-      saving = false
+      saving = false;
     }
-  }
+  };
 </script>
 
 <div class="field-group">
   <h3>Basic Information</h3>
-  
+
   <div class="field">
     <label for="title">Title *</label>
     <div class="field-input-wrapper">
-      <input 
+      <input
         id="title"
-        type="text" 
+        type="text"
         bind:value={metadata.title}
         on:blur={() => saveField('title', metadata.title)}
         required
@@ -301,10 +313,10 @@ const handleFieldChange = (field: string, value: string) => {
       <span class="field-error">{getFieldError('title')}</span>
     {/if}
   </div>
-  
+
   <div class="field">
     <label for="language">Language *</label>
-    <select 
+    <select
       id="language"
       bind:value={metadata.language}
       on:change={() => saveField('language', metadata.language)}
@@ -316,13 +328,13 @@ const handleFieldChange = (field: string, value: string) => {
       {/each}
     </select>
   </div>
-  
+
   <div class="field">
     <label for="identifier">Identifier *</label>
     <div class="identifier-field">
-      <input 
+      <input
         id="identifier"
-        type="text" 
+        type="text"
         bind:value={metadata.identifier}
         on:blur={() => saveField('identifier', metadata.identifier)}
         required
@@ -330,13 +342,13 @@ const handleFieldChange = (field: string, value: string) => {
       <button type="button" on:click={generateNewIdentifier}>Generate</button>
     </div>
   </div>
-  
+
   <div class="field-array">
     <label>Authors</label>
     {#each metadata.creator || [] as creator, index}
       <div class="array-item">
-        <input 
-          type="text" 
+        <input
+          type="text"
           bind:value={creator}
           on:blur={() => saveCreators()}
           placeholder="Author name"
@@ -350,46 +362,47 @@ const handleFieldChange = (field: string, value: string) => {
 ```
 
 ## Advanced Metadata Fields
+
 ```svelte
 <div class="field-group">
   <h3>Publication Details</h3>
-  
+
   <div class="field">
     <label for="publisher">Publisher</label>
-    <input 
+    <input
       id="publisher"
-      type="text" 
+      type="text"
       bind:value={metadata.publisher}
       on:blur={() => saveField('publisher', metadata.publisher)}
     />
   </div>
-  
+
   <div class="field">
     <label for="date">Publication Date</label>
-    <input 
+    <input
       id="date"
-      type="date" 
+      type="date"
       bind:value={metadata.date}
       on:blur={() => saveField('date', metadata.date)}
     />
   </div>
-  
+
   <div class="field">
     <label for="description">Description</label>
-    <textarea 
+    <textarea
       id="description"
       bind:value={metadata.description}
       on:blur={() => saveField('description', metadata.description)}
       rows="4"
     ></textarea>
   </div>
-  
+
   <div class="field-array">
     <label>Subjects</label>
     {#each metadata.subject || [] as subject, index}
       <div class="array-item">
-        <input 
-          type="text" 
+        <input
+          type="text"
           bind:value={subject}
           on:blur={() => saveSubjects()}
           placeholder="Subject/keyword"
@@ -399,12 +412,12 @@ const handleFieldChange = (field: string, value: string) => {
     {/each}
     <button type="button" on:click={addSubject}>Add Subject</button>
   </div>
-  
+
   <div class="field">
     <label for="rights">Rights</label>
-    <input 
+    <input
       id="rights"
-      type="text" 
+      type="text"
       bind:value={metadata.rights}
       on:blur={() => saveField('rights', metadata.rights)}
       placeholder="Copyright information"
@@ -414,13 +427,14 @@ const handleFieldChange = (field: string, value: string) => {
 ```
 
 ## Accessibility Metadata Fields
+
 ```svelte
 <div class="field-group">
   <h3>Accessibility Information</h3>
-  
+
   <div class="field">
     <label for="access-mode">Access Mode</label>
-    <select 
+    <select
       id="access-mode"
       multiple
       bind:value={metadata.accessMode}
@@ -432,10 +446,10 @@ const handleFieldChange = (field: string, value: string) => {
       <option value="tactile">Tactile</option>
     </select>
   </div>
-  
+
   <div class="field">
     <label for="accessibility-features">Accessibility Features</label>
-    <select 
+    <select
       id="accessibility-features"
       multiple
       bind:value={metadata.accessibilityFeature}
@@ -450,10 +464,10 @@ const handleFieldChange = (field: string, value: string) => {
       <option value="structuralNavigation">Structural Navigation</option>
     </select>
   </div>
-  
+
   <div class="field">
     <label for="accessibility-hazards">Accessibility Hazards</label>
-    <select 
+    <select
       id="accessibility-hazards"
       multiple
       bind:value={metadata.accessibilityHazard}
@@ -465,10 +479,10 @@ const handleFieldChange = (field: string, value: string) => {
       <option value="none">None</option>
     </select>
   </div>
-  
+
   <div class="field">
     <label for="accessibility-summary">Accessibility Summary</label>
-    <textarea 
+    <textarea
       id="accessibility-summary"
       bind:value={metadata.accessibilitySummary}
       on:blur={() => saveField('accessibilitySummary', metadata.accessibilitySummary)}
@@ -480,45 +494,47 @@ const handleFieldChange = (field: string, value: string) => {
 ```
 
 ## Validation Logic
+
 ```typescript
 const validateMetadata = (metadata: EPUBMetadata): ValidationResult[] => {
-  const errors: ValidationResult[] = []
-  
+  const errors: ValidationResult[] = [];
+
   // Required fields
   if (!metadata.title?.trim()) {
-    errors.push({ field: 'title', message: 'Title is required', severity: 'error' })
+    errors.push({ field: 'title', message: 'Title is required', severity: 'error' });
   }
-  
+
   if (!metadata.language?.trim()) {
-    errors.push({ field: 'language', message: 'Language is required', severity: 'error' })
+    errors.push({ field: 'language', message: 'Language is required', severity: 'error' });
   } else if (!isValidLanguageCode(metadata.language)) {
-    errors.push({ field: 'language', message: 'Invalid language code', severity: 'error' })
+    errors.push({ field: 'language', message: 'Invalid language code', severity: 'error' });
   }
-  
+
   if (!metadata.identifier?.trim()) {
-    errors.push({ field: 'identifier', message: 'Identifier is required', severity: 'error' })
+    errors.push({ field: 'identifier', message: 'Identifier is required', severity: 'error' });
   } else if (!isValidIdentifier(metadata.identifier)) {
-    errors.push({ field: 'identifier', message: 'Invalid identifier format', severity: 'warning' })
+    errors.push({ field: 'identifier', message: 'Invalid identifier format', severity: 'warning' });
   }
-  
+
   // Date validation
   if (metadata.date && !isValidDate(metadata.date)) {
-    errors.push({ field: 'date', message: 'Invalid date format', severity: 'error' })
+    errors.push({ field: 'date', message: 'Invalid date format', severity: 'error' });
   }
-  
-  return errors
-}
+
+  return errors;
+};
 ```
 
 ## Auto-generation Utilities
+
 ```typescript
 const generateIdentifier = (): string => {
-  return `urn:uuid:${crypto.randomUUID()}`
-}
+  return `urn:uuid:${crypto.randomUUID()}`;
+};
 
 const getCurrentDate = (): string => {
-  return new Date().toISOString().split('T')[0] // YYYY-MM-DD format
-}
+  return new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+};
 
 const getLanguageCodes = (): LanguageOption[] => [
   { code: 'en', name: 'English' },
@@ -530,10 +546,11 @@ const getLanguageCodes = (): LanguageOption[] => [
   { code: 'ja', name: 'Japanese' },
   { code: 'zh', name: 'Chinese' },
   // ... more language codes
-]
+];
 ```
 
 ## Error Handling
+
 - Required field validation
 - Invalid date format handling
 - Language code validation
@@ -544,6 +561,7 @@ const getLanguageCodes = (): LanguageOption[] => [
 ## Testing Considerations
 
 ### Validation Testing
+
 - Test all required field validation
 - Test array field operations (add/remove)
 - Test dropdown selections
@@ -551,6 +569,7 @@ const getLanguageCodes = (): LanguageOption[] => [
 - Test accessibility metadata handling
 
 ### Immediate Persistence Testing
+
 - Test immediate save functionality on field blur
 - Test save failure handling and error recovery
 - Test concurrent field updates
@@ -559,6 +578,7 @@ const getLanguageCodes = (): LanguageOption[] => [
 - Verify content.opf file integrity after saves
 
 ### Performance Testing
+
 - Measure save operation latency across storage backends
 - Test with rapidly changing fields (typing simulation)
 - Monitor memory usage with extended editing sessions
@@ -566,12 +586,14 @@ const getLanguageCodes = (): LanguageOption[] => [
 - Verify no memory leaks in OPF cache
 
 ### Integration Testing
+
 - Test workspace switching with unsaved changes
 - Test metadata loading from existing EPUB files
 - Test OPF regeneration with updated metadata
 - Test cross-component metadata updates (manifest view, etc.)
 
 ### Error Recovery Testing
+
 - Test behavior when storage quota exceeded
 - Test recovery from corrupted content.opf files
 - Test partial save failures (workspace exists but OPF write fails)
@@ -580,12 +602,14 @@ const getLanguageCodes = (): LanguageOption[] => [
 ## Implementation Notes
 
 ### Development Priorities
+
 1. **Start with immediate persistence**: Implement the simple approach first
 2. **Add performance monitoring**: Track save times and failures from day one
 3. **Progressive enhancement**: Add debouncing only if performance issues arise
 4. **Error handling**: Robust error recovery is critical for data safety
 
 ### Best Practices
+
 - **Visual feedback**: Show save indicators (saving/saved/error) for user confidence
 - **Error recovery**: Graceful handling of save failures with retry mechanisms
 - **Performance monitoring**: Log slow operations (>100ms) for optimization
@@ -593,11 +617,13 @@ const getLanguageCodes = (): LanguageOption[] => [
 - **Accessibility**: Test with screen readers, ensure save states are announced
 
 ### Optimization Options
+
 - **Debouncing**: Available for rapid text input if needed (500ms recommended)
 - **Batch updates**: Group multiple field changes if performance becomes issue
 - **Background saves**: Consider web workers for large metadata sets
 
 ### Browser Considerations
+
 - **OPFS performance**: Expect <1ms save times on modern browsers
 - **IndexedDB fallback**: Expect <10ms save times, still very acceptable
 - **Storage quotas**: Monitor and handle quota exceeded gracefully

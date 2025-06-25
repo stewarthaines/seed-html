@@ -15,7 +15,7 @@
   let storage: FileStorageAPI;
   let logs: LogEntry[] = [];
   let isLoading = false;
-  
+
   // EPUB state
   let currentWorkspace: string | null = null;
   let validationResults: unknown = null;
@@ -30,7 +30,10 @@
       unpacker = new EPUBUnpacker();
       addLog('success', 'EPUB Unpacker initialized');
     } catch (error: unknown) {
-      addLog('error', `Failed to initialize: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      addLog(
+        'error',
+        `Failed to initialize: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   });
 
@@ -44,8 +47,14 @@
     const target = event.target as globalThis.HTMLInputElement;
     if (target.files && target.files[0]) {
       uploadedEPUB = target.files[0];
-      addLog('info', `Uploaded file: ${uploadedEPUB.name} (${(uploadedEPUB.size / 1024).toFixed(1)} KB)`);
-      addLog('info', `File type: ${uploadedEPUB.type}, Constructor: ${uploadedEPUB.constructor.name}`);
+      addLog(
+        'info',
+        `Uploaded file: ${uploadedEPUB.name} (${(uploadedEPUB.size / 1024).toFixed(1)} KB)`
+      );
+      addLog(
+        'info',
+        `File type: ${uploadedEPUB.type}, Constructor: ${uploadedEPUB.constructor.name}`
+      );
       addLog('info', `Has arrayBuffer method: ${typeof uploadedEPUB.arrayBuffer === 'function'}`);
     }
   }
@@ -53,26 +62,29 @@
   // Process uploaded EPUB
   async function processUploadedEPUB() {
     if (!uploadedEPUB || !unpacker || isLoading) return;
-    
+
     // Verify it's actually a File object
     if (!(uploadedEPUB instanceof File)) {
       addLog('error', 'Invalid file object - not a File instance');
       return;
     }
-    
+
     // Check if arrayBuffer method exists
     if (typeof uploadedEPUB.arrayBuffer !== 'function') {
       addLog('error', 'File object missing arrayBuffer method - browser compatibility issue');
       return;
     }
-    
+
     isLoading = true;
     addLog('action', `Processing uploaded EPUB: ${uploadedEPUB.name}`);
-    
+
     try {
       await processEPUBFile(uploadedEPUB, `Custom EPUB: ${uploadedEPUB.name}`);
     } catch (error: unknown) {
-      addLog('error', `Failed to process upload: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      addLog(
+        'error',
+        `Failed to process upload: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     } finally {
       isLoading = false;
     }
@@ -91,10 +103,13 @@
         addLog('action', `Analyzing EPUB structure...`);
         const analysis = await unpacker.analyzeEPUB(file);
         analysisResults = analysis;
-        
-        addLog('success', `Analysis complete: ${analysis.fileCount} files, ${(analysis.totalSize / 1024).toFixed(1)} KB`);
+
+        addLog(
+          'success',
+          `Analysis complete: ${analysis.fileCount} files, ${(analysis.totalSize / 1024).toFixed(1)} KB`
+        );
         addLog('info', `Valid EPUB: ${analysis.isValid ? 'Yes' : 'No'}`);
-        
+
         if (analysis.validation.errors.length > 0) {
           analysis.validation.errors.forEach(error => addLog('error', `Validation: ${error}`));
         }
@@ -108,15 +123,13 @@
           await storage.createWorkspace(currentWorkspace);
           addLog('info', `Created workspace: ${currentWorkspace}`);
         }
-        
+
         const result = await unpacker.unpackEPUB(file, currentWorkspace);
-        
+
         if (result.success) {
           addLog('success', `Unpacked ${result.processedFiles} files to workspace`);
           if (result.extractedFiles) {
-            result.extractedFiles.slice(0, 5).forEach(file => 
-              addLog('info', `Extracted: ${file}`)
-            );
+            result.extractedFiles.slice(0, 5).forEach(file => addLog('info', `Extracted: ${file}`));
             if (result.extractedFiles.length > 5) {
               addLog('info', `... and ${result.extractedFiles.length - 5} more files`);
             }
@@ -126,25 +139,31 @@
         }
       }
     } catch (error: unknown) {
-      addLog('error', `Failed to unpack ${name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      addLog(
+        'error',
+        `Failed to unpack ${name}: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
   // Process EPUB scenario
   async function processScenario(scenarioKey: string, analysisOnly = false) {
     if (!unpacker || isLoading) return;
-    
+
     const scenario = mockEPUBScenarios[scenarioKey as keyof typeof mockEPUBScenarios];
     if (!scenario) return;
-    
+
     isLoading = true;
     addLog('action', `${analysisOnly ? 'Analyzing' : 'Processing'} ${scenario.name}...`);
-    
+
     try {
       const arrayBuffer = await scenario.create();
       await processEPUBData(arrayBuffer, scenario.name, analysisOnly);
     } catch (error: unknown) {
-      addLog('error', `Failed to process ${scenario.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      addLog(
+        'error',
+        `Failed to process ${scenario.name}: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     } finally {
       isLoading = false;
     }
@@ -156,16 +175,19 @@
       // Convert ArrayBuffer to File object for API compatibility
       const blob = new Blob([arrayBuffer], { type: 'application/epub+zip' });
       const file = new File([blob], `${name}.epub`, { type: 'application/epub+zip' });
-      
+
       if (analysisOnly) {
         // Analysis mode - don't extract files
         const analysis = await unpacker.analyzeEPUB(file);
         analysisResults = analysis;
         validationResults = analysis.validation;
-        
+
         addLog('success', `Analysis complete for ${name}`);
-        addLog('info', `Files: ${analysis.fileCount}, Size: ${(analysis.totalSize / 1024).toFixed(1)} KB`);
-        
+        addLog(
+          'info',
+          `Files: ${analysis.fileCount}, Size: ${(analysis.totalSize / 1024).toFixed(1)} KB`
+        );
+
         if (analysis.validation.errors.length > 0) {
           analysis.validation.errors.forEach(error => addLog('error', `Validation: ${error}`));
         }
@@ -179,16 +201,19 @@
           await storage.createWorkspace(currentWorkspace);
           addLog('info', `Created workspace: ${currentWorkspace}`);
         }
-        
+
         const result = await unpacker.unpackEPUB(file, currentWorkspace);
-        
+
         if (result.success) {
           extractedFiles = result.extractedFiles || [];
           validationResults = result.validation;
-          
+
           addLog('success', `Unpacked ${name} successfully`);
-          addLog('info', `Extracted ${result.processedFiles} files, ${(result.totalSize! / 1024).toFixed(1)} KB`);
-          
+          addLog(
+            'info',
+            `Extracted ${result.processedFiles} files, ${(result.totalSize! / 1024).toFixed(1)} KB`
+          );
+
           if (result.validation?.errors.length > 0) {
             result.validation.errors.forEach(error => addLog('error', `Validation: ${error}`));
           }
@@ -201,36 +226,42 @@
         }
       }
     } catch (error: unknown) {
-      addLog('error', `Processing error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      addLog(
+        'error',
+        `Processing error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
   // Demo reset
   async function resetDemo() {
     if (isLoading) return;
-    
+
     isLoading = true;
     addLog('action', 'Resetting demo...');
-    
+
     try {
       if (currentWorkspace && storage) {
         await storage.deleteWorkspace(currentWorkspace);
         addLog('info', `Deleted workspace: ${currentWorkspace}`);
       }
-      
+
       currentWorkspace = null;
       validationResults = null;
       extractedFiles = [];
       analysisResults = null;
       uploadedEPUB = null;
-      
+
       // Reset file input
       const fileInput = document.querySelector('input[type="file"]') as globalThis.HTMLInputElement;
       if (fileInput) fileInput.value = '';
-      
+
       addLog('success', 'Demo reset complete');
     } catch (error: unknown) {
-      addLog('error', `Failed to reset: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      addLog(
+        'error',
+        `Failed to reset: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     } finally {
       isLoading = false;
     }
@@ -242,7 +273,7 @@
 
   function formatValidationResults(results: unknown): string {
     if (!results || typeof results !== 'object') return 'No validation results';
-    
+
     const validation = results as { isValid: boolean; errors: string[]; warnings: string[] };
     let output = `Valid: ${validation.isValid}\n`;
     if (validation.errors && validation.errors.length > 0) {
@@ -268,12 +299,7 @@
       <div class="section">
         <h3>Custom EPUB Upload</h3>
         <div class="upload-area">
-          <input 
-            type="file" 
-            accept=".epub" 
-            on:change={handleFileUpload}
-            disabled={isLoading}
-          >
+          <input type="file" accept=".epub" on:change={handleFileUpload} disabled={isLoading} />
           {#if uploadedEPUB}
             <button on:click={processUploadedEPUB} disabled={isLoading}>
               Unpack Uploaded EPUB
@@ -321,9 +347,7 @@
       <div class="section">
         <h3>Demo Controls</h3>
         <div class="button-group">
-          <button on:click={resetDemo} disabled={isLoading}>
-            Reset Demo
-          </button>
+          <button on:click={resetDemo} disabled={isLoading}> Reset Demo </button>
         </div>
       </div>
 
@@ -355,7 +379,9 @@
           <h3>Analysis Results</h3>
           <div class="analysis-display">
             <div class="analysis-stat">Files: {analysisResults.fileCount}</div>
-            <div class="analysis-stat">Size: {(analysisResults.totalSize / 1024).toFixed(1)} KB</div>
+            <div class="analysis-stat">
+              Size: {(analysisResults.totalSize / 1024).toFixed(1)} KB
+            </div>
             <div class="analysis-stat">Valid: {analysisResults.isValid ? '✅' : '❌'}</div>
             {#if analysisResults.fileList.length > 0}
               <div class="file-list-preview">
@@ -400,7 +426,7 @@
     margin-bottom: 10px;
   }
 
-  .upload-area input[type="file"] {
+  .upload-area input[type='file'] {
     margin-bottom: 10px;
   }
 

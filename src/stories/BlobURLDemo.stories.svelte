@@ -50,10 +50,10 @@ The demo creates:
 - Sample XHTML with references to these assets
 
 This demonstrates the complete workflow used by the EPUB editor for preview iframe functionality.
-        `
-        }
-      }
-    }
+        `,
+        },
+      },
+    },
   });
 </script>
 
@@ -63,7 +63,7 @@ This demonstrates the complete workflow used by the EPUB editor for preview ifra
 </Story>
 
 <!-- Automated Demo with Sample Workflow -->
-<Story 
+<Story
   name="Demo with Sample Workflow"
   play={async ({ canvasElement }) => {
     const { within } = await import('@testing-library/dom');

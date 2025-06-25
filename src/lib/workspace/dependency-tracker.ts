@@ -1,6 +1,6 @@
 /**
  * ManifestDependencyTracker Class
- * 
+ *
  * File dependency analysis using CSSOM + regex fallback for robust parsing.
  */
 
@@ -22,17 +22,17 @@ export class ManifestDependencyTracker {
     try {
       const dependencies: string[] = [];
 
-      if (manifestItem.mediaType === "application/xhtml+xml") {
+      if (manifestItem.mediaType === 'application/xhtml+xml') {
         const xhtmlDeps = await this.findXHTMLDependencies(workspaceId, manifestItem);
         dependencies.push(...xhtmlDeps);
-      } else if (manifestItem.mediaType === "text/css") {
+      } else if (manifestItem.mediaType === 'text/css') {
         const cssDeps = await this.findCSSDependencies(workspaceId, manifestItem);
         dependencies.push(...cssDeps);
       }
       // Add more media types as needed (JS, etc.)
 
-      return dependencies.filter((dep, index, array) => 
-        dep.length > 0 && array.indexOf(dep) === index // Remove duplicates and empty strings
+      return dependencies.filter(
+        (dep, index, array) => dep.length > 0 && array.indexOf(dep) === index // Remove duplicates and empty strings
       );
     } catch (error) {
       throw new WorkspaceError(
@@ -46,11 +46,14 @@ export class ManifestDependencyTracker {
   /**
    * Find dependencies in XHTML files
    */
-  private async findXHTMLDependencies(workspaceId: string, manifestItem: ManifestItem): Promise<string[]> {
+  private async findXHTMLDependencies(
+    workspaceId: string,
+    manifestItem: ManifestItem
+  ): Promise<string[]> {
     try {
       const content = await this.storage.readTextFile(workspaceId, manifestItem.href);
-      const doc = new DOMParser().parseFromString(content, "application/xml");
-      
+      const doc = new DOMParser().parseFromString(content, 'application/xml');
+
       // Check for parsing errors
       const parserError = doc.querySelector('parsererror');
       if (parserError) {
@@ -62,44 +65,44 @@ export class ManifestDependencyTracker {
 
       // Find CSS links
       const cssLinks = doc.querySelectorAll('link[rel="stylesheet"]');
-      cssLinks.forEach((link) => {
-        const href = link.getAttribute("href");
+      cssLinks.forEach(link => {
+        const href = link.getAttribute('href');
         if (href) {
           dependencies.push(this.resolveRelativePath(manifestItem.href, href));
         }
       });
 
       // Find images
-      const images = doc.querySelectorAll("img");
-      images.forEach((img) => {
-        const src = img.getAttribute("src");
+      const images = doc.querySelectorAll('img');
+      images.forEach(img => {
+        const src = img.getAttribute('src');
         if (src) {
           dependencies.push(this.resolveRelativePath(manifestItem.href, src));
         }
       });
 
       // Find audio/video sources
-      const mediaSources = doc.querySelectorAll("audio source, video source, audio, video");
-      mediaSources.forEach((source) => {
-        const src = source.getAttribute("src");
+      const mediaSources = doc.querySelectorAll('audio source, video source, audio, video');
+      mediaSources.forEach(source => {
+        const src = source.getAttribute('src');
         if (src) {
           dependencies.push(this.resolveRelativePath(manifestItem.href, src));
         }
       });
 
       // Find object/embed elements
-      const objects = doc.querySelectorAll("object, embed");
-      objects.forEach((obj) => {
-        const data = obj.getAttribute("data") || obj.getAttribute("src");
+      const objects = doc.querySelectorAll('object, embed');
+      objects.forEach(obj => {
+        const data = obj.getAttribute('data') || obj.getAttribute('src');
         if (data) {
           dependencies.push(this.resolveRelativePath(manifestItem.href, data));
         }
       });
 
       // Find script sources
-      const scripts = doc.querySelectorAll("script[src]");
-      scripts.forEach((script) => {
-        const src = script.getAttribute("src");
+      const scripts = doc.querySelectorAll('script[src]');
+      scripts.forEach(script => {
+        const src = script.getAttribute('src');
         if (src) {
           dependencies.push(this.resolveRelativePath(manifestItem.href, src));
         }
@@ -122,9 +125,11 @@ export class ManifestDependencyTracker {
    */
   private findXHTMLDependenciesRegex(content: string, basePath: string): string[] {
     const dependencies: string[] = [];
-    
+
     // CSS links
-    const cssMatches = content.match(/<link[^>]+rel=["']stylesheet["'][^>]*href=["']([^"']+)["']/gi);
+    const cssMatches = content.match(
+      /<link[^>]+rel=["']stylesheet["'][^>]*href=["']([^"']+)["']/gi
+    );
     if (cssMatches) {
       cssMatches.forEach(match => {
         const hrefMatch = match.match(/href=["']([^"']+)["']/i);
@@ -173,7 +178,10 @@ export class ManifestDependencyTracker {
   /**
    * Find dependencies in CSS files
    */
-  private async findCSSDependencies(workspaceId: string, manifestItem: ManifestItem): Promise<string[]> {
+  private async findCSSDependencies(
+    workspaceId: string,
+    manifestItem: ManifestItem
+  ): Promise<string[]> {
     try {
       const content = await this.storage.readTextFile(workspaceId, manifestItem.href);
       const dependencies: string[] = [];
@@ -182,26 +190,22 @@ export class ManifestDependencyTracker {
         // Try CSSOM parsing first (supported in all target browsers)
         const sheet = new CSSStyleSheet();
         await sheet.replace(content);
-        
+
         for (const rule of sheet.cssRules) {
           if (rule instanceof CSSImportRule && rule.href) {
             dependencies.push(this.resolveRelativePath(manifestItem.href, rule.href));
           }
-          
+
           if (rule instanceof CSSStyleRule) {
             // Extract URLs from style declarations
             const urls = this.extractUrlsFromStyle(rule.style);
-            dependencies.push(...urls.map(url => 
-              this.resolveRelativePath(manifestItem.href, url)
-            ));
+            dependencies.push(...urls.map(url => this.resolveRelativePath(manifestItem.href, url)));
           }
 
           // Handle @font-face rules
           if (rule instanceof CSSFontFaceRule) {
             const urls = this.extractUrlsFromStyle(rule.style);
-            dependencies.push(...urls.map(url => 
-              this.resolveRelativePath(manifestItem.href, url)
-            ));
+            dependencies.push(...urls.map(url => this.resolveRelativePath(manifestItem.href, url)));
           }
         }
       } catch {
@@ -227,7 +231,12 @@ export class ManifestDependencyTracker {
     if (importMatches) {
       importMatches.forEach(match => {
         const urlMatch = match.match(/@import\s+(?:url\()?["']?([^"');\s]+)["']?\)?/i);
-        if (urlMatch && urlMatch[1] && !urlMatch[1].startsWith('http') && !urlMatch[1].startsWith('data:')) {
+        if (
+          urlMatch &&
+          urlMatch[1] &&
+          !urlMatch[1].startsWith('http') &&
+          !urlMatch[1].startsWith('data:')
+        ) {
           dependencies.push(this.resolveRelativePath(basePath, urlMatch[1]));
         }
       });
@@ -238,7 +247,13 @@ export class ManifestDependencyTracker {
     if (urlMatches) {
       urlMatches.forEach(match => {
         const urlMatch = match.match(/url\(['"]?([^'")]+)['"]?\)/i);
-        if (urlMatch && urlMatch[1] && !urlMatch[1].startsWith('http') && !urlMatch[1].startsWith('data:') && !urlMatch[1].startsWith('#')) {
+        if (
+          urlMatch &&
+          urlMatch[1] &&
+          !urlMatch[1].startsWith('http') &&
+          !urlMatch[1].startsWith('data:') &&
+          !urlMatch[1].startsWith('#')
+        ) {
           dependencies.push(this.resolveRelativePath(basePath, urlMatch[1]));
         }
       });
@@ -252,29 +267,29 @@ export class ManifestDependencyTracker {
    */
   private extractUrlsFromStyle(style: CSSStyleDeclaration): string[] {
     const urls: string[] = [];
-    
+
     // Check common properties that reference URLs
     const urlProperties = [
-      'background-image', 'border-image', 'list-style-image', 
-      'content', 'cursor', 'src' // for @font-face
+      'background-image',
+      'border-image',
+      'list-style-image',
+      'content',
+      'cursor',
+      'src', // for @font-face
     ];
-    
+
     for (const prop of urlProperties) {
       const value = style.getPropertyValue(prop);
       if (value) {
         const urlMatches = value.match(/url\(['"]?([^'")]+)['"]?\)/g);
         if (urlMatches) {
-          urls.push(...urlMatches.map(match => 
-            match.replace(/url\(['"]?([^'")]+)['"]?\)/, '$1')
-          ));
+          urls.push(...urlMatches.map(match => match.replace(/url\(['"]?([^'")]+)['"]?\)/, '$1')));
         }
       }
     }
-    
-    return urls.filter(url => 
-      !url.startsWith('http') && 
-      !url.startsWith('data:') && 
-      !url.startsWith('#')
+
+    return urls.filter(
+      url => !url.startsWith('http') && !url.startsWith('data:') && !url.startsWith('#')
     );
   }
 
@@ -283,13 +298,17 @@ export class ManifestDependencyTracker {
    */
   private resolveRelativePath(basePath: string, relativePath: string): string {
     // Handle absolute URLs and data URLs
-    if (relativePath.startsWith('http') || relativePath.startsWith('data:') || relativePath.startsWith('#')) {
+    if (
+      relativePath.startsWith('http') ||
+      relativePath.startsWith('data:') ||
+      relativePath.startsWith('#')
+    ) {
       return '';
     }
 
     // Get directory of base file
-    const baseDir = basePath.split("/").slice(0, -1).join("/");
-    
+    const baseDir = basePath.split('/').slice(0, -1).join('/');
+
     // Handle different relative path patterns
     if (relativePath.startsWith('./')) {
       relativePath = relativePath.substring(2);
@@ -310,7 +329,7 @@ export class ManifestDependencyTracker {
     // Resolve .. patterns
     const parts = resolved.split('/');
     const resolvedParts: string[] = [];
-    
+
     for (const part of parts) {
       if (part === '..') {
         resolvedParts.pop();
@@ -325,7 +344,10 @@ export class ManifestDependencyTracker {
   /**
    * Analyze circular dependencies (placeholder for future implementation)
    */
-  async findCircularDependencies(workspaceId: string, manifestItems: ManifestItem[]): Promise<string[][]> {
+  async findCircularDependencies(
+    workspaceId: string,
+    manifestItems: ManifestItem[]
+  ): Promise<string[][]> {
     // TODO: Implement circular dependency detection
     // This would involve building a dependency graph and detecting cycles
     return [];
@@ -334,9 +356,12 @@ export class ManifestDependencyTracker {
   /**
    * Get all dependencies for multiple manifest items
    */
-  async findAllDependencies(workspaceId: string, manifestItems: ManifestItem[]): Promise<Map<string, string[]>> {
+  async findAllDependencies(
+    workspaceId: string,
+    manifestItems: ManifestItem[]
+  ): Promise<Map<string, string[]>> {
     const dependencyMap = new Map<string, string[]>();
-    
+
     for (const item of manifestItems) {
       try {
         const dependencies = await this.findDependencies(workspaceId, item);
@@ -353,7 +378,11 @@ export class ManifestDependencyTracker {
   /**
    * Check if a file is referenced by any manifest item
    */
-  async isFileReferenced(workspaceId: string, filePath: string, manifestItems: ManifestItem[]): Promise<boolean> {
+  async isFileReferenced(
+    workspaceId: string,
+    filePath: string,
+    manifestItems: ManifestItem[]
+  ): Promise<boolean> {
     for (const item of manifestItems) {
       try {
         const dependencies = await this.findDependencies(workspaceId, item);

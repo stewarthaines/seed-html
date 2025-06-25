@@ -309,6 +309,7 @@ it.skip('should parse XML with namespaces', () => {
 #### Documentation Requirements
 
 When skipping tests, always include:
+
 1. **Reason**: Which API limitation causes the skip
 2. **Alternative**: Where the functionality is tested (Storybook/E2E)
 3. **Clear comment**: Explaining the browser API requirement

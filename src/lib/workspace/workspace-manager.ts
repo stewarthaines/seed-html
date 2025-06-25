@@ -1,6 +1,6 @@
 /**
  * WorkspaceManager Class
- * 
+ *
  * Core workspace operations and OPF management with integrated EPUB content handling.
  */
 
@@ -17,13 +17,9 @@ import type {
   WorkspacePreview,
   WorkspaceConfig,
   WorkspacePathInfo,
-  ValidationError as ValidationErrorType
+  ValidationError as ValidationErrorType,
 } from './types.js';
-import {
-  WorkspaceError,
-  ValidationError,
-  DEFAULT_WORKSPACE_CONFIG
-} from './types.js';
+import { WorkspaceError, ValidationError, DEFAULT_WORKSPACE_CONFIG } from './types.js';
 
 export class WorkspaceManager {
   private storage: FileStorageAPI;
@@ -56,7 +52,7 @@ export class WorkspaceManager {
       for (const workspaceId of workspaceIds) {
         try {
           const cachedInfo = await this.loadCachedMetadata(workspaceId);
-          if (cachedInfo && await this.isCacheFresh(workspaceId, cachedInfo)) {
+          if (cachedInfo && (await this.isCacheFresh(workspaceId, cachedInfo))) {
             workspaceInfos.push(cachedInfo);
           } else {
             // Cache miss/stale - parse OPF and update cache
@@ -69,19 +65,17 @@ export class WorkspaceManager {
           workspaceInfos.push({
             id: workspaceId,
             title: `Workspace ${workspaceId} (Error)`,
-            language: "unknown",
+            language: 'unknown',
             lastModified: new Date(),
             fileCount: 0,
             totalSize: 0,
-            epubVersion: "unknown",
+            epubVersion: 'unknown',
             hasError: true,
           });
         }
       }
 
-      return workspaceInfos.sort(
-        (a, b) => b.lastModified.getTime() - a.lastModified.getTime()
-      );
+      return workspaceInfos.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime());
     } catch (error) {
       throw new WorkspaceError(
         `Failed to list workspaces: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -95,7 +89,7 @@ export class WorkspaceManager {
    */
   async createEPUBWorkspace(metadata: EPUBMetadata): Promise<string> {
     const workspaceId = crypto.randomUUID();
-    
+
     try {
       // Create workspace directory
       await this.storage.createWorkspace(workspaceId);
@@ -114,7 +108,7 @@ export class WorkspaceManager {
       } catch {
         // Ignore cleanup errors
       }
-      
+
       throw new WorkspaceError(
         `Failed to create workspace: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'WORKSPACE_CREATION_ERROR'
@@ -128,7 +122,7 @@ export class WorkspaceManager {
   async switchWorkspace(workspaceId: string): Promise<WorkspaceInfo> {
     try {
       const workspaceInfo = await this.parseWorkspaceMetadata(workspaceId);
-      
+
       // Validate workspace structure
       const validation = await this.validateWorkspaceStructure(workspaceId);
       if (!validation.isValid) {
@@ -171,26 +165,26 @@ export class WorkspaceManager {
     try {
       const containerXml = await this.storage.readTextFile(workspaceId, 'META-INF/container.xml');
       const result = OPFUtils.parseContainerXml(containerXml);
-      
+
       if (result.error) {
         throw new Error(result.error);
       }
-      
+
       const rootfilePath = result.rootfilePath!;
       const lastSlashIndex = rootfilePath.lastIndexOf('/');
-      
+
       if (lastSlashIndex === -1) {
         // OPF file is in root directory
         return {
           rootfilePath,
           basePath: '',
-          opfFileName: rootfilePath
+          opfFileName: rootfilePath,
         };
       }
-      
+
       const basePath = rootfilePath.substring(0, lastSlashIndex);
       const opfFileName = rootfilePath.substring(lastSlashIndex + 1);
-      
+
       return { rootfilePath, basePath, opfFileName };
     } catch (error) {
       throw new WorkspaceError(
@@ -215,7 +209,7 @@ export class WorkspaceManager {
         metadata: { ...opf.metadata },
         manifest: [...opf.manifest.map(item => ({ ...item }))],
         spine: [...opf.spine.map(item => ({ ...item }))],
-        guide: opf.guide ? [...opf.guide.map(item => ({ ...item }))] : undefined
+        guide: opf.guide ? [...opf.guide.map(item => ({ ...item }))] : undefined,
       };
     } catch (error) {
       throw new WorkspaceError(
@@ -234,7 +228,7 @@ export class WorkspaceManager {
       // Validate OPF structure
       const opfXML = OPFUtils.generateOPFXML(opf);
       const validation = OPFUtils.validateXML(opfXML);
-      
+
       if (!validation.isValid) {
         throw new ValidationError(
           `Invalid OPF structure: ${validation.error || 'Unknown validation error'}`,
@@ -246,7 +240,7 @@ export class WorkspaceManager {
       // Get dynamic OPF path and write updated OPF
       const pathInfo = await this.getWorkspacePathInfo(workspaceId);
       await this.storage.writeTextFile(workspaceId, pathInfo.rootfilePath, opfXML);
-      
+
       // Invalidate cache
       await this.invalidateCache(workspaceId);
     } catch (error) {
@@ -267,10 +261,11 @@ export class WorkspaceManager {
   async addManifestItem(workspaceId: string, item: Partial<ManifestItem>): Promise<ManifestItem> {
     try {
       const opf = await this.getWorkspaceOPF(workspaceId);
-      
+
       // Generate ID if not provided
-      const id = item.id || this.generateManifestId(item.href!, new Set(opf.manifest.map(m => m.id)));
-      
+      const id =
+        item.id || this.generateManifestId(item.href!, new Set(opf.manifest.map(m => m.id)));
+
       // Check for duplicate ID
       if (opf.manifest.some(m => m.id === id)) {
         throw new ValidationError(
@@ -288,12 +283,12 @@ export class WorkspaceManager {
         href: item.href!,
         mediaType,
         properties: item.properties,
-        fallback: item.fallback
+        fallback: item.fallback,
       };
 
       // Add to manifest
       opf.manifest = [...opf.manifest, manifestItem];
-      
+
       // Update modification date
       opf.metadata.modifiedDate = new Date().toISOString();
 
@@ -319,7 +314,7 @@ export class WorkspaceManager {
   async removeManifestItem(workspaceId: string, itemId: string): Promise<void> {
     try {
       const opf = await this.getWorkspaceOPF(workspaceId);
-      
+
       // Find and remove the item
       const itemIndex = opf.manifest.findIndex(item => item.id === itemId);
       if (itemIndex === -1) {
@@ -358,11 +353,11 @@ export class WorkspaceManager {
   async updateSpineOrder(workspaceId: string, spineItems: string[]): Promise<void> {
     try {
       const opf = await this.getWorkspaceOPF(workspaceId);
-      
+
       // Validate all spine items exist in manifest
       const manifestIds = new Set(opf.manifest.map(item => item.id));
       const invalidItems = spineItems.filter(id => !manifestIds.has(id));
-      
+
       if (invalidItems.length > 0) {
         throw new ValidationError(
           `Spine items reference missing manifest items: ${invalidItems.join(', ')}`,
@@ -374,7 +369,7 @@ export class WorkspaceManager {
       // Update spine
       opf.spine = spineItems.map(idref => ({
         idref,
-        linear: true
+        linear: true,
       }));
 
       // Update modification date
@@ -418,10 +413,10 @@ export class WorkspaceManager {
   async validateWorkspaceStructure(workspaceId: string): Promise<ValidationResult> {
     const errors: ValidationErrorType[] = [];
     const warnings: ValidationErrorType[] = [];
-    
+
     try {
       const files = await this.storage.listFiles(workspaceId);
-      
+
       // Get workspace path info to handle dynamic OPF locations
       let pathInfo: WorkspacePathInfo;
       try {
@@ -431,10 +426,10 @@ export class WorkspaceManager {
         pathInfo = {
           rootfilePath: 'OEBPS/content.opf',
           basePath: 'OEBPS',
-          opfFileName: 'content.opf'
+          opfFileName: 'content.opf',
         };
       }
-      
+
       // Check required files (using dynamic OPF path)
       const requiredFiles = ['mimetype', 'META-INF/container.xml', pathInfo.rootfilePath];
       for (const requiredFile of requiredFiles) {
@@ -443,7 +438,7 @@ export class WorkspaceManager {
             code: 'MISSING_REQUIRED_FILE',
             message: `Missing required file: ${requiredFile}`,
             file: requiredFile,
-            severity: 'error'
+            severity: 'error',
           });
         }
       }
@@ -466,7 +461,7 @@ export class WorkspaceManager {
                 code: 'MISSING_MANIFEST_FILE',
                 message: `Manifest references missing file: ${item.href} (resolved to ${resolvedPath})`,
                 file: item.href,
-                severity: 'error'
+                severity: 'error',
               });
               validFiles--;
             }
@@ -478,7 +473,7 @@ export class WorkspaceManager {
               errors.push({
                 code: 'INVALID_SPINE_REFERENCE',
                 message: `Spine references missing manifest item: ${spineItem.idref}`,
-                severity: 'error'
+                severity: 'error',
               });
             }
           }
@@ -487,37 +482,43 @@ export class WorkspaceManager {
             code: 'INVALID_OPF_STRUCTURE',
             message: `Invalid OPF file: ${error instanceof Error ? error.message : 'Unknown error'}`,
             file: pathInfo.rootfilePath,
-            severity: 'error'
+            severity: 'error',
           });
         }
       }
 
       // Check for orphaned files (with proper path resolution and cache file exclusion)
-      const manifestFiles = new Set(manifestItems.map(item => this.resolveManifestPath(item.href, pathInfo.basePath)));
+      const manifestFiles = new Set(
+        manifestItems.map(item => this.resolveManifestPath(item.href, pathInfo.basePath))
+      );
       const systemFiles = new Set([
-        'mimetype', 
-        'META-INF/container.xml', 
+        'mimetype',
+        'META-INF/container.xml',
         pathInfo.rootfilePath,
-        '.workspace-metadata.json'  // Exclude cache file
+        '.workspace-metadata.json', // Exclude cache file
       ]);
-      
+
       for (const file of files) {
-        if (!manifestFiles.has(file) && !systemFiles.has(file) && 
-            !file.startsWith('EDITME/') && !file.endsWith('.workspace-metadata.json')) {
+        if (
+          !manifestFiles.has(file) &&
+          !systemFiles.has(file) &&
+          !file.startsWith('EDITME/') &&
+          !file.endsWith('.workspace-metadata.json')
+        ) {
           orphanedFiles++;
           if (!this.config.validation.allowOrphanedFiles) {
             errors.push({
               code: 'ORPHANED_FILE',
               message: `File not referenced in manifest: ${file}`,
               file,
-              severity: this.config.validation.strict ? 'error' : 'warning'
+              severity: this.config.validation.strict ? 'error' : 'warning',
             });
           } else {
             warnings.push({
               code: 'ORPHANED_FILE',
               message: `File not referenced in manifest: ${file}`,
               file,
-              severity: 'warning'
+              severity: 'warning',
             });
           }
         }
@@ -531,24 +532,26 @@ export class WorkspaceManager {
           totalFiles: files.length,
           validFiles,
           missingFiles: errors.filter(e => e.code === 'MISSING_MANIFEST_FILE').length,
-          orphanedFiles
-        }
+          orphanedFiles,
+        },
       };
     } catch (error) {
       return {
         isValid: false,
-        errors: [{
-          code: 'VALIDATION_FAILED',
-          message: `Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          severity: 'error'
-        }],
+        errors: [
+          {
+            code: 'VALIDATION_FAILED',
+            message: `Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            severity: 'error',
+          },
+        ],
         warnings: [],
         summary: {
           totalFiles: 0,
           validFiles: 0,
           missingFiles: 0,
-          orphanedFiles: 0
-        }
+          orphanedFiles: 0,
+        },
       };
     }
   }
@@ -560,13 +563,16 @@ export class WorkspaceManager {
     try {
       const opf = await this.getWorkspaceOPF(workspaceId);
       const files = await this.storage.listFiles(workspaceId);
-      
+
       // Calculate file sizes
       let totalSize = 0;
       for (const file of files) {
         try {
           // Check if getFileStats method exists (for testing)
-          if ('getFileStats' in this.storage && typeof (this.storage as any).getFileStats === 'function') {
+          if (
+            'getFileStats' in this.storage &&
+            typeof (this.storage as any).getFileStats === 'function'
+          ) {
             const stats = await (this.storage as any).getFileStats(workspaceId, file);
             totalSize += stats.size || 0;
           } else {
@@ -585,11 +591,14 @@ export class WorkspaceManager {
         audioItems: 0,
         videoItems: 0,
         fontItems: 0,
-        otherItems: 0
+        otherItems: 0,
       };
 
       for (const item of opf.manifest) {
-        if (item.mediaType.startsWith('application/xhtml+xml') || item.mediaType.startsWith('text/html')) {
+        if (
+          item.mediaType.startsWith('application/xhtml+xml') ||
+          item.mediaType.startsWith('text/html')
+        ) {
           manifestSummary.textItems++;
         } else if (item.mediaType.startsWith('image/')) {
           manifestSummary.imageItems++;
@@ -607,7 +616,7 @@ export class WorkspaceManager {
       // Analyze dependencies
       const referencedFiles = new Set<string>();
       const missingDependencies: string[] = [];
-      
+
       for (const item of opf.manifest) {
         try {
           const dependencies = await this.dependencyTracker.findDependencies(workspaceId, item);
@@ -624,15 +633,18 @@ export class WorkspaceManager {
 
       // Find orphaned files (use path resolution and exclude cache files)
       const pathInfo = await this.getWorkspacePathInfo(workspaceId);
-      const manifestFiles = new Set(opf.manifest.map(item => this.resolveManifestPath(item.href, pathInfo.basePath)));
-      const orphanedFiles = files.filter(file => 
-        !manifestFiles.has(file) && 
-        !referencedFiles.has(file) &&
-        !file.startsWith('META-INF/') &&
-        !file.startsWith('EDITME/') &&
-        !file.endsWith('.workspace-metadata.json') &&
-        file !== 'mimetype' &&
-        file !== pathInfo.rootfilePath
+      const manifestFiles = new Set(
+        opf.manifest.map(item => this.resolveManifestPath(item.href, pathInfo.basePath))
+      );
+      const orphanedFiles = files.filter(
+        file =>
+          !manifestFiles.has(file) &&
+          !referencedFiles.has(file) &&
+          !file.startsWith('META-INF/') &&
+          !file.startsWith('EDITME/') &&
+          !file.endsWith('.workspace-metadata.json') &&
+          file !== 'mimetype' &&
+          file !== pathInfo.rootfilePath
       );
 
       return {
@@ -643,8 +655,8 @@ export class WorkspaceManager {
         dependencies: {
           orphanedFiles,
           missingDependencies,
-          circularReferences: [] // TODO: Implement circular reference detection
-        }
+          circularReferences: [], // TODO: Implement circular reference detection
+        },
       };
     } catch (error) {
       throw new WorkspaceError(
@@ -665,7 +677,7 @@ export class WorkspaceManager {
     if (!basePath || href.startsWith(basePath + '/')) {
       return href;
     }
-    
+
     // If href is relative to base path, prepend base path
     return `${basePath}/${href}`;
   }
@@ -678,12 +690,12 @@ export class WorkspaceManager {
     if (!basePath) {
       return filePath;
     }
-    
+
     // If file path starts with base path, make it relative
     if (filePath.startsWith(basePath + '/')) {
       return filePath.substring(basePath.length + 1);
     }
-    
+
     // Otherwise return as-is
     return filePath;
   }
@@ -696,12 +708,12 @@ export class WorkspaceManager {
     const containerXML = OPFUtils.generateContainerXML();
     await this.storage.writeTextFile(workspaceId, 'META-INF/container.xml', containerXML);
 
-    // Create initial OPF document  
+    // Create initial OPF document
     const opfDocument: OPFDocument = {
       version: '3.0',
       metadata,
       manifest: [],
-      spine: []
+      spine: [],
     };
 
     const opfXML = OPFUtils.generateOPFXML(opfDocument);
@@ -710,11 +722,11 @@ export class WorkspaceManager {
     // Create directory structure
     const directories = [
       'OEBPS/Text',
-      'OEBPS/Images', 
+      'OEBPS/Images',
       'OEBPS/Styles',
       'OEBPS/Audio',
       'EDITME/src',
-      'EDITME/scripts'
+      'EDITME/scripts',
     ];
 
     for (const dir of directories) {
@@ -725,7 +737,7 @@ export class WorkspaceManager {
   private async parseWorkspaceMetadata(workspaceId: string): Promise<WorkspaceInfo> {
     const opf = await this.getWorkspaceOPF(workspaceId);
     const files = await this.storage.listFiles(workspaceId);
-    
+
     let totalSize = 0;
     for (const file of files) {
       try {
@@ -744,7 +756,7 @@ export class WorkspaceManager {
       lastModified: opf.metadata.modifiedDate ? new Date(opf.metadata.modifiedDate) : new Date(),
       fileCount: files.length,
       totalSize,
-      epubVersion: `EPUB ${opf.version}`
+      epubVersion: `EPUB ${opf.version}`,
     };
   }
 
@@ -757,19 +769,19 @@ export class WorkspaceManager {
       lastModified: new Date(entry.lastCacheUpdate),
       fileCount: entry.fileCount,
       totalSize: entry.totalSize,
-      epubVersion: entry.epubVersion
+      epubVersion: entry.epubVersion,
     };
   }
 
   generateManifestId(href: string, existingIds: Set<string>): string {
     // Extract base name from href
-    const fileName = href.split("/").pop() || "item";
-    const baseName = fileName.replace(/\.[^.]+$/, ""); // Remove extension
+    const fileName = href.split('/').pop() || 'item';
+    const baseName = fileName.replace(/\.[^.]+$/, ''); // Remove extension
 
     // Sanitize for XML ID requirements
     const sanitized = baseName
-      .replace(/[^a-zA-Z0-9-_]/g, "-")
-      .replace(/^[^a-zA-Z]/, "item-") // Ensure starts with letter
+      .replace(/[^a-zA-Z0-9-_]/g, '-')
+      .replace(/^[^a-zA-Z]/, 'item-') // Ensure starts with letter
       .toLowerCase();
 
     // Ensure uniqueness
@@ -783,48 +795,48 @@ export class WorkspaceManager {
   }
 
   detectMediaType(href: string): string {
-    const extension = href.split(".").pop()?.toLowerCase() || "";
-    
+    const extension = href.split('.').pop()?.toLowerCase() || '';
+
     const mediaTypeMap: Record<string, string> = {
       // Text content
-      xhtml: "application/xhtml+xml",
-      html: "application/xhtml+xml",
-      xml: "application/xml",
-      css: "text/css",
-      js: "application/javascript",
-      txt: "text/plain",
+      xhtml: 'application/xhtml+xml',
+      html: 'application/xhtml+xml',
+      xml: 'application/xml',
+      css: 'text/css',
+      js: 'application/javascript',
+      txt: 'text/plain',
 
       // Images
-      jpg: "image/jpeg",
-      jpeg: "image/jpeg",
-      png: "image/png",
-      gif: "image/gif",
-      svg: "image/svg+xml",
-      webp: "image/webp",
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      gif: 'image/gif',
+      svg: 'image/svg+xml',
+      webp: 'image/webp',
 
       // Audio
-      mp3: "audio/mpeg",
-      wav: "audio/wav",
-      ogg: "audio/ogg",
-      m4a: "audio/mp4",
+      mp3: 'audio/mpeg',
+      wav: 'audio/wav',
+      ogg: 'audio/ogg',
+      m4a: 'audio/mp4',
 
       // Video
-      mp4: "video/mp4",
-      webm: "video/webm",
-      ogv: "video/ogg",
+      mp4: 'video/mp4',
+      webm: 'video/webm',
+      ogv: 'video/ogg',
 
       // Fonts
-      ttf: "font/ttf",
-      otf: "font/otf",
-      woff: "font/woff",
-      woff2: "font/woff2",
+      ttf: 'font/ttf',
+      otf: 'font/otf',
+      woff: 'font/woff',
+      woff2: 'font/woff2',
 
       // EPUB specific
-      opf: "application/oebps-package+xml",
-      ncx: "application/x-dtbncx+xml",
+      opf: 'application/oebps-package+xml',
+      ncx: 'application/x-dtbncx+xml',
     };
 
-    return mediaTypeMap[extension] || "application/octet-stream";
+    return mediaTypeMap[extension] || 'application/octet-stream';
   }
 
   /**

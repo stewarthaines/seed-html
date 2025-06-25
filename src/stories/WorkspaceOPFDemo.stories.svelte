@@ -51,10 +51,10 @@ The demo creates a complete EPUB workspace with:
 - Full EPUB 3.0 structure validation
 
 This demonstrates the complete workspace lifecycle from creation to validation, showcasing all backend capabilities.
-          `
-        }
-      }
-    }
+          `,
+        },
+      },
+    },
   });
 </script>
 

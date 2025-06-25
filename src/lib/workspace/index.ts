@@ -1,6 +1,6 @@
 /**
  * Workspace & OPF Manager - Main Exports
- * 
+ *
  * High-level workspace management with integrated EPUB content.opf parsing,
  * generation, and manipulation.
  */
@@ -24,13 +24,8 @@ export type {
   ValidationError,
   ValidationWarning,
   WorkspaceCacheEntry,
-  WorkspaceCache
+  WorkspaceCache,
 } from './types.js';
 
 // Error classes
-export {
-  WorkspaceError,
-  ValidationError,
-  CacheError,
-  DEFAULT_WORKSPACE_CONFIG
-} from './types.js';
+export { WorkspaceError, ValidationError, CacheError, DEFAULT_WORKSPACE_CONFIG } from './types.js';

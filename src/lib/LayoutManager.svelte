@@ -1,45 +1,42 @@
 <script lang="ts">
-  import { PaneGroup, Pane, PaneResizer } from 'paneforge'
-  import Sidebar from './Sidebar.svelte'
-  import { layoutStore } from './stores/layout'
-  
+  import { PaneGroup, Pane, PaneResizer } from 'paneforge';
+  import Sidebar from './Sidebar.svelte';
+  import { layoutStore } from './stores/layout';
+
   // Subscribe to layout store
-  $: ({ sidebar } = $layoutStore)
-  
+  $: ({ sidebar } = $layoutStore);
+
   // Reactive sidebar width for grid template
-  $: sidebarWidth = sidebar.isExpanded ? '250px' : '48px'
+  $: sidebarWidth = sidebar.isExpanded ? '250px' : '48px';
 </script>
 
 <div class="app-layout" style="grid-template-columns: {sidebarWidth} 1fr">
-  <Sidebar 
-    isExpanded={sidebar.isExpanded}
-    activeSection={sidebar.activeSection}
-  >
+  <Sidebar isExpanded={sidebar.isExpanded} activeSection={sidebar.activeSection}>
     <svelte:fragment slot="sidebar-workspace">
       <slot name="sidebar-workspace" />
     </svelte:fragment>
-    
+
     <svelte:fragment slot="sidebar-metadata">
       <slot name="sidebar-metadata" />
     </svelte:fragment>
-    
+
     <svelte:fragment slot="sidebar-manifest">
       <slot name="sidebar-manifest" />
     </svelte:fragment>
-    
+
     <svelte:fragment slot="sidebar-nav">
       <slot name="sidebar-nav" />
     </svelte:fragment>
-    
+
     <svelte:fragment slot="sidebar-spine">
       <slot name="sidebar-spine" />
     </svelte:fragment>
-    
+
     <svelte:fragment slot="sidebar-settings">
       <slot name="sidebar-settings" />
     </svelte:fragment>
   </Sidebar>
-  
+
   <main class="main-content">
     <PaneGroup direction="horizontal" autoSaveId="editme-content-panes">
       <Pane defaultSize={50} minSize={25}>
@@ -52,9 +49,9 @@
           </div>
         </div>
       </Pane>
-      
+
       <PaneResizer />
-      
+
       <Pane defaultSize={50} minSize={20}>
         <div class="pane-container">
           <div class="pane-header">
@@ -77,18 +74,18 @@
     margin: 0;
     padding: 0;
   }
-  
+
   .main-content {
     min-width: 0;
     overflow: hidden;
   }
-  
+
   .pane-container {
     display: flex;
     flex-direction: column;
     height: 100%;
   }
-  
+
   .pane-header {
     flex-shrink: 0;
     border-bottom: 1px solid #e0e0e0;
@@ -98,13 +95,13 @@
     align-items: center;
     padding: 0 1rem;
   }
-  
+
   .pane-content {
     flex: 1;
     overflow: auto;
     background: white;
   }
-  
+
   /* PaneForge resizer styling */
   :global([data-pane-resizer]) {
     background: #e0e0e0;
@@ -112,11 +109,11 @@
     cursor: col-resize;
     transition: background-color 0.2s ease;
   }
-  
+
   :global([data-pane-resizer]:hover) {
     background: #ccc;
   }
-  
+
   :global([data-pane-resizer][data-resize-handle-active]) {
     background: #999;
   }

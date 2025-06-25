@@ -1,11 +1,13 @@
 # EPUB Packaging Storybook Demo Plan
 
 ## Basic Demo Overview
+
 Create a simple Storybook demonstration for the EPUB Packaging feature showing successful packaging with a minimal valid EPUB structure.
 
 ## Demo Story: `EPUBPackager/BasicDemo`
 
 ### Mock Workspace Configuration
+
 ```
 mimetype (application/epub+zip)
 META-INF/
@@ -17,6 +19,7 @@ OEBPS/
 ```
 
 ### Demo Features
+
 - Package button to trigger packaging
 - Progress indicator showing packaging phases
 - Display packaging results (success, filename, file count, sizes)
@@ -24,6 +27,7 @@ OEBPS/
 - Show extracted metadata
 
 ### Demo Component
+
 ```typescript
 interface EPUBPackagingDemoProps {
   showProgress?: boolean;
@@ -32,11 +36,13 @@ interface EPUBPackagingDemoProps {
 ```
 
 ### Implementation Files
+
 - **Story**: `src/stories/EPUBPackaging.stories.svelte`
 - **Mock Data**: Inline mock workspace with minimal valid EPUB structure
 - **Demo**: Uses real EPUBPackager with mocked FileStorageAPI
 
 ### Demo Flow
+
 1. Display mock workspace info (file count, structure preview)
 2. Package button triggers EPUBPackager.packageEPUB()
 3. Show progress updates during packaging

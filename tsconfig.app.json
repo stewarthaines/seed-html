@@ -19,5 +19,5 @@
     "moduleDetection": "force"
   },
   "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte"],
-  "exclude": ["src/lib/storage/opfs-worker.js"]
+  "exclude": ["src/lib/storage/opfs-worker.js", "src/lib/zip/test/create-fixtures.js"]
 }

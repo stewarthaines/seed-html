@@ -1,6 +1,6 @@
 /**
  * WorkspaceMetadataCache Unit Tests
- * 
+ *
  * Tests two-tier caching system (memory + disk) with TTL expiration
  * and file modification tracking.
  */
@@ -15,12 +15,12 @@ const mockStorage = {
   readTextFile: vi.fn(),
   writeTextFile: vi.fn(),
   getFileStats: vi.fn(),
-  listFiles: vi.fn()
+  listFiles: vi.fn(),
 };
 
 describe('WorkspaceMetadataCache', () => {
   let cache: WorkspaceMetadataCache;
-  
+
   const mockWorkspaceInfo: WorkspaceInfo = {
     id: 'workspace-123',
     title: 'Test Book',
@@ -29,7 +29,7 @@ describe('WorkspaceMetadataCache', () => {
     lastModified: new Date('2024-01-01'),
     fileCount: 5,
     totalSize: 1024,
-    epubVersion: 'EPUB 3.0'
+    epubVersion: 'EPUB 3.0',
   };
 
   const mockCacheEntry: WorkspaceCacheEntry = {
@@ -41,11 +41,11 @@ describe('WorkspaceMetadataCache', () => {
       title: 'Test Book',
       language: 'en',
       identifier: 'test-123',
-      author: 'Test Author'
+      author: 'Test Author',
     },
     fileCount: 5,
     totalSize: 1024,
-    epubVersion: 'EPUB 3.0'
+    epubVersion: 'EPUB 3.0',
   };
 
   beforeEach(() => {
@@ -67,9 +67,9 @@ describe('WorkspaceMetadataCache', () => {
       const customConfig = {
         ttl: 12 * 60 * 60 * 1000, // 12 hours
         maxEntries: 50,
-        enableDiskCache: false
+        enableDiskCache: false,
       };
-      
+
       const customCache = new WorkspaceMetadataCache(mockStorage as any, customConfig);
       expect(customCache).toBeInstanceOf(WorkspaceMetadataCache);
     });
@@ -79,21 +79,21 @@ describe('WorkspaceMetadataCache', () => {
     it('should return cached entry from memory when available and fresh', async () => {
       // Setup memory cache
       await cache.set('workspace-123', mockWorkspaceInfo);
-      
+
       const result = await cache.get('workspace-123');
-      
+
       expect(result).toEqual(mockWorkspaceInfo);
       expect(mockStorage.readTextFile).not.toHaveBeenCalled(); // Should not hit disk
     });
 
     it('should load from disk cache when not in memory but disk cache is fresh', async () => {
       const diskCacheData = {
-        'workspace-123': mockCacheEntry
+        'workspace-123': mockCacheEntry,
       };
-      
+
       mockStorage.readTextFile.mockResolvedValue(JSON.stringify(diskCacheData));
       mockStorage.getFileStats.mockResolvedValue({
-        lastModified: mockCacheEntry.opfFileModified - 1000 // OPF older than cache
+        lastModified: mockCacheEntry.opfFileModified - 1000, // OPF older than cache
       });
 
       const result = await cache.get('workspace-123');
@@ -102,7 +102,8 @@ describe('WorkspaceMetadataCache', () => {
       expect(result?.id).toBe('workspace-123');
       expect(result?.title).toBe('Test Book');
       expect(mockStorage.readTextFile).toHaveBeenCalledWith(
-        'workspace-123', '.workspace-metadata.json'
+        'workspace-123',
+        '.workspace-metadata.json'
       );
     });
 
@@ -117,13 +118,13 @@ describe('WorkspaceMetadataCache', () => {
     it('should return null when disk cache exists but is stale', async () => {
       const staleCacheEntry = {
         ...mockCacheEntry,
-        lastCacheUpdate: Date.now() - (25 * 60 * 60 * 1000) // 25 hours ago (stale)
+        lastCacheUpdate: Date.now() - 25 * 60 * 60 * 1000, // 25 hours ago (stale)
       };
-      
+
       const diskCacheData = {
-        'workspace-123': staleCacheEntry
+        'workspace-123': staleCacheEntry,
       };
-      
+
       mockStorage.readTextFile.mockResolvedValue(JSON.stringify(diskCacheData));
 
       const result = await cache.get('workspace-123');
@@ -133,12 +134,12 @@ describe('WorkspaceMetadataCache', () => {
 
     it('should return null when OPF file is newer than cache', async () => {
       const diskCacheData = {
-        'workspace-123': mockCacheEntry
+        'workspace-123': mockCacheEntry,
       };
-      
+
       mockStorage.readTextFile.mockResolvedValue(JSON.stringify(diskCacheData));
       mockStorage.getFileStats.mockResolvedValue({
-        lastModified: mockCacheEntry.opfFileModified + 5000 // OPF newer than cache
+        lastModified: mockCacheEntry.opfFileModified + 5000, // OPF newer than cache
       });
 
       const result = await cache.get('workspace-123');
@@ -157,13 +158,13 @@ describe('WorkspaceMetadataCache', () => {
     it('should handle disk cache with wrong version', async () => {
       const wrongVersionEntry = {
         ...mockCacheEntry,
-        version: 999 // Wrong version
+        version: 999, // Wrong version
       };
-      
+
       const diskCacheData = {
-        'workspace-123': wrongVersionEntry
+        'workspace-123': wrongVersionEntry,
       };
-      
+
       mockStorage.readTextFile.mockResolvedValue(JSON.stringify(diskCacheData));
 
       const result = await cache.get('workspace-123');
@@ -183,7 +184,7 @@ describe('WorkspaceMetadataCache', () => {
     it('should write to disk cache when enabled', async () => {
       mockStorage.writeTextFile.mockResolvedValue(undefined);
       mockStorage.getFileStats.mockResolvedValue({
-        lastModified: Date.now()
+        lastModified: Date.now(),
       });
 
       await cache.set('workspace-123', mockWorkspaceInfo);
@@ -199,7 +200,7 @@ describe('WorkspaceMetadataCache', () => {
       const noDiskCache = new WorkspaceMetadataCache(mockStorage as any, {
         enableDiskCache: false,
         ttl: 24 * 60 * 60 * 1000,
-        maxEntries: 100
+        maxEntries: 100,
       });
 
       await noDiskCache.set('workspace-123', mockWorkspaceInfo);
@@ -211,7 +212,7 @@ describe('WorkspaceMetadataCache', () => {
       const smallCache = new WorkspaceMetadataCache(mockStorage as any, {
         maxEntries: 2,
         ttl: 24 * 60 * 60 * 1000,
-        enableDiskCache: false
+        enableDiskCache: false,
       });
 
       // Fill cache beyond capacity
@@ -241,7 +242,7 @@ describe('WorkspaceMetadataCache', () => {
 
       // Should not throw error - memory cache should still work
       await expect(cache.set('workspace-123', mockWorkspaceInfo)).resolves.toBeUndefined();
-      
+
       // Memory cache should still work
       const result = await cache.get('workspace-123');
       expect(result).toEqual(mockWorkspaceInfo);
@@ -251,7 +252,7 @@ describe('WorkspaceMetadataCache', () => {
   describe('invalidate', () => {
     it('should remove entry from memory cache', async () => {
       await cache.set('workspace-123', mockWorkspaceInfo);
-      
+
       const beforeInvalidate = await cache.get('workspace-123');
       expect(beforeInvalidate).toEqual(mockWorkspaceInfo);
 
@@ -285,11 +286,11 @@ describe('WorkspaceMetadataCache', () => {
     it('should return true for fresh cache entry', async () => {
       const freshEntry = {
         ...mockCacheEntry,
-        lastCacheUpdate: Date.now() - (1 * 60 * 60 * 1000) // 1 hour ago
+        lastCacheUpdate: Date.now() - 1 * 60 * 60 * 1000, // 1 hour ago
       };
 
       mockStorage.getFileStats.mockResolvedValue({
-        lastModified: freshEntry.opfFileModified - 1000 // OPF older than cache
+        lastModified: freshEntry.opfFileModified - 1000, // OPF older than cache
       });
 
       const result = await cache.isCacheFresh('workspace-123', freshEntry);
@@ -300,7 +301,7 @@ describe('WorkspaceMetadataCache', () => {
     it('should return false for expired cache entry', async () => {
       const expiredEntry = {
         ...mockCacheEntry,
-        lastCacheUpdate: Date.now() - (25 * 60 * 60 * 1000) // 25 hours ago
+        lastCacheUpdate: Date.now() - 25 * 60 * 60 * 1000, // 25 hours ago
       };
 
       const result = await cache.isCacheFresh('workspace-123', expiredEntry);
@@ -310,7 +311,7 @@ describe('WorkspaceMetadataCache', () => {
 
     it('should return false when OPF file is newer', async () => {
       mockStorage.getFileStats.mockResolvedValue({
-        lastModified: mockCacheEntry.opfFileModified + 5000 // OPF newer
+        lastModified: mockCacheEntry.opfFileModified + 5000, // OPF newer
       });
 
       const result = await cache.isCacheFresh('workspace-123', mockCacheEntry);
@@ -321,7 +322,7 @@ describe('WorkspaceMetadataCache', () => {
     it('should return false for wrong cache version', async () => {
       const wrongVersionEntry = {
         ...mockCacheEntry,
-        version: 999
+        version: 999,
       };
 
       const result = await cache.isCacheFresh('workspace-123', wrongVersionEntry);
@@ -358,9 +359,9 @@ describe('WorkspaceMetadataCache', () => {
         metadata: {
           title: 'Test Book',
           language: 'en',
-          identifier: 'test-123'
+          identifier: 'test-123',
           // No author
-        }
+        },
       };
 
       const workspaceInfo = cache.cacheEntryToWorkspaceInfo(minimalEntry);
@@ -375,12 +376,12 @@ describe('WorkspaceMetadataCache', () => {
       const shortTTLCache = new WorkspaceMetadataCache(mockStorage as any, {
         ttl: 1000, // 1 second
         maxEntries: 100,
-        enableDiskCache: true
+        enableDiskCache: true,
       });
 
       const shortTTLEntry = {
         ...mockCacheEntry,
-        lastCacheUpdate: Date.now() - 2000 // 2 seconds ago
+        lastCacheUpdate: Date.now() - 2000, // 2 seconds ago
       };
 
       const result = await shortTTLCache.isCacheFresh('workspace-123', shortTTLEntry);
@@ -392,7 +393,7 @@ describe('WorkspaceMetadataCache', () => {
       const tinyCache = new WorkspaceMetadataCache(mockStorage as any, {
         maxEntries: 1,
         ttl: 24 * 60 * 60 * 1000,
-        enableDiskCache: false
+        enableDiskCache: false,
       });
 
       await tinyCache.set('workspace-1', { ...mockWorkspaceInfo, id: 'workspace-1' });
@@ -410,14 +411,14 @@ describe('WorkspaceMetadataCache', () => {
     it('should handle corrupted cache files and rebuild', async () => {
       // First call returns corrupted data
       mockStorage.readTextFile.mockResolvedValueOnce('corrupted json');
-      
+
       let result = await cache.get('workspace-123');
       expect(result).toBeNull();
 
       // After rebuild, should work normally
       mockStorage.getFileStats.mockResolvedValue({ lastModified: Date.now() });
       await cache.set('workspace-123', mockWorkspaceInfo);
-      
+
       result = await cache.get('workspace-123');
       expect(result).toEqual(mockWorkspaceInfo);
     });
@@ -425,12 +426,12 @@ describe('WorkspaceMetadataCache', () => {
     it('should handle partial cache corruption gracefully', async () => {
       const partiallyCorruptedData = {
         'workspace-123': mockCacheEntry,
-        'workspace-456': 'not an object'
+        'workspace-456': 'not an object',
       };
-      
+
       mockStorage.readTextFile.mockResolvedValue(JSON.stringify(partiallyCorruptedData));
       mockStorage.getFileStats.mockResolvedValue({
-        lastModified: mockCacheEntry.opfFileModified - 1000
+        lastModified: mockCacheEntry.opfFileModified - 1000,
       });
 
       const result = await cache.get('workspace-123');
@@ -445,9 +446,12 @@ describe('WorkspaceMetadataCache', () => {
     it('should prioritize memory cache over disk cache', async () => {
       // Setup both memory and disk cache
       await cache.set('workspace-123', mockWorkspaceInfo);
-      
+
       const diskData = {
-        'workspace-123': { ...mockCacheEntry, metadata: { ...mockCacheEntry.metadata, title: 'Disk Title' } }
+        'workspace-123': {
+          ...mockCacheEntry,
+          metadata: { ...mockCacheEntry.metadata, title: 'Disk Title' },
+        },
       };
       mockStorage.readTextFile.mockResolvedValue(JSON.stringify(diskData));
 

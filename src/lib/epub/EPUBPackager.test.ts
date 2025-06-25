@@ -8,79 +8,79 @@ import type { WorkspaceFile, PackageOptions, EPUBMetadata } from './EPUBPackager
 
 // Mock the ZIP and storage modules
 vi.mock('../zip/index.js', () => ({
-	ZipWriter: vi.fn(() => ({
-		addFile: vi.fn(),
-		buildBlob: vi.fn(() => Promise.resolve(new Blob(['mock-zip'], { type: 'application/zip' })))
-	})),
-	downloadBlob: vi.fn()
+  ZipWriter: vi.fn(() => ({
+    addFile: vi.fn(),
+    buildBlob: vi.fn(() => Promise.resolve(new Blob(['mock-zip'], { type: 'application/zip' }))),
+  })),
+  downloadBlob: vi.fn(),
 }));
 
 vi.mock('../storage/index.js', () => ({
-	FileStorageAPI: vi.fn(() => ({
-		init: vi.fn(),
-		isInitialized: vi.fn(() => true),
-		listFiles: vi.fn(),
-		readFile: vi.fn()
-	}))
+  FileStorageAPI: vi.fn(() => ({
+    init: vi.fn(),
+    isInitialized: vi.fn(() => true),
+    listFiles: vi.fn(),
+    readFile: vi.fn(),
+  })),
 }));
 
 // Mock OPFUtils to avoid happy-dom namespace parsing issues
 vi.mock('./opf-utils.js', () => ({
-	OPFUtils: {
-		parseOPFMetadata: vi.fn(() => ({
-			title: 'Test Book',
-			author: 'Test Author',
-			language: 'en',
-			identifier: 'test-book-123',
-			publisher: 'Test Publisher',
-			date: '2024-01-01'
-		})),
-		validateXML: vi.fn(() => ({ isValid: true })),
-		parseContainerXml: vi.fn(() => ({ rootfilePath: 'OEBPS/content.opf' })),
-		parseRootfilePath: vi.fn(() => 'OEBPS/content.opf')
-	}
+  OPFUtils: {
+    parseOPFMetadata: vi.fn(() => ({
+      title: 'Test Book',
+      author: 'Test Author',
+      language: 'en',
+      identifier: 'test-book-123',
+      publisher: 'Test Publisher',
+      date: '2024-01-01',
+    })),
+    validateXML: vi.fn(() => ({ isValid: true })),
+    parseContainerXml: vi.fn(() => ({ rootfilePath: 'OEBPS/content.opf' })),
+    parseRootfilePath: vi.fn(() => 'OEBPS/content.opf'),
+  },
 }));
 
 describe('EPUBPackager', () => {
-	let packager: EPUBPackager;
-	let mockStorage: any;
+  let packager: EPUBPackager;
+  let mockStorage: any;
 
-	beforeEach(async () => {
-		// Reset all mocks
-		vi.clearAllMocks();
-		
-		packager = new EPUBPackager();
-		mockStorage = (packager as any).fileStorage;
-	});
+  beforeEach(async () => {
+    // Reset all mocks
+    vi.clearAllMocks();
 
-	afterEach(() => {
-		vi.restoreAllMocks();
-	});
+    packager = new EPUBPackager();
+    mockStorage = (packager as any).fileStorage;
+  });
 
-	describe('packageEPUB', () => {
-		const mockWorkspaceId = 'test-workspace';
-		
-		const mockValidFiles: WorkspaceFile[] = [
-			{
-				path: 'mimetype',
-				content: new TextEncoder().encode('application/epub+zip').buffer as ArrayBuffer,
-				size: 20,
-				mimeType: 'application/epub+zip'
-			},
-			{
-				path: 'META-INF/container.xml',
-				content: new TextEncoder().encode(`<?xml version="1.0" encoding="UTF-8"?>
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  describe('packageEPUB', () => {
+    const mockWorkspaceId = 'test-workspace';
+
+    const mockValidFiles: WorkspaceFile[] = [
+      {
+        path: 'mimetype',
+        content: new TextEncoder().encode('application/epub+zip').buffer as ArrayBuffer,
+        size: 20,
+        mimeType: 'application/epub+zip',
+      },
+      {
+        path: 'META-INF/container.xml',
+        content: new TextEncoder().encode(`<?xml version="1.0" encoding="UTF-8"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
 	<rootfiles>
 		<rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
 	</rootfiles>
 </container>`).buffer as ArrayBuffer,
-				size: 200,
-				mimeType: 'application/xml'
-			},
-			{
-				path: 'OEBPS/content.opf',
-				content: new TextEncoder().encode(`<?xml version="1.0" encoding="UTF-8"?>
+        size: 200,
+        mimeType: 'application/xml',
+      },
+      {
+        path: 'OEBPS/content.opf',
+        content: new TextEncoder().encode(`<?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uid">
 	<metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
 		<dc:title>Test Book</dc:title>
@@ -91,179 +91,175 @@ describe('EPUBPackager', () => {
 		<dc:date>2024-01-01</dc:date>
 	</metadata>
 </package>`).buffer as ArrayBuffer,
-				size: 400,
-				mimeType: 'application/oebps-package+xml'
-			}
-		];
+        size: 400,
+        mimeType: 'application/oebps-package+xml',
+      },
+    ];
 
-		beforeEach(() => {
-			// Setup default mock behavior
-			mockStorage.listFiles.mockResolvedValue(mockValidFiles.map(f => f.path));
-			mockValidFiles.forEach(file => {
-				mockStorage.readFile.mockResolvedValueOnce(file.content);
-			});
-		});
+    beforeEach(() => {
+      // Setup default mock behavior
+      mockStorage.listFiles.mockResolvedValue(mockValidFiles.map(f => f.path));
+      mockValidFiles.forEach(file => {
+        mockStorage.readFile.mockResolvedValueOnce(file.content);
+      });
+    });
 
-		it('should successfully package a valid EPUB workspace', async () => {
-			const result = await packager.packageEPUB(mockWorkspaceId);
+    it('should successfully package a valid EPUB workspace', async () => {
+      const result = await packager.packageEPUB(mockWorkspaceId);
 
-			expect(result.success).toBe(true);
-			expect(result.blob).toBeInstanceOf(Blob);
-			expect(result.filename).toMatch(/^Test Book - Test Author - \d{4}-\d{2}-\d{2}\.epub$/);
-			expect(result.fileCount).toBe(3);
-			expect(result.totalSize).toBe(708);
-			expect(result.processingTime).toBeGreaterThan(0);
-		});
+      expect(result.success).toBe(true);
+      expect(result.blob).toBeInstanceOf(Blob);
+      expect(result.filename).toMatch(/^Test Book - Test Author - \d{4}-\d{2}-\d{2}\.epub$/);
+      expect(result.fileCount).toBe(3);
+      expect(result.totalSize).toBe(708);
+      expect(result.processingTime).toBeGreaterThan(0);
+    });
 
-		it('should handle empty workspace', async () => {
-			mockStorage.listFiles.mockResolvedValue([]);
+    it('should handle empty workspace', async () => {
+      mockStorage.listFiles.mockResolvedValue([]);
 
-			const result = await packager.packageEPUB(mockWorkspaceId);
+      const result = await packager.packageEPUB(mockWorkspaceId);
 
-			expect(result.success).toBe(false);
-			expect(result.error).toBe('Workspace is empty');
-		});
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Workspace is empty');
+    });
 
-		it('should handle missing container.xml', async () => {
-			const filesWithoutContainer = mockValidFiles.filter(f => f.path !== 'META-INF/container.xml');
-			mockStorage.listFiles.mockResolvedValue(filesWithoutContainer.map(f => f.path));
-			filesWithoutContainer.forEach(file => {
-				mockStorage.readFile.mockResolvedValueOnce(file.content);
-			});
+    it('should handle missing container.xml', async () => {
+      const filesWithoutContainer = mockValidFiles.filter(f => f.path !== 'META-INF/container.xml');
+      mockStorage.listFiles.mockResolvedValue(filesWithoutContainer.map(f => f.path));
+      filesWithoutContainer.forEach(file => {
+        mockStorage.readFile.mockResolvedValueOnce(file.content);
+      });
 
-			const result = await packager.packageEPUB(mockWorkspaceId);
+      const result = await packager.packageEPUB(mockWorkspaceId);
 
-			expect(result.success).toBe(false);
-			expect(result.error).toBe('Missing META-INF/container.xml file - invalid EPUB structure');
-		});
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Missing META-INF/container.xml file - invalid EPUB structure');
+    });
 
-		it('should handle missing OPF file', async () => {
-			const filesWithoutOPF = mockValidFiles.filter(f => f.path !== 'OEBPS/content.opf');
-			mockStorage.listFiles.mockResolvedValue(filesWithoutOPF.map(f => f.path));
-			filesWithoutOPF.forEach(file => {
-				mockStorage.readFile.mockResolvedValueOnce(file.content);
-			});
+    it('should handle missing OPF file', async () => {
+      const filesWithoutOPF = mockValidFiles.filter(f => f.path !== 'OEBPS/content.opf');
+      mockStorage.listFiles.mockResolvedValue(filesWithoutOPF.map(f => f.path));
+      filesWithoutOPF.forEach(file => {
+        mockStorage.readFile.mockResolvedValueOnce(file.content);
+      });
 
-			const result = await packager.packageEPUB(mockWorkspaceId);
+      const result = await packager.packageEPUB(mockWorkspaceId);
 
-			expect(result.success).toBe(false);
-			expect(result.error).toBe('Missing OPF file at path: OEBPS/content.opf');
-		});
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Missing OPF file at path: OEBPS/content.opf');
+    });
 
-		it('should call progress callback during packaging', async () => {
-			const progressCallback = vi.fn();
-			const options: PackageOptions = { progressCallback };
+    it('should call progress callback during packaging', async () => {
+      const progressCallback = vi.fn();
+      const options: PackageOptions = { progressCallback };
 
-			await packager.packageEPUB(mockWorkspaceId, options);
+      await packager.packageEPUB(mockWorkspaceId, options);
 
-			expect(progressCallback).toHaveBeenCalledWith(
-				expect.objectContaining({ phase: 'compressing' })
-			);
-			expect(progressCallback).toHaveBeenCalledWith(
-				expect.objectContaining({ phase: 'writing' })
-			);
-			expect(progressCallback).toHaveBeenCalledWith(
-				expect.objectContaining({ phase: 'complete' })
-			);
-		});
+      expect(progressCallback).toHaveBeenCalledWith(
+        expect.objectContaining({ phase: 'compressing' })
+      );
+      expect(progressCallback).toHaveBeenCalledWith(expect.objectContaining({ phase: 'writing' }));
+      expect(progressCallback).toHaveBeenCalledWith(expect.objectContaining({ phase: 'complete' }));
+    });
 
-		it('should handle storage initialization', async () => {
-			mockStorage.isInitialized.mockReturnValue(false);
-			mockStorage.init.mockResolvedValue(undefined);
+    it('should handle storage initialization', async () => {
+      mockStorage.isInitialized.mockReturnValue(false);
+      mockStorage.init.mockResolvedValue(undefined);
 
-			const result = await packager.packageEPUB(mockWorkspaceId);
+      const result = await packager.packageEPUB(mockWorkspaceId);
 
-			expect(mockStorage.init).toHaveBeenCalled();
-			expect(result.success).toBe(true);
-		});
-	});
+      expect(mockStorage.init).toHaveBeenCalled();
+      expect(result.success).toBe(true);
+    });
+  });
 
-	describe('optimizeCompression', () => {
-		it('should not compress mimetype file', () => {
-			const result = packager.optimizeCompression('mimetype', new ArrayBuffer(0));
-			expect(result.method).toBe(0x00);
-			expect(result.reason).toBe('EPUB compliance requirement');
-		});
+  describe('optimizeCompression', () => {
+    it('should not compress mimetype file', () => {
+      const result = packager.optimizeCompression('mimetype', new ArrayBuffer(0));
+      expect(result.method).toBe(0x00);
+      expect(result.reason).toBe('EPUB compliance requirement');
+    });
 
-		it('should not compress already compressed formats', () => {
-			const formats = ['jpg', 'jpeg', 'png', 'gif', 'mp3', 'mp4', 'webp', 'zip'];
-			
-			formats.forEach(ext => {
-				const result = packager.optimizeCompression(`test.${ext}`, new ArrayBuffer(0));
-				expect(result.method).toBe(0x00);
-				expect(result.reason).toBe('Already compressed format');
-			});
-		});
+    it('should not compress already compressed formats', () => {
+      const formats = ['jpg', 'jpeg', 'png', 'gif', 'mp3', 'mp4', 'webp', 'zip'];
 
-		it('should compress text-based formats', () => {
-			const formats = ['html', 'xhtml', 'xml', 'css', 'js', 'txt', 'opf', 'ncx'];
-			
-			formats.forEach(ext => {
-				const result = packager.optimizeCompression(`test.${ext}`, new ArrayBuffer(0));
-				expect(result.method).toBe(0x08);
-				expect(result.reason).toBe('Text-based content compresses well');
-			});
-		});
+      formats.forEach(ext => {
+        const result = packager.optimizeCompression(`test.${ext}`, new ArrayBuffer(0));
+        expect(result.method).toBe(0x00);
+        expect(result.reason).toBe('Already compressed format');
+      });
+    });
 
-		it('should compress unknown formats by default', () => {
-			const result = packager.optimizeCompression('test.unknown', new ArrayBuffer(0));
-			expect(result.method).toBe(0x08);
-			expect(result.reason).toBe('Default compression');
-		});
-	});
+    it('should compress text-based formats', () => {
+      const formats = ['html', 'xhtml', 'xml', 'css', 'js', 'txt', 'opf', 'ncx'];
 
-	describe('generateFilename', () => {
-		it('should generate filename with title, author, and date', () => {
-			const metadata: EPUBMetadata = {
-				title: 'Test Book',
-				author: 'Test Author',
-				language: 'en',
-				identifier: 'test-123'
-			};
+      formats.forEach(ext => {
+        const result = packager.optimizeCompression(`test.${ext}`, new ArrayBuffer(0));
+        expect(result.method).toBe(0x08);
+        expect(result.reason).toBe('Text-based content compresses well');
+      });
+    });
 
-			const filename = packager.generateFilename(metadata);
-			expect(filename).toMatch(/^Test Book - Test Author - \d{4}-\d{2}-\d{2}\.epub$/);
-		});
+    it('should compress unknown formats by default', () => {
+      const result = packager.optimizeCompression('test.unknown', new ArrayBuffer(0));
+      expect(result.method).toBe(0x08);
+      expect(result.reason).toBe('Default compression');
+    });
+  });
 
-		it('should generate filename without author', () => {
-			const metadata: EPUBMetadata = {
-				title: 'Test Book',
-				language: 'en',
-				identifier: 'test-123'
-			};
+  describe('generateFilename', () => {
+    it('should generate filename with title, author, and date', () => {
+      const metadata: EPUBMetadata = {
+        title: 'Test Book',
+        author: 'Test Author',
+        language: 'en',
+        identifier: 'test-123',
+      };
 
-			const filename = packager.generateFilename(metadata);
-			expect(filename).toMatch(/^Test Book - \d{4}-\d{2}-\d{2}\.epub$/);
-		});
+      const filename = packager.generateFilename(metadata);
+      expect(filename).toMatch(/^Test Book - Test Author - \d{4}-\d{2}-\d{2}\.epub$/);
+    });
 
-		it('should sanitize invalid characters', () => {
-			const metadata: EPUBMetadata = {
-				title: 'Test<>Book:|?*',
-				author: 'Test/\\Author',
-				language: 'en',
-				identifier: 'test-123'
-			};
+    it('should generate filename without author', () => {
+      const metadata: EPUBMetadata = {
+        title: 'Test Book',
+        language: 'en',
+        identifier: 'test-123',
+      };
 
-			const filename = packager.generateFilename(metadata);
-			expect(filename).toMatch(/^TestBook - TestAuthor - \d{4}-\d{2}-\d{2}\.epub$/);
-		});
-	});
+      const filename = packager.generateFilename(metadata);
+      expect(filename).toMatch(/^Test Book - \d{4}-\d{2}-\d{2}\.epub$/);
+    });
 
-	// Note: parseRootfilePath tests moved to opf-utils.test.ts
-	// This method is now a static method on OPFUtils class
+    it('should sanitize invalid characters', () => {
+      const metadata: EPUBMetadata = {
+        title: 'Test<>Book:|?*',
+        author: 'Test/\\Author',
+        language: 'en',
+        identifier: 'test-123',
+      };
 
-	// Note: parseOPFMetadata tests moved to opf-utils.test.ts
-	// This method is now a static method on OPFUtils class
+      const filename = packager.generateFilename(metadata);
+      expect(filename).toMatch(/^TestBook - TestAuthor - \d{4}-\d{2}-\d{2}\.epub$/);
+    });
+  });
 
-	describe('downloadEPUB', () => {
-		it('should call downloadBlob utility', async () => {
-			const { downloadBlob } = await import('../zip/index.js');
-			const blob = new Blob(['test'], { type: 'application/epub+zip' });
-			const filename = 'test.epub';
+  // Note: parseRootfilePath tests moved to opf-utils.test.ts
+  // This method is now a static method on OPFUtils class
 
-			packager.downloadEPUB(blob, filename);
+  // Note: parseOPFMetadata tests moved to opf-utils.test.ts
+  // This method is now a static method on OPFUtils class
 
-			expect(downloadBlob).toHaveBeenCalledWith(blob, filename);
-		});
-	});
+  describe('downloadEPUB', () => {
+    it('should call downloadBlob utility', async () => {
+      const { downloadBlob } = await import('../zip/index.js');
+      const blob = new Blob(['test'], { type: 'application/epub+zip' });
+      const filename = 'test.epub';
+
+      packager.downloadEPUB(blob, filename);
+
+      expect(downloadBlob).toHaveBeenCalledWith(blob, filename);
+    });
+  });
 });

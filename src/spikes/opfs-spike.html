@@ -1,267 +1,285 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OPFS Multi-Backend Spike</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            max-width: 800px;
-            margin: 2rem auto;
-            padding: 1rem;
-            line-height: 1.6;
-        }
-        
-        .controls {
-            margin-bottom: 2rem;
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-        
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-        
-        button:hover {
-            background: #0056b3;
-        }
-        
-        button:disabled {
-            background: #6c757d;
-            cursor: not-allowed;
-        }
-        
-        .status {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            white-space: pre-wrap;
-            font-family: monospace;
-            font-size: 0.875rem;
-            max-height: 400px;
-            overflow-y: auto;
-            word-break: break-word;
-        }
-        
-        .backend-info {
-            background: #e7f3ff;
-            border: 1px solid #b3d9ff;
-            border-radius: 4px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            font-weight: 500;
-        }
-        
-        .file-list {
-            background: #ffffff;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            min-height: 200px;
-        }
-        
-        .file-item {
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid #dee2e6;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .file-item:last-child {
-            border-bottom: none;
-        }
-        
-        .file-info {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-        
-        .file-name {
-            font-weight: 500;
-        }
-        
-        .file-size {
-            font-size: 0.875rem;
-            color: #6c757d;
-        }
-        
-        .file-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-        
-        .file-actions button {
-            padding: 0.25rem 0.5rem;
-            font-size: 0.875rem;
-            background: #28a745;
-        }
-        
-        .file-actions button.delete {
-            background: #dc3545;
-        }
-        
-        .empty-state {
-            padding: 2rem;
-            text-align: center;
-            color: #6c757d;
-            font-style: italic;
-        }
-        
-        input[type="text"] {
-            padding: 0.5rem;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 1rem;
+        line-height: 1.6;
+      }
+
+      .controls {
+        margin-bottom: 2rem;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+      }
+
+      button:hover {
+        background: #0056b3;
+      }
+
+      button:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+
+      .status {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        white-space: pre-wrap;
+        font-family: monospace;
+        font-size: 0.875rem;
+        max-height: 400px;
+        overflow-y: auto;
+        word-break: break-word;
+      }
+
+      .backend-info {
+        background: #e7f3ff;
+        border: 1px solid #b3d9ff;
+        border-radius: 4px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        font-weight: 500;
+      }
+
+      .file-list {
+        background: #ffffff;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        min-height: 200px;
+      }
+
+      .file-item {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .file-item:last-child {
+        border-bottom: none;
+      }
+
+      .file-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+
+      .file-name {
+        font-weight: 500;
+      }
+
+      .file-size {
+        font-size: 0.875rem;
+        color: #6c757d;
+      }
+
+      .file-actions {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .file-actions button {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+        background: #28a745;
+      }
+
+      .file-actions button.delete {
+        background: #dc3545;
+      }
+
+      .empty-state {
+        padding: 2rem;
+        text-align: center;
+        color: #6c757d;
+        font-style: italic;
+      }
+
+      input[type='text'] {
+        padding: 0.5rem;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 1rem;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1>OPFS Multi-Backend Spike</h1>
-    <p>Testing Origin Private File System with feature detection and IndexedDB fallback for file:// protocol support.</p>
-    
-    <div class="backend-info" id="backendInfo">
-        Backend: Not detected yet
-    </div>
-    
+    <p>
+      Testing Origin Private File System with feature detection and IndexedDB fallback for file://
+      protocol support.
+    </p>
+
+    <div class="backend-info" id="backendInfo">Backend: Not detected yet</div>
+
     <div class="controls">
-        <button id="loadBtn">Detect Backend & Load Files</button>
-        <button id="writeTestBtn">Write Test File</button>
-        <input type="text" id="testFileName" placeholder="test.txt" value="test.txt">
-        <button id="clearAllBtn">Clear All Files</button>
+      <button id="loadBtn">Detect Backend & Load Files</button>
+      <button id="writeTestBtn">Write Test File</button>
+      <input type="text" id="testFileName" placeholder="test.txt" value="test.txt" />
+      <button id="clearAllBtn">Clear All Files</button>
     </div>
-    
-    <div class="status" id="status">Ready. Click "Detect Backend & Load Files" to detect storage backend and list files.</div>
-    
+
+    <div class="status" id="status">
+      Ready. Click "Detect Backend & Load Files" to detect storage backend and list files.
+    </div>
+
     <h3>Files in Storage:</h3>
     <div class="file-list" id="fileList">
-        <div class="empty-state">No files loaded yet</div>
+      <div class="empty-state">No files loaded yet</div>
     </div>
 
     <script>
-        // Storage Backend Interface
-        class StorageBackend {
-            async writeFile(fileName, content) { throw new Error('Not implemented'); }
-            async readFile(fileName) { throw new Error('Not implemented'); }
-            async deleteFile(fileName) { throw new Error('Not implemented'); }
-            async listFiles() { throw new Error('Not implemented'); }
-            async clearAllFiles() { throw new Error('Not implemented'); }
-            getBackendType() { throw new Error('Not implemented'); }
+      // Storage Backend Interface
+      class StorageBackend {
+        async writeFile(fileName, content) {
+          throw new Error('Not implemented');
+        }
+        async readFile(fileName) {
+          throw new Error('Not implemented');
+        }
+        async deleteFile(fileName) {
+          throw new Error('Not implemented');
+        }
+        async listFiles() {
+          throw new Error('Not implemented');
+        }
+        async clearAllFiles() {
+          throw new Error('Not implemented');
+        }
+        getBackendType() {
+          throw new Error('Not implemented');
+        }
+      }
+
+      // OPFS Async Backend (Firefox main thread, Chrome/Edge HTTPS)
+      class OPFSAsyncBackend extends StorageBackend {
+        constructor() {
+          super();
+          this.root = null;
         }
 
-        // OPFS Async Backend (Firefox main thread, Chrome/Edge HTTPS)
-        class OPFSAsyncBackend extends StorageBackend {
-            constructor() {
-                super();
-                this.root = null;
-            }
-
-            async init() {
-                this.root = await navigator.storage.getDirectory();
-            }
-
-            async writeFile(fileName, content) {
-                try {
-                    const fileHandle = await this.root.getFileHandle(fileName, { create: true });
-                    const writable = await fileHandle.createWritable();
-                    await writable.write(content);
-                    await writable.close();
-                    return { success: true, message: `File "${fileName}" written successfully (OPFS Async)` };
-                } catch (error) {
-                    return { success: false, message: `Failed to write file: ${error.message}` };
-                }
-            }
-
-            async readFile(fileName) {
-                try {
-                    const fileHandle = await this.root.getFileHandle(fileName);
-                    const file = await fileHandle.getFile();
-                    const content = await file.text();
-                    return { success: true, content, size: file.size };
-                } catch (error) {
-                    return { success: false, message: `Failed to read file: ${error.message}` };
-                }
-            }
-
-            async deleteFile(fileName) {
-                try {
-                    await this.root.removeEntry(fileName);
-                    return { success: true, message: `File "${fileName}" deleted successfully` };
-                } catch (error) {
-                    return { success: false, message: `Failed to delete file: ${error.message}` };
-                }
-            }
-
-            async listFiles() {
-                try {
-                    const files = [];
-                    for await (const [name, handle] of this.root.entries()) {
-                        if (handle.kind === 'file') {
-                            try {
-                                const file = await handle.getFile();
-                                files.push({
-                                    name,
-                                    size: file.size,
-                                    lastModified: file.lastModified,
-                                    type: file.type || 'unknown'
-                                });
-                            } catch (error) {
-                                console.warn(`Could not read file ${name}:`, error);
-                            }
-                        }
-                    }
-                    return { success: true, files };
-                } catch (error) {
-                    return { success: false, message: `Failed to list files: ${error.message}` };
-                }
-            }
-
-            async clearAllFiles() {
-                try {
-                    let deletedCount = 0;
-                    for await (const [name, handle] of this.root.entries()) {
-                        if (handle.kind === 'file') {
-                            try {
-                                await this.root.removeEntry(name);
-                                deletedCount++;
-                            } catch (error) {
-                                console.warn(`Could not delete file ${name}:`, error);
-                            }
-                        }
-                    }
-                    return { success: true, message: `Deleted ${deletedCount} files` };
-                } catch (error) {
-                    return { success: false, message: `Failed to clear files: ${error.message}` };
-                }
-            }
-
-            getBackendType() {
-                return 'opfs-async';
-            }
+        async init() {
+          this.root = await navigator.storage.getDirectory();
         }
 
-        // OPFS Sync Backend (Safari with worker)
-        class OPFSSyncBackend extends StorageBackend {
-            constructor() {
-                super();
-                this.worker = null;
-                this.messageId = 0;
-                this.pendingMessages = new Map();
-                this.initWorker();
-            }
+        async writeFile(fileName, content) {
+          try {
+            const fileHandle = await this.root.getFileHandle(fileName, { create: true });
+            const writable = await fileHandle.createWritable();
+            await writable.write(content);
+            await writable.close();
+            return {
+              success: true,
+              message: `File "${fileName}" written successfully (OPFS Async)`,
+            };
+          } catch (error) {
+            return { success: false, message: `Failed to write file: ${error.message}` };
+          }
+        }
 
-            initWorker() {
-                const workerScript = `
+        async readFile(fileName) {
+          try {
+            const fileHandle = await this.root.getFileHandle(fileName);
+            const file = await fileHandle.getFile();
+            const content = await file.text();
+            return { success: true, content, size: file.size };
+          } catch (error) {
+            return { success: false, message: `Failed to read file: ${error.message}` };
+          }
+        }
+
+        async deleteFile(fileName) {
+          try {
+            await this.root.removeEntry(fileName);
+            return { success: true, message: `File "${fileName}" deleted successfully` };
+          } catch (error) {
+            return { success: false, message: `Failed to delete file: ${error.message}` };
+          }
+        }
+
+        async listFiles() {
+          try {
+            const files = [];
+            for await (const [name, handle] of this.root.entries()) {
+              if (handle.kind === 'file') {
+                try {
+                  const file = await handle.getFile();
+                  files.push({
+                    name,
+                    size: file.size,
+                    lastModified: file.lastModified,
+                    type: file.type || 'unknown',
+                  });
+                } catch (error) {
+                  console.warn(`Could not read file ${name}:`, error);
+                }
+              }
+            }
+            return { success: true, files };
+          } catch (error) {
+            return { success: false, message: `Failed to list files: ${error.message}` };
+          }
+        }
+
+        async clearAllFiles() {
+          try {
+            let deletedCount = 0;
+            for await (const [name, handle] of this.root.entries()) {
+              if (handle.kind === 'file') {
+                try {
+                  await this.root.removeEntry(name);
+                  deletedCount++;
+                } catch (error) {
+                  console.warn(`Could not delete file ${name}:`, error);
+                }
+              }
+            }
+            return { success: true, message: `Deleted ${deletedCount} files` };
+          } catch (error) {
+            return { success: false, message: `Failed to clear files: ${error.message}` };
+          }
+        }
+
+        getBackendType() {
+          return 'opfs-async';
+        }
+      }
+
+      // OPFS Sync Backend (Safari with worker)
+      class OPFSSyncBackend extends StorageBackend {
+        constructor() {
+          super();
+          this.worker = null;
+          this.messageId = 0;
+          this.pendingMessages = new Map();
+          this.initWorker();
+        }
+
+        initWorker() {
+          const workerScript = `
                     let opfsRoot = null;
 
                     async function getOPFSRoot() {
@@ -388,226 +406,229 @@
                     });
                 `;
 
-                const blob = new Blob([workerScript], { type: 'application/javascript' });
-                const workerURL = URL.createObjectURL(blob);
+          const blob = new Blob([workerScript], { type: 'application/javascript' });
+          const workerURL = URL.createObjectURL(blob);
 
-                this.worker = new Worker(workerURL);
-                this.worker.addEventListener('message', this.handleWorkerMessage.bind(this));
-                this.worker.addEventListener('error', (error) => {
-                    console.error('Worker error:', error);
-                });
+          this.worker = new Worker(workerURL);
+          this.worker.addEventListener('message', this.handleWorkerMessage.bind(this));
+          this.worker.addEventListener('error', error => {
+            console.error('Worker error:', error);
+          });
 
-                URL.revokeObjectURL(workerURL);
-            }
-
-            handleWorkerMessage(event) {
-                const { type, result, id } = event.data;
-                
-                if (this.pendingMessages.has(id)) {
-                    const { resolve } = this.pendingMessages.get(id);
-                    this.pendingMessages.delete(id);
-                    resolve(result);
-                }
-            }
-
-            async sendMessage(type, data = null) {
-                return new Promise((resolve, reject) => {
-                    const id = ++this.messageId;
-                    this.pendingMessages.set(id, { resolve, reject });
-                    
-                    this.worker.postMessage({ type, data, id });
-                    
-                    setTimeout(() => {
-                        if (this.pendingMessages.has(id)) {
-                            this.pendingMessages.delete(id);
-                            reject(new Error('Worker operation timed out'));
-                        }
-                    }, 10000);
-                });
-            }
-
-            async writeFile(fileName, content) {
-                return await this.sendMessage('write', { fileName, content });
-            }
-
-            async readFile(fileName) {
-                return await this.sendMessage('read', { fileName });
-            }
-
-            async deleteFile(fileName) {
-                return await this.sendMessage('delete', { fileName });
-            }
-
-            async listFiles() {
-                return await this.sendMessage('list');
-            }
-
-            async clearAllFiles() {
-                return await this.sendMessage('clear');
-            }
-
-            getBackendType() {
-                return 'opfs-sync';
-            }
+          URL.revokeObjectURL(workerURL);
         }
 
-        // IndexedDB Backend (Chrome/Edge file:// fallback)
-        class IndexedDBBackend extends StorageBackend {
-            constructor() {
-                super();
-                this.db = null;
-                this.dbName = 'editme-storage';
-                this.version = 1;
-            }
+        handleWorkerMessage(event) {
+          const { type, result, id } = event.data;
 
-            async init() {
-                return new Promise((resolve, reject) => {
-                    const request = indexedDB.open(this.dbName, this.version);
-                    
-                    request.onerror = () => reject(request.error);
-                    request.onsuccess = () => {
-                        this.db = request.result;
-                        resolve();
-                    };
-                    
-                    request.onupgradeneeded = (event) => {
-                        const db = event.target.result;
-                        if (!db.objectStoreNames.contains('files')) {
-                            const store = db.createObjectStore('files', { keyPath: 'fileName' });
-                            store.createIndex('modified', 'modified', { unique: false });
-                        }
-                    };
-                });
-            }
-
-            async writeFile(fileName, content) {
-                try {
-                    const transaction = this.db.transaction(['files'], 'readwrite');
-                    const store = transaction.objectStore('files');
-                    
-                    const encoder = new TextEncoder();
-                    const data = encoder.encode(content);
-                    
-                    const fileRecord = {
-                        fileName,
-                        content: data,
-                        size: data.length,
-                        modified: Date.now(),
-                        type: 'text/plain'
-                    };
-                    
-                    await new Promise((resolve, reject) => {
-                        const request = store.put(fileRecord);
-                        request.onsuccess = () => resolve();
-                        request.onerror = () => reject(request.error);
-                    });
-                    
-                    return { success: true, message: `File "${fileName}" written successfully (IndexedDB)` };
-                } catch (error) {
-                    return { success: false, message: `Failed to write file: ${error.message}` };
-                }
-            }
-
-            async readFile(fileName) {
-                try {
-                    const transaction = this.db.transaction(['files'], 'readonly');
-                    const store = transaction.objectStore('files');
-                    
-                    const fileRecord = await new Promise((resolve, reject) => {
-                        const request = store.get(fileName);
-                        request.onsuccess = () => resolve(request.result);
-                        request.onerror = () => reject(request.error);
-                    });
-                    
-                    if (!fileRecord) {
-                        return { success: false, message: 'File not found' };
-                    }
-                    
-                    const decoder = new TextDecoder();
-                    const content = decoder.decode(fileRecord.content);
-                    
-                    return { success: true, content, size: fileRecord.size };
-                } catch (error) {
-                    return { success: false, message: `Failed to read file: ${error.message}` };
-                }
-            }
-
-            async deleteFile(fileName) {
-                try {
-                    const transaction = this.db.transaction(['files'], 'readwrite');
-                    const store = transaction.objectStore('files');
-                    
-                    await new Promise((resolve, reject) => {
-                        const request = store.delete(fileName);
-                        request.onsuccess = () => resolve();
-                        request.onerror = () => reject(request.error);
-                    });
-                    
-                    return { success: true, message: `File "${fileName}" deleted successfully` };
-                } catch (error) {
-                    return { success: false, message: `Failed to delete file: ${error.message}` };
-                }
-            }
-
-            async listFiles() {
-                try {
-                    const transaction = this.db.transaction(['files'], 'readonly');
-                    const store = transaction.objectStore('files');
-                    
-                    const files = await new Promise((resolve, reject) => {
-                        const request = store.getAll();
-                        request.onsuccess = () => {
-                            const records = request.result;
-                            const files = records.map(record => ({
-                                name: record.fileName,
-                                size: record.size,
-                                lastModified: record.modified,
-                                type: record.type || 'unknown'
-                            }));
-                            resolve(files);
-                        };
-                        request.onerror = () => reject(request.error);
-                    });
-                    
-                    return { success: true, files };
-                } catch (error) {
-                    return { success: false, message: `Failed to list files: ${error.message}` };
-                }
-            }
-
-            async clearAllFiles() {
-                try {
-                    const transaction = this.db.transaction(['files'], 'readwrite');
-                    const store = transaction.objectStore('files');
-                    
-                    const count = await new Promise((resolve, reject) => {
-                        const countRequest = store.count();
-                        countRequest.onsuccess = () => resolve(countRequest.result);
-                        countRequest.onerror = () => reject(countRequest.error);
-                    });
-                    
-                    await new Promise((resolve, reject) => {
-                        const request = store.clear();
-                        request.onsuccess = () => resolve();
-                        request.onerror = () => reject(request.error);
-                    });
-                    
-                    return { success: true, message: `Deleted ${count} files` };
-                } catch (error) {
-                    return { success: false, message: `Failed to clear files: ${error.message}` };
-                }
-            }
-
-            getBackendType() {
-                return 'indexeddb';
-            }
+          if (this.pendingMessages.has(id)) {
+            const { resolve } = this.pendingMessages.get(id);
+            this.pendingMessages.delete(id);
+            resolve(result);
+          }
         }
 
-        // Storage Backend Factory with Feature Detection
-        class StorageBackendFactory {
-            static async testWorkerSyncAccessHandle() {
-                return new Promise((resolve) => {
-                    const workerScript = `
+        async sendMessage(type, data = null) {
+          return new Promise((resolve, reject) => {
+            const id = ++this.messageId;
+            this.pendingMessages.set(id, { resolve, reject });
+
+            this.worker.postMessage({ type, data, id });
+
+            setTimeout(() => {
+              if (this.pendingMessages.has(id)) {
+                this.pendingMessages.delete(id);
+                reject(new Error('Worker operation timed out'));
+              }
+            }, 10000);
+          });
+        }
+
+        async writeFile(fileName, content) {
+          return await this.sendMessage('write', { fileName, content });
+        }
+
+        async readFile(fileName) {
+          return await this.sendMessage('read', { fileName });
+        }
+
+        async deleteFile(fileName) {
+          return await this.sendMessage('delete', { fileName });
+        }
+
+        async listFiles() {
+          return await this.sendMessage('list');
+        }
+
+        async clearAllFiles() {
+          return await this.sendMessage('clear');
+        }
+
+        getBackendType() {
+          return 'opfs-sync';
+        }
+      }
+
+      // IndexedDB Backend (Chrome/Edge file:// fallback)
+      class IndexedDBBackend extends StorageBackend {
+        constructor() {
+          super();
+          this.db = null;
+          this.dbName = 'editme-storage';
+          this.version = 1;
+        }
+
+        async init() {
+          return new Promise((resolve, reject) => {
+            const request = indexedDB.open(this.dbName, this.version);
+
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => {
+              this.db = request.result;
+              resolve();
+            };
+
+            request.onupgradeneeded = event => {
+              const db = event.target.result;
+              if (!db.objectStoreNames.contains('files')) {
+                const store = db.createObjectStore('files', { keyPath: 'fileName' });
+                store.createIndex('modified', 'modified', { unique: false });
+              }
+            };
+          });
+        }
+
+        async writeFile(fileName, content) {
+          try {
+            const transaction = this.db.transaction(['files'], 'readwrite');
+            const store = transaction.objectStore('files');
+
+            const encoder = new TextEncoder();
+            const data = encoder.encode(content);
+
+            const fileRecord = {
+              fileName,
+              content: data,
+              size: data.length,
+              modified: Date.now(),
+              type: 'text/plain',
+            };
+
+            await new Promise((resolve, reject) => {
+              const request = store.put(fileRecord);
+              request.onsuccess = () => resolve();
+              request.onerror = () => reject(request.error);
+            });
+
+            return {
+              success: true,
+              message: `File "${fileName}" written successfully (IndexedDB)`,
+            };
+          } catch (error) {
+            return { success: false, message: `Failed to write file: ${error.message}` };
+          }
+        }
+
+        async readFile(fileName) {
+          try {
+            const transaction = this.db.transaction(['files'], 'readonly');
+            const store = transaction.objectStore('files');
+
+            const fileRecord = await new Promise((resolve, reject) => {
+              const request = store.get(fileName);
+              request.onsuccess = () => resolve(request.result);
+              request.onerror = () => reject(request.error);
+            });
+
+            if (!fileRecord) {
+              return { success: false, message: 'File not found' };
+            }
+
+            const decoder = new TextDecoder();
+            const content = decoder.decode(fileRecord.content);
+
+            return { success: true, content, size: fileRecord.size };
+          } catch (error) {
+            return { success: false, message: `Failed to read file: ${error.message}` };
+          }
+        }
+
+        async deleteFile(fileName) {
+          try {
+            const transaction = this.db.transaction(['files'], 'readwrite');
+            const store = transaction.objectStore('files');
+
+            await new Promise((resolve, reject) => {
+              const request = store.delete(fileName);
+              request.onsuccess = () => resolve();
+              request.onerror = () => reject(request.error);
+            });
+
+            return { success: true, message: `File "${fileName}" deleted successfully` };
+          } catch (error) {
+            return { success: false, message: `Failed to delete file: ${error.message}` };
+          }
+        }
+
+        async listFiles() {
+          try {
+            const transaction = this.db.transaction(['files'], 'readonly');
+            const store = transaction.objectStore('files');
+
+            const files = await new Promise((resolve, reject) => {
+              const request = store.getAll();
+              request.onsuccess = () => {
+                const records = request.result;
+                const files = records.map(record => ({
+                  name: record.fileName,
+                  size: record.size,
+                  lastModified: record.modified,
+                  type: record.type || 'unknown',
+                }));
+                resolve(files);
+              };
+              request.onerror = () => reject(request.error);
+            });
+
+            return { success: true, files };
+          } catch (error) {
+            return { success: false, message: `Failed to list files: ${error.message}` };
+          }
+        }
+
+        async clearAllFiles() {
+          try {
+            const transaction = this.db.transaction(['files'], 'readwrite');
+            const store = transaction.objectStore('files');
+
+            const count = await new Promise((resolve, reject) => {
+              const countRequest = store.count();
+              countRequest.onsuccess = () => resolve(countRequest.result);
+              countRequest.onerror = () => reject(countRequest.error);
+            });
+
+            await new Promise((resolve, reject) => {
+              const request = store.clear();
+              request.onsuccess = () => resolve();
+              request.onerror = () => reject(request.error);
+            });
+
+            return { success: true, message: `Deleted ${count} files` };
+          } catch (error) {
+            return { success: false, message: `Failed to clear files: ${error.message}` };
+          }
+        }
+
+        getBackendType() {
+          return 'indexeddb';
+        }
+      }
+
+      // Storage Backend Factory with Feature Detection
+      class StorageBackendFactory {
+        static async testWorkerSyncAccessHandle() {
+          return new Promise(resolve => {
+            const workerScript = `
                         (async () => {
                             try {
                                 const root = await navigator.storage.getDirectory();
@@ -625,228 +646,232 @@
                             }
                         })();
                     `;
-                    
-                    const blob = new Blob([workerScript], { type: 'application/javascript' });
-                    const workerURL = URL.createObjectURL(blob);
-                    const worker = new Worker(workerURL);
-                    
-                    const timeout = setTimeout(() => {
-                        worker.terminate();
-                        URL.revokeObjectURL(workerURL);
-                        resolve(false);
-                    }, 3000);
-                    
-                    worker.onmessage = (event) => {
-                        clearTimeout(timeout);
-                        worker.terminate();
-                        URL.revokeObjectURL(workerURL);
-                        resolve(event.data.success === true);
-                    };
-                    
-                    worker.onerror = () => {
-                        clearTimeout(timeout);
-                        worker.terminate();
-                        URL.revokeObjectURL(workerURL);
-                        resolve(false);
-                    };
-                });
-            }
 
-            static async detectStorageBackend() {
-                // Step 1: Check OPFS basic support
-                if (!('storage' in navigator && 'getDirectory' in navigator.storage)) {
-                    return 'indexeddb';
-                }
-                
-                try {
-                    // Step 2: Test OPFS access
-                    const root = await navigator.storage.getDirectory();
-                    const testHandle = await root.getFileHandle('__capability_test__', { create: true });
-                    
-                    // Step 3: Test createWritable on main thread first (generally preferred)
-                    if ('createWritable' in testHandle) {
-                        try {
-                            const writable = await testHandle.createWritable();
-                            await writable.close();
-                            await root.removeEntry('__capability_test__');
-                            return 'opfs-async'; // Main thread async (preferred when available)
-                        } catch (error) {
-                            // OPFS blocked (typically file:// protocol restrictions)
-                            // Don't clean up test file yet, may need it for worker test
-                        }
-                    }
-                    
-                    // Step 4: Test worker sync as fallback
-                    const workerSupportsSync = await this.testWorkerSyncAccessHandle();
-                    if (workerSupportsSync) {
-                        await root.removeEntry('__capability_test__');
-                        return 'opfs-sync'; // Worker sync fallback
-                    }
-                    
-                    // Step 5: Test createSyncAccessHandle on main thread (rare)
-                    if ('createSyncAccessHandle' in testHandle) {
-                        try {
-                            const syncHandle = await testHandle.createSyncAccessHandle();
-                            syncHandle.close();
-                            await root.removeEntry('__capability_test__');
-                            return 'opfs-sync'; // Main thread sync approach
-                        } catch (error) {
-                            // Expected to fail in most browsers
-                        }
-                    }
-                    
-                    // No write capability available
-                    await root.removeEntry('__capability_test__');
-                    return 'indexeddb';
-                    
-                } catch (error) {
-                    // OPFS completely unavailable
-                    return 'indexeddb';
-                }
-            }
+            const blob = new Blob([workerScript], { type: 'application/javascript' });
+            const workerURL = URL.createObjectURL(blob);
+            const worker = new Worker(workerURL);
 
-            static async create() {
-                const backendType = await this.detectStorageBackend();
-                
-                let backend;
-                switch (backendType) {
-                    case 'opfs-sync':
-                        backend = new OPFSSyncBackend();
-                        break;
-                    case 'opfs-async':
-                        backend = new OPFSAsyncBackend();
-                        await backend.init();
-                        break;
-                    case 'indexeddb':
-                        backend = new IndexedDBBackend();
-                        await backend.init();
-                        break;
-                    default:
-                        throw new Error(`Unsupported backend: ${backendType}`);
-                }
-                
-                return backend;
-            }
+            const timeout = setTimeout(() => {
+              worker.terminate();
+              URL.revokeObjectURL(workerURL);
+              resolve(false);
+            }, 3000);
+
+            worker.onmessage = event => {
+              clearTimeout(timeout);
+              worker.terminate();
+              URL.revokeObjectURL(workerURL);
+              resolve(event.data.success === true);
+            };
+
+            worker.onerror = () => {
+              clearTimeout(timeout);
+              worker.terminate();
+              URL.revokeObjectURL(workerURL);
+              resolve(false);
+            };
+          });
         }
 
-        // Main Storage Manager
-        class StorageManager {
-            constructor() {
-                this.backend = null;
+        static async detectStorageBackend() {
+          // Step 1: Check OPFS basic support
+          if (!('storage' in navigator && 'getDirectory' in navigator.storage)) {
+            return 'indexeddb';
+          }
+
+          try {
+            // Step 2: Test OPFS access
+            const root = await navigator.storage.getDirectory();
+            const testHandle = await root.getFileHandle('__capability_test__', { create: true });
+
+            // Step 3: Test createWritable on main thread first (generally preferred)
+            if ('createWritable' in testHandle) {
+              try {
+                const writable = await testHandle.createWritable();
+                await writable.close();
+                await root.removeEntry('__capability_test__');
+                return 'opfs-async'; // Main thread async (preferred when available)
+              } catch (error) {
+                // OPFS blocked (typically file:// protocol restrictions)
+                // Don't clean up test file yet, may need it for worker test
+              }
             }
 
-            updateStatus(message) {
-                const timestamp = new Date().toLocaleTimeString();
-                document.getElementById('status').textContent = `[${timestamp}] ${message}`;
+            // Step 4: Test worker sync as fallback
+            const workerSupportsSync = await this.testWorkerSyncAccessHandle();
+            if (workerSupportsSync) {
+              await root.removeEntry('__capability_test__');
+              return 'opfs-sync'; // Worker sync fallback
             }
 
-            updateBackendInfo(backendType) {
-                const backendNames = {
-                    'opfs-sync': 'OPFS Sync (Worker Thread)',
-                    'opfs-async': 'OPFS Async (Main Thread)',
-                    'indexeddb': 'IndexedDB (Fallback)'
-                };
-                
-                const protocolInfo = location.protocol === 'file:' ? ' • file:// protocol' : ' • https:// protocol';
-                document.getElementById('backendInfo').textContent = 
-                    `Backend: ${backendNames[backendType]}${protocolInfo}`;
+            // Step 5: Test createSyncAccessHandle on main thread (rare)
+            if ('createSyncAccessHandle' in testHandle) {
+              try {
+                const syncHandle = await testHandle.createSyncAccessHandle();
+                syncHandle.close();
+                await root.removeEntry('__capability_test__');
+                return 'opfs-sync'; // Main thread sync approach
+              } catch (error) {
+                // Expected to fail in most browsers
+              }
             }
 
-            formatFileSize(bytes) {
-                if (bytes === 0) return '0 B';
-                const k = 1024;
-                const sizes = ['B', 'KB', 'MB', 'GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            // No write capability available
+            await root.removeEntry('__capability_test__');
+            return 'indexeddb';
+          } catch (error) {
+            // OPFS completely unavailable
+            return 'indexeddb';
+          }
+        }
+
+        static async create() {
+          const backendType = await this.detectStorageBackend();
+
+          let backend;
+          switch (backendType) {
+            case 'opfs-sync':
+              backend = new OPFSSyncBackend();
+              break;
+            case 'opfs-async':
+              backend = new OPFSAsyncBackend();
+              await backend.init();
+              break;
+            case 'indexeddb':
+              backend = new IndexedDBBackend();
+              await backend.init();
+              break;
+            default:
+              throw new Error(`Unsupported backend: ${backendType}`);
+          }
+
+          return backend;
+        }
+      }
+
+      // Main Storage Manager
+      class StorageManager {
+        constructor() {
+          this.backend = null;
+        }
+
+        updateStatus(message) {
+          const timestamp = new Date().toLocaleTimeString();
+          document.getElementById('status').textContent = `[${timestamp}] ${message}`;
+        }
+
+        updateBackendInfo(backendType) {
+          const backendNames = {
+            'opfs-sync': 'OPFS Sync (Worker Thread)',
+            'opfs-async': 'OPFS Async (Main Thread)',
+            indexeddb: 'IndexedDB (Fallback)',
+          };
+
+          const protocolInfo =
+            location.protocol === 'file:' ? ' • file:// protocol' : ' • https:// protocol';
+          document.getElementById('backendInfo').textContent =
+            `Backend: ${backendNames[backendType]}${protocolInfo}`;
+        }
+
+        formatFileSize(bytes) {
+          if (bytes === 0) return '0 B';
+          const k = 1024;
+          const sizes = ['B', 'KB', 'MB', 'GB'];
+          const i = Math.floor(Math.log(bytes) / Math.log(k));
+          return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        async init() {
+          this.updateStatus('Detecting storage backend...');
+          try {
+            this.backend = await StorageBackendFactory.create();
+            this.updateBackendInfo(this.backend.getBackendType());
+            this.updateStatus(`Storage backend initialized: ${this.backend.getBackendType()}`);
+            return true;
+          } catch (error) {
+            this.updateStatus(`Failed to initialize storage: ${error.message}`);
+            return false;
+          }
+        }
+
+        async loadFiles() {
+          this.updateStatus('Loading files...');
+          const result = await this.backend.listFiles();
+
+          if (result.success) {
+            this.displayFiles(result.files);
+            this.updateStatus(`Loaded ${result.files.length} files`);
+          } else {
+            this.updateStatus(`Failed to load files: ${result.message}`);
+          }
+        }
+
+        async writeTestFile(fileName) {
+          const content = `Test file created at ${new Date().toISOString()}\n\nThis is a test file written via ${this.backend.getBackendType()} backend.\n\nContent: ${Math.random()}`;
+
+          this.updateStatus(`Writing test file: ${fileName}`);
+          const result = await this.backend.writeFile(fileName, content);
+
+          if (result.success) {
+            this.updateStatus(result.message);
+            await this.loadFiles();
+          } else {
+            this.updateStatus(`Failed to write test file: ${result.message}`);
+          }
+        }
+
+        async readFile(fileName) {
+          this.updateStatus(`Reading file: ${fileName}`);
+          const result = await this.backend.readFile(fileName);
+
+          if (result.success) {
+            this.updateStatus(
+              `File content (${this.formatFileSize(result.size)}):\n${result.content}`
+            );
+          } else {
+            this.updateStatus(`Failed to read file: ${result.message}`);
+          }
+        }
+
+        async deleteFile(fileName) {
+          if (confirm(`Are you sure you want to delete "${fileName}"?`)) {
+            this.updateStatus(`Deleting file: ${fileName}`);
+            const result = await this.backend.deleteFile(fileName);
+
+            if (result.success) {
+              this.updateStatus(result.message);
+              await this.loadFiles();
+            } else {
+              this.updateStatus(`Failed to delete file: ${result.message}`);
             }
+          }
+        }
 
-            async init() {
-                this.updateStatus('Detecting storage backend...');
-                try {
-                    this.backend = await StorageBackendFactory.create();
-                    this.updateBackendInfo(this.backend.getBackendType());
-                    this.updateStatus(`Storage backend initialized: ${this.backend.getBackendType()}`);
-                    return true;
-                } catch (error) {
-                    this.updateStatus(`Failed to initialize storage: ${error.message}`);
-                    return false;
-                }
+        async clearAllFiles() {
+          if (confirm('Are you sure you want to delete ALL files?')) {
+            this.updateStatus('Clearing all files...');
+            const result = await this.backend.clearAllFiles();
+
+            if (result.success) {
+              this.updateStatus(result.message);
+              await this.loadFiles();
+            } else {
+              this.updateStatus(`Failed to clear files: ${result.message}`);
             }
+          }
+        }
 
-            async loadFiles() {
-                this.updateStatus('Loading files...');
-                const result = await this.backend.listFiles();
-                
-                if (result.success) {
-                    this.displayFiles(result.files);
-                    this.updateStatus(`Loaded ${result.files.length} files`);
-                } else {
-                    this.updateStatus(`Failed to load files: ${result.message}`);
-                }
-            }
+        displayFiles(files) {
+          const fileList = document.getElementById('fileList');
 
-            async writeTestFile(fileName) {
-                const content = `Test file created at ${new Date().toISOString()}\n\nThis is a test file written via ${this.backend.getBackendType()} backend.\n\nContent: ${Math.random()}`;
-                
-                this.updateStatus(`Writing test file: ${fileName}`);
-                const result = await this.backend.writeFile(fileName, content);
-                
-                if (result.success) {
-                    this.updateStatus(result.message);
-                    await this.loadFiles();
-                } else {
-                    this.updateStatus(`Failed to write test file: ${result.message}`);
-                }
-            }
+          if (files.length === 0) {
+            fileList.innerHTML = '<div class="empty-state">No files in storage</div>';
+            return;
+          }
 
-            async readFile(fileName) {
-                this.updateStatus(`Reading file: ${fileName}`);
-                const result = await this.backend.readFile(fileName);
-                
-                if (result.success) {
-                    this.updateStatus(`File content (${this.formatFileSize(result.size)}):\n${result.content}`);
-                } else {
-                    this.updateStatus(`Failed to read file: ${result.message}`);
-                }
-            }
-
-            async deleteFile(fileName) {
-                if (confirm(`Are you sure you want to delete "${fileName}"?`)) {
-                    this.updateStatus(`Deleting file: ${fileName}`);
-                    const result = await this.backend.deleteFile(fileName);
-                    
-                    if (result.success) {
-                        this.updateStatus(result.message);
-                        await this.loadFiles();
-                    } else {
-                        this.updateStatus(`Failed to delete file: ${result.message}`);
-                    }
-                }
-            }
-
-            async clearAllFiles() {
-                if (confirm('Are you sure you want to delete ALL files?')) {
-                    this.updateStatus('Clearing all files...');
-                    const result = await this.backend.clearAllFiles();
-                    
-                    if (result.success) {
-                        this.updateStatus(result.message);
-                        await this.loadFiles();
-                    } else {
-                        this.updateStatus(`Failed to clear files: ${result.message}`);
-                    }
-                }
-            }
-
-            displayFiles(files) {
-                const fileList = document.getElementById('fileList');
-                
-                if (files.length === 0) {
-                    fileList.innerHTML = '<div class="empty-state">No files in storage</div>';
-                    return;
-                }
-
-                const filesHTML = files.map(file => `
+          const filesHTML = files
+            .map(
+              file => `
                     <div class="file-item">
                         <div class="file-info">
                             <div class="file-name">${file.name}</div>
@@ -857,79 +882,81 @@
                             <button class="delete" onclick="storageManager.deleteFile('${file.name}')">Delete</button>
                         </div>
                     </div>
-                `).join('');
+                `
+            )
+            .join('');
 
-                fileList.innerHTML = filesHTML;
-            }
+          fileList.innerHTML = filesHTML;
+        }
+      }
+
+      // Initialize the storage manager
+      const storageManager = new StorageManager();
+
+      // Set up event listeners
+      document.getElementById('loadBtn').addEventListener('click', async () => {
+        const button = document.getElementById('loadBtn');
+        button.disabled = true;
+
+        try {
+          const initialized = await storageManager.init();
+          if (initialized) {
+            await storageManager.loadFiles();
+          }
+        } catch (error) {
+          storageManager.updateStatus(`Error: ${error.message}`);
+        } finally {
+          button.disabled = false;
+        }
+      });
+
+      document.getElementById('writeTestBtn').addEventListener('click', async () => {
+        const button = document.getElementById('writeTestBtn');
+        const fileName = document.getElementById('testFileName').value.trim();
+
+        if (!fileName) {
+          alert('Please enter a file name');
+          return;
         }
 
-        // Initialize the storage manager
-        const storageManager = new StorageManager();
+        button.disabled = true;
 
-        // Set up event listeners
-        document.getElementById('loadBtn').addEventListener('click', async () => {
-            const button = document.getElementById('loadBtn');
-            button.disabled = true;
-            
-            try {
-                const initialized = await storageManager.init();
-                if (initialized) {
-                    await storageManager.loadFiles();
-                }
-            } catch (error) {
-                storageManager.updateStatus(`Error: ${error.message}`);
-            } finally {
-                button.disabled = false;
-            }
-        });
+        try {
+          await storageManager.writeTestFile(fileName);
+        } catch (error) {
+          storageManager.updateStatus(`Error: ${error.message}`);
+        } finally {
+          button.disabled = false;
+        }
+      });
 
-        document.getElementById('writeTestBtn').addEventListener('click', async () => {
-            const button = document.getElementById('writeTestBtn');
-            const fileName = document.getElementById('testFileName').value.trim();
-            
-            if (!fileName) {
-                alert('Please enter a file name');
-                return;
-            }
-            
-            button.disabled = true;
-            
-            try {
-                await storageManager.writeTestFile(fileName);
-            } catch (error) {
-                storageManager.updateStatus(`Error: ${error.message}`);
-            } finally {
-                button.disabled = false;
-            }
-        });
+      document.getElementById('clearAllBtn').addEventListener('click', async () => {
+        const button = document.getElementById('clearAllBtn');
+        button.disabled = true;
 
-        document.getElementById('clearAllBtn').addEventListener('click', async () => {
-            const button = document.getElementById('clearAllBtn');
-            button.disabled = true;
-            
-            try {
-                await storageManager.clearAllFiles();
-            } catch (error) {
-                storageManager.updateStatus(`Error: ${error.message}`);
-            } finally {
-                button.disabled = false;
-            }
-        });
+        try {
+          await storageManager.clearAllFiles();
+        } catch (error) {
+          storageManager.updateStatus(`Error: ${error.message}`);
+        } finally {
+          button.disabled = false;
+        }
+      });
 
-        // Display browser and protocol info
-        window.addEventListener('load', () => {
-            const hasOPFS = 'storage' in navigator && 'getDirectory' in navigator.storage;
-            const hasIndexedDB = 'indexedDB' in window;
-            
-            const supportInfo = `
+      // Display browser and protocol info
+      window.addEventListener('load', () => {
+        const hasOPFS = 'storage' in navigator && 'getDirectory' in navigator.storage;
+        const hasIndexedDB = 'indexedDB' in window;
+
+        const supportInfo = `
 Browser: ${navigator.userAgent}
 OPFS Support: ${hasOPFS ? 'Yes' : 'No'}
 IndexedDB Support: ${hasIndexedDB ? 'Yes' : 'No'}
 Running from: ${location.protocol}//${location.host || 'file system'}
             `.trim();
-            
-            storageManager.updateStatus(supportInfo);
-        });
+
+        storageManager.updateStatus(supportInfo);
+      });
     </script>
-</body>
+  </body>
 </html>

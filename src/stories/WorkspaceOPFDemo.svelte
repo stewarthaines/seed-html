@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { WorkspaceManager } from '../lib/workspace/index.js';
   import './workspace-opf-demo.css';
-  
+
   interface LogEntry {
     timestamp: string;
     type: 'info' | 'success' | 'error' | 'action' | 'warning';
@@ -20,7 +20,7 @@
   let cacheStats: any = null;
   let logs: LogEntry[] = [];
   let isLoading = false;
-  
+
   // Demo data
   const sampleMetadata = {
     title: 'Interactive EPUB Demo',
@@ -28,21 +28,21 @@
     identifier: 'demo-epub-' + Date.now(),
     creator: ['Demo Author'],
     publisher: 'Storybook Demo',
-    description: 'A sample EPUB created for demonstration purposes'
+    description: 'A sample EPUB created for demonstration purposes',
   };
 
   const sampleChapters = [
     { title: 'Introduction', href: 'OEBPS/Text/intro.xhtml' },
     { title: 'Chapter 1: Getting Started', href: 'OEBPS/Text/chapter1.xhtml' },
     { title: 'Chapter 2: Advanced Features', href: 'OEBPS/Text/chapter2.xhtml' },
-    { title: 'Conclusion', href: 'OEBPS/Text/conclusion.xhtml' }
+    { title: 'Conclusion', href: 'OEBPS/Text/conclusion.xhtml' },
   ];
 
   const sampleResources = [
     { href: 'OEBPS/Styles/main.css', mediaType: 'text/css' },
     { href: 'OEBPS/Images/cover.jpg', mediaType: 'image/jpeg' },
     { href: 'OEBPS/Images/diagram.png', mediaType: 'image/png' },
-    { href: 'OEBPS/Fonts/SourceSans.ttf', mediaType: 'font/ttf' }
+    { href: 'OEBPS/Fonts/SourceSans.ttf', mediaType: 'font/ttf' },
   ];
 
   function addLog(message: string, type: LogEntry['type'] = 'info') {
@@ -59,13 +59,13 @@
       addLog('Initializing Workspace Manager...', 'action');
       workspaceManager = new WorkspaceManager({
         cache: { ttl: 5 * 60 * 1000, maxEntries: 10, enableDiskCache: true },
-        validation: { strict: false, checkDependencies: true, allowOrphanedFiles: true }
+        validation: { strict: false, checkDependencies: true, allowOrphanedFiles: true },
       });
-      
+
       await workspaceManager.init();
       initialized = true;
       addLog('✅ Workspace Manager initialized successfully', 'success');
-      
+
       await refreshWorkspaceList();
     } catch (err: any) {
       error = err.message;
@@ -79,7 +79,7 @@
     try {
       workspaces = await workspaceManager.listWorkspacesWithMetadata();
       addLog(`📋 Found ${workspaces.length} workspaces`, 'info');
-      
+
       // Update cache stats if available
       if ((workspaceManager as any).cache) {
         cacheStats = (workspaceManager as any).cache.getCacheStats();
@@ -91,39 +91,39 @@
 
   async function createSampleWorkspace() {
     if (!workspaceManager || isLoading) return;
-    
+
     try {
       isLoading = true;
       addLog('🏗️ Creating sample EPUB workspace...', 'action');
       const workspaceId = await workspaceManager.createEPUBWorkspace(sampleMetadata);
       addLog(`✅ Created workspace: ${workspaceId}`, 'success');
-      
+
       // Add sample chapters to manifest and spine
       addLog('📄 Adding sample chapters...', 'action');
       for (const chapter of sampleChapters) {
         await workspaceManager.addManifestItem(workspaceId, {
           href: chapter.href,
-          mediaType: 'application/xhtml+xml'
+          mediaType: 'application/xhtml+xml',
         });
         addLog(`📄 Added chapter: ${chapter.title}`, 'info');
       }
-      
+
       // Add resources
       addLog('📎 Adding sample resources...', 'action');
       for (const resource of sampleResources) {
         await workspaceManager.addManifestItem(workspaceId, resource);
         addLog(`📎 Added resource: ${resource.href}`, 'info');
       }
-      
+
       // Update spine order
       const updatedOpf = await workspaceManager.getWorkspaceOPF(workspaceId);
       const chapterIds = updatedOpf.manifest
         .filter((item: any) => item.mediaType === 'application/xhtml+xml')
         .map((item: any) => item.id);
-      
+
       await workspaceManager.updateSpineOrder(workspaceId, chapterIds);
       addLog(`📖 Updated spine order with ${chapterIds.length} chapters`, 'success');
-      
+
       await refreshWorkspaceList();
     } catch (err: any) {
       addLog(`❌ Failed to create workspace: ${err.message}`, 'error');
@@ -134,26 +134,30 @@
 
   async function selectWorkspace(workspace: any) {
     if (!workspaceManager || isLoading) return;
-    
+
     try {
       isLoading = true;
       selectedWorkspace = workspace;
       addLog(`🔍 Switching to workspace: ${workspace.title}`, 'action');
-      
+
       // Load OPF document
       opfDocument = await workspaceManager.getWorkspaceOPF(workspace.id);
       addLog(`📋 Loaded OPF with ${opfDocument.manifest.length} items`, 'success');
-      
+
       // Validate workspace structure
       validationResult = await workspaceManager.validateWorkspaceStructure(workspace.id);
       const status = validationResult.isValid ? '✅ Valid' : '⚠️ Issues found';
-      addLog(`🔍 Validation: ${status} (${validationResult.errors.length} errors, ${validationResult.warnings.length} warnings)`, 
-             validationResult.isValid ? 'success' : 'warning');
-      
+      addLog(
+        `🔍 Validation: ${status} (${validationResult.errors.length} errors, ${validationResult.warnings.length} warnings)`,
+        validationResult.isValid ? 'success' : 'warning'
+      );
+
       // Generate preview
       workspacePreview = await workspaceManager.generateWorkspacePreview(workspace.id);
-      addLog(`📊 Generated preview: ${workspacePreview.estimatedEPUBSize} bytes estimated`, 'success');
-      
+      addLog(
+        `📊 Generated preview: ${workspacePreview.estimatedEPUBSize} bytes estimated`,
+        'success'
+      );
     } catch (err: any) {
       addLog(`❌ Failed to load workspace: ${err.message}`, 'error');
     } finally {
@@ -163,18 +167,18 @@
 
   async function updateMetadata() {
     if (!selectedWorkspace || !opfDocument || !workspaceManager) return;
-    
+
     try {
       isLoading = true;
       const newMetadata = {
         ...opfDocument.metadata,
         title: opfDocument.metadata.title + ' (Updated)',
-        modifiedDate: new Date().toISOString()
+        modifiedDate: new Date().toISOString(),
       };
-      
+
       await workspaceManager.updateMetadata(selectedWorkspace.id, newMetadata);
       addLog(`✏️ Updated metadata for: ${selectedWorkspace.title}`, 'success');
-      
+
       // Refresh the OPF document
       opfDocument = await workspaceManager.getWorkspaceOPF(selectedWorkspace.id);
       await refreshWorkspaceList();
@@ -187,19 +191,19 @@
 
   async function deleteWorkspace(workspaceId: string) {
     if (!workspaceManager) return;
-    
+
     try {
       isLoading = true;
       await workspaceManager.deleteWorkspace(workspaceId);
       addLog(`🗑️ Deleted workspace: ${workspaceId}`, 'success');
-      
+
       if (selectedWorkspace?.id === workspaceId) {
         selectedWorkspace = null;
         opfDocument = null;
         validationResult = null;
         workspacePreview = null;
       }
-      
+
       await refreshWorkspaceList();
     } catch (err: any) {
       addLog(`❌ Failed to delete workspace: ${err.message}`, 'error');
@@ -234,7 +238,7 @@
   <div class="demo-header">
     <h1>🏗️ Workspace & OPF Manager Demo</h1>
     <p>Interactive demonstration of EPUB workspace management backend functionality</p>
-    
+
     {#if !initialized && !error}
       <div class="loading">
         <div class="spinner"></div>
@@ -244,7 +248,8 @@
 
     {#if error}
       <div class="error">
-        <strong>❌ Error:</strong> {error}
+        <strong>❌ Error:</strong>
+        {error}
       </div>
     {/if}
   </div>
@@ -264,7 +269,7 @@
             </button>
           </div>
         </div>
-        
+
         <div class="workspace-list">
           {#if workspaces.length === 0}
             <div class="empty-state">
@@ -273,7 +278,11 @@
           {:else}
             {#each workspaces as workspace}
               <div class="workspace-item" class:selected={selectedWorkspace?.id === workspace.id}>
-                <div class="workspace-info" on:click={() => selectWorkspace(workspace)} on:keydown={() => {}}>
+                <div
+                  class="workspace-info"
+                  on:click={() => selectWorkspace(workspace)}
+                  on:keydown={() => {}}
+                >
                   <h3>{workspace.title}</h3>
                   <div class="workspace-meta">
                     <span>👤 {workspace.author || 'Unknown Author'}</span>
@@ -286,8 +295,8 @@
                     <div class="workspace-error">⚠️ Workspace has validation errors</div>
                   {/if}
                 </div>
-                <button 
-                  on:click|stopPropagation={() => deleteWorkspace(workspace.id)} 
+                <button
+                  on:click|stopPropagation={() => deleteWorkspace(workspace.id)}
                   class="btn btn-danger btn-small"
                   disabled={isLoading}
                 >
@@ -310,7 +319,7 @@
                 ✏️ Update Metadata
               </button>
             </div>
-            
+
             {#if opfDocument}
               <div class="opf-content">
                 <div class="metadata-section">
@@ -319,12 +328,18 @@
                     <div><strong>Title:</strong> {opfDocument.metadata.title}</div>
                     <div><strong>Language:</strong> {opfDocument.metadata.language}</div>
                     <div><strong>Identifier:</strong> {opfDocument.metadata.identifier}</div>
-                    <div><strong>Creator:</strong> {opfDocument.metadata.creator?.join(', ') || 'N/A'}</div>
+                    <div>
+                      <strong>Creator:</strong>
+                      {opfDocument.metadata.creator?.join(', ') || 'N/A'}
+                    </div>
                     {#if opfDocument.metadata.publisher}
                       <div><strong>Publisher:</strong> {opfDocument.metadata.publisher}</div>
                     {/if}
                     {#if opfDocument.metadata.modifiedDate}
-                      <div><strong>Modified:</strong> {formatDate(opfDocument.metadata.modifiedDate)}</div>
+                      <div>
+                        <strong>Modified:</strong>
+                        {formatDate(opfDocument.metadata.modifiedDate)}
+                      </div>
                     {/if}
                   </div>
                 </div>
@@ -366,24 +381,32 @@
             <div class="panel">
               <div class="panel-header">
                 <h2>🔍 Validation Results</h2>
-                <div class="validation-status" class:valid={validationResult.isValid} class:invalid={!validationResult.isValid}>
+                <div
+                  class="validation-status"
+                  class:valid={validationResult.isValid}
+                  class:invalid={!validationResult.isValid}
+                >
                   {validationResult.isValid ? '✅ Valid' : '⚠️ Issues Found'}
                 </div>
               </div>
-              
+
               <div class="validation-content">
                 <div class="validation-summary">
                   <div class="summary-item">
-                    <strong>Total Files:</strong> {validationResult.summary.totalFiles}
+                    <strong>Total Files:</strong>
+                    {validationResult.summary.totalFiles}
                   </div>
                   <div class="summary-item">
-                    <strong>Valid Files:</strong> {validationResult.summary.validFiles}
+                    <strong>Valid Files:</strong>
+                    {validationResult.summary.validFiles}
                   </div>
                   <div class="summary-item">
-                    <strong>Missing Files:</strong> {validationResult.summary.missingFiles}
+                    <strong>Missing Files:</strong>
+                    {validationResult.summary.missingFiles}
                   </div>
                   <div class="summary-item">
-                    <strong>Orphaned Files:</strong> {validationResult.summary.orphanedFiles}
+                    <strong>Orphaned Files:</strong>
+                    {validationResult.summary.orphanedFiles}
                   </div>
                 </div>
 
@@ -426,11 +449,12 @@
               <div class="panel-header">
                 <h2>📊 Workspace Preview</h2>
               </div>
-              
+
               <div class="preview-content">
                 <div class="preview-stats">
                   <div class="stat-item">
-                    <strong>Estimated EPUB Size:</strong> {formatFileSize(workspacePreview.estimatedEPUBSize)}
+                    <strong>Estimated EPUB Size:</strong>
+                    {formatFileSize(workspacePreview.estimatedEPUBSize)}
                   </div>
                 </div>
 
@@ -484,7 +508,10 @@
                     <h4>🔗 Dependency Issues</h4>
                     {#if workspacePreview.dependencies.orphanedFiles.length > 0}
                       <div class="orphaned-files">
-                        <strong>Orphaned Files ({workspacePreview.dependencies.orphanedFiles.length}):</strong>
+                        <strong
+                          >Orphaned Files ({workspacePreview.dependencies.orphanedFiles
+                            .length}):</strong
+                        >
                         {#each workspacePreview.dependencies.orphanedFiles as file}
                           <span class="orphaned-file">{file}</span>
                         {/each}
@@ -492,7 +519,10 @@
                     {/if}
                     {#if workspacePreview.dependencies.missingDependencies.length > 0}
                       <div class="missing-deps">
-                        <strong>Missing Dependencies ({workspacePreview.dependencies.missingDependencies.length}):</strong>
+                        <strong
+                          >Missing Dependencies ({workspacePreview.dependencies.missingDependencies
+                            .length}):</strong
+                        >
                         {#each workspacePreview.dependencies.missingDependencies as dep}
                           <span class="missing-dep">{dep}</span>
                         {/each}
@@ -514,11 +544,13 @@
           </div>
           <div class="cache-stats">
             <div class="cache-stat">
-              <strong>Memory Entries:</strong> {cacheStats.memoryEntries} / {cacheStats.maxEntries}
+              <strong>Memory Entries:</strong>
+              {cacheStats.memoryEntries} / {cacheStats.maxEntries}
             </div>
             {#if cacheStats.cacheHitRate !== undefined}
               <div class="cache-stat">
-                <strong>Hit Rate:</strong> {(cacheStats.cacheHitRate * 100).toFixed(1)}%
+                <strong>Hit Rate:</strong>
+                {(cacheStats.cacheHitRate * 100).toFixed(1)}%
               </div>
             {/if}
           </div>
@@ -529,9 +561,7 @@
       <div class="panel">
         <div class="panel-header">
           <h2>📝 Activity Log</h2>
-          <button on:click={clearLogs} class="btn btn-secondary btn-small">
-            🗑️ Clear
-          </button>
+          <button on:click={clearLogs} class="btn btn-secondary btn-small"> 🗑️ Clear </button>
         </div>
         <div class="activity-log">
           {#each logs.slice().reverse() as log}

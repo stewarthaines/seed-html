@@ -9,6 +9,7 @@ This project uses Storybook for component development, testing, and documentatio
 ### When to Use This Pattern
 
 Use this approach for features that:
+
 - Are primarily backend/API focused (storage, parsing, transformation)
 - Don't have their own dedicated UI components
 - Need interactive demonstration during development
@@ -25,12 +26,12 @@ The File Storage API (`src/stories/StorageDemo.svelte`) demonstrates this patter
 // src/stories/FeatureDemo.svelte
 <script lang="ts">
   import { SomeAPI } from '../lib/feature';
-  
+
   // Component state
   let api: SomeAPI;
   let logs: LogEntry[] = [];
   let isLoading = false;
-  
+
   // Initialize API
   onMount(async () => {
     try {
@@ -41,13 +42,13 @@ The File Storage API (`src/stories/StorageDemo.svelte`) demonstrates this patter
       addLog('error', `Failed to initialize: ${error.message}`);
     }
   });
-  
+
   // Demo operations
   async function performOperation() {
     if (!api || isLoading) return;
     isLoading = true;
     addLog('action', 'Performing operation...');
-    
+
     try {
       const result = await api.someMethod();
       addLog('success', `Operation complete: ${result}`);
@@ -57,14 +58,14 @@ The File Storage API (`src/stories/StorageDemo.svelte`) demonstrates this patter
       isLoading = false;
     }
   }
-  
+
   // Reset for clean demos
   async function resetDemo() {
     // Clear any persistent state
     // Reset component state
     addLog('success', 'Demo reset complete');
   }
-  
+
   function addLog(type: 'info' | 'success' | 'error' | 'action', message: string) {
     const timestamp = new Date().toLocaleTimeString();
     logs = [...logs, { timestamp, type, message }];
@@ -81,7 +82,7 @@ The File Storage API (`src/stories/StorageDemo.svelte`) demonstrates this patter
       Reset Demo
     </button>
   </div>
-  
+
   <div class="console-log">
     {#each logs as log}
       <div class="log-entry log-{log.type}">
@@ -132,31 +133,31 @@ Interactive demonstration of the feature's capabilities.
 </Story>
 
 <!-- Automated demo with sample data -->
-<Story 
+<Story
   name="Demo with Sample Data"
   play={async ({ canvasElement }) => {
     const { within } = await import('@testing-library/dom');
     const { default: userEvent } = await import('@testing-library/user-event');
-    
+
     const canvas = within(canvasElement);
     const user = userEvent.setup();
-    
+
     try {
       // Wait for initialization
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Reset to clean state
       const resetButton = canvas.getByText('Reset Demo');
       await user.click(resetButton);
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Perform demo operations
       const operationButton = canvas.getByText('Perform Operation');
       await user.click(operationButton);
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // Additional operations as needed
-      
+
     } catch (error) {
       console.log('Play function failed:', error);
     }
@@ -169,18 +170,21 @@ Interactive demonstration of the feature's capabilities.
 #### 3. **Key Implementation Principles**
 
 ##### **Real-Time Logging Console**
+
 - Show all operations with timestamps
 - Use different log types (info, success, error, action)
 - Clear, descriptive messages
 - Scrollable console area
 
 ##### **State Management**
+
 - Track loading states
 - Disable buttons during operations
 - Reset functionality for clean demos
 - Error handling with user feedback
 
 ##### **Play Function Best Practices**
+
 ```typescript
 // Use proper testing library imports
 const { within } = await import('@testing-library/dom');
@@ -203,6 +207,7 @@ await user.click(resetButton);
 ```
 
 ##### **CSS Styling Guidelines**
+
 ```css
 /* Console-like appearance */
 .console-log {
@@ -215,10 +220,18 @@ await user.click(resetButton);
 }
 
 /* Color-coded log types */
-.log-success { color: #4ade80; }
-.log-error { color: #f87171; }
-.log-action { color: #fbbf24; }
-.log-info { color: #60a5fa; }
+.log-success {
+  color: #4ade80;
+}
+.log-error {
+  color: #f87171;
+}
+.log-action {
+  color: #fbbf24;
+}
+.log-info {
+  color: #60a5fa;
+}
 
 /* Responsive button layout */
 .button-group {
@@ -272,23 +285,27 @@ src/stories/
 ## Story Categories
 
 ### Component Stories
+
 - `title: 'Components/ComponentName'`
 - Traditional UI component documentation
 - Props, events, slots demonstration
 
 ### Application Stories
+
 - `title: 'Application/ComponentName'`
 - Layout and structural components
 - Full application state demonstration
 - Cross-component interaction testing
 
-### Backend Feature Stories  
+### Backend Feature Stories
+
 - `title: 'Backend/FeatureName'`
 - API demonstration and testing
 - Real browser integration
 - Interactive documentation
 
 ### Integration Stories
+
 - `title: 'Integration/WorkflowName'`
 - End-to-end workflow demonstration
 - Multiple feature coordination
@@ -297,25 +314,29 @@ src/stories/
 ## Development Workflow
 
 ### 1. **Create Demo Component**
+
 ```bash
 # Create demo component for new feature
 touch src/stories/FeatureDemo.svelte
-touch src/stories/FeatureDemo.stories.svelte  
+touch src/stories/FeatureDemo.stories.svelte
 touch src/stories/feature-demo.css
 ```
 
 ### 2. **Implement Interactive Demo**
+
 - Real API integration (not mocked)
 - Console logging for transparency
 - Reset functionality for repeatability
 - Error handling with user feedback
 
 ### 3. **Add Story with Play Function**
+
 - Basic interactive story for manual testing
 - Automated story with sample data for screenshots
 - Comprehensive documentation in story description
 
 ### 4. **Test and Capture**
+
 ```bash
 npm run storybook           # Start Storybook
 npm run screenshots         # Capture automated screenshots
@@ -323,6 +344,7 @@ npm run test:stories        # Run story-based tests
 ```
 
 ### 5. **Update Documentation**
+
 - Add story to main Storybook navigation
 - Include screenshots in feature documentation
 - Reference interactive demos in technical specs
@@ -338,7 +360,7 @@ npm run test:stories        # Run story-based tests
 </Story>
 
 <!-- Story with play function -->
-<Story 
+<Story
   name="Interactive Demo"
   play={async ({ canvasElement }) => {
     // Interaction logic
@@ -352,11 +374,7 @@ npm run test:stories        # Run story-based tests
 
 ```svelte
 <!-- AVOID: args and parameters props cause compilation errors -->
-<Story 
-  name="Demo"
-  args={{ prop: value }}
-  parameters={{ docs: { description: "..." } }}
->
+<Story name="Demo" args={{ prop: value }} parameters={{ docs: { description: '...' } }}>
   <ComponentName />
 </Story>
 ```
@@ -368,6 +386,7 @@ npm run test:stories        # Run story-based tests
 ## Best Practices
 
 ### ✅ **Do**
+
 - Use real APIs, not mocks, for authentic testing
 - Include comprehensive error handling
 - Provide reset functionality for clean demos
@@ -376,6 +395,7 @@ npm run test:stories        # Run story-based tests
 - Include both manual and automated story variants
 
 ### ❌ **Don't**
+
 - Mock critical browser APIs (defeats the purpose)
 - Skip error handling (demos should be robust)
 - Forget reset functionality (leads to state accumulation)
@@ -386,46 +406,49 @@ npm run test:stories        # Run story-based tests
 ## Advanced Patterns
 
 ### **Multi-Step Workflows**
+
 ```typescript
 // Demonstrate complex workflows
 async function performComplexWorkflow() {
   addLog('action', 'Starting complex workflow...');
-  
+
   const step1 = await api.stepOne();
   addLog('success', `Step 1 complete: ${step1}`);
-  
+
   const step2 = await api.stepTwo(step1);
   addLog('success', `Step 2 complete: ${step2}`);
-  
+
   const result = await api.stepThree(step2);
   addLog('success', `Workflow complete: ${result}`);
 }
 ```
 
 ### **Real-Time Updates**
+
 ```typescript
 // Show progress for long-running operations
 async function longRunningOperation() {
   const operation = api.startLongOperation();
-  
-  operation.onProgress((progress) => {
+
+  operation.onProgress(progress => {
     addLog('info', `Progress: ${progress}%`);
   });
-  
+
   const result = await operation.complete();
   addLog('success', `Operation complete: ${result}`);
 }
 ```
 
 ### **State Comparison**
+
 ```typescript
 // Show before/after states
 async function demonstrateTransformation() {
   const before = await api.getCurrentState();
   addLog('info', `Before: ${JSON.stringify(before)}`);
-  
+
   await api.performTransformation();
-  
+
   const after = await api.getCurrentState();
   addLog('success', `After: ${JSON.stringify(after)}`);
 }
@@ -449,14 +472,14 @@ For layout components and complete application demonstrations, use the fullscree
     title: 'Application/LayoutComponent',
     component: LayoutComponent,
     parameters: {
-      layout: 'fullscreen',  // Essential for layout stories
+      layout: 'fullscreen', // Essential for layout stories
       docs: {
         description: {
-          component: 'Layout component documentation...'
-        }
-      }
+          component: 'Layout component documentation...',
+        },
+      },
     },
-    tags: ['autodocs']
+    tags: ['autodocs'],
   });
 </script>
 ```
@@ -466,8 +489,8 @@ For layout components and complete application demonstrations, use the fullscree
 #### **Sidebar Toggle Pattern**
 
 ```svelte
-<Story 
-  name="Collapsed Sidebar" 
+<Story
+  name="Collapsed Sidebar"
   play={async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const toggleButton = canvas.getByLabelText('Toggle sidebar');
@@ -481,11 +504,11 @@ For layout components and complete application demonstrations, use the fullscree
 #### **Section Navigation Pattern**
 
 ```svelte
-<Story 
+<Story
   name="Section Tour"
   play={async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    
+
     // Navigate through sections with timing
     const sections = ['Metadata', 'Manifest', 'Navigation'];
     for (const sectionName of sections) {
@@ -502,17 +525,17 @@ For layout components and complete application demonstrations, use the fullscree
 #### **Responsive Layout Testing**
 
 ```svelte
-<Story 
+<Story
   name="Mobile View"
   parameters={{
     viewport: {
-      name: 'tablet'
+      name: 'tablet',
     },
     docs: {
       description: {
-        story: 'Layout behavior on tablet-sized screens'
-      }
-    }
+        story: 'Layout behavior on tablet-sized screens',
+      },
+    },
   }}
 >
   <LayoutComponent />
@@ -525,14 +548,14 @@ For layout components and complete application demonstrations, use the fullscree
 
 ```svelte
 <!-- App.stories.svelte -->
-<Story 
+<Story
   name="Interactive Demo"
   play={async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    
+
     // Wait for initialization
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     // Demonstrate key interactions
     const sections = ['Metadata', 'Manifest', 'Settings'];
     for (const section of sections) {
@@ -540,12 +563,12 @@ For layout components and complete application demonstrations, use the fullscree
       await userEvent.click(button);
       await new Promise(resolve => setTimeout(resolve, 800));
     }
-    
+
     // Toggle layout
     const toggleButton = canvas.getByLabelText('Toggle sidebar');
     await userEvent.click(toggleButton);
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     // Return to default state
     await userEvent.click(toggleButton);
   }}
@@ -559,19 +582,22 @@ For layout components and complete application demonstrations, use the fullscree
 #### **✅ Essential Patterns**
 
 **Fullscreen Parameter:**
+
 ```javascript
 parameters: {
-  layout: 'fullscreen'  // Required for layout components
+  layout: 'fullscreen'; // Required for layout components
 }
 ```
 
 **Realistic Timing in Play Functions:**
+
 ```javascript
 // Allow time for animations and state changes
 await new Promise(resolve => setTimeout(resolve, 1500));
 ```
 
 **Accessibility-Focused Selectors:**
+
 ```javascript
 // Use accessible selectors
 const toggleButton = canvas.getByLabelText('Toggle sidebar');
@@ -580,6 +606,7 @@ const roleButton = canvas.getByRole('button', { name: /settings/i });
 ```
 
 **Robust Error Handling:**
+
 ```javascript
 play={async ({ canvasElement }) => {
   try {
@@ -594,21 +621,25 @@ play={async ({ canvasElement }) => {
 #### **🎯 Layout-Specific Considerations**
 
 **State Persistence:**
+
 - Layout stories may retain localStorage state between runs
 - Include reset mechanisms or account for previous state
 - Test both fresh and restored state scenarios
 
 **Animation Timing:**
+
 - CSS transitions need time to complete
 - Use realistic delays (500-1500ms) for visual clarity
 - Match timing to actual CSS transition durations
 
 **Viewport Constraints:**
+
 - Test minimum and maximum layout sizes
 - Verify responsive breakpoint behavior
 - Include mobile/tablet viewport variants
 
 **Cross-Story State:**
+
 - Layout state persists across story navigation
 - Consider this when designing demo sequences
 - Reset state explicitly if clean demos are required
@@ -630,14 +661,12 @@ play={async ({ canvasElement }) => {
       </ul>
     </div>
   </svelte:fragment>
-  
+
   <svelte:fragment slot="left-content">
     <div class="editor-demo">
       <h3>Text Editor</h3>
       <textarea rows="20" placeholder="Content here...">
-# Chapter 1: Introduction
-
-Welcome to EPUB creation...
+        # Chapter 1: Introduction Welcome to EPUB creation...
       </textarea>
     </div>
   </svelte:fragment>
@@ -687,7 +716,7 @@ Welcome to EPUB creation...
 const buttons = {
   toggle: canvas.getByLabelText('Toggle sidebar'),
   metadata: canvas.getByTitle('Metadata'),
-  manifest: canvas.getByTitle('Manifest')
+  manifest: canvas.getByTitle('Manifest'),
 };
 
 // Use consistent timing patterns
@@ -718,26 +747,30 @@ This pattern ensures layout and application stories provide comprehensive visual
 ### ✅ DO: Follow Component Separation Pattern
 
 **Correct Structure:**
+
 ```
 src/stories/
 ├── FeatureDemo.stories.svelte    # Story definitions only
-├── FeatureDemo.svelte            # Component logic  
+├── FeatureDemo.svelte            # Component logic
 └── feature-demo.css              # Component styles
 ```
 
 **Stories File (`*.stories.svelte`):**
+
 - Use `defineMeta` from `@storybook/addon-svelte-csf`
 - Import component from separate `.svelte` file
 - Keep story definitions minimal and focused
 - NO component logic or large `<script>` blocks
 
 **Component File (`*.svelte`):**
+
 - Contains all component logic, state, and interactions
 - Import dedicated CSS file for styles
 - Follow TypeScript patterns with proper type annotations
 - Handle all business logic and API calls
 
 **CSS File (`*.css`):**
+
 - Dedicated styling following project design system
 - Responsive design patterns
 - Accessibility-focused styles
@@ -745,24 +778,29 @@ src/stories/
 ### ❌ DON'T: Common Anti-Patterns
 
 **Never mix export default with defineMeta:**
+
 ```svelte
 <!-- ❌ WRONG -->
 <script context="module">
-export default { title: '...' };  // Don't do this
+  export default { title: '...' }; // Don't do this
 </script>
 ```
 
 **Never put component logic in stories file:**
+
 ```svelte
 <!-- ❌ WRONG -->
 <script>
   let complexState = {};
-  async function handleComplexLogic() { /* ... */ }
+  async function handleComplexLogic() {
+    /* ... */
+  }
   // 100+ lines of component code
 </script>
 ```
 
 **Never embed large style blocks:**
+
 ```svelte
 <!-- ❌ WRONG -->
 <style>
@@ -775,12 +813,14 @@ export default { title: '...' };  // Don't do this
 For backend feature demonstrations, use this proven pattern:
 
 1. **Create Component First:**
+
    ```bash
    src/stories/BackendFeatureDemo.svelte  # Component logic
    src/stories/backend-feature-demo.css   # Styles
    ```
 
 2. **Then Create Story:**
+
    ```svelte
    <!-- BackendFeatureDemo.stories.svelte -->
    <script module>
@@ -794,10 +834,10 @@ For backend feature demonstrations, use this proven pattern:
        parameters: {
          docs: {
            description: {
-             component: `# Feature Documentation...`
-           }
-         }
-       }
+             component: `# Feature Documentation...`,
+           },
+         },
+       },
      });
    </script>
 
@@ -809,6 +849,7 @@ For backend feature demonstrations, use this proven pattern:
 ### 🧪 Testing Your Story
 
 Before committing, verify:
+
 ```bash
 npm run storybook                    # Should start without parsing errors
 npm run build-storybook             # Should build successfully
@@ -835,22 +876,28 @@ npm run test:stories                # Should pass story tests
 ### 🔍 Common Failure Scenarios & Solutions
 
 #### **Problem: "Failed to fetch dynamically imported module"**
+
 **Cause**: Mixed CSF patterns or component/reference mismatches
-**Solution**: 
+**Solution**:
+
 1. Use `defineMeta` consistently
 2. Ensure component file exists before referencing
 3. Check import paths are correct
 
 #### **Problem: "Storybook stories indexer parser threw an unrecognized error"**
+
 **Cause**: Component logic embedded in stories file
 **Solution**:
+
 1. Extract component logic to separate `.svelte` file
 2. Keep stories file minimal with only `defineMeta` and `<Story>` components
 3. Import component from separate file
 
 #### **Problem: Validation errors in Storybook demo**
+
 **Cause**: Backend features showing false positive errors
 **Solution**:
+
 1. Implement proper path resolution in validation logic
 2. Exclude system files (cache files, etc.) from validation
 3. Use dynamic container.xml parsing for robust path handling
@@ -860,23 +907,27 @@ npm run test:stories                # Should pass story tests
 When creating a new Storybook story:
 
 **Pre-Development:**
+
 - [ ] Identify if this is a UI component or backend feature demo
 - [ ] Plan component separation (stories/component/css files)
 - [ ] Review existing similar patterns for consistency
 
 **Component Creation:**
+
 - [ ] Create component file first (`FeatureDemo.svelte`)
 - [ ] Add TypeScript types and proper error handling
 - [ ] Create dedicated CSS file (`feature-demo.css`)
 - [ ] Test component independently
 
 **Story Creation:**
+
 - [ ] Use `defineMeta` from `@storybook/addon-svelte-csf`
 - [ ] Import component from separate file
 - [ ] Add comprehensive documentation in story description
 - [ ] Keep story definition minimal and focused
 
 **Verification:**
+
 - [ ] `npm run storybook` starts without errors
 - [ ] Story loads and displays correctly
 - [ ] Interactive features work as expected
@@ -884,6 +935,7 @@ When creating a new Storybook story:
 - [ ] Responsive design works across screen sizes
 
 **Integration:**
+
 - [ ] Add to appropriate story category
 - [ ] Update documentation if needed
 - [ ] Run screenshot capture if applicable

@@ -49,10 +49,10 @@ Add specific technical information about your feature:
 - Performance characteristics
 
 This demonstrates the complete feature workflow and validates functionality in a real browser environment.
-          `
-        }
-      }
-    }
+          `,
+        },
+      },
+    },
   });
 </script>
 
@@ -62,7 +62,7 @@ This demonstrates the complete feature workflow and validates functionality in a
 </Story>
 
 <!-- Automated Demo with Sample Data -->
-<Story 
+<Story
   name="Demo with Sample Data"
   play={async ({ canvasElement }) => {
     // Use proper testing library imports

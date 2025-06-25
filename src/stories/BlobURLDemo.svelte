@@ -28,18 +28,25 @@
   // Sample assets to create
   const sampleAssets = [
     { path: 'cover.jpg', type: 'Image', content: 'fake-jpeg-content' },
-    { path: 'styles.css', type: 'Stylesheet', content: 'body { font-family: serif; margin: 2em; }' },
-    { path: 'reader.js', type: 'Script', content: 'console.log("EPUB reader loaded");' }
+    {
+      path: 'styles.css',
+      type: 'Stylesheet',
+      content: 'body { font-family: serif; margin: 2em; }',
+    },
+    { path: 'reader.js', type: 'Script', content: 'console.log("EPUB reader loaded");' },
   ];
 
   // Sample XHTML with asset references
-  const sampleXHTML = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+  const sampleXHTML =
+    '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '<!DOCTYPE html>\n' +
     '<html xmlns="http://www.w3.org/1999/xhtml">\n' +
     '<head>\n' +
     '  <title>Sample Chapter</title>\n' +
     '  <link rel="stylesheet" type="text/css" href="styles.css"/>\n' +
-    '  <' + 'script src="reader.js"><' + '/script>\n' +
+    '  <' +
+    'script src="reader.js"><' +
+    '/script>\n' +
     '</head>\n' +
     '<body>\n' +
     '  <h1>Chapter 1: Introduction</h1>\n' +
@@ -67,7 +74,7 @@
     if (!storage || isLoading) return;
     isLoading = true;
     addLog('action', 'Setting up demo...');
-    
+
     try {
       // Create workspace
       currentWorkspace = await storage.createWorkspace();
@@ -78,7 +85,7 @@
         fileStorage: storage,
         basePath: 'OEBPS',
         maxBlobURLs: 100,
-        onCapacityReached: () => addLog('error', 'Blob URL capacity reached!')
+        onCapacityReached: () => addLog('error', 'Blob URL capacity reached!'),
       });
       blobURLManager.setActiveWorkspace(currentWorkspace);
       addLog('success', 'Blob URL Manager initialized');
@@ -93,7 +100,7 @@
       // Setup asset tracking
       assets = sampleAssets.map(asset => ({
         path: asset.path,
-        type: asset.type
+        type: asset.type,
       }));
 
       // Set original XHTML
@@ -112,18 +119,18 @@
     if (!blobURLManager || !currentWorkspace || isLoading) return;
     isLoading = true;
     addLog('action', 'Creating blob URLs for assets...');
-    
+
     try {
       for (let i = 0; i < assets.length; i++) {
         const asset = assets[i];
         const startTime = Date.now();
         const blobURL = await blobURLManager.createBlobURL(asset.path);
         const duration = Date.now() - startTime;
-        
+
         assets[i] = { ...asset, blobURL };
         addLog('success', `${asset.path} → blob URL (${duration}ms)`);
       }
-      
+
       addLog('success', `Created ${assets.length} blob URLs. Ready to process XHTML.`);
     } catch (error: unknown) {
       addLog('error', `Blob URL creation failed: ${(error as Error).message}`);
@@ -136,12 +143,12 @@
     if (!blobURLManager || !originalXHTML || isLoading) return;
     isLoading = true;
     addLog('action', 'Processing XHTML content...');
-    
+
     try {
       const startTime = Date.now();
       processedXHTML = await blobURLManager.processXHTMLForPreview(originalXHTML);
       const duration = Date.now() - startTime;
-      
+
       addLog('success', `XHTML processed successfully (${duration}ms)`);
       addLog('info', 'Asset URLs have been replaced with blob URLs');
     } catch (error: unknown) {
@@ -155,7 +162,7 @@
     if (isLoading) return;
     isLoading = true;
     addLog('action', 'Resetting demo...');
-    
+
     try {
       // Cleanup blob URLs
       if (blobURLManager) {
@@ -175,7 +182,7 @@
       originalXHTML = '';
       processedXHTML = '';
       blobURLManager = null as any;
-      
+
       addLog('success', 'Demo reset complete');
     } catch (error: unknown) {
       addLog('error', `Reset failed: ${(error as Error).message}`);
@@ -192,35 +199,22 @@
   </header>
 
   <div class="demo-controls">
-    <button 
-      on:click={setupDemo} 
-      disabled={isLoading || currentWorkspace}
-      class="primary"
-    >
+    <button on:click={setupDemo} disabled={isLoading || currentWorkspace} class="primary">
       Setup Demo
     </button>
-    
-    <button 
-      on:click={createBlobURLs} 
+
+    <button
+      on:click={createBlobURLs}
       disabled={isLoading || !currentWorkspace || assets.some(a => a.blobURL)}
     >
       Create Blob URLs
     </button>
-    
-    <button 
-      on:click={processXHTML} 
-      disabled={isLoading || !assets.some(a => a.blobURL)}
-    >
+
+    <button on:click={processXHTML} disabled={isLoading || !assets.some(a => a.blobURL)}>
       Process XHTML
     </button>
-    
-    <button 
-      on:click={resetDemo} 
-      disabled={isLoading}
-      class="secondary"
-    >
-      Reset Demo
-    </button>
+
+    <button on:click={resetDemo} disabled={isLoading} class="secondary"> Reset Demo </button>
   </div>
 
   <div class="demo-content">
@@ -259,7 +253,7 @@
             <h4>Original XHTML</h4>
             <pre class="xhtml-content">{originalXHTML}</pre>
           </div>
-          
+
           {#if processedXHTML}
             <div class="xhtml-section">
               <h4>Processed XHTML (with blob URLs)</h4>

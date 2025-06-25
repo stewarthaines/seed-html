@@ -5,13 +5,16 @@
 The Blob URL Manager converts EPUB manifest items into blob URLs and substitutes them in XHTML content for preview iframe usage. It enables preview iframes to load EPUB assets (CSS, JS, SVG) using standard relative URLs without modifying the original EPUB HTML structure.
 
 **Main Classes:**
+
 - `BlobURLManager` - Core blob URL creation and XHTML processing with OPFS optimization
 - `XHTMLProcessor` - DOM-based XHTML parsing and asset URL substitution
 
 **Shared Utilities:**
+
 - `getMimeType()` - File extension to MIME type mapping (from `src/lib/utils/mime-types.ts`)
 
 **Key Features:**
+
 - **OPFS Optimization**: Zero-copy blob creation for supported browsers
 - **Dual-path Backend**: Automatic OPFS vs IndexedDB detection for optimal performance
 - **Capacity Management**: Hard limit of 100 blob URLs with user notification
@@ -27,6 +30,7 @@ constructor(config: BlobURLManagerConfig)
 ```
 
 **Input:**
+
 - `config: BlobURLManagerConfig` - Configuration object with file storage, base path, capacity limits, and callbacks
 
 **Side Effects:** Initializes blob URL registry and sets up capacity management
@@ -40,9 +44,9 @@ const pathInfo = await workspaceManager.getWorkspacePathInfo('workspace-123');
 
 const blobURLManager = new BlobURLManager({
   fileStorage: fileStorageInstance,
-  basePath: pathInfo.basePath, // e.g., "OEBPS" or "content" 
+  basePath: pathInfo.basePath, // e.g., "OEBPS" or "content"
   maxBlobURLs: 100,
-  onCapacityReached: () => alert('Blob URL limit reached!')
+  onCapacityReached: () => alert('Blob URL limit reached!'),
 });
 ```
 
@@ -53,6 +57,7 @@ setActiveWorkspace(workspaceId: string): void
 ```
 
 **Input:**
+
 - `workspaceId: string` - Workspace identifier to set as active
 
 **Output:** `void`
@@ -76,11 +81,13 @@ createBlobURL(filePath: string): Promise<string>
 ```
 
 **Input:**
+
 - `filePath: string` - Manifest item href (relative path, e.g., "images/cover.jpg", "styles/main.css")
 
 **Output:** `Promise<string>` - Blob URL for the file content
 
-**Side Effects:** 
+**Side Effects:**
+
 - Resolves relative href to full workspace path using configured base path
 - Creates and registers blob URL for cleanup tracking
 - Uses OPFS zero-copy path if supported, otherwise reads content into memory
@@ -110,6 +117,7 @@ createBlobFromContent(content: ArrayBuffer | string, mimeType: string): string
 ```
 
 **Input:**
+
 - `content: ArrayBuffer | string` - File content data
 - `mimeType: string` - MIME type for the blob
 
@@ -125,7 +133,9 @@ const transformedCSS = 'body { background: #fff; }';
 const cssBlob = blobURLManager.createBlobFromContent(transformedCSS, 'text/css');
 
 // Create blob from binary data
-const imageData = new Uint8Array([/* image bytes */]);
+const imageData = new Uint8Array([
+  /* image bytes */
+]);
 const imageBlob = blobURLManager.createBlobFromContent(imageData.buffer, 'image/png');
 ```
 
@@ -136,11 +146,13 @@ processXHTMLForPreview(xhtmlContent: string): Promise<string>
 ```
 
 **Input:**
+
 - `xhtmlContent: string` - XHTML content with relative asset URLs
 
 **Output:** `Promise<string>` - XHTML with relative URLs replaced by blob URLs
 
-**Side Effects:** 
+**Side Effects:**
+
 - Parses XHTML with DOMParser
 - Creates blob URLs for referenced assets
 - May reach capacity limit and throw error
@@ -174,6 +186,7 @@ revokeBlobURL(url: string): void
 ```
 
 **Input:**
+
 - `url: string` - Blob URL to revoke
 
 **Output:** `void`
@@ -215,6 +228,7 @@ getMimeType(filePath: string): string
 ```
 
 **Input:**
+
 - `filePath: string` - File path with extension
 
 **Output:** `string` - MIME type for the file extension
@@ -227,9 +241,9 @@ getMimeType(filePath: string): string
 
 ```typescript
 console.log(blobURLManager.getMimeType('chapter.xhtml')); // "application/xhtml+xml"
-console.log(blobURLManager.getMimeType('style.css'));    // "text/css"
-console.log(blobURLManager.getMimeType('cover.jpg'));    // "image/jpeg"
-console.log(blobURLManager.getMimeType('unknown.xyz'));  // "application/octet-stream"
+console.log(blobURLManager.getMimeType('style.css')); // "text/css"
+console.log(blobURLManager.getMimeType('cover.jpg')); // "image/jpeg"
+console.log(blobURLManager.getMimeType('unknown.xyz')); // "application/octet-stream"
 ```
 
 ### isResourcePath()
@@ -239,6 +253,7 @@ isResourcePath(href: string): boolean
 ```
 
 **Input:**
+
 - `href: string` - URL or path to check
 
 **Output:** `boolean` - True if this is a relative resource path
@@ -248,11 +263,11 @@ isResourcePath(href: string): boolean
 **Usage:**
 
 ```typescript
-console.log(blobURLManager.isResourcePath('images/cover.jpg'));     // true
-console.log(blobURLManager.isResourcePath('http://example.com'));   // false
+console.log(blobURLManager.isResourcePath('images/cover.jpg')); // true
+console.log(blobURLManager.isResourcePath('http://example.com')); // false
 console.log(blobURLManager.isResourcePath('data:image/png;base64')); // false
-console.log(blobURLManager.isResourcePath('blob:null/abc123'));     // false
-console.log(blobURLManager.isResourcePath('/absolute/path'));       // false
+console.log(blobURLManager.isResourcePath('blob:null/abc123')); // false
+console.log(blobURLManager.isResourcePath('/absolute/path')); // false
 ```
 
 ### getBlobURLCount()
@@ -305,10 +320,10 @@ if (blobURLManager.isAtCapacity()) {
 
 ```typescript
 interface BlobURLManagerConfig {
-  maxBlobURLs: number;                    // Default: 100
-  fileStorage: FileStorageAPI;            // File Storage API instance
-  basePath: string;                       // EPUB content base path (from WorkspacePathInfo)
-  onCapacityReached?: () => void;         // Callback when limit reached
+  maxBlobURLs: number; // Default: 100
+  fileStorage: FileStorageAPI; // File Storage API instance
+  basePath: string; // EPUB content base path (from WorkspacePathInfo)
+  onCapacityReached?: () => void; // Callback when limit reached
 }
 ```
 
@@ -316,10 +331,10 @@ interface BlobURLManagerConfig {
 
 ```typescript
 interface BlobURLRegistry {
-  urls: Map<string, string>;              // filePath -> blobURL mapping
-  created: Map<string, Date>;             // Creation time tracking
-  count: number;                          // Current URL count
-  maxCount: number;                       // Maximum allowed URLs
+  urls: Map<string, string>; // filePath -> blobURL mapping
+  created: Map<string, Date>; // Creation time tracking
+  count: number; // Current URL count
+  maxCount: number; // Maximum allowed URLs
 }
 ```
 
@@ -333,7 +348,7 @@ interface FileStorageAPI {
   readFile(workspaceId: string, filePath: string): Promise<ArrayBuffer>;
   writeFile(workspaceId: string, filePath: string, content: ArrayBuffer | string): Promise<void>;
   deleteFile(workspaceId: string, filePath: string): Promise<void>;
-  
+
   // OPFS optimization methods
   supportsDirectBlobURLs(): boolean;
   getFile(workspaceId: string, filePath: string): Promise<File>;
@@ -344,7 +359,10 @@ interface FileStorageAPI {
 
 ```typescript
 export class BlobURLError extends Error {
-  constructor(message: string, public code: string) {
+  constructor(
+    message: string,
+    public code: string
+  ) {
     super(message);
     this.name = 'BlobURLError';
   }
@@ -357,7 +375,10 @@ export class BlobURLCapacityError extends BlobURLError {
 }
 
 export class XHTMLProcessingError extends BlobURLError {
-  constructor(message: string, public originalError?: Error) {
+  constructor(
+    message: string,
+    public originalError?: Error
+  ) {
     super(message, 'XHTML_PROCESSING_ERROR');
   }
 }
@@ -388,7 +409,7 @@ if (fileStorage.supportsDirectBlobURLs()) {
   const correctedFile = new File([file], file.name, { type: mimeType });
   return URL.createObjectURL(correctedFile);
 } else {
-  // IndexedDB path: Chrome+Edge on https://, fallback scenarios  
+  // IndexedDB path: Chrome+Edge on https://, fallback scenarios
   // Use traditional content reading (with memory copy)
   const content = await fileStorage.readFile(workspaceId, filePath);
   const mimeType = getMimeType(filePath);
@@ -403,6 +424,7 @@ if (fileStorage.supportsDirectBlobURLs()) {
 - **IndexedDB**: `readFile() → new Blob() → URL.createObjectURL()` (memory copy)
 
 For a 10MB image file:
+
 - **OPFS**: ~1ms (zero-copy)
 - **IndexedDB**: ~100ms (memory allocation and copy)
 
@@ -423,7 +445,7 @@ const blobURLManager = new BlobURLManager({
   maxBlobURLs: 100,
   onCapacityReached: () => {
     console.warn('Blob URL capacity reached - consider cleanup');
-  }
+  },
 });
 
 // Set active workspace
@@ -444,22 +466,21 @@ img.src = coverURL;
 
 ```typescript
 async function processEPUBChapterForPreview(
-  workspaceId: string, 
+  workspaceId: string,
   chapterPath: string
 ): Promise<string> {
-  
   // Read original XHTML content
   const content = await storage.readTextFile(workspaceId, chapterPath);
-  
+
   // Process with blob URL substitution
   const processedContent = await blobURLManager.processXHTMLForPreview(content);
-  
+
   return processedContent;
 }
 
 // Usage in preview iframe
 const processedHTML = await processEPUBChapterForPreview(
-  'workspace-123', 
+  'workspace-123',
   'OEBPS/Text/chapter1.xhtml'
 );
 
@@ -475,17 +496,17 @@ class TransformPipeline {
     private blobURLManager: BlobURLManager,
     private transformScripts: TransformScript[]
   ) {}
-  
+
   async transformForPreview(xhtmlContent: string): Promise<string> {
     // 1. Apply text transforms first
     let transformedContent = await this.applyTextTransforms(xhtmlContent);
-    
-    // 2. Apply DOM transforms  
+
+    // 2. Apply DOM transforms
     transformedContent = await this.applyDOMTransforms(transformedContent);
-    
+
     // 3. Process with blob URL substitution
     transformedContent = await this.blobURLManager.processXHTMLForPreview(transformedContent);
-    
+
     return transformedContent;
   }
 }
@@ -502,16 +523,15 @@ async function switchToWorkspace(newWorkspaceId: string): Promise<void> {
   try {
     // Automatic cleanup of previous workspace blob URLs
     blobURLManager.setActiveWorkspace(newWorkspaceId);
-    
+
     // Verify workspace exists and is valid
     const workspaces = await storage.listWorkspaces();
     if (!workspaces.includes(newWorkspaceId)) {
       throw new Error(`Workspace ${newWorkspaceId} not found`);
     }
-    
+
     console.log(`Switched to workspace: ${newWorkspaceId}`);
     console.log(`Blob URLs reset to: ${blobURLManager.getBlobURLCount()}`);
-    
   } catch (error) {
     console.error('Failed to switch workspace:', error);
     throw error;
@@ -526,11 +546,11 @@ async function createBlobURLWithCapacityCheck(filePath: string): Promise<string>
   // Check capacity before creating
   if (blobURLManager.isAtCapacity()) {
     console.warn('At blob URL capacity - cleaning up oldest URLs');
-    
+
     // Custom cleanup strategy (optional)
     blobURLManager.cleanup();
   }
-  
+
   try {
     return await blobURLManager.createBlobURL(filePath);
   } catch (error) {
@@ -603,16 +623,19 @@ try {
 The XHTML processor handles missing assets gracefully:
 
 **CSS/JavaScript Files Missing:**
+
 - Logs console warning with file path
 - Leaves original relative URL (browser shows 404)
 - Continues processing other assets
 
 **Image/Media Files Missing:**
+
 - Replaces src with error icon data URL
 - Logs console warning
 - Sets alt text to indicate missing file
 
 **XHTML Processing Errors:**
+
 - Throws XHTMLProcessingError for malformed content
 - No regex fallback - fails fast and clearly
 
@@ -620,13 +643,12 @@ The XHTML processor handles missing assets gracefully:
 
 ### Browser Backend Performance
 
-- **OPFS**: Supported in Safari, Firefox, Chrome+Edge on http:// 
+- **OPFS**: Supported in Safari, Firefox, Chrome+Edge on http://
   - Zero-copy blob creation
   - Instant large file handling
   - Lower memory footprint
-  
 - **IndexedDB**: Fallback for Chrome+Edge on https://, older browsers
-  - Memory-copy blob creation  
+  - Memory-copy blob creation
   - Slower for large files
   - Higher memory usage
 
@@ -662,7 +684,7 @@ The API automatically detects capabilities and uses the best available backend f
 function resolveManifestPath(href: string, basePath: string): string {
   // Handle OPF in container root (empty basePath)
   if (!basePath) return href;
-  
+
   // Standard case: basePath + href
   // Examples: "OEBPS" + "images/cover.jpg" → "OEBPS/images/cover.jpg"
   return `${basePath}/${href}`;
@@ -670,6 +692,7 @@ function resolveManifestPath(href: string, basePath: string): string {
 ```
 
 **EPUB Specification Compliance:**
+
 - Manifest hrefs are relative to the Package Document (content.opf) location
 - No complex `../` or `./` handling needed (EPUB spec restricts these)
 - Simple concatenation follows EPUB path resolution rules
@@ -680,16 +703,16 @@ The XHTML processor handles these element/attribute combinations:
 
 ```typescript
 const ASSET_SELECTORS = [
-  { tag: 'script', attr: 'src' },     // JavaScript files
-  { tag: 'link', attr: 'href' },      // Stylesheets, icons
-  { tag: 'a', attr: 'href' },         // Navigation links
-  { tag: 'audio', attr: 'src' },      // Audio files
-  { tag: 'video', attr: 'src' },      // Video files
-  { tag: 'video', attr: 'poster' },   // Video poster images
-  { tag: 'img', attr: 'src' },        // Images
-  { tag: 'object', attr: 'data' },    // Embedded objects
-  { tag: 'image', attr: 'href' },     // SVG image elements
-  { tag: '*', attr: 'data-src' }      // Custom lazy-loading attributes
+  { tag: 'script', attr: 'src' }, // JavaScript files
+  { tag: 'link', attr: 'href' }, // Stylesheets, icons
+  { tag: 'a', attr: 'href' }, // Navigation links
+  { tag: 'audio', attr: 'src' }, // Audio files
+  { tag: 'video', attr: 'src' }, // Video files
+  { tag: 'video', attr: 'poster' }, // Video poster images
+  { tag: 'img', attr: 'src' }, // Images
+  { tag: 'object', attr: 'data' }, // Embedded objects
+  { tag: 'image', attr: 'href' }, // SVG image elements
+  { tag: '*', attr: 'data-src' }, // Custom lazy-loading attributes
 ];
 ```
 
@@ -700,18 +723,18 @@ const ASSET_SELECTORS = [
 ```typescript
 class BlobURLManager {
   private supportsDirectBlobs: boolean;
-  
+
   constructor(config: BlobURLManagerConfig) {
     // Cache backend capability at initialization
     this.supportsDirectBlobs = config.fileStorage.supportsDirectBlobURLs();
   }
-  
+
   async createBlobURL(href: string): Promise<string> {
     // Use cached capability check (no re-detection during runtime)
     if (this.supportsDirectBlobs) {
       // OPFS zero-copy path
     } else {
-      // IndexedDB memory-copy path  
+      // IndexedDB memory-copy path
     }
   }
 }
@@ -721,10 +744,10 @@ class BlobURLManager {
 
 ```typescript
 interface BlobURLRegistry {
-  urls: Map<string, string>;    // href → blobURL (uses original href as key)
-  created: Map<string, Date>;   // href → creation timestamp
-  count: number;                // Current URL count
-  maxCount: number;             // Capacity limit
+  urls: Map<string, string>; // href → blobURL (uses original href as key)
+  created: Map<string, Date>; // href → creation timestamp
+  count: number; // Current URL count
+  maxCount: number; // Capacity limit
 }
 
 // Cache key examples:
@@ -733,6 +756,7 @@ interface BlobURLRegistry {
 ```
 
 **Cache Behavior:**
+
 - **Key Format**: Original href (e.g., `"images/cover.jpg"`)
 - **Lifetime**: Until `setActiveWorkspace()` or manual `cleanup()`
 - **No Expiration**: URLs persist until explicit cleanup (no TTL)
@@ -742,6 +766,7 @@ interface BlobURLRegistry {
 ### Missing Asset Behavior
 
 **CSS/JavaScript Files (Non-Visual Assets):**
+
 ```typescript
 // Missing stylesheet or script file
 console.warn(`Missing asset: ${resolvedPath} (referenced by <${tagName}> element)`);
@@ -750,6 +775,7 @@ element.setAttribute(attr, originalHref);
 ```
 
 **Images/Media Files (Visual Assets):**
+
 ```typescript
 // Missing image, video, or audio file
 console.warn(`Missing image: ${resolvedPath} (referenced by <${tagName}> element)`);
@@ -759,6 +785,7 @@ element.setAttribute('alt', `Missing: ${originalHref}`);
 ```
 
 **Navigation Links:**
+
 ```typescript
 // Missing <a href> targets - leave unchanged for normal 404 behavior
 // No special error handling or console warnings
@@ -780,28 +807,24 @@ const ERROR_ICON_SVG = `data:image/svg+xml,${encodeURIComponent(`
 ```typescript
 // Capacity errors
 `Blob URL capacity exceeded: ${currentCount}/${maxCount}`
-
 // File not found
-`Missing asset: OEBPS/styles/main.css (referenced by <link> element)`
-`Missing image: OEBPS/images/cover.jpg (referenced by <img> element)`
-
-// XHTML processing errors  
+`Missing asset: OEBPS/styles/main.css (referenced by <link> element)``Missing image: OEBPS/images/cover.jpg (referenced by <img> element)`
+// XHTML processing errors
 `Invalid XHTML content: ${parserError.message}`
-
 // File storage errors
-`Failed to create blob URL for ${href}: ${storageError.message}`
+`Failed to create blob URL for ${href}: ${storageError.message}`;
 ```
 
 ### MIME Type Edge Cases
 
 ```typescript
 // Edge case handling in getMimeType()
-getMimeType('file.tar.gz')     // → "application/gzip" (last extension wins)
-getMimeType('chapter')         // → "application/octet-stream" (no extension)
-getMimeType('FILE.JPEG')       // → "image/jpeg" (case insensitive)
-getMimeType('.htaccess')       // → "application/octet-stream" (leading dot only)
-getMimeType('file.')           // → "application/octet-stream" (trailing dot)
-getMimeType('')                // → "application/octet-stream" (empty string)
+getMimeType('file.tar.gz'); // → "application/gzip" (last extension wins)
+getMimeType('chapter'); // → "application/octet-stream" (no extension)
+getMimeType('FILE.JPEG'); // → "image/jpeg" (case insensitive)
+getMimeType('.htaccess'); // → "application/octet-stream" (leading dot only)
+getMimeType('file.'); // → "application/octet-stream" (trailing dot)
+getMimeType(''); // → "application/octet-stream" (empty string)
 ```
 
 ## Testing Considerations
@@ -821,7 +844,7 @@ const mockFileStorage = {
 const mockPathInfo = {
   rootfilePath: 'OEBPS/content.opf',
   basePath: 'OEBPS',
-  opfFileName: 'content.opf'
+  opfFileName: 'content.opf',
 };
 ```
 
@@ -863,10 +886,10 @@ const expectedXHTML = `
 test('missing CSS file shows warning and preserves URL', async () => {
   // Setup: file storage returns error for missing file
   mockFileStorage.readFile.mockRejectedValue(new Error('File not found'));
-  
+
   const input = '<link rel="stylesheet" href="missing.css">';
   const result = await blobURLManager.processXHTMLForPreview(input);
-  
+
   expect(console.warn).toHaveBeenCalledWith(
     'Missing asset: OEBPS/missing.css (referenced by <link> element)'
   );
@@ -875,10 +898,10 @@ test('missing CSS file shows warning and preserves URL', async () => {
 
 test('missing image shows error icon', async () => {
   mockFileStorage.readFile.mockRejectedValue(new Error('File not found'));
-  
+
   const input = '<img src="missing.jpg" alt="test">';
   const result = await blobURLManager.processXHTMLForPreview(input);
-  
+
   expect(console.warn).toHaveBeenCalledWith(
     'Missing image: OEBPS/missing.jpg (referenced by <img> element)'
   );
@@ -892,11 +915,11 @@ test('missing image shows error icon', async () => {
 ```typescript
 test('blob URLs are cached by original href', async () => {
   const href = 'images/cover.jpg';
-  
+
   // First call creates blob URL
   const url1 = await blobURLManager.createBlobURL(href);
   expect(mockFileStorage.getFile).toHaveBeenCalledWith('workspace-id', 'OEBPS/images/cover.jpg');
-  
+
   // Second call returns cached URL
   const url2 = await blobURLManager.createBlobURL(href);
   expect(url1).toBe(url2);
@@ -906,7 +929,7 @@ test('blob URLs are cached by original href', async () => {
 test('workspace switch clears cache', async () => {
   await blobURLManager.createBlobURL('images/test.jpg');
   expect(blobURLManager.getBlobURLCount()).toBe(1);
-  
+
   blobURLManager.setActiveWorkspace('new-workspace');
   expect(blobURLManager.getBlobURLCount()).toBe(0);
 });
@@ -920,14 +943,14 @@ test('workspace switch clears cache', async () => {
 class BlobURLManager {
   // Path resolution (testable)
   private resolveManifestPath(href: string): string;
-  
+
   // Asset element processing (testable)
   private findAssetElements(doc: Document): Element[];
   private processAssetElement(element: Element): Promise<void>;
-  
+
   // Error handling (testable)
   private handleMissingAsset(element: Element, href: string, error: Error): void;
-  
+
   // Registry management (testable)
   private addToRegistry(href: string, blobURL: string): void;
   private removeFromRegistry(href: string): void;
@@ -942,10 +965,10 @@ interface InternalState {
   basePath: string;
   supportsDirectBlobs: boolean;
   registry: {
-    urls: Map<string, string>;      // href → blob URL
-    created: Map<string, Date>;     // href → creation time
-    count: number;                  // current count
-    maxCount: number;               // capacity limit
+    urls: Map<string, string>; // href → blob URL
+    created: Map<string, Date>; // href → creation time
+    count: number; // current count
+    maxCount: number; // capacity limit
   };
 }
 ```

@@ -10,7 +10,7 @@
      PRIMITIVE COLORS
      Base color palette - do not use directly in components
      ============================================ */
-  
+
   /* Neutral scale (gray) */
   --color-neutral-50: #fafafa;
   --color-neutral-100: #f5f5f5;
@@ -23,7 +23,7 @@
   --color-neutral-800: #262626;
   --color-neutral-900: #171717;
   --color-neutral-950: #0a0a0a;
-  
+
   /* Primary brand color (blue) */
   --color-primary-50: #eff6ff;
   --color-primary-100: #dbeafe;
@@ -36,7 +36,7 @@
   --color-primary-800: #1e40af;
   --color-primary-900: #1e3a8a;
   --color-primary-950: #172554;
-  
+
   /* Success (green) */
   --color-success-50: #f0fdf4;
   --color-success-100: #dcfce7;
@@ -49,7 +49,7 @@
   --color-success-800: #166534;
   --color-success-900: #14532d;
   --color-success-950: #052e16;
-  
+
   /* Warning (amber) */
   --color-warning-50: #fffbeb;
   --color-warning-100: #fef3c7;
@@ -62,7 +62,7 @@
   --color-warning-800: #92400e;
   --color-warning-900: #78350f;
   --color-warning-950: #451a03;
-  
+
   /* Error (red) */
   --color-error-50: #fef2f2;
   --color-error-100: #fee2e2;
@@ -75,17 +75,17 @@
   --color-error-800: #991b1b;
   --color-error-900: #7f1d1d;
   --color-error-950: #450a0a;
-  
+
   /* Pure colors */
   --color-white: #ffffff;
   --color-black: #000000;
   --color-transparent: transparent;
-  
+
   /* ============================================
      SEMANTIC COLORS - Light Theme Default
      Use these in components, not primitives
      ============================================ */
-  
+
   /* Background colors */
   --color-bg-primary: var(--color-white);
   --color-bg-secondary: var(--color-neutral-50);
@@ -96,7 +96,7 @@
   --color-bg-success: var(--color-success-50);
   --color-bg-warning: var(--color-warning-50);
   --color-bg-error: var(--color-error-50);
-  
+
   /* Text colors */
   --color-text-primary: var(--color-neutral-900);
   --color-text-secondary: var(--color-neutral-600);
@@ -109,7 +109,7 @@
   --color-text-error: var(--color-error-700);
   --color-text-link: var(--color-primary-600);
   --color-text-link-hover: var(--color-primary-700);
-  
+
   /* Border colors */
   --color-border-default: var(--color-neutral-200);
   --color-border-strong: var(--color-neutral-300);
@@ -120,7 +120,7 @@
   --color-border-warning: var(--color-warning-300);
   --color-border-error: var(--color-error-300);
   --color-border-focus: var(--color-primary-500);
-  
+
   /* Interactive colors */
   --color-interactive-primary: var(--color-primary-600);
   --color-interactive-primary-hover: var(--color-primary-700);
@@ -130,19 +130,19 @@
   --color-interactive-secondary-active: var(--color-neutral-300);
   --color-interactive-disabled: var(--color-neutral-300);
   --color-interactive-disabled-text: var(--color-neutral-500);
-  
+
   /* Surface colors (for panels, cards, modals) */
   --color-surface-primary: var(--color-white);
   --color-surface-secondary: var(--color-neutral-50);
   --color-surface-tertiary: var(--color-neutral-100);
   --color-surface-overlay: rgba(0, 0, 0, 0.5);
   --color-surface-elevated: var(--color-white);
-  
+
   /* ============================================
      COMPONENT-SPECIFIC COLORS
      Pre-defined combinations for common components
      ============================================ */
-  
+
   /* Sidebar colors */
   --color-sidebar-bg: var(--color-bg-secondary);
   --color-sidebar-border: var(--color-border-default);
@@ -150,7 +150,7 @@
   --color-sidebar-item-active: var(--color-bg-accent);
   --color-sidebar-text: var(--color-text-primary);
   --color-sidebar-text-secondary: var(--color-text-secondary);
-  
+
   /* Button colors */
   --color-button-primary-bg: var(--color-interactive-primary);
   --color-button-primary-bg-hover: var(--color-interactive-primary-hover);
@@ -159,14 +159,14 @@
   --color-button-secondary-bg-hover: var(--color-interactive-secondary-hover);
   --color-button-secondary-text: var(--color-text-primary);
   --color-button-secondary-border: var(--color-border-default);
-  
+
   /* Form colors */
   --color-input-bg: var(--color-bg-primary);
   --color-input-border: var(--color-border-default);
   --color-input-border-focus: var(--color-border-focus);
   --color-input-text: var(--color-text-primary);
   --color-input-placeholder: var(--color-text-tertiary);
-  
+
   /* Status colors */
   --color-status-success: var(--color-success-600);
   --color-status-warning: var(--color-warning-600);

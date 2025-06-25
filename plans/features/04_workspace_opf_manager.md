@@ -203,10 +203,7 @@ class WorkspaceMetadataCache {
   private readonly CACHE_VERSION = 1;
   private readonly CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
-  async isCacheFresh(
-    workspaceId: string,
-    cacheEntry: WorkspaceCacheEntry
-  ): Promise<boolean> {
+  async isCacheFresh(workspaceId: string, cacheEntry: WorkspaceCacheEntry): Promise<boolean> {
     // Check cache version compatibility
     if (cacheEntry.version !== this.CACHE_VERSION) return false;
 
@@ -215,10 +212,7 @@ class WorkspaceMetadataCache {
 
     // Check if OPF file has been modified
     try {
-      const opfStats = await this.storage.getFileStats(
-        workspaceId,
-        "OEBPS/content.opf"
-      );
+      const opfStats = await this.storage.getFileStats(workspaceId, 'OEBPS/content.opf');
       return opfStats.lastModified <= cacheEntry.opfFileModified;
     } catch {
       return false; // OPF file missing/inaccessible
@@ -246,13 +240,13 @@ class WorkspaceMetadataCache {
 class ManifestIDGenerator {
   generateID(href: string, existingIds: Set<string>): string {
     // Extract base name from href
-    const fileName = href.split("/").pop() || "item";
-    const baseName = fileName.replace(/\.[^.]+$/, ""); // Remove extension
+    const fileName = href.split('/').pop() || 'item';
+    const baseName = fileName.replace(/\.[^.]+$/, ''); // Remove extension
 
     // Sanitize for XML ID requirements
     const sanitized = baseName
-      .replace(/[^a-zA-Z0-9-_]/g, "-")
-      .replace(/^[^a-zA-Z]/, "item-") // Ensure starts with letter
+      .replace(/[^a-zA-Z0-9-_]/g, '-')
+      .replace(/^[^a-zA-Z]/, 'item-') // Ensure starts with letter
       .toLowerCase();
 
     // Ensure uniqueness
@@ -273,46 +267,46 @@ class ManifestIDGenerator {
 class MediaTypeDetector {
   private static readonly MEDIA_TYPE_MAP: Record<string, string> = {
     // Text content
-    xhtml: "application/xhtml+xml",
-    html: "application/xhtml+xml",
-    xml: "application/xml",
-    css: "text/css",
-    js: "application/javascript",
-    txt: "text/plain",
+    xhtml: 'application/xhtml+xml',
+    html: 'application/xhtml+xml',
+    xml: 'application/xml',
+    css: 'text/css',
+    js: 'application/javascript',
+    txt: 'text/plain',
 
     // Images
-    jpg: "image/jpeg",
-    jpeg: "image/jpeg",
-    png: "image/png",
-    gif: "image/gif",
-    svg: "image/svg+xml",
-    webp: "image/webp",
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    gif: 'image/gif',
+    svg: 'image/svg+xml',
+    webp: 'image/webp',
 
     // Audio
-    mp3: "audio/mpeg",
-    wav: "audio/wav",
-    ogg: "audio/ogg",
-    m4a: "audio/mp4",
+    mp3: 'audio/mpeg',
+    wav: 'audio/wav',
+    ogg: 'audio/ogg',
+    m4a: 'audio/mp4',
 
     // Video
-    mp4: "video/mp4",
-    webm: "video/webm",
-    ogv: "video/ogg",
+    mp4: 'video/mp4',
+    webm: 'video/webm',
+    ogv: 'video/ogg',
 
     // Fonts
-    ttf: "font/ttf",
-    otf: "font/otf",
-    woff: "font/woff",
-    woff2: "font/woff2",
+    ttf: 'font/ttf',
+    otf: 'font/otf',
+    woff: 'font/woff',
+    woff2: 'font/woff2',
 
     // EPUB specific
-    opf: "application/oebps-package+xml",
-    ncx: "application/x-dtbncx+xml",
+    opf: 'application/oebps-package+xml',
+    ncx: 'application/x-dtbncx+xml',
   };
 
   static getMediaType(href: string): string {
-    const extension = href.split(".").pop()?.toLowerCase() || "";
-    return this.MEDIA_TYPE_MAP[extension] || "application/octet-stream";
+    const extension = href.split('.').pop()?.toLowerCase() || '';
+    return this.MEDIA_TYPE_MAP[extension] || 'application/octet-stream';
   }
 }
 ```
@@ -321,75 +315,61 @@ class MediaTypeDetector {
 
 ```typescript
 class ManifestDependencyTracker {
-  async findDependencies(
-    workspaceId: string,
-    manifestItem: ManifestItem
-  ): Promise<string[]> {
+  async findDependencies(workspaceId: string, manifestItem: ManifestItem): Promise<string[]> {
     const dependencies: string[] = [];
 
-    if (manifestItem.mediaType === "application/xhtml+xml") {
+    if (manifestItem.mediaType === 'application/xhtml+xml') {
       // Parse XHTML for CSS, image, and other resource references
-      const content = await this.storage.readTextFile(
-        workspaceId,
-        manifestItem.href
-      );
-      const doc = new DOMParser().parseFromString(content, "application/xml");
+      const content = await this.storage.readTextFile(workspaceId, manifestItem.href);
+      const doc = new DOMParser().parseFromString(content, 'application/xml');
 
       // Find CSS links
       const cssLinks = doc.querySelectorAll('link[rel="stylesheet"]');
-      cssLinks.forEach((link) => {
-        const href = link.getAttribute("href");
-        if (href)
-          dependencies.push(this.resolveRelativePath(manifestItem.href, href));
+      cssLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href) dependencies.push(this.resolveRelativePath(manifestItem.href, href));
       });
 
       // Find images
-      const images = doc.querySelectorAll("img");
-      images.forEach((img) => {
-        const src = img.getAttribute("src");
-        if (src)
-          dependencies.push(this.resolveRelativePath(manifestItem.href, src));
+      const images = doc.querySelectorAll('img');
+      images.forEach(img => {
+        const src = img.getAttribute('src');
+        if (src) dependencies.push(this.resolveRelativePath(manifestItem.href, src));
       });
 
       // Find other media references
-      const audio = doc.querySelectorAll("audio source, video source");
-      audio.forEach((source) => {
-        const src = source.getAttribute("src");
-        if (src)
-          dependencies.push(this.resolveRelativePath(manifestItem.href, src));
+      const audio = doc.querySelectorAll('audio source, video source');
+      audio.forEach(source => {
+        const src = source.getAttribute('src');
+        if (src) dependencies.push(this.resolveRelativePath(manifestItem.href, src));
       });
-    } else if (manifestItem.mediaType === "text/css") {
+    } else if (manifestItem.mediaType === 'text/css') {
       // Parse CSS for font and image references using CSSOM + regex fallback
-      const content = await this.storage.readTextFile(
-        workspaceId,
-        manifestItem.href
-      );
-      
+      const content = await this.storage.readTextFile(workspaceId, manifestItem.href);
+
       try {
         // Use CSSOM for robust CSS parsing (supported in all target browsers)
         const sheet = new CSSStyleSheet();
         await sheet.replace(content);
-        
+
         for (const rule of sheet.cssRules) {
           if (rule instanceof CSSImportRule && rule.href) {
             dependencies.push(this.resolveRelativePath(manifestItem.href, rule.href));
           }
-          
+
           if (rule instanceof CSSStyleRule) {
             // Extract URLs from style declarations
             const urls = this.extractUrlsFromStyle(rule.style);
-            dependencies.push(...urls.map(url => 
-              this.resolveRelativePath(manifestItem.href, url)
-            ));
+            dependencies.push(...urls.map(url => this.resolveRelativePath(manifestItem.href, url)));
           }
         }
       } catch {
         // Fallback to regex parsing if CSSOM fails (malformed CSS)
         const urlMatches = content.match(/url\(['"]?([^'")\s]+)['"]?\)/g);
         if (urlMatches) {
-          urlMatches.forEach((match) => {
+          urlMatches.forEach(match => {
             const url = match.match(/url\(['"]?([^'")\s]+)['"]?\)/)?.[1];
-            if (url && !url.startsWith("http") && !url.startsWith("data:")) {
+            if (url && !url.startsWith('http') && !url.startsWith('data:')) {
               dependencies.push(this.resolveRelativePath(manifestItem.href, url));
             }
           });
@@ -397,41 +377,41 @@ class ManifestDependencyTracker {
       }
     }
 
-    return dependencies.filter((dep) => dep.length > 0);
+    return dependencies.filter(dep => dep.length > 0);
   }
 
   private extractUrlsFromStyle(style: CSSStyleDeclaration): string[] {
     const urls: string[] = [];
-    
+
     // Check common properties that reference URLs
     const urlProperties = [
-      'background-image', 'border-image', 'list-style-image', 
-      'content', 'cursor', 'src' // for @font-face
+      'background-image',
+      'border-image',
+      'list-style-image',
+      'content',
+      'cursor',
+      'src', // for @font-face
     ];
-    
+
     for (const prop of urlProperties) {
       const value = style.getPropertyValue(prop);
       if (value) {
         const urlMatches = value.match(/url\(['"]?([^'")]+)['"]?\)/g);
         if (urlMatches) {
-          urls.push(...urlMatches.map(match => 
-            match.replace(/url\(['"]?([^'")]+)['"]?\)/, '$1')
-          ));
+          urls.push(...urlMatches.map(match => match.replace(/url\(['"]?([^'")]+)['"]?\)/, '$1')));
         }
       }
     }
-    
-    return urls.filter(url => 
-      !url.startsWith('http') && 
-      !url.startsWith('data:') && 
-      !url.startsWith('#')
+
+    return urls.filter(
+      url => !url.startsWith('http') && !url.startsWith('data:') && !url.startsWith('#')
     );
   }
 
   private resolveRelativePath(basePath: string, relativePath: string): string {
-    const baseDir = basePath.split("/").slice(0, -1).join("/");
+    const baseDir = basePath.split('/').slice(0, -1).join('/');
     const resolved = baseDir ? `${baseDir}/${relativePath}` : relativePath;
-    return resolved.replace(/\/\.\//g, "/").replace(/\/[^/]+\/\.\.\//g, "/");
+    return resolved.replace(/\/\.\//g, '/').replace(/\/[^/]+\/\.\.\//g, '/');
   }
 }
 ```
@@ -519,21 +499,33 @@ src/lib/workspace/
 
 ```typescript
 export class WorkspaceError extends Error {
-  constructor(message: string, public code: string, public workspaceId?: string) {
+  constructor(
+    message: string,
+    public code: string,
+    public workspaceId?: string
+  ) {
     super(message);
     this.name = 'WorkspaceError';
   }
 }
 
 export class ValidationError extends WorkspaceError {
-  constructor(message: string, public errors: string[], workspaceId?: string) {
+  constructor(
+    message: string,
+    public errors: string[],
+    workspaceId?: string
+  ) {
     super(message, 'VALIDATION_ERROR', workspaceId);
     this.name = 'ValidationError';
   }
 }
 
 export class CacheError extends WorkspaceError {
-  constructor(message: string, public reason: 'CORRUPTED' | 'MISSING' | 'STALE', workspaceId?: string) {
+  constructor(
+    message: string,
+    public reason: 'CORRUPTED' | 'MISSING' | 'STALE',
+    workspaceId?: string
+  ) {
     super(message, 'CACHE_ERROR', workspaceId);
     this.name = 'CacheError';
   }
@@ -579,18 +571,18 @@ interface ValidationError {
 ```typescript
 interface WorkspaceConfig {
   cache: {
-    ttl: number;           // Cache TTL in milliseconds (default: 24 hours)
-    maxEntries: number;    // Max memory cache entries (default: 100)
+    ttl: number; // Cache TTL in milliseconds (default: 24 hours)
+    maxEntries: number; // Max memory cache entries (default: 100)
     enableDiskCache: boolean; // Enable persistent disk cache (default: true)
   };
   validation: {
-    strict: boolean;       // Strict EPUB compliance (default: false)
+    strict: boolean; // Strict EPUB compliance (default: false)
     checkDependencies: boolean; // Validate file dependencies (default: true)
     allowOrphanedFiles: boolean; // Allow files not in manifest (default: true)
   };
   performance: {
-    batchSize: number;     // Batch size for bulk operations (default: 50)
-    concurrency: number;   // Max concurrent file operations (default: 5)
+    batchSize: number; // Batch size for bulk operations (default: 50)
+    concurrency: number; // Max concurrent file operations (default: 5)
     enableProgressCallbacks: boolean; // Enable progress reporting (default: true)
   };
 }
@@ -602,7 +594,7 @@ interface WorkspaceConfig {
 
 ```typescript
 async addManifestItem(
-  workspaceId: string, 
+  workspaceId: string,
   item: Partial<ManifestItem>
 ): Promise<ManifestItem> {
   // Returns complete ManifestItem with auto-generated ID and detected mediaType
@@ -617,17 +609,18 @@ async addManifestItem(
 interface WorkspacePreview {
   metadata: EPUBMetadata;
   manifestSummary: {
-    textItems: number;      // .xhtml, .html files
-    imageItems: number;     // .jpg, .png, .gif, .svg files  
-    audioItems: number;     // .mp3, .wav, .ogg files
-    videoItems: number;     // .mp4, .webm files
-    fontItems: number;      // .ttf, .otf, .woff files
-    otherItems: number;     // Everything else
+    textItems: number; // .xhtml, .html files
+    imageItems: number; // .jpg, .png, .gif, .svg files
+    audioItems: number; // .mp3, .wav, .ogg files
+    videoItems: number; // .mp4, .webm files
+    fontItems: number; // .ttf, .otf, .woff files
+    otherItems: number; // Everything else
   };
-  spineOrder: string[];     // Ordered list of spine item IDs
+  spineOrder: string[]; // Ordered list of spine item IDs
   estimatedEPUBSize: number; // Sum of all file sizes in bytes
-  dependencies: {           // File dependency analysis
-    orphanedFiles: string[];    // Files not referenced anywhere
+  dependencies: {
+    // File dependency analysis
+    orphanedFiles: string[]; // Files not referenced anywhere
     missingDependencies: string[]; // Referenced files that don't exist
     circularReferences: string[][]; // Circular dependency chains
   };
@@ -690,35 +683,31 @@ async function createNewEPUBProject(metadata: EPUBMetadata): Promise<string> {
 
   // 2. Add initial content files
   await workspaceManager.addManifestItem(workspaceId, {
-    id: "nav",
-    href: "OEBPS/nav.xhtml",
-    mediaType: "application/xhtml+xml",
-    properties: ["nav"],
+    id: 'nav',
+    href: 'OEBPS/nav.xhtml',
+    mediaType: 'application/xhtml+xml',
+    properties: ['nav'],
   });
 
   await workspaceManager.addManifestItem(workspaceId, {
-    id: "chapter1",
-    href: "OEBPS/Text/chapter1.xhtml",
-    mediaType: "application/xhtml+xml",
+    id: 'chapter1',
+    href: 'OEBPS/Text/chapter1.xhtml',
+    mediaType: 'application/xhtml+xml',
   });
 
   await workspaceManager.addManifestItem(workspaceId, {
-    id: "stylesheet",
-    href: "OEBPS/Styles/style.css",
-    mediaType: "text/css",
+    id: 'stylesheet',
+    href: 'OEBPS/Styles/style.css',
+    mediaType: 'text/css',
   });
 
   // 3. Set up spine order
-  await workspaceManager.updateSpineOrder(workspaceId, ["chapter1"]);
+  await workspaceManager.updateSpineOrder(workspaceId, ['chapter1']);
 
   // 4. Validate workspace structure
-  const validation = await workspaceManager.validateWorkspaceStructure(
-    workspaceId
-  );
+  const validation = await workspaceManager.validateWorkspaceStructure(workspaceId);
   if (!validation.isValid) {
-    throw new Error(
-      `Workspace validation failed: ${validation.errors.join(", ")}`
-    );
+    throw new Error(`Workspace validation failed: ${validation.errors.join(', ')}`);
   }
 
   return workspaceId;
@@ -736,9 +725,7 @@ async function addNewChapter(
   const workspaceManager = new WorkspaceManager();
 
   // 1. Generate chapter file
-  const chapterHref = `OEBPS/Text/${chapterTitle
-    .toLowerCase()
-    .replace(/\s+/g, "-")}.xhtml`;
+  const chapterHref = `OEBPS/Text/${chapterTitle.toLowerCase().replace(/\s+/g, '-')}.xhtml`;
 
   // 2. Create XHTML content
   const chapterContent = `<?xml version="1.0" encoding="utf-8"?>
@@ -755,21 +742,17 @@ async function addNewChapter(
 </html>`;
 
   // 3. Write file to workspace
-  await workspaceManager.storage.writeTextFile(
-    workspaceId,
-    chapterHref,
-    chapterContent
-  );
+  await workspaceManager.storage.writeTextFile(workspaceId, chapterHref, chapterContent);
 
   // 4. Add to manifest (ID auto-generated, dependencies auto-detected)
   const manifestItem = await workspaceManager.addManifestItem(workspaceId, {
     href: chapterHref,
-    mediaType: "application/xhtml+xml",
+    mediaType: 'application/xhtml+xml',
   });
 
   // 5. Insert into spine
   const currentSpine = await workspaceManager.getWorkspaceOPF(workspaceId);
-  const spineIds = currentSpine.spine.map((item) => item.idref);
+  const spineIds = currentSpine.spine.map(item => item.idref);
 
   if (insertAfter) {
     const insertIndex = spineIds.indexOf(insertAfter) + 1;
@@ -811,19 +794,17 @@ class WorkspaceManager {
         workspaceInfos.push({
           id: workspaceId,
           title: `Workspace ${workspaceId} (Error)`,
-          language: "unknown",
+          language: 'unknown',
           lastModified: new Date(),
           fileCount: 0,
           totalSize: 0,
-          epubVersion: "unknown",
+          epubVersion: 'unknown',
           hasError: true,
         });
       }
     }
 
-    return workspaceInfos.sort(
-      (a, b) => b.lastModified.getTime() - a.lastModified.getTime()
-    );
+    return workspaceInfos.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime());
   }
 }
 ```

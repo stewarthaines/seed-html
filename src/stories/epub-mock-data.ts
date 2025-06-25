@@ -92,13 +92,13 @@ const corruptedContentOpf = `<?xml version="1.0" encoding="UTF-8"?>
  */
 export async function createValidEPUB(): Promise<ArrayBuffer> {
   const writer = new ZipWriter();
-  
+
   await writer.addFile('mimetype', validMimetype);
   await writer.addFile('META-INF/container.xml', validContainerXml);
   await writer.addFile('OEBPS/content.opf', validContentOpf);
   await writer.addFile('OEBPS/chapter1.xhtml', validChapterXhtml);
   await writer.addFile('OEBPS/nav.xhtml', validNavXhtml);
-  
+
   const blob = await writer.buildBlob();
   return blob.arrayBuffer();
 }
@@ -108,12 +108,12 @@ export async function createValidEPUB(): Promise<ArrayBuffer> {
  */
 export async function createMissingFilesEPUB(): Promise<ArrayBuffer> {
   const writer = new ZipWriter();
-  
+
   // Missing mimetype file
   await writer.addFile('META-INF/container.xml', validContainerXml);
   await writer.addFile('OEBPS/content.opf', validContentOpf);
   await writer.addFile('OEBPS/chapter1.xhtml', validChapterXhtml);
-  
+
   const blob = await writer.buildBlob();
   return blob.arrayBuffer();
 }
@@ -123,12 +123,12 @@ export async function createMissingFilesEPUB(): Promise<ArrayBuffer> {
  */
 export async function createMissingContainerEPUB(): Promise<ArrayBuffer> {
   const writer = new ZipWriter();
-  
+
   await writer.addFile('mimetype', validMimetype);
   // Missing META-INF/container.xml
   await writer.addFile('OEBPS/content.opf', validContentOpf);
   await writer.addFile('OEBPS/chapter1.xhtml', validChapterXhtml);
-  
+
   const blob = await writer.buildBlob();
   return blob.arrayBuffer();
 }
@@ -138,12 +138,12 @@ export async function createMissingContainerEPUB(): Promise<ArrayBuffer> {
  */
 export async function createCorruptedContainerEPUB(): Promise<ArrayBuffer> {
   const writer = new ZipWriter();
-  
+
   await writer.addFile('mimetype', validMimetype);
   await writer.addFile('META-INF/container.xml', corruptedContainerXml);
   await writer.addFile('OEBPS/content.opf', validContentOpf);
   await writer.addFile('OEBPS/chapter1.xhtml', validChapterXhtml);
-  
+
   const blob = await writer.buildBlob();
   return blob.arrayBuffer();
 }
@@ -153,12 +153,12 @@ export async function createCorruptedContainerEPUB(): Promise<ArrayBuffer> {
  */
 export async function createCorruptedOPFEPUB(): Promise<ArrayBuffer> {
   const writer = new ZipWriter();
-  
+
   await writer.addFile('mimetype', validMimetype);
   await writer.addFile('META-INF/container.xml', validContainerXml);
   await writer.addFile('OEBPS/content.opf', corruptedContentOpf);
   await writer.addFile('OEBPS/chapter1.xhtml', validChapterXhtml);
-  
+
   const blob = await writer.buildBlob();
   return blob.arrayBuffer();
 }
@@ -168,12 +168,12 @@ export async function createCorruptedOPFEPUB(): Promise<ArrayBuffer> {
  */
 export async function createWrongMimetypeEPUB(): Promise<ArrayBuffer> {
   const writer = new ZipWriter();
-  
+
   await writer.addFile('mimetype', 'application/zip'); // Wrong mimetype
   await writer.addFile('META-INF/container.xml', validContainerXml);
   await writer.addFile('OEBPS/content.opf', validContentOpf);
   await writer.addFile('OEBPS/chapter1.xhtml', validChapterXhtml);
-  
+
   const blob = await writer.buildBlob();
   return blob.arrayBuffer();
 }
@@ -182,31 +182,31 @@ export const mockEPUBScenarios = {
   validEPUB: {
     name: 'Valid EPUB 3.0',
     description: 'Standard compliant EPUB with all required files',
-    create: createValidEPUB
+    create: createValidEPUB,
   },
   missingFiles: {
     name: 'Missing Files',
     description: 'EPUB missing mimetype file',
-    create: createMissingFilesEPUB
+    create: createMissingFilesEPUB,
   },
   missingContainer: {
     name: 'Missing Container',
     description: 'EPUB missing container.xml file',
-    create: createMissingContainerEPUB
+    create: createMissingContainerEPUB,
   },
   corruptedContainer: {
     name: 'Corrupted Container',
     description: 'EPUB with invalid XML in container.xml',
-    create: createCorruptedContainerEPUB
+    create: createCorruptedContainerEPUB,
   },
   corruptedOPF: {
     name: 'Corrupted OPF',
     description: 'EPUB with invalid XML in content.opf',
-    create: createCorruptedOPFEPUB
+    create: createCorruptedOPFEPUB,
   },
   wrongMimetype: {
     name: 'Wrong Mimetype',
     description: 'EPUB with incorrect mimetype content',
-    create: createWrongMimetypeEPUB
-  }
+    create: createWrongMimetypeEPUB,
+  },
 };

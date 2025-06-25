@@ -29,11 +29,7 @@ Enhances the File Storage API with Web Worker-based write operations for improve
 ```typescript
 interface WorkerFileStorageAPI extends FileStorageAPI {
   // Enhanced write with worker support
-  writeFile(
-    workspaceId: string,
-    path: string,
-    content: ArrayBuffer
-  ): Promise<void>;
+  writeFile(workspaceId: string, path: string, content: ArrayBuffer): Promise<void>;
 
   // Worker management
   terminateWorker(): Promise<void>;
@@ -54,7 +50,7 @@ interface WorkerConfig {
 // Messages sent to worker
 interface WriteRequest {
   id: string;
-  type: "write";
+  type: 'write';
   workspaceId: string;
   path: string;
   content: ArrayBuffer;
@@ -62,31 +58,31 @@ interface WriteRequest {
 
 interface InitRequest {
   id: string;
-  type: "init";
+  type: 'init';
 }
 
 interface TerminateRequest {
   id: string;
-  type: "terminate";
+  type: 'terminate';
 }
 
 // Messages from worker
 interface WriteResponse {
   id: string;
-  type: "response";
+  type: 'response';
   success: true;
 }
 
 interface ErrorResponse {
   id: string;
-  type: "error";
+  type: 'error';
   code: string;
   message: string;
 }
 
 interface InitResponse {
   id: string;
-  type: "init-complete";
+  type: 'init-complete';
 }
 ```
 
@@ -100,24 +96,24 @@ class FileStorageWorker {
 
     try {
       switch (type) {
-        case "init":
+        case 'init':
           await this.initializeOPFS();
-          self.postMessage({ id, type: "init-complete" });
+          self.postMessage({ id, type: 'init-complete' });
           break;
 
-        case "write":
+        case 'write':
           await this.writeFile(workspaceId, path, content);
-          self.postMessage({ id, type: "response", success: true });
+          self.postMessage({ id, type: 'response', success: true });
           break;
 
-        case "terminate":
+        case 'terminate':
           self.close();
           break;
       }
     } catch (error) {
       self.postMessage({
         id,
-        type: "error",
+        type: 'error',
         code: this.getErrorCode(error),
         message: error.message,
       });
@@ -152,7 +148,7 @@ class FileStorageWorker {
   }
 
   async ensureFileHandle(workspaceDir, path) {
-    const pathParts = path.split("/");
+    const pathParts = path.split('/');
     const fileName = pathParts.pop();
 
     if (pathParts.length > 0) {
@@ -165,7 +161,7 @@ class FileStorageWorker {
 }
 
 const worker = new FileStorageWorker();
-self.addEventListener("message", (event) => worker.handleMessage(event));
+self.addEventListener('message', event => worker.handleMessage(event));
 ```
 
 ## Main Thread Enhancement
@@ -188,26 +184,19 @@ class WorkerFileStorageAPI extends FileStorageAPI {
     this.messageHandler = new WorkerMessageHandler(this.config.timeout);
   }
 
-  async writeFile(
-    workspaceId: string,
-    path: string,
-    content: ArrayBuffer
-  ): Promise<void> {
+  async writeFile(workspaceId: string, path: string, content: ArrayBuffer): Promise<void> {
     try {
       await this.ensureWorkerInitialized();
       await this.messageHandler.sendMessage({
         id: crypto.randomUUID(),
-        type: "write",
+        type: 'write',
         workspaceId,
         path,
         content,
       });
     } catch (error) {
       if (this.config.fallbackToMainThread) {
-        console.warn(
-          "Worker write failed, falling back to main thread:",
-          error
-        );
+        console.warn('Worker write failed, falling back to main thread:', error);
         return super.writeFile(workspaceId, path, content);
       }
       throw error;
@@ -226,22 +215,22 @@ class WorkerFileStorageAPI extends FileStorageAPI {
 
   private async initializeWorker() {
     try {
-      this.worker = new Worker("/worker-file-storage.js");
-      this.worker.addEventListener("message", (event) =>
+      this.worker = new Worker('/worker-file-storage.js');
+      this.worker.addEventListener('message', event =>
         this.messageHandler.handleWorkerMessage(event)
       );
 
       // Initialize worker
       await this.messageHandler.sendMessage({
         id: crypto.randomUUID(),
-        type: "init",
+        type: 'init',
       });
     } catch (error) {
       this.worker = null;
       this.workerInitPromise = null;
       throw new FileStorageError(
         ErrorCodes.WORKER_INITIALIZATION_FAILED,
-        "Failed to initialize worker",
+        'Failed to initialize worker',
         error
       );
     }
@@ -265,10 +254,7 @@ class WorkerFileStorageAPI extends FileStorageAPI {
 
 ```typescript
 class WorkerMessageHandler {
-  private pendingMessages = new Map<
-    string,
-    { resolve: Function; reject: Function }
-  >();
+  private pendingMessages = new Map<string, { resolve: Function; reject: Function }>();
   private timeout: number;
 
   constructor(timeout: number = 30000) {
@@ -282,12 +268,7 @@ class WorkerMessageHandler {
       this.pendingMessages.set(message.id, { resolve, reject });
 
       if (!this.worker) {
-        reject(
-          new FileStorageError(
-            ErrorCodes.WORKER_NOT_AVAILABLE,
-            "Worker not available"
-          )
-        );
+        reject(new FileStorageError(ErrorCodes.WORKER_NOT_AVAILABLE, 'Worker not available'));
         return;
       }
 
@@ -298,10 +279,7 @@ class WorkerMessageHandler {
         if (this.pendingMessages.has(message.id)) {
           this.pendingMessages.delete(message.id);
           reject(
-            new FileStorageError(
-              ErrorCodes.WORKER_COMMUNICATION_FAILED,
-              "Worker operation timeout"
-            )
+            new FileStorageError(ErrorCodes.WORKER_COMMUNICATION_FAILED, 'Worker operation timeout')
           );
         }
       }, this.timeout);
@@ -315,7 +293,7 @@ class WorkerMessageHandler {
     if (pending) {
       this.pendingMessages.delete(response.id);
 
-      if (response.type === "error") {
+      if (response.type === 'error') {
         pending.reject(new FileStorageError(response.code, response.message));
       } else {
         pending.resolve(response);
@@ -331,24 +309,20 @@ class WorkerMessageHandler {
 // Additional error codes for worker operations
 const WorkerErrorCodes = {
   ...ErrorCodes,
-  WORKER_INITIALIZATION_FAILED: "WORKER_INITIALIZATION_FAILED",
-  WORKER_NOT_AVAILABLE: "WORKER_NOT_AVAILABLE",
-  WORKER_COMMUNICATION_TIMEOUT: "WORKER_COMMUNICATION_TIMEOUT",
+  WORKER_INITIALIZATION_FAILED: 'WORKER_INITIALIZATION_FAILED',
+  WORKER_NOT_AVAILABLE: 'WORKER_NOT_AVAILABLE',
+  WORKER_COMMUNICATION_TIMEOUT: 'WORKER_COMMUNICATION_TIMEOUT',
 };
 
 // Worker-specific error handling
 try {
-  await workerStorage.writeFile(
-    "workspace-123",
-    "OEBPS/chapter1.xhtml",
-    content
-  );
+  await workerStorage.writeFile('workspace-123', 'OEBPS/chapter1.xhtml', content);
 } catch (error) {
   if (error instanceof FileStorageError) {
     switch (error.code) {
       case WorkerErrorCodes.WORKER_COMMUNICATION_FAILED:
         // Worker failed, main thread fallback already attempted
-        showErrorDialog("File save failed. Please try again.");
+        showErrorDialog('File save failed. Please try again.');
         break;
       case WorkerErrorCodes.WORKER_INITIALIZATION_FAILED:
         // Worker couldn't start, fall back to main thread permanently
@@ -394,7 +368,7 @@ const storage = new WorkerFileStorageAPI({
 });
 
 // Usage (identical to base API)
-await storage.writeFile("workspace-123", "OEBPS/chapter1.xhtml", content);
+await storage.writeFile('workspace-123', 'OEBPS/chapter1.xhtml', content);
 
 // Cleanup on app shutdown
 await storage.terminateWorker();
@@ -414,19 +388,12 @@ async function saveBatchFiles(
 }
 
 // Example: Large file handling
-async function saveLargeEPUBAssets(
-  workspaceId: string,
-  assets: Map<string, ArrayBuffer>
-) {
+async function saveLargeEPUBAssets(workspaceId: string, assets: Map<string, ArrayBuffer>) {
   // Your examples here
 }
 
 // Example: Worker error recovery
-async function saveWithRetry(
-  workspaceId: string,
-  path: string,
-  content: ArrayBuffer
-) {
+async function saveWithRetry(workspaceId: string, path: string, content: ArrayBuffer) {
   // Your examples here
 }
 ```

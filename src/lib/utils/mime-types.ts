@@ -1,47 +1,47 @@
 /**
  * MIME Type Detection Utilities
- * 
+ *
  * Shared MIME type detection for EPUB files and assets.
  * Used by EPUBPackager, BlobURLManager, and other components.
  */
 
 const MIME_TYPES: Record<string, string> = {
   // Text formats
-  'html': 'text/html',
-  'xhtml': 'application/xhtml+xml',
-  'xml': 'application/xml',
-  'css': 'text/css',
-  'js': 'application/javascript',
-  'txt': 'text/plain',
-  'json': 'application/json',
-  
+  html: 'text/html',
+  xhtml: 'application/xhtml+xml',
+  xml: 'application/xml',
+  css: 'text/css',
+  js: 'application/javascript',
+  txt: 'text/plain',
+  json: 'application/json',
+
   // EPUB-specific formats
-  'opf': 'application/oebps-package+xml',
-  'ncx': 'application/x-dtbncx+xml',
-  'epub': 'application/epub+zip',
-  
+  opf: 'application/oebps-package+xml',
+  ncx: 'application/x-dtbncx+xml',
+  epub: 'application/epub+zip',
+
   // Image formats
-  'jpg': 'image/jpeg',
-  'jpeg': 'image/jpeg',
-  'png': 'image/png',
-  'gif': 'image/gif',
-  'svg': 'image/svg+xml',
-  'webp': 'image/webp',
-  
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  gif: 'image/gif',
+  svg: 'image/svg+xml',
+  webp: 'image/webp',
+
   // Audio formats
-  'mp3': 'audio/mpeg',
-  'wav': 'audio/wav',
-  'ogg': 'audio/ogg',
-  'm4a': 'audio/mp4',
-  
+  mp3: 'audio/mpeg',
+  wav: 'audio/wav',
+  ogg: 'audio/ogg',
+  m4a: 'audio/mp4',
+
   // Video formats
-  'mp4': 'video/mp4',
-  'webm': 'video/webm',
-  'ogv': 'video/ogg',
-  
+  mp4: 'video/mp4',
+  webm: 'video/webm',
+  ogv: 'video/ogg',
+
   // Archive formats
-  'gz': 'application/gzip',
-  'zip': 'application/zip'
+  gz: 'application/gzip',
+  zip: 'application/zip',
 };
 
 /**

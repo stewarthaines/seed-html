@@ -5,6 +5,7 @@
 The ZIP library provides browser-native ZIP file creation and extraction capabilities using the Compression Streams API. It's designed specifically for EPUB workflows with no external dependencies.
 
 **Main Classes:**
+
 - `Zip` - ZIP file reader and parser
 - `ZipWriter` - ZIP file creation with EPUB compliance
 - `ZipEntry` - Individual file entries within ZIP archives
@@ -37,6 +38,7 @@ constructor(buffer: ArrayBuffer)
 ```
 
 **Input:**
+
 - `buffer: ArrayBuffer` - ZIP file data to parse
 
 **Output:** `Zip` - ZIP reader instance
@@ -71,7 +73,7 @@ for (const entry of zip.entries) {
 #### constructor()
 
 ```typescript
-constructor()
+constructor();
 ```
 
 **Output:** `ZipWriter` - ZIP writer instance
@@ -85,6 +87,7 @@ addFile(filename: string, content: string | ArrayBuffer | Uint8Array): Promise<v
 ```
 
 **Input:**
+
 - `filename: string` - Path within ZIP file
 - `content: string | ArrayBuffer | Uint8Array` - File content
 
@@ -96,8 +99,8 @@ addFile(filename: string, content: string | ArrayBuffer | Uint8Array): Promise<v
 
 ```typescript
 const writer = new ZipWriter();
-await writer.addFile("mimetype", "application/epub+zip");
-await writer.addFile("content.txt", "Hello World");
+await writer.addFile('mimetype', 'application/epub+zip');
+await writer.addFile('content.txt', 'Hello World');
 ```
 
 #### buildBlob()
@@ -179,7 +182,7 @@ interface CompressionResult {
 ### EPUB Reading Workflow
 
 ```typescript
-import { Zip } from "$lib/zip";
+import { Zip } from '$lib/zip';
 
 // Load EPUB file
 const zip = new Zip(epubArrayBuffer);
@@ -197,15 +200,15 @@ const opfContent = await opfEntry.extractAsText();
 ### EPUB Creation Workflow
 
 ```typescript
-import { ZipWriter } from "$lib/zip";
+import { ZipWriter } from '$lib/zip';
 
 // Create EPUB structure
 const writer = new ZipWriter();
 
 // Add required files (mimetype first, uncompressed)
-await writer.addFile("mimetype", "application/epub+zip");
-await writer.addFile("META-INF/container.xml", containerXml);
-await writer.addFile("OEBPS/content.opf", opfContent);
+await writer.addFile('mimetype', 'application/epub+zip');
+await writer.addFile('META-INF/container.xml', containerXml);
+await writer.addFile('OEBPS/content.opf', opfContent);
 
 // Add content files
 for (const chapter of chapters) {
@@ -219,14 +222,14 @@ const epubBlob = await writer.buildBlob();
 ### File Storage Integration
 
 ```typescript
-import { Zip, ZipWriter } from "$lib/zip";
-import { FileStorageAPI } from "$lib/storage";
+import { Zip, ZipWriter } from '$lib/zip';
+import { FileStorageAPI } from '$lib/storage';
 
 // Extract EPUB to workspace
 async function extractToWorkspace(epubBuffer: ArrayBuffer, workspaceId: string) {
   const zip = new Zip(epubBuffer);
   const storage = new FileStorageAPI();
-  
+
   for (const entry of zip.entries) {
     const content = await entry.extract();
     await storage.writeFile(workspaceId, entry.filename, content);
@@ -238,12 +241,12 @@ async function packageFromWorkspace(workspaceId: string) {
   const storage = new FileStorageAPI();
   const writer = new ZipWriter();
   const files = await storage.listFiles(workspaceId);
-  
+
   for (const filename of files) {
     const content = await storage.readFile(workspaceId, filename);
     await writer.addFile(filename, content);
   }
-  
+
   return await writer.buildBlob();
 }
 ```
@@ -269,6 +272,7 @@ try {
 ```
 
 Common error scenarios:
+
 - **Invalid ZIP structure** - Corrupted or non-ZIP files
 - **Compression errors** - Unsupported compression methods
 - **File not found** - Missing entries in ZIP directory
@@ -277,6 +281,7 @@ Common error scenarios:
 ## Testing
 
 **64 comprehensive tests** across utils, reader, and writer:
+
 - Browser API mocking (document, window, URL, Compression Streams)
 - Edge cases, error handling, and EPUB workflow scenarios
 - Run with: `npm test src/lib/zip`

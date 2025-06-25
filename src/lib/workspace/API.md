@@ -5,6 +5,7 @@
 The Workspace & OPF Manager provides high-level workspace management with integrated EPUB content.opf parsing, generation, and manipulation. It combines workspace operations with EPUB-aware metadata handling for a cohesive development experience.
 
 **Main Classes:**
+
 - `WorkspaceManager` - Core workspace operations and OPF management
 - `WorkspaceMetadataCache` - Two-tier caching system for performance
 - `ManifestManager` - Manifest item manipulation and validation
@@ -19,6 +20,7 @@ constructor(config?: Partial<WorkspaceConfig>)
 ```
 
 **Input:**
+
 - `config?: Partial<WorkspaceConfig>` - Optional configuration overrides
 
 **Side Effects:** Initializes File Storage API and cache system
@@ -28,7 +30,7 @@ constructor(config?: Partial<WorkspaceConfig>)
 ```typescript
 const workspaceManager = new WorkspaceManager({
   cache: { ttl: 12 * 60 * 60 * 1000 }, // 12 hour cache
-  validation: { strict: true }
+  validation: { strict: true },
 });
 ```
 
@@ -57,6 +59,7 @@ createEPUBWorkspace(metadata: EPUBMetadata): Promise<string>
 ```
 
 **Input:**
+
 - `metadata: EPUBMetadata` - EPUB metadata for initial OPF generation
 
 **Output:** `Promise<string>` - Generated workspace ID (UUID)
@@ -67,10 +70,10 @@ createEPUBWorkspace(metadata: EPUBMetadata): Promise<string>
 
 ```typescript
 const workspaceId = await workspaceManager.createEPUBWorkspace({
-  title: "My EPUB Book",
-  author: "Jane Smith",
-  language: "en",
-  identifier: "isbn:9781234567890"
+  title: 'My EPUB Book',
+  author: 'Jane Smith',
+  language: 'en',
+  identifier: 'isbn:9781234567890',
 });
 ```
 
@@ -81,6 +84,7 @@ switchWorkspace(workspaceId: string): Promise<WorkspaceInfo>
 ```
 
 **Input:**
+
 - `workspaceId: string` - Workspace ID to switch to
 
 **Output:** `Promise<WorkspaceInfo>` - Workspace metadata and validation status
@@ -91,7 +95,7 @@ switchWorkspace(workspaceId: string): Promise<WorkspaceInfo>
 
 ```typescript
 try {
-  const workspace = await workspaceManager.switchWorkspace("workspace-123");
+  const workspace = await workspaceManager.switchWorkspace('workspace-123');
   console.log(`Switched to: ${workspace.title}`);
 } catch (error) {
   if (error instanceof WorkspaceError && error.code === 'WORKSPACE_NOT_FOUND') {
@@ -107,6 +111,7 @@ getWorkspaceOPF(workspaceId: string): Promise<OPFDocument>
 ```
 
 **Input:**
+
 - `workspaceId: string` - Workspace ID
 
 **Output:** `Promise<OPFDocument>` - Parsed OPF document with metadata, manifest, and spine
@@ -129,6 +134,7 @@ updateWorkspaceOPF(workspaceId: string, opf: OPFDocument): Promise<void>
 ```
 
 **Input:**
+
 - `workspaceId: string` - Workspace ID
 - `opf: OPFDocument` - Updated OPF document
 
@@ -140,7 +146,7 @@ updateWorkspaceOPF(workspaceId: string, opf: OPFDocument): Promise<void>
 
 ```typescript
 const opf = await workspaceManager.getWorkspaceOPF(workspaceId);
-opf.metadata.title = "Updated Title";
+opf.metadata.title = 'Updated Title';
 opf.metadata.modifiedDate = new Date().toISOString();
 await workspaceManager.updateWorkspaceOPF(workspaceId, opf);
 ```
@@ -152,6 +158,7 @@ addManifestItem(workspaceId: string, item: Partial<ManifestItem>): Promise<Manif
 ```
 
 **Input:**
+
 - `workspaceId: string` - Workspace ID
 - `item: Partial<ManifestItem>` - Manifest item (ID and mediaType auto-generated if missing)
 
@@ -163,8 +170,8 @@ addManifestItem(workspaceId: string, item: Partial<ManifestItem>): Promise<Manif
 
 ```typescript
 const manifestItem = await workspaceManager.addManifestItem(workspaceId, {
-  href: "OEBPS/Text/chapter1.xhtml"
-  // ID auto-generated: "chapter1"  
+  href: 'OEBPS/Text/chapter1.xhtml',
+  // ID auto-generated: "chapter1"
   // mediaType auto-detected: "application/xhtml+xml"
 });
 
@@ -178,6 +185,7 @@ validateWorkspaceStructure(workspaceId: string): Promise<ValidationResult>
 ```
 
 **Input:**
+
 - `workspaceId: string` - Workspace ID
 
 **Output:** `Promise<ValidationResult>` - Detailed validation results with errors, warnings, and summary
@@ -203,7 +211,9 @@ if (validation.warnings.length > 0) {
   });
 }
 
-console.log(`Summary: ${validation.summary.validFiles}/${validation.summary.totalFiles} files valid`);
+console.log(
+  `Summary: ${validation.summary.validFiles}/${validation.summary.totalFiles} files valid`
+);
 ```
 
 ### generateWorkspacePreview()
@@ -213,6 +223,7 @@ generateWorkspacePreview(workspaceId: string): Promise<WorkspacePreview>
 ```
 
 **Input:**
+
 - `workspaceId: string` - Workspace ID
 
 **Output:** `Promise<WorkspacePreview>` - Comprehensive workspace analysis including file counts, dependencies, and estimated size
@@ -225,7 +236,9 @@ generateWorkspacePreview(workspaceId: string): Promise<WorkspacePreview>
 const preview = await workspaceManager.generateWorkspacePreview(workspaceId);
 
 console.log(`Title: ${preview.metadata.title}`);
-console.log(`Files: ${preview.manifestSummary.textItems} text, ${preview.manifestSummary.imageItems} images`);
+console.log(
+  `Files: ${preview.manifestSummary.textItems} text, ${preview.manifestSummary.imageItems} images`
+);
 console.log(`Size: ${Math.round(preview.estimatedEPUBSize / 1024)} KB`);
 
 if (preview.dependencies.orphanedFiles.length > 0) {
@@ -242,6 +255,7 @@ findDependencies(workspaceId: string, manifestItem: ManifestItem): Promise<strin
 ```
 
 **Input:**
+
 - `workspaceId: string` - Workspace ID
 - `manifestItem: ManifestItem` - Manifest item to analyze
 
@@ -254,9 +268,9 @@ findDependencies(workspaceId: string, manifestItem: ManifestItem): Promise<strin
 ```typescript
 const tracker = new ManifestDependencyTracker(storage);
 const dependencies = await tracker.findDependencies(workspaceId, {
-  id: "chapter1",
-  href: "OEBPS/Text/chapter1.xhtml",
-  mediaType: "application/xhtml+xml"
+  id: 'chapter1',
+  href: 'OEBPS/Text/chapter1.xhtml',
+  mediaType: 'application/xhtml+xml',
 });
 
 console.log('Dependencies:', dependencies);
@@ -310,18 +324,18 @@ interface ManifestItem {
 ```typescript
 interface WorkspaceConfig {
   cache: {
-    ttl: number;           // Cache TTL in milliseconds (default: 24 hours)
-    maxEntries: number;    // Max memory cache entries (default: 100)
+    ttl: number; // Cache TTL in milliseconds (default: 24 hours)
+    maxEntries: number; // Max memory cache entries (default: 100)
     enableDiskCache: boolean; // Enable persistent disk cache (default: true)
   };
   validation: {
-    strict: boolean;       // Strict EPUB compliance (default: false)
+    strict: boolean; // Strict EPUB compliance (default: false)
     checkDependencies: boolean; // Validate file dependencies (default: true)
     allowOrphanedFiles: boolean; // Allow files not in manifest (default: true)
   };
   performance: {
-    batchSize: number;     // Batch size for bulk operations (default: 50)
-    concurrency: number;   // Max concurrent file operations (default: 5)
+    batchSize: number; // Batch size for bulk operations (default: 50)
+    concurrency: number; // Max concurrent file operations (default: 5)
     enableProgressCallbacks: boolean; // Enable progress reporting (default: true)
   };
 }
@@ -353,7 +367,7 @@ class CacheError extends WorkspaceError {
 ### Error Codes
 
 - `WORKSPACE_NOT_FOUND` - Workspace ID doesn't exist
-- `INVALID_OPF_STRUCTURE` - OPF file malformed or missing required elements  
+- `INVALID_OPF_STRUCTURE` - OPF file malformed or missing required elements
 - `MANIFEST_INCONSISTENCY` - Spine references missing manifest items
 - `CACHE_ERROR` - Cache corruption, staleness, or access issues
 - `VALIDATION_ERROR` - Workspace validation failures
@@ -364,7 +378,7 @@ class CacheError extends WorkspaceError {
 
 ```typescript
 try {
-  const workspace = await workspaceManager.switchWorkspace("invalid-id");
+  const workspace = await workspaceManager.switchWorkspace('invalid-id');
 } catch (error) {
   if (error instanceof WorkspaceError) {
     switch (error.code) {
@@ -399,22 +413,22 @@ async function createNewEPUBProject(metadata: EPUBMetadata): Promise<string> {
 
   // 2. Add navigation document
   await workspaceManager.addManifestItem(workspaceId, {
-    id: "nav",
-    href: "OEBPS/nav.xhtml",
-    mediaType: "application/xhtml+xml",
-    properties: ["nav"]
+    id: 'nav',
+    href: 'OEBPS/nav.xhtml',
+    mediaType: 'application/xhtml+xml',
+    properties: ['nav'],
   });
 
   // 3. Add first chapter
   await workspaceManager.addManifestItem(workspaceId, {
-    href: "OEBPS/Text/chapter1.xhtml",
-    mediaType: "application/xhtml+xml"
+    href: 'OEBPS/Text/chapter1.xhtml',
+    mediaType: 'application/xhtml+xml',
   });
 
   // 4. Add stylesheet
   await workspaceManager.addManifestItem(workspaceId, {
-    href: "OEBPS/Styles/style.css",
-    mediaType: "text/css"
+    href: 'OEBPS/Styles/style.css',
+    mediaType: 'text/css',
   });
 
   // 5. Validate final structure
@@ -434,16 +448,19 @@ async function createNewEPUBProject(metadata: EPUBMetadata): Promise<string> {
 ### Workspace Metadata Management
 
 ```typescript
-async function updateWorkspaceMetadata(workspaceId: string, updates: Partial<EPUBMetadata>): Promise<void> {
+async function updateWorkspaceMetadata(
+  workspaceId: string,
+  updates: Partial<EPUBMetadata>
+): Promise<void> {
   const workspaceManager = new WorkspaceManager();
-  
+
   // Get current OPF
   const opf = await workspaceManager.getWorkspaceOPF(workspaceId);
-  
+
   // Update metadata
   opf.metadata = { ...opf.metadata, ...updates };
   opf.metadata.modifiedDate = new Date().toISOString();
-  
+
   // Save changes
   await workspaceManager.updateWorkspaceOPF(workspaceId, opf);
 }
@@ -459,17 +476,17 @@ async function analyzeWorkspaceDependencies(workspaceId: string): Promise<{
 }> {
   const workspaceManager = new WorkspaceManager();
   const tracker = new ManifestDependencyTracker(workspaceManager.storage);
-  
+
   const opf = await workspaceManager.getWorkspaceOPF(workspaceId);
   const allFiles = await workspaceManager.storage.listFiles(workspaceId);
-  
+
   const referencedFiles = new Set<string>();
   const missingDependencies: string[] = [];
-  
+
   // Analyze each manifest item
   for (const item of opf.manifest) {
     const dependencies = await tracker.findDependencies(workspaceId, item);
-    
+
     for (const dep of dependencies) {
       referencedFiles.add(dep);
       if (!allFiles.includes(dep)) {
@@ -477,20 +494,21 @@ async function analyzeWorkspaceDependencies(workspaceId: string): Promise<{
       }
     }
   }
-  
+
   // Find orphaned files
   const manifestFiles = new Set(opf.manifest.map(item => item.href));
-  const orphanedFiles = allFiles.filter(file => 
-    !manifestFiles.has(file) && 
-    !referencedFiles.has(file) &&
-    !file.startsWith('META-INF/') &&
-    file !== 'mimetype'
+  const orphanedFiles = allFiles.filter(
+    file =>
+      !manifestFiles.has(file) &&
+      !referencedFiles.has(file) &&
+      !file.startsWith('META-INF/') &&
+      file !== 'mimetype'
   );
-  
+
   return {
     validDependencies: Array.from(referencedFiles).filter(file => allFiles.includes(file)),
     missingDependencies,
-    orphanedFiles
+    orphanedFiles,
   };
 }
 ```

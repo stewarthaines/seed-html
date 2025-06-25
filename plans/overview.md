@@ -91,12 +91,9 @@ textarea iframe content
 The `transformText.js` will be run as a dynamic function in the textarea iframe's context.
 
 ```js
-const codeStringWithArgs = await readFile(
-  workspaceId,
-  "EDITME/scripts/transformText.js"
-);
-const dynamicFunctionWithArgs = new Function("plainText", codeStringWithArgs);
-const plainText = document.querySelector("textarea").value;
+const codeStringWithArgs = await readFile(workspaceId, 'EDITME/scripts/transformText.js');
+const dynamicFunctionWithArgs = new Function('plainText', codeStringWithArgs);
+const plainText = document.querySelector('textarea').value;
 const transformedText = await dynamicFunctionWithArgs(plainText);
 const xhtml = `<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE xhtml>
