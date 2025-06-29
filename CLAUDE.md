@@ -49,6 +49,7 @@ Plain text source → transformText.js → transformDom.js → XHTML → Preview
 - Multi-device preview (iPhone, iPad, Pixel phone variants)
 - Extensible transform scripts loaded from EPUB manifest
 - Accessibility-focused design
+- Internationalized including RTL
 
 ## Development Phases
 
@@ -67,7 +68,7 @@ Plain text source → transformText.js → transformDom.js → XHTML → Preview
 
 ### Phase 3: Content Management
 
-8. Manifest View (file listing)
+8. Manifest View (file listing with preview and download)
 9. Metadata Editor (form-based)
 10. Spine Item Manager (chapter ordering)
 11. Theme System (light/dark mode)

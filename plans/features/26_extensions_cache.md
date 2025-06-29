@@ -1,4 +1,4 @@
-# 25. Import extensions
+# 26. Extensions Cache
 
 ## Brainstorming
 

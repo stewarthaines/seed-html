@@ -9,7 +9,7 @@ Specialized editor for audio manifest items with timestamp selection, clip range
 - Begin/end timestamp selection
 - Clip playback functionality
 - "Last 2 seconds" preview option
-- Visual timeline interface
+- playbackRate variable
 
 ## Dependencies
 
@@ -18,8 +18,7 @@ Specialized editor for audio manifest items with timestamp selection, clip range
 ## Technical Approach
 
 - HTML5 Audio API for playback control
-- Canvas-based waveform visualization
-- Precise timestamp handling and storage
+- Precise timestamp handling and storage (up to 2 decimal places)
 - Audio metadata extraction and display
 
 ## API Design
@@ -33,6 +32,7 @@ interface AudioClipEditor {
   // Clip management
   setClipRange(start: number, end: number): void;
   getClipRange(): { start: number; end: number };
+  setPlaybackRate()(rate: number): void;
   clearClipRange(): void;
 
   // Playback control
@@ -172,6 +172,7 @@ interface TimelineMarker {
           <button on:click={setClipStart} disabled={!audioElement}> Set Start </button>
           <button on:click={setClipEnd} disabled={!audioElement}> Set End </button>
           <button on:click={clearClip} disabled={!hasClipRange}> Clear Clip </button>
+          <button on:click={setPlaybackRate} disabled={!hasClipRange}> Set Playback Rate </button>
         </div>
       </div>
     </div>
@@ -320,196 +321,6 @@ interface TimelineMarker {
 </style>
 ```
 
-## Waveform Visualization
-
-```typescript
-const drawWaveform = (canvas: HTMLCanvasElement, waveformData: number[]) => {
-  const ctx = canvas.getContext('2d');
-  if (!ctx || !waveformData.length) return;
-
-  const width = canvas.width;
-  const height = canvas.height;
-  const centerY = height / 2;
-
-  ctx.clearRect(0, 0, width, height);
-
-  // Draw waveform
-  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent-color');
-  ctx.lineWidth = 1;
-
-  ctx.beginPath();
-
-  for (let i = 0; i < waveformData.length; i++) {
-    const x = (i / waveformData.length) * width;
-    const y = centerY + waveformData[i] * centerY * 0.8;
-
-    if (i === 0) {
-      ctx.moveTo(x, y);
-    } else {
-      ctx.lineTo(x, y);
-    }
-  }
-
-  ctx.stroke();
-
-  // Draw clip range if set
-  if (hasClipRange) {
-    drawClipRange(ctx, width, height);
-  }
-
-  // Draw playhead
-  drawPlayhead(ctx, width, height);
-};
-
-const drawClipRange = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
-  if (!duration || !hasClipRange) return;
-
-  const startX = (clipStart / duration) * width;
-  const endX = (clipEnd / duration) * width;
-
-  // Draw clip range background
-  ctx.fillStyle = 'rgba(0, 123, 255, 0.2)';
-  ctx.fillRect(startX, 0, endX - startX, height);
-
-  // Draw clip range borders
-  ctx.strokeStyle = 'rgba(0, 123, 255, 0.8)';
-  ctx.lineWidth = 2;
-
-  ctx.beginPath();
-  ctx.moveTo(startX, 0);
-  ctx.lineTo(startX, height);
-  ctx.moveTo(endX, 0);
-  ctx.lineTo(endX, height);
-  ctx.stroke();
-};
-
-const drawPlayhead = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
-  if (!duration) return;
-
-  const x = (currentTime / duration) * width;
-
-  ctx.strokeStyle = '#ff4444';
-  ctx.lineWidth = 2;
-
-  ctx.beginPath();
-  ctx.moveTo(x, 0);
-  ctx.lineTo(x, height);
-  ctx.stroke();
-};
-```
-
-## Audio Analysis
-
-```typescript
-const generateWaveformData = async (audioBuffer: AudioBuffer): Promise<number[]> => {
-  const channelData = audioBuffer.getChannelData(0); // Use first channel
-  const samples = 1000; // Number of samples for visualization
-  const blockSize = Math.floor(channelData.length / samples);
-  const waveformData: number[] = [];
-
-  for (let i = 0; i < samples; i++) {
-    const start = i * blockSize;
-    const end = start + blockSize;
-    let sum = 0;
-
-    // Calculate RMS for this block
-    for (let j = start; j < end && j < channelData.length; j++) {
-      sum += channelData[j] * channelData[j];
-    }
-
-    const rms = Math.sqrt(sum / blockSize);
-    waveformData.push(rms);
-  }
-
-  // Normalize to -1 to 1 range
-  const maxRms = Math.max(...waveformData);
-  return waveformData.map(value => value / maxRms);
-};
-
-const loadAudioForAnalysis = async (audioSrc: string): Promise<AudioBuffer> => {
-  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-  try {
-    const response = await fetch(audioSrc);
-    const arrayBuffer = await response.arrayBuffer();
-    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-
-    return audioBuffer;
-  } finally {
-    audioContext.close();
-  }
-};
-```
-
-## Timeline Interaction
-
-```typescript
-const handleTimelineClick = (event: MouseEvent) => {
-  const canvas = event.target as HTMLCanvasElement;
-  const rect = canvas.getBoundingClientRect();
-  const x = event.clientX - rect.left;
-  const percentage = x / rect.width;
-  const newTime = percentage * duration;
-
-  seekTo(newTime);
-};
-
-let isDragging = false;
-let dragMode: 'seek' | 'clip-start' | 'clip-end' = 'seek';
-
-const handleTimelineMouseDown = (event: MouseEvent) => {
-  const canvas = event.target as HTMLCanvasElement;
-  const rect = canvas.getBoundingClientRect();
-  const x = event.clientX - rect.left;
-  const percentage = x / rect.width;
-  const time = percentage * duration;
-
-  // Determine drag mode based on proximity to markers
-  const tolerance = 10; // pixels
-  const startX = (clipStart / duration) * rect.width;
-  const endX = (clipEnd / duration) * rect.width;
-
-  if (Math.abs(x - startX) < tolerance) {
-    dragMode = 'clip-start';
-  } else if (Math.abs(x - endX) < tolerance) {
-    dragMode = 'clip-end';
-  } else {
-    dragMode = 'seek';
-  }
-
-  isDragging = true;
-  event.preventDefault();
-};
-
-const handleTimelineMouseMove = (event: MouseEvent) => {
-  if (!isDragging) return;
-
-  const canvas = event.target as HTMLCanvasElement;
-  const rect = canvas.getBoundingClientRect();
-  const x = event.clientX - rect.left;
-  const percentage = Math.max(0, Math.min(1, x / rect.width));
-  const time = percentage * duration;
-
-  switch (dragMode) {
-    case 'seek':
-      seekTo(time);
-      break;
-    case 'clip-start':
-      clipStart = Math.min(time, clipEnd - 0.1); // Ensure start < end
-      break;
-    case 'clip-end':
-      clipEnd = Math.max(time, clipStart + 0.1); // Ensure end > start
-      break;
-  }
-
-  redrawTimeline();
-};
-
-const handleTimelineMouseUp = () => {
-  isDragging = false;
-};
-```
-
 ## Playback Control
 
 ```typescript
@@ -569,53 +380,27 @@ const formatTime = (seconds: number): string => {
 
 ## Clip Data Export
 
-```typescript
-const exportClipData = (): ClipData => {
-  return {
-    startTime: clipStart,
-    endTime: clipEnd,
-    duration: clipDuration,
-    filePath: audioFilePath,
-    metadata: audioMetadata,
-  };
-};
-
-const saveClipMarkers = async (): Promise<void> => {
-  const clipData = exportClipData();
-  const markerFile = audioFilePath.replace(/\.(mp3|wav|ogg|m4a)$/i, '.clip.json');
-
-  try {
-    await fileStorage.writeFile(workspaceId, markerFile, JSON.stringify(clipData, null, 2));
-
-    dispatch('clip-saved', { clipData, markerFile });
-  } catch (error) {
-    console.error('Failed to save clip markers:', error);
-    dispatch('save-error', { error });
-  }
-};
-```
+- Generates markdown-style directive with clip parameters eg. `:clip[clickable clip label]{src=filename.mp3 begin=1:0.5 end=1:54 rate=0.8}`
+- TBD
 
 ## Error Handling
 
 - Unsupported audio formats
+- Warn on non Constant Bit Rate encoding
 - Audio loading failures
 - Invalid timestamp ranges
 - Playback errors
-- Canvas rendering issues
 
 ## Testing Considerations
 
 - Test with various audio formats
-- Test timeline interaction accuracy
 - Test clip range validation
 - Test playback controls
-- Test waveform generation
 - Test performance with large audio files
 
 ## Implementation Notes
 
 - Start with basic playback controls
-- Add waveform visualization incrementally
 - Implement precise timestamp handling
 - Test across different browsers
 - Consider Web Audio API for advanced features

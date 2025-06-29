@@ -12,15 +12,15 @@ The app is designed for accessibility.
 
 ## Plain text transform
 
-The app converts plain text into xhtml required by the EPUB reading system. Each chapter xhtml has a corresponding plain text manifest item associated by id. The plain text source is stored in the EPUB as manifest items outside of the OEBPS folder.
+The app converts plain text into the xhtml files required by the EPUB Reading System. Each chapter (or page) xhtml has a corresponding plain text manifest item associated by its id. The plain text source is stored in the EPUB within the `SOURCE.zip` manifest item.
 
-For example a chapter manifest item might be called 'OEBPS/chapter1.xhtml' with an id of 'chapter1' and its plain text source is stored in the workspace as 'SOURCE/text/chapter1.txt' (bundled in SOURCE.zip during packaging).
+For example a chapter manifest item might be called `OEBPS/chapter1.xhtml` with an id of `chapter1` and its plain text source is stored in the workspace as `SOURCE/text/chapter1.txt` (bundled in SOURCE.zip during packaging).
 
-The EPUB file also includes javascript used to transform the plain text to xhtml. This allows the EPUB author to decide what plain text formatting convention to use. Possible formats are markdown, asciidoc, textile or restructuredtext. The choice of which markdown library to use is also open to the author based on their needs.
+The EPUB file also includes javascript used to transform the plain text to xhtml. This allows the EPUB author to decide what plain text formatting convention to use. Possible formats are markdown or asciidoc or your own. The choice of which javascript library to use is also open to the author based on their needs.
 
 If the transform fails at any stage (plain text -> xhtml, xhtml dom transform) the user is notified by displaying an informative message in the relevant place (eg. in the preview iframe if the xhtml transform failed).
 
-The textarea has a change event handler which triggers debounced render to preview so the user never has to explicitly save the plain text to see the preview update.
+The textarea has a change event handler which triggers debounced render to preview so the user never has to explicitly save the plain text to see the preview update. If the transform to xhtml fails the preview and the chapter xhtml manifest item is not modified, so only valid items are saved to the workspace.
 
 ## File storage
 
@@ -29,17 +29,17 @@ Two browser-local file storage backends are provided;
 1. OPFS
 2. IndexedDB
 
-The OPFS storage solution is more performant for the use-case of turning manifest items into content blob urls for the preview iframe. The IndexedDB is provided as a fallback based on feature detection for browsers that don't support OPFS .createWritable().
+The OPFS storage solution is more performant for the use-case of turning manifest items into content blob urls for the preview iframe. The IndexedDB is provided as a fallback based on feature detection for browsers (or given security constraints) that don't support OPFS File Handle .createWritable().
 
 ## Packaging and unpacking EPUB
 
-The EPUB format is a zip file. The browser Compression Streams API is used to perform unpacking of existing EPUB files, and packagining of workspace EPUB content.
+The EPUB format is a zip file. The browser Decompression Streams API is used to perform unpacking of existing EPUB files, and packagining of workspace EPUB content uses the Compression Streams API.
 
 When loading a malformed EPUB file the user should be notified but the app makes no attempt to recover, and the load operation fails.
 
 If the storage quota is exceeded the loading fails with a message to the user. Storage availability and quota should be visible somewhere in the ui.
 
-When an existing EPUB is loaded it gets unpacked into the available file storage and a 'workspace' is created. The workspace ID is a unique identifier that is used as the toplevel folder name in the selected storage.
+When an existing EPUB is loaded it gets unpacked into the available file storage and a `workspace` is created. The workspace ID is a unique identifier that is used as the toplevel folder name in the selected storage.
 
 ## UI Overview
 
@@ -68,6 +68,7 @@ OEBPS/EDITME.html
 ```
 
 **Note**: SOURCE.zip contains the editor workspace files:
+
 - `SOURCE/text/chapter1.txt`, `SOURCE/text/chapter2.txt` (plain text sources)
 - `SOURCE/scripts/transformText.js` (text transform script)
 - `SOURCE/extensions/markdown-it/` (markdown library)

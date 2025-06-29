@@ -1,13 +1,13 @@
 # SOURCE.zip Implementation TODO
 
-This document outlines the implementation steps required to integrate SOURCE.zip functionality based on the documentation changes and existing codebase analysis.
+This document provides a focused implementation roadmap for SOURCE.zip functionality. For detailed specifications, see the corresponding feature files in `plans/features/`.
 
 ## Overview
 
 The codebase has strong foundations with comprehensive EPUB handling, file storage, and workspace management already implemented. The main work involves:
 
-1. **Bridging existing EPUB workflows** with SOURCE.zip concept
-2. **Implementing transform pipeline** (currently unbuilt)
+1. **Bridging existing EPUB workflows** with SOURCE.zip concept → [Feature 23](plans/features/23_source_zip.md)
+2. **Implementing transform pipeline** (currently unbuilt) → [Feature 12](plans/features/12_transform_pipeline.md)
 3. **Modifying existing features** to handle SOURCE/ directory structure
 
 ## Implementation Status
@@ -20,9 +20,11 @@ The codebase has strong foundations with comprehensive EPUB handling, file stora
 - **Dependency Tracker** - File reference validation and analysis
 
 ### ❌ Missing (Needs Implementation)
-- **Transform Pipeline** - Script execution engine (Feature 12)
-- **SOURCE.zip Management** - Creation/extraction workflows
+- **Transform Pipeline** - Script execution engine → [Feature 12](plans/features/12_transform_pipeline.md)
+- **SOURCE.zip Management** - Creation/extraction workflows → [Feature 23](plans/features/23_source_zip.md)
 - **Extension System** - Dynamic script loading from SOURCE/
+- **Navigation Editor** - Simplified text-based TOC editing → [Feature 17](plans/features/17_navigation_editor.md)
+- **Audio Clip Editor** - Directive-based audio clip handling → [Feature 18](plans/features/18_audio_clip_editor.md)
 
 ## Phase 1: Core SOURCE.zip Integration (High Priority)
 
@@ -177,64 +179,37 @@ async extractToWorkspace(zip: Zip, workspaceId: string): Promise<ExtractionResul
 
 ## Phase 2: Transform Pipeline Implementation (New Feature)
 
-### 2.1 Create Transform Pipeline (New)
-**Location**: `src/lib/transform/`
+**Implementation Details**: See [Feature 12 - Transform Pipeline](plans/features/12_transform_pipeline.md)
 
-**Files to Create**:
-```
-src/lib/transform/
-├── index.ts                 # Main exports
-├── transform-pipeline.ts    # Main pipeline class
-├── settings-manager.ts      # Settings JSON handling
-├── script-loader.ts         # Dynamic script loading
-├── transform-executor.ts    # Sandboxed script execution
-└── types.ts                # Transform-related types
-```
+**Key Components**:
+- Transform Pipeline execution engine (`src/lib/transform/`)
+- Settings Manager for SOURCE/settings.json
+- Script loader for dynamic extensions
+- Sandboxed script execution environment
 
-**Key Implementation**:
-```typescript
-// transform-pipeline.ts
-export class TransformPipeline {
-  async loadSettings(workspaceId: string): Promise<TransformSettings> {
-    const settingsPath = 'SOURCE/settings.json';
-    if (await this.fileStorage.fileExists(workspaceId, settingsPath)) {
-      const content = await this.fileStorage.readFileAsText(workspaceId, settingsPath);
-      return JSON.parse(content);
-    }
-    return this.getDefaultSettings();
-  }
-  
-  async transformText(workspaceId: string, plainText: string): Promise<string> {
-    const settings = await this.loadSettings(workspaceId);
-    const scripts = await this.loadTransformScripts(workspaceId, settings);
-    
-    // Execute text transform script
-    return await this.executeTextTransform(plainText, scripts.textTransform);
-  }
-}
-```
+**Dependencies**: Blob URL Manager for loading transform scripts
 
-### 2.2 Create Settings Manager (New)
-```typescript
-// settings-manager.ts
-export class SettingsManager {
-  async loadSettings(workspaceId: string): Promise<EditmeSettings> {
-    // Load and parse SOURCE/settings.json
-  }
-  
-  async saveSettings(workspaceId: string, settings: EditmeSettings): Promise<void> {
-    // Save to SOURCE/settings.json
-  }
-  
-  async incrementDraftId(workspaceId: string): Promise<number> {
-    // Update draft_id in settings
-  }
-}
-```
+## Phase 3: Content Editing Features
 
-## Phase 3: Integration & Testing
+### 3.1 Navigation Editor Implementation
+**Implementation Details**: See [Feature 17 - Navigation Editor](plans/features/17_navigation_editor.md)
 
-### 3.1 Update Dependency Tracker (Existing)
+**Key Approach**: 
+- Text-based editing leveraging existing spine editor functionality
+- Auto-generation from chapter H1 headings
+- Support for advanced directives
+- Location: `src/lib/navigation/`
+
+### 3.2 Audio Clip Editor Implementation  
+**Implementation Details**: See [Feature 18 - Audio Clip Editor](plans/features/18_audio_clip_editor.md)
+
+**Key Approach**:
+- Simplified directive-based output (no waveform visualization)
+- Timestamp selection and playback rate control
+- Generate `:clip` markdown-style directives
+- Location: `src/lib/audio/`
+
+### 3.3 Update Dependency Tracker (Existing)
 **File**: `src/lib/workspace/dependency-tracker.ts`
 
 **Add New Method**:
@@ -246,42 +221,27 @@ async findSourceDependencies(workspaceId: string): Promise<SourceDependencies> {
 }
 ```
 
-### 3.2 Create Integration Layer (New)
+### 3.4 Create Integration Layer (New)
 **File**: `src/lib/workspace/source-integration.ts`
-
 **Purpose**: Bridge workspace manager with SOURCE.zip functionality
-```typescript
-export class SourceIntegration {
-  async syncSourceWithWorkspace(workspaceId: string): Promise<void> {
-    // Coordinate between workspace manager and source manager
-  }
-  
-  async validateSourceIntegration(workspaceId: string): Promise<ValidationResult> {
-    // Validate SOURCE/ and workspace consistency
-  }
-}
-```
 
-### 3.3 Update Type Definitions
-**Files**: Various `types.ts` files
+### 3.5 Update Type Definitions
+**Files**: Various `types.ts` files  
+**Purpose**: Add SOURCE-related interfaces and transform settings types
 
-**Add New Types**:
-```typescript
-// src/lib/source/types.ts
-export interface SourceValidation {
-  isValid: boolean;
-  errors: string[];
-  warnings: string[];
-  fileCount: number;
-}
+## Phase 4: Future Features (New)
 
-export interface TransformSettings {
-  is_draft: boolean;
-  draft_id: number;
-  text_transform: string;
-  dom_transforms: string[];
-}
-```
+### 4.1 Internationalization 
+**Status**: Planning phase → [Feature 27](plans/features/27_internationalisation.md)
+**Priority**: Medium
+
+### 4.2 First Run Experience
+**Status**: Planning phase → [Feature 28](plans/features/28_first_run.md)
+**Priority**: Medium
+
+### 4.3 Application Version Management
+**Status**: Planning phase → [Feature 29](plans/features/29_app_version.md)
+**Priority**: Low
 
 ## Testing Strategy
 
@@ -299,6 +259,14 @@ export interface TransformSettings {
 - [ ] Text and DOM transforms
 
 ### Phase 3 Testing
+- [ ] Navigation Editor text-based editing → [Feature 17](plans/features/17_navigation_editor.md)
+- [ ] Audio Clip Editor directive generation → [Feature 18](plans/features/18_audio_clip_editor.md)
+- [ ] Content editing features integration testing
+
+### Phase 4 Testing
+- [ ] Future features integration → [Features 27-29](plans/features/)
+
+### Phase 5 Integration Testing
 - [ ] End-to-end SOURCE.zip workflows
 - [ ] Integration between all components
 - [ ] Performance testing with large SOURCE/ directories
@@ -308,12 +276,15 @@ export interface TransformSettings {
 
 ### Critical Path:
 1. **SourceManager** → **Workspace Manager modifications** → **EPUB Pack/Unpack updates**
-2. **Transform Pipeline** → **Settings Manager** → **Integration testing**
+2. **Transform Pipeline** → **Settings Manager** → **Content Editing Features**
+3. **Navigation/Audio Editors** → **Future Features** → **Integration testing**
 
 ### Parallel Development:
 - SOURCE.zip core functionality (Phase 1)
-- Transform pipeline implementation (Phase 2)
-- Type definitions and integration helpers (Phase 3)
+- Transform pipeline implementation (Phase 2) 
+- Content editing features (Phase 3)
+- Future features planning (Phase 4)
+- Type definitions and integration helpers (Phase 5)
 
 ## File Modification Summary
 
@@ -325,18 +296,33 @@ export interface TransformSettings {
 ### **New Implementations** (New Files):
 - `src/lib/source/` - Complete new module (~300 lines)
 - `src/lib/transform/` - Complete new module (~500 lines)
-- Integration helpers and type definitions (~100 lines)
+- `src/lib/navigation/` - Navigation editor module (~200 lines)
+- `src/lib/audio/` - Audio clip editor module (~300 lines)
+- Integration helpers and type definitions (~150 lines)
 
 ### **Supporting Changes** (Existing Files):
 - `src/lib/workspace/dependency-tracker.ts` - 1 new method
 - Various type definition updates
 
-## Next Steps
+## Next Steps (Updated Based on Recent Changes)
 
+### **Immediate Priority (Phase 1-2)**:
 1. **Start with SourceManager implementation** - Foundation for all SOURCE.zip operations
 2. **Modify workspace creation** - Update to create SOURCE/ structure
 3. **Update EPUB workflows** - Package/unpack SOURCE.zip integration
 4. **Implement transform pipeline** - Script execution and settings management
-5. **Integration testing** - End-to-end workflow validation
 
-The codebase foundation is strong. Most work involves extending existing patterns rather than rewriting core functionality.
+### **Content Features (Phase 3)**:
+5. **Navigation Editor** - Text-based approach leveraging existing spine editor patterns
+6. **Audio Clip Editor** - Simplified directive-based output, no waveform complexity
+
+### **Future Planning (Phase 4)**:
+7. **Feature specification** - Complete planning for internationalization, first-run, version management
+8. **Integration testing** - End-to-end workflow validation
+
+## Key Implementation Notes
+
+- **Navigation Editor**: Simplified from complex UI to text-based approach using existing transform pipeline
+- **Audio Clip Editor**: Removed waveform visualization complexity, focus on directive generation
+- **Three new features**: Require detailed specification before implementation
+- **Codebase foundation**: Strong existing patterns, most work involves extension rather than rewriting
