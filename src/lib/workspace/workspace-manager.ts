@@ -8,6 +8,7 @@ import { FileStorageAPI } from '../storage/index.js';
 import { OPFUtils } from '../epub/index.js';
 import { WorkspaceMetadataCache } from './workspace-cache.js';
 import { ManifestDependencyTracker } from './dependency-tracker.js';
+import { SourceManager } from '../source/index.js';
 import type {
   WorkspaceInfo,
   EPUBMetadata,
@@ -25,6 +26,7 @@ export class WorkspaceManager {
   private storage: FileStorageAPI;
   private cache: WorkspaceMetadataCache;
   private dependencyTracker: ManifestDependencyTracker;
+  private sourceManager: SourceManager;
   private config: WorkspaceConfig;
 
   constructor(config?: Partial<WorkspaceConfig>) {
@@ -32,6 +34,7 @@ export class WorkspaceManager {
     this.storage = new FileStorageAPI();
     this.cache = new WorkspaceMetadataCache(this.storage, this.config.cache);
     this.dependencyTracker = new ManifestDependencyTracker(this.storage);
+    this.sourceManager = new SourceManager(this.storage);
   }
 
   /**
@@ -502,7 +505,7 @@ export class WorkspaceManager {
         if (
           !manifestFiles.has(file) &&
           !systemFiles.has(file) &&
-          !file.startsWith('EDITME/') &&
+          !file.startsWith('SOURCE/') &&
           !file.endsWith('.workspace-metadata.json')
         ) {
           orphanedFiles++;
@@ -521,6 +524,36 @@ export class WorkspaceManager {
               severity: 'warning',
             });
           }
+        }
+      }
+
+      // Validate SOURCE/ structure if it exists
+      try {
+        const sourceValidation = await this.sourceManager.validateSourceStructure(workspaceId);
+        if (!sourceValidation.isValid) {
+          for (const error of sourceValidation.errors) {
+            errors.push({
+              code: 'INVALID_SOURCE_STRUCTURE',
+              message: `SOURCE/ validation error: ${error}`,
+              severity: 'error',
+            });
+          }
+        }
+        for (const warning of sourceValidation.warnings) {
+          warnings.push({
+            code: 'SOURCE_STRUCTURE_WARNING',
+            message: `SOURCE/ validation warning: ${warning}`,
+            severity: 'warning',
+          });
+        }
+      } catch (sourceError) {
+        // SOURCE/ validation failed - this is not necessarily an error if no SOURCE/ files exist
+        if (files.some(f => f.startsWith('SOURCE/'))) {
+          warnings.push({
+            code: 'SOURCE_VALIDATION_FAILED',
+            message: `Could not validate SOURCE/ structure: ${sourceError instanceof Error ? sourceError.message : 'Unknown error'}`,
+            severity: 'warning',
+          });
         }
       }
 
@@ -641,7 +674,7 @@ export class WorkspaceManager {
           !manifestFiles.has(file) &&
           !referencedFiles.has(file) &&
           !file.startsWith('META-INF/') &&
-          !file.startsWith('EDITME/') &&
+          !file.startsWith('SOURCE/') &&
           !file.endsWith('.workspace-metadata.json') &&
           file !== 'mimetype' &&
           file !== pathInfo.rootfilePath
@@ -725,13 +758,14 @@ export class WorkspaceManager {
       'OEBPS/Images',
       'OEBPS/Styles',
       'OEBPS/Audio',
-      'EDITME/src',
-      'EDITME/scripts',
     ];
 
     for (const dir of directories) {
       await this.storage.writeTextFile(workspaceId, `${dir}/.gitkeep`, '');
     }
+
+    // Initialize SOURCE/ directory structure using SourceManager
+    await this.sourceManager.initializeSourceStructure(workspaceId);
   }
 
   private async parseWorkspaceMetadata(workspaceId: string): Promise<WorkspaceInfo> {

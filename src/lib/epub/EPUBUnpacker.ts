@@ -8,6 +8,7 @@
 import { Zip } from '../zip/index.js';
 import { FileStorageAPI } from '../storage/index.js';
 import { OPFUtils } from './opf-utils.js';
+import { SourceManager } from '../source/index.js';
 
 export interface UnpackResult {
   success: boolean;
@@ -245,11 +246,21 @@ export class EPUBUnpacker {
       }
     }
 
+    // Initialize SourceManager for SOURCE.zip handling
+    const sourceManager = new SourceManager(this.fileStorage);
+    let sourceZipEntry: any = null;
+
     for (const entry of zip.entries) {
       try {
         // Skip directory entries (they have no content)
         if (entry.fileName.endsWith('/')) {
           continue;
+        }
+
+        // Check if this is SOURCE.zip - handle specially
+        if (entry.fileName === 'SOURCE.zip' || entry.fileName.endsWith('/SOURCE.zip')) {
+          sourceZipEntry = entry;
+          continue; // Process SOURCE.zip after all other files
         }
 
         // Extract file using ZIP library's built-in decompression
@@ -265,6 +276,22 @@ export class EPUBUnpacker {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error';
         errors.push(`Failed to extract ${entry.fileName}: ${errorMessage}`);
         skippedFiles.push(entry.fileName);
+      }
+    }
+
+    // Handle SOURCE.zip extraction if present
+    if (sourceZipEntry) {
+      try {
+        const sourceZipBlob = await sourceZipEntry.extract();
+        await sourceManager.extractSourceZip(workspaceId, sourceZipBlob);
+        
+        // Report SOURCE.zip extraction (the ZIP itself is not stored as a workspace file)
+        extractedFiles.push('SOURCE.zip (extracted to SOURCE/ directory)');
+        totalBytes += sourceZipBlob.size;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        errors.push(`Failed to extract SOURCE.zip: ${errorMessage}`);
+        skippedFiles.push(sourceZipEntry.fileName);
       }
     }
 

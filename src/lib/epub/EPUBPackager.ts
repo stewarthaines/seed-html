@@ -9,6 +9,7 @@ import { ZipWriter, downloadBlob } from '../zip/index.js';
 import { FileStorageAPI } from '../storage/index.js';
 import { OPFUtils, type EPUBMetadata } from './opf-utils.js';
 import { getMimeType } from '../utils/mime-types.js';
+import { SourceManager } from '../source/index.js';
 
 export { type EPUBMetadata } from './opf-utils.js';
 
@@ -53,9 +54,11 @@ export interface PackageResult {
 
 export class EPUBPackager {
   private fileStorage: FileStorageAPI;
+  private sourceManager: SourceManager;
 
   constructor() {
     this.fileStorage = new FileStorageAPI();
+    this.sourceManager = new SourceManager(this.fileStorage);
   }
 
   async packageEPUB(workspaceId: string, options: PackageOptions = {}): Promise<PackageResult> {
@@ -144,10 +147,16 @@ export class EPUBPackager {
   }
 
   async readWorkspaceFiles(workspaceId: string): Promise<WorkspaceFile[]> {
-    const filePaths = await this.fileStorage.listFiles(workspaceId);
+    const allFilePaths = await this.fileStorage.listFiles(workspaceId);
+    
+    // Separate SOURCE/ files from EPUB files
+    const sourceFiles = allFilePaths.filter(f => f.startsWith('SOURCE/'));
+    const epubFiles = allFilePaths.filter(f => !f.startsWith('SOURCE/'));
+    
     const files: WorkspaceFile[] = [];
 
-    for (const path of filePaths) {
+    // Process EPUB files normally
+    for (const path of epubFiles) {
       try {
         const content = await this.fileStorage.readFile(workspaceId, path);
         files.push({
@@ -160,6 +169,25 @@ export class EPUBPackager {
         // Skip files that can't be read but don't fail the entire operation
         // eslint-disable-next-line no-console
         console.warn(`Failed to read file ${path}:`, error);
+      }
+    }
+
+    // Handle SOURCE.zip creation if SOURCE/ files exist
+    if (sourceFiles.length > 0) {
+      try {
+        const sourceZip = await this.sourceManager.createSourceZip(workspaceId);
+        if (sourceZip) {
+          const sourceZipBuffer = await sourceZip.arrayBuffer();
+          files.push({
+            path: 'SOURCE.zip',
+            content: sourceZipBuffer,
+            size: sourceZipBuffer.byteLength,
+            mimeType: 'application/zip',
+          });
+        }
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.warn('Failed to create SOURCE.zip:', error);
       }
     }
 
