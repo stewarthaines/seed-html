@@ -11,7 +11,11 @@ const mockLocalStorage = {
 };
 
 // Mock matchMedia - skip tests that require this in happy-dom
-const mockMatchMedia = vi.fn();
+const mockMatchMedia = vi.fn().mockReturnValue({
+  matches: false,
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+});
 
 describe('Theme Store', () => {
   beforeEach(() => {
@@ -21,8 +25,13 @@ describe('Theme Store', () => {
     mockLocalStorage.removeItem.mockReset();
     mockLocalStorage.clear.mockReset();
 
-    // Reset matchMedia mock
+    // Reset and reconfigure matchMedia mock
     mockMatchMedia.mockReset();
+    mockMatchMedia.mockReturnValue({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    });
 
     // Mock global objects
     Object.defineProperty(window, 'localStorage', {
