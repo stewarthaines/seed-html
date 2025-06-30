@@ -1,66 +1,83 @@
-# 25. Extension Import Manager
+# 25. Extension Manager with Cache
 
 ## Overview
 
-Provides a user interface for importing JavaScript extensions into the workspace, with automatic license detection and transform scaffold generation. Extensions are stored in `SOURCE/extensions/` and bundled with SOURCE.zip during EPUB packaging.
+Provides a unified interface for managing JavaScript extensions in workspaces, including importing new extensions, managing existing ones, and utilizing a global extension cache. Extensions are stored in `SOURCE/extensions/` and automatically cached for reuse across workspaces.
 
 ## Requirements
 
 ### Functional Requirements
-- Upload JavaScript files from desktop to workspace
-- Store extensions in `SOURCE/extensions/<name>/` directory structure
-- Auto-detect and download license files from npm/CDN sources
-- Generate placeholder `transform.js` for user customization
-- Validate JavaScript syntax and detect library information
-- Integration with transform pipeline (feature 12) and settings (feature 22)
+- **Import Extensions**: Upload JavaScript files from desktop to create new extensions
+- **Extension Storage**: Store in `SOURCE/extensions/<name>/` directory structure
+- **Global Cache**: Maintain cache at `extensions/` in File Storage for reuse
+- **Cache Population**: Auto-cache extensions during workspace import and creation
+- **Multi-file Support**: Add additional JS files to existing extensions
+- **License Management**: Include LICENSE.txt files when present
 
 ### User Experience Requirements
-- Drag-and-drop file upload interface
-- Extension management (view, delete, update)
-- License compliance indicators and warnings
-- Transform script editor with syntax highlighting
+- **Unified Interface**: Modal-based workflow in workspace settings view
+- **Cache Integration**: Import extensions from cache as alternative to file upload
+- **Extension Management**: List, add files to, and remove extensions
+- **Cache Management**: View cached extensions, delete unwanted ones
+- **Name Confirmation**: Auto-detect names with user override option
 
 ## Dependencies
 
-- **File Storage API**: Writing extensions to `SOURCE/extensions/` directory
+- **File Storage API**: Writing extensions to workspace and global cache
 - **SOURCE.zip Integration**: Extensions bundled during EPUB packaging
-- **Transform Pipeline**: Extension scripts loaded during text/DOM transforms
-- **Settings Manager**: Extension selection and configuration
-- **Web APIs**: File upload, fetch for license detection
+- **Transform Pipeline**: Extension libraries loaded as globals
+- **Workspace Manager**: Extension discovery during import
+- **Web APIs**: File upload and handling
 
 ## Technical Approach
 
-### Workspace Structure
+### Storage Structure
 
 ```
+# Workspace Extensions
 workspace-{id}/
 └── OEBPS/
-    └── SOURCE/                    # Extracted from SOURCE.zip during editing
+    └── SOURCE/
         └── extensions/
             ├── markdown-it/
-            │   ├── markdown-it.min.js    # Uploaded library file
-            │   ├── transform.js          # User-customizable transform
-            │   ├── LICENSE                # Auto-downloaded license
-            │   └── metadata.json         # Extension metadata
+            │   ├── markdown-it.min.js    # Main library file
+            │   ├── markdown-it-plugin.js # Additional library files
+            │   └── LICENSE.txt           # Optional license
             └── abcjs/
-                ├── abcjs-basic.js
-                ├── transform.js
-                ├── LICENSE.txt
-                └── metadata.json
+                ├── abcjs-basic.min.js
+                └── LICENSE
+
+# Global Extension Cache (File Storage)
+extensions/
+├── markdown-it/
+│   ├── markdown-it.min.js
+│   ├── markdown-it-plugin.js
+│   └── LICENSE.txt
+├── abcjs/
+│   ├── abcjs-basic.min.js
+│   └── LICENSE
+└── prism/
+    └── prism.min.js
 ```
 
-### SOURCE.zip Integration
-- **During Editing**: Extensions accessible in `SOURCE/extensions/` directory
-- **During Packaging**: All extension files bundled into SOURCE.zip
-- **During Unpacking**: SOURCE.zip extracted, extensions available immediately
-- **Transform Loading**: Pipeline loads extensions from extracted SOURCE/ directory
+### Cache Integration Workflow
+
+#### Cache Population
+1. **Workspace Import**: Scan `SOURCE/extensions/` for new extensions
+2. **New Extension Creation**: Cache immediately when user creates extension
+3. **Automatic Process**: No user prompts, transparent caching
+4. **Conflict Handling**: Skip caching if same name exists with different content
+
+#### Cache Usage
+1. **Import from Cache**: Alternative to file upload in extension dialog
+2. **Copy to Workspace**: Extensions copied from cache to `SOURCE/extensions/`
+3. **Independent Copies**: Changes to workspace extension don't affect cache
 
 ### Extension Directory Structure
-Each extension follows a standardized structure:
-- `<library>.js` - Main JavaScript library file
-- `transform.js` - User-customizable transform script
-- `LICENSE` or `LICENSE.txt` - Library license file
-- `metadata.json` - Extension information and configuration
+Each extension contains:
+- `*.js` - JavaScript library files (one or more)
+- `LICENSE.txt` or `LICENSE` - Optional license file
+- No metadata.json or transform.js (transforms go in `SOURCE/scripts/`)
 
 ## API Design
 
@@ -69,184 +86,193 @@ Each extension follows a standardized structure:
 ```typescript
 interface ExtensionManager {
   // Extension import
-  importExtension(workspaceId: string, file: File, extensionName?: string): Promise<ExtensionInfo>;
+  importExtension(workspaceId: string, file: File, extensionName: string): Promise<ExtensionInfo>;
+  addFileToExtension(workspaceId: string, extensionName: string, file: File): Promise<void>;
   
-  // Extension management
-  listExtensions(workspaceId: string): Promise<ExtensionInfo[]>;
-  deleteExtension(workspaceId: string, extensionName: string): Promise<void>;
-  updateExtension(workspaceId: string, extensionName: string, updates: Partial<ExtensionInfo>): Promise<void>;
+  // Workspace extension management
+  listWorkspaceExtensions(workspaceId: string): Promise<ExtensionInfo[]>;
+  deleteWorkspaceExtension(workspaceId: string, extensionName: string): Promise<void>;
   
-  // Transform script management
-  getTransformScript(workspaceId: string, extensionName: string): Promise<string>;
-  updateTransformScript(workspaceId: string, extensionName: string, script: string): Promise<void>;
+  // Cache management
+  listCachedExtensions(): Promise<ExtensionInfo[]>;
+  importFromCache(workspaceId: string, extensionName: string): Promise<void>;
+  deleteCachedExtension(extensionName: string): Promise<void>;
+  cacheExtension(workspaceId: string, extensionName: string): Promise<void>;
   
-  // License detection
-  detectLicense(libraryName: string, version?: string): Promise<LicenseInfo | null>;
-  downloadLicense(workspaceId: string, extensionName: string, licenseUrl: string): Promise<void>;
+  // Cache population (internal)
+  scanAndCacheExtensions(workspaceId: string): Promise<number>; // Returns count of newly cached
 }
 
 interface ExtensionInfo {
-  name: string;
-  version?: string;
-  description?: string;
-  libraryFile: string;           // e.g., "markdown-it.min.js"
-  transformFile: string;         // Always "transform.js"
-  licenseFile?: string;          // e.g., "LICENSE.txt"
-  metadata: ExtensionMetadata;
-  hasCustomTransform: boolean;
-  isActive: boolean;             // Used in transform pipeline
+  name: string;                  // Extension directory name
+  files: ExtensionFile[];        // All JS and license files
+  totalSize: number;             // Combined size of all files
+  location: 'workspace' | 'cache' | 'both';
 }
 
-interface ExtensionMetadata {
-  importedAt: string;            // ISO timestamp
-  originalFilename: string;
-  fileSize: number;
-  libraryName?: string;          // Detected library name
-  version?: string;              // Detected version
-  license?: {
-    type: string;                // e.g., "MIT", "Apache-2.0"
-    url?: string;
-    downloaded: boolean;
-  };
-  transforms: {
-    text: boolean;               // Can transform text
-    dom: boolean;                // Can transform DOM
-  };
+interface ExtensionFile {
+  filename: string;              // e.g., "markdown-it.min.js", "LICENSE.txt"
+  size: number;
+  type: 'javascript' | 'license';
 }
 
-interface LicenseInfo {
-  type: string;
-  url: string;
-  content?: string;
+interface ImportOptions {
+  source: 'file' | 'cache';
+  extensionName: string;         // User-confirmed name
+  files?: File[];                // For file upload
+  cacheExtensionName?: string;   // For cache import
 }
 ```
 
-### License Detection API
+### Extension Name Detection
 
 ```typescript
-// License detection strategies
-class LicenseDetector {
-  async detectFromNpm(packageName: string, version?: string): Promise<LicenseInfo | null>;
-  async detectFromCdnjs(libraryName: string): Promise<LicenseInfo | null>;
-  async detectFromJsdelivr(packageName: string): Promise<LicenseInfo | null>;
-  async detectFromUnpkg(packageName: string): Promise<LicenseInfo | null>;
+// Extract extension name from filename
+function detectExtensionName(filename: string): string {
+  // Remove .min.js, .js extensions and version numbers
+  return filename
+    .replace(/\.min\.js$/, '')
+    .replace(/\.js$/, '')
+    .replace(/-\d+\.\d+\.\d+/, '')
+    .replace(/[^a-z0-9-]/gi, '-')
+    .toLowerCase();
+}
+
+// Example: "markdown-it-13.0.1.min.js" → "markdown-it"
+```
+
+### Cache Operations
+
+```typescript
+class ExtensionCache {
+  private cacheBasePath = 'extensions/';
   
-  // Fallback: parse library file for license comments
-  async detectFromSource(libraryContent: string): Promise<LicenseInfo | null>;
-}
-```
-
-### Transform Template Generation
-
-```typescript
-// Generate scaffold transform.js based on detected library
-class TransformGenerator {
-  generateTextTransform(extensionInfo: ExtensionInfo): string;
-  generateDomTransform(extensionInfo: ExtensionInfo): string;
-  generateTemplate(libraryName: string, transformType: 'text' | 'dom'): string;
-}
-
-// Example generated transform.js for markdown-it
-const MARKDOWN_IT_TEMPLATE = `
-// Markdown-it text transform
-// This transform converts markdown text to HTML using markdown-it
-// Customize the configuration below for your needs
-
-if (typeof window.markdownit === 'undefined') {
-  throw new Error('markdown-it library not loaded. Please check extension import.');
-}
-
-const md = window.markdownit({
-  html: true,         // Enable HTML tags
-  xhtmlOut: true,     // Use XHTML output (required for EPUB)
-  breaks: true,       // Convert line breaks to <br>
-  linkify: true,      // Auto-link URLs
-  typographer: true   // Enable smart quotes and other typography
-});
-
-// Transform function - customize as needed
-function transform(plainText) {
-  try {
-    return md.render(plainText);
-  } catch (error) {
-    throw new Error(\`Markdown transform failed: \${error.message}\`);
+  async addToCache(workspaceId: string, extensionName: string): Promise<void> {
+    const sourcePath = `workspace-${workspaceId}/OEBPS/SOURCE/extensions/${extensionName}/`;
+    const cachePath = `${this.cacheBasePath}${extensionName}/`;
+    
+    // Check if already cached with same content
+    if (await this.isCached(extensionName)) {
+      const isDifferent = await this.compareExtensions(sourcePath, cachePath);
+      if (isDifferent) {
+        throw new Error(`Extension '${extensionName}' already cached with different content`);
+      }
+      return; // Already cached with same content
+    }
+    
+    // Copy all files from workspace to cache
+    await this.copyExtension(sourcePath, cachePath);
+  }
+  
+  async importFromCache(extensionName: string, workspaceId: string): Promise<void> {
+    const cachePath = `${this.cacheBasePath}${extensionName}/`;
+    const destPath = `workspace-${workspaceId}/OEBPS/SOURCE/extensions/${extensionName}/`;
+    
+    // Copy all files from cache to workspace
+    await this.copyExtension(cachePath, destPath);
   }
 }
 
-// Return the transformed HTML
-return transform(plainText);
-`;
-```
-
 ## User Interface Design
 
-### Extension Import Dialog
-```typescript
-// Svelte component for extension import
-<ExtensionImport>
-  <FileDropZone 
-    on:files={handleFileUpload}
-    accept=".js,.min.js"
-    multiple={false}
-  />
+### Modal-Based Extension Management
+```svelte
+<!-- Main Extension List in Settings -->
+<ExtensionManager>
+  <button on:click={openAddExtensionModal}>Add Extension</button>
   
-  <ExtensionPreview 
-    {detectedInfo}
-    {licenseStatus}
-    on:confirm={confirmImport}
-  />
-</ExtensionImport>
+  <!-- Current Workspace Extensions -->
+  <section>
+    <h3>Workspace Extensions</h3>
+    {#each workspaceExtensions as ext}
+      <ExtensionItem {ext}>
+        <button on:click={() => addFileToExtension(ext.name)}>Add File</button>
+        <button on:click={() => deleteExtension(ext.name)}>Remove</button>
+      </ExtensionItem>
+    {/each}
+  </section>
+  
+  <!-- Cached Extensions -->
+  <section>
+    <h3>Available from Cache</h3>
+    {#each cachedExtensions.filter(e => e.location === 'cache') as ext}
+      <ExtensionItem {ext}>
+        <button on:click={() => importFromCache(ext.name)}>Import to Workspace</button>
+        <button on:click={() => deleteCached(ext.name)}>Delete from Cache</button>
+      </ExtensionItem>
+    {/each}
+  </section>
+</ExtensionManager>
+
+<!-- Add Extension Modal -->
+<Modal bind:open={addExtensionModalOpen}>
+  <h2>Add Extension</h2>
+  
+  <Tabs>
+    <TabPanel title="Upload File">
+      <FileDropZone 
+        on:files={handleFileUpload}
+        accept=".js,.min.js"
+        multiple={false}
+      />
+      {#if detectedName}
+        <label>
+          Extension Name:
+          <input bind:value={extensionName} />
+        </label>
+      {/if}
+    </TabPanel>
+    
+    <TabPanel title="Import from Cache">
+      <select bind:value={selectedCacheExtension}>
+        {#each availableCacheExtensions as ext}
+          <option value={ext.name}>{ext.name}</option>
+        {/each}
+      </select>
+    </TabPanel>
+  </Tabs>
+  
+  <button on:click={confirmAddExtension}>Add Extension</button>
+</Modal>
 ```
 
-### Extension Management View
-```typescript
-<ExtensionList>
-  {#each extensions as ext}
-    <ExtensionCard 
-      {ext}
-      on:edit={openTransformEditor}
-      on:delete={confirmDelete}
-      on:toggle={toggleActive}
-    />
-  {/each}
-</ExtensionList>
-```
+## Workflow Integration
 
-## SOURCE.zip Workflow Integration
-
-### Import Process
+### New Extension Creation
 1. **File Upload**: User selects JavaScript file from desktop
-2. **Library Detection**: Analyze file to extract library name/version
-3. **License Detection**: Search npm/CDN for license information
-4. **Directory Creation**: Create `SOURCE/extensions/<name>/` directory
-5. **File Storage**: Save library file, generate transform.js, download license
-6. **Metadata Storage**: Save extension metadata to metadata.json
+2. **Name Detection**: Extract name from filename (e.g., "markdown-it.min.js" → "markdown-it")
+3. **User Confirmation**: Show detected name, allow user to modify
+4. **Conflict Check**: Verify name doesn't conflict with existing extension
+5. **Directory Creation**: Create `SOURCE/extensions/<name>/` in workspace
+6. **File Storage**: Save JS file (and LICENSE.txt if provided)
+7. **Cache Population**: Automatically copy to global cache
 
-### Packaging Integration
-1. **Extension Collection**: Gather all `SOURCE/extensions/` during packaging
-2. **SOURCE.zip Creation**: Bundle extensions with other SOURCE/ files
-3. **Transform Registration**: Extensions available in packaged EPUB
+### Import from Cache
+1. **Cache Selection**: User selects from available cached extensions
+2. **Copy to Workspace**: Copy all extension files to `SOURCE/extensions/<name>/`
+3. **Independent Copy**: Changes to workspace copy don't affect cache
 
-### Unpacking Integration
-1. **SOURCE.zip Extraction**: Extract extensions to `SOURCE/extensions/`
-2. **Extension Discovery**: Scan for extension directories and metadata
-3. **Transform Registration**: Make extensions available to transform pipeline
+### Workspace Import/Export
+1. **EPUB Import**: Extract SOURCE.zip, scan for new extensions
+2. **Auto-Cache**: Silently cache any new extensions found
+3. **EPUB Export**: Bundle all extensions into SOURCE.zip
+4. **Transform Loading**: Extensions available as globals in transform pipeline
 
 ## Testing Considerations
 
 ### Unit Tests
-- File upload handling and validation
-- License detection from various sources (npm, cdnjs, jsdelivr)
-- Transform template generation for common libraries
-- Extension metadata parsing and validation
-- Directory structure creation and cleanup
+- File upload handling and name detection
+- Extension name conflict detection
+- Cache population during workspace import
+- Cache vs workspace extension comparison
+- Multi-file extension support
 
 ### Integration Tests
-- End-to-end extension import workflow
-- SOURCE.zip bundling and extraction of extensions
-- Transform pipeline integration with imported extensions
-- Settings integration for extension selection
-- License compliance validation
+- End-to-end extension creation and caching
+- Import from cache workflow
+- SOURCE.zip bundling with extensions
+- Auto-cache during workspace import
+- Transform pipeline loading cached extensions
 
 ### Browser Compatibility
 - File API usage for upload handling
@@ -257,24 +283,23 @@ return transform(plainText);
 ## Implementation Notes
 
 ### Security Considerations
-- **JavaScript Validation**: Basic syntax checking before import
-- **File Size Limits**: Prevent extremely large library imports
-- **Content Scanning**: Basic malware/suspicious code detection
-- **Sandboxing**: Extensions run in controlled transform environment
+- **File Validation**: Verify .js files before import
+- **Name Sanitization**: Ensure safe directory names
+- **Cache Isolation**: Each workspace gets independent extension copies
 
 ### Performance Optimizations
-- **Lazy Loading**: Load extension metadata only when needed
-- **Caching**: Cache license detection results
-- **Compression**: Minified libraries preferred for smaller SOURCE.zip
+- **Efficient Caching**: Skip re-caching identical extensions
+- **Bulk Operations**: Cache all new extensions in single scan
+- **Lazy Loading**: Load extension details only when needed
 
 ### Error Handling
-- **Import Failures**: Clear feedback for unsupported files
-- **License Detection Failures**: Graceful degradation with manual license option
-- **Network Errors**: Offline license detection fallbacks
-- **Storage Errors**: Cleanup on failed imports
+- **Name Conflicts**: Clear user notification, no auto-resolution
+- **Cache Conflicts**: Warning when same name has different content
+- **Import Failures**: Rollback on error, maintain consistency
+- **Missing Files**: Handle extensions with no LICENSE gracefully
 
 ### User Experience
-- **Progress Indicators**: Show import/license detection progress
-- **Validation Feedback**: Real-time feedback during import
-- **Extension Status**: Clear indicators for active/inactive extensions
-- **Transform Editor**: Syntax highlighting and error detection
+- **Transparent Caching**: Auto-cache without interrupting workflow
+- **Clear Status**: Show which extensions are cached vs workspace-only
+- **Simple Actions**: One-click import from cache
+- **Conflict Prevention**: Name confirmation prevents most conflicts
