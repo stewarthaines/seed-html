@@ -76,7 +76,7 @@
   }
 
   .main-content {
-    min-width: 0;
+    min-inline-size: 0; /* Using logical properties */
     overflow: hidden;
   }
 
@@ -88,33 +88,47 @@
 
   .pane-header {
     flex-shrink: 0;
-    border-bottom: 1px solid #e0e0e0;
-    background: #f8f9fa;
-    min-height: 40px;
+    border-block-end: 1px solid var(--color-border-default); /* Using logical properties and design tokens */
+    background: var(--color-bg-secondary);
+    min-block-size: 40px; /* Using logical properties */
     display: flex;
     align-items: center;
-    padding: 0 1rem;
+    padding-inline: var(--space-4); /* Using logical properties and spacing tokens */
+    padding-block: 0;
   }
 
   .pane-content {
     flex: 1;
     overflow: auto;
-    background: white;
+    background: var(--color-bg-primary); /* Using design tokens */
   }
 
-  /* PaneForge resizer styling */
+  /* PaneForge resizer styling - using logical properties */
   :global([data-pane-resizer]) {
-    background: #e0e0e0;
-    width: 4px;
+    background: var(--color-border-default);
+    inline-size: 4px; /* Using logical properties */
     cursor: col-resize;
-    transition: background-color 0.2s ease;
+    transition: background-color var(--duration-fast) ease; /* Using motion tokens */
   }
 
   :global([data-pane-resizer]:hover) {
-    background: #ccc;
+    background: var(--color-border-strong);
   }
 
   :global([data-pane-resizer][data-resize-handle-active]) {
-    background: #999;
+    background: var(--color-border-accent);
+  }
+
+  /* Focus indicators for accessibility */
+  :global([data-pane-resizer]:focus-visible) {
+    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .pane-header {
+      border-block-end: 2px solid var(--color-forced-border);
+    }
   }
 </style>

@@ -63,43 +63,54 @@
   position: sticky;
 }
 
-/* Position values */
+/* Position values - using logical properties */
 .inset-0 {
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  inset: 0;
 }
 .inset-auto {
-  top: auto;
-  right: auto;
-  bottom: auto;
-  left: auto;
+  inset: auto;
 }
 
+/* Logical positioning utilities */
+.inset-inline-0 {
+  inset-inline: 0;
+}
+.inset-inline-auto {
+  inset-inline: auto;
+}
+.inset-block-0 {
+  inset-block: 0;
+}
+.inset-block-auto {
+  inset-block: auto;
+}
+
+/* Individual logical position utilities */
+.start-0 {
+  inset-inline-start: 0;
+}
+.start-auto {
+  inset-inline-start: auto;
+}
+.end-0 {
+  inset-inline-end: 0;
+}
+.end-auto {
+  inset-inline-end: auto;
+}
+
+/* Block positioning (vertical) */
 .top-0 {
-  top: 0;
+  inset-block-start: 0;
 }
 .top-auto {
-  top: auto;
-}
-.right-0 {
-  right: 0;
-}
-.right-auto {
-  right: auto;
+  inset-block-start: auto;
 }
 .bottom-0 {
-  bottom: 0;
+  inset-block-end: 0;
 }
 .bottom-auto {
-  bottom: auto;
-}
-.left-0 {
-  left: 0;
-}
-.left-auto {
-  left: auto;
+  inset-block-end: auto;
 }
 
 /* ============================================
@@ -527,28 +538,28 @@
 }
 
 /* ============================================
-   FLOAT UTILITIES
+   FLOAT UTILITIES - using logical properties
    ============================================ */
 
-.float-right {
-  float: right;
+.float-start {
+  float: inline-start;
 }
-.float-left {
-  float: left;
+.float-end {
+  float: inline-end;
 }
 .float-none {
   float: none;
 }
 
 /* ============================================
-   CLEAR UTILITIES
+   CLEAR UTILITIES - using logical properties
    ============================================ */
 
-.clear-left {
-  clear: left;
+.clear-start {
+  clear: inline-start;
 }
-.clear-right {
-  clear: right;
+.clear-end {
+  clear: inline-end;
 }
 .clear-both {
   clear: both;
@@ -589,7 +600,7 @@
 }
 
 /* ============================================
-   OBJECT POSITION UTILITIES
+   OBJECT POSITION UTILITIES - using logical properties
    ============================================ */
 
 .object-bottom {
@@ -598,24 +609,253 @@
 .object-center {
   object-position: center;
 }
-.object-left {
+.object-start {
   object-position: left;
 }
-.object-left-bottom {
+.object-start-bottom {
   object-position: left bottom;
 }
-.object-left-top {
+.object-start-top {
   object-position: left top;
 }
-.object-right {
+.object-end {
   object-position: right;
 }
-.object-right-bottom {
+.object-end-bottom {
   object-position: right bottom;
 }
-.object-right-top {
+.object-end-top {
   object-position: right top;
 }
 .object-top {
   object-position: top;
 }
+
+/* RTL-aware object positioning */
+[dir="rtl"] .object-start {
+  object-position: right;
+}
+[dir="rtl"] .object-start-bottom {
+  object-position: right bottom;
+}
+[dir="rtl"] .object-start-top {
+  object-position: right top;
+}
+[dir="rtl"] .object-end {
+  object-position: left;
+}
+[dir="rtl"] .object-end-bottom {
+  object-position: left bottom;
+}
+[dir="rtl"] .object-end-top {
+  object-position: left top;
+}
+
+/* ============================================
+   TEXT ALIGNMENT UTILITIES - using logical properties
+   ============================================ */
+
+.text-start {
+  text-align: start;
+}
+.text-end {
+  text-align: end;
+}
+.text-center {
+  text-align: center;
+}
+.text-justify {
+  text-align: justify;
+}
+
+/* ============================================
+   ACCESSIBILITY UTILITIES
+   ============================================ */
+
+/* Screen reader only content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: var(--sr-only-clip);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sr-only-focusable:focus,
+.sr-only-focusable:active {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: inherit;
+}
+
+/* Focus management */
+.focus-visible {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* Touch target sizing (WCAG AA compliance) */
+.touch-target {
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+}
+
+/* ============================================
+   SPACING UTILITIES - using logical properties
+   ============================================ */
+
+/* Margin utilities */
+.m-0 { margin: 0; }
+.m-1 { margin: var(--space-1); }
+.m-2 { margin: var(--space-2); }
+.m-3 { margin: var(--space-3); }
+.m-4 { margin: var(--space-4); }
+.m-5 { margin: var(--space-5); }
+.m-6 { margin: var(--space-6); }
+.m-8 { margin: var(--space-8); }
+.m-auto { margin: auto; }
+
+/* Margin inline (horizontal) */
+.mx-0 { margin-inline: 0; }
+.mx-1 { margin-inline: var(--space-1); }
+.mx-2 { margin-inline: var(--space-2); }
+.mx-3 { margin-inline: var(--space-3); }
+.mx-4 { margin-inline: var(--space-4); }
+.mx-5 { margin-inline: var(--space-5); }
+.mx-6 { margin-inline: var(--space-6); }
+.mx-8 { margin-inline: var(--space-8); }
+.mx-auto { margin-inline: auto; }
+
+/* Margin block (vertical) */
+.my-0 { margin-block: 0; }
+.my-1 { margin-block: var(--space-1); }
+.my-2 { margin-block: var(--space-2); }
+.my-3 { margin-block: var(--space-3); }
+.my-4 { margin-block: var(--space-4); }
+.my-5 { margin-block: var(--space-5); }
+.my-6 { margin-block: var(--space-6); }
+.my-8 { margin-block: var(--space-8); }
+.my-auto { margin-block: auto; }
+
+/* Margin start (inline-start) */
+.ms-0 { margin-inline-start: 0; }
+.ms-1 { margin-inline-start: var(--space-1); }
+.ms-2 { margin-inline-start: var(--space-2); }
+.ms-3 { margin-inline-start: var(--space-3); }
+.ms-4 { margin-inline-start: var(--space-4); }
+.ms-5 { margin-inline-start: var(--space-5); }
+.ms-6 { margin-inline-start: var(--space-6); }
+.ms-8 { margin-inline-start: var(--space-8); }
+.ms-auto { margin-inline-start: auto; }
+
+/* Margin end (inline-end) */
+.me-0 { margin-inline-end: 0; }
+.me-1 { margin-inline-end: var(--space-1); }
+.me-2 { margin-inline-end: var(--space-2); }
+.me-3 { margin-inline-end: var(--space-3); }
+.me-4 { margin-inline-end: var(--space-4); }
+.me-5 { margin-inline-end: var(--space-5); }
+.me-6 { margin-inline-end: var(--space-6); }
+.me-8 { margin-inline-end: var(--space-8); }
+.me-auto { margin-inline-end: auto; }
+
+/* Margin top (block-start) */
+.mt-0 { margin-block-start: 0; }
+.mt-1 { margin-block-start: var(--space-1); }
+.mt-2 { margin-block-start: var(--space-2); }
+.mt-3 { margin-block-start: var(--space-3); }
+.mt-4 { margin-block-start: var(--space-4); }
+.mt-5 { margin-block-start: var(--space-5); }
+.mt-6 { margin-block-start: var(--space-6); }
+.mt-8 { margin-block-start: var(--space-8); }
+.mt-auto { margin-block-start: auto; }
+
+/* Margin bottom (block-end) */
+.mb-0 { margin-block-end: 0; }
+.mb-1 { margin-block-end: var(--space-1); }
+.mb-2 { margin-block-end: var(--space-2); }
+.mb-3 { margin-block-end: var(--space-3); }
+.mb-4 { margin-block-end: var(--space-4); }
+.mb-5 { margin-block-end: var(--space-5); }
+.mb-6 { margin-block-end: var(--space-6); }
+.mb-8 { margin-block-end: var(--space-8); }
+.mb-auto { margin-block-end: auto; }
+
+/* Padding utilities */
+.p-0 { padding: 0; }
+.p-1 { padding: var(--space-1); }
+.p-2 { padding: var(--space-2); }
+.p-3 { padding: var(--space-3); }
+.p-4 { padding: var(--space-4); }
+.p-5 { padding: var(--space-5); }
+.p-6 { padding: var(--space-6); }
+.p-8 { padding: var(--space-8); }
+
+/* Padding inline (horizontal) */
+.px-0 { padding-inline: 0; }
+.px-1 { padding-inline: var(--space-1); }
+.px-2 { padding-inline: var(--space-2); }
+.px-3 { padding-inline: var(--space-3); }
+.px-4 { padding-inline: var(--space-4); }
+.px-5 { padding-inline: var(--space-5); }
+.px-6 { padding-inline: var(--space-6); }
+.px-8 { padding-inline: var(--space-8); }
+
+/* Padding block (vertical) */
+.py-0 { padding-block: 0; }
+.py-1 { padding-block: var(--space-1); }
+.py-2 { padding-block: var(--space-2); }
+.py-3 { padding-block: var(--space-3); }
+.py-4 { padding-block: var(--space-4); }
+.py-5 { padding-block: var(--space-5); }
+.py-6 { padding-block: var(--space-6); }
+.py-8 { padding-block: var(--space-8); }
+
+/* Padding start (inline-start) */
+.ps-0 { padding-inline-start: 0; }
+.ps-1 { padding-inline-start: var(--space-1); }
+.ps-2 { padding-inline-start: var(--space-2); }
+.ps-3 { padding-inline-start: var(--space-3); }
+.ps-4 { padding-inline-start: var(--space-4); }
+.ps-5 { padding-inline-start: var(--space-5); }
+.ps-6 { padding-inline-start: var(--space-6); }
+.ps-8 { padding-inline-start: var(--space-8); }
+
+/* Padding end (inline-end) */
+.pe-0 { padding-inline-end: 0; }
+.pe-1 { padding-inline-end: var(--space-1); }
+.pe-2 { padding-inline-end: var(--space-2); }
+.pe-3 { padding-inline-end: var(--space-3); }
+.pe-4 { padding-inline-end: var(--space-4); }
+.pe-5 { padding-inline-end: var(--space-5); }
+.pe-6 { padding-inline-end: var(--space-6); }
+.pe-8 { padding-inline-end: var(--space-8); }
+
+/* Padding top (block-start) */
+.pt-0 { padding-block-start: 0; }
+.pt-1 { padding-block-start: var(--space-1); }
+.pt-2 { padding-block-start: var(--space-2); }
+.pt-3 { padding-block-start: var(--space-3); }
+.pt-4 { padding-block-start: var(--space-4); }
+.pt-5 { padding-block-start: var(--space-5); }
+.pt-6 { padding-block-start: var(--space-6); }
+.pt-8 { padding-block-start: var(--space-8); }
+
+/* Padding bottom (block-end) */
+.pb-0 { padding-block-end: 0; }
+.pb-1 { padding-block-end: var(--space-1); }
+.pb-2 { padding-block-end: var(--space-2); }
+.pb-3 { padding-block-end: var(--space-3); }
+.pb-4 { padding-block-end: var(--space-4); }
+.pb-5 { padding-block-end: var(--space-5); }
+.pb-6 { padding-block-end: var(--space-6); }
+.pb-8 { padding-block-end: var(--space-8); }

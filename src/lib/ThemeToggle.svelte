@@ -47,7 +47,8 @@
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    padding: var(--space-2) var(--space-3);
+    padding-block: var(--space-2); /* Using logical properties */
+    padding-inline: var(--space-3);
     background-color: var(--color-bg-secondary);
     color: var(--color-text-primary);
     border: 1px solid var(--color-border-default);
@@ -58,6 +59,8 @@
     cursor: pointer;
     transition: all var(--duration-fast) ease;
     outline: none;
+    min-inline-size: var(--touch-target-min); /* Using accessibility tokens */
+    min-block-size: var(--touch-target-min);
   }
 
   .theme-toggle:hover {
@@ -68,8 +71,8 @@
   }
 
   .theme-toggle:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
+    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus); /* Using accessibility tokens */
+    outline-offset: var(--focus-ring-offset);
   }
 
   .theme-toggle:active {
@@ -77,15 +80,17 @@
     box-shadow: none;
   }
 
-  /* Size variants */
+  /* Size variants using logical properties */
   .theme-toggle--small {
-    padding: var(--space-1) var(--space-2);
+    padding-block: var(--space-1); /* Using logical properties */
+    padding-inline: var(--space-2);
     font-size: var(--text-xs);
     gap: var(--space-1);
   }
 
   .theme-toggle--large {
-    padding: var(--space-3) var(--space-4);
+    padding-block: var(--space-3); /* Using logical properties */
+    padding-inline: var(--space-4);
     font-size: var(--text-base);
     gap: var(--space-3);
   }
@@ -94,28 +99,54 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 1.2em;
-    height: 1.2em;
+    inline-size: 1.2em; /* Using logical properties */
+    block-size: 1.2em;
     flex-shrink: 0;
   }
 
   .theme-toggle__icon svg {
-    width: 100%;
-    height: 100%;
+    inline-size: 100%; /* Using logical properties */
+    block-size: 100%;
   }
 
   .theme-toggle__label {
     white-space: nowrap;
   }
 
-  /* Icon size adjustments for different button sizes */
+  /* Icon size adjustments for different button sizes using logical properties */
   .theme-toggle--small .theme-toggle__icon {
-    width: 1em;
-    height: 1em;
+    inline-size: 1em; /* Using logical properties */
+    block-size: 1em;
   }
 
   .theme-toggle--large .theme-toggle__icon {
-    width: 1.4em;
-    height: 1.4em;
+    inline-size: 1.4em; /* Using logical properties */
+    block-size: 1.4em;
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .theme-toggle {
+      border: 2px solid var(--color-forced-border);
+    }
+    
+    .theme-toggle:focus-visible {
+      outline: 3px solid var(--color-forced-active);
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .theme-toggle {
+      transition: none;
+    }
+    
+    .theme-toggle:hover {
+      transform: none;
+    }
+    
+    .theme-toggle:active {
+      transform: none;
+    }
   }
 </style>

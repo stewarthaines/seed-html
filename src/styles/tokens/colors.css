@@ -172,4 +172,46 @@
   --color-status-warning: var(--color-warning-600);
   --color-status-error: var(--color-error-600);
   --color-status-info: var(--color-primary-600);
+
+  /* ============================================
+     ACCESSIBILITY COLORS
+     WCAG 2.1 AA compliant colors and focus indicators
+     ============================================ */
+
+  /* Focus indicators - high contrast, visible against all backgrounds */
+  --color-focus: var(--color-primary-600);
+  --color-focus-ring: var(--color-primary-500);
+
+  /* High contrast mode support (system colors) */
+  --color-forced-bg: Canvas;
+  --color-forced-text: CanvasText;
+  --color-forced-border: ButtonBorder;
+  --color-forced-link: LinkText;
+  --color-forced-visited: VisitedText;
+  --color-forced-active: ActiveText;
+  --color-forced-button-face: ButtonFace;
+  --color-forced-button-text: ButtonText;
+
+  /* Error and validation colors (WCAG AA compliant) */
+  --color-error-text: #dc2626; /* 4.5:1 contrast on white */
+  --color-error-bg: #fef2f2; /* Light error background */
+  --color-success-text: #166534; /* 4.5:1 contrast on white */
+  --color-success-bg: #f0fdf4; /* Light success background */
+  --color-warning-text: #92400e; /* 4.5:1 contrast on white */
+  --color-warning-bg: #fffbeb; /* Light warning background */
+}
+
+/* ============================================
+   HIGH CONTRAST MODE OVERRIDES
+   Ensures visibility in Windows High Contrast mode
+   ============================================ */
+
+@media (prefers-contrast: high) {
+  :root {
+    --color-text-primary: var(--color-forced-text);
+    --color-bg-primary: var(--color-forced-bg);
+    --color-border-default: var(--color-forced-border);
+    --color-text-link: var(--color-forced-link);
+    --color-focus: var(--color-forced-active);
+  }
 }

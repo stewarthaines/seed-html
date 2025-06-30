@@ -1,6 +1,6 @@
 /*
   Spacing Design Tokens
-  
+
   This file defines the spacing scale and layout-related measurements.
   Based on 4px (0.25rem) base unit for consistent spacing throughout the app.
 */
@@ -81,7 +81,6 @@
   /* Sidebar dimensions */
   --layout-sidebar-width-expanded: 250px;
   --layout-sidebar-width-collapsed: 40px;
-  --layout-sidebar-transition-duration: 0.2s;
 
   /* Header dimensions */
   --layout-header-height: 60px;
@@ -92,8 +91,9 @@
   --layout-content-max-width: 1200px;
   --layout-content-gap: var(--space-4);
 
-  /* Panel spacing */
-  --layout-panel-padding: var(--space-6);
+  /* Panel spacing - using logical properties */
+  --layout-panel-padding-block: var(--space-6);
+  --layout-panel-padding-inline: var(--space-6);
   --layout-panel-gap: var(--space-4);
   --layout-panel-border-radius: var(--radius-md);
 
@@ -101,25 +101,52 @@
   --layout-resize-handle-width: 4px;
   --layout-resize-handle-hover-width: 6px;
 
-  /* Form spacing */
+  /* Form spacing - using logical properties */
   --form-field-spacing: var(--space-4);
   --form-group-spacing: var(--space-6);
   --form-section-spacing: var(--space-8);
 
-  /* List spacing */
-  --list-item-padding: var(--space-3);
+  /* List spacing - using logical properties */
+  --list-item-padding-block: var(--space-3);
+  --list-item-padding-inline: var(--space-3);
   --list-item-gap: var(--space-2);
   --list-section-gap: var(--space-6);
 
-  /* Card spacing */
-  --card-padding: var(--space-6);
+  /* Card spacing - using logical properties */
+  --card-padding-block: var(--space-6);
+  --card-padding-inline: var(--space-6);
   --card-gap: var(--space-4);
-  --card-header-padding: var(--space-4);
+  --card-header-padding-block: var(--space-4);
+  --card-header-padding-inline: var(--space-4);
 
-  /* Button spacing */
-  --button-padding-x: var(--space-4);
-  --button-padding-y: var(--space-2);
+  /* Button spacing - using logical properties */
+  --button-padding-inline: var(--space-4);
+  --button-padding-block: var(--space-2);
   --button-gap: var(--space-2);
+
+  /* ============================================
+     RTL & ACCESSIBILITY LAYOUT TOKENS
+     Direction-aware and accessibility-focused measurements
+     ============================================ */
+
+  /* Direction-aware spacing */
+  --layout-direction: ltr; /* Default, overridden by [dir="rtl"] */
+
+  /* RTL-aware content alignment */
+  --content-align-start: left; /* Overridden in RTL */
+  --content-align-end: right; /* Overridden in RTL */
+
+  /* Focus and accessibility spacing */
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-style: solid;
+
+  /* Touch target minimum sizes (WCAG AA) */
+  --touch-target-min: 44px;
+  --touch-target-spacing: var(--space-2);
+
+  /* Screen reader spacing */
+  --sr-only-clip: rect(0, 0, 0, 0);
 
   /* ============================================
      BORDER RADIUS
@@ -166,4 +193,15 @@
   --container-xl: 1280px;
   --container-2xl: 1536px;
   --container-full: 100%;
+}
+
+/* ============================================
+   RTL LAYOUT OVERRIDES
+   Direction-specific token overrides for RTL languages
+   ============================================ */
+
+[dir='rtl'] {
+  --layout-direction: rtl;
+  --content-align-start: right;
+  --content-align-end: left;
 }

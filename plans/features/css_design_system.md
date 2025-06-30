@@ -151,6 +151,83 @@ src/styles/
 --z-toast: 1300;
 ```
 
+#### 5. Accessibility Tokens
+
+```css
+/* Focus indicators - WCAG 2.1 AA compliant */
+--color-focus: var(--color-primary-600);
+--color-focus-ring: var(--color-primary-500);
+--focus-ring-width: 2px;
+--focus-ring-offset: 2px;
+--focus-ring-style: solid;
+
+/* High contrast mode support */
+--color-forced-bg: Canvas;
+--color-forced-text: CanvasText;
+--color-forced-border: ButtonBorder;
+--color-forced-link: LinkText;
+
+/* Motion preferences */
+--duration-instant: 0ms;
+--duration-fast: 150ms;
+--duration-normal: 300ms;
+--duration-slow: 500ms;
+
+/* Reduced motion overrides */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --duration-slow: 0ms;
+  }
+}
+
+/* Screen reader utilities */
+--sr-only: {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+```
+
+#### 6. Internationalization Tokens
+
+```css
+/* Direction-aware layout */
+--layout-direction: ltr; /* Default, overridden by [dir="rtl"] */
+
+/* RTL-aware spacing (automatically flipped in RTL) */
+--space-inline-start: var(--space-4);
+--space-inline-end: var(--space-2);
+
+/* Typography for international scripts */
+--font-arabic: 'Noto Sans Arabic', 'Arabic UI Text', sans-serif;
+--font-hebrew: 'Noto Sans Hebrew', 'Hebrew UI Text', sans-serif;
+--font-cjk: 'Noto Sans CJK', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+
+/* Line height adjustments for different scripts */
+--leading-arabic: 1.75; /* Accommodates diacritics */
+--leading-cjk: 1.6; /* Optimal for CJK characters */
+--leading-latin: 1.5; /* Standard for Latin scripts */
+
+/* Text direction utilities */
+--text-align-start: left; /* Overridden in RTL */
+--text-align-end: right; /* Overridden in RTL */
+
+/* RTL layout overrides */
+[dir="rtl"] {
+  --layout-direction: rtl;
+  --text-align-start: right;
+  --text-align-end: left;
+}
+```
+
 ## Theme System
 
 ### Theme Architecture
@@ -195,20 +272,57 @@ The theme system uses CSS custom properties and data attributes for switching:
 
 ### Common Utility Patterns
 
+#### Logical Properties for RTL Support
+
 ```css
-/* Spacing utilities */
+/* Spacing utilities - RTL-aware using logical properties */
 .p-4 {
   padding: var(--space-4);
 }
+
+/* Inline (horizontal) spacing - automatically flips in RTL */
 .px-4 {
+  padding-inline: var(--space-4);
+}
+.ps-4 {
+  padding-inline-start: var(--space-4);
+}
+.pe-4 {
+  padding-inline-end: var(--space-4);
+}
+
+/* Block (vertical) spacing - consistent in all directions */
+.py-4 {
+  padding-block: var(--space-4);
+}
+.pt-4 {
+  padding-block-start: var(--space-4);
+}
+.pb-4 {
+  padding-block-end: var(--space-4);
+}
+
+/* Margin utilities with logical properties */
+.mx-auto {
+  margin-inline: auto;
+}
+.ms-4 {
+  margin-inline-start: var(--space-4);
+}
+.me-4 {
+  margin-inline-end: var(--space-4);
+}
+
+/* Legacy physical properties for backward compatibility */
+.px-4-legacy {
   padding-left: var(--space-4);
   padding-right: var(--space-4);
 }
-.py-4 {
-  padding-top: var(--space-4);
-  padding-bottom: var(--space-4);
-}
+```
 
+#### Layout Utilities
+
+```css
 /* Flexbox utilities */
 .flex {
   display: flex;
@@ -223,7 +337,33 @@ The theme system uses CSS custom properties and data attributes for switching:
   justify-content: space-between;
 }
 
-/* Typography utilities */
+/* Direction-aware positioning */
+.inset-inline-0 {
+  inset-inline: 0;
+}
+.start-0 {
+  inset-inline-start: 0;
+}
+.end-0 {
+  inset-inline-end: 0;
+}
+
+/* Text alignment using logical properties */
+.text-start {
+  text-align: start;
+}
+.text-end {
+  text-align: end;
+}
+.text-center {
+  text-align: center;
+}
+```
+
+#### Typography Utilities
+
+```css
+/* Font size utilities */
 .text-sm {
   font-size: var(--text-sm);
 }
@@ -234,6 +374,83 @@ The theme system uses CSS custom properties and data attributes for switching:
   line-height: var(--leading-normal);
 }
 
+/* International typography */
+.font-arabic {
+  font-family: var(--font-arabic);
+  line-height: var(--leading-arabic);
+}
+.font-hebrew {
+  font-family: var(--font-hebrew);
+  line-height: var(--leading-arabic);
+}
+.font-cjk {
+  font-family: var(--font-cjk);
+  line-height: var(--leading-cjk);
+}
+```
+
+#### Accessibility Utilities
+
+```css
+/* Screen reader utilities */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sr-only-focusable:focus,
+.sr-only-focusable:active {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: inherit;
+}
+
+/* Focus utilities */
+.focus-visible {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* High contrast mode utilities */
+@media (prefers-contrast: high) {
+  .high-contrast-border {
+    border: 2px solid;
+  }
+  .high-contrast-text {
+    color: var(--color-forced-text);
+    background-color: var(--color-forced-bg);
+  }
+}
+
+/* Motion utilities */
+.motion-reduce {
+  animation: none !important;
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-safe {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+```
+
+#### Color Utilities
+
+```css
 /* Color utilities */
 .text-primary {
   color: var(--color-text-primary);
@@ -241,34 +458,47 @@ The theme system uses CSS custom properties and data attributes for switching:
 .bg-secondary {
   background-color: var(--color-bg-secondary);
 }
+
+/* Focus-aware color utilities */
+.focus\:text-primary:focus-visible {
+  color: var(--color-text-primary);
+}
+.focus\:bg-primary:focus-visible {
+  background-color: var(--color-bg-primary);
+}
 ```
 
 ## Component CSS Patterns
 
-### Svelte Component CSS Structure
+### Accessible & International Component Patterns
+
+#### Accessibility-First Button Component
 
 ```svelte
-<!-- ExampleComponent.svelte -->
-<script>
-  export let variant = 'primary';
-  export let size = 'medium';
+<!-- AccessibleButton.svelte -->
+<script lang="ts">
+  export let variant: 'primary' | 'secondary' | 'danger' = 'primary';
+  export let size: 'sm' | 'md' | 'lg' = 'md';
   export let disabled = false;
+  export let ariaLabel: string | undefined = undefined;
+  export let ariaDescribedBy: string | undefined = undefined;
+  export let type: 'button' | 'submit' | 'reset' = 'button';
 </script>
 
 <button
-  class="btn"
-  class:btn--primary={variant === 'primary'}
-  class:btn--secondary={variant === 'secondary'}
-  class:btn--small={size === 'small'}
-  class:btn--large={size === 'large'}
-  class:btn--disabled={disabled}
+  {type}
   {disabled}
+  class="btn btn--{variant} btn--{size}"
+  class:btn--disabled={disabled}
+  aria-label={ariaLabel}
+  aria-describedby={ariaDescribedBy}
+  on:click
 >
   <slot />
 </button>
 
 <style>
-  /* Base button styles using design tokens */
+  /* Base button styles with accessibility */
   .btn {
     display: inline-flex;
     align-items: center;
@@ -278,33 +508,76 @@ The theme system uses CSS custom properties and data attributes for switching:
     font-family: var(--font-sans);
     font-weight: var(--font-medium);
     cursor: pointer;
-    transition: all 150ms ease;
-
+    
+    /* RTL-aware spacing using logical properties */
+    padding-inline: var(--space-4);
+    padding-block: var(--space-2);
+    
+    /* Accessible transitions */
+    transition: all var(--duration-fast) ease;
+    
     /* Default size */
-    padding: var(--space-2) var(--space-4);
     font-size: var(--text-sm);
+    
+    /* Accessible focus indicators */
+    &:focus-visible {
+      outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
+      outline-offset: var(--focus-ring-offset);
+    }
+    
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+      border: 2px solid var(--color-forced-border);
+    }
+    
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+      &:hover:not(.btn--disabled) {
+        transform: none;
+      }
+    }
   }
 
-  /* Variants */
+  /* Variants with WCAG contrast compliance */
   .btn--primary {
     background-color: var(--color-accent);
     color: var(--color-text-inverse);
+    
+    &:hover:not(.btn--disabled) {
+      background-color: var(--color-primary-700);
+    }
   }
 
   .btn--secondary {
     background-color: var(--color-bg-secondary);
     color: var(--color-text-primary);
     border: 1px solid var(--color-border-default);
+    
+    &:hover:not(.btn--disabled) {
+      background-color: var(--color-bg-tertiary);
+    }
   }
 
-  /* Sizes */
-  .btn--small {
-    padding: var(--space-1) var(--space-3);
+  .btn--danger {
+    background-color: var(--color-danger-600);
+    color: var(--color-text-inverse);
+    
+    &:hover:not(.btn--disabled) {
+      background-color: var(--color-danger-700);
+    }
+  }
+
+  /* Sizes using logical properties */
+  .btn--sm {
+    padding-inline: var(--space-3);
+    padding-block: var(--space-1);
     font-size: var(--text-xs);
   }
 
-  .btn--large {
-    padding: var(--space-3) var(--space-6);
+  .btn--lg {
+    padding-inline: var(--space-6);
+    padding-block: var(--space-3);
     font-size: var(--text-base);
   }
 
@@ -317,6 +590,152 @@ The theme system uses CSS custom properties and data attributes for switching:
   .btn--disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+</style>
+```
+
+#### RTL-Aware Layout Component
+
+```svelte
+<!-- RTLAwarePanel.svelte -->
+<script lang="ts">
+  export let direction: 'ltr' | 'rtl' | 'auto' = 'auto';
+  export let title: string;
+  export let collapsible = false;
+  export let collapsed = false;
+</script>
+
+<div 
+  class="panel" 
+  dir={direction}
+  class:panel--rtl={direction === 'rtl'}
+>
+  <header class="panel__header">
+    <h2 class="panel__title">{title}</h2>
+    {#if collapsible}
+      <button 
+        class="panel__toggle"
+        aria-expanded={!collapsed}
+        aria-controls="panel-content"
+      >
+        <span class="sr-only">
+          {collapsed ? 'Expand' : 'Collapse'} {title}
+        </span>
+        <svg class="panel__icon" class:panel__icon--rotated={collapsed}>
+          <!-- Chevron icon -->
+        </svg>
+      </button>
+    {/if}
+  </header>
+  
+  <div 
+    id="panel-content"
+    class="panel__content"
+    class:panel__content--collapsed={collapsed}
+  >
+    <slot />
+  </div>
+</div>
+
+<style>
+  .panel {
+    background-color: var(--color-bg-primary);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    
+    /* RTL-aware shadow */
+    box-shadow: var(--shadow-sm);
+  }
+
+  .panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    
+    /* RTL-aware padding */
+    padding-inline: var(--space-4);
+    padding-block: var(--space-3);
+    
+    border-block-end: 1px solid var(--color-border-default);
+  }
+
+  .panel__title {
+    margin: 0;
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
+    
+    /* RTL-aware text alignment */
+    text-align: start;
+  }
+
+  .panel__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* RTL-aware positioning */
+    margin-inline-start: auto;
+    
+    width: var(--space-8);
+    height: var(--space-8);
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    
+    &:focus-visible {
+      outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
+      outline-offset: var(--focus-ring-offset);
+    }
+  }
+
+  .panel__icon {
+    width: var(--space-4);
+    height: var(--space-4);
+    transition: transform var(--duration-fast) ease;
+    
+    /* RTL-aware rotation */
+    transform-origin: center;
+  }
+
+  .panel__icon--rotated {
+    transform: rotate(180deg);
+  }
+
+  /* RTL-specific adjustments */
+  .panel--rtl .panel__icon {
+    transform: scaleX(-1);
+  }
+
+  .panel--rtl .panel__icon--rotated {
+    transform: scaleX(-1) rotate(180deg);
+  }
+
+  .panel__content {
+    padding-inline: var(--space-4);
+    padding-block: var(--space-4);
+    
+    transition: all var(--duration-normal) ease;
+  }
+
+  .panel__content--collapsed {
+    height: 0;
+    padding-block: 0;
+    overflow: hidden;
+  }
+
+  /* Screen reader utilities */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 </style>
 ```
@@ -367,26 +786,95 @@ The Layout System (Feature 06) will use this design system:
 
 ## Development Workflow
 
-### 1. Adding New Components
+### 1. Adding New Components (Accessibility & i18n First)
 
-1. Create component in appropriate directory under `src/lib/components/`
-2. Use Svelte `<style>` blocks with design tokens
-3. Add component-specific CSS patterns to `src/styles/components/` if reusable
-4. Document component API and styling patterns
+1. **Create component** in appropriate directory under `src/lib/components/`
+2. **Include accessibility props** following standard conventions:
+   ```typescript
+   export let ariaLabel: string | undefined = undefined;
+   export let ariaDescribedBy: string | undefined = undefined;
+   export let role: string | undefined = undefined;
+   ```
+3. **Use logical properties** in Svelte `<style>` blocks with design tokens
+4. **Add focus management** using accessibility design tokens
+5. **Test with screen readers** and keyboard navigation
+6. **Validate RTL layout** by temporarily setting `dir="rtl"`
+7. **Document component API** and accessibility features
 
-### 2. Adding New Utilities
+#### Component Accessibility Checklist
 
-1. Identify frequently repeated CSS patterns
-2. Add atomic utility classes to appropriate file in `src/styles/utilities/`
-3. Follow naming conventions (prefer Tailwind-style naming)
-4. Update utility exports in `src/styles/utilities/index.css`
+- [ ] **Semantic HTML** - Use appropriate HTML elements (`button`, `nav`, `main`, etc.)
+- [ ] **ARIA attributes** - Include necessary `aria-*` props
+- [ ] **Focus indicators** - Use `--color-focus` and `--focus-ring-width` tokens
+- [ ] **Keyboard navigation** - Support Tab, Enter, Space, Arrow keys as appropriate
+- [ ] **Screen reader text** - Include `.sr-only` content where needed
+- [ ] **Color contrast** - Ensure 4.5:1 ratio (3:1 for large text)
+- [ ] **Motion preferences** - Respect `prefers-reduced-motion`
+- [ ] **High contrast** - Test in high contrast mode
+- [ ] **RTL layout** - Use logical properties, test with `dir="rtl"`
 
-### 3. Extending Themes
+### 2. Adding New Utilities (Logical Properties First)
 
-1. Add new color tokens to `src/styles/tokens/colors.css`
-2. Create theme variant file in `src/styles/themes/`
-3. Update theme switching logic in theme store
-4. Test all components with new theme
+1. **Identify frequently repeated CSS patterns**
+2. **Use logical properties** for directional utilities (prefer `margin-inline` over `margin-left/right`)
+3. **Add atomic utility classes** to appropriate file in `src/styles/utilities/`
+4. **Follow naming conventions** (prefer Tailwind-style naming with logical property awareness)
+5. **Include accessibility variants** (focus states, high contrast support)
+6. **Update utility exports** in `src/styles/utilities/index.css`
+
+#### Utility Development Guidelines
+
+```css
+/* ✅ Good: RTL-aware utility */
+.ms-4 {
+  margin-inline-start: var(--space-4);
+}
+
+/* ❌ Avoid: Physical property utility */
+.ml-4 {
+  margin-left: var(--space-4);
+}
+
+/* ✅ Good: Accessibility-aware utility */
+.focus-ring:focus-visible {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
+  outline-offset: var(--focus-ring-offset);
+}
+```
+
+### 3. Extending Themes (Accessibility Compliant)
+
+1. **Add new color tokens** to `src/styles/tokens/colors.css`
+2. **Validate contrast ratios** meet WCAG 2.1 AA standards (4.5:1 normal, 3:1 large text)
+3. **Create theme variant file** in `src/styles/themes/`
+4. **Include high contrast mode** overrides
+5. **Update theme switching logic** in theme store
+6. **Test all components** with new theme
+7. **Validate focus indicators** remain visible in all themes
+
+#### Theme Accessibility Requirements
+
+- **Contrast Ratios**: All text must meet WCAG 2.1 AA contrast requirements
+- **Focus Indicators**: Must be visible against all background colors
+- **High Contrast**: Support Windows High Contrast mode
+- **Color Independence**: No information conveyed by color alone
+
+### 4. Internationalization Integration
+
+1. **Use logical properties** for all directional CSS
+2. **Test with RTL languages** by setting `dir="rtl"` on root element
+3. **Include appropriate font families** for target languages
+4. **Adjust line heights** for different scripts (Arabic, CJK, etc.)
+5. **Validate icon positioning** in RTL layouts
+6. **Test text expansion** with longer translated strings
+
+#### i18n Testing Checklist
+
+- [ ] **RTL Layout** - Test with `dir="rtl"` attribute
+- [ ] **Text Expansion** - Test with 150% longer text strings
+- [ ] **Font Rendering** - Verify international fonts load correctly
+- [ ] **Icon Mirroring** - Directional icons flip appropriately
+- [ ] **Number Formatting** - Respect locale-specific number formats
 
 ## File Import Strategy
 
@@ -486,9 +974,21 @@ export default defineConfig({
 
 ### Accessibility Testing
 
-- Color contrast testing for all theme combinations
-- Focus state testing for interactive elements
-- Screen reader testing with semantic HTML + CSS
+- **Automated Testing**: Integration with `@axe-core/playwright` for component accessibility validation
+- **Color contrast testing**: All theme combinations must meet WCAG 2.1 AA standards (4.5:1 normal, 3:1 large text)
+- **Focus state testing**: Interactive elements must have visible focus indicators using design tokens
+- **Screen reader testing**: Validate with NVDA, JAWS, and VoiceOver
+- **Keyboard navigation**: All functionality accessible via keyboard only
+- **High contrast mode**: Components work in Windows High Contrast mode
+- **Motion preferences**: Respect `prefers-reduced-motion` settings
+
+### Internationalization Testing
+
+- **RTL Layout Testing**: Visual regression testing for RTL layouts using `dir="rtl"`
+- **Text Expansion Testing**: UI handles 150% text expansion without breaking
+- **Font Rendering**: International fonts (Arabic, Hebrew, CJK) render correctly
+- **Icon Direction**: Directional icons and layouts flip appropriately in RTL
+- **Number & Date Formatting**: Locale-specific formatting works correctly
 
 ### Performance Testing
 

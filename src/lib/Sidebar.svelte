@@ -82,98 +82,106 @@
     --sidebar-width: 250px;
     --sidebar-collapsed-width: 48px;
 
-    width: 100%;
-    background: #f8f9fa;
-    border-right: 1px solid #e0e0e0;
+    inline-size: 100%; /* Using logical properties */
+    background: var(--color-bg-secondary); /* Using design tokens */
+    border-inline-end: 1px solid var(--color-border-default); /* Using logical properties and tokens */
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    height: 100vh;
+    block-size: 100vh; /* Using logical properties */
   }
 
   .sidebar.collapsed {
-    width: 100%;
+    inline-size: 100%; /* Using logical properties */
   }
 
   .sidebar-header {
     display: flex;
     align-items: center;
-    padding: 0.75rem;
-    border-bottom: 1px solid #e0e0e0;
-    background: #ffffff;
+    padding-block: var(--space-3); /* Using logical properties and spacing tokens */
+    padding-inline: var(--space-3);
+    border-block-end: 1px solid var(--color-border-default); /* Using logical properties and tokens */
+    background: var(--color-bg-primary); /* Using design tokens */
     flex-shrink: 0;
-    min-height: 60px;
+    min-block-size: 60px; /* Using logical properties */
   }
 
   .sidebar-toggle {
     background: none;
     border: none;
-    font-size: 1.2rem;
+    font-size: var(--text-lg); /* Using typography tokens */
     cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 4px;
-    transition: background-color 0.2s ease;
+    padding-block: var(--space-2); /* Using logical properties and spacing tokens */
+    padding-inline: var(--space-2);
+    border-radius: var(--radius-sm); /* Using border radius tokens */
+    transition: background-color var(--duration-fast) ease; /* Using motion tokens */
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    inline-size: 32px; /* Using logical properties */
+    block-size: 32px;
+    min-inline-size: var(--touch-target-min); /* Using accessibility tokens */
+    min-block-size: var(--touch-target-min);
   }
 
   .sidebar-toggle:hover {
-    background: #f0f0f0;
+    background: var(--color-interactive-secondary-hover); /* Using design tokens */
   }
 
-  .sidebar-toggle:focus {
-    outline: 2px solid #007acc;
-    outline-offset: 2px;
+  .sidebar-toggle:focus-visible {
+    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus); /* Using accessibility tokens */
+    outline-offset: var(--focus-ring-offset);
   }
 
   .sidebar-title {
-    margin: 0 0 0 0.75rem;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #333;
+    margin-block: 0; /* Using logical properties */
+    margin-inline: 0 0 0 var(--space-3); /* Using logical properties and spacing tokens */
+    font-size: var(--text-lg); /* Using typography tokens */
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary); /* Using design tokens */
   }
 
   .sidebar-nav {
-    padding: 0.5rem 0;
+    padding-block: var(--space-2) 0; /* Using logical properties and spacing tokens */
+    padding-inline: 0;
     flex-shrink: 0;
   }
 
   .sidebar-section {
-    width: 100%;
+    inline-size: 100%; /* Using logical properties */
     background: none;
     border: none;
     display: flex;
     align-items: center;
-    padding: 0.75rem;
+    padding-block: var(--space-3); /* Using logical properties and spacing tokens */
+    padding-inline: var(--space-3);
     cursor: pointer;
-    transition: background-color 0.2s ease;
-    text-align: left;
-    color: #666;
+    transition: background-color var(--duration-fast) ease; /* Using motion tokens */
+    text-align: start; /* Using logical properties */
+    color: var(--color-text-secondary); /* Using design tokens */
+    min-block-size: var(--touch-target-min); /* Using accessibility tokens */
   }
 
   .sidebar-section:hover {
-    background: #f0f0f0;
-    color: #333;
+    background: var(--color-interactive-secondary-hover); /* Using design tokens */
+    color: var(--color-text-primary);
   }
 
-  .sidebar-section:focus {
-    outline: 2px solid #007acc;
-    outline-offset: -2px;
+  .sidebar-section:focus-visible {
+    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus); /* Using accessibility tokens */
+    outline-offset: calc(-1 * var(--focus-ring-offset));
   }
 
   .sidebar-section.active {
-    background: #e3f2fd;
-    color: #1976d2;
-    border-right: 3px solid #1976d2;
+    background: var(--color-bg-accent); /* Using design tokens */
+    color: var(--color-text-accent);
+    border-inline-end: 3px solid var(--color-border-accent); /* Using logical properties and tokens */
   }
 
   .section-icon {
-    font-size: 1.2rem;
-    width: 24px;
-    height: 24px;
+    font-size: var(--text-lg); /* Using typography tokens */
+    inline-size: 24px; /* Using logical properties */
+    block-size: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -181,34 +189,35 @@
   }
 
   .section-label {
-    margin-left: 0.75rem;
-    font-size: 0.9rem;
-    font-weight: 500;
+    margin-inline-start: var(--space-3); /* Using logical properties and spacing tokens */
+    font-size: var(--text-sm); /* Using typography tokens */
+    font-weight: var(--font-medium);
   }
 
   .sidebar-content {
     flex: 1;
     overflow-y: auto;
-    padding: 1rem;
-    background: #ffffff;
+    padding-block: var(--space-4); /* Using logical properties and spacing tokens */
+    padding-inline: var(--space-4);
+    background: var(--color-bg-primary); /* Using design tokens */
   }
 
-  /* Scrollbar styling */
+  /* Scrollbar styling using design tokens */
   .sidebar-content::-webkit-scrollbar {
-    width: 6px;
+    inline-size: 6px; /* Using logical properties */
   }
 
   .sidebar-content::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: var(--color-bg-secondary); /* Using design tokens */
   }
 
   .sidebar-content::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
+    background: var(--color-border-strong); /* Using design tokens */
+    border-radius: var(--radius-xs); /* Using border radius tokens */
   }
 
   .sidebar-content::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
+    background: var(--color-text-tertiary); /* Using design tokens */
   }
 
   /* Update CSS custom property for grid layout */
@@ -218,5 +227,25 @@
 
   .sidebar.collapsed {
     --sidebar-width: 48px;
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .sidebar {
+      border-inline-end: 2px solid var(--color-forced-border);
+    }
+    
+    .sidebar-header {
+      border-block-end: 2px solid var(--color-forced-border);
+    }
+    
+    .sidebar-section.active {
+      border-inline-end: 4px solid var(--color-forced-active);
+    }
+  }
+
+  /* RTL support - icons that need direction flipping */
+  [dir="rtl"] .sidebar-toggle {
+    transform: scaleX(-1);
   }
 </style>
