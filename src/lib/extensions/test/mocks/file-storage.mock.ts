@@ -40,9 +40,9 @@ export class MockFileStorage implements Partial<FileStorageAPI> {
   }
 
   // Core workspace operations
-  async createWorkspace(): Promise<string> {
+  async createWorkspace(id?: string): Promise<string> {
     this.operationCount++;
-    const workspaceId = `workspace-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const workspaceId = id || `workspace-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     this.workspaces.set(workspaceId, new Map());
     return workspaceId;
   }
@@ -138,7 +138,7 @@ export class MockFileStorage implements Partial<FileStorageAPI> {
     return files;
   }
 
-  async getFileStats(workspaceId: string, path: string): Promise<{ size: number; lastModified: Date }> {
+  async getFileInfo(workspaceId: string, path: string): Promise<{ size: number; lastModified: Date }> {
     this.operationCount++;
     if (this.failureMode === 'stats') {
       throw new Error('Failed to get file stats');
@@ -211,7 +211,9 @@ export class MockFileStorage implements Partial<FileStorageAPI> {
   private getWorkspace(workspaceId: string): Map<string, MockFileEntry> {
     const workspace = this.workspaces.get(workspaceId);
     if (!workspace) {
-      throw new Error(`Workspace ${workspaceId} not found`);
+      // Auto-create workspace like real storage backends do
+      this.workspaces.set(workspaceId, new Map());
+      return this.workspaces.get(workspaceId)!;
     }
     return workspace;
   }

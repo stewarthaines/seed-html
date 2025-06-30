@@ -168,11 +168,19 @@ export function createCompleteWorkspace(): Record<string, string | ArrayBuffer> 
 // Workspace with conflicting extension names
 export function createConflictedWorkspace(): Record<string, string | ArrayBuffer> {
   return {
-    // Two different markdown-it versions
-    'SOURCE/extensions/markdown-it/markdown-it.min.js': SAMPLE_EXTENSIONS.MARKDOWN_IT.files['markdown-it.min.js'],
-    'SOURCE/extensions/markdown-it/LICENSE.txt': SAMPLE_EXTENSIONS.MARKDOWN_IT.files['LICENSE.txt'],
+    // markdown-it with DIFFERENT content than what's in cache (creates conflict)
+    'SOURCE/extensions/markdown-it/markdown-it.min.js': `// MODIFIED version of markdown-it
+(function() { 
+  window.markdownit = function() { 
+    return { render: function(text) { return '<p>MODIFIED: ' + text + '</p>'; } }; 
+  }; 
+})();`,
+    'SOURCE/extensions/markdown-it/LICENSE.txt': 'MODIFIED license text',
     
-    // Different content for same extension name (conflict scenario)
+    // Another extension that should cache successfully
+    'SOURCE/extensions/prism/prism.min.js': SAMPLE_EXTENSIONS.PRISM_JS.files['prism.min.js'],
+    
+    // Different extension with different name
     'SOURCE/extensions/markdown-it-v2/markdown-it.min.js': `// Different version of markdown-it
 (function() { 
   window.markdownit = function() { 
