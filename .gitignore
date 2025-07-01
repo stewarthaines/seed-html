@@ -35,3 +35,7 @@ storybook-static
 
 # Coverage reports
 coverage
+
+# i18n build artifacts
+src/lib/i18n/locales/*.json
+static/translations.zip

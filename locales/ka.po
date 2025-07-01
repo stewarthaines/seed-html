@@ -5,120 +5,120 @@ msgstr ""
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:108
 msgid "Add/remove manifest items"
-msgstr ""
+msgstr "🇬🇪 Add/remove manifest items"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:124
 msgid "Advanced configurations"
-msgstr ""
+msgstr "🇬🇪 Advanced configurations"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:121
 msgid "Application preferences"
-msgstr ""
+msgstr "🇬🇪 Application preferences"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:156
 msgid "at"
-msgstr ""
+msgstr "🇬🇪 at"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:114
 msgid "Auto-generation from spine"
-msgstr ""
+msgstr "🇬🇪 Auto-generation from spine"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/i18n/test/i18n.test.ts:112
 #: /Users/stewart/Projects/editme-svelte/src/lib/i18n/test/i18n.test.ts:137
 #: /Users/stewart/Projects/editme-svelte/src/lib/i18n/test/i18n.test.ts:152
 msgid "Cancel"
-msgstr ""
+msgstr "🇬🇪 Cancel"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:116
 msgid "Chapter ordering interface"
-msgstr ""
+msgstr "🇬🇪 Chapter ordering interface"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:130
 msgid "Create Workspace"
-msgstr ""
+msgstr "🇬🇪 Create Workspace"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/i18n/test/i18n.test.ts:113
 #: /Users/stewart/Projects/editme-svelte/src/lib/i18n/test/i18n.test.ts:138
 #: /Users/stewart/Projects/editme-svelte/src/lib/i18n/test/i18n.test.ts:153
 msgid "Delete"
-msgstr ""
+msgstr "🇬🇪 Delete"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:117
 msgid "Drag-and-drop reordering"
-msgstr ""
+msgstr "🇬🇪 Drag-and-drop reordering"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:126
 msgid "Enhanced functionality"
-msgstr ""
+msgstr "🇬🇪 Enhanced functionality"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:123
 msgid "Export/import settings"
-msgstr ""
+msgstr "🇬🇪 Export/import settings"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:106
 msgid "File listing and management"
-msgstr ""
+msgstr "🇬🇪 File listing and management"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/i18n/test/i18n.test.ts:121
 #: /Users/stewart/Projects/editme-svelte/src/lib/i18n/test/i18n.test.ts:122
 #: /Users/stewart/Projects/editme-svelte/src/lib/i18n/test/integration.test.ts:315
 #: /Users/stewart/Projects/editme-svelte/src/lib/i18n/test/integration.test.ts:320
 msgid "Found {count} items"
-msgstr ""
+msgstr "🇬🇪 Found {count} items"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/i18n/test/integration.test.ts:316
 #: /Users/stewart/Projects/editme-svelte/src/lib/i18n/test/integration.test.ts:321
 msgid "Hello {name}"
-msgstr ""
+msgstr "🇬🇪 Hello {name}"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/i18n/test/i18n.test.ts:126
 msgid "Hello {name}, you have {count} messages"
-msgstr ""
+msgstr "🇬🇪 Hello {name}, you have {count} messages"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:138
 msgid "Import EPUB"
-msgstr ""
+msgstr "🇬🇪 Import EPUB"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:127
 msgid "Improved user interface"
-msgstr ""
+msgstr "🇬🇪 Improved user interface"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:119
 msgid "Link to source files"
-msgstr ""
+msgstr "🇬🇪 Link to source files"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:45
 msgid "Main navigation"
-msgstr ""
+msgstr "🇬🇪 Main navigation"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:112
 msgid "Navigation link management"
-msgstr ""
+msgstr "🇬🇪 Navigation link management"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:129
 msgid "New capabilities"
-msgstr ""
+msgstr "🇬🇪 New capabilities"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/i18n/test/i18n.test.ts:117
 #: /Users/stewart/Projects/editme-svelte/src/lib/i18n/test/i18n.test.ts:145
 msgid "Nonexistent key"
-msgstr ""
+msgstr "🇬🇪 Nonexistent key"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:134
 msgid "Open Existing"
-msgstr ""
+msgstr "🇬🇪 Open Existing"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:109
 msgid "Preview file contents"
-msgstr ""
+msgstr "🇬🇪 Preview file contents"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:116
 msgid "Recently"
-msgstr ""
+msgstr "🇬🇪 Recently"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/MetadataView.svelte:87
 msgid "Reset all metadata to defaults?"
-msgstr ""
+msgstr "🇬🇪 Reset all metadata to defaults?"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/i18n/test/i18n.test.ts:111
 #: /Users/stewart/Projects/editme-svelte/src/lib/i18n/test/i18n.test.ts:136
@@ -133,44 +133,44 @@ msgstr ""
 #: /Users/stewart/Projects/editme-svelte/src/lib/i18n/test/integration.test.ts:285
 #: /Users/stewart/Projects/editme-svelte/src/lib/i18n/test/integration.test.ts:289
 msgid "Save"
-msgstr ""
+msgstr "🇬🇪 Save"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/MetadataView.svelte:183
 msgid "Save & Continue"
-msgstr ""
+msgstr "🇬🇪 Save & Continue"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:128
 msgid "Seamless integration"
-msgstr ""
+msgstr "🇬🇪 Seamless integration"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:107
 msgid "Search and filter files"
-msgstr ""
+msgstr "🇬🇪 Search and filter files"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:118
 msgid "Spine item management"
-msgstr ""
+msgstr "🇬🇪 Spine item management"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:111
 msgid "Table of contents editing"
-msgstr ""
+msgstr "🇬🇪 Table of contents editing"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:122
 msgid "Theme and UI settings"
-msgstr ""
+msgstr "🇬🇪 Theme and UI settings"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:113
 msgid "TOC structure editing"
-msgstr ""
+msgstr "🇬🇪 TOC structure editing"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:35
 msgid "Toggle sidebar"
-msgstr ""
+msgstr "🇬🇪 Toggle sidebar"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/MetadataView.svelte:46
 msgid "You have unsaved metadata changes. Continue?"
-msgstr ""
+msgstr "🇬🇪 You have unsaved metadata changes. Continue?"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:44
 msgid "You have unsaved workspace changes. Continue?"
-msgstr ""
+msgstr "🇬🇪 You have unsaved workspace changes. Continue?"
