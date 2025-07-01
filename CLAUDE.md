@@ -333,3 +333,41 @@ For functionality requiring full browser APIs:
 5. **Document limitations** clearly in test comments
 
 This strategy ensures comprehensive test coverage while maintaining fast, reliable unit tests that can run in any environment.
+
+## Component Development Guidelines
+
+When creating new components, follow these accessibility and development standards:
+
+### Accessibility Checklist
+
+Before considering a component complete:
+
+- ✅ **Use Semantic HTML**: Use proper elements (`<button>`, `<nav>`, `<input>`) instead of `<div>` with event handlers
+- ✅ **Add ARIA Labels**: Include `aria-label` for icon-only buttons and controls
+- ✅ **Include Focus Styles**: Apply `:focus-visible` styles using design system tokens
+- ✅ **Ensure Touch Targets**: Interactive elements must be at least 44x44 pixels
+- ✅ **Let Svelte Help**: Trust Svelte's compiler to catch accessibility issues
+
+### Development Patterns
+
+**Reference Components**: Learn from existing accessible patterns in:
+
+- `ThemeToggle.svelte` - Icon button with proper ARIA
+- `Sidebar.svelte` - Navigation with semantic markup
+
+**Documentation**: See comprehensive guides at:
+
+- `src/lib/components/ACCESSIBILITY.md` - Component patterns and examples
+- `src/styles/ACCESSIBILITY.md` - CSS tokens and styling guidelines
+
+### Testing Requirements
+
+- **Keyboard Navigation**: Tab through your interface - can you see focus clearly?
+- **Svelte Warnings**: Component must compile without accessibility warnings
+- **Touch Targets**: Test on mobile - are interactive elements easy to tap?
+
+## Claude Interaction Guidelines
+
+- **Interaction Style**
+  - When planning under-specified work don't assume complexity but ask the user
+  - When you ask the user questions ask them one at a time
