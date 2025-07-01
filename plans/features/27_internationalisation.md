@@ -118,10 +118,18 @@ Replace physical properties with logical equivalents throughout the design syste
 }
 
 /* Bidirectional utilities */
-.text-start { text-align: start; }
-.text-end { text-align: end; }
-.float-start { float: inline-start; }
-.float-end { float: inline-end; }
+.text-start {
+  text-align: start;
+}
+.text-end {
+  text-align: end;
+}
+.float-start {
+  float: inline-start;
+}
+.float-end {
+  float: inline-end;
+}
 ```
 
 #### Updated Utility Classes
@@ -130,241 +138,140 @@ Extend `src/styles/utilities/layout.css` with RTL-aware utilities:
 
 ```css
 /* Directional positioning */
-.inset-inline-0 { inset-inline: 0; }
-.inset-block-0 { inset-block: 0; }
-.start-0 { inset-inline-start: 0; }
-.end-0 { inset-inline-end: 0; }
+.inset-inline-0 {
+  inset-inline: 0;
+}
+.inset-block-0 {
+  inset-block: 0;
+}
+.start-0 {
+  inset-inline-start: 0;
+}
+.end-0 {
+  inset-inline-end: 0;
+}
 
 /* Margin utilities */
-.m-inline-auto { margin-inline: auto; }
-.ms-4 { margin-inline-start: var(--space-4); }
-.me-4 { margin-inline-end: var(--space-4); }
+.m-inline-auto {
+  margin-inline: auto;
+}
+.ms-4 {
+  margin-inline-start: var(--space-4);
+}
+.me-4 {
+  margin-inline-end: var(--space-4);
+}
 
 /* Padding utilities */
-.ps-4 { padding-inline-start: var(--space-4); }
-.pe-4 { padding-inline-end: var(--space-4); }
+.ps-4 {
+  padding-inline-start: var(--space-4);
+}
+.pe-4 {
+  padding-inline-end: var(--space-4);
+}
 ```
 
 ### Phase 2: Component Accessibility Patterns (2-3 days)
 
-#### Accessible Component Template
-
-```svelte
-<!-- AccessibleButton.svelte -->
-<script lang="ts">
-  export let variant: 'primary' | 'secondary' | 'danger' = 'primary';
-  export let size: 'sm' | 'md' | 'lg' = 'md';
-  export let disabled: boolean = false;
-  export let ariaLabel: string | undefined = undefined;
-  export let ariaDescribedBy: string | undefined = undefined;
-  export let type: 'button' | 'submit' | 'reset' = 'button';
-</script>
-
-<button
-  {type}
-  {disabled}
-  class="btn btn-{variant} btn-{size}"
-  aria-label={ariaLabel}
-  aria-describedby={ariaDescribedBy}
-  on:click
->
-  <slot />
-</button>
-
-<style>
-  .btn {
-    /* Accessible focus indicators */
-    &:focus-visible {
-      outline: 2px solid var(--color-focus);
-      outline-offset: 2px;
-    }
-    
-    /* High contrast mode support */
-    @media (prefers-contrast: high) {
-      border: 2px solid;
-    }
-  }
-</style>
-```
-
-#### Form Accessibility Pattern
-
-```svelte
-<!-- AccessibleInput.svelte -->
-<script lang="ts">
-  export let id: string;
-  export let label: string;
-  export let value: string = '';
-  export let error: string | undefined = undefined;
-  export let required: boolean = false;
-  export let type: string = 'text';
-  
-  $: errorId = error ? `${id}-error` : undefined;
-  $: describedBy = error ? errorId : undefined;
-</script>
-
-<div class="form-field">
-  <label for={id} class="form-label">
-    {label}
-    {#if required}<span class="required" aria-label="required">*</span>{/if}
-  </label>
-  
-  <input
-    {id}
-    {type}
-    {required}
-    bind:value
-    class="form-input"
-    class:error={!!error}
-    aria-describedby={describedBy}
-    aria-invalid={!!error}
-  />
-  
-  {#if error}
-    <div id={errorId} class="form-error" role="alert">
-      {error}
-    </div>
-  {/if}
-</div>
-```
-
-#### Navigation Accessibility
-
-```svelte
-<!-- AccessibleNavigation.svelte -->
-<nav aria-label="Main navigation" role="navigation">
-  <ul class="nav-list" role="menubar">
-    {#each navItems as item, index}
-      <li role="none">
-        <a
-          href={item.href}
-          class="nav-link"
-          role="menuitem"
-          aria-current={item.active ? 'page' : undefined}
-          tabindex={index === 0 ? 0 : -1}
-        >
-          {item.label}
-        </a>
-      </li>
-    {/each}
-  </ul>
-</nav>
-```
+No custom components, just document good practice.
 
 ### Phase 3: Internationalization Framework (3-4 days)
 
-#### Svelte i18n Integration
+#### Gettext-based Translation System
 
-```typescript
-// src/lib/i18n/index.ts
-import { writable, derived } from 'svelte/store';
+**Overview**: Professional translation workflow with ZIP compression for EPUB embedding.
 
-export interface Locale {
-  code: string;
-  name: string;
-  direction: 'ltr' | 'rtl';
-  translations: Record<string, string>;
-}
+**Languages**: `[en, de, ka, ar, he, zh-Hant, ja]` - Covers multiple writing systems including RTL support.
 
-export const currentLocale = writable<string>('en');
-export const locales = writable<Record<string, Locale>>({});
+**Architecture**:
+- **Translation calls**: `t('text')` function-based approach throughout components
+- **File structure**: Flat .po files in `locales/` directory for translator simplicity
+- **Build workflow**: npm-based tools for extraction and conversion
+- **Runtime optimization**: ZIP-compressed translations for minimal EPUB embedding overhead
 
-export const t = derived(
-  [currentLocale, locales],
-  ([$currentLocale, $locales]) => {
-    return (key: string, params: Record<string, any> = {}) => {
-      const locale = $locales[$currentLocale];
-      if (!locale) return key;
-      
-      let translation = locale.translations[key] || key;
-      
-      // Simple parameter substitution
-      Object.keys(params).forEach(param => {
-        translation = translation.replace(`{${param}}`, params[param]);
-      });
-      
-      return translation;
-    };
-  }
-);
+#### Technical Implementation
 
-export const isRTL = derived(
-  [currentLocale, locales],
-  ([$currentLocale, $locales]) => {
-    const locale = $locales[$currentLocale];
-    return locale?.direction === 'rtl';
-  }
-);
+**Package Dependencies**:
+```bash
+npm install --save-dev gettext-extractor po2json
 ```
 
-#### Translation Files Structure
-
+**npm Scripts**:
 ```json
-// src/lib/i18n/locales/en.json
 {
-  "app.title": "EDITME EPUB Editor",
-  "nav.workspace": "Workspace",
-  "nav.metadata": "Metadata",
-  "nav.manifest": "Manifest",
-  "nav.spine": "Spine",
-  "nav.navigation": "Navigation",
-  "buttons.save": "Save",
-  "buttons.cancel": "Cancel",
-  "errors.required_field": "This field is required",
-  "workspace.create_new": "Create New Workspace",
-  "workspace.items_count": "{count} items"
-}
-
-// src/lib/i18n/locales/ar.json
-{
-  "app.title": "محرر الكتب الإلكترونية EDITME",
-  "nav.workspace": "مساحة العمل",
-  "nav.metadata": "البيانات الوصفية",
-  "nav.manifest": "البيان",
-  "nav.spine": "العمود الفقري",
-  "nav.navigation": "التنقل",
-  "buttons.save": "حفظ",
-  "buttons.cancel": "إلغاء",
-  "errors.required_field": "هذا الحقل مطلوب",
-  "workspace.create_new": "إنشاء مساحة عمل جديدة",
-  "workspace.items_count": "{count} عناصر"
+  "i18n:extract": "node build-scripts/i18n-extract.js",
+  "i18n:convert": "node build-scripts/i18n-convert.js", 
+  "i18n:compress": "node build-scripts/i18n-compress.js",
+  "i18n:build": "npm run i18n:extract && npm run i18n:convert && npm run i18n:compress"
 }
 ```
 
-## API Design
+**File Structure**:
+```
+locales/
+├── en.po      # Source (English)
+├── de.po      # German
+├── ka.po      # Georgian  
+├── ar.po      # Arabic (RTL)
+├── he.po      # Hebrew (RTL)
+├── zh-Hant.po # Traditional Chinese
+└── ja.po      # Japanese
 
-### Accessibility Store
+build-scripts/
+├── i18n-extract.js   # Extract t() calls from Svelte files
+├── i18n-convert.js   # Convert .po to .json files
+└── i18n-compress.js  # Create translations.zip
 
+src/lib/i18n/
+├── index.ts     # Main translation runtime
+├── loader.ts    # ZIP extraction & storage integration
+├── types.ts     # TypeScript definitions
+└── stores/
+    └── locale.ts # Svelte stores for locale management
+```
+
+**Runtime Loading Strategy**:
+- **ZIP approach**: All translations compressed at build time (`translations.zip`)
+- **First-run extraction**: Extract all locales to storage with 'locales' workspace ID
+- **Version-based updates**: Re-extract when app version changes
+- **English fallback**: Bundled English for immediate availability
+- **Storage integration**: Uses existing OPFS/IndexedDB storage system
+
+**Translation Usage Pattern**:
+```svelte
+<script>
+  import { t } from '$lib/i18n';
+</script>
+
+<!-- Basic translation -->
+<button>{t('Save file')}</button>
+
+<!-- With interpolation -->
+<span>{t('Found {count} items', {count: items.length})}</span>
+
+<!-- With pluralization (gettext-extractor features) -->
+<span>{t('{count} item', '{count} items', count)}</span>
+```
+
+**Locale Direction Detection**:
 ```typescript
-// src/lib/stores/accessibility.ts
-import { writable } from 'svelte/store';
-
-export interface AccessibilitySettings {
-  reducedMotion: boolean;
-  highContrast: boolean;
-  screenReaderMode: boolean;
-  keyboardNavigationEnabled: boolean;
-  focusManagement: 'auto' | 'manual';
-}
-
-export const a11ySettings = writable<AccessibilitySettings>({
-  reducedMotion: false,
-  highContrast: false,
-  screenReaderMode: false,
-  keyboardNavigationEnabled: true,
-  focusManagement: 'auto'
-});
-
-export const detectA11yPreferences = () => {
-  if (typeof window !== 'undefined') {
-    a11ySettings.update(settings => ({
-      ...settings,
-      reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-      highContrast: window.matchMedia('(prefers-contrast: high)').matches
-    }));
-  }
+// Automatic RTL detection for Arabic, Hebrew
+const localeConfig = {
+  'ar': { direction: 'rtl', name: 'العربية' },
+  'he': { direction: 'rtl', name: 'עברית' },
+  'en': { direction: 'ltr', name: 'English' },
+  // ... other locales
 };
 ```
+
+**Key Benefits for EPUB Embedding**:
+- **Size optimization**: Only ~20-30KB compressed vs 100-200KB raw for all 7 languages
+- **Professional workflow**: Standard .po files for translator tools (Poedit, etc.)
+- **Runtime efficiency**: No reactive store overhead, simple function calls
+- **Standard tooling**: Works with existing gettext ecosystem
+- **Offline-first**: All translations available without network dependency
+
+## API Design
 
 ### RTL Layout Manager
 
@@ -373,101 +280,16 @@ export const detectA11yPreferences = () => {
 import { derived } from 'svelte/store';
 import { currentLocale, locales } from '../i18n';
 
-export const documentDirection = derived(
-  [currentLocale, locales],
-  ([$currentLocale, $locales]) => {
-    const locale = $locales[$currentLocale];
-    return locale?.direction || 'ltr';
-  }
-);
+export const documentDirection = derived([currentLocale, locales], ([$currentLocale, $locales]) => {
+  const locale = $locales[$currentLocale];
+  return locale?.direction || 'ltr';
+});
 
 export const applyDirectionToDocument = (direction: 'ltr' | 'rtl') => {
   if (typeof document !== 'undefined') {
     document.documentElement.dir = direction;
     document.documentElement.setAttribute('data-direction', direction);
   }
-};
-```
-
-### Accessibility Component Conventions
-
-Instead of complex base classes, use simple Svelte conventions for accessibility:
-
-```svelte
-<!-- AccessibleButton.svelte - Standard Svelte Pattern -->
-<script lang="ts">
-  export let variant: 'primary' | 'secondary' | 'danger' = 'primary';
-  export let size: 'sm' | 'md' | 'lg' = 'md';
-  export let disabled = false;
-  export let ariaLabel: string | undefined = undefined;
-  export let ariaDescribedBy: string | undefined = undefined;
-  export let type: 'button' | 'submit' | 'reset' = 'button';
-</script>
-
-<button
-  {type}
-  {disabled}
-  class="btn btn-{variant} btn-{size}"
-  aria-label={ariaLabel}
-  aria-describedby={ariaDescribedBy}
-  on:click
->
-  <slot />
-</button>
-
-<style>
-  .btn {
-    /* Accessible focus indicators */
-    &:focus-visible {
-      outline: 2px solid var(--color-focus);
-      outline-offset: 2px;
-    }
-    
-    /* High contrast mode support */
-    @media (prefers-contrast: high) {
-      border: 2px solid;
-    }
-  }
-</style>
-```
-
-#### Accessibility Prop Conventions
-
-Establish consistent naming across all components:
-
-- `ariaLabel?: string` - Accessible label
-- `ariaLabelledBy?: string` - Reference to labeling element
-- `ariaDescribedBy?: string` - Reference to description element
-- `role?: string` - ARIA role override
-- `tabIndex?: number` - Tab order control
-
-#### Focus Management Utilities
-
-Simple utilities for complex focus scenarios:
-
-```typescript
-// src/lib/utils/focus.ts
-export const trapFocus = (container: HTMLElement) => {
-  const focusableElements = container.querySelectorAll(
-    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-  );
-  const firstElement = focusableElements[0] as HTMLElement;
-  const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
-
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Tab') {
-      if (e.shiftKey && document.activeElement === firstElement) {
-        e.preventDefault();
-        lastElement.focus();
-      } else if (!e.shiftKey && document.activeElement === lastElement) {
-        e.preventDefault();
-        firstElement.focus();
-      }
-    }
-  };
-
-  container.addEventListener('keydown', handleKeyDown);
-  return () => container.removeEventListener('keydown', handleKeyDown);
 };
 ```
 
@@ -522,20 +344,17 @@ export const trapFocus = (container: HTMLElement) => {
 #### Component Development Standards
 
 1. **Always Include Accessibility**
+
    ```svelte
    <!-- ✅ Good: Standard Svelte accessibility pattern -->
    <script lang="ts">
      export let ariaLabel: string | undefined = undefined;
    </script>
-   
-   <button
-     aria-label={ariaLabel}
-     class="btn"
-     on:click
-   >
+
+   <button aria-label={ariaLabel} class="btn" on:click>
      <slot />
    </button>
-   
+
    <!-- ❌ Bad: No accessibility considerations -->
    <div class="btn" on:click>
      <slot />
@@ -543,13 +362,14 @@ export const trapFocus = (container: HTMLElement) => {
    ```
 
 2. **Use Logical Properties**
+
    ```css
    /* ✅ Good: RTL-aware */
    .sidebar {
      margin-inline-start: 1rem;
      border-inline-end: 1px solid #ccc;
    }
-   
+
    /* ❌ Bad: LTR-only */
    .sidebar {
      margin-left: 1rem;
@@ -558,10 +378,11 @@ export const trapFocus = (container: HTMLElement) => {
    ```
 
 3. **Externalize All Text**
+
    ```svelte
    <!-- ✅ Good: Translatable -->
    <button>{$t('buttons.save')}</button>
-   
+
    <!-- ❌ Bad: Hardcoded -->
    <button>Save</button>
    ```
@@ -582,24 +403,32 @@ export const trapFocus = (container: HTMLElement) => {
 ### Implementation Phases
 
 #### Phase 1: Foundation (Days 1-2)
+
 - Update CSS utilities to use logical properties
 - Add RTL-aware design tokens
 - Create accessibility utility functions
 - Update existing components (LayoutManager, Sidebar, ThemeToggle)
 
 #### Phase 2: Component Patterns (Days 3-5)
+
 - Establish accessibility prop conventions
 - Create accessible component templates and examples
 - Implement focus management utilities for complex scenarios
 - Create accessible form components
 
 #### Phase 3: Internationalization (Days 6-9)
-- Set up Svelte i18n framework
-- Extract all hardcoded strings
-- Create translation files for primary languages
-- Implement locale switching
+
+- Install and configure gettext npm packages (`gettext-extractor`, `po2json`)
+- Create build scripts for string extraction and .po/.json conversion  
+- Set up .po file structure for all 7 languages
+- Implement translation runtime system with `t()` function
+- Create ZIP-based translation loader with storage integration
+- Add locale direction detection for RTL languages
+- Integrate with existing storage system using 'locales' workspace ID
+- Add app version-based cache invalidation
 
 #### Phase 4: Testing & Validation (Days 10-12)
+
 - Set up automated accessibility testing
 - Create RTL test suite
 - Implement internationalization tests
