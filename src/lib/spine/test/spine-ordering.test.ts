@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { SpineItemManager } from '../spine-item-manager.js';
-import type { MockWorkspaceManager } from '../../../test/mocks/workspace-manager.mock.js';
+import type { MockWorkspaceManager } from '../../test/mocks/workspace-manager.mock.js';
 import {
   createTestWorkspaceManager,
   setupSpineOrderingScenario,

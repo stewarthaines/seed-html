@@ -5,8 +5,8 @@
  * and verifying test results in SpineItemManager test suites.
  */
 
-import { vi } from 'vitest';
-import { createMockWorkspaceManager, type MockWorkspaceManager } from '../../../test/mocks/workspace-manager.mock.js';
+import { vi, expect } from 'vitest';
+import { createMockWorkspaceManager, type MockWorkspaceManager } from '../../test/mocks/workspace-manager.mock.js';
 import type { SpineItemWithSource } from '../types.js';
 import type { ManifestItem, SpineItem } from '../../workspace/types.js';
 import { 

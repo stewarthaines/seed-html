@@ -7,11 +7,11 @@
 
 import type { 
   ManifestItem, 
-  SpineItem, 
-  SpineItemWithSource 
-} from '../../../workspace/types.js';
-import type { MockOPFDocument } from '../../../test/mocks/workspace-manager.mock.js';
+  SpineItem
+} from '../../workspace/types.js';
+import type { MockOPFDocument } from '../../test/mocks/workspace-manager.mock.js';
 import type {
+  SpineItemWithSource,
   ChapterCreationData,
   ChapterUpdateData,
   ChapterDeletionOptions,

@@ -9,7 +9,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { SpineItemManager } from '../spine-item-manager.js';
-import type { MockWorkspaceManager } from '../../../test/mocks/workspace-manager.mock.js';
+import type { MockWorkspaceManager } from '../../test/mocks/workspace-manager.mock.js';
 import type { SpineItemWithSource, ChapterCreationData } from '../types.js';
 import {
   createTestWorkspaceManager,
@@ -34,6 +34,7 @@ describe('SpineItemManager Core', () => {
 
   beforeEach(() => {
     mockWorkspaceManager = createTestWorkspaceManager();
+    mockWorkspaceManager.reset();
     spineManager = new SpineItemManager(mockWorkspaceManager as any);
   });
 
@@ -160,6 +161,7 @@ describe('SpineItemManager Core', () => {
 
   describe('addChapter()', () => {
     beforeEach(async () => {
+      mockWorkspaceManager.reset();
       await setupTestWorkspace(mockWorkspaceManager, testWorkspaceId, 'empty');
     });
 
@@ -295,6 +297,7 @@ describe('SpineItemManager Core', () => {
 
   describe('updateChapter()', () => {
     beforeEach(async () => {
+      mockWorkspaceManager.reset();
       await setupTestWorkspace(mockWorkspaceManager, testWorkspaceId, 'basic');
     });
 
@@ -386,6 +389,7 @@ describe('SpineItemManager Core', () => {
 
   describe('deleteChapter()', () => {
     beforeEach(async () => {
+      mockWorkspaceManager.reset();
       await setupTestWorkspace(mockWorkspaceManager, testWorkspaceId, 'basic');
     });
 
@@ -472,6 +476,7 @@ describe('SpineItemManager Core', () => {
 
   describe('generateChapterId()', () => {
     beforeEach(async () => {
+      mockWorkspaceManager.reset();
       await setupTestWorkspace(mockWorkspaceManager, testWorkspaceId, 'empty');
     });
 
