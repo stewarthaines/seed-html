@@ -4,7 +4,7 @@
  * Defines all types used by the SpineItemManager for chapter management operations.
  */
 
-import type { ManifestItem, SpineItem } from '../workspace/types.js';
+import type { ManifestItem, SpineItem } from '../epub/opf-utils.js';
 
 /**
  * Spine item enhanced with source file association and manifest data

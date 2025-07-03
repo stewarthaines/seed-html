@@ -8,7 +8,7 @@
 import { vi, expect } from 'vitest';
 import { createMockWorkspaceManager, type MockWorkspaceManager } from '../../test/mocks/workspace-manager.mock.js';
 import type { SpineItemWithSource } from '../types.js';
-import type { ManifestItem, SpineItem } from '../../workspace/types.js';
+import type { ManifestItem, SpineItem } from '../../epub/opf-utils.js';
 import { 
   getSampleOPFDocuments, 
   getSampleWorkspaceFiles,

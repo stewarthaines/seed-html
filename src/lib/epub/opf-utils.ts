@@ -8,12 +8,28 @@
 /// <reference lib="dom" />
 
 export interface EPUBMetadata {
+  // Required Dublin Core elements
   title: string;
-  author?: string;
   language: string;
   identifier: string;
+
+  // Optional Dublin Core elements
+  creator?: string[];
+  contributor?: string[];
   publisher?: string;
   date?: string;
+  description?: string;
+  subject?: string[];
+  rights?: string;
+  source?: string;
+  relation?: string;
+  coverage?: string;
+  type?: string;
+  format?: string;
+
+  // EPUB-specific metadata
+  modifiedDate?: string;
+  epubVersion?: string;
 }
 
 export interface ContainerInfo {
@@ -31,7 +47,7 @@ export interface OPFDocument {
   manifest: ManifestItem[];
   spine: SpineItem[];
   guide?: GuideItem[];
-  version: string;
+  version?: string;
 }
 
 export interface ManifestItem {
@@ -151,18 +167,46 @@ export class OPFUtils {
     }
 
     // Extract optional fields
-    const authorElements = doc.getElementsByTagNameNS(DC_NS, 'creator');
+    const creatorElements = doc.getElementsByTagNameNS(DC_NS, 'creator');
+    const contributorElements = doc.getElementsByTagNameNS(DC_NS, 'contributor');
     const publisherElements = doc.getElementsByTagNameNS(DC_NS, 'publisher');
     const dateElements = doc.getElementsByTagNameNS(DC_NS, 'date');
+    const descriptionElements = doc.getElementsByTagNameNS(DC_NS, 'description');
+    const subjectElements = doc.getElementsByTagNameNS(DC_NS, 'subject');
+    const rightsElements = doc.getElementsByTagNameNS(DC_NS, 'rights');
+    const sourceElements = doc.getElementsByTagNameNS(DC_NS, 'source');
+    const relationElements = doc.getElementsByTagNameNS(DC_NS, 'relation');
+    const coverageElements = doc.getElementsByTagNameNS(DC_NS, 'coverage');
+    const typeElements = doc.getElementsByTagNameNS(DC_NS, 'type');
+    const formatElements = doc.getElementsByTagNameNS(DC_NS, 'format');
+
+    // Convert NodeLists to arrays
+    const creators = Array.from(creatorElements)
+      .map(el => el.textContent?.trim())
+      .filter(Boolean) as string[];
+    const contributors = Array.from(contributorElements)
+      .map(el => el.textContent?.trim())
+      .filter(Boolean) as string[];
+    const subjects = Array.from(subjectElements)
+      .map(el => el.textContent?.trim())
+      .filter(Boolean) as string[];
 
     return {
       title: titleElements[0].textContent!.trim(),
-      author: authorElements.length > 0 ? authorElements[0].textContent?.trim() : undefined,
       language: languageElements[0].textContent!.trim(),
       identifier: identifierElements[0].textContent!.trim(),
-      publisher:
-        publisherElements.length > 0 ? publisherElements[0].textContent?.trim() : undefined,
+      creator: creators.length > 0 ? creators : undefined,
+      contributor: contributors.length > 0 ? contributors : undefined,
+      publisher: publisherElements.length > 0 ? publisherElements[0].textContent?.trim() : undefined,
       date: dateElements.length > 0 ? dateElements[0].textContent?.trim() : undefined,
+      description: descriptionElements.length > 0 ? descriptionElements[0].textContent?.trim() : undefined,
+      subject: subjects.length > 0 ? subjects : undefined,
+      rights: rightsElements.length > 0 ? rightsElements[0].textContent?.trim() : undefined,
+      source: sourceElements.length > 0 ? sourceElements[0].textContent?.trim() : undefined,
+      relation: relationElements.length > 0 ? relationElements[0].textContent?.trim() : undefined,
+      coverage: coverageElements.length > 0 ? coverageElements[0].textContent?.trim() : undefined,
+      type: typeElements.length > 0 ? typeElements[0].textContent?.trim() : undefined,
+      format: formatElements.length > 0 ? formatElements[0].textContent?.trim() : undefined,
     };
   }
 
@@ -287,14 +331,50 @@ export class OPFUtils {
     <dc:identifier id="${uniqueId}">${escapeXML(metadata.identifier)}</dc:identifier>`;
 
     // Add optional metadata
-    if (metadata.author) {
-      xml += `\n    <dc:creator>${escapeXML(metadata.author)}</dc:creator>`;
+    if (metadata.creator && metadata.creator.length > 0) {
+      metadata.creator.forEach(creator => {
+        xml += `\n    <dc:creator>${escapeXML(creator)}</dc:creator>`;
+      });
+    }
+    if (metadata.contributor && metadata.contributor.length > 0) {
+      metadata.contributor.forEach(contributor => {
+        xml += `\n    <dc:contributor>${escapeXML(contributor)}</dc:contributor>`;
+      });
     }
     if (metadata.publisher) {
       xml += `\n    <dc:publisher>${escapeXML(metadata.publisher)}</dc:publisher>`;
     }
     if (metadata.date) {
       xml += `\n    <dc:date>${escapeXML(metadata.date)}</dc:date>`;
+    }
+    if (metadata.description) {
+      xml += `\n    <dc:description>${escapeXML(metadata.description)}</dc:description>`;
+    }
+    if (metadata.subject && metadata.subject.length > 0) {
+      metadata.subject.forEach(subject => {
+        xml += `\n    <dc:subject>${escapeXML(subject)}</dc:subject>`;
+      });
+    }
+    if (metadata.rights) {
+      xml += `\n    <dc:rights>${escapeXML(metadata.rights)}</dc:rights>`;
+    }
+    if (metadata.source) {
+      xml += `\n    <dc:source>${escapeXML(metadata.source)}</dc:source>`;
+    }
+    if (metadata.relation) {
+      xml += `\n    <dc:relation>${escapeXML(metadata.relation)}</dc:relation>`;
+    }
+    if (metadata.coverage) {
+      xml += `\n    <dc:coverage>${escapeXML(metadata.coverage)}</dc:coverage>`;
+    }
+    if (metadata.type) {
+      xml += `\n    <dc:type>${escapeXML(metadata.type)}</dc:type>`;
+    }
+    if (metadata.format) {
+      xml += `\n    <dc:format>${escapeXML(metadata.format)}</dc:format>`;
+    }
+    if (metadata.modifiedDate) {
+      xml += `\n    <meta property="dcterms:modified">${escapeXML(metadata.modifiedDate)}</meta>`;
     }
 
     xml += `\n  </metadata>

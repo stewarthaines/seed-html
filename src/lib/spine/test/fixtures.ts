@@ -5,7 +5,7 @@
  * spine items, and complete workspace scenarios for testing spine operations.
  */
 
-import type { ManifestItem, SpineItem } from '../../workspace/types.js';
+import type { ManifestItem, SpineItem } from '../../epub/opf-utils.js';
 import type { MockOPFDocument } from '../../test/mocks/workspace-manager.mock.js';
 import type {
   SpineItemWithSource,

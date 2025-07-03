@@ -24,13 +24,15 @@
 import { vi } from 'vitest';
 import type { WorkspaceManager } from '../../workspace/index.js';
 import type { 
+  WorkspaceInfo,
+  ValidationResult
+} from '../../workspace/types.js';
+import type {
   OPFDocument, 
   ManifestItem, 
   SpineItem,
   EPUBMetadata,
-  WorkspaceInfo,
-  ValidationResult
-} from '../../workspace/types.js';
+} from '../../epub/opf-utils.js';
 
 export interface MockOPFDocument extends OPFDocument {
   manifest: ManifestItem[];
@@ -136,7 +138,7 @@ export class MockWorkspaceManager implements Partial<WorkspaceManager> {
           title: 'Untitled',
           language: 'en',
           identifier: `urn:uuid:${crypto.randomUUID()}`,
-          creator: '',
+          creator: [],
           date: new Date().toISOString().split('T')[0]
         }
       };
@@ -371,7 +373,7 @@ export class MockWorkspaceManager implements Partial<WorkspaceManager> {
         title: 'Test EPUB',
         language: 'en',
         identifier: `urn:uuid:${crypto.randomUUID()}`,
-        creator: 'Test Author',
+        creator: ['Test Author'],
         date: '2024-01-01'
       }
     };

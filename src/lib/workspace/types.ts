@@ -4,6 +4,8 @@
  * Type definitions for workspace management, OPF operations, and error handling.
  */
 
+import type { EPUBMetadata } from '../epub/opf-utils.js';
+
 // Core workspace types
 export interface WorkspaceInfo {
   id: string;
@@ -23,58 +25,6 @@ export interface WorkspacePathInfo {
   opfFileName: string; // OPF filename (e.g., "content.opf")
 }
 
-export interface EPUBMetadata {
-  // Required Dublin Core elements
-  title: string;
-  language: string;
-  identifier: string;
-
-  // Optional Dublin Core elements
-  creator?: string[];
-  contributor?: string[];
-  publisher?: string;
-  date?: string;
-  description?: string;
-  subject?: string[];
-  rights?: string;
-  source?: string;
-  relation?: string;
-  coverage?: string;
-  type?: string;
-  format?: string;
-
-  // EPUB-specific metadata
-  modifiedDate?: string;
-  epubVersion?: string;
-}
-
-export interface OPFDocument {
-  metadata: EPUBMetadata;
-  manifest: ManifestItem[];
-  spine: SpineItem[];
-  guide?: GuideItem[];
-  version?: string; // "2.0" or "3.0"
-}
-
-export interface ManifestItem {
-  id: string;
-  href: string;
-  mediaType: string;
-  properties?: string[];
-  fallback?: string;
-}
-
-export interface SpineItem {
-  idref: string;
-  linear?: boolean;
-  properties?: string[];
-}
-
-export interface GuideItem {
-  type: string;
-  title?: string;
-  href: string;
-}
 
 export interface WorkspacePreview {
   metadata: EPUBMetadata;
