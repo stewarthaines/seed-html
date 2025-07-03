@@ -249,7 +249,7 @@ describe('OPFUtils', () => {
       const parser = new DOMParser();
       const doc = parser.parseFromString(opfContent, 'application/xml');
       const metadata = OPFUtils.parseOPFMetadata(doc);
-      expect(metadata.author).toBe('Test Author');
+      expect(metadata.creator).toEqual(['Test Author']);
       expect(metadata.publisher).toBe('Test Publisher');
       expect(metadata.date).toBe('2023-01-01');
     });
@@ -308,7 +308,7 @@ describe('OPFUtils', () => {
           title: 'Test Book',
           language: 'en',
           identifier: 'test-book-123',
-          author: 'Test Author',
+          creator: ['Test Author'],
         },
         manifest: [
           {

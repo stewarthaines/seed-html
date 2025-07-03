@@ -7,13 +7,12 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { SpineItemManager } from '../spine-item-manager.js';
-import type { MockWorkspaceManager } from '../../../test/mocks/workspace-manager.mock.js';
+import type { MockWorkspaceManager } from '../../test/mocks/workspace-manager.mock.js';
 import {
   createTestWorkspaceManager,
   setupTestWorkspace,
   setupErrorScenario,
   clearErrorScenario,
-  expectRollbackOccurred,
 } from './test-utils.js';
 import { getSampleChapterData } from './fixtures.js';
 
@@ -287,7 +286,7 @@ describe('SpineItemManager Error Handling', () => {
 
       // Some operations may fail due to conflicts
       const successful = results.filter(r => r.status === 'fulfilled');
-      const failed = results.filter(r => r.status === 'rejected');
+      const _failed = results.filter(r => r.status === 'rejected');
 
       // At least one should succeed
       expect(successful.length).toBeGreaterThan(0);

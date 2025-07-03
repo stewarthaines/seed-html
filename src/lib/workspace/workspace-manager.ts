@@ -11,16 +11,18 @@ import { ManifestDependencyTracker } from './dependency-tracker.js';
 import { SourceManager } from '../source/index.js';
 import type {
   WorkspaceInfo,
-  EPUBMetadata,
-  OPFDocument,
-  ManifestItem,
-  SpineItem,
   ValidationResult,
   WorkspacePreview,
   WorkspaceConfig,
   WorkspacePathInfo,
   ValidationError as ValidationErrorType,
 } from './types.js';
+import type {
+  EPUBMetadata,
+  OPFDocument,
+  ManifestItem,
+  SpineItem,
+} from '../epub/opf-utils.js';
 import { WorkspaceError, ValidationError, DEFAULT_WORKSPACE_CONFIG } from './types.js';
 
 export class WorkspaceManager {

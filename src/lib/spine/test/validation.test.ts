@@ -9,10 +9,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { SpineItemManager } from '../spine-item-manager.js';
 import type { MockWorkspaceManager } from '../../test/mocks/workspace-manager.mock.js';
 import { createTestWorkspaceManager, setupTestWorkspace } from './test-utils.js';
-import {
-  getSampleOPFDocuments,
-  getInvalidOPFDocuments,
-} from './fixtures.js';
+import { getSampleOPFDocuments, getInvalidOPFDocuments } from './fixtures.js';
 
 describe('SpineItemManager Validation', () => {
   let spineManager: SpineItemManager;
@@ -371,7 +368,7 @@ describe('SpineItemManager Validation', () => {
           title: 'Empty with Issues',
           language: '', // Invalid metadata
           identifier: '',
-          creator: '',
+          creator: [''],
           date: '',
         },
       });

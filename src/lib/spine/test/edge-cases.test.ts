@@ -13,7 +13,6 @@ import {
   setupTestWorkspace,
   setupLargeSpine,
   measurePerformance,
-  generateTestChapterIds,
 } from './test-utils.js';
 import { getEdgeCaseData, createLargeSpineData } from './fixtures.js';
 
@@ -54,7 +53,7 @@ describe('SpineItemManager Edge Cases', () => {
           title: 'Manifest Only EPUB',
           language: 'en',
           identifier: 'test-manifest-only',
-          creator: 'Test',
+          creator: ['Test'],
           date: '2024-01-01',
         },
       });
@@ -77,7 +76,7 @@ describe('SpineItemManager Edge Cases', () => {
           title: 'Spine Only EPUB',
           language: 'en',
           identifier: 'test-spine-only',
-          creator: 'Test',
+          creator: ['Test'],
           date: '2024-01-01',
         },
       });
@@ -95,7 +94,7 @@ describe('SpineItemManager Edge Cases', () => {
           title: 'Single Item EPUB',
           language: 'en',
           identifier: 'test-single',
-          creator: 'Test',
+          creator: ['Test'],
           date: '2024-01-01',
         },
       });
@@ -274,7 +273,7 @@ describe('SpineItemManager Edge Cases', () => {
           title: 'Large EPUB with Sources',
           language: 'en',
           identifier: 'test-large-sources',
-          creator: 'Test',
+          creator: ['Test'],
           date: '2024-01-01',
         },
       });
@@ -399,7 +398,7 @@ describe('SpineItemManager Edge Cases', () => {
           title: 'Non-standard Sources',
           language: 'en',
           identifier: 'test-nonstandard',
-          creator: 'Test',
+          creator: ['Test'],
           date: '2024-01-01',
         },
       });
@@ -446,7 +445,7 @@ describe('SpineItemManager Edge Cases', () => {
           title: 'Nested Structure EPUB',
           language: 'en',
           identifier: 'test-nested',
-          creator: 'Test',
+          creator: ['Test'],
           date: '2024-01-01',
         },
       });
@@ -561,7 +560,7 @@ describe('SpineItemManager Edge Cases', () => {
         spineManager.moveChapterUp(testWorkspaceId, 2),
       ];
 
-      const results = await Promise.allSettled(concurrentReorders);
+      const _results = await Promise.allSettled(concurrentReorders);
 
       // Final state should be consistent regardless of which succeeded
       const items = await spineManager.loadSpineItems(testWorkspaceId);

@@ -1,11 +1,11 @@
 /**
  * SpineItemManager - Comprehensive Chapter Management for EPUB Files
- * 
+ *
  * Provides complete spine management functionality including chapter creation,
  * ordering, source file association, and validation. Integrates with WorkspaceManager
  * for atomic file operations and maintains consistency between manifest, spine,
  * and source files.
- * 
+ *
  * Key Features:
  * - Atomic operations with rollback on failure
  * - Source file association by naming convention (SOURCE/text/{id}.txt)
@@ -13,24 +13,24 @@
  * - Comprehensive spine ordering operations
  * - XHTML file creation with proper templates
  * - Full validation of spine consistency
- * 
+ *
  * @example
  * ```typescript
  * const spineManager = new SpineItemManager(workspaceManager);
- * 
+ *
  * // Add new chapter
  * const chapter = await spineManager.addChapter('workspace-123', {
  *   title: 'Chapter 1: Introduction',
  *   linear: true
  * });
- * 
+ *
  * // Reorder chapters
  * await spineManager.reorderItems('workspace-123', 0, 2);
  * ```
  */
 
 import type { WorkspaceManager } from '../workspace/index.js';
-import type { ManifestItem, SpineItem, OPFDocument } from '../workspace/types.js';
+import type { ManifestItem, SpineItem } from '../epub/opf-utils.js';
 import type {
   SpineItemWithSource,
   ChapterCreationData,
@@ -38,7 +38,7 @@ import type {
   ChapterDeletionOptions,
   SpineValidationResult,
   SpineValidationError,
-  SpineValidationWarning
+  SpineValidationWarning,
 } from './types.js';
 
 export class SpineItemManager {
@@ -69,17 +69,17 @@ export class SpineItemManager {
       const spineItemWithSource: SpineItemWithSource = {
         // Spine properties
         idref: spineItem.idref,
-        linear: spineItem.linear,
+        linear: spineItem.linear ?? true,
         properties: spineItem.properties,
-        
+
         // Manifest properties
         id: manifestItem.id,
         href: manifestItem.href,
         mediaType: manifestItem.mediaType,
-        
+
         // Source file association
         hasSourceFile,
-        sourcePath: hasSourceFile ? sourcePath : undefined
+        sourcePath: hasSourceFile ? sourcePath : undefined,
       };
 
       spineItems.push(spineItemWithSource);
@@ -91,7 +91,10 @@ export class SpineItemManager {
   /**
    * Create a new chapter with XHTML file, manifest entry, spine item, and optional source file
    */
-  async addChapter(workspaceId: string, chapterData: ChapterCreationData): Promise<SpineItemWithSource> {
+  async addChapter(
+    workspaceId: string,
+    chapterData: ChapterCreationData
+  ): Promise<SpineItemWithSource> {
     if (this.workspaceManager.startTransaction) {
       this.workspaceManager.startTransaction();
     }
@@ -99,17 +102,17 @@ export class SpineItemManager {
     try {
       // Generate unique chapter ID
       const chapterId = await this.generateChapterId(workspaceId, chapterData.title);
-      
+
       // Generate filename if not provided
       const fileName = chapterData.fileName || `${chapterId}.xhtml`;
-      
+
       // Validate filename format
       if (!this.isValidFilename(fileName)) {
         throw new Error(`Invalid filename format: ${fileName}`);
       }
 
       const href = `Text/${fileName}`;
-      
+
       // Check for filename conflicts
       const opf = await this.workspaceManager.getWorkspaceOPF(workspaceId);
       if (opf.manifest.some(item => item.href === href)) {
@@ -120,14 +123,14 @@ export class SpineItemManager {
       const manifestItem: ManifestItem = {
         id: chapterId,
         href,
-        mediaType: 'application/xhtml+xml'
+        mediaType: 'application/xhtml+xml',
       };
 
       // Create spine item
       const spineItem: SpineItem = {
         idref: chapterId,
         linear: chapterData.linear ?? true,
-        properties: chapterData.properties
+        properties: chapterData.properties,
       };
 
       // Add to manifest and spine
@@ -141,11 +144,11 @@ export class SpineItemManager {
       // Create source file if requested (default: true)
       let hasSourceFile = false;
       let sourcePath: string | undefined;
-      
+
       if (chapterData.createSourceFile !== false) {
         sourcePath = await this.createSourceFile(
-          workspaceId, 
-          chapterId, 
+          workspaceId,
+          chapterId,
           chapterData.sourceContent || this.generateSourceContent(chapterData.title)
         );
         hasSourceFile = true;
@@ -158,19 +161,18 @@ export class SpineItemManager {
       return {
         // Spine properties
         idref: spineItem.idref,
-        linear: spineItem.linear,
+        linear: spineItem.linear ?? true,
         properties: spineItem.properties,
-        
+
         // Manifest properties
         id: manifestItem.id,
         href: manifestItem.href,
         mediaType: manifestItem.mediaType,
-        
+
         // Source file association
         hasSourceFile,
-        sourcePath
+        sourcePath,
       };
-
     } catch (error) {
       if (this.workspaceManager.rollbackTransaction) {
         this.workspaceManager.rollbackTransaction();
@@ -182,18 +184,22 @@ export class SpineItemManager {
   /**
    * Update chapter properties including filename, linearity, and properties
    */
-  async updateChapter(workspaceId: string, chapterId: string, updates: ChapterUpdateData): Promise<SpineItemWithSource> {
+  async updateChapter(
+    workspaceId: string,
+    chapterId: string,
+    updates: ChapterUpdateData
+  ): Promise<SpineItemWithSource> {
     if (this.workspaceManager.startTransaction) {
       this.workspaceManager.startTransaction();
     }
 
     try {
       const opf = await this.workspaceManager.getWorkspaceOPF(workspaceId);
-      
+
       // Find existing manifest and spine items
       const manifestItem = opf.manifest.find(item => item.id === chapterId);
       const spineItem = opf.spine.find(item => item.idref === chapterId);
-      
+
       if (!manifestItem || !spineItem) {
         throw new Error(`Chapter not found: ${chapterId}`);
       }
@@ -208,7 +214,7 @@ export class SpineItemManager {
         }
 
         const newHrefCandidate = `Text/${updates.fileName}`;
-        
+
         // Check for filename conflicts (excluding current item)
         if (opf.manifest.some(item => item.href === newHrefCandidate && item.id !== chapterId)) {
           throw new Error(`File already exists: ${newHrefCandidate}`);
@@ -236,7 +242,10 @@ export class SpineItemManager {
 
         // Rename source file if it exists
         try {
-          const sourceContent = await this.workspaceManager.readTextFile(workspaceId, oldSourcePath);
+          const sourceContent = await this.workspaceManager.readTextFile(
+            workspaceId,
+            oldSourcePath
+          );
           await this.workspaceManager.writeTextFile(workspaceId, newSourcePath, sourceContent);
           await this.workspaceManager.deleteFile(workspaceId, oldSourcePath);
         } catch (error) {
@@ -250,17 +259,17 @@ export class SpineItemManager {
         const updatedManifestItem: ManifestItem = {
           id: newId,
           href: newHref,
-          mediaType: manifestItem.mediaType
+          mediaType: manifestItem.mediaType,
         };
 
         const updatedSpineItem: SpineItem = {
           idref: newId,
           linear: updates.linear ?? spineItem.linear,
-          properties: updates.properties ?? spineItem.properties
+          properties: updates.properties ?? spineItem.properties,
         };
 
         await this.workspaceManager.addManifestItem(workspaceId, updatedManifestItem);
-        
+
         // Find original position and insert at same position
         const originalIndex = opf.spine.findIndex(item => item.idref === chapterId);
         await this.workspaceManager.addSpineItem(workspaceId, updatedSpineItem, originalIndex);
@@ -270,7 +279,7 @@ export class SpineItemManager {
           const updatedSpineItem: SpineItem = {
             idref: spineItem.idref,
             linear: updates.linear ?? spineItem.linear,
-            properties: updates.properties ?? spineItem.properties
+            properties: updates.properties ?? spineItem.properties,
           };
 
           await this.workspaceManager.removeSpineItem(workspaceId, chapterId);
@@ -301,9 +310,8 @@ export class SpineItemManager {
         href: newHref,
         mediaType: manifestItem.mediaType,
         hasSourceFile,
-        sourcePath: hasSourceFile ? sourcePath : undefined
+        sourcePath: hasSourceFile ? sourcePath : undefined,
       };
-
     } catch (error) {
       this.workspaceManager.rollbackTransaction();
       throw error;
@@ -313,17 +321,21 @@ export class SpineItemManager {
   /**
    * Delete chapter with options to preserve files and manifest entries
    */
-  async deleteChapter(workspaceId: string, chapterId: string, options: ChapterDeletionOptions = {}): Promise<void> {
+  async deleteChapter(
+    workspaceId: string,
+    chapterId: string,
+    options: ChapterDeletionOptions = {}
+  ): Promise<void> {
     if (this.workspaceManager.startTransaction) {
       this.workspaceManager.startTransaction();
     }
 
     try {
       const opf = await this.workspaceManager.getWorkspaceOPF(workspaceId);
-      
+
       const manifestItem = opf.manifest.find(item => item.id === chapterId);
       const spineItem = opf.spine.find(item => item.idref === chapterId);
-      
+
       if (!manifestItem || !spineItem) {
         throw new Error(`Chapter not found: ${chapterId}`);
       }
@@ -359,7 +371,6 @@ export class SpineItemManager {
       if (this.workspaceManager.commitTransaction) {
         this.workspaceManager.commitTransaction();
       }
-
     } catch (error) {
       if (this.workspaceManager.rollbackTransaction) {
         this.workspaceManager.rollbackTransaction();
@@ -371,17 +382,21 @@ export class SpineItemManager {
   /**
    * Move chapter from one position to another in spine order
    */
-  async reorderItems(workspaceId: string, fromIndex: number, toIndex: number): Promise<SpineItemWithSource[]> {
+  async reorderItems(
+    workspaceId: string,
+    fromIndex: number,
+    toIndex: number
+  ): Promise<SpineItemWithSource[]> {
     const items = await this.loadSpineItems(workspaceId);
-    
+
     if (!Number.isInteger(fromIndex) || !Number.isInteger(toIndex)) {
       throw new Error('Indices must be integers');
     }
-    
+
     if (fromIndex < 0 || fromIndex >= items.length) {
       throw new Error(`Invalid fromIndex: ${fromIndex}`);
     }
-    
+
     if (toIndex < 0 || toIndex >= items.length) {
       throw new Error(`Invalid toIndex: ${toIndex}`);
     }
@@ -406,7 +421,7 @@ export class SpineItemManager {
    */
   async moveChapterUp(workspaceId: string, chapterIndex: number): Promise<SpineItemWithSource[]> {
     const items = await this.loadSpineItems(workspaceId);
-    
+
     if (chapterIndex < 0 || chapterIndex >= items.length) {
       throw new Error(`Invalid index: ${chapterIndex}`);
     }
@@ -417,7 +432,7 @@ export class SpineItemManager {
 
     // If already at top, move to bottom
     const newIndex = chapterIndex === 0 ? items.length - 1 : chapterIndex - 1;
-    
+
     return this.reorderItems(workspaceId, chapterIndex, newIndex);
   }
 
@@ -426,7 +441,7 @@ export class SpineItemManager {
    */
   async moveChapterDown(workspaceId: string, chapterIndex: number): Promise<SpineItemWithSource[]> {
     const items = await this.loadSpineItems(workspaceId);
-    
+
     if (chapterIndex < 0 || chapterIndex >= items.length) {
       throw new Error(`Invalid index: ${chapterIndex}`);
     }
@@ -441,7 +456,7 @@ export class SpineItemManager {
 
     // If already at bottom, move to top
     const newIndex = chapterIndex === items.length - 1 ? 0 : chapterIndex + 1;
-    
+
     return this.reorderItems(workspaceId, chapterIndex, newIndex);
   }
 
@@ -452,7 +467,7 @@ export class SpineItemManager {
     // Validate all items exist and no duplicates
     const idrefs = spineItems.map(item => item.idref);
     const uniqueIdrefs = new Set(idrefs);
-    
+
     if (uniqueIdrefs.size !== idrefs.length) {
       throw new Error('Duplicate items in spine order');
     }
@@ -464,30 +479,39 @@ export class SpineItemManager {
   /**
    * Create source file for chapter with optional initial content
    */
-  async createSourceFile(workspaceId: string, chapterId: string, content?: string): Promise<string> {
+  async createSourceFile(
+    workspaceId: string,
+    chapterId: string,
+    content?: string
+  ): Promise<string> {
     const sourcePath = `SOURCE/text/${chapterId}.txt`;
     const sourceContent = content || this.generateSourceContent(chapterId);
-    
+
     await this.workspaceManager.writeTextFile(workspaceId, sourcePath, sourceContent);
-    
+
     return sourcePath;
   }
 
   /**
    * Generate unique chapter ID with collision handling
    */
-  async generateChapterId(workspaceId: string, baseTitle?: string, excludeId?: string): Promise<string> {
+  async generateChapterId(
+    workspaceId: string,
+    baseTitle?: string,
+    excludeId?: string
+  ): Promise<string> {
     const opf = await this.workspaceManager.getWorkspaceOPF(workspaceId);
     const existingIds = new Set(opf.manifest.map(item => item.id).filter(id => id !== excludeId));
 
     // Check if title suggests sequential numbering or is a generic title
-    const isSequentialTitle = !baseTitle || 
+    const isSequentialTitle =
+      !baseTitle ||
       baseTitle.trim() === '' ||
       /^(first|second|third|another|test)\s+chapter$/i.test(baseTitle.trim()) ||
       /^untitled$/i.test(baseTitle.trim());
 
     let baseId: string;
-    
+
     if (isSequentialTitle) {
       // Generate sequential ID
       baseId = 'chapter';
@@ -534,7 +558,7 @@ export class SpineItemManager {
           code: 'MISSING_MANIFEST_ITEM',
           message: `Spine item references missing manifest item: ${spineItem.idref}`,
           chapterId: spineItem.idref,
-          severity: 'error'
+          severity: 'error',
         });
       }
     }
@@ -549,7 +573,7 @@ export class SpineItemManager {
           code: 'DUPLICATE_SPINE_ITEM',
           message: `Duplicate spine item: ${duplicate}`,
           chapterId: duplicate,
-          severity: 'error'
+          severity: 'error',
         });
       }
     }
@@ -563,19 +587,19 @@ export class SpineItemManager {
           code: 'ORPHANED_TEXT_FILE',
           message: `Text file not included in reading order: ${orphaned.href}`,
           chapterId: orphaned.id,
-          severity: 'warning'
+          severity: 'warning',
         });
       }
     }
 
     // Check for orphaned source files (source files that don't correspond to any spine item)
     let orphanedSources = 0;
-    
+
     // For testing, we can access the mock workspace files directly to check for orphaned sources
     if (typeof (this.workspaceManager as any).getWorkspaceFiles === 'function') {
       const allFiles = (this.workspaceManager as any).getWorkspaceFiles(workspaceId);
       const spineIds = new Set(opf.spine.map(item => item.idref));
-      
+
       for (const [filePath] of allFiles) {
         if (filePath.startsWith('SOURCE/text/') && filePath.endsWith('.txt')) {
           // Extract the ID from the file path: SOURCE/text/chapterId.txt -> chapterId
@@ -592,7 +616,7 @@ export class SpineItemManager {
 
     const linearItems = opf.spine.filter(item => item.linear).length;
     const nonLinearItems = opf.spine.filter(item => !item.linear).length;
-    
+
     // Count items with source files
     let itemsWithSource = 0;
     for (const spineItem of opf.spine) {
@@ -612,8 +636,8 @@ export class SpineItemManager {
         linearItems,
         nonLinearItems,
         itemsWithSource,
-        orphanedSources
-      }
+        orphanedSources,
+      },
     };
   }
 
@@ -641,7 +665,7 @@ export class SpineItemManager {
       .replace(/\s+/g, '-') // Replace spaces with hyphens
       .replace(/-+/g, '-') // Collapse multiple hyphens
       .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
-    
+
     // Truncate to max 100 characters and remove any trailing hyphens
     return sanitized.slice(0, 100).replace(/-$/g, '');
   }

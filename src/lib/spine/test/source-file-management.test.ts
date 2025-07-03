@@ -14,7 +14,6 @@ import {
   setupWorkspaceWithSourceFiles,
   expectSourceFileCreated,
   setupErrorScenario,
-  clearErrorScenario,
 } from './test-utils.js';
 
 describe('SpineItemManager Source File Management', () => {
@@ -69,7 +68,7 @@ describe('SpineItemManager Source File Management', () => {
       // First, add a chapter to get its title
       await spineManager.addChapter(testWorkspaceId, { title: 'Amazing Chapter Title' });
 
-      const sourcePath = await spineManager.createSourceFile(testWorkspaceId, 'chapter4');
+      const _sourcePath = await spineManager.createSourceFile(testWorkspaceId, 'chapter4');
 
       const files = mockWorkspaceManager.getWorkspaceFiles(testWorkspaceId);
       const content = files.get('SOURCE/text/chapter4.txt') as string;
@@ -250,7 +249,7 @@ describe('SpineItemManager Source File Management', () => {
           title: 'Test EPUB',
           language: 'en',
           identifier: 'test',
-          creator: 'Test',
+          creator: ['Test'],
           date: '2024-01-01',
         },
       });
@@ -453,7 +452,7 @@ describe('SpineItemManager Source File Management', () => {
           title: 'Test EPUB',
           language: 'en',
           identifier: 'test',
-          creator: 'Test',
+          creator: ['Test'],
           date: '2024-01-01',
         },
       });
