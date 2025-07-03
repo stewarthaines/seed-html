@@ -10,8 +10,8 @@ import { createMockWorkspaceManager, type MockWorkspaceManager } from '../../tes
 import type { SpineItemWithSource } from '../types.js';
 import type { ManifestItem, SpineItem } from '../../workspace/types.js';
 import { 
-  SAMPLE_OPF_DOCUMENTS, 
-  SAMPLE_WORKSPACE_FILES,
+  getSampleOPFDocuments, 
+  getSampleWorkspaceFiles,
   createTestOPF,
   createTestWorkspaceFiles 
 } from './fixtures.js';
@@ -33,7 +33,7 @@ export async function setupTestWorkspace(
   workspaceId: string,
   scenario: 'empty' | 'basic' | 'withNonLinear' | 'withProperties' = 'basic'
 ): Promise<void> {
-  const opf = SAMPLE_OPF_DOCUMENTS[scenario];
+  const opf = getSampleOPFDocuments()[scenario];
   mockWorkspace.setWorkspaceOPF(workspaceId, opf);
   
   // Add corresponding files
@@ -51,11 +51,11 @@ export async function setupWorkspaceWithSourceFiles(
   sourceFileScenario: 'withSourceFiles' | 'mixedSourceFiles' | 'noSourceFiles'
 ): Promise<void> {
   // Set up basic OPF
-  const opf = SAMPLE_OPF_DOCUMENTS.basic;
+  const opf = getSampleOPFDocuments().basic;
   mockWorkspace.setWorkspaceOPF(workspaceId, opf);
   
   // Add files based on scenario
-  const files = SAMPLE_WORKSPACE_FILES[sourceFileScenario];
+  const files = getSampleWorkspaceFiles()[sourceFileScenario];
   mockWorkspace.addTestFiles(workspaceId, files);
 }
 

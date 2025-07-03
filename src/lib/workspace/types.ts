@@ -53,7 +53,7 @@ export interface OPFDocument {
   manifest: ManifestItem[];
   spine: SpineItem[];
   guide?: GuideItem[];
-  version: string; // "2.0" or "3.0"
+  version?: string; // "2.0" or "3.0"
 }
 
 export interface ManifestItem {

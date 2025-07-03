@@ -1,22 +1,17 @@
 /**
  * SpineItemManager Validation Tests
- * 
+ *
  * Unit tests for spine consistency validation including spine-manifest consistency,
  * duplicate detection, orphaned file detection, and comprehensive validation reporting.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { SpineItemManager } from '../spine-item-manager.js';
-import type { MockWorkspaceManager } from '../../../test/mocks/workspace-manager.mock.js';
-import type { SpineValidationResult } from '../types.js';
+import type { MockWorkspaceManager } from '../../test/mocks/workspace-manager.mock.js';
+import { createTestWorkspaceManager, setupTestWorkspace } from './test-utils.js';
 import {
-  createTestWorkspaceManager,
-  setupTestWorkspace
-} from './test-utils.js';
-import {
-  SAMPLE_OPF_DOCUMENTS,
-  INVALID_OPF_DOCUMENTS,
-  SAMPLE_VALIDATION_RESULTS
+  getSampleOPFDocuments,
+  getInvalidOPFDocuments,
 } from './fixtures.js';
 
 describe('SpineItemManager Validation', () => {
@@ -46,13 +41,16 @@ describe('SpineItemManager Validation', () => {
         expect.objectContaining({
           totalItems: 3,
           linearItems: 3,
-          nonLinearItems: 0
+          nonLinearItems: 0,
         })
       );
     });
 
     it('should detect missing manifest items', async () => {
-      mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, INVALID_OPF_DOCUMENTS.missingManifestItems);
+      mockWorkspaceManager.setWorkspaceOPF(
+        testWorkspaceId,
+        getInvalidOPFDocuments().missingManifestItems
+      );
 
       const result = await spineManager.validateSpineOrder(testWorkspaceId);
 
@@ -63,13 +61,16 @@ describe('SpineItemManager Validation', () => {
           code: 'MISSING_MANIFEST_ITEM',
           message: expect.stringContaining('chapter2'),
           chapterId: 'chapter2',
-          severity: 'error'
+          severity: 'error',
         })
       );
     });
 
     it('should detect duplicate spine items', async () => {
-      mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, INVALID_OPF_DOCUMENTS.duplicateSpineItems);
+      mockWorkspaceManager.setWorkspaceOPF(
+        testWorkspaceId,
+        getInvalidOPFDocuments().duplicateSpineItems
+      );
 
       const result = await spineManager.validateSpineOrder(testWorkspaceId);
 
@@ -80,13 +81,16 @@ describe('SpineItemManager Validation', () => {
           code: 'DUPLICATE_SPINE_ITEM',
           message: expect.stringContaining('chapter1'),
           chapterId: 'chapter1',
-          severity: 'error'
+          severity: 'error',
         })
       );
     });
 
     it('should detect orphaned text files', async () => {
-      mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, INVALID_OPF_DOCUMENTS.orphanedManifestItems);
+      mockWorkspaceManager.setWorkspaceOPF(
+        testWorkspaceId,
+        getInvalidOPFDocuments().orphanedManifestItems
+      );
 
       const result = await spineManager.validateSpineOrder(testWorkspaceId);
 
@@ -97,7 +101,7 @@ describe('SpineItemManager Validation', () => {
           code: 'ORPHANED_TEXT_FILE',
           message: expect.stringContaining('chapter3'),
           chapterId: 'chapter3',
-          severity: 'warning'
+          severity: 'warning',
         })
       );
     });
@@ -114,12 +118,12 @@ describe('SpineItemManager Validation', () => {
     });
 
     it('should count items with source files', async () => {
-      mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, SAMPLE_OPF_DOCUMENTS.basic);
-      
+      mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, getSampleOPFDocuments().basic);
+
       // Add some source files
       mockWorkspaceManager.addTestFiles(testWorkspaceId, {
         'SOURCE/text/chapter1.txt': '# Chapter 1',
-        'SOURCE/text/chapter2.txt': '# Chapter 2'
+        'SOURCE/text/chapter2.txt': '# Chapter 2',
         // chapter3 has no source file
       });
 
@@ -129,14 +133,14 @@ describe('SpineItemManager Validation', () => {
     });
 
     it('should detect orphaned source files', async () => {
-      mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, SAMPLE_OPF_DOCUMENTS.basic);
-      
+      mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, getSampleOPFDocuments().basic);
+
       // Add source files including orphans
       mockWorkspaceManager.addTestFiles(testWorkspaceId, {
         'SOURCE/text/chapter1.txt': '# Chapter 1',
         'SOURCE/text/chapter2.txt': '# Chapter 2',
         'SOURCE/text/chapter3.txt': '# Chapter 3',
-        'SOURCE/text/orphaned-chapter.txt': '# Orphaned Chapter'
+        'SOURCE/text/orphaned-chapter.txt': '# Orphaned Chapter',
       });
 
       const result = await spineManager.validateSpineOrder(testWorkspaceId);
@@ -157,22 +161,24 @@ describe('SpineItemManager Validation', () => {
         linearItems: 0,
         nonLinearItems: 0,
         itemsWithSource: 0,
-        orphanedSources: 0
+        orphanedSources: 0,
       });
     });
 
     it('should handle workspace not found', async () => {
       mockWorkspaceManager.setFailureMode('workspace-not-found');
 
-      await expect(spineManager.validateSpineOrder('nonexistent-workspace'))
-        .rejects.toThrow('Workspace not found');
+      await expect(spineManager.validateSpineOrder('nonexistent-workspace')).rejects.toThrow(
+        'Workspace not found'
+      );
     });
 
     it('should handle corrupted OPF data', async () => {
       mockWorkspaceManager.setFailureMode('opf-read');
 
-      await expect(spineManager.validateSpineOrder(testWorkspaceId))
-        .rejects.toThrow('Failed to read OPF document');
+      await expect(spineManager.validateSpineOrder(testWorkspaceId)).rejects.toThrow(
+        'Failed to read OPF document'
+      );
     });
   });
 
@@ -182,20 +188,20 @@ describe('SpineItemManager Validation', () => {
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
         manifest: [
           { id: 'chapter1', href: 'Text/chapter1.xhtml', mediaType: 'application/xhtml+xml' },
-          { id: 'orphaned', href: 'Text/orphaned.xhtml', mediaType: 'application/xhtml+xml' }
+          { id: 'orphaned', href: 'Text/orphaned.xhtml', mediaType: 'application/xhtml+xml' },
         ],
         spine: [
           { idref: 'chapter1', linear: true },
           { idref: 'missing-chapter', linear: true }, // Missing from manifest
-          { idref: 'chapter1', linear: true } // Duplicate
+          { idref: 'chapter1', linear: true }, // Duplicate
         ],
         metadata: {
           title: 'Complex Issues EPUB',
           language: 'en',
           identifier: 'test-complex',
-          creator: 'Test',
-          date: '2024-01-01'
-        }
+          creator: ['Test'],
+          date: '2024-01-01',
+        },
       });
 
       const result = await spineManager.validateSpineOrder(testWorkspaceId);
@@ -206,10 +212,10 @@ describe('SpineItemManager Validation', () => {
 
       // Should detect missing manifest item
       expect(result.errors.some(error => error.code === 'MISSING_MANIFEST_ITEM')).toBe(true);
-      
+
       // Should detect duplicate spine item
       expect(result.errors.some(error => error.code === 'DUPLICATE_SPINE_ITEM')).toBe(true);
-      
+
       // Should detect orphaned manifest item
       expect(result.warnings.some(warning => warning.code === 'ORPHANED_TEXT_FILE')).toBe(true);
     });
@@ -221,7 +227,7 @@ describe('SpineItemManager Validation', () => {
 
       expect(result.isValid).toBe(true);
       expect(result.summary.totalItems).toBe(4);
-      
+
       // Should handle items with properties correctly
       expect(result.summary.linearItems).toBe(2); // cover and toc should be non-linear
       expect(result.summary.nonLinearItems).toBe(2);
@@ -232,24 +238,22 @@ describe('SpineItemManager Validation', () => {
         manifest: [
           { id: 'chapter1', href: 'Text/chapter1.xhtml', mediaType: 'application/xhtml+xml' },
           { id: 'style', href: 'Styles/style.css', mediaType: 'text/css' },
-          { id: 'image', href: 'Images/cover.jpg', mediaType: 'image/jpeg' }
+          { id: 'image', href: 'Images/cover.jpg', mediaType: 'image/jpeg' },
         ],
-        spine: [
-          { idref: 'chapter1', linear: true }
-        ],
+        spine: [{ idref: 'chapter1', linear: true }],
         metadata: {
           title: 'Mixed Media EPUB',
           language: 'en',
           identifier: 'test-mixed',
-          creator: 'Test',
-          date: '2024-01-01'
-        }
+          creator: ['Test'],
+          date: '2024-01-01',
+        },
       });
 
       const result = await spineManager.validateSpineOrder(testWorkspaceId);
 
       expect(result.isValid).toBe(true);
-      
+
       // Only XHTML files should be considered for orphan detection
       expect(result.warnings).toHaveLength(0);
     });
@@ -259,12 +263,12 @@ describe('SpineItemManager Validation', () => {
       const largeManifest = Array.from({ length: 1000 }, (_, i) => ({
         id: `chapter${i + 1}`,
         href: `Text/chapter${i + 1}.xhtml`,
-        mediaType: 'application/xhtml+xml'
+        mediaType: 'application/xhtml+xml',
       }));
 
       const largeSpine = Array.from({ length: 1000 }, (_, i) => ({
         idref: `chapter${i + 1}`,
-        linear: true
+        linear: true,
       }));
 
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
@@ -274,9 +278,9 @@ describe('SpineItemManager Validation', () => {
           title: 'Large EPUB',
           language: 'en',
           identifier: 'test-large',
-          creator: 'Test',
-          date: '2024-01-01'
-        }
+          creator: ['Test'],
+          date: '2024-01-01',
+        },
       });
 
       const startTime = Date.now();
@@ -292,12 +296,12 @@ describe('SpineItemManager Validation', () => {
   describe('Validation Result Structure', () => {
     it('should provide comprehensive summary information', async () => {
       await setupTestWorkspace(mockWorkspaceManager, testWorkspaceId, 'withNonLinear');
-      
+
       // Add some source files
       mockWorkspaceManager.addTestFiles(testWorkspaceId, {
         'SOURCE/text/chapter1.txt': '# Chapter 1',
         'SOURCE/text/epilogue.txt': '# Epilogue',
-        'SOURCE/text/orphaned.txt': '# Orphaned'
+        'SOURCE/text/orphaned.txt': '# Orphaned',
       });
 
       const result = await spineManager.validateSpineOrder(testWorkspaceId);
@@ -307,19 +311,23 @@ describe('SpineItemManager Validation', () => {
         linearItems: expect.any(Number),
         nonLinearItems: expect.any(Number),
         itemsWithSource: expect.any(Number),
-        orphanedSources: expect.any(Number)
+        orphanedSources: expect.any(Number),
       });
 
       // Verify counts make sense
       expect(result.summary.totalItems).toBeGreaterThan(0);
-      expect(result.summary.linearItems + result.summary.nonLinearItems)
-        .toBe(result.summary.totalItems);
+      expect(result.summary.linearItems + result.summary.nonLinearItems).toBe(
+        result.summary.totalItems
+      );
       expect(result.summary.itemsWithSource).toBeGreaterThanOrEqual(0);
       expect(result.summary.orphanedSources).toBeGreaterThanOrEqual(0);
     });
 
     it('should provide detailed error information', async () => {
-      mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, INVALID_OPF_DOCUMENTS.missingManifestItems);
+      mockWorkspaceManager.setWorkspaceOPF(
+        testWorkspaceId,
+        getInvalidOPFDocuments().missingManifestItems
+      );
 
       const result = await spineManager.validateSpineOrder(testWorkspaceId);
 
@@ -327,7 +335,7 @@ describe('SpineItemManager Validation', () => {
         code: expect.any(String),
         message: expect.any(String),
         chapterId: expect.any(String),
-        severity: 'error'
+        severity: 'error',
       });
 
       expect(result.errors[0].code).toBe('MISSING_MANIFEST_ITEM');
@@ -336,7 +344,10 @@ describe('SpineItemManager Validation', () => {
     });
 
     it('should provide detailed warning information', async () => {
-      mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, INVALID_OPF_DOCUMENTS.orphanedManifestItems);
+      mockWorkspaceManager.setWorkspaceOPF(
+        testWorkspaceId,
+        getInvalidOPFDocuments().orphanedManifestItems
+      );
 
       const result = await spineManager.validateSpineOrder(testWorkspaceId);
 
@@ -344,7 +355,7 @@ describe('SpineItemManager Validation', () => {
         code: expect.any(String),
         message: expect.any(String),
         chapterId: expect.any(String),
-        severity: 'warning'
+        severity: 'warning',
       });
 
       expect(result.warnings[0].code).toBe('ORPHANED_TEXT_FILE');
@@ -361,8 +372,8 @@ describe('SpineItemManager Validation', () => {
           language: '', // Invalid metadata
           identifier: '',
           creator: '',
-          date: ''
-        }
+          date: '',
+        },
       });
 
       const result = await spineManager.validateSpineOrder(testWorkspaceId);
@@ -373,7 +384,7 @@ describe('SpineItemManager Validation', () => {
           isValid: expect.any(Boolean),
           errors: expect.any(Array),
           warnings: expect.any(Array),
-          summary: expect.any(Object)
+          summary: expect.any(Object),
         })
       );
     });
@@ -383,20 +394,20 @@ describe('SpineItemManager Validation', () => {
     it('should handle malformed spine items', async () => {
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
         manifest: [
-          { id: 'chapter1', href: 'Text/chapter1.xhtml', mediaType: 'application/xhtml+xml' }
+          { id: 'chapter1', href: 'Text/chapter1.xhtml', mediaType: 'application/xhtml+xml' },
         ],
         spine: [
           { idref: '', linear: true } as any, // Empty idref
           { idref: null, linear: true } as any, // Null idref
-          { linear: true } as any // Missing idref
+          { linear: true } as any, // Missing idref
         ],
         metadata: {
           title: 'Malformed Spine',
           language: 'en',
           identifier: 'test-malformed',
-          creator: 'Test',
-          date: '2024-01-01'
-        }
+          creator: ['Test'],
+          date: '2024-01-01',
+        },
       });
 
       const result = await spineManager.validateSpineOrder(testWorkspaceId);
@@ -410,18 +421,16 @@ describe('SpineItemManager Validation', () => {
         manifest: [
           { id: '', href: 'Text/chapter1.xhtml', mediaType: 'application/xhtml+xml' } as any, // Empty ID
           { href: 'Text/chapter2.xhtml', mediaType: 'application/xhtml+xml' } as any, // Missing ID
-          { id: 'chapter3', mediaType: 'application/xhtml+xml' } as any // Missing href
+          { id: 'chapter3', mediaType: 'application/xhtml+xml' } as any, // Missing href
         ],
-        spine: [
-          { idref: 'chapter1', linear: true }
-        ],
+        spine: [{ idref: 'chapter1', linear: true }],
         metadata: {
           title: 'Malformed Manifest',
           language: 'en',
           identifier: 'test-malformed-manifest',
-          creator: 'Test',
-          date: '2024-01-01'
-        }
+          creator: ['Test'],
+          date: '2024-01-01',
+        },
       });
 
       const result = await spineManager.validateSpineOrder(testWorkspaceId);
@@ -434,16 +443,18 @@ describe('SpineItemManager Validation', () => {
       // This is more theoretical, but test robustness
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
         manifest: [
-          { id: 'chapter1', href: 'Text/chapter1.xhtml', mediaType: 'application/xhtml+xml' }
+          { id: 'chapter1', href: 'Text/chapter1.xhtml', mediaType: 'application/xhtml+xml' },
         ],
-        spine: Array(100).fill(0).map(() => ({ idref: 'chapter1', linear: true })), // 100 references to same item
+        spine: Array(100)
+          .fill(0)
+          .map(() => ({ idref: 'chapter1', linear: true })), // 100 references to same item
         metadata: {
           title: 'Circular References',
           language: 'en',
           identifier: 'test-circular',
-          creator: 'Test',
-          date: '2024-01-01'
-        }
+          creator: ['Test'],
+          date: '2024-01-01',
+        },
       });
 
       const result = await spineManager.validateSpineOrder(testWorkspaceId);
@@ -456,7 +467,7 @@ describe('SpineItemManager Validation', () => {
       // Create spine with many missing references
       const manyMissingSpine = Array.from({ length: 1000 }, (_, i) => ({
         idref: `missing-chapter${i}`,
-        linear: true
+        linear: true,
       }));
 
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
@@ -466,9 +477,9 @@ describe('SpineItemManager Validation', () => {
           title: 'Many Errors',
           language: 'en',
           identifier: 'test-many-errors',
-          creator: 'Test',
-          date: '2024-01-01'
-        }
+          creator: ['Test'],
+          date: '2024-01-01',
+        },
       });
 
       const startTime = Date.now();
@@ -481,7 +492,10 @@ describe('SpineItemManager Validation', () => {
     });
 
     it('should provide meaningful error messages', async () => {
-      mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, INVALID_OPF_DOCUMENTS.missingManifestItems);
+      mockWorkspaceManager.setWorkspaceOPF(
+        testWorkspaceId,
+        getInvalidOPFDocuments().missingManifestItems
+      );
 
       const result = await spineManager.validateSpineOrder(testWorkspaceId);
 
