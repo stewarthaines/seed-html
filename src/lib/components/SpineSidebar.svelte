@@ -27,6 +27,17 @@
   onMount(() => {
     spineManager = new SpineItemManager(workspaceManager);
     loadSpineItems();
+
+    // Listen for append item events from Sidebar
+    const handleAppendEvent = () => {
+      handleAppendChapter();
+    };
+    window.addEventListener('append-spine-item', handleAppendEvent);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('append-spine-item', handleAppendEvent);
+    };
   });
 
   // Load spine items
@@ -50,7 +61,7 @@
     // Dispatch custom event for parent to handle main view navigation
     const event = new CustomEvent('select-spine-item', {
       detail: { itemId },
-      bubbles: true
+      bubbles: true,
     });
     window.dispatchEvent(event);
   }
@@ -61,7 +72,7 @@
       const newChapter = await spineManager.addChapter(workspaceId, {
         title: 'New Chapter',
         linear: true,
-        createSourceFile: true
+        createSourceFile: true,
       });
 
       // Reload spine items
@@ -82,7 +93,7 @@
     isReordering = true;
     try {
       spineItems = await spineManager.moveChapterUp(workspaceId, index);
-      
+
       // Announce move for screen readers
       announceMove(spineItems[index - 1].id, index, index - 1);
     } catch (err) {
@@ -101,7 +112,7 @@
     isReordering = true;
     try {
       spineItems = await spineManager.moveChapterDown(workspaceId, index);
-      
+
       // Announce move for screen readers
       announceMove(spineItems[index + 1].id, index, index + 1);
     } catch (err) {
@@ -127,9 +138,12 @@
   }
 
   // Handle drag start
-  function handleDragStart(event: DragEvent & { currentTarget: EventTarget & HTMLDivElement }, index: number) {
+  function handleDragStart(
+    event: DragEvent & { currentTarget: EventTarget & HTMLDivElement },
+    index: number
+  ) {
     if (!sidebarExpanded) return;
-    
+
     event.dataTransfer!.effectAllowed = 'move';
     event.dataTransfer!.setData('text/plain', index.toString());
   }
@@ -137,24 +151,27 @@
   // Handle drag over
   function handleDragOver(event: DragEvent & { currentTarget: EventTarget & HTMLDivElement }) {
     if (!sidebarExpanded) return;
-    
+
     event.preventDefault();
     event.dataTransfer!.dropEffect = 'move';
   }
 
   // Handle drop
-  async function handleDrop(event: DragEvent & { currentTarget: EventTarget & HTMLDivElement }, dropIndex: number) {
+  async function handleDrop(
+    event: DragEvent & { currentTarget: EventTarget & HTMLDivElement },
+    dropIndex: number
+  ) {
     if (!sidebarExpanded || isReordering) return;
-    
+
     event.preventDefault();
     const dragIndex = parseInt(event.dataTransfer!.getData('text/plain'), 10);
-    
+
     if (dragIndex === dropIndex) return;
 
     isReordering = true;
     try {
       spineItems = await spineManager.reorderItems(workspaceId, dragIndex, dropIndex);
-      
+
       // Announce move for screen readers
       announceMove(spineItems[dropIndex].id, dragIndex, dropIndex);
     } catch (err) {
@@ -185,9 +202,9 @@
         <div
           class="spine-item-wrapper"
           draggable={sidebarExpanded}
-          on:dragstart={(e) => handleDragStart(e, index)}
+          on:dragstart={e => handleDragStart(e, index)}
           on:dragover={handleDragOver}
-          on:drop={(e) => handleDrop(e, index)}
+          on:drop={e => handleDrop(e, index)}
           role="listitem"
         >
           <SpineItem
@@ -203,25 +220,13 @@
             onMoveDown={async () => await handleMoveDown(index)}
             dragHandleProps={{
               draggable: true,
-              'data-drag-handle': true
+              'data-drag-handle': true,
             }}
           />
         </div>
       {/each}
-    </div>
 
-    <button 
-      class="append-button"
-      class:compact={!isExpanded}
-      on:click={handleAppendChapter}
-      disabled={isReordering}
-      aria-label={isExpanded ? $t('Append Item') : $t('Add')}
-    >
-      <span class="append-icon">+</span>
-      {#if isExpanded}
-        <span class="append-label">{$t('Append Item')}</span>
-      {/if}
-    </button>
+    </div>
   {/if}
 </div>
 
@@ -231,6 +236,9 @@
     flex-direction: column;
     block-size: 100%;
     gap: var(--space-2); /* More compact spacing */
+    background: var(--color-bg-secondary); /* Light grey background */
+    padding: 0 /* var(--space-2); */
+    padding-inline-end: 0; /* Remove right padding to allow items to extend to edge */
   }
 
   .loading,
@@ -271,13 +279,23 @@
   .spine-list {
     flex: 1;
     overflow-y: auto;
+    overflow-x: visible; /* Allow horizontal overflow for focus rings */
     display: flex;
     flex-direction: column;
-    gap: 1px; /* Minimal gap for compact look */
+    gap: 0; /* No gap between items */
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .spine-list > :global(*) {
+    border: none;
   }
 
   .spine-item-wrapper {
     transition: transform var(--duration-fast) ease;
+    border: none;
+    outline: none;
   }
 
   .spine-item-wrapper[draggable="true"]:active {
@@ -285,56 +303,6 @@
     transform: scale(0.98);
   }
 
-  .append-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-2);
-    inline-size: 100%;
-    padding-block: var(--space-3);
-    padding-inline: var(--space-4);
-    margin-block-start: auto;
-    border: 1px dashed var(--color-border-default);
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--color-text-secondary);
-    font-size: var(--text-base);
-    cursor: pointer;
-    transition: all var(--duration-fast) ease;
-    min-block-size: var(--touch-target-min);
-  }
-
-  .append-button:hover:not(:disabled) {
-    background: var(--color-interactive-secondary-hover);
-    border-color: var(--color-border-strong);
-    color: var(--color-text-primary);
-  }
-
-  .append-button:focus-visible {
-    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
-    outline-offset: var(--focus-ring-offset);
-  }
-
-  .append-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .append-button.compact {
-    padding-block: var(--space-2);
-    padding-inline: var(--space-2);
-    justify-content: center;
-    min-block-size: 36px;
-  }
-
-  .append-icon {
-    font-size: var(--text-lg);
-    font-weight: var(--font-medium);
-  }
-
-  .append-label {
-    font-weight: var(--font-normal);
-  }
 
   /* Scrollbar styling */
   .spine-list::-webkit-scrollbar {
@@ -354,10 +322,4 @@
     background: var(--color-text-tertiary);
   }
 
-  /* High contrast mode */
-  @media (prefers-contrast: high) {
-    .append-button {
-      border-width: 2px;
-    }
-  }
 </style>

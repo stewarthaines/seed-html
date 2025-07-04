@@ -11,45 +11,10 @@
 </script>
 
 <LayoutManager>
-  <svelte:fragment slot="sidebar-workspace">
-    <div class="placeholder-content">
-      <h3>{$t('Workspace')}</h3>
-      <p>{$t('Workspace selector placeholder')}</p>
-    </div>
-  </svelte:fragment>
-
-  <svelte:fragment slot="sidebar-metadata">
-    <div class="placeholder-content">
-      <h3>{$t('Metadata')}</h3>
-      <p>{$t('Metadata editor placeholder')}</p>
-    </div>
-  </svelte:fragment>
-
-  <svelte:fragment slot="sidebar-manifest">
-    <div class="placeholder-content">
-      <h3>{$t('Manifest')}</h3>
-      <p>{$t('File manifest placeholder')}</p>
-    </div>
-  </svelte:fragment>
-
-  <svelte:fragment slot="sidebar-nav">
-    <div class="placeholder-content">
-      <h3>{$t('Navigation')}</h3>
-      <p>{$t('TOC editor placeholder')}</p>
-    </div>
-  </svelte:fragment>
-
   <svelte:fragment slot="sidebar-spine">
     <div class="placeholder-content">
       <h3>{$t('Spine Items')}</h3>
       <p>{$t('Chapter ordering placeholder')}</p>
-    </div>
-  </svelte:fragment>
-
-  <svelte:fragment slot="sidebar-settings">
-    <div class="placeholder-content">
-      <h3>{$t('Settings')}</h3>
-      <p>{$t('App settings placeholder')}</p>
     </div>
   </svelte:fragment>
 

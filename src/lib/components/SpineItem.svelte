@@ -148,26 +148,36 @@
     display: flex;
     align-items: center;
     gap: var(--space-1);
-    padding-block: var(--space-1); /* More compact */
-    padding-inline: var(--space-2);
-    border-radius: var(--radius-xs); /* Smaller radius */
+    padding-block: var(--space-2);
+    padding-inline-start: var(--space-2);
+    padding-inline-end: var(--space-2); /* Add right padding for non-selected items */
+    border-radius: 0; /* Remove border radius for cleaner lines */
     cursor: pointer;
     transition: background-color var(--duration-fast) ease;
-    min-block-size: 32px; /* Smaller minimum height */
+    min-block-size: 40px; /* Accommodate move buttons (28px + padding) */
     position: relative;
+    background: transparent; /* Default transparent background */
   }
 
-  .spine-item:hover {
-    background: var(--color-interactive-secondary-hover);
+  .spine-item:hover:not(.selected) {
+    background: var(--color-bg-tertiary);
   }
 
   .spine-item:focus-visible {
     outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
     outline-offset: var(--focus-ring-offset);
+    position: relative;
+    z-index: 1; /* Ensure focus ring appears above other elements */
   }
 
   .spine-item.selected {
-    background: var(--color-interactive-secondary-active);
+    background: var(--color-bg-primary); /* White background */
+    border-top: 1px solid var(--color-border-default);
+    border-bottom: 1px solid var(--color-border-default);
+    margin-inline-start: calc(var(--space-2) * -1); /* Extend to left edge */
+    margin-inline-end: 0; /* Extend to right edge */
+    padding-inline-start: calc(var(--space-2) * 2); /* Compensate for left negative margin */
+    padding-inline-end: var(--space-2); /* Normal right padding */
   }
 
   .spine-item.compact {
@@ -175,6 +185,11 @@
     padding-inline: var(--space-1);
     justify-content: center;
     min-block-size: 24px; /* Even smaller for collapsed state */
+  }
+  
+  .spine-item.compact.selected {
+    margin-inline: 0; /* Don't extend in compact mode */
+    padding-inline: var(--space-1); /* Keep original padding */
   }
 
   .spine-item.compact .chapter-id {
@@ -225,7 +240,7 @@
     justify-content: center;
     inline-size: 28px;
     block-size: 28px;
-    border: 1px solid var(--color-border-default);
+    border: none;
     background: var(--color-bg-primary);
     border-radius: var(--radius-xs);
     cursor: pointer;
@@ -236,7 +251,6 @@
 
   .move-button:hover:not(:disabled) {
     background: var(--color-interactive-secondary-hover);
-    border-color: var(--color-border-strong);
     color: var(--color-text-primary);
   }
 

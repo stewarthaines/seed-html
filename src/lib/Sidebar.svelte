@@ -6,15 +6,20 @@
   export let isExpanded = true;
   export let activeSection: SidebarSection = 'workspace';
 
-  // Sidebar sections configuration
-  const SIDEBAR_SECTIONS: Array<{ id: SidebarSection; icon: string; label: string }> = [
+  // Main navigation sections (clickable)
+  const MAIN_SECTIONS: Array<{
+    id: Exclude<SidebarSection, 'spine' | 'settings'>;
+    icon: string;
+    label: string;
+  }> = [
     { id: 'workspace', icon: '🏠', label: $t('Workspace') },
     { id: 'metadata', icon: '📄', label: $t('Metadata') },
     { id: 'manifest', icon: '📋', label: $t('Manifest') },
     { id: 'navigation', icon: '📖', label: $t('Navigation') },
-    { id: 'spine', icon: '📖', label: $t('Spine Items') },
-    { id: 'settings', icon: '⚙️', label: $t('Settings') },
   ] as const;
+
+  // Settings section (separate for footer)
+  const SETTINGS_SECTION = { id: 'settings' as const, icon: '⚙️', label: $t('Settings') };
 
   function toggleSidebar() {
     layoutStore.toggleSidebar();
@@ -22,6 +27,19 @@
 
   function setSidebarSection(section: SidebarSection) {
     layoutStore.setSidebarSection(section);
+  }
+
+  function handleAppendItem() {
+    // Dispatch event for SpineSidebar to handle
+    const event = new CustomEvent('append-spine-item', {
+      bubbles: true,
+    });
+    window.dispatchEvent(event);
+  }
+
+  function generateCompactLabel(label: string): string {
+    // Take first 2 letters of the label
+    return label.slice(0, 2).toUpperCase();
   }
 </script>
 
@@ -42,41 +60,76 @@
     {/if}
   </div>
 
-  <nav class="sidebar-nav" aria-label={$t('Main navigation')}>
-    {#each SIDEBAR_SECTIONS as section}
-      <button
-        class="sidebar-section"
-        class:active={activeSection === section.id}
-        on:click={() => setSidebarSection(section.id)}
-        aria-current={activeSection === section.id ? 'page' : undefined}
-        title={$t(section.label)}
-      >
-        <span class="section-label">{$t(section.label)}</span>
-      </button>
-    {/each}
-  </nav>
+  <div class="sidebar-main">
+    <nav class="sidebar-nav" aria-label={$t('Main navigation')}>
+      {#each MAIN_SECTIONS as section}
+        <button
+          class="sidebar-section"
+          class:active={activeSection === section.id}
+          on:click={() => setSidebarSection(section.id)}
+          aria-current={activeSection === section.id ? 'page' : undefined}
+          title={$t(section.label)}
+        >
+          <span class="section-label">
+            {#if isExpanded}
+              {$t(section.label)}
+            {:else}
+              {generateCompactLabel($t(section.label))}
+            {/if}
+          </span>
+        </button>
+      {/each}
 
-  <div class="sidebar-content" class:collapsed={!isExpanded} id="sidebar-content">
-    {#if isExpanded}
-      {#if activeSection === 'workspace'}
-        <slot name="sidebar-workspace" />
-      {:else if activeSection === 'metadata'}
-        <slot name="sidebar-metadata" />
-      {:else if activeSection === 'manifest'}
-        <slot name="sidebar-manifest" />
-      {:else if activeSection === 'navigation'}
-        <slot name="sidebar-navigation" />
-      {:else if activeSection === 'spine'}
-        <slot name="sidebar-spine" />
-      {:else if activeSection === 'settings'}
-        <slot name="sidebar-settings" />
+      <!-- Spine Items section header (non-clickable) -->
+      {#if isExpanded}
+        <div class="spine-section-header">
+          <span class="section-label">{$t('Spine Items')}</span>
+          <button
+            class="append-button-nav"
+            on:click={handleAppendItem}
+            aria-label={$t('Append Item')}
+            title={$t('Append Item')}
+          >
+            <span class="append-icon">+</span>
+          </button>
+        </div>
+      {:else}
+        <div class="spine-section-header compact">
+          <span class="section-label">{generateCompactLabel($t('Spine Items'))}</span>
+          <button
+            class="append-button-nav compact"
+            on:click={handleAppendItem}
+            aria-label={$t('Append Item')}
+            title={$t('Append Item')}
+          >
+            <span class="append-icon">+</span>
+          </button>
+        </div>
       {/if}
-    {:else}
-      <!-- Show only spine content when collapsed -->
-      {#if activeSection === 'spine'}
-        <slot name="sidebar-spine" />
-      {/if}
-    {/if}
+    </nav>
+
+    <!-- Always visible spine items -->
+    <div class="spine-items-container">
+      <slot name="sidebar-spine" />
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <button
+      class="sidebar-section"
+      class:active={activeSection === SETTINGS_SECTION.id}
+      on:click={() => setSidebarSection(SETTINGS_SECTION.id)}
+      aria-current={activeSection === SETTINGS_SECTION.id ? 'page' : undefined}
+      title={$t(SETTINGS_SECTION.label)}
+    >
+      <span class="section-label">
+        {#if isExpanded}
+          {$t(SETTINGS_SECTION.label)}
+        {:else}
+          {generateCompactLabel($t(SETTINGS_SECTION.label))}
+        {/if}
+      </span>
+    </button>
   </div>
 </aside>
 
@@ -90,8 +143,10 @@
     border-inline-end: 1px solid var(--color-border-default); /* Using logical properties and tokens */
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-x: visible; /* Allow active items to extend past border */
+    overflow-y: hidden;
     block-size: 100vh; /* Using logical properties */
+    position: relative; /* For absolute positioning of settings content */
   }
 
   .sidebar.collapsed {
@@ -144,10 +199,25 @@
     color: var(--color-text-secondary); /* Subdued like Craigslist */
   }
 
+  .sidebar-main {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: visible; /* Allow active items to extend and focus rings to show */
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-secondary); /* Grey background for scrollable area */
+  }
+
   .sidebar-nav {
     padding-block: 0; /* No extra padding for ultra-compact */
     padding-inline: 0;
     flex-shrink: 0;
+  }
+
+  .sidebar-footer {
+    flex-shrink: 0;
+    background: var(--color-bg-secondary); /* Grey background to match nav */
+    border-top: 1px solid var(--color-border-default); /* Subtle separation */
   }
 
   .sidebar-section {
@@ -156,15 +226,16 @@
     border: none;
     display: flex;
     align-items: center;
-    padding-block: var(--space-1); /* Even tighter spacing */
+    padding-block: var(--space-2); /* Match spine item padding */
     padding-inline: var(--space-2);
     cursor: pointer;
     transition: background-color 0.1s ease; /* Faster transition */
     text-align: start; /* Using logical properties */
     color: var(--color-text-link); /* Blue link color */
-    min-block-size: 28px; /* Smaller height for compact look */
+    min-block-size: 40px; /* Match spine item height */
     font-size: var(--text-sm); /* Smaller font */
     outline: none;
+    position: relative;
   }
 
   .sidebar-section:hover {
@@ -172,27 +243,96 @@
   }
 
   .sidebar-section:hover:not(.active) {
-    background: var(--color-sidebar-item-hover); /* Use semantic token */
+    background: var(--color-bg-tertiary); /* Light grey hover */
   }
 
   .sidebar-section:focus-visible {
-    outline: 2px solid var(--color-border-focus); /* Use semantic focus color */
-    outline-offset: -2px;
-    background: var(--color-sidebar-item-hover); /* Use semantic token */
-  }
-
-  .sidebar-section:focus-visible.active {
-    background: var(--color-sidebar-item-active); /* Keep active background on focus */
+    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus); /* Use standard focus ring */
+    outline-offset: var(--focus-ring-offset);
+    z-index: 1; /* Ensure focus ring appears above */
   }
 
   .sidebar-section.active {
-    background: var(--color-sidebar-item-active); /* Use semantic token */
+    background: var(--color-bg-primary); /* White background like main content */
     color: var(--color-text-primary);
     font-weight: var(--font-normal);
+    border-top: 1px solid var(--color-border-default);
+    border-bottom: 1px solid var(--color-border-default);
+    margin-inline-end: -1px; /* Extend past the sidebar border */
   }
 
   .sidebar-section.active .section-label {
     text-decoration: none; /* Remove underline for active state */
+  }
+
+  .spine-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-block: var(--space-2);
+    padding-inline: var(--space-2);
+    min-block-size: 40px;
+    color: var(--color-text-primary);
+    background: transparent;
+  }
+
+  .spine-section-header .section-label {
+    font-size: var(--text-sm);
+    font-weight: var(--font-normal);
+  }
+
+  .spine-section-header.compact {
+    justify-content: center;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding-block: var(--space-1);
+  }
+
+  .spine-section-header.compact .section-label {
+    font-size: var(--text-xs);
+    text-align: center;
+  }
+
+  .append-button-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 24px;
+    block-size: 24px;
+    border: none;
+    background: var(--color-bg-primary);
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    transition: all var(--duration-fast) ease;
+  }
+
+  .append-button-nav:hover {
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
+  }
+
+  .append-button-nav:focus-visible {
+    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
+    outline-offset: var(--focus-ring-offset);
+    z-index: 1;
+  }
+
+  .append-button-nav.compact {
+    inline-size: 20px;
+    block-size: 20px;
+    font-size: var(--text-xs);
+  }
+
+  .append-icon {
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+  }
+
+  .spine-items-container {
+    flex: 1;
+    /* Remove overflow - let parent handle scrolling */
   }
 
   .section-icon {
@@ -204,34 +344,33 @@
     font-weight: var(--font-normal);
   }
 
-  .sidebar-content {
-    flex: 1;
-    overflow-y: auto;
-    padding-block: var(--space-2); /* More compact padding */
-    padding-inline: var(--space-2); /* Less horizontal padding */
-    background: var(--color-bg-primary); /* Using design tokens */
+  /* Compact sidebar styling */
+  .sidebar.collapsed .section-label {
+    font-size: var(--text-xs);
+    text-align: center;
+    font-weight: var(--font-medium);
   }
 
-  .sidebar-content.collapsed {
-    padding-block: var(--space-1);
+  .sidebar.collapsed .sidebar-section {
+    justify-content: center;
     padding-inline: var(--space-1);
   }
 
-  /* Scrollbar styling using design tokens */
-  .sidebar-content::-webkit-scrollbar {
+  /* Scrollbar styling for main scrollable area */
+  .sidebar-main::-webkit-scrollbar {
     inline-size: 6px; /* Using logical properties */
   }
 
-  .sidebar-content::-webkit-scrollbar-track {
+  .sidebar-main::-webkit-scrollbar-track {
     background: var(--color-bg-secondary); /* Using design tokens */
   }
 
-  .sidebar-content::-webkit-scrollbar-thumb {
+  .sidebar-main::-webkit-scrollbar-thumb {
     background: var(--color-border-strong); /* Using design tokens */
     border-radius: var(--radius-xs); /* Using border radius tokens */
   }
 
-  .sidebar-content::-webkit-scrollbar-thumb:hover {
+  .sidebar-main::-webkit-scrollbar-thumb:hover {
     background: var(--color-text-tertiary); /* Using design tokens */
   }
 
