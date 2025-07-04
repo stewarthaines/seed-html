@@ -95,90 +95,75 @@ export class SpineItemManager {
     workspaceId: string,
     chapterData: ChapterCreationData
   ): Promise<SpineItemWithSource> {
-    if (this.workspaceManager.startTransaction) {
-      this.workspaceManager.startTransaction();
+    // Generate unique chapter ID
+    const chapterId = await this.generateChapterId(workspaceId, chapterData.title);
+
+    // Generate filename if not provided
+    const fileName = chapterData.fileName || `${chapterId}.xhtml`;
+
+    // Validate filename format
+    if (!this.isValidFilename(fileName)) {
+      throw new Error(`Invalid filename format: ${fileName}`);
     }
 
-    try {
-      // Generate unique chapter ID
-      const chapterId = await this.generateChapterId(workspaceId, chapterData.title);
+    const href = `Text/${fileName}`;
 
-      // Generate filename if not provided
-      const fileName = chapterData.fileName || `${chapterId}.xhtml`;
-
-      // Validate filename format
-      if (!this.isValidFilename(fileName)) {
-        throw new Error(`Invalid filename format: ${fileName}`);
-      }
-
-      const href = `Text/${fileName}`;
-
-      // Check for filename conflicts
-      const opf = await this.workspaceManager.getWorkspaceOPF(workspaceId);
-      if (opf.manifest.some(item => item.href === href)) {
-        throw new Error(`File already exists: ${href}`);
-      }
-
-      // Create manifest item
-      const manifestItem: ManifestItem = {
-        id: chapterId,
-        href,
-        mediaType: 'application/xhtml+xml',
-      };
-
-      // Create spine item
-      const spineItem: SpineItem = {
-        idref: chapterId,
-        linear: chapterData.linear ?? true,
-        properties: chapterData.properties,
-      };
-
-      // Add to manifest and spine
-      await this.workspaceManager.addManifestItem(workspaceId, manifestItem);
-      await this.workspaceManager.addSpineItem(workspaceId, spineItem, chapterData.insertIndex);
-
-      // Create XHTML file
-      const xhtmlContent = this.generateXHTMLContent(chapterData.title);
-      await this.workspaceManager.writeTextFile(workspaceId, `OEBPS/${href}`, xhtmlContent);
-
-      // Create source file if requested (default: true)
-      let hasSourceFile = false;
-      let sourcePath: string | undefined;
-
-      if (chapterData.createSourceFile !== false) {
-        sourcePath = await this.createSourceFile(
-          workspaceId,
-          chapterId,
-          chapterData.sourceContent || this.generateSourceContent(chapterData.title)
-        );
-        hasSourceFile = true;
-      }
-
-      if (this.workspaceManager.commitTransaction) {
-        this.workspaceManager.commitTransaction();
-      }
-
-      return {
-        // Spine properties
-        idref: spineItem.idref,
-        linear: spineItem.linear ?? true,
-        properties: spineItem.properties,
-
-        // Manifest properties
-        id: manifestItem.id,
-        href: manifestItem.href,
-        mediaType: manifestItem.mediaType,
-
-        // Source file association
-        hasSourceFile,
-        sourcePath,
-      };
-    } catch (error) {
-      if (this.workspaceManager.rollbackTransaction) {
-        this.workspaceManager.rollbackTransaction();
-      }
-      throw error;
+    // Check for filename conflicts
+    const opf = await this.workspaceManager.getWorkspaceOPF(workspaceId);
+    if (opf.manifest.some(item => item.href === href)) {
+      throw new Error(`File already exists: ${href}`);
     }
+
+    // Create manifest item
+    const manifestItem: ManifestItem = {
+      id: chapterId,
+      href,
+      mediaType: 'application/xhtml+xml',
+    };
+
+    // Create spine item
+    const spineItem: SpineItem = {
+      idref: chapterId,
+      linear: chapterData.linear ?? true,
+      properties: chapterData.properties,
+    };
+
+    // Add to manifest and spine
+    await this.workspaceManager.addManifestItem(workspaceId, manifestItem);
+    await this.workspaceManager.addSpineItem(workspaceId, spineItem, chapterData.insertIndex);
+
+    // Create XHTML file
+    const xhtmlContent = this.generateXHTMLContent(chapterData.title);
+    await this.workspaceManager.writeTextFile(workspaceId, `OEBPS/${href}`, xhtmlContent);
+
+    // Create source file if requested (default: true)
+    let hasSourceFile = false;
+    let sourcePath: string | undefined;
+
+    if (chapterData.createSourceFile !== false) {
+      sourcePath = await this.createSourceFile(
+        workspaceId,
+        chapterId,
+        chapterData.sourceContent || this.generateSourceContent(chapterData.title)
+      );
+      hasSourceFile = true;
+    }
+
+    return {
+      // Spine properties
+      idref: spineItem.idref,
+      linear: spineItem.linear ?? true,
+      properties: spineItem.properties,
+
+      // Manifest properties
+      id: manifestItem.id,
+      href: manifestItem.href,
+      mediaType: manifestItem.mediaType,
+
+      // Source file association
+      hasSourceFile,
+      sourcePath,
+    };
   }
 
   /**
@@ -189,133 +174,117 @@ export class SpineItemManager {
     chapterId: string,
     updates: ChapterUpdateData
   ): Promise<SpineItemWithSource> {
-    if (this.workspaceManager.startTransaction) {
-      this.workspaceManager.startTransaction();
+    const opf = await this.workspaceManager.getWorkspaceOPF(workspaceId);
+
+    // Find existing manifest and spine items
+    const manifestItem = opf.manifest.find(item => item.id === chapterId);
+    const spineItem = opf.spine.find(item => item.idref === chapterId);
+
+    if (!manifestItem || !spineItem) {
+      throw new Error(`Chapter not found: ${chapterId}`);
     }
 
-    try {
-      const opf = await this.workspaceManager.getWorkspaceOPF(workspaceId);
+    let newId = chapterId;
+    let newHref = manifestItem.href;
 
-      // Find existing manifest and spine items
-      const manifestItem = opf.manifest.find(item => item.id === chapterId);
-      const spineItem = opf.spine.find(item => item.idref === chapterId);
-
-      if (!manifestItem || !spineItem) {
-        throw new Error(`Chapter not found: ${chapterId}`);
+    // Handle filename change
+    if (updates.fileName) {
+      if (!this.isValidFilename(updates.fileName)) {
+        throw new Error(`Invalid filename format: ${updates.fileName}`);
       }
 
-      let newId = chapterId;
-      let newHref = manifestItem.href;
+      const newHrefCandidate = `Text/${updates.fileName}`;
 
-      // Handle filename change
-      if (updates.fileName) {
-        if (!this.isValidFilename(updates.fileName)) {
-          throw new Error(`Invalid filename format: ${updates.fileName}`);
-        }
+      // Check for filename conflicts (excluding current item)
+      if (opf.manifest.some(item => item.href === newHrefCandidate && item.id !== chapterId)) {
+        throw new Error(`File already exists: ${newHrefCandidate}`);
+      }
 
-        const newHrefCandidate = `Text/${updates.fileName}`;
+      // Generate new ID from filename if needed
+      const baseId = updates.fileName.replace(/\.xhtml$/, '');
+      newId = await this.generateChapterId(workspaceId, baseId, chapterId);
+      newHref = newHrefCandidate;
 
-        // Check for filename conflicts (excluding current item)
-        if (opf.manifest.some(item => item.href === newHrefCandidate && item.id !== chapterId)) {
-          throw new Error(`File already exists: ${newHrefCandidate}`);
-        }
+      // Rename files
+      const oldXhtmlPath = `OEBPS/${manifestItem.href}`;
+      const newXhtmlPath = `OEBPS/${newHref}`;
+      const oldSourcePath = `SOURCE/text/${chapterId}.txt`;
+      const newSourcePath = `SOURCE/text/${newId}.txt`;
 
-        // Generate new ID from filename if needed
-        const baseId = updates.fileName.replace(/\.xhtml$/, '');
-        newId = await this.generateChapterId(workspaceId, baseId, chapterId);
-        newHref = newHrefCandidate;
+      // Read old content and write to new location
+      try {
+        const xhtmlContent = await this.workspaceManager.readTextFile(workspaceId, oldXhtmlPath);
+        await this.workspaceManager.writeTextFile(workspaceId, newXhtmlPath, xhtmlContent);
+        await this.workspaceManager.deleteFile(workspaceId, oldXhtmlPath);
+      } catch (error) {
+        // File might not exist, continue
+      }
 
-        // Rename files
-        const oldXhtmlPath = `OEBPS/${manifestItem.href}`;
-        const newXhtmlPath = `OEBPS/${newHref}`;
-        const oldSourcePath = `SOURCE/text/${chapterId}.txt`;
-        const newSourcePath = `SOURCE/text/${newId}.txt`;
+      // Rename source file if it exists
+      try {
+        const sourceContent = await this.workspaceManager.readTextFile(workspaceId, oldSourcePath);
+        await this.workspaceManager.writeTextFile(workspaceId, newSourcePath, sourceContent);
+        await this.workspaceManager.deleteFile(workspaceId, oldSourcePath);
+      } catch (error) {
+        // Source file might not exist, continue
+      }
 
-        // Read old content and write to new location
-        try {
-          const xhtmlContent = await this.workspaceManager.readTextFile(workspaceId, oldXhtmlPath);
-          await this.workspaceManager.writeTextFile(workspaceId, newXhtmlPath, xhtmlContent);
-          await this.workspaceManager.deleteFile(workspaceId, oldXhtmlPath);
-        } catch (error) {
-          // File might not exist, continue
-        }
+      // Update manifest and spine with new ID/href
+      await this.workspaceManager.removeManifestItem(workspaceId, chapterId);
+      await this.workspaceManager.removeSpineItem(workspaceId, chapterId);
 
-        // Rename source file if it exists
-        try {
-          const sourceContent = await this.workspaceManager.readTextFile(
-            workspaceId,
-            oldSourcePath
-          );
-          await this.workspaceManager.writeTextFile(workspaceId, newSourcePath, sourceContent);
-          await this.workspaceManager.deleteFile(workspaceId, oldSourcePath);
-        } catch (error) {
-          // Source file might not exist, continue
-        }
+      const updatedManifestItem: ManifestItem = {
+        id: newId,
+        href: newHref,
+        mediaType: manifestItem.mediaType,
+      };
 
-        // Update manifest and spine with new ID/href
-        await this.workspaceManager.removeManifestItem(workspaceId, chapterId);
-        await this.workspaceManager.removeSpineItem(workspaceId, chapterId);
+      const updatedSpineItem: SpineItem = {
+        idref: newId,
+        linear: updates.linear ?? spineItem.linear,
+        properties: updates.properties ?? spineItem.properties,
+      };
 
-        const updatedManifestItem: ManifestItem = {
-          id: newId,
-          href: newHref,
-          mediaType: manifestItem.mediaType,
-        };
+      await this.workspaceManager.addManifestItem(workspaceId, updatedManifestItem);
 
+      // Find original position and insert at same position
+      const originalIndex = opf.spine.findIndex(item => item.idref === chapterId);
+      await this.workspaceManager.addSpineItem(workspaceId, updatedSpineItem, originalIndex);
+    } else {
+      // Update spine properties only
+      if (updates.linear !== undefined || updates.properties !== undefined) {
         const updatedSpineItem: SpineItem = {
-          idref: newId,
+          idref: spineItem.idref,
           linear: updates.linear ?? spineItem.linear,
           properties: updates.properties ?? spineItem.properties,
         };
 
-        await this.workspaceManager.addManifestItem(workspaceId, updatedManifestItem);
-
-        // Find original position and insert at same position
+        await this.workspaceManager.removeSpineItem(workspaceId, chapterId);
         const originalIndex = opf.spine.findIndex(item => item.idref === chapterId);
         await this.workspaceManager.addSpineItem(workspaceId, updatedSpineItem, originalIndex);
-      } else {
-        // Update spine properties only
-        if (updates.linear !== undefined || updates.properties !== undefined) {
-          const updatedSpineItem: SpineItem = {
-            idref: spineItem.idref,
-            linear: updates.linear ?? spineItem.linear,
-            properties: updates.properties ?? spineItem.properties,
-          };
-
-          await this.workspaceManager.removeSpineItem(workspaceId, chapterId);
-          const originalIndex = opf.spine.findIndex(item => item.idref === chapterId);
-          await this.workspaceManager.addSpineItem(workspaceId, updatedSpineItem, originalIndex);
-        }
       }
-
-      // Update source file content if provided
-      if (updates.sourceContent !== undefined) {
-        const sourcePath = `SOURCE/text/${newId}.txt`;
-        await this.workspaceManager.writeTextFile(workspaceId, sourcePath, updates.sourceContent);
-      }
-
-      if (this.workspaceManager.commitTransaction) {
-        this.workspaceManager.commitTransaction();
-      }
-
-      // Return updated spine item
-      const sourcePath = `SOURCE/text/${newId}.txt`;
-      const hasSourceFile = await this.workspaceManager.fileExists(workspaceId, sourcePath);
-
-      return {
-        idref: newId,
-        linear: updates.linear ?? spineItem.linear,
-        properties: updates.properties ?? spineItem.properties,
-        id: newId,
-        href: newHref,
-        mediaType: manifestItem.mediaType,
-        hasSourceFile,
-        sourcePath: hasSourceFile ? sourcePath : undefined,
-      };
-    } catch (error) {
-      this.workspaceManager.rollbackTransaction();
-      throw error;
     }
+
+    // Update source file content if provided
+    if (updates.sourceContent !== undefined) {
+      const sourcePath = `SOURCE/text/${newId}.txt`;
+      await this.workspaceManager.writeTextFile(workspaceId, sourcePath, updates.sourceContent);
+    }
+
+    // Return updated spine item
+    const sourcePath = `SOURCE/text/${newId}.txt`;
+    const hasSourceFile = await this.workspaceManager.fileExists(workspaceId, sourcePath);
+
+    return {
+      idref: newId,
+      linear: updates.linear ?? spineItem.linear!,
+      properties: updates.properties ?? spineItem.properties,
+      id: newId,
+      href: newHref,
+      mediaType: manifestItem.mediaType,
+      hasSourceFile,
+      sourcePath: hasSourceFile ? sourcePath : undefined,
+    };
   }
 
   /**
@@ -326,56 +295,41 @@ export class SpineItemManager {
     chapterId: string,
     options: ChapterDeletionOptions = {}
   ): Promise<void> {
-    if (this.workspaceManager.startTransaction) {
-      this.workspaceManager.startTransaction();
+    const opf = await this.workspaceManager.getWorkspaceOPF(workspaceId);
+
+    const manifestItem = opf.manifest.find(item => item.id === chapterId);
+    const spineItem = opf.spine.find(item => item.idref === chapterId);
+
+    if (!manifestItem || !spineItem) {
+      throw new Error(`Chapter not found: ${chapterId}`);
     }
 
-    try {
-      const opf = await this.workspaceManager.getWorkspaceOPF(workspaceId);
+    // Remove from spine (always)
+    await this.workspaceManager.removeSpineItem(workspaceId, chapterId);
 
-      const manifestItem = opf.manifest.find(item => item.id === chapterId);
-      const spineItem = opf.spine.find(item => item.idref === chapterId);
+    // Remove from manifest unless preserving
+    if (!options.preserveManifest) {
+      await this.workspaceManager.removeManifestItem(workspaceId, chapterId);
+    }
 
-      if (!manifestItem || !spineItem) {
-        throw new Error(`Chapter not found: ${chapterId}`);
+    // Delete XHTML file unless preserving
+    if (!options.preserveXHTML) {
+      const xhtmlPath = `OEBPS/${manifestItem.href}`;
+      try {
+        await this.workspaceManager.deleteFile(workspaceId, xhtmlPath);
+      } catch (error) {
+        // File might not exist, continue
       }
+    }
 
-      // Remove from spine (always)
-      await this.workspaceManager.removeSpineItem(workspaceId, chapterId);
-
-      // Remove from manifest unless preserving
-      if (!options.preserveManifest) {
-        await this.workspaceManager.removeManifestItem(workspaceId, chapterId);
+    // Delete source file unless preserving
+    if (!options.preserveSourceFile) {
+      const sourcePath = `SOURCE/text/${chapterId}.txt`;
+      try {
+        await this.workspaceManager.deleteFile(workspaceId, sourcePath);
+      } catch (error) {
+        // File might not exist, continue
       }
-
-      // Delete XHTML file unless preserving
-      if (!options.preserveXHTML) {
-        const xhtmlPath = `OEBPS/${manifestItem.href}`;
-        try {
-          await this.workspaceManager.deleteFile(workspaceId, xhtmlPath);
-        } catch (error) {
-          // File might not exist, continue
-        }
-      }
-
-      // Delete source file unless preserving
-      if (!options.preserveSourceFile) {
-        const sourcePath = `SOURCE/text/${chapterId}.txt`;
-        try {
-          await this.workspaceManager.deleteFile(workspaceId, sourcePath);
-        } catch (error) {
-          // File might not exist, continue
-        }
-      }
-
-      if (this.workspaceManager.commitTransaction) {
-        this.workspaceManager.commitTransaction();
-      }
-    } catch (error) {
-      if (this.workspaceManager.rollbackTransaction) {
-        this.workspaceManager.rollbackTransaction();
-      }
-      throw error;
     }
   }
 
