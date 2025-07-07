@@ -24,29 +24,39 @@
   }
 
   // Focus management for move buttons
-  async function handleMoveUpKeyboard(event: KeyboardEvent & { currentTarget: EventTarget & HTMLButtonElement }) {
+  async function handleMoveUpKeyboard(
+    event: KeyboardEvent & { currentTarget: EventTarget & HTMLButtonElement }
+  ) {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       await onMoveUp(); // Wait for operation to complete
       // Focus restoration happens immediately after Promise resolves
-      const newUpButton = document.querySelector(`[aria-label="Move ${item.id} up"]`) as HTMLButtonElement;
+      const newUpButton = document.querySelector(
+        `[aria-label="Move ${item.id} up"]`
+      ) as HTMLButtonElement;
       if (newUpButton) {
         newUpButton.focus();
       }
     }
   }
 
-  async function handleMoveDownKeyboard(event: KeyboardEvent & { currentTarget: EventTarget & HTMLButtonElement }) {
+  async function handleMoveDownKeyboard(
+    event: KeyboardEvent & { currentTarget: EventTarget & HTMLButtonElement }
+  ) {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       await onMoveDown(); // Wait for operation to complete
       // Focus restoration with fallback logic
-      const newDownButton = document.querySelector(`[aria-label="Move ${item.id} down"]`) as HTMLButtonElement;
+      const newDownButton = document.querySelector(
+        `[aria-label="Move ${item.id} down"]`
+      ) as HTMLButtonElement;
       if (newDownButton && !newDownButton.disabled) {
         newDownButton.focus();
       } else {
         // Fallback: focus the move up button if down button is disabled (item is now last)
-        const newUpButton = document.querySelector(`[aria-label="Move ${item.id} up"]`) as HTMLButtonElement;
+        const newUpButton = document.querySelector(
+          `[aria-label="Move ${item.id} up"]`
+        ) as HTMLButtonElement;
         if (newUpButton) {
           newUpButton.focus();
         }
@@ -99,23 +109,14 @@
   aria-label={`${item.id}${!item.hasSourceFile ? ', has validation error' : ''}`}
 >
   {#if !compact && isExpanded}
-    <div 
-      class="drag-handle"
-      {...dragHandleProps}
-      tabindex="-1"
-      aria-hidden="true"
-    >
+    <div class="drag-handle" {...dragHandleProps} tabindex="-1" aria-hidden="true">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-        <path d="M2 5h12v1H2zm0 5h12v1H2z"/>
+        <path d="M2 5h12v1H2zm0 5h12v1H2z" />
       </svg>
     </div>
   {/if}
 
   <span class="chapter-id">{displayLabel}</span>
-
-  {#if !compact && (!item.hasSourceFile || !item.linear)}
-    <span class="error-indicator" aria-label="Validation error">⚠️</span>
-  {/if}
 
   {#if showMoveButtons}
     <div class="move-buttons" aria-label="Reorder controls">
@@ -140,6 +141,10 @@
         ↓
       </button>
     </div>
+  {/if}
+
+  {#if !compact && (!item.hasSourceFile || !item.linear)}
+    <span class="error-indicator" aria-label="Validation error">⚠️</span>
   {/if}
 </div>
 
@@ -186,7 +191,7 @@
     justify-content: center;
     min-block-size: 24px; /* Even smaller for collapsed state */
   }
-  
+
   .spine-item.compact.selected {
     margin-inline: 0; /* Don't extend in compact mode */
     padding-inline: var(--space-1); /* Keep original padding */
@@ -275,5 +280,4 @@
       font-weight: bold;
     }
   }
-
 </style>

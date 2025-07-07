@@ -225,7 +225,6 @@
           />
         </div>
       {/each}
-
     </div>
   {/if}
 </div>
@@ -237,7 +236,7 @@
     block-size: 100%;
     gap: var(--space-2); /* More compact spacing */
     background: var(--color-bg-secondary); /* Light grey background */
-    padding: 0 /* var(--space-2); */
+    padding: 0; /* var(--space-2); */
     padding-inline-end: 0; /* Remove right padding to allow items to extend to edge */
   }
 
@@ -298,11 +297,10 @@
     outline: none;
   }
 
-  .spine-item-wrapper[draggable="true"]:active {
+  .spine-item-wrapper[draggable='true']:active {
     opacity: 0.8;
     transform: scale(0.98);
   }
-
 
   /* Scrollbar styling */
   .spine-list::-webkit-scrollbar {
@@ -321,5 +319,4 @@
   .spine-list::-webkit-scrollbar-thumb:hover {
     background: var(--color-text-tertiary);
   }
-
 </style>

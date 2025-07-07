@@ -1,21 +1,79 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import LayoutManager from './lib/LayoutManager.svelte';
   import { navigationStore } from './lib/navigation';
   import WorkspaceView from './lib/navigation/views/WorkspaceView.svelte';
   import MetadataView from './lib/navigation/views/MetadataView.svelte';
   import PlaceholderView from './lib/navigation/views/PlaceholderView.svelte';
+  import SpineView from './lib/navigation/views/SpineView.svelte';
+  import SpineSidebar from './lib/components/SpineSidebar.svelte';
+  import { WorkspaceManager } from './lib/workspace';
+  import { layoutStore } from './lib/stores/layout';
   import { t } from './lib/i18n';
+
+  // Optional props for dependency injection (used by stories)
+  export let workspaceManager: WorkspaceManager | null = null;
+  export let initialWorkspaceId: string | null = null;
 
   // Subscribe to navigation state
   $: currentView = $navigationStore.currentView;
+  $: isExpanded = $layoutStore.sidebar.isExpanded;
+
+  // Spine management state
+  let currentWorkspaceManager: WorkspaceManager;
+  let currentWorkspaceId: string | null = null;
+  let selectedSpineItemId: string | null = null;
+  let initialized = false;
+
+  // Initialize workspace manager
+  onMount(async () => {
+    try {
+      if (!workspaceManager) {
+        // Default behavior - create own manager
+        currentWorkspaceManager = new WorkspaceManager();
+        await currentWorkspaceManager.init();
+        
+        // Get the first available workspace
+        const workspaces = await currentWorkspaceManager.listWorkspacesWithMetadata();
+        if (workspaces.length > 0) {
+          currentWorkspaceId = workspaces[0].id;
+        }
+      } else {
+        // Use provided manager and workspace ID
+        currentWorkspaceManager = workspaceManager;
+        currentWorkspaceId = initialWorkspaceId;
+      }
+      
+      initialized = true;
+    } catch (error) {
+      console.error('Failed to initialize workspace manager:', error);
+    }
+
+    // Listen for spine item selection events
+    const handleSelectSpineItem = (event: Event) => {
+      const customEvent = event as CustomEvent<{ itemId: string }>;
+      selectedSpineItemId = customEvent.detail.itemId;
+    };
+
+    window.addEventListener('select-spine-item', handleSelectSpineItem);
+    return () => window.removeEventListener('select-spine-item', handleSelectSpineItem);
+  });
 </script>
 
 <LayoutManager>
   <svelte:fragment slot="sidebar-spine">
-    <div class="placeholder-content">
-      <h3>{$t('Spine Items')}</h3>
-      <p>{$t('Chapter ordering placeholder')}</p>
-    </div>
+    {#if initialized && currentWorkspaceId && currentWorkspaceManager}
+      <SpineSidebar
+        workspaceId={currentWorkspaceId}
+        workspaceManager={currentWorkspaceManager}
+        selectedItemId={selectedSpineItemId}
+        {isExpanded}
+      />
+    {:else}
+      <div class="placeholder-content">
+        <p>{$t('Loading workspace...')}</p>
+      </div>
+    {/if}
   </svelte:fragment>
 
   <svelte:fragment slot="left-content">
@@ -39,12 +97,20 @@
         icon="📖" 
       />
     {:else if currentView === 'spine'}
-      <PlaceholderView 
-        viewType="spine" 
-        title={$t('Spine Items')} 
-        description={$t('Manage chapter ordering and spine structure')}
-        icon="📚" 
-      />
+      {#if initialized && currentWorkspaceId && currentWorkspaceManager}
+        <SpineView 
+          workspaceId={currentWorkspaceId}
+          workspaceManager={currentWorkspaceManager}
+          selectedItemId={selectedSpineItemId}
+        />
+      {:else}
+        <PlaceholderView 
+          viewType="spine" 
+          title={$t('Spine Items')} 
+          description={$t('Loading workspace...')}
+          icon="📚" 
+        />
+      {/if}
     {:else if currentView === 'settings'}
       <PlaceholderView 
         viewType="settings" 

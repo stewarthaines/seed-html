@@ -167,10 +167,10 @@
         activeSection={$layoutStore.sidebar.activeSection}
       >
         <svelte:fragment slot="sidebar-spine">
-          <SpineSidebar 
-            {workspaceId} 
-            {workspaceManager} 
-            {selectedItemId} 
+          <SpineSidebar
+            {workspaceId}
+            {workspaceManager}
+            {selectedItemId}
             isExpanded={$layoutStore.sidebar.isExpanded}
           />
         </svelte:fragment>
@@ -223,7 +223,6 @@
   }
 
   .demo-sidebar {
-    border-right: 1px solid var(--color-border-default);
     background: var(--color-bg-secondary);
     min-width: 0;
     overflow: hidden;
