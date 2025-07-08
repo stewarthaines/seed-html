@@ -246,6 +246,155 @@ if (preview.dependencies.orphanedFiles.length > 0) {
 }
 ```
 
+### readFile()
+
+```typescript
+readFile(workspaceId: string, path: string): Promise<ArrayBuffer>
+```
+
+**Input:**
+
+- `workspaceId: string` - Workspace ID
+- `path: string` - File path relative to workspace root
+
+**Output:** `Promise<ArrayBuffer>` - File content as ArrayBuffer (use TextDecoder for text files)
+
+**Side Effects:** Reads file from workspace storage
+
+**Usage:**
+
+```typescript
+// Read text file and decode
+const buffer = await workspaceManager.readFile(workspaceId, 'OEBPS/Text/chapter1.xhtml');
+const textContent = new TextDecoder().decode(buffer);
+console.log('Chapter content:', textContent);
+
+// Read binary file (image, audio, etc.)
+const binaryContent = await workspaceManager.readFile(workspaceId, 'OEBPS/Images/cover.jpg');
+console.log('Image size:', binaryContent.byteLength, 'bytes');
+
+// For text files, prefer readTextFile() method instead
+const textContent2 = await workspaceManager.readTextFile(workspaceId, 'OEBPS/Text/chapter1.xhtml');
+```
+
+### writeFile()
+
+```typescript
+writeFile(workspaceId: string, path: string, content: string | ArrayBuffer): Promise<void>
+```
+
+**Input:**
+
+- `workspaceId: string` - Workspace ID
+- `path: string` - File path relative to workspace root
+- `content: string | ArrayBuffer` - File content as string for text files or ArrayBuffer for binary files
+
+**Output:** `Promise<void>`
+
+**Side Effects:** Writes file to workspace storage, invalidates workspace cache
+
+**Usage:**
+
+```typescript
+// Write text file
+await workspaceManager.writeFile(workspaceId, 'OEBPS/Text/chapter2.xhtml', 
+  '<?xml version="1.0"?><html><body><h1>Chapter 2</h1></body></html>');
+
+// Write binary file
+const imageBuffer = new ArrayBuffer(1024);
+await workspaceManager.writeFile(workspaceId, 'OEBPS/Images/new-image.jpg', imageBuffer);
+```
+
+### readTextFile()
+
+```typescript
+readTextFile(workspaceId: string, path: string): Promise<string>
+```
+
+**Input:**
+
+- `workspaceId: string` - Workspace ID  
+- `path: string` - File path relative to workspace root
+
+**Output:** `Promise<string>` - File content as UTF-8 string
+
+**Side Effects:** Reads text file from workspace storage
+
+**Usage:**
+
+```typescript
+const content = await workspaceManager.readTextFile(workspaceId, 'OEBPS/content.opf');
+console.log('OPF content:', content);
+```
+
+### writeTextFile()
+
+```typescript
+writeTextFile(workspaceId: string, path: string, content: string): Promise<void>
+```
+
+**Input:**
+
+- `workspaceId: string` - Workspace ID
+- `path: string` - File path relative to workspace root  
+- `content: string` - Text content to write
+
+**Output:** `Promise<void>`
+
+**Side Effects:** Writes text file to workspace storage, invalidates workspace cache
+
+**Usage:**
+
+```typescript
+await workspaceManager.writeTextFile(workspaceId, 'OEBPS/Styles/style.css', 
+  'body { font-family: serif; margin: 2em; }');
+```
+
+### deleteFile()
+
+```typescript
+deleteFile(workspaceId: string, path: string): Promise<void>
+```
+
+**Input:**
+
+- `workspaceId: string` - Workspace ID
+- `path: string` - File path relative to workspace root
+
+**Output:** `Promise<void>`
+
+**Side Effects:** Deletes file from workspace storage, invalidates workspace cache
+
+**Usage:**
+
+```typescript
+await workspaceManager.deleteFile(workspaceId, 'OEBPS/Images/old-cover.jpg');
+```
+
+### fileExists()
+
+```typescript
+fileExists(workspaceId: string, path: string): Promise<boolean>
+```
+
+**Input:**
+
+- `workspaceId: string` - Workspace ID
+- `path: string` - File path relative to workspace root
+
+**Output:** `Promise<boolean>` - True if file exists, false otherwise
+
+**Side Effects:** Checks file existence in workspace storage
+
+**Usage:**
+
+```typescript
+const exists = await workspaceManager.fileExists(workspaceId, 'OEBPS/nav.xhtml');
+if (exists) {
+  console.log('Navigation document exists');
+}
+```
+
 ## ManifestDependencyTracker Class
 
 ### findDependencies()
