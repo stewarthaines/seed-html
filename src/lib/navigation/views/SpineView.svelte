@@ -23,7 +23,7 @@
   export function onViewEnter(data?: any): void {
     // Initialize spine manager
     spineManager = new SpineItemManager(workspaceManager);
-    
+
     // Load selected item if available
     if (selectedItemId) {
       loadSelectedItem();
@@ -38,7 +38,7 @@
     return {
       selectedItemId,
       selectedItem,
-      sourceContent
+      sourceContent,
     };
   }
 
@@ -153,7 +153,7 @@
             </div>
             <div class="metadata-item">
               <label>{$t('Title')}</label>
-              <span>{selectedItem.title || $t('Untitled')}</span>
+              <span>{selectedItem.idref || $t('Untitled')}</span>
             </div>
             <div class="metadata-item">
               <label>{$t('Linear')}</label>
@@ -171,8 +171,8 @@
             </div>
             <div class="metadata-item">
               <label>{$t('Source Status')}</label>
-              <span class={selectedItem.hasSource ? 'status-success' : 'status-error'}>
-                {selectedItem.hasSource ? $t('Available') : $t('Missing')}
+              <span class={selectedItem.hasSourceFile ? 'status-success' : 'status-error'}>
+                {selectedItem.hasSourceFile ? $t('Available') : $t('Missing')}
               </span>
             </div>
           </div>
@@ -186,12 +186,12 @@
               <span class="content-size">{formatFileSize(new Blob([sourceContent]).size)}</span>
             {/if}
           </div>
-          
+
           {#if sourceContent}
             <div class="content-viewer">
               <pre class="source-content">{sourceContent}</pre>
             </div>
-          {:else if selectedItem.hasSource}
+          {:else if selectedItem.hasSourceFile}
             <div class="content-placeholder">
               <p>{$t('Unable to load source content')}</p>
             </div>
@@ -279,7 +279,9 @@
   }
 
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .error-icon,
