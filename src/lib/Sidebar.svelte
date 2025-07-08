@@ -168,7 +168,7 @@
     border-block-end: 1px solid var(--color-border-default); /* Using logical properties and tokens */
     background: var(--color-bg-primary); /* Using design tokens */
     flex-shrink: 0;
-    min-block-size: 40px; /* Smaller header */
+    min-block-size: var(--touch-target-min); /* 44px - meets WCAG AA requirements even for header */
   }
 
   .sidebar-toggle {
@@ -239,7 +239,7 @@
     transition: background-color 0.1s ease; /* Faster transition */
     text-align: start; /* Using logical properties */
     color: var(--color-text-link); /* Blue link color */
-    min-block-size: 40px; /* Match spine item height */
+    min-block-size: var(--touch-target-min); /* 44px - meets WCAG AA touch target requirements */
     font-size: var(--text-sm); /* Smaller font */
     outline: none;
     position: relative;
@@ -282,7 +282,7 @@
     justify-content: space-between;
     padding-block: var(--space-2);
     padding-inline: var(--space-2);
-    min-block-size: 40px;
+    min-block-size: var(--touch-target-min); /* 44px - meets WCAG AA touch target requirements */
     color: var(--color-text-primary);
     background: transparent;
   }
@@ -308,8 +308,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    inline-size: 24px;
-    block-size: 24px;
+    inline-size: var(--touch-target-min);
+    block-size: var(--touch-target-min);
     border: none;
     background: var(--color-bg-primary);
     border-radius: var(--radius-xs);
@@ -331,8 +331,8 @@
   }
 
   .append-button-nav.compact {
-    inline-size: 20px;
-    block-size: 20px;
+    inline-size: var(--touch-target-min);
+    block-size: var(--touch-target-min);
     font-size: var(--text-xs);
   }
 

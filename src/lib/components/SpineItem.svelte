@@ -161,7 +161,7 @@
     border-radius: 0; /* Remove border radius for cleaner lines */
     cursor: pointer;
     transition: background-color var(--duration-fast) ease;
-    min-block-size: 40px; /* Accommodate move buttons (28px + padding) */
+    min-block-size: var(--touch-target-min); /* 44px - meets WCAG AA touch target requirements */
     position: relative;
     background: transparent; /* Default transparent background */
   }
@@ -191,7 +191,9 @@
     padding-block: 2px; /* Ultra compact */
     padding-inline: var(--space-1);
     justify-content: center;
-    min-block-size: 24px; /* Even smaller for collapsed state */
+    min-block-size: var(
+      --touch-target-min
+    ); /* 44px - maintain accessibility even in compact mode */
   }
 
   .spine-item.compact.selected {
