@@ -5,7 +5,7 @@
  * managing settings and script files for the transformation pipeline.
  */
 
-import type { FileStorageAPI } from '../storage/file-storage.js';
+import type { FileStorageAPI } from '../storage/index.js';
 import { TransformError } from './transform-error.js';
 
 export interface TransformSettings {
@@ -49,7 +49,7 @@ export class TransformManager {
    */
   async loadTransformSettings(workspaceId: string): Promise<TransformSettings> {
     try {
-      const settingsText = await this.fileStorage.readFileAsText(workspaceId, 'SOURCE/settings.json');
+      const settingsText = await this.fileStorage.readTextFile(workspaceId, 'SOURCE/settings.json');
       
       if (!settingsText.trim()) {
         return {};
@@ -86,12 +86,12 @@ export class TransformManager {
     // Load text transform script
     if (settings.transform_pipeline?.text_transform) {
       try {
-        const content = await this.fileStorage.readFileAsText(
+        const content = await this.fileStorage.readTextFile(
           workspaceId, 
           `SOURCE/scripts/${settings.transform_pipeline.text_transform}`
         );
         
-        const metadata = await this.fileStorage.getFileStats(
+        const metadata = await this.fileStorage.getFileInfo(
           workspaceId, 
           `SOURCE/scripts/${settings.transform_pipeline.text_transform}`
         );
@@ -111,12 +111,12 @@ export class TransformManager {
     if (settings.transform_pipeline?.dom_transforms) {
       for (const scriptName of settings.transform_pipeline.dom_transforms) {
         try {
-          const content = await this.fileStorage.readFileAsText(
+          const content = await this.fileStorage.readTextFile(
             workspaceId, 
             `SOURCE/scripts/${scriptName}`
           );
           
-          const metadata = await this.fileStorage.getFileStats(
+          const metadata = await this.fileStorage.getFileInfo(
             workspaceId, 
             `SOURCE/scripts/${scriptName}`
           );

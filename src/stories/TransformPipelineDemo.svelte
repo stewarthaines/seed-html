@@ -12,8 +12,8 @@
   }
 
   interface FileStorageAPI {
-    readFileAsText(workspaceId: string, path: string): Promise<string>;
-    getFileStats(workspaceId: string, path: string): Promise<{ size: number; lastModified: Date }>;
+    readTextFile(workspaceId: string, path: string): Promise<string>;
+    getFileInfo(workspaceId: string, path: string): Promise<{ size: number; lastModified: Date }>;
   }
 
   // Demo state
@@ -32,7 +32,7 @@
 
   // Mock File Storage API
   const mockFileStorage: FileStorageAPI = {
-    async readFileAsText(workspaceId: string, path: string): Promise<string> {
+    async readTextFile(workspaceId: string, path: string): Promise<string> {
       if (path === 'SOURCE/settings.json') {
         return JSON.stringify({
           transform_pipeline: {
@@ -52,7 +52,7 @@
       throw new Error(`File not found: ${path}`);
     },
 
-    async getFileStats(workspaceId: string, path: string) {
+    async getFileInfo(workspaceId: string, path: string) {
       return {
         size: 1000,
         lastModified: new Date(),

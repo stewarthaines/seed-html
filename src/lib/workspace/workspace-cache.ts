@@ -68,7 +68,9 @@ export class WorkspaceMetadataCache {
     // Enforce memory cache size limit
     if (this.memoryCache.size > this.config.maxEntries) {
       const firstKey = this.memoryCache.keys().next().value;
-      this.memoryCache.delete(firstKey);
+      if (firstKey !== undefined) {
+        this.memoryCache.delete(firstKey);
+      }
     }
 
     // Update disk cache if enabled - use simplified approach to avoid reading existing cache
@@ -134,7 +136,9 @@ export class WorkspaceMetadataCache {
     // Enforce memory cache size limit
     if (this.memoryCache.size > this.config.maxEntries) {
       const firstKey = this.memoryCache.keys().next().value;
-      this.memoryCache.delete(firstKey);
+      if (firstKey !== undefined) {
+        this.memoryCache.delete(firstKey);
+      }
     }
 
     // Update disk cache if enabled
@@ -206,9 +210,9 @@ export class WorkspaceMetadataCache {
 
       // Check if OPF file has been modified (simplified for tests)
       try {
-        // In tests, mock storage might not have getFileStats, so try readFile as fallback
-        if ('getFileStats' in this.storage && typeof this.storage.getFileStats === 'function') {
-          const stats = await this.storage.getFileStats(workspaceId, 'OEBPS/content.opf');
+        // In tests, mock storage might not have getFileInfo, so try readFile as fallback
+        if ('getFileInfo' in this.storage && typeof this.storage.getFileInfo === 'function') {
+          const stats = await this.storage.getFileInfo(workspaceId, 'OEBPS/content.opf');
           return stats.lastModified <= cacheEntry.opfFileModified;
         } else {
           // Fallback: just check if file exists

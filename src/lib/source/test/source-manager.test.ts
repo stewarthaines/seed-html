@@ -280,10 +280,10 @@ describe('SourceManager', () => {
       await sourceManager.extractSourceZip(workspaceId, zipBlob);
 
       // Verify files were overwritten
-      const settings = await mockFileStorage.readFileAsText(workspaceId, 'SOURCE/settings.json');
+      const settings = await mockFileStorage.readTextFile(workspaceId, 'SOURCE/settings.json');
       expect(JSON.parse(settings)).toEqual(DEFAULT_SETTINGS);
 
-      const chapter = await mockFileStorage.readFileAsText(workspaceId, 'SOURCE/text/chapter1.txt');
+      const chapter = await mockFileStorage.readTextFile(workspaceId, 'SOURCE/text/chapter1.txt');
       expect(chapter).toBe('New content');
     });
 
@@ -415,7 +415,7 @@ describe('SourceManager', () => {
       );
 
       // Verify default settings.json content
-      const settings = await mockFileStorage.readFileAsText(workspaceId, 'SOURCE/settings.json');
+      const settings = await mockFileStorage.readTextFile(workspaceId, 'SOURCE/settings.json');
       const parsedSettings = JSON.parse(settings);
       expect(parsedSettings).toHaveProperty('is_draft');
       expect(parsedSettings).toHaveProperty('version');
@@ -432,7 +432,7 @@ describe('SourceManager', () => {
       await sourceManager.initializeSourceStructure(workspaceId);
 
       // Verify existing files were not overwritten
-      const settings = await mockFileStorage.readFileAsText(workspaceId, 'SOURCE/settings.json');
+      const settings = await mockFileStorage.readTextFile(workspaceId, 'SOURCE/settings.json');
       expect(JSON.parse(settings)).toEqual(existingSettings);
 
       expect(await mockFileStorage.fileExists(workspaceId, 'SOURCE/text/existing.txt')).toBe(true);

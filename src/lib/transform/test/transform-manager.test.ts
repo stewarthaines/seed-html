@@ -430,6 +430,9 @@ function unused() {
       const allScripts = [scripts.textTransform, ...scripts.domTransforms].filter(Boolean);
       
       allScripts.forEach(script => {
+        expect(script).toBeDefined();
+        if (!script) return; // TypeScript null check
+        
         expect(script).toHaveProperty('filename');
         expect(script).toHaveProperty('content');
         expect(script).toHaveProperty('size');

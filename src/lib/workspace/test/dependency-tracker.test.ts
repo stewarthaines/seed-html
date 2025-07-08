@@ -13,7 +13,7 @@ import type { ManifestItem } from '../types.js';
 const mockStorage = {
   readTextFile: vi.fn(),
   listFiles: vi.fn(),
-  getFileStats: vi.fn(),
+  getFileInfo: vi.fn(),
 };
 
 // Mock DOMParser for Node.js environment
@@ -113,21 +113,38 @@ beforeAll(() => {
     };
 
     // Mock CSSImportRule and CSSStyleRule classes
-    globalThis.CSSImportRule = class {
+    (globalThis as any).CSSImportRule = class MockCSSImportRule {
       type = 3;
-      href: string;
-      constructor(href: string) {
-        this.href = href;
+      href: string = '';
+      layerName: string | null = null;
+      media: MediaList = {} as MediaList;
+      styleSheet: CSSStyleSheet | null = null;
+      supportsText: string | null = null;
+      // Add other required properties as empty implementations
+      cssText: string = '';
+      parentRule: CSSRule | null = null;
+      parentStyleSheet: CSSStyleSheet | null = null;
+      constructor(href?: string) {
+        if (href) this.href = href;
       }
-    };
+    } as any;
 
-    globalThis.CSSStyleRule = class {
+    (globalThis as any).CSSStyleRule = class MockCSSStyleRule {
       type = 1;
-      style: any;
-      constructor(style: any) {
-        this.style = style;
+      style: any = {};
+      selectorText: string = '';
+      styleMap: any = {};
+      cssRules: CSSRuleList = {} as CSSRuleList;
+      // Add other required properties as empty implementations
+      cssText: string = '';
+      parentRule: CSSRule | null = null;
+      parentStyleSheet: CSSStyleSheet | null = null;
+      deleteRule: (index: number) => void = () => {};
+      insertRule: (rule: string, index?: number) => number = () => 0;
+      constructor(style?: any) {
+        if (style) this.style = style;
       }
-    };
+    } as any;
   }
 });
 

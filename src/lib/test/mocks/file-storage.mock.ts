@@ -21,6 +21,7 @@
  * ```
  */
 
+import { vi } from 'vitest';
 import type { FileStorageAPI } from '../storage/index.js';
 
 export interface MockFileEntry {
@@ -30,7 +31,7 @@ export interface MockFileEntry {
   lastModified: Date;
 }
 
-export type FailureMode = 'read' | 'write' | 'list' | 'delete' | 'exists' | 'stats';
+export type FailureMode = 'read' | 'write' | 'list' | 'delete' | 'exists' | 'fileinfo';
 
 /**
  * Comprehensive mock implementation of FileStorageAPI
@@ -142,14 +143,10 @@ export class MockFileStorage implements Partial<FileStorageAPI> {
     return entry.content;
   }
 
-  async readFileAsText(workspaceId: string, path: string): Promise<string> {
+  async readTextFile(workspaceId: string, path: string): Promise<string> {
     this.operationCount++;
     const buffer = await this.readFile(workspaceId, path);
     return new TextDecoder().decode(buffer);
-  }
-
-  async readTextFile(workspaceId: string, path: string): Promise<string> {
-    return this.readFileAsText(workspaceId, path);
   }
 
   async fileExists(workspaceId: string, path: string): Promise<boolean> {
@@ -185,8 +182,8 @@ export class MockFileStorage implements Partial<FileStorageAPI> {
 
   async getFileInfo(workspaceId: string, path: string): Promise<{ size: number; lastModified: Date }> {
     this.operationCount++;
-    if (this.failureMode === 'stats') {
-      throw new Error('Failed to get file stats');
+    if (this.failureMode === 'fileinfo') {
+      throw new Error('Failed to get file info');
     }
 
     const workspace = this.getWorkspace(workspaceId);
@@ -199,10 +196,6 @@ export class MockFileStorage implements Partial<FileStorageAPI> {
       size: entry.size,
       lastModified: entry.lastModified
     };
-  }
-
-  async getFileStats(workspaceId: string, path: string): Promise<{ size: number; lastModified: Date }> {
-    return this.getFileInfo(workspaceId, path);
   }
 
   async deleteFile(workspaceId: string, path: string): Promise<void> {
@@ -349,4 +342,34 @@ export class MockFileStorage implements Partial<FileStorageAPI> {
  */
 export function createMockFileStorage(): MockFileStorage {
   return new MockFileStorage();
+}
+
+/**
+ * Create Vitest-based mock functions for FileStorageAPI
+ * 
+ * Use this when you need .mockResolvedValue() and .mockRejectedValue() patterns
+ * in your tests. This creates proper Vitest mock functions that can be controlled
+ * with standard Jest/Vitest mock API.
+ */
+export function createVitestMockFileStorage() {
+  return {
+    createWorkspace: vi.fn().mockResolvedValue('workspace-123'),
+    deleteWorkspace: vi.fn().mockResolvedValue(undefined),
+    listWorkspaces: vi.fn().mockResolvedValue(['workspace-123']),
+    writeTextFile: vi.fn().mockResolvedValue(undefined),
+    writeFile: vi.fn().mockResolvedValue(undefined),
+    readTextFile: vi.fn().mockResolvedValue(''),
+    readFile: vi.fn().mockResolvedValue(new ArrayBuffer(0)),
+    deleteFile: vi.fn().mockResolvedValue(undefined),
+    fileExists: vi.fn().mockResolvedValue(true),
+    workspaceExists: vi.fn().mockResolvedValue(true),
+    listFiles: vi.fn().mockResolvedValue([]),
+    getFileInfo: vi.fn().mockResolvedValue({ size: 0, lastModified: new Date() }),
+    getQuota: vi.fn().mockResolvedValue({ used: 0, available: 1000000 }),
+    // Test utility methods
+    addTestFiles: vi.fn().mockResolvedValue(undefined),
+    reset: vi.fn(),
+    hasWorkspace: vi.fn().mockReturnValue(true),
+    setFailureMode: vi.fn(),
+  };
 }

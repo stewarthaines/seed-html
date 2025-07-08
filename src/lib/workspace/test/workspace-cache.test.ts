@@ -14,7 +14,7 @@ import type { WorkspaceInfo, WorkspaceCacheEntry } from '../types.js';
 const mockStorage = {
   readTextFile: vi.fn(),
   writeTextFile: vi.fn(),
-  getFileStats: vi.fn(),
+  getFileInfo: vi.fn(),
   listFiles: vi.fn(),
 };
 
@@ -41,7 +41,7 @@ describe('WorkspaceMetadataCache', () => {
       title: 'Test Book',
       language: 'en',
       identifier: 'test-123',
-      author: 'Test Author',
+      creator: ['Test Author'],
     },
     fileCount: 5,
     totalSize: 1024,
@@ -92,7 +92,7 @@ describe('WorkspaceMetadataCache', () => {
       };
 
       mockStorage.readTextFile.mockResolvedValue(JSON.stringify(diskCacheData));
-      mockStorage.getFileStats.mockResolvedValue({
+      mockStorage.getFileInfo.mockResolvedValue({
         lastModified: mockCacheEntry.opfFileModified - 1000, // OPF older than cache
       });
 
@@ -138,7 +138,7 @@ describe('WorkspaceMetadataCache', () => {
       };
 
       mockStorage.readTextFile.mockResolvedValue(JSON.stringify(diskCacheData));
-      mockStorage.getFileStats.mockResolvedValue({
+      mockStorage.getFileInfo.mockResolvedValue({
         lastModified: mockCacheEntry.opfFileModified + 5000, // OPF newer than cache
       });
 
@@ -183,7 +183,7 @@ describe('WorkspaceMetadataCache', () => {
 
     it('should write to disk cache when enabled', async () => {
       mockStorage.writeTextFile.mockResolvedValue(undefined);
-      mockStorage.getFileStats.mockResolvedValue({
+      mockStorage.getFileInfo.mockResolvedValue({
         lastModified: Date.now(),
       });
 
@@ -229,7 +229,7 @@ describe('WorkspaceMetadataCache', () => {
     });
 
     it('should handle OPF file stats errors gracefully', async () => {
-      mockStorage.getFileStats.mockRejectedValue(new Error('File not found'));
+      mockStorage.getFileInfo.mockRejectedValue(new Error('File not found'));
       mockStorage.writeTextFile.mockResolvedValue(undefined);
 
       // Should not throw error
@@ -237,7 +237,7 @@ describe('WorkspaceMetadataCache', () => {
     });
 
     it('should handle disk write errors gracefully', async () => {
-      mockStorage.getFileStats.mockResolvedValue({ lastModified: Date.now() });
+      mockStorage.getFileInfo.mockResolvedValue({ lastModified: Date.now() });
       mockStorage.writeTextFile.mockRejectedValue(new Error('Disk full'));
 
       // Should not throw error - memory cache should still work
@@ -289,7 +289,7 @@ describe('WorkspaceMetadataCache', () => {
         lastCacheUpdate: Date.now() - 1 * 60 * 60 * 1000, // 1 hour ago
       };
 
-      mockStorage.getFileStats.mockResolvedValue({
+      mockStorage.getFileInfo.mockResolvedValue({
         lastModified: freshEntry.opfFileModified - 1000, // OPF older than cache
       });
 
@@ -310,7 +310,7 @@ describe('WorkspaceMetadataCache', () => {
     });
 
     it('should return false when OPF file is newer', async () => {
-      mockStorage.getFileStats.mockResolvedValue({
+      mockStorage.getFileInfo.mockResolvedValue({
         lastModified: mockCacheEntry.opfFileModified + 5000, // OPF newer
       });
 
@@ -331,7 +331,7 @@ describe('WorkspaceMetadataCache', () => {
     });
 
     it('should return false when OPF file is missing', async () => {
-      mockStorage.getFileStats.mockRejectedValue(new Error('File not found'));
+      mockStorage.getFileInfo.mockRejectedValue(new Error('File not found'));
 
       const result = await cache.isCacheFresh('workspace-123', mockCacheEntry);
 
@@ -345,7 +345,7 @@ describe('WorkspaceMetadataCache', () => {
 
       expect(workspaceInfo.id).toBe(mockCacheEntry.workspaceId);
       expect(workspaceInfo.title).toBe(mockCacheEntry.metadata.title);
-      expect(workspaceInfo.author).toBe(mockCacheEntry.metadata.author);
+      expect(workspaceInfo.author).toBe(mockCacheEntry.metadata.creator?.[0]);
       expect(workspaceInfo.language).toBe(mockCacheEntry.metadata.language);
       expect(workspaceInfo.fileCount).toBe(mockCacheEntry.fileCount);
       expect(workspaceInfo.totalSize).toBe(mockCacheEntry.totalSize);
@@ -416,7 +416,7 @@ describe('WorkspaceMetadataCache', () => {
       expect(result).toBeNull();
 
       // After rebuild, should work normally
-      mockStorage.getFileStats.mockResolvedValue({ lastModified: Date.now() });
+      mockStorage.getFileInfo.mockResolvedValue({ lastModified: Date.now() });
       await cache.set('workspace-123', mockWorkspaceInfo);
 
       result = await cache.get('workspace-123');
@@ -430,7 +430,7 @@ describe('WorkspaceMetadataCache', () => {
       };
 
       mockStorage.readTextFile.mockResolvedValue(JSON.stringify(partiallyCorruptedData));
-      mockStorage.getFileStats.mockResolvedValue({
+      mockStorage.getFileInfo.mockResolvedValue({
         lastModified: mockCacheEntry.opfFileModified - 1000,
       });
 
@@ -464,7 +464,7 @@ describe('WorkspaceMetadataCache', () => {
 
     it('should batch disk writes efficiently', async () => {
       mockStorage.writeTextFile.mockResolvedValue(undefined);
-      mockStorage.getFileStats.mockResolvedValue({ lastModified: Date.now() });
+      mockStorage.getFileInfo.mockResolvedValue({ lastModified: Date.now() });
 
       // Multiple rapid sets
       await cache.set('workspace-1', { ...mockWorkspaceInfo, id: 'workspace-1' });

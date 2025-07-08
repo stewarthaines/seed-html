@@ -308,7 +308,7 @@ describe('SourceManager Integration Tests', () => {
       );
 
       // Verify settings.json content
-      const settings = await mockFileStorage.readFileAsText(workspaceId, 'SOURCE/settings.json');
+      const settings = await mockFileStorage.readTextFile(workspaceId, 'SOURCE/settings.json');
       const parsedSettings = JSON.parse(settings);
       expect(parsedSettings).toHaveProperty('is_draft');
       expect(parsedSettings).toHaveProperty('version');

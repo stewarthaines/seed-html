@@ -64,11 +64,11 @@ describe('ExtensionCache', () => {
       expect(cacheFiles.has('markdown-it/LICENSE.txt')).toBe(true);
 
       // Verify content was copied correctly
-      const originalContent = await mockFileStorage.readFileAsText(
+      const originalContent = await mockFileStorage.readTextFile(
         workspaceId,
         'SOURCE/extensions/markdown-it/markdown-it.min.js'
       );
-      const cachedContent = await mockFileStorage.readFileAsText(
+      const cachedContent = await mockFileStorage.readTextFile(
         CACHE_WORKSPACE_ID,
         'markdown-it/markdown-it.min.js'
       );
@@ -175,11 +175,11 @@ describe('ExtensionCache', () => {
       expect(workspaceFiles.has('SOURCE/extensions/markdown-it/LICENSE.txt')).toBe(true);
 
       // Verify content was copied correctly
-      const cachedContent = await mockFileStorage.readFileAsText(
+      const cachedContent = await mockFileStorage.readTextFile(
         CACHE_WORKSPACE_ID,
         'markdown-it/markdown-it.min.js'
       );
-      const workspaceContent = await mockFileStorage.readFileAsText(
+      const workspaceContent = await mockFileStorage.readTextFile(
         workspaceId,
         'SOURCE/extensions/markdown-it/markdown-it.min.js'
       );

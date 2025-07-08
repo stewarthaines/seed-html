@@ -15,7 +15,9 @@ import type {
   WorkspacePreview,
   WorkspaceConfig,
   WorkspacePathInfo,
-  ValidationError as ValidationErrorType,
+  ValidationIssue,
+  ValidationWarning,
+  WorkspaceCacheEntry,
 } from './types.js';
 import type {
   EPUBMetadata,
@@ -565,8 +567,8 @@ export class WorkspaceManager {
    * Validate workspace structure
    */
   async validateWorkspaceStructure(workspaceId: string): Promise<ValidationResult> {
-    const errors: ValidationErrorType[] = [];
-    const warnings: ValidationErrorType[] = [];
+    const errors: ValidationIssue[] = [];
+    const warnings: ValidationWarning[] = [];
 
     try {
       const files = await this.storage.listFiles(workspaceId);
@@ -752,12 +754,12 @@ export class WorkspaceManager {
       let totalSize = 0;
       for (const file of files) {
         try {
-          // Check if getFileStats method exists (for testing)
+          // Check if getFileInfo method exists (for testing)
           if (
-            'getFileStats' in this.storage &&
-            typeof (this.storage as any).getFileStats === 'function'
+            'getFileInfo' in this.storage &&
+            typeof (this.storage as any).getFileInfo === 'function'
           ) {
-            const stats = await (this.storage as any).getFileStats(workspaceId, file);
+            const stats = await (this.storage as any).getFileInfo(workspaceId, file);
             totalSize += stats.size || 0;
           } else {
             const buffer = await this.storage.readFile(workspaceId, file);
@@ -1037,6 +1039,27 @@ export class WorkspaceManager {
   private async isCacheFresh(workspaceId: string, workspaceInfo: WorkspaceInfo): Promise<boolean> {
     const cacheEntry = this.workspaceInfoToCacheEntry(workspaceInfo);
     return await this.cache.isCacheFresh(workspaceId, cacheEntry);
+  }
+
+  /**
+   * Convert WorkspaceInfo to WorkspaceCacheEntry format
+   */
+  private workspaceInfoToCacheEntry(workspaceInfo: WorkspaceInfo): WorkspaceCacheEntry {
+    return {
+      version: 1, // Using version 1 as default
+      workspaceId: workspaceInfo.id,
+      lastCacheUpdate: Date.now(),
+      opfFileModified: workspaceInfo.lastModified.getTime(),
+      metadata: {
+        title: workspaceInfo.title,
+        language: workspaceInfo.language,
+        identifier: workspaceInfo.id, // Using workspace ID as identifier fallback
+        creator: workspaceInfo.author ? [workspaceInfo.author] : undefined,
+      },
+      fileCount: workspaceInfo.fileCount,
+      totalSize: workspaceInfo.totalSize,
+      epubVersion: workspaceInfo.epubVersion,
+    };
   }
 
   /**
