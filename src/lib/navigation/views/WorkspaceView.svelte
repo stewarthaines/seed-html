@@ -333,25 +333,6 @@
     color: var(--color-text-primary);
   }
 
-  .view-header {
-    padding: var(--space-6);
-    border-block-end: 1px solid var(--color-border-default);
-    background-color: var(--color-surface-primary);
-  }
-
-  .view-title {
-    margin: 0 0 var(--space-2) 0;
-    font-size: var(--text-2xl);
-    font-weight: 700;
-    color: var(--color-text-primary);
-  }
-
-  .view-description {
-    margin: 0;
-    font-size: var(--text-base);
-    color: var(--color-text-secondary);
-  }
-
   .view-content {
     flex: 1;
     padding: var(--space-6);

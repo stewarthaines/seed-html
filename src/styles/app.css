@@ -1,6 +1,6 @@
 /*
   App-specific Styles
-  
+
   Overrides and additions specific to the EDITME.html application
 */
 
@@ -16,7 +16,7 @@
 }
 
 /* Override body to ensure no scrollbars */
-body {
+body:not(.sb-show-main) {
   overflow: hidden;
 }
 
