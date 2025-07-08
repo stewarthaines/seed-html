@@ -110,14 +110,32 @@ OEBPS/ (standard EPUB content)
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
 
+### Quality Validation ⚠️ REQUIRED BEFORE ALL COMMITS
+
+**MANDATORY**: All changes must pass TypeScript validation before commit. Zero TypeScript errors are tolerated in the codebase.
+
+- `npm run check` - **REQUIRED** TypeScript validation (must pass)
+- `npm run lint` - **REQUIRED** ESLint check (must pass)
+- `npm test` - **REQUIRED** Run unit tests (must pass)
+
+**Combined Quality Check** (recommended):
+```bash
+npm run check && npm run lint && npm test
+```
+
 ### Testing
 
 - `npm test` - Run unit tests once
-- `npm run test:watch` - Run tests in watch mode
+- `npm run test:watch` - Run tests in watch mode  
 - `npm run test:coverage` - Run tests with coverage report
 - `npm run test:stories` - Run Storybook tests with Vitest
 - `npm run screenshots` - Capture component screenshots
 - Use proper ES module imports (await import()) instead of require() for mocked modules
+
+**Testing + TypeScript Validation** (recommended for development):
+```bash
+npm run check && npm test
+```
 
 ### Storybook
 
@@ -130,10 +148,147 @@ OEBPS/ (standard EPUB content)
   - 📋 Development checklist for new stories
 - **Backend Demos**: See `STORYBOOK.md` for interactive backend feature demonstration patterns
 
-### Linting
+## Development Quality Requirements
 
-- `npm run lint` - ESLint check
-- `npm run check` - TypeScript validation
+### 🚨 Zero-Tolerance Policy
+
+**TypeScript Errors**: The codebase maintains ZERO TypeScript errors at all times. Any commit introducing TypeScript errors will be rejected.
+
+**Quality Gates**: All code changes must pass the following validation before commit:
+
+1. ✅ **TypeScript Validation**: `npm run check` (zero errors)
+2. ✅ **ESLint Compliance**: `npm run lint` (zero errors)  
+3. ✅ **Unit Tests**: `npm test` (all tests passing)
+
+### Pre-Commit Checklist
+
+Before committing ANY changes:
+
+```bash
+# 1. Run full quality validation
+npm run check && npm run lint && npm test
+
+# 2. Verify zero TypeScript errors specifically
+npx tsc --noEmit --project tsconfig.app.json
+
+# 3. Check for any remaining issues
+npm run build  # Should complete without errors
+```
+
+### Development Workflow Quality Standards
+
+1. **Feature Development**:
+   - Write TypeScript-compliant code from the start
+   - Run `npm run check` frequently during development
+   - Address TypeScript errors immediately, never defer
+
+2. **Test Development**:
+   - All new tests must be TypeScript compliant
+   - Use proper type assertions (`as any`) only when necessary for mocks
+   - Ensure test files import and instantiate classes correctly
+
+3. **Error Resolution**:
+   - Fix TypeScript errors before implementing new features
+   - Never commit partial fixes that leave errors unresolved
+   - Use proper type definitions instead of suppressing errors
+
+### Quality Enforcement for AI Coding Agents
+
+**Mandatory Validation**: All coding agents (Claude, GitHub Copilot, etc.) must:
+
+1. Run `npm run check` after any code modification
+2. Resolve ALL TypeScript errors before considering a task complete
+3. Verify that tests pass and are TypeScript compliant
+4. Never use `@ts-ignore` or `any` types unless absolutely necessary
+
+**Error Prevention**: Coding agents should:
+- Validate imports and class instantiation
+- Use proper mock types for testing
+- Ensure interface compliance in all implementations
+- Test both positive and negative cases for type safety
+
+## Development Workflow
+
+### Step-by-Step Quality Assurance Process
+
+Follow this workflow for ALL development work to prevent TypeScript errors from entering the codebase:
+
+#### 1. 🏗️ Development Phase
+
+```bash
+# Start development with clean state
+npm run check  # Verify current state is clean
+
+# During active development (run frequently):
+npm run check  # Check types after significant changes
+npm run test:watch  # Run tests continuously
+```
+
+#### 2. ✅ Pre-Commit Validation Phase
+
+**MANDATORY** before any commit:
+
+```bash
+# Full quality validation (all must pass):
+npm run check     # TypeScript validation
+npm run lint      # ESLint compliance  
+npm test          # Unit test execution
+npm run build     # Production build verification
+
+# Alternative: Combined command
+npm run check && npm run lint && npm test && npm run build
+```
+
+#### 3. 🚨 Error Resolution Protocol
+
+If any validation fails:
+
+1. **TypeScript Errors**: 
+   - Fix immediately, never defer
+   - Use proper types, avoid `any` unless necessary
+   - Ensure imports and class instantiation are correct
+
+2. **ESLint Errors**:
+   - Address code style and potential bugs
+   - Use `npm run lint -- --fix` for auto-fixable issues
+
+3. **Test Failures**:
+   - Fix broken functionality
+   - Update tests if API contracts changed
+   - Ensure new tests are TypeScript compliant
+
+4. **Build Failures**:
+   - Resolve any remaining compilation issues
+   - Check for missing dependencies or configuration errors
+
+#### 4. 📋 Code Review Checklist
+
+Before requesting code review:
+
+- [ ] Zero TypeScript errors (`npm run check`)
+- [ ] Zero ESLint errors (`npm run lint`)
+- [ ] All tests passing (`npm test`)
+- [ ] Production build successful (`npm run build`)
+- [ ] No use of `@ts-ignore` without justification
+- [ ] Proper type definitions for new interfaces
+- [ ] Mock types compatible with real implementations
+
+#### 5. 🤖 AI Coding Agent Workflow
+
+For AI assistants (Claude, GitHub Copilot, etc.):
+
+**Required Actions:**
+1. Run `npm run check` after EVERY code modification
+2. Fix ALL TypeScript errors before task completion
+3. Verify tests pass and are TypeScript compliant
+4. Document any intentional use of `any` types
+5. Ensure proper import statements and class instantiation
+
+**Never Complete a Task With:**
+- Outstanding TypeScript errors
+- Commented-out critical code (like test setup)
+- Missing imports or incorrect class instantiation
+- Failing tests due to type issues
 
 ## CSS Design System
 
@@ -301,15 +456,60 @@ The project follows a structured development process to ensure high-quality, wel
 
 This process ensures features are well-designed, thoroughly tested, and properly documented before implementation begins. The API documentation serves as a contract that guides both test development and implementation.
 
-## Testing Strategy & Happy-DOM Limitations
+## Testing Strategy & TypeScript Quality Assurance
 
 ### Test Environment Architecture
 
-The project uses a multi-tiered testing strategy to accommodate browser API limitations in the unit testing environment:
+The project uses a multi-tiered testing strategy with **mandatory TypeScript validation** at all levels:
 
-- **Unit Tests (happy-dom)**: Fast, focused testing of pure logic and mocked integrations
-- **Storybook Tests (browser)**: Integration testing with real browser APIs
-- **E2E Tests (browser)**: Full workflow testing in real browser environment
+- **Unit Tests (happy-dom)**: Fast, focused testing with TypeScript compliance required
+- **Storybook Tests (browser)**: Integration testing with TypeScript validation
+- **E2E Tests (browser)**: Full workflow testing with type safety
+- **TypeScript Validation**: Continuous type checking during test development
+
+### TypeScript Quality in Testing
+
+**CRITICAL**: All tests must be TypeScript compliant. Common issues to avoid:
+
+1. **Import Errors**: Ensure proper imports for test dependencies
+   ```typescript
+   // ✅ Correct
+   import { SettingsManager } from '../settings-manager.js';
+   
+   // ❌ Incorrect
+   // Commented imports that cause undefined variable errors
+   ```
+
+2. **Mock Type Compatibility**: Use proper type assertions for mocks
+   ```typescript
+   // ✅ Correct
+   const mockStorage = createMockFileStorage();
+   const manager = new SettingsManager(mockStorage as any, mockExt as any);
+   
+   // ❌ Incorrect
+   const manager = new SettingsManager(mockStorage, mockExt); // Type error
+   ```
+
+3. **Test Variable Initialization**: Initialize variables in beforeEach
+   ```typescript
+   // ✅ Correct
+   beforeEach(() => {
+     settingsManager = new SettingsManager(mockStorage as any, mockExt as any);
+   });
+   
+   // ❌ Incorrect
+   beforeEach(() => {
+     // settingsManager = new SettingsManager(...); // Commented out
+   });
+   ```
+
+### Testing Quality Gates
+
+Before considering any test complete:
+
+1. **TypeScript Validation**: `npm run check` must pass
+2. **Test Execution**: `npm test` must pass
+3. **Combined Validation**: `npm run check && npm test`
 
 ### Happy-DOM Limitations
 
@@ -410,11 +610,40 @@ Before considering a component complete:
 
 ## Claude Interaction Guidelines
 
-- **Interaction Style**
-  - When planning under-specified work don't assume complexity but ask the user
-  - **IMPORTANT:** Ask the user one question at a time, not a list of questions
+### 🚨 MANDATORY Quality Validation for Claude
+
+**TypeScript Compliance**: Claude MUST run `npm run check` after any code modification and resolve ALL TypeScript errors before considering any task complete.
+
+**Quality Gates**: Every coding task must include:
+1. ✅ TypeScript validation (`npm run check`)
+2. ✅ ESLint compliance (`npm run lint`) 
+3. ✅ Test execution (`npm test`)
+4. ✅ Build verification (`npm run build`)
+
+**Never Complete Tasks With**:
+- Outstanding TypeScript errors
+- Failing tests due to type issues
+- Missing imports or class instantiation
+- Commented-out critical code (especially test setup)
+
+### Interaction Style
+
+- **Quality First**: Always prioritize TypeScript compliance and test validity
+- **Error Resolution**: Fix type errors immediately, never defer or ignore
+- **Validation Workflow**: Run quality checks frequently during development
+- **Documentation**: When planning under-specified work, ask the user for clarification
+- **IMPORTANT:** Ask the user one question at a time, not a list of questions
+
+### Development Best Practices
+
+- **Proactive Type Checking**: Run `npm run check` after every significant code change
+- **Proper Imports**: Ensure all imports are correct and classes can be instantiated
+- **Mock Compatibility**: Use proper type assertions for test mocks (`as any`)
+- **Interface Compliance**: Verify all implementations match their interfaces
+- **Test Quality**: Ensure tests are TypeScript compliant and properly initialized
 
 ## Claude Interaction Memory
 
 - The user usually has Storybook running. If Claude wants a screenshot, ask the user
-- the user is the system architecture expert. instead of searching the whole project try asking the user for guidance
+- The user is the system architecture expert. Instead of searching the whole project, try asking the user for guidance
+- **CRITICAL**: The user expects zero TypeScript errors in the codebase at all times
