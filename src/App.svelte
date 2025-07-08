@@ -26,28 +26,31 @@
   let initialized = false;
 
   // Initialize workspace manager
-  onMount(async () => {
-    try {
-      if (!workspaceManager) {
-        // Default behavior - create own manager
-        currentWorkspaceManager = new WorkspaceManager();
-        await currentWorkspaceManager.init();
-        
-        // Get the first available workspace
-        const workspaces = await currentWorkspaceManager.listWorkspacesWithMetadata();
-        if (workspaces.length > 0) {
-          currentWorkspaceId = workspaces[0].id;
+  onMount(() => {
+    // Async initialization
+    (async () => {
+      try {
+        if (!workspaceManager) {
+          // Default behavior - create own manager
+          currentWorkspaceManager = new WorkspaceManager();
+          await currentWorkspaceManager.init();
+          
+          // Get the first available workspace
+          const workspaces = await currentWorkspaceManager.listWorkspacesWithMetadata();
+          if (workspaces.length > 0) {
+            currentWorkspaceId = workspaces[0].id;
+          }
+        } else {
+          // Use provided manager and workspace ID
+          currentWorkspaceManager = workspaceManager;
+          currentWorkspaceId = initialWorkspaceId;
         }
-      } else {
-        // Use provided manager and workspace ID
-        currentWorkspaceManager = workspaceManager;
-        currentWorkspaceId = initialWorkspaceId;
+        
+        initialized = true;
+      } catch (error) {
+        console.error('Failed to initialize workspace manager:', error);
       }
-      
-      initialized = true;
-    } catch (error) {
-      console.error('Failed to initialize workspace manager:', error);
-    }
+    })();
 
     // Listen for spine item selection events
     const handleSelectSpineItem = (event: Event) => {
