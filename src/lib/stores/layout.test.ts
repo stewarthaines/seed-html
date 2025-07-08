@@ -172,7 +172,7 @@ describe('Layout Store', () => {
         'workspace',
         'metadata',
         'manifest',
-        'nav',
+        'navigation',
         'spine',
         'settings',
       ];
@@ -192,11 +192,11 @@ describe('Layout Store', () => {
       const beforeSectionChange = get(layoutStore);
       expect(beforeSectionChange.sidebar.isExpanded).toBe(false);
 
-      layoutStore.setSidebarSection('nav');
+      layoutStore.setSidebarSection('navigation');
 
       const afterSectionChange = get(layoutStore);
       expect(afterSectionChange.sidebar.isExpanded).toBe(false); // Should remain unchanged
-      expect(afterSectionChange.sidebar.activeSection).toBe('nav');
+      expect(afterSectionChange.sidebar.activeSection).toBe('navigation');
     });
   });
 

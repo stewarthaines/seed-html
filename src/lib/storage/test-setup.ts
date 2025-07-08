@@ -13,6 +13,8 @@ import type {
   BackendType,
   OPFSFileHandle,
   OPFSDirectoryHandle,
+  FileSystemWritableFileStream,
+  FileSystemSyncAccessHandle,
 } from './types.js';
 
 /**
@@ -87,14 +89,17 @@ export class MockOPFSFileHandle implements OPFSFileHandle {
     private content: ArrayBuffer = new ArrayBuffer(0)
   ) {}
 
-  async createWritable(): Promise<{ write: unknown; close: unknown }> {
+  async createWritable(): Promise<FileSystemWritableFileStream> {
     return {
       write: vi.fn(),
       close: vi.fn(),
-    };
+      locked: false,
+      abort: vi.fn(),
+      getWriter: vi.fn()
+    } as unknown as FileSystemWritableFileStream;
   }
 
-  async createSyncAccessHandle(): Promise<Record<string, unknown>> {
+  async createSyncAccessHandle(): Promise<FileSystemSyncAccessHandle> {
     return {
       read: vi.fn(),
       write: vi.fn(),
@@ -102,7 +107,7 @@ export class MockOPFSFileHandle implements OPFSFileHandle {
       close: vi.fn(),
       getSize: vi.fn().mockReturnValue(this.content.byteLength),
       truncate: vi.fn(),
-    };
+    } as unknown as FileSystemSyncAccessHandle;
   }
 
   async getFile(): Promise<File> {
@@ -120,7 +125,7 @@ export class MockOPFSDirectoryHandle implements OPFSDirectoryHandle {
 
   constructor(public name: string) {}
 
-  async getFileHandle(name: string, options?: { create?: boolean }): Promise<MockOPFSFileHandle> {
+  async getFileHandle(name: string, options?: { create?: boolean }): Promise<OPFSFileHandle> {
     if (this.files.has(name)) {
       return this.files.get(name)!;
     }
@@ -137,7 +142,7 @@ export class MockOPFSDirectoryHandle implements OPFSDirectoryHandle {
   async getDirectoryHandle(
     name: string,
     options?: { create?: boolean }
-  ): Promise<MockOPFSDirectoryHandle> {
+  ): Promise<OPFSDirectoryHandle> {
     if (this.directories.has(name)) {
       return this.directories.get(name)!;
     }
@@ -165,7 +170,7 @@ export class MockOPFSDirectoryHandle implements OPFSDirectoryHandle {
     throw new Error(`Entry not found: ${name}`);
   }
 
-  async *entries(): AsyncIterableIterator<[string, MockOPFSFileHandle | MockOPFSDirectoryHandle]> {
+  async *entries(): AsyncIterableIterator<[string, OPFSFileHandle | OPFSDirectoryHandle]> {
     for (const [name, handle] of this.files) {
       yield [name, handle];
     }
@@ -251,6 +256,21 @@ export class MockStorageBackend implements StorageBackend {
     }
 
     return files;
+  }
+
+  async getFileInfo(workspaceId: string, path: string): Promise<{ size: number; lastModified: Date }> {
+    const workspace = this.workspaces.get(workspaceId);
+    if (!workspace) {
+      throw new Error(`Workspace not found: ${workspaceId}`);
+    }
+    const content = workspace.get(path);
+    if (!content) {
+      throw new Error(`File not found: ${path}`);
+    }
+    return {
+      size: content.byteLength,
+      lastModified: new Date()
+    };
   }
 
   async getQuota(): Promise<StorageQuota> {

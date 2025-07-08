@@ -213,7 +213,7 @@ export class WorkspaceMetadataCache {
         // In tests, mock storage might not have getFileInfo, so try readFile as fallback
         if ('getFileInfo' in this.storage && typeof this.storage.getFileInfo === 'function') {
           const stats = await this.storage.getFileInfo(workspaceId, 'OEBPS/content.opf');
-          return stats.lastModified <= cacheEntry.opfFileModified;
+          return stats.lastModified.getTime() <= cacheEntry.opfFileModified;
         } else {
           // Fallback: just check if file exists
           await this.storage.readFile(workspaceId, 'OEBPS/content.opf');
