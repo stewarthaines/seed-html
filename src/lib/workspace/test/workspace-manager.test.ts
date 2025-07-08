@@ -680,4 +680,214 @@ describe('WorkspaceManager', () => {
       expect(manager).toBeInstanceOf(WorkspaceManager);
     });
   });
+
+  describe('file operations', () => {
+    const WORKSPACE_ID = 'test-workspace';
+
+    beforeEach(async () => {
+      await createValidWorkspace(WORKSPACE_ID);
+    });
+
+    describe('readFile()', () => {
+      it('should read text files as ArrayBuffer', async () => {
+        const textContent = 'This is text content';
+        await mockStorage.addTestFiles(WORKSPACE_ID, {
+          'OEBPS/test.txt': textContent,
+        });
+
+        const result = await workspaceManager.readFile(WORKSPACE_ID, 'OEBPS/test.txt');
+
+        expect(result).toBeInstanceOf(ArrayBuffer);
+        // Verify we can decode it back to text
+        const decodedText = new TextDecoder().decode(result);
+        expect(decodedText).toBe(textContent);
+      });
+
+      it('should read binary files as ArrayBuffer', async () => {
+        const binaryContent = new ArrayBuffer(1024);
+        await mockStorage.addTestFiles(WORKSPACE_ID, {
+          'OEBPS/image.jpg': binaryContent,
+        });
+
+        const result = await workspaceManager.readFile(WORKSPACE_ID, 'OEBPS/image.jpg');
+
+        expect(result).toBeInstanceOf(ArrayBuffer);
+        expect(result).toBe(binaryContent);
+      });
+
+      it('should throw WorkspaceError for missing file', async () => {
+        await expect(
+          workspaceManager.readFile(WORKSPACE_ID, 'OEBPS/missing.txt')
+        ).rejects.toThrow(WorkspaceError);
+      });
+
+      it('should throw WorkspaceError with correct error code', async () => {
+        try {
+          await workspaceManager.readFile(WORKSPACE_ID, 'OEBPS/missing.txt');
+          expect.fail('Should have thrown WorkspaceError');
+        } catch (error) {
+          expect(error).toBeInstanceOf(WorkspaceError);
+          expect((error as WorkspaceError).code).toBe('FILE_READ_ERROR');
+          expect((error as WorkspaceError).workspaceId).toBe(WORKSPACE_ID);
+        }
+      });
+
+      it('should handle storage backend errors', async () => {
+        mockStorage.setFailureMode('read');
+
+        await expect(
+          workspaceManager.readFile(WORKSPACE_ID, 'OEBPS/test.txt')
+        ).rejects.toThrow(WorkspaceError);
+      });
+    });
+
+    describe('writeFile()', () => {
+      it('should write text content as string', async () => {
+        const textContent = 'New text content';
+        const filePath = 'OEBPS/new-text.txt';
+
+        await workspaceManager.writeFile(WORKSPACE_ID, filePath, textContent);
+
+        const files = await mockStorage.listFiles(WORKSPACE_ID);
+        expect(files).toContain(filePath);
+
+        const savedContent = await mockStorage.readTextFile(WORKSPACE_ID, filePath);
+        expect(savedContent).toBe(textContent);
+      });
+
+      it('should write binary content as ArrayBuffer', async () => {
+        const binaryContent = new ArrayBuffer(512);
+        const view = new Uint8Array(binaryContent);
+        view[0] = 0xFF; // Add some test data
+        view[1] = 0xD8;
+
+        const filePath = 'OEBPS/new-image.jpg';
+
+        await workspaceManager.writeFile(WORKSPACE_ID, filePath, binaryContent);
+
+        const files = await mockStorage.listFiles(WORKSPACE_ID);
+        expect(files).toContain(filePath);
+
+        const savedContent = await mockStorage.readFile(WORKSPACE_ID, filePath);
+        expect(savedContent).toBeInstanceOf(ArrayBuffer);
+        expect(savedContent.byteLength).toBe(512);
+        
+        const savedView = new Uint8Array(savedContent);
+        expect(savedView[0]).toBe(0xFF);
+        expect(savedView[1]).toBe(0xD8);
+      });
+
+      it('should invalidate cache after writing', async () => {
+        const invalidateSpy = vi.spyOn(workspaceManager as any, 'invalidateCache');
+
+        await workspaceManager.writeFile(WORKSPACE_ID, 'OEBPS/test.txt', 'test content');
+
+        expect(invalidateSpy).toHaveBeenCalledWith(WORKSPACE_ID);
+      });
+
+      it('should throw WorkspaceError on storage failure', async () => {
+        mockStorage.setFailureMode('write');
+
+        await expect(
+          workspaceManager.writeFile(WORKSPACE_ID, 'OEBPS/test.txt', 'content')
+        ).rejects.toThrow(WorkspaceError);
+      });
+
+      it('should throw WorkspaceError with correct error code', async () => {
+        mockStorage.setFailureMode('write');
+
+        try {
+          await workspaceManager.writeFile(WORKSPACE_ID, 'OEBPS/test.txt', 'content');
+          expect.fail('Should have thrown WorkspaceError');
+        } catch (error) {
+          expect(error).toBeInstanceOf(WorkspaceError);
+          expect((error as WorkspaceError).code).toBe('FILE_WRITE_ERROR');
+          expect((error as WorkspaceError).workspaceId).toBe(WORKSPACE_ID);
+        }
+      });
+
+      it('should handle large binary files', async () => {
+        const largeBuffer = new ArrayBuffer(10 * 1024 * 1024); // 10MB
+        const filePath = 'OEBPS/large-file.bin';
+
+        await workspaceManager.writeFile(WORKSPACE_ID, filePath, largeBuffer);
+
+        const files = await mockStorage.listFiles(WORKSPACE_ID);
+        expect(files).toContain(filePath);
+
+        const savedContent = await mockStorage.readFile(WORKSPACE_ID, filePath);
+        expect(savedContent.byteLength).toBe(largeBuffer.byteLength);
+      });
+    });
+
+    describe('integration with existing file methods', () => {
+      it('should work alongside readTextFile()', async () => {
+        const textContent = 'Test content for both methods';
+        const filePath = 'OEBPS/test.txt';
+
+        // Write with writeFile
+        await workspaceManager.writeFile(WORKSPACE_ID, filePath, textContent);
+
+        // Read with both methods
+        const resultFromReadFile = await workspaceManager.readFile(WORKSPACE_ID, filePath);
+        const resultFromReadTextFile = await workspaceManager.readTextFile(WORKSPACE_ID, filePath);
+
+        expect(resultFromReadFile).toBeInstanceOf(ArrayBuffer);
+        expect(resultFromReadTextFile).toBe(textContent);
+        
+        // Verify we can decode the ArrayBuffer to get the same text
+        const decodedFromBuffer = new TextDecoder().decode(resultFromReadFile);
+        expect(decodedFromBuffer).toBe(resultFromReadTextFile);
+      });
+
+      it('should work alongside writeTextFile()', async () => {
+        const textContent = 'Content written with different methods';
+        const filePath1 = 'OEBPS/file1.txt';
+        const filePath2 = 'OEBPS/file2.txt';
+
+        // Write with different methods
+        await workspaceManager.writeFile(WORKSPACE_ID, filePath1, textContent);
+        await workspaceManager.writeTextFile(WORKSPACE_ID, filePath2, textContent);
+
+        // Read both and verify they're the same
+        const content1 = await workspaceManager.readFile(WORKSPACE_ID, filePath1);
+        const content2 = await workspaceManager.readFile(WORKSPACE_ID, filePath2);
+
+        // Both should return ArrayBuffer instances
+        expect(content1).toBeInstanceOf(ArrayBuffer);
+        expect(content2).toBeInstanceOf(ArrayBuffer);
+
+        // Compare the actual content by decoding to text
+        const decoded1 = new TextDecoder().decode(content1);
+        const decoded2 = new TextDecoder().decode(content2);
+        
+        expect(decoded1).toBe(decoded2);
+        expect(decoded1).toBe(textContent);
+      });
+
+      it('should maintain file type consistency', async () => {
+        const textFile = 'OEBPS/text.txt';
+        const binaryFile = 'OEBPS/binary.jpg';
+        const textContent = 'Text content';
+        const binaryContent = new ArrayBuffer(256);
+
+        await workspaceManager.writeFile(WORKSPACE_ID, textFile, textContent);
+        await workspaceManager.writeFile(WORKSPACE_ID, binaryFile, binaryContent);
+
+        const readText = await workspaceManager.readFile(WORKSPACE_ID, textFile);
+        const readBinary = await workspaceManager.readFile(WORKSPACE_ID, binaryFile);
+
+        // Both should return ArrayBuffer
+        expect(readText).toBeInstanceOf(ArrayBuffer);
+        expect(readBinary).toBeInstanceOf(ArrayBuffer);
+        
+        // Text content should be decodable
+        const decodedText = new TextDecoder().decode(readText);
+        expect(decodedText).toBe(textContent);
+        
+        // Binary content should have the same size
+        expect(readBinary.byteLength).toBe(binaryContent.byteLength);
+      });
+    });
+  });
 });
