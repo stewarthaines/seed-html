@@ -26,7 +26,7 @@ describe('Settings Validation', () => {
   beforeEach(() => {
     mockFileStorage = createMockFileStorage();
     mockExtensionManager = createMockExtensionManager();
-    settingsManager = new SettingsManager(mockFileStorage, mockExtensionManager);
+    settingsManager = new SettingsManager(mockFileStorage as any, mockExtensionManager as any);
   });
 
   describe('validateGlobalSettings', () => {
@@ -262,9 +262,9 @@ describe('Settings Validation', () => {
   describe('Edge Cases', () => {
     it('should handle null input gracefully', () => {
 
-      const globalResult = settingsManager.validateGlobalSettings(null);
-      const workspaceResult = settingsManager.validateWorkspaceSettings(null);
-      const epubResult = settingsManager.validateEPUBSettings(null);
+      const globalResult = settingsManager.validateGlobalSettings(null as any);
+      const workspaceResult = settingsManager.validateWorkspaceSettings(null as any);
+      const epubResult = settingsManager.validateEPUBSettings(null as any);
       
       expect(globalResult).toHaveProperty('isValid');
       expect(workspaceResult).toHaveProperty('isValid');
@@ -273,9 +273,9 @@ describe('Settings Validation', () => {
 
     it('should handle undefined input gracefully', () => {
 
-      const globalResult = settingsManager.validateGlobalSettings(undefined);
-      const workspaceResult = settingsManager.validateWorkspaceSettings(undefined);
-      const epubResult = settingsManager.validateEPUBSettings(undefined);
+      const globalResult = settingsManager.validateGlobalSettings(undefined as any);
+      const workspaceResult = settingsManager.validateWorkspaceSettings(undefined as any);
+      const epubResult = settingsManager.validateEPUBSettings(undefined as any);
       
       expect(globalResult).toHaveProperty('isValid');
       expect(workspaceResult).toHaveProperty('isValid');

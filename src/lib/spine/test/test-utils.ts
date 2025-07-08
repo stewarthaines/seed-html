@@ -73,6 +73,7 @@ export function createSpineItemWithSource(
     id: manifestItem.id,
     href: manifestItem.href,
     mediaType: manifestItem.mediaType,
+    linear: spineItem.linear ?? true,
     hasSourceFile,
     sourcePath: hasSourceFile ? (sourcePath || `SOURCE/text/${manifestItem.id}.txt`) : undefined
   };

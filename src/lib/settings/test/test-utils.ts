@@ -5,7 +5,6 @@
  */
 
 import { vi, expect } from 'vitest';
-import type { FileStorageAPI } from '../../storage/index.js';
 import type { ExtensionManager } from '../../extensions/index.js';
 import type { WorkspaceSettings, EPUBSettings } from '../index.js';
 
@@ -14,7 +13,7 @@ import type { WorkspaceSettings, EPUBSettings } from '../index.js';
 // ============================================================================
 
 /**
- * Creates a mock FileStorageAPI for testing
+ * Creates a mock FileStorageAPI for testing using Vitest mock functions
  */
 export function createMockFileStorage() {
   return {
@@ -22,8 +21,10 @@ export function createMockFileStorage() {
     readFile: vi.fn().mockResolvedValue(new ArrayBuffer(0)),
     writeFile: vi.fn().mockResolvedValue(undefined),
     deleteFile: vi.fn().mockResolvedValue(undefined),
+    renameFile: vi.fn().mockResolvedValue(undefined),
     listFiles: vi.fn().mockResolvedValue([]),
     fileExists: vi.fn().mockResolvedValue(true),
+    getFileInfo: vi.fn().mockResolvedValue({ size: 0, lastModified: new Date() }),
     
     // Text file utilities
     readTextFile: vi.fn().mockResolvedValue('{}'),
@@ -38,8 +39,13 @@ export function createMockFileStorage() {
     init: vi.fn().mockResolvedValue(undefined),
     isInitialized: vi.fn().mockReturnValue(true),
     destroy: vi.fn().mockReturnValue(undefined),
-    getQuota: vi.fn().mockResolvedValue({ used: 0, available: 1000000 })
-  } satisfies Partial<FileStorageAPI>;
+    getQuota: vi.fn().mockResolvedValue({ used: 0, available: 1000000 }),
+    getBackendType: vi.fn().mockReturnValue('indexeddb'),
+    estimateWorkspaceSize: vi.fn().mockResolvedValue(0),
+    supportsDirectBlobURLs: vi.fn().mockReturnValue(false),
+    getFile: vi.fn().mockResolvedValue(new File([], 'test.txt')),
+    manager: undefined
+  };
 }
 
 /**

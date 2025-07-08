@@ -80,7 +80,7 @@ describe('SourceManager Integration Tests', () => {
       const originalFiles = createMinimalSourceStructure();
       await mockFileStorage.addTestFiles(originalWorkspaceId, originalFiles);
 
-      let currentWorkspaceId = originalWorkspaceId;
+      let currentWorkspaceId: string = originalWorkspaceId;
 
       // Perform 3 round-trips
       for (let i = 1; i <= 3; i++) {

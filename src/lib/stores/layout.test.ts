@@ -225,7 +225,7 @@ describe('Layout Store', () => {
       layoutStore.setSidebarSection('settings');
 
       // Simulate new store instance loading from localStorage
-      const newStore = get(layoutStore);
+      const _newStore = get(layoutStore);
 
       // Mock what would be in localStorage
       mockLocalStorage.setItem('editme_sidebar_expanded', JSON.stringify(false));

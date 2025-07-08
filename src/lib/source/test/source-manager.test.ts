@@ -18,6 +18,24 @@ import {
   DEFAULT_SETTINGS,
 } from './fixtures/create-test-data.js';
 
+/**
+ * Helper function to convert MockZip entries to blob format
+ */
+async function createZipBlobFromMockZip(mockZip: any): Promise<Blob> {
+  const zipEntries = await Promise.all(
+    mockZip.entries.map(async (e: any) => {
+      const content = await e.extractAsArrayBuffer();
+      return {
+        filename: e.fileName,
+        content: Array.from(new Uint8Array(content)),
+        size: content.byteLength,
+      };
+    })
+  );
+
+  return new Blob([JSON.stringify({ files: zipEntries })], { type: 'application/zip' });
+}
+
 // Mock ZIP library
 vi.mock('../../zip', () => ({
   ZipWriter: vi.fn(() => createMockZipWriter()),
@@ -178,18 +196,7 @@ describe('SourceManager', () => {
           content,
         }))
       );
-      const zipBlob = new Blob(
-        [
-          JSON.stringify({
-            files: mockZip.entries.map(e => ({
-              filename: e.fileName,
-              content: Array.from(new Uint8Array(e.content)),
-              size: e.content.byteLength,
-            })),
-          }),
-        ],
-        { type: 'application/zip' }
-      );
+      const zipBlob = await createZipBlobFromMockZip(mockZip);
 
       await sourceManager.extractSourceZip(workspaceId, zipBlob);
 
@@ -203,7 +210,7 @@ describe('SourceManager', () => {
 
     it('should handle empty ZIP file', async () => {
       const workspaceId = TEST_WORKSPACE_IDS.EMPTY;
-      const emptyZip = createMockZip([]);
+      createMockZip([]);
       const zipBlob = new Blob([JSON.stringify({ files: [] })], { type: 'application/zip' });
 
       await sourceManager.extractSourceZip(workspaceId, zipBlob);
@@ -226,18 +233,7 @@ describe('SourceManager', () => {
         { fileName: 'SOURCE/../../../etc/passwd', content: 'malicious content' },
         { fileName: 'SOURCE/normal.txt', content: 'normal content' },
       ]);
-      const zipBlob = new Blob(
-        [
-          JSON.stringify({
-            files: maliciousZip.entries.map(e => ({
-              filename: e.fileName,
-              content: Array.from(new Uint8Array(e.content)),
-              size: e.content.byteLength,
-            })),
-          }),
-        ],
-        { type: 'application/zip' }
-      );
+      const zipBlob = await createZipBlobFromMockZip(maliciousZip);
 
       await expect(sourceManager.extractSourceZip(workspaceId, zipBlob)).rejects.toThrow(
         'Invalid file path'
@@ -264,18 +260,7 @@ describe('SourceManager', () => {
           content,
         }))
       );
-      const zipBlob = new Blob(
-        [
-          JSON.stringify({
-            files: newZip.entries.map(e => ({
-              filename: e.fileName,
-              content: Array.from(new Uint8Array(e.content)),
-              size: e.content.byteLength,
-            })),
-          }),
-        ],
-        { type: 'application/zip' }
-      );
+      const zipBlob = await createZipBlobFromMockZip(newZip);
 
       await sourceManager.extractSourceZip(workspaceId, zipBlob);
 
@@ -298,18 +283,7 @@ describe('SourceManager', () => {
           content,
         }))
       );
-      const zipBlob = new Blob(
-        [
-          JSON.stringify({
-            files: mockZip.entries.map(e => ({
-              filename: e.fileName,
-              content: Array.from(new Uint8Array(e.content)),
-              size: e.content.byteLength,
-            })),
-          }),
-        ],
-        { type: 'application/zip' }
-      );
+      const zipBlob = await createZipBlobFromMockZip(mockZip);
 
       await expect(sourceManager.extractSourceZip(workspaceId, zipBlob)).rejects.toThrow(
         'Failed to write file'
@@ -326,18 +300,7 @@ describe('SourceManager', () => {
           content,
         }))
       );
-      const zipBlob = new Blob(
-        [
-          JSON.stringify({
-            files: mockZip.entries.map(e => ({
-              filename: e.fileName,
-              content: Array.from(new Uint8Array(e.content)),
-              size: e.content.byteLength,
-            })),
-          }),
-        ],
-        { type: 'application/zip' }
-      );
+      const zipBlob = await createZipBlobFromMockZip(mockZip);
 
       await sourceManager.extractSourceZip(workspaceId, zipBlob);
 
@@ -548,10 +511,16 @@ describe('SourceManager', () => {
       const result = await sourceManager.listSourceFiles(workspaceId);
 
       for (const fileInfo of result) {
-        const expectedSize =
-          typeof files[fileInfo.path] === 'string'
-            ? new TextEncoder().encode(files[fileInfo.path] as string).length
-            : (files[fileInfo.path] as ArrayBuffer).byteLength;
+        const fileContent = files[fileInfo.path];
+        let expectedSize: number;
+
+        if (typeof fileContent === 'string') {
+          expectedSize = new TextEncoder().encode(fileContent).length;
+        } else {
+          // fileContent is ArrayBuffer
+          expectedSize = (fileContent as ArrayBuffer).byteLength;
+        }
+
         expect(fileInfo.size).toBe(expectedSize);
       }
     });

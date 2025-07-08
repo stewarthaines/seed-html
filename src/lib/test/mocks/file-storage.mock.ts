@@ -211,6 +211,17 @@ export class MockFileStorage implements Partial<FileStorageAPI> {
     workspace.delete(path);
   }
 
+  async renameFile(workspaceId: string, oldPath: string, newPath: string): Promise<void> {
+    this.operationCount++;
+    const workspace = this.getWorkspace(workspaceId);
+    const entry = workspace.get(oldPath);
+    if (!entry) {
+      throw new Error(`File not found: ${oldPath}`);
+    }
+    workspace.set(newPath, { ...entry, path: newPath });
+    workspace.delete(oldPath);
+  }
+
   // System methods for compatibility
   async init(): Promise<void> {
     // No-op for mock
@@ -226,6 +237,29 @@ export class MockFileStorage implements Partial<FileStorageAPI> {
 
   async getQuota(): Promise<{ used: number; available: number }> {
     return { used: 0, available: 1000000 };
+  }
+
+  getBackendType(): string {
+    return 'indexeddb';
+  }
+
+  async estimateWorkspaceSize(workspaceId: string): Promise<number> {
+    return this.getWorkspaceSize(workspaceId);
+  }
+
+  supportsDirectBlobURLs(): boolean {
+    return false;
+  }
+
+  async getFile(workspaceId: string, filePath: string): Promise<File> {
+    const entry = await this.readFile(workspaceId, filePath);
+    const fileName = filePath.split('/').pop() || 'file';
+    return new File([entry], fileName);
+  }
+
+  get manager(): undefined {
+    // Mock doesn't have a real manager
+    return undefined;
   }
 
   // Test utility methods

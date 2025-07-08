@@ -1,6 +1,6 @@
 /**
  * SpineItemManager Ordering Tests
- * 
+ *
  * Unit tests for spine ordering operations including reordering, movement,
  * and bulk order updates. Tests edge cases and concurrent operations.
  */
@@ -13,8 +13,7 @@ import {
   setupSpineOrderingScenario,
   expectSpineOrder,
   setupErrorScenario,
-  clearErrorScenario,
-  measurePerformance
+  measurePerformance,
 } from './test-utils.js';
 
 describe('SpineItemManager Ordering Operations', () => {
@@ -39,32 +38,62 @@ describe('SpineItemManager Ordering Operations', () => {
     it('should move chapter from start to middle', async () => {
       const reorderedItems = await spineManager.reorderItems(testWorkspaceId, 0, 2);
 
-      expectSpineOrder(reorderedItems, ['chapter2', 'chapter3', 'chapter1', 'chapter4', 'chapter5']);
+      expectSpineOrder(reorderedItems, [
+        'chapter2',
+        'chapter3',
+        'chapter1',
+        'chapter4',
+        'chapter5',
+      ]);
     });
 
     it('should move chapter from middle to start', async () => {
       const reorderedItems = await spineManager.reorderItems(testWorkspaceId, 2, 0);
 
-      expectSpineOrder(reorderedItems, ['chapter3', 'chapter1', 'chapter2', 'chapter4', 'chapter5']);
+      expectSpineOrder(reorderedItems, [
+        'chapter3',
+        'chapter1',
+        'chapter2',
+        'chapter4',
+        'chapter5',
+      ]);
     });
 
     it('should move chapter from middle to end', async () => {
       const reorderedItems = await spineManager.reorderItems(testWorkspaceId, 1, 4);
 
-      expectSpineOrder(reorderedItems, ['chapter1', 'chapter3', 'chapter4', 'chapter5', 'chapter2']);
+      expectSpineOrder(reorderedItems, [
+        'chapter1',
+        'chapter3',
+        'chapter4',
+        'chapter5',
+        'chapter2',
+      ]);
     });
 
     it('should move chapter from end to start', async () => {
       const reorderedItems = await spineManager.reorderItems(testWorkspaceId, 4, 0);
 
-      expectSpineOrder(reorderedItems, ['chapter5', 'chapter1', 'chapter2', 'chapter3', 'chapter4']);
+      expectSpineOrder(reorderedItems, [
+        'chapter5',
+        'chapter1',
+        'chapter2',
+        'chapter3',
+        'chapter4',
+      ]);
     });
 
     it('should handle same position (no-op)', async () => {
       const originalItems = await spineManager.loadSpineItems(testWorkspaceId);
       const reorderedItems = await spineManager.reorderItems(testWorkspaceId, 2, 2);
 
-      expectSpineOrder(reorderedItems, ['chapter1', 'chapter2', 'chapter3', 'chapter4', 'chapter5']);
+      expectSpineOrder(reorderedItems, [
+        'chapter1',
+        'chapter2',
+        'chapter3',
+        'chapter4',
+        'chapter5',
+      ]);
       expect(reorderedItems).toEqual(originalItems);
     });
 
@@ -77,33 +106,38 @@ describe('SpineItemManager Ordering Operations', () => {
           expect.objectContaining({
             linear: true,
             mediaType: 'application/xhtml+xml',
-            href: expect.stringMatching(/^Text\/.*\.xhtml$/)
+            href: expect.stringMatching(/^Text\/.*\.xhtml$/),
           })
         );
       });
     });
 
     it('should handle invalid fromIndex', async () => {
-      await expect(spineManager.reorderItems(testWorkspaceId, -1, 2))
-        .rejects.toThrow('Invalid fromIndex');
+      await expect(spineManager.reorderItems(testWorkspaceId, -1, 2)).rejects.toThrow(
+        'Invalid fromIndex'
+      );
 
-      await expect(spineManager.reorderItems(testWorkspaceId, 10, 2))
-        .rejects.toThrow('Invalid fromIndex');
+      await expect(spineManager.reorderItems(testWorkspaceId, 10, 2)).rejects.toThrow(
+        'Invalid fromIndex'
+      );
     });
 
     it('should handle invalid toIndex', async () => {
-      await expect(spineManager.reorderItems(testWorkspaceId, 0, -1))
-        .rejects.toThrow('Invalid toIndex');
+      await expect(spineManager.reorderItems(testWorkspaceId, 0, -1)).rejects.toThrow(
+        'Invalid toIndex'
+      );
 
-      await expect(spineManager.reorderItems(testWorkspaceId, 0, 10))
-        .rejects.toThrow('Invalid toIndex');
+      await expect(spineManager.reorderItems(testWorkspaceId, 0, 10)).rejects.toThrow(
+        'Invalid toIndex'
+      );
     });
 
     it('should handle workspace update failure', async () => {
       setupErrorScenario(mockWorkspaceManager, 'spine-update');
 
-      await expect(spineManager.reorderItems(testWorkspaceId, 0, 2))
-        .rejects.toThrow('Failed to update spine order');
+      await expect(spineManager.reorderItems(testWorkspaceId, 0, 2)).rejects.toThrow(
+        'Failed to update spine order'
+      );
     });
 
     it('should handle concurrent reorder operations', async () => {
@@ -111,12 +145,12 @@ describe('SpineItemManager Ordering Operations', () => {
       const operations = [
         spineManager.reorderItems(testWorkspaceId, 0, 2),
         spineManager.reorderItems(testWorkspaceId, 1, 3),
-        spineManager.reorderItems(testWorkspaceId, 2, 0)
+        spineManager.reorderItems(testWorkspaceId, 2, 0),
       ];
 
       // All operations should complete, with the last one determining final order
       const results = await Promise.allSettled(operations);
-      
+
       // At least one should succeed (depending on implementation strategy)
       const successfulResults = results.filter(result => result.status === 'fulfilled');
       expect(successfulResults.length).toBeGreaterThan(0);
@@ -150,18 +184,17 @@ describe('SpineItemManager Ordering Operations', () => {
     });
 
     it('should handle invalid index', async () => {
-      await expect(spineManager.moveChapterUp(testWorkspaceId, -1))
-        .rejects.toThrow('Invalid index');
+      await expect(spineManager.moveChapterUp(testWorkspaceId, -1)).rejects.toThrow(
+        'Invalid index'
+      );
 
-      await expect(spineManager.moveChapterUp(testWorkspaceId, 5))
-        .rejects.toThrow('Invalid index');
+      await expect(spineManager.moveChapterUp(testWorkspaceId, 5)).rejects.toThrow('Invalid index');
     });
 
     it('should handle empty spine', async () => {
       setupSpineOrderingScenario(mockWorkspaceManager, testWorkspaceId, 0);
 
-      await expect(spineManager.moveChapterUp(testWorkspaceId, 0))
-        .rejects.toThrow('Invalid index');
+      await expect(spineManager.moveChapterUp(testWorkspaceId, 0)).rejects.toThrow('Invalid index');
     });
   });
 
@@ -192,11 +225,13 @@ describe('SpineItemManager Ordering Operations', () => {
     });
 
     it('should handle invalid index', async () => {
-      await expect(spineManager.moveChapterDown(testWorkspaceId, -1))
-        .rejects.toThrow('Invalid index');
+      await expect(spineManager.moveChapterDown(testWorkspaceId, -1)).rejects.toThrow(
+        'Invalid index'
+      );
 
-      await expect(spineManager.moveChapterDown(testWorkspaceId, 5))
-        .rejects.toThrow('Invalid index');
+      await expect(spineManager.moveChapterDown(testWorkspaceId, 5)).rejects.toThrow(
+        'Invalid index'
+      );
     });
 
     it('should handle single item spine', async () => {
@@ -216,10 +251,10 @@ describe('SpineItemManager Ordering Operations', () => {
 
     it('should update complete spine order from reordered items array', async () => {
       const originalItems = await spineManager.loadSpineItems(testWorkspaceId);
-      
+
       // Reverse the order
       const reorderedItems = [...originalItems].reverse();
-      
+
       await spineManager.updateSpineOrder(testWorkspaceId, reorderedItems);
 
       const updatedItems = await spineManager.loadSpineItems(testWorkspaceId);
@@ -228,15 +263,15 @@ describe('SpineItemManager Ordering Operations', () => {
 
     it('should handle partial reordering', async () => {
       const originalItems = await spineManager.loadSpineItems(testWorkspaceId);
-      
+
       // Move chapter 3 to the beginning
       const reorderedItems = [
         originalItems[2], // chapter3
         originalItems[0], // chapter1
         originalItems[1], // chapter2
-        originalItems[3]  // chapter4
+        originalItems[3], // chapter4
       ];
-      
+
       await spineManager.updateSpineOrder(testWorkspaceId, reorderedItems);
 
       const updatedItems = await spineManager.loadSpineItems(testWorkspaceId);
@@ -246,20 +281,20 @@ describe('SpineItemManager Ordering Operations', () => {
     it('should preserve item properties during reordering', async () => {
       const originalItems = await spineManager.loadSpineItems(testWorkspaceId);
       const reorderedItems = [...originalItems].reverse();
-      
+
       await spineManager.updateSpineOrder(testWorkspaceId, reorderedItems);
 
       const updatedItems = await spineManager.loadSpineItems(testWorkspaceId);
-      
+
       // Each item should retain all its properties
-      updatedItems.forEach((item, index) => {
+      updatedItems.forEach((item, _index) => {
         const originalItem = originalItems.find(orig => orig.id === item.id);
         expect(item).toEqual(
           expect.objectContaining({
             linear: originalItem?.linear,
             mediaType: originalItem?.mediaType,
             href: originalItem?.href,
-            hasSourceFile: originalItem?.hasSourceFile
+            hasSourceFile: originalItem?.hasSourceFile,
           })
         );
       });
@@ -273,12 +308,9 @@ describe('SpineItemManager Ordering Operations', () => {
     });
 
     it('should validate all items exist in current spine', async () => {
-      const invalidItems = [
-        { id: 'nonexistent', idref: 'nonexistent' } as any
-      ];
+      const invalidItems = [{ id: 'nonexistent', idref: 'nonexistent' } as any];
 
-      await expect(spineManager.updateSpineOrder(testWorkspaceId, invalidItems))
-        .rejects.toThrow();
+      await expect(spineManager.updateSpineOrder(testWorkspaceId, invalidItems)).rejects.toThrow();
     });
 
     it('should handle duplicate items in order', async () => {
@@ -286,19 +318,21 @@ describe('SpineItemManager Ordering Operations', () => {
       const duplicateItems = [
         originalItems[0],
         originalItems[1],
-        originalItems[0] // Duplicate
+        originalItems[0], // Duplicate
       ];
 
-      await expect(spineManager.updateSpineOrder(testWorkspaceId, duplicateItems))
-        .rejects.toThrow();
+      await expect(
+        spineManager.updateSpineOrder(testWorkspaceId, duplicateItems)
+      ).rejects.toThrow();
     });
 
     it('should handle workspace update failure', async () => {
       const originalItems = await spineManager.loadSpineItems(testWorkspaceId);
       setupErrorScenario(mockWorkspaceManager, 'spine-update');
 
-      await expect(spineManager.updateSpineOrder(testWorkspaceId, originalItems))
-        .rejects.toThrow('Failed to update spine order');
+      await expect(spineManager.updateSpineOrder(testWorkspaceId, originalItems)).rejects.toThrow(
+        'Failed to update spine order'
+      );
     });
   });
 
@@ -317,11 +351,9 @@ describe('SpineItemManager Ordering Operations', () => {
     it('should handle rapid sequential operations', async () => {
       setupSpineOrderingScenario(mockWorkspaceManager, testWorkspaceId, 10);
 
-      const operations = [];
+      const operations: Promise<any>[] = [];
       for (let i = 0; i < 5; i++) {
-        operations.push(
-          spineManager.moveChapterDown(testWorkspaceId, i % 10)
-        );
+        operations.push(spineManager.moveChapterDown(testWorkspaceId, i % 10));
       }
 
       const { duration } = await measurePerformance(
@@ -343,10 +375,10 @@ describe('SpineItemManager Ordering Operations', () => {
       }
 
       const finalItems = await spineManager.loadSpineItems(testWorkspaceId);
-      
+
       // Verify all items are still present
       expect(finalItems).toHaveLength(20);
-      
+
       // Verify no duplicate IDs
       const ids = finalItems.map(item => item.id);
       const uniqueIds = new Set(ids);
@@ -375,24 +407,23 @@ describe('SpineItemManager Ordering Operations', () => {
       expect(items).toHaveLength(0);
 
       // Operations on empty spine should fail gracefully
-      await expect(spineManager.reorderItems(testWorkspaceId, 0, 0))
-        .rejects.toThrow();
+      await expect(spineManager.reorderItems(testWorkspaceId, 0, 0)).rejects.toThrow();
 
-      await expect(spineManager.moveChapterUp(testWorkspaceId, 0))
-        .rejects.toThrow();
+      await expect(spineManager.moveChapterUp(testWorkspaceId, 0)).rejects.toThrow();
 
-      await expect(spineManager.moveChapterDown(testWorkspaceId, 0))
-        .rejects.toThrow();
+      await expect(spineManager.moveChapterDown(testWorkspaceId, 0)).rejects.toThrow();
     });
 
     it('should handle very large indices gracefully', async () => {
       setupSpineOrderingScenario(mockWorkspaceManager, testWorkspaceId, 3);
 
-      await expect(spineManager.reorderItems(testWorkspaceId, 0, 999999))
-        .rejects.toThrow('Invalid toIndex');
+      await expect(spineManager.reorderItems(testWorkspaceId, 0, 999999)).rejects.toThrow(
+        'Invalid toIndex'
+      );
 
-      await expect(spineManager.moveChapterUp(testWorkspaceId, 999999))
-        .rejects.toThrow('Invalid index');
+      await expect(spineManager.moveChapterUp(testWorkspaceId, 999999)).rejects.toThrow(
+        'Invalid index'
+      );
     });
 
     it('should handle concurrent operations gracefully', async () => {
@@ -402,12 +433,12 @@ describe('SpineItemManager Ordering Operations', () => {
       const concurrentOps = [
         spineManager.reorderItems(testWorkspaceId, 0, 2),
         spineManager.moveChapterUp(testWorkspaceId, 3),
-        spineManager.moveChapterDown(testWorkspaceId, 1)
+        spineManager.moveChapterDown(testWorkspaceId, 1),
       ];
 
       // Should handle gracefully without corruption
       const results = await Promise.allSettled(concurrentOps);
-      
+
       // At least some operations should succeed
       const successful = results.filter(r => r.status === 'fulfilled');
       expect(successful.length).toBeGreaterThan(0);
@@ -415,7 +446,7 @@ describe('SpineItemManager Ordering Operations', () => {
       // Final state should be consistent
       const finalItems = await spineManager.loadSpineItems(testWorkspaceId);
       expect(finalItems).toHaveLength(5);
-      
+
       // No duplicate IDs
       const ids = finalItems.map(item => item.id);
       expect(new Set(ids).size).toBe(5);
