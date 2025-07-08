@@ -19,12 +19,7 @@ import type {
   ValidationWarning,
   WorkspaceCacheEntry,
 } from './types.js';
-import type {
-  EPUBMetadata,
-  OPFDocument,
-  ManifestItem,
-  SpineItem,
-} from '../epub/opf-utils.js';
+import type { EPUBMetadata, OPFDocument, ManifestItem, SpineItem } from '../epub/opf-utils.js';
 import { WorkspaceError, ValidationError, DEFAULT_WORKSPACE_CONFIG } from './types.js';
 
 export class WorkspaceManager {
@@ -68,7 +63,7 @@ export class WorkspaceManager {
             await this.cache.updateCache(workspaceId, freshInfo);
             workspaceInfos.push(freshInfo);
           }
-        } catch (error) {
+        } catch {
           // Workspace has issues - include with error state
           workspaceInfos.push({
             id: workspaceId,
@@ -215,9 +210,9 @@ export class WorkspaceManager {
       return {
         version: opf.version,
         metadata: { ...opf.metadata },
-        manifest: [...opf.manifest.map(item => ({ ...item }))],
-        spine: [...opf.spine.map(item => ({ ...item }))],
-        guide: opf.guide ? [...opf.guide.map(item => ({ ...item }))] : undefined,
+        manifest: opf.manifest.map(item => ({ ...item })),
+        spine: opf.spine.map(item => ({ ...item })),
+        guide: opf.guide ? opf.guide.map(item => ({ ...item })) : undefined,
       };
     } catch (error) {
       throw new WorkspaceError(
@@ -529,6 +524,44 @@ export class WorkspaceManager {
   }
 
   /**
+   * Read a file from the workspace (returns ArrayBuffer for both text and binary content)
+   */
+  async readFile(workspaceId: string, path: string): Promise<ArrayBuffer> {
+    try {
+      return await this.storage.readFile(workspaceId, path);
+    } catch (error) {
+      throw new WorkspaceError(
+        `Failed to read file: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'FILE_READ_ERROR',
+        workspaceId
+      );
+    }
+  }
+
+  /**
+   * Write a file to the workspace (supports both text and binary content)
+   */
+  async writeFile(workspaceId: string, path: string, content: string | ArrayBuffer): Promise<void> {
+    try {
+      // Convert string content to ArrayBuffer if needed
+      const bufferContent =
+        typeof content === 'string'
+          ? (new TextEncoder().encode(content).buffer as ArrayBuffer)
+          : content;
+
+      await this.storage.writeFile(workspaceId, path, bufferContent);
+      // Invalidate cache since workspace contents changed
+      await this.invalidateCache(workspaceId);
+    } catch (error) {
+      throw new WorkspaceError(
+        `Failed to write file: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'FILE_WRITE_ERROR',
+        workspaceId
+      );
+    }
+  }
+
+  /**
    * Delete a file from the workspace
    */
   async deleteFile(workspaceId: string, path: string): Promise<void> {
@@ -577,7 +610,7 @@ export class WorkspaceManager {
       let pathInfo: WorkspacePathInfo;
       try {
         pathInfo = await this.getWorkspacePathInfo(workspaceId);
-      } catch (error) {
+      } catch {
         // If we can't parse container.xml, fall back to default
         pathInfo = {
           rootfilePath: 'OEBPS/content.opf',
@@ -906,12 +939,7 @@ export class WorkspaceManager {
     await this.storage.writeTextFile(workspaceId, 'OEBPS/content.opf', opfXML);
 
     // Create directory structure
-    const directories = [
-      'OEBPS/Text',
-      'OEBPS/Images',
-      'OEBPS/Styles',
-      'OEBPS/Audio',
-    ];
+    const directories = ['OEBPS/Text', 'OEBPS/Images', 'OEBPS/Styles', 'OEBPS/Audio'];
 
     for (const dir of directories) {
       await this.storage.writeTextFile(workspaceId, `${dir}/.gitkeep`, '');
