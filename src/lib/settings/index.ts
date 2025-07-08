@@ -60,7 +60,7 @@ export interface TransformOption {
 // Settings Manager Interface
 // ============================================================================
 
-export interface SettingsManager {
+export interface ISettingsManager {
 
   // Global Settings (localStorage)
   loadGlobalSettings(): GlobalSettings;

@@ -583,7 +583,7 @@ describe('ExtensionManager', () => {
         if (writeCount % 3 === 0) { // Every 3rd write fails
           throw new Error('Intermittent storage failure');
         }
-        return originalWrite(...args);
+        return originalWrite(...(args as [string, string, string | ArrayBuffer]));
       });
 
       const summary = await extensionManager.scanAndCacheExtensions(workspaceId);

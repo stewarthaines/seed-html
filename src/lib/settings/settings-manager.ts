@@ -15,7 +15,7 @@ import type {
   EPUBSettings,
   SettingsValidation,
   TransformOption,
-  SettingsManager as ISettingsManager
+  ISettingsManager
 } from './index.js';
 import { themeStore } from '../stores/theme.js';
 import { setLocale } from '../i18n/index.js';

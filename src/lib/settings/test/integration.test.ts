@@ -10,9 +10,7 @@ import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest';
 import { SETTINGS_FIXTURES } from './fixtures.js';
 import { createTempWorkspace, cleanupTempWorkspace, createMockFileStorage, createMockExtensionManager } from './test-utils.js';
 import type { SettingsManager } from '../index.js';
-
-// TODO: Import actual SettingsManager when implemented
-// import { SettingsManager } from '../settings-manager.js';
+import { SettingsManager as SettingsManagerImpl } from '../settings-manager.js';
 
 describe.skip('Settings Manager Integration', () => {
   // These tests will be enabled when the actual SettingsManager is implemented
@@ -28,8 +26,7 @@ describe.skip('Settings Manager Integration', () => {
     mockFileStorage = createMockFileStorage();
     mockExtensionManager = createMockExtensionManager();
     
-    // TODO: Uncomment when SettingsManager is implemented
-    // settingsManager = new SettingsManager(mockFileStorage, mockExtensionManager);
+    settingsManager = new SettingsManagerImpl(mockFileStorage as any, mockExtensionManager as any);
   });
   
   afterEach(async () => {
@@ -129,8 +126,8 @@ describe.skip('Settings Manager Integration', () => {
       // Save valid settings first
       await settingsManager.saveEPUBSettings(tempWorkspaceId, SETTINGS_FIXTURES.epub.valid());
       
-      // Corrupt the data
-      settingsManager.corruptData(`${tempWorkspaceId}/SOURCE/settings.json`);
+      // Corrupt the data by writing invalid JSON
+      await mockFileStorage.writeTextFile(tempWorkspaceId, 'SOURCE/settings.json', 'invalid json content');
       
       const loadedSettings = await settingsManager.loadEPUBSettings(tempWorkspaceId);
       const expectedDefaults = settingsManager.getDefaultEPUBSettings();
@@ -142,8 +139,8 @@ describe.skip('Settings Manager Integration', () => {
       // Save valid settings first
       await settingsManager.saveWorkspaceSettings(tempWorkspaceId, SETTINGS_FIXTURES.workspace.advanced());
       
-      // Corrupt the data
-      settingsManager.corruptData(`${tempWorkspaceId}/.workspace-metadata.json`);
+      // Corrupt the data by writing invalid JSON
+      await mockFileStorage.writeTextFile(tempWorkspaceId, '.workspace-metadata.json', 'invalid json content');
       
       const loadedSettings = await settingsManager.loadWorkspaceSettings(tempWorkspaceId);
       const expectedDefaults = settingsManager.getDefaultWorkspaceSettings();

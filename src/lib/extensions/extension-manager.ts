@@ -9,6 +9,7 @@ import type { FileStorageAPI } from '../storage/index.js';
 import type { 
   ExtensionInfo, 
   ExtensionFile, 
+  ExtensionSignature,
   CachingSummary, 
   ValidationResult 
 } from './types.js';

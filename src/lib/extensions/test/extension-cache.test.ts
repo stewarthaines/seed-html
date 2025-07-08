@@ -98,10 +98,10 @@ describe('ExtensionCache', () => {
       const workspaceId = TEST_WORKSPACE_IDS.COMPLETE;
 
       // Cache original version
-      await mockFileStorage.addTestFiles(CACHE_WORKSPACE_ID, createCacheFiles(CONFLICTING_EXTENSIONS.MARKDOWN_V1));
+      await mockFileStorage.addTestFiles(CACHE_WORKSPACE_ID, createCacheFiles(CONFLICTING_EXTENSIONS.MARKDOWN_V1 as any));
 
       // Try to cache different version
-      await mockFileStorage.addTestFiles(workspaceId, createExtensionFiles(CONFLICTING_EXTENSIONS.MARKDOWN_V2, workspaceId));
+      await mockFileStorage.addTestFiles(workspaceId, createExtensionFiles(CONFLICTING_EXTENSIONS.MARKDOWN_V2 as any, workspaceId));
 
       await expect(
         extensionCache.addToCache(workspaceId, 'markdown-it')
@@ -244,7 +244,7 @@ describe('ExtensionCache', () => {
         if (operationCount > 0) { // Fail on any write
           throw new Error('Failed to write file');
         }
-        return originalWrite(...args);
+        return originalWrite(...(args as [string, string, string | ArrayBuffer]));
       });
 
       await expect(
@@ -417,8 +417,8 @@ describe('ExtensionCache', () => {
       const workspaceId = TEST_WORKSPACE_IDS.CONFLICTED;
       
       // Setup conflicting content
-      await mockFileStorage.addTestFiles(workspaceId, createExtensionFiles(CONFLICTING_EXTENSIONS.MARKDOWN_V2, workspaceId));
-      await mockFileStorage.addTestFiles(CACHE_WORKSPACE_ID, createCacheFiles(CONFLICTING_EXTENSIONS.MARKDOWN_V1));
+      await mockFileStorage.addTestFiles(workspaceId, createExtensionFiles(CONFLICTING_EXTENSIONS.MARKDOWN_V2 as any, workspaceId));
+      await mockFileStorage.addTestFiles(CACHE_WORKSPACE_ID, createCacheFiles(CONFLICTING_EXTENSIONS.MARKDOWN_V1 as any));
 
       const isDifferent = await (extensionCache as any).compareExtensions(
         workspaceId,

@@ -191,7 +191,7 @@ describe('Extension Manager Integration', () => {
         if (writeCount === 2) { // Fail on second write (cache write)
           throw new Error('Storage failure during caching');
         }
-        return originalWrite(...args);
+        return originalWrite(...(args as [string, string, string | ArrayBuffer]));
       });
 
       await expect(
