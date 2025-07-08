@@ -1,44 +1,227 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import { navigationStore } from '../navigation-store';
-  import type { WorkspaceViewData } from '../types';
   import { t } from '../../i18n';
+  import { WorkspaceManager } from '../../workspace/workspace-manager';
+  import type { WorkspaceInfo } from '../../workspace/types';
+  import type { EPUBMetadata } from '../../epub/opf-utils';
+  import CurrentWorkspaceBar from '../../components/workspace/CurrentWorkspaceBar.svelte';
+  import WorkspaceActionBar from '../../components/workspace/WorkspaceActionBar.svelte';
+  import WorkspaceList from '../../components/workspace/WorkspaceList.svelte';
 
-  // Component implements ViewComponent interface
-  let viewData: WorkspaceViewData = {
-    selectedWorkspace: null,
-    recentWorkspaces: [],
+  const dispatch = createEventDispatcher<{
+    workspaceOpened: { workspaceId: string };
+    navigationRequested: { view: string; workspaceId?: string };
+  }>();
+
+  // Initialize WorkspaceManager
+  const workspaceManager = new WorkspaceManager();
+
+  // Component state
+  let workspaces: WorkspaceInfo[] = [];
+  let currentWorkspaceId: string | null = null;
+  let currentWorkspace: WorkspaceInfo | null = null;
+  let loading = true;
+  let error: string | null = null;
+  let hasUnsavedChanges = false;
+  let guardId: string;
+
+  // Load current workspace from localStorage
+  const loadCurrentWorkspace = () => {
+    const stored = localStorage.getItem('currentWorkspace');
+    if (stored && workspaces.find(w => w.id === stored)) {
+      currentWorkspaceId = stored;
+      currentWorkspace = workspaces.find(w => w.id === stored) || null;
+    } else {
+      currentWorkspaceId = null;
+      currentWorkspace = null;
+      localStorage.removeItem('currentWorkspace');
+    }
   };
 
-  let guardId: string;
-  let hasUnsavedChanges = false;
+  // Load workspaces from WorkspaceManager
+  const loadWorkspaces = async () => {
+    try {
+      loading = true;
+      error = null;
+      workspaces = await workspaceManager.listWorkspacesWithMetadata();
+      loadCurrentWorkspace();
+    } catch (err) {
+      console.error('Failed to load workspaces:', err);
+      error = $t('Failed to load workspaces');
+      workspaces = [];
+    } finally {
+      loading = false;
+    }
+  };
 
-  // ViewComponent interface implementation
-  export function onViewEnter(data?: any): void {
-    if (data) {
-      viewData = { ...viewData, ...data };
+  // Create minimal EPUB metadata for new workspace
+  const createMinimalEPUBMetadata = (): EPUBMetadata => ({
+    title: 'Untitled Book Project',
+    language: 'en',
+    identifier: crypto.randomUUID(),
+    creator: ['Unknown'],
+  });
+
+  // Handle create new workspace
+  const handleCreateNew = async () => {
+    try {
+      loading = true;
+      const metadata = createMinimalEPUBMetadata();
+      const workspaceId = await workspaceManager.createEPUBWorkspace(metadata);
+
+      // Refresh workspace list
+      await loadWorkspaces();
+
+      // Set as current workspace
+      currentWorkspaceId = workspaceId;
+      currentWorkspace = workspaces.find(w => w.id === workspaceId) || null;
+      localStorage.setItem('currentWorkspace', workspaceId);
+
+      // Navigate to metadata view
+      dispatch('navigationRequested', {
+        view: 'metadata',
+        workspaceId,
+      });
+
+      dispatch('workspaceOpened', { workspaceId });
+    } catch (err) {
+      console.error('Failed to create workspace:', err);
+      alert(
+        $t('Failed to create workspace: {error}', {
+          error: err instanceof Error ? err.message : 'Unknown error',
+        })
+      );
+    } finally {
+      loading = false;
+    }
+  };
+
+  // Handle load EPUB file
+  const handleLoadEpub = () => {
+    // Create file input element
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.epub';
+
+    input.onchange = async event => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        loading = true;
+
+        // TODO: Implement EPUB import in WorkspaceManager
+        // For now, show a placeholder message
+        alert(
+          $t(
+            'EPUB import functionality is coming soon. For now, use "Create New" to start a fresh project.'
+          )
+        );
+      } catch (err) {
+        console.error('Failed to import EPUB:', err);
+        alert(
+          $t('Failed to import EPUB: {error}', {
+            error: err instanceof Error ? err.message : 'Unknown error',
+          })
+        );
+      } finally {
+        loading = false;
+      }
+    };
+
+    input.click();
+  };
+
+  // Handle workspace selection (open workspace)
+  const handleWorkspaceSelect = async (event: CustomEvent<{ workspaceId: string }>) => {
+    const { workspaceId } = event.detail;
+
+    try {
+      // Set as current workspace
+      currentWorkspaceId = workspaceId;
+      currentWorkspace = workspaces.find(w => w.id === workspaceId) || null;
+      localStorage.setItem('currentWorkspace', workspaceId);
+
+      // Navigate to workspace (metadata view)
+      dispatch('navigationRequested', {
+        view: 'metadata',
+        workspaceId,
+      });
+
+      dispatch('workspaceOpened', { workspaceId });
+    } catch (err) {
+      console.error('Failed to open workspace:', err);
+      alert(
+        $t('Failed to open workspace: {error}', {
+          error: err instanceof Error ? err.message : 'Unknown error',
+        })
+      );
+    }
+  };
+
+  // Handle workspace deletion
+  const handleWorkspaceDelete = async (event: CustomEvent<{ workspaceId: string }>) => {
+    const { workspaceId } = event.detail;
+    const workspace = workspaces.find(w => w.id === workspaceId);
+
+    if (!workspace) return;
+
+    const confirmed = confirm(
+      $t('Delete "{title}"? This cannot be undone.', {
+        title: workspace.title,
+      })
+    );
+
+    if (!confirmed) return;
+
+    try {
+      loading = true;
+      await workspaceManager.deleteWorkspace(workspaceId);
+
+      // If this was the current workspace, clear it
+      if (currentWorkspaceId === workspaceId) {
+        currentWorkspaceId = null;
+        currentWorkspace = null;
+        localStorage.removeItem('currentWorkspace');
+      }
+
+      // Refresh workspace list
+      await loadWorkspaces();
+    } catch (err) {
+      console.error('Failed to delete workspace:', err);
+      alert(
+        $t('Failed to delete workspace: {error}', {
+          error: err instanceof Error ? err.message : 'Unknown error',
+        })
+      );
+    } finally {
+      loading = false;
+    }
+  };
+
+  // Handle current workspace actions
+  const handleSwitchWorkspace = () => {
+    // Just scroll to workspace list for now
+    const workspaceListElement = document.querySelector('.workspace-list');
+    if (workspaceListElement) {
+      workspaceListElement.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleCloseWorkspace = () => {
+    if (hasUnsavedChanges) {
+      const confirmed = confirm($t('You have unsaved workspace changes. Continue?'));
+      if (!confirmed) return;
     }
 
-    // Restore saved data
-    const saved = navigationStore.getViewData<WorkspaceViewData>('workspace');
-    if (saved) {
-      viewData = saved;
-    }
-  }
+    currentWorkspaceId = null;
+    currentWorkspace = null;
+    localStorage.removeItem('currentWorkspace');
+    hasUnsavedChanges = false;
+  };
 
-  export function onViewLeave(): void {
-    // Save current state
-    navigationStore.setViewData('workspace', viewData);
-  }
-
-  export function getViewData(): WorkspaceViewData {
-    return viewData;
-  }
-
-  export function setViewData(data: any): void {
-    viewData = { ...viewData, ...data };
-  }
-
+  // Navigation guard
   export async function canLeave(): Promise<boolean> {
     if (hasUnsavedChanges) {
       return window.confirm($t('You have unsaved workspace changes. Continue?'));
@@ -46,8 +229,37 @@
     return true;
   }
 
+  // ViewComponent interface implementation
+  export function onViewEnter(data?: any): void {
+    // Load workspaces when entering view
+    loadWorkspaces();
+  }
+
+  export function onViewLeave(): void {
+    // Save any state if needed
+  }
+
+  export function getViewData(): any {
+    return {
+      currentWorkspaceId,
+      hasUnsavedChanges,
+    };
+  }
+
+  export function setViewData(data: any): void {
+    if (data.currentWorkspaceId) {
+      currentWorkspaceId = data.currentWorkspaceId;
+    }
+    if (data.hasUnsavedChanges !== undefined) {
+      hasUnsavedChanges = data.hasUnsavedChanges;
+    }
+  }
+
   // Component lifecycle
-  onMount(() => {
+  onMount(async () => {
+    // Initialize workspace manager
+    await workspaceManager.init();
+
     // Register navigation guard
     guardId = navigationStore.addNavigationGuard(canLeave);
 
@@ -64,89 +276,52 @@
     // Call onViewLeave
     onViewLeave();
   });
-
-  // Example workspace operations
-  function selectWorkspace(workspaceId: string) {
-    viewData.selectedWorkspace = workspaceId;
-    hasUnsavedChanges = false;
-    navigationStore.setViewData('workspace', viewData);
-  }
-
-  function _addToRecent(workspaceId: string) {
-    const recent = viewData.recentWorkspaces.filter(id => id !== workspaceId);
-    recent.unshift(workspaceId);
-    viewData.recentWorkspaces = recent.slice(0, 5); // Keep only 5 recent
-    hasUnsavedChanges = true;
-  }
 </script>
 
 <div class="workspace-view">
-  <header class="view-header">
-    <h2>{$t('Workspace Management')}</h2>
-    <p>{$t('Select and manage EPUB workspaces')}</p>
-  </header>
+  <main class="view-content">
+    <!-- Current Workspace Bar -->
+    <CurrentWorkspaceBar
+      {currentWorkspace}
+      on:switchRequested={handleSwitchWorkspace}
+      on:closeRequested={handleCloseWorkspace}
+    />
 
-  <div class="view-content">
-    <section class="workspace-section">
-      <h3>{$t('Current Workspace')}</h3>
-      {#if viewData.selectedWorkspace}
-        <div class="current-workspace">
-          <span class="workspace-icon">📁</span>
-          <span class="workspace-name">{viewData.selectedWorkspace}</span>
-          <button on:click={() => selectWorkspace('')} class="btn btn-secondary">{$t('Close')}</button>
-        </div>
-      {:else}
-        <div class="no-workspace">
-          <span class="icon">📂</span>
-          <p>{$t('No workspace selected')}</p>
-          <button class="btn btn-primary">{$t('Create New Workspace')}</button>
-        </div>
-      {/if}
-    </section>
+    <!-- Action Bar -->
+    <WorkspaceActionBar
+      isLoading={loading}
+      on:createNewRequested={handleCreateNew}
+      on:loadEpubRequested={handleLoadEpub}
+    />
 
-    <section class="recent-section">
-      <h3>{$t('Recent Workspaces')}</h3>
-      {#if viewData.recentWorkspaces.length > 0}
-        <ul class="recent-list">
-          {#each viewData.recentWorkspaces as workspaceId}
-            <li class="recent-item">
-              <button on:click={() => selectWorkspace(workspaceId)} class="recent-workspace">
-                <span class="workspace-icon">📁</span>
-                <span class="workspace-name">{workspaceId}</span>
-                <span class="workspace-date">{$t('Last opened')}: {$t('Recently')}</span>
-              </button>
-            </li>
-          {/each}
-        </ul>
-      {:else}
-        <p class="no-recent">{$t('No recent workspaces')}</p>
-      {/if}
-    </section>
-
-    <section class="actions-section">
-      <div class="action-buttons">
-        <button class="btn btn-primary">
-          <span class="btn-icon">➕</span>
-          {$t('Create Workspace')}
-        </button>
-        <button class="btn btn-secondary">
-          <span class="btn-icon">📁</span>
-          {$t('Open Existing')}
-        </button>
-        <button class="btn btn-secondary">
-          <span class="btn-icon">📥</span>
-          {$t('Import EPUB')}
+    <!-- Error State -->
+    {#if error}
+      <div class="error-banner">
+        <span class="error-icon" aria-hidden="true">⚠️</span>
+        <span class="error-text">{error}</span>
+        <button type="button" class="retry-button" on:click={loadWorkspaces}>
+          {$t('Retry')}
         </button>
       </div>
-    </section>
+    {/if}
 
+    <!-- Workspace List -->
+    <WorkspaceList
+      {workspaces}
+      {currentWorkspaceId}
+      isLoading={loading}
+      on:workspaceSelected={handleWorkspaceSelect}
+      on:workspaceDeleted={handleWorkspaceDelete}
+    />
+
+    <!-- Unsaved Changes Indicator -->
     {#if hasUnsavedChanges}
       <div class="unsaved-indicator">
-        <span class="indicator-icon">⚠️</span>
+        <span class="indicator-icon" aria-hidden="true">⚠️</span>
         <span>{$t('You have unsaved changes')}</span>
       </div>
     {/if}
-  </div>
+  </main>
 </div>
 
 <style>
@@ -154,26 +329,26 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    background-color: var(--color-bg-primary);
+    background-color: var(--color-background);
     color: var(--color-text-primary);
   }
 
   .view-header {
     padding: var(--space-6);
-    border-bottom: 1px solid var(--color-border-default);
-    background-color: var(--color-bg-secondary);
+    border-block-end: 1px solid var(--color-border-default);
+    background-color: var(--color-surface-primary);
   }
 
-  .view-header h2 {
+  .view-title {
     margin: 0 0 var(--space-2) 0;
-    font-size: var(--text-xl);
-    font-weight: var(--font-semibold);
+    font-size: var(--text-2xl);
+    font-weight: 700;
     color: var(--color-text-primary);
   }
 
-  .view-header p {
+  .view-description {
     margin: 0;
-    font-size: var(--text-sm);
+    font-size: var(--text-base);
     color: var(--color-text-secondary);
   }
 
@@ -183,143 +358,49 @@
     overflow-y: auto;
   }
 
-  .workspace-section,
-  .recent-section,
-  .actions-section {
-    margin-bottom: var(--space-8);
-  }
-
-  .workspace-section h3,
-  .recent-section h3 {
-    margin: 0 0 var(--space-4) 0;
-    font-size: var(--text-lg);
-    font-weight: var(--font-medium);
-    color: var(--color-text-primary);
-  }
-
-  .current-workspace {
+  .error-banner {
     display: flex;
     align-items: center;
     gap: var(--space-3);
     padding: var(--space-4);
-    background-color: var(--color-bg-secondary);
-    border: 1px solid var(--color-border-default);
+    margin-block-end: var(--space-6);
+    background-color: var(--color-error-surface);
+    color: var(--color-error);
+    border: 1px solid var(--color-error);
     border-radius: var(--radius-md);
   }
 
-  .workspace-icon {
-    font-size: var(--text-lg);
+  .error-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
   }
 
-  .workspace-name {
+  .error-text {
     flex: 1;
-    font-weight: var(--font-medium);
-    color: var(--color-text-primary);
+    font-weight: 500;
   }
 
-  .no-workspace {
-    text-align: center;
-    padding: var(--space-8);
-    color: var(--color-text-secondary);
-  }
-
-  .no-workspace .icon {
-    display: block;
-    font-size: 3rem;
-    margin-bottom: var(--space-4);
-  }
-
-  .no-workspace p {
-    margin: 0 0 var(--space-4) 0;
-    font-size: var(--text-base);
-  }
-
-  .recent-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .recent-item {
-    margin-bottom: var(--space-2);
-  }
-
-  .recent-workspace {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-3);
-    background: none;
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: all var(--duration-fast) ease;
-    text-align: left;
-  }
-
-  .recent-workspace:hover {
-    background-color: var(--color-bg-secondary);
-    border-color: var(--color-border-hover);
-  }
-
-  .workspace-date {
-    font-size: var(--text-xs);
-    color: var(--color-text-secondary);
-    margin-left: auto;
-  }
-
-  .no-recent {
-    color: var(--color-text-secondary);
-    font-style: italic;
-    text-align: center;
-    padding: var(--space-4);
-  }
-
-  .action-buttons {
-    display: flex;
-    gap: var(--space-3);
-    flex-wrap: wrap;
-  }
-
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-2) var(--space-4);
-    border: none;
-    border-radius: var(--radius-md);
-    font-family: var(--font-sans);
+  .retry-button {
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-error);
+    border-radius: var(--radius-sm);
+    background-color: transparent;
+    color: var(--color-error);
     font-size: var(--text-sm);
-    font-weight: var(--font-medium);
+    font-weight: 500;
     cursor: pointer;
     transition: all var(--duration-fast) ease;
-    text-decoration: none;
+    min-height: 44px; /* Accessibility: min touch target */
   }
 
-  .btn-primary {
-    background-color: var(--color-accent);
+  .retry-button:hover {
+    background-color: var(--color-error);
+    color: var(--color-surface);
   }
 
-  .btn-primary:hover {
-    background-color: var(--color-accent-dark, var(--color-accent));
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
-  }
-
-  .btn-secondary {
-    background-color: var(--color-bg-secondary);
-    color: var(--color-text-primary);
-    border: 1px solid var(--color-border-default);
-  }
-
-  .btn-secondary:hover {
-    background-color: var(--color-bg-tertiary);
-    border-color: var(--color-border-hover);
-  }
-
-  .btn-icon {
-    font-size: var(--text-base);
+  .retry-button:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--color-focus-ring);
   }
 
   .unsaved-indicator {
@@ -327,14 +408,35 @@
     align-items: center;
     gap: var(--space-2);
     padding: var(--space-3);
-    background-color: var(--color-warning-bg, #fef3cd);
-    color: var(--color-warning-text, #856404);
-    border: 1px solid var(--color-warning-border, #ffeaa7);
+    margin-block-start: var(--space-6);
+    background-color: var(--color-warning-surface);
+    color: var(--color-warning);
+    border: 1px solid var(--color-warning);
     border-radius: var(--radius-md);
     font-size: var(--text-sm);
   }
 
   .indicator-icon {
     font-size: var(--text-base);
+    flex-shrink: 0;
+  }
+
+  /* Mobile adjustments */
+  @media (max-width: 768px) {
+    .view-header {
+      padding: var(--space-4);
+    }
+
+    .view-content {
+      padding: var(--space-4);
+    }
+
+    .view-title {
+      font-size: var(--text-xl);
+    }
+
+    .view-description {
+      font-size: var(--text-sm);
+    }
   }
 </style>

@@ -9,6 +9,9 @@
 
   // Reactive sidebar width for grid template
   $: sidebarWidth = sidebar.isExpanded ? '250px' : '48px';
+
+  // Determine which sections should show preview pane
+  $: showPreviewPane = sidebar.activeSection !== 'workspace';
 </script>
 
 <div class="app-layout" style="grid-template-columns: {sidebarWidth} 1fr">
@@ -39,31 +42,43 @@
   </Sidebar>
 
   <main class="main-content" title={$t('Main View')}>
-    <PaneGroup direction="horizontal" autoSaveId="editme-content-panes">
-      <Pane defaultSize={50} minSize={25}>
-        <div class="pane-container">
-          <div class="pane-header">
-            <slot name="left-header" />
+    {#if showPreviewPane}
+      <PaneGroup direction="horizontal" autoSaveId="editme-content-panes">
+        <Pane defaultSize={50} minSize={25}>
+          <div class="pane-container">
+            <div class="pane-header">
+              <slot name="left-header" />
+            </div>
+            <div class="pane-content">
+              <slot name="left-content" />
+            </div>
           </div>
-          <div class="pane-content">
-            <slot name="left-content" />
-          </div>
-        </div>
-      </Pane>
+        </Pane>
 
-      <PaneResizer />
+        <PaneResizer />
 
-      <Pane defaultSize={50} minSize={20}>
-        <div class="pane-container">
-          <div class="pane-header">
-            <slot name="right-header" />
+        <Pane defaultSize={50} minSize={20}>
+          <div class="pane-container">
+            <div class="pane-header">
+              <slot name="right-header" />
+            </div>
+            <div class="pane-content">
+              <slot name="right-content" />
+            </div>
           </div>
-          <div class="pane-content">
-            <slot name="right-content" />
-          </div>
+        </Pane>
+      </PaneGroup>
+    {:else}
+      <!-- Single pane mode for workspace view -->
+      <div class="single-pane-container">
+        <div class="pane-header">
+          <slot name="left-header" />
         </div>
-      </Pane>
-    </PaneGroup>
+        <div class="pane-content">
+          <slot name="left-content" />
+        </div>
+      </div>
+    {/if}
   </main>
 </div>
 
@@ -102,6 +117,12 @@
     flex: 1;
     overflow: auto;
     background: var(--color-bg-primary); /* Using design tokens */
+  }
+
+  .single-pane-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
   }
 
   /* PaneForge resizer styling - using logical properties */
