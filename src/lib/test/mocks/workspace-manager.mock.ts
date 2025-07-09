@@ -487,7 +487,7 @@ export class MockWorkspaceManager implements Partial<any> {
    */
   setWorkspaceOPF(workspaceId: string, opf: Partial<MockOPFDocument>): void {
     const fullOPF: MockOPFDocument = {
-      manifest: opf.manifest || [],
+      manifest: opf.manifest !== undefined ? opf.manifest : [],
       spine: opf.spine || [],
       metadata:
         'metadata' in opf

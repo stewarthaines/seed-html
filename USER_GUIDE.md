@@ -23,7 +23,7 @@ EDITME.html works in modern web browsers without any installation. Choose your p
 ### Browser Requirements
 
 - **Chrome/Edge**: Version 119 or later
-- **Firefox**: Version 119 or later  
+- **Firefox**: Version 119 or later
 - **Safari**: Version 17 or later
 
 ## Using the Web Version
@@ -53,13 +53,14 @@ EDITME.html works in modern web browsers without any installation. Choose your p
 
 ### Downloading EDITME.html
 
-1. From the web version, select **File → Download Editor**
-2. Save `EDITME.html` to your desired location
+1. From the web version, select **File → Save As...** in your browser
+2. Move `EDITME.html` to your desired location
 3. Double-click the file to open in your browser
 
 ### Offline Capabilities
 
 When using the downloaded version:
+
 - Full editing functionality
 - All features work identically to web version
 - Data persists between sessions
@@ -68,22 +69,15 @@ When using the downloaded version:
 ### File Access
 
 For the best offline experience:
+
 1. Save EDITME.html in your documents folder
-2. Create a dedicated folder for your EPUB projects
-3. Use the built-in file manager to organize work
+2. Packaged EPUB files will be saved to your Downloads folder
 
 ## Extracting from EPUBs
 
 Some EPUBs include EDITME.html for editing. To extract:
 
-### Method 1: Using EDITME (Recommended)
-
-1. Open any working copy of EDITME.html
-2. Import the EPUB containing the editor
-3. Navigate to the manifest view
-4. Find and download `EDITME.html`
-
-### Method 2: Manual Extraction
+### Manual Extraction
 
 1. Rename the `.epub` file to `.zip`
 2. Extract the ZIP file
@@ -92,14 +86,14 @@ Some EPUBs include EDITME.html for editing. To extract:
 
 ### Embedded Instructions
 
-Active EPUBs should include a `README.txt` or similar file with specific extraction instructions for that publication.
+Active EPUBs should include a `editme_about.xhtml` or similar chapter with specific extraction instructions for that publication.
 
 ## Basic Workflow
 
 ### Creating a New EPUB
 
 1. **Start a New Project**
-   - Click "New EPUB" or press `Ctrl/Cmd + N`
+   - Click "New EPUB"
    - Enter basic metadata (title, author, language)
 
 2. **Write Your Content**
@@ -108,21 +102,19 @@ Active EPUBs should include a `README.txt` or similar file with specific extract
    - The editor transforms text to XHTML automatically
 
 3. **Preview Your Work**
-   - Toggle preview pane with `Ctrl/Cmd + P`
+   - Use the Spine Item view preview pane
    - Select different device sizes
    - Check formatting in real-time
 
 4. **Export Your EPUB**
-   - Click "Export" or press `Ctrl/Cmd + E`
-   - Choose export options
-   - Save the `.epub` file
+   - Click "Package"
+   - Review the `.epub` file from the Downloads folder
 
 ### Importing Existing EPUBs
 
 1. Click "Import" or drag-and-drop an EPUB file
 2. The editor extracts and displays contents
 3. Edit text sources if available
-4. Or convert XHTML back to editable text
 
 ### Text Transformation
 
@@ -133,11 +125,10 @@ Plain Text → Transform Scripts → Formatted XHTML → EPUB
 ```
 
 Default transformations include:
+
 - Paragraph detection
 - Heading formatting
-- List creation
 - Emphasis and strong text
-- Smart quotes
 
 ## Advanced Features
 
@@ -172,13 +163,11 @@ Default transformations include:
 
 1. **Reorder Chapters**
    - Drag and drop in spine sidebar
-   - Use arrow keys for keyboard control
+   - Use tab key for keyboard control
    - Changes save automatically
 
 2. **Add/Remove Items**
-   - Right-click for context menu
    - Use toolbar buttons
-   - Keyboard shortcuts available
 
 ### Metadata Editing
 
@@ -197,15 +186,16 @@ Default transformations include:
 ### Storage Issues
 
 **Problem**: "Storage quota exceeded" error
-**Solution**: 
+**Solution**:
+
 - Clear old projects from workspace manager
-- Export completed EPUBs and remove from editor
 - Check browser storage settings
 
 ### Import Failures
 
 **Problem**: EPUB won't import
 **Solution**:
+
 - Verify file is not corrupted
 - Check file size (very large EPUBs may fail)
 - Try manual extraction method
@@ -214,6 +204,7 @@ Default transformations include:
 
 **Problem**: Text not formatting correctly
 **Solution**:
+
 - Check transform script syntax
 - Reset to default transforms
 - Review error messages in console
@@ -222,6 +213,7 @@ Default transformations include:
 
 **Problem**: Features not working
 **Solution**:
+
 - Update to latest browser version
 - Check browser compatibility list
 - Try different browser
@@ -229,13 +221,15 @@ Default transformations include:
 
 ### Data Recovery
 
-Your work is saved in browser storage:
-- **Chrome/Edge**: DevTools → Application → Storage
-- **Firefox**: DevTools → Storage
-- **Safari**: DevTools → Storage
+Your work is saved in browser storage that is not easily findable.
+
+- **Chrome/Edge**: OPFS for http: access, IndexedDB for file: access
+- **Firefox**: OPFS backend
+- **Safari**: OPFS backend
 
 To backup:
-1. Export all EPUBs regularly
+
+1. Package all EPUBs regularly
 2. Use workspace export feature
 3. Keep copies of custom transforms
 
@@ -255,7 +249,7 @@ To backup:
 
 ### Backup Strategy
 
-1. Export EPUBs after major changes
+1. Package EPUBs after major changes
 2. Download transform scripts
 3. Keep offline copy of editor
 4. Document custom settings

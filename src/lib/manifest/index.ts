@@ -1,0 +1,37 @@
+/**
+ * ManifestManager Public API Exports
+ * 
+ * Complete public interface for EPUB manifest management and content operations.
+ */
+
+// Core implementation
+export { ManifestManagerImpl, type IManifestManager } from './manifest-manager.js';
+
+// Validation utilities
+export { ManifestValidator } from './validation.js';
+
+// Utility functions
+export { ManifestUtils } from './utils.js';
+
+// Type definitions
+export type {
+  ManifestItem,
+  CreateTextItemData,
+  ContentPreview,
+  ContentMetadata,
+  SourceItem,
+  ValidationResult,
+  MediaTypeCategories,
+  MediaTypeDefinition
+} from './types.js';
+
+// Error classes
+export {
+  WorkspaceNotFoundError,
+  ManifestCorruptedError,
+  ItemNotFoundError,
+  DuplicateItemError,
+  ValidationError,
+  StorageQuotaExceededError,
+  ContentTooBigError
+} from './types.js';
