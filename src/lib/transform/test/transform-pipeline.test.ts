@@ -25,7 +25,7 @@ describe('TransformPipeline', () => {
   describe('generateXHTMLDocument()', () => {
     it('should generate valid XHTML with basic metadata', () => {
       const content = '<h1>Test Chapter</h1><p>Content here.</p>';
-      
+
       const xhtml = transformPipeline.generateXHTMLDocument(content, SAMPLE_CHAPTER_METADATA.basic);
 
       expect(xhtml).toContain('<?xml version="1.0" encoding="utf-8"?>');
@@ -39,8 +39,11 @@ describe('TransformPipeline', () => {
 
     it('should generate XHTML with multiple stylesheets and scripts', () => {
       const content = '<h1>Advanced Chapter</h1>';
-      
-      const xhtml = transformPipeline.generateXHTMLDocument(content, SAMPLE_CHAPTER_METADATA.advanced);
+
+      const xhtml = transformPipeline.generateXHTMLDocument(
+        content,
+        SAMPLE_CHAPTER_METADATA.advanced
+      );
 
       expect(xhtml).toContain('<title>Chapter 2: Advanced Topics</title>');
       expect(xhtml).toContain('href="../Styles/main.css"');
@@ -53,8 +56,11 @@ describe('TransformPipeline', () => {
 
     it('should handle different languages correctly', () => {
       const content = '<h1>Chapitre de test</h1>';
-      
-      const xhtml = transformPipeline.generateXHTMLDocument(content, SAMPLE_CHAPTER_METADATA.multilingual);
+
+      const xhtml = transformPipeline.generateXHTMLDocument(
+        content,
+        SAMPLE_CHAPTER_METADATA.multilingual
+      );
 
       expect(xhtml).toContain('xml:lang="fr"');
       expect(xhtml).toContain('lang="fr"');
@@ -66,9 +72,9 @@ describe('TransformPipeline', () => {
         title: 'Chapter 1: "Quotes" & <Tags>',
         language: 'en',
         stylesheets: [],
-        scripts: []
+        scripts: [],
       };
-      
+
       const xhtml = transformPipeline.generateXHTMLDocument('<p>Content</p>', metadata);
 
       expect(xhtml).toContain('<title>Chapter 1: &quot;Quotes&quot; &amp; &lt;Tags&gt;</title>');
@@ -79,9 +85,9 @@ describe('TransformPipeline', () => {
         title: 'Simple Chapter',
         language: 'en',
         stylesheets: [],
-        scripts: []
+        scripts: [],
       };
-      
+
       const xhtml = transformPipeline.generateXHTMLDocument('<p>Content</p>', metadata);
 
       expect(xhtml).not.toContain('<link');
@@ -94,14 +100,10 @@ describe('TransformPipeline', () => {
     it('should handle missing text transform script gracefully', async () => {
       const workspaceId = 'test-workspace';
       await mockFileStorage.addTestFiles(workspaceId, {
-        'SOURCE/settings.json': JSON.stringify({}, null, 2)
+        'SOURCE/settings.json': JSON.stringify({}, null, 2),
       });
 
-      const result = await transformPipeline.transformText(
-        'Hello World',
-        workspaceId,
-        'chapter1'
-      );
+      const result = await transformPipeline.transformText('Hello World', workspaceId, 'chapter1');
 
       expect(result.success).toBe(true);
       expect(result.transformedText).toBe('<p>Hello World</p>');
@@ -111,14 +113,10 @@ describe('TransformPipeline', () => {
     it('should handle empty text input', async () => {
       const workspaceId = 'test-workspace';
       await mockFileStorage.addTestFiles(workspaceId, {
-        'SOURCE/settings.json': JSON.stringify({}, null, 2)
+        'SOURCE/settings.json': JSON.stringify({}, null, 2),
       });
 
-      const result = await transformPipeline.transformText(
-        '',
-        workspaceId,
-        'chapter1'
-      );
+      const result = await transformPipeline.transformText('', workspaceId, 'chapter1');
 
       expect(result.success).toBe(true);
       expect(result.transformedText).toBe('');
@@ -129,12 +127,12 @@ describe('TransformPipeline', () => {
     it('should handle missing DOM transform scripts gracefully', async () => {
       const workspaceId = 'test-workspace';
       await mockFileStorage.addTestFiles(workspaceId, {
-        'SOURCE/settings.json': JSON.stringify({}, null, 2)
+        'SOURCE/settings.json': JSON.stringify({}, null, 2),
       });
 
       const parser = new DOMParser();
       const testDoc = parser.parseFromString('<h1>Test</h1>', 'text/html');
-      
+
       const result = await transformPipeline.transformDOM(testDoc, workspaceId, 'chapter1');
 
       expect(result).toBeDefined();
@@ -147,7 +145,7 @@ describe('TransformPipeline', () => {
     it('should execute pipeline with no transforms configured', async () => {
       const workspaceId = 'test-workspace';
       await mockFileStorage.addTestFiles(workspaceId, {
-        'SOURCE/settings.json': JSON.stringify({}, null, 2)
+        'SOURCE/settings.json': JSON.stringify({}, null, 2),
       });
 
       const result = await transformPipeline.executeTransformPipeline(
@@ -161,7 +159,7 @@ describe('TransformPipeline', () => {
       expect(result.xhtmlDocument).toBeDefined();
       expect(result.xhtmlDocument!.querySelector).toBeDefined();
       expect(result.executionTime).toBeGreaterThanOrEqual(0);
-      
+
       // Should contain the escaped plain text
       const bodyContent = result.xhtmlDocument!.body.innerHTML;
       expect(bodyContent).toContain('<p>Hello World</p>');
@@ -172,14 +170,10 @@ describe('TransformPipeline', () => {
     it('should handle settings loading errors', async () => {
       const workspaceId = 'test-workspace';
       await mockFileStorage.addTestFiles(workspaceId, {
-        'SOURCE/settings.json': 'invalid json {'
+        'SOURCE/settings.json': 'invalid json {',
       });
 
-      const result = await transformPipeline.transformText(
-        'Hello World',
-        workspaceId,
-        'chapter1'
-      );
+      const result = await transformPipeline.transformText('Hello World', workspaceId, 'chapter1');
 
       expect(result.success).toBe(false);
       expect(result.error).toBeInstanceOf(TransformError);
@@ -190,11 +184,7 @@ describe('TransformPipeline', () => {
       const workspaceId = 'test-workspace';
       mockFileStorage.setFailureMode('read');
 
-      const result = await transformPipeline.transformText(
-        'Hello World',
-        workspaceId,
-        'chapter1'
-      );
+      const result = await transformPipeline.transformText('Hello World', workspaceId, 'chapter1');
 
       expect(result.success).toBe(false);
       expect(result.error).toBeInstanceOf(TransformError);
@@ -205,7 +195,7 @@ describe('TransformPipeline', () => {
     it('should measure execution time', async () => {
       const workspaceId = 'test-workspace';
       await mockFileStorage.addTestFiles(workspaceId, {
-        'SOURCE/settings.json': JSON.stringify({}, null, 2)
+        'SOURCE/settings.json': JSON.stringify({}, null, 2),
       });
 
       const startTime = Date.now();

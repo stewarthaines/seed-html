@@ -297,8 +297,11 @@ writeFile(workspaceId: string, path: string, content: string | ArrayBuffer): Pro
 
 ```typescript
 // Write text file
-await workspaceManager.writeFile(workspaceId, 'OEBPS/Text/chapter2.xhtml', 
-  '<?xml version="1.0"?><html><body><h1>Chapter 2</h1></body></html>');
+await workspaceManager.writeFile(
+  workspaceId,
+  'OEBPS/Text/chapter2.xhtml',
+  '<?xml version="1.0"?><html><body><h1>Chapter 2</h1></body></html>'
+);
 
 // Write binary file
 const imageBuffer = new ArrayBuffer(1024);
@@ -313,7 +316,7 @@ readTextFile(workspaceId: string, path: string): Promise<string>
 
 **Input:**
 
-- `workspaceId: string` - Workspace ID  
+- `workspaceId: string` - Workspace ID
 - `path: string` - File path relative to workspace root
 
 **Output:** `Promise<string>` - File content as UTF-8 string
@@ -336,7 +339,7 @@ writeTextFile(workspaceId: string, path: string, content: string): Promise<void>
 **Input:**
 
 - `workspaceId: string` - Workspace ID
-- `path: string` - File path relative to workspace root  
+- `path: string` - File path relative to workspace root
 - `content: string` - Text content to write
 
 **Output:** `Promise<void>`
@@ -346,8 +349,11 @@ writeTextFile(workspaceId: string, path: string, content: string): Promise<void>
 **Usage:**
 
 ```typescript
-await workspaceManager.writeTextFile(workspaceId, 'OEBPS/Styles/style.css', 
-  'body { font-family: serif; margin: 2em; }');
+await workspaceManager.writeTextFile(
+  workspaceId,
+  'OEBPS/Styles/style.css',
+  'body { font-family: serif; margin: 2em; }'
+);
 ```
 
 ### deleteFile()
@@ -582,21 +588,24 @@ async function createNewEPUBProject(metadata: EPUBMetadata): Promise<string> {
 
   // 5. Create SOURCE directory with default content
   const fileStorage = new FileStorage();
-  
+
   // Add default settings
   const defaultSettings = {
     is_draft: false,
     draft_id: 0,
     text_transform: 'SOURCE/extensions/markdown-it/transform.js',
-    dom_transforms: []
+    dom_transforms: [],
   };
-  await fileStorage.writeFile(workspaceId, 'SOURCE/settings.json', 
-    JSON.stringify(defaultSettings, null, 2));
-  
+  await fileStorage.writeFile(
+    workspaceId,
+    'SOURCE/settings.json',
+    JSON.stringify(defaultSettings, null, 2)
+  );
+
   // Add source text for first chapter
   const defaultChapterContent = `# Chapter 1\n\nStart writing your content here...\n`;
   await fileStorage.writeFile(workspaceId, 'SOURCE/text/chapter1.txt', defaultChapterContent);
-  
+
   // Add default transform script
   const defaultTransform = `// Default markdown transform\nreturn window.markdownit().render(plainText);`;
   await fileStorage.writeFile(workspaceId, 'SOURCE/scripts/transform.js', defaultTransform);

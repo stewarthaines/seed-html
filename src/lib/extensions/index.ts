@@ -1,6 +1,6 @@
 /**
  * Extension Manager - Clean API exports
- * 
+ *
  * Main entry point for extension management functionality
  */
 
@@ -9,13 +9,13 @@ export { ExtensionManager } from './extension-manager.js';
 export { ExtensionCache } from './extension-cache.js';
 
 // Utility functions
-export { 
+export {
   detectExtensionName,
   normalizeExtensionName,
   validateExtensionFile,
   createExtensionSignature,
   compareExtensionSignatures,
-  isValidExtensionName
+  isValidExtensionName,
 } from './utils.js';
 
 // Type definitions
@@ -25,5 +25,5 @@ export type {
   CachingSummary,
   CachingError,
   ValidationResult,
-  ExtensionSignature
+  ExtensionSignature,
 } from './types.js';

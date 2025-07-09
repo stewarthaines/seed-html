@@ -7,61 +7,61 @@ import type { TranslationCatalog } from '../../types.js';
 export const mockEnglishCatalog: TranslationCatalog = {
   locale: 'en',
   messages: {
-    'Save': 'Save',
-    'Cancel': 'Cancel',
-    'Delete': 'Delete',
-    'Edit': 'Edit',
-    'File': 'File',
-    'Settings': 'Settings',
+    Save: 'Save',
+    Cancel: 'Cancel',
+    Delete: 'Delete',
+    Edit: 'Edit',
+    File: 'File',
+    Settings: 'Settings',
     'Found {count} items': 'Found {count} items',
-    'Workspace': 'Workspace'
+    Workspace: 'Workspace',
   },
   headers: {
-    'Language': 'en',
-    'Content-Type': 'text/plain; charset=UTF-8'
-  }
+    Language: 'en',
+    'Content-Type': 'text/plain; charset=UTF-8',
+  },
 };
 
 export const mockGermanCatalog: TranslationCatalog = {
   locale: 'de',
   messages: {
-    'Save': 'Speichern',
-    'Cancel': 'Abbrechen',
-    'Delete': 'Löschen',
-    'Edit': 'Bearbeiten',
-    'File': 'Datei',
-    'Settings': 'Einstellungen',
+    Save: 'Speichern',
+    Cancel: 'Abbrechen',
+    Delete: 'Löschen',
+    Edit: 'Bearbeiten',
+    File: 'Datei',
+    Settings: 'Einstellungen',
     'Found {count} items': '{count} Elemente gefunden',
-    'Workspace': 'Arbeitsbereich'
+    Workspace: 'Arbeitsbereich',
   },
   headers: {
-    'Language': 'de',
-    'Content-Type': 'text/plain; charset=UTF-8'
-  }
+    Language: 'de',
+    'Content-Type': 'text/plain; charset=UTF-8',
+  },
 };
 
 export const mockArabicCatalog: TranslationCatalog = {
   locale: 'ar',
   messages: {
-    'Save': 'حفظ',
-    'Cancel': 'إلغاء',
-    'Delete': 'حذف',
-    'Edit': 'تحرير',
-    'File': 'ملف',
-    'Settings': 'الإعدادات',
+    Save: 'حفظ',
+    Cancel: 'إلغاء',
+    Delete: 'حذف',
+    Edit: 'تحرير',
+    File: 'ملف',
+    Settings: 'الإعدادات',
     'Found {count} items': 'تم العثور على {count} عناصر',
-    'Workspace': 'مساحة العمل'
+    Workspace: 'مساحة العمل',
   },
   headers: {
-    'Language': 'ar',
-    'Content-Type': 'text/plain; charset=UTF-8'
-  }
+    Language: 'ar',
+    'Content-Type': 'text/plain; charset=UTF-8',
+  },
 };
 
 export const mockTranslationCatalogs = {
   en: mockEnglishCatalog,
   de: mockGermanCatalog,
-  ar: mockArabicCatalog
+  ar: mockArabicCatalog,
 };
 
 /**
@@ -69,13 +69,13 @@ export const mockTranslationCatalogs = {
  */
 export function createMockPo2JsonData(catalog: TranslationCatalog) {
   const po2jsonData: Record<string, any> = {
-    '': catalog.headers
+    '': catalog.headers,
   };
-  
+
   for (const [key, value] of Object.entries(catalog.messages)) {
     po2jsonData[key] = value;
   }
-  
+
   return po2jsonData;
 }
 
@@ -84,12 +84,12 @@ export function createMockPo2JsonData(catalog: TranslationCatalog) {
  */
 export function createMockTranslationArchive() {
   const archiveData: Record<string, string> = {};
-  
+
   for (const [locale, catalog] of Object.entries(mockTranslationCatalogs)) {
     const po2jsonData = createMockPo2JsonData(catalog);
     archiveData[`${locale}.json`] = JSON.stringify(po2jsonData);
   }
-  
+
   return JSON.stringify(archiveData);
 }
 
@@ -117,19 +117,19 @@ export function createMockDataUrl(): string {
  */
 export class MockLocalStorage {
   private storage = new Map<string, string>();
-  
+
   getItem(key: string): string | null {
     return this.storage.get(key) || null;
   }
-  
+
   setItem(key: string, value: string): void {
     this.storage.set(key, value);
   }
-  
+
   removeItem(key: string): void {
     this.storage.delete(key);
   }
-  
+
   clear(): void {
     this.storage.clear();
   }
@@ -141,16 +141,16 @@ export class MockLocalStorage {
 export class MockDecompressionStream {
   readable: ReadableStream<Uint8Array>;
   writable: WritableStream<Uint8Array>;
-  
+
   constructor() {
     let controller: ReadableStreamDefaultController<Uint8Array>;
-    
+
     this.readable = new ReadableStream({
       start(c) {
         controller = c;
-      }
+      },
     });
-    
+
     this.writable = new WritableStream({
       write(chunk) {
         // For testing, just pass through the data (simulate decompression)
@@ -158,7 +158,7 @@ export class MockDecompressionStream {
       },
       close() {
         controller.close();
-      }
+      },
     });
   }
 }

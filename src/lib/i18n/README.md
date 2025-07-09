@@ -7,7 +7,7 @@ The EDITME EPUB editor supports 7 languages with reactive internationalization u
 ## Supported Languages
 
 - **English** (en) - Primary development language
-- **German** (de) - Deutsch  
+- **German** (de) - Deutsch
 - **Arabic** (ar) - العربية (RTL)
 - **Hebrew** (he) - עברית (RTL)
 - **Japanese** (ja) - 日本語
@@ -34,7 +34,7 @@ The EDITME EPUB editor supports 7 languages with reactive internationalization u
 ```svelte
 <script>
   import { t } from '$lib/i18n';
-  
+
   export let filename = 'document.epub';
   export let fileCount = 5;
 </script>
@@ -49,7 +49,7 @@ The EDITME EPUB editor supports 7 languages with reactive internationalization u
 ```svelte
 <script>
   import { t } from '$lib/i18n';
-  
+
   export let itemCount = 3;
 </script>
 
@@ -62,6 +62,7 @@ The EDITME EPUB editor supports 7 languages with reactive internationalization u
 Follow these patterns for consistent, organized translation keys:
 
 ### General Patterns
+
 - Use **dot notation** for nested organization
 - Use **camelCase** for action/state descriptors
 - Use **lowercase** for simple nouns
@@ -70,6 +71,7 @@ Follow these patterns for consistent, organized translation keys:
 ### Component-Specific Keys
 
 #### Navigation & Layout
+
 ```
 navigation.workspace.title
 navigation.metadata.label
@@ -79,6 +81,7 @@ sidebar.toggle.close
 ```
 
 #### Actions & Buttons
+
 ```
 action.save
 action.cancel
@@ -89,6 +92,7 @@ action.exportEpub
 ```
 
 #### Form Fields & Labels
+
 ```
 field.title
 field.language
@@ -99,6 +103,7 @@ field.publication.date
 ```
 
 #### Error Messages
+
 ```
 error.required
 error.invalidFormat
@@ -109,6 +114,7 @@ error.languageInvalid
 ```
 
 #### Status & Feedback
+
 ```
 status.saving
 status.saved
@@ -118,6 +124,7 @@ feedback.validationPassed
 ```
 
 #### Metadata Editor Example
+
 ```
 metadata.tab.basic
 metadata.tab.advanced
@@ -181,7 +188,7 @@ const textAlign = isRTL ? 'right' : 'left';
 ```svelte
 <script>
   import { t, documentDirection } from '$lib/i18n';
-  
+
   export let title = '';
   export let isRequired = false;
 </script>
@@ -193,14 +200,14 @@ const textAlign = isRTL ? 'right' : 'left';
       <span class="required" aria-label={$t('field.required')}>*</span>
     {/if}
   </label>
-  
-  <input 
+
+  <input
     id="field-input"
     bind:value={title}
     placeholder={$t('field.title.placeholder')}
     aria-describedby={isRequired ? 'field-help' : undefined}
   />
-  
+
   {#if isRequired}
     <div id="field-help" class="help-text">
       {$t('field.required.description')}
@@ -215,7 +222,7 @@ const textAlign = isRTL ? 'right' : 'left';
     padding-inline-start: 0.5rem;
     text-align: start;
   }
-  
+
   .required {
     color: var(--color-error);
     margin-inline-start: 0.25rem;
@@ -228,7 +235,7 @@ const textAlign = isRTL ? 'right' : 'left';
 ```svelte
 <script>
   import { t } from '$lib/i18n';
-  
+
   export let errors = [];
 </script>
 
@@ -239,9 +246,9 @@ const textAlign = isRTL ? 'right' : 'left';
       {#each errors as error}
         <li>
           {#if error.field && error.message}
-            {$t('validation.fieldError', { 
-              field: $t(`field.${error.field}`), 
-              message: $t(`error.${error.message}`) 
+            {$t('validation.fieldError', {
+              field: $t(`field.${error.field}`),
+              message: $t(`error.${error.message}`),
             })}
           {:else}
             {$t(`error.${error.code}`, error.params)}
@@ -256,6 +263,7 @@ const textAlign = isRTL ? 'right' : 'left';
 ## Best Practices
 
 ### ✅ Do
+
 - Use `$t()` for all user-visible text
 - Follow consistent key naming conventions
 - Use descriptive variable names in interpolation
@@ -264,6 +272,7 @@ const textAlign = isRTL ? 'right' : 'left';
 - Include context in translation keys when meaning is ambiguous
 
 ### ❌ Don't
+
 - Hardcode any user-facing text
 - Use physical CSS properties (`left`, `right`) for layout
 - Assume text direction in component logic
@@ -290,12 +299,14 @@ const textAlign = isRTL ? 'right' : 'left';
 ## Storage & Performance
 
 ### Translation Loading
+
 - **ZIP compression**: All 7 languages compressed to ~20-30KB
 - **First-run extraction**: Extracts to storage with 'locales' workspace ID
 - **Offline-first**: No network dependency after initial load
 - **Version-based updates**: Re-extracts when app version changes
 
 ### Caching Strategy
+
 - **Storage integration**: Uses existing OPFS/IndexedDB system
 - **Automatic fallback**: English bundled for immediate availability
 - **Locale persistence**: User selection stored across sessions
@@ -306,10 +317,7 @@ All translation patterns are designed to work seamlessly with screen readers and
 
 ```svelte
 <!-- Proper ARIA labeling with translations -->
-<button 
-  aria-label={$t('action.save.description')}
-  aria-describedby="save-status"
->
+<button aria-label={$t('action.save.description')} aria-describedby="save-status">
   {$t('action.save')}
 </button>
 
@@ -325,6 +333,7 @@ All translation patterns are designed to work seamlessly with screen readers and
 ## Testing Internationalization
 
 ### Component Testing
+
 ```typescript
 import { render } from '@testing-library/svelte';
 import { setLocale } from '$lib/i18n';
@@ -338,6 +347,7 @@ test('renders in German', async () => {
 ```
 
 ### RTL Testing
+
 ```typescript
 test('handles RTL layout correctly', async () => {
   await setLocale('ar');

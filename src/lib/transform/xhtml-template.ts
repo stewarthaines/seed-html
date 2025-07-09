@@ -1,6 +1,6 @@
 /**
  * XHTML Template Generation
- * 
+ *
  * Generates valid XHTML documents with proper DOCTYPE, namespaces,
  * stylesheets, scripts, and metadata for EPUB content.
  */
@@ -18,17 +18,17 @@ export interface ChapterMetadata {
  */
 export function generateXHTMLDocument(content: string, metadata: ChapterMetadata): string {
   const escapedTitle = escapeHtml(metadata.title);
-  
-  const stylesheetLinks = metadata.stylesheets.map(href => 
-    `    <link rel="stylesheet" type="text/css" href="${escapeHtml(href)}" />`
-  ).join('\n');
-  
-  const scriptTags = metadata.scripts.map(src => 
-    `    <script type="text/javascript" src="${escapeHtml(src)}"></script>`
-  ).join('\n');
-  
+
+  const stylesheetLinks = metadata.stylesheets
+    .map(href => `    <link rel="stylesheet" type="text/css" href="${escapeHtml(href)}" />`)
+    .join('\n');
+
+  const scriptTags = metadata.scripts
+    .map(src => `    <script type="text/javascript" src="${escapeHtml(src)}"></script>`)
+    .join('\n');
+
   const customHeadContent = metadata.customHead ? `    ${metadata.customHead}` : '';
-  
+
   return `<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="${escapeHtml(metadata.language)}" lang="${escapeHtml(metadata.language)}">

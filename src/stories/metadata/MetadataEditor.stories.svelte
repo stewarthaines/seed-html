@@ -61,8 +61,9 @@ The implementation integrates with the complete metadata management system inclu
   parameters={{
     docs: {
       description: {
-        story: 'Interactive metadata editor using real backend integration. Demonstrates tab navigation, form validation, auto-save functionality, and error handling with authentic data persistence.'
-      }
-    }
+        story:
+          'Interactive metadata editor using real backend integration. Demonstrates tab navigation, form validation, auto-save functionality, and error handling with authentic data persistence.',
+      },
+    },
   }}
 />

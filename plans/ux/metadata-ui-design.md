@@ -329,7 +329,7 @@ MetadataEditor (main container)
 │   └── TabErrorIndicator (validation state icons)
 ├── MetadataFormGroup (active form content)
 │   ├── BasicInfoFields
-│   ├── AdvancedFields  
+│   ├── AdvancedFields
 │   ├── PublicationDetailsFields
 │   └── AccessibilityFields
 └── Field Components (reusable)
@@ -342,6 +342,7 @@ MetadataEditor (main container)
 ### 2. Data Flow Pattern
 
 **Central Coordination:**
+
 ```
 MetadataManager → MetadataEditor → Form Groups → Individual Fields
                       ↑               ↑            ↑
@@ -349,6 +350,7 @@ MetadataManager → MetadataEditor → Form Groups → Individual Fields
 ```
 
 **Svelte-Idiomatic Event Pattern:**
+
 - **MetadataEditor**: Owns MetadataManager, loads all metadata on mount
 - **Form Groups**: Receive metadata as props, emit change/save events
 - **Field Components**: Receive values as props, emit user interaction events
@@ -357,6 +359,7 @@ MetadataManager → MetadataEditor → Form Groups → Individual Fields
 ### 3. Component Interfaces
 
 #### MetadataEditor (Main Container)
+
 ```typescript
 interface MetadataEditorProps {
   workspaceId: string;
@@ -369,17 +372,19 @@ interface MetadataEditorEvents {
 ```
 
 **Responsibilities:**
+
 - Load metadata on mount via `metadataManager.loadMetadata()`
 - Handle all field updates via `metadataManager.updateField()`
 - Manage tab switching with validation
 - Coordinate error states across form groups
 
 #### MetadataTabBar
+
 ```typescript
 interface MetadataTabBarProps {
   activeTab: string;
   validationErrors: ValidationResult[];
-  tabs: Array<{id: string, label: string, errorCount: number}>;
+  tabs: Array<{ id: string; label: string; errorCount: number }>;
 }
 
 interface MetadataTabBarEvents {
@@ -388,11 +393,12 @@ interface MetadataTabBarEvents {
 ```
 
 **Tab Switching Logic:**
+
 ```svelte
 <script>
-  const handleTabClick = async (event) => {
+  const handleTabClick = async event => {
     const newTabId = event.detail.tabId;
-    
+
     // Validate current tab before allowing switch
     const currentErrors = validateCurrentTab(activeTab, metadata);
     if (currentErrors.length > 0) {
@@ -400,7 +406,7 @@ interface MetadataTabBarEvents {
       showTabValidationErrors(currentErrors);
       return;
     }
-    
+
     // Switch to new tab
     dispatch('tabClick', { tabId: newTabId });
   };
@@ -408,6 +414,7 @@ interface MetadataTabBarEvents {
 ```
 
 #### Form Group Components (BasicInfoFields, etc.)
+
 ```typescript
 interface FormGroupProps {
   metadata: EPUBMetadata;
@@ -416,30 +423,31 @@ interface FormGroupProps {
 }
 
 interface FormGroupEvents {
-  fieldChange: { field: string, value: string | string[] };
-  fieldSave: { field: string, value: string | string[] };
+  fieldChange: { field: string; value: string | string[] };
+  fieldSave: { field: string; value: string | string[] };
   arrayAdd: { field: string };
-  arrayRemove: { field: string, index: number };
+  arrayRemove: { field: string; index: number };
 }
 ```
 
 **Array Field Management Example:**
+
 ```svelte
 <!-- BasicInfoFields.svelte -->
 <script>
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
-  
+
   export let metadata;
-  
+
   const addAuthor = () => {
     dispatch('arrayAdd', { field: 'creator' });
   };
-  
-  const removeAuthor = (index) => {
+
+  const removeAuthor = index => {
     dispatch('arrayRemove', { field: 'creator', index });
   };
-  
+
   const updateAuthor = (index, value) => {
     const newCreators = [...(metadata.creator || [])];
     newCreators[index] = value;
@@ -451,10 +459,10 @@ interface FormGroupEvents {
   <label>{$t('field.authors')}</label>
   {#each metadata.creator || [] as author, index}
     <div class="array-item">
-      <TextMetadataField 
+      <TextMetadataField
         value={author}
         placeholder={$t('field.author.placeholder')}
-        on:change={(e) => updateAuthor(index, e.detail.value)}
+        on:change={e => updateAuthor(index, e.detail.value)}
         on:blur={() => dispatch('fieldSave', { field: 'creator', value: metadata.creator })}
       />
       <button type="button" on:click={() => removeAuthor(index)}>
@@ -469,6 +477,7 @@ interface FormGroupEvents {
 ```
 
 #### Individual Field Components
+
 ```typescript
 interface TextMetadataFieldProps {
   value: string;
@@ -486,23 +495,24 @@ interface TextMetadataFieldEvents {
 ```
 
 **Reusable Field Component:**
+
 ```svelte
 <!-- TextMetadataField.svelte -->
 <script>
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
-  
+
   export let value = '';
   export let placeholder = '';
   export let required = false;
   export let disabled = false;
   export let error = '';
-  
-  const handleChange = (event) => {
+
+  const handleChange = event => {
     dispatch('change', { value: event.target.value });
   };
-  
-  const handleBlur = (event) => {
+
+  const handleBlur = event => {
     dispatch('blur', { value: event.target.value });
   };
 </script>
@@ -526,19 +536,20 @@ interface TextMetadataFieldEvents {
 ### 4. State Management Patterns
 
 #### Central Metadata Loading
+
 ```svelte
 <!-- MetadataEditor.svelte -->
 <script>
   import { onMount } from 'svelte';
-  
+
   export let workspaceId;
   export let metadataManager;
-  
+
   let metadata = {};
   let validationErrors = [];
   let activeTab = 'basic';
   let saving = false;
-  
+
   onMount(async () => {
     try {
       metadata = await metadataManager.loadMetadata(workspaceId);
@@ -552,21 +563,22 @@ interface TextMetadataFieldEvents {
 ```
 
 #### Event Handler Patterns
+
 ```svelte
 <script>
-  const handleFieldChange = (event) => {
+  const handleFieldChange = event => {
     const { field, value } = event.detail;
-    
+
     // Update local state immediately for UI responsiveness
     metadata = { ...metadata, [field]: value };
-    
+
     // Update validation errors
     validationErrors = metadataManager.validateMetadata(metadata);
   };
-  
-  const handleFieldSave = async (event) => {
+
+  const handleFieldSave = async event => {
     const { field, value } = event.detail;
-    
+
     try {
       saving = true;
       await metadataManager.updateField(workspaceId, field, value);
@@ -577,10 +589,10 @@ interface TextMetadataFieldEvents {
       saving = false;
     }
   };
-  
-  const handleArrayAdd = async (event) => {
+
+  const handleArrayAdd = async event => {
     const { field } = event.detail;
-    
+
     try {
       if (field === 'creator') {
         await metadataManager.addCreator(workspaceId);
@@ -589,7 +601,7 @@ interface TextMetadataFieldEvents {
       } else if (field === 'contributor') {
         await metadataManager.addContributor(workspaceId);
       }
-      
+
       // Refresh metadata from manager
       metadata = await metadataManager.loadMetadata(workspaceId);
     } catch (error) {
@@ -600,16 +612,15 @@ interface TextMetadataFieldEvents {
 ```
 
 #### Tab Validation Logic
+
 ```svelte
 <script>
   const validateCurrentTab = (tabId, metadata) => {
     const tabFields = getTabFields(tabId);
-    return validationErrors.filter(error => 
-      tabFields.includes(error.field)
-    );
+    return validationErrors.filter(error => tabFields.includes(error.field));
   };
-  
-  const getTabFields = (tabId) => {
+
+  const getTabFields = tabId => {
     switch (tabId) {
       case 'basic':
         return ['title', 'language', 'identifier', 'creator'];
@@ -623,10 +634,10 @@ interface TextMetadataFieldEvents {
         return [];
     }
   };
-  
-  const handleTabSwitch = async (event) => {
+
+  const handleTabSwitch = async event => {
     const newTabId = event.detail.tabId;
-    
+
     // Check for errors in current tab
     const currentTabErrors = validateCurrentTab(activeTab, metadata);
     if (currentTabErrors.length > 0) {
@@ -635,7 +646,7 @@ interface TextMetadataFieldEvents {
       showValidationAlert($t('validation.fixErrorsBeforeSwitching'));
       return;
     }
-    
+
     // Switch tab
     activeTab = newTabId;
   };
@@ -645,7 +656,15 @@ interface TextMetadataFieldEvents {
 ### 5. Error Handling Patterns
 
 #### Field-Level Error Display
+
 ```svelte
+<script>
+  const getFieldError = (fieldName, errors) => {
+    const error = errors.find(err => err.field === fieldName);
+    return error ? $t(`error.${error.message}`) : '';
+  };
+</script>
+
 <!-- In form group components -->
 {#each tabFields as field}
   <TextMetadataField
@@ -655,20 +674,14 @@ interface TextMetadataFieldEvents {
     on:blur={handleFieldSave}
   />
 {/each}
-
-<script>
-  const getFieldError = (fieldName, errors) => {
-    const error = errors.find(err => err.field === fieldName);
-    return error ? $t(`error.${error.message}`) : '';
-  };
-</script>
 ```
 
 #### Tab Error Indicators
+
 ```svelte
 <!-- MetadataTabBar.svelte -->
 {#each tabs as tab}
-  <button 
+  <button
     class="tab-button"
     class:active={activeTab === tab.id}
     class:has-errors={getTabErrorCount(tab.id) > 0}
@@ -676,9 +689,7 @@ interface TextMetadataFieldEvents {
   >
     {$t(`metadata.tab.${tab.id}`)}
     {#if getTabErrorCount(tab.id) > 0}
-      <span class="error-indicator" aria-label={$t('validation.hasErrors')}>
-        !
-      </span>
+      <span class="error-indicator" aria-label={$t('validation.hasErrors')}> ! </span>
     {/if}
   </button>
 {/each}

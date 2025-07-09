@@ -24,12 +24,7 @@ export type {
 } from './types.js';
 
 // Type definitions from EPUB utilities
-export type {
-  EPUBMetadata,
-  OPFDocument,
-  SpineItem,
-  GuideItem,
-} from '../epub/opf-utils.js';
+export type { EPUBMetadata, OPFDocument, SpineItem, GuideItem } from '../epub/opf-utils.js';
 
 // Error classes
 export { WorkspaceError, ValidationError, CacheError, DEFAULT_WORKSPACE_CONFIG } from './types.js';

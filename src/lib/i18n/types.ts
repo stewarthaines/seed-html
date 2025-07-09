@@ -36,7 +36,7 @@ export interface I18nState {
 }
 
 export interface TranslationFunction {
-  /** 
+  /**
    * Translate a message
    * @param key - Translation key
    * @param params - Interpolation parameters

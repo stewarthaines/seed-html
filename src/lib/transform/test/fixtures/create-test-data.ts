@@ -9,8 +9,8 @@
 export const DEFAULT_TRANSFORM_SETTINGS = {
   transform_pipeline: {
     text_transform: 'markdown-transform.js',
-    dom_transforms: ['heading-ids.js', 'custom-styling.js']
-  }
+    dom_transforms: ['heading-ids.js', 'custom-styling.js'],
+  },
 };
 
 /**
@@ -19,8 +19,8 @@ export const DEFAULT_TRANSFORM_SETTINGS = {
 export const ALTERNATIVE_TRANSFORM_SETTINGS = {
   transform_pipeline: {
     text_transform: 'asciidoc-transform.js',
-    dom_transforms: ['toc-generator.js', 'footnote-processor.js', 'image-optimizer.js']
-  }
+    dom_transforms: ['toc-generator.js', 'footnote-processor.js', 'image-optimizer.js'],
+  },
 };
 
 /**
@@ -199,7 +199,7 @@ function transformDOM(document) {
   paragraphs.forEach(p => p.style.marginBottom = '1em');
   return document;
 }
-`.trim()
+`.trim(),
 };
 
 /**
@@ -238,7 +238,7 @@ window.Prism = {
     html: {}
   }
 };
-`.trim()
+`.trim(),
 };
 
 /**
@@ -249,30 +249,27 @@ export const SAMPLE_CHAPTER_METADATA = {
     title: 'Chapter 1: Introduction',
     language: 'en',
     stylesheets: ['../Styles/stylesheet.css'],
-    scripts: []
+    scripts: [],
   },
-  
+
   advanced: {
     title: 'Chapter 2: Advanced Topics',
     language: 'en',
     stylesheets: [
       '../Styles/main.css',
       '../Styles/chapter.css',
-      '../Styles/syntax-highlighting.css'
+      '../Styles/syntax-highlighting.css',
     ],
-    scripts: [
-      '../Scripts/reader.js',
-      '../Scripts/interactive.js'
-    ],
-    customHead: '<meta name="chapter" content="2" />'
+    scripts: ['../Scripts/reader.js', '../Scripts/interactive.js'],
+    customHead: '<meta name="chapter" content="2" />',
   },
-  
+
   multilingual: {
     title: 'Chapitre 1: Introduction',
     language: 'fr',
     stylesheets: ['../Styles/french.css'],
-    scripts: []
-  }
+    scripts: [],
+  },
 };
 
 /**
@@ -339,7 +336,7 @@ Just plain text paragraphs.`,
 
   empty: '',
 
-  large: 'Large content section.\n'.repeat(1000) + 'End of large document.'
+  large: 'Large content section.\n'.repeat(1000) + 'End of large document.',
 };
 
 /**
@@ -374,7 +371,7 @@ v1.0, 2023</p>
 <p>This manual is intended for:</p>
 <p>* End users
 * System administrators
-* Developers</p>`
+* Developers</p>`,
 };
 
 /**
@@ -385,24 +382,24 @@ export const SAMPLE_TRANSFORM_CONTEXT = {
     workspaceId: 'test-workspace',
     spineItemId: 'chapter1',
     manifestItems: {
-      'chapter1': 'blob:chapter1-url',
-      'chapter2': 'blob:chapter2-url',
-      'appendix1': 'blob:appendix1-url'
-    }
+      chapter1: 'blob:chapter1-url',
+      chapter2: 'blob:chapter2-url',
+      appendix1: 'blob:appendix1-url',
+    },
   },
-  
+
   noManifest: {
     workspaceId: 'test-workspace',
-    spineItemId: 'chapter1'
+    spineItemId: 'chapter1',
   },
-  
+
   largeManifest: {
     workspaceId: 'test-workspace',
     spineItemId: 'chapter1',
     manifestItems: Object.fromEntries(
       Array.from({ length: 100 }, (_, i) => [`item${i}`, `blob:item${i}-url`])
-    )
-  }
+    ),
+  },
 };
 
 /**
@@ -412,19 +409,21 @@ export function createCompleteTransformWorkspace(): Record<string, string> {
   return {
     // Settings
     'SOURCE/settings.json': JSON.stringify(DEFAULT_TRANSFORM_SETTINGS, null, 2),
-    
+
     // Transform scripts
     'SOURCE/scripts/markdown-transform.js': SAMPLE_TRANSFORM_SCRIPTS['markdown-transform.js'],
     'SOURCE/scripts/heading-ids.js': SAMPLE_TRANSFORM_SCRIPTS['heading-ids.js'],
     'SOURCE/scripts/custom-styling.js': SAMPLE_TRANSFORM_SCRIPTS['custom-styling.js'],
-    
+
     // Extension libraries
-    'SOURCE/extensions/markdown-it/markdown-it.min.js': SAMPLE_EXTENSION_LIBRARIES['markdown-it/markdown-it.min.js'],
-    'SOURCE/extensions/abcjs/abcjs-basic.min.js': SAMPLE_EXTENSION_LIBRARIES['abcjs/abcjs-basic.min.js'],
-    
+    'SOURCE/extensions/markdown-it/markdown-it.min.js':
+      SAMPLE_EXTENSION_LIBRARIES['markdown-it/markdown-it.min.js'],
+    'SOURCE/extensions/abcjs/abcjs-basic.min.js':
+      SAMPLE_EXTENSION_LIBRARIES['abcjs/abcjs-basic.min.js'],
+
     // Source text files
     'SOURCE/text/chapter1.txt': SAMPLE_PLAIN_TEXT.markdown,
-    'SOURCE/text/chapter2.txt': SAMPLE_PLAIN_TEXT.asciidoc
+    'SOURCE/text/chapter2.txt': SAMPLE_PLAIN_TEXT.asciidoc,
   };
 }
 
@@ -433,13 +432,18 @@ export function createCompleteTransformWorkspace(): Record<string, string> {
  */
 export function createMinimalTransformWorkspace(): Record<string, string> {
   return {
-    'SOURCE/settings.json': JSON.stringify({
-      transform_pipeline: {
-        text_transform: 'markdown-transform.js'
-      }
-    }, null, 2),
+    'SOURCE/settings.json': JSON.stringify(
+      {
+        transform_pipeline: {
+          text_transform: 'markdown-transform.js',
+        },
+      },
+      null,
+      2
+    ),
     'SOURCE/scripts/markdown-transform.js': SAMPLE_TRANSFORM_SCRIPTS['markdown-transform.js'],
-    'SOURCE/extensions/markdown-it/markdown-it.min.js': SAMPLE_EXTENSION_LIBRARIES['markdown-it/markdown-it.min.js']
+    'SOURCE/extensions/markdown-it/markdown-it.min.js':
+      SAMPLE_EXTENSION_LIBRARIES['markdown-it/markdown-it.min.js'],
   };
 }
 
@@ -448,14 +452,18 @@ export function createMinimalTransformWorkspace(): Record<string, string> {
  */
 export function createBrokenTransformWorkspace(): Record<string, string> {
   return {
-    'SOURCE/settings.json': JSON.stringify({
-      transform_pipeline: {
-        text_transform: 'broken-syntax.js',
-        dom_transforms: ['runtime-error.js']
-      }
-    }, null, 2),
+    'SOURCE/settings.json': JSON.stringify(
+      {
+        transform_pipeline: {
+          text_transform: 'broken-syntax.js',
+          dom_transforms: ['runtime-error.js'],
+        },
+      },
+      null,
+      2
+    ),
     'SOURCE/scripts/broken-syntax.js': SAMPLE_TRANSFORM_SCRIPTS['broken-syntax.js'],
-    'SOURCE/scripts/runtime-error.js': SAMPLE_TRANSFORM_SCRIPTS['runtime-error.js']
+    'SOURCE/scripts/runtime-error.js': SAMPLE_TRANSFORM_SCRIPTS['runtime-error.js'],
   };
 }
 
@@ -464,12 +472,16 @@ export function createBrokenTransformWorkspace(): Record<string, string> {
  */
 export function createTimeoutTransformWorkspace(): Record<string, string> {
   return {
-    'SOURCE/settings.json': JSON.stringify({
-      transform_pipeline: {
-        text_transform: 'timeout-script.js'
-      }
-    }, null, 2),
-    'SOURCE/scripts/timeout-script.js': SAMPLE_TRANSFORM_SCRIPTS['timeout-script.js']
+    'SOURCE/settings.json': JSON.stringify(
+      {
+        transform_pipeline: {
+          text_transform: 'timeout-script.js',
+        },
+      },
+      null,
+      2
+    ),
+    'SOURCE/scripts/timeout-script.js': SAMPLE_TRANSFORM_SCRIPTS['timeout-script.js'],
   };
 }
 
@@ -478,7 +490,7 @@ export function createTimeoutTransformWorkspace(): Record<string, string> {
  */
 export function createNoSettingsWorkspace(): Record<string, string> {
   return {
-    'SOURCE/scripts/markdown-transform.js': SAMPLE_TRANSFORM_SCRIPTS['markdown-transform.js']
+    'SOURCE/scripts/markdown-transform.js': SAMPLE_TRANSFORM_SCRIPTS['markdown-transform.js'],
   };
 }
 
@@ -488,7 +500,7 @@ export function createNoSettingsWorkspace(): Record<string, string> {
 export function createInvalidSettingsWorkspace(): Record<string, string> {
   return {
     'SOURCE/settings.json': '{ "transform_pipeline": { "invalid": json } }', // Invalid JSON
-    'SOURCE/scripts/markdown-transform.js': SAMPLE_TRANSFORM_SCRIPTS['markdown-transform.js']
+    'SOURCE/scripts/markdown-transform.js': SAMPLE_TRANSFORM_SCRIPTS['markdown-transform.js'],
   };
 }
 
@@ -497,12 +509,16 @@ export function createInvalidSettingsWorkspace(): Record<string, string> {
  */
 export function createMissingScriptsWorkspace(): Record<string, string> {
   return {
-    'SOURCE/settings.json': JSON.stringify({
-      transform_pipeline: {
-        text_transform: 'nonexistent-script.js',
-        dom_transforms: ['another-missing.js']
-      }
-    }, null, 2)
+    'SOURCE/settings.json': JSON.stringify(
+      {
+        transform_pipeline: {
+          text_transform: 'nonexistent-script.js',
+          dom_transforms: ['another-missing.js'],
+        },
+      },
+      null,
+      2
+    ),
   };
 }
 
@@ -527,9 +543,9 @@ export function validateTransformResult(result: any): boolean {
   return (
     typeof result === 'object' &&
     typeof result.success === 'boolean' &&
-    (result.success ? 
-      (typeof result.transformedText === 'string' || result.xhtmlDocument instanceof Document) :
-      result.error !== undefined)
+    (result.success
+      ? typeof result.transformedText === 'string' || result.xhtmlDocument instanceof Document
+      : result.error !== undefined)
   );
 }
 
@@ -544,5 +560,5 @@ export const TEST_WORKSPACE_IDS = {
   NO_SETTINGS: 'test-workspace-no-settings',
   INVALID_SETTINGS: 'test-workspace-invalid-settings',
   MISSING_SCRIPTS: 'test-workspace-missing-scripts',
-  PERFORMANCE: 'test-workspace-performance'
+  PERFORMANCE: 'test-workspace-performance',
 } as const;

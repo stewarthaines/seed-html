@@ -1,6 +1,6 @@
 /**
  * Reusable utilities for Storybook stories that work with WorkspaceManager
- * 
+ *
  * This module provides standardized patterns for creating demo workspaces,
  * managing content, and handling story lifecycle in workspace-based demos.
  */
@@ -68,7 +68,7 @@ export function createSampleMetadata(overrides: Partial<DemoMetadata> = {}): Dem
  */
 export function createSampleChapters(count: number = 5): DemoChapter[] {
   const chapters: DemoChapter[] = [];
-  
+
   // Prologue
   chapters.push({
     id: 'prologue',
@@ -165,7 +165,7 @@ export async function createDemoWorkspace(
 
   // Create metadata
   const demoMetadata = createSampleMetadata(metadata);
-  
+
   // Clean up existing workspace if using a specific ID
   const workspaceId = providedId || `demo-workspace-${Date.now()}`;
   if (providedId) {
@@ -313,7 +313,7 @@ li {
 
   // Write CSS file
   await workspaceManager.writeTextFile(workspaceId, 'Styles/style.css', sampleCSS);
-  
+
   // Also create a SOURCE version for editing
   await workspaceManager.writeTextFile(workspaceId, 'SOURCE/styles/style.css', sampleCSS);
 }
@@ -352,15 +352,13 @@ export function createInitialStoryState(): WorkspaceStoryState {
 /**
  * Handle story initialization with error handling
  */
-export async function initializeStoryWorkspace(
-  options: WorkspaceSetupOptions = {}
-): Promise<{
+export async function initializeStoryWorkspace(options: WorkspaceSetupOptions = {}): Promise<{
   workspaceManager: WorkspaceManager;
   workspaceId: string;
 }> {
   const workspaceManager = await initializeWorkspaceManager();
   const workspaceId = await createDemoWorkspace(workspaceManager, options);
-  
+
   return { workspaceManager, workspaceId };
 }
 

@@ -1,6 +1,6 @@
 /**
  * MetadataUtils - Utility functions for EPUB metadata
- * 
+ *
  * Provides static utility methods for generating identifiers, dates,
  * and accessing language/accessibility options.
  */
@@ -49,7 +49,7 @@ export class MetadataUtils {
       { code: 'ar', name: 'Arabic' },
       { code: 'he', name: 'Hebrew' },
       { code: 'ka', name: 'Georgian' },
-      { code: 'zh-TW', name: 'Chinese Traditional' }
+      { code: 'zh-TW', name: 'Chinese Traditional' },
     ];
   }
 
@@ -58,12 +58,7 @@ export class MetadataUtils {
    */
   static getAccessibilityOptions(): AccessibilityOptions {
     return {
-      accessModes: [
-        'textual',
-        'visual',
-        'auditory',
-        'tactile'
-      ],
+      accessModes: ['textual', 'visual', 'auditory', 'tactile'],
       accessibilityFeatures: [
         'alternativeText',
         'audioDescription',
@@ -74,7 +69,7 @@ export class MetadataUtils {
         'structuralNavigation',
         'tableOfContents',
         'index',
-        'printPageNumbers'
+        'printPageNumbers',
       ],
       accessibilityHazards: [
         'flashing',
@@ -83,8 +78,8 @@ export class MetadataUtils {
         'noFlashing',
         'noMotionSimulation',
         'noSound',
-        'none'
-      ]
+        'none',
+      ],
     };
   }
 }

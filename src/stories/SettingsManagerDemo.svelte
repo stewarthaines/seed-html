@@ -3,11 +3,11 @@
   import { SettingsManager } from '../lib/settings/settings-manager.js';
   import { FileStorageAPI } from '../lib/storage/index.js';
   import { ExtensionManager } from '../lib/extensions/index.js';
-  import type { 
-    GlobalSettings, 
-    WorkspaceSettings, 
+  import type {
+    GlobalSettings,
+    WorkspaceSettings,
     EPUBSettings,
-    TransformOption 
+    TransformOption,
   } from '../lib/settings/index.js';
   import { themeStore } from '../lib/stores/theme.js';
   import { currentLocale, documentDirection } from '../lib/i18n/index.js';
@@ -23,7 +23,7 @@
   let settingsManager: SettingsManager;
   let fileStorage: FileStorageAPI;
   let extensionManager: ExtensionManager;
-  
+
   // State
   let logs: LogEntry[] = [];
   let isLoading = false;
@@ -57,7 +57,7 @@
   onMount(async () => {
     try {
       addLog('action', 'Initializing Settings Manager Demo...');
-      
+
       // Initialize file storage
       fileStorage = new FileStorageAPI();
       await fileStorage.init();
@@ -73,11 +73,14 @@
 
       // Load initial settings
       await loadAllSettings();
-      
+
       isInitialized = true;
       addLog('success', 'Demo initialization complete');
     } catch (error: unknown) {
-      addLog('error', `Failed to initialize: ${error instanceof Error ? error.message : String(error)}`);
+      addLog(
+        'error',
+        `Failed to initialize: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   });
 
@@ -112,7 +115,10 @@
         addLog('info', `Workspace settings loaded for ${currentWorkspace}`);
       }
     } catch (error: unknown) {
-      addLog('error', `Failed to load settings: ${error instanceof Error ? error.message : String(error)}`);
+      addLog(
+        'error',
+        `Failed to load settings: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -125,11 +131,14 @@
       const workspaceId = await fileStorage.createWorkspace();
       currentWorkspace = workspaceId;
       addLog('success', `Created workspace: ${workspaceId}`);
-      
+
       // Load workspace-specific settings
       await loadAllSettings();
     } catch (error: unknown) {
-      addLog('error', `Failed to create workspace: ${error instanceof Error ? error.message : String(error)}`);
+      addLog(
+        'error',
+        `Failed to create workspace: ${error instanceof Error ? error.message : String(error)}`
+      );
     } finally {
       isLoading = false;
     }
@@ -150,19 +159,25 @@
         const newSettings: GlobalSettings = {
           theme: themes[i % themes.length],
           locale: locales[i % locales.length],
-          editor_font_size: fontSizes[i % fontSizes.length]
+          editor_font_size: fontSizes[i % fontSizes.length],
         };
 
         settingsManager.saveGlobalSettings(newSettings);
         globalSettings = settingsManager.loadGlobalSettings();
-        
-        addLog('success', `Applied global settings: theme=${newSettings.theme}, locale=${newSettings.locale}, fontSize=${newSettings.editor_font_size}px`);
-        
+
+        addLog(
+          'success',
+          `Applied global settings: theme=${newSettings.theme}, locale=${newSettings.locale}, fontSize=${newSettings.editor_font_size}px`
+        );
+
         // Wait for theme/locale changes to take effect
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     } catch (error: unknown) {
-      addLog('error', `Failed to demonstrate global settings: ${error instanceof Error ? error.message : String(error)}`);
+      addLog(
+        'error',
+        `Failed to demonstrate global settings: ${error instanceof Error ? error.message : String(error)}`
+      );
     } finally {
       isLoading = false;
     }
@@ -180,8 +195,8 @@
         draft_id: 5,
         editor: {
           advanced_mode: true,
-          preview_delay_ms: 1500
-        }
+          preview_delay_ms: 1500,
+        },
       };
 
       await settingsManager.saveWorkspaceSettings(currentWorkspace, advancedSettings);
@@ -193,14 +208,17 @@
       // Minimal settings
       const minimalSettings: WorkspaceSettings = {
         bust_cache: false,
-        draft_id: 0
+        draft_id: 0,
       };
 
       await settingsManager.saveWorkspaceSettings(currentWorkspace, minimalSettings);
       workspaceSettings = await settingsManager.loadWorkspaceSettings(currentWorkspace);
       addLog('success', 'Applied minimal workspace settings');
     } catch (error: unknown) {
-      addLog('error', `Failed to demonstrate workspace settings: ${error instanceof Error ? error.message : String(error)}`);
+      addLog(
+        'error',
+        `Failed to demonstrate workspace settings: ${error instanceof Error ? error.message : String(error)}`
+      );
     } finally {
       isLoading = false;
     }
@@ -216,15 +234,15 @@
         text_transform: 'SOURCE/scripts/transform.js',
         dom_transforms: [
           'SOURCE/extensions/markdown-it/transform.js',
-          'SOURCE/extensions/highlight-js/highlight.min.js'
+          'SOURCE/extensions/highlight-js/highlight.min.js',
         ],
         spine_basename: 'chapter',
         cover: {
           template: 'elegant',
           background_color: '#f8f9fa',
           text_color: '#212529',
-          font_family: 'sans-serif'
-        }
+          font_family: 'sans-serif',
+        },
       };
 
       await settingsManager.saveEPUBSettings(currentWorkspace, epubSettingsDemo);
@@ -235,7 +253,10 @@
       availableTransforms = await settingsManager.getAvailableTransforms(currentWorkspace);
       addLog('info', `Found ${availableTransforms.length} available transform scripts`);
     } catch (error: unknown) {
-      addLog('error', `Failed to demonstrate EPUB settings: ${error instanceof Error ? error.message : String(error)}`);
+      addLog(
+        'error',
+        `Failed to demonstrate EPUB settings: ${error instanceof Error ? error.message : String(error)}`
+      );
     } finally {
       isLoading = false;
     }
@@ -253,8 +274,8 @@
         draft_id: 0,
         editor: {
           advanced_mode: true,
-          preview_delay_ms: 750
-        }
+          preview_delay_ms: 750,
+        },
       };
 
       await settingsManager.saveWorkspaceSettings(currentWorkspace, draftSettings);
@@ -265,19 +286,25 @@
         const newDraftId = await settingsManager.incrementDraftId(currentWorkspace);
         const draftTitle = settingsManager.generateDraftTitle('My EPUB Book', newDraftId);
         addLog('info', `Created draft ${newDraftId}: "${draftTitle}"`);
-        
+
         await new Promise(resolve => setTimeout(resolve, 500));
       }
 
       // Demonstrate title extraction
       const testTitle = 'Advanced JavaScript Guide 7';
       const extracted = settingsManager.extractDraftInfo(testTitle);
-      addLog('info', `Extracted from "${testTitle}": base="${extracted.baseTitle}", draftId=${extracted.draftId}`);
+      addLog(
+        'info',
+        `Extracted from "${testTitle}": base="${extracted.baseTitle}", draftId=${extracted.draftId}`
+      );
 
       // Reload workspace settings to show final state
       workspaceSettings = await settingsManager.loadWorkspaceSettings(currentWorkspace);
     } catch (error: unknown) {
-      addLog('error', `Failed to demonstrate draft mode: ${error instanceof Error ? error.message : String(error)}`);
+      addLog(
+        'error',
+        `Failed to demonstrate draft mode: ${error instanceof Error ? error.message : String(error)}`
+      );
     } finally {
       isLoading = false;
     }
@@ -293,7 +320,7 @@
       const invalidGlobal = settingsManager.validateGlobalSettings({
         theme: 'purple' as any,
         locale: 'invalid-locale',
-        editor_font_size: 100
+        editor_font_size: 100,
       });
       addLog('error', `Global validation errors: ${invalidGlobal.errors.join(', ')}`);
 
@@ -303,8 +330,8 @@
         draft_id: -5,
         editor: {
           preview_delay_ms: 50,
-          advanced_mode: 'true' as any
-        }
+          advanced_mode: 'true' as any,
+        },
       });
       addLog('error', `Workspace validation errors: ${invalidWorkspace.errors.join(', ')}`);
 
@@ -315,8 +342,8 @@
         cover: {
           template: '',
           background_color: 'red',
-          text_color: '#xyz'
-        }
+          text_color: '#xyz',
+        },
       });
       addLog('error', `EPUB validation errors: ${invalidEPUB.errors.join(', ')}`);
 
@@ -324,11 +351,14 @@
       const validGlobal = settingsManager.validateGlobalSettings({
         theme: 'dark',
         locale: 'en',
-        editor_font_size: 14
+        editor_font_size: 14,
       });
       addLog('success', `Valid global settings: ${validGlobal.isValid ? 'PASSED' : 'FAILED'}`);
     } catch (error: unknown) {
-      addLog('error', `Failed to demonstrate validation: ${error instanceof Error ? error.message : String(error)}`);
+      addLog(
+        'error',
+        `Failed to demonstrate validation: ${error instanceof Error ? error.message : String(error)}`
+      );
     } finally {
       isLoading = false;
     }
@@ -355,7 +385,10 @@
 
       addLog('success', 'Demo reset complete');
     } catch (error: unknown) {
-      addLog('error', `Failed to reset demo: ${error instanceof Error ? error.message : String(error)}`);
+      addLog(
+        'error',
+        `Failed to reset demo: ${error instanceof Error ? error.message : String(error)}`
+      );
     } finally {
       isLoading = false;
     }
@@ -379,16 +412,16 @@
     <div class="control-section">
       <h3>🚀 Setup</h3>
       <div class="button-group">
-        <button 
-          class="demo-button primary" 
-          on:click={createWorkspace} 
+        <button
+          class="demo-button primary"
+          on:click={createWorkspace}
           disabled={isLoading || !isInitialized}
         >
           Create Demo Workspace
         </button>
-        <button 
-          class="demo-button" 
-          on:click={loadAllSettings} 
+        <button
+          class="demo-button"
+          on:click={loadAllSettings}
           disabled={isLoading || !isInitialized}
         >
           Refresh Settings
@@ -399,9 +432,9 @@
     <div class="control-section">
       <h3>🌍 Global Settings</h3>
       <div class="button-group">
-        <button 
-          class="demo-button success" 
-          on:click={demonstrateGlobalSettings} 
+        <button
+          class="demo-button success"
+          on:click={demonstrateGlobalSettings}
           disabled={isLoading || !isInitialized}
         >
           Demo Theme & Locale
@@ -412,16 +445,16 @@
     <div class="control-section">
       <h3>📁 Workspace Settings</h3>
       <div class="button-group">
-        <button 
-          class="demo-button success" 
-          on:click={demonstrateWorkspaceSettings} 
+        <button
+          class="demo-button success"
+          on:click={demonstrateWorkspaceSettings}
           disabled={isLoading || !currentWorkspace}
         >
           Demo Editor Settings
         </button>
-        <button 
-          class="demo-button warning" 
-          on:click={demonstrateDraftMode} 
+        <button
+          class="demo-button warning"
+          on:click={demonstrateDraftMode}
           disabled={isLoading || !currentWorkspace}
         >
           Demo Draft Mode
@@ -432,16 +465,16 @@
     <div class="control-section">
       <h3>📖 EPUB Settings</h3>
       <div class="button-group">
-        <button 
-          class="demo-button success" 
-          on:click={demonstrateEPUBSettings} 
+        <button
+          class="demo-button success"
+          on:click={demonstrateEPUBSettings}
           disabled={isLoading || !currentWorkspace}
         >
           Demo Transform Scripts
         </button>
-        <button 
-          class="demo-button warning" 
-          on:click={demonstrateValidation} 
+        <button
+          class="demo-button warning"
+          on:click={demonstrateValidation}
           disabled={isLoading || !isInitialized}
         >
           Demo Validation
@@ -452,11 +485,7 @@
     <div class="control-section">
       <h3>🔄 Controls</h3>
       <div class="button-group">
-        <button 
-          class="demo-button danger" 
-          on:click={resetDemo} 
-          disabled={isLoading}
-        >
+        <button class="demo-button danger" on:click={resetDemo} disabled={isLoading}>
           Reset Demo
         </button>
       </div>
@@ -481,7 +510,9 @@
       </div>
       <div class="status-item">
         <span class="status-label">Workspace:</span>
-        <span class="status-value">{currentWorkspace ? currentWorkspace.slice(0, 8) + '...' : 'None'}</span>
+        <span class="status-value"
+          >{currentWorkspace ? currentWorkspace.slice(0, 8) + '...' : 'None'}</span
+        >
       </div>
     </div>
 
@@ -497,7 +528,9 @@
       </div>
       <div class="status-item">
         <span class="status-label">Workspace Loaded:</span>
-        <span class="status-value boolean-{!!workspaceSettings}">{workspaceSettings ? 'Yes' : 'No'}</span>
+        <span class="status-value boolean-{!!workspaceSettings}"
+          >{workspaceSettings ? 'Yes' : 'No'}</span
+        >
       </div>
       <div class="status-item">
         <span class="status-label">EPUB Loaded:</span>
@@ -513,11 +546,15 @@
       </div>
       <div class="status-item">
         <span class="status-label">Built-in Scripts:</span>
-        <span class="status-value">{availableTransforms.filter(t => t.extensionName === 'built-in').length}</span>
+        <span class="status-value"
+          >{availableTransforms.filter(t => t.extensionName === 'built-in').length}</span
+        >
       </div>
       <div class="status-item">
         <span class="status-label">Extension Scripts:</span>
-        <span class="status-value">{availableTransforms.filter(t => t.extensionName !== 'built-in').length}</span>
+        <span class="status-value"
+          >{availableTransforms.filter(t => t.extensionName !== 'built-in').length}</span
+        >
       </div>
     </div>
   </div>

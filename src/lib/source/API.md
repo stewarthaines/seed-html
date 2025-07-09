@@ -36,6 +36,7 @@ constructor(private fileStorage: FileStorageAPI)
 ```
 
 **Input:**
+
 - `fileStorage: FileStorageAPI` - File storage instance for workspace operations
 
 **Output:** `SourceManager` - SOURCE.zip manager instance
@@ -59,6 +60,7 @@ async createSourceZip(workspaceId: string): Promise<Blob | null>
 ```
 
 **Input:**
+
 - `workspaceId: string` - Workspace identifier containing SOURCE/ directory
 
 **Output:** `Promise<Blob | null>` - SOURCE.zip blob, or null if no SOURCE/ files exist
@@ -83,12 +85,14 @@ async extractSourceZip(workspaceId: string, sourceZipBlob: Blob): Promise<void>
 ```
 
 **Input:**
+
 - `workspaceId: string` - Target workspace for extraction
 - `sourceZipBlob: Blob` - SOURCE.zip content to extract
 
 **Output:** `Promise<void>` - Resolves when extraction completes
 
-**Side Effects:** 
+**Side Effects:**
+
 - Creates SOURCE/ directory structure in workspace
 - Writes all extracted files to workspace storage
 - Overwrites existing SOURCE/ files
@@ -107,6 +111,7 @@ async hasSourceFiles(workspaceId: string): Promise<boolean>
 ```
 
 **Input:**
+
 - `workspaceId: string` - Workspace to check for SOURCE/ files
 
 **Output:** `Promise<boolean>` - True if SOURCE/ directory contains files
@@ -129,6 +134,7 @@ async listSourceFiles(workspaceId: string): Promise<SourceFileInfo[]>
 ```
 
 **Input:**
+
 - `workspaceId: string` - Workspace to enumerate SOURCE/ files
 
 **Output:** `Promise<SourceFileInfo[]>` - Array of SOURCE/ file information
@@ -151,11 +157,13 @@ async initializeSourceStructure(workspaceId: string): Promise<void>
 ```
 
 **Input:**
+
 - `workspaceId: string` - Workspace to initialize SOURCE/ structure
 
 **Output:** `Promise<void>` - Resolves when structure is created
 
 **Side Effects:**
+
 - Creates `SOURCE/settings.json` with default content
 - Creates empty directories: `SOURCE/text/`, `SOURCE/scripts/`, `SOURCE/extensions/`
 - Writes `.gitkeep` files to maintain directory structure
@@ -174,6 +182,7 @@ async validateSourceStructure(workspaceId: string): Promise<SourceValidation>
 ```
 
 **Input:**
+
 - `workspaceId: string` - Workspace to validate SOURCE/ structure
 
 **Output:** `Promise<SourceValidation>` - Validation results with errors/warnings
@@ -197,6 +206,7 @@ async getSourceDirectoryStats(workspaceId: string): Promise<SourceStats>
 ```
 
 **Input:**
+
 - `workspaceId: string` - Workspace to analyze SOURCE/ statistics
 
 **Output:** `Promise<SourceStats>` - Detailed statistics about SOURCE/ directory
@@ -217,30 +227,30 @@ console.log(`Extensions: ${stats.directories.extensions}`);
 
 ```typescript
 interface SourceFileInfo {
-  path: string;                    // Relative path within SOURCE/
-  size: number;                    // File size in bytes
+  path: string; // Relative path within SOURCE/
+  size: number; // File size in bytes
   type: 'settings' | 'text' | 'script' | 'extension' | 'other';
-  lastModified?: Date;             // Last modification time (if available)
+  lastModified?: Date; // Last modification time (if available)
 }
 
 interface SourceValidation {
-  isValid: boolean;                // Overall validation status
-  errors: string[];                // Critical errors that prevent functionality
-  warnings: string[];              // Non-critical issues
-  fileCount: number;               // Total number of SOURCE/ files
-  totalSize: number;               // Total size of SOURCE/ directory in bytes
-  hasSettings: boolean;            // Whether settings.json exists
+  isValid: boolean; // Overall validation status
+  errors: string[]; // Critical errors that prevent functionality
+  warnings: string[]; // Non-critical issues
+  fileCount: number; // Total number of SOURCE/ files
+  totalSize: number; // Total size of SOURCE/ directory in bytes
+  hasSettings: boolean; // Whether settings.json exists
 }
 
 interface SourceStats {
-  totalFiles: number;              // Total file count
-  totalSize: number;               // Total size in bytes
+  totalFiles: number; // Total file count
+  totalSize: number; // Total size in bytes
   directories: {
-    text: number;                  // Files in SOURCE/text/
-    scripts: number;               // Files in SOURCE/scripts/
-    extensions: number;            // Files in SOURCE/extensions/
+    text: number; // Files in SOURCE/text/
+    scripts: number; // Files in SOURCE/scripts/
+    extensions: number; // Files in SOURCE/extensions/
   };
-  hasSettingsFile: boolean;        // Whether settings.json exists
+  hasSettingsFile: boolean; // Whether settings.json exists
 }
 ```
 
@@ -341,7 +351,7 @@ async function manageSourceDirectory(workspaceId: string) {
 
   // List all SOURCE/ files
   const files = await sourceManager.listSourceFiles(workspaceId);
-  
+
   // Group files by type
   const textFiles = files.filter(f => f.type === 'text');
   const scriptFiles = files.filter(f => f.type === 'script');

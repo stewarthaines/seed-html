@@ -21,11 +21,11 @@ const config: StorybookConfig = {
       ...config.resolve.alias,
       $lib: path.resolve(__dirname, '../src/lib'),
     };
-    
+
     // Enable JSON imports for translation files
     config.json = config.json || {};
     config.json.namedExports = false;
-    
+
     return config;
   },
 };

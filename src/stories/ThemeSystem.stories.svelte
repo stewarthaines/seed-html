@@ -101,24 +101,38 @@
   }}
 >
   <div style="padding: 2rem;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div
+      style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;"
+    >
       <h2>Design Token Showcase</h2>
       <ThemeToggle />
     </div>
-    
+
     <!-- Color Tokens -->
     <section style="margin-bottom: 3rem;">
       <h3 style="margin-bottom: 1rem;">Color Tokens</h3>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-        <div style="background-color: var(--color-bg-primary); border: 1px solid var(--color-border-default); padding: 1rem; border-radius: 8px;">
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;"
+      >
+        <div
+          style="background-color: var(--color-bg-primary); border: 1px solid var(--color-border-default); padding: 1rem; border-radius: 8px;"
+        >
           <div style="font-weight: 600;">Primary Background</div>
-          <div style="font-size: 0.875rem; color: var(--color-text-secondary);">var(--color-bg-primary)</div>
+          <div style="font-size: 0.875rem; color: var(--color-text-secondary);">
+            var(--color-bg-primary)
+          </div>
         </div>
-        <div style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border-default); padding: 1rem; border-radius: 8px;">
+        <div
+          style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border-default); padding: 1rem; border-radius: 8px;"
+        >
           <div style="font-weight: 600;">Secondary Background</div>
-          <div style="font-size: 0.875rem; color: var(--color-text-secondary);">var(--color-bg-secondary)</div>
+          <div style="font-size: 0.875rem; color: var(--color-text-secondary);">
+            var(--color-bg-secondary)
+          </div>
         </div>
-        <div style="background-color: var(--color-accent); color: white; padding: 1rem; border-radius: 8px;">
+        <div
+          style="background-color: var(--color-accent); color: white; padding: 1rem; border-radius: 8px;"
+        >
           <div style="font-weight: 600;">Accent Color</div>
           <div style="font-size: 0.875rem; opacity: 0.9;">var(--color-accent)</div>
         </div>
@@ -143,19 +157,27 @@
       <h3 style="margin-bottom: 1rem;">Spacing Tokens</h3>
       <div style="display: flex; flex-direction: column; gap: 0.5rem;">
         <div style="display: flex; align-items: center; gap: 1rem;">
-          <div style="width: var(--space-1); height: 20px; background-color: var(--color-accent);"></div>
+          <div
+            style="width: var(--space-1); height: 20px; background-color: var(--color-accent);"
+          ></div>
           <span>var(--space-1)</span>
         </div>
         <div style="display: flex; align-items: center; gap: 1rem;">
-          <div style="width: var(--space-2); height: 20px; background-color: var(--color-accent);"></div>
+          <div
+            style="width: var(--space-2); height: 20px; background-color: var(--color-accent);"
+          ></div>
           <span>var(--space-2)</span>
         </div>
         <div style="display: flex; align-items: center; gap: 1rem;">
-          <div style="width: var(--space-4); height: 20px; background-color: var(--color-accent);"></div>
+          <div
+            style="width: var(--space-4); height: 20px; background-color: var(--color-accent);"
+          ></div>
           <span>var(--space-4)</span>
         </div>
         <div style="display: flex; align-items: center; gap: 1rem;">
-          <div style="width: var(--space-8); height: 20px; background-color: var(--color-accent);"></div>
+          <div
+            style="width: var(--space-8); height: 20px; background-color: var(--color-accent);"
+          ></div>
           <span>var(--space-8)</span>
         </div>
       </div>
@@ -164,18 +186,32 @@
     <!-- Shadow Tokens -->
     <section>
       <h3 style="margin-bottom: 1rem;">Elevation Tokens</h3>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
-        <div style="padding: 1rem; background-color: var(--color-bg-primary); box-shadow: var(--shadow-sm); border-radius: 8px;">
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;"
+      >
+        <div
+          style="padding: 1rem; background-color: var(--color-bg-primary); box-shadow: var(--shadow-sm); border-radius: 8px;"
+        >
           <div style="font-weight: 600;">Small Shadow</div>
-          <div style="font-size: 0.875rem; color: var(--color-text-secondary);">var(--shadow-sm)</div>
+          <div style="font-size: 0.875rem; color: var(--color-text-secondary);">
+            var(--shadow-sm)
+          </div>
         </div>
-        <div style="padding: 1rem; background-color: var(--color-bg-primary); box-shadow: var(--shadow-md); border-radius: 8px;">
+        <div
+          style="padding: 1rem; background-color: var(--color-bg-primary); box-shadow: var(--shadow-md); border-radius: 8px;"
+        >
           <div style="font-weight: 600;">Medium Shadow</div>
-          <div style="font-size: 0.875rem; color: var(--color-text-secondary);">var(--shadow-md)</div>
+          <div style="font-size: 0.875rem; color: var(--color-text-secondary);">
+            var(--shadow-md)
+          </div>
         </div>
-        <div style="padding: 1rem; background-color: var(--color-bg-primary); box-shadow: var(--shadow-lg); border-radius: 8px;">
+        <div
+          style="padding: 1rem; background-color: var(--color-bg-primary); box-shadow: var(--shadow-lg); border-radius: 8px;"
+        >
           <div style="font-weight: 600;">Large Shadow</div>
-          <div style="font-size: 0.875rem; color: var(--color-text-secondary);">var(--shadow-lg)</div>
+          <div style="font-size: 0.875rem; color: var(--color-text-secondary);">
+            var(--shadow-lg)
+          </div>
         </div>
       </div>
     </section>
@@ -194,20 +230,29 @@
   }}
 >
   <div style="padding: 2rem;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div
+      style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;"
+    >
       <h2>Theme System Integration</h2>
       <ThemeToggle />
     </div>
 
     <!-- Card Components -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-      <div style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border-default); padding: 1.5rem; border-radius: 8px;">
+    <div
+      style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;"
+    >
+      <div
+        style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border-default); padding: 1.5rem; border-radius: 8px;"
+      >
         <h4 style="margin: 0 0 0.5rem 0; color: var(--color-text-primary);">Card Title</h4>
         <p style="margin: 0; color: var(--color-text-secondary); font-size: var(--text-sm);">
-          This is a sample card component using design tokens that automatically adapt to the current theme.
+          This is a sample card component using design tokens that automatically adapt to the
+          current theme.
         </p>
       </div>
-      <div style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border-default); padding: 1.5rem; border-radius: 8px;">
+      <div
+        style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border-default); padding: 1.5rem; border-radius: 8px;"
+      >
         <h4 style="margin: 0 0 0.5rem 0; color: var(--color-text-primary);">Another Card</h4>
         <p style="margin: 0; color: var(--color-text-secondary); font-size: var(--text-sm);">
           Notice how all colors, borders, and backgrounds change seamlessly when switching themes.
@@ -217,34 +262,48 @@
 
     <!-- Button Examples -->
     <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;">
-      <button style="background-color: var(--color-accent); color: white; border: none; padding: var(--space-2) var(--space-4); border-radius: 6px; font-size: var(--text-sm); cursor: pointer;">
+      <button
+        style="background-color: var(--color-accent); color: white; border: none; padding: var(--space-2) var(--space-4); border-radius: 6px; font-size: var(--text-sm); cursor: pointer;"
+      >
         Primary Button
       </button>
-      <button style="background-color: var(--color-bg-secondary); color: var(--color-text-primary); border: 1px solid var(--color-border-default); padding: var(--space-2) var(--space-4); border-radius: 6px; font-size: var(--text-sm); cursor: pointer;">
+      <button
+        style="background-color: var(--color-bg-secondary); color: var(--color-text-primary); border: 1px solid var(--color-border-default); padding: var(--space-2) var(--space-4); border-radius: 6px; font-size: var(--text-sm); cursor: pointer;"
+      >
         Secondary Button
       </button>
-      <button style="background-color: transparent; color: var(--color-text-secondary); border: 1px solid var(--color-border-default); padding: var(--space-2) var(--space-4); border-radius: 6px; font-size: var(--text-sm); cursor: pointer;">
+      <button
+        style="background-color: transparent; color: var(--color-text-secondary); border: 1px solid var(--color-border-default); padding: var(--space-2) var(--space-4); border-radius: 6px; font-size: var(--text-sm); cursor: pointer;"
+      >
         Outline Button
       </button>
     </div>
 
     <!-- Form Elements -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+    <div
+      style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;"
+    >
       <div>
-        <label style="display: block; margin-bottom: 0.5rem; font-size: var(--text-sm); color: var(--color-text-primary);">
+        <label
+          style="display: block; margin-bottom: 0.5rem; font-size: var(--text-sm); color: var(--color-text-primary);"
+        >
           Text Input
         </label>
-        <input 
-          type="text" 
+        <input
+          type="text"
           placeholder="Enter text..."
           style="width: 100%; padding: var(--space-2); border: 1px solid var(--color-border-default); border-radius: 4px; background-color: var(--color-bg-primary); color: var(--color-text-primary); font-size: var(--text-sm);"
         />
       </div>
       <div>
-        <label style="display: block; margin-bottom: 0.5rem; font-size: var(--text-sm); color: var(--color-text-primary);">
+        <label
+          style="display: block; margin-bottom: 0.5rem; font-size: var(--text-sm); color: var(--color-text-primary);"
+        >
           Select Dropdown
         </label>
-        <select style="width: 100%; padding: var(--space-2); border: 1px solid var(--color-border-default); border-radius: 4px; background-color: var(--color-bg-primary); color: var(--color-text-primary); font-size: var(--text-sm);">
+        <select
+          style="width: 100%; padding: var(--space-2); border: 1px solid var(--color-border-default); border-radius: 4px; background-color: var(--color-bg-primary); color: var(--color-text-primary); font-size: var(--text-sm);"
+        >
           <option>Option 1</option>
           <option>Option 2</option>
           <option>Option 3</option>
@@ -252,9 +311,12 @@
       </div>
     </div>
 
-    <div style="margin-top: 2rem; padding: 1rem; background-color: var(--color-bg-secondary); border-left: 4px solid var(--color-accent); border-radius: 4px;">
+    <div
+      style="margin-top: 2rem; padding: 1rem; background-color: var(--color-bg-secondary); border-left: 4px solid var(--color-accent); border-radius: 4px;"
+    >
       <p style="margin: 0; color: var(--color-text-primary); font-size: var(--text-sm);">
-        <strong>Theme Integration:</strong> All components automatically adapt their colors, borders, and styling based on the current theme using CSS custom properties.
+        <strong>Theme Integration:</strong> All components automatically adapt their colors, borders,
+        and styling based on the current theme using CSS custom properties.
       </p>
     </div>
   </div>
@@ -272,29 +334,31 @@
   }}
   play={async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    
+
     // Wait for component to load
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     // Toggle theme a few times to demonstrate functionality
     const toggleButton = canvas.getByLabelText('Toggle theme');
-    
+
     await userEvent.click(toggleButton);
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
+
     await userEvent.click(toggleButton);
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
+
     // Final toggle to dark for demonstration
     await userEvent.click(toggleButton);
   }}
 >
   <div style="padding: 2rem;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div
+      style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;"
+    >
       <h2>Interactive Theme Demo</h2>
       <ThemeToggle />
     </div>
-    
+
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
       <div>
         <h3>Theme Features</h3>
@@ -306,12 +370,19 @@
           <li>Seamless theme switching</li>
         </ul>
       </div>
-      
-      <div style="background-color: var(--color-bg-secondary); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--color-border-default);">
+
+      <div
+        style="background-color: var(--color-bg-secondary); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--color-border-default);"
+      >
         <h4 style="margin-top: 0; color: var(--color-text-primary);">Current Theme Info</h4>
         <div style="font-size: var(--text-sm); color: var(--color-text-secondary);">
-          <p>The theme toggle button shows the opposite theme icon - clicking the sun icon switches to light mode, clicking the moon icon switches to dark mode.</p>
-          <p>Theme preferences are automatically saved to localStorage and restored on next visit.</p>
+          <p>
+            The theme toggle button shows the opposite theme icon - clicking the sun icon switches
+            to light mode, clicking the moon icon switches to dark mode.
+          </p>
+          <p>
+            Theme preferences are automatically saved to localStorage and restored on next visit.
+          </p>
         </div>
       </div>
     </div>

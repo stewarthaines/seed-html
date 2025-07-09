@@ -2,7 +2,7 @@ function transformText(plainText, context) {
   // Simple markdown-like transformation
   let lines = plainText.split('\n');
   let html = '';
-  
+
   for (let line of lines) {
     line = line.trim();
     if (line.startsWith('# ')) {
@@ -16,6 +16,6 @@ function transformText(plainText, context) {
       html += '<p>' + line + '</p>';
     }
   }
-  
+
   return html;
 }

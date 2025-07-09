@@ -48,6 +48,7 @@ The sidebar provides access to all SpineItemManager capabilities:
 **Rationale:** Clear separation of concerns - sidebar handles structural spine operations, main view handles individual item content editing.
 
 **Implementation:**
+
 - Sidebar: All spine operations (create, reorder, select, validate)
 - Main view: Single item content editing (separate design document)
 - Real-time coordination between interfaces
@@ -57,6 +58,7 @@ The sidebar provides access to all SpineItemManager capabilities:
 **Decision:** Dedicated drag handles when sidebar is expanded, no reordering when collapsed.
 
 **Implementation:**
+
 - **Expanded Sidebar**: Drag handles visible, full reordering capability
 - **Collapsed Sidebar**: Navigation only, no reordering
 - **Touch Support**: Drag handles work on both desktop and mobile
@@ -68,6 +70,7 @@ The sidebar provides access to all SpineItemManager capabilities:
 **Decision:** Minimal information display focused on essential spine management.
 
 **Display Elements:**
+
 - **Primary Label**: Chapter ID only (chapter1, chapter2, etc.)
 - **Drag Handle**: When sidebar expanded
 - **Validation Status**: ⚠️ icon only when errors exist (no indicator for valid items)
@@ -80,6 +83,7 @@ The sidebar provides access to all SpineItemManager capabilities:
 **Decision:** Minimal status indicators with focus on validation errors only.
 
 **Status Indicators:**
+
 - **Validation Errors**: ⚠️ icon when errors exist
 - **Valid Items**: No indicator (clean list)
 - **No Source File Status**: Not displayed
@@ -87,6 +91,7 @@ The sidebar provides access to all SpineItemManager capabilities:
 - **No Hover Tooltips**: No additional information on hover
 
 **Interaction States:**
+
 - **Selection**: Visual highlight for currently selected item
 - **Hover**: Standard interactive element feedback
 - **Focus**: Accessibility-compliant focus styles
@@ -97,12 +102,14 @@ The sidebar provides access to all SpineItemManager capabilities:
 **Decision:** Minimal, non-intrusive error indication.
 
 **Error Display:**
+
 - **Single Indicator**: ⚠️ icon for any validation error
 - **No Error Details**: No hover tooltips or detailed messages
 - **No Summary**: No overall validation status display
 - **No Recovery Actions**: No undo/redo or auto-fix in sidebar
 
 **Error Types Handled:**
+
 - All validation errors use the same ⚠️ indicator
 - Error details available through main view or other interfaces
 - Focus on visual indication rather than detailed feedback
@@ -112,12 +119,14 @@ The sidebar provides access to all SpineItemManager capabilities:
 **Decision:** Progressive enhancement based on sidebar state with dual interaction approach for accessibility.
 
 **Responsive Design:**
+
 - **Expanded Sidebar**: Full functionality with drag handles
 - **Collapsed Sidebar**: Navigation only, no reordering
 - **Touch Targets**: Minimum 44px for all interactive elements
 - **Mobile Optimized**: Drag handles work on touch devices
 
 **Accessibility - Dual Interaction Approach:**
+
 - **Mouse/Touch Users**: Drag handles for intuitive reordering
 - **Keyboard Users**: Move Up/Down buttons appear on selected item only
 - **Screen Reader Support**: Proper ARIA labels and position announcements
@@ -126,6 +135,7 @@ The sidebar provides access to all SpineItemManager capabilities:
 - **Clean UI**: No accessibility clutter - buttons only visible when needed
 
 **Accessibility Implementation:**
+
 - **Move Button Labels**: "Move [Chapter ID] up" / "Move [Chapter ID] down"
 - **Position Announcements**: "[Chapter ID] moved to position X of Y"
 - **Button Visibility**: Only on selected item, maintains clean design
@@ -136,11 +146,13 @@ The sidebar provides access to all SpineItemManager capabilities:
 **Decision:** Simple selection-based coordination with main view.
 
 **Main View Integration:**
+
 - **Selection**: Click spine item to open in main view for editing
 - **Creation**: New chapters automatically selected for editing
 - **Real-time Updates**: Spine changes immediately reflected in main view
 
 **Workspace Coordination:**
+
 - **Immediate Operations**: Spine operations are immediately persistent
 - **Validation**: Real-time validation with ⚠️ indicators
 - **State Management**: Seamless workspace state coordination
@@ -150,6 +162,7 @@ The sidebar provides access to all SpineItemManager capabilities:
 ### Sidebar Interface Components
 
 **Spine Item List:**
+
 - Drag handle (expanded sidebar only)
 - Chapter ID as primary label
 - Validation error indicator (⚠️ when errors exist)
@@ -159,29 +172,34 @@ The sidebar provides access to all SpineItemManager capabilities:
 - **Accessibility**: ARIA labels and keyboard navigation support
 
 **Append Button:**
+
 - "Append Item" button at bottom of list
 - Auto-generates sequential chapter ID
 - Immediately selects new chapter for main view editing
 
 **Responsive States:**
+
 - **Expanded**: Full management capabilities with drag handles
 - **Collapsed**: Navigation only, no reordering
 
 ### Interaction Model
 
 **Primary Interactions:**
+
 - **Drag Handles**: Mouse/touch reordering (expanded sidebar)
 - **Move Buttons**: Keyboard accessible reordering (selected item only)
 - **Click Selection**: Item selection for main view editing
 - **Append Button**: New chapter creation
 
 **Design Constraints:**
+
 - **No Context Menus**: All operations through direct interaction
 - **No Global Keyboard Shortcuts**: Interaction through focused elements only
 - **No Hover Tooltips**: Clean, minimal feedback
 - **No Additional Status**: Focus on essential validation only
 
 **Accessibility Features:**
+
 - **Dual Approach**: Drag handles + move buttons for comprehensive access
 - **Contextual Buttons**: Move buttons appear only on selected items
 - **Screen Reader Support**: Proper announcements and ARIA labels
@@ -194,12 +212,14 @@ The sidebar provides access to all SpineItemManager capabilities:
 ### Component Structure
 
 **SpineSidebar.svelte:**
+
 - Spine item list with drag handles
 - Append button for new chapters
 - Selection state management
 - Validation error display
 
 **SpineItem.svelte:**
+
 - Individual spine item component
 - Drag handle integration
 - ID display and selection handling
@@ -211,11 +231,13 @@ The sidebar provides access to all SpineItemManager capabilities:
 ### Integration Points
 
 **SpineItemManager API:**
+
 - Use existing methods for all operations
 - Real-time validation integration
 - Workspace state coordination
 
 **Main View Coordination:**
+
 - Selection event handling
 - New chapter creation workflow
 - State synchronization

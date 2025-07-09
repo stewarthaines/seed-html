@@ -14,35 +14,39 @@ const preview: Preview = {
       try {
         // Load all translation catalogs
         const translations = await loadStorybookTranslations();
-        
+
         // Set up i18n state with loaded translations
         i18nState.set({
           currentLocale: DEFAULT_LOCALE,
           locales: LOCALE_CONFIGS,
           catalogs: translations,
           initialized: true,
-          loading: false
+          loading: false,
         });
-        
-        console.log('📦 Storybook i18n initialized with', Object.keys(translations).length, 'locales');
-        
+
+        console.log(
+          '📦 Storybook i18n initialized with',
+          Object.keys(translations).length,
+          'locales'
+        );
+
         // Return translations for story access if needed
         return { translations };
       } catch (error) {
         console.error('Failed to load Storybook translations:', error);
-        
+
         // Fallback with minimal translations
         i18nState.set({
           currentLocale: DEFAULT_LOCALE,
           locales: LOCALE_CONFIGS,
           catalogs: { en: { locale: 'en', messages: {}, headers: {} } },
           initialized: true,
-          loading: false
+          loading: false,
         });
-        
+
         return { translations: {} };
       }
-    }
+    },
   ],
   // Global types for toolbar controls
   globalTypes: {
@@ -92,13 +96,13 @@ const preview: Preview = {
     // i18n decorator - handles locale switching (translations already loaded by loader)
     (Story, { globals }) => {
       const { locale = 'en' } = globals;
-      
+
       if (typeof window !== 'undefined') {
         // Set document direction for RTL languages
         const direction = isRTL(locale) ? 'rtl' : 'ltr';
         document.documentElement.dir = direction;
         document.documentElement.setAttribute('data-locale', locale);
-        
+
         // Defer locale switching to avoid state mutation during render
         setTimeout(() => {
           try {

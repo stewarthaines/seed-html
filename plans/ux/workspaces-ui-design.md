@@ -11,7 +11,7 @@ User experience design for EPUB workspace management, providing an intuitive int
 The workspace management interface supports four primary workflows based on user intent and project lifecycle:
 
 1. **Minimal EPUB Creation** - Instantly create valid, packageable EPUB with defaults
-2. **Project Opening** - Accessing existing workspaces and recent projects  
+2. **Project Opening** - Accessing existing workspaces and recent projects
 3. **EPUB Import** - Loading existing EPUB files into the editor
 4. **Project Management** - Organizing, renaming, deleting, and maintaining workspace portfolio
 
@@ -109,16 +109,19 @@ The workspace management interface supports four primary workflows based on user
 ### Loading States
 
 **Initial Load**
+
 - Show skeleton placeholders for workspace list
 - Display "Loading workspaces..." message
 - Animate loading indicators
 
 **Workspace Creation**
+
 - Disable form during creation
 - Show "Creating workspace..." progress
 - Clear form on success, show error on failure
 
-**Workspace Operations**  
+**Workspace Operations**
+
 - Show operation feedback (deleting, importing, etc.)
 - Prevent concurrent operations with disabled states
 - Provide clear success/failure messaging
@@ -126,17 +129,20 @@ The workspace management interface supports four primary workflows based on user
 ### Error States
 
 **Immediate Action Errors**
+
 - Use browser alert() for failed EPUB imports, creation failures, delete errors
 - Simple, direct feedback without additional UI complexity
 - Clear error messages with actionable information
 
 **Workspace Load Errors**
+
 - Show problematic workspaces in list with error badge/indicator
 - Allow users to see and attempt to recover corrupted workspaces
 - Click on error workspace shows browser alert with specific error details
 - No dedicated error UI areas - keep errors contextual and inline
 
 **Storage Errors**
+
 - Browser alert for storage quota exceeded
 - Browser alert for permission/access failures
 - No persistent error states in the UI
@@ -144,16 +150,19 @@ The workspace management interface supports four primary workflows based on user
 ### Empty States
 
 **No Workspaces**
+
 - Welcoming first-time user experience
 - Clear calls-to-action for getting started
 - Educational content about EPUB creation
 
 **No Search Results**
+
 - "No workspaces match your search" messaging
 - Suggest adjusting search terms
 - Option to create new workspace with search term as title
 
 **No Recent Workspaces**
+
 - Show message when recent list is empty
 - Encourage users to open existing workspaces
 - Highlight most recently modified workspace
@@ -163,30 +172,35 @@ The workspace management interface supports four primary workflows based on user
 ### Workspace Selection Behavior
 
 **Click to Open**
+
 - Single click on workspace title immediately opens workspace and navigates away
 - Enter key when workspace is focused opens selected workspace
 - Delete button at end of each row with browser confirm() dialog
 - No separate selection state - direct actions for accessibility
 
 **Current Workspace Indicator**
+
 - Clearly highlight currently active workspace in workspace list
 - Show "Currently Open" badge or visual distinction in workspace bar
 - Display current workspace title from EPUB metadata (not editable from this view)
 
 **Navigation Behavior**
+
 - Return to workspace view only by clicking "Workspace" in sidebar
-- No automatic returns or navigation prompts  
+- No automatic returns or navigation prompts
 - Clear, explicit navigation model for predictable user experience
 
 ### Keyboard Navigation
 
 **Tab Navigation**
+
 - Logical tab order: action buttons → search → workspace list
 - Arrow keys navigate within workspace list
 - Enter activates buttons and opens workspaces
 - Escape closes modals and cancels operations
 
 **Keyboard Shortcuts**
+
 - Ctrl+N / Cmd+N: Create new workspace
 - Ctrl+O / Cmd+O: Open workspace browser
 - Ctrl+I / Cmd+I: Import EPUB
@@ -195,6 +209,7 @@ The workspace management interface supports four primary workflows based on user
 ### Touch Interactions
 
 **Mobile-Friendly Gestures**
+
 - Swipe left on workspace item reveals management actions
 - Pull-to-refresh updates workspace list
 - Long press shows context menu
@@ -205,32 +220,37 @@ The workspace management interface supports four primary workflows based on user
 ### Form Validation
 
 **Required Field Validation**
+
 - Title and Language are required for new workspaces
 - Show validation on blur and before submission
 - Clear, specific error messages for each field
 - Prevent submission with incomplete required fields
 
 **Duplicate Name Handling**
+
 - Check for existing workspace titles
 - Suggest variations: "My Novel (2)", "My Novel - Copy"
 - Allow user to proceed with duplicate names if desired
 - Warn about potential confusion with existing projects
 
 **Character Limits**
+
 - Title: 100 characters maximum
-- Author: 50 characters maximum  
+- Author: 50 characters maximum
 - Show character count for longer fields
 - Graceful truncation with ellipsis in display
 
 ### Import Validation
 
 **EPUB File Validation**
+
 - Verify file is valid EPUB format
 - Check for required EPUB structure (mimetype, container.xml, OPF)
 - Warn about unsupported EPUB features
 - Provide detailed error messages for invalid files
 
 **Size and Quota Limits**
+
 - Check available storage before import
 - Warn when approaching storage limits
 - Suggest cleanup options for large imports
@@ -241,18 +261,21 @@ The workspace management interface supports four primary workflows based on user
 ### Screen Reader Support
 
 **Semantic Structure**
+
 - Proper heading hierarchy (h1 → h2 → h3)
 - ARIA landmarks for main sections
 - List markup for workspace collections
 - Form labels properly associated with inputs
 
 **Status Announcements**
+
 - Announce workspace creation success/failure
 - Communicate loading states to screen readers
 - Status updates for long-running operations
 - Error messages announced when they appear
 
 **Navigation Aids**
+
 - Skip links for keyboard users
 - ARIA labels for icon-only buttons
 - Descriptive button text and link purposes
@@ -261,12 +284,14 @@ The workspace management interface supports four primary workflows based on user
 ### Keyboard Accessibility
 
 **Focus Management**
+
 - Visible focus indicators on all interactive elements
 - Focus trapping in modal dialogs
 - Logical focus order throughout interface
 - Focus restoration when modals close
 
 **Screen Magnification**
+
 - Interface remains usable at 200% zoom
 - Text doesn't overlap or get cut off
 - All functionality accessible when magnified
@@ -275,6 +300,7 @@ The workspace management interface supports four primary workflows based on user
 ### Color and Contrast
 
 **High Contrast Support**
+
 - WCAG AA contrast ratios for all text
 - Color not sole indicator of state/meaning
 - High contrast mode compatibility
@@ -301,6 +327,7 @@ WorkspaceView (main container)
 ### Data Flow Pattern
 
 **Central Coordination:**
+
 ```
 WorkspaceManager → WorkspaceView → Child Components
                       ↑               ↑
@@ -308,6 +335,7 @@ WorkspaceManager → WorkspaceView → Child Components
 ```
 
 **Svelte-Idiomatic Event Pattern:**
+
 - **WorkspaceView**: Owns WorkspaceManager, loads all workspaces on mount
 - **Child Components**: Receive workspace data as props, emit user action events
 - **Modal Components**: Handle their own form state, emit completion events
@@ -316,6 +344,7 @@ WorkspaceManager → WorkspaceView → Child Components
 ### Component Interfaces
 
 #### WorkspaceView (Main Container)
+
 ```typescript
 interface WorkspaceViewProps {
   workspaceManager: WorkspaceManager;
@@ -323,17 +352,19 @@ interface WorkspaceViewProps {
 
 interface WorkspaceViewEvents {
   workspaceSelected: { workspaceId: string };
-  navigationRequested: { view: string, workspaceId?: string };
+  navigationRequested: { view: string; workspaceId?: string };
 }
 ```
 
 **Responsibilities:**
+
 - Load workspace list on mount via `workspaceManager.listWorkspacesWithMetadata()`
 - Handle all workspace operations via manager methods
 - Manage modal state and coordination
 - Track current workspace selection
 
 #### WorkspaceItem
+
 ```typescript
 interface WorkspaceItemProps {
   workspace: WorkspaceInfo;
@@ -344,11 +375,12 @@ interface WorkspaceItemProps {
 interface WorkspaceItemEvents {
   select: { workspaceId: string };
   open: { workspaceId: string };
-  contextMenu: { workspaceId: string, x: number, y: number };
+  contextMenu: { workspaceId: string; x: number; y: number };
 }
 ```
 
-#### CreateWorkspaceModal  
+#### CreateWorkspaceModal
+
 ```typescript
 interface CreateWorkspaceModalProps {
   isOpen: boolean;
@@ -356,7 +388,7 @@ interface CreateWorkspaceModalProps {
 }
 
 interface CreateWorkspaceModalEvents {
-  create: { metadata: EPUBMetadata, template?: string };
+  create: { metadata: EPUBMetadata; template?: string };
   cancel: {};
 }
 ```
@@ -364,19 +396,20 @@ interface CreateWorkspaceModalEvents {
 ### State Management Patterns
 
 #### Central Workspace Loading
+
 ```svelte
 <!-- WorkspaceView.svelte -->
 <script>
   import { onMount } from 'svelte';
-  
+
   export let workspaceManager;
-  
+
   let workspaces = [];
   let currentWorkspaceId = null;
   let selectedWorkspaceId = null;
   let loading = true;
   let error = null;
-  
+
   onMount(async () => {
     try {
       workspaces = await workspaceManager.listWorkspacesWithMetadata();
@@ -392,25 +425,26 @@ interface CreateWorkspaceModalEvents {
 ```
 
 #### Event Handler Patterns
+
 ```svelte
 <script>
-  const handleWorkspaceSelect = (event) => {
+  const handleWorkspaceSelect = event => {
     const { workspaceId } = event.detail;
     selectedWorkspaceId = workspaceId;
   };
-  
-  const handleWorkspaceOpen = async (event) => {
+
+  const handleWorkspaceOpen = async event => {
     const { workspaceId } = event.detail;
-    
+
     try {
       loading = true;
       currentWorkspaceId = workspaceId;
       localStorage.setItem('currentWorkspace', workspaceId);
-      
+
       // Navigate to metadata or spine view
-      dispatch('navigationRequested', { 
-        view: 'metadata', 
-        workspaceId 
+      dispatch('navigationRequested', {
+        view: 'metadata',
+        workspaceId,
       });
     } catch (error) {
       console.error('Failed to open workspace:', error);
@@ -419,20 +453,20 @@ interface CreateWorkspaceModalEvents {
       loading = false;
     }
   };
-  
-  const handleWorkspaceCreate = async (event) => {
+
+  const handleWorkspaceCreate = async event => {
     const { metadata, template } = event.detail;
-    
+
     try {
       const workspaceId = await workspaceManager.createEPUBWorkspace(metadata);
-      
+
       if (template) {
         await applyTemplate(workspaceId, template);
       }
-      
+
       // Refresh workspace list
       workspaces = await workspaceManager.listWorkspacesWithMetadata();
-      
+
       // Open the new workspace
       handleWorkspaceOpen({ detail: { workspaceId } });
     } catch (error) {
@@ -491,6 +525,7 @@ interface CreateWorkspaceModalEvents {
 ### Workspace Templates
 
 **Template System**
+
 - Predefined project structures for common use cases
 - Novel template: chapters, front matter, back matter
 - Technical manual: sections, glossary, index structure
@@ -498,6 +533,7 @@ interface CreateWorkspaceModalEvents {
 - User-created templates from existing projects
 
 **Template Application**
+
 - Create initial file structure based on template
 - Pre-populate with placeholder content
 - Set up initial spine ordering and navigation
@@ -506,6 +542,7 @@ interface CreateWorkspaceModalEvents {
 ### Bulk Operations
 
 **Multi-Select Actions**
+
 - Checkbox selection for multiple workspaces
 - Bulk delete with confirmation
 - Export multiple workspaces as ZIP
@@ -513,6 +550,7 @@ interface CreateWorkspaceModalEvents {
 - Select all/none functionality
 
 **Import/Export Workflows**
+
 - Drag-and-drop multiple EPUB files for batch import
 - Export workspace as standard EPUB
 - Backup/restore workspace collections
@@ -521,12 +559,14 @@ interface CreateWorkspaceModalEvents {
 ### Search and Filtering
 
 **Workspace Search**
+
 - Full-text search across workspace metadata
 - Search by title, author, description, tags
 - Search within workspace content (advanced)
 - Recent search suggestions and history
 
 **Filtering Options**
+
 - Filter by creation date, modification date
 - Filter by author, language, EPUB version
 - Filter by file size, content type
@@ -537,12 +577,14 @@ interface CreateWorkspaceModalEvents {
 ### Workspace Corruption Detection
 
 **Automatic Detection**
+
 - Validate workspace structure on load
 - Check for missing required files (OPF, container.xml)
 - Verify manifest/spine consistency
 - Report specific corruption issues with repair suggestions
 
 **Recovery Options**
+
 - Automatic repair for common issues
 - Manual intervention with guided repair steps
 - Backup restoration from auto-saved versions
@@ -551,12 +593,14 @@ interface CreateWorkspaceModalEvents {
 ### Data Loss Prevention
 
 **Auto-Save Protection**
+
 - Continuous backup of workspace metadata
 - Snapshot creation before destructive operations
 - Version history for workspace recovery
 - Cloud sync integration for data redundancy
 
 **Conflict Resolution**
+
 - Detect concurrent modifications in team environments
 - Merge strategy for non-conflicting changes
 - User choice for conflicting modifications
@@ -567,12 +611,14 @@ interface CreateWorkspaceModalEvents {
 ### Large Workspace Collections
 
 **Virtualized Lists**
+
 - Render only visible workspace items
 - Smooth scrolling for hundreds of workspaces
 - Efficient search and filtering without lag
 - Progressive loading for very large collections
 
 **Workspace Metadata Caching**
+
 - Cache workspace thumbnails and previews
 - Efficient metadata storage and retrieval
 - Background refresh of stale cache entries
@@ -581,6 +627,7 @@ interface CreateWorkspaceModalEvents {
 ### Memory Management
 
 **Efficient Loading**
+
 - Load workspace list metadata only (not full content)
 - Lazy load workspace details on demand
 - Proper cleanup of unused workspace data
@@ -639,43 +686,43 @@ Following the existing codebase pattern where translation keys are the actual En
 
 ```typescript
 // Workspace management
-$t('Workspace Management')
-$t('No workspaces yet')
-$t('Create New Workspace')
-$t('Load EPUB')
-$t('Open Existing')
+$t('Workspace Management');
+$t('No workspaces yet');
+$t('Create New Workspace');
+$t('Load EPUB');
+$t('Open Existing');
 
-// UI text  
-$t('Workspaces ({count} total)', { count: workspaces.length })
-$t('Current Workspace')
-$t('No workspace selected')
-$t('Single-click to open workspace')
+// UI text
+$t('Workspaces ({count} total)', { count: workspaces.length });
+$t('Current Workspace');
+$t('No workspace selected');
+$t('Single-click to open workspace');
 
 // Action buttons
-$t('Create New')
-$t('Load EPUB') 
-$t('Delete')
-$t('Close')
-$t('Switch')
+$t('Create New');
+$t('Load EPUB');
+$t('Delete');
+$t('Close');
+$t('Switch');
 
 // Status and error messages
-$t('Creating workspace...')
-$t('Loading workspaces...')
-$t('You have unsaved workspace changes. Continue?')
-$t('Delete "{title}"? This cannot be undone.', { title: workspace.title })
-$t('Failed to create workspace: {error}', { error: error.message })
-$t('Failed to import EPUB: {error}', { error: error.message })
+$t('Creating workspace...');
+$t('Loading workspaces...');
+$t('You have unsaved workspace changes. Continue?');
+$t('Delete "{title}"? This cannot be undone.', { title: workspace.title });
+$t('Failed to create workspace: {error}', { error: error.message });
+$t('Failed to import EPUB: {error}', { error: error.message });
 
 // Empty states
-$t('No workspaces yet')
-$t('Get started by creating your first EPUB')
-$t('All your work is saved automatically')
+$t('No workspaces yet');
+$t('Get started by creating your first EPUB');
+$t('All your work is saved automatically');
 
 // Relative time displays
-$t('2 hours ago')
-$t('1 day ago') 
-$t('3 days ago')
-$t('Last modified')
+$t('2 hours ago');
+$t('1 day ago');
+$t('3 days ago');
+$t('Last modified');
 ```
 
 ---
@@ -685,20 +732,23 @@ $t('Last modified')
 Based on user feedback, this workspace UI design prioritizes simplicity, accessibility, and direct action workflows:
 
 ### Key Design Principles
+
 - **No modal dialogs** - All actions navigate directly or use browser native dialogs
-- **Single workspace list** - One list sorted by modification time (most recent first)  
+- **Single workspace list** - One list sorted by modification time (most recent first)
 - **Direct actions** - Single-click to open, browser confirm() for destructive actions
 - **Minimal UI complexity** - No dedicated error areas, selection states, or form modals
 - **Explicit navigation** - Return to workspace view only via sidebar "Workspace" click
 
 ### Core Workflows Defined
+
 1. **Create New**: Instant creation of "Untitled Book Project" → navigate to metadata view
-2. **Load EPUB**: File picker → automatic import → navigate to imported workspace  
+2. **Load EPUB**: File picker → automatic import → navigate to imported workspace
 3. **Open Existing**: Single-click workspace title → navigate to workspace
 4. **Delete Workspace**: Delete button → browser confirm() → refresh list
 5. **Error Handling**: Browser alerts for action failures, inline error badges for problematic workspaces
 
 ### Accessibility Features
+
 - No complex focus management (no modals)
 - All interactive elements meet 44px touch targets
 - Simple keyboard navigation with logical tab order
@@ -726,6 +776,7 @@ WorkspaceView.svelte (main container - owns WorkspaceManager)
 #### Component Responsibilities
 
 **WorkspaceView.svelte** (Main Container)
+
 ```typescript
 interface WorkspaceViewProps {
   workspaceManager: WorkspaceManager;
@@ -733,11 +784,12 @@ interface WorkspaceViewProps {
 
 interface WorkspaceViewEvents {
   workspaceOpened: { workspaceId: string };
-  navigationRequested: { view: string, workspaceId?: string };
+  navigationRequested: { view: string; workspaceId?: string };
 }
 ```
 
 **Responsibilities:**
+
 - Owns WorkspaceManager instance and coordinates all workspace operations
 - Loads workspace list on mount via `workspaceManager.listWorkspacesWithMetadata()`
 - Handles workspace creation, deletion, and opening operations
@@ -745,6 +797,7 @@ interface WorkspaceViewEvents {
 - Coordinates error handling with browser alerts
 
 **CurrentWorkspaceBar.svelte**
+
 ```typescript
 interface CurrentWorkspaceBarProps {
   currentWorkspace: WorkspaceInfo | null;
@@ -757,11 +810,13 @@ interface CurrentWorkspaceBarEvents {
 ```
 
 **Responsibilities:**
+
 - Displays active workspace information (title from EPUB metadata)
 - Provides Switch and Close actions for current workspace
 - Shows "no workspace" state when none selected
 
 **WorkspaceActionBar.svelte**
+
 ```typescript
 interface WorkspaceActionBarProps {
   isLoading: boolean;
@@ -774,11 +829,13 @@ interface WorkspaceActionBarEvents {
 ```
 
 **Responsibilities:**
+
 - Renders Create New and Load EPUB action buttons
 - Handles disabled state during loading operations
 - Emits action events for parent coordination
 
 **WorkspaceList.svelte**
+
 ```typescript
 interface WorkspaceListProps {
   workspaces: WorkspaceInfo[];
@@ -793,12 +850,14 @@ interface WorkspaceListEvents {
 ```
 
 **Responsibilities:**
+
 - Renders list of workspaces sorted by modification time
 - Handles empty state display
 - Manages loading state with skeleton placeholders
 - Coordinates WorkspaceItem interactions
 
 **WorkspaceItem.svelte**
+
 ```typescript
 interface WorkspaceItemProps {
   workspace: WorkspaceInfo;
@@ -813,6 +872,7 @@ interface WorkspaceItemEvents {
 ```
 
 **Responsibilities:**
+
 - Displays individual workspace information (title, author, modified date)
 - Handles click-to-open interaction
 - Renders delete button with appropriate styling
@@ -822,6 +882,7 @@ interface WorkspaceItemEvents {
 #### Data Flow Pattern
 
 **Central Coordination (Following metadata pattern):**
+
 ```
 WorkspaceManager → WorkspaceView → Child Components
                       ↑               ↑
@@ -829,6 +890,7 @@ WorkspaceManager → WorkspaceView → Child Components
 ```
 
 **Event Handling Example:**
+
 ```svelte
 <!-- WorkspaceView.svelte -->
 <script>
@@ -836,21 +898,21 @@ WorkspaceManager → WorkspaceView → Child Components
     try {
       const metadata = createMinimalEPUBMetadata();
       const workspaceId = await workspaceManager.createEPUBWorkspace(metadata);
-      
+
       // Navigate to new workspace
-      dispatch('navigationRequested', { 
-        view: 'metadata', 
-        workspaceId 
+      dispatch('navigationRequested', {
+        view: 'metadata',
+        workspaceId,
       });
     } catch (error) {
       alert(`Failed to create workspace: ${error.message}`);
     }
   };
 
-  const handleWorkspaceDelete = async (event) => {
+  const handleWorkspaceDelete = async event => {
     const { workspaceId } = event.detail;
     const workspace = workspaces.find(w => w.id === workspaceId);
-    
+
     if (confirm(`Delete "${workspace.title}"? This cannot be undone.`)) {
       try {
         await workspaceManager.deleteWorkspace(workspaceId);
@@ -870,6 +932,7 @@ WorkspaceManager → WorkspaceView → Child Components
 Stories will be created for each component to demonstrate different states and interactions using mock data:
 
 **WorkspaceView Stories**
+
 - `Empty State` - No workspaces, first-time user experience
 - `Populated State` - Multiple workspaces with variety of metadata
 - `Loading State` - Skeleton placeholders while loading
@@ -877,17 +940,20 @@ Stories will be created for each component to demonstrate different states and i
 - `Current Workspace` - One workspace marked as currently active
 
 **WorkspaceActionBar Stories**
+
 - `Default State` - Normal action buttons
 - `Loading State` - Disabled buttons during operations
 - `Interactive Demo` - Create New adds mock workspace to list
 
 **WorkspaceList Stories**
+
 - `Empty List` - No workspaces message
 - `Populated List` - Multiple workspace items
 - `Loading List` - Skeleton loading state
 - `Error Items` - Mix of normal and problematic workspaces
 
 **WorkspaceItem Stories**
+
 - `Normal Workspace` - Standard workspace display
 - `Current Workspace` - Highlighted as currently active
 - `Error Workspace` - Warning icon and error styling
@@ -895,6 +961,7 @@ Stories will be created for each component to demonstrate different states and i
 - `Recent vs Old` - Different relative time displays
 
 **CurrentWorkspaceBar Stories**
+
 - `No Workspace` - Empty state display
 - `Active Workspace` - Current workspace information
 - `Long Title` - Text truncation in workspace bar
@@ -912,7 +979,7 @@ const mockWorkspaces: WorkspaceInfo[] = [
     lastModified: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
     fileCount: 15,
     totalSize: 2400000,
-    epubVersion: '3.0'
+    epubVersion: '3.0',
   },
   {
     id: 'workspace-2',
@@ -922,7 +989,7 @@ const mockWorkspaces: WorkspaceInfo[] = [
     lastModified: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
     fileCount: 8,
     totalSize: 890000,
-    epubVersion: '3.0'
+    epubVersion: '3.0',
   },
   {
     id: 'workspace-error',
@@ -933,14 +1000,15 @@ const mockWorkspaces: WorkspaceInfo[] = [
     fileCount: 0,
     totalSize: 0,
     epubVersion: 'unknown',
-    hasError: true
-  }
+    hasError: true,
+  },
 ];
 ```
 
 #### Interactive Behavior in Stories
 
 **Limited Functionality for Visual Demonstration:**
+
 - `Create New` button adds a mock "Untitled Book Project" to the workspace list
 - `Load EPUB` button opens browser file dialog but performs no import
 - `Delete` buttons show browser confirm() dialog but don't actually remove items
@@ -962,25 +1030,28 @@ const mockWorkspaces: WorkspaceInfo[] = [
 Following the established metadata component testing pattern with lightweight, focused tests:
 
 **Individual Component Tests:**
+
 - **Props handling** - Verify components render correctly with different prop values
 - **Event emission** - Test that user interactions emit expected events
 - **Conditional rendering** - Verify components show/hide elements based on props
 - **Error states** - Test error styling and messaging display
 
 **WorkspaceView Integration Tests:**
+
 - **WorkspaceManager integration** - Mock manager and verify method calls
 - **Event coordination** - Test that child component events trigger correct parent actions
 - **Error handling** - Verify browser alerts appear for failed operations
 - **Navigation events** - Test that workspace operations trigger navigation requests
 
 **Example Test Structure:**
+
 ```typescript
 // WorkspaceItem.test.ts
 describe('WorkspaceItem', () => {
   it('renders workspace information correctly', () => {
     const mockWorkspace = createMockWorkspace();
     const { getByText } = render(WorkspaceItem, { workspace: mockWorkspace });
-    
+
     expect(getByText(mockWorkspace.title)).toBeInTheDocument();
     expect(getByText(mockWorkspace.author)).toBeInTheDocument();
   });
@@ -988,14 +1059,14 @@ describe('WorkspaceItem', () => {
   it('emits selected event when clicked', async () => {
     const mockWorkspace = createMockWorkspace();
     const { component, getByRole } = render(WorkspaceItem, { workspace: mockWorkspace });
-    
+
     const mockHandler = vi.fn();
     component.$on('selected', mockHandler);
-    
+
     await fireEvent.click(getByRole('button'));
     expect(mockHandler).toHaveBeenCalledWith(
       expect.objectContaining({
-        detail: { workspaceId: mockWorkspace.id }
+        detail: { workspaceId: mockWorkspace.id },
       })
     );
   });
@@ -1003,6 +1074,7 @@ describe('WorkspaceItem', () => {
 ```
 
 **Test Coverage Goals:**
+
 - Component rendering with various prop combinations
 - Event emission accuracy and payload structure
 - Error state display and styling
@@ -1010,6 +1082,7 @@ describe('WorkspaceItem', () => {
 - Integration between parent and child components
 
 **Testing Exclusions:**
+
 - No accessibility testing at this phase
 - No end-to-end workflow testing
 - No actual WorkspaceManager functionality testing (covered in workspace module tests)

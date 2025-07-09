@@ -108,7 +108,7 @@
 }
 
 /* RTL support for select arrow */
-[dir="rtl"] .select {
+[dir='rtl'] .select {
   background-position: left var(--space-2) center;
 }
 
@@ -146,7 +146,7 @@
 }
 
 .checkbox:checked::after {
-  content: "";
+  content: '';
   display: block;
   width: 100%;
   height: 100%;
@@ -157,7 +157,7 @@
 }
 
 .radio:checked::after {
-  content: "";
+  content: '';
   display: block;
   width: 100%;
   height: 100%;
@@ -185,7 +185,7 @@
 }
 
 .label-required::after {
-  content: " *";
+  content: ' *';
   color: var(--color-error-600);
 }
 

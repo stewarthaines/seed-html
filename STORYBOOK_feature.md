@@ -268,7 +268,7 @@ async function initializeDemo() {
 
     // Create fresh demo environment
     workspaceId = await workspaceManager.createEPUBWorkspace(demoMetadata);
-    
+
     // Add predictable demo content
     // ...
   } catch (err) {
@@ -294,7 +294,7 @@ try {
     await window.resetDemo();
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
-  
+
   // Then perform demo operations
 } catch (error) {
   console.log('Story demo failed:', error);

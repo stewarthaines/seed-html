@@ -284,7 +284,7 @@ export class EPUBUnpacker {
       try {
         const sourceZipBlob = await sourceZipEntry.extract();
         await sourceManager.extractSourceZip(workspaceId, sourceZipBlob);
-        
+
         // Report SOURCE.zip extraction (the ZIP itself is not stored as a workspace file)
         extractedFiles.push('SOURCE.zip (extracted to SOURCE/ directory)');
         totalBytes += sourceZipBlob.size;

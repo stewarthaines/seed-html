@@ -55,10 +55,10 @@ The demo uses realistic mock data representing various workspace states:
 - Different file counts and sizes
 - Various languages and authors
 - Recent vs older modification dates
-          `
-        }
-      }
-    }
+          `,
+        },
+      },
+    },
   });
 </script>
 

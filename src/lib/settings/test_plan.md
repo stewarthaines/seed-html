@@ -40,19 +40,19 @@ const mockFileStorage = {
   readJSONFile: vi.fn<[string, string], Promise<any>>(),
   writeJSONFile: vi.fn<[string, string, any], Promise<void>>(),
   listFiles: vi.fn<[string, string?], Promise<string[]>>(),
-  isInitialized: () => true
+  isInitialized: () => true,
 } satisfies Partial<FileStorageAPI>;
 
 // Extension discovery
 const mockExtensionManager = {
-  listWorkspaceExtensions: vi.fn<[string], Promise<ExtensionInfo[]>>()
+  listWorkspaceExtensions: vi.fn<[string], Promise<ExtensionInfo[]>>(),
 } satisfies Partial<ExtensionManager>;
 
 // Browser localStorage
 const mockLocalStorage = {
   getItem: vi.fn<[string], string | null>(),
   setItem: vi.fn<[string, string], void>(),
-  removeItem: vi.fn<[string], void>()
+  removeItem: vi.fn<[string], void>(),
 };
 ```
 
@@ -74,39 +74,39 @@ export const SETTINGS_FIXTURES = {
     valid: (): GlobalSettings => ({
       theme: 'dark',
       locale: 'en',
-      editor_font_size: 14
+      editor_font_size: 14,
     }),
     minimal: (): GlobalSettings => ({
       theme: 'system',
       locale: 'de',
-      editor_font_size: 12
-    })
+      editor_font_size: 12,
+    }),
   },
-  
+
   workspace: {
     valid: (): WorkspaceSettings => ({
       bust_cache: false,
       draft_id: 0,
       editor: {
         advanced_mode: false,
-        preview_delay_ms: 500
-      }
+        preview_delay_ms: 500,
+      },
     }),
     advanced: (): WorkspaceSettings => ({
       bust_cache: true,
       draft_id: 7,
       editor: {
         advanced_mode: true,
-        preview_delay_ms: 1000
-      }
+        preview_delay_ms: 1000,
+      },
     }),
     minimal: (): WorkspaceSettings => ({
       bust_cache: false,
-      draft_id: 0
+      draft_id: 0,
       // No editor object
-    })
+    }),
   },
-  
+
   epub: {
     valid: (): EPUBSettings => ({
       text_transform: 'SOURCE/scripts/transform.js',
@@ -116,16 +116,16 @@ export const SETTINGS_FIXTURES = {
         template: 'minimal',
         background_color: '#ffffff',
         text_color: '#000000',
-        font_family: 'serif'
-      }
+        font_family: 'serif',
+      },
     }),
     minimal: (): EPUBSettings => ({
       text_transform: 'SOURCE/scripts/transform.js',
       dom_transforms: [],
-      spine_basename: 'section'
+      spine_basename: 'section',
       // No cover config
-    })
-  }
+    }),
+  },
 };
 ```
 
@@ -137,85 +137,85 @@ export const VALIDATION_TEST_CASES = {
     {
       name: 'invalid theme',
       input: { theme: 'purple' },
-      expectedErrors: ['Theme must be light, dark, or system']
+      expectedErrors: ['Theme must be light, dark, or system'],
     },
     {
       name: 'invalid locale',
       input: { locale: 'invalid-locale' },
-      expectedErrors: ['Locale invalid-locale is not supported']
+      expectedErrors: ['Locale invalid-locale is not supported'],
     },
     {
       name: 'font size too small',
       input: { editor_font_size: 5 },
-      expectedErrors: ['Font size must be between 8 and 32 pixels']
+      expectedErrors: ['Font size must be between 8 and 32 pixels'],
     },
     {
       name: 'font size too large',
       input: { editor_font_size: 50 },
-      expectedErrors: ['Font size must be between 8 and 32 pixels']
+      expectedErrors: ['Font size must be between 8 and 32 pixels'],
     },
     {
       name: 'negative font size',
       input: { editor_font_size: -10 },
-      expectedErrors: ['Font size must be between 8 and 32 pixels']
-    }
+      expectedErrors: ['Font size must be between 8 and 32 pixels'],
+    },
   ],
-  
+
   workspaceSettings: [
     {
       name: 'negative draft ID',
       input: { draft_id: -1 },
-      expectedErrors: ['Draft ID must be non-negative']
+      expectedErrors: ['Draft ID must be non-negative'],
     },
     {
       name: 'preview delay too short',
       input: { editor: { preview_delay_ms: 50 } },
-      expectedErrors: ['Preview delay must be between 100-2000ms']
+      expectedErrors: ['Preview delay must be between 100-2000ms'],
     },
     {
       name: 'preview delay too long',
       input: { editor: { preview_delay_ms: 3000 } },
-      expectedErrors: ['Preview delay must be between 100-2000ms']
+      expectedErrors: ['Preview delay must be between 100-2000ms'],
     },
     {
       name: 'invalid bust_cache type',
       input: { bust_cache: 'yes' },
-      expectedErrors: ['Bust cache must be a boolean']
-    }
+      expectedErrors: ['Bust cache must be a boolean'],
+    },
   ],
-  
+
   epubSettings: [
     {
       name: 'invalid transform path - outside SOURCE',
       input: { text_transform: '../../../etc/passwd' },
-      expectedErrors: ['Transform path must start with SOURCE/']
+      expectedErrors: ['Transform path must start with SOURCE/'],
     },
     {
       name: 'invalid transform path - no .js extension',
       input: { text_transform: 'SOURCE/scripts/transform.txt' },
-      expectedErrors: ['Transform path must end with .js']
+      expectedErrors: ['Transform path must end with .js'],
     },
     {
       name: 'empty spine basename',
       input: { spine_basename: '' },
-      expectedErrors: ['Spine basename cannot be empty']
+      expectedErrors: ['Spine basename cannot be empty'],
     },
     {
       name: 'spine basename with invalid characters',
       input: { spine_basename: 'chapter/../evil' },
-      expectedErrors: ['Spine basename contains invalid characters']
+      expectedErrors: ['Spine basename contains invalid characters'],
     },
     {
       name: 'invalid background color',
       input: { cover: { background_color: 'red' } },
-      expectedErrors: ['Background color must be a valid hex color (#RRGGBB)']
+      expectedErrors: ['Background color must be a valid hex color (#RRGGBB)'],
     },
     {
       name: 'invalid text color',
       input: { cover: { text_color: '#xyz' } },
-      expectedErrors: ['Text color must be a valid hex color (#RRGGBB)']
-    }
-  ]
+      expectedErrors: ['Text color must be a valid hex color (#RRGGBB)'],
+    },
+  ],
 };
 ```
 
@@ -228,50 +228,48 @@ export const EXTENSION_FIXTURES = {
       name: 'markdown-it',
       files: [
         { filename: 'transform.js', size: 15000, type: 'javascript' },
-        { filename: 'LICENSE.txt', size: 1200, type: 'license' }
+        { filename: 'LICENSE.txt', size: 1200, type: 'license' },
       ],
       totalSize: 16200,
-      location: 'workspace'
-    }
+      location: 'workspace',
+    },
   ],
-  
+
   multipleExtensions: (): ExtensionInfo[] => [
     {
       name: 'markdown-it',
       files: [
         { filename: 'transform.js', size: 15000, type: 'javascript' },
-        { filename: 'markdown-it.min.js', size: 45000, type: 'javascript' }
+        { filename: 'markdown-it.min.js', size: 45000, type: 'javascript' },
       ],
       totalSize: 60000,
-      location: 'workspace'
+      location: 'workspace',
     },
     {
       name: 'highlight-js',
-      files: [
-        { filename: 'highlight.min.js', size: 32000, type: 'javascript' }
-      ],
+      files: [{ filename: 'highlight.min.js', size: 32000, type: 'javascript' }],
       totalSize: 32000,
-      location: 'workspace'
-    }
+      location: 'workspace',
+    },
   ],
-  
+
   expectedTransformOptions: (): TransformOption[] => [
     {
       path: 'SOURCE/scripts/transform.js',
       extensionName: 'built-in',
-      fileName: 'transform.js'
+      fileName: 'transform.js',
     },
     {
       path: 'SOURCE/extensions/markdown-it/transform.js',
       extensionName: 'markdown-it',
-      fileName: 'transform.js'
+      fileName: 'transform.js',
     },
     {
       path: 'SOURCE/extensions/markdown-it/markdown-it.min.js',
       extensionName: 'markdown-it',
-      fileName: 'markdown-it.min.js'
-    }
-  ]
+      fileName: 'markdown-it.min.js',
+    },
+  ],
 };
 ```
 
@@ -294,7 +292,7 @@ describe('Settings Validation', () => {
         expect(result.errors).toEqual(expectedErrors);
       }
     );
-    
+
     it('should accept valid global settings', () => {
       const valid = SETTINGS_FIXTURES.global.valid();
       const result = settingsManager.validateGlobalSettings(valid);
@@ -302,7 +300,7 @@ describe('Settings Validation', () => {
       expect(result.errors).toHaveLength(0);
     });
   });
-  
+
   // Similar tests for validateWorkspaceSettings and validateEPUBSettings
 });
 ```
@@ -315,16 +313,16 @@ Test that all default methods return valid, expected values:
 describe('Default Settings', () => {
   it('should return valid default global settings', () => {
     const defaults = settingsManager.getDefaultGlobalSettings();
-    
+
     expect(defaults.theme).toBe('system');
     expect(defaults.locale).toBe('en');
     expect(defaults.editor_font_size).toBe(14);
-    
+
     // Defaults should pass validation
     const validation = settingsManager.validateGlobalSettings(defaults);
     expect(validation.isValid).toBe(true);
   });
-  
+
   // Similar tests for workspace and EPUB defaults
 });
 ```
@@ -340,34 +338,34 @@ describe('Draft Mode Utilities', () => {
       expect(settingsManager.generateDraftTitle('My Book', 3)).toBe('My Book 3');
       expect(settingsManager.generateDraftTitle('Guide to Testing', 1)).toBe('Guide to Testing 1');
     });
-    
+
     it('should handle titles with numbers', () => {
       expect(settingsManager.generateDraftTitle('Book 2020', 5)).toBe('Book 2020 5');
     });
   });
-  
+
   describe('extractDraftInfo', () => {
     it('should extract draft ID from title', () => {
       const result = settingsManager.extractDraftInfo('My Book 3');
       expect(result.baseTitle).toBe('My Book');
       expect(result.draftId).toBe(3);
     });
-    
+
     it('should return null for titles without draft ID', () => {
       const result = settingsManager.extractDraftInfo('Regular Title');
       expect(result.baseTitle).toBe('Regular Title');
       expect(result.draftId).toBe(null);
     });
-    
+
     it('should handle edge cases', () => {
       expect(settingsManager.extractDraftInfo('Book 123 456')).toEqual({
         baseTitle: 'Book 123',
-        draftId: 456
+        draftId: 456,
       });
-      
+
       expect(settingsManager.extractDraftInfo('Book')).toEqual({
         baseTitle: 'Book',
-        draftId: null
+        draftId: null,
       });
     });
   });
@@ -383,54 +381,54 @@ describe('Settings File Operations', () => {
   describe('Global Settings (localStorage)', () => {
     it('should save and load global settings', () => {
       const settings = SETTINGS_FIXTURES.global.valid();
-      
+
       settingsManager.saveGlobalSettings(settings);
-      
+
       expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
         'editme_global_settings',
         JSON.stringify(settings)
       );
     });
-    
+
     it('should load settings from localStorage', () => {
       const stored = SETTINGS_FIXTURES.global.valid();
       mockLocalStorage.getItem.mockReturnValue(JSON.stringify(stored));
-      
+
       const loaded = settingsManager.loadGlobalSettings();
-      
+
       expect(mockLocalStorage.getItem).toHaveBeenCalledWith('editme_global_settings');
       expect(loaded).toEqual(stored);
     });
-    
+
     it('should return defaults when localStorage is empty', () => {
       mockLocalStorage.getItem.mockReturnValue(null);
-      
+
       const loaded = settingsManager.loadGlobalSettings();
       const defaults = settingsManager.getDefaultGlobalSettings();
-      
+
       expect(loaded).toEqual(defaults);
     });
   });
-  
+
   describe('Workspace Settings', () => {
     it('should save workspace settings to metadata file', async () => {
       const settings = SETTINGS_FIXTURES.workspace.valid();
-      
+
       await settingsManager.saveWorkspaceSettings('ws-123', settings);
-      
+
       expect(mockFileStorage.writeJSONFile).toHaveBeenCalledWith(
         'ws-123',
         '.workspace-metadata.json',
         expect.objectContaining(settings)
       );
     });
-    
+
     it('should load workspace settings from metadata file', async () => {
       const stored = SETTINGS_FIXTURES.workspace.valid();
       mockFileStorage.readJSONFile.mockResolvedValue(stored);
-      
+
       const loaded = await settingsManager.loadWorkspaceSettings('ws-123');
-      
+
       expect(mockFileStorage.readJSONFile).toHaveBeenCalledWith(
         'ws-123',
         '.workspace-metadata.json'
@@ -451,52 +449,54 @@ describe('Transform Management', () => {
     it('should return transforms from built-in scripts and extensions', async () => {
       // Mock built-in scripts
       mockFileStorage.listFiles.mockResolvedValue(['transform.js', 'custom.js']);
-      
+
       // Mock extensions
       mockExtensionManager.listWorkspaceExtensions.mockResolvedValue(
         EXTENSION_FIXTURES.multipleExtensions()
       );
-      
+
       const transforms = await settingsManager.getAvailableTransforms('ws-123');
-      
+
       expect(transforms).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             path: 'SOURCE/scripts/transform.js',
             extensionName: 'built-in',
-            fileName: 'transform.js'
+            fileName: 'transform.js',
           }),
           expect.objectContaining({
             path: 'SOURCE/extensions/markdown-it/transform.js',
             extensionName: 'markdown-it',
-            fileName: 'transform.js'
-          })
+            fileName: 'transform.js',
+          }),
         ])
       );
     });
   });
-  
+
   describe('resolveTransformScripts', () => {
     it('should validate script paths exist', async () => {
       const settings = SETTINGS_FIXTURES.epub.valid();
-      mockFileStorage.fileExists = vi.fn()
-        .mockResolvedValueOnce(true)  // text_transform exists
+      mockFileStorage.fileExists = vi
+        .fn()
+        .mockResolvedValueOnce(true) // text_transform exists
         .mockResolvedValueOnce(true); // dom_transform exists
-      
+
       const resolved = await settingsManager.resolveTransformScripts('ws-123', settings);
-      
+
       expect(resolved.textTransform).toBe(settings.text_transform);
       expect(resolved.domTransforms).toEqual(settings.dom_transforms);
     });
-    
+
     it('should handle missing scripts gracefully', async () => {
       const settings = SETTINGS_FIXTURES.epub.valid();
-      mockFileStorage.fileExists = vi.fn()
+      mockFileStorage.fileExists = vi
+        .fn()
         .mockResolvedValueOnce(false) // text_transform missing
         .mockResolvedValueOnce(true); // dom_transform exists
-      
+
       const resolved = await settingsManager.resolveTransformScripts('ws-123', settings);
-      
+
       expect(resolved.textTransform).toBe(null);
       expect(resolved.domTransforms).toEqual(settings.dom_transforms);
     });
@@ -515,54 +515,54 @@ describe('Error Handling', () => {
       mockLocalStorage.setItem.mockImplementation(() => {
         throw new DOMException('QuotaExceededError');
       });
-      
+
       const settings = SETTINGS_FIXTURES.global.valid();
-      
+
       // Should not throw
       expect(() => settingsManager.saveGlobalSettings(settings)).not.toThrow();
     });
-    
+
     it('should handle localStorage access denied', () => {
       mockLocalStorage.getItem.mockImplementation(() => {
         throw new Error('Access denied');
       });
-      
+
       // Should return defaults
       const loaded = settingsManager.loadGlobalSettings();
       const defaults = settingsManager.getDefaultGlobalSettings();
       expect(loaded).toEqual(defaults);
     });
   });
-  
+
   describe('File System Errors', () => {
     it('should handle file not found', async () => {
       mockFileStorage.readJSONFile.mockRejectedValue(new Error('File not found'));
-      
+
       const loaded = await settingsManager.loadWorkspaceSettings('ws-123');
       const defaults = settingsManager.getDefaultWorkspaceSettings();
-      
+
       expect(loaded).toEqual(defaults);
     });
-    
+
     it('should handle corrupted JSON', async () => {
       mockFileStorage.readJSONFile.mockRejectedValue(new SyntaxError('Invalid JSON'));
-      
+
       const loaded = await settingsManager.loadEPUBSettings('ws-123');
       const defaults = settingsManager.getDefaultEPUBSettings();
-      
+
       expect(loaded).toEqual(defaults);
     });
   });
-  
+
   describe('Draft ID Operations', () => {
     it('should handle increment when workspace settings missing', async () => {
       mockFileStorage.readJSONFile.mockRejectedValue(new Error('File not found'));
-      
+
       const newDraftId = await settingsManager.incrementDraftId('ws-123');
-      
+
       // Should start from 1 if no existing settings
       expect(newDraftId).toBe(1);
-      
+
       // Should save updated settings
       expect(mockFileStorage.writeJSONFile).toHaveBeenCalledWith(
         'ws-123',
@@ -592,19 +592,19 @@ describe('Settings Manager Integration', () => {
   let settingsManager: SettingsManager;
   let fileStorage: FileStorageAPI;
   let tempWorkspaceId: string;
-  
+
   beforeEach(async () => {
     tempWorkspaceId = await createTempWorkspace();
     fileStorage = new FileStorageAPI();
     await fileStorage.init();
-    
+
     const mockExtensionManager = {
-      listWorkspaceExtensions: vi.fn().mockResolvedValue([])
+      listWorkspaceExtensions: vi.fn().mockResolvedValue([]),
     };
-    
+
     settingsManager = new SettingsManager(fileStorage, mockExtensionManager);
   });
-  
+
   afterEach(async () => {
     await cleanupTempWorkspace(tempWorkspaceId);
     fileStorage.destroy();
@@ -618,37 +618,37 @@ describe('Settings Manager Integration', () => {
 describe('Settings Persistence', () => {
   it('should persist workspace settings through save/load cycle', async () => {
     const originalSettings = SETTINGS_FIXTURES.workspace.advanced();
-    
+
     // Save settings
     await settingsManager.saveWorkspaceSettings(tempWorkspaceId, originalSettings);
-    
+
     // Load settings in fresh instance
     const freshManager = new SettingsManager(fileStorage, mockExtensionManager);
     const loadedSettings = await freshManager.loadWorkspaceSettings(tempWorkspaceId);
-    
+
     expect(loadedSettings).toEqual(originalSettings);
   });
-  
+
   it('should persist EPUB settings through save/load cycle', async () => {
     const originalSettings = SETTINGS_FIXTURES.epub.valid();
-    
+
     await settingsManager.saveEPUBSettings(tempWorkspaceId, originalSettings);
-    
+
     const loadedSettings = await settingsManager.loadEPUBSettings(tempWorkspaceId);
-    
+
     expect(loadedSettings).toEqual(originalSettings);
   });
-  
+
   it('should handle draft ID increments with real persistence', async () => {
     // Set initial workspace settings
     const initialSettings = SETTINGS_FIXTURES.workspace.valid();
     initialSettings.draft_id = 5;
     await settingsManager.saveWorkspaceSettings(tempWorkspaceId, initialSettings);
-    
+
     // Increment draft ID
     const newDraftId = await settingsManager.incrementDraftId(tempWorkspaceId);
     expect(newDraftId).toBe(6);
-    
+
     // Verify persistence
     const loadedSettings = await settingsManager.loadWorkspaceSettings(tempWorkspaceId);
     expect(loadedSettings.draft_id).toBe(6);
@@ -660,34 +660,30 @@ describe('Edge Cases with Real File System', () => {
     // Don't create any settings file
     const loadedSettings = await settingsManager.loadWorkspaceSettings(tempWorkspaceId);
     const expectedDefaults = settingsManager.getDefaultWorkspaceSettings();
-    
+
     expect(loadedSettings).toEqual(expectedDefaults);
   });
-  
+
   it('should handle corrupted settings files', async () => {
     // Write invalid JSON to settings file
-    await fileStorage.writeFile(
-      tempWorkspaceId,
-      'SOURCE/settings.json',
-      'invalid json content'
-    );
-    
+    await fileStorage.writeFile(tempWorkspaceId, 'SOURCE/settings.json', 'invalid json content');
+
     const loadedSettings = await settingsManager.loadEPUBSettings(tempWorkspaceId);
     const expectedDefaults = settingsManager.getDefaultEPUBSettings();
-    
+
     expect(loadedSettings).toEqual(expectedDefaults);
   });
-  
+
   it('should handle concurrent settings operations', async () => {
     const settings1 = SETTINGS_FIXTURES.workspace.valid();
     const settings2 = SETTINGS_FIXTURES.workspace.advanced();
-    
+
     // Simulate concurrent saves
     await Promise.all([
       settingsManager.saveWorkspaceSettings(tempWorkspaceId, settings1),
-      settingsManager.saveWorkspaceSettings(tempWorkspaceId, settings2)
+      settingsManager.saveWorkspaceSettings(tempWorkspaceId, settings2),
     ]);
-    
+
     // One of them should win (test that it doesn't crash)
     const finalSettings = await settingsManager.loadWorkspaceSettings(tempWorkspaceId);
     expect(finalSettings).toEqual(expect.any(Object));
@@ -711,13 +707,13 @@ export function createMockFileStorage() {
     writeJSONFile: vi.fn().mockResolvedValue(undefined),
     listFiles: vi.fn().mockResolvedValue([]),
     fileExists: vi.fn().mockResolvedValue(true),
-    isInitialized: () => true
+    isInitialized: () => true,
   } satisfies Partial<FileStorageAPI>;
 }
 
 export function createMockExtensionManager() {
   return {
-    listWorkspaceExtensions: vi.fn().mockResolvedValue([])
+    listWorkspaceExtensions: vi.fn().mockResolvedValue([]),
   } satisfies Partial<ExtensionManager>;
 }
 
@@ -763,12 +759,12 @@ export function setupLocalStorageMock() {
     getItem: vi.fn(),
     setItem: vi.fn(),
     removeItem: vi.fn(),
-    clear: vi.fn()
+    clear: vi.fn(),
   };
 
   Object.defineProperty(window, 'localStorage', {
     value: mockLocalStorage,
-    writable: true
+    writable: true,
   });
 
   return mockLocalStorage;
@@ -778,6 +774,7 @@ export function setupLocalStorageMock() {
 ## Coverage Requirements
 
 ### Unit Tests Should Cover:
+
 - ✅ All validation methods with valid/invalid inputs
 - ✅ All default settings generation
 - ✅ Draft mode utilities (pure functions)
@@ -786,6 +783,7 @@ export function setupLocalStorageMock() {
 - ✅ File operation mocking scenarios
 
 ### Integration Tests Should Cover:
+
 - ✅ Real file persistence cycles
 - ✅ Draft ID increment with persistence
 - ✅ Corrupted file recovery
@@ -793,6 +791,7 @@ export function setupLocalStorageMock() {
 - ✅ Concurrent operations handling
 
 ### Edge Cases to Test:
+
 - ✅ Empty/null input handling
 - ✅ Malformed JSON recovery
 - ✅ Storage quota exceeded

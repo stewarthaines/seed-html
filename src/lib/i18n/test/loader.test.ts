@@ -1,18 +1,18 @@
 /**
  * Unit tests for translation loader
- * 
+ *
  * Note: Some tests are skipped due to happy-dom limitations with storage APIs.
  * These features are tested in browser environment via Storybook stories.
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { createI18nLoader } from '../loader.js';
-import { 
-  MockLocalStorage, 
+import {
+  MockLocalStorage,
   MockDecompressionStream,
   createMockDataUrl,
   createMockTranslationArchive,
-  mockTranslationCatalogs 
+  mockTranslationCatalogs,
 } from './fixtures/mock-translations.js';
 
 // Create a mock FileStorageAPI class
@@ -74,7 +74,7 @@ mockFileStorage.init();
 vi.mock('../storage/index.js', () => {
   const MockFileStorageAPI = vi.fn().mockImplementation(() => mockFileStorage);
   return {
-    FileStorageAPI: MockFileStorageAPI
+    FileStorageAPI: MockFileStorageAPI,
   };
 });
 
@@ -86,24 +86,30 @@ describe('TranslationLoader', () => {
   beforeEach(() => {
     // Setup mocks
     mockLocalStorage = new MockLocalStorage();
-    
+
     // Mock globalThis and localStorage - check if it exists first
     originalGlobalThis = globalThis.localStorage;
-    
+
     // For happy-dom, we need to be more careful with localStorage mocking
     if (typeof globalThis.localStorage === 'undefined') {
       globalThis.localStorage = mockLocalStorage as any;
     } else {
       // Use vi.spyOn for existing localStorage
-      vi.spyOn(globalThis.localStorage, 'getItem').mockImplementation((key) => mockLocalStorage.getItem(key));
-      vi.spyOn(globalThis.localStorage, 'setItem').mockImplementation((key, value) => mockLocalStorage.setItem(key, value));
-      vi.spyOn(globalThis.localStorage, 'removeItem').mockImplementation((key) => mockLocalStorage.removeItem(key));
+      vi.spyOn(globalThis.localStorage, 'getItem').mockImplementation(key =>
+        mockLocalStorage.getItem(key)
+      );
+      vi.spyOn(globalThis.localStorage, 'setItem').mockImplementation((key, value) =>
+        mockLocalStorage.setItem(key, value)
+      );
+      vi.spyOn(globalThis.localStorage, 'removeItem').mockImplementation(key =>
+        mockLocalStorage.removeItem(key)
+      );
       vi.spyOn(globalThis.localStorage, 'clear').mockImplementation(() => mockLocalStorage.clear());
     }
 
     // Mock fetch globally
     globalThis.fetch = vi.fn();
-    
+
     // Mock DecompressionStream
     globalThis.DecompressionStream = MockDecompressionStream as any;
 
@@ -120,22 +126,22 @@ describe('TranslationLoader', () => {
     } else {
       delete (globalThis as any).localStorage;
     }
-    
+
     vi.restoreAllMocks();
   });
 
   describe('needsUpdate()', () => {
     it('should return true when version mismatch', async () => {
       mockLocalStorage.setItem('editme-i18n-version', '0.9.0');
-      
+
       const needsUpdate = await loader.needsUpdate();
-      
+
       expect(needsUpdate).toBe(true);
     });
 
     it('should return true when no version stored', async () => {
       const needsUpdate = await loader.needsUpdate();
-      
+
       expect(needsUpdate).toBe(true);
     });
 
@@ -146,9 +152,9 @@ describe('TranslationLoader', () => {
       // Set up mock storage with only 2 files
       await mockFileStorage.writeTextFile('locales', 'en.json', '{}');
       await mockFileStorage.writeTextFile('locales', 'de.json', '{}');
-      
+
       const needsUpdate = await loader.needsUpdate();
-      
+
       expect(needsUpdate).toBe(true);
     });
 
@@ -164,9 +170,9 @@ describe('TranslationLoader', () => {
       await mockFileStorage.writeTextFile('locales', 'he.json', '{}');
       await mockFileStorage.writeTextFile('locales', 'zh-Hant.json', '{}');
       await mockFileStorage.writeTextFile('locales', 'ja.json', '{}');
-      
+
       const needsUpdate = await loader.needsUpdate();
-      
+
       expect(needsUpdate).toBe(false);
     });
 
@@ -177,31 +183,31 @@ describe('TranslationLoader', () => {
       // Override the mock listFiles to throw an error
       const originalListFiles = mockFileStorage.listFiles;
       mockFileStorage.listFiles = vi.fn().mockRejectedValue(new Error('Storage error'));
-      
+
       const needsUpdate = await loader.needsUpdate();
-      
+
       expect(needsUpdate).toBe(true);
-      
+
       // Restore the original method
       mockFileStorage.listFiles = originalListFiles;
     });
   });
 
   describe('extractTranslations()', () => {
-    // Skip: requires storage backend detection which doesn't work in happy-dom  
+    // Skip: requires storage backend detection which doesn't work in happy-dom
     // This functionality is tested in browser environment via Storybook
     it.skip('should extract translations from data URL', async () => {
       const mockDataUrl = createMockDataUrl();
       (globalThis as any).__EDITME_TRANSLATIONS_ZIP__ = mockDataUrl;
-      
+
       // Create proper mock JSON data that will be returned after decompression
       const mockArchiveData = createMockTranslationArchive();
       const mockArrayBuffer = new TextEncoder().encode(mockArchiveData).buffer;
-      
+
       // Mock fetch response
       const mockResponse = {
         ok: true,
-        arrayBuffer: () => Promise.resolve(mockArrayBuffer)
+        arrayBuffer: () => Promise.resolve(mockArrayBuffer),
       };
       (globalThis.fetch as any).mockResolvedValue(mockResponse);
 
@@ -214,18 +220,16 @@ describe('TranslationLoader', () => {
     it('should throw error when data URL missing', async () => {
       delete (globalThis as any).__EDITME_TRANSLATIONS_ZIP__;
 
-      await expect(loader.extractTranslations()).rejects.toThrow(
-        'Translation data URL not found'
-      );
+      await expect(loader.extractTranslations()).rejects.toThrow('Translation data URL not found');
     });
 
     it('should throw error when fetch fails', async () => {
       const mockDataUrl = createMockDataUrl();
       (globalThis as any).__EDITME_TRANSLATIONS_ZIP__ = mockDataUrl;
-      
+
       const mockResponse = {
         ok: false,
-        status: 404
+        status: 404,
       };
       (globalThis.fetch as any).mockResolvedValue(mockResponse);
 
@@ -236,13 +240,13 @@ describe('TranslationLoader', () => {
 
     it('should throw error when DecompressionStream unavailable', async () => {
       delete (globalThis as any).DecompressionStream;
-      
+
       const mockDataUrl = createMockDataUrl();
       (globalThis as any).__EDITME_TRANSLATIONS_ZIP__ = mockDataUrl;
-      
+
       const mockResponse = {
         ok: true,
-        arrayBuffer: () => Promise.resolve(new ArrayBuffer(100))
+        arrayBuffer: () => Promise.resolve(new ArrayBuffer(100)),
       };
       (globalThis.fetch as any).mockResolvedValue(mockResponse);
 
@@ -260,7 +264,7 @@ describe('TranslationLoader', () => {
     });
 
     it('should handle po2json array values (plurals)', async () => {
-      // Test skipped - requires browser storage APIs not available in happy-dom  
+      // Test skipped - requires browser storage APIs not available in happy-dom
     });
 
     it('should skip invalid JSON files', async () => {
@@ -273,7 +277,7 @@ describe('TranslationLoader', () => {
   });
 
   // Skip: all these tests require storage backend detection which doesn't work in happy-dom
-  // These functionalities are tested in browser environment via Storybook  
+  // These functionalities are tested in browser environment via Storybook
   describe.skip('extractMessages()', () => {
     it('should extract messages from po2json format', async () => {
       // Test skipped - requires browser storage APIs not available in happy-dom

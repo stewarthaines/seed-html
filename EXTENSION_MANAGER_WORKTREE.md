@@ -11,17 +11,20 @@ This document provides setup instructions for implementing the Extension Manager
 ## Implementation Scope
 
 ### What to Implement
+
 The Extension Manager implementation based on the comprehensive API documentation and unit tests:
 
 **API Documentation**: `src/lib/extensions/API.md` (651 lines)
 **Unit Tests**: Complete test suite (9 files, 2330+ lines)
+
 - `src/lib/extensions/test/extension-manager.test.ts` (720 lines)
-- `src/lib/extensions/test/extension-cache.test.ts` (580 lines)  
+- `src/lib/extensions/test/extension-cache.test.ts` (580 lines)
 - `src/lib/extensions/test/utils.test.ts` (380 lines)
 - `src/lib/extensions/test/integration.test.ts` (650 lines)
 - Supporting mocks and fixtures
 
 ### Core Classes to Implement
+
 1. **ExtensionManager** (`src/lib/extensions/extension-manager.ts`)
    - Main API class with all documented methods
    - Extension import/export functionality
@@ -43,11 +46,13 @@ The Extension Manager implementation based on the comprehensive API documentatio
 ### Key Implementation Details
 
 #### Storage Strategy
+
 - Uses existing File Storage API with `'extensions-cache'` as global cache workspace ID
 - Extensions copied to workspace `SOURCE/extensions/` directory (not linked)
 - Cache stored at global level for reuse across workspaces
 
 #### Extension Structure
+
 ```
 SOURCE/extensions/
 ├── extension-name/
@@ -56,11 +61,13 @@ SOURCE/extensions/
 ```
 
 #### Conflict Resolution
+
 - File list + size comparison for detecting cache conflicts
 - Minimal validation approach (check file exists and basic structure)
 - Best-effort batch operations with partial success handling
 
 #### Auto-Detection
+
 - Extension name auto-detected from JavaScript filename
 - User confirmation with ability to choose different name
 - Automatic cache population during workspace import and extension creation
@@ -68,21 +75,27 @@ SOURCE/extensions/
 ## Available Resources
 
 ### Complete API Specification
+
 The Extension Manager has comprehensive documentation in `src/lib/extensions/API.md` including:
+
 - All method signatures with Input/Output/Side Effects
 - Integration patterns and error handling
 - Browser compatibility notes
 - Performance characteristics
 
 ### Comprehensive Unit Tests
+
 All functionality is covered by unit tests that can guide implementation:
+
 - Core ExtensionManager functionality tests (720 lines)
 - Cache utilities and operations tests (580 lines)
-- Name detection and validation tests (380 lines)  
+- Name detection and validation tests (380 lines)
 - End-to-end integration workflow tests (650 lines)
 
 ### Mock Infrastructure
+
 Complete mock setup available for development:
+
 - Mock File Storage with failure injection capabilities
 - Test data generators for realistic extension samples
 - Fixture creation utilities
@@ -90,18 +103,23 @@ Complete mock setup available for development:
 ## Development Approach
 
 ### 1. Start with Types and Interfaces
+
 Begin by implementing the type definitions from the API documentation to establish the contracts.
 
 ### 2. Implement Core Classes
+
 Follow the test-driven approach using the existing comprehensive unit tests:
+
 - Run tests to see what needs to be implemented
 - Implement functionality to make tests pass
 - Iterate until all tests pass
 
 ### 3. Integration Testing
+
 Use the integration tests to validate end-to-end workflows and cross-class interactions.
 
 ### 4. Validation
+
 Ensure implementation matches the documented API specification exactly.
 
 ## Testing Strategy
@@ -120,10 +138,11 @@ npm test -- src/lib/extensions/test/extension-cache.test.ts
 ## File Structure
 
 Expected implementation files:
+
 ```
 src/lib/extensions/
 ├── extension-manager.ts      # Main ExtensionManager class
-├── extension-cache.ts        # ExtensionCache utility class  
+├── extension-cache.ts        # ExtensionCache utility class
 ├── utils.ts                 # Extension utilities
 ├── types.ts                 # Type definitions (already exists)
 ├── index.ts                 # Clean exports
@@ -140,13 +159,17 @@ src/lib/extensions/
 ## Integration Points
 
 ### File Storage API
+
 Uses the existing File Storage API (`src/lib/storage/`) for all file operations:
+
 - Global cache at workspace ID `'extensions-cache'`
 - Workspace extensions at `SOURCE/extensions/`
 - Standard file read/write/list operations
 
 ### Workspace Manager Integration
+
 Will integrate with existing Workspace Manager for:
+
 - Automatic extension scanning during workspace import
 - Extension validation as part of workspace validation
 - SOURCE/ directory structure management
@@ -154,16 +177,19 @@ Will integrate with existing Workspace Manager for:
 ## Key Design Decisions
 
 ### Extension vs Transform Scripts
+
 - **Extensions**: Vendor JavaScript files (in `SOURCE/extensions/`)
 - **Transform Scripts**: User code (in `SOURCE/scripts/`)
 - Clear separation maintained throughout implementation
 
-### Cache Strategy  
+### Cache Strategy
+
 - Global cache for reuse across workspaces
 - Copy operations (not linking) for packaging simplicity
 - File-based conflict detection with size comparison
 
 ### Validation Approach
+
 - Minimal validation for performance and simplicity
 - Focus on file existence and basic structure
 - User-friendly error messages for common issues
@@ -171,6 +197,7 @@ Will integrate with existing Workspace Manager for:
 ## Implementation Timeline
 
 The Extension Manager is ready for implementation with:
+
 - ✅ Complete API documentation (651 lines)
 - ✅ Comprehensive unit tests (2330+ lines)
 - ✅ Integration with existing File Storage API
@@ -181,6 +208,7 @@ This provides a solid foundation for test-driven development where the implement
 ## Merging Back
 
 Once implementation is complete:
+
 1. Ensure all unit tests pass
 2. Run integration tests to validate cross-feature compatibility
 3. Test with existing Transform Pipeline and SOURCE.zip features

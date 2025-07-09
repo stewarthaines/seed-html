@@ -5,7 +5,13 @@
  * Used primarily on Safari where sync access handles work better in workers.
  */
 
-import type { WorkerMessage, WorkerResponse, WorkerMessageType, OperationResult, StorageQuota } from './types.js';
+import type {
+  WorkerMessage,
+  WorkerResponse,
+  WorkerMessageType,
+  OperationResult,
+  StorageQuota,
+} from './types.js';
 import workerScript from './opfs-worker.js?raw';
 
 export class OPFSWorkerManager {
@@ -91,39 +97,62 @@ export class OPFSWorkerManager {
   }
 
   async createWorkspace(workspaceId: string): Promise<OperationResult<void>> {
-    return await this.sendMessage('createWorkspace', { workspaceId }) as OperationResult<void>;
+    return (await this.sendMessage('createWorkspace', { workspaceId })) as OperationResult<void>;
   }
 
   async deleteWorkspace(workspaceId: string): Promise<OperationResult<void>> {
-    return await this.sendMessage('deleteWorkspace', { workspaceId }) as OperationResult<void>;
+    return (await this.sendMessage('deleteWorkspace', { workspaceId })) as OperationResult<void>;
   }
 
   async listWorkspaces(): Promise<OperationResult<{ workspaces: string[] }>> {
-    return await this.sendMessage('listWorkspaces') as OperationResult<{ workspaces: string[] }>;
+    return (await this.sendMessage('listWorkspaces')) as OperationResult<{ workspaces: string[] }>;
   }
 
-  async writeFile(workspaceId: string, path: string, content: ArrayBuffer): Promise<OperationResult<void>> {
-    return await this.sendMessage('writeFile', { workspaceId, path, content }) as OperationResult<void>;
+  async writeFile(
+    workspaceId: string,
+    path: string,
+    content: ArrayBuffer
+  ): Promise<OperationResult<void>> {
+    return (await this.sendMessage('writeFile', {
+      workspaceId,
+      path,
+      content,
+    })) as OperationResult<void>;
   }
 
-  async readFile(workspaceId: string, path: string): Promise<OperationResult<{ content: ArrayBuffer }>> {
-    return await this.sendMessage('readFile', { workspaceId, path }) as OperationResult<{ content: ArrayBuffer }>;
+  async readFile(
+    workspaceId: string,
+    path: string
+  ): Promise<OperationResult<{ content: ArrayBuffer }>> {
+    return (await this.sendMessage('readFile', { workspaceId, path })) as OperationResult<{
+      content: ArrayBuffer;
+    }>;
   }
 
   async deleteFile(workspaceId: string, path: string): Promise<OperationResult<void>> {
-    return await this.sendMessage('deleteFile', { workspaceId, path }) as OperationResult<void>;
+    return (await this.sendMessage('deleteFile', { workspaceId, path })) as OperationResult<void>;
   }
 
-  async listFiles(workspaceId: string, basePath?: string): Promise<OperationResult<{ files: string[] }>> {
-    return await this.sendMessage('listFiles', { workspaceId, basePath }) as OperationResult<{ files: string[] }>;
+  async listFiles(
+    workspaceId: string,
+    basePath?: string
+  ): Promise<OperationResult<{ files: string[] }>> {
+    return (await this.sendMessage('listFiles', { workspaceId, basePath })) as OperationResult<{
+      files: string[];
+    }>;
   }
 
-  async getFileInfo(workspaceId: string, path: string): Promise<OperationResult<{ fileInfo: { size: number; lastModified: Date } }>> {
-    return await this.sendMessage('getFileInfo', { workspaceId, path }) as OperationResult<{ fileInfo: { size: number; lastModified: Date } }>;
+  async getFileInfo(
+    workspaceId: string,
+    path: string
+  ): Promise<OperationResult<{ fileInfo: { size: number; lastModified: Date } }>> {
+    return (await this.sendMessage('getFileInfo', { workspaceId, path })) as OperationResult<{
+      fileInfo: { size: number; lastModified: Date };
+    }>;
   }
 
   async getQuota(): Promise<OperationResult<{ quota: StorageQuota }>> {
-    return await this.sendMessage('getQuota') as OperationResult<{ quota: StorageQuota }>;
+    return (await this.sendMessage('getQuota')) as OperationResult<{ quota: StorageQuota }>;
   }
 
   destroy(): void {

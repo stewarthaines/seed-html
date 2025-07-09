@@ -238,12 +238,15 @@ export class OPFSAsyncBackend implements StorageBackend {
     return files.sort();
   }
 
-  async getFileInfo(workspaceId: string, path: string): Promise<{ size: number; lastModified: Date }> {
+  async getFileInfo(
+    workspaceId: string,
+    path: string
+  ): Promise<{ size: number; lastModified: Date }> {
     const fileHandle = await this.getFileHandle(workspaceId, path, false);
     const file = await fileHandle.getFile();
     return {
       size: file.size,
-      lastModified: new Date(file.lastModified)
+      lastModified: new Date(file.lastModified),
     };
   }
 
@@ -347,7 +350,10 @@ export class OPFSSyncBackend implements StorageBackend {
     return result.data?.files || [];
   }
 
-  async getFileInfo(workspaceId: string, path: string): Promise<{ size: number; lastModified: Date }> {
+  async getFileInfo(
+    workspaceId: string,
+    path: string
+  ): Promise<{ size: number; lastModified: Date }> {
     const result = await this.workerManager.getFileInfo(workspaceId, path);
     if (!result.success) {
       throw new Error(result.error?.message || 'Failed to get file info');
@@ -556,10 +562,16 @@ export class IndexedDBBackend implements StorageBackend {
     });
   }
 
-  async getFileInfo(workspaceId: string, path: string): Promise<{ size: number; lastModified: Date }> {
+  async getFileInfo(
+    workspaceId: string,
+    path: string
+  ): Promise<{ size: number; lastModified: Date }> {
     return await this.transaction(['files'], 'readonly', async transaction => {
       const store = transaction.objectStore('files');
-      const record = await this.getRecord<{ content: ArrayBuffer; modified: number }>(store, [workspaceId, path]);
+      const record = await this.getRecord<{ content: ArrayBuffer; modified: number }>(store, [
+        workspaceId,
+        path,
+      ]);
 
       if (!record) {
         throw new Error('File not found');
@@ -567,7 +579,7 @@ export class IndexedDBBackend implements StorageBackend {
 
       return {
         size: record.content.byteLength,
-        lastModified: new Date(record.modified)
+        lastModified: new Date(record.modified),
       };
     });
   }
@@ -687,7 +699,10 @@ export class StorageManager {
     return await this.backend.listFiles(workspaceId, path);
   }
 
-  async getFileInfo(workspaceId: string, path: string): Promise<{ size: number; lastModified: Date }> {
+  async getFileInfo(
+    workspaceId: string,
+    path: string
+  ): Promise<{ size: number; lastModified: Date }> {
     if (!this.backend) {
       throw new Error('Storage manager not initialized');
     }
@@ -824,7 +839,10 @@ export class FileStorageAPI {
     return await this.manager.listFiles(workspaceId, path);
   }
 
-  async getFileInfo(workspaceId: string, path: string): Promise<{ size: number; lastModified: Date }> {
+  async getFileInfo(
+    workspaceId: string,
+    path: string
+  ): Promise<{ size: number; lastModified: Date }> {
     return await this.manager.getFileInfo(workspaceId, path);
   }
 

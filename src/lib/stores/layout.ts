@@ -18,7 +18,13 @@ export interface LayoutStore extends Writable<LayoutState> {
   setSidebarSection(section: SidebarSection): void;
 }
 
-export type SidebarSection = 'workspace' | 'metadata' | 'manifest' | 'navigation' | 'spine' | 'settings';
+export type SidebarSection =
+  | 'workspace'
+  | 'metadata'
+  | 'manifest'
+  | 'navigation'
+  | 'spine'
+  | 'settings';
 
 // Storage keys for persistence
 const STORAGE_KEYS = {

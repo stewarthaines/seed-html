@@ -1,6 +1,6 @@
 /**
  * SOURCE.zip Management API
- * 
+ *
  * Complete API for managing SOURCE/ directory files and SOURCE.zip
  * creation/extraction in EPUB workspaces.
  */
@@ -16,7 +16,7 @@ export {
   getSourceFileType,
   validateSettingsJson,
   calculateDirectoryStats,
-  sanitizeSourcePath
+  sanitizeSourcePath,
 } from './source-utils.js';
 
 // Type definitions
@@ -26,7 +26,7 @@ export type {
   SourceStats,
   SettingsValidation,
   SourceFileType,
-  SourceSettings
+  SourceSettings,
 } from './types.js';
 
 // Constants

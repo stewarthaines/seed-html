@@ -8,10 +8,11 @@ const meta = {
     layout: 'fullscreen',
     docs: {
       description: {
-        component: 'Interactive demonstration of the Spine Item Manager UI for managing EPUB chapter ordering'
-      }
-    }
-  }
+        component:
+          'Interactive demonstration of the Spine Item Manager UI for managing EPUB chapter ordering',
+      },
+    },
+  },
 } satisfies Meta<SpineManagerDemo>;
 
 export default meta;
@@ -26,7 +27,7 @@ type Story = StoryObj<typeof meta>;
  * - Append new chapter functionality
  */
 export const Default: Story = {
-  args: {}
+  args: {},
 };
 
 /**
@@ -38,8 +39,8 @@ export const Default: Story = {
  */
 export const WithChapters: Story = {
   args: {
-    preloadChapters: true
-  }
+    preloadChapters: true,
+  },
 };
 
 /**
@@ -52,8 +53,8 @@ export const WithChapters: Story = {
 export const CollapsedSidebar: Story = {
   args: {
     preloadChapters: true,
-    startCollapsed: true
-  }
+    startCollapsed: true,
+  },
 };
 
 /**
@@ -64,6 +65,6 @@ export const CollapsedSidebar: Story = {
  */
 export const ErrorState: Story = {
   args: {
-    simulateError: true
-  }
+    simulateError: true,
+  },
 };

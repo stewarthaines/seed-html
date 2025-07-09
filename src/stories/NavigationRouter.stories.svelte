@@ -37,7 +37,7 @@
 
     // Navigate through each view systematically
     const views = ['metadata', 'manifest', 'navigation', 'spine', 'settings'];
-    
+
     for (const viewName of views) {
       // Find and click the sidebar button
       const viewButton = canvas.getByTitle(getViewDisplayName(viewName));
@@ -53,10 +53,10 @@
     function getViewDisplayName(view) {
       const displayNames = {
         metadata: 'Metadata',
-        manifest: 'Manifest', 
+        manifest: 'Manifest',
         navigation: 'Navigation',
         spine: 'Spine Items',
-        settings: 'Settings'
+        settings: 'Settings',
       };
       return displayNames[view] || view;
     }
@@ -262,7 +262,7 @@
       { name: 'Manifest', title: 'Manifest' },
       { name: 'Navigation', title: 'Navigation' },
       { name: 'Spine Items', title: 'Spine Items' },
-      { name: 'Settings', title: 'Settings' }
+      { name: 'Settings', title: 'Settings' },
     ];
 
     for (const view of placeholderViews) {
@@ -305,7 +305,9 @@
     <div style="flex: 1;">
       <App />
     </div>
-    <div style="width: 300px; padding: 1rem; background: #f5f5f5; border-left: 1px solid #ddd; font-family: monospace; font-size: 12px; overflow-y: auto;">
+    <div
+      style="width: 300px; padding: 1rem; background: #f5f5f5; border-left: 1px solid #ddd; font-family: monospace; font-size: 12px; overflow-y: auto;"
+    >
       <h3>Navigation State</h3>
       <div id="nav-debug">
         <!-- Navigation state will be displayed here -->
@@ -329,7 +331,7 @@
 
     // Rapid navigation test
     const views = ['metadata', 'manifest', 'navigation', 'spine', 'settings'];
-    
+
     // Navigate rapidly forward
     for (const viewName of views) {
       const viewButton = canvas.getByTitle(getViewDisplayName(viewName));
@@ -347,9 +349,9 @@
       const displayNames = {
         metadata: 'Metadata',
         manifest: 'Manifest',
-        navigation: 'Navigation', 
+        navigation: 'Navigation',
         spine: 'Spine Items',
-        settings: 'Settings'
+        settings: 'Settings',
       };
       return displayNames[view] || view;
     }
@@ -370,14 +372,16 @@
   <div style="padding: 2rem;">
     <h2>Cross-Browser Navigation Test</h2>
     <p>This story tests the navigation system in various browser conditions:</p>
-    
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 2rem 0;">
+
+    <div
+      style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 2rem 0;"
+    >
       <div style="border: 1px solid #ddd; padding: 1rem; border-radius: 8px;">
         <h4>localStorage Available</h4>
         <App />
       </div>
     </div>
-    
+
     <div style="margin-top: 2rem; padding: 1rem; background: #f0f8ff; border-radius: 8px;">
       <h4>Browser Compatibility Notes:</h4>
       <ul style="margin: 0; font-size: 14px;">

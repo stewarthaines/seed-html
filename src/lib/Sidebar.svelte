@@ -111,7 +111,7 @@
     <div class="spine-items-container">
       <slot name="sidebar-spine" />
     </div>
-    
+
     <!-- Content slots for different sections -->
     <div class="section-content">
       <slot name="sidebar-workspace" />
@@ -345,7 +345,6 @@
     flex: 1;
     /* Remove overflow - let parent handle scrolling */
   }
-
 
   .section-label {
     font-size: var(--text-base); /* Using typography tokens */

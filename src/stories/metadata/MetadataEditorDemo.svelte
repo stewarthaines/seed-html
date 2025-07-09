@@ -94,7 +94,6 @@
     background-color: #f9fafb;
   }
 
-
   .demo-loading,
   .demo-error {
     flex: 1;

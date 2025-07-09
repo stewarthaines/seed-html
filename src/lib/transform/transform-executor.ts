@@ -1,6 +1,6 @@
 /**
  * Transform Script Execution
- * 
+ *
  * Provides sandboxed execution of transform scripts with timeout protection
  * and dangerous globals removal for security.
  */
@@ -21,7 +21,7 @@ export interface ExecutionOptions {
  */
 export class TransformExecutor {
   private static readonly DEFAULT_TIMEOUT_MS = 2000;
-  
+
   /**
    * Execute text transform function with context
    */
@@ -33,20 +33,22 @@ export class TransformExecutor {
     options: ExecutionOptions = {}
   ): Promise<string> {
     const timeoutMs = options.timeoutMs || TransformExecutor.DEFAULT_TIMEOUT_MS;
-    
+
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        reject(new TransformError({
-          stage: 'text',
-          message: `Transform execution timed out after ${timeoutMs}ms`,
-          scriptName
-        }));
+        reject(
+          new TransformError({
+            stage: 'text',
+            message: `Transform execution timed out after ${timeoutMs}ms`,
+            scriptName,
+          })
+        );
       }, timeoutMs);
 
       try {
         // Create sandboxed execution environment
         const sandboxedGlobals = this.createSandboxedGlobals(options.globals);
-        
+
         // Execute script in sandboxed context
         const result = this.executeFunctionInSandbox(
           scriptContent,
@@ -75,23 +77,25 @@ export class TransformExecutor {
     options: ExecutionOptions = {}
   ): Promise<Document> {
     const timeoutMs = options.timeoutMs || TransformExecutor.DEFAULT_TIMEOUT_MS;
-    
+
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        reject(new TransformError({
-          stage: 'dom',
-          message: `Transform execution timed out after ${timeoutMs}ms`,
-          scriptName
-        }));
+        reject(
+          new TransformError({
+            stage: 'dom',
+            message: `Transform execution timed out after ${timeoutMs}ms`,
+            scriptName,
+          })
+        );
       }, timeoutMs);
 
       try {
         // Clone document to avoid modifying original
         const clonedDoc = document.cloneNode(true) as Document;
-        
+
         // Create sandboxed execution environment
         const sandboxedGlobals = this.createSandboxedGlobals(options.globals);
-        
+
         // Execute script in sandboxed context
         const result = this.executeFunctionInSandbox(
           scriptContent,
@@ -102,7 +106,7 @@ export class TransformExecutor {
         );
 
         clearTimeout(timeout);
-        
+
         // Ensure result is a Document
         if (result instanceof Document) {
           resolve(result);
@@ -133,12 +137,12 @@ export class TransformExecutor {
       Boolean,
       Array,
       Object,
-      
+
       // Safe DOM methods (will be bound to actual document when needed)
       document: typeof document !== 'undefined' ? document : undefined,
-      
+
       // Extension libraries
-      ...extensionGlobals
+      ...extensionGlobals,
     };
 
     // Explicitly remove dangerous globals
@@ -158,7 +162,7 @@ export class TransformExecutor {
       'process',
       'global',
       'globalThis',
-      'window'
+      'window',
     ];
 
     dangerousGlobals.forEach(dangerous => {
@@ -182,7 +186,7 @@ export class TransformExecutor {
       // Create function with restricted globals
       const globalNames = Object.keys(globals);
       const globalValues = Object.values(globals);
-      
+
       // Wrap script content to execute in restricted scope
       const wrappedScript = `(function(${globalNames.join(', ')}) {
           ${scriptContent}
@@ -197,7 +201,7 @@ export class TransformExecutor {
       // Execute the wrapped script to get the function
       const scriptFunction = new Function('return ' + wrappedScript)();
       const transformFunction = scriptFunction(...globalValues);
-      
+
       // Execute the transform function with provided arguments
       return transformFunction(...args);
     } catch (error) {
@@ -215,11 +219,11 @@ export class TransformExecutor {
   ): TransformError {
     const message = error instanceof Error ? error.message : String(error);
     const stack = error instanceof Error ? error.stack : undefined;
-    
+
     // Try to extract line/column information from stack trace
     let line: number | undefined;
     let column: number | undefined;
-    
+
     if (stack) {
       const lineMatch = stack.match(/at.*:(\d+):(\d+)/);
       if (lineMatch) {
@@ -234,7 +238,7 @@ export class TransformExecutor {
       scriptName,
       line,
       column,
-      stack
+      stack,
     });
   }
 }

@@ -32,10 +32,10 @@ Copyright OpenJS Foundation and other contributors <https://openjsf.org/>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction.`
+in the Software without restriction.`,
     },
     expectedSize: 1234,
-    description: 'Popular utility library'
+    description: 'Popular utility library',
   },
 
   D3: {
@@ -58,17 +58,17 @@ in the Software without restriction.`
   };
   global.d3 = d3;
 })(typeof window !== "undefined" ? window : this);`,
-      'LICENSE': `BSD 3-Clause License
+      LICENSE: `BSD 3-Clause License
 
 Copyright 2010-2023 Mike Bostock. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-1. Redistributions of source code must retain the above copyright notice.`
+1. Redistributions of source code must retain the above copyright notice.`,
     },
     expectedSize: 856,
-    description: 'Data visualization library'
+    description: 'Data visualization library',
   },
 
   // Music notation libraries
@@ -107,10 +107,10 @@ ABCJS.plugin = {
 Copyright (c) 2010-2023 Paul Rosen and Gregory Dyke
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files.`
+of this software and associated documentation files.`,
     },
     expectedSize: 1456,
-    description: 'ABC music notation renderer with plugins'
+    description: 'ABC music notation renderer with plugins',
   },
 
   // Markdown processing
@@ -134,10 +134,10 @@ of this software and associated documentation files.`
   } else {
     window.marked = marked;
   }
-})();`
+})();`,
     },
     expectedSize: 567,
-    description: 'Fast markdown parser'
+    description: 'Fast markdown parser',
   },
 
   // Math rendering
@@ -154,15 +154,15 @@ window.katex = {
     return '<span class="katex">' + expression + '</span>';
   }
 };`,
-      'LICENSE': `MIT License
+      LICENSE: `MIT License
 
 Copyright (c) 2013-2020 Khan Academy and other contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files.`
+of this software and associated documentation files.`,
     },
     expectedSize: 445,
-    description: 'Math rendering library'
+    description: 'Math rendering library',
   },
 
   // Code highlighting
@@ -219,16 +219,16 @@ hljs.registerLanguage('javascript', function(hljs) {
     ]
   };
 });`,
-      'LICENSE': `BSD 3-Clause License
+      LICENSE: `BSD 3-Clause License
 
 Copyright (c) 2006, Ivan Sagalaev. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:`
+are permitted provided that the following conditions are met:`,
     },
     expectedSize: 2234,
-    description: 'Syntax highlighting with language packs'
-  }
+    description: 'Syntax highlighting with language packs',
+  },
 };
 
 // Extensions with version numbers in filenames (for name detection testing)
@@ -236,23 +236,23 @@ export const VERSIONED_EXTENSIONS = [
   {
     filename: 'jquery-3.6.0.min.js',
     expectedName: 'jquery',
-    content: '// jQuery v3.6.0\n(function(){window.jQuery = window.$ = {};})();'
+    content: '// jQuery v3.6.0\n(function(){window.jQuery = window.$ = {};})();',
   },
   {
     filename: 'lodash-4.17.21.min.js',
     expectedName: 'lodash',
-    content: '// Lodash v4.17.21\nwindow._ = {};'
+    content: '// Lodash v4.17.21\nwindow._ = {};',
   },
   {
     filename: 'react-18.2.0.production.min.js',
     expectedName: 'react',
-    content: '// React v18.2.0\nwindow.React = {};'
+    content: '// React v18.2.0\nwindow.React = {};',
   },
   {
     filename: 'vue-3.3.4.global.min.js',
     expectedName: 'vue',
-    content: '// Vue.js v3.3.4\nwindow.Vue = {};'
-  }
+    content: '// Vue.js v3.3.4\nwindow.Vue = {};',
+  },
 ];
 
 // Extensions with special characters (for normalization testing)
@@ -260,28 +260,30 @@ export const SPECIAL_CHAR_EXTENSIONS = [
   {
     filename: 'My Custom Library.js',
     expectedName: 'my-custom-library',
-    content: '// Custom library with spaces'
+    content: '// Custom library with spaces',
   },
   {
     filename: 'library@scope.js',
     expectedName: 'library-scope',
-    content: '// Scoped package name'
+    content: '// Scoped package name',
   },
   {
     filename: 'package+name.min.js',
     expectedName: 'package-name',
-    content: '// Package with plus sign'
+    content: '// Package with plus sign',
   },
   {
     filename: 'extension_with_underscores.js',
     expectedName: 'extension-with-underscores',
-    content: '// Underscores to hyphens'
-  }
+    content: '// Underscores to hyphens',
+  },
 ];
 
 // Large extensions for performance testing
 export function createLargeExtensionSample(): SampleExtension {
-  const largeCode = Array(1000).fill(`
+  const largeCode = Array(1000)
+    .fill(
+      `
     function performComplexOperation(data) {
       return data.map(function(item, index) {
         return {
@@ -291,17 +293,19 @@ export function createLargeExtensionSample(): SampleExtension {
         };
       });
     }
-  `).join('\n');
+  `
+    )
+    .join('\n');
 
   return {
     name: 'large-library',
     files: {
       'large-library.min.js': `// Large JavaScript library\n${largeCode}`,
       'large-library-utils.js': `// Utility functions\n${largeCode.slice(0, largeCode.length / 2)}`,
-      'LICENSE.txt': 'MIT License for large library with extensive text content.\n'.repeat(100)
+      'LICENSE.txt': 'MIT License for large library with extensive text content.\n'.repeat(100),
     },
     expectedSize: largeCode.length * 1.5,
-    description: 'Large library for performance testing'
+    description: 'Large library for performance testing',
   };
 }
 
@@ -314,8 +318,8 @@ export const CONFLICTING_EXTENSIONS = {
 window.markdownit = function() {
   return { render: function(text) { return '<p>' + text + '</p>'; } };
 };`,
-      'LICENSE.txt': 'MIT License v1'
-    }
+      'LICENSE.txt': 'MIT License v1',
+    },
   },
   MARKDOWN_V2: {
     name: 'markdown-it',
@@ -324,9 +328,9 @@ window.markdownit = function() {
 window.markdownit = function() {
   return { render: function(text) { return '<div>' + text + '</div>'; } };
 };`,
-      'LICENSE.txt': 'MIT License v2'
-    }
-  }
+      'LICENSE.txt': 'MIT License v2',
+    },
+  },
 };
 
 // Malformed extensions for security testing
@@ -334,18 +338,18 @@ export const MALFORMED_EXTENSIONS = [
   {
     name: '../../../evil',
     files: { 'evil.js': 'console.log("Path traversal attempt");' },
-    expectedError: 'Invalid extension name'
+    expectedError: 'Invalid extension name',
   },
   {
     name: 'extension',
     files: { '../evil.js': 'console.log("Relative path in filename");' },
-    expectedError: 'Invalid file path'
+    expectedError: 'Invalid file path',
   },
   {
     name: 'con', // Reserved Windows filename
     files: { 'con.js': 'console.log("Reserved filename");' },
-    expectedError: 'Invalid extension name'
-  }
+    expectedError: 'Invalid extension name',
+  },
 ];
 
 // Helper function to get extension by name
@@ -354,23 +358,26 @@ export function getExtensionSample(name: string): SampleExtension | undefined {
 }
 
 // Helper function to create extension file structure for workspace
-export function createExtensionFiles(extension: SampleExtension, workspaceId: string): Record<string, string> {
+export function createExtensionFiles(
+  extension: SampleExtension,
+  workspaceId: string
+): Record<string, string> {
   const files: Record<string, string> = {};
-  
+
   for (const [filename, content] of Object.entries(extension.files)) {
     files[`SOURCE/extensions/${extension.name}/${filename}`] = content;
   }
-  
+
   return files;
 }
 
 // Helper function to create cache file structure
 export function createCacheFiles(extension: SampleExtension): Record<string, string> {
   const files: Record<string, string> = {};
-  
+
   for (const [filename, content] of Object.entries(extension.files)) {
     files[`${extension.name}/${filename}`] = content;
   }
-  
+
   return files;
 }

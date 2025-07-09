@@ -9,44 +9,44 @@ export const LOCALE_CONFIGS: Record<string, LocaleConfig> = {
     code: 'en',
     name: 'English',
     direction: 'ltr',
-    englishName: 'English'
+    englishName: 'English',
   },
   de: {
-    code: 'de', 
+    code: 'de',
     name: 'Deutsch',
     direction: 'ltr',
-    englishName: 'German'
+    englishName: 'German',
   },
   ka: {
     code: 'ka',
     name: 'ქართული',
     direction: 'ltr',
-    englishName: 'Georgian'
+    englishName: 'Georgian',
   },
   ar: {
     code: 'ar',
     name: 'العربية',
     direction: 'rtl',
-    englishName: 'Arabic'
+    englishName: 'Arabic',
   },
   he: {
     code: 'he',
     name: 'עברית',
     direction: 'rtl',
-    englishName: 'Hebrew'
+    englishName: 'Hebrew',
   },
   'zh-Hant': {
     code: 'zh-Hant',
     name: '繁體中文',
     direction: 'ltr',
-    englishName: 'Traditional Chinese'
+    englishName: 'Traditional Chinese',
   },
   ja: {
     code: 'ja',
     name: '日本語',
     direction: 'ltr',
-    englishName: 'Japanese'
-  }
+    englishName: 'Japanese',
+  },
 };
 
 export const DEFAULT_LOCALE = 'en';
@@ -77,19 +77,19 @@ export function getBrowserLocale(): string {
 
   // Get browser language preferences
   const languages = navigator.languages || [navigator.language];
-  
+
   for (const lang of languages) {
     // Try exact match first
     if (LOCALE_CONFIGS[lang]) {
       return lang;
     }
-    
+
     // Try language code only (e.g., 'en' from 'en-US')
     const langCode = lang.split('-')[0];
     if (LOCALE_CONFIGS[langCode]) {
       return langCode;
     }
-    
+
     // Try region-specific variants (e.g., 'zh-Hant' from 'zh-TW')
     if (langCode === 'zh') {
       // Traditional Chinese for HK, TW, MO
@@ -98,6 +98,6 @@ export function getBrowserLocale(): string {
       }
     }
   }
-  
+
   return DEFAULT_LOCALE;
 }

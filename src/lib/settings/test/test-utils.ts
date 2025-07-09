@@ -1,6 +1,6 @@
 /**
  * Test Utilities for Settings Manager
- * 
+ *
  * Mock helpers and testing utilities for Settings Manager test suite.
  */
 
@@ -25,16 +25,16 @@ export function createMockFileStorage() {
     listFiles: vi.fn().mockResolvedValue([]),
     fileExists: vi.fn().mockResolvedValue(true),
     getFileInfo: vi.fn().mockResolvedValue({ size: 0, lastModified: new Date() }),
-    
+
     // Text file utilities
     readTextFile: vi.fn().mockResolvedValue('{}'),
     writeTextFile: vi.fn().mockResolvedValue(undefined),
-    
+
     // Workspace operations
     createWorkspace: vi.fn().mockResolvedValue('test-workspace'),
     deleteWorkspace: vi.fn().mockResolvedValue(undefined),
     listWorkspaces: vi.fn().mockResolvedValue([]),
-    
+
     // System methods
     init: vi.fn().mockResolvedValue(undefined),
     isInitialized: vi.fn().mockReturnValue(true),
@@ -44,7 +44,7 @@ export function createMockFileStorage() {
     estimateWorkspaceSize: vi.fn().mockResolvedValue(0),
     supportsDirectBlobURLs: vi.fn().mockReturnValue(false),
     getFile: vi.fn().mockResolvedValue(new File([], 'test.txt')),
-    manager: undefined
+    manager: undefined,
   };
 }
 
@@ -53,7 +53,7 @@ export function createMockFileStorage() {
  */
 export function createMockExtensionManager() {
   return {
-    listWorkspaceExtensions: vi.fn().mockResolvedValue([])
+    listWorkspaceExtensions: vi.fn().mockResolvedValue([]),
   } satisfies Partial<ExtensionManager>;
 }
 
@@ -71,12 +71,12 @@ export function setupLocalStorageMock() {
     removeItem: vi.fn(),
     clear: vi.fn(),
     length: 0,
-    key: vi.fn()
+    key: vi.fn(),
   };
 
   Object.defineProperty(window, 'localStorage', {
     value: mockLocalStorage,
-    writable: true
+    writable: true,
   });
 
   return mockLocalStorage;
@@ -120,7 +120,7 @@ export function expectWorkspaceSettingsSaved(
     '.workspace-metadata.json',
     expect.stringContaining('"settings":')
   );
-  
+
   // Also verify settings are included
   const calls = mockStorage.writeTextFile.mock.calls;
   const lastCall = calls[calls.length - 1];
@@ -208,18 +208,14 @@ export function mockEPUBSettingsReturn(
 /**
  * Sets up mock to simulate file not found error
  */
-export function mockFileNotFound(
-  mockStorage: ReturnType<typeof createMockFileStorage>
-) {
+export function mockFileNotFound(mockStorage: ReturnType<typeof createMockFileStorage>) {
   mockStorage.readTextFile.mockRejectedValueOnce(new Error('File not found'));
 }
 
 /**
  * Sets up mock to simulate corrupted JSON error
  */
-export function mockCorruptedJSON(
-  mockStorage: ReturnType<typeof createMockFileStorage>
-) {
+export function mockCorruptedJSON(mockStorage: ReturnType<typeof createMockFileStorage>) {
   mockStorage.readTextFile.mockResolvedValueOnce('invalid json content');
 }
 
@@ -272,18 +268,14 @@ export function simulateLocalStorageAccessError(
 /**
  * Simulates file system write permission error
  */
-export function simulateFileWriteError(
-  mockStorage: ReturnType<typeof createMockFileStorage>
-) {
+export function simulateFileWriteError(mockStorage: ReturnType<typeof createMockFileStorage>) {
   mockStorage.writeTextFile.mockRejectedValueOnce(new Error('Permission denied'));
 }
 
 /**
  * Simulates file system read permission error
  */
-export function simulateFileReadError(
-  mockStorage: ReturnType<typeof createMockFileStorage>
-) {
+export function simulateFileReadError(mockStorage: ReturnType<typeof createMockFileStorage>) {
   mockStorage.readTextFile.mockRejectedValueOnce(new Error('Permission denied'));
 }
 
@@ -299,7 +291,7 @@ export function createWorkspaceMetadata(settings: WorkspaceSettings) {
     version: '1.0',
     created: new Date().toISOString(),
     lastModified: new Date().toISOString(),
-    settings
+    settings,
   };
 }
 
@@ -312,15 +304,15 @@ export function resetAllMocks(
   mockLocalStorage: ReturnType<typeof setupLocalStorageMock>
 ) {
   vi.clearAllMocks();
-  
+
   // Reset to default implementations
   mockStorage.readTextFile.mockResolvedValue('{}');
   mockStorage.writeTextFile.mockResolvedValue(undefined);
   mockStorage.listFiles.mockResolvedValue([]);
   mockStorage.fileExists.mockResolvedValue(true);
-  
+
   mockExtensionManager.listWorkspaceExtensions.mockResolvedValue([]);
-  
+
   mockLocalStorage.getItem.mockReturnValue(null);
   mockLocalStorage.setItem.mockImplementation(() => {});
 }

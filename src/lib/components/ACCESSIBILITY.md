@@ -27,6 +27,7 @@ This guide documents accessibility patterns for EDITME components, leveraging Sv
 ```
 
 **Key Points:**
+
 - Use real `<button>` elements (not divs with click handlers)
 - Add `aria-label` for icon-only buttons
 - Include `type="button"` to prevent form submission
@@ -39,10 +40,10 @@ This guide documents accessibility patterns for EDITME components, leveraging Sv
 ```svelte
 <script>
   import { layoutStore } from '$lib/stores/layout';
-  
+
   $: activeSection = $layoutStore.sidebar.activeSection;
-  
-  const setSidebarSection = (sectionId) => {
+
+  const setSidebarSection = sectionId => {
     layoutStore.setSidebarSection(sectionId);
   };
 </script>
@@ -63,6 +64,7 @@ This guide documents accessibility patterns for EDITME components, leveraging Sv
 ```
 
 **Key Points:**
+
 - Use `<nav>` with descriptive `aria-label`
 - Use `aria-current="page"` for active view (not URL-based)
 - Buttons for view switching (not links with href)
@@ -77,18 +79,14 @@ This guide documents accessibility patterns for EDITME components, leveraging Sv
 
 ```svelte
 <label for="email">Email Address</label>
-<input
-  id="email"
-  type="email"
-  required
-  aria-describedby={error ? 'email-error' : undefined}
-/>
+<input id="email" type="email" required aria-describedby={error ? 'email-error' : undefined} />
 {#if error}
   <span id="email-error" class="error">{error}</span>
 {/if}
 ```
 
 **Key Points:**
+
 - Always associate labels with inputs
 - Use native HTML5 validation where possible
 - Connect error messages with `aria-describedby`
@@ -106,6 +104,7 @@ button:focus-visible {
 ```
 
 **Key Points:**
+
 - Use `:focus-visible` for keyboard-only focus
 - Apply design system tokens for consistency
 - Ensure sufficient contrast with background
@@ -137,12 +136,7 @@ Use native HTML patterns:
 Simple ARIA states:
 
 ```svelte
-<button
-  aria-expanded={isOpen}
-  aria-controls="content-id"
->
-  Toggle Content
-</button>
+<button aria-expanded={isOpen} aria-controls="content-id"> Toggle Content </button>
 
 <div id="content-id" hidden={!isOpen}>
   <!-- Content -->
@@ -175,7 +169,9 @@ Simple ARIA states:
 
 ```css
 /* Bad */
-*:focus { outline: none; }
+*:focus {
+  outline: none;
+}
 
 /* Good */
 button:focus-visible {

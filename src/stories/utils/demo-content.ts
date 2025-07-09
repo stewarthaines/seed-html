@@ -1,6 +1,6 @@
 /**
  * Demo content generators for Storybook stories
- * 
+ *
  * Provides realistic, varied content for testing different scenarios
  */
 
@@ -121,7 +121,7 @@ The stage is set, the characters are ready, and the adventure is about to begin.
   for (let i = 1; i <= count; i++) {
     const template = templates[(i - 1) % templates.length];
     const title = `Chapter ${i}: ${template.title}`;
-    
+
     chapters.push({
       id: `chapter${i}`,
       title,
@@ -164,7 +164,7 @@ export function generateMinimalChapters(): DemoChapter[] {
     },
     {
       id: 'chapter2',
-      title: 'Chapter 2', 
+      title: 'Chapter 2',
       content: '# Chapter 2\n\nAnother simple chapter.',
       linear: true,
     },
@@ -394,7 +394,7 @@ export function generateTestScenarios(): Record<string, TestScenario> {
       chapters: generateVariedChapters(3),
       includeCSS: true,
     },
-    
+
     withErrors: {
       name: 'With Validation Errors',
       description: 'Content with missing files and validation issues',
@@ -403,7 +403,7 @@ export function generateTestScenarios(): Record<string, TestScenario> {
       skipMissingChapters: ['missing-source'],
       includeCSS: true,
     },
-    
+
     minimal: {
       name: 'Minimal Content',
       description: 'Bare minimum content for basic functionality',
@@ -411,7 +411,7 @@ export function generateTestScenarios(): Record<string, TestScenario> {
       chapters: generateMinimalChapters(),
       includeCSS: false,
     },
-    
+
     comprehensive: {
       name: 'Comprehensive Demo',
       description: 'Full-featured demo with all elements',

@@ -55,12 +55,12 @@ export interface MetadataFieldTypes {
   accessModeSufficient: string[];
   accessibilityFeature: string[];
   accessibilityHazard: string[];
-  
+
   // Required string fields
   title: string;
   language: string;
   identifier: string;
-  
+
   // Optional string fields
   publisher: string;
   date: string;
@@ -258,9 +258,11 @@ export class OPFUtils {
       identifier: identifierElements[0].textContent!.trim(),
       creator: creators.length > 0 ? creators : undefined,
       contributor: contributors.length > 0 ? contributors : undefined,
-      publisher: publisherElements.length > 0 ? publisherElements[0].textContent?.trim() : undefined,
+      publisher:
+        publisherElements.length > 0 ? publisherElements[0].textContent?.trim() : undefined,
       date: dateElements.length > 0 ? dateElements[0].textContent?.trim() : undefined,
-      description: descriptionElements.length > 0 ? descriptionElements[0].textContent?.trim() : undefined,
+      description:
+        descriptionElements.length > 0 ? descriptionElements[0].textContent?.trim() : undefined,
       subject: subjects.length > 0 ? subjects : undefined,
       rights: rightsElements.length > 0 ? rightsElements[0].textContent?.trim() : undefined,
       source: sourceElements.length > 0 ? sourceElements[0].textContent?.trim() : undefined,
@@ -582,10 +584,7 @@ export class MetadataUtils {
   /**
    * Safely get an array field from metadata
    */
-  static getArrayField<T extends ArrayMetadataFields>(
-    metadata: EPUBMetadata,
-    field: T
-  ): string[] {
+  static getArrayField<T extends ArrayMetadataFields>(metadata: EPUBMetadata, field: T): string[] {
     const value = metadata[field];
     return Array.isArray(value) ? value : [];
   }
@@ -616,14 +615,42 @@ export class MetadataUtils {
    * Type guard to check if a field is an array field
    */
   static isArrayField(field: string): field is ArrayMetadataFields {
-    return ['creator', 'contributor', 'subject', 'accessMode', 'accessModeSufficient', 'accessibilityFeature', 'accessibilityHazard'].includes(field);
+    return [
+      'creator',
+      'contributor',
+      'subject',
+      'accessMode',
+      'accessModeSufficient',
+      'accessibilityFeature',
+      'accessibilityHazard',
+    ].includes(field);
   }
 
   /**
    * Type guard to check if a field is a string field
    */
   static isStringField(field: string): field is StringMetadataFields {
-    return ['title', 'language', 'identifier', 'publisher', 'date', 'description', 'rights', 'source', 'relation', 'coverage', 'type', 'format', 'modifiedDate', 'epubVersion', 'renditionLayout', 'pageProgressionDirection', 'renditionOrientation', 'renditionSpread', 'accessibilitySummary'].includes(field);
+    return [
+      'title',
+      'language',
+      'identifier',
+      'publisher',
+      'date',
+      'description',
+      'rights',
+      'source',
+      'relation',
+      'coverage',
+      'type',
+      'format',
+      'modifiedDate',
+      'epubVersion',
+      'renditionLayout',
+      'pageProgressionDirection',
+      'renditionOrientation',
+      'renditionSpread',
+      'accessibilitySummary',
+    ].includes(field);
   }
 
   /**
@@ -638,7 +665,7 @@ export class MetadataUtils {
     const newArray = updater(currentArray);
     return {
       ...metadata,
-      [field]: newArray
+      [field]: newArray,
     };
   }
 
@@ -652,7 +679,7 @@ export class MetadataUtils {
   ): EPUBMetadata {
     return {
       ...metadata,
-      [field]: value
+      [field]: value,
     };
   }
 }

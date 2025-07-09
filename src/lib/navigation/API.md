@@ -21,6 +21,7 @@ navigateTo(view: ViewType, options?: NavigationOptions): Promise<boolean>
 ```
 
 **Input:**
+
 - `view: ViewType` - Target view to navigate to (`'workspace' | 'metadata' | 'manifest' | 'navigation' | 'spine' | 'settings'`)
 - `options?: NavigationOptions` - Optional navigation configuration
   - `force?: boolean` - Bypass navigation guards (default: false)
@@ -41,7 +42,7 @@ await navigationStore.navigateTo('metadata');
 
 // Navigation with initial data
 await navigationStore.navigateTo('manifest', {
-  viewData: { selectedFile: 'chapter1.xhtml' }
+  viewData: { selectedFile: 'chapter1.xhtml' },
 });
 
 // Forced navigation (bypasses guards)
@@ -55,6 +56,7 @@ canNavigate(targetView?: ViewType): Promise<boolean>
 ```
 
 **Input:**
+
 - `targetView?: ViewType` - Optional target view to check guards against
 
 **Output:** `Promise<boolean>` - Returns true if navigation is allowed
@@ -107,6 +109,7 @@ setViewData(view: ViewType, data: any): void
 ```
 
 **Input:**
+
 - `view: ViewType` - Target view to store data for
 - `data: any` - Data to associate with the view (serializable objects only)
 
@@ -121,13 +124,13 @@ setViewData(view: ViewType, data: any): void
 navigationStore.setViewData('metadata', {
   title: 'My EPUB Book',
   author: 'Jane Doe',
-  hasUnsavedChanges: true
+  hasUnsavedChanges: true,
 });
 
 // Store file selection for manifest view
 navigationStore.setViewData('manifest', {
   selectedItems: ['chapter1.xhtml', 'styles.css'],
-  sortOrder: 'name'
+  sortOrder: 'name',
 });
 ```
 
@@ -138,6 +141,7 @@ getViewData<T = any>(view: ViewType): T | null
 ```
 
 **Input:**
+
 - `view: ViewType` - View to retrieve data for
 
 **Output:** `T | null` - Stored data for the view, or null if none exists
@@ -164,6 +168,7 @@ clearViewData(view: ViewType): void
 ```
 
 **Input:**
+
 - `view: ViewType` - View to clear data for
 
 **Output:** None
@@ -177,9 +182,7 @@ clearViewData(view: ViewType): void
 navigationStore.clearViewData('metadata');
 
 // Clear all data on workspace switch
-Object.values(ViewType).forEach(view => 
-  navigationStore.clearViewData(view)
-);
+Object.values(ViewType).forEach(view => navigationStore.clearViewData(view));
 ```
 
 ### Navigation Guards
@@ -191,6 +194,7 @@ addNavigationGuard(guard: NavigationGuard): string
 ```
 
 **Input:**
+
 - `guard: NavigationGuard` - Function that returns boolean or Promise<boolean>
 
 **Output:** `string` - Unique guard ID for later removal
@@ -222,6 +226,7 @@ removeNavigationGuard(guardId: string): boolean
 ```
 
 **Input:**
+
 - `guardId: string` - ID returned from addNavigationGuard()
 
 **Output:** `boolean` - True if guard was found and removed
@@ -253,11 +258,11 @@ interface ViewComponent {
   // Component lifecycle
   onViewEnter?(data?: any): Promise<void> | void;
   onViewLeave?(): Promise<void> | void;
-  
+
   // Data persistence
   getViewData?(): any;
   setViewData?(data: any): void;
-  
+
   // Navigation integration
   canLeave?(): Promise<boolean> | boolean;
 }
@@ -270,11 +275,11 @@ interface ViewComponent {
 <script lang="ts">
   import { navigationStore } from '$lib/navigation';
   import { onMount, onDestroy } from 'svelte';
-  
+
   // Component implements ViewComponent interface
   let formData = { title: '', author: '', hasUnsavedChanges: false };
   let guardId: string;
-  
+
   // Lifecycle methods
   export function onViewEnter(data?: any) {
     if (data) {
@@ -286,32 +291,32 @@ interface ViewComponent {
       formData = saved;
     }
   }
-  
+
   export function onViewLeave() {
     // Save current state
     navigationStore.setViewData('metadata', formData);
   }
-  
+
   export function getViewData() {
     return formData;
   }
-  
+
   export function setViewData(data: any) {
     formData = { ...formData, ...data };
   }
-  
+
   export async function canLeave(): Promise<boolean> {
     if (formData.hasUnsavedChanges) {
       return confirm('You have unsaved changes. Continue?');
     }
     return true;
   }
-  
+
   onMount(() => {
     // Register navigation guard
     guardId = navigationStore.addNavigationGuard(canLeave);
   });
-  
+
   onDestroy(() => {
     // Clean up guard
     if (guardId) {
@@ -327,13 +332,13 @@ interface ViewComponent {
 
 ```typescript
 // Available views in the application
-export type ViewType = 
-  | 'workspace'    // Workspace selection and management
-  | 'metadata'     // EPUB metadata editing
-  | 'manifest'     // File listing and management
-  | 'navigation'   // Table of contents editing
-  | 'spine'        // Chapter ordering
-  | 'settings';    // Application settings
+export type ViewType =
+  | 'workspace' // Workspace selection and management
+  | 'metadata' // EPUB metadata editing
+  | 'manifest' // File listing and management
+  | 'navigation' // Table of contents editing
+  | 'spine' // Chapter ordering
+  | 'settings'; // Application settings
 
 // Navigation store state
 export interface NavigationState {
@@ -354,10 +359,7 @@ export interface NavigationOptions {
 }
 
 // Navigation guard function
-export type NavigationGuard = (
-  from: ViewType,
-  to: ViewType
-) => boolean | Promise<boolean>;
+export type NavigationGuard = (from: ViewType, to: ViewType) => boolean | Promise<boolean>;
 
 // Store interface
 export interface NavigationStore extends Writable<NavigationState> {
@@ -407,6 +409,7 @@ export interface SpineViewData {
 The navigation system handles several error scenarios gracefully:
 
 #### Guard Rejection
+
 ```typescript
 // Navigation blocked by guard
 const success = await navigationStore.navigateTo('metadata');
@@ -417,6 +420,7 @@ if (!success) {
 ```
 
 #### Invalid View
+
 ```typescript
 try {
   await navigationStore.navigateTo('invalid-view' as ViewType);
@@ -428,6 +432,7 @@ try {
 ```
 
 #### localStorage Failures
+
 ```typescript
 // Navigation store handles localStorage errors gracefully
 // Falls back to in-memory state if persistence fails
@@ -445,13 +450,13 @@ async function safeNavigate(view: ViewType) {
       showMessage('Cannot navigate: unsaved changes');
       return false;
     }
-    
+
     const success = await navigationStore.navigateTo(view);
     if (!success) {
       showMessage('Navigation failed');
       return false;
     }
-    
+
     return true;
   } catch (error) {
     console.error('Navigation error:', error);
@@ -468,13 +473,14 @@ async function safeNavigate(view: ViewType) {
 The navigation system is designed to support upcoming content management features:
 
 #### Manifest View Integration
+
 ```typescript
 // Navigate to manifest with file selection
 await navigationStore.navigateTo('manifest', {
   viewData: {
     selectedItems: ['chapter1.xhtml'],
-    highlightNew: true
-  }
+    highlightNew: true,
+  },
 });
 
 // Access manifest data from other views
@@ -482,6 +488,7 @@ const manifestData = navigationStore.getViewData<ManifestViewData>('manifest');
 ```
 
 #### Metadata Editor Integration
+
 ```typescript
 // Save metadata and navigate to next step
 async function saveAndContinue() {
@@ -494,14 +501,13 @@ async function saveAndContinue() {
 ```
 
 #### Workspace Switching
+
 ```typescript
 // Clear all view data when switching workspaces
 function switchWorkspace(workspaceId: string) {
   // Clear navigation state
-  Object.values(ViewType).forEach(view => 
-    navigationStore.clearViewData(view)
-  );
-  
+  Object.values(ViewType).forEach(view => navigationStore.clearViewData(view));
+
   // Reset to workspace view
   navigationStore.navigateTo('workspace', { replaceHistory: true });
 }
@@ -538,16 +544,19 @@ Views automatically inherit theme system support:
 ## Performance Considerations
 
 ### View Data Management
+
 - **Memory Usage**: View data is kept in memory for fast access; large data should be stored in workspace files
 - **Persistence**: Only essential navigation state is persisted to localStorage
 - **Cleanup**: View data is automatically cleaned up on workspace switches
 
 ### Navigation Guards
+
 - **Guard Execution**: Guards run sequentially; avoid heavy async operations
 - **Guard Limits**: Recommended maximum of 5 guards per view for performance
 - **Timeout Handling**: Guards that take >5 seconds are automatically bypassed
 
 ### Browser Compatibility
+
 - **localStorage**: Falls back to in-memory storage if localStorage is unavailable
 - **History API**: Uses internal history management instead of browser history
 - **Memory Management**: Limits view history to 20 entries to prevent memory leaks
@@ -555,16 +564,19 @@ Views automatically inherit theme system support:
 ## Testing Considerations
 
 ### Unit Testing
+
 - Mock navigation guards for predictable test behavior
 - Test view data persistence across navigation
 - Verify localStorage fallback behavior
 
 ### Integration Testing
+
 - Test navigation flows with multiple views
 - Verify guard execution order and blocking behavior
 - Test error handling and recovery scenarios
 
 ### Component Testing
+
 - Mock navigation store for isolated component testing
 - Test view component lifecycle methods
 - Verify proper guard registration and cleanup
@@ -572,6 +584,7 @@ Views automatically inherit theme system support:
 ## Internal API Details
 
 ### Guard Management
+
 ```typescript
 // Internal guard storage and execution
 interface GuardManager {
@@ -582,16 +595,18 @@ interface GuardManager {
 ```
 
 ### State Persistence
+
 ```typescript
 // localStorage keys and data structure
 const STORAGE_KEYS = {
   CURRENT_VIEW: 'editme_nav_current_view',
   VIEW_HISTORY: 'editme_nav_view_history',
-  VIEW_DATA: 'editme_nav_view_data'
+  VIEW_DATA: 'editme_nav_view_data',
 } as const;
 ```
 
 ### View Registration
+
 ```typescript
 // Internal view component registry
 interface ViewRegistry {

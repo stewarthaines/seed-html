@@ -28,7 +28,7 @@ Executes JavaScript transform scripts to convert plain text sources into XHTML s
 ### Performance Requirements
 
 - **Timeout**: 2-second maximum execution time per transform
-- **No Caching**: Re-evaluate transform functions each execution  
+- **No Caching**: Re-evaluate transform functions each execution
 - **Memory**: No specific limits, rely on browser constraints
 - **Validation**: Runtime error handling only, no pre-validation
 
@@ -412,23 +412,22 @@ function transformText(plainText, context) {
   if (typeof markdownit === 'undefined') {
     throw new Error('markdown-it library not available');
   }
-  
+
   // Initialize markdown processor
   const md = markdownit({
     html: true,
     xhtmlOut: true,
     breaks: false,
-    linkify: true
+    linkify: true,
   });
-  
+
   // Handle :toc directive using context.manifestItems
   if (context.manifestItems) {
-    plainText = plainText.replace(
-      /:toc\[([^\]]+)\]\{src="([^"]+)"\}/g,
-      (match, title, pattern) => generateTOC(title, pattern, context.manifestItems)
+    plainText = plainText.replace(/:toc\[([^\]]+)\]\{src="([^"]+)"\}/g, (match, title, pattern) =>
+      generateTOC(title, pattern, context.manifestItems)
     );
   }
-  
+
   return md.render(plainText);
 }
 
@@ -444,20 +443,21 @@ function generateTOC(title, pattern, manifestItems) {
 function transformDOM(document) {
   // Add IDs to headings for navigation
   const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
-  
+
   headings.forEach((heading, index) => {
     if (!heading.id) {
       const text = heading.textContent || '';
-      const id = text
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/^-|-$/g, '') || `heading-${index + 1}`;
-      
+      const id =
+        text
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/^-|-$/g, '') || `heading-${index + 1}`;
+
       heading.id = id;
     }
   });
-  
+
   return document;
 }
 ```

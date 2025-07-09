@@ -13,18 +13,20 @@ export const DEFAULT_SETTINGS = {
   draft_id: 1,
   text_transform: 'markdown-transform.js',
   dom_transforms: ['custom-dom.js'],
-  version: '1.0.0'
+  version: '1.0.0',
 };
 
 /**
  * Sample text file contents for testing
  */
 export const SAMPLE_TEXT_FILES = {
-  'chapter1.txt': '# Chapter 1\n\nThis is the first chapter of our story.\n\nIt begins with a simple sentence.',
-  'chapter2.txt': '# Chapter 2\n\nThe story continues in the second chapter.\n\n## Section 2.1\n\nWith multiple sections.',
+  'chapter1.txt':
+    '# Chapter 1\n\nThis is the first chapter of our story.\n\nIt begins with a simple sentence.',
+  'chapter2.txt':
+    '# Chapter 2\n\nThe story continues in the second chapter.\n\n## Section 2.1\n\nWith multiple sections.',
   'appendix.txt': '# Appendix\n\nAdditional information and references.',
   'empty.txt': '',
-  'large.txt': 'Large content\n'.repeat(1000) + 'END'
+  'large.txt': 'Large content\n'.repeat(1000) + 'END',
 };
 
 /**
@@ -56,19 +58,23 @@ const utilities = {
 };
 
 module.exports = utilities;
-`.trim()
+`.trim(),
 };
 
 /**
  * Sample extension file contents for testing
  */
 export const SAMPLE_EXTENSION_FILES = {
-  'markdown-it/package.json': JSON.stringify({
-    name: 'markdown-it',
-    version: '1.0.0',
-    main: 'index.js',
-    description: 'Markdown parser extension'
-  }, null, 2),
+  'markdown-it/package.json': JSON.stringify(
+    {
+      name: 'markdown-it',
+      version: '1.0.0',
+      main: 'index.js',
+      description: 'Markdown parser extension',
+    },
+    null,
+    2
+  ),
   'markdown-it/index.js': `
 const MarkdownIt = require('markdown-it');
 
@@ -80,18 +86,22 @@ module.exports = function(options = {}) {
   });
 };
 `.trim(),
-  'highlight/package.json': JSON.stringify({
-    name: 'highlight-js',
-    version: '2.0.0',
-    main: 'highlight.js'
-  }, null, 2),
+  'highlight/package.json': JSON.stringify(
+    {
+      name: 'highlight-js',
+      version: '2.0.0',
+      main: 'highlight.js',
+    },
+    null,
+    2
+  ),
   'highlight/highlight.js': `
 function highlightCode(code, language = 'javascript') {
   return \`<pre class="highlight \${language}"><code>\${code}</code></pre>\`;
 }
 
 module.exports = { highlightCode };
-`.trim()
+`.trim(),
 };
 
 /**
@@ -134,10 +144,11 @@ export function createMinimalSourceStructure(): Record<string, string> {
     'SOURCE/settings.json': JSON.stringify(DEFAULT_SETTINGS, null, 2),
     'SOURCE/text/chapter1.txt': SAMPLE_TEXT_FILES['chapter1.txt'],
     'SOURCE/scripts/markdown-transform.js': SAMPLE_SCRIPT_FILES['markdown-transform.js'],
-    'SOURCE/extensions/markdown-it/package.json': SAMPLE_EXTENSION_FILES['markdown-it/package.json'],
+    'SOURCE/extensions/markdown-it/package.json':
+      SAMPLE_EXTENSION_FILES['markdown-it/package.json'],
     'SOURCE/text/.gitkeep': '',
     'SOURCE/scripts/.gitkeep': '',
-    'SOURCE/extensions/.gitkeep': ''
+    'SOURCE/extensions/.gitkeep': '',
   };
 }
 
@@ -149,7 +160,7 @@ export function createEmptySourceStructure(): Record<string, string> {
     'SOURCE/settings.json': JSON.stringify(DEFAULT_SETTINGS, null, 2),
     'SOURCE/text/.gitkeep': '',
     'SOURCE/scripts/.gitkeep': '',
-    'SOURCE/extensions/.gitkeep': ''
+    'SOURCE/extensions/.gitkeep': '',
   };
 }
 
@@ -162,7 +173,7 @@ export function createInvalidSourceStructure(): Record<string, string> {
     'SOURCE/text/chapter1.txt': SAMPLE_TEXT_FILES['chapter1.txt'],
     'SOURCE/invalid-file.exe': 'INVALID BINARY CONTENT',
     'SOURCE/../traversal-attempt.txt': 'SECURITY TEST',
-    'SOURCE/scripts/broken-script.js': 'function broken() { // missing closing brace'
+    'SOURCE/scripts/broken-script.js': 'function broken() { // missing closing brace',
   };
 }
 
@@ -177,7 +188,8 @@ export function createLargeSourceStructure(): Record<string, string | ArrayBuffe
 
   // Add many text files
   for (let i = 1; i <= 100; i++) {
-    files[`SOURCE/text/chapter${i}.txt`] = `# Chapter ${i}\n\n${'Content for chapter ' + i + '.\n'.repeat(50)}`;
+    files[`SOURCE/text/chapter${i}.txt`] =
+      `# Chapter ${i}\n\n${'Content for chapter ' + i + '.\n'.repeat(50)}`;
   }
 
   // Add many script files
@@ -192,12 +204,17 @@ module.exports = { transform${i} };
 
   // Add several extensions
   for (let i = 1; i <= 10; i++) {
-    files[`SOURCE/extensions/ext${i}/package.json`] = JSON.stringify({
-      name: `extension-${i}`,
-      version: '1.0.0',
-      main: 'index.js'
-    }, null, 2);
-    files[`SOURCE/extensions/ext${i}/index.js`] = `module.exports = function ext${i}() { return 'Extension ${i}'; };`;
+    files[`SOURCE/extensions/ext${i}/package.json`] = JSON.stringify(
+      {
+        name: `extension-${i}`,
+        version: '1.0.0',
+        main: 'index.js',
+      },
+      null,
+      2
+    );
+    files[`SOURCE/extensions/ext${i}/index.js`] =
+      `module.exports = function ext${i}() { return 'Extension ${i}'; };`;
   }
 
   // Add large binary file (simulated)
@@ -217,7 +234,7 @@ module.exports = { transform${i} };
 export function createCorruptedSettings(): Record<string, string> {
   return {
     'SOURCE/settings.json': '{ "is_draft": true, "invalid": json }', // Invalid JSON
-    'SOURCE/text/chapter1.txt': SAMPLE_TEXT_FILES['chapter1.txt']
+    'SOURCE/text/chapter1.txt': SAMPLE_TEXT_FILES['chapter1.txt'],
   };
 }
 
@@ -227,12 +244,12 @@ export function createCorruptedSettings(): Record<string, string> {
 export function getBinaryTestData(): ArrayBuffer {
   const buffer = new ArrayBuffer(1024);
   const view = new Uint8Array(buffer);
-  
+
   // Create a simple binary pattern
   for (let i = 0; i < view.length; i++) {
     view[i] = (i * 17) % 256; // Simple pattern to verify integrity
   }
-  
+
   return buffer;
 }
 
@@ -243,26 +260,26 @@ export function createFileTypeTestData(): Record<string, string> {
   return {
     // Settings file
     'SOURCE/settings.json': JSON.stringify(DEFAULT_SETTINGS, null, 2),
-    
+
     // Text files
     'SOURCE/text/story.txt': 'A simple story',
     'SOURCE/text/notes.md': '# Notes\n\nSome markdown notes',
     'SOURCE/text/data.csv': 'name,age\nJohn,30\nJane,25',
-    
+
     // Script files
     'SOURCE/scripts/transform.js': 'function transform() {}',
     'SOURCE/scripts/helper.ts': 'export function helper() {}',
     'SOURCE/scripts/build.py': 'def build(): pass',
-    
+
     // Extension files
     'SOURCE/extensions/plugin/package.json': '{"name": "plugin"}',
     'SOURCE/extensions/plugin/index.js': 'module.exports = {};',
     'SOURCE/extensions/theme/style.css': '.theme { color: red; }',
-    
+
     // Other files
     'SOURCE/README.md': '# README',
     'SOURCE/config.yaml': 'key: value',
-    'SOURCE/data.xml': '<root></root>'
+    'SOURCE/data.xml': '<root></root>',
   };
 }
 
@@ -277,11 +294,11 @@ export function createWorkspaceWithEPUBFiles(): Record<string, string> {
     'OEBPS/Text/chapter1.xhtml': '<html><body><h1>Chapter 1</h1></body></html>',
     'OEBPS/Styles/stylesheet.css': 'body { font-family: serif; }',
     'OEBPS/Images/cover.jpg': 'FAKE_JPEG_DATA',
-    'mimetype': 'application/epub+zip',
+    mimetype: 'application/epub+zip',
     'META-INF/container.xml': '<?xml version="1.0"?><container></container>',
-    
+
     // SOURCE files that should be bundled
-    ...createMinimalSourceStructure()
+    ...createMinimalSourceStructure(),
   };
 }
 
@@ -297,7 +314,7 @@ export function getExpectedSourceZipFiles(): string[] {
     'SOURCE/text/appendix.txt',
     'SOURCE/text/empty.txt',
     'SOURCE/text/large.txt',
-    'SOURCE/scripts/.gitkeep', 
+    'SOURCE/scripts/.gitkeep',
     'SOURCE/scripts/markdown-transform.js',
     'SOURCE/scripts/custom-dom.js',
     'SOURCE/scripts/utils.js',
@@ -305,14 +322,17 @@ export function getExpectedSourceZipFiles(): string[] {
     'SOURCE/extensions/markdown-it/package.json',
     'SOURCE/extensions/markdown-it/index.js',
     'SOURCE/extensions/highlight/package.json',
-    'SOURCE/extensions/highlight/highlight.js'
+    'SOURCE/extensions/highlight/highlight.js',
   ].sort();
 }
 
 /**
  * Validate file content matches expected data
  */
-export function validateFileContent(actualContent: ArrayBuffer, expectedContent: string | ArrayBuffer): boolean {
+export function validateFileContent(
+  actualContent: ArrayBuffer,
+  expectedContent: string | ArrayBuffer
+): boolean {
   if (typeof expectedContent === 'string') {
     const actualText = new TextDecoder().decode(actualContent);
     return actualText === expectedContent;
@@ -331,10 +351,10 @@ export function validateFileContent(actualContent: ArrayBuffer, expectedContent:
  */
 export const TEST_WORKSPACE_IDS = {
   COMPLETE: 'test-workspace-complete',
-  MINIMAL: 'test-workspace-minimal', 
+  MINIMAL: 'test-workspace-minimal',
   EMPTY: 'test-workspace-empty',
   INVALID: 'test-workspace-invalid',
   LARGE: 'test-workspace-large',
   CORRUPTED: 'test-workspace-corrupted',
-  MIXED: 'test-workspace-mixed'
+  MIXED: 'test-workspace-mixed',
 } as const;

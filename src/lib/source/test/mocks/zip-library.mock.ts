@@ -36,7 +36,10 @@ export class MockZip {
       let content: ArrayBuffer;
       if (typeof entry.content === 'string') {
         const uint8 = new TextEncoder().encode(entry.content);
-        content = uint8.buffer.slice(uint8.byteOffset, uint8.byteOffset + uint8.byteLength) as ArrayBuffer;
+        content = uint8.buffer.slice(
+          uint8.byteOffset,
+          uint8.byteOffset + uint8.byteLength
+        ) as ArrayBuffer;
       } else {
         content = entry.content;
       }
@@ -48,7 +51,10 @@ export class MockZip {
     let buffer: ArrayBuffer;
     if (typeof content === 'string') {
       const uint8 = new TextEncoder().encode(content);
-      buffer = uint8.buffer.slice(uint8.byteOffset, uint8.byteOffset + uint8.byteLength) as ArrayBuffer;
+      buffer = uint8.buffer.slice(
+        uint8.byteOffset,
+        uint8.byteOffset + uint8.byteLength
+      ) as ArrayBuffer;
     } else {
       buffer = content;
     }
@@ -75,9 +81,15 @@ export class MockZipWriter {
     let buffer: ArrayBuffer;
     if (typeof content === 'string') {
       const uint8 = new TextEncoder().encode(content);
-      buffer = uint8.buffer.slice(uint8.byteOffset, uint8.byteOffset + uint8.byteLength) as ArrayBuffer;
+      buffer = uint8.buffer.slice(
+        uint8.byteOffset,
+        uint8.byteOffset + uint8.byteLength
+      ) as ArrayBuffer;
     } else if (content instanceof Uint8Array) {
-      buffer = content.buffer.slice(content.byteOffset, content.byteOffset + content.byteLength) as ArrayBuffer;
+      buffer = content.buffer.slice(
+        content.byteOffset,
+        content.byteOffset + content.byteLength
+      ) as ArrayBuffer;
     } else {
       buffer = content;
     }

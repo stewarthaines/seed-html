@@ -11,6 +11,7 @@ The EDITME project uses Storybook for component development, testing, and docume
 ### Phase 1: Design & Planning
 
 #### 1. Create Design Specification
+
 - **Location**: `plans/ux/{feature}-ui-design.md`
 - **Content**: Comprehensive design document including:
   - Component hierarchy and responsibilities
@@ -22,6 +23,7 @@ The EDITME project uses Storybook for component development, testing, and docume
 **Example**: See `plans/ux/workspaces-ui-design.md` for the workspace management specification.
 
 #### 2. Analyze Existing Patterns
+
 - Review similar components in `src/lib/components/`
 - Study existing Storybook stories for patterns
 - Check design system usage in `src/styles/`
@@ -30,12 +32,15 @@ The EDITME project uses Storybook for component development, testing, and docume
 ### Phase 2: Component Implementation
 
 #### 3. Implement Component Hierarchy
+
 Follow the **single-owner pattern**:
+
 - **Parent component**: Owns data and business logic
 - **Child components**: Receive props and emit events
 - **Event flow**: Props down, events up
 
 **Workspace Example Structure**:
+
 ```
 WorkspaceView.svelte (owner)
 ├── CurrentWorkspaceBar.svelte
@@ -47,6 +52,7 @@ WorkspaceView.svelte (owner)
 #### 4. Component Implementation Guidelines
 
 **File Structure**:
+
 ```
 src/lib/components/{feature}/
 ├── ParentContainer.svelte
@@ -56,6 +62,7 @@ src/lib/components/{feature}/
 ```
 
 **Key Patterns**:
+
 - Use design system tokens from `src/styles/`
 - Implement accessibility features (ARIA labels, 44px touch targets)
 - Follow responsive design principles
@@ -65,6 +72,7 @@ src/lib/components/{feature}/
 ### Phase 3: Storybook Story Development
 
 #### 5. Create Demo Component
+
 - **Location**: `src/stories/{Feature}Demo.svelte`
 - **Purpose**: Interactive demonstration with mock data
 - **Features**:
@@ -74,6 +82,7 @@ src/lib/components/{feature}/
   - Error state demonstrations
 
 **Mock Data Strategy**:
+
 ```typescript
 // Create realistic mock data
 const mockWorkspaces: WorkspaceInfo[] = [
@@ -85,7 +94,7 @@ const mockWorkspaces: WorkspaceInfo[] = [
     lastModified: new Date(Date.now() - 2 * 60 * 60 * 1000),
     fileCount: 15,
     totalSize: 2400000,
-    epubVersion: '3.0'
+    epubVersion: '3.0',
   },
   // ... more variants
 ];
@@ -95,15 +104,17 @@ const errorWorkspace: WorkspaceInfo = {
   id: 'workspace-error',
   title: 'Corrupted Project',
   // ... error state data
-  hasError: true
+  hasError: true,
 };
 ```
 
 #### 6. Create Story File
+
 - **Location**: `src/stories/{Feature}.stories.svelte`
 - **Structure**: Multiple story variants demonstrating different states
 
 **Story Variants to Include**:
+
 ```svelte
 <Story name="Default">
   <FeatureDemo />
@@ -129,15 +140,20 @@ const errorWorkspace: WorkspaceInfo = {
 ```
 
 #### 7. Interactive Controls
+
 Implement demo controls to test different states:
+
 ```svelte
 <!-- Demo Controls -->
 <div class="demo-controls">
   <h3>Demo Controls</h3>
   <div class="control-buttons">
-    <button 
-      type="button" 
-      on:click={() => { showEmptyState = !showEmptyState; initializeData(); }}
+    <button
+      type="button"
+      on:click={() => {
+        showEmptyState = !showEmptyState;
+        initializeData();
+      }}
       class:active={showEmptyState}
     >
       Toggle Empty State
@@ -150,7 +166,9 @@ Implement demo controls to test different states:
 ### Phase 4: Documentation & Testing
 
 #### 8. Comprehensive Documentation
+
 Include detailed documentation in the story:
+
 ```javascript
 parameters: {
   docs: {
@@ -175,14 +193,16 @@ Components use the established design system:
 - CSS design tokens for consistent styling
 - Semantic HTML with proper ARIA labels
 - 44px minimum touch targets for accessibility
-      `
+      `;
     }
   }
 }
 ```
 
 #### 9. State Testing Strategy
+
 Use Storybook for comprehensive state testing:
+
 - **Happy Path**: Normal operation with valid data
 - **Empty States**: No data or initialization scenarios
 - **Loading States**: Async operations in progress
@@ -190,7 +210,9 @@ Use Storybook for comprehensive state testing:
 - **Edge Cases**: Boundary conditions and unusual data
 
 #### 10. Browser Testing
+
 Leverage Storybook's browser environment for:
+
 - Real DOM interactions and event handling
 - CSS rendering and responsive behavior
 - Accessibility testing with screen readers
@@ -199,24 +221,26 @@ Leverage Storybook's browser environment for:
 ## Mock Data Best Practices
 
 ### Realistic Data Creation
+
 ```typescript
 // Use realistic, varied data
 const mockData = [
   // Normal cases
   { title: 'The Adventures of Tom Sawyer', author: 'Mark Twain' },
   { title: 'Technical Manual for Advanced Users', author: 'John Smith' },
-  
+
   // International examples
   { title: 'الأسود يليق بك', author: 'أحلام مستغانمي', language: 'ar' },
   { title: 'Das Kapital', author: 'Karl Marx', language: 'de' },
-  
+
   // Edge cases
   { title: 'Very Long Title That Tests Text Wrapping...', author: 'Long Name' },
-  { title: 'Short', author: 'A' }
+  { title: 'Short', author: 'A' },
 ];
 ```
 
 ### State Management
+
 ```typescript
 // Handle state transitions
 const handleStateChange = (newState: ComponentState) => {
@@ -234,11 +258,12 @@ const simulateAsyncOperation = async () => {
 ```
 
 ### Event Simulation
+
 ```typescript
 // Simulate real user interactions
 const handleUserAction = (actionType: string) => {
   console.log(`User action: ${actionType}`);
-  
+
   // Dispatch events as real components would
   dispatch('actionPerformed', { actionType, timestamp: Date.now() });
 };
@@ -247,13 +272,15 @@ const handleUserAction = (actionType: string) => {
 ## Integration Patterns
 
 ### Backend Integration
+
 For components that integrate with backend services:
+
 ```typescript
 // Mock backend responses
 const mockBackendResponse = {
   success: true,
   data: mockData,
-  timestamp: Date.now()
+  timestamp: Date.now(),
 };
 
 // Simulate API calls
@@ -272,11 +299,12 @@ const simulateApiCall = async () => {
 ```
 
 ### Event System Integration
+
 ```typescript
 // Handle component events
 const handleComponentEvent = (event: CustomEvent) => {
   console.log('Component event:', event.type, event.detail);
-  
+
   // Update parent state
   if (event.type === 'itemSelected') {
     selectedItemId = event.detail.itemId;
@@ -287,7 +315,9 @@ const handleComponentEvent = (event: CustomEvent) => {
 ## Layout Testing
 
 ### Responsive Design
+
 Test components at different viewport sizes:
+
 ```svelte
 <!-- Mobile viewport test -->
 <Story name="Mobile View">
@@ -305,7 +335,9 @@ Test components at different viewport sizes:
 ```
 
 ### Container Constraints
+
 Test how components behave in constrained layouts:
+
 ```svelte
 <!-- Narrow container -->
 <div style="width: 200px; height: 400px; overflow: auto;">
@@ -321,6 +353,7 @@ Test how components behave in constrained layouts:
 ## Quality Assurance
 
 ### Pre-Commit Checklist
+
 Before committing component work:
 
 - [ ] **TypeScript**: Zero errors (`npm run check`)
@@ -333,7 +366,9 @@ Before committing component work:
 - [ ] **Documentation**: Comprehensive story documentation
 
 ### Story Quality Standards
+
 Each story should demonstrate:
+
 - **All component states** (loading, error, empty, populated)
 - **Interactive behaviors** with console logging
 - **Responsive design** across viewport sizes
@@ -343,6 +378,7 @@ Each story should demonstrate:
 ## File Organization
 
 ### Component Files
+
 ```
 src/lib/components/{feature}/
 ├── MainContainer.svelte      # Parent component with business logic
@@ -352,6 +388,7 @@ src/lib/components/{feature}/
 ```
 
 ### Story Files
+
 ```
 src/stories/
 ├── {Feature}Demo.svelte      # Interactive demo component
@@ -362,6 +399,7 @@ src/stories/
 ```
 
 ### Documentation
+
 ```
 plans/ux/
 └── {feature}-ui-design.md    # Design specification
@@ -378,6 +416,7 @@ The workspace management system serves as a complete reference implementation:
 **Integration**: Full backend integration patterns with WorkspaceManager
 
 **Files**:
+
 - `plans/ux/workspaces-ui-design.md` - Design specification
 - `src/lib/components/workspace/` - Component implementation
 - `src/stories/WorkspaceComponents.stories.svelte` - Story definitions
@@ -395,6 +434,7 @@ These templates include the established patterns for mock data, state management
 ## Conclusion
 
 This workflow ensures that UI components are:
+
 - **Well-designed** with comprehensive specifications
 - **Properly implemented** following established patterns
 - **Thoroughly tested** with realistic mock data scenarios

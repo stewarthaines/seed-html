@@ -72,10 +72,10 @@ This demo uses the real Extension Manager API with a mock file storage backend, 
 - **ExtensionDetails**: Detailed extension information panel
 - **OperationLog**: Real-time activity logging with filtering
 - **StatusPanel**: System status and storage quota monitoring
-          `
-        }
-      }
-    }
+          `,
+        },
+      },
+    },
   });
 </script>
 

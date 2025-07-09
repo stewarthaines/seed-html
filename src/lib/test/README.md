@@ -18,11 +18,13 @@ Following TESTING.md principles, this consolidates duplicate test utilities into
 Comprehensive mock implementation of `FileStorageAPI` used across all feature modules.
 
 **Previously duplicated in:**
+
 - `src/lib/source/test/mocks/file-storage.mock.ts` ✅ **Removed**
-- `src/lib/transform/test/mocks/file-storage.mock.ts` ✅ **Removed**  
+- `src/lib/transform/test/mocks/file-storage.mock.ts` ✅ **Removed**
 - `src/lib/extensions/test/mocks/file-storage.mock.ts` ✅ **Removed**
 
 **Features:**
+
 - In-memory file storage simulation
 - Controllable error injection for testing failure scenarios
 - Operation counting for test verification
@@ -30,6 +32,7 @@ Comprehensive mock implementation of `FileStorageAPI` used across all feature mo
 - Full compatibility with FileStorageAPI interface
 
 **Usage:**
+
 ```typescript
 // Import from shared location
 import { MockFileStorage, createMockFileStorage } from '../../test/mocks/file-storage.mock.js';
@@ -38,7 +41,7 @@ import { MockFileStorage, createMockFileStorage } from '../../test/mocks/file-st
 const mockStorage = new MockFileStorage();
 mockStorage.setFailureMode('read');
 
-// For simple function-based mocking  
+// For simple function-based mocking
 const mockStorage = createMockFileStorage();
 ```
 
@@ -47,6 +50,7 @@ const mockStorage = createMockFileStorage();
 Comprehensive mock implementation of `WorkspaceManager` used across spine and EPUB testing modules.
 
 **Features:**
+
 - In-memory OPF document simulation with EPUB specification compliance
 - EPUB metadata management with Dublin Core support (creator[], contributor[], etc.)
 - Spine/manifest operations with atomic transaction support
@@ -55,6 +59,7 @@ Comprehensive mock implementation of `WorkspaceManager` used across spine and EP
 - Rich helper methods for workspace setup and verification
 
 **Usage:**
+
 ```typescript
 // Import from shared location
 import { MockWorkspaceManager, createMockWorkspaceManager } from '../../test/mocks/workspace-manager.mock.js';
@@ -63,8 +68,8 @@ import { MockWorkspaceManager, createMockWorkspaceManager } from '../../test/moc
 const mockWorkspace = new MockWorkspaceManager();
 mockWorkspace.setWorkspaceOPF('workspace-123', {
   manifest: [...],
-  spine: [...], 
-  metadata: { 
+  spine: [...],
+  metadata: {
     title: 'Test EPUB',
     creator: ['Author Name'], // EPUB-compliant array format
     language: 'en',
@@ -77,6 +82,7 @@ const mockWorkspace = createMockWorkspaceManager();
 ```
 
 **Key Features:**
+
 - **EPUB Compliance**: Uses specification-compliant interfaces from `epub/opf-utils.ts`
 - **Transaction Support**: Atomic operations with rollback capabilities
 - **Error Injection**: Controllable failure modes for testing error scenarios
@@ -86,16 +92,19 @@ const mockWorkspace = createMockWorkspaceManager();
 ## When to Use Shared vs Module-Specific Mocks
 
 ### ✅ Use Shared Mocks When:
+
 - Multiple modules need identical mock functionality
 - The mock represents an external system boundary (FileStorageAPI, browser APIs)
 - The mock is complex enough to benefit from centralized maintenance
 
 ### ✅ Use Module-Specific Mocks When:
+
 - Following TESTING.md modern mock strategy (simple vi.fn() patterns)
 - Module-specific internal interfaces that other modules don't use
 - Quick, focused mocks for a single test file
 
 **Example of modern simple mocking (keep module-specific):**
+
 ```typescript
 // src/lib/settings/test/test-utils.ts - Keep this pattern
 export function createMockFileStorage() {
@@ -110,10 +119,11 @@ export function createMockFileStorage() {
 ## Guidelines
 
 1. **Import Paths**: Always use relative imports from test files to shared mocks:
+
    ```typescript
    // ✅ Correct
    import { MockFileStorage } from '../../test/mocks/file-storage.mock.js';
-   
+
    // ❌ Don't use $lib paths in tests
    import { MockFileStorage } from '$lib/test/mocks/file-storage.mock.js';
    ```

@@ -13,13 +13,13 @@ import {
   createMockFile,
   createCompleteWorkspace,
   createPopulatedCache,
-  PERFORMANCE_LIMITS
+  PERFORMANCE_LIMITS,
 } from './fixtures/create-test-data.js';
 import {
   EXTENSION_SAMPLES,
   createLargeExtensionSample,
   createExtensionFiles,
-  createCacheFiles
+  createCacheFiles,
 } from './fixtures/extension-samples.js';
 
 describe('Extension Manager Integration', () => {
@@ -39,7 +39,7 @@ describe('Extension Manager Integration', () => {
   describe('Complete Import Workflow', () => {
     it('should handle full file upload to workspace import workflow', async () => {
       const workspaceId = TEST_WORKSPACE_IDS.MINIMAL;
-      
+
       // 1. File upload simulation
       const file = createMockFile(
         'markdown-it-13.0.1.min.js',
@@ -152,9 +152,9 @@ describe('Extension Manager Integration', () => {
 
       // 2. Create workspace with overlapping but different extensions
       const workspaceFiles = createCompleteWorkspace();
-      
+
       // Modify one extension to create conflict
-      workspaceFiles['SOURCE/extensions/markdown-it/markdown-it.min.js'] = 
+      workspaceFiles['SOURCE/extensions/markdown-it/markdown-it.min.js'] =
         '// Different version with different content';
 
       await mockFileStorage.addTestFiles(workspaceId, workspaceFiles);
@@ -180,23 +180,22 @@ describe('Extension Manager Integration', () => {
     it.skip('should rollback on import failure', async () => {
       // Skip: Complex rollback edge case - core import functionality works
       const workspaceId = TEST_WORKSPACE_IDS.MINIMAL;
-      
+
       const file = createMockFile('test.js', 'function test() {}');
-      
+
       // Simulate failure during file writing
       let writeCount = 0;
       const originalWrite = mockFileStorage.writeFile.bind(mockFileStorage);
       mockFileStorage.writeFile = vi.fn(async (...args) => {
         writeCount++;
-        if (writeCount === 2) { // Fail on second write (cache write)
+        if (writeCount === 2) {
+          // Fail on second write (cache write)
           throw new Error('Storage failure during caching');
         }
         return originalWrite(...(args as [string, string, string | ArrayBuffer]));
       });
 
-      await expect(
-        extensionManager.importExtension(workspaceId, file, 'test')
-      ).rejects.toThrow();
+      await expect(extensionManager.importExtension(workspaceId, file, 'test')).rejects.toThrow();
 
       // Verify workspace is clean (no partial extension)
       const workspaceExtensions = await extensionManager.listWorkspaceExtensions(workspaceId);
@@ -238,7 +237,7 @@ describe('Extension Manager Integration', () => {
       const imports = [
         extensionManager.importExtension(workspaceId, file1, 'lib1'),
         extensionManager.importExtension(workspaceId, file2, 'lib2'),
-        extensionManager.importExtension(workspaceId, file3, 'lib3')
+        extensionManager.importExtension(workspaceId, file3, 'lib3'),
       ];
 
       const results = await Promise.allSettled(imports);
@@ -269,7 +268,11 @@ describe('Extension Manager Integration', () => {
         largeExtension.files['large-library.min.js']
       );
 
-      const result = await extensionManager.importExtension(workspaceId, mainFile, largeExtension.name);
+      const result = await extensionManager.importExtension(
+        workspaceId,
+        mainFile,
+        largeExtension.name
+      );
 
       const importTime = Date.now() - startTime;
 
@@ -289,13 +292,8 @@ describe('Extension Manager Integration', () => {
       // Create and import many small extensions
       const importPromises = [];
       for (let i = 0; i < 20; i++) {
-        const file = createMockFile(
-          `small-lib-${i}.js`,
-          `function lib${i}() { return ${i}; }`
-        );
-        importPromises.push(
-          extensionManager.importExtension(workspaceId, file, `small-lib-${i}`)
-        );
+        const file = createMockFile(`small-lib-${i}.js`, `function lib${i}() { return ${i}; }`);
+        importPromises.push(extensionManager.importExtension(workspaceId, file, `small-lib-${i}`));
       }
 
       await Promise.all(importPromises);
@@ -337,7 +335,8 @@ describe('Extension Manager Integration', () => {
       // Create workspace with many extensions
       const files: Record<string, string> = {};
       for (let i = 0; i < 50; i++) {
-        files[`SOURCE/extensions/ext-${i}/lib-${i}.js`] = `// Extension ${i}\nfunction lib${i}() {}`;
+        files[`SOURCE/extensions/ext-${i}/lib-${i}.js`] =
+          `// Extension ${i}\nfunction lib${i}() {}`;
         files[`SOURCE/extensions/ext-${i}/LICENSE.txt`] = `License for extension ${i}`;
       }
 
@@ -439,10 +438,7 @@ describe('Extension Manager Integration', () => {
       const workspaceId = TEST_WORKSPACE_IDS.MINIMAL;
 
       // 1. Import D3.js for visualization
-      const d3File = createMockFile(
-        'd3.min.js',
-        EXTENSION_SAMPLES.D3.files['d3.min.js']
-      );
+      const d3File = createMockFile('d3.min.js', EXTENSION_SAMPLES.D3.files['d3.min.js']);
 
       await extensionManager.importExtension(workspaceId, d3File, 'd3');
 
@@ -489,9 +485,9 @@ describe('Extension Manager Integration', () => {
       for (const extension of extensions) {
         const extensionPath = `SOURCE/extensions/${extension.name}/`;
         const extensionFilePaths = allFiles.filter(path => path.startsWith(extensionPath));
-        
+
         expect(extensionFilePaths.length).toBe(extension.files.length);
-        
+
         // Each extension should have at least one JS file
         const hasJsFile = extensionFilePaths.some(path => path.endsWith('.js'));
         expect(hasJsFile).toBe(true);

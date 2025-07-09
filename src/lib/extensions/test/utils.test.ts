@@ -11,12 +11,9 @@ import { MockFileStorage } from '../../test/mocks/file-storage.mock.js';
 import {
   FILENAME_PATTERNS,
   FILE_VALIDATION_CASES,
-  createMockFile
+  createMockFile,
 } from './fixtures/create-test-data.js';
-import {
-  VERSIONED_EXTENSIONS,
-  SPECIAL_CHAR_EXTENSIONS
-} from './fixtures/extension-samples.js';
+import { VERSIONED_EXTENSIONS, SPECIAL_CHAR_EXTENSIONS } from './fixtures/extension-samples.js';
 
 describe('Extension Manager Utilities', () => {
   let extensionManager: ExtensionManager;
@@ -58,7 +55,7 @@ describe('Extension Manager Utilities', () => {
         { input: 'three.js', expected: 'three' },
         { input: 'socket.io.min.js', expected: 'socket-io' },
         { input: 'web-animations.min.js', expected: 'web-animations' },
-        { input: 'pdf.worker.min.js', expected: 'pdf-worker' }
+        { input: 'pdf.worker.min.js', expected: 'pdf-worker' },
       ];
 
       for (const testCase of testCases) {
@@ -72,7 +69,7 @@ describe('Extension Manager Utilities', () => {
         { input: 'lib123.js', expected: 'lib123' },
         { input: '123lib.js', expected: '123lib' },
         { input: 'lib-v2.js', expected: 'lib-v2' },
-        { input: 'version-2.0.js', expected: 'version' } // Version number stripped
+        { input: 'version-2.0.js', expected: 'version' }, // Version number stripped
       ];
 
       for (const testCase of numericCases) {
@@ -89,10 +86,10 @@ describe('Extension Manager Utilities', () => {
       for (const testCase of FILE_VALIDATION_CASES) {
         const file = createMockFile(testCase.name, 'content', testCase.type);
         const result = extensionManager.validateExtensionFile(file);
-        
+
         expect(result.isValid).toBe(testCase.valid);
         expect(result.fileType).toBe(testCase.fileType);
-        
+
         if (!testCase.valid) {
           expect(result.error).toBeDefined();
         }
@@ -100,17 +97,12 @@ describe('Extension Manager Utilities', () => {
     });
 
     it('should validate JavaScript files with various extensions', () => {
-      const jsVariants = [
-        'script.js',
-        'library.min.js',
-        'module.esm.js',
-        'bundle.umd.js'
-      ];
+      const jsVariants = ['script.js', 'library.min.js', 'module.esm.js', 'bundle.umd.js'];
 
       for (const filename of jsVariants) {
         const file = createMockFile(filename, 'function test() {}', 'text/javascript');
         const result = extensionManager.validateExtensionFile(file);
-        
+
         expect(result.isValid).toBe(true);
         expect(result.fileType).toBe('javascript');
       }
@@ -121,13 +113,13 @@ describe('Extension Manager Utilities', () => {
         { name: 'LICENSE', type: 'text/plain' },
         { name: 'LICENSE.txt', type: 'text/plain' },
         { name: 'LICENCE', type: 'text/plain' }, // British spelling
-        { name: 'COPYING', type: 'text/plain' }
+        { name: 'COPYING', type: 'text/plain' },
       ];
 
       for (const variant of licenseVariants) {
         const file = createMockFile(variant.name, 'MIT License', variant.type);
         const result = extensionManager.validateExtensionFile(file);
-        
+
         if (variant.name === 'LICENSE' || variant.name === 'LICENSE.txt') {
           expect(result.isValid).toBe(true);
           expect(result.fileType).toBe('license');
@@ -144,13 +136,13 @@ describe('Extension Manager Utilities', () => {
         { name: 'library.bat', type: 'application/x-msdos-program' },
         { name: 'module.sh', type: 'text/x-shellscript' },
         { name: 'plugin.php', type: 'application/x-php' },
-        { name: 'widget.asp', type: 'text/asp' }
+        { name: 'widget.asp', type: 'text/asp' },
       ];
 
       for (const dangerous of dangerousFiles) {
         const file = createMockFile(dangerous.name, 'content', dangerous.type);
         const result = extensionManager.validateExtensionFile(file);
-        
+
         expect(result.isValid).toBe(false);
         expect(result.error).toContain('Invalid file type');
       }
@@ -190,7 +182,7 @@ describe('Extension Manager Utilities', () => {
         { input: 'name@with@symbols', expected: 'name-with-symbols' },
         { input: 'dots.in.name', expected: 'dots-in-name' },
         { input: 'multiple---dashes', expected: 'multiple-dashes' },
-        { input: '-leading-trailing-', expected: 'leading-trailing' }
+        { input: '-leading-trailing-', expected: 'leading-trailing' },
       ];
 
       for (const testCase of normalizationCases) {
@@ -201,16 +193,13 @@ describe('Extension Manager Utilities', () => {
 
     it('should handle edge cases in normalization', () => {
       // All special characters
-      expect((extensionManager as any).normalizeExtensionName('!@#$%^&*()'))
-        .toBe('');
+      expect((extensionManager as any).normalizeExtensionName('!@#$%^&*()')).toBe('');
 
       // Numbers only
-      expect((extensionManager as any).normalizeExtensionName('123456'))
-        .toBe('123456');
+      expect((extensionManager as any).normalizeExtensionName('123456')).toBe('123456');
 
       // Single character
-      expect((extensionManager as any).normalizeExtensionName('a'))
-        .toBe('a');
+      expect((extensionManager as any).normalizeExtensionName('a')).toBe('a');
 
       // Very long name
       const longName = 'a'.repeat(100);
@@ -224,7 +213,7 @@ describe('Extension Manager Utilities', () => {
         { input: 'Vue.js', expected: 'vue-js' },
         { input: 'React-DOM', expected: 'react-dom' },
         { input: 'Three.JS', expected: 'three-js' },
-        { input: 'Socket.IO', expected: 'socket-io' }
+        { input: 'Socket.IO', expected: 'socket-io' },
       ];
 
       for (const testCase of semanticCases) {
@@ -239,17 +228,17 @@ describe('Extension Manager Utilities', () => {
       const signature1 = {
         files: [
           { name: 'library.js', size: 1000 },
-          { name: 'LICENSE.txt', size: 500 }
+          { name: 'LICENSE.txt', size: 500 },
         ],
-        totalSize: 1500
+        totalSize: 1500,
       };
 
       const signature2 = {
         files: [
           { name: 'library.js', size: 1000 },
-          { name: 'LICENSE.txt', size: 500 }
+          { name: 'LICENSE.txt', size: 500 },
         ],
-        totalSize: 1500
+        totalSize: 1500,
       };
 
       const result = (extensionManager as any).compareExtensions(signature1, signature2);
@@ -259,12 +248,12 @@ describe('Extension Manager Utilities', () => {
     it('should detect different total sizes', () => {
       const signature1 = {
         files: [{ name: 'library.js', size: 1000 }],
-        totalSize: 1000
+        totalSize: 1000,
       };
 
       const signature2 = {
         files: [{ name: 'library.js', size: 1001 }],
-        totalSize: 1001
+        totalSize: 1001,
       };
 
       const result = (extensionManager as any).compareExtensions(signature1, signature2);
@@ -275,14 +264,14 @@ describe('Extension Manager Utilities', () => {
       const signature1 = {
         files: [
           { name: 'library.js', size: 1000 },
-          { name: 'LICENSE.txt', size: 500 }
+          { name: 'LICENSE.txt', size: 500 },
         ],
-        totalSize: 1500
+        totalSize: 1500,
       };
 
       const signature2 = {
         files: [{ name: 'library.js', size: 1000 }],
-        totalSize: 1000
+        totalSize: 1000,
       };
 
       const result = (extensionManager as any).compareExtensions(signature1, signature2);
@@ -292,12 +281,12 @@ describe('Extension Manager Utilities', () => {
     it('should detect different filenames', () => {
       const signature1 = {
         files: [{ name: 'library.js', size: 1000 }],
-        totalSize: 1000
+        totalSize: 1000,
       };
 
       const signature2 = {
         files: [{ name: 'different.js', size: 1000 }],
-        totalSize: 1000
+        totalSize: 1000,
       };
 
       const result = (extensionManager as any).compareExtensions(signature1, signature2);
@@ -309,18 +298,18 @@ describe('Extension Manager Utilities', () => {
         files: [
           { name: 'a.js', size: 500 },
           { name: 'b.js', size: 300 },
-          { name: 'LICENSE.txt', size: 200 }
+          { name: 'LICENSE.txt', size: 200 },
         ],
-        totalSize: 1000
+        totalSize: 1000,
       };
 
       const signature2 = {
         files: [
           { name: 'LICENSE.txt', size: 200 },
           { name: 'b.js', size: 300 },
-          { name: 'a.js', size: 500 }
+          { name: 'a.js', size: 500 },
         ],
-        totalSize: 1000
+        totalSize: 1000,
       };
 
       const result = (extensionManager as any).compareExtensions(signature1, signature2);
@@ -330,18 +319,20 @@ describe('Extension Manager Utilities', () => {
     it('should handle empty extensions', () => {
       const emptySignature = {
         files: [],
-        totalSize: 0
+        totalSize: 0,
       };
 
       const nonEmptySignature = {
         files: [{ name: 'file.js', size: 100 }],
-        totalSize: 100
+        totalSize: 100,
       };
 
-      expect((extensionManager as any).compareExtensions(emptySignature, emptySignature))
-        .toBe(true);
-      expect((extensionManager as any).compareExtensions(emptySignature, nonEmptySignature))
-        .toBe(false);
+      expect((extensionManager as any).compareExtensions(emptySignature, emptySignature)).toBe(
+        true
+      );
+      expect((extensionManager as any).compareExtensions(emptySignature, nonEmptySignature)).toBe(
+        false
+      );
     });
   });
 
@@ -355,7 +346,7 @@ describe('Extension Manager Utilities', () => {
         { input: 'file<>:"|?*.js', expected: 'file-js' },
         { input: '.hidden', expected: 'hidden' },
         { input: 'CON.js', expected: 'con-js' }, // Windows reserved name
-        { input: 'file\x00null.js', expected: 'file-null-js' } // Null byte
+        { input: 'file\x00null.js', expected: 'file-null-js' }, // Null byte
       ];
 
       for (const testCase of dangerousCases) {
@@ -374,7 +365,7 @@ describe('Extension Manager Utilities', () => {
         'my-extension.min.js',
         'LICENSE.txt',
         'file_name.js',
-        'jQuery-3.6.0.js'
+        'jQuery-3.6.0.js',
       ];
 
       for (const safeCase of safeCases) {

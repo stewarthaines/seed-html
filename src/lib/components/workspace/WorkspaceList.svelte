@@ -31,7 +31,7 @@
     // Current workspace always first
     if (a.id === currentWorkspaceId) return -1;
     if (b.id === currentWorkspaceId) return 1;
-    
+
     // Then by last modified (most recent first)
     return b.lastModified.getTime() - a.lastModified.getTime();
   });
@@ -143,7 +143,7 @@
           <p class="results-text">
             {$t('Showing {filtered} of {total} workspaces', {
               filtered: filteredWorkspaces.length,
-              total: workspaces.length
+              total: workspaces.length,
             })}
           </p>
         </div>
@@ -249,8 +249,13 @@
   }
 
   @keyframes pulse {
-    0%, 100% { opacity: 0.6; }
-    50% { opacity: 0.8; }
+    0%,
+    100% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 0.8;
+    }
   }
 
   .loading-text {

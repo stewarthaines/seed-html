@@ -13,32 +13,34 @@ const i18nState = writable<I18nState>({
   locales: LOCALE_CONFIGS,
   catalogs: {},
   initialized: false,
-  loading: false
+  loading: false,
 });
 
 // Public stores
 export const currentLocale = derived(i18nState, $state => $state.currentLocale);
 export const isLoading = derived(i18nState, $state => $state.loading);
 export const isInitialized = derived(i18nState, $state => $state.initialized);
-export const documentDirection = derived(currentLocale, $locale => isRTL($locale) ? 'rtl' : 'ltr');
+export const documentDirection = derived(currentLocale, $locale =>
+  isRTL($locale) ? 'rtl' : 'ltr'
+);
 
 // English fallback catalog (bundled for immediate availability)
 const englishFallback: TranslationCatalog = {
   locale: 'en',
   messages: {
-    'Save': 'Save',
-    'Cancel': 'Cancel',
-    'Delete': 'Delete',
-    'Edit': 'Edit',
-    'File': 'File',
-    'Settings': 'Settings',
-    'Workspace': 'Workspace',
-    'Metadata': 'Metadata',
-    'Manifest': 'Manifest',
-    'Navigation': 'Navigation',
-    'Spine Items': 'Spine Items'
+    Save: 'Save',
+    Cancel: 'Cancel',
+    Delete: 'Delete',
+    Edit: 'Edit',
+    File: 'File',
+    Settings: 'Settings',
+    Workspace: 'Workspace',
+    Metadata: 'Metadata',
+    Manifest: 'Manifest',
+    Navigation: 'Navigation',
+    'Spine Items': 'Spine Items',
   },
-  headers: {}
+  headers: {},
 };
 
 /**
@@ -46,28 +48,28 @@ const englishFallback: TranslationCatalog = {
  */
 export const translate: TranslationFunction = (key: string, params: Record<string, any> = {}) => {
   const state = get(i18nState);
-  
+
   // Get translation from current locale catalog
   const catalog = state.catalogs[state.currentLocale];
   let translation = catalog?.messages[key];
-  
+
   // Fallback to English if not found
   if (!translation && state.currentLocale !== 'en') {
     translation = state.catalogs.en?.messages[key] || englishFallback.messages[key];
   }
-  
+
   // Ultimate fallback to key itself
   if (!translation) {
     translation = key;
   }
-  
+
   // Simple parameter interpolation
   if (Object.keys(params).length > 0) {
     for (const [param, value] of Object.entries(params)) {
       translation = translation.replace(new RegExp(`\\{${param}\\}`, 'g'), String(value));
     }
   }
-  
+
   return translation;
 };
 
@@ -77,30 +79,31 @@ export const translate: TranslationFunction = (key: string, params: Record<strin
  */
 export const t = derived(
   i18nState,
-  ($state): TranslationFunction => (key: string, params: Record<string, any> = {}) => {
-    // Get translation from current locale catalog
-    const catalog = $state.catalogs[$state.currentLocale];
-    let translation = catalog?.messages[key];
-    
-    // Fallback to English if not found
-    if (!translation && $state.currentLocale !== 'en') {
-      translation = $state.catalogs.en?.messages[key] || englishFallback.messages[key];
-    }
-    
-    // Ultimate fallback to key itself
-    if (!translation) {
-      translation = key;
-    }
-    
-    // Simple parameter interpolation
-    if (Object.keys(params).length > 0) {
-      for (const [param, value] of Object.entries(params)) {
-        translation = translation.replace(new RegExp(`\\{${param}\\}`, 'g'), String(value));
+  ($state): TranslationFunction =>
+    (key: string, params: Record<string, any> = {}) => {
+      // Get translation from current locale catalog
+      const catalog = $state.catalogs[$state.currentLocale];
+      let translation = catalog?.messages[key];
+
+      // Fallback to English if not found
+      if (!translation && $state.currentLocale !== 'en') {
+        translation = $state.catalogs.en?.messages[key] || englishFallback.messages[key];
       }
+
+      // Ultimate fallback to key itself
+      if (!translation) {
+        translation = key;
+      }
+
+      // Simple parameter interpolation
+      if (Object.keys(params).length > 0) {
+        for (const [param, value] of Object.entries(params)) {
+          translation = translation.replace(new RegExp(`\\{${param}\\}`, 'g'), String(value));
+        }
+      }
+
+      return translation;
     }
-    
-    return translation;
-  }
 );
 
 /**
@@ -108,57 +111,56 @@ export const t = derived(
  */
 export async function initI18n(): Promise<void> {
   const state = get(i18nState);
-  
+
   if (state.initialized || state.loading) {
     return;
   }
-  
+
   i18nState.update(s => ({ ...s, loading: true }));
-  
+
   try {
     const loader = createI18nLoader();
-    
+
     // Check if we need to extract translations
     if (await loader.needsUpdate()) {
       await loader.extractTranslations();
     }
-    
+
     // Load translation catalogs
     const catalogs = await loader.loadTranslations();
-    
+
     // Ensure English fallback is available
     if (!catalogs.en) {
       catalogs.en = englishFallback;
     }
-    
+
     // Determine initial locale
     const preferredLocale = getBrowserLocale();
     const initialLocale = catalogs[preferredLocale] ? preferredLocale : DEFAULT_LOCALE;
-    
+
     // Apply document direction
     if (typeof document !== 'undefined') {
       document.documentElement.dir = isRTL(initialLocale) ? 'rtl' : 'ltr';
       document.documentElement.setAttribute('data-locale', initialLocale);
     }
-    
+
     i18nState.update(s => ({
       ...s,
       currentLocale: initialLocale,
       catalogs,
       initialized: true,
-      loading: false
+      loading: false,
     }));
-    
   } catch (error) {
     console.error('Failed to initialize i18n:', error);
-    
+
     // Fallback to English only
     i18nState.update(s => ({
       ...s,
       currentLocale: DEFAULT_LOCALE,
       catalogs: { en: englishFallback },
       initialized: true,
-      loading: false
+      loading: false,
     }));
   }
 }
@@ -168,30 +170,30 @@ export async function initI18n(): Promise<void> {
  */
 export async function setLocale(locale: string): Promise<void> {
   const state = get(i18nState);
-  
+
   if (!state.initialized) {
     throw new Error('i18n system not initialized');
   }
-  
+
   if (!LOCALE_CONFIGS[locale]) {
     throw new Error(`Unsupported locale: ${locale}`);
   }
-  
+
   if (!state.catalogs[locale]) {
     console.warn(`Translation catalog for ${locale} not loaded, falling back to English`);
   }
-  
+
   // Update document direction
   if (typeof document !== 'undefined') {
     document.documentElement.dir = isRTL(locale) ? 'rtl' : 'ltr';
     document.documentElement.setAttribute('data-locale', locale);
   }
-  
+
   // Store preference
   if (typeof localStorage !== 'undefined') {
     localStorage.setItem('editme-locale', locale);
   }
-  
+
   i18nState.update(s => ({ ...s, currentLocale: locale }));
 }
 
@@ -221,7 +223,7 @@ export function _resetI18nForTesting() {
     locales: LOCALE_CONFIGS,
     catalogs: {},
     initialized: false,
-    loading: false
+    loading: false,
   });
 }
 

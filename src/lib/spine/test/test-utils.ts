@@ -1,19 +1,22 @@
 /**
  * Test Utilities for SpineItemManager Tests
- * 
+ *
  * Provides helper functions for setting up mocks, creating test data,
  * and verifying test results in SpineItemManager test suites.
  */
 
 import { vi, expect } from 'vitest';
-import { createMockWorkspaceManager, type MockWorkspaceManager } from '../../test/mocks/workspace-manager.mock.js';
+import {
+  createMockWorkspaceManager,
+  type MockWorkspaceManager,
+} from '../../test/mocks/workspace-manager.mock.js';
 import type { SpineItemWithSource } from '../types.js';
 import type { ManifestItem, SpineItem } from '../../epub/opf-utils.js';
-import { 
-  getSampleOPFDocuments, 
+import {
+  getSampleOPFDocuments,
   getSampleWorkspaceFiles,
   createTestOPF,
-  createTestWorkspaceFiles 
+  createTestWorkspaceFiles,
 } from './fixtures.js';
 
 /**
@@ -35,7 +38,7 @@ export async function setupTestWorkspace(
 ): Promise<void> {
   const opf = getSampleOPFDocuments()[scenario];
   mockWorkspace.setWorkspaceOPF(workspaceId, opf);
-  
+
   // Add corresponding files
   const chapterIds = opf.spine.map(item => item.idref);
   const files = createTestWorkspaceFiles(chapterIds);
@@ -53,7 +56,7 @@ export async function setupWorkspaceWithSourceFiles(
   // Set up basic OPF
   const opf = getSampleOPFDocuments().basic;
   mockWorkspace.setWorkspaceOPF(workspaceId, opf);
-  
+
   // Add files based on scenario
   const files = getSampleWorkspaceFiles()[sourceFileScenario];
   mockWorkspace.addTestFiles(workspaceId, files);
@@ -75,7 +78,7 @@ export function createSpineItemWithSource(
     mediaType: manifestItem.mediaType,
     linear: spineItem.linear ?? true,
     hasSourceFile,
-    sourcePath: hasSourceFile ? (sourcePath || `SOURCE/text/${manifestItem.id}.txt`) : undefined
+    sourcePath: hasSourceFile ? sourcePath || `SOURCE/text/${manifestItem.id}.txt` : undefined,
   };
 }
 
@@ -91,9 +94,9 @@ export function expectWorkspaceManagerCalled(
   if (!methodMock) {
     throw new Error(`Method ${method} not found on mock workspace manager`);
   }
-  
+
   expect(methodMock).toHaveBeenCalledTimes(expectedCalls.length);
-  
+
   expectedCalls.forEach((expectedCall, index) => {
     expect(methodMock).toHaveBeenNthCalledWith(index + 1, ...expectedCall);
   });
@@ -110,9 +113,9 @@ export function expectSourceFileCreated(
 ): void {
   const files = mockWorkspace.getWorkspaceFiles(workspaceId);
   const sourcePath = `SOURCE/text/${chapterId}.txt`;
-  
+
   expect(files.has(sourcePath)).toBe(true);
-  
+
   if (expectedContent) {
     const content = files.get(sourcePath);
     expect(content).toContain(expectedContent);
@@ -130,9 +133,9 @@ export function expectXHTMLFileCreated(
 ): void {
   const files = mockWorkspace.getWorkspaceFiles(workspaceId);
   const xhtmlPath = `OEBPS/Text/${fileName}`;
-  
+
   expect(files.has(xhtmlPath)).toBe(true);
-  
+
   const content = files.get(xhtmlPath) as string;
   expect(content).toContain(`<title>${expectedTitle}</title>`);
   expect(content).toContain(`<h1>${expectedTitle}</h1>`);
@@ -176,14 +179,14 @@ export function setupIdCollisionScenario(
   const manifest = existingIds.map(id => ({
     id,
     href: `Text/${id}.xhtml`,
-    mediaType: 'application/xhtml+xml'
+    mediaType: 'application/xhtml+xml',
   }));
-  
+
   const spine = existingIds.map(id => ({
     idref: id,
-    linear: true
+    linear: true,
   }));
-  
+
   const opf = createTestOPF({ manifest, spine });
   mockWorkspace.setWorkspaceOPF(workspaceId, opf);
 }
@@ -195,23 +198,23 @@ export function setupSpineOrderingScenario(
   mockWorkspace: MockWorkspaceManager,
   workspaceId: string,
   itemCount: number
-): { chapterIds: string[], originalOrder: string[] } {
+): { chapterIds: string[]; originalOrder: string[] } {
   const chapterIds = Array.from({ length: itemCount }, (_, i) => `chapter${i + 1}`);
-  
+
   const manifest = chapterIds.map(id => ({
     id,
     href: `Text/${id}.xhtml`,
-    mediaType: 'application/xhtml+xml'
+    mediaType: 'application/xhtml+xml',
   }));
-  
+
   const spine = chapterIds.map(id => ({
     idref: id,
-    linear: true
+    linear: true,
   }));
-  
+
   const opf = createTestOPF({ manifest, spine });
   mockWorkspace.setWorkspaceOPF(workspaceId, opf);
-  
+
   return { chapterIds, originalOrder: [...chapterIds] };
 }
 
@@ -223,7 +226,7 @@ export function expectSpineOrder(
   expectedOrder: string[]
 ): void {
   expect(actualItems).toHaveLength(expectedOrder.length);
-  
+
   actualItems.forEach((item, index) => {
     expect(item.id).toBe(expectedOrder[index]);
     expect(item.idref).toBe(expectedOrder[index]);
@@ -270,20 +273,20 @@ export function setupLargeSpine(
 ): void {
   const manifest: ManifestItem[] = [];
   const spine: SpineItem[] = [];
-  
+
   for (let i = 1; i <= itemCount; i++) {
     const id = `chapter${i}`;
     manifest.push({
       id,
       href: `Text/${id}.xhtml`,
-      mediaType: 'application/xhtml+xml'
+      mediaType: 'application/xhtml+xml',
     });
     spine.push({
       idref: id,
-      linear: true
+      linear: true,
     });
   }
-  
+
   const opf = createTestOPF({ manifest, spine });
   mockWorkspace.setWorkspaceOPF(workspaceId, opf);
 }
@@ -298,9 +301,9 @@ export async function measurePerformance<T>(
   const startTime = Date.now();
   const result = await operation();
   const duration = Date.now() - startTime;
-  
+
   expect(duration).toBeLessThan(maxTimeMs);
-  
+
   return { result, duration };
 }
 
@@ -326,7 +329,7 @@ export function createSimpleMockWorkspaceManager() {
     writeTextFile: vi.fn(),
     readTextFile: vi.fn(),
     deleteFile: vi.fn(),
-    fileExists: vi.fn()
+    fileExists: vi.fn(),
   };
 }
 
@@ -345,10 +348,10 @@ export function validateSpineItemWithSource(
       href: expect.stringMatching(/^Text\/.*\.xhtml$/),
       mediaType: 'application/xhtml+xml',
       hasSourceFile: expectedHasSource,
-      linear: expect.any(Boolean)
+      linear: expect.any(Boolean),
     })
   );
-  
+
   if (expectedHasSource) {
     expect(item.sourcePath).toBe(`SOURCE/text/${expectedId}.txt`);
   } else {

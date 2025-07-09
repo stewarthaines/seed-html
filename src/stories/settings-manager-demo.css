@@ -7,7 +7,10 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 1rem;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
 }
 
 /* Header Section */
@@ -355,23 +358,23 @@
   .settings-demo {
     padding: 0.5rem;
   }
-  
+
   .control-panel {
     grid-template-columns: 1fr;
   }
-  
+
   .status-display {
     grid-template-columns: 1fr;
   }
-  
+
   .settings-preview {
     grid-template-columns: 1fr;
   }
-  
+
   .demo-header h1 {
     font-size: 1.5rem;
   }
-  
+
   .console-log {
     height: 250px;
     font-size: 0.8rem;
@@ -385,35 +388,35 @@
     border-color: #495057;
     color: #f8f9fa;
   }
-  
+
   .control-section h3 {
     color: #f8f9fa;
   }
-  
+
   .demo-button {
     background: #495057;
     border-color: #6c757d;
     color: #f8f9fa;
   }
-  
+
   .demo-button:hover:not(:disabled) {
     background: #6c757d;
     border-color: #adb5bd;
   }
-  
+
   .status-card,
   .settings-card {
     background: #343a40;
     border-color: #495057;
     color: #f8f9fa;
   }
-  
+
   .status-card h4,
   .settings-card h4 {
     color: #f8f9fa;
     border-color: #495057;
   }
-  
+
   .settings-json {
     background: #495057;
     border-color: #6c757d;

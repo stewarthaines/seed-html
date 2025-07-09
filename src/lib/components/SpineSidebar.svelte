@@ -96,7 +96,7 @@
 
       // Announce move for screen readers
       announceMove(spineItems[index - 1].id, index, index - 1);
-    } catch (err) {
+    } catch (_err) {
       // Failed to move chapter up
       // Reload to restore correct order
       await loadSpineItems();
@@ -115,7 +115,7 @@
 
       // Announce move for screen readers
       announceMove(spineItems[index + 1].id, index, index + 1);
-    } catch (err) {
+    } catch (_err) {
       // Failed to move chapter down
       // Reload to restore correct order
       await loadSpineItems();
@@ -174,7 +174,7 @@
 
       // Announce move for screen readers
       announceMove(spineItems[dropIndex].id, dragIndex, dropIndex);
-    } catch (err) {
+    } catch (_err) {
       // Failed to reorder items
       // Reload to restore correct order
       await loadSpineItems();

@@ -25,13 +25,13 @@ describe('Navigation Store', () => {
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks();
-    
+
     // Mock localStorage
     Object.defineProperty(window, 'localStorage', {
       value: mockLocalStorage,
       writable: true,
     });
-    
+
     // Default localStorage behavior
     mockLocalStorage.getItem.mockReturnValue(null);
     mockLocalStorage.setItem.mockImplementation(() => undefined);

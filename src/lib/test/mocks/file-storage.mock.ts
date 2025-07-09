@@ -1,21 +1,21 @@
 /**
  * Shared Mock File Storage API for Testing
- * 
+ *
  * Comprehensive mock implementation of FileStorageAPI used across all feature modules.
  * Provides controllable simulation of file operations with error injection, state tracking,
  * and comprehensive test utilities.
- * 
+ *
  * Based on the most feature-rich implementation from extensions module, this shared mock
  * eliminates code duplication while providing consistent testing capabilities.
- * 
+ *
  * Usage:
  * ```typescript
  * import { MockFileStorage, createMockFileStorage } from '../../../test/mocks/file-storage.mock.js';
- * 
+ *
  * // For class-based mocking with full control
  * const mockStorage = new MockFileStorage();
  * mockStorage.setFailureMode('read');
- * 
+ *
  * // For simple function-based mocking
  * const mockStorage = createMockFileStorage();
  * ```
@@ -35,7 +35,7 @@ export type FailureMode = 'read' | 'write' | 'list' | 'delete' | 'exists' | 'fil
 
 /**
  * Comprehensive mock implementation of FileStorageAPI
- * 
+ *
  * Features:
  * - In-memory file storage simulation
  * - Controllable error injection for testing failure scenarios
@@ -109,15 +109,14 @@ export class MockFileStorage implements Partial<FileStorageAPI> {
     }
 
     const workspace = this.getWorkspace(workspaceId);
-    const size = typeof content === 'string' ? 
-      new TextEncoder().encode(content).length : 
-      content.byteLength;
+    const size =
+      typeof content === 'string' ? new TextEncoder().encode(content).length : content.byteLength;
 
     workspace.set(path, {
       path,
       content,
       size,
-      lastModified: new Date()
+      lastModified: new Date(),
     });
   }
 
@@ -180,7 +179,10 @@ export class MockFileStorage implements Partial<FileStorageAPI> {
     return files;
   }
 
-  async getFileInfo(workspaceId: string, path: string): Promise<{ size: number; lastModified: Date }> {
+  async getFileInfo(
+    workspaceId: string,
+    path: string
+  ): Promise<{ size: number; lastModified: Date }> {
     this.operationCount++;
     if (this.failureMode === 'fileinfo') {
       throw new Error('Failed to get file info');
@@ -194,7 +196,7 @@ export class MockFileStorage implements Partial<FileStorageAPI> {
 
     return {
       size: entry.size,
-      lastModified: entry.lastModified
+      lastModified: entry.lastModified,
     };
   }
 
@@ -263,25 +265,27 @@ export class MockFileStorage implements Partial<FileStorageAPI> {
   }
 
   // Test utility methods
-  
+
   /**
    * Add multiple files at once for test setup
    * @param workspaceId - Target workspace
    * @param files - Map of file paths to content
    */
-  async addTestFiles(workspaceId: string, files: Record<string, string | ArrayBuffer>): Promise<void> {
+  async addTestFiles(
+    workspaceId: string,
+    files: Record<string, string | ArrayBuffer>
+  ): Promise<void> {
     const workspace = this.ensureWorkspace(workspaceId);
-    
+
     for (const [path, content] of Object.entries(files)) {
-      const size = typeof content === 'string' ? 
-        new TextEncoder().encode(content).length : 
-        content.byteLength;
+      const size =
+        typeof content === 'string' ? new TextEncoder().encode(content).length : content.byteLength;
 
       workspace.set(path, {
         path,
         content,
         size,
-        lastModified: new Date()
+        lastModified: new Date(),
       });
     }
   }
@@ -297,7 +301,7 @@ export class MockFileStorage implements Partial<FileStorageAPI> {
 
   /**
    * Get all files for verification (from original source/transform mocks)
-   * @param workspaceId - Target workspace  
+   * @param workspaceId - Target workspace
    * @returns Map of file paths to ArrayBuffer content
    */
   getAllFiles(workspaceId: string): Map<string, ArrayBuffer> | undefined {
@@ -369,7 +373,7 @@ export class MockFileStorage implements Partial<FileStorageAPI> {
 
 /**
  * Factory function for creating fresh mock instances in tests
- * 
+ *
  * Use this when you need a class-based mock with full control over state and error simulation.
  * For simple function-based mocks, consider using the pattern in settings/test/test-utils.ts
  * following TESTING.md modern mock strategy.
@@ -380,53 +384,85 @@ export function createMockFileStorage(): MockFileStorage {
 
 /**
  * Create Vitest-based mock functions for FileStorageAPI
- * 
+ *
  * Use this when you need .mockResolvedValue() and .mockRejectedValue() patterns
  * in your tests. This creates proper Vitest mock functions that can be controlled
  * with standard Jest/Vitest mock API.
- * 
+ *
  * This function now wraps the MockFileStorage class with Vitest spy functions
  * to provide both stateful behavior and Vitest mock API compatibility.
  */
 export function createVitestMockFileStorage() {
   const mockStorage = new MockFileStorage();
-  
+
   return {
     // Core workspace operations with Vitest spy wrappers
     createWorkspace: vi.fn().mockImplementation((id?: string) => mockStorage.createWorkspace(id)),
     deleteWorkspace: vi.fn().mockImplementation((id: string) => mockStorage.deleteWorkspace(id)),
     listWorkspaces: vi.fn().mockImplementation(() => mockStorage.listWorkspaces()),
-    
+
     // File operations with Vitest spy wrappers
-    writeTextFile: vi.fn().mockImplementation((workspaceId: string, path: string, content: string) => 
-      mockStorage.writeTextFile(workspaceId, path, content)),
-    writeFile: vi.fn().mockImplementation((workspaceId: string, path: string, content: string | ArrayBuffer) => 
-      mockStorage.writeFile(workspaceId, path, content)),
-    readTextFile: vi.fn().mockImplementation((workspaceId: string, path: string) => 
-      mockStorage.readTextFile(workspaceId, path)),
-    readFile: vi.fn().mockImplementation((workspaceId: string, path: string) => 
-      mockStorage.readFile(workspaceId, path)),
-    deleteFile: vi.fn().mockImplementation((workspaceId: string, path: string) => 
-      mockStorage.deleteFile(workspaceId, path)),
-    fileExists: vi.fn().mockImplementation((workspaceId: string, path: string) => 
-      mockStorage.fileExists(workspaceId, path)),
-    workspaceExists: vi.fn().mockImplementation((workspaceId: string) => 
-      mockStorage.workspaceExists(workspaceId)),
-    listFiles: vi.fn().mockImplementation((workspaceId: string, directory?: string) => 
-      mockStorage.listFiles(workspaceId, directory)),
-    getFileInfo: vi.fn().mockImplementation((workspaceId: string, path: string) => 
-      mockStorage.getFileInfo(workspaceId, path)),
-    
+    writeTextFile: vi
+      .fn()
+      .mockImplementation((workspaceId: string, path: string, content: string) =>
+        mockStorage.writeTextFile(workspaceId, path, content)
+      ),
+    writeFile: vi
+      .fn()
+      .mockImplementation((workspaceId: string, path: string, content: string | ArrayBuffer) =>
+        mockStorage.writeFile(workspaceId, path, content)
+      ),
+    readTextFile: vi
+      .fn()
+      .mockImplementation((workspaceId: string, path: string) =>
+        mockStorage.readTextFile(workspaceId, path)
+      ),
+    readFile: vi
+      .fn()
+      .mockImplementation((workspaceId: string, path: string) =>
+        mockStorage.readFile(workspaceId, path)
+      ),
+    deleteFile: vi
+      .fn()
+      .mockImplementation((workspaceId: string, path: string) =>
+        mockStorage.deleteFile(workspaceId, path)
+      ),
+    fileExists: vi
+      .fn()
+      .mockImplementation((workspaceId: string, path: string) =>
+        mockStorage.fileExists(workspaceId, path)
+      ),
+    workspaceExists: vi
+      .fn()
+      .mockImplementation((workspaceId: string) => mockStorage.workspaceExists(workspaceId)),
+    listFiles: vi
+      .fn()
+      .mockImplementation((workspaceId: string, directory?: string) =>
+        mockStorage.listFiles(workspaceId, directory)
+      ),
+    getFileInfo: vi
+      .fn()
+      .mockImplementation((workspaceId: string, path: string) =>
+        mockStorage.getFileInfo(workspaceId, path)
+      ),
+
     // System methods
     getQuota: vi.fn().mockImplementation(() => mockStorage.getQuota()),
-    
+
     // Test utility methods - direct access to underlying MockFileStorage
-    addTestFiles: vi.fn().mockImplementation((workspaceId: string, files: Record<string, string | ArrayBuffer>) => 
-      mockStorage.addTestFiles(workspaceId, files)),
+    addTestFiles: vi
+      .fn()
+      .mockImplementation((workspaceId: string, files: Record<string, string | ArrayBuffer>) =>
+        mockStorage.addTestFiles(workspaceId, files)
+      ),
     reset: vi.fn().mockImplementation(() => mockStorage.reset()),
-    hasWorkspace: vi.fn().mockImplementation((workspaceId: string) => mockStorage.hasWorkspace(workspaceId)),
-    setFailureMode: vi.fn().mockImplementation((mode: FailureMode | null) => mockStorage.setFailureMode(mode)),
-    
+    hasWorkspace: vi
+      .fn()
+      .mockImplementation((workspaceId: string) => mockStorage.hasWorkspace(workspaceId)),
+    setFailureMode: vi
+      .fn()
+      .mockImplementation((mode: FailureMode | null) => mockStorage.setFailureMode(mode)),
+
     // Expose underlying MockFileStorage instance for advanced test scenarios
     _mockInstance: mockStorage,
   };

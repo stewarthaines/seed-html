@@ -28,7 +28,6 @@ export interface WorkspacePathInfo {
   opfFileName: string; // OPF filename (e.g., "content.opf")
 }
 
-
 export interface WorkspacePreview {
   metadata: EPUBMetadata;
   manifestSummary: {

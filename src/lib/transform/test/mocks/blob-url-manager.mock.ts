@@ -29,7 +29,10 @@ export class MockBlobUrlManager {
   /**
    * Create blob URL for file content
    */
-  async createBlobUrl(content: ArrayBuffer, mimeType: string = 'application/javascript'): Promise<string> {
+  async createBlobUrl(
+    content: ArrayBuffer,
+    mimeType: string = 'application/javascript'
+  ): Promise<string> {
     if (this.failureMode === 'create') {
       throw new Error('Failed to create blob URL');
     }
@@ -53,8 +56,8 @@ export class MockBlobUrlManager {
    * Load extension library and inject as global
    */
   async loadLibraryAsGlobal(
-    workspaceId: string, 
-    libraryPath: string, 
+    workspaceId: string,
+    libraryPath: string,
     globalName: string
   ): Promise<void> {
     if (this.failureMode === 'load') {
@@ -63,7 +66,7 @@ export class MockBlobUrlManager {
 
     // Simulate library loading
     this.loadedLibraries.add(libraryPath);
-    
+
     // Create mock library implementation based on global name
     this.globals[globalName] = this.createMockLibrary(globalName);
   }
@@ -95,7 +98,7 @@ export class MockBlobUrlManager {
   private createMockLibrary(globalName: string): any {
     switch (globalName) {
       case 'markdownit':
-        return function(options: any = {}) {
+        return function (options: any = {}) {
           return {
             render: (text: string) => {
               // Simple mock markdown rendering
@@ -108,7 +111,9 @@ export class MockBlobUrlManager {
                 .replace(/^(?!<)(.+)$/gm, '<p>$1</p>')
                 .replace(/<p><\/p>/g, '');
             },
-            use: function(plugin: any) { return this; }
+            use: function (plugin: any) {
+              return this;
+            },
           };
         };
 
@@ -118,12 +123,12 @@ export class MockBlobUrlManager {
             // Mock ABC notation rendering
             return `<div id="${elementId}" class="abcjs-rendered">${abcString}</div>`;
           },
-          Editor: function(elementId: string, options: any = {}) {
+          Editor: function (elementId: string, options: any = {}) {
             return {
               paramChanged: () => {},
-              setNotation: () => {}
+              setNotation: () => {},
             };
-          }
+          },
         };
 
       case 'Prism':
@@ -135,8 +140,8 @@ export class MockBlobUrlManager {
           languages: {
             javascript: {},
             css: {},
-            html: {}
-          }
+            html: {},
+          },
         };
 
       default:
@@ -145,7 +150,7 @@ export class MockBlobUrlManager {
           version: '1.0.0-mock',
           init: () => {},
           process: (input: any) => input,
-          render: (input: any) => `<div class="mock-${globalName}">${input}</div>`
+          render: (input: any) => `<div class="mock-${globalName}">${input}</div>`,
         };
     }
   }

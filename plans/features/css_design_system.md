@@ -193,7 +193,7 @@ src/styles/
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
+};
 ```
 
 #### 6. Internationalization Tokens
@@ -221,7 +221,7 @@ src/styles/
 --text-align-end: right; /* Overridden in RTL */
 
 /* RTL layout overrides */
-[dir="rtl"] {
+[dir='rtl'] {
   --layout-direction: rtl;
   --text-align-start: right;
   --text-align-end: left;
@@ -508,28 +508,28 @@ The theme system uses CSS custom properties and data attributes for switching:
     font-family: var(--font-sans);
     font-weight: var(--font-medium);
     cursor: pointer;
-    
+
     /* RTL-aware spacing using logical properties */
     padding-inline: var(--space-4);
     padding-block: var(--space-2);
-    
+
     /* Accessible transitions */
     transition: all var(--duration-fast) ease;
-    
+
     /* Default size */
     font-size: var(--text-sm);
-    
+
     /* Accessible focus indicators */
     &:focus-visible {
       outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
       outline-offset: var(--focus-ring-offset);
     }
-    
+
     /* High contrast mode support */
     @media (prefers-contrast: high) {
       border: 2px solid var(--color-forced-border);
     }
-    
+
     /* Reduced motion support */
     @media (prefers-reduced-motion: reduce) {
       transition: none;
@@ -543,7 +543,7 @@ The theme system uses CSS custom properties and data attributes for switching:
   .btn--primary {
     background-color: var(--color-accent);
     color: var(--color-text-inverse);
-    
+
     &:hover:not(.btn--disabled) {
       background-color: var(--color-primary-700);
     }
@@ -553,7 +553,7 @@ The theme system uses CSS custom properties and data attributes for switching:
     background-color: var(--color-bg-secondary);
     color: var(--color-text-primary);
     border: 1px solid var(--color-border-default);
-    
+
     &:hover:not(.btn--disabled) {
       background-color: var(--color-bg-tertiary);
     }
@@ -562,7 +562,7 @@ The theme system uses CSS custom properties and data attributes for switching:
   .btn--danger {
     background-color: var(--color-danger-600);
     color: var(--color-text-inverse);
-    
+
     &:hover:not(.btn--disabled) {
       background-color: var(--color-danger-700);
     }
@@ -605,21 +605,14 @@ The theme system uses CSS custom properties and data attributes for switching:
   export let collapsed = false;
 </script>
 
-<div 
-  class="panel" 
-  dir={direction}
-  class:panel--rtl={direction === 'rtl'}
->
+<div class="panel" dir={direction} class:panel--rtl={direction === 'rtl'}>
   <header class="panel__header">
     <h2 class="panel__title">{title}</h2>
     {#if collapsible}
-      <button 
-        class="panel__toggle"
-        aria-expanded={!collapsed}
-        aria-controls="panel-content"
-      >
+      <button class="panel__toggle" aria-expanded={!collapsed} aria-controls="panel-content">
         <span class="sr-only">
-          {collapsed ? 'Expand' : 'Collapse'} {title}
+          {collapsed ? 'Expand' : 'Collapse'}
+          {title}
         </span>
         <svg class="panel__icon" class:panel__icon--rotated={collapsed}>
           <!-- Chevron icon -->
@@ -627,12 +620,8 @@ The theme system uses CSS custom properties and data attributes for switching:
       </button>
     {/if}
   </header>
-  
-  <div 
-    id="panel-content"
-    class="panel__content"
-    class:panel__content--collapsed={collapsed}
-  >
+
+  <div id="panel-content" class="panel__content" class:panel__content--collapsed={collapsed}>
     <slot />
   </div>
 </div>
@@ -642,7 +631,7 @@ The theme system uses CSS custom properties and data attributes for switching:
     background-color: var(--color-bg-primary);
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-md);
-    
+
     /* RTL-aware shadow */
     box-shadow: var(--shadow-sm);
   }
@@ -651,11 +640,11 @@ The theme system uses CSS custom properties and data attributes for switching:
     display: flex;
     align-items: center;
     justify-content: space-between;
-    
+
     /* RTL-aware padding */
     padding-inline: var(--space-4);
     padding-block: var(--space-3);
-    
+
     border-block-end: 1px solid var(--color-border-default);
   }
 
@@ -664,7 +653,7 @@ The theme system uses CSS custom properties and data attributes for switching:
     font-size: var(--text-lg);
     font-weight: var(--font-semibold);
     color: var(--color-text-primary);
-    
+
     /* RTL-aware text alignment */
     text-align: start;
   }
@@ -673,17 +662,17 @@ The theme system uses CSS custom properties and data attributes for switching:
     display: flex;
     align-items: center;
     justify-content: center;
-    
+
     /* RTL-aware positioning */
     margin-inline-start: auto;
-    
+
     width: var(--space-8);
     height: var(--space-8);
     border: none;
     background: none;
     cursor: pointer;
     border-radius: var(--radius-sm);
-    
+
     &:focus-visible {
       outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
       outline-offset: var(--focus-ring-offset);
@@ -694,7 +683,7 @@ The theme system uses CSS custom properties and data attributes for switching:
     width: var(--space-4);
     height: var(--space-4);
     transition: transform var(--duration-fast) ease;
-    
+
     /* RTL-aware rotation */
     transform-origin: center;
   }
@@ -715,7 +704,7 @@ The theme system uses CSS custom properties and data attributes for switching:
   .panel__content {
     padding-inline: var(--space-4);
     padding-block: var(--space-4);
-    
+
     transition: all var(--duration-normal) ease;
   }
 

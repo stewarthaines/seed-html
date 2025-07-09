@@ -60,10 +60,10 @@ Interactive demonstration of the complete EPUB workflow with automatic SOURCE.zi
 - **Other**: System files like \`.gitkeep\` and miscellaneous content
 
 This demo showcases the complete EPUB workflow with SOURCE.zip integration, demonstrating how editor files are seamlessly managed within the EPUB packaging/unpacking process.
-        `
-        }
-      }
-    }
+        `,
+        },
+      },
+    },
   });
 </script>
 

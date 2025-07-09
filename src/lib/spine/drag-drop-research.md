@@ -21,6 +21,7 @@ Based on CLAUDE.md guidelines, the solution must provide:
 **Status**: ✅ **Recommended Choice**
 
 **Pros**:
+
 - ✅ Svelte-native solution with official accessibility support
 - ✅ Zero-configuration accessibility (v0.6.1+)
 - ✅ Built-in keyboard navigation (Tab, Enter, Space, Arrow keys)
@@ -29,6 +30,7 @@ Based on CLAUDE.md guidelines, the solution must provide:
 - ✅ Active development with accessibility focus
 
 **Accessibility Features**:
+
 - Tab into container for description and instructions
 - Space/Enter to enter dragging mode
 - Arrow keys to change position while dragging
@@ -37,11 +39,13 @@ Based on CLAUDE.md guidelines, the solution must provide:
 - Supports aria-label on containers and items
 
 **Installation**:
+
 ```bash
 npm install svelte-dnd-action
 ```
 
 **Basic Implementation**:
+
 ```typescript
 import { dndzone } from 'svelte-dnd-action';
 import { flip } from 'svelte/animate';
@@ -63,10 +67,10 @@ function handleDndFinalize(e) {
 ```
 
 ```html
-<div 
+<div
   class="spine-list"
-  use:dndzone={{ 
-    items: spineItems, 
+  use:dndzone={{
+    items: spineItems,
     dragDisabled,
     flipDurationMs: 300,
     dropTargetStyle: {}
@@ -76,8 +80,8 @@ function handleDndFinalize(e) {
   aria-label="Chapter list - drag to reorder"
 >
   {#each spineItems as item (item.id)}
-    <div 
-      class="spine-item" 
+    <div
+      class="spine-item"
       aria-label="Chapter: {generateDisplayTitle(item)}"
       animate:flip={{ duration: 300 }}
     >
@@ -90,21 +94,25 @@ function handleDndFinalize(e) {
 ### 2. Alternative Approaches Considered
 
 #### React Aria (Not Compatible)
+
 - ✅ Excellent accessibility model
 - ❌ React-only, not compatible with Svelte
 - 📋 Reference for accessibility patterns
 
 #### @dnd-kit (Not Recommended)
+
 - ✅ Modern, performant
 - ❌ Research shows "unusable for screen reader users"
 - ❌ React-focused with limited Svelte support
 
 #### Draggable by Shopify (Limited)
+
 - ✅ Good touch/mouse support
 - ❌ Keyboard support marked as "coming soon"
 - ❌ Not Svelte-specific
 
 #### Native HTML5 Drag and Drop (Not Recommended)
+
 - ✅ No dependencies
 - ❌ Poor accessibility support
 - ❌ Limited touch device support
@@ -148,19 +156,19 @@ Implement svelte-dnd-action with essential accessibility features:
 
   async function handleDndFinalize(e) {
     if (isReordering) return;
-    
+
     const newItems = e.detail.items;
     const originalItems = [...spineItems];
-    
+
     // Find moved item
-    const movedItem = newItems.find((item, index) => 
+    const movedItem = newItems.find((item, index) =>
       originalItems[index]?.id !== item.id
     );
-    
+
     if (movedItem) {
       const fromIndex = originalItems.findIndex(item => item.id === movedItem.id);
       const toIndex = newItems.findIndex(item => item.id === movedItem.id);
-      
+
       if (fromIndex !== toIndex) {
         isReordering = true;
         try {
@@ -175,7 +183,7 @@ Implement svelte-dnd-action with essential accessibility features:
         }
       }
     }
-    
+
     dragDisabled = true;
   }
 
@@ -218,14 +226,14 @@ Implement svelte-dnd-action with essential accessibility features:
 
 <div class="spine-manager">
   <div class="spine-toolbar">
-    <button 
+    <button
       class="btn btn-secondary"
       on:click={() => dragDisabled = !dragDisabled}
       aria-pressed={!dragDisabled}
     >
       {dragDisabled ? 'Enable Reorder' : 'Disable Reorder'}
     </button>
-    
+
     <div class="reorder-instructions" aria-live="polite">
       {#if !dragDisabled}
         Press Tab to navigate items, Enter to start dragging, arrow keys to reorder
@@ -233,7 +241,7 @@ Implement svelte-dnd-action with essential accessibility features:
     </div>
   </div>
 
-  <div 
+  <div
     class="spine-list"
     use:dndzone={dndOptions}
     on:consider={handleDndConsider}
@@ -243,7 +251,7 @@ Implement svelte-dnd-action with essential accessibility features:
     aria-multiselectable="false"
   >
     {#each spineItems as item, index (item.id)}
-      <div 
+      <div
         class="spine-item"
         class:dragging={item.isDragging}
         class:non-linear={!item.linear}
@@ -281,41 +289,41 @@ Implement svelte-dnd-action with essential accessibility features:
         </div>
 
         <div class="item-actions">
-          <button 
+          <button
             class="btn btn-sm"
             on:click={() => editSpineItem(item)}
             aria-label="Edit chapter {generateDisplayTitle(item)}"
           >
             Edit
           </button>
-          
-          <button 
+
+          <button
             class="btn btn-sm"
             on:click={() => createOrEditSource(item)}
             aria-label="{item.hasSourceFile ? 'Edit' : 'Create'} source file for {generateDisplayTitle(item)}"
           >
             {item.hasSourceFile ? 'Edit Source' : 'Create Source'}
           </button>
-          
-          <button 
+
+          <button
             class="btn btn-sm"
-            on:click={() => moveUp(index)} 
+            on:click={() => moveUp(index)}
             disabled={index === 0}
             aria-label="Move {generateDisplayTitle(item)} up"
           >
             ↑
           </button>
-          
-          <button 
+
+          <button
             class="btn btn-sm"
-            on:click={() => moveDown(index)} 
+            on:click={() => moveDown(index)}
             disabled={index === spineItems.length - 1}
             aria-label="Move {generateDisplayTitle(item)} down"
           >
             ↓
           </button>
-          
-          <button 
+
+          <button
             class="btn btn-sm btn-danger"
             on:click={() => deleteSpineItem(item)}
             aria-label="Delete chapter {generateDisplayTitle(item)}"
@@ -343,22 +351,22 @@ export function announceToScreenReader(message: string) {
   announcement.setAttribute('aria-atomic', 'true');
   announcement.className = 'sr-only';
   announcement.textContent = message;
-  
+
   document.body.appendChild(announcement);
-  
+
   setTimeout(() => {
     document.body.removeChild(announcement);
   }, 1000);
 }
 
 export function generateReorderAnnouncement(
-  itemTitle: string, 
-  fromIndex: number, 
+  itemTitle: string,
+  fromIndex: number,
   toIndex: number
 ): string {
   const fromPosition = fromIndex + 1;
   const toPosition = toIndex + 1;
-  
+
   if (fromPosition < toPosition) {
     return `Moved "${itemTitle}" down from position ${fromPosition} to ${toPosition}`;
   } else {
@@ -376,7 +384,7 @@ export function generateReorderAnnouncement(
   min-height: 44px;
   display: flex;
   align-items: center;
-  
+
   /* Focus styles using design system */
   &:focus-visible {
     outline: 2px solid var(--color-focus);
@@ -392,10 +400,10 @@ export function generateReorderAnnouncement(
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   &:not(.disabled) {
     cursor: grab;
-    
+
     &:active {
       cursor: grabbing;
     }
@@ -406,7 +414,7 @@ export function generateReorderAnnouncement(
   /* Ensure button touch targets */
   min-width: 44px;
   min-height: 44px;
-  
+
   &:focus-visible {
     outline: 2px solid var(--color-focus);
     outline-offset: 2px;
@@ -417,6 +425,7 @@ export function generateReorderAnnouncement(
 ## Implementation Checklist
 
 ### ✅ Immediate Implementation
+
 - [x] Install svelte-dnd-action
 - [x] Basic drag-and-drop with accessibility
 - [x] ARIA labels for containers and items
@@ -424,6 +433,7 @@ export function generateReorderAnnouncement(
 - [x] Focus management and visual indicators
 
 ### 📋 Future Enhancements
+
 - [ ] Screen reader announcements for reorder actions
 - [ ] Advanced keyboard shortcuts (Home/End for move to start/end)
 - [ ] Haptic feedback for touch devices
@@ -434,12 +444,14 @@ export function generateReorderAnnouncement(
 ## Testing Strategy
 
 ### Accessibility Testing
+
 1. **Keyboard Navigation**: Tab through all interactive elements
 2. **Screen Reader**: Test with NVDA/JAWS/VoiceOver
 3. **Voice Control**: Test with Dragon NaturallySpeaking
 4. **Mobile Accessibility**: Test with TalkBack/VoiceOver on mobile
 
 ### Browser Testing
+
 - Chrome/Edge (latest)
 - Firefox (latest)
 - Safari (latest)
@@ -450,6 +462,7 @@ export function generateReorderAnnouncement(
 **svelte-dnd-action** provides the best balance of accessibility, Svelte integration, and ease of implementation. Its built-in accessibility features align perfectly with the project's accessibility requirements while providing the functionality needed for chapter reordering in the Spine Item Manager.
 
 The recommended implementation provides:
+
 - ✅ Full keyboard navigation support
 - ✅ Screen reader compatibility
 - ✅ Touch-friendly interactions

@@ -1,6 +1,6 @@
 /**
  * Transform Pipeline Implementation
- * 
+ *
  * Core transformation pipeline that executes text and DOM transforms
  * to convert plain text sources into XHTML spine items.
  */
@@ -61,12 +61,12 @@ export class TransformPipeline {
     try {
       // Step 1: Execute text transformation
       const textResult = await this.transformText(plainText, workspaceId, spineItemId);
-      
+
       if (!textResult.success) {
         return {
           success: false,
           error: textResult.error,
-          executionTime: Date.now() - startTime
+          executionTime: Date.now() - startTime,
         };
       }
 
@@ -81,23 +81,24 @@ export class TransformPipeline {
       const transformedDocument = await this.transformDOM(document, workspaceId, spineItemId);
 
       // Step 4: Generate final XHTML document
-      const bodyContent = transformedDocument.querySelector('div')?.innerHTML || transformedDocument.body.innerHTML;
+      const bodyContent =
+        transformedDocument.querySelector('div')?.innerHTML || transformedDocument.body.innerHTML;
       const xhtmlString = this.generateXHTMLDocument(bodyContent, metadata);
-      
+
       // Parse XHTML to Document object
       const xhtmlDocument = parser.parseFromString(xhtmlString, 'application/xhtml+xml');
 
       return {
         success: true,
         xhtmlDocument,
-        executionTime: Date.now() - startTime
+        executionTime: Date.now() - startTime,
       };
     } catch (error) {
       if (error instanceof TransformError) {
         return {
           success: false,
           error,
-          executionTime: Date.now() - startTime
+          executionTime: Date.now() - startTime,
         };
       }
 
@@ -105,9 +106,9 @@ export class TransformPipeline {
         success: false,
         error: new TransformError({
           stage: 'template',
-          message: error instanceof Error ? error.message : 'Unknown pipeline error'
+          message: error instanceof Error ? error.message : 'Unknown pipeline error',
         }),
-        executionTime: Date.now() - startTime
+        executionTime: Date.now() - startTime,
       };
     }
   }
@@ -125,15 +126,15 @@ export class TransformPipeline {
     try {
       // Load transform scripts
       const scripts = await this.transformManager.loadTransformScripts(workspaceId);
-      
+
       if (!scripts.textTransform) {
         // No text transform configured - return plain text wrapped in paragraph
         const wrappedText = plainText ? `<p>${this.escapeHtml(plainText)}</p>` : '';
-        
+
         return {
           success: true,
           transformedText: wrappedText,
-          executionTime: Date.now() - startTime
+          executionTime: Date.now() - startTime,
         };
       }
 
@@ -142,7 +143,7 @@ export class TransformPipeline {
 
       // Create transform context
       const context: TransformContext = {
-        manifestItems: {} // Would be populated with actual manifest items in real usage
+        manifestItems: {}, // Would be populated with actual manifest items in real usage
       };
 
       // Execute text transform
@@ -153,21 +154,21 @@ export class TransformPipeline {
         context,
         {
           timeoutMs: scripts.settings.transform_pipeline?.timeout_ms || 2000,
-          globals: extensionLibraries
+          globals: extensionLibraries,
         }
       );
 
       return {
         success: true,
         transformedText,
-        executionTime: Date.now() - startTime
+        executionTime: Date.now() - startTime,
       };
     } catch (error) {
       if (error instanceof TransformError) {
         return {
           success: false,
           error,
-          executionTime: Date.now() - startTime
+          executionTime: Date.now() - startTime,
         };
       }
 
@@ -175,9 +176,9 @@ export class TransformPipeline {
         success: false,
         error: new TransformError({
           stage: 'text',
-          message: error instanceof Error ? error.message : 'Unknown text transform error'
+          message: error instanceof Error ? error.message : 'Unknown text transform error',
         }),
-        executionTime: Date.now() - startTime
+        executionTime: Date.now() - startTime,
       };
     }
   }
@@ -193,7 +194,7 @@ export class TransformPipeline {
     try {
       // Load transform scripts
       const scripts = await this.transformManager.loadTransformScripts(workspaceId);
-      
+
       if (scripts.domTransforms.length === 0) {
         // No DOM transforms configured - return cloned document
         return document.cloneNode(true) as Document;
@@ -212,7 +213,7 @@ export class TransformPipeline {
           currentDocument,
           {
             timeoutMs: scripts.settings.transform_pipeline?.timeout_ms || 2000,
-            globals: extensionLibraries
+            globals: extensionLibraries,
           }
         );
       }
@@ -225,7 +226,7 @@ export class TransformPipeline {
 
       throw new TransformError({
         stage: 'dom',
-        message: error instanceof Error ? error.message : 'Unknown DOM transform error'
+        message: error instanceof Error ? error.message : 'Unknown DOM transform error',
       });
     }
   }

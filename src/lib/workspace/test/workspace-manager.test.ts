@@ -716,9 +716,9 @@ describe('WorkspaceManager', () => {
       });
 
       it('should throw WorkspaceError for missing file', async () => {
-        await expect(
-          workspaceManager.readFile(WORKSPACE_ID, 'OEBPS/missing.txt')
-        ).rejects.toThrow(WorkspaceError);
+        await expect(workspaceManager.readFile(WORKSPACE_ID, 'OEBPS/missing.txt')).rejects.toThrow(
+          WorkspaceError
+        );
       });
 
       it('should throw WorkspaceError with correct error code', async () => {
@@ -735,9 +735,9 @@ describe('WorkspaceManager', () => {
       it('should handle storage backend errors', async () => {
         mockStorage.setFailureMode('read');
 
-        await expect(
-          workspaceManager.readFile(WORKSPACE_ID, 'OEBPS/test.txt')
-        ).rejects.toThrow(WorkspaceError);
+        await expect(workspaceManager.readFile(WORKSPACE_ID, 'OEBPS/test.txt')).rejects.toThrow(
+          WorkspaceError
+        );
       });
     });
 
@@ -758,8 +758,8 @@ describe('WorkspaceManager', () => {
       it('should write binary content as ArrayBuffer', async () => {
         const binaryContent = new ArrayBuffer(512);
         const view = new Uint8Array(binaryContent);
-        view[0] = 0xFF; // Add some test data
-        view[1] = 0xD8;
+        view[0] = 0xff; // Add some test data
+        view[1] = 0xd8;
 
         const filePath = 'OEBPS/new-image.jpg';
 
@@ -771,10 +771,10 @@ describe('WorkspaceManager', () => {
         const savedContent = await mockStorage.readFile(WORKSPACE_ID, filePath);
         expect(savedContent).toBeInstanceOf(ArrayBuffer);
         expect(savedContent.byteLength).toBe(512);
-        
+
         const savedView = new Uint8Array(savedContent);
-        expect(savedView[0]).toBe(0xFF);
-        expect(savedView[1]).toBe(0xD8);
+        expect(savedView[0]).toBe(0xff);
+        expect(savedView[1]).toBe(0xd8);
       });
 
       it('should invalidate cache after writing', async () => {
@@ -834,7 +834,7 @@ describe('WorkspaceManager', () => {
 
         expect(resultFromReadFile).toBeInstanceOf(ArrayBuffer);
         expect(resultFromReadTextFile).toBe(textContent);
-        
+
         // Verify we can decode the ArrayBuffer to get the same text
         const decodedFromBuffer = new TextDecoder().decode(resultFromReadFile);
         expect(decodedFromBuffer).toBe(resultFromReadTextFile);
@@ -860,7 +860,7 @@ describe('WorkspaceManager', () => {
         // Compare the actual content by decoding to text
         const decoded1 = new TextDecoder().decode(content1);
         const decoded2 = new TextDecoder().decode(content2);
-        
+
         expect(decoded1).toBe(decoded2);
         expect(decoded1).toBe(textContent);
       });
@@ -880,11 +880,11 @@ describe('WorkspaceManager', () => {
         // Both should return ArrayBuffer
         expect(readText).toBeInstanceOf(ArrayBuffer);
         expect(readBinary).toBeInstanceOf(ArrayBuffer);
-        
+
         // Text content should be decodable
         const decodedText = new TextDecoder().decode(readText);
         expect(decodedText).toBe(textContent);
-        
+
         // Binary content should have the same size
         expect(readBinary.byteLength).toBe(binaryContent.byteLength);
       });

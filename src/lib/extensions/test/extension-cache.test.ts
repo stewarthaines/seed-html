@@ -12,13 +12,13 @@ import {
   TEST_WORKSPACE_IDS,
   createPopulatedCache,
   createCompleteWorkspace,
-  validateFileContent
+  validateFileContent,
 } from './fixtures/create-test-data.js';
 import {
   EXTENSION_SAMPLES,
   CONFLICTING_EXTENSIONS,
   createCacheFiles,
-  createExtensionFiles
+  createExtensionFiles,
 } from './fixtures/extension-samples.js';
 
 describe('ExtensionCache', () => {
@@ -98,28 +98,34 @@ describe('ExtensionCache', () => {
       const workspaceId = TEST_WORKSPACE_IDS.COMPLETE;
 
       // Cache original version
-      await mockFileStorage.addTestFiles(CACHE_WORKSPACE_ID, createCacheFiles(CONFLICTING_EXTENSIONS.MARKDOWN_V1 as any));
+      await mockFileStorage.addTestFiles(
+        CACHE_WORKSPACE_ID,
+        createCacheFiles(CONFLICTING_EXTENSIONS.MARKDOWN_V1 as any)
+      );
 
       // Try to cache different version
-      await mockFileStorage.addTestFiles(workspaceId, createExtensionFiles(CONFLICTING_EXTENSIONS.MARKDOWN_V2 as any, workspaceId));
+      await mockFileStorage.addTestFiles(
+        workspaceId,
+        createExtensionFiles(CONFLICTING_EXTENSIONS.MARKDOWN_V2 as any, workspaceId)
+      );
 
-      await expect(
-        extensionCache.addToCache(workspaceId, 'markdown-it')
-      ).rejects.toThrow("Extension 'markdown-it' already cached with different content");
+      await expect(extensionCache.addToCache(workspaceId, 'markdown-it')).rejects.toThrow(
+        "Extension 'markdown-it' already cached with different content"
+      );
     });
 
     it('should throw error for non-existent workspace extension', async () => {
       const workspaceId = TEST_WORKSPACE_IDS.COMPLETE;
 
-      await expect(
-        extensionCache.addToCache(workspaceId, 'non-existent')
-      ).rejects.toThrow("Extension 'non-existent' does not exist in workspace");
+      await expect(extensionCache.addToCache(workspaceId, 'non-existent')).rejects.toThrow(
+        "Extension 'non-existent' does not exist in workspace"
+      );
     });
 
     it('should handle single-file extensions correctly', async () => {
       const workspaceId = TEST_WORKSPACE_IDS.MINIMAL;
       await mockFileStorage.addTestFiles(workspaceId, {
-        'SOURCE/extensions/simple/library.js': 'function simple() {}'
+        'SOURCE/extensions/simple/library.js': 'function simple() {}',
       });
 
       await extensionCache.addToCache(workspaceId, 'simple');
@@ -137,7 +143,7 @@ describe('ExtensionCache', () => {
       await extensionCache.addToCache(workspaceId, extension.name);
 
       const cacheFiles = mockFileStorage.getWorkspaceFiles(CACHE_WORKSPACE_ID);
-      const extensionCacheFiles = Array.from(cacheFiles.keys()).filter(k => 
+      const extensionCacheFiles = Array.from(cacheFiles.keys()).filter(k =>
         k.startsWith(`${extension.name}/`)
       );
 
@@ -153,9 +159,9 @@ describe('ExtensionCache', () => {
       const workspaceId = TEST_WORKSPACE_IDS.COMPLETE;
       mockFileStorage.setFailureMode('write');
 
-      await expect(
-        extensionCache.addToCache(workspaceId, 'markdown-it')
-      ).rejects.toThrow('Failed to write file');
+      await expect(extensionCache.addToCache(workspaceId, 'markdown-it')).rejects.toThrow(
+        'Failed to write file'
+      );
     });
   });
 
@@ -210,46 +216,47 @@ describe('ExtensionCache', () => {
     it('should throw error for non-existent cache entry', async () => {
       const workspaceId = TEST_WORKSPACE_IDS.EMPTY;
 
-      await expect(
-        extensionCache.importFromCache('non-existent', workspaceId)
-      ).rejects.toThrow("Extension 'non-existent' not found in cache");
+      await expect(extensionCache.importFromCache('non-existent', workspaceId)).rejects.toThrow(
+        "Extension 'non-existent' not found in cache"
+      );
     });
 
     it('should handle workspace conflicts', async () => {
       const workspaceId = TEST_WORKSPACE_IDS.COMPLETE;
       await mockFileStorage.addTestFiles(workspaceId, createCompleteWorkspace());
 
-      await expect(
-        extensionCache.importFromCache('markdown-it', workspaceId)
-      ).rejects.toThrow("Extension 'markdown-it' already exists in workspace");
+      await expect(extensionCache.importFromCache('markdown-it', workspaceId)).rejects.toThrow(
+        "Extension 'markdown-it' already exists in workspace"
+      );
     });
 
     it('should handle storage read errors from cache', async () => {
       const workspaceId = TEST_WORKSPACE_IDS.EMPTY;
       mockFileStorage.setFailureMode('read');
 
-      await expect(
-        extensionCache.importFromCache('markdown-it', workspaceId)
-      ).rejects.toThrow('Failed to read file');
+      await expect(extensionCache.importFromCache('markdown-it', workspaceId)).rejects.toThrow(
+        'Failed to read file'
+      );
     });
 
     it('should handle storage write errors to workspace', async () => {
       const workspaceId = TEST_WORKSPACE_IDS.EMPTY;
-      
+
       // Allow reads but fail writes
       let operationCount = 0;
       const originalWrite = mockFileStorage.writeFile.bind(mockFileStorage);
       mockFileStorage.writeFile = vi.fn(async (...args) => {
         operationCount++;
-        if (operationCount > 0) { // Fail on any write
+        if (operationCount > 0) {
+          // Fail on any write
           throw new Error('Failed to write file');
         }
         return originalWrite(...(args as [string, string, string | ArrayBuffer]));
       });
 
-      await expect(
-        extensionCache.importFromCache('markdown-it', workspaceId)
-      ).rejects.toThrow('Failed to write file');
+      await expect(extensionCache.importFromCache('markdown-it', workspaceId)).rejects.toThrow(
+        'Failed to write file'
+      );
     });
   });
 
@@ -319,9 +326,7 @@ describe('ExtensionCache', () => {
       await mockFileStorage.addTestFiles(CACHE_WORKSPACE_ID, createPopulatedCache());
       mockFileStorage.setFailureMode('list');
 
-      await expect(
-        extensionCache.listCachedExtensions()
-      ).rejects.toThrow('Failed to list files');
+      await expect(extensionCache.listCachedExtensions()).rejects.toThrow('Failed to list files');
     });
   });
 
@@ -335,7 +340,7 @@ describe('ExtensionCache', () => {
 
       // Verify files were removed from cache
       const cacheFiles = mockFileStorage.getWorkspaceFiles(CACHE_WORKSPACE_ID);
-      const markdownFiles = Array.from(cacheFiles.keys()).filter(path => 
+      const markdownFiles = Array.from(cacheFiles.keys()).filter(path =>
         path.startsWith('markdown-it/')
       );
       expect(markdownFiles).toHaveLength(0);
@@ -353,24 +358,24 @@ describe('ExtensionCache', () => {
       await extensionCache.deleteCachedExtension(extension.name);
 
       const cacheFiles = mockFileStorage.getWorkspaceFiles(CACHE_WORKSPACE_ID);
-      const extensionFiles = Array.from(cacheFiles.keys()).filter(path => 
+      const extensionFiles = Array.from(cacheFiles.keys()).filter(path =>
         path.startsWith(`${extension.name}/`)
       );
       expect(extensionFiles).toHaveLength(0);
     });
 
     it('should throw error for non-existent cache entry', async () => {
-      await expect(
-        extensionCache.deleteCachedExtension('non-existent')
-      ).rejects.toThrow("Extension 'non-existent' not found in cache");
+      await expect(extensionCache.deleteCachedExtension('non-existent')).rejects.toThrow(
+        "Extension 'non-existent' not found in cache"
+      );
     });
 
     it('should handle storage delete errors', async () => {
       mockFileStorage.setFailureMode('delete');
 
-      await expect(
-        extensionCache.deleteCachedExtension('markdown-it')
-      ).rejects.toThrow('Failed to delete file');
+      await expect(extensionCache.deleteCachedExtension('markdown-it')).rejects.toThrow(
+        'Failed to delete file'
+      );
     });
   });
 
@@ -415,10 +420,16 @@ describe('ExtensionCache', () => {
 
     it('should detect different extensions correctly', async () => {
       const workspaceId = TEST_WORKSPACE_IDS.CONFLICTED;
-      
+
       // Setup conflicting content
-      await mockFileStorage.addTestFiles(workspaceId, createExtensionFiles(CONFLICTING_EXTENSIONS.MARKDOWN_V2 as any, workspaceId));
-      await mockFileStorage.addTestFiles(CACHE_WORKSPACE_ID, createCacheFiles(CONFLICTING_EXTENSIONS.MARKDOWN_V1 as any));
+      await mockFileStorage.addTestFiles(
+        workspaceId,
+        createExtensionFiles(CONFLICTING_EXTENSIONS.MARKDOWN_V2 as any, workspaceId)
+      );
+      await mockFileStorage.addTestFiles(
+        CACHE_WORKSPACE_ID,
+        createCacheFiles(CONFLICTING_EXTENSIONS.MARKDOWN_V1 as any)
+      );
 
       const isDifferent = await (extensionCache as any).compareExtensions(
         workspaceId,
@@ -431,16 +442,16 @@ describe('ExtensionCache', () => {
 
     it('should handle different file counts', async () => {
       const workspaceId = TEST_WORKSPACE_IDS.MINIMAL;
-      
+
       // Workspace has 1 file
       await mockFileStorage.addTestFiles(workspaceId, {
-        'SOURCE/extensions/test/library.js': 'function test() {}'
+        'SOURCE/extensions/test/library.js': 'function test() {}',
       });
 
       // Cache has 2 files
       await mockFileStorage.addTestFiles(CACHE_WORKSPACE_ID, {
         'test/library.js': 'function test() {}',
-        'test/LICENSE.txt': 'MIT License'
+        'test/LICENSE.txt': 'MIT License',
       });
 
       const isDifferent = await (extensionCache as any).compareExtensions(
@@ -454,15 +465,15 @@ describe('ExtensionCache', () => {
 
     it('should handle different total sizes', async () => {
       const workspaceId = TEST_WORKSPACE_IDS.MINIMAL;
-      
+
       // Workspace version
       await mockFileStorage.addTestFiles(workspaceId, {
-        'SOURCE/extensions/test/library.js': 'short content'
+        'SOURCE/extensions/test/library.js': 'short content',
       });
 
       // Cache version (longer content)
       await mockFileStorage.addTestFiles(CACHE_WORKSPACE_ID, {
-        'test/library.js': 'much longer content that exceeds the workspace version'
+        'test/library.js': 'much longer content that exceeds the workspace version',
       });
 
       const isDifferent = await (extensionCache as any).compareExtensions(
@@ -476,19 +487,19 @@ describe('ExtensionCache', () => {
 
     it('should ignore file order differences', async () => {
       const workspaceId = TEST_WORKSPACE_IDS.MINIMAL;
-      
+
       // Workspace files in one order
       await mockFileStorage.addTestFiles(workspaceId, {
         'SOURCE/extensions/test/a.js': 'content a',
         'SOURCE/extensions/test/b.js': 'content b',
-        'SOURCE/extensions/test/LICENSE.txt': 'license'
+        'SOURCE/extensions/test/LICENSE.txt': 'license',
       });
 
       // Cache files in different order (but same content)
       await mockFileStorage.addTestFiles(CACHE_WORKSPACE_ID, {
         'test/LICENSE.txt': 'license',
         'test/b.js': 'content b',
-        'test/a.js': 'content a'
+        'test/a.js': 'content a',
       });
 
       const isDifferent = await (extensionCache as any).compareExtensions(
@@ -530,9 +541,7 @@ describe('ExtensionCache', () => {
       await mockFileStorage.addTestFiles(CACHE_WORKSPACE_ID, createPopulatedCache());
       mockFileStorage.setFailureMode('list');
 
-      await expect(
-        extensionCache.getCacheStats()
-      ).rejects.toThrow('Failed to list files');
+      await expect(extensionCache.getCacheStats()).rejects.toThrow('Failed to list files');
     });
   });
 });

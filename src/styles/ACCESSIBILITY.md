@@ -105,13 +105,13 @@ Use semantic color tokens that maintain proper contrast ratios:
 
 ```css
 /* Text colors with guaranteed contrast */
-color: var(--color-text-primary);    /* High contrast with backgrounds */
-color: var(--color-text-secondary);  /* Medium contrast, not for small text */
-color: var(--color-text-muted);      /* Low contrast, use sparingly */
+color: var(--color-text-primary); /* High contrast with backgrounds */
+color: var(--color-text-secondary); /* Medium contrast, not for small text */
+color: var(--color-text-muted); /* Low contrast, use sparingly */
 
 /* Interactive states */
 .button {
-  background: var(--color-primary);  /* Meets contrast requirements */
+  background: var(--color-primary); /* Meets contrast requirements */
   color: var(--color-primary-text); /* Guaranteed readable on primary bg */
 }
 ```
@@ -187,23 +187,23 @@ For showing focus state on parent elements:
   /* Minimum touch target */
   min-height: var(--touch-target-min);
   padding: var(--space-2) var(--space-4);
-  
+
   /* Remove default focus, add custom */
   &:focus {
     outline: none;
   }
-  
+
   &:focus-visible {
     outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus-ring);
     outline-offset: var(--focus-ring-offset);
   }
-  
+
   /* Disabled state */
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
-  
+
   /* High contrast mode */
   @media (prefers-contrast: high) {
     border: 2px solid;
@@ -217,16 +217,16 @@ For showing focus state on parent elements:
 .input {
   /* Minimum height for touch */
   min-height: var(--touch-target-min);
-  
+
   /* Focus styles */
   &:focus {
     outline: none;
     border-color: var(--color-focus);
     box-shadow: 0 0 0 1px var(--color-focus);
   }
-  
+
   /* Error state with ARIA */
-  &[aria-invalid="true"] {
+  &[aria-invalid='true'] {
     border-color: var(--color-danger);
   }
 }
@@ -261,13 +261,17 @@ For showing focus state on parent elements:
 
 ```css
 /* Bad: Only color indicates state */
-.error { color: red; }
+.error {
+  color: red;
+}
 
 /* Good: Multiple indicators */
 .error {
   color: var(--color-danger);
   font-weight: var(--font-semibold);
-  &::before { content: "⚠️ "; }
+  &::before {
+    content: '⚠️ ';
+  }
 }
 ```
 

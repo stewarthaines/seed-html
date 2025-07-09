@@ -26,7 +26,7 @@
   let sourceStats: any = null;
   let validation: any = null;
   let uploadedFile: File | null = null;
-  
+
   // EPUB-specific state
   let epubFiles: string[] = [];
   let epubMetadata: EPUBMetadata | null = null;
@@ -43,7 +43,7 @@
       epubPackager = new EPUBPackager();
       epubUnpacker = new EPUBUnpacker();
       addLog('success', 'EPUB integration managers initialized');
-      
+
       // Create a demo EPUB workspace
       await createEPUBWorkspace();
     } catch (error: any) {
@@ -64,14 +64,14 @@
 
       // Create EPUB structure
       await createEPUBStructure();
-      
+
       // Initialize SOURCE/ structure
       await sourceManager.initializeSourceStructure(currentWorkspaceId);
       addLog('success', 'SOURCE/ directory structure initialized');
 
       // Add demo content for both EPUB and SOURCE
       await createDemoContent();
-      
+
       // Refresh all info
       await refreshAllInfo();
     } catch (error: any) {
@@ -83,26 +83,26 @@
 
   async function createEPUBStructure() {
     if (!currentWorkspaceId) return;
-    
+
     addLog('action', 'Creating EPUB structure...');
 
     try {
       // Create mimetype
       await fileStorage.writeTextFile(currentWorkspaceId, 'mimetype', 'application/epub+zip');
-      
+
       // Create container.xml
       const containerXML = OPFUtils.generateContainerXML();
       await fileStorage.writeTextFile(currentWorkspaceId, 'META-INF/container.xml', containerXML);
-      
+
       // Create basic OPF with metadata
       const metadata: EPUBMetadata = {
         title: 'Demo EPUB with SOURCE Integration',
         creator: ['EPUB Demo Author'],
         language: 'en',
         identifier: 'demo-epub-' + Date.now(),
-        modifiedDate: new Date().toISOString()
+        modifiedDate: new Date().toISOString(),
       };
-      
+
       const opfDocument = {
         version: '3.0' as const,
         metadata,
@@ -110,18 +110,18 @@
           { id: 'nav', href: 'nav.xhtml', mediaType: 'application/xhtml+xml', properties: ['nav'] },
           { id: 'chapter1', href: 'Text/chapter1.xhtml', mediaType: 'application/xhtml+xml' },
           { id: 'chapter2', href: 'Text/chapter2.xhtml', mediaType: 'application/xhtml+xml' },
-          { id: 'style', href: 'Styles/style.css', mediaType: 'text/css' }
+          { id: 'style', href: 'Styles/style.css', mediaType: 'text/css' },
         ],
         spine: [
           { idref: 'nav', linear: true },
           { idref: 'chapter1', linear: true },
-          { idref: 'chapter2', linear: true }
-        ]
+          { idref: 'chapter2', linear: true },
+        ],
       };
-      
+
       const opfXML = OPFUtils.generateOPFXML(opfDocument);
       await fileStorage.writeTextFile(currentWorkspaceId, 'OEBPS/content.opf', opfXML);
-      
+
       epubMetadata = metadata;
       addLog('success', 'EPUB structure created');
     } catch (error: any) {
@@ -131,51 +131,75 @@
 
   async function createDemoContent() {
     if (!currentWorkspaceId) return;
-    
+
     addLog('action', 'Adding demo content to EPUB and SOURCE/...');
 
     try {
       // Add EPUB content files
-      await fileStorage.writeTextFile(currentWorkspaceId, 'OEBPS/nav.xhtml',
+      await fileStorage.writeTextFile(
+        currentWorkspaceId,
+        'OEBPS/nav.xhtml',
         `<?xml version="1.0" encoding="UTF-8"?>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
 <head><title>Navigation</title></head>
 <body><nav epub:type="toc"><ol>
 <li><a href="Text/chapter1.xhtml">Chapter 1</a></li>
 <li><a href="Text/chapter2.xhtml">Chapter 2</a></li>
-</ol></nav></body></html>`);
-      
-      await fileStorage.writeTextFile(currentWorkspaceId, 'OEBPS/Text/chapter1.xhtml',
+</ol></nav></body></html>`
+      );
+
+      await fileStorage.writeTextFile(
+        currentWorkspaceId,
+        'OEBPS/Text/chapter1.xhtml',
         `<?xml version="1.0" encoding="UTF-8"?>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head><title>Chapter 1</title><link rel="stylesheet" href="../Styles/style.css"/></head>
-<body><h1>Chapter 1: Introduction</h1><p>Welcome to the world of EPUB creation with SOURCE integration...</p></body></html>`);
-      
-      await fileStorage.writeTextFile(currentWorkspaceId, 'OEBPS/Text/chapter2.xhtml',
+<body><h1>Chapter 1: Introduction</h1><p>Welcome to the world of EPUB creation with SOURCE integration...</p></body></html>`
+      );
+
+      await fileStorage.writeTextFile(
+        currentWorkspaceId,
+        'OEBPS/Text/chapter2.xhtml',
         `<?xml version="1.0" encoding="UTF-8"?>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head><title>Chapter 2</title><link rel="stylesheet" href="../Styles/style.css"/></head>
-<body><h1>Chapter 2: Getting Started</h1><p>Let's begin with the basics of EPUB with SOURCE.zip...</p></body></html>`);
-      
-      await fileStorage.writeTextFile(currentWorkspaceId, 'OEBPS/Styles/style.css',
-        `body { font-family: serif; margin: 2em; }\nh1 { color: #333; border-bottom: 1px solid #ccc; }\np { line-height: 1.6; }`);
+<body><h1>Chapter 2: Getting Started</h1><p>Let's begin with the basics of EPUB with SOURCE.zip...</p></body></html>`
+      );
+
+      await fileStorage.writeTextFile(
+        currentWorkspaceId,
+        'OEBPS/Styles/style.css',
+        `body { font-family: serif; margin: 2em; }\nh1 { color: #333; border-bottom: 1px solid #ccc; }\np { line-height: 1.6; }`
+      );
 
       // Add SOURCE/ files
-      await fileStorage.writeTextFile(currentWorkspaceId, 'SOURCE/text/chapter1.txt', 
-        '# Chapter 1: Introduction\n\nWelcome to the world of EPUB creation with SOURCE integration...');
-      await fileStorage.writeTextFile(currentWorkspaceId, 'SOURCE/text/chapter2.txt',
-        '# Chapter 2: Getting Started\n\nLet\'s begin with the basics of EPUB with SOURCE.zip...');
+      await fileStorage.writeTextFile(
+        currentWorkspaceId,
+        'SOURCE/text/chapter1.txt',
+        '# Chapter 1: Introduction\n\nWelcome to the world of EPUB creation with SOURCE integration...'
+      );
+      await fileStorage.writeTextFile(
+        currentWorkspaceId,
+        'SOURCE/text/chapter2.txt',
+        "# Chapter 2: Getting Started\n\nLet's begin with the basics of EPUB with SOURCE.zip..."
+      );
 
       // Add script files
-      await fileStorage.writeTextFile(currentWorkspaceId, 'SOURCE/scripts/markdown-transform.js',
+      await fileStorage.writeTextFile(
+        currentWorkspaceId,
+        'SOURCE/scripts/markdown-transform.js',
         `function transformText(text) {
   return text.replace(/^# (.+)$/gm, '<h1>$1</h1>');
 }
-module.exports = { transformText };`);
+module.exports = { transformText };`
+      );
 
       // Add extension
-      await fileStorage.writeTextFile(currentWorkspaceId, 'SOURCE/extensions/highlight/package.json',
-        JSON.stringify({ name: 'highlight-js', version: '1.0.0', main: 'index.js' }, null, 2));
+      await fileStorage.writeTextFile(
+        currentWorkspaceId,
+        'SOURCE/extensions/highlight/package.json',
+        JSON.stringify({ name: 'highlight-js', version: '1.0.0', main: 'index.js' }, null, 2)
+      );
 
       addLog('success', 'Demo content added to both EPUB and SOURCE/ directories');
     } catch (error: any) {
@@ -190,16 +214,25 @@ module.exports = { transformText };`);
 
     try {
       const result = await epubPackager.packageEPUB(currentWorkspaceId, {
-        progressCallback: (progress) => {
-          addLog('info', `Packaging progress: ${progress.phase} - ${progress.processedFiles}/${progress.totalFiles} files`);
-        }
+        progressCallback: progress => {
+          addLog(
+            'info',
+            `Packaging progress: ${progress.phase} - ${progress.processedFiles}/${progress.totalFiles} files`
+          );
+        },
       });
-      
+
       if (result.success && result.blob) {
         packagedEPUB = result.blob;
-        addLog('success', `EPUB packaged successfully (${result.blob.size} bytes, ${result.fileCount} files)`);
-        addLog('info', `Compression ratio: ${((1 - result.compressedSize! / result.totalSize!) * 100).toFixed(1)}%`);
-        
+        addLog(
+          'success',
+          `EPUB packaged successfully (${result.blob.size} bytes, ${result.fileCount} files)`
+        );
+        addLog(
+          'info',
+          `Compression ratio: ${((1 - result.compressedSize! / result.totalSize!) * 100).toFixed(1)}%`
+        );
+
         // Offer download
         const url = URL.createObjectURL(result.blob);
         const a = document.createElement('a');
@@ -207,9 +240,9 @@ module.exports = { transformText };`);
         a.download = result.filename || 'demo-epub.epub';
         a.click();
         URL.revokeObjectURL(url);
-        
+
         addLog('info', 'EPUB download started - contains SOURCE.zip automatically');
-        
+
         // Analyze the created EPUB
         await analyzeEPUB(result.blob);
       } else {
@@ -231,13 +264,16 @@ module.exports = { transformText };`);
       // Create new workspace for unpacked EPUB
       unpackedWorkspaceId = await fileStorage.createWorkspace();
       addLog('info', `Created unpacking workspace: ${unpackedWorkspaceId}`);
-      
+
       const result = await epubUnpacker.unpackEPUB(uploadedFile, unpackedWorkspaceId);
-      
+
       if (result.success) {
         addLog('success', `EPUB unpacked successfully to workspace ${result.workspaceId}`);
-        addLog('info', `Extracted ${result.extractedFiles?.length} files, total size: ${result.totalSize} bytes`);
-        
+        addLog(
+          'info',
+          `Extracted ${result.extractedFiles?.length} files, total size: ${result.totalSize} bytes`
+        );
+
         // Check if SOURCE.zip was extracted
         const hasSourceZip = result.extractedFiles?.some(f => f.includes('SOURCE.zip'));
         if (hasSourceZip) {
@@ -245,16 +281,15 @@ module.exports = { transformText };`);
         } else {
           addLog('info', 'No SOURCE.zip found in EPUB');
         }
-        
+
         // Switch to unpacked workspace for analysis
         currentWorkspaceId = unpackedWorkspaceId;
         await refreshAllInfo();
-        
       } else {
         addLog('error', `EPUB unpacking failed: ${result.error}`);
         await fileStorage.deleteWorkspace(unpackedWorkspaceId);
       }
-      
+
       // Clear uploaded file
       uploadedFile = null;
     } catch (error: any) {
@@ -274,13 +309,16 @@ module.exports = { transformText };`);
 
     try {
       validation = await sourceManager.validateSourceStructure(currentWorkspaceId);
-      
+
       if (validation.isValid) {
-        addLog('success', `SOURCE/ structure is valid (${validation.fileCount} files, ${validation.totalSize} bytes)`);
+        addLog(
+          'success',
+          `SOURCE/ structure is valid (${validation.fileCount} files, ${validation.totalSize} bytes)`
+        );
       } else {
         addLog('error', `SOURCE/ validation failed: ${validation.errors.join(', ')}`);
       }
-      
+
       if (validation.warnings.length > 0) {
         addLog('info', `Warnings: ${validation.warnings.join(', ')}`);
       }
@@ -293,41 +331,49 @@ module.exports = { transformText };`);
 
   async function refreshAllInfo() {
     if (!sourceManager || !currentWorkspaceId) return;
-    
+
     try {
       // Get SOURCE/ file listing
       sourceFiles = await sourceManager.listSourceFiles(currentWorkspaceId);
-      
+
       // Get SOURCE/ statistics
       sourceStats = await sourceManager.getSourceDirectoryStats(currentWorkspaceId);
-      
+
       // Get EPUB files
       const allFiles = await fileStorage.listFiles(currentWorkspaceId);
       epubFiles = allFiles.filter(f => !f.startsWith('SOURCE/'));
-      
-      addLog('info', `Refreshed workspace info: ${sourceFiles.length} SOURCE files, ${epubFiles.length} EPUB files`);
+
+      addLog(
+        'info',
+        `Refreshed workspace info: ${sourceFiles.length} SOURCE files, ${epubFiles.length} EPUB files`
+      );
     } catch (error: any) {
       addLog('error', `Failed to refresh info: ${error.message}`);
     }
   }
-  
+
   async function analyzeEPUB(epubBlob: Blob) {
     if (!epubUnpacker) return;
-    
+
     try {
       addLog('action', 'Analyzing EPUB structure...');
-      
+
       // Convert Blob to File for analysis
       const epubFile = new File([epubBlob], 'analysis.epub', { type: 'application/epub+zip' });
       const analysis = await epubUnpacker.analyzeEPUB(epubFile);
-      
+
       epubAnalysis = analysis;
-      
+
       if (analysis.isValid) {
-        addLog('success', `EPUB analysis complete: ${analysis.fileCount} files, ${(analysis.totalSize / 1024).toFixed(1)} KB`);
-        
+        addLog(
+          'success',
+          `EPUB analysis complete: ${analysis.fileCount} files, ${(analysis.totalSize / 1024).toFixed(1)} KB`
+        );
+
         // Check for SOURCE.zip in file list
-        const hasSourceZip = analysis.fileList.includes('OEBPS/SOURCE.zip') || analysis.fileList.includes('SOURCE.zip');
+        const hasSourceZip =
+          analysis.fileList.includes('OEBPS/SOURCE.zip') ||
+          analysis.fileList.includes('SOURCE.zip');
         if (hasSourceZip) {
           addLog('success', '✅ SOURCE.zip found in EPUB manifest');
         } else {
@@ -368,10 +414,10 @@ module.exports = { transformText };`);
       epubMetadata = null;
       packagedEPUB = null;
       epubAnalysis = null;
-      
+
       // Create new demo workspace
       await createEPUBWorkspace();
-      
+
       addLog('success', 'Demo reset complete');
     } catch (error: any) {
       addLog('error', `Failed to reset demo: ${error.message}`);
@@ -390,7 +436,10 @@ module.exports = { transformText };`);
     if (target.files && target.files[0]) {
       uploadedFile = target.files[0];
       const fileType = uploadedFile.name.endsWith('.epub') ? 'EPUB' : 'unknown';
-      addLog('info', `${fileType} file selected: ${uploadedFile.name} (${(uploadedFile.size / 1024).toFixed(1)} KB)`);
+      addLog(
+        'info',
+        `${fileType} file selected: ${uploadedFile.name} (${(uploadedFile.size / 1024).toFixed(1)} KB)`
+      );
     }
   }
 
@@ -410,26 +459,26 @@ module.exports = { transformText };`);
     <!-- EPUB Operations Panel -->
     <div class="epub-operations-panel">
       <h3>📚 EPUB Operations</h3>
-      
+
       <div class="button-group">
-        <button 
-          on:click={packageToEPUB} 
+        <button
+          on:click={packageToEPUB}
           disabled={isLoading || !currentWorkspaceId}
           class="btn-primary"
         >
           📦 Package to EPUB
         </button>
-        
-        <button 
-          on:click={validateSourceStructure} 
+
+        <button
+          on:click={validateSourceStructure}
           disabled={isLoading || !currentWorkspaceId}
           class="btn-secondary"
         >
           ✅ Validate Workspace
         </button>
-        
-        <button 
-          on:click={refreshAllInfo} 
+
+        <button
+          on:click={refreshAllInfo}
           disabled={isLoading || !currentWorkspaceId}
           class="btn-secondary"
         >
@@ -439,37 +488,20 @@ module.exports = { transformText };`);
 
       <div class="upload-section">
         <h4>📤 Upload EPUB File</h4>
-        <input 
-          type="file" 
-          accept=".epub" 
-          on:change={handleFileUpload}
-          disabled={isLoading}
-        />
+        <input type="file" accept=".epub" on:change={handleFileUpload} disabled={isLoading} />
         {#if uploadedFile}
-          <button 
-            on:click={unpackEPUB} 
-            disabled={isLoading}
-            class="btn-primary"
-          >
+          <button on:click={unpackEPUB} disabled={isLoading} class="btn-primary">
             📂 Unpack EPUB
           </button>
         {/if}
       </div>
 
       <div class="reset-section">
-        <button 
-          on:click={resetDemo} 
-          disabled={isLoading}
-          class="btn-danger"
-        >
+        <button on:click={resetDemo} disabled={isLoading} class="btn-danger">
           🔄 Reset Demo
         </button>
-        
-        <button 
-          on:click={clearLogs} 
-          disabled={isLoading}
-          class="btn-secondary"
-        >
+
+        <button on:click={clearLogs} disabled={isLoading} class="btn-secondary">
           🧹 Clear Logs
         </button>
       </div>
@@ -478,7 +510,7 @@ module.exports = { transformText };`);
     <!-- Workspace State Panel -->
     <div class="workspace-state-panel">
       <h3>📊 Workspace State</h3>
-      
+
       {#if epubMetadata}
         <div class="epub-metadata">
           <h4>📚 EPUB Metadata</h4>
@@ -502,7 +534,7 @@ module.exports = { transformText };`);
           </div>
         </div>
       {/if}
-      
+
       {#if sourceStats}
         <div class="source-stats">
           <h4>📂 SOURCE/ Directory</h4>
@@ -540,7 +572,11 @@ module.exports = { transformText };`);
       {#if validation}
         <div class="validation-section">
           <h4>🔍 Workspace Validation</h4>
-          <div class="validation-status" class:valid={validation.isValid} class:invalid={!validation.isValid}>
+          <div
+            class="validation-status"
+            class:valid={validation.isValid}
+            class:invalid={!validation.isValid}
+          >
             {validation.isValid ? '✅ Valid' : '❌ Invalid'}
           </div>
           {#if validation.errors.length > 0}
@@ -570,7 +606,7 @@ module.exports = { transformText };`);
     <!-- EPUB Analysis Panel -->
     <div class="epub-analysis-panel">
       <h3>🔍 EPUB Analysis</h3>
-      
+
       {#if epubAnalysis}
         <div class="epub-analysis">
           <div class="analysis-summary">
@@ -591,12 +627,14 @@ module.exports = { transformText };`);
               <div class="analysis-item">
                 <span class="analysis-label">SOURCE.zip:</span>
                 <span class="analysis-value">
-                  {epubAnalysis.fileList.some(f => f.includes('SOURCE.zip')) ? '✅ Present' : '❌ Missing'}
+                  {epubAnalysis.fileList.some(f => f.includes('SOURCE.zip'))
+                    ? '✅ Present'
+                    : '❌ Missing'}
                 </span>
               </div>
             </div>
           </div>
-          
+
           <div class="file-list-section">
             <h4>📄 EPUB Files</h4>
             <div class="file-list-scroll">
@@ -617,11 +655,11 @@ module.exports = { transformText };`);
         <p class="no-analysis">No EPUB analysis available - package an EPUB first</p>
       {/if}
     </div>
-    
+
     <!-- Files Panel -->
     <div class="files-panel">
       <h3>📁 Workspace Files</h3>
-      
+
       <div class="file-sections">
         <div class="file-section">
           <h4>📚 EPUB Files ({epubFiles.length})</h4>
@@ -640,7 +678,7 @@ module.exports = { transformText };`);
             <p class="no-files">No EPUB files found</p>
           {/if}
         </div>
-        
+
         <div class="file-section">
           <h4>📂 SOURCE/ Files ({sourceFiles.length})</h4>
           {#if sourceFiles.length > 0}

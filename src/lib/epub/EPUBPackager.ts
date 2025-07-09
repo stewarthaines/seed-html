@@ -148,11 +148,11 @@ export class EPUBPackager {
 
   async readWorkspaceFiles(workspaceId: string): Promise<WorkspaceFile[]> {
     const allFilePaths = await this.fileStorage.listFiles(workspaceId);
-    
+
     // Separate SOURCE/ files from EPUB files
     const sourceFiles = allFilePaths.filter(f => f.startsWith('SOURCE/'));
     const epubFiles = allFilePaths.filter(f => !f.startsWith('SOURCE/'));
-    
+
     const files: WorkspaceFile[] = [];
 
     // Process EPUB files normally

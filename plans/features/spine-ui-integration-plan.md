@@ -6,11 +6,10 @@ This document outlines the steps needed to integrate the recently implemented sp
 
 ## Current State
 
-- **Implemented**: 
+- **Implemented**:
   - `SpineItemManager` class (`src/lib/spine/spine-item-manager.ts`)
   - `SpineSidebar` component with Craigslist-inspired compact design
   - Backend functionality for spine item operations
-  
 - **Needs Integration**:
   - Connection to main app routing
   - Workspace state management
@@ -24,6 +23,7 @@ This document outlines the steps needed to integrate the recently implemented sp
 **Purpose**: Establish centralized workspace management that can be shared between components.
 
 **Tasks**:
+
 - Import WorkspaceManager from `$lib/workspace`
 - Create reactive workspace state:
   - `workspaceId` - Currently active workspace
@@ -38,6 +38,7 @@ This document outlines the steps needed to integrate the recently implemented sp
 **Purpose**: Integrate the functional SpineSidebar component into the app layout.
 
 **Tasks**:
+
 - Import SpineSidebar component
 - Replace placeholder content in the `sidebar-spine` slot
 - Pass required props:
@@ -54,6 +55,7 @@ This document outlines the steps needed to integrate the recently implemented sp
 **Purpose**: Provide a main view for displaying and editing selected spine items.
 
 **Tasks**:
+
 - Create `src/lib/navigation/views/SpineView.svelte`
 - Features to include:
   - Display spine item metadata (title, position, etc.)
@@ -71,6 +73,7 @@ This document outlines the steps needed to integrate the recently implemented sp
 **Purpose**: Enable communication between sidebar and main view.
 
 **Tasks**:
+
 - Listen for `select-spine-item` events in App.svelte
 - Update application state with selected item:
   - `selectedSpineItemId`
@@ -85,6 +88,7 @@ This document outlines the steps needed to integrate the recently implemented sp
 **Purpose**: Display the appropriate view based on navigation state.
 
 **Tasks**:
+
 - Replace PlaceholderView for spine route with SpineView
 - Pass selected spine item data to the view
 - Handle case when no item is selected (show instructions or first item)
@@ -97,6 +101,7 @@ This document outlines the steps needed to integrate the recently implemented sp
 **Purpose**: Ensure the compact sidebar design works correctly.
 
 **Tasks**:
+
 - Connect layoutStore sidebar state to SpineSidebar `isExpanded` prop
 - Test compact mode functionality
 - Ensure tooltips work in compact mode
@@ -107,23 +112,27 @@ This document outlines the steps needed to integrate the recently implemented sp
 ## Additional Considerations
 
 ### Error Handling
+
 - Workspace loading failures
 - Missing spine items
 - Save operation failures
 - Network/storage errors
 
 ### Performance
+
 - Lazy load spine items for large EPUBs
 - Debounce save operations
 - Optimize re-renders on selection changes
 
 ### Testing
+
 - Unit tests for state management
 - Integration tests for event flow
 - Storybook stories for different states
 - E2E tests for full workflow
 
 ### Future Enhancements
+
 - Drag-and-drop reordering in sidebar
 - Bulk operations on multiple items
 - Keyboard navigation shortcuts

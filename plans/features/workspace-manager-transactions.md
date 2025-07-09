@@ -52,11 +52,11 @@ interface TransactionManager {
   startTransaction(): void;
   commitTransaction(): Promise<void>;
   rollbackTransaction(): Promise<void>;
-  
+
   // Operation tracking
   trackOperation(operation: TransactionOperation): void;
   isTransactionActive(): boolean;
-  
+
   // Utility methods
   executeInTransaction<T>(fn: () => Promise<T>): Promise<T>;
 }
@@ -73,35 +73,35 @@ interface TransactionOperation {
 ```typescript
 class WorkspaceManager {
   private transactionManager: TransactionManager;
-  
+
   constructor(storage: FileStorageAPI, transactionManager?: TransactionManager) {
     this.storage = storage;
     this.transactionManager = transactionManager || new DefaultTransactionManager();
   }
-  
+
   // Delegate transaction methods for backward compatibility
   startTransaction(): void {
     this.transactionManager.startTransaction();
   }
-  
+
   commitTransaction(): Promise<void> {
     return this.transactionManager.commitTransaction();
   }
-  
+
   rollbackTransaction(): Promise<void> {
     return this.transactionManager.rollbackTransaction();
   }
-  
+
   // Enhanced methods with transaction tracking
   async addManifestItem(workspaceId: string, item: ManifestItem): Promise<void> {
     if (this.transactionManager.isTransactionActive()) {
       const originalOPF = await this.getWorkspaceOPF(workspaceId);
       this.transactionManager.trackOperation({
         type: 'add_manifest_item',
-        rollback: () => this.updateWorkspaceOPF(workspaceId, originalOPF)
+        rollback: () => this.updateWorkspaceOPF(workspaceId, originalOPF),
       });
     }
-    
+
     // Existing implementation
     await this.addManifestItemInternal(workspaceId, item);
   }
@@ -115,32 +115,32 @@ class WorkspaceManager {
 ```typescript
 class DefaultTransactionManager implements TransactionManager {
   private transactionState: TransactionState | null = null;
-  
+
   startTransaction(): void {
     if (this.transactionState?.active) {
       throw new Error('Transaction already active');
     }
-    
+
     this.transactionState = {
       active: true,
       operations: [],
-      startTime: Date.now()
+      startTime: Date.now(),
     };
   }
-  
+
   trackOperation(operation: TransactionOperation): void {
     if (!this.transactionState?.active) {
       throw new Error('No active transaction');
     }
-    
+
     this.transactionState.operations.push(operation);
   }
-  
+
   async commitTransaction(): Promise<void> {
     if (!this.transactionState?.active) {
       throw new Error('No active transaction');
     }
-    
+
     try {
       // All operations have already been applied
       // Commit just clears the transaction state
@@ -151,12 +151,12 @@ class DefaultTransactionManager implements TransactionManager {
       throw error;
     }
   }
-  
+
   async rollbackTransaction(): Promise<void> {
     if (!this.transactionState?.active) {
       return; // No-op if no transaction
     }
-    
+
     try {
       // Execute rollback operations in reverse order
       const operations = this.transactionState.operations.reverse();
@@ -184,11 +184,13 @@ interface TransactionState {
 #### 2. Backend-Agnostic Implementation
 
 **Storage Backend Independence:**
+
 - TransactionManager doesn't know about storage backends
 - Rollback operations are provided by the calling component
 - Works with any storage implementation (IndexedDB, OPFS, etc.)
 
 **Operation Tracking Pattern:**
+
 ```typescript
 // In WorkspaceManager methods
 async writeTextFile(workspaceId: string, path: string, content: string): Promise<void> {
@@ -196,7 +198,7 @@ async writeTextFile(workspaceId: string, path: string, content: string): Promise
     // Capture current state for rollback
     const originalContent = await this.readTextFileInternal(workspaceId, path);
     const fileExisted = await this.fileExists(workspaceId, path);
-    
+
     this.transactionManager.trackOperation({
       type: 'file_write',
       rollback: async () => {
@@ -209,7 +211,7 @@ async writeTextFile(workspaceId: string, path: string, content: string): Promise
       metadata: { path, workspaceId }
     });
   }
-  
+
   // Perform actual write
   await this.storage.writeTextFile(workspaceId, path, content);
 }
@@ -221,7 +223,7 @@ async writeTextFile(workspaceId: string, path: string, content: string): Promise
 // Utility method for common transaction pattern
 async executeInTransaction<T>(fn: () => Promise<T>): Promise<T> {
   this.startTransaction();
-  
+
   try {
     const result = await fn();
     await this.commitTransaction();
@@ -236,12 +238,12 @@ async executeInTransaction<T>(fn: () => Promise<T>): Promise<T> {
 async addChapter(workspaceId: string, chapterData: ChapterCreationData): Promise<SpineItemWithSource> {
   return this.workspaceManager.transactionManager.executeInTransaction(async () => {
     const chapterId = await this.generateChapterId(workspaceId, chapterData.title);
-    
+
     // All these operations are automatically tracked for rollback
     await this.workspaceManager.addManifestItem(workspaceId, manifestItem);
     await this.workspaceManager.addSpineItem(workspaceId, spineItem);
     await this.workspaceManager.writeTextFile(workspaceId, xhtmlPath, content);
-    
+
     return spineItemWithSource;
   });
 }
@@ -254,26 +256,26 @@ async addChapter(workspaceId: string, chapterData: ChapterCreationData): Promise
 ```typescript
 class WorkspaceManager {
   private transactionManager: TransactionManager;
-  
+
   constructor(storage: FileStorageAPI, options?: WorkspaceManagerOptions) {
     this.storage = storage;
     this.transactionManager = options?.transactionManager || new DefaultTransactionManager();
   }
-  
+
   // Expose transaction manager for direct usage
   get transactions(): TransactionManager {
     return this.transactionManager;
   }
-  
+
   // Backward compatibility methods
   startTransaction(): void {
     this.transactionManager.startTransaction();
   }
-  
+
   commitTransaction(): Promise<void> {
     return this.transactionManager.commitTransaction();
   }
-  
+
   rollbackTransaction(): Promise<void> {
     return this.transactionManager.rollbackTransaction();
   }
@@ -286,21 +288,24 @@ class WorkspaceManager {
 // SpineItemManager can use transactions directly
 class SpineItemManager {
   private workspaceManager: WorkspaceManager;
-  
+
   constructor(workspaceManager: WorkspaceManager) {
     this.workspaceManager = workspaceManager;
   }
-  
-  async addChapter(workspaceId: string, chapterData: ChapterCreationData): Promise<SpineItemWithSource> {
+
+  async addChapter(
+    workspaceId: string,
+    chapterData: ChapterCreationData
+  ): Promise<SpineItemWithSource> {
     // Use transaction manager directly
     const transactionManager = this.workspaceManager.transactions;
-    
+
     return transactionManager.executeInTransaction(async () => {
       // All workspace operations are automatically tracked
       await this.workspaceManager.addManifestItem(workspaceId, manifestItem);
       await this.workspaceManager.addSpineItem(workspaceId, spineItem);
       await this.workspaceManager.writeTextFile(workspaceId, xhtmlPath, content);
-      
+
       return spineItemWithSource;
     });
   }
@@ -313,26 +318,26 @@ class SpineItemManager {
 // Easy to mock for testing
 class MockTransactionManager implements TransactionManager {
   private operations: TransactionOperation[] = [];
-  
+
   startTransaction(): void {
     this.operations = [];
   }
-  
+
   trackOperation(operation: TransactionOperation): void {
     this.operations.push(operation);
   }
-  
+
   async commitTransaction(): Promise<void> {
     // No-op for testing
   }
-  
+
   async rollbackTransaction(): Promise<void> {
     // Execute rollbacks for testing
     for (const op of this.operations.reverse()) {
       await op.rollback();
     }
   }
-  
+
   getTrackedOperations(): TransactionOperation[] {
     return this.operations;
   }
@@ -340,7 +345,9 @@ class MockTransactionManager implements TransactionManager {
 
 // Test WorkspaceManager with mock transactions
 const mockTransactionManager = new MockTransactionManager();
-const workspaceManager = new WorkspaceManager(storage, { transactionManager: mockTransactionManager });
+const workspaceManager = new WorkspaceManager(storage, {
+  transactionManager: mockTransactionManager,
+});
 ```
 
 ### 4. Alternative Transaction Manager Implementations
@@ -351,35 +358,35 @@ const workspaceManager = new WorkspaceManager(storage, { transactionManager: moc
 class IndexedDBTransactionManager implements TransactionManager {
   private storage: IndexedDBBackend;
   private transactionState: TransactionState | null = null;
-  
+
   constructor(storage: IndexedDBBackend) {
     this.storage = storage;
   }
-  
+
   startTransaction(): void {
     // Leverage IndexedDB's native transaction support
     this.transactionState = {
       active: true,
       operations: [],
       startTime: Date.now(),
-      nativeTransaction: this.storage.transaction(['workspaces'], 'readwrite')
+      nativeTransaction: this.storage.transaction(['workspaces'], 'readwrite'),
     };
   }
-  
+
   async commitTransaction(): Promise<void> {
     if (!this.transactionState?.active) {
       throw new Error('No active transaction');
     }
-    
+
     // IndexedDB commits automatically when transaction scope ends
     this.transactionState = null;
   }
-  
+
   async rollbackTransaction(): Promise<void> {
     if (!this.transactionState?.active) {
       return;
     }
-    
+
     // IndexedDB rollback happens automatically on error
     // But we still need to handle app-level rollbacks
     await this.executeRollbackOperations();
@@ -394,7 +401,7 @@ class IndexedDBTransactionManager implements TransactionManager {
 class LightweightTransactionManager implements TransactionManager {
   private operations: TransactionOperation[] = [];
   private active = false;
-  
+
   startTransaction(): void {
     if (this.active) {
       throw new Error('Transaction already active');
@@ -402,24 +409,24 @@ class LightweightTransactionManager implements TransactionManager {
     this.active = true;
     this.operations = [];
   }
-  
+
   trackOperation(operation: TransactionOperation): void {
     if (!this.active) {
       throw new Error('No active transaction');
     }
     this.operations.push(operation);
   }
-  
+
   async commitTransaction(): Promise<void> {
     this.active = false;
     this.operations = [];
   }
-  
+
   async rollbackTransaction(): Promise<void> {
     if (!this.active) {
       return;
     }
-    
+
     try {
       // Execute rollbacks in reverse order
       for (const operation of this.operations.reverse()) {
@@ -498,21 +505,25 @@ try {
 ## Implementation Phases
 
 ### Phase 1: Core Transaction Infrastructure
+
 - Add transaction state management
 - Implement operation tracking
 - Add public transaction methods
 
 ### Phase 2: Backend Integration
+
 - Enhance IndexedDB backend with transaction support
 - Add OPFS rollback mechanisms
 - Implement storage-aware commit/rollback
 
 ### Phase 3: Method Enhancement
+
 - Add transaction tracking to critical methods
 - Implement rollback for file operations
 - Add cache state restoration
 
 ### Phase 4: Testing & Validation
+
 - Unit tests for transaction scenarios
 - Integration tests with SpineItemManager
 - Performance testing across backends

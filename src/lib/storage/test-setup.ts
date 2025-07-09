@@ -95,7 +95,7 @@ export class MockOPFSFileHandle implements OPFSFileHandle {
       close: vi.fn(),
       locked: false,
       abort: vi.fn(),
-      getWriter: vi.fn()
+      getWriter: vi.fn(),
     } as unknown as FileSystemWritableFileStream;
   }
 
@@ -258,7 +258,10 @@ export class MockStorageBackend implements StorageBackend {
     return files;
   }
 
-  async getFileInfo(workspaceId: string, path: string): Promise<{ size: number; lastModified: Date }> {
+  async getFileInfo(
+    workspaceId: string,
+    path: string
+  ): Promise<{ size: number; lastModified: Date }> {
     const workspace = this.workspaces.get(workspaceId);
     if (!workspace) {
       throw new Error(`Workspace not found: ${workspaceId}`);
@@ -269,7 +272,7 @@ export class MockStorageBackend implements StorageBackend {
     }
     return {
       size: content.byteLength,
-      lastModified: new Date()
+      lastModified: new Date(),
     };
   }
 

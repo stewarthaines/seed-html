@@ -7,7 +7,7 @@
 
   // Create story composition
   const story = createWorkspaceStoryComposition();
-  
+
   // Test state
   let debugInfo = {
     mounted: false,
@@ -21,7 +21,7 @@
   // Build configuration
   $: config = {
     ...STORY_CONFIGS[scenario],
-    logging: { enabled: true, showDetails: true }
+    logging: { enabled: true, showDetails: true },
   };
 
   onMount(async () => {
@@ -32,9 +32,9 @@
     try {
       debugInfo.initStarted = true;
       debugInfo = { ...debugInfo };
-      
+
       await story.initializeStory(config);
-      
+
       debugInfo.initCompleted = true;
       debugInfo.storyState = {
         workspaceManager: !!story.state.workspaceManager,
@@ -44,7 +44,6 @@
         error: story.state.error,
       };
       debugInfo = { ...debugInfo };
-      
     } catch (error) {
       debugInfo.error = error.message;
       debugInfo = { ...debugInfo };
@@ -154,12 +153,8 @@
   </div>
 
   <div class="debug-actions">
-    <button on:click={() => story.initializeStory(config)}>
-      🔄 Retry Initialization
-    </button>
-    <button on:click={() => story.logger.clearLogs()}>
-      🗑️ Clear Logs
-    </button>
+    <button on:click={() => story.initializeStory(config)}> 🔄 Retry Initialization </button>
+    <button on:click={() => story.logger.clearLogs()}> 🗑️ Clear Logs </button>
   </div>
 </div>
 

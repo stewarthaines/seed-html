@@ -16,7 +16,7 @@
   const mockStorage = new MockFileStorageAPI(BASIC_EPUB_WORKSPACE);
 
   // Replace the file storage with our mock
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   (packager as any).fileStorage = mockStorage;
 
   async function handlePackage() {

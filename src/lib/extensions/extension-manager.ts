@@ -1,26 +1,26 @@
 /**
  * ExtensionManager - Main API for extension management
- * 
+ *
  * Provides unified JavaScript extension management for workspaces including
  * importing new extensions, managing existing ones, and utilizing a global cache.
  */
 
 import type { FileStorageAPI } from '../storage/index.js';
-import type { 
-  ExtensionInfo, 
-  ExtensionFile, 
+import type {
+  ExtensionInfo,
+  ExtensionFile,
   ExtensionSignature,
-  CachingSummary, 
-  ValidationResult 
+  CachingSummary,
+  ValidationResult,
 } from './types.js';
 import { ExtensionCache } from './extension-cache.js';
-import { 
-  detectExtensionName, 
+import {
+  detectExtensionName,
   normalizeExtensionName,
-  validateExtensionFile, 
+  validateExtensionFile,
   isValidExtensionName,
   createExtensionSignature,
-  compareExtensionSignatures
+  compareExtensionSignatures,
 } from './utils.js';
 
 /**
@@ -47,16 +47,20 @@ export class ExtensionManager {
 
   /**
    * Imports a new extension from uploaded file
-   * 
+   *
    * @param workspaceId - Target workspace identifier
    * @param file - JavaScript file to import
    * @param extensionName - User-confirmed extension name (normalized)
    * @returns Promise resolving to information about the created extension
    */
-  async importExtension(workspaceId: string, file: File, extensionName: string): Promise<ExtensionInfo> {
+  async importExtension(
+    workspaceId: string,
+    file: File,
+    extensionName: string
+  ): Promise<ExtensionInfo> {
     // Normalize extension name
     const normalizedName = normalizeExtensionName(extensionName);
-    
+
     // Validate inputs
     if (!isValidExtensionName(normalizedName)) {
       throw new Error(`Invalid extension name: '${extensionName}' contains illegal characters`);
@@ -75,7 +79,7 @@ export class ExtensionManager {
 
     // Read file content
     const arrayBuffer = await file.arrayBuffer();
-    
+
     // Save to workspace
     const filePath = `SOURCE/extensions/${normalizedName}/${file.name}`;
     await this.fileStorage.writeFile(workspaceId, filePath, arrayBuffer);
@@ -91,19 +95,21 @@ export class ExtensionManager {
     // Return extension info
     return {
       name: normalizedName,
-      files: [{
-        filename: file.name,
-        size: file.size,
-        type: validation.fileType as 'javascript' | 'license'
-      }],
+      files: [
+        {
+          filename: file.name,
+          size: file.size,
+          type: validation.fileType as 'javascript' | 'license',
+        },
+      ],
       totalSize: file.size,
-      location: 'workspace'
+      location: 'workspace',
     };
   }
 
   /**
    * Adds a file to an existing extension
-   * 
+   *
    * @param workspaceId - Target workspace identifier
    * @param extensionName - Existing extension name
    * @param file - Additional JavaScript or LICENSE file
@@ -145,7 +151,7 @@ export class ExtensionManager {
 
   /**
    * Lists all extensions in a workspace
-   * 
+   *
    * @param workspaceId - Target workspace identifier
    * @returns Promise resolving to array of extensions in workspace
    */
@@ -153,7 +159,7 @@ export class ExtensionManager {
     try {
       const files = await this.fileStorage.listFiles(workspaceId);
       const extensionFiles = files.filter(f => f.startsWith('SOURCE/extensions/'));
-      
+
       const extensionDirs = new Set<string>();
       for (const file of extensionFiles) {
         const pathParts = file.split('/');
@@ -185,7 +191,7 @@ export class ExtensionManager {
 
   /**
    * Deletes an extension from a workspace
-   * 
+   *
    * @param workspaceId - Target workspace identifier
    * @param extensionName - Extension to delete
    * @returns Promise that resolves when deletion is complete
@@ -208,7 +214,7 @@ export class ExtensionManager {
 
   /**
    * Lists all cached extensions
-   * 
+   *
    * @returns Promise resolving to array of globally cached extensions
    */
   async listCachedExtensions(): Promise<ExtensionInfo[]> {
@@ -217,7 +223,7 @@ export class ExtensionManager {
 
   /**
    * Imports an extension from the global cache to a workspace
-   * 
+   *
    * @param workspaceId - Target workspace identifier
    * @param extensionName - Name of cached extension to import
    * @returns Promise that resolves when import is complete
@@ -241,7 +247,7 @@ export class ExtensionManager {
 
   /**
    * Deletes an extension from the global cache
-   * 
+   *
    * @param extensionName - Cached extension to delete
    * @returns Promise that resolves when deletion is complete
    */
@@ -251,7 +257,7 @@ export class ExtensionManager {
 
   /**
    * Caches an extension from a workspace to the global cache
-   * 
+   *
    * @param workspaceId - Source workspace identifier
    * @param extensionName - Extension to cache
    * @returns Promise that resolves when caching is complete
@@ -268,8 +274,11 @@ export class ExtensionManager {
     const existingSignature = await this.cache.getExtensionSignature(extensionName);
     if (existingSignature) {
       // Get workspace file signatures without reading content for comparison
-      const workspaceSignature = await this.getWorkspaceExtensionSignature(workspaceId, extensionName);
-      
+      const workspaceSignature = await this.getWorkspaceExtensionSignature(
+        workspaceId,
+        extensionName
+      );
+
       if (compareExtensionSignatures(existingSignature, workspaceSignature)) {
         // Already cached with same content, skip
         return;
@@ -288,24 +297,24 @@ export class ExtensionManager {
 
   /**
    * Scans workspace for extensions and caches them automatically
-   * 
+   *
    * @param workspaceId - Workspace to scan for extensions
    * @returns Promise resolving to summary of caching results
    */
   async scanAndCacheExtensions(workspaceId: string): Promise<CachingSummary> {
     const workspaceExtensions = await this.listWorkspaceExtensions(workspaceId);
-    
+
     const summary: CachingSummary = {
       successCount: 0,
       totalScanned: workspaceExtensions.length,
       conflicts: [],
-      errors: []
+      errors: [],
     };
 
     for (const extension of workspaceExtensions) {
       try {
         const files = await this.getWorkspaceExtensionFiles(workspaceId, extension.name);
-        
+
         // Check for conflicts first
         const hasConflict = await this.cache.hasConflict(extension.name, files);
         if (hasConflict) {
@@ -320,7 +329,7 @@ export class ExtensionManager {
         summary.errors.push({
           extensionName: extension.name,
           reason: 'storage',
-          message: error instanceof Error ? error.message : 'Unknown error'
+          message: error instanceof Error ? error.message : 'Unknown error',
         });
       }
     }
@@ -332,7 +341,7 @@ export class ExtensionManager {
 
   /**
    * Detects extension name from JavaScript filename
-   * 
+   *
    * @param filename - JavaScript filename
    * @returns Normalized extension name
    */
@@ -342,7 +351,7 @@ export class ExtensionManager {
 
   /**
    * Validates uploaded file for extension import
-   * 
+   *
    * @param file - File to validate
    * @returns Validation result with file type and any errors
    */
@@ -352,7 +361,7 @@ export class ExtensionManager {
 
   /**
    * Normalizes extension name for safe directory usage
-   * 
+   *
    * @param name - Raw extension name
    * @returns Normalized name
    */
@@ -362,7 +371,7 @@ export class ExtensionManager {
 
   /**
    * Compares two extensions for equality
-   * 
+   *
    * @param ext1 - First extension
    * @param ext2 - Second extension
    * @returns True if extensions are equivalent
@@ -371,44 +380,44 @@ export class ExtensionManager {
     // Handle both ExtensionInfo objects and signature-like objects from tests
     const name1 = ext1.name || 'unknown';
     const name2 = ext2.name || 'unknown';
-    
+
     if (name1 !== name2) return false;
     if (ext1.totalSize !== ext2.totalSize) return false;
     if (ext1.files.length !== ext2.files.length) return false;
-    
+
     // Handle both filename/name formats
-    const files1 = ext1.files.slice().sort((a: any, b: any) => 
-      (a.filename || a.name).localeCompare(b.filename || b.name)
-    );
-    const files2 = ext2.files.slice().sort((a: any, b: any) => 
-      (a.filename || a.name).localeCompare(b.filename || b.name)
-    );
-    
+    const files1 = ext1.files
+      .slice()
+      .sort((a: any, b: any) => (a.filename || a.name).localeCompare(b.filename || b.name));
+    const files2 = ext2.files
+      .slice()
+      .sort((a: any, b: any) => (a.filename || a.name).localeCompare(b.filename || b.name));
+
     return files1.every((file: any, index: number) => {
       const otherFile = files2[index];
       const name1 = file.filename || file.name;
       const name2 = otherFile.filename || otherFile.name;
-      
+
       return name1 === name2 && file.size === otherFile.size;
     });
   }
 
   /**
    * Sanitizes filename for safe file system usage
-   * 
+   *
    * @param filename - Original filename
    * @returns Sanitized filename
    */
   sanitizeFilename(filename: string): string {
     return filename
-      .replace(/\.\.\//g, '')                  // Remove ../ traversal
-      .replace(/\.\.\\/g, '')                  // Remove ..\ traversal  
-      .replace(/[<>:"/\\|?*\x00-\x1f]/g, '-')  // Replace dangerous chars
-      .replace(/^\.+/, '')                     // Remove leading dots
-      .replace(/\.+$/, '')                     // Remove trailing dots
-      .replace(/-+/g, '-')                     // Collapse multiple hyphens
-      .replace(/^-|-$/g, '')                   // Remove leading/trailing hyphens
-      .substring(0, 255);                      // Limit length
+      .replace(/\.\.\//g, '') // Remove ../ traversal
+      .replace(/\.\.\\/g, '') // Remove ..\ traversal
+      .replace(/[<>:"/\\|?*\x00-\x1f]/g, '-') // Replace dangerous chars
+      .replace(/^\.+/, '') // Remove leading dots
+      .replace(/\.+$/, '') // Remove trailing dots
+      .replace(/-+/g, '-') // Collapse multiple hyphens
+      .replace(/^-|-$/g, '') // Remove leading/trailing hyphens
+      .substring(0, 255); // Limit length
   }
 
   // Private Helper Methods
@@ -416,7 +425,10 @@ export class ExtensionManager {
   /**
    * Gets extension signature from workspace without reading file contents (optimized)
    */
-  private async getWorkspaceExtensionSignature(workspaceId: string, extensionName: string): Promise<ExtensionSignature> {
+  private async getWorkspaceExtensionSignature(
+    workspaceId: string,
+    extensionName: string
+  ): Promise<ExtensionSignature> {
     const files = await this.fileStorage.listFiles(workspaceId);
     const extensionFiles = files.filter(f => f.startsWith(`SOURCE/extensions/${extensionName}/`));
 
@@ -427,7 +439,7 @@ export class ExtensionManager {
     const fileInfos = [];
     for (const filePath of extensionFiles) {
       const filename = filePath.split('/').pop()!;
-      
+
       // Only process valid extension files
       if (filename.endsWith('.js') || filename.toLowerCase().includes('license')) {
         // Use fileInfo method if available, otherwise read file to get size
@@ -448,7 +460,10 @@ export class ExtensionManager {
   /**
    * Gets detailed information about a workspace extension
    */
-  private async getWorkspaceExtensionInfo(workspaceId: string, extensionName: string): Promise<ExtensionInfo> {
+  private async getWorkspaceExtensionInfo(
+    workspaceId: string,
+    extensionName: string
+  ): Promise<ExtensionInfo> {
     const files = await this.fileStorage.listFiles(workspaceId);
     const extensionFiles = files.filter(f => f.startsWith(`SOURCE/extensions/${extensionName}/`));
 
@@ -476,7 +491,7 @@ export class ExtensionManager {
       extensionFileInfos.push({
         filename,
         size: fileInfo.size,
-        type: fileType
+        type: fileType,
       });
 
       totalSize += fileInfo.size;
@@ -486,14 +501,17 @@ export class ExtensionManager {
       name: extensionName,
       files: extensionFileInfos,
       totalSize,
-      location: 'workspace'
+      location: 'workspace',
     };
   }
 
   /**
    * Gets all files for a workspace extension as Map
    */
-  private async getWorkspaceExtensionFiles(workspaceId: string, extensionName: string): Promise<Map<string, ArrayBuffer>> {
+  private async getWorkspaceExtensionFiles(
+    workspaceId: string,
+    extensionName: string
+  ): Promise<Map<string, ArrayBuffer>> {
     const files = await this.fileStorage.listFiles(workspaceId);
     const extensionFiles = files.filter(f => f.startsWith(`SOURCE/extensions/${extensionName}/`));
 

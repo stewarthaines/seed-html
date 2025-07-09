@@ -160,13 +160,13 @@ class EPUBPackager {
 
   async readWorkspaceFiles(workspaceId: string): Promise<WorkspaceFile[]> {
     const allFiles = await this.fileStorage.listFiles(workspaceId);
-    
+
     // Separate SOURCE/ files from EPUB files
     const sourceFiles = allFiles.filter(f => f.startsWith('SOURCE/'));
     const epubFiles = allFiles.filter(f => !f.startsWith('SOURCE/'));
-    
+
     const workspaceFiles: WorkspaceFile[] = [];
-    
+
     // Process EPUB files normally
     for (const filePath of epubFiles) {
       const content = await this.fileStorage.readFile(workspaceId, filePath);
@@ -177,7 +177,7 @@ class EPUBPackager {
         mimeType: getMimeType(filePath),
       });
     }
-    
+
     // Create SOURCE.zip if SOURCE/ files exist
     const { sourceZip } = await this.handleSourceZip(workspaceId);
     if (sourceZip) {
@@ -189,7 +189,7 @@ class EPUBPackager {
         mimeType: 'application/zip',
       });
     }
-    
+
     return workspaceFiles;
   }
 }
@@ -204,17 +204,17 @@ class EPUBUnpacker {
 
   async extractToWorkspace(zip: Zip, workspaceId: string): Promise<ExtractionResult> {
     // ... existing extraction logic for EPUB files ...
-    
+
     // Handle SOURCE.zip if present
     const sourceZipEntry = zip.entries.find(e => e.fileName === 'OEBPS/SOURCE.zip');
     if (sourceZipEntry) {
       const sourceZipBlob = await sourceZipEntry.extract();
       await this.sourceManager.extractSourceZip(workspaceId, sourceZipBlob);
-      
+
       // SOURCE.zip is not stored as a workspace file - only its extracted contents
       extractedFiles.push('SOURCE.zip (extracted to SOURCE/)');
     }
-    
+
     return result;
   }
 }
@@ -222,24 +222,24 @@ class EPUBUnpacker {
 
 ### Workspace Manager Integration
 
-```typescript
+````typescript
 // Modified WorkspaceManager method
 class WorkspaceManager {
   constructor(private sourceManager: SourceManager) {}
 
   private async createEPUBStructure(workspaceId: string, metadata: EPUBMetadata): Promise<void> {
     // ... existing EPUB structure creation ...
-    
+
     // Initialize SOURCE/ directory structure
     await this.sourceManager.initializeSourceStructure(workspaceId);
   }
 
   async validateWorkspaceStructure(workspaceId: string): Promise<ValidationResult> {
     // ... existing validation logic for EPUB files ...
-    
+
     // Validate SOURCE/ structure separately
     const sourceValidation = await this.sourceManager.validateSourceStructure(workspaceId);
-    
+
     return {
       // ... existing validation results ...
       sourceValidation,
@@ -387,9 +387,10 @@ interface MockFileStorage {
   deleteFile: vi.fn();
   fileExists: vi.fn();
 }
-```
+````
 
 **ZIP Library Mocks:**
+
 ```typescript
 interface MockZipWriter {
   addFile: vi.fn();
@@ -409,6 +410,7 @@ interface MockZipEntry {
 ### Test Fixtures
 
 **Sample SOURCE/ Structure:**
+
 ```
 SOURCE/
 ├── settings.json              # Valid transform settings
@@ -425,6 +427,7 @@ SOURCE/
 ```
 
 **settings.json Fixture:**
+
 ```json
 {
   "is_draft": false,
@@ -436,25 +439,29 @@ SOURCE/
 ```
 
 **Test Data Sizes:**
+
 - Small: 1-10 files, <1MB total
-- Medium: 50-100 files, 1-10MB total  
+- Medium: 50-100 files, 1-10MB total
 - Large: 500+ files, 50MB+ total (memory limit testing)
 
 ### Error Scenarios Testing
 
 **File System Errors:**
+
 - Permission denied (read/write)
 - Storage quota exceeded
 - File not found
 - Directory creation failures
 
 **ZIP Library Errors:**
+
 - Corrupted ZIP format
 - Unsupported compression methods
 - Memory allocation failures
 - Invalid file names/paths
 
 **Validation Errors:**
+
 - Malformed settings.json
 - Invalid directory structure
 - Missing required files
@@ -463,33 +470,38 @@ SOURCE/
 ### Integration Test Scenarios
 
 **Round-trip Workflow:**
+
 1. Create workspace with SOURCE/ files
 2. Package to EPUB (creates SOURCE.zip)
-3. Unpack EPUB to new workspace  
+3. Unpack EPUB to new workspace
 4. Verify SOURCE/ structure matches original
 5. Validate all files content matches
 
 **EPUB Compatibility:**
+
 - Test with EPUB 2.0 and 3.0 formats
 - Validate with EpubCheck tool
 - Ensure SOURCE.zip doesn't break EPUB readers
 - Test manifest item handling
 
 **Performance Benchmarks:**
+
 - SOURCE.zip creation time vs directory size
-- Memory usage during large ZIP operations  
+- Memory usage during large ZIP operations
 - Browser compatibility across Chrome/Firefox/Safari
 - OPFS vs IndexedDB performance comparison
 
 ### Browser Environment Testing
 
 **Happy-DOM Limitations:**
+
 - Skip DecompressionStream/CompressionStream tests (run in Storybook)
 - Mock ZIP operations for unit tests
 - Test validation and file management logic
 - Use Storybook for full ZIP integration testing
 
 **Storybook Integration Tests:**
+
 - Real ZIP creation/extraction with browser APIs
 - File upload/download workflow testing
 - Visual validation of SOURCE/ directory management
@@ -532,7 +544,7 @@ SOURCE/
 ### Migration Strategy
 
 - **No migration support**: Existing workspaces with `EDITME/` structure become invalid
-- **Clean break**: New `SOURCE/` structure is incompatible with old `EDITME/` structure  
+- **Clean break**: New `SOURCE/` structure is incompatible with old `EDITME/` structure
 - **User communication**: Clear error messages when old structure detected
 
 ### Security Considerations

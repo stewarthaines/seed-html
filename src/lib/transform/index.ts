@@ -1,6 +1,6 @@
 /**
  * Transform Pipeline API Exports
- * 
+ *
  * Main entry point for the transform pipeline system providing
  * clean exports for all classes and types.
  */
@@ -28,5 +28,5 @@ export type {
   TransformResult,
   PipelineResult,
   ChapterMetadata,
-  BlobUrlManager
+  BlobUrlManager,
 } from './types.js';

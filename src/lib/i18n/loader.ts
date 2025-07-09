@@ -19,7 +19,7 @@ export function createI18nLoader(): I18nLoader {
 
 class TranslationLoader implements I18nLoader {
   private storage = new FileStorageAPI();
-  
+
   /**
    * Check if translations need to be re-extracted
    */
@@ -30,80 +30,76 @@ class TranslationLoader implements I18nLoader {
       if (storedVersion !== I18N_VERSION) {
         return true;
       }
-      
+
       // Initialize storage if needed
       if (!this.storage.isInitialized()) {
         await this.storage.init();
       }
-      
+
       // Check if locale files exist in storage
       const filePaths = await this.storage.listFiles(LOCALES_WORKSPACE_ID);
       const localeFiles = filePaths.filter(path => path.endsWith('.json'));
-      
+
       // We expect 7 locale files
       if (localeFiles.length < 7) {
         return true;
       }
-      
+
       return false;
-      
     } catch (error) {
       console.warn('Error checking translation update status:', error);
       return true; // Assume update needed on error
     }
   }
-  
+
   /**
    * Extract translations from compressed archive to storage
    */
   async extractTranslations(): Promise<void> {
     try {
       console.log('📦 Extracting translations from embedded data...');
-      
+
       // Get embedded translation data URL from global variable
       const translationsDataUrl = (globalThis as any).__EDITME_TRANSLATIONS_ZIP__;
       if (!translationsDataUrl) {
-        throw new Error('Translation data URL not found. Ensure the app was built with i18n:build.');
+        throw new Error(
+          'Translation data URL not found. Ensure the app was built with i18n:build.'
+        );
       }
-      
+
       // Fetch from data URL
       const response = await fetch(translationsDataUrl);
       if (!response.ok) {
         throw new Error(`Failed to fetch translation data: ${response.status}`);
       }
-      
+
       // Decompress the gzipped JSON
       const compressedData = await response.arrayBuffer();
       const decompressedData = await this.decompressGzip(compressedData);
       const archiveData = JSON.parse(decompressedData);
-      
+
       console.log(`📄 Found ${Object.keys(archiveData).length} translation files`);
-      
+
       // Ensure workspace exists
       await this.storage.createWorkspace(LOCALES_WORKSPACE_ID);
-      
+
       // Extract each locale file
       for (const [filename, content] of Object.entries(archiveData)) {
-        await this.storage.writeTextFile(
-          LOCALES_WORKSPACE_ID,
-          filename,
-          content as string
-        );
-        
+        await this.storage.writeTextFile(LOCALES_WORKSPACE_ID, filename, content as string);
+
         console.log(`✅ Extracted ${filename}`);
       }
-      
+
       // Update version marker
       localStorage.setItem(VERSION_KEY, I18N_VERSION);
-      
+
       console.log('🎉 Translation extraction complete');
-      
     } catch (error) {
       console.error('❌ Failed to extract translations:', error);
       throw error;
     }
   }
-  
+
   /**
    * Decompress gzipped data in browser
    */
@@ -113,15 +109,15 @@ class TranslationLoader implements I18nLoader {
       const stream = new DecompressionStream('gzip');
       const writer = stream.writable.getWriter();
       const reader = stream.readable.getReader();
-      
+
       // Write compressed data
       await writer.write(new Uint8Array(compressedData));
       await writer.close();
-      
+
       // Read decompressed data
       const chunks: Uint8Array[] = [];
       let done = false;
-      
+
       while (!done) {
         const { value, done: readerDone } = await reader.read();
         done = readerDone;
@@ -129,94 +125,92 @@ class TranslationLoader implements I18nLoader {
           chunks.push(value);
         }
       }
-      
+
       // Combine chunks and decode to string
       const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
       const combined = new Uint8Array(totalLength);
       let offset = 0;
-      
+
       for (const chunk of chunks) {
         combined.set(chunk, offset);
         offset += chunk.length;
       }
-      
+
       return new TextDecoder().decode(combined);
     } else {
       // Fallback: assume it's already decompressed or use a different approach
       throw new Error('DecompressionStream not available and no fallback implemented');
     }
   }
-  
+
   /**
    * Load translations from storage
    */
   async loadTranslations(): Promise<Record<string, TranslationCatalog>> {
     try {
       const catalogs: Record<string, TranslationCatalog> = {};
-      
+
       // Initialize storage if needed
       if (!this.storage.isInitialized()) {
         await this.storage.init();
       }
-      
+
       // List all JSON files in locales workspace
       const filePaths = await this.storage.listFiles(LOCALES_WORKSPACE_ID);
       const localeFiles = filePaths.filter(path => path.endsWith('.json'));
-      
+
       console.log(`📚 Loading ${localeFiles.length} translation catalogs...`);
-      
+
       // Load each catalog
       for (const filePath of localeFiles) {
         try {
           const content = await this.storage.readTextFile(LOCALES_WORKSPACE_ID, filePath);
           const jsonData = JSON.parse(content);
-          
+
           // Extract locale code from filename (e.g., 'en.json' -> 'en')
           const filename = filePath.split('/').pop() || filePath;
           const locale = filename.replace('.json', '');
-          
+
           // Convert po2json format to our catalog format
           const catalog: TranslationCatalog = {
             locale,
             messages: this.extractMessages(jsonData),
-            headers: jsonData[''] || {} // po2json stores headers under empty key
+            headers: jsonData[''] || {}, // po2json stores headers under empty key
           };
-          
+
           catalogs[locale] = catalog;
-          
         } catch (error) {
           console.error(`Failed to load ${filePath}:`, error);
           // Continue with other files
         }
       }
-      
+
       console.log(`✅ Loaded ${Object.keys(catalogs).length} translation catalogs`);
       return catalogs;
-      
     } catch (error) {
       console.error('❌ Failed to load translations from storage:', error);
       throw error;
     }
   }
-  
+
   /**
    * Extract message strings from po2json output
    */
   private extractMessages(jsonData: any): Record<string, string> {
     const messages: Record<string, string> = {};
-    
+
     for (const [key, value] of Object.entries(jsonData)) {
       // Skip empty key (contains headers)
       if (key === '') continue;
-      
+
       // po2json can return arrays for plurals, we'll take the first form for now
       const translation = Array.isArray(value) ? value[0] : value;
-      
+
       if (typeof translation === 'string') {
         messages[key] = translation;
       }
     }
-    
+
     return messages;
   }
 }

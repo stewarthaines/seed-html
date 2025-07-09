@@ -24,6 +24,7 @@ Our feature development follows a structured 6-step process that ensures quality
 ### Unit Tests vs Integration Tests vs Storybook
 
 #### Unit Tests (Vitest + happy-dom)
+
 - **Purpose**: Fast testing of pure business logic and validation
 - **Environment**: happy-dom (4x faster than jsdom)
 - **Focus**: Algorithms, validation rules, pure functions, error handling
@@ -31,12 +32,14 @@ Our feature development follows a structured 6-step process that ensures quality
 - **What NOT to Mock**: Internal business logic, state management
 
 #### Integration Tests (Vitest + Real APIs)
+
 - **Purpose**: Test feature boundaries with real dependencies where practical
 - **Environment**: Node.js with real file system (for file storage tests)
 - **Focus**: End-to-end workflows, data persistence, cross-system integration
 - **Preferred over**: Heavy mocking of internal systems
 
 #### Storybook Tests (Real Browser)
+
 - **Purpose**: Visual verification and full browser API testing
 - **Environment**: Real browser (Chromium-based)
 - **Focus**: User interactions, visual components, browser-specific APIs
@@ -44,16 +47,16 @@ Our feature development follows a structured 6-step process that ensures quality
 
 ### When to Use Each Approach
 
-| Scenario | Unit Tests | Integration Tests | Storybook | Notes |
-|----------|------------|-------------------|-----------|-------|
-| Pure business logic | ✅ | ❌ | ❌ | Fast unit tests are ideal |
-| Validation rules | ✅ | ❌ | ❌ | Pure functions test well |
-| File operations | Mock only | ✅ | ✅ | Integration tests with real FS, Storybook for UI |
-| Cross-system workflows | ❌ | ✅ | ✅ | Test real data flow |
-| Browser API integration | ❌ (skip) | ❌ | ✅ | happy-dom limitations |
-| Error handling | ✅ | ✅ | ✅ | All levels test different error scenarios |
-| Visual components | ❌ | ❌ | ✅ | Storybook excels at UI testing |
-| Performance testing | ❌ | Limited | ✅ | Real browser performance metrics |
+| Scenario                | Unit Tests | Integration Tests | Storybook | Notes                                            |
+| ----------------------- | ---------- | ----------------- | --------- | ------------------------------------------------ |
+| Pure business logic     | ✅         | ❌                | ❌        | Fast unit tests are ideal                        |
+| Validation rules        | ✅         | ❌                | ❌        | Pure functions test well                         |
+| File operations         | Mock only  | ✅                | ✅        | Integration tests with real FS, Storybook for UI |
+| Cross-system workflows  | ❌         | ✅                | ✅        | Test real data flow                              |
+| Browser API integration | ❌ (skip)  | ❌                | ✅        | happy-dom limitations                            |
+| Error handling          | ✅         | ✅                | ✅        | All levels test different error scenarios        |
+| Visual components       | ❌         | ❌                | ✅        | Storybook excels at UI testing                   |
+| Performance testing     | ❌         | Limited           | ✅        | Real browser performance metrics                 |
 
 ## Testing Framework Configuration
 
@@ -67,8 +70,8 @@ export default defineConfig({
   test: {
     environment: 'happy-dom',
     include: ['src/**/*.{test,spec}.{js,ts}'],
-    exclude: ['src/**/*.stories.{js,ts}', '**/node_modules/**']
-  }
+    exclude: ['src/**/*.stories.{js,ts}', '**/node_modules/**'],
+  },
 });
 ```
 
@@ -79,7 +82,7 @@ Tests are organized within feature modules:
 ```
 src/lib/settings/
 ├── index.ts                 # Public API
-├── API.md                   # Full documentation  
+├── API.md                   # Full documentation
 ├── settings-manager.ts      # Implementation
 └── test/
     ├── settings-manager.test.ts     # Core logic tests
@@ -109,11 +112,13 @@ import type { ExtensionManager } from '../../extensions/index.js';
 #### Path Reference Guide
 
 From `src/lib/settings/test/` directory:
+
 - **Storage module**: `../../storage/index.js`
 - **Extensions module**: `../../extensions/index.js`
 - **Settings types**: `../index.js`
 
 From `src/lib/settings/` directory:
+
 - **Storage module**: `../storage/index.js`
 - **Extensions module**: `../extensions/index.js`
 
@@ -144,12 +149,12 @@ const mockFileStorage = {
   readJSONFile: vi.fn<[string, string], Promise<any>>(),
   writeJSONFile: vi.fn<[string, string, any], Promise<void>>(),
   listFiles: vi.fn<[string, string?], Promise<string[]>>(),
-  isInitialized: () => true
+  isInitialized: () => true,
 } satisfies Partial<FileStorageAPI>;
 
 // Mock only external extension discovery
 const mockExtensionManager = {
-  listWorkspaceExtensions: vi.fn<[string], Promise<ExtensionInfo[]>>()
+  listWorkspaceExtensions: vi.fn<[string], Promise<ExtensionInfo[]>>(),
 } satisfies Partial<ExtensionManager>;
 
 // Mock browser localStorage API
@@ -157,7 +162,7 @@ const mockLocalStorage = {
   getItem: vi.fn<[string], string | null>(),
   setItem: vi.fn<[string, string], void>(),
   removeItem: vi.fn<[string], void>(),
-  clear: vi.fn<[], void>()
+  clear: vi.fn<[], void>(),
 };
 ```
 
@@ -176,8 +181,8 @@ const mockLocalStorage = {
 ```typescript
 export const VALID_GLOBAL_SETTINGS: GlobalSettings = {
   theme: 'dark',
-  locale: 'en', 
-  editor_font_size: 14
+  locale: 'en',
+  editor_font_size: 14,
 };
 
 export const VALID_WORKSPACE_SETTINGS: WorkspaceSettings = {
@@ -185,8 +190,8 @@ export const VALID_WORKSPACE_SETTINGS: WorkspaceSettings = {
   draft_id: 5,
   editor: {
     preview_delay_ms: 1000,
-    advanced_mode: true
-  }
+    advanced_mode: true,
+  },
 };
 
 export const VALID_EPUB_SETTINGS: EPUBSettings = {
@@ -196,9 +201,9 @@ export const VALID_EPUB_SETTINGS: EPUBSettings = {
   cover: {
     template: 'minimal',
     background_color: '#ffffff',
-    text_color: '#000000', 
-    font_family: 'serif'
-  }
+    text_color: '#000000',
+    font_family: 'serif',
+  },
 };
 ```
 
@@ -210,60 +215,60 @@ export const INVALID_SETTINGS_CASES = {
     {
       case: 'invalid theme',
       data: { theme: 'purple' },
-      expectedErrors: ['Theme must be light, dark, or system']
+      expectedErrors: ['Theme must be light, dark, or system'],
     },
     {
-      case: 'invalid locale', 
+      case: 'invalid locale',
       data: { locale: 'xx' },
-      expectedErrors: ['Locale xx is not supported']
+      expectedErrors: ['Locale xx is not supported'],
     },
     {
       case: 'font size too small',
       data: { editor_font_size: 5 },
-      expectedErrors: ['Font size must be between 8 and 32 pixels']
+      expectedErrors: ['Font size must be between 8 and 32 pixels'],
     },
     {
       case: 'font size too large',
       data: { editor_font_size: 50 },
-      expectedErrors: ['Font size must be between 8 and 32 pixels']
-    }
+      expectedErrors: ['Font size must be between 8 and 32 pixels'],
+    },
   ],
-  
+
   workspaceSettings: [
     {
       case: 'negative draft ID',
       data: { draft_id: -1 },
-      expectedErrors: ['Draft ID must be non-negative']
+      expectedErrors: ['Draft ID must be non-negative'],
     },
     {
       case: 'preview delay too short',
       data: { editor: { preview_delay_ms: 50 } },
-      expectedErrors: ['Preview delay must be between 100-2000ms']
+      expectedErrors: ['Preview delay must be between 100-2000ms'],
     },
     {
       case: 'preview delay too long',
-      data: { editor: { preview_delay_ms: 3000 } }, 
-      expectedErrors: ['Preview delay must be between 100-2000ms']
-    }
+      data: { editor: { preview_delay_ms: 3000 } },
+      expectedErrors: ['Preview delay must be between 100-2000ms'],
+    },
   ],
-  
+
   epubSettings: [
     {
       case: 'invalid transform path',
       data: { text_transform: '../../../etc/passwd' },
-      expectedErrors: ['Transform path must start with SOURCE/']
+      expectedErrors: ['Transform path must start with SOURCE/'],
     },
     {
       case: 'empty spine basename',
       data: { spine_basename: '' },
-      expectedErrors: ['Spine basename cannot be empty']
+      expectedErrors: ['Spine basename cannot be empty'],
     },
     {
       case: 'invalid cover color',
       data: { cover: { background_color: 'red' } },
-      expectedErrors: ['Background color must be a valid hex color']
-    }
-  ]
+      expectedErrors: ['Background color must be a valid hex color'],
+    },
+  ],
 };
 ```
 
@@ -276,37 +281,35 @@ export const MOCK_EXTENSIONS: ExtensionInfo[] = [
     files: [
       { filename: 'transform.js', size: 15000, type: 'javascript' },
       { filename: 'markdown-it.min.js', size: 45000, type: 'javascript' },
-      { filename: 'LICENSE.txt', size: 1200, type: 'license' }
+      { filename: 'LICENSE.txt', size: 1200, type: 'license' },
     ],
     totalSize: 61200,
-    location: 'workspace'
+    location: 'workspace',
   },
   {
-    name: 'highlight-js', 
-    files: [
-      { filename: 'highlight.min.js', size: 32000, type: 'javascript' }
-    ],
+    name: 'highlight-js',
+    files: [{ filename: 'highlight.min.js', size: 32000, type: 'javascript' }],
     totalSize: 32000,
-    location: 'workspace'
-  }
+    location: 'workspace',
+  },
 ];
 
 export const EXPECTED_TRANSFORM_OPTIONS: TransformOption[] = [
   {
     path: 'SOURCE/scripts/transform.js',
     extensionName: 'built-in',
-    fileName: 'transform.js'
+    fileName: 'transform.js',
   },
   {
-    path: 'SOURCE/extensions/markdown-it/transform.js', 
+    path: 'SOURCE/extensions/markdown-it/transform.js',
     extensionName: 'markdown-it',
-    fileName: 'transform.js'
+    fileName: 'transform.js',
   },
   {
     path: 'SOURCE/extensions/markdown-it/markdown-it.min.js',
-    extensionName: 'markdown-it', 
-    fileName: 'markdown-it.min.js'
-  }
+    extensionName: 'markdown-it',
+    fileName: 'markdown-it.min.js',
+  },
 ];
 ```
 
@@ -324,22 +327,22 @@ describe('SettingsManager', () => {
   let settingsManager: SettingsManager;
   let mockFileStorage: ReturnType<typeof createMockFileStorage>;
   let mockExtensionManager: ReturnType<typeof createMockExtensionManager>;
-  
+
   beforeEach(() => {
     // Create simple, focused mocks
     mockFileStorage = createMockFileStorage();
     mockExtensionManager = createMockExtensionManager();
-    
+
     // Mock only localStorage (external boundary)
     Object.defineProperty(window, 'localStorage', {
       value: {
         getItem: vi.fn(),
         setItem: vi.fn(),
-        removeItem: vi.fn()
+        removeItem: vi.fn(),
       },
-      writable: true
+      writable: true,
     });
-    
+
     // Test the real SettingsManager
     settingsManager = new SettingsManager(mockFileStorage, mockExtensionManager);
   });
@@ -356,9 +359,9 @@ describe('SettingsManager', () => {
   describe('File Operations (Mock External Boundary)', () => {
     it('should save workspace settings', async () => {
       const settings = SETTINGS_FIXTURES.workspace.valid();
-      
+
       await settingsManager.saveWorkspaceSettings('ws-123', settings);
-      
+
       // Verify behavior at the boundary
       expect(mockFileStorage.writeJSONFile).toHaveBeenCalledWith(
         'ws-123',
@@ -379,13 +382,13 @@ export function createMockFileStorage() {
     readJSONFile: vi.fn().mockResolvedValue({}),
     writeJSONFile: vi.fn().mockResolvedValue(undefined),
     listFiles: vi.fn().mockResolvedValue([]),
-    isInitialized: () => true
+    isInitialized: () => true,
   } satisfies Partial<FileStorageAPI>;
 }
 
 export function createMockExtensionManager() {
   return {
-    listWorkspaceExtensions: vi.fn().mockResolvedValue([])
+    listWorkspaceExtensions: vi.fn().mockResolvedValue([]),
   } satisfies Partial<ExtensionManager>;
 }
 
@@ -412,15 +415,15 @@ describe('Settings Validation', () => {
       'should reject $case',
       ({ data, expectedErrors }) => {
         const result = settingsManager.validateGlobalSettings(data);
-        
+
         expect(result.isValid).toBe(false);
         expect(result.errors).toEqual(expectedErrors);
       }
     );
-    
+
     it('should accept valid global settings', () => {
       const result = settingsManager.validateGlobalSettings(VALID_GLOBAL_SETTINGS);
-      
+
       expect(result.isValid).toBe(true);
       expect(result.errors).toHaveLength(0);
     });
@@ -437,11 +440,11 @@ describe('File Operations', () => {
     mockFileStorage.readJSONFile.mockResolvedValue({
       bust_cache: true,
       draft_id: 3,
-      editor: { advanced_mode: true, preview_delay_ms: 750 }
+      editor: { advanced_mode: true, preview_delay_ms: 750 },
     });
-    
+
     const result = await settingsManager.loadWorkspaceSettings('workspace-123');
-    
+
     expect(mockFileStorage.readJSONFile).toHaveBeenCalledWith(
       'workspace-123',
       '.workspace-metadata.json'
@@ -449,13 +452,13 @@ describe('File Operations', () => {
     expect(result.bust_cache).toBe(true);
     expect(result.draft_id).toBe(3);
   });
-  
+
   it('should return defaults when file not found', async () => {
     // Mock file not found
     mockFileStorage.readJSONFile.mockRejectedValue(new Error('File not found'));
-    
+
     const result = await settingsManager.loadWorkspaceSettings('workspace-123');
-    
+
     // Should return defaults
     const defaults = settingsManager.getDefaultWorkspaceSettings();
     expect(result).toEqual(defaults);
@@ -482,9 +485,9 @@ describe('Browser API Integration', () => {
   it.skip('should detect system theme preference', () => {
     // Test that requires matchMedia
   });
-  
+
   // Skip: requires complex File API behavior
-  // This functionality is tested in browser environment via Storybook  
+  // This functionality is tested in browser environment via Storybook
   it.skip('should handle large file uploads', () => {
     // Test with real File objects
   });
@@ -501,19 +504,17 @@ describe('Error Handling', () => {
     mockLocalStorage.setItem.mockImplementation(() => {
       throw new DOMException('QuotaExceededError');
     });
-    
+
     expect(() => {
       settingsManager.saveGlobalSettings(VALID_GLOBAL_SETTINGS);
     }).not.toThrow();
-    
+
     // Should log warning but not crash
   });
-  
+
   it('should handle file storage write failures', async () => {
-    mockFileStorage.writeJSONFile.mockRejectedValue(
-      new Error('Disk full')
-    );
-    
+    mockFileStorage.writeJSONFile.mockRejectedValue(new Error('Disk full'));
+
     await expect(
       settingsManager.saveWorkspaceSettings('workspace-123', VALID_WORKSPACE_SETTINGS)
     ).rejects.toThrow('Disk full');
@@ -525,10 +526,8 @@ describe('Error Handling', () => {
 
 ```typescript
 it('should handle permission denied errors', async () => {
-  mockFileStorage.readJSONFile.mockRejectedValue(
-    new Error('Permission denied')
-  );
-  
+  mockFileStorage.readJSONFile.mockRejectedValue(new Error('Permission denied'));
+
   // Should fall back to defaults
   const result = await settingsManager.loadEPUBSettings('workspace-123');
   expect(result).toEqual(settingsManager.getDefaultEPUBSettings());
@@ -552,10 +551,10 @@ const meta: Meta<SettingsManagerDemo> = {
   parameters: {
     docs: {
       description: {
-        component: 'Interactive demonstration of Settings Manager functionality'
-      }
-    }
-  }
+        component: 'Interactive demonstration of Settings Manager functionality',
+      },
+    },
+  },
 };
 
 export default meta;
@@ -573,23 +572,23 @@ export const Default: Story = {};
   import { SettingsManager } from '$lib/settings';
   import { FileStorageAPI } from '$lib/storage';
   import { ExtensionManager } from '$lib/extensions';
-  
+
   let settingsManager: SettingsManager;
   let logs: string[] = [];
   let globalSettings = {};
   let workspaceSettings = {};
-  
+
   onMount(async () => {
     // Initialize with real APIs
     const fileStorage = new FileStorageAPI();
     await fileStorage.init();
-    
+
     const extensionManager = new ExtensionManager(fileStorage);
     settingsManager = new SettingsManager(fileStorage, extensionManager);
-    
+
     loadAllSettings();
   });
-  
+
   async function loadAllSettings() {
     try {
       globalSettings = settingsManager.loadGlobalSettings();
@@ -599,7 +598,7 @@ export const Default: Story = {};
       addLog(`Error: ${error.message}`);
     }
   }
-  
+
   function addLog(message: string) {
     logs = [...logs, `${new Date().toLocaleTimeString()}: ${message}`];
   }
@@ -607,7 +606,7 @@ export const Default: Story = {};
 
 <div class="settings-demo">
   <h2>Settings Manager Demo</h2>
-  
+
   <!-- Interactive controls for testing -->
   <section>
     <h3>Global Settings</h3>
@@ -623,7 +622,7 @@ export const Default: Story = {};
       Save Global Settings
     </button>
   </section>
-  
+
   <!-- Log output -->
   <section>
     <h3>Operation Log</h3>
@@ -639,14 +638,16 @@ export const Default: Story = {};
 ## Testing Checklist
 
 ### For Pure Functions (Unit Tests)
+
 - ✅ Test all valid input combinations
-- ✅ Test all validation error cases  
+- ✅ Test all validation error cases
 - ✅ Test boundary conditions
 - ✅ Test with malformed input
 - ✅ Verify return types match interface
 - ✅ Ensure no side effects
 
 ### For Storage Operations (Unit Tests + Storybook)
+
 - ✅ Mock file operations in unit tests
 - ✅ Test error handling (file not found, permission denied)
 - ✅ Test with corrupted data
@@ -655,6 +656,7 @@ export const Default: Story = {};
 - ✅ Test with large datasets in Storybook
 
 ### For Integration Features (Storybook)
+
 - ✅ Test with real browser APIs
 - ✅ Test theme application to DOM
 - ✅ Test i18n integration
@@ -663,6 +665,7 @@ export const Default: Story = {};
 - ✅ Visual verification of UI updates
 
 ### Error Scenarios
+
 - ✅ Storage quota exceeded
 - ✅ Network failures
 - ✅ Permission denied
@@ -675,6 +678,7 @@ export const Default: Story = {};
 When consolidating duplicate type definitions across modules, follow these patterns to maintain test reliability:
 
 ### 1. Identify Authoritative Source
+
 Choose the most comprehensive, specification-compliant interface as the single source of truth:
 
 ```typescript
@@ -687,6 +691,7 @@ import type { EPUBMetadata, OPFDocument } from '../../epub/opf-utils.js';
 ```
 
 ### 2. Update Imports Systematically
+
 Use relative imports in test files for TypeScript compatibility:
 
 ```typescript
@@ -698,6 +703,7 @@ import type { OPFDocument } from '$lib/epub/opf-utils.js';
 ```
 
 ### 3. Fix Type Compatibility Issues
+
 Update mock data and test expectations to match the consolidated interface:
 
 ```typescript
@@ -709,6 +715,7 @@ creator: ['Test Author'], // Array format per EPUB spec
 ```
 
 ### 4. Verify Test Coverage
+
 Ensure all tests pass with the unified interface:
 
 ```typescript
@@ -718,17 +725,19 @@ expect(xml).toContain('<dc:creator>Test Author</dc:creator>'); // Generated XML
 ```
 
 ### 5. Benefits of Interface Consolidation
+
 - **Single Source of Truth**: Eliminates duplicate interface definitions
 - **Specification Compliance**: Ensures adherence to standards (EPUB, Dublin Core)
 - **Reduced Maintenance**: Changes only need to be made in one location
 - **Type Safety**: Prevents interface drift between modules
 
 ### 6. Factory Functions for Test Isolation
+
 Use factory functions instead of shared constants to prevent test pollution:
 
 ```typescript
 // ✅ Good - each test gets fresh data
-export function createTestOPF(): MockOPFDocument { 
+export function createTestOPF(): MockOPFDocument {
   return {
     manifest: [],
     spine: [],
@@ -736,8 +745,8 @@ export function createTestOPF(): MockOPFDocument {
       title: 'Test EPUB',
       creator: ['Test Author'],
       language: 'en',
-      identifier: 'test-123'
-    }
+      identifier: 'test-123',
+    },
   };
 }
 
@@ -748,6 +757,7 @@ export const TEST_OPF = { manifest: [], spine: [] }; // Tests can mutate this
 ## Modern Development Best Practices (2024)
 
 ### Test-Driven Development with Behavior Focus
+
 1. Write API documentation first (defines behavior contracts)
 2. Create test fixtures for realistic data scenarios
 3. Write tests that verify user-facing behavior
@@ -757,12 +767,14 @@ export const TEST_OPF = { manifest: [], spine: [] }; // Tests can mutate this
 7. Refactor with confidence knowing behavior is preserved
 
 ### Modern Mock Strategy
+
 - **Unit Tests**: Mock external boundaries only (file system, network, browser APIs)
 - **Integration Tests**: Use real implementations where practical
 - **Storybook**: Use real APIs for authentic user testing
 - **Avoid**: Over-mocking internal logic or pure functions
 
 ### Test Organization
+
 ```
 src/lib/settings/
 ├── settings-manager.ts
@@ -777,12 +789,14 @@ src/lib/settings/
 ```
 
 ### TypeScript-First Testing
+
 - Use `satisfies` for type-safe mocks
 - Properly type all mock functions with generics
 - Test TypeScript interfaces, not just runtime behavior
 - Use `expect.objectContaining()` for flexible assertions
 
 ### Array Content Assertions
+
 When testing arrays for substring matches, use `array.some()` instead of `toContain()` with matchers:
 
 ```typescript
@@ -794,13 +808,16 @@ expect(result.errors.some(error => error.includes('Invalid JSON syntax'))).toBe(
 ```
 
 ### Performance-Conscious Testing
+
 - **Vitest**: 4x faster than Jest, use for all new tests
 - **happy-dom**: Faster than jsdom for DOM operations
 - **Parallel testing**: Vitest runs tests in parallel by default
 - **Focused mocking**: Only mock what's absolutely necessary
 
 ### Integration Testing Strategy
+
 For Settings Manager specifically:
+
 ```typescript
 // integration.test.ts - Tests with real file system
 describe('Settings Integration', () => {
@@ -808,25 +825,27 @@ describe('Settings Integration', () => {
     const tempDir = await createTempWorkspace();
     const fileStorage = new FileStorageAPI();
     await fileStorage.init();
-    
+
     const manager = new SettingsManager(fileStorage, mockExtensionManager);
     const settings = SETTINGS_FIXTURES.workspace.valid();
-    
+
     await manager.saveWorkspaceSettings(tempDir, settings);
     const loaded = await manager.loadWorkspaceSettings(tempDir);
-    
+
     expect(loaded).toEqual(settings);
   });
 });
 ```
 
 ### Error Testing Philosophy
+
 - **Unit Tests**: Test validation and error handling logic
 - **Integration Tests**: Test real error scenarios (disk full, permissions)
 - **Storybook**: Test user-facing error experiences
 - **Focus**: How errors are handled, not just that they occur
 
 ### Continuous Quality
+
 - Run unit tests on every change (sub-second feedback)
 - Integration tests in CI pipeline
 - Storybook for manual verification and visual regression

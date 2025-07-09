@@ -43,7 +43,9 @@ function createThemeStore(): ThemeStore {
 
       // Detect system preference
       if (typeof window !== 'undefined' && window.matchMedia) {
-        systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light';
       }
 
       // Load saved preference
@@ -74,7 +76,7 @@ function createThemeStore(): ThemeStore {
       // Listen for system preference changes
       if (typeof window !== 'undefined' && window.matchMedia) {
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        mediaQuery.addEventListener('change', (e) => {
+        mediaQuery.addEventListener('change', e => {
           const newSystemPreference: ThemeMode = e.matches ? 'dark' : 'light';
           update(state => ({
             ...state,

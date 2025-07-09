@@ -24,7 +24,7 @@
       lastModified: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
       fileCount: 15,
       totalSize: 2400000,
-      epubVersion: '3.0'
+      epubVersion: '3.0',
     },
     {
       id: 'workspace-2',
@@ -34,17 +34,17 @@
       lastModified: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
       fileCount: 8,
       totalSize: 890000,
-      epubVersion: '3.0'
+      epubVersion: '3.0',
     },
     {
       id: 'workspace-3',
-      title: 'Alice\'s Adventures in Wonderland',
+      title: "Alice's Adventures in Wonderland",
       author: 'Lewis Carroll',
       language: 'en',
       lastModified: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
       fileCount: 12,
       totalSize: 1650000,
-      epubVersion: '3.0'
+      epubVersion: '3.0',
     },
     {
       id: 'workspace-4',
@@ -54,7 +54,7 @@
       lastModified: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 1 week ago
       fileCount: 25,
       totalSize: 3200000,
-      epubVersion: '3.0'
+      epubVersion: '3.0',
     },
     {
       id: 'workspace-5',
@@ -64,7 +64,7 @@
       lastModified: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
       fileCount: 10,
       totalSize: 1100000,
-      epubVersion: '3.0'
+      epubVersion: '3.0',
     },
     {
       id: 'workspace-6',
@@ -74,8 +74,8 @@
       lastModified: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), // 2 weeks ago
       fileCount: 45,
       totalSize: 8900000,
-      epubVersion: '3.0'
-    }
+      epubVersion: '3.0',
+    },
   ];
 
   const errorWorkspace: WorkspaceInfo = {
@@ -87,7 +87,7 @@
     fileCount: 0,
     totalSize: 0,
     epubVersion: 'unknown',
-    hasError: true
+    hasError: true,
   };
 
   // Initialize data based on props
@@ -102,10 +102,8 @@
       currentWorkspace = null;
       isLoading = true;
     } else {
-      workspaces = showErrorStates 
-        ? [errorWorkspace, ...mockWorkspaces]
-        : [...mockWorkspaces];
-      
+      workspaces = showErrorStates ? [errorWorkspace, ...mockWorkspaces] : [...mockWorkspaces];
+
       // Set first workspace as current (if not empty)
       if (workspaces.length > 0 && !showErrorStates) {
         currentWorkspaceId = workspaces[0].id;
@@ -117,7 +115,7 @@
   // Handle workspace actions
   const handleCreateNew = () => {
     console.log('Story: Create new workspace requested');
-    
+
     // Simulate creating a new workspace
     const newWorkspace: WorkspaceInfo = {
       id: `workspace-new-${Date.now()}`,
@@ -127,7 +125,7 @@
       lastModified: new Date(),
       fileCount: 1,
       totalSize: 5000,
-      epubVersion: '3.0'
+      epubVersion: '3.0',
     };
 
     workspaces = [newWorkspace, ...workspaces];
@@ -143,7 +141,7 @@
   const handleWorkspaceSelect = (event: CustomEvent<{ workspaceId: string }>) => {
     const { workspaceId } = event.detail;
     console.log('Story: Workspace selected:', workspaceId);
-    
+
     currentWorkspaceId = workspaceId;
     currentWorkspace = workspaces.find(w => w.id === workspaceId) || null;
   };
@@ -151,17 +149,17 @@
   const handleWorkspaceDelete = (event: CustomEvent<{ workspaceId: string }>) => {
     const { workspaceId } = event.detail;
     const workspace = workspaces.find(w => w.id === workspaceId);
-    
+
     if (!workspace) return;
-    
+
     const confirmed = confirm(`Delete "${workspace.title}"? This cannot be undone.`);
     if (!confirmed) return;
-    
+
     console.log('Story: Workspace deleted:', workspaceId);
-    
+
     // Remove from list
     workspaces = workspaces.filter(w => w.id !== workspaceId);
-    
+
     // Clear current if it was deleted
     if (currentWorkspaceId === workspaceId) {
       currentWorkspaceId = null;
@@ -186,7 +184,7 @@
 
   onMount(() => {
     initializeData();
-    
+
     // Simulate loading completion for loading state
     if (showLoadingState) {
       setTimeout(() => {
@@ -246,23 +244,31 @@
   <div class="demo-controls">
     <h3>Demo Controls</h3>
     <div class="control-buttons">
-      <button 
-        type="button" 
-        on:click={() => { showEmptyState = !showEmptyState; initializeData(); }}
+      <button
+        type="button"
+        on:click={() => {
+          showEmptyState = !showEmptyState;
+          initializeData();
+        }}
         class:active={showEmptyState}
       >
         Toggle Empty State
       </button>
-      <button 
-        type="button" 
-        on:click={() => { showErrorStates = !showErrorStates; initializeData(); }}
+      <button
+        type="button"
+        on:click={() => {
+          showErrorStates = !showErrorStates;
+          initializeData();
+        }}
         class:active={showErrorStates}
       >
         Toggle Error States
       </button>
-      <button 
-        type="button" 
-        on:click={() => { isLoading = !isLoading; }}
+      <button
+        type="button"
+        on:click={() => {
+          isLoading = !isLoading;
+        }}
         class:active={isLoading}
       >
         Toggle Loading

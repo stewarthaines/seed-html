@@ -1,7 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import App from '../../App.svelte';
-  import { createWorkspaceStoryComposition, STORY_CONFIGS, type StoryConfiguration } from '../utils/story-templates';
+  import {
+    createWorkspaceStoryComposition,
+    STORY_CONFIGS,
+    type StoryConfiguration,
+  } from '../utils/story-templates';
   import { formatLogEntry, getLogLevelClass } from '../utils/story-logging';
 
   // Props
@@ -35,9 +39,9 @@
     console.log('🚀 AppWithWorkspace onMount - Starting initialization');
     console.log('📋 Config passed to initializeStory:', config);
     console.log('🏭 Story composition created:', story);
-    
+
     story.initializeStory(config);
-    
+
     // Set up event listeners for spine item selection
     const handleSelectSpineItem = (event: Event) => {
       const customEvent = event as CustomEvent<{ itemId: string }>;
@@ -45,7 +49,7 @@
     };
 
     window.addEventListener('select-spine-item', handleSelectSpineItem);
-    
+
     return () => {
       window.removeEventListener('select-spine-item', handleSelectSpineItem);
     };
@@ -66,7 +70,11 @@
     console.log('🎯 Values being passed to App component:');
     console.log('  - workspaceManager:', story.state.workspaceManager);
     console.log('  - initialWorkspaceId:', story.state.workspaceId);
-    console.log('  - Are these null?', story.state.workspaceManager === null, story.state.workspaceId === null);
+    console.log(
+      '  - Are these null?',
+      story.state.workspaceManager === null,
+      story.state.workspaceId === null
+    );
   }
 
   // Demo actions
@@ -81,7 +89,9 @@
 
 <div class="app-with-workspace">
   <!-- Always visible debug indicator -->
-  <div style="position: fixed; top: 10px; right: 10px; background: #ff6b6b; color: white; padding: 8px; border-radius: 4px; z-index: 9999; font-size: 12px;">
+  <div
+    style="position: fixed; top: 10px; right: 10px; background: #ff6b6b; color: white; padding: 8px; border-radius: 4px; z-index: 9999; font-size: 12px;"
+  >
     🔧 AppWithWorkspace Active | Scenario: {scenario} | Logging: {enableLogging}
   </div>
 
@@ -91,15 +101,9 @@
       <div class="controls-section">
         <h3>Demo Controls</h3>
         <div class="control-buttons">
-          <button on:click={handleRefresh} disabled={!story.state.initialized}>
-            🔄 Refresh
-          </button>
-          <button on:click={handleReset}>
-            🔄 Reset
-          </button>
-          <button on:click={() => story.logger.clearLogs()}>
-            🗑️ Clear Logs
-          </button>
+          <button on:click={handleRefresh} disabled={!story.state.initialized}> 🔄 Refresh </button>
+          <button on:click={handleReset}> 🔄 Reset </button>
+          <button on:click={() => story.logger.clearLogs()}> 🗑️ Clear Logs </button>
         </div>
       </div>
 
@@ -107,11 +111,15 @@
         <h4>🔍 Debug Info</h4>
         <div class="debug-grid">
           <div class="debug-item">
-            <strong>Scenario:</strong> {scenario}
+            <strong>Scenario:</strong>
+            {scenario}
           </div>
           <div class="debug-item">
-            <strong>Workspace Manager:</strong> 
-            <span class:success={!!story.state.workspaceManager} class:error={!story.state.workspaceManager}>
+            <strong>Workspace Manager:</strong>
+            <span
+              class:success={!!story.state.workspaceManager}
+              class:error={!story.state.workspaceManager}
+            >
               {story.state.workspaceManager ? 'Present' : 'null'}
             </span>
           </div>
@@ -135,7 +143,8 @@
           </div>
           {#if story.state.error}
             <div class="debug-item error">
-              <strong>Error:</strong> {story.state.error}
+              <strong>Error:</strong>
+              {story.state.error}
             </div>
           {/if}
         </div>
@@ -195,8 +204,8 @@
 
   <!-- Main App -->
   <div class="app-container">
-    <App 
-      workspaceManager={story.state.workspaceManager} 
+    <App
+      workspaceManager={story.state.workspaceManager}
       initialWorkspaceId={story.state.workspaceId}
     />
   </div>

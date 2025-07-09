@@ -1,6 +1,6 @@
 /**
  * Transform Pipeline Type Definitions
- * 
+ *
  * TypeScript interfaces and types for the transform pipeline system.
  */
 

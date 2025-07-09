@@ -170,13 +170,16 @@
         <h3>{$t('Publication Details')}</h3>
         <div class="placeholder-fields">
           <p class="placeholder-text">
-            {$t('Additional metadata fields (publisher, date, description, etc.) will be implemented in Phase 3.')}
+            {$t(
+              'Additional metadata fields (publisher, date, description, etc.) will be implemented in Phase 3.'
+            )}
           </p>
         </div>
       </div>
 
       <div class="form-actions">
-        <button type="button" class="btn btn-secondary" on:click={handleReset}>{$t('Reset')}</button>
+        <button type="button" class="btn btn-secondary" on:click={handleReset}>{$t('Reset')}</button
+        >
 
         <button type="submit" class="btn btn-primary" disabled={!isValid}>
           <span class="btn-icon">💾</span>

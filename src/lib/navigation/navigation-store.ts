@@ -49,7 +49,7 @@ interface GuardManager {
 // Create the navigation store
 function createNavigationStore(): NavigationStore {
   const { subscribe, set, update } = writable<NavigationState>(DEFAULT_STATE);
-  
+
   // Guard management
   const guardManager: GuardManager = {
     guards: new Map(),
@@ -126,7 +126,7 @@ function createNavigationStore(): NavigationStore {
           currentView = state.currentView;
         });
         unsubscribe(); // Immediately unsubscribe after getting current value
-        
+
         if (sidebar.activeSection !== currentView) {
           // Firefox-specific fix: Add microtask delay to handle async timing issues
           if (navigator.userAgent.includes('Firefox')) {
@@ -149,7 +149,7 @@ function createNavigationStore(): NavigationStore {
       }
 
       const currentState = getCurrentState();
-      
+
       // Check if already on target view
       if (currentState.currentView === view && !options.force) {
         return true;
@@ -170,14 +170,17 @@ function createNavigationStore(): NavigationStore {
 
         // Clear spine item selection when navigating away from spine view
         if (currentState.currentView === 'spine' && view !== 'spine') {
-          console.log('[NavigationStore] Clearing spine selection - navigating from spine to', view);
+          console.log(
+            '[NavigationStore] Clearing spine selection - navigating from spine to',
+            view
+          );
           const clearEvent = new CustomEvent('clear-spine-selection');
           window.dispatchEvent(clearEvent);
         }
 
         // Perform navigation
         await performNavigation(view, options);
-        
+
         return true;
       } catch (error) {
         console.error('Navigation error:', error);
@@ -190,7 +193,7 @@ function createNavigationStore(): NavigationStore {
     async canNavigate(targetView?: ViewType): Promise<boolean> {
       const currentState = getCurrentState();
       const target = targetView || currentState.currentView;
-      
+
       if (!isValidViewType(target)) {
         return false;
       }
@@ -206,7 +209,7 @@ function createNavigationStore(): NavigationStore {
     // Navigate back in history
     async goBack(): Promise<boolean> {
       const currentState = getCurrentState();
-      
+
       if (!currentState.canNavigateBack || historyPosition <= 0) {
         return false;
       }
@@ -225,15 +228,18 @@ function createNavigationStore(): NavigationStore {
       // Navigate back
       historyPosition--;
       await updateNavigationState(targetView, { isHistoryNavigation: true });
-      
+
       return true;
     },
 
     // Navigate forward in history
     async goForward(): Promise<boolean> {
       const currentState = getCurrentState();
-      
-      if (!currentState.canNavigateForward || historyPosition >= currentState.viewHistory.length - 1) {
+
+      if (
+        !currentState.canNavigateForward ||
+        historyPosition >= currentState.viewHistory.length - 1
+      ) {
         return false;
       }
 
@@ -251,7 +257,7 @@ function createNavigationStore(): NavigationStore {
       // Navigate forward
       historyPosition++;
       await updateNavigationState(targetView, { isHistoryNavigation: true });
-      
+
       return true;
     },
 
@@ -264,7 +270,7 @@ function createNavigationStore(): NavigationStore {
 
       update(state => {
         const newViewData = { ...state.viewData, [view]: data };
-        
+
         // Persist view data to localStorage
         try {
           localStorage.setItem(STORAGE_KEYS.VIEW_DATA, JSON.stringify(newViewData));
@@ -301,7 +307,7 @@ function createNavigationStore(): NavigationStore {
       update(state => {
         const newViewData = { ...state.viewData };
         delete newViewData[view];
-        
+
         // Persist updated view data
         try {
           localStorage.setItem(STORAGE_KEYS.VIEW_DATA, JSON.stringify(newViewData));
@@ -333,7 +339,7 @@ function createNavigationStore(): NavigationStore {
   // Helper functions
   function getCurrentState(): NavigationState {
     let state: NavigationState;
-    subscribe(s => state = s)();
+    subscribe(s => (state = s))();
     return state!;
   }
 
@@ -343,7 +349,7 @@ function createNavigationStore(): NavigationStore {
 
   async function executeGuards(from: ViewType, to: ViewType): Promise<boolean> {
     const guards = Array.from(guardManager.guards.values());
-    
+
     for (const guard of guards) {
       try {
         const result = await guard(from, to);
@@ -355,13 +361,13 @@ function createNavigationStore(): NavigationStore {
         return false; // Block navigation on guard error
       }
     }
-    
+
     return true;
   }
 
   async function performNavigation(view: ViewType, options: NavigationOptions): Promise<void> {
     const currentState = getCurrentState();
-    
+
     // Set view data if provided
     if (options.viewData) {
       update(state => ({
@@ -372,7 +378,7 @@ function createNavigationStore(): NavigationStore {
 
     // Update history
     let newHistory = [...currentState.viewHistory];
-    
+
     if (options.replaceHistory) {
       // Replace current history entry
       newHistory[newHistory.length - 1] = view;
@@ -382,7 +388,7 @@ function createNavigationStore(): NavigationStore {
       newHistory = newHistory.slice(0, historyPosition + 1);
       newHistory.push(view);
       historyPosition = newHistory.length - 1;
-      
+
       // Limit history size
       if (newHistory.length > MAX_HISTORY_SIZE) {
         newHistory = newHistory.slice(-MAX_HISTORY_SIZE);
@@ -394,11 +400,11 @@ function createNavigationStore(): NavigationStore {
   }
 
   async function updateNavigationState(
-    view: ViewType, 
+    view: ViewType,
     options: { newHistory?: ViewType[]; isHistoryNavigation?: boolean } = {}
   ): Promise<void> {
     const currentState = getCurrentState();
-    
+
     const newHistory = options.newHistory || currentState.viewHistory;
     const canNavigateBack = historyPosition > 0;
     const canNavigateForward = historyPosition < newHistory.length - 1;

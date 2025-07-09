@@ -1,13 +1,13 @@
 import type { Writable } from 'svelte/store';
 
 // Available views in the application
-export type ViewType = 
-  | 'workspace'    // Workspace selection and management
-  | 'metadata'     // EPUB metadata editing
-  | 'manifest'     // File listing and management
-  | 'navigation'   // Table of contents editing
-  | 'spine'        // Chapter ordering
-  | 'settings';    // Application settings
+export type ViewType =
+  | 'workspace' // Workspace selection and management
+  | 'metadata' // EPUB metadata editing
+  | 'manifest' // File listing and management
+  | 'navigation' // Table of contents editing
+  | 'spine' // Chapter ordering
+  | 'settings'; // Application settings
 
 // Navigation store state
 export interface NavigationState {
@@ -28,10 +28,7 @@ export interface NavigationOptions {
 }
 
 // Navigation guard function
-export type NavigationGuard = (
-  from: ViewType,
-  to: ViewType
-) => boolean | Promise<boolean>;
+export type NavigationGuard = (from: ViewType, to: ViewType) => boolean | Promise<boolean>;
 
 // Store interface
 export interface NavigationStore extends Writable<NavigationState> {
@@ -52,11 +49,11 @@ export interface ViewComponent {
   // Component lifecycle
   onViewEnter?(data?: any): Promise<void> | void;
   onViewLeave?(): Promise<void> | void;
-  
+
   // Data persistence
   getViewData?(): any;
   setViewData?(data: any): void;
-  
+
   // Navigation integration
   canLeave?(): Promise<boolean> | boolean;
 }

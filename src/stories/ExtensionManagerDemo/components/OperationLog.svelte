@@ -31,7 +31,7 @@
     { value: 'info', label: 'Info', count: 0 },
     { value: 'success', label: 'Success', count: 0 },
     { value: 'warning', label: 'Warning', count: 0 },
-    { value: 'error', label: 'Error', count: 0 }
+    { value: 'error', label: 'Error', count: 0 },
   ];
 
   // Log container for auto-scroll
@@ -52,9 +52,10 @@
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(entry =>
-        entry.message.toLowerCase().includes(query) ||
-        (entry.details && JSON.stringify(entry.details).toLowerCase().includes(query))
+      filtered = filtered.filter(
+        entry =>
+          entry.message.toLowerCase().includes(query) ||
+          (entry.details && JSON.stringify(entry.details).toLowerCase().includes(query))
       );
     }
 
@@ -62,10 +63,13 @@
   }
 
   function updateLogCounts(allEntries: LogEntry[]) {
-    const counts = allEntries.reduce((acc, entry) => {
-      acc[entry.level] = (acc[entry.level] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const counts = allEntries.reduce(
+      (acc, entry) => {
+        acc[entry.level] = (acc[entry.level] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
     logLevels[0].count = allEntries.length; // all
     logLevels[1].count = counts.info || 0;
@@ -87,18 +91,23 @@
       hour12: false,
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
     });
   }
 
   // Get log level icon
   function getLogIcon(level: LogEntry['level']): string {
     switch (level) {
-      case 'info': return 'ℹ️';
-      case 'success': return '✅';
-      case 'warning': return '⚠️';
-      case 'error': return '❌';
-      default: return '📝';
+      case 'info':
+        return 'ℹ️';
+      case 'success':
+        return '✅';
+      case 'warning':
+        return '⚠️';
+      case 'error':
+        return '❌';
+      default:
+        return '📝';
     }
   }
 
@@ -129,12 +138,12 @@
         timestamp: entry.timestamp.toISOString(),
         level: entry.level,
         message: entry.message,
-        details: entry.details
-      }))
+        details: entry.details,
+      })),
     };
 
     const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-      type: 'application/json'
+      type: 'application/json',
     });
 
     const url = URL.createObjectURL(blob);
@@ -173,7 +182,7 @@
   <div class="log-header">
     <h3>Operation Log</h3>
     <div class="log-controls">
-      <button 
+      <button
         class="control-btn"
         class:active={isAutoScroll}
         on:click={toggleAutoScroll}
@@ -181,12 +190,8 @@
       >
         📜
       </button>
-      <button class="control-btn" on:click={scrollToBottom} title="Scroll to bottom">
-        ⬇️
-      </button>
-      <button class="control-btn" on:click={exportLogs} title="Export logs">
-        💾
-      </button>
+      <button class="control-btn" on:click={scrollToBottom} title="Scroll to bottom"> ⬇️ </button>
+      <button class="control-btn" on:click={exportLogs} title="Export logs"> 💾 </button>
       <button class="control-btn clear-btn" on:click={handleClearLog} title="Clear log">
         🗑️
       </button>
@@ -202,7 +207,7 @@
           class="level-filter"
           class:active={selectedLevel === level.value}
           class:has-entries={level.count > 0}
-          on:click={() => selectedLevel = level.value}
+          on:click={() => (selectedLevel = level.value)}
         >
           <span class="level-label">{level.label}</span>
           <span class="level-count">{level.count}</span>
@@ -238,13 +243,13 @@
     {:else}
       <div class="log-entries">
         {#each filteredEntries as entry (entry.id)}
-          <div 
+          <div
             class="log-entry {getLogLevelClass(entry.level)}"
             class:has-details={entry.details}
             on:click={() => entry.details && showLogDetails(entry)}
             role={entry.details ? 'button' : 'listitem'}
             tabindex={entry.details ? 0 : -1}
-            on:keydown={(e) => e.key === 'Enter' && entry.details && showLogDetails(entry)}
+            on:keydown={e => e.key === 'Enter' && entry.details && showLogDetails(entry)}
           >
             <div class="log-timestamp">
               {formatTime(entry.timestamp)}
@@ -255,9 +260,7 @@
             <div class="log-content">
               <div class="log-message">{entry.message}</div>
               {#if entry.details}
-                <div class="log-details-indicator">
-                  Click to view details
-                </div>
+                <div class="log-details-indicator">Click to view details</div>
               {/if}
             </div>
             <div class="log-actions">

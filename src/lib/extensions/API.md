@@ -25,6 +25,7 @@ constructor(fileStorage: FileStorageAPI)
 ```
 
 **Input:**
+
 - `fileStorage: FileStorageAPI` - Initialized File Storage API instance
 
 **Output:** `ExtensionManager` instance
@@ -51,13 +52,15 @@ importExtension(workspaceId: string, file: File, extensionName: string): Promise
 ```
 
 **Input:**
+
 - `workspaceId: string` - Target workspace identifier
 - `file: File` - JavaScript file to import
 - `extensionName: string` - User-confirmed extension name (normalized)
 
 **Output:** `Promise<ExtensionInfo>` - Information about the created extension
 
-**Side Effects:** 
+**Side Effects:**
+
 - Creates `SOURCE/extensions/{extensionName}/` directory in workspace
 - Saves uploaded file to extension directory
 - Automatically caches extension to global cache
@@ -87,6 +90,7 @@ addFileToExtension(workspaceId: string, extensionName: string, file: File): Prom
 ```
 
 **Input:**
+
 - `workspaceId: string` - Target workspace identifier
 - `extensionName: string` - Existing extension name
 - `file: File` - Additional JavaScript or LICENSE file
@@ -94,6 +98,7 @@ addFileToExtension(workspaceId: string, extensionName: string, file: File): Prom
 **Output:** `Promise<void>`
 
 **Side Effects:**
+
 - Adds file to existing extension directory
 - Updates cache if extension is cached and content matches
 
@@ -102,11 +107,7 @@ addFileToExtension(workspaceId: string, extensionName: string, file: File): Prom
 ```typescript
 // Add a plugin file to existing markdown-it extension
 const pluginFile = new File([pluginCode], 'markdown-it-footnote.js');
-await extensionManager.addFileToExtension(
-  'workspace-123',
-  'markdown-it',
-  pluginFile
-);
+await extensionManager.addFileToExtension('workspace-123', 'markdown-it', pluginFile);
 ```
 
 ## Workspace Extension Management
@@ -118,6 +119,7 @@ listWorkspaceExtensions(workspaceId: string): Promise<ExtensionInfo[]>
 ```
 
 **Input:**
+
 - `workspaceId: string` - Target workspace identifier
 
 **Output:** `Promise<ExtensionInfo[]>` - Array of extensions in workspace
@@ -141,6 +143,7 @@ deleteWorkspaceExtension(workspaceId: string, extensionName: string): Promise<vo
 ```
 
 **Input:**
+
 - `workspaceId: string` - Target workspace identifier
 - `extensionName: string` - Extension to delete
 
@@ -174,8 +177,8 @@ listCachedExtensions(): Promise<ExtensionInfo[]>
 const cachedExtensions = await extensionManager.listCachedExtensions();
 
 // Show available extensions for import
-const availableForImport = cachedExtensions.filter(ext => 
-  !currentWorkspaceExtensions.some(we => we.name === ext.name)
+const availableForImport = cachedExtensions.filter(
+  ext => !currentWorkspaceExtensions.some(we => we.name === ext.name)
 );
 ```
 
@@ -186,6 +189,7 @@ importFromCache(workspaceId: string, extensionName: string): Promise<void>
 ```
 
 **Input:**
+
 - `workspaceId: string` - Target workspace identifier
 - `extensionName: string` - Name of cached extension to import
 
@@ -207,6 +211,7 @@ deleteCachedExtension(extensionName: string): Promise<void>
 ```
 
 **Input:**
+
 - `extensionName: string` - Cached extension to delete
 
 **Output:** `Promise<void>`
@@ -226,6 +231,7 @@ cacheExtension(workspaceId: string, extensionName: string): Promise<void>
 ```
 
 **Input:**
+
 - `workspaceId: string` - Source workspace identifier
 - `extensionName: string` - Extension to cache
 
@@ -249,6 +255,7 @@ scanAndCacheExtensions(workspaceId: string): Promise<CachingSummary>
 ```
 
 **Input:**
+
 - `workspaceId: string` - Workspace to scan for extensions
 
 **Output:** `Promise<CachingSummary>` - Summary of caching results
@@ -276,6 +283,7 @@ detectExtensionName(filename: string): string
 ```
 
 **Input:**
+
 - `filename: string` - JavaScript filename
 
 **Output:** `string` - Normalized extension name
@@ -302,6 +310,7 @@ validateExtensionFile(file: File): ValidationResult
 ```
 
 **Input:**
+
 - `file: File` - File to validate
 
 **Output:** `ValidationResult` - Validation status and file type
@@ -326,9 +335,9 @@ if (result.isValid) {
 
 ```typescript
 interface ExtensionInfo {
-  name: string;                  // Extension directory name
-  files: ExtensionFile[];        // All JS and license files
-  totalSize: number;             // Combined size of all files in bytes
+  name: string; // Extension directory name
+  files: ExtensionFile[]; // All JS and license files
+  totalSize: number; // Combined size of all files in bytes
   location: 'workspace' | 'cache'; // Where this info was retrieved from
 }
 ```
@@ -337,8 +346,8 @@ interface ExtensionInfo {
 
 ```typescript
 interface ExtensionFile {
-  filename: string;              // e.g., "markdown-it.min.js", "LICENSE.txt"
-  size: number;                  // File size in bytes
+  filename: string; // e.g., "markdown-it.min.js", "LICENSE.txt"
+  size: number; // File size in bytes
   type: 'javascript' | 'license'; // File type classification
 }
 ```
@@ -347,10 +356,10 @@ interface ExtensionFile {
 
 ```typescript
 interface CachingSummary {
-  successCount: number;          // Number of extensions successfully cached
-  totalScanned: number;          // Total extensions found in workspace
-  conflicts: string[];           // Names of extensions with cache conflicts
-  errors: CachingError[];        // Detailed error information
+  successCount: number; // Number of extensions successfully cached
+  totalScanned: number; // Total extensions found in workspace
+  conflicts: string[]; // Names of extensions with cache conflicts
+  errors: CachingError[]; // Detailed error information
 }
 ```
 
@@ -358,9 +367,9 @@ interface CachingSummary {
 
 ```typescript
 interface CachingError {
-  extensionName: string;         // Extension that failed to cache
+  extensionName: string; // Extension that failed to cache
   reason: 'conflict' | 'storage' | 'validation';
-  message: string;               // Human-readable error message
+  message: string; // Human-readable error message
 }
 ```
 
@@ -368,9 +377,9 @@ interface CachingError {
 
 ```typescript
 interface ValidationResult {
-  isValid: boolean;              // Whether file passed validation
+  isValid: boolean; // Whether file passed validation
   fileType: 'javascript' | 'license' | 'unknown';
-  error?: string;                // Error message if validation failed
+  error?: string; // Error message if validation failed
 }
 ```
 
@@ -446,28 +455,23 @@ async function handleExtensionImport(workspaceId: string, file: File) {
     if (!validation.isValid) {
       throw new Error(validation.error);
     }
-    
+
     // 2. Detect and confirm name
     const detectedName = extensionManager.detectExtensionName(file.name);
     const confirmedName = await promptUserForName(detectedName);
-    
+
     // 3. Check for conflicts
     const existing = await extensionManager.listWorkspaceExtensions(workspaceId);
     if (existing.some(ext => ext.name === confirmedName)) {
       throw new Error(`Extension '${confirmedName}' already exists`);
     }
-    
+
     // 4. Import extension (automatically caches)
-    const extensionInfo = await extensionManager.importExtension(
-      workspaceId, 
-      file, 
-      confirmedName
-    );
-    
+    const extensionInfo = await extensionManager.importExtension(workspaceId, file, confirmedName);
+
     // 5. Update UI
     showSuccessMessage(`Extension '${extensionInfo.name}' imported successfully`);
     refreshExtensionList();
-    
   } catch (error) {
     showErrorMessage(`Failed to import extension: ${error.message}`);
   }
@@ -487,20 +491,19 @@ async function importExtensionFromCache(workspaceId: string, extensionName: stri
     if (!extension) {
       throw new Error(`Extension '${extensionName}' not found in cache`);
     }
-    
+
     // 2. Check workspace conflicts
     const workspace = await extensionManager.listWorkspaceExtensions(workspaceId);
     if (workspace.some(ext => ext.name === extensionName)) {
       throw new Error(`Extension '${extensionName}' already exists in workspace`);
     }
-    
+
     // 3. Import from cache
     await extensionManager.importFromCache(workspaceId, extensionName);
-    
+
     // 4. Update UI
     showSuccessMessage(`Extension '${extensionName}' imported from cache`);
     refreshExtensionList();
-    
   } catch (error) {
     showErrorMessage(`Failed to import from cache: ${error.message}`);
   }
@@ -516,10 +519,10 @@ async function importWorkspaceWithExtensions(epubFile: File) {
   try {
     // 1. Standard EPUB import
     const result = await epubUnpacker.unpackEPUB(epubFile, workspaceId);
-    
+
     // 2. Auto-cache discovered extensions
     const cachingSummary = await extensionManager.scanAndCacheExtensions(workspaceId);
-    
+
     // 3. Log caching results (non-blocking)
     if (cachingSummary.successCount > 0) {
       console.log(`Cached ${cachingSummary.successCount} new extensions`);
@@ -527,10 +530,9 @@ async function importWorkspaceWithExtensions(epubFile: File) {
     if (cachingSummary.conflicts.length > 0) {
       console.log(`Cache conflicts: ${cachingSummary.conflicts.join(', ')}`);
     }
-    
+
     // 4. Continue with normal import workflow
     showSuccessMessage(`Workspace imported with ${result.extensionCount} extensions`);
-    
   } catch (error) {
     showErrorMessage(`Import failed: ${error.message}`);
   }
@@ -569,12 +571,12 @@ interface ExtensionSignature {
 function compareExtensions(sig1: ExtensionSignature, sig2: ExtensionSignature): boolean {
   if (sig1.totalSize !== sig2.totalSize) return false;
   if (sig1.files.length !== sig2.files.length) return false;
-  
+
   const files1 = sig1.files.sort((a, b) => a.name.localeCompare(b.name));
   const files2 = sig2.files.sort((a, b) => a.name.localeCompare(b.name));
-  
-  return files1.every((file, index) => 
-    file.name === files2[index].name && file.size === files2[index].size
+
+  return files1.every(
+    (file, index) => file.name === files2[index].name && file.size === files2[index].size
   );
 }
 ```
@@ -587,9 +589,9 @@ Extension names are normalized to ensure safe directory names:
 function normalizeExtensionName(name: string): string {
   return name
     .toLowerCase()
-    .replace(/[^a-z0-9-]/g, '-')  // Replace invalid chars with hyphens
-    .replace(/-+/g, '-')          // Collapse multiple hyphens
-    .replace(/^-|-$/g, '');       // Remove leading/trailing hyphens
+    .replace(/[^a-z0-9-]/g, '-') // Replace invalid chars with hyphens
+    .replace(/-+/g, '-') // Collapse multiple hyphens
+    .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
 }
 ```
 

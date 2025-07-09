@@ -29,7 +29,7 @@
     cacheEnabled: true,
     compressionEnabled: true,
     version: 'Demo v1.0.0',
-    lastUpdate: new Date()
+    lastUpdate: new Date(),
   };
 
   // Calculate storage percentages
@@ -91,10 +91,14 @@
   // Get health indicator
   function getHealthIcon(status: string): string {
     switch (status) {
-      case 'healthy': return '💚';
-      case 'warning': return '🟡';
-      case 'critical': return '🔴';
-      default: return '⚪';
+      case 'healthy':
+        return '💚';
+      case 'warning':
+        return '🟡';
+      case 'critical':
+        return '🔴';
+      default:
+        return '⚪';
     }
   }
 </script>
@@ -117,8 +121,8 @@
     <h4>Storage Usage</h4>
     <div class="storage-stats">
       <div class="storage-bar">
-        <div 
-          class="storage-fill" 
+        <div
+          class="storage-fill"
           style="width: {usagePercentage}%; background-color: {getUsageColor(usagePercentage)}"
         ></div>
       </div>
@@ -178,7 +182,7 @@
           </div>
           <div class="progress-container">
             <div class="progress-bar">
-              <div 
+              <div
                 class="progress-fill"
                 style="width: {uploadProgress.progress}%; background-color: {statusInfo.color}"
               ></div>
@@ -205,13 +209,21 @@
       </div>
       <div class="info-item">
         <span class="info-label">Cache Enabled:</span>
-        <span class="info-value" class:enabled={systemInfo.cacheEnabled} class:disabled={!systemInfo.cacheEnabled}>
+        <span
+          class="info-value"
+          class:enabled={systemInfo.cacheEnabled}
+          class:disabled={!systemInfo.cacheEnabled}
+        >
           {systemInfo.cacheEnabled ? 'Yes' : 'No'}
         </span>
       </div>
       <div class="info-item">
         <span class="info-label">Compression:</span>
-        <span class="info-value" class:enabled={systemInfo.compressionEnabled} class:disabled={!systemInfo.compressionEnabled}>
+        <span
+          class="info-value"
+          class:enabled={systemInfo.compressionEnabled}
+          class:disabled={!systemInfo.compressionEnabled}
+        >
           {systemInfo.compressionEnabled ? 'Enabled' : 'Disabled'}
         </span>
       </div>
@@ -230,15 +242,9 @@
   <div class="status-section">
     <h4>Quick Actions</h4>
     <div class="quick-actions">
-      <button class="action-btn" title="Refresh statistics">
-        🔄 Refresh
-      </button>
-      <button class="action-btn" title="Clear cache">
-        🗑️ Clear Cache
-      </button>
-      <button class="action-btn" title="Export statistics">
-        📊 Export Stats
-      </button>
+      <button class="action-btn" title="Refresh statistics"> 🔄 Refresh </button>
+      <button class="action-btn" title="Clear cache"> 🗑️ Clear Cache </button>
+      <button class="action-btn" title="Export statistics"> 📊 Export Stats </button>
     </div>
   </div>
 </div>
@@ -320,7 +326,9 @@
 
   .storage-fill {
     height: 100%;
-    transition: width 0.3s ease, background-color 0.3s ease;
+    transition:
+      width 0.3s ease,
+      background-color 0.3s ease;
   }
 
   .storage-info {
@@ -443,8 +451,12 @@
   }
 
   @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .loading-text {

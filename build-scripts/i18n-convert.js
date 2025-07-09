@@ -37,16 +37,15 @@ async function convertPoFiles() {
         format: 'mf', // Message format for interpolation
         domain: locale,
         fuzzy: false, // Skip fuzzy translations
-        fallback: locale === 'en' // Use English as fallback
+        fallback: locale === 'en', // Use English as fallback
       });
 
       // Write JSON file
       await fs.writeFile(jsonPath, JSON.stringify(translations, null, 2));
-      
+
       const messageCount = Object.keys(translations).length;
       console.log(`✅ ${locale}.json - ${messageCount} translations`);
       convertedCount++;
-
     } catch (error) {
       if (error.code === 'ENOENT') {
         console.log(`⚠️  ${locale}.po not found, skipping...`);

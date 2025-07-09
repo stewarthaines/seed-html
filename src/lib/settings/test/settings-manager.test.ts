@@ -43,7 +43,10 @@ describe('Settings Manager Core', () => {
     mockExtensionManager = createMockExtensionManager();
     mockLocalStorage = setupLocalStorageMock();
 
-    settingsManager = new DefaultSettingsManager(mockFileStorage as any, mockExtensionManager as any);
+    settingsManager = new DefaultSettingsManager(
+      mockFileStorage as any,
+      mockExtensionManager as any
+    );
 
     resetAllMocks(mockFileStorage, mockExtensionManager, mockLocalStorage);
   });

@@ -96,7 +96,10 @@
 
       <h3>{$t('Coming Soon')}</h3>
       <p class="placeholder-description">
-        {$t('The {title} interface will be implemented in Phase 3 of the EDITME development. This will include full content management capabilities.', { title: title.toLowerCase() })}
+        {$t(
+          'The {title} interface will be implemented in Phase 3 of the EDITME development. This will include full content management capabilities.',
+          { title: title.toLowerCase() }
+        )}
       </p>
 
       <div class="feature-preview">
@@ -153,9 +156,9 @@
         <div class="last-action">
           <span class="action-icon">✨</span>
           <span
-            >{$t('Last action')}: {viewData.lastAction} {$t('at')} {new Date(
-              viewData.actionTime
-            ).toLocaleTimeString()}</span
+            >{$t('Last action')}: {viewData.lastAction}
+            {$t('at')}
+            {new Date(viewData.actionTime).toLocaleTimeString()}</span
           >
         </div>
       {/if}

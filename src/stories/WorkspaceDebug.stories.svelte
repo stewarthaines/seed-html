@@ -9,7 +9,8 @@
       layout: 'fullscreen',
       docs: {
         description: {
-          component: 'Debug test component for isolating workspace creation issues in story utilities.',
+          component:
+            'Debug test component for isolating workspace creation issues in story utilities.',
         },
       },
     },
@@ -32,7 +33,8 @@
   parameters={{
     docs: {
       description: {
-        story: 'Tests workspace creation with the basic scenario configuration. Shows detailed debug information about the initialization process.',
+        story:
+          'Tests workspace creation with the basic scenario configuration. Shows detailed debug information about the initialization process.',
       },
     },
   }}
@@ -46,7 +48,8 @@
   parameters={{
     docs: {
       description: {
-        story: 'Tests workspace creation with error simulation enabled. Should show how errors are handled in the story utilities.',
+        story:
+          'Tests workspace creation with error simulation enabled. Should show how errors are handled in the story utilities.',
       },
     },
   }}
@@ -60,7 +63,8 @@
   parameters={{
     docs: {
       description: {
-        story: 'Tests workspace creation with the comprehensive scenario that includes more complex content and configuration.',
+        story:
+          'Tests workspace creation with the comprehensive scenario that includes more complex content and configuration.',
       },
     },
   }}

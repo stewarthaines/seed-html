@@ -10,7 +10,7 @@ describe('TransformError', () => {
         scriptName: 'markdown-transform.js',
         line: 42,
         column: 15,
-        stack: 'Error: Transform failed\n    at transformText (markdown-transform.js:42:15)'
+        stack: 'Error: Transform failed\n    at transformText (markdown-transform.js:42:15)',
       };
 
       const error = new TransformError(details);
@@ -26,7 +26,7 @@ describe('TransformError', () => {
     it('should create error with minimal details', () => {
       const details = {
         stage: 'dom' as const,
-        message: 'DOM manipulation failed'
+        message: 'DOM manipulation failed',
       };
 
       const error = new TransformError(details);
@@ -42,7 +42,7 @@ describe('TransformError', () => {
       const details = {
         stage: 'loading' as const,
         message: 'Script not found',
-        scriptName: 'missing-script.js'
+        scriptName: 'missing-script.js',
       };
 
       const error = new TransformError(details);
@@ -54,7 +54,7 @@ describe('TransformError', () => {
     it('should handle template stage errors', () => {
       const details = {
         stage: 'template' as const,
-        message: 'Invalid template metadata'
+        message: 'Invalid template metadata',
       };
 
       const error = new TransformError(details);
@@ -71,7 +71,7 @@ describe('TransformError', () => {
         message: 'markdown-it library not found',
         scriptName: 'markdown-transform.js',
         line: 10,
-        column: 5
+        column: 5,
       });
 
       const userMessage = error.toUserMessage();
@@ -88,7 +88,7 @@ describe('TransformError', () => {
         stage: 'dom',
         message: 'Cannot read property of undefined',
         scriptName: 'heading-ids.js',
-        line: 25
+        line: 25,
       });
 
       const userMessage = error.toUserMessage();
@@ -104,7 +104,7 @@ describe('TransformError', () => {
       const error = new TransformError({
         stage: 'loading',
         message: 'File not found',
-        scriptName: 'nonexistent-script.js'
+        scriptName: 'nonexistent-script.js',
       });
 
       const userMessage = error.toUserMessage();
@@ -118,7 +118,7 @@ describe('TransformError', () => {
     it('should format template error message', () => {
       const error = new TransformError({
         stage: 'template',
-        message: 'Invalid metadata structure'
+        message: 'Invalid metadata structure',
       });
 
       const userMessage = error.toUserMessage();
@@ -131,7 +131,7 @@ describe('TransformError', () => {
     it('should handle error without script name', () => {
       const error = new TransformError({
         stage: 'text',
-        message: 'Generic transform error'
+        message: 'Generic transform error',
       });
 
       const userMessage = error.toUserMessage();
@@ -145,7 +145,7 @@ describe('TransformError', () => {
       const error = new TransformError({
         stage: 'dom',
         message: 'Runtime error',
-        scriptName: 'transform.js'
+        scriptName: 'transform.js',
       });
 
       const userMessage = error.toUserMessage();
@@ -161,7 +161,7 @@ describe('TransformError', () => {
       const error = new TransformError({
         stage: 'text',
         message: 'Transform execution timed out after 2000ms',
-        scriptName: 'slow-transform.js'
+        scriptName: 'slow-transform.js',
       });
 
       const userMessage = error.toUserMessage();
@@ -174,10 +174,10 @@ describe('TransformError', () => {
     it('should format syntax errors clearly', () => {
       const error = new TransformError({
         stage: 'loading',
-        message: 'Unexpected token \'}\'',
+        message: "Unexpected token '}'",
         scriptName: 'broken-script.js',
         line: 15,
-        column: 3
+        column: 3,
       });
 
       const userMessage = error.toUserMessage();
@@ -198,7 +198,7 @@ describe('TransformError', () => {
         scriptName: 'test-script.js',
         line: 100,
         column: 25,
-        stack: 'Error stack trace here'
+        stack: 'Error stack trace here',
       };
 
       const error = new TransformError(originalDetails);
@@ -216,7 +216,7 @@ describe('TransformError', () => {
     it('should handle minimal error details', () => {
       const error = new TransformError({
         stage: 'template',
-        message: 'Template error'
+        message: 'Template error',
       });
 
       const details = error.getErrorDetails();
@@ -235,7 +235,7 @@ describe('TransformError', () => {
         stage: 'dom',
         message: 'DOM error',
         scriptName: 'dom-script.js',
-        line: 50
+        line: 50,
       });
 
       const details = error.getErrorDetails();
@@ -250,7 +250,7 @@ describe('TransformError', () => {
     it('should be instanceof Error', () => {
       const error = new TransformError({
         stage: 'text',
-        message: 'Test error'
+        message: 'Test error',
       });
 
       expect(error).toBeInstanceOf(Error);
@@ -260,7 +260,7 @@ describe('TransformError', () => {
     it('should have correct name property', () => {
       const error = new TransformError({
         stage: 'text',
-        message: 'Test error'
+        message: 'Test error',
       });
 
       expect(error.name).toBe('TransformError');
@@ -272,7 +272,7 @@ describe('TransformError', () => {
       try {
         throw new TransformError({
           stage: 'text',
-          message: 'Test throw'
+          message: 'Test throw',
         });
       } catch (error) {
         caughtError = error;
@@ -284,10 +284,12 @@ describe('TransformError', () => {
     });
 
     it('should work with Promise rejections', async () => {
-      const promise = Promise.reject(new TransformError({
-        stage: 'dom',
-        message: 'Async error'
-      }));
+      const promise = Promise.reject(
+        new TransformError({
+          stage: 'dom',
+          message: 'Async error',
+        })
+      );
 
       await expect(promise).rejects.toThrow(TransformError);
       await expect(promise).rejects.toHaveProperty('stage', 'dom');
@@ -301,29 +303,34 @@ describe('TransformError', () => {
       stages.forEach(stage => {
         const error = new TransformError({
           stage,
-          message: `Error in ${stage} stage`
+          message: `Error in ${stage} stage`,
         });
 
         expect(error.stage).toBe(stage);
-        expect(error.toUserMessage()).toContain(stage === 'text' ? 'Text Transform' :
-                                               stage === 'dom' ? 'DOM Transform' :
-                                               stage === 'template' ? 'Template Generation' :
-                                               'Script Loading');
+        expect(error.toUserMessage()).toContain(
+          stage === 'text'
+            ? 'Text Transform'
+            : stage === 'dom'
+              ? 'DOM Transform'
+              : stage === 'template'
+                ? 'Template Generation'
+                : 'Script Loading'
+        );
       });
     });
 
     it('should format stage names consistently', () => {
       const stageNameMapping = {
-        'text': 'Text Transform',
-        'dom': 'DOM Transform', 
-        'template': 'Template Generation',
-        'loading': 'Script Loading'
+        text: 'Text Transform',
+        dom: 'DOM Transform',
+        template: 'Template Generation',
+        loading: 'Script Loading',
       };
 
       Object.entries(stageNameMapping).forEach(([stage, expectedName]) => {
         const error = new TransformError({
           stage: stage as any,
-          message: 'Test message'
+          message: 'Test message',
         });
 
         expect(error.toUserMessage()).toContain(expectedName);
@@ -336,7 +343,7 @@ describe('TransformError', () => {
       const longMessage = 'A'.repeat(1000);
       const error = new TransformError({
         stage: 'text',
-        message: longMessage
+        message: longMessage,
       });
 
       const userMessage = error.toUserMessage();
@@ -348,7 +355,7 @@ describe('TransformError', () => {
       const specialMessage = 'Error with "quotes" & <tags> and émojis 🔥';
       const error = new TransformError({
         stage: 'text',
-        message: specialMessage
+        message: specialMessage,
       });
 
       const userMessage = error.toUserMessage();
@@ -359,7 +366,7 @@ describe('TransformError', () => {
       const multilineMessage = 'First line\nSecond line\nThird line';
       const error = new TransformError({
         stage: 'text',
-        message: multilineMessage
+        message: multilineMessage,
       });
 
       const userMessage = error.toUserMessage();
@@ -369,7 +376,7 @@ describe('TransformError', () => {
     it('should handle empty error message', () => {
       const error = new TransformError({
         stage: 'text',
-        message: ''
+        message: '',
       });
 
       const userMessage = error.toUserMessage();
@@ -382,7 +389,7 @@ describe('TransformError', () => {
         stage: 'text',
         message: 'Error at extreme position',
         line: 999999,
-        column: 888888
+        column: 888888,
       });
 
       const userMessage = error.toUserMessage();
@@ -395,7 +402,7 @@ describe('TransformError', () => {
         stage: 'text',
         message: 'Error at start',
         line: 0,
-        column: 0
+        column: 0,
       });
 
       const userMessage = error.toUserMessage();

@@ -3,11 +3,13 @@
 A git worktree has been created for implementing the Transform Pipeline feature (Feature 12).
 
 ## Location
+
 ```
 /Users/stewart/Projects/editme-svelte-transform-pipeline
 ```
 
 ## Branch
+
 ```
 feature/transform-pipeline
 ```
@@ -15,6 +17,7 @@ feature/transform-pipeline
 ## Implementation Status
 
 ### ✅ Already Completed
+
 - **API Documentation**: `src/lib/transform/API.md` - Comprehensive API specification
 - **Unit Tests**: Complete test suite in `src/lib/transform/test/`
   - `transform-pipeline.test.ts` - Main pipeline tests
@@ -23,6 +26,7 @@ feature/transform-pipeline
   - Mock infrastructure and test fixtures
 
 ### 🔨 Ready to Implement
+
 The Transform Pipeline needs to be built following the documented API in `src/lib/transform/API.md`.
 
 ## Key Files to Create
@@ -48,6 +52,7 @@ src/lib/transform/
    - Settings from SOURCE/settings.json
 
 ## Feature Specification
+
 See `plans/features/12_transform_pipeline.md` for complete requirements and technical approach.
 
 ## Getting Started

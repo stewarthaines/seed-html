@@ -44,6 +44,7 @@ constructor(
 ```
 
 **Input:**
+
 - `fileStorage: FileStorageAPI` - File storage instance for workspace operations
 - `blobUrlManager: BlobUrlManager` - Blob URL manager for library loading
 
@@ -75,6 +76,7 @@ async executeTransformPipeline(
 ```
 
 **Input:**
+
 - `plainText: string` - Source plain text content to transform
 - `workspaceId: string` - Workspace identifier containing transform scripts
 - `spineItemId: string` - Current spine item being transformed
@@ -82,7 +84,8 @@ async executeTransformPipeline(
 
 **Output:** `Promise<TransformResult>` - Complete transformation result with XHTML document
 
-**Side Effects:** 
+**Side Effects:**
+
 - Loads and executes transform scripts from SOURCE/scripts/
 - Creates blob URLs for 3rd party extension libraries
 - Generates final XHTML document with template system
@@ -94,7 +97,7 @@ const metadata = {
   title: 'Chapter 1',
   language: 'en',
   stylesheets: ['../Styles/stylesheet.css'],
-  scripts: []
+  scripts: [],
 };
 
 const result = await pipeline.executeTransformPipeline(
@@ -122,6 +125,7 @@ async transformText(
 ```
 
 **Input:**
+
 - `plainText: string` - Source plain text to transform
 - `workspaceId: string` - Workspace containing transform scripts and settings
 - `spineItemId: string` - Current spine item identifier
@@ -129,6 +133,7 @@ async transformText(
 **Output:** `Promise<TransformResult>` - Text transformation result with HTML content
 
 **Side Effects:**
+
 - Loads text transform script from SOURCE/scripts/ based on settings.json
 - Executes transform function in sandboxed context with 2-second timeout
 - Provides context with manifest items for advanced features
@@ -160,6 +165,7 @@ async transformDOM(
 ```
 
 **Input:**
+
 - `xhtmlDocument: Document` - XHTML document to transform
 - `workspaceId: string` - Workspace containing DOM transform scripts
 - `spineItemId: string` - Current spine item identifier
@@ -167,6 +173,7 @@ async transformDOM(
 **Output:** `Promise<Document>` - Transformed XHTML document
 
 **Side Effects:**
+
 - Loads DOM transform scripts from SOURCE/scripts/ based on settings.json
 - Executes transforms sequentially in order specified
 - Clones document to avoid modifying original
@@ -191,6 +198,7 @@ generateXHTMLDocument(
 ```
 
 **Input:**
+
 - `content: string` - Transformed HTML content for document body
 - `metadata: ChapterMetadata` - Document metadata (title, stylesheets, scripts)
 
@@ -205,7 +213,7 @@ const metadata = {
   title: 'Chapter 1: Introduction',
   language: 'en',
   stylesheets: ['../Styles/main.css', '../Styles/chapter.css'],
-  scripts: ['../Scripts/reader.js']
+  scripts: ['../Scripts/reader.js'],
 };
 
 const xhtml = pipeline.generateXHTMLDocument('<h1>Chapter 1</h1><p>Content...</p>', metadata);
@@ -221,6 +229,7 @@ constructor(private fileStorage: FileStorageAPI)
 ```
 
 **Input:**
+
 - `fileStorage: FileStorageAPI` - File storage instance for script loading
 
 **Output:** `TransformManager` - Transform script manager instance
@@ -234,11 +243,13 @@ async loadTransformScripts(workspaceId: string): Promise<TransformScripts>
 ```
 
 **Input:**
+
 - `workspaceId: string` - Workspace containing SOURCE/scripts/ directory
 
 **Output:** `Promise<TransformScripts>` - Loaded transform scripts with metadata
 
 **Side Effects:**
+
 - Reads settings.json to determine which scripts to load
 - Loads script files from SOURCE/scripts/ directory
 - Validates script file existence and accessibility
@@ -263,11 +274,13 @@ async loadTransformSettings(workspaceId: string): Promise<TransformSettings>
 ```
 
 **Input:**
+
 - `workspaceId: string` - Workspace containing SOURCE/settings.json
 
 **Output:** `Promise<TransformSettings>` - Transform pipeline settings
 
 **Side Effects:**
+
 - Reads and parses SOURCE/settings.json
 - Validates settings structure and script references
 
@@ -289,6 +302,7 @@ validateTransformScript(
 ```
 
 **Input:**
+
 - `scriptContent: string` - JavaScript source code to validate
 - `expectedFunctions: array` - Functions that should be present in script
 
@@ -299,10 +313,7 @@ validateTransformScript(
 **Usage:**
 
 ```typescript
-const validation = manager.validateTransformScript(
-  scriptContent,
-  ['transformText']
-);
+const validation = manager.validateTransformScript(scriptContent, ['transformText']);
 
 if (!validation.isValid) {
   console.error('Script validation errors:', validation.errors);
@@ -325,6 +336,7 @@ constructor(details: {
 ```
 
 **Input:**
+
 - `details: object` - Error details including stage, message, and location
 
 **Output:** `TransformError` - Transform error instance
@@ -386,65 +398,65 @@ console.log('Location:', `${errorDetails.line}:${errorDetails.column}`);
 ```typescript
 interface TransformResult {
   success: boolean;
-  transformedText?: string;       // Output from text transform
-  xhtmlDocument?: Document;       // Final XHTML document
-  warnings?: string[];            // Non-fatal issues
-  error?: TransformError;         // Transform failure details
-  executionTime?: number;         // Transform duration in milliseconds
+  transformedText?: string; // Output from text transform
+  xhtmlDocument?: Document; // Final XHTML document
+  warnings?: string[]; // Non-fatal issues
+  error?: TransformError; // Transform failure details
+  executionTime?: number; // Transform duration in milliseconds
 }
 
 interface TransformScripts {
-  textTransform?: TransformScript;      // Text transform script
-  domTransforms: TransformScript[];     // DOM transform scripts in order
-  settings: TransformSettings;          // Pipeline settings from SOURCE/settings.json
+  textTransform?: TransformScript; // Text transform script
+  domTransforms: TransformScript[]; // DOM transform scripts in order
+  settings: TransformSettings; // Pipeline settings from SOURCE/settings.json
 }
 
 interface TransformScript {
-  filename: string;               // Script filename (relative to SOURCE/scripts/)
-  content: string;                // JavaScript source code
-  lastModified?: Date;            // File modification time
-  size: number;                   // File size in bytes
+  filename: string; // Script filename (relative to SOURCE/scripts/)
+  content: string; // JavaScript source code
+  lastModified?: Date; // File modification time
+  size: number; // File size in bytes
 }
 
 interface TransformSettings {
   transform_pipeline?: {
-    text_transform?: string;      // Text transform script filename
-    dom_transforms?: string[];    // DOM transform script filenames in order
-    enabled?: boolean;            // Pipeline enabled/disabled
-    timeout_ms?: number;          // Custom timeout (default 2000ms)
+    text_transform?: string; // Text transform script filename
+    dom_transforms?: string[]; // DOM transform script filenames in order
+    enabled?: boolean; // Pipeline enabled/disabled
+    timeout_ms?: number; // Custom timeout (default 2000ms)
   };
 }
 
 interface ChapterMetadata {
-  title: string;                  // Document title
-  language: string;               // Document language (en, fr, etc.)
-  stylesheets: string[];          // CSS stylesheet hrefs
-  scripts: string[];              // JavaScript script srcs
-  customHead?: string;            // Additional head content
+  title: string; // Document title
+  language: string; // Document language (en, fr, etc.)
+  stylesheets: string[]; // CSS stylesheet hrefs
+  scripts: string[]; // JavaScript script srcs
+  customHead?: string; // Additional head content
 }
 
 interface TransformContext {
-  workspaceId: string;            // Current workspace identifier
-  spineItemId: string;            // Current spine item being transformed
+  workspaceId: string; // Current workspace identifier
+  spineItemId: string; // Current spine item being transformed
   manifestItems?: Record<string, string>; // Manifest ID to blob URL mapping (for :toc directive)
-  settings?: any;                 // Workspace settings for transform access
+  settings?: any; // Workspace settings for transform access
 }
 
 interface ValidationResult {
-  isValid: boolean;               // Overall validation status
-  errors: string[];               // Critical validation errors
-  warnings: string[];             // Non-critical validation issues
-  requiredFunctions?: string[];   // Missing required function names
+  isValid: boolean; // Overall validation status
+  errors: string[]; // Critical validation errors
+  warnings: string[]; // Non-critical validation issues
+  requiredFunctions?: string[]; // Missing required function names
 }
 
 interface TransformErrorDetails {
   stage: 'text' | 'dom' | 'template' | 'loading';
-  message: string;                // Error message
-  scriptName?: string;            // Script that failed
-  line?: number;                  // Error line number
-  column?: number;                // Error column number
-  stack?: string;                 // JavaScript stack trace
-  userMessage: string;            // User-friendly error description
+  message: string; // Error message
+  scriptName?: string; // Script that failed
+  line?: number; // Error line number
+  column?: number; // Error column number
+  stack?: string; // JavaScript stack trace
+  userMessage: string; // User-friendly error description
 }
 ```
 
@@ -466,7 +478,7 @@ const pipeline = new TransformPipeline(storage, blobManager);
 async function transformChapter(plainText: string, workspaceId: string) {
   try {
     const result = await pipeline.transformText(plainText, workspaceId, 'chapter1');
-    
+
     if (result.success) {
       return result.transformedText;
     } else {
@@ -485,42 +497,38 @@ async function transformChapter(plainText: string, workspaceId: string) {
 import { TransformPipeline } from '$lib/transform';
 
 // Full pipeline execution
-async function processSpineItem(
-  plainText: string,
-  workspaceId: string,
-  spineItemId: string
-) {
+async function processSpineItem(plainText: string, workspaceId: string, spineItemId: string) {
   const pipeline = new TransformPipeline(storage, blobManager);
-  
+
   const metadata = {
     title: 'Chapter Title',
     language: 'en',
     stylesheets: ['../Styles/main.css'],
-    scripts: []
+    scripts: [],
   };
-  
+
   const result = await pipeline.executeTransformPipeline(
     plainText,
     workspaceId,
     spineItemId,
     metadata
   );
-  
+
   if (result.success) {
     // Save XHTML document to workspace
     const xhtmlContent = result.xhtmlDocument!.documentElement.outerHTML;
     await storage.writeTextFile(workspaceId, `OEBPS/Text/${spineItemId}.xhtml`, xhtmlContent);
-    
+
     return result;
   } else {
     // Handle transform error
     console.error('Pipeline error:', result.error?.toUserMessage());
-    
+
     // Show warnings if any
     if (result.warnings?.length) {
       console.warn('Transform warnings:', result.warnings);
     }
-    
+
     throw result.error;
   }
 }
@@ -537,11 +545,11 @@ async function transformWithNavigationContext(
   manifestItems: Record<string, string>
 ) {
   const pipeline = new TransformPipeline(storage, blobManager);
-  
+
   // The pipeline will automatically provide manifestItems in transform context
   // Transform scripts can access this via context.manifestItems for :toc directives
   const result = await pipeline.transformText(plainText, workspaceId, spineItemId);
-  
+
   return result;
 }
 ```
@@ -555,16 +563,16 @@ import { BlobUrlManager } from '$lib/blob-url';
 // Load extension libraries as globals
 async function setupTransformEnvironment(workspaceId: string) {
   const blobManager = new BlobUrlManager();
-  
+
   // Load extension libraries from SOURCE/extensions/
   const extensionLibraries = [
     'SOURCE/extensions/markdown-it/markdown-it.min.js',
-    'SOURCE/extensions/abcjs/abcjs-basic.min.js'
+    'SOURCE/extensions/abcjs/abcjs-basic.min.js',
   ];
-  
+
   // Libraries will be loaded as globals in the transform execution context
   // Transform scripts can then use: new markdownit(), ABCJS.renderAbc(), etc.
-  
+
   const pipeline = new TransformPipeline(storage, blobManager);
   return pipeline;
 }
@@ -578,7 +586,7 @@ import { TransformError } from '$lib/transform';
 async function transformWithErrorHandling(plainText: string, workspaceId: string) {
   try {
     const result = await pipeline.transformText(plainText, workspaceId, 'chapter1');
-    
+
     if (result.success) {
       // Check for warnings
       if (result.warnings?.length) {
@@ -593,11 +601,11 @@ async function transformWithErrorHandling(plainText: string, workspaceId: string
       // Get user-friendly error message
       const userMessage = error.toUserMessage();
       console.error('Transform error:', userMessage);
-      
+
       // Get technical details for debugging
       const details = error.getErrorDetails();
       console.debug('Error details:', details);
-      
+
       // Handle different error stages
       switch (error.stage) {
         case 'loading':
@@ -613,7 +621,7 @@ async function transformWithErrorHandling(plainText: string, workspaceId: string
           console.error('XHTML template generation failed:', details.message);
           break;
       }
-      
+
       // Provide fallback behavior
       return plainText; // Return original text on transform failure
     } else {
@@ -635,28 +643,25 @@ function transformText(plainText, context) {
   if (typeof markdownit === 'undefined') {
     throw new Error('markdown-it library not available. Please add to SOURCE/extensions/');
   }
-  
+
   // Initialize markdown processor
   const md = markdownit({
     html: true,
     xhtmlOut: true,
     breaks: false,
     linkify: true,
-    typographer: true
+    typographer: true,
   });
-  
+
   // Access transform context for advanced features
   if (context.manifestItems) {
     // Handle :toc directives for navigation
-    plainText = plainText.replace(
-      /:toc\[([^\]]+)\]\{src="([^"]+)"\}/g,
-      (match, title, pattern) => {
-        // Use context.manifestItems to build table of contents
-        return generateTOC(title, pattern, context.manifestItems);
-      }
-    );
+    plainText = plainText.replace(/:toc\[([^\]]+)\]\{src="([^"]+)"\}/g, (match, title, pattern) => {
+      // Use context.manifestItems to build table of contents
+      return generateTOC(title, pattern, context.manifestItems);
+    });
   }
-  
+
   // Transform markdown to HTML
   return md.render(plainText);
 }
@@ -664,21 +669,22 @@ function transformText(plainText, context) {
 function transformDOM(document) {
   // Add IDs to headings for navigation
   const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
-  
+
   headings.forEach((heading, index) => {
     if (!heading.id) {
       const text = heading.textContent || '';
-      const id = text
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .replace(/^-|-$/g, '') || `heading-${index + 1}`;
-      
+      const id =
+        text
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '') || `heading-${index + 1}`;
+
       heading.id = id;
     }
   });
-  
+
   return document;
 }
 
@@ -696,7 +702,12 @@ The Transform Pipeline uses comprehensive error handling with user-friendly mess
 
 ```typescript
 try {
-  const result = await pipeline.executeTransformPipeline(plainText, workspaceId, spineItemId, metadata);
+  const result = await pipeline.executeTransformPipeline(
+    plainText,
+    workspaceId,
+    spineItemId,
+    metadata
+  );
 } catch (error) {
   if (error instanceof TransformError) {
     switch (error.stage) {
@@ -709,7 +720,7 @@ try {
         console.error('Text transform failed:', error.toUserMessage());
         break;
       case 'dom':
-        // DOM transform runtime errors  
+        // DOM transform runtime errors
         console.error('DOM transform failed:', error.toUserMessage());
         break;
       case 'template':

@@ -184,6 +184,7 @@ No custom components, just document good practice.
 **Languages**: `[en, de, ka, ar, he, zh-Hant, ja]` - Covers multiple writing systems including RTL support.
 
 **Architecture**:
+
 - **Translation calls**: `t('text')` function-based approach throughout components
 - **File structure**: Flat .po files in `locales/` directory for translator simplicity
 - **Build workflow**: npm-based tools for extraction and conversion
@@ -192,26 +193,29 @@ No custom components, just document good practice.
 #### Technical Implementation
 
 **Package Dependencies**:
+
 ```bash
 npm install --save-dev gettext-extractor po2json
 ```
 
 **npm Scripts**:
+
 ```json
 {
   "i18n:extract": "node build-scripts/i18n-extract.js",
-  "i18n:convert": "node build-scripts/i18n-convert.js", 
+  "i18n:convert": "node build-scripts/i18n-convert.js",
   "i18n:compress": "node build-scripts/i18n-compress.js",
   "i18n:build": "npm run i18n:extract && npm run i18n:convert && npm run i18n:compress"
 }
 ```
 
 **File Structure**:
+
 ```
 locales/
 ├── en.po      # Source (English)
 ├── de.po      # German
-├── ka.po      # Georgian  
+├── ka.po      # Georgian
 ├── ar.po      # Arabic (RTL)
 ├── he.po      # Hebrew (RTL)
 ├── zh-Hant.po # Traditional Chinese
@@ -231,6 +235,7 @@ src/lib/i18n/
 ```
 
 **Runtime Loading Strategy**:
+
 - **ZIP approach**: All translations compressed at build time (`translations.zip`)
 - **First-run extraction**: Extract all locales to storage with 'locales' workspace ID
 - **Version-based updates**: Re-extract when app version changes
@@ -238,6 +243,7 @@ src/lib/i18n/
 - **Storage integration**: Uses existing OPFS/IndexedDB storage system
 
 **Translation Usage Pattern**:
+
 ```svelte
 <script>
   import { t } from '$lib/i18n';
@@ -247,24 +253,26 @@ src/lib/i18n/
 <button>{t('Save file')}</button>
 
 <!-- With interpolation -->
-<span>{t('Found {count} items', {count: items.length})}</span>
+<span>{t('Found {count} items', { count: items.length })}</span>
 
 <!-- With pluralization (gettext-extractor features) -->
 <span>{t('{count} item', '{count} items', count)}</span>
 ```
 
 **Locale Direction Detection**:
+
 ```typescript
 // Automatic RTL detection for Arabic, Hebrew
 const localeConfig = {
-  'ar': { direction: 'rtl', name: 'العربية' },
-  'he': { direction: 'rtl', name: 'עברית' },
-  'en': { direction: 'ltr', name: 'English' },
+  ar: { direction: 'rtl', name: 'العربية' },
+  he: { direction: 'rtl', name: 'עברית' },
+  en: { direction: 'ltr', name: 'English' },
   // ... other locales
 };
 ```
 
 **Key Benefits for EPUB Embedding**:
+
 - **Size optimization**: Only ~20-30KB compressed vs 100-200KB raw for all 7 languages
 - **Professional workflow**: Standard .po files for translator tools (Poedit, etc.)
 - **Runtime efficiency**: No reactive store overhead, simple function calls
@@ -419,7 +427,7 @@ export const applyDirectionToDocument = (direction: 'ltr' | 'rtl') => {
 #### Phase 3: Internationalization (Days 6-9)
 
 - Install and configure gettext npm packages (`gettext-extractor`, `po2json`)
-- Create build scripts for string extraction and .po/.json conversion  
+- Create build scripts for string extraction and .po/.json conversion
 - Set up .po file structure for all 7 languages
 - Implement translation runtime system with `t()` function
 - Create ZIP-based translation loader with storage integration
