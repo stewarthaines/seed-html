@@ -4,6 +4,16 @@
 
 This is a Svelte-based EPUB editor that runs in modern browsers, replacing a previous Vue.js version. It allows users to create and edit EPUB files using plain text sources that are transformed to XHTML.
 
+### Distribution Model
+
+**EDITME.html is distributed as freeware for personal use** with three deployment methods:
+
+1. **Web Application** - Hosted version accessible via browser
+2. **Standalone HTML** - Single file download for offline use
+3. **Active EPUB** - Embedded within EPUB files for self-editing capability
+
+The build process creates a single `EDITME.html` file (~2-3MB) with all assets inlined, suitable for all distribution methods. See [DEPLOYMENT.md](./DEPLOYMENT.md) for deployment details.
+
 ## Project Structure
 
 - `plans/` - Project documentation and planning
@@ -97,17 +107,20 @@ mimetype
 META-INF/content.opf
 OEBPS/ (standard EPUB content)
 ├── SOURCE.zip (editor source files - extracted to SOURCE/ during editing)
-└── EDITME.html (editor app - to be extracted by the user to edit the EPUB file)
+├── EDITME.html (editor app - to be extracted by the user to edit the EPUB file)
+└── EXTRACT_EDITOR.txt (instructions for extracting the editor)
 ```
 
 **Note**: The `SOURCE.zip` file contains all editor-specific files (settings, plain text sources, transform scripts, extensions) and is extracted to a `SOURCE/` directory in the workspace during editing.
+
+**Important**: When creating Active EPUBs, always include extraction instructions for end users. See [EPUB_EMBEDDING.md](./EPUB_EMBEDDING.md) for detailed embedding guidelines.
 
 ## Commands
 
 ### Development
 
 - `npm run dev` - Start development server
-- `npm run build` - Build for production
+- `npm run build` - Build for production (creates single EDITME.html file)
 - `npm run preview` - Preview production build
 
 ### Quality Validation ⚠️ REQUIRED BEFORE ALL COMMITS
@@ -119,10 +132,11 @@ OEBPS/ (standard EPUB content)
 - `npm test` - **REQUIRED** Run unit tests (must pass)
 
 **Combined Quality Check** (recommended):
-
 ```bash
 npm run check && npm run lint && npm test
 ```
+
+**See [LINTING.md](./LINTING.md) for detailed ESLint configuration and acceptable lint thresholds.**
 
 ### Testing
 
@@ -159,257 +173,18 @@ npm run check && npm test
 **Quality Gates**: All code changes must pass the following validation before commit:
 
 1. ✅ **TypeScript Validation**: `npm run check` (zero errors)
-2. ✅ **ESLint Compliance**: `npm run lint` (< 500 problems, zero critical errors)
+2. ✅ **ESLint Compliance**: `npm run lint` (< 500 problems, zero critical errors)  
 3. ✅ **Unit Tests**: `npm test` (all tests passing)
 
-### Pre-Commit Checklist
-
-Before committing ANY changes:
-
-```bash
-# 1. Run full quality validation
-npm run check && npm run lint && npm test
-
-# 2. Verify zero TypeScript errors specifically
-npx tsc --noEmit --project tsconfig.app.json
-
-# 3. Check for any remaining issues
-npm run build  # Should complete without errors
-```
-
-### Development Workflow Quality Standards
-
-1. **Feature Development**:
-   - Write TypeScript-compliant code from the start
-   - Run `npm run check` frequently during development
-   - Address TypeScript errors immediately, never defer
-
-2. **Test Development**:
-   - All new tests must be TypeScript compliant
-   - Use proper type assertions (`as any`) only when necessary for mocks
-   - Ensure test files import and instantiate classes correctly
-
-3. **Error Resolution**:
-   - Fix TypeScript errors before implementing new features
-   - Never commit partial fixes that leave errors unresolved
-   - Use proper type definitions instead of suppressing errors
-
-### Quality Enforcement for AI Coding Agents
-
-**Mandatory Validation**: All coding agents (Claude, GitHub Copilot, etc.) must:
-
-1. Run `npm run check` after any code modification
-2. Resolve ALL TypeScript errors before considering a task complete
-3. Verify that tests pass and are TypeScript compliant
-4. Never use `@ts-ignore` or `any` types unless absolutely necessary
-
-**Error Prevention**: Coding agents should:
-
-- Validate imports and class instantiation
-- Use proper mock types for testing
-- Ensure interface compliance in all implementations
-- Test both positive and negative cases for type safety
+**See [DEVELOPMENT.md](./DEVELOPMENT.md) for complete development workflow quality standards and AI coding agent requirements.**
 
 ## Development Workflow
 
-### Step-by-Step Quality Assurance Process
-
-Follow this workflow for ALL development work to prevent TypeScript errors from entering the codebase:
-
-#### 1. 🏗️ Development Phase
-
-```bash
-# Start development with clean state
-npm run check  # Verify current state is clean
-
-# During active development (run frequently):
-npm run check  # Check types after significant changes
-npm run test:watch  # Run tests continuously
-```
-
-#### 2. ✅ Pre-Commit Validation Phase
-
-**MANDATORY** before any commit:
-
-```bash
-# Full quality validation (all must pass):
-npm run check     # TypeScript validation (zero errors)
-npm run lint      # ESLint compliance (< 500 problems, zero critical errors)
-npm test          # Unit test execution (all tests passing)
-npm run build     # Production build verification
-
-# Alternative: Combined command
-npm run check && npm run lint && npm test && npm run build
-```
-
-#### 3. 🚨 Error Resolution Protocol
-
-If any validation fails:
-
-1. **TypeScript Errors**:
-   - Fix immediately, never defer
-   - Use proper types, avoid `any` unless necessary
-   - Ensure imports and class instantiation are correct
-
-2. **ESLint Errors**:
-   - Address code style and potential bugs
-   - Use `npm run lint -- --fix` for auto-fixable issues
-   - Focus on errors in main source code, warnings in demo/story files are acceptable
-
-3. **Test Failures**:
-   - Fix broken functionality
-   - Update tests if API contracts changed
-   - Ensure new tests are TypeScript compliant
-
-4. **Build Failures**:
-   - Resolve any remaining compilation issues
-   - Check for missing dependencies or configuration errors
-
-#### 4. 📋 Code Review Checklist
-
-Before requesting code review:
-
-- [ ] Zero TypeScript errors (`npm run check`)
-- [ ] ESLint compliance (`npm run lint` - < 500 problems, zero critical errors)
-- [ ] All tests passing (`npm test`)
-- [ ] Production build successful (`npm run build`)
-- [ ] No use of `@ts-ignore` without justification
-- [ ] Proper type definitions for new interfaces
-- [ ] Mock types compatible with real implementations
-
-#### 5. 🤖 AI Coding Agent Workflow
-
-For AI assistants (Claude, GitHub Copilot, etc.):
-
-**Required Actions:**
-
-1. Run `npm run check` after EVERY code modification
-2. Run `npm run lint` to verify ESLint compliance (< 500 problems, zero critical errors)
-3. Fix ALL TypeScript errors before task completion
-4. Verify tests pass and are TypeScript compliant
-5. Document any intentional use of `any` types
-6. Ensure proper import statements and class instantiation
-
-**Never Complete a Task With:**
-
-- Outstanding TypeScript errors
-- Critical ESLint errors (undefined variables, syntax errors)
-- Commented-out critical code (like test setup)
-- Missing imports or incorrect class instantiation
-- Failing tests due to type issues
-
-**Acceptable in Final State:**
-
-- ESLint warnings in demo/story files (< 500 total problems)
-- Console statement warnings in main source code
-- Style preference warnings (prefer-const, etc.)
+**See [DEVELOPMENT.md](./DEVELOPMENT.md) for comprehensive development workflow, quality assurance process, and AI coding agent requirements.**
 
 ## Linting Strategy & Environment Configuration
 
-The project uses an environment-aware ESLint configuration that applies different rules based on code context, maintaining high code quality while allowing flexibility where appropriate.
-
-### Environment-Specific Rules
-
-**Core Source Code (`src/lib/`, `src/routes/`):**
-- Strict TypeScript rules with zero tolerance for critical errors
-- Browser globals available (DOM, Web APIs, IndexedDB, File System Access)
-- Console statements produce warnings (acceptable for debugging)
-- Unused variables must be prefixed with underscore (`_variable`)
-
-**Svelte Components (`**/*.svelte`):**
-- All browser environment rules plus Svelte-specific adjustments
-- Comprehensive DOM/Web API globals defined for modern browser features
-- Lenient rules for regex escaping and case declarations in Svelte context
-
-**Story/Demo Files (`src/stories/**/*`):**
-- Lenient rules for demonstration code
-- `any` types allowed without warnings
-- Console statements permitted
-- Focus on visual demonstration over strict code quality
-
-**Test Files (`**/*.test.{js,ts}`, `**/*.spec.{js,ts}`):**
-- Test framework globals (Vitest: `describe`, `it`, `expect`, `vi`)
-- Relaxed rules for test-specific patterns
-- `any` types allowed for mocking
-- Unused variables permitted for test setup
-
-**Build Scripts (`scripts/`, `build-scripts/`):**
-- Node.js environment with full Node.js globals
-- Lenient console logging for build output
-- Support for both ES modules and CommonJS patterns
-
-### Acceptable Lint Issues
-
-**Target: < 500 Total Problems**
-- ✅ **Main source code**: Should have minimal warnings, zero critical errors
-- ✅ **Demo/story files**: Warnings acceptable for visual demonstration purposes
-- ✅ **Test files**: Type-related warnings acceptable for mocking scenarios
-- ✅ **Generated files**: Automatically ignored via `.eslintignore` patterns
-
-**Critical vs Non-Critical Issues:**
-- **Critical**: TypeScript errors, undefined variables, syntax errors
-- **Non-Critical**: Style preferences, console warnings, prefer-const suggestions
-
-### Browser API Coverage
-
-The ESLint configuration includes comprehensive browser API coverage:
-
-**Core Web APIs:**
-- DOM manipulation: `document`, `window`, `Element`, `HTMLElement`
-- Events: `Event`, `CustomEvent`, `KeyboardEvent`, `DragEvent`, `FocusEvent`
-- File handling: `File`, `Blob`, `URL`, `FileSystemDirectoryHandle`
-- Networking: `fetch`, `Response`, `Request`
-- Storage: `localStorage`, `sessionStorage`, `indexedDB`
-- Streaming: `ReadableStream`, `WritableStream`, `CompressionStream`
-
-**Modern Browser Features:**
-- Web Workers: `Worker`, `MessageEvent`, `ErrorEvent`
-- Performance: `performance`, `PerformanceObserver`
-- Encoding: `TextEncoder`, `TextDecoder`
-- Crypto: `crypto.subtle`, `CryptoKey`
-
-### VSCode Integration
-
-The linting setup integrates with VSCode for optimal developer experience:
-
-**Format on Save:**
-- Prettier handles code formatting automatically
-- ESLint focuses on code quality and error detection
-- No conflicts between formatting and linting rules
-
-**Lint on Save:**
-- Real-time error highlighting in editor
-- Quick fixes available for auto-fixable issues
-- Consistent feedback during development
-
-### Common Lint Issue Resolution
-
-**Unused Variables:**
-```typescript
-// ❌ ESLint error
-import { layoutStore } from '../stores/layout';
-
-// ✅ Prefix with underscore if unused
-import { layoutStore as _layoutStore } from '../stores/layout';
-```
-
-**Global Variables:**
-```typescript
-// ❌ ESLint error: 'document' is not defined
-const element = document.querySelector('.app');
-
-// ✅ Already configured in environment-specific rules
-// No changes needed - ESLint config handles browser globals
-```
-
-**Console Statements:**
-```typescript
-// In main source code - produces warning (acceptable)
-console.log('Debug info');
-
-// In test/story files - no warning (explicitly allowed)
-console.log('Test output');
-```
+**See [LINTING.md](./LINTING.md) for comprehensive ESLint configuration including environment-specific rules, browser API coverage, VSCode integration, and common lint issue resolution.**
 
 ## CSS Design System
 
@@ -478,259 +253,19 @@ import { documentDirection } from '$lib/i18n';
 
 ## API Documentation Standards
 
-### Writing API Documentation
-
-When implementing new features, create comprehensive API documentation in `src/lib/{feature}/API.md` following these standards:
-
-#### Required Sections:
-
-1. **Overview** - Brief description of main classes and purpose
-2. **Class Documentation** - Each public class with constructor and methods
-3. **Method Documentation** - Input/Output/Side Effects/Usage examples for each method
-4. **Type Definitions** - All publicly useful interfaces and types
-5. **Common Integration Patterns** - Real-world usage examples
-6. **Error Handling** - Exception types and error handling patterns
-
-#### Documentation Style:
-
-````typescript
-#### methodName()
-
-```typescript
-methodName(param: Type): Promise<ReturnType>
-```
-
-**Input:**
-- `param: Type` - Description of parameter
-
-**Output:** `Promise<ReturnType>` - Description of return value
-
-**Side Effects:** List any side effects (file creation, state changes, etc.)
-
-**Usage:**
-
-```typescript
-const example = new ClassName();
-const result = await example.methodName(value);
-console.log('Result:', result);
-```
-````
-
-#### Key Guidelines:
-
-- **Focus on Integration**: Show how the API integrates with other features
-- **Practical Examples**: Include real-world usage patterns, not toy examples
-- **Error Scenarios**: Document common error cases and handling
-- **Browser Compatibility**: Note any browser-specific behavior or limitations
-- **Performance Notes**: Highlight performance characteristics and optimization tips
-
-#### Examples to Follow:
-
-- `src/lib/epub/API.md` - Comprehensive EPUB library documentation
-- `src/lib/storage/API.md` - File Storage API with backend detection details
-
-#### When to Create API Docs:
-
-- **New feature implementation** - Always create API.md for new `src/lib/{feature}/` modules
-- **Public API changes** - Update existing API.md when interfaces change
-- **Integration points** - Document any APIs that other features will consume
-- **Complex workflows** - Show end-to-end integration patterns
+**See [DEVELOPMENT.md](./DEVELOPMENT.md) for comprehensive API documentation standards including required sections, documentation style, key guidelines, and when to create API docs.**
 
 ## Feature Development Process
 
-The project follows a structured development process to ensure high-quality, well-documented features:
-
-### 1. Feature Planning & Specification
-
-- Start with detailed feature plan in `plans/features/{number}_{name}.md`
-- Collaborate on requirements, technical approach, and integration points
-- Define API interfaces, error handling, and performance considerations
-- Clarify implementation details through iterative discussion
-
-### 2. API Documentation
-
-- Create comprehensive `src/lib/{feature}/API.md` **before implementation**
-- Document all public methods with Input/Output/Side Effects/Usage examples
-- Include error scenarios, edge cases, and integration patterns
-- Add testing considerations and internal API details for unit test development
-
-### 3. Unit Test Development
-
-- Write comprehensive unit tests based on the API documentation **before implementation**
-- Cover all methods, error scenarios, edge cases, and integration points
-- Test internal behavior, caching, error handling, and state management
-- Ensure tests validate the API contract defined in documentation
-
-### 4. Implementation
-
-- Implement the feature following the API specification exactly
-- Code should pass all unit tests without requiring test modifications
-- Focus on meeting the documented API contract and behavior
-- Implementation validates that the API design is practical and complete
-
-### 5. Storybook Story Creation
-
-- Create interactive Storybook stories demonstrating the feature
-- Show integration patterns, error scenarios, and real-world usage
-- Follow patterns in `STORYBOOK.md` for backend feature demonstrations
-- Stories serve as live documentation and manual testing interface
-
-This process ensures features are well-designed, thoroughly tested, and properly documented before implementation begins. The API documentation serves as a contract that guides both test development and implementation.
+**See [DEVELOPMENT.md](./DEVELOPMENT.md) for the complete 5-step feature development process including planning, API documentation, testing, implementation, and Storybook story creation.**
 
 ## Testing Strategy & TypeScript Quality Assurance
 
-### Test Environment Architecture
-
-The project uses a multi-tiered testing strategy with **mandatory TypeScript validation** at all levels:
-
-- **Unit Tests (happy-dom)**: Fast, focused testing with TypeScript compliance required
-- **Storybook Tests (browser)**: Integration testing with TypeScript validation
-- **E2E Tests (browser)**: Full workflow testing with type safety
-- **TypeScript Validation**: Continuous type checking during test development
-
-### TypeScript Quality in Testing
-
-**CRITICAL**: All tests must be TypeScript compliant. Common issues to avoid:
-
-1. **Import Errors**: Ensure proper imports for test dependencies
-
-   ```typescript
-   // ✅ Correct
-   import { SettingsManager } from '../settings-manager.js';
-
-   // ❌ Incorrect
-   // Commented imports that cause undefined variable errors
-   ```
-
-2. **Mock Type Compatibility**: Use proper type assertions for mocks
-
-   ```typescript
-   // ✅ Correct
-   const mockStorage = createMockFileStorage();
-   const manager = new SettingsManager(mockStorage as any, mockExt as any);
-
-   // ❌ Incorrect
-   const manager = new SettingsManager(mockStorage, mockExt); // Type error
-   ```
-
-3. **Test Variable Initialization**: Initialize variables in beforeEach
-
-   ```typescript
-   // ✅ Correct
-   beforeEach(() => {
-     settingsManager = new SettingsManager(mockStorage as any, mockExt as any);
-   });
-
-   // ❌ Incorrect
-   beforeEach(() => {
-     // settingsManager = new SettingsManager(...); // Commented out
-   });
-   ```
-
-### Testing Quality Gates
-
-Before considering any test complete:
-
-1. **TypeScript Validation**: `npm run check` must pass
-2. **Test Execution**: `npm test` must pass
-3. **Combined Validation**: `npm run check && npm test`
-
-### Happy-DOM Limitations
-
-Happy-dom provides excellent performance for unit testing but has limitations with certain browser APIs. The following APIs should be avoided in unit tests:
-
-#### ❌ Not Supported / Problematic APIs
-
-- **DecompressionStream/CompressionStream**: ZIP file extraction hangs in happy-dom
-- **getElementsByTagNameNS()**: XML namespace parsing doesn't work correctly
-- **CSSOM APIs**: CSS Object Model parsing is incomplete
-- **Complex DOM manipulation**: Advanced DOM operations may not work as expected
-- **Fetch to localhost**: Network operations fail in test environment
-
-#### ✅ Well-Supported APIs
-
-- **Basic DOM operations**: createElement, querySelector, innerHTML
-- **DOMParser**: Basic XML/HTML parsing (without namespaces)
-- **File/Blob APIs**: File and Blob creation and basic operations
-- **URL.createObjectURL/revokeObjectURL**: Basic blob URL operations
-
-### Testing Patterns
-
-#### When to Skip Tests
-
-Use `.skip` for tests that require unsupported browser APIs:
-
-```typescript
-// Skip: requires getElementsByTagNameNS which doesn't work in happy-dom
-// This functionality is tested in browser environment via Storybook
-it.skip('should parse XML with namespaces', () => {
-  // Test that requires namespace parsing
-});
-```
-
-#### When to Mock vs Skip
-
-- **Mock**: When the API is central to the logic being tested
-- **Skip**: When the API is a secondary concern or integration point
-
-#### Documentation Requirements
-
-When skipping tests, always include:
-
-1. **Reason**: Which API limitation causes the skip
-2. **Alternative**: Where the functionality is tested (Storybook/E2E)
-3. **Clear comment**: Explaining the browser API requirement
-
-### Browser API Testing in Storybook
-
-For functionality requiring full browser APIs:
-
-1. **Create interactive stories** demonstrating the feature
-2. **Test real file operations** with actual ZIP/EPUB files
-3. **Validate complex DOM operations** in browser environment
-4. **Use Storybook test runner** for automated browser testing
-
-### Guidelines for New Tests
-
-1. **Start with unit tests** for pure logic
-2. **Mock browser APIs** when testing integration logic
-3. **Skip tests** that require unsupported APIs
-4. **Create Storybook stories** for browser API integration
-5. **Document limitations** clearly in test comments
-
-This strategy ensures comprehensive test coverage while maintaining fast, reliable unit tests that can run in any environment.
+**See [TESTING.md](./TESTING.md) for comprehensive testing strategy including test environment architecture, TypeScript quality requirements, happy-dom limitations, testing patterns, and browser API testing in Storybook.**
 
 ## Component Development Guidelines
 
-When creating new components, follow these accessibility and development standards:
-
-### Accessibility Checklist
-
-Before considering a component complete:
-
-- ✅ **Use Semantic HTML**: Use proper elements (`<button>`, `<nav>`, `<input>`) instead of `<div>` with event handlers
-- ✅ **Add ARIA Labels**: Include `aria-label` for icon-only buttons and controls
-- ✅ **Include Focus Styles**: Apply `:focus-visible` styles using design system tokens
-- ✅ **Ensure Touch Targets**: Interactive elements must be at least 44x44 pixels
-- ✅ **Let Svelte Help**: Trust Svelte's compiler to catch accessibility issues
-
-### Development Patterns
-
-**Reference Components**: Learn from existing accessible patterns in:
-
-- `ThemeToggle.svelte` - Icon button with proper ARIA
-- `Sidebar.svelte` - Navigation with semantic markup
-
-**Documentation**: See comprehensive guides at:
-
-- `src/lib/components/ACCESSIBILITY.md` - Component patterns and examples
-- `src/styles/ACCESSIBILITY.md` - CSS tokens and styling guidelines
-
-### Testing Requirements
-
-- **Keyboard Navigation**: Tab through your interface - can you see focus clearly?
-- **Svelte Warnings**: Component must compile without accessibility warnings
-- **Touch Targets**: Test on mobile - are interactive elements easy to tap?
+**See [DEVELOPMENT.md](./DEVELOPMENT.md) for component development guidelines including accessibility checklist, development patterns, reference components, and testing requirements.**
 
 ## Claude Interaction Guidelines
 
@@ -739,15 +274,14 @@ Before considering a component complete:
 **TypeScript Compliance**: Claude MUST run `npm run check` after any code modification and resolve ALL TypeScript errors before considering any task complete.
 
 **Quality Gates**: Every coding task must include:
-
 1. ✅ TypeScript validation (`npm run check`)
-2. ✅ ESLint compliance (`npm run lint`)
+2. ✅ ESLint compliance (`npm run lint` - < 500 problems, zero critical errors) 
 3. ✅ Test execution (`npm test`)
 4. ✅ Build verification (`npm run build`)
 
 **Never Complete Tasks With**:
-
 - Outstanding TypeScript errors
+- Critical ESLint errors (undefined variables, syntax errors)
 - Failing tests due to type issues
 - Missing imports or class instantiation
 - Commented-out critical code (especially test setup)
@@ -760,13 +294,7 @@ Before considering a component complete:
 - **Documentation**: When planning under-specified work, ask the user for clarification
 - **IMPORTANT:** Ask the user one question at a time, not a list of questions
 
-### Development Best Practices
-
-- **Proactive Type Checking**: Run `npm run check` after every significant code change
-- **Proper Imports**: Ensure all imports are correct and classes can be instantiated
-- **Mock Compatibility**: Use proper type assertions for test mocks (`as any`)
-- **Interface Compliance**: Verify all implementations match their interfaces
-- **Test Quality**: Ensure tests are TypeScript compliant and properly initialized
+**See [DEVELOPMENT.md](./DEVELOPMENT.md) for complete AI coding agent requirements and development best practices.**
 
 ## Claude Interaction Memory
 

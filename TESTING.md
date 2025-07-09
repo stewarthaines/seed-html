@@ -852,3 +852,126 @@ describe('Settings Integration', () => {
 - Focus on behavior preservation during refactoring
 
 This modern approach ensures robust, maintainable tests that provide confidence in system behavior while avoiding the overhead and fragility of over-mocked test suites.
+
+## Testing Strategy & TypeScript Quality Assurance
+
+### Test Environment Architecture
+
+The project uses a multi-tiered testing strategy with **mandatory TypeScript validation** at all levels:
+
+- **Unit Tests (happy-dom)**: Fast, focused testing with TypeScript compliance required
+- **Storybook Tests (browser)**: Integration testing with TypeScript validation
+- **E2E Tests (browser)**: Full workflow testing with type safety
+- **TypeScript Validation**: Continuous type checking during test development
+
+### TypeScript Quality in Testing
+
+**CRITICAL**: All tests must be TypeScript compliant. Common issues to avoid:
+
+1. **Import Errors**: Ensure proper imports for test dependencies
+
+   ```typescript
+   // ✅ Correct
+   import { SettingsManager } from '../settings-manager.js';
+
+   // ❌ Incorrect
+   // Commented imports that cause undefined variable errors
+   ```
+
+2. **Mock Type Compatibility**: Use proper type assertions for mocks
+
+   ```typescript
+   // ✅ Correct
+   const mockStorage = createMockFileStorage();
+   const manager = new SettingsManager(mockStorage as any, mockExt as any);
+
+   // ❌ Incorrect
+   const manager = new SettingsManager(mockStorage, mockExt); // Type error
+   ```
+
+3. **Test Variable Initialization**: Initialize variables in beforeEach
+
+   ```typescript
+   // ✅ Correct
+   beforeEach(() => {
+     settingsManager = new SettingsManager(mockStorage as any, mockExt as any);
+   });
+
+   // ❌ Incorrect
+   beforeEach(() => {
+     // settingsManager = new SettingsManager(...); // Commented out
+   });
+   ```
+
+### Testing Quality Gates
+
+Before considering any test complete:
+
+1. **TypeScript Validation**: `npm run check` must pass
+2. **Test Execution**: `npm test` must pass
+3. **Combined Validation**: `npm run check && npm test`
+
+### Happy-DOM Limitations
+
+Happy-dom provides excellent performance for unit testing but has limitations with certain browser APIs. The following APIs should be avoided in unit tests:
+
+#### ❌ Not Supported / Problematic APIs
+
+- **DecompressionStream/CompressionStream**: ZIP file extraction hangs in happy-dom
+- **getElementsByTagNameNS()**: XML namespace parsing doesn't work correctly
+- **CSSOM APIs**: CSS Object Model parsing is incomplete
+- **Complex DOM manipulation**: Advanced DOM operations may not work as expected
+- **Fetch to localhost**: Network operations fail in test environment
+
+#### ✅ Well-Supported APIs
+
+- **Basic DOM operations**: createElement, querySelector, innerHTML
+- **DOMParser**: Basic XML/HTML parsing (without namespaces)
+- **File/Blob APIs**: File and Blob creation and basic operations
+- **URL.createObjectURL/revokeObjectURL**: Basic blob URL operations
+
+### Testing Patterns
+
+#### When to Skip Tests
+
+Use `.skip` for tests that require unsupported browser APIs:
+
+```typescript
+// Skip: requires getElementsByTagNameNS which doesn't work in happy-dom
+// This functionality is tested in browser environment via Storybook
+it.skip('should parse XML with namespaces', () => {
+  // Test that requires namespace parsing
+});
+```
+
+#### When to Mock vs Skip
+
+- **Mock**: When the API is central to the logic being tested
+- **Skip**: When the API is a secondary concern or integration point
+
+#### Documentation Requirements
+
+When skipping tests, always include:
+
+1. **Reason**: Which API limitation causes the skip
+2. **Alternative**: Where the functionality is tested (Storybook/E2E)
+3. **Clear comment**: Explaining the browser API requirement
+
+### Browser API Testing in Storybook
+
+For functionality requiring full browser APIs:
+
+1. **Create interactive stories** demonstrating the feature
+2. **Test real file operations** with actual ZIP/EPUB files
+3. **Validate complex DOM operations** in browser environment
+4. **Use Storybook test runner** for automated browser testing
+
+### Guidelines for New Tests
+
+1. **Start with unit tests** for pure logic
+2. **Mock browser APIs** when testing integration logic
+3. **Skip tests** that require unsupported APIs
+4. **Create Storybook stories** for browser API integration
+5. **Document limitations** clearly in test comments
+
+This strategy ensures comprehensive test coverage while maintaining fast, reliable unit tests that can run in any environment.

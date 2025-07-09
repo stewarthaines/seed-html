@@ -1,47 +1,114 @@
-# Svelte + TS + Vite
+# EDITME.html - EPUB Editor
 
-This template should help get you started developing with Svelte and TypeScript in Vite.
+A modern browser-based EPUB editor that transforms plain text into beautifully formatted ebooks. Built with Svelte, TypeScript, and cutting-edge web technologies.
 
-## Recommended IDE Setup
+## Overview
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode).
+EDITME.html is a sophisticated EPUB editing application that runs entirely in your web browser. It enables authors to create, edit, and publish EPUB files using a simple plain text workflow with powerful transformation capabilities.
 
-## Need an official Svelte framework?
+### Key Features
 
-Check out [SvelteKit](https://github.com/sveltejs/kit#readme), which is also powered by Vite. Deploy anywhere with its serverless-first approach and adapt to various platforms, with out of the box support for TypeScript, SCSS, and Less, and easily-added support for mdsvex, GraphQL, PostCSS, Tailwind CSS, and more.
+- **Plain Text to XHTML Transformation** - Write in plain text, publish as formatted EPUB
+- **Browser-Based** - No installation required, works offline after first load
+- **Multi-Device Preview** - See how your book looks on different devices
+- **Extensible Transform System** - Customize text processing with JavaScript
+- **Accessibility-First Design** - Full keyboard navigation and screen reader support
+- **Internationalization** - Available in 7 languages with RTL support
+- **Modern Storage** - Uses OPFS and IndexedDB for persistent local storage
 
-## Technical considerations
+## Distribution
 
-**Why use this over SvelteKit?**
+EDITME.html is distributed as **freeware for personal use** under three models:
 
-- It brings its own routing solution which might not be preferable for some users.
-- It is first and foremost a framework that just happens to use Vite under the hood, not a Vite app.
+1. **Web Application** - Access at [coming soon] for immediate use
+2. **Downloadable HTML** - Save locally for offline editing
+3. **Embedded in EPUBs** - Active EPUB format includes the editor
 
-This template contains as little as possible to get started with Vite + TypeScript + Svelte, while taking into account the developer experience with regards to HMR and intellisense. It demonstrates capabilities on par with the other `create-vite` templates and is a good starting point for beginners dipping their toes into a Vite + Svelte project.
+See [USER_GUIDE.md](./USER_GUIDE.md) for detailed usage instructions.
 
-Should you later need the extended capabilities and extensibility provided by SvelteKit, the template has been structured similarly to SvelteKit so that it is easy to migrate.
+## Technology Stack
 
-**Why `global.d.ts` instead of `compilerOptions.types` inside `jsconfig.json` or `tsconfig.json`?**
+- **Frontend Framework**: Svelte 5 with TypeScript
+- **Build System**: Vite 6
+- **Storage**: OPFS (Origin Private File System) with IndexedDB fallback
+- **EPUB Processing**: Native Compression Streams API
+- **Testing**: Vitest with happy-dom
+- **Documentation**: Storybook for component development
 
-Setting `compilerOptions.types` shuts out all other types not explicitly listed in the configuration. Using triple-slash references keeps the default TypeScript setting of accepting type information from the entire workspace, while also adding `svelte` and `vite/client` type information.
+## Development
 
-**Why include `.vscode/extensions.json`?**
+This section is for developers maintaining or extending EDITME.html.
 
-Other templates indirectly recommend extensions via the README, but this file allows VS Code to prompt the user to install the recommended extension upon opening the project.
+### Prerequisites
 
-**Why enable `allowJs` in the TS template?**
+- Node.js 18+ (LTS recommended)
+- npm 9+
+- Modern browser (Chrome/Edge 119+, Firefox 119+, Safari 17+)
 
-While `allowJs: false` would indeed prevent the use of `.js` files in the project, it does not prevent the use of JavaScript syntax in `.svelte` files. In addition, it would force `checkJs: false`, bringing the worst of both worlds: not being able to guarantee the entire codebase is TypeScript, and also having worse typechecking for the existing JavaScript. In addition, there are valid use cases in which a mixed codebase may be relevant.
+### Setup
 
-**Why is HMR not preserving my local component state?**
+```bash
+# Clone the repository
+git clone [repository-url]
+cd editme-svelte
 
-HMR state preservation comes with a number of gotchas! It has been disabled by default in both `svelte-hmr` and `@sveltejs/vite-plugin-svelte` due to its often surprising behavior. You can read the details [here](https://github.com/rixo/svelte-hmr#svelte-hmr).
+# Install dependencies
+npm install
 
-If you have state that's important to retain within a component, consider creating an external store which would not be replaced by HMR.
-
-```ts
-// store.ts
-// An extremely simple external store
-import { writable } from 'svelte/store';
-export default writable(0);
+# Start development server
+npm run dev
 ```
+
+### Quality Standards
+
+This project maintains **zero TypeScript errors** at all times. Before committing:
+
+```bash
+# Run all quality checks
+npm run check && npm run lint && npm test
+```
+
+See [DEVELOPMENT.md](./DEVELOPMENT.md) for comprehensive development guidelines.
+
+### Key Documentation
+
+- **[CLAUDE.md](./CLAUDE.md)** - AI coding agent instructions
+- **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Development workflows and standards
+- **[TESTING.md](./TESTING.md)** - Testing strategy and patterns
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Build and deployment instructions
+
+### Project Structure
+
+```
+editme-svelte/
+├── src/
+│   ├── lib/           # Core libraries with API documentation
+│   ├── routes/        # Application views
+│   ├── stores/        # Svelte stores
+│   └── styles/        # Design system
+├── plans/             # Project planning documents
+├── static/            # Static assets (inlined at build)
+└── stories/           # Storybook component demos
+```
+
+## Building
+
+```bash
+# Production build
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+The build creates a single `EDITME.html` file in the `dist/` directory with all assets inlined.
+
+## License
+
+EDITME.html Freeware - (c) 2025 Stewart Haines
+
+This software is provided free of charge for personal use only. Commercial use requires a separate license agreement. See [LICENSE.txt](./LICENSE.txt) for full terms.
+
+## Support
+
+For bug reports and feature requests, please [contact info coming soon].
