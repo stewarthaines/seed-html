@@ -44,30 +44,17 @@ The generated EPUB can be opened in any standard EPUB reader.
         },
       },
     },
-    argTypes: {
-      showProgress: {
-        control: 'boolean',
-        description: 'Show progress indicator during packaging',
-      },
-      allowDownload: {
-        control: 'boolean',
-        description: 'Enable download button for generated EPUB',
-      },
-    },
   });
 </script>
 
-<!-- Basic Demo Story -->
 <Story name="Basic Demo">
   <EPUBPackagingDemo showProgress={true} allowDownload={true} />
 </Story>
 
-<!-- Without Progress Demo -->
 <Story name="Without Progress">
   <EPUBPackagingDemo showProgress={false} allowDownload={true} />
 </Story>
 
-<!-- Progress Only Demo -->
 <Story name="Progress Only">
   <EPUBPackagingDemo showProgress={true} allowDownload={false} />
 </Story>

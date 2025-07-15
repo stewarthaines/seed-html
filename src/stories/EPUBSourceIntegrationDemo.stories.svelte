@@ -168,7 +168,6 @@ This demo showcases the complete EPUB workflow with SOURCE.zip integration, demo
 <!-- Demo showing round-trip EPUB workflow -->
 <Story
   name="Round-trip Integration"
-  args={{}}
   play={async ({ canvasElement }) => {
     const { within } = await import('@testing-library/dom');
     const { default: userEvent } = await import('@testing-library/user-event');
