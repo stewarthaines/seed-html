@@ -1,6 +1,7 @@
 <script lang="ts">
   import { layoutStore, type SidebarSection } from './stores/layout';
   import { t } from '../lib/i18n';
+  import ThemeToggle from './ThemeToggle.svelte';
 
   // Props
   export let isExpanded = true;
@@ -66,6 +67,13 @@
 
     {#if isExpanded}
       <h2 class="sidebar-title">EDITME.html</h2>
+      <div class="header-actions">
+        <ThemeToggle size="small" showLabel={false} />
+      </div>
+    {:else}
+      <div class="header-actions compact">
+        <ThemeToggle size="small" showLabel={false} />
+      </div>
     {/if}
   </div>
 
@@ -220,6 +228,19 @@
     font-size: var(--text-sm); /* Even smaller for compact look */
     font-weight: var(--font-normal);
     color: var(--color-text-secondary); /* Subdued like Craigslist */
+    flex: 1; /* Take remaining space */
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin-inline-start: var(--space-2);
+  }
+
+  .header-actions.compact {
+    margin-inline-start: 0;
+    justify-content: center;
   }
 
   .sidebar-main {
