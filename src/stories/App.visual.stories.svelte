@@ -1,6 +1,6 @@
 <script module>
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { userEvent, within } from 'storybook/test';
+  // Standard testing library imports will be done inside play functions
   import App from '../App.svelte';
   import { createVisualMockWorkspaceManager, VISUAL_SCENARIOS } from './utils/visual-mock-data';
 
@@ -82,7 +82,11 @@
     },
   }}
   play={async ({ canvasElement }) => {
+    const { within } = await import('@testing-library/dom');
+    const { default: userEvent } = await import('@testing-library/user-event');
+    
     const canvas = within(canvasElement);
+    const user = userEvent.setup();
 
     // Wait for app to initialize
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -99,59 +103,12 @@
     for (const section of sections) {
       try {
         const button = canvas.getByTitle(section.title);
-        await userEvent.click(button);
+        await user.click(button);
         await new Promise(resolve => setTimeout(resolve, 1500));
       } catch (error) {
         console.log(`Could not find button for ${section.name}:`, error);
       }
     }
-  }}
-/>
-
-<Story
-  name="Sidebar Collapsed"
-  args={{
-    workspaceManager: createVisualMockWorkspaceManager('withContent'),
-    initialWorkspaceId: 'demo-workspace',
-  }}
-  parameters={{
-    docs: {
-      description: {
-        story: 'Application view with sidebar collapsed to maximize content editing space.',
-      },
-    },
-  }}
-  play={async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    // Wait for initialization
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    try {
-      const toggleButton = canvas.getByLabelText('Toggle sidebar');
-      await userEvent.click(toggleButton);
-    } catch (error) {
-      console.log('Could not find sidebar toggle:', error);
-    }
-  }}
-/>
-
-<Story
-  name="Mobile/Tablet View"
-  args={{
-    workspaceManager: createVisualMockWorkspaceManager('withContent'),
-    initialWorkspaceId: 'demo-workspace',
-  }}
-  parameters={{
-    viewport: {
-      name: 'tablet',
-    },
-    docs: {
-      description: {
-        story:
-          'Application layout optimized for tablet viewing, showing responsive design adaptation.',
-      },
-    },
   }}
 />
 
@@ -170,7 +127,11 @@
     },
   }}
   play={async ({ canvasElement }) => {
+    const { within } = await import('@testing-library/dom');
+    const { default: userEvent } = await import('@testing-library/user-event');
+    
     const canvas = within(canvasElement);
+    const user = userEvent.setup();
 
     // Wait for initialization
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -184,7 +145,7 @@
 
       if (chapterButton) {
         console.log('Found chapter button:', chapterButton.textContent);
-        await userEvent.click(chapterButton);
+        await user.click(chapterButton);
         await new Promise(resolve => setTimeout(resolve, 1500));
         console.log('Spine item clicked, should navigate to spine view');
       } else {

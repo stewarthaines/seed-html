@@ -1,6 +1,6 @@
 <script module>
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { userEvent, within } from 'storybook/test';
+  // Standard testing library imports will be done inside play functions
   import LayoutManager from '../lib/LayoutManager.svelte';
 
   const { Story } = defineMeta({
