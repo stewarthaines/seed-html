@@ -7,7 +7,10 @@
   import PlaceholderView from './lib/navigation/views/PlaceholderView.svelte';
   import SpineView from './lib/navigation/views/SpineView.svelte';
   import SpineSidebar from './lib/components/SpineSidebar.svelte';
+  import ManifestContainer from './lib/components/manifest/ManifestContainer.svelte';
+  import ManifestPreview from './lib/components/manifest/ManifestPreview.svelte';
   import { WorkspaceManager } from './lib/workspace';
+  import { ManifestManagerImpl } from './lib/manifest/manifest-manager';
   import { layoutStore } from './lib/stores/layout';
   import { t } from './lib/i18n';
 
@@ -24,6 +27,7 @@
   let currentWorkspaceId: string | null = null;
   let selectedSpineItemId: string | null = null;
   let initialized = false;
+  let manifestManager: ManifestManagerImpl | null = null;
 
   // Initialize workspace manager
   onMount(() => {
@@ -46,6 +50,9 @@
           currentWorkspaceId = initialWorkspaceId;
         }
 
+        // Create manifest manager
+        manifestManager = new ManifestManagerImpl(currentWorkspaceManager);
+        
         initialized = true;
       } catch (error) {
         console.error('Failed to initialize workspace manager:', error);
@@ -99,12 +106,20 @@
     {:else if currentView === 'metadata'}
       <MetadataView />
     {:else if currentView === 'manifest'}
-      <PlaceholderView
-        viewType="manifest"
-        title={$t('File Manifest')}
-        description={$t('Manage EPUB files and resources')}
-        icon="📋"
-      />
+      {#if initialized && currentWorkspaceId && manifestManager}
+        <ManifestContainer
+          workspaceId={currentWorkspaceId}
+          manifestManager={manifestManager}
+          advancedMode={true}
+        />
+      {:else}
+        <PlaceholderView
+          viewType="manifest"
+          title={$t('File Manifest')}
+          description={$t('Manage EPUB files and resources')}
+          icon="📋"
+        />
+      {/if}
     {:else if currentView === 'navigation'}
       <PlaceholderView
         viewType="navigation"
@@ -143,11 +158,20 @@
   </svelte:fragment>
 
   <svelte:fragment slot="right-content">
-    <div class="placeholder-content">
-      <h3>{$t('Preview Pane')}</h3>
-      <p>{$t('XHTML preview will go here (Phase 4)')}</p>
-      <p class="current-view-info">{$t('Current view')}: <strong>{currentView}</strong></p>
-    </div>
+    {#if currentView === 'manifest' && initialized && currentWorkspaceId && manifestManager}
+      <ManifestPreview
+        selectedItem={null}
+        selectedItemType={null}
+        workspaceId={currentWorkspaceId}
+        manifestManager={manifestManager}
+      />
+    {:else}
+      <div class="placeholder-content">
+        <h3>{$t('Preview Pane')}</h3>
+        <p>{$t('XHTML preview will go here (Phase 4)')}</p>
+        <p class="current-view-info">{$t('Current view')}: <strong>{currentView}</strong></p>
+      </div>
+    {/if}
   </svelte:fragment>
 </LayoutManager>
 
