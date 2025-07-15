@@ -291,6 +291,10 @@ npm run build-storybook             # Should build successfully
 npm run test:stories                # Should pass story tests
 ```
 
+### Playwright Verification
+
+**For AI Coding Agents**: Use Playwright to verify that stories actually work in the browser. The user will have Storybook running at http://localhost:6006 for this purpose.
+
 ## Reference Examples
 
 - ✅ `StorageDemo.stories.svelte` - Backend feature demo pattern
@@ -369,6 +373,7 @@ npm run test:stories                # Should pass story tests
 
 - [ ] **Storybook Starts**: `npm run storybook` (no parsing errors)
 - [ ] **Story Loads**: No "Failed to fetch" errors
+- [ ] **Playwright Verification**: Use Playwright to confirm stories actually work in browser
 - [ ] **Interactions Work**: Play functions complete successfully
 - [ ] **No Console Errors**: Clean browser console
 - [ ] **Pattern Compliance**: Follows category conventions

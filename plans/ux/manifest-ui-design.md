@@ -173,129 +173,172 @@ Based on your decisions, here's the complete manifest UI design:
 
 ## Storybook Story Coverage
 
-### Story Organization
+Following our established [STORYBOOK.md](../../STORYBOOK.md) guidelines, manifest stories are organized by category with proper patterns and comprehensive coverage.
 
-Stories will be created for each component to demonstrate different states and interactions using mock data:
+### Story Organization Structure
 
-**ManifestView Stories**
+Stories follow the standardized categorization and are located in `src/stories/manifest/` following the metadata story pattern:
 
-- `Empty Manifest` - No manifest items, new workspace experience
-- `Populated Manifest` - Multiple manifest items with variety of media types
-- `Loading State` - Skeleton placeholders while loading manifest
-- `Mixed Content` - Text, images, audio, video, and binary files
-- `With SOURCE Items` - Advanced mode showing SOURCE/ items integrated
-- `Validation Errors` - Items with various validation issues
+```
+src/stories/manifest/
+├── ManifestContainer.stories.svelte          # Components/Content/
+├── ManifestContainerDemo.svelte
+├── ManifestPreview.stories.svelte            # Components/Content/
+├── ManifestPreviewDemo.svelte
+├── ManifestItemManager.stories.svelte        # Components/Content/
+├── ManifestItemManagerDemo.svelte
+├── ManifestMetadataForm.stories.svelte       # Components/Content/
+├── ManifestMetadataFormDemo.svelte
+├── ManifestView.stories.svelte               # Application/
+├── ManifestViewDemo.svelte
+├── ManifestManager.stories.svelte            # Backend/
+├── ManifestManagerDemo.svelte
+├── manifest-demo.css                         # Shared component styles
+└── mock-data/
+    ├── manifest-items.ts
+    ├── source-items.ts
+    └── content-previews.ts
+```
 
-**ManifestTable Stories**
+### Components/Content/ Stories (Args Pattern)
 
-- `Empty Table` - No items message with creation suggestions
-- `Standard Content` - Mix of XHTML, CSS, images, and other resources
-- `Error States` - Items with validation errors and inline styling
-- `Filtered Results` - Table with filter applied showing subset
-- `Loading Rows` - Skeleton loading state for table rows
-- `Long File Names` - Text truncation and responsive column handling
+**`Components/Content/Manifest Container`**
+- Default (empty state with creation prompts)
+- With Items (populated manifest table)
+- Loading State (skeleton placeholders)
+- Error State (validation issues display)
+- Mobile View (responsive card layout)
 
-**ManifestPreview Stories**
+**`Components/Content/Manifest Preview`**
+- No Selection (empty state message)
+- Text File Preview (XHTML/HTML with syntax highlighting)
+- Image Preview (various formats with metadata)
+- Audio Preview (playable controls and metadata)
+- Video Preview (playable controls and metadata)
+- Binary File Info (download option for unsupported formats)
+- Loading Preview (content loading state)
+- Error Preview (failed to load content)
 
-- `Text Preview` - XHTML/HTML content with syntax highlighting
-- `Image Preview` - Various image formats with metadata
-- `Audio Preview` - Playable audio with controls and metadata
-- `Video Preview` - Playable video with controls and metadata
-- `Binary Preview` - Unsupported format with download option
-- `No Selection` - Empty state when no item selected
-- `Loading Preview` - Loading state while content loads
-- `Error Preview` - Failed to load content error state
+**`Components/Content/Manifest Item Manager`**
+- Create Form (new item creation interface)
+- Edit Form (modify existing item properties)
+- Validation Errors (form with various validation issues)
+- Upload Interface (file upload with drag-and-drop)
+- Loading State (disabled form during operations)
 
-**ManifestItemEditor Stories**
+**`Components/Content/Manifest Metadata Form`**
+- Default Form (EPUB metadata editing)
+- With Errors (validation error display)
+- Loading State (disabled during save operations)
 
-- `Create Text File` - Modal with text file creation form
-- `Upload File` - File upload interface with drag-and-drop
-- `Edit Existing` - Modify existing manifest item properties
-- `Validation Errors` - Form with various validation issues
-- `Loading State` - Disabled form during save operations
+### Application/ Stories (Args Pattern)
 
-**ManifestToolbar Stories**
+**`Application/Manifest View`**
+- Full Interface (sidebar + table + preview integration)
+- Mobile Layout (stacked responsive design)
+- Item Selection Flow (demonstrates selection → preview)
+- CRUD Operations Demo (create, edit, delete workflows)
+- Advanced Mode (with SOURCE/ items integrated)
+- Mixed Content Types (text, images, audio, video, binary)
 
-- `Default State` - Normal toolbar with all actions
-- `Loading State` - Disabled actions during operations
-- `Filtered State` - Active filter with clear option
-- `Drag Active` - Drag-and-drop overlay visible
+### Backend/ Stories (Direct Instantiation Pattern)
+
+**`Backend/Manifest Manager`**
+- CRUD Operations Demo (API method demonstrations)
+- File Upload Demo (file processing workflows)
+- Metadata Extraction Demo (OPF parsing and validation)
+- Validation Demo (manifest validation rules)
 
 ### Mock Data Structure
 
-```typescript
-// Mock manifest data for stories
-const mockManifestItems: ManifestItem[] = [
-  {
-    id: 'chapter1',
-    href: 'OEBPS/chapter1.xhtml',
-    mediaType: 'application/xhtml+xml',
-    size: 12456,
-    modified: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-    properties: ['nav'],
-    isInSpine: true,
-    spineIndex: 0,
-  },
-  {
-    id: 'chapter2',
-    href: 'OEBPS/chapter2.xhtml',
-    mediaType: 'application/xhtml+xml',
-    size: 8934,
-    modified: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-    isInSpine: true,
-    spineIndex: 1,
-  },
-  {
-    id: 'cover-image',
-    href: 'OEBPS/images/cover.jpg',
-    mediaType: 'image/jpeg',
-    size: 245678,
-    modified: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-    properties: ['cover-image'],
-  },
-  {
-    id: 'stylesheet',
-    href: 'OEBPS/styles/main.css',
-    mediaType: 'text/css',
-    size: 3456,
-    modified: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-  },
-  {
-    id: 'audio-clip',
-    href: 'OEBPS/audio/pronunciation.mp3',
-    mediaType: 'audio/mpeg',
-    size: 156789,
-    modified: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 1 week ago
-  },
-  {
-    id: 'invalid-item',
-    href: 'OEBPS/broken-file.xhtml',
-    mediaType: 'application/xhtml+xml',
-    size: 0,
-    modified: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
-    hasError: true,
-  },
-];
+Aligned with established patterns, mock data is organized in `src/stories/manifest/mock-data/`:
 
-// Mock SOURCE items for advanced mode
-const mockSourceItems: SourceItem[] = [
+**`manifest-items.ts`** - Manifest item data:
+```typescript
+import type { ManifestItem } from '../../../lib/manifest/types';
+
+export const createMockManifestItems = (count: number = 6, hasErrors: boolean = false): ManifestItem[] => {
+  const baseItems: ManifestItem[] = [
+    {
+      id: 'chapter1',
+      href: 'OEBPS/chapter1.xhtml',
+      mediaType: 'application/xhtml+xml',
+      size: 12456,
+      modified: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      properties: ['nav'],
+      isInSpine: true,
+      spineIndex: 0,
+    },
+    {
+      id: 'chapter2', 
+      href: 'OEBPS/chapter2.xhtml',
+      mediaType: 'application/xhtml+xml',
+      size: 8934,
+      modified: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      isInSpine: true,
+      spineIndex: 1,
+    },
+    {
+      id: 'cover-image',
+      href: 'OEBPS/images/cover.jpg', 
+      mediaType: 'image/jpeg',
+      size: 245678,
+      modified: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      properties: ['cover-image'],
+    },
+    {
+      id: 'stylesheet',
+      href: 'OEBPS/styles/main.css',
+      mediaType: 'text/css', 
+      size: 3456,
+      modified: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+    },
+    {
+      id: 'audio-clip',
+      href: 'OEBPS/audio/pronunciation.mp3',
+      mediaType: 'audio/mpeg',
+      size: 156789, 
+      modified: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+    },
+  ];
+  
+  if (hasErrors) {
+    baseItems.push({
+      id: 'invalid-item',
+      href: 'OEBPS/broken-file.xhtml',
+      mediaType: 'application/xhtml+xml',
+      size: 0,
+      modified: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      hasError: true,
+    });
+  }
+  
+  return baseItems.slice(0, count);
+};
+```
+
+**`source-items.ts`** - SOURCE directory items:
+```typescript
+import type { SourceItem } from '../../../lib/manifest/types';
+
+export const createMockSourceItems = (): SourceItem[] => [
   {
     path: 'SOURCE/text/chapter1.txt',
     type: 'text',
     size: 8934,
-    modified: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hour ago
+    modified: new Date(Date.now() - 1 * 60 * 60 * 1000),
   },
   {
-    path: 'SOURCE/text/chapter2.txt',
+    path: 'SOURCE/text/chapter2.txt', 
     type: 'text',
     size: 6789,
-    modified: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+    modified: new Date(Date.now() - 2 * 60 * 60 * 1000),
   },
   {
     path: 'SOURCE/transforms/custom.js',
     type: 'javascript',
     size: 2345,
-    modified: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+    modified: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
   },
 ];
 ```
@@ -313,22 +356,67 @@ const mockSourceItems: SourceItem[] = [
 - `Download` buttons simulate file download without actual file generation
 - `Drag-and-drop` zone shows visual feedback but doesn't process files
 
-### Story Controls and Knobs
+### Story Development Guidelines
 
-- **Item count** - Adjust number of mock manifest items
-- **Loading state** - Toggle loading/loaded states
-- **Selected item** - Choose which item is selected for preview
-- **Advanced mode** - Toggle SOURCE/ items visibility
-- **Error states** - Add validation errors to specific items
-- **Filter text** - Pre-populate filter input with search terms
-- **Content types** - Adjust mix of text/image/audio/video content
+Following our established Storybook patterns:
 
-### Content Preview Mocking
+**Args Pattern Implementation (Components/Application categories):**
+```svelte
+const { Story } = defineMeta({
+  title: 'Components/Content/Manifest Container',
+  component: ManifestContainerDemo,
+  argTypes: {
+    itemCount: {
+      control: { type: 'number', min: 0, max: 20 },
+      description: 'Number of mock manifest items to display',
+    },
+    isLoading: {
+      control: { type: 'boolean' },
+      description: 'Show loading skeleton state',
+    },
+    selectedItemId: {
+      control: { type: 'text' },
+      description: 'ID of currently selected item for preview',
+    },
+    advancedMode: {
+      control: { type: 'boolean' },
+      description: 'Show SOURCE/ items integrated with manifest',
+    },
+    hasErrors: {
+      control: { type: 'boolean' },
+      description: 'Include items with validation errors',
+    },
+    filterText: {
+      control: { type: 'text' },
+      description: 'Pre-populate filter input with search terms',
+    },
+    contentTypes: {
+      control: { type: 'check' },
+      options: ['text', 'image', 'audio', 'video', 'binary'],
+      description: 'Mix of content types to include',
+    },
+  },
+});
+```
 
+**Direct Instantiation Pattern (Backend category):**
+```svelte
+<Story name="CRUD Operations Demo">
+  <ManifestManagerDemo showCRUDOperations={true} />
+</Story>
+```
+
+**Component Separation Pattern:**
+- Each story has a corresponding demo component (e.g., `ManifestContainerDemo.svelte`)
+- Shared styles in `manifest-demo.css` following design system
+- Mock data providers in dedicated `mock-data/` subdirectory
+- TypeScript interfaces for consistent mock data structure
+
+**`content-previews.ts`** - Preview content for different media types:
 ```typescript
-// Mock content for different media types
-const mockContentData = {
-  'chapter1.xhtml': `<?xml version="1.0" encoding="UTF-8"?>
+export const getMockContentPreview = (href: string): string | null => {
+  const contentMap: Record<string, string> = {
+    'OEBPS/chapter1.xhtml': `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -340,11 +428,14 @@ const mockContentData = {
   <p>This is the first chapter of our story...</p>
 </body>
 </html>`,
-  'cover.jpg': 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...', // Base64 mock
-  'main.css': `body { font-family: Georgia, serif; line-height: 1.6; }
+    'OEBPS/images/cover.jpg': 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...',
+    'OEBPS/styles/main.css': `body { font-family: Georgia, serif; line-height: 1.6; }
 h1 { color: #333; margin-bottom: 1em; }
 p { margin-bottom: 1em; }`,
-  'pronunciation.mp3': 'blob:mock-audio-url',
+    'OEBPS/audio/pronunciation.mp3': 'blob:mock-audio-url',
+  };
+  
+  return contentMap[href] || null;
 };
 ```
 

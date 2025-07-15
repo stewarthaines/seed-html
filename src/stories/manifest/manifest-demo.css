@@ -1,0 +1,397 @@
+/**
+ * Shared styles for manifest Storybook demonstrations
+ * 
+ * Provides consistent styling across all manifest stories using
+ * the design system tokens and established patterns.
+ */
+
+/* Demo container styles */
+.manifest-demo {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-surface-primary, #f9fafb);
+  font-family: var(--font-family-base, system-ui, sans-serif);
+}
+
+/* Loading and error states */
+.demo-loading,
+.demo-error {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--spacing-8, 2rem);
+}
+
+.demo-loading h2,
+.demo-error h2 {
+  color: var(--color-text-primary, #1f2937);
+  font-size: var(--font-size-xl, 1.25rem);
+  font-weight: var(--font-weight-semibold, 600);
+  margin-bottom: var(--spacing-4, 1rem);
+}
+
+.demo-loading p {
+  color: var(--color-text-secondary, #6b7280);
+  font-size: var(--font-size-sm, 0.875rem);
+  margin: var(--spacing-2, 0.5rem) 0;
+}
+
+.demo-error p {
+  color: var(--color-error-600, #dc2626);
+  font-size: var(--font-size-sm, 0.875rem);
+  margin-bottom: var(--spacing-4, 1rem);
+}
+
+.demo-error button {
+  padding: var(--spacing-3, 0.75rem) var(--spacing-6, 1.5rem);
+  background-color: var(--color-error-600, #dc2626);
+  color: var(--color-white, white);
+  border: none;
+  border-radius: var(--border-radius-md, 0.375rem);
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: var(--font-weight-medium, 500);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.demo-error button:hover {
+  background-color: var(--color-error-700, #b91c1c);
+}
+
+.demo-error button:focus {
+  outline: 2px solid var(--color-error-500, #ef4444);
+  outline-offset: 2px;
+}
+
+/* Main content container */
+.manifest-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border-primary, #e5e7eb);
+  border-radius: var(--border-radius-lg, 0.5rem);
+  margin: var(--spacing-4, 1rem);
+  overflow: hidden;
+  background-color: var(--color-surface-primary, white);
+  box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
+}
+
+/* Toolbar styles */
+.manifest-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3, 0.75rem);
+  padding: var(--spacing-4, 1rem);
+  background-color: var(--color-surface-secondary, #f9fafb);
+  border-bottom: 1px solid var(--color-border-primary, #e5e7eb);
+}
+
+.manifest-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2, 0.5rem);
+  padding: var(--spacing-2, 0.5rem) var(--spacing-3, 0.75rem);
+  background-color: var(--color-primary-600, #2563eb);
+  color: var(--color-white, white);
+  border: none;
+  border-radius: var(--border-radius-md, 0.375rem);
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: var(--font-weight-medium, 500);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.manifest-toolbar button:hover {
+  background-color: var(--color-primary-700, #1d4ed8);
+}
+
+.manifest-toolbar button:focus {
+  outline: 2px solid var(--color-primary-500, #3b82f6);
+  outline-offset: 2px;
+}
+
+.manifest-toolbar button.secondary {
+  background-color: var(--color-surface-primary, white);
+  color: var(--color-text-primary, #374151);
+  border: 1px solid var(--color-border-primary, #d1d5db);
+}
+
+.manifest-toolbar button.secondary:hover {
+  background-color: var(--color-surface-secondary, #f9fafb);
+}
+
+.manifest-toolbar input[type="text"] {
+  flex: 1;
+  max-width: 20rem;
+  padding: var(--spacing-2, 0.5rem) var(--spacing-3, 0.75rem);
+  border: 1px solid var(--color-border-primary, #d1d5db);
+  border-radius: var(--border-radius-md, 0.375rem);
+  font-size: var(--font-size-sm, 0.875rem);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.manifest-toolbar input[type="text"]:focus {
+  outline: none;
+  border-color: var(--color-primary-500, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Content layout */
+.manifest-content {
+  flex: 1;
+  display: flex;
+  min-height: 0; /* Enable scrolling in flex children */
+}
+
+.manifest-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Prevent overflow in flex items */
+}
+
+.manifest-sidebar {
+  width: 20rem;
+  background-color: var(--color-surface-secondary, #f9fafb);
+  border-left: 1px solid var(--color-border-primary, #e5e7eb);
+  overflow-y: auto;
+}
+
+/* Table styles */
+.manifest-table {
+  flex: 1;
+  overflow: auto;
+}
+
+.manifest-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.manifest-table th {
+  background-color: var(--color-surface-secondary, #f9fafb);
+  color: var(--color-text-primary, #374151);
+  font-weight: var(--font-weight-semibold, 600);
+  font-size: var(--font-size-xs, 0.75rem);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: var(--spacing-3, 0.75rem);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border-primary, #e5e7eb);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.manifest-table td {
+  padding: var(--spacing-3, 0.75rem);
+  border-bottom: 1px solid var(--color-border-secondary, #f3f4f6);
+  color: var(--color-text-primary, #374151);
+  font-size: var(--font-size-sm, 0.875rem);
+}
+
+.manifest-table tr {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.manifest-table tr:hover {
+  background-color: var(--color-surface-secondary, #f9fafb);
+}
+
+.manifest-table tr.selected {
+  background-color: var(--color-primary-50, #eff6ff);
+}
+
+.manifest-table tr:focus {
+  outline: 2px solid var(--color-primary-500, #3b82f6);
+  outline-offset: -2px;
+}
+
+/* Preview styles */
+.manifest-preview {
+  padding: var(--spacing-4, 1rem);
+  height: 100%;
+  overflow-y: auto;
+}
+
+.manifest-preview h3 {
+  color: var(--color-text-primary, #374151);
+  font-size: var(--font-size-lg, 1.125rem);
+  font-weight: var(--font-weight-semibold, 600);
+  margin-bottom: var(--spacing-4, 1rem);
+}
+
+.manifest-preview-content {
+  background-color: var(--color-surface-primary, white);
+  border: 1px solid var(--color-border-primary, #e5e7eb);
+  border-radius: var(--border-radius-md, 0.375rem);
+  padding: var(--spacing-4, 1rem);
+  margin-bottom: var(--spacing-4, 1rem);
+  max-height: 20rem;
+  overflow: auto;
+}
+
+.manifest-preview-content pre {
+  margin: 0;
+  font-family: var(--font-family-mono, 'Fira Code', monospace);
+  font-size: var(--font-size-xs, 0.75rem);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.manifest-preview-metadata {
+  background-color: var(--color-surface-secondary, #f9fafb);
+  border: 1px solid var(--color-border-primary, #e5e7eb);
+  border-radius: var(--border-radius-md, 0.375rem);
+  padding: var(--spacing-3, 0.75rem);
+  margin-bottom: var(--spacing-4, 1rem);
+}
+
+.manifest-preview-metadata dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--spacing-2, 0.5rem) var(--spacing-4, 1rem);
+  margin: 0;
+}
+
+.manifest-preview-metadata dt {
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--color-text-secondary, #6b7280);
+  font-size: var(--font-size-xs, 0.75rem);
+}
+
+.manifest-preview-metadata dd {
+  margin: 0;
+  color: var(--color-text-primary, #374151);
+  font-size: var(--font-size-xs, 0.75rem);
+}
+
+.manifest-preview-actions {
+  display: flex;
+  gap: var(--spacing-2, 0.5rem);
+}
+
+.manifest-preview-actions button {
+  padding: var(--spacing-2, 0.5rem) var(--spacing-3, 0.75rem);
+  background-color: var(--color-surface-primary, white);
+  color: var(--color-text-primary, #374151);
+  border: 1px solid var(--color-border-primary, #d1d5db);
+  border-radius: var(--border-radius-md, 0.375rem);
+  font-size: var(--font-size-sm, 0.875rem);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.manifest-preview-actions button:hover {
+  background-color: var(--color-surface-secondary, #f9fafb);
+}
+
+.manifest-preview-actions button.danger {
+  color: var(--color-error-600, #dc2626);
+  border-color: var(--color-error-300, #fca5a5);
+}
+
+.manifest-preview-actions button.danger:hover {
+  background-color: var(--color-error-50, #fef2f2);
+}
+
+/* Empty state */
+.manifest-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--spacing-8, 2rem);
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.manifest-empty h3 {
+  font-size: var(--font-size-lg, 1.125rem);
+  font-weight: var(--font-weight-medium, 500);
+  margin-bottom: var(--spacing-2, 0.5rem);
+  color: var(--color-text-primary, #374151);
+}
+
+.manifest-empty p {
+  font-size: var(--font-size-sm, 0.875rem);
+  margin-bottom: var(--spacing-6, 1.5rem);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .manifest-content {
+    flex-direction: column;
+  }
+  
+  .manifest-sidebar {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--color-border-primary, #e5e7eb);
+  }
+  
+  .manifest-toolbar {
+    flex-wrap: wrap;
+    gap: var(--spacing-2, 0.5rem);
+  }
+  
+  .manifest-toolbar input[type="text"] {
+    max-width: none;
+    flex: 1;
+    min-width: 12rem;
+  }
+}
+
+/* Focus and accessibility improvements */
+.manifest-table tr:focus-visible {
+  outline: 2px solid var(--color-primary-500, #3b82f6);
+  outline-offset: -2px;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--color-primary-500, #3b82f6);
+  outline-offset: 2px;
+}
+
+input:focus-visible {
+  outline: 2px solid var(--color-primary-500, #3b82f6);
+  outline-offset: 2px;
+}
+
+/* Animation for loading states */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.manifest-loading .manifest-table tr {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Status indicators */
+.status-indicator {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  margin-right: var(--spacing-2, 0.5rem);
+}
+
+.status-indicator.success {
+  background-color: var(--color-success-500, #10b981);
+}
+
+.status-indicator.warning {
+  background-color: var(--color-warning-500, #f59e0b);
+}
+
+.status-indicator.error {
+  background-color: var(--color-error-500, #ef4444);
+}
