@@ -12,6 +12,7 @@
   import { WorkspaceManager } from './lib/workspace';
   import { ManifestManagerImpl } from './lib/manifest/manifest-manager';
   import { MetadataManagerImpl } from './lib/metadata/MetadataManager';
+  import { SpineItemManager } from './lib/spine/spine-item-manager';
   import { layoutStore } from './lib/stores/layout';
   import { t } from './lib/i18n';
   import {
@@ -42,6 +43,7 @@
   let initialized = false;
   let currentManifestManager: ManifestManagerImpl | null = null;
   let currentMetadataManager: MetadataManagerImpl | null = null;
+  let currentSpineManager: SpineItemManager | null = null;
 
   // Initialize workspace manager
   onMount(() => {
@@ -54,6 +56,7 @@
           currentWorkspaceId = contextWorkspaceId || null;
           currentManifestManager = contextManifestManager || null;
           currentMetadataManager = contextMetadataManager || null;
+          currentSpineManager = new SpineItemManager(contextWorkspaceManager);
         } else {
           // Production: create and initialize real managers
           const tempWorkspaceManager = new WorkspaceManager();
@@ -65,9 +68,10 @@
             currentWorkspaceId = workspaces[0].id;
           }
 
-          // Create real manifest and metadata managers
+          // Create real manifest, metadata, and spine managers
           currentManifestManager = new ManifestManagerImpl(tempWorkspaceManager);
           currentMetadataManager = new MetadataManagerImpl(tempWorkspaceManager);
+          currentSpineManager = new SpineItemManager(tempWorkspaceManager);
           
           // Set manager only after full initialization
           currentWorkspaceManager = tempWorkspaceManager;
@@ -105,10 +109,11 @@
 
 <LayoutManager hasWorkspace={!!currentWorkspaceId}>
   <svelte:fragment slot="sidebar-spine">
-    {#if initialized && currentWorkspaceId && currentWorkspaceManager}
+    {#if initialized && currentWorkspaceId && currentWorkspaceManager && currentSpineManager}
       <SpineSidebar
         workspaceId={currentWorkspaceId}
         workspaceManager={currentWorkspaceManager}
+        spineManager={currentSpineManager}
         selectedItemId={selectedSpineItemId}
         {isExpanded}
       />
@@ -121,9 +126,10 @@
 
   <svelte:fragment slot="left-content">
     <!-- Main content area - switches based on current view -->
-    {#if currentView === 'workspace'}
+    {#if currentView === 'workspace' && currentSpineManager}
       <WorkspaceView 
         workspaceManager={currentWorkspaceManager}
+        spineManager={currentSpineManager}
         currentWorkspaceId={currentWorkspaceId}
         onWorkspaceChange={(workspaceId) => {
           currentWorkspaceId = workspaceId;
@@ -166,10 +172,11 @@
         icon="📖"
       />
     {:else if currentView === 'spine'}
-      {#if initialized && currentWorkspaceId && currentWorkspaceManager}
+      {#if initialized && currentWorkspaceId && currentWorkspaceManager && currentSpineManager}
         <SpineView
           workspaceId={currentWorkspaceId}
           workspaceManager={currentWorkspaceManager}
+          spineManager={currentSpineManager}
           selectedItemId={selectedSpineItemId}
         />
       {:else}

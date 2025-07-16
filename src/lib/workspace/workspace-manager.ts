@@ -152,16 +152,15 @@ export class WorkspaceManager {
     try {
       // Step 1: Invalidate cache first to prevent issues if storage deletion fails
       await this.invalidateCache(workspaceId);
-      
+
       // Step 2: Attempt storage deletion
       await this.storage.deleteWorkspace(workspaceId);
-      
+
       // Step 3: Verify deletion completed successfully
       const remainingWorkspaces = await this.storage.listWorkspaces();
       if (remainingWorkspaces.includes(workspaceId)) {
         throw new Error(`Workspace still exists after deletion attempt`);
       }
-      
     } catch (error) {
       throw new WorkspaceError(
         `Failed to delete workspace: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -178,26 +177,28 @@ export class WorkspaceManager {
   async cleanupOrphanedWorkspaces(): Promise<{ cleaned: string[]; errors: string[] }> {
     const cleaned: string[] = [];
     const errors: string[] = [];
-    
+
     try {
       const allWorkspaceIds = await this.storage.listWorkspaces();
-      
+
       for (const workspaceId of allWorkspaceIds) {
         try {
           // Attempt to parse workspace metadata
           await this.parseWorkspaceMetadata(workspaceId);
           // If successful, workspace is valid - skip cleanup
-        } catch (error) {
+        } catch {
           // Workspace is corrupted or orphaned - attempt cleanup
           try {
             await this.deleteWorkspace(workspaceId);
             cleaned.push(workspaceId);
           } catch (cleanupError) {
-            errors.push(`Failed to clean ${workspaceId}: ${cleanupError instanceof Error ? cleanupError.message : 'Unknown error'}`);
+            errors.push(
+              `Failed to clean ${workspaceId}: ${cleanupError instanceof Error ? cleanupError.message : 'Unknown error'}`
+            );
           }
         }
       }
-      
+
       return { cleaned, errors };
     } catch (error) {
       throw new WorkspaceError(
@@ -1141,5 +1142,20 @@ export class WorkspaceManager {
    */
   private async invalidateCache(workspaceId: string): Promise<void> {
     await this.cache.invalidateCache(workspaceId);
+  }
+
+  /**
+   * Check if advanced mode is enabled for a workspace
+   * Advanced mode enables SOURCE file management and enhanced features
+   */
+  async isAdvancedModeEnabled(workspaceId: string): Promise<boolean> {
+    try {
+      // Check if SOURCE directory exists and has content
+      const sourceFiles = await this.storage.listFiles(workspaceId, 'SOURCE/');
+      return sourceFiles.length > 0;
+    } catch {
+      // If SOURCE directory doesn't exist or can't be accessed, advanced mode is disabled
+      return false;
+    }
   }
 }

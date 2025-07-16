@@ -3,16 +3,16 @@
   import { navigationStore } from '../navigation-store';
   import type { WorkspaceManager } from '../../workspace';
   import type { SpineItemWithSource } from '../../spine/types';
-  import { SpineItemManager } from '../../spine/spine-item-manager';
+  import type { SpineItemManager } from '../../spine/spine-item-manager';
   import { t } from '../../i18n';
 
   // Props
   export let workspaceId: string;
   export let workspaceManager: WorkspaceManager;
+  export let spineManager: SpineItemManager;
   export let selectedItemId: string | null = null;
 
   // Component state
-  let spineManager: SpineItemManager;
   let selectedItem: SpineItemWithSource | null = null;
   let sourceContent = '';
   let isLoading = false;
@@ -21,9 +21,6 @@
 
   // ViewComponent interface implementation
   export function onViewEnter(_data?: any): void {
-    // Initialize spine manager
-    spineManager = new SpineItemManager(workspaceManager);
-
     // Load selected item if available
     if (selectedItemId) {
       loadSelectedItem();

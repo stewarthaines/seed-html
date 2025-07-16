@@ -16,7 +16,7 @@
   };
 </script>
 
-<div class="current-workspace-bar">
+<!--div class="current-workspace-bar">
   {#if currentWorkspace}
     <div class="workspace-info">
       <span class="workspace-icon" aria-hidden="true">📖</span>
@@ -51,7 +51,7 @@
       <span class="no-workspace-text">{$t('No workspace selected')}</span>
     </div>
   {/if}
-</div>
+</div-->
 
 <style>
   .current-workspace-bar {

@@ -27,6 +27,7 @@ import {
 
 import { ManifestValidator } from './validation.js';
 import { ManifestUtils } from './utils.js';
+import type { WorkspaceManager } from '../workspace/index.js';
 
 /**
  * Interface defining the complete ManifestManager API
@@ -87,7 +88,7 @@ export class ManifestManagerImpl implements IManifestManager {
   private readonly CONTENT_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB
   private readonly CACHE_SIZE_LIMIT = 10 * 1024 * 1024; // 10MB
 
-  constructor(private workspaceManager: any) {
+  constructor(private workspaceManager: WorkspaceManager) {
     this.cache = {
       manifests: new Map(),
       content: new Map(),

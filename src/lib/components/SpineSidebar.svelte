@@ -3,13 +3,14 @@
   import { t } from '../i18n';
   import { layoutStore as _layoutStore } from '../stores/layout';
   import SpineItem from './SpineItem.svelte';
-  import { SpineItemManager } from '../spine/spine-item-manager';
+  import type { SpineItemManager } from '../spine/spine-item-manager';
   import type { SpineItemWithSource } from '../spine/types';
   import type { WorkspaceManager } from '../workspace';
 
   // Props
   export let workspaceId: string;
   export let workspaceManager: WorkspaceManager;
+  export let spineManager: SpineItemManager;
   export let selectedItemId: string | null = null;
   export let isExpanded = true;
 
@@ -17,16 +18,13 @@
   let spineItems: SpineItemWithSource[] = [];
   let isLoading = true;
   let error: string | null = null;
-  let spineManager: SpineItemManager;
   let isReordering = false;
 
   // Reactive state - use prop instead of store
   $: sidebarExpanded = isExpanded;
 
-  // Initialize spine manager and reactive loading
+  // Initialize event listeners
   onMount(() => {
-    spineManager = new SpineItemManager(workspaceManager);
-
     // Listen for append item events from Sidebar
     const handleAppendEvent = () => {
       handleAppendChapter();

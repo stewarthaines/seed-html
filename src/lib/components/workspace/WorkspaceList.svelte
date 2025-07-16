@@ -56,13 +56,13 @@
 
 <div class="workspace-list">
   <div class="list-header">
-    <h3 class="list-title">
+    <!--h3 class="list-title">
       {#if workspaces.length === 0}
         {$t('Workspaces')}
       {:else}
         {$t('Workspaces ({count} total)', { count: workspaces.length })}
       {/if}
-    </h3>
+    </h3-->
 
     {#if workspaces.length > 0}
       <div class="search-container">

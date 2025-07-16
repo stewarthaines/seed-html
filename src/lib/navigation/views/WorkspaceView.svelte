@@ -5,6 +5,7 @@
   import { WorkspaceManager } from '../../workspace/workspace-manager';
   import type { WorkspaceInfo } from '../../workspace/types';
   import type { EPUBMetadata } from '../../epub/opf-utils';
+  import type { SpineItemManager } from '../../spine/spine-item-manager';
   import CurrentWorkspaceBar from '../../components/workspace/CurrentWorkspaceBar.svelte';
   import WorkspaceActionBar from '../../components/workspace/WorkspaceActionBar.svelte';
   import WorkspaceList from '../../components/workspace/WorkspaceList.svelte';
@@ -17,6 +18,7 @@
 
   // Props for dependency injection
   export let workspaceManager: WorkspaceManager;
+  export let spineManager: SpineItemManager;
   export let onWorkspaceChange: ((workspaceId: string | null) => void) | null = null;
   export let currentWorkspaceId: string | null = null;
 
@@ -161,7 +163,7 @@
     input.click();
   };
 
-  // Handle workspace selection (open workspace)
+  // Handle workspace selection (open workspace) with smart navigation
   const handleWorkspaceSelect = async (event: CustomEvent<{ workspaceId: string }>) => {
     const { workspaceId } = event.detail;
 
@@ -169,11 +171,32 @@
       // Set as current workspace
       setCurrentWorkspace(workspaceId);
 
-      // Navigate to workspace (metadata view)
-      dispatch('navigationRequested', {
-        view: 'metadata',
-        workspaceId,
-      });
+      // Smart navigation: check for spine items first
+      try {
+        const spineItems = await spineManager.loadSpineItems(workspaceId);
+        
+        if (spineItems.length > 0) {
+          // Navigate to first spine item
+          const firstSpineItem = spineItems[0];
+          window.dispatchEvent(new CustomEvent('select-spine-item', {
+            detail: { itemId: firstSpineItem.id }
+          }));
+          // Navigation to spine view happens automatically via existing event handler in App.svelte
+        } else {
+          // Fallback to metadata view if no spine items
+          dispatch('navigationRequested', {
+            view: 'metadata',
+            workspaceId,
+          });
+        }
+      } catch (spineError) {
+        // Error loading spine items - fallback to metadata view
+        console.warn('Failed to load spine items, falling back to metadata view:', spineError);
+        dispatch('navigationRequested', {
+          view: 'metadata',
+          workspaceId,
+        });
+      }
 
       dispatch('workspaceOpened', { workspaceId });
     } catch (err) {
@@ -323,12 +346,12 @@
     };
   }
 
-  export function setViewData(data: any): void {
-    if (data.currentWorkspaceId) {
-      setCurrentWorkspace(data.currentWorkspaceId);
+  export function setViewData(_data: any): void {
+    if (_data.currentWorkspaceId) {
+      setCurrentWorkspace(_data.currentWorkspaceId);
     }
-    if (data.hasUnsavedChanges !== undefined) {
-      hasUnsavedChanges = data.hasUnsavedChanges;
+    if (_data.hasUnsavedChanges !== undefined) {
+      hasUnsavedChanges = _data.hasUnsavedChanges;
     }
   }
 
