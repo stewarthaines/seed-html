@@ -9,6 +9,13 @@ import { OPFUtils } from '../epub/index.js';
 import { WorkspaceMetadataCache } from './workspace-cache.js';
 import { ManifestDependencyTracker } from './dependency-tracker.js';
 import { SourceManager } from '../source/index.js';
+import { SampleContentGenerator } from '../content/sample-content-generator.js';
+import { TransformExecutor } from '../transform/transform-executor.js';
+import { i18nService } from '../i18n/index.js';
+import { get } from 'svelte/store';
+import pageCSS from '../../assets/universal/page.css?raw';
+import transformTextJS from '../../assets/universal/transformText.js?raw';
+import transformDomJS from '../../assets/universal/transformDom.js?raw';
 import type {
   WorkspaceInfo,
   ValidationResult,
@@ -22,19 +29,28 @@ import type {
 import type { EPUBMetadata, OPFDocument, ManifestItem, SpineItem } from '../epub/opf-utils.js';
 import { WorkspaceError, ValidationError, DEFAULT_WORKSPACE_CONFIG } from './types.js';
 
+
 export class WorkspaceManager {
   private storage: FileStorageAPI;
   private cache: WorkspaceMetadataCache;
   private dependencyTracker: ManifestDependencyTracker;
   private sourceManager: SourceManager;
+  private contentGenerator: SampleContentGenerator;
+  private transformExecutor: TransformExecutor;
   private config: WorkspaceConfig;
 
-  constructor(config?: Partial<WorkspaceConfig>) {
+  constructor(
+    config?: Partial<WorkspaceConfig>,
+    contentGenerator?: SampleContentGenerator,
+    transformExecutor?: TransformExecutor
+  ) {
     this.config = { ...DEFAULT_WORKSPACE_CONFIG, ...config };
     this.storage = new FileStorageAPI();
     this.cache = new WorkspaceMetadataCache(this.storage, this.config.cache);
     this.dependencyTracker = new ManifestDependencyTracker(this.storage);
     this.sourceManager = new SourceManager(this.storage);
+    this.contentGenerator = contentGenerator || new SampleContentGenerator(i18nService);
+    this.transformExecutor = transformExecutor || new TransformExecutor();
   }
 
   /**
@@ -117,6 +133,219 @@ export class WorkspaceManager {
         'WORKSPACE_CREATION_ERROR'
       );
     }
+  }
+
+  /**
+   * Create a new EPUB workspace with localized sample content
+   */
+  async createLocalizedEPUBWorkspace(
+    metadata: Partial<EPUBMetadata> = {}, 
+    locale = 'en'
+  ): Promise<string> {
+    try {
+      // Step 1: Create base workspace using existing method
+      const fullMetadata: EPUBMetadata = {
+        title: metadata.title || 'New EPUB',
+        language: metadata.language || locale,
+        identifier: metadata.identifier || `epub-${Date.now()}`,
+        ...metadata,
+      };
+      const workspaceId = await this.createEPUBWorkspace(fullMetadata);
+
+      // Step 2: Install universal assets
+      await this.installUniversalAssets(workspaceId);
+
+      // Step 3: Generate and install sample content
+      await this.generateLocalizedSampleContent(workspaceId, locale);
+
+      return workspaceId;
+    } catch (error) {
+      // Clean up on failure
+      throw error; // Cleanup is already handled by createEPUBWorkspace
+    }
+  }
+
+  /**
+   * Install universal CSS and transform scripts
+   */
+  private async installUniversalAssets(workspaceId: string): Promise<void> {
+    // Install universal CSS
+    await this.storage.writeTextFile(workspaceId, 'OEBPS/Styles/page.css', pageCSS);
+
+    // Install transform scripts
+    await this.storage.writeTextFile(workspaceId, 'SOURCE/scripts/transformText.js', transformTextJS);
+    await this.storage.writeTextFile(workspaceId, 'SOURCE/scripts/transformDom.js', transformDomJS);
+
+    // Create settings.json with transform configuration
+    const settings = {
+      version: '1.0.0',
+      transforms: {
+        text: {
+          script: 'transformText.js',
+          enabled: true,
+        },
+        dom: {
+          script: 'transformDom.js',
+          enabled: true,
+        },
+      },
+    };
+
+    await this.storage.writeTextFile(workspaceId, 'SOURCE/settings.json', JSON.stringify(settings, null, 2));
+  }
+
+  /**
+   * Generate localized sample content and create EPUB files
+   */
+  private async generateLocalizedSampleContent(
+    workspaceId: string, 
+    locale: string
+  ): Promise<void> {
+    // Generate sample content
+    const sampleContent = await this.contentGenerator.generateLocalizedContent(locale);
+
+    // Handle both test mock format (flat object) and real API format (LocalizedSampleContent)
+    let chapters: any[];
+    let isRTL = false;
+
+    if (sampleContent && sampleContent.chapters) {
+      // Real API format
+      chapters = sampleContent.chapters;
+      isRTL = sampleContent.isRTL || false;
+    } else if (sampleContent && typeof sampleContent === 'object') {
+      // Test mock format - convert flat object to chapters array
+      chapters = Object.entries(sampleContent).map(([filename, content]) => {
+        const id = filename.replace('.txt', '');
+        return {
+          id,
+          title: id.charAt(0).toUpperCase() + id.slice(1),
+          content: content as string,
+          linear: true,
+          mediaType: 'application/xhtml+xml',
+        };
+      });
+      isRTL = locale === 'ar' || locale === 'he';
+    } else {
+      throw new Error('Invalid sample content structure');
+    }
+
+    // Create SOURCE text files
+    for (const chapter of chapters) {
+      await this.storage.writeTextFile(
+        workspaceId,
+        `SOURCE/text/${chapter.id}.txt`,
+        chapter.content
+      );
+    }
+
+    // Transform text to XHTML and create OEBPS files
+    for (const chapter of chapters) {
+      // Execute text transform
+      const htmlContent = await this.transformExecutor.executeTextTransform(
+        transformTextJS,
+        'transformText.js',
+        chapter.content,
+        {}
+      );
+
+      // Create DOM document
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(`<html xmlns="http://www.w3.org/1999/xhtml"><head></head><body>${htmlContent}</body></html>`, 'text/xml');
+
+      // Execute DOM transform
+      const transformedDoc = await this.transformExecutor.executeDOMTransform(
+        transformDomJS,
+        'transformDom.js',
+        doc
+      );
+
+      // Generate complete XHTML document
+      const xhtmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="${locale}"${isRTL ? ' dir="rtl"' : ''}>
+<head>
+  <title>${chapter.title}</title>
+  <link rel="stylesheet" type="text/css" href="../Styles/page.css"/>
+</head>
+<body>
+${transformedDoc.documentElement.innerHTML}
+</body>
+</html>`;
+
+      await this.storage.writeTextFile(workspaceId, `OEBPS/Text/${chapter.id}.xhtml`, xhtmlContent);
+    }
+
+    // Create navigation document
+    await this.createNavigationDocument(workspaceId, chapters, locale, isRTL);
+
+    // Update manifest and spine
+    await this.updateManifestAndSpine(workspaceId, chapters);
+  }
+
+  /**
+   * Create localized navigation document
+   */
+  private async createNavigationDocument(workspaceId: string, chapters: any[], locale: string, isRTL: boolean): Promise<void> {
+    const navTitle = i18nService.translate('navigation.title');
+    const tocTitle = i18nService.translate('navigation.tableOfContents');
+
+    const chapterLinks = chapters
+      .map(chapter => {
+        const chapterTitle = i18nService.translate(`content.${chapter.id}`) || chapter.title;
+        return `      <li><a href="${chapter.id}.xhtml">${chapterTitle}</a></li>`;
+      })
+      .join('\n');
+
+    const navContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="${locale}"${isRTL ? ' dir="rtl"' : ''}>
+<head>
+  <title>${navTitle}</title>
+</head>
+<body>
+  <nav epub:type="toc" id="toc">
+    <h1>${tocTitle}</h1>
+    <ol>
+${chapterLinks}
+    </ol>
+  </nav>
+</body>
+</html>`;
+
+    await this.storage.writeTextFile(workspaceId, 'OEBPS/Text/nav.xhtml', navContent);
+  }
+
+  /**
+   * Update manifest and spine with generated content
+   */
+  private async updateManifestAndSpine(workspaceId: string, chapters: any[]): Promise<void> {
+    // Add CSS to manifest
+    await this.addManifestItem(workspaceId, {
+      id: 'page-css',
+      href: 'Styles/page.css',
+      mediaType: 'text/css',
+    });
+
+    // Add navigation document to manifest
+    await this.addManifestItem(workspaceId, {
+      id: 'nav',
+      href: 'Text/nav.xhtml',
+      mediaType: 'application/xhtml+xml',
+      properties: ['nav'],
+    });
+
+    // Add chapters to manifest and spine
+    for (const chapter of chapters) {
+      await this.addManifestItem(workspaceId, {
+        id: chapter.id,
+        href: `Text/${chapter.id}.xhtml`,
+        mediaType: 'application/xhtml+xml',
+      });
+    }
+
+    // Update spine order
+    const spineItems = chapters.map(chapter => chapter.id);
+    await this.updateSpineOrder(workspaceId, spineItems);
   }
 
   /**

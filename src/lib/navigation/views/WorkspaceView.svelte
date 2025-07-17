@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import { navigationStore } from '../navigation-store';
-  import { t } from '../../i18n';
+  import { t, currentLocale } from '../../i18n';
   import { WorkspaceManager } from '../../workspace/workspace-manager';
   import type { WorkspaceInfo } from '../../workspace/types';
   import type { EPUBMetadata } from '../../epub/opf-utils';
@@ -99,8 +99,13 @@
   const handleCreateNew = async () => {
     try {
       loading = true;
+      
+      // Get current locale for localized content
+      const locale = $currentLocale;
       const metadata = createMinimalEPUBMetadata();
-      const workspaceId = await workspaceManager.createEPUBWorkspace(metadata);
+      
+      // Use enhanced workspace creation with localized sample content
+      const workspaceId = await workspaceManager.createLocalizedEPUBWorkspace(metadata, locale);
 
       // Refresh workspace list
       await loadWorkspaces();
@@ -108,10 +113,11 @@
       // Set as current workspace
       setCurrentWorkspace(workspaceId);
 
-      // Navigate to metadata view
+      // Navigate to first content (prologue) for immediate preview
       dispatch('navigationRequested', {
-        view: 'metadata',
+        view: 'text',
         workspaceId,
+        spineItemId: 'prologue',
       });
 
       dispatch('workspaceOpened', { workspaceId });

@@ -9,6 +9,11 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { SampleContentGenerator } from '../sample-content-generator.js';
+
+// Mock the i18n translate function
+vi.mock('../../i18n/index.js', () => ({
+  translate: vi.fn(),
+}));
 import {
   TranslationMissingError,
   UnsupportedLocaleError,
@@ -34,6 +39,7 @@ import {
 } from './test-utils.js';
 import { LOCALE_CONFIGS } from '../../i18n/locale-config.js';
 import { expectedAvailableLocales } from './fixtures.js';
+import { translate as mockTranslate } from '../../i18n/index.js';
 
 describe('SampleContentGenerator', () => {
   let generator: SampleContentGenerator;
@@ -43,12 +49,22 @@ describe('SampleContentGenerator', () => {
     // Create fresh mock for each test
     mockI18nSystem = createMockI18nSystem();
 
+    // Set up global translate mock to use same data as mockI18nSystem
+    (mockTranslate as any).mockImplementation((key: string) => 
+      mockI18nSystem.translate(key, {})
+    );
+
     // Create generator instance with mock - this should FAIL initially (TDD)
     generator = new SampleContentGenerator(mockI18nSystem as any);
 
     // Clear mocks after creating but reset to 'en' locale
     vi.clearAllMocks();
     setMockLocale(mockI18nSystem, 'en');
+    
+    // Re-setup the translate mock after clearing
+    (mockTranslate as any).mockImplementation((key: string) => 
+      mockI18nSystem.translate(key, {})
+    );
   });
 
   afterEach(() => {
