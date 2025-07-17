@@ -18,6 +18,7 @@ import {
   UnsupportedLocaleError as UnsupportedLocaleErrorClass,
   InvalidContentError as InvalidContentErrorClass,
 } from './types.js';
+import { translate as t } from '../i18n/index.js';
 
 /**
  * I18n System interface (should match the real implementation)
@@ -83,10 +84,10 @@ export class SampleContentGenerator {
 
       // Generate metadata
       const metadata = {
-        title: this.i18nSystem.translate('sample.book.title', {}),
-        description: this.i18nSystem.translate('sample.book.description', {}),
-        author: this.i18nSystem.translate('sample.author.name', {}),
-        publisher: this.i18nSystem.translate('sample.publisher.name', {}),
+        title: t('sample.book.title'),
+        description: t('sample.book.description'),
+        author: t('sample.author.name'),
+        publisher: t('sample.publisher.name'),
       };
 
       // Generate chapters
@@ -153,12 +154,12 @@ export class SampleContentGenerator {
       const pageProgressionDirection = isRTL ? 'rtl' : 'ltr';
 
       return {
-        title: this.i18nSystem.translate('sample.book.title', {}),
+        title: t('sample.book.title'),
         language: locale,
         identifier,
-        creator: [this.i18nSystem.translate('sample.author.name', {})],
-        publisher: this.i18nSystem.translate('sample.publisher.name', {}),
-        description: this.i18nSystem.translate('sample.book.description', {}),
+        creator: [t('sample.author.name')],
+        publisher: t('sample.publisher.name'),
+        description: t('sample.book.description'),
         pageProgressionDirection,
       };
     } finally {
@@ -207,29 +208,29 @@ export class SampleContentGenerator {
       return [
         {
           id: 'prologue',
-          title: this.i18nSystem.translate('sample.prologue.title', {}),
-          content: this.i18nSystem.translate('sample.prologue.content', {}),
+          title: t('sample.prologue.title'),
+          content: t('sample.prologue.content'),
           linear: true,
           mediaType: 'application/xhtml+xml',
         },
         {
           id: 'chapter1',
-          title: this.i18nSystem.translate('sample.chapter1.title', {}),
-          content: this.i18nSystem.translate('sample.chapter1.content', {}),
+          title: t('sample.chapter1.title'),
+          content: t('sample.chapter1.content'),
           linear: true,
           mediaType: 'application/xhtml+xml',
         },
         {
           id: 'chapter2',
-          title: this.i18nSystem.translate('sample.chapter2.title', {}),
-          content: this.i18nSystem.translate('sample.chapter2.content', {}),
+          title: t('sample.chapter2.title'),
+          content: t('sample.chapter2.content'),
           linear: true,
           mediaType: 'application/xhtml+xml',
         },
         {
           id: 'appendix',
-          title: this.i18nSystem.translate('sample.appendix.title', {}),
-          content: this.i18nSystem.translate('sample.appendix.content', {}),
+          title: t('sample.appendix.title'),
+          content: t('sample.appendix.content'),
           linear: false,
           mediaType: 'application/xhtml+xml',
         },
@@ -289,7 +290,7 @@ export class SampleContentGenerator {
           missingKeys.push(key);
         } else {
           // Key exists, check if it's empty
-          const translation = this.i18nSystem.translate(key, {});
+          const translation = t(key);
 
           if (!translation || translation.trim() === '') {
             // Key exists but is empty
@@ -319,7 +320,7 @@ export class SampleContentGenerator {
   private async checkTranslationCompleteness(locale: string): Promise<void> {
     // First pass: check for empty translations (higher priority)
     for (const key of REQUIRED_SAMPLE_KEYS) {
-      const translation = this.i18nSystem.translate(key, {});
+      const translation = t(key);
 
       // If we got a translation that's not the key itself, but it's empty
       if (translation !== key && (!translation || translation.trim() === '')) {
@@ -330,7 +331,7 @@ export class SampleContentGenerator {
     // Second pass: check for missing translations
     const missingKeys: string[] = [];
     for (const key of REQUIRED_SAMPLE_KEYS) {
-      const translation = this.i18nSystem.translate(key, {});
+      const translation = t(key);
 
       // If translation equals key, it means it's missing (fallback behavior)
       if (translation === key) {

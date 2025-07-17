@@ -6,156 +6,567 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit"
 "Project-Id-Version: EDITME EPUB Editor"
 "Report-Msgid-Bugs-To: "
-"POT-Creation-Date: 2025-07-01T07:34:45.535Z"
-"PO-Revision-Date: 2025-07-01T07:34:45.535Z"
+"POT-Creation-Date: 2025-07-17T23:41:12.991Z"
+"PO-Revision-Date: 2025-07-17T23:41:12.991Z"
 "Last-Translator: "
 "Language-Team: "
 "Plural-Forms: nplurals=2; plural=(n != 1);"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:108
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:42
+msgid "{count} days ago"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:38
+msgid "{count}h ago"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:44
+msgid "{count}w ago"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:40
+msgid "1 day ago"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataEditor.svelte:26
+msgid "Accessibility"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:111
 msgid "Add/remove manifest items"
 msgstr ""
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:124
-msgid "Advanced configurations"
-msgstr ""
-
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:121
-msgid "Application preferences"
-msgstr ""
-
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:156
-msgid "at"
-msgstr ""
-
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:114
-msgid "Auto-generation from spine"
-msgstr ""
-
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:116
-msgid "Chapter ordering interface"
-msgstr ""
-
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:130
-msgid "Create Workspace"
-msgstr ""
-
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:117
-msgid "Drag-and-drop reordering"
-msgstr ""
-
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:126
-msgid "Enhanced functionality"
-msgstr ""
-
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:123
-msgid "Export/import settings"
-msgstr ""
-
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:106
-msgid "File listing and management"
-msgstr ""
-
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:138
-msgid "Import EPUB"
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataEditor.svelte:24
+msgid "Advanced"
 msgstr ""
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:127
-msgid "Improved user interface"
+msgid "Advanced configurations"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:111
+#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:125
+msgid "Append Item"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:124
+msgid "Application preferences"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestContainer.svelte:72
+msgid "Are you sure you want to delete this item?"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:160
+msgid "at"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:45
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:51
+msgid "Auto"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:117
+msgid "Auto-generation from spine"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/SpineView.svelte:180
+msgid "Available"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataEditor.svelte:23
+msgid "Basic Info"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/AdvancedFields.svelte:25
+msgid "Biography"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:53
+msgid "Both"
 msgstr ""
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:119
-msgid "Link to source files"
+msgid "Chapter ordering interface"
 msgstr ""
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:45
-msgid "Main navigation"
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/AdvancedFields.svelte:28
+msgid "Children"
 msgstr ""
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:13
-msgid "Manifest"
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:266
+msgid "Clean up {count} corrupted workspace(s)? This will permanently delete workspaces that cannot be loaded properly."
 msgstr ""
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:12
-msgid "Metadata"
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestTable.svelte:241
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestToolbar.svelte:88
+msgid "Clear filter"
 msgstr ""
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:14
-msgid "Navigation"
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceList.svelte:83
+msgid "Clear search"
 msgstr ""
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:112
-msgid "Navigation link management"
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestItemEditor.svelte:219
+msgid "Close"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/CurrentWorkspaceBar.svelte:43
+msgid "Close workspace"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceActionBar.svelte:32
+msgid "Create a new minimal EPUB project"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestItemEditor.svelte:212
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestItemEditor.svelte:348
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestTable.svelte:267
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestToolbar.svelte:114
+msgid "Create Text File"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:86
+msgid "Currently open"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:39
+msgid "Default"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:226
+msgid "Delete \"{title}\"? This cannot be undone."
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:110
+msgid "Delete workspace: {title}"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:120
+msgid "Drag-and-drop reordering"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/AdvancedFields.svelte:24
+msgid "Drama"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestItemEditor.svelte:216
+msgid "Edit Manifest Item"
 msgstr ""
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:129
-msgid "New capabilities"
+msgid "Enhanced functionality"
 msgstr ""
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:134
-msgid "Open Existing"
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:153
+msgid "EPUB import functionality is coming soon. For now, use \"Create New\" to start a fresh project."
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:73
+msgid "Error"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:126
+msgid "Export/import settings"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:300
+msgid "Failed to cleanup workspaces: {error}"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:127
+msgid "Failed to create workspace: {error}"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestContainer.svelte:85
+msgid "Failed to delete item"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:247
+msgid "Failed to delete workspace: {error}"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:160
+msgid "Failed to import EPUB: {error}"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestPreview.svelte:54
+msgid "Failed to load content preview"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestContainer.svelte:46
+msgid "Failed to load manifest"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataEditor.svelte:86
+msgid "Failed to load metadata"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:83
+msgid "Failed to load workspaces"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:211
+msgid "Failed to open workspace: {error}"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestContainer.svelte:113
+msgid "Failed to save item"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestContainer.svelte:129
+msgid "Failed to upload files"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/AdvancedFields.svelte:21
+msgid "Fiction"
 msgstr ""
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:109
+msgid "File listing and management"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:99
+msgid "files"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceActionBar.svelte:60
+msgid "Import from folder - coming soon"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:130
+msgid "Improved user interface"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:36
+msgid "Just now"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:46
+msgid "Landscape"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:40
+msgid "Left to Right"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:122
+msgid "Link to source files"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceActionBar.svelte:46
+msgid "Load an existing EPUB file for editing"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestTable.svelte:258
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestToolbar.svelte:105
+msgid "Load File"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:81
+msgid "Main navigation"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:19
+msgid "Manifest"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestTable.svelte:216
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestToolbar.svelte:63
+msgid "Manifest actions"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestPreview.svelte:154
+msgid "Manifest Item"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:18
+msgid "Metadata"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataTabBar.svelte:15
+msgid "metadata.tab.accessibility"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataTabBar.svelte:13
+msgid "metadata.tab.advanced"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataTabBar.svelte:12
+msgid "metadata.tab.basic"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataTabBar.svelte:14
+msgid "metadata.tab.publication"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/SpineView.svelte:180
+msgid "Missing"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:20
+msgid "Navigation"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:115
+msgid "Navigation link management"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:132
+msgid "New capabilities"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/SpineView.svelte:166
+msgid "No"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:261
+msgid "No corrupted workspaces found to clean up."
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/AdvancedFields.svelte:22
+msgid "Non-fiction"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:52
+msgid "None"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:66
+msgid "Open workspace: {title}"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestItemEditor.svelte:130
+msgid "Please fill in all required fields"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataEditor.svelte:186
+msgid "Please fix errors before switching tabs"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/AdvancedFields.svelte:23
+msgid "Poetry"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:47
+msgid "Portrait"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:35
+msgid "Pre-paginated"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:112
 msgid "Preview file contents"
 msgstr ""
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:116
-msgid "Recently"
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataEditor.svelte:25
+msgid "Publication Details"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/AdvancedFields.svelte:27
+msgid "Reference"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:34
+msgid "Reflowable"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/fields/DateMetadataField.svelte:40
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/fields/TextareaMetadataField.svelte:37
+msgid "Required field"
 msgstr ""
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/MetadataView.svelte:87
 msgid "Reset all metadata to defaults?"
 msgstr ""
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/MetadataView.svelte:183
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:41
+msgid "Right to Left"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:233
+msgid "sample.appendix.content"
+msgstr "# Technical Reference\n\n## File Structure\n\nActive EPUBs follow this enhanced structure:\n\n```\nyour-book.epub\n├── mimetype\n├── META-INF/\n│   ├── container.xml\n│   └── com.apple.ibooks.display-options.xml\n├── OEBPS/\n│   ├── content.opf          # Package document\n│   ├── toc.xhtml           # Table of contents\n│   ├── Text/               # Chapter content\n│   ├── Images/             # Graphics and media\n│   └── Styles/             # CSS stylesheets\n└── SOURCE/\n    ├── text/               # Plain text sources\n    ├── scripts/            # Transform processors\n    └── settings.json       # Editor configuration\n```\n\n## Transform Pipeline\n\nThe conversion process works as follows:\n1. **Source Text**: Written in markdown-like plain text\n2. **Text Transform**: Converts to basic HTML structure\n3. **DOM Transform**: Adds navigation IDs and EPUB-specific elements\n4. **XHTML Output**: Valid EPUB content ready for reading\n\n## Extending the Editor\n\nCustomize functionality by modifying:\n- **Transform Scripts**: Add new formatting rules\n- **CSS Styles**: Change visual appearance\n- **Settings**: Configure editor behavior\n\nThe modular design ensures your customizations remain intact when sharing or updating the EPUB file.\n\n*Build better books with Active EPUB technology.*"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:232
+msgid "sample.appendix.title"
+msgstr "Technical Reference"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:160
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:89
+msgid "sample.author.name"
+msgstr "EDITME Editorial Team"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:162
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:88
+msgid "sample.book.description"
+msgstr "A comprehensive guide to creating and editing EPUB files with Active EPUB technology. Learn how to build interactive digital books with embedded editors and plain text workflows."
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:157
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:87
+msgid "sample.book.title"
+msgstr "Introduction to EPUB"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:219
+msgid "sample.chapter1.content"
+msgstr "# Getting Started with Active EPUB\n\nWelcome to the world of **Active EPUB** - a revolutionary approach to digital publishing that puts the power of content creation directly into your EPUB files.\n\n## What Makes Active EPUB Special?\n\nUnlike traditional EPUB files that are static once created, Active EPUB files contain their own editing environment. This means:\n\n- **Self-contained editing**: No need for external software\n- **Plain text workflow**: Write in simple, readable format\n- **Automatic transformation**: Your text becomes beautifully formatted EPUB content\n- **Embedded editor**: The editing tools travel with your book\n\n## Your First Steps\n\n1. **Explore the interface**: Navigate through the different sections using the sidebar\n2. **Edit metadata**: Customize your book's title, author, and description\n3. **Browse the manifest**: See all the files that make up your EPUB\n4. **Preview content**: Watch your changes appear in real-time\n\n## The Plain Text Advantage\n\nActive EPUB uses a simple text format that's easy to read and edit:\n\n```\n# This becomes a heading\n**This text is bold**\n*This text is italic*\n\nParagraphs are separated by blank lines.\n```\n\nThis approach keeps your content portable and future-proof while still creating professional-looking books.\n\n*Ready to dive deeper? Continue to the next chapter to learn about advanced features.*"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:218
+msgid "sample.chapter1.title"
+msgstr "Getting Started"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:226
+msgid "sample.chapter2.content"
+msgstr "# Advanced Features and Customization\n\nNow that you've mastered the basics, let's explore the powerful features that make Active EPUB truly special.\n\n## Transform Scripts\n\nOne of the most powerful features of Active EPUB is the ability to customize how your plain text is converted to EPUB content through **transform scripts**.\n\n### Text Transformations\n\nThe text transformation pipeline works in two stages:\n\n1. **Text Transform**: Converts your plain text to basic HTML\n2. **DOM Transform**: Adds EPUB-specific elements and navigation\n\nYou can customize both stages by modifying the transform scripts in your book's SOURCE folder.\n\n### Custom Formatting\n\nCreate your own formatting rules:\n\n```javascript\n// Example: Convert [[note]] to footnote\ntext = text.replace(/\\[\\[(.+?)\\]\\]/g, '<footnote>$1</footnote>');\n```\n\n## Workspace Management\n\nActive EPUB includes a complete workspace system:\n\n- **Multiple projects**: Switch between different books easily\n- **Auto-save**: Your work is saved automatically\n- **Version control**: Track changes to your content\n- **Export options**: Generate standard EPUB files when ready\n\n## Collaboration Features\n\nShare your Active EPUB files with others:\n\n- **Self-contained**: Recipients can edit without installing software\n- **Plain text sources**: Easy to version control with Git\n- **Portable**: Works on any modern device with a web browser\n\n## Performance Optimization\n\nActive EPUB is built for performance:\n\n- **OPFS storage**: Lightning-fast file operations\n- **Lazy loading**: Only loads content when needed\n- **Compression**: Efficient storage of resources\n\n*In the next section, we'll explore the technical details of how Active EPUB works under the hood.*"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:225
+msgid "sample.chapter2.title"
+msgstr "Advanced Features"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:212
+msgid "sample.prologue.content"
+msgstr "This document demonstrates the power of **Active EPUB** technology - a revolutionary approach to digital publishing that embeds a complete editing environment directly within EPUB files.\n\n## What You're Looking At\n\nYou're not just reading a book - you're experiencing an **Active EPUB**. This means:\n\n- ✨ **Self-editing capability**: This EPUB file contains its own editor\n- 📝 **Plain text sources**: Content is stored in readable, editable format\n- 🔄 **Live transformation**: Text automatically becomes beautiful EPUB content\n- 📱 **Universal compatibility**: Works on any device with a modern web browser\n\n## How It Works\n\nActive EPUB extends the standard EPUB format by including:\n\n1. **SOURCE folder**: Contains your plain text content and editing scripts\n2. **EDITME.html**: The embedded editor application\n3. **Transform pipeline**: Converts your text to valid EPUB content\n4. **Workspace system**: Manages multiple projects and file storage\n\n## The Plain Text Advantage\n\nUnlike traditional word processors, Active EPUB uses simple, readable text:\n\n```\n# This becomes a chapter heading\n**Bold text** and *italic text*\n\nParagraphs are separated by blank lines.\n```\n\nThis approach ensures your content is:\n- **Future-proof**: Plain text never becomes obsolete\n- **Version-controllable**: Easy to track changes with Git\n- **Portable**: Works across all platforms and devices\n- **Readable**: No complex formatting codes\n\n## Ready to Explore?\n\nUse the sidebar to navigate through different sections:\n- **Metadata**: Edit book information\n- **Manifest**: Browse all book files\n- **Content**: Edit and preview chapters\n- **Settings**: Customize your editing experience\n\n*Welcome to the future of digital publishing!*"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:211
+msgid "sample.prologue.title"
+msgstr "Welcome to Active EPUB"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:161
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:90
+msgid "sample.publisher.name"
+msgstr "EDITME Publishing"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/MetadataView.svelte:186
 msgid "Save & Continue"
 msgstr ""
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:128
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestItemEditor.svelte:352
+msgid "Save Changes"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:131
 msgid "Seamless integration"
 msgstr ""
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:107
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:110
 msgid "Search and filter files"
 msgstr ""
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:16
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceList.svelte:76
+msgid "Search workspaces"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/AdvancedFields.svelte:20
+msgid "Select content type"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/fields/DateMetadataField.svelte:67
+msgid "Set to today"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:24
 msgid "Settings"
 msgstr ""
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:118
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:289
+msgid "Some workspaces could not be cleaned: {errors}"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestTable.svelte:312
+msgid "Sort by ID"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestTable.svelte:342
+msgid "Sort by modification date"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestTable.svelte:322
+msgid "Sort by path"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestTable.svelte:332
+msgid "Sort by size"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestPreview.svelte:154
+msgid "SOURCE Item"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:121
 msgid "Spine item management"
 msgstr ""
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:15
-msgid "Spine Items"
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:280
+msgid "Successfully cleaned up {count} corrupted workspace(s)."
 msgstr ""
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:111
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/CurrentWorkspaceBar.svelte:35
+msgid "Switch workspace"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:114
 msgid "Table of contents editing"
 msgstr ""
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:122
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/AdvancedFields.svelte:26
+msgid "Textbook"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:125
 msgid "Theme and UI settings"
 msgstr ""
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:113
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:116
 msgid "TOC structure editing"
 msgstr ""
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:35
+#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:63
 msgid "Toggle sidebar"
 msgstr ""
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:11
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/CurrentWorkspaceBar.svelte:26
+msgid "Unknown"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:93
+msgid "Unknown Author"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/SpineView.svelte:161
+msgid "Untitled"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestItemEditor.svelte:214
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestItemEditor.svelte:350
+msgid "Upload File"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataTab.svelte:41
+msgid "validation.errorsCount"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:17
 msgid "Workspace"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceList.svelte:61
+msgid "Workspaces"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceList.svelte:63
+msgid "Workspaces ({count} total)"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/SpineView.svelte:166
+msgid "Yes"
 msgstr ""
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/MetadataView.svelte:46
 msgid "You have unsaved metadata changes. Continue?"
 msgstr ""
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:44
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:320
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:331
 msgid "You have unsaved workspace changes. Continue?"
 msgstr ""

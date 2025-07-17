@@ -5,8 +5,7 @@
  */
 
 import { GettextExtractor, JsExtractors } from 'gettext-extractor';
-import pkg from 'glob';
-const { glob } = pkg;
+import { glob } from 'glob';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
@@ -57,6 +56,13 @@ async function extractStrings() {
         }),
         // Alternative underscore syntax: _('text')
         JsExtractors.callExpression('_', {
+          arguments: {
+            text: 0,
+            context: 1,
+          },
+        }),
+        // Direct translate function calls: translate('text')
+        JsExtractors.callExpression('translate', {
           arguments: {
             text: 0,
             context: 1,

@@ -229,3 +229,19 @@ export function _resetI18nForTesting() {
 
 // Export i18nState for Storybook and testing
 export { i18nState };
+
+/**
+ * Unified i18n service for non-component usage
+ * Provides all i18n functionality through a single service object
+ */
+export const i18nService = {
+  translate,
+  getCurrentLocale: () => get(currentLocale),
+  getAvailableLocales,
+  hasTranslation: (locale: string, key: string) => {
+    const state = get(i18nState);
+    return !!(state.catalogs[locale]?.messages[key]);
+  },
+  isLocaleSupported: (locale: string) => !!(LOCALE_CONFIGS[locale]),
+  isRTL,
+};

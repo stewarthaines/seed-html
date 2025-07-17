@@ -6,156 +6,567 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit"
 "Project-Id-Version: EDITME EPUB Editor"
 "Report-Msgid-Bugs-To: "
-"POT-Creation-Date: 2025-07-01T07:28:11.290Z"
-"PO-Revision-Date: 2025-07-01T07:28:11.290Z"
+"POT-Creation-Date: 2025-07-17T23:41:13.004Z"
+"PO-Revision-Date: 2025-07-17T23:41:13.004Z"
 "Last-Translator: "
 "Language-Team: "
 "Plural-Forms: nplurals=2; plural=(n != 1);"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:108
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:42
+msgid "{count} days ago"
+msgstr "🇬🇪 {count} days ago"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:38
+msgid "{count}h ago"
+msgstr "🇬🇪 {count}h ago"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:44
+msgid "{count}w ago"
+msgstr "🇬🇪 {count}w ago"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:40
+msgid "1 day ago"
+msgstr "🇬🇪 1 day ago"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataEditor.svelte:26
+msgid "Accessibility"
+msgstr "🇬🇪 Accessibility"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:111
 msgid "Add/remove manifest items"
 msgstr "🇬🇪 Add/remove manifest items"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:124
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataEditor.svelte:24
+msgid "Advanced"
+msgstr "🇬🇪 Advanced"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:127
 msgid "Advanced configurations"
 msgstr "🇬🇪 Advanced configurations"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:121
+#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:111
+#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:125
+msgid "Append Item"
+msgstr "🇬🇪 Append Item"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:124
 msgid "Application preferences"
 msgstr "🇬🇪 Application preferences"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:156
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestContainer.svelte:72
+msgid "Are you sure you want to delete this item?"
+msgstr "🇬🇪 Are you sure you want to delete this item?"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:160
 msgid "at"
 msgstr "🇬🇪 at"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:114
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:45
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:51
+msgid "Auto"
+msgstr "🇬🇪 Auto"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:117
 msgid "Auto-generation from spine"
 msgstr "🇬🇪 Auto-generation from spine"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:116
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/SpineView.svelte:180
+msgid "Available"
+msgstr "🇬🇪 Available"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataEditor.svelte:23
+msgid "Basic Info"
+msgstr "🇬🇪 Basic Info"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/AdvancedFields.svelte:25
+msgid "Biography"
+msgstr "🇬🇪 Biography"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:53
+msgid "Both"
+msgstr "🇬🇪 Both"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:119
 msgid "Chapter ordering interface"
 msgstr "🇬🇪 Chapter ordering interface"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:130
-msgid "Create Workspace"
-msgstr "🇬🇪 Create Workspace"
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/AdvancedFields.svelte:28
+msgid "Children"
+msgstr "🇬🇪 Children"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:117
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:266
+msgid "Clean up {count} corrupted workspace(s)? This will permanently delete workspaces that cannot be loaded properly."
+msgstr "🇬🇪 Clean up {count} corrupted workspace(s)? This will permanently delete workspaces that cannot be loaded properly."
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestTable.svelte:241
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestToolbar.svelte:88
+msgid "Clear filter"
+msgstr "🇬🇪 Clear filter"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceList.svelte:83
+msgid "Clear search"
+msgstr "🇬🇪 Clear search"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestItemEditor.svelte:219
+msgid "Close"
+msgstr "🇬🇪 Close"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/CurrentWorkspaceBar.svelte:43
+msgid "Close workspace"
+msgstr "🇬🇪 Close workspace"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceActionBar.svelte:32
+msgid "Create a new minimal EPUB project"
+msgstr "🇬🇪 Create a new minimal EPUB project"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestItemEditor.svelte:212
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestItemEditor.svelte:348
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestTable.svelte:267
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestToolbar.svelte:114
+msgid "Create Text File"
+msgstr "🇬🇪 Create Text File"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:86
+msgid "Currently open"
+msgstr "🇬🇪 Currently open"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:39
+msgid "Default"
+msgstr "🇬🇪 Default"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:226
+msgid "Delete \"{title}\"? This cannot be undone."
+msgstr "🇬🇪 Delete \"{title}\"? This cannot be undone."
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:110
+msgid "Delete workspace: {title}"
+msgstr "🇬🇪 Delete workspace: {title}"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:120
 msgid "Drag-and-drop reordering"
 msgstr "🇬🇪 Drag-and-drop reordering"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:126
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/AdvancedFields.svelte:24
+msgid "Drama"
+msgstr "🇬🇪 Drama"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestItemEditor.svelte:216
+msgid "Edit Manifest Item"
+msgstr "🇬🇪 Edit Manifest Item"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:129
 msgid "Enhanced functionality"
 msgstr "🇬🇪 Enhanced functionality"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:123
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:153
+msgid "EPUB import functionality is coming soon. For now, use \"Create New\" to start a fresh project."
+msgstr "🇬🇪 EPUB import functionality is coming soon. For now, use \"Create New\" to start a fresh project."
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:73
+msgid "Error"
+msgstr "🇬🇪 Error"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:126
 msgid "Export/import settings"
 msgstr "🇬🇪 Export/import settings"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:106
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:300
+msgid "Failed to cleanup workspaces: {error}"
+msgstr "🇬🇪 Failed to cleanup workspaces: {error}"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:127
+msgid "Failed to create workspace: {error}"
+msgstr "🇬🇪 Failed to create workspace: {error}"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestContainer.svelte:85
+msgid "Failed to delete item"
+msgstr "🇬🇪 Failed to delete item"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:247
+msgid "Failed to delete workspace: {error}"
+msgstr "🇬🇪 Failed to delete workspace: {error}"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:160
+msgid "Failed to import EPUB: {error}"
+msgstr "🇬🇪 Failed to import EPUB: {error}"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestPreview.svelte:54
+msgid "Failed to load content preview"
+msgstr "🇬🇪 Failed to load content preview"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestContainer.svelte:46
+msgid "Failed to load manifest"
+msgstr "🇬🇪 Failed to load manifest"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataEditor.svelte:86
+msgid "Failed to load metadata"
+msgstr "🇬🇪 Failed to load metadata"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:83
+msgid "Failed to load workspaces"
+msgstr "🇬🇪 Failed to load workspaces"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:211
+msgid "Failed to open workspace: {error}"
+msgstr "🇬🇪 Failed to open workspace: {error}"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestContainer.svelte:113
+msgid "Failed to save item"
+msgstr "🇬🇪 Failed to save item"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestContainer.svelte:129
+msgid "Failed to upload files"
+msgstr "🇬🇪 Failed to upload files"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/AdvancedFields.svelte:21
+msgid "Fiction"
+msgstr "🇬🇪 Fiction"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:109
 msgid "File listing and management"
 msgstr "🇬🇪 File listing and management"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:138
-msgid "Import EPUB"
-msgstr "🇬🇪 Import EPUB"
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:99
+msgid "files"
+msgstr "🇬🇪 files"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:127
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceActionBar.svelte:60
+msgid "Import from folder - coming soon"
+msgstr "🇬🇪 Import from folder - coming soon"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:130
 msgid "Improved user interface"
 msgstr "🇬🇪 Improved user interface"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:119
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:36
+msgid "Just now"
+msgstr "🇬🇪 Just now"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:46
+msgid "Landscape"
+msgstr "🇬🇪 Landscape"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:40
+msgid "Left to Right"
+msgstr "🇬🇪 Left to Right"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:122
 msgid "Link to source files"
 msgstr "🇬🇪 Link to source files"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:45
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceActionBar.svelte:46
+msgid "Load an existing EPUB file for editing"
+msgstr "🇬🇪 Load an existing EPUB file for editing"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestTable.svelte:258
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestToolbar.svelte:105
+msgid "Load File"
+msgstr "🇬🇪 Load File"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:81
 msgid "Main navigation"
 msgstr "🇬🇪 Main navigation"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:13
+#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:19
 msgid "Manifest"
 msgstr "🇬🇪 Manifest"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:12
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestTable.svelte:216
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestToolbar.svelte:63
+msgid "Manifest actions"
+msgstr "🇬🇪 Manifest actions"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestPreview.svelte:154
+msgid "Manifest Item"
+msgstr "🇬🇪 Manifest Item"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:18
 msgid "Metadata"
 msgstr "🇬🇪 Metadata"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:14
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataTabBar.svelte:15
+msgid "metadata.tab.accessibility"
+msgstr "🇬🇪 metadata.tab.accessibility"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataTabBar.svelte:13
+msgid "metadata.tab.advanced"
+msgstr "🇬🇪 metadata.tab.advanced"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataTabBar.svelte:12
+msgid "metadata.tab.basic"
+msgstr "🇬🇪 metadata.tab.basic"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataTabBar.svelte:14
+msgid "metadata.tab.publication"
+msgstr "🇬🇪 metadata.tab.publication"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/SpineView.svelte:180
+msgid "Missing"
+msgstr "🇬🇪 Missing"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:20
 msgid "Navigation"
 msgstr "🇬🇪 Navigation"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:112
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:115
 msgid "Navigation link management"
 msgstr "🇬🇪 Navigation link management"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:129
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:132
 msgid "New capabilities"
 msgstr "🇬🇪 New capabilities"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:134
-msgid "Open Existing"
-msgstr "🇬🇪 Open Existing"
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/SpineView.svelte:166
+msgid "No"
+msgstr "🇬🇪 No"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:109
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:261
+msgid "No corrupted workspaces found to clean up."
+msgstr "🇬🇪 No corrupted workspaces found to clean up."
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/AdvancedFields.svelte:22
+msgid "Non-fiction"
+msgstr "🇬🇪 Non-fiction"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:52
+msgid "None"
+msgstr "🇬🇪 None"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:66
+msgid "Open workspace: {title}"
+msgstr "🇬🇪 Open workspace: {title}"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestItemEditor.svelte:130
+msgid "Please fill in all required fields"
+msgstr "🇬🇪 Please fill in all required fields"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataEditor.svelte:186
+msgid "Please fix errors before switching tabs"
+msgstr "🇬🇪 Please fix errors before switching tabs"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/AdvancedFields.svelte:23
+msgid "Poetry"
+msgstr "🇬🇪 Poetry"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:47
+msgid "Portrait"
+msgstr "🇬🇪 Portrait"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:35
+msgid "Pre-paginated"
+msgstr "🇬🇪 Pre-paginated"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:112
 msgid "Preview file contents"
 msgstr "🇬🇪 Preview file contents"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:116
-msgid "Recently"
-msgstr "🇬🇪 Recently"
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataEditor.svelte:25
+msgid "Publication Details"
+msgstr "🇬🇪 Publication Details"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/AdvancedFields.svelte:27
+msgid "Reference"
+msgstr "🇬🇪 Reference"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:34
+msgid "Reflowable"
+msgstr "🇬🇪 Reflowable"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/fields/DateMetadataField.svelte:40
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/fields/TextareaMetadataField.svelte:37
+msgid "Required field"
+msgstr "🇬🇪 Required field"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/MetadataView.svelte:87
 msgid "Reset all metadata to defaults?"
 msgstr "🇬🇪 Reset all metadata to defaults?"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/MetadataView.svelte:183
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/BasicInfoFields.svelte:41
+msgid "Right to Left"
+msgstr "🇬🇪 Right to Left"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:233
+msgid "sample.appendix.content"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:232
+msgid "sample.appendix.title"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:160
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:89
+msgid "sample.author.name"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:162
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:88
+msgid "sample.book.description"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:157
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:87
+msgid "sample.book.title"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:219
+msgid "sample.chapter1.content"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:218
+msgid "sample.chapter1.title"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:226
+msgid "sample.chapter2.content"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:225
+msgid "sample.chapter2.title"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:212
+msgid "sample.prologue.content"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:211
+msgid "sample.prologue.title"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:161
+#: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:90
+msgid "sample.publisher.name"
+msgstr ""
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/MetadataView.svelte:186
 msgid "Save & Continue"
 msgstr "🇬🇪 Save & Continue"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:128
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestItemEditor.svelte:352
+msgid "Save Changes"
+msgstr "🇬🇪 Save Changes"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:131
 msgid "Seamless integration"
 msgstr "🇬🇪 Seamless integration"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:107
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:110
 msgid "Search and filter files"
 msgstr "🇬🇪 Search and filter files"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:16
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceList.svelte:76
+msgid "Search workspaces"
+msgstr "🇬🇪 Search workspaces"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/AdvancedFields.svelte:20
+msgid "Select content type"
+msgstr "🇬🇪 Select content type"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/fields/DateMetadataField.svelte:67
+msgid "Set to today"
+msgstr "🇬🇪 Set to today"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:24
 msgid "Settings"
 msgstr "🇬🇪 Settings"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:118
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:289
+msgid "Some workspaces could not be cleaned: {errors}"
+msgstr "🇬🇪 Some workspaces could not be cleaned: {errors}"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestTable.svelte:312
+msgid "Sort by ID"
+msgstr "🇬🇪 Sort by ID"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestTable.svelte:342
+msgid "Sort by modification date"
+msgstr "🇬🇪 Sort by modification date"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestTable.svelte:322
+msgid "Sort by path"
+msgstr "🇬🇪 Sort by path"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestTable.svelte:332
+msgid "Sort by size"
+msgstr "🇬🇪 Sort by size"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestPreview.svelte:154
+msgid "SOURCE Item"
+msgstr "🇬🇪 SOURCE Item"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:121
 msgid "Spine item management"
 msgstr "🇬🇪 Spine item management"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:15
-msgid "Spine Items"
-msgstr "🇬🇪 Spine Items"
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:280
+msgid "Successfully cleaned up {count} corrupted workspace(s)."
+msgstr "🇬🇪 Successfully cleaned up {count} corrupted workspace(s)."
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:111
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/CurrentWorkspaceBar.svelte:35
+msgid "Switch workspace"
+msgstr "🇬🇪 Switch workspace"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:114
 msgid "Table of contents editing"
 msgstr "🇬🇪 Table of contents editing"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:122
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/AdvancedFields.svelte:26
+msgid "Textbook"
+msgstr "🇬🇪 Textbook"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:125
 msgid "Theme and UI settings"
 msgstr "🇬🇪 Theme and UI settings"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:113
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/PlaceholderView.svelte:116
 msgid "TOC structure editing"
 msgstr "🇬🇪 TOC structure editing"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:35
+#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:63
 msgid "Toggle sidebar"
 msgstr "🇬🇪 Toggle sidebar"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:11
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/CurrentWorkspaceBar.svelte:26
+msgid "Unknown"
+msgstr "🇬🇪 Unknown"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceItem.svelte:93
+msgid "Unknown Author"
+msgstr "🇬🇪 Unknown Author"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/SpineView.svelte:161
+msgid "Untitled"
+msgstr "🇬🇪 Untitled"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestItemEditor.svelte:214
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/manifest/ManifestItemEditor.svelte:350
+msgid "Upload File"
+msgstr "🇬🇪 Upload File"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/metadata/MetadataTab.svelte:41
+msgid "validation.errorsCount"
+msgstr "🇬🇪 validation.errorsCount"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/Sidebar.svelte:17
 msgid "Workspace"
 msgstr "🇬🇪 Workspace"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceList.svelte:61
+msgid "Workspaces"
+msgstr "🇬🇪 Workspaces"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/components/workspace/WorkspaceList.svelte:63
+msgid "Workspaces ({count} total)"
+msgstr "🇬🇪 Workspaces ({count} total)"
+
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/SpineView.svelte:166
+msgid "Yes"
+msgstr "🇬🇪 Yes"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/MetadataView.svelte:46
 msgid "You have unsaved metadata changes. Continue?"
 msgstr "🇬🇪 You have unsaved metadata changes. Continue?"
 
-#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:44
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:320
+#: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/WorkspaceView.svelte:331
 msgid "You have unsaved workspace changes. Continue?"
 msgstr "🇬🇪 You have unsaved workspace changes. Continue?"
