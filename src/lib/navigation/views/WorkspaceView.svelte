@@ -88,9 +88,9 @@
   };
 
   // Create minimal EPUB metadata for new workspace
-  const createMinimalEPUBMetadata = (): EPUBMetadata => ({
+  const createMinimalEPUBMetadata = (): Partial<EPUBMetadata> => ({
     title: 'Untitled Book Project',
-    language: 'en',
+    // Note: language is intentionally omitted so createLocalizedEPUBWorkspace can set it from locale
     identifier: crypto.randomUUID(),
     creator: ['Unknown'],
   });

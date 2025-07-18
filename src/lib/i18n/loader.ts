@@ -105,7 +105,7 @@ class TranslationLoader implements I18nLoader {
         console.log('✅ Decompressed data size:', decompressedData.length, 'characters');
       } catch (error) {
         console.error('❌ Decompression failed:', error);
-        throw new Error(`Failed to decompress translation data: ${error.message}`);
+        throw new Error(`Failed to decompress translation data: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
       
       let archiveData: Record<string, string>;
@@ -115,7 +115,7 @@ class TranslationLoader implements I18nLoader {
       } catch (error) {
         console.error('❌ JSON parsing failed:', error);
         console.error('First 200 chars of decompressed data:', decompressedData.substring(0, 200));
-        throw new Error(`Failed to parse translation archive: ${error.message}`);
+        throw new Error(`Failed to parse translation archive: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
 
       console.log(`📄 Found ${Object.keys(archiveData).length} translation files`);
