@@ -26,7 +26,8 @@
     "i18n:compress": "node build-scripts/i18n-compress.js",
     "i18n:build": "npm run i18n:extract && npm run i18n:convert && npm run i18n:compress",
     "translate:demo": "node scripts/auto-translate.js",
-    "translate:populate": "node scripts/populate-demo-translations.js"
+    "translate:populate": "node scripts/populate-demo-translations.js",
+    "analyze": "npm run build && open dist/stats.html"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^4.0.0",
@@ -55,6 +56,8 @@
     "po2json": "^0.4.5",
     "prettier": "^3.6.0",
     "prettier-plugin-svelte": "^3.4.0",
+    "rollup-plugin-analyzer": "^4.0.0",
+    "rollup-plugin-visualizer": "^6.0.3",
     "storybook": "^9.0.5",
     "svelte": "^5.28.1",
     "svelte-check": "^4.1.6",
