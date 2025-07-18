@@ -387,55 +387,55 @@ msgstr "🇬🇪 Right to Left"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:233
 msgid "sample.appendix.content"
-msgstr ""
+msgstr "🇬🇪 sample.appendix.content"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:232
 msgid "sample.appendix.title"
-msgstr ""
+msgstr "🇬🇪 sample.appendix.title"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:160
 #: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:89
 msgid "sample.author.name"
-msgstr ""
+msgstr "🇬🇪 sample.author.name"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:162
 #: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:88
 msgid "sample.book.description"
-msgstr ""
+msgstr "🇬🇪 sample.book.description"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:157
 #: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:87
 msgid "sample.book.title"
-msgstr ""
+msgstr "🇬🇪 sample.book.title"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:219
 msgid "sample.chapter1.content"
-msgstr ""
+msgstr "🇬🇪 sample.chapter1.content"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:218
 msgid "sample.chapter1.title"
-msgstr ""
+msgstr "🇬🇪 sample.chapter1.title"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:226
 msgid "sample.chapter2.content"
-msgstr ""
+msgstr "🇬🇪 sample.chapter2.content"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:225
 msgid "sample.chapter2.title"
-msgstr ""
+msgstr "🇬🇪 sample.chapter2.title"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:212
 msgid "sample.prologue.content"
-msgstr ""
+msgstr "🇬🇪 sample.prologue.content"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:211
 msgid "sample.prologue.title"
-msgstr ""
+msgstr "🇬🇪 sample.prologue.title"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:161
 #: /Users/stewart/Projects/editme-svelte/src/lib/content/sample-content-generator.ts:90
 msgid "sample.publisher.name"
-msgstr ""
+msgstr "🇬🇪 sample.publisher.name"
 
 #: /Users/stewart/Projects/editme-svelte/src/lib/navigation/views/MetadataView.svelte:186
 msgid "Save & Continue"
