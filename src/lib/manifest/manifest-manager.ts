@@ -27,6 +27,7 @@ import {
 
 import { ManifestValidator } from './validation.js';
 import { ManifestUtils } from './utils.js';
+import { resolveManifestPath } from '../blob-url/utils.js';
 import type { WorkspaceManager } from '../workspace/index.js';
 
 /**
@@ -248,14 +249,18 @@ export class ManifestManagerImpl implements IManifestManager {
       // Get item info
       const item = await this.getManifestItem(workspaceId, itemId);
       
-      // Read content from workspace
+      // Get workspace path info to resolve relative paths correctly
+      const pathInfo = await this.workspaceManager.getWorkspacePathInfo(workspaceId);
+      const resolvedPath = resolveManifestPath(item.href, pathInfo.basePath);
+      
+      // Read content from workspace using resolved path
       let content: ArrayBuffer | string;
       
       // Determine if we should read as text or binary based on media type
       if (this.isTextMediaType(item.mediaType)) {
-        content = await this.workspaceManager.readTextFile(workspaceId, item.href);
+        content = await this.workspaceManager.readTextFile(workspaceId, resolvedPath);
       } else {
-        content = await this.workspaceManager.readFile(workspaceId, item.href);
+        content = await this.workspaceManager.readFile(workspaceId, resolvedPath);
       }
 
       // Cache the content (with size limits)

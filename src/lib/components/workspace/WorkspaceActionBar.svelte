@@ -7,7 +7,9 @@
   export let isLoading = false;
 
   const handleCreateNew = () => {
+    console.log('🎯 WorkspaceActionBar: Create New button clicked!');
     dispatch('createNewRequested');
+    console.log('🎯 WorkspaceActionBar: createNewRequested event dispatched');
   };
 
   const handleLoadEpub = () => {

@@ -32,16 +32,12 @@ class TranslationLoader implements I18nLoader {
    */
   async extractTranslations(): Promise<void> {
     try {
-      console.log('📦 Extracting translations from ZIP bundle...');
-
       // Try to get embedded translation data URL from global variable
       let translationsDataUrl = (globalThis as any).__EDITME_I18N_BUNDLE__;
       let response: Response;
 
       if (!translationsDataUrl) {
         // Development fallback: try to fetch from static directory
-        console.log('⚠️ No embedded translation data found, trying static file fallback...');
-        console.log('This usually means you need to rebuild the single file with: npm run build');
         try {
           response = await fetch('/i18n-bundle.zip');
           if (!response.ok) {
@@ -54,7 +50,6 @@ class TranslationLoader implements I18nLoader {
         }
       } else {
         // Production: fetch from embedded data URL
-        console.log('✅ Found embedded translation data, extracting...');
         response = await fetch(translationsDataUrl);
         // Clean up memory after reading the data URL
         delete (globalThis as any).__EDITME_I18N_BUNDLE__;
@@ -64,18 +59,12 @@ class TranslationLoader implements I18nLoader {
       }
 
       // Get ZIP data as ArrayBuffer
-      console.log(
-        '📥 Fetched ZIP data, size:',
-        response.headers.get('content-length') || 'unknown'
-      );
       const zipArrayBuffer = await response.arrayBuffer();
-      console.log('📦 ZIP buffer size:', zipArrayBuffer.byteLength, 'bytes');
 
       // Parse ZIP using our ZIP library
       let zip: Zip;
       try {
         zip = new Zip(zipArrayBuffer);
-        console.log('✅ ZIP parsed successfully, entries:', zip.entries.length);
       } catch (error) {
         console.error('❌ ZIP parsing failed:', error);
         throw new Error(
@@ -94,7 +83,6 @@ class TranslationLoader implements I18nLoader {
       // Ensure workspace exists
       try {
         await this.storage.createWorkspace(LOCALES_WORKSPACE_ID);
-        console.log(`✅ Workspace ${LOCALES_WORKSPACE_ID} created/verified`);
       } catch (workspaceError) {
         console.error(`❌ Failed to create workspace ${LOCALES_WORKSPACE_ID}:`, workspaceError);
         throw workspaceError;
@@ -103,13 +91,10 @@ class TranslationLoader implements I18nLoader {
       // Extract each JSON file from ZIP
       for (const entry of zip.entries) {
         if (!entry.fileName.endsWith('.json')) {
-          console.log(`⏭️ Skipping non-JSON file: ${entry.fileName}`);
           continue;
         }
 
         try {
-          console.log(`📝 Extracting ${entry.fileName} (${entry.uncompressedSize} bytes)`);
-
           // Extract file content as text
           const blob = await entry.extract();
           const content = await blob.text();
@@ -117,7 +102,6 @@ class TranslationLoader implements I18nLoader {
           // Validate JSON before writing
           try {
             JSON.parse(content);
-            console.log(`✅ ${entry.fileName}: Valid JSON, ${content.length} chars`);
           } catch (parseError) {
             console.error(`❌ ${entry.fileName}: Invalid JSON from ZIP:`, parseError);
             throw new Error(
@@ -136,7 +120,6 @@ class TranslationLoader implements I18nLoader {
 
             // First check if file exists
             const fileExists = await this.storage.fileExists(LOCALES_WORKSPACE_ID, entry.fileName);
-            console.log(`🔍 File exists check for ${entry.fileName}: ${fileExists}`);
 
             if (fileExists) {
               // Retry read with exponential backoff handling
@@ -149,23 +132,15 @@ class TranslationLoader implements I18nLoader {
                   readBack = await this.storage.readTextFile(LOCALES_WORKSPACE_ID, entry.fileName);
 
                   if (readBack.length > 0) {
-                    console.log(
-                      `✅ Verified ${entry.fileName} - read back ${readBack.length} chars (attempt ${attempts + 1})`
-                    );
-
                     // Double-check by trying to parse the read-back content
                     try {
                       JSON.parse(readBack);
-                      console.log(`🔍 Read-back JSON is valid for ${entry.fileName}`);
                       break; // Success, exit retry loop
                     } catch (jsonError) {
                       console.error(`❌ Read-back JSON invalid for ${entry.fileName}:`, jsonError);
                       break; // Don't retry JSON parse errors
                     }
                   } else {
-                    console.warn(
-                      `⚠️ Read back 0 chars for ${entry.fileName}, attempt ${attempts + 1}/${maxAttempts}`
-                    );
                     attempts++;
 
                     if (attempts < maxAttempts) {
@@ -222,7 +197,6 @@ class TranslationLoader implements I18nLoader {
         console.error(`❌ Storage backend: ${this.storage.getBackendType()}`);
       }
 
-      console.log('🎉 Translation extraction complete');
     } catch (error) {
       console.error('❌ Failed to extract translations:', error);
       throw error;
@@ -243,26 +217,16 @@ class TranslationLoader implements I18nLoader {
 
       // List all JSON files in locales workspace
       const filePaths = await this.storage.listFiles(LOCALES_WORKSPACE_ID);
-      console.log(
-        `🔍 Debug: Found ${filePaths.length} total files in locales workspace:`,
-        filePaths
-      );
       const localeFiles = filePaths.filter(path => path.endsWith('.json'));
-      console.log(`🔍 Debug: Filtered to ${localeFiles.length} JSON files:`, localeFiles);
-
-      console.log(`📚 Loading ${localeFiles.length} translation catalogs...`);
 
       // Load each catalog
       for (const filePath of localeFiles) {
         try {
           const content = await this.storage.readTextFile(LOCALES_WORKSPACE_ID, filePath);
 
-          console.log(`📄 ${filePath}: content length ${content.length}`);
-
           let jsonData;
           try {
             jsonData = JSON.parse(content);
-            console.log(`✅ ${filePath}: JSON parsed successfully`);
           } catch (parseError) {
             console.error(`❌ ${filePath}: JSON parse failed:`, parseError);
             console.log(`🔍 ${filePath}: first 100 chars: "${content.slice(0, 100)}"`);
@@ -288,22 +252,9 @@ class TranslationLoader implements I18nLoader {
         }
       }
 
-      console.log(`✅ Loaded ${Object.keys(catalogs).length} translation catalogs`);
-
-      // Debug: check sample content in English catalog
-      if (catalogs.en) {
-        const sampleKeys = Object.keys(catalogs.en.messages).filter(k => k.startsWith('sample.'));
-        console.log(
-          `🔍 Debug: English catalog has ${Object.keys(catalogs.en.messages).length} total keys, ${sampleKeys.length} sample keys`
-        );
-        if (sampleKeys.length > 0) {
-          console.log(`🔍 Sample keys found: ${sampleKeys.slice(0, 3).join(', ')}...`);
-          console.log(
-            `🔍 Sample title: "${catalogs.en.messages['sample.book.title'] || 'MISSING'}"`
-          );
-        } else {
-          console.log('❌ No sample keys found in English catalog!');
-        }
+      // Only keep the sample key validation for debugging workspace creation
+      if (catalogs.en && !Object.keys(catalogs.en.messages).filter(k => k.startsWith('sample.')).length) {
+        console.warn('⚠️ No sample keys found in English catalog - workspace creation may fail');
       }
 
       return catalogs;

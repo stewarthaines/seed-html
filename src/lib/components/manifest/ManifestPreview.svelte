@@ -15,6 +15,14 @@
   let loading = false;
   let error: string | null = null;
 
+  // Helper function to determine if mediaType represents text content
+  const isTextMediaType = (mediaType: string): boolean => {
+    return mediaType.startsWith('text/') || 
+           mediaType.includes('json') ||
+           mediaType.includes('xml') ||
+           mediaType.includes('javascript');
+  };
+
   $: if (selectedItem && selectedItemType && manifestManager && workspaceId) {
     loadContentPreview();
   }
@@ -36,20 +44,31 @@
         const sourceItem = selectedItem as SourceItem;
         // For SOURCE items, we need to get content differently
         const content = await manifestManager.getSourceItemContent(workspaceId, sourceItem.path);
+        const mediaType = sourceItem.mediaType || 'text/plain';
+        const isText = isTextMediaType(mediaType);
+
+        // Convert ArrayBuffer to string for text files
+        let textContent: string | undefined;
+        if (isText) {
+          if (typeof content === 'string') {
+            textContent = content;
+          } else {
+            // Convert ArrayBuffer to string for text files
+            const decoder = new TextDecoder('utf-8');
+            textContent = decoder.decode(content);
+          }
+        }
 
         // Create a basic preview for SOURCE items
         contentPreview = {
           itemId: sourceItem.path,
-          mediaType: sourceItem.mediaType || 'text/plain',
-          contentType: sourceItem.mediaType?.startsWith('text/') ? 'text' : 'binary',
-          textContent: typeof content === 'string' ? content : undefined,
+          mediaType,
+          contentType: isText ? 'text' : 'binary',
+          textContent,
           metadata: {
-            characterCount: typeof content === 'string' ? content.length : undefined,
-            lineCount: typeof content === 'string' ? content.split('\n').length : undefined,
-            wordCount:
-              typeof content === 'string'
-                ? content.split(/\s+/).filter(w => w.length > 0).length
-                : undefined,
+            characterCount: textContent ? textContent.length : undefined,
+            lineCount: textContent ? textContent.split('\n').length : undefined,
+            wordCount: textContent ? textContent.split(/\s+/).filter(w => w.length > 0).length : undefined,
           },
         };
       }

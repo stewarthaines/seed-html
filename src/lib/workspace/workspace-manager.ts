@@ -26,7 +26,9 @@ import type {
   ValidationWarning,
   WorkspaceCacheEntry,
 } from './types.js';
+import type { SourceItem } from '../manifest/types.js';
 import type { EPUBMetadata, OPFDocument, ManifestItem, SpineItem } from '../epub/opf-utils.js';
+import { getMimeType } from '../utils/mime-types.js';
 import { WorkspaceError, ValidationError, DEFAULT_WORKSPACE_CONFIG, RESERVED_WORKSPACE_IDS } from './types.js';
 
 
@@ -145,6 +147,7 @@ export class WorkspaceManager {
     metadata: Partial<EPUBMetadata> = {}, 
     locale = 'en'
   ): Promise<string> {
+    console.log('🏗️ WorkspaceManager.createLocalizedEPUBWorkspace: Starting with metadata:', metadata, 'locale:', locale);
     try {
       // Step 1: Create base workspace using existing method
       const fullMetadata: EPUBMetadata = {
@@ -153,16 +156,25 @@ export class WorkspaceManager {
         identifier: metadata.identifier || `epub-${Date.now()}`,
         ...metadata,
       };
+      console.log('  📋 Full metadata prepared:', fullMetadata);
+      console.log('  🏗️ Calling createEPUBWorkspace...');
       const workspaceId = await this.createEPUBWorkspace(fullMetadata);
+      console.log('  ✅ Base workspace created with ID:', workspaceId);
 
       // Step 2: Install universal assets
+      console.log('  📦 Installing universal assets...');
       await this.installUniversalAssets(workspaceId);
+      console.log('  ✅ Universal assets installed');
 
       // Step 3: Generate and install sample content
+      console.log('  📝 Generating localized sample content...');
       await this.generateLocalizedSampleContent(workspaceId, locale);
+      console.log('  ✅ Sample content generated');
 
+      console.log('🏗️ WorkspaceManager.createLocalizedEPUBWorkspace: Completed successfully with ID:', workspaceId);
       return workspaceId;
     } catch (error) {
+      console.error('❌ WorkspaceManager.createLocalizedEPUBWorkspace: Failed with error:', error);
       // Clean up on failure
       throw error; // Cleanup is already handled by createEPUBWorkspace
     }
@@ -243,27 +255,41 @@ export class WorkspaceManager {
 
     // Transform text to XHTML and create OEBPS files
     for (const chapter of chapters) {
-      // Execute text transform
-      const htmlContent = await this.transformExecutor.executeTextTransform(
-        transformTextJS,
-        'transformText.js',
-        chapter.content,
-        {}
-      );
+      try {
+        console.log(`  📄 Processing chapter: ${chapter.id}`);
+        
+        // Execute text transform
+        const htmlContent = await this.transformExecutor.executeTextTransform(
+          transformTextJS,
+          'transformText.js',
+          chapter.content,
+          {}
+        );
+        console.log(`  ✅ Text transform complete for ${chapter.id}, content length: ${htmlContent.length}`);
 
-      // Create DOM document
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(`<html xmlns="http://www.w3.org/1999/xhtml"><head></head><body>${htmlContent}</body></html>`, 'text/xml');
+        // Create DOM document
+        const parser = new DOMParser();
+        const docString = `<html xmlns="http://www.w3.org/1999/xhtml"><head></head><body>${htmlContent}</body></html>`;
+        const doc = parser.parseFromString(docString, 'text/xml');
 
-      // Execute DOM transform
-      const transformedDoc = await this.transformExecutor.executeDOMTransform(
-        transformDomJS,
-        'transformDom.js',
-        doc
-      );
+        // Check for parse errors
+        const parseError = doc.querySelector('parsererror');
+        if (parseError) {
+          console.error(`  ❌ DOM parsing error for ${chapter.id}:`, parseError.textContent);
+          throw new Error(`DOM parsing failed for ${chapter.id}: ${parseError.textContent}`);
+        }
+        console.log(`  ✅ DOM parsing complete for ${chapter.id}`);
 
-      // Generate complete XHTML document
-      const xhtmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+        // Execute DOM transform
+        const transformedDoc = await this.transformExecutor.executeDOMTransform(
+          transformDomJS,
+          'transformDom.js',
+          doc
+        );
+        console.log(`  ✅ DOM transform complete for ${chapter.id}`);
+
+        // Generate complete XHTML document
+        const xhtmlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="${locale}"${isRTL ? ' dir="rtl"' : ''}>
 <head>
@@ -275,7 +301,14 @@ ${transformedDoc.documentElement.innerHTML}
 </body>
 </html>`;
 
-      await this.storage.writeTextFile(workspaceId, `OEBPS/Text/${chapter.id}.xhtml`, xhtmlContent);
+        console.log(`  💾 Writing XHTML file for ${chapter.id}, content length: ${xhtmlContent.length}`);
+        await this.storage.writeTextFile(workspaceId, `OEBPS/Text/${chapter.id}.xhtml`, xhtmlContent);
+        console.log(`  ✅ XHTML file written for ${chapter.id}`);
+
+      } catch (error) {
+        console.error(`  ❌ Failed to process chapter ${chapter.id}:`, error);
+        throw error;
+      }
     }
 
     // Create navigation document
@@ -1392,5 +1425,33 @@ ${chapterLinks}
       // If SOURCE directory doesn't exist or can't be accessed, advanced mode is disabled
       return false;
     }
+  }
+
+  /**
+   * List SOURCE/ files for manifest integration
+   */
+  async listSourceFiles(workspaceId: string): Promise<SourceItem[]> {
+    try {
+      const sourceFiles = await this.sourceManager.listSourceFiles(workspaceId);
+      // Convert SourceFileInfo to SourceItem format for manifest compatibility
+      return sourceFiles.map(fileInfo => ({
+        name: fileInfo.path.split('/').pop() || fileInfo.path,
+        path: fileInfo.path,
+        size: fileInfo.size,
+        type: 'file' as const, // Map all to 'file' for SourceItem compatibility
+        modified: new Date(), // SourceFileInfo doesn't have modified date, use current date
+        mediaType: getMimeType(fileInfo.path) // Add mediaType using existing utility
+      }));
+    } catch (error: any) {
+      return [];
+    }
+  }
+
+  /**
+   * Get SOURCE/ file content for manifest integration
+   */
+  async getSourceFile(workspaceId: string, sourcePath: string): Promise<ArrayBuffer | string> {
+    // Use the file storage to read SOURCE file content
+    return await this.storage.readFile(workspaceId, sourcePath);
   }
 }

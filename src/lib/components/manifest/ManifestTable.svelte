@@ -5,7 +5,7 @@
 
   export let manifestItems: ManifestItem[] = [];
   export let sourceItems: SourceItem[] = [];
-  export let advancedMode = false;
+  export let advancedMode = true;
   export let validationErrors: ValidationResult[] = [];
   export let selectedItem: ManifestItem | SourceItem | null = null;
   export let selectedItemType: 'manifest' | 'source' | null = null;
@@ -25,21 +25,37 @@
   // Combine and filter items
   $: allItems = [
     ...manifestItems.map(item => ({ ...item, _type: 'manifest' as const })),
-    ...(advancedMode ? sourceItems.map(item => ({ ...item, _type: 'source' as const })) : [])
+    ...(advancedMode ? sourceItems.map(item => ({ ...item, _type: 'source' as const })) : []),
   ];
+
+  // Debug logging for combined items
+  $: {
+    if (sourceItems.length > 0) {
+      console.log(
+        '🔍 ManifestTable: Showing',
+        manifestItems.length,
+        'manifest +',
+        sourceItems.length,
+        'SOURCE items =',
+        allItems.length,
+        'total'
+      );
+    }
+  }
 
   // Filter items based on filter text
   $: filteredItems = allItems.filter(item => {
     if (!filterText) return true;
-    
+
     const searchText = filterText.toLowerCase();
-    
+
     if (item._type === 'manifest') {
       const manifestItem = item as ManifestItem & { _type: 'manifest' };
       return (
         manifestItem.id.toLowerCase().includes(searchText) ||
         manifestItem.href.toLowerCase().includes(searchText) ||
-        (manifestItem.properties?.some(prop => prop.toLowerCase().includes(searchText)) || false)
+        manifestItem.properties?.some(prop => prop.toLowerCase().includes(searchText)) ||
+        false
       );
     } else {
       const sourceItem = item as SourceItem & { _type: 'source' };
@@ -87,7 +103,11 @@
     dispatch('itemSelect', { item, type });
   };
 
-  const handleRowKeyDown = (event: KeyboardEvent, item: ManifestItem | SourceItem, type: 'manifest' | 'source') => {
+  const handleRowKeyDown = (
+    event: KeyboardEvent,
+    item: ManifestItem | SourceItem,
+    type: 'manifest' | 'source'
+  ) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       handleRowClick(item, type);
@@ -106,7 +126,7 @@
 
   const isItemSelected = (item: ManifestItem | SourceItem, type: 'manifest' | 'source') => {
     if (!selectedItem || selectedItemType !== type) return false;
-    
+
     if (type === 'manifest') {
       return (item as ManifestItem).id === (selectedItem as ManifestItem).id;
     } else {
@@ -124,34 +144,34 @@
 
   const formatFileSize = (bytes: number | undefined) => {
     if (!bytes) return '-';
-    
+
     const units = ['B', 'KB', 'MB', 'GB'];
     let size = bytes;
     let unitIndex = 0;
-    
+
     while (size >= 1024 && unitIndex < units.length - 1) {
       size /= 1024;
       unitIndex++;
     }
-    
+
     return `${size.toFixed(unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
   };
 
   const formatDate = (date: Date | undefined) => {
     if (!date) return '-';
-    
+
     const now = new Date();
     const isToday = date.toDateString() === now.toDateString();
-    
+
     if (isToday) {
       // For today, show only time
       return new Intl.DateTimeFormat('en-US', {
-        timeStyle: 'short'
+        timeStyle: 'short',
       }).format(date);
     } else {
       // For other dates, show only date
       return new Intl.DateTimeFormat('en-US', {
-        dateStyle: 'short'
+        dateStyle: 'short',
       }).format(date);
     }
   };
@@ -196,7 +216,7 @@
   const handleDrop = (event: DragEvent) => {
     event.preventDefault();
     dragActive = false;
-    
+
     if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
       dispatch('fileUpload', { files: event.dataTransfer.files });
     }
@@ -209,7 +229,7 @@
 
 <div class="manifest-table-container">
   <!-- Toolbar -->
-  <div 
+  <div
     class="manifest-toolbar"
     class:drag-active={dragActive}
     role="toolbar"
@@ -257,7 +277,7 @@
       >
         📁 {$t('Load File')}
       </button>
-      
+
       <button
         type="button"
         class="action-button secondary"
@@ -290,138 +310,142 @@
 
   <!-- Table container -->
   <div class="table-container">
-  {#if sortedItems.length === 0}
-    <div class="empty-state">
-      {#if filterText}
-        <p>{$t('No items match your filter')}</p>
-        <p class="empty-state-subtitle">{$t('Try adjusting your search terms')}</p>
-      {:else}
-        <p>{$t('No manifest items found')}</p>
-        <p class="empty-state-subtitle">{$t('Create your first item using the buttons above')}</p>
-      {/if}
-    </div>
-  {:else}
-    <table class="manifest-table">
-      <thead>
-        <tr>
-          <th scope="col">
-            <button 
-              type="button" 
-              class="sort-button" 
-              on:click={() => handleSort('id')}
-              aria-label={$t('Sort by ID')}
-            >
-              {$t('ID')} {getSortIcon('id')}
-            </button>
-          </th>
-          <th scope="col">
-            <button 
-              type="button" 
-              class="sort-button" 
-              on:click={() => handleSort('href')}
-              aria-label={$t('Sort by path')}
-            >
-              {$t('Path')} {getSortIcon('href')}
-            </button>
-          </th>
-          <th scope="col">
-            <button 
-              type="button" 
-              class="sort-button" 
-              on:click={() => handleSort('size')}
-              aria-label={$t('Sort by size')}
-            >
-              {$t('Size')} {getSortIcon('size')}
-            </button>
-          </th>
-          <th scope="col">
-            <button 
-              type="button" 
-              class="sort-button" 
-              on:click={() => handleSort('modified')}
-              aria-label={$t('Sort by modification date')}
-            >
-              {$t('Modified')} {getSortIcon('modified')}
-            </button>
-          </th>
-          <th scope="col">{$t('Properties')}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {#each sortedItems as item}
-          {@const itemType = item._type}
-          {@const isSelected = isItemSelected(item, itemType)}
-          {@const hasError = itemType === 'manifest' ? hasValidationError(item as ManifestItem) : false}
-          <tr
-            class="manifest-row"
-            class:selected={isSelected}
-            class:error={hasError}
-            class:source-item={itemType === 'source'}
-            tabindex="0"
-            aria-selected={isSelected}
-            on:click={() => handleRowClick(item, itemType)}
-            on:keydown={(event) => handleRowKeyDown(event, item, itemType)}
-          >
-            <td class="id-cell">
-              {#if itemType === 'source'}
-                <span class="source-icon">📁</span>
-              {/if}
-              <span class="item-id">
-                {itemType === 'manifest' ? (item as ManifestItem).id : (item as SourceItem).name}
-              </span>
-            </td>
-            <td class="href-cell">
-              <span class="item-href">
-                {itemType === 'manifest' ? (item as ManifestItem).href : (item as SourceItem).path}
-              </span>
-            </td>
-            <td class="size-cell">
-              {formatFileSize(item.size)}
-            </td>
-            <td class="modified-cell">
-              {formatDate(item.modified)}
-            </td>
-            <td class="properties-cell">
-              {#if itemType === 'manifest' && (item as ManifestItem).properties && ((item as ManifestItem).properties?.length ?? 0) > 0}
-                <div class="properties-list">
-                  {#each (item as ManifestItem).properties || [] as property}
-                    <span class="property-tag">{property}</span>
-                  {/each}
-                </div>
-              {:else}
-                -
-              {/if}
-            </td>
-            <!-- Hover-based action buttons -->
-            {#if itemType === 'manifest'}
-              <td class="actions-overlay">
-                <div class="row-actions">
-                  <button
-                    type="button"
-                    class="action-button edit-button"
-                    title={$t('Edit {id}', { id: (item as ManifestItem).id })}
-                    tabindex={isSelected ? 0 : -1}
-                    on:click={(event) => handleEditClick(event, item as ManifestItem)}
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    type="button"
-                    class="action-button delete-button"
-                    title={$t('Delete {id}', { id: (item as ManifestItem).id })}
-                    tabindex={isSelected ? 0 : -1}
-                    on:click={(event) => handleDeleteClick(event, item as ManifestItem)}
-                  >
-                    🗑️
-                  </button>
-                </div>
-              </td>
-            {/if}
+    {#if sortedItems.length === 0}
+      <div class="empty-state">
+        {#if filterText}
+          <p>{$t('No items match your filter')}</p>
+          <p class="empty-state-subtitle">{$t('Try adjusting your search terms')}</p>
+        {:else}
+          <p>{$t('No manifest items found')}</p>
+          <p class="empty-state-subtitle">{$t('Create your first item using the buttons above')}</p>
+        {/if}
+      </div>
+    {:else}
+      <table class="manifest-table">
+        <thead>
+          <tr>
+            <th scope="col">
+              <button
+                type="button"
+                class="sort-button"
+                on:click={() => handleSort('id')}
+                aria-label={$t('Sort by ID')}
+              >
+                {$t('ID')}
+                {getSortIcon('id')}
+              </button>
+            </th>
+            <th scope="col">
+              <button
+                type="button"
+                class="sort-button"
+                on:click={() => handleSort('href')}
+                aria-label={$t('Sort by path')}
+              >
+                {$t('Path')}
+                {getSortIcon('href')}
+              </button>
+            </th>
+            <th scope="col">
+              <button
+                type="button"
+                class="sort-button"
+                on:click={() => handleSort('size')}
+                aria-label={$t('Sort by size')}
+              >
+                {$t('Size')}
+                {getSortIcon('size')}
+              </button>
+            </th>
+            <th scope="col">
+              <button
+                type="button"
+                class="sort-button"
+                on:click={() => handleSort('modified')}
+                aria-label={$t('Sort by modification date')}
+              >
+                {$t('Modified')}
+                {getSortIcon('modified')}
+              </button>
+            </th>
+            <th scope="col">{$t('Properties')}</th>
           </tr>
-        {/each}
-      </tbody>
-    </table>
-  {/if}
+        </thead>
+        <tbody>
+          {#each sortedItems as item}
+            {@const itemType = item._type}
+            {@const isSelected = isItemSelected(item, itemType)}
+            {@const hasError =
+              itemType === 'manifest' ? hasValidationError(item as ManifestItem) : false}
+            <tr
+              class="manifest-row"
+              class:selected={isSelected}
+              class:error={hasError}
+              class:source-item={itemType === 'source'}
+              tabindex="0"
+              aria-selected={isSelected}
+              on:click={() => handleRowClick(item, itemType)}
+              on:keydown={event => handleRowKeyDown(event, item, itemType)}
+            >
+              <td class="id-cell">
+                <span class="item-id">
+                  {itemType === 'manifest' ? (item as ManifestItem).id : (item as SourceItem).name}
+                </span>
+              </td>
+              <td class="href-cell">
+                <span class="item-href">
+                  {itemType === 'manifest'
+                    ? (item as ManifestItem).href
+                    : (item as SourceItem).path}
+                </span>
+              </td>
+              <td class="size-cell">
+                {formatFileSize(item.size)}
+              </td>
+              <td class="modified-cell">
+                {formatDate(item.modified)}
+              </td>
+              <td class="properties-cell">
+                {#if itemType === 'manifest' && (item as ManifestItem).properties && ((item as ManifestItem).properties?.length ?? 0) > 0}
+                  <div class="properties-list">
+                    {#each (item as ManifestItem).properties || [] as property}
+                      <span class="property-tag">{property}</span>
+                    {/each}
+                  </div>
+                {:else}
+                  -
+                {/if}
+              </td>
+              <!-- Hover-based action buttons -->
+              {#if itemType === 'manifest'}
+                <td class="actions-overlay">
+                  <div class="row-actions">
+                    <button
+                      type="button"
+                      class="action-button edit-button"
+                      title={$t('Edit {id}', { id: (item as ManifestItem).id })}
+                      tabindex={isSelected ? 0 : -1}
+                      on:click={event => handleEditClick(event, item as ManifestItem)}
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      type="button"
+                      class="action-button delete-button"
+                      title={$t('Delete {id}', { id: (item as ManifestItem).id })}
+                      tabindex={isSelected ? 0 : -1}
+                      on:click={event => handleDeleteClick(event, item as ManifestItem)}
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </td>
+              {/if}
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    {/if}
   </div>
 </div>
 
@@ -718,7 +742,6 @@
     word-break: break-all;
   }
 
-
   .size-cell {
     text-align: right;
     color: var(--color-text-secondary);
@@ -813,7 +836,6 @@
     color: var(--color-error);
     border-color: var(--color-error);
   }
-
 
   /* Responsive design */
   @media (max-width: 768px) {

@@ -97,38 +97,56 @@
 
   // Handle create new workspace
   const handleCreateNew = async () => {
+    console.log('🚀 handleCreateNew: Starting workspace creation...');
     try {
       loading = true;
+      console.log('  ✅ Set loading = true');
       
       // Get current locale for localized content
       const locale = $currentLocale;
+      console.log('  📍 Current locale:', locale);
       const metadata = createMinimalEPUBMetadata();
+      console.log('  📋 Created metadata:', metadata);
       
       // Use enhanced workspace creation with localized sample content
+      console.log('  ⚙️ Calling workspaceManager.createLocalizedEPUBWorkspace...');
       const workspaceId = await workspaceManager.createLocalizedEPUBWorkspace(metadata, locale);
+      console.log('  ✅ Workspace created with ID:', workspaceId);
 
       // Refresh workspace list
+      console.log('  🔄 Refreshing workspace list...');
       await loadWorkspaces();
+      console.log('  ✅ Workspace list refreshed');
 
       // Set as current workspace
+      console.log('  📌 Setting current workspace to:', workspaceId);
       setCurrentWorkspace(workspaceId);
+      console.log('  ✅ Current workspace set');
 
       // Navigate to first content (prologue) for immediate preview
+      console.log('  🧭 Dispatching navigation request...');
       dispatch('navigationRequested', {
         view: 'text',
         workspaceId,
-        spineItemId: 'prologue',
       });
 
+      console.log('  📡 Dispatching workspaceOpened event...');
       dispatch('workspaceOpened', { workspaceId });
+      console.log('  ✅ Workspace creation completed successfully!');
     } catch (err) {
-      console.error('Failed to create workspace:', err);
+      console.error('❌ Failed to create workspace:', err);
+      console.error('❌ Error details:', {
+        message: err instanceof Error ? err.message : 'Unknown error',
+        stack: err instanceof Error ? err.stack : undefined,
+        err
+      });
       alert(
         $t('Failed to create workspace: {error}', {
           error: err instanceof Error ? err.message : 'Unknown error',
         })
       );
     } finally {
+      console.log('  🏁 handleCreateNew finally block - setting loading = false');
       loading = false;
     }
   };
@@ -352,12 +370,12 @@
     };
   }
 
-  export function setViewData(_data: any): void {
-    if (_data.currentWorkspaceId) {
-      setCurrentWorkspace(_data.currentWorkspaceId);
+  export function setViewData(data: any): void {
+    if (data.currentWorkspaceId) {
+      setCurrentWorkspace(data.currentWorkspaceId);
     }
-    if (_data.hasUnsavedChanges !== undefined) {
-      hasUnsavedChanges = _data.hasUnsavedChanges;
+    if (data.hasUnsavedChanges !== undefined) {
+      hasUnsavedChanges = data.hasUnsavedChanges;
     }
   }
 

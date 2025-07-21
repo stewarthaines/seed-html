@@ -129,7 +129,9 @@ export class SourceManager {
   async listSourceFiles(workspaceId: string): Promise<SourceFileInfo[]> {
     try {
       const allFiles = await this.fileStorage.listFiles(workspaceId);
-      const sourceFiles = allFiles.filter(path => isSourceFile(path));
+      const sourceFiles = allFiles
+        .filter(path => isSourceFile(path))
+        .filter(path => !path.endsWith('.gitkeep')); // Filter out .gitkeep files
 
       const fileInfos: SourceFileInfo[] = [];
 

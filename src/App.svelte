@@ -51,7 +51,10 @@
   let selectedManifestItemType: 'manifest' | 'source' | null = null;
 
   // Handler for manifest item selection
-  const handleManifestItemSelect = (event: CustomEvent<{ item: ManifestItem | SourceItem; type: 'manifest' | 'source' }>) => {
+  const handleManifestItemSelect = (
+    event: CustomEvent<{ item: ManifestItem | SourceItem; type: 'manifest' | 'source' }>
+  ) => {
+    console.log('handleManifestItemSelect', event.detail.item);
     selectedManifestItem = event.detail.item;
     selectedManifestItemType = event.detail.type;
   };
@@ -107,7 +110,6 @@
     const handleClearSpineSelection = () => {
       selectedSpineItemId = null;
     };
-
 
     window.addEventListener('select-spine-item', handleSelectSpineItem);
     window.addEventListener('clear-spine-selection', handleClearSpineSelection);

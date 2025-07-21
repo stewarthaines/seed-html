@@ -8,7 +8,7 @@
 
   export let workspaceId = '';
   export let manifestManager: IManifestManager | null = null;
-  export let advancedMode = false;
+  export let advancedMode = true;
 
   // Create event dispatcher for item selection
   const dispatch = createEventDispatcher<{
@@ -37,10 +37,14 @@
 
       // Load SOURCE items if advanced mode is enabled
       if (advancedMode) {
+        console.log('🔍 Advanced mode enabled, loading SOURCE items...');
         const isAdvancedModeEnabled = await manifestManager.isAdvancedModeEnabled(workspaceId);
-        if (isAdvancedModeEnabled) {
-          sourceItems = await manifestManager.listSourceItems(workspaceId);
-        }
+        
+        // Always try to load source items for debugging
+        sourceItems = await manifestManager.listSourceItems(workspaceId);
+        console.log('🔍 Loaded', sourceItems.length, 'SOURCE items');
+      } else {
+        sourceItems = [];
       }
 
       // Validate manifest
@@ -57,11 +61,11 @@
   }) => {
     selectedItem = event.detail.item;
     selectedItemType = event.detail.type;
-    
+
     // Dispatch the selection event to parent component
     dispatch('itemSelect', {
       item: event.detail.item,
-      type: event.detail.type
+      type: event.detail.type,
     });
   };
 
