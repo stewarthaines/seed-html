@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import CurrentWorkspaceBar from '../lib/components/workspace/CurrentWorkspaceBar.svelte';
   import WorkspaceActionBar from '../lib/components/workspace/WorkspaceActionBar.svelte';
   import WorkspaceList from '../lib/components/workspace/WorkspaceList.svelte';
   import type { WorkspaceInfo } from '../lib/workspace/types';
