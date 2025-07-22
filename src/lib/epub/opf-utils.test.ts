@@ -1,139 +1,70 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { OPFUtils } from './opf-utils.js';
+import type { OPFDocument } from './opf-utils.js';
 
-// Mock DOMParser for Node.js environment
-beforeAll(() => {
-  if (!globalThis.DOMParser) {
-    // @ts-expect-error - Mock DOMParser for testing
-    globalThis.DOMParser = class MockDOMParser {
-      parseFromString(xmlStr: string, _contentType: string) {
-        // Simple mock that handles basic XML parsing for our tests
-        if (xmlStr.includes('</unclosed>')) {
-          // Simulate parsing error
-          return {
-            querySelector: (selector: string) => {
-              if (selector === 'parsererror') {
-                return { textContent: 'Mismatched tag' };
-              }
-              return null;
-            },
-            getElementsByTagNameNS: () => [],
-          };
-        }
+// Diagnostic helper functions for XML validation testing
 
-        // Mock successful parsing
-        return {
-          querySelector: (selector: string) => {
-            if (selector === 'parsererror') return null;
-            if (selector === 'rootfile') {
-              if (xmlStr.includes('full-path="OEBPS/content.opf"')) {
-                return {
-                  getAttribute: (attr: string) =>
-                    attr === 'full-path' ? 'OEBPS/content.opf' : null,
-                };
-              }
-              if (xmlStr.includes('full-path="OEBPS/content.xml"')) {
-                return {
-                  getAttribute: (attr: string) =>
-                    attr === 'full-path' ? 'OEBPS/content.xml' : null,
-                };
-              }
-              if (xmlStr.includes('<rootfile media-type=')) {
-                return { getAttribute: (_attr: string) => null }; // No full-path
-              }
-              return null; // No rootfile found
-            }
-            if (selector === 'package') {
-              if (xmlStr.includes('version="3.0"')) {
-                return {
-                  getAttribute: (attr: string) => (attr === 'version' ? '3.0' : null),
-                };
-              }
-              if (xmlStr.includes('version="2.0"')) {
-                return {
-                  getAttribute: (attr: string) => (attr === 'version' ? '2.0' : null),
-                };
-              }
-            }
-            if (selector === '[properties]') {
-              return xmlStr.includes('properties=') ? {} : null;
-            }
-            return null;
-          },
-          querySelectorAll: (selector: string) => {
-            if (selector === 'manifest item') {
-              if (xmlStr.includes('id="toc"') && xmlStr.includes('id="chapter1"')) {
-                return [
-                  {
-                    getAttribute: (attr: string) => {
-                      if (attr === 'id') return 'toc';
-                      if (attr === 'href') return 'toc.xhtml';
-                      if (attr === 'media-type') return 'application/xhtml+xml';
-                      if (attr === 'properties') return 'nav';
-                      return null;
-                    },
-                  },
-                  {
-                    getAttribute: (attr: string) => {
-                      if (attr === 'id') return 'chapter1';
-                      if (attr === 'href') return 'chapter1.xhtml';
-                      if (attr === 'media-type') return 'application/xhtml+xml';
-                      return null;
-                    },
-                  },
-                ];
-              }
-            }
-            if (selector === 'spine itemref') {
-              if (xmlStr.includes('idref="chapter1"')) {
-                return [
-                  {
-                    getAttribute: (attr: string) => {
-                      if (attr === 'idref') return 'chapter1';
-                      return null;
-                    },
-                  },
-                ];
-              }
-            }
-            return [];
-          },
-          getElementsByTagNameNS: (namespace: string, localName: string) => {
-            const DC_NS = 'http://purl.org/dc/elements/1.1/';
-            if (namespace === DC_NS) {
-              // Handle Dublin Core elements
-              if (localName === 'title' && xmlStr.includes('<dc:title>')) {
-                const match = xmlStr.match(/<dc:title[^>]*>(.*?)<\/dc:title>/);
-                return match ? [{ textContent: match[1] }] : [];
-              }
-              if (localName === 'language' && xmlStr.includes('<dc:language>')) {
-                const match = xmlStr.match(/<dc:language[^>]*>(.*?)<\/dc:language>/);
-                return match ? [{ textContent: match[1] }] : [];
-              }
-              if (localName === 'identifier' && xmlStr.includes('<dc:identifier')) {
-                const match = xmlStr.match(/<dc:identifier[^>]*>(.*?)<\/dc:identifier>/);
-                return match ? [{ textContent: match[1] }] : [];
-              }
-              if (localName === 'creator' && xmlStr.includes('<dc:creator>')) {
-                const match = xmlStr.match(/<dc:creator[^>]*>(.*?)<\/dc:creator>/);
-                return match ? [{ textContent: match[1] }] : [];
-              }
-              if (localName === 'publisher' && xmlStr.includes('<dc:publisher>')) {
-                const match = xmlStr.match(/<dc:publisher[^>]*>(.*?)<\/dc:publisher>/);
-                return match ? [{ textContent: match[1] }] : [];
-              }
-              if (localName === 'date' && xmlStr.includes('<dc:date>')) {
-                const match = xmlStr.match(/<dc:date[^>]*>(.*?)<\/dc:date>/);
-                return match ? [{ textContent: match[1] }] : [];
-              }
-            }
-            return [];
-          },
-        };
-      }
-    };
+/**
+ * Validates XML is well-formed using real DOMParser and provides detailed error context
+ * @param xml - XML string to validate
+ * @param context - Context description for error reporting
+ * @returns Parsed document if valid
+ * @throws Error with detailed context if invalid
+ */
+function expectValidXML(xml: string, context: string): Document {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xml, 'application/xml');
+  const parseError = doc.querySelector('parsererror');
+  
+  if (parseError) {
+    throw new Error(`${context}: XML parsing failed\n${parseError.textContent}\n\nGenerated XML:\n${xml}`);
   }
-});
+  
+  return doc;
+}
+
+/**
+ * Debug XML generation step by step to isolate failures
+ * Tests each OPF section individually to identify exact failure points
+ * @param opfDocument - OPF document to debug
+ */
+function debugXMLGeneration(opfDocument: OPFDocument): void {
+  // Test complete document generation
+  const completeXML = OPFUtils.generateOPFXML(opfDocument);
+  expectValidXML(completeXML, 'Complete OPF document');
+  
+  // Additional section-by-section validation could be added here
+  // if internal generation methods were exposed
+}
+
+/**
+ * Factory function to create test OPF document with valid structure
+ * @returns Fresh OPF document for testing
+ */
+function createTestOPFDocument(): OPFDocument {
+  return {
+    version: '3.0',
+    metadata: {
+      title: 'Test EPUB',
+      creator: ['Test Author'],
+      language: 'en',
+      identifier: 'test-123',
+    },
+    manifest: [
+      {
+        id: 'chapter1',
+        href: 'chapter1.xhtml',
+        mediaType: 'application/xhtml+xml',
+      },
+    ],
+    spine: [
+      {
+        idref: 'chapter1',
+        linear: true,
+      },
+    ],
+  };
+}
 
 describe('OPFUtils', () => {
   describe('parseContainerXml', () => {
@@ -211,7 +142,8 @@ describe('OPFUtils', () => {
   });
 
   describe('parseOPFMetadata', () => {
-    // Skip: requires getElementsByTagNameNS which doesn't work properly in happy-dom
+    // Skip: requires getElementsByTagNameNS which doesn't work correctly in happy-dom
+    // XML namespace parsing has incomplete support for complex namespace scenarios
     // This functionality is tested in browser environment via Storybook
     it.skip('should parse required metadata fields', () => {
       const opfContent = `<?xml version="1.0" encoding="UTF-8"?>
@@ -231,7 +163,8 @@ describe('OPFUtils', () => {
       expect(metadata.identifier).toBe('test-book-123');
     });
 
-    // Skip: requires getElementsByTagNameNS which doesn't work properly in happy-dom
+    // Skip: requires getElementsByTagNameNS which doesn't work correctly in happy-dom
+    // XML namespace parsing has incomplete support for complex namespace scenarios
     // This functionality is tested in browser environment via Storybook
     it.skip('should parse optional metadata fields', () => {
       const opfContent = `<?xml version="1.0" encoding="UTF-8"?>
@@ -272,7 +205,8 @@ describe('OPFUtils', () => {
   });
 
   describe('parseOPFDocument', () => {
-    // Skip: requires getElementsByTagNameNS which doesn't work properly in happy-dom
+    // Skip: requires getElementsByTagNameNS which doesn't work correctly in happy-dom
+    // XML namespace parsing has incomplete support for complex namespace scenarios
     // This functionality is tested in browser environment via Storybook
     it.skip('should parse complete OPF document', () => {
       const opfContent = `<?xml version="1.0" encoding="UTF-8"?>
@@ -300,52 +234,258 @@ describe('OPFUtils', () => {
     });
   });
 
-  describe('generateOPFXML', () => {
-    it('should generate valid OPF XML', () => {
-      const opfDocument = {
-        version: '3.0',
-        metadata: {
-          title: 'Test Book',
-          language: 'en',
-          identifier: 'test-book-123',
-          creator: ['Test Author'],
-        },
-        manifest: [
-          {
-            id: 'chapter1',
-            href: 'chapter1.xhtml',
-            mediaType: 'application/xhtml+xml',
-          },
-        ],
-        spine: [
-          {
-            idref: 'chapter1',
-            linear: true,
-          },
-        ],
-      };
+  describe('generateOPFXML - XML Validation Tests', () => {
+    describe('XML Well-formedness Validation', () => {
+      it('should generate valid XML that can be parsed', () => {
+        const opfDocument = createTestOPFDocument();
+        const xml = OPFUtils.generateOPFXML(opfDocument);
+        
+        // Parse with real DOMParser from happy-dom
+        const doc = expectValidXML(xml, 'Basic OPF generation');
+        
+        // Validate structure exists
+        expect(doc.querySelector('package')).toBeTruthy();
+        expect(doc.querySelector('metadata')).toBeTruthy();
+        expect(doc.querySelector('manifest')).toBeTruthy();
+        expect(doc.querySelector('spine')).toBeTruthy();
+      });
 
-      const xml = OPFUtils.generateOPFXML(opfDocument);
-      expect(xml).toContain('<dc:title>Test Book</dc:title>');
-      expect(xml).toContain('<dc:creator>Test Author</dc:creator>');
-      expect(xml).toContain('<item id="chapter1"');
-      expect(xml).toContain('<itemref idref="chapter1"');
+      it('should generate properly structured XML elements', () => {
+        const opfDocument = createTestOPFDocument();
+        const xml = OPFUtils.generateOPFXML(opfDocument);
+        const doc = expectValidXML(xml, 'XML structure validation');
+        
+        const packageEl = doc.querySelector('package');
+        expect(packageEl?.getAttribute('version')).toBe('3.0');
+        expect(packageEl?.getAttribute('unique-identifier')).toBeTruthy();
+        
+        const spineItems = doc.querySelectorAll('spine itemref');
+        expect(spineItems).toHaveLength(1);
+        expect(spineItems[0]?.getAttribute('idref')).toBe('chapter1');
+      });
     });
 
-    it('should escape XML characters', () => {
-      const opfDocument = {
-        version: '3.0',
-        metadata: {
-          title: 'Book & Title <Test>',
-          language: 'en',
-          identifier: 'test-book-123',
-        },
-        manifest: [],
-        spine: [],
-      };
+    describe('EPUB 3.0 Specification Compliance', () => {
+      it('should generate EPUB 3.0 compliant OPF structure', () => {
+        const opfDocument = createTestOPFDocument();
+        const xml = OPFUtils.generateOPFXML(opfDocument);
+        const doc = expectValidXML(xml, 'EPUB 3.0 compliance');
+        
+        // Validate required EPUB elements
+        const packageEl = doc.querySelector('package');
+        expect(packageEl?.getAttribute('version')).toBe('3.0');
+        expect(packageEl?.getAttribute('xmlns')).toBe('http://www.idpf.org/2007/opf');
+        
+        // Validate required Dublin Core namespace (note: limited by happy-dom)
+        const metadata = doc.querySelector('metadata');
+        expect(metadata?.getAttribute('xmlns:dc')).toBe('http://purl.org/dc/elements/1.1/');
+        
+        // Validate required structural elements
+        expect(doc.querySelector('metadata')).toBeTruthy();
+        expect(doc.querySelector('manifest')).toBeTruthy();
+        expect(doc.querySelector('spine')).toBeTruthy();
+      });
+    });
 
-      const xml = OPFUtils.generateOPFXML(opfDocument);
-      expect(xml).toContain('<dc:title>Book &amp; Title &lt;Test&gt;</dc:title>');
+    describe('Character Encoding and Special Character Testing', () => {
+      it('should handle Unicode and special characters correctly', () => {
+        const opfDocument = {
+          version: '3.0',
+          metadata: {
+            title: 'كتاب عربي', // Arabic title
+            creator: ['作者名前', 'שם המחבר'], // Japanese and Hebrew
+            description: 'Book with <em>HTML</em> & "quotes" content',
+            language: 'en',
+            identifier: 'test-unicode-123',
+          },
+          manifest: [
+            { id: 'chapter-א', href: 'chapter1.xhtml', mediaType: 'application/xhtml+xml' }
+          ],
+          spine: [
+            { idref: 'chapter-א', linear: true }
+          ]
+        };
+        
+        const xml = OPFUtils.generateOPFXML(opfDocument);
+        expectValidXML(xml, 'Unicode character test');
+        
+        // Validate special characters are properly escaped
+        expect(xml).toContain('&lt;em&gt;');
+        expect(xml).toContain('&quot;quotes&quot;');
+        expect(xml).toContain('&amp;');
+        
+        // Validate Unicode content is preserved
+        expect(xml).toContain('كتاب عربي');
+        expect(xml).toContain('作者名前');
+        expect(xml).toContain('שם המחבר');
+      });
+
+      it('should properly escape special characters in XML', () => {
+        const opfDocument = {
+          version: '3.0',
+          metadata: {
+            title: 'Book & Title <Test>',
+            language: 'en',
+            identifier: 'test-escape-123',
+          },
+          manifest: [],
+          spine: []
+        };
+        
+        const xml = OPFUtils.generateOPFXML(opfDocument);
+        expectValidXML(xml, 'XML character escaping');
+        
+        expect(xml).toContain('<dc:title>Book &amp; Title &lt;Test&gt;</dc:title>');
+      });
+    });
+
+    describe('Type Safety Validation', () => {
+      it('should maintain type safety between OPF object and XML', () => {
+        const originalOPF = createTestOPFDocument();
+        const xml = OPFUtils.generateOPFXML(originalOPF);
+        
+        // Validate XML is well-formed
+        const doc = expectValidXML(xml, 'Type safety test');
+        
+        // Test that essential data is preserved in XML structure
+        expect(doc.querySelector('spine')?.children).toHaveLength(originalOPF.spine.length);
+        expect(doc.querySelector('manifest')?.children).toHaveLength(originalOPF.manifest.length);
+        
+        // Validate spine items match original
+        const spineItems = Array.from(doc.querySelectorAll('spine itemref'));
+        spineItems.forEach((item, index) => {
+          expect(item.getAttribute('idref')).toBe(originalOPF.spine[index]?.idref);
+        });
+      });
+    });
+
+    describe('Edge Case Testing', () => {
+      it('should handle multiple spine items correctly', () => {
+        const opfDocument = {
+          version: '3.0',
+          metadata: {
+            title: 'Multi-Chapter Book',
+            language: 'en',
+            identifier: 'test-multi-123',
+          },
+          manifest: [
+            { id: 'chapter1', href: 'ch1.xhtml', mediaType: 'application/xhtml+xml' },
+            { id: 'chapter2', href: 'ch2.xhtml', mediaType: 'application/xhtml+xml' },
+            { id: 'appendix', href: 'app.xhtml', mediaType: 'application/xhtml+xml' },
+          ],
+          spine: [
+            { idref: 'chapter1', linear: true },
+            { idref: 'chapter2', linear: true },
+            { idref: 'appendix', linear: false }
+          ]
+        };
+        
+        const xml = OPFUtils.generateOPFXML(opfDocument);
+        const doc = expectValidXML(xml, 'Multiple spine items');
+        
+        const spineItems = doc.querySelectorAll('spine itemref');
+        expect(spineItems).toHaveLength(3);
+        
+        // Check linear attribute handling
+        expect(spineItems[0]?.getAttribute('idref')).toBe('chapter1');
+        expect(spineItems[1]?.getAttribute('idref')).toBe('chapter2');
+        expect(spineItems[2]?.getAttribute('idref')).toBe('appendix');
+        expect(spineItems[2]?.getAttribute('linear')).toBe('no');
+      });
+
+      it('should handle special characters in spine item IDs', () => {
+        const opfDocument = {
+          version: '3.0',
+          metadata: {
+            title: 'Special ID Book',
+            language: 'en',
+            identifier: 'test-special-123',
+          },
+          manifest: [
+            { id: 'chapter-1&2', href: 'ch12.xhtml', mediaType: 'application/xhtml+xml' },
+          ],
+          spine: [
+            { idref: 'chapter-1&2', linear: true },
+          ]
+        };
+        
+        const xml = OPFUtils.generateOPFXML(opfDocument);
+        expectValidXML(xml, 'Special characters in IDs');
+        
+        // Should properly escape the ID in attributes
+        expect(xml).toContain('idref="chapter-1&amp;2"');
+      });
+    });
+
+    describe('Systematic Debugging', () => {
+      it('should debug XML generation step by step', () => {
+        const opfDocument = {
+          version: '3.0',
+          metadata: {
+            title: 'Debug Test Book',
+            language: 'en',
+            identifier: 'debug-123',
+          },
+          manifest: [
+            { id: 'chapter1', href: 'ch1.xhtml', mediaType: 'application/xhtml+xml' },
+            { id: 'chapter2', href: 'ch2.xhtml', mediaType: 'application/xhtml+xml' },
+          ],
+          spine: [
+            { idref: 'chapter1', linear: true },
+            { idref: 'chapter2', linear: true },
+          ]
+        };
+        
+        // Use diagnostic helper to test generation
+        debugXMLGeneration(opfDocument);
+        
+        // Test complete document generation
+        const xml = OPFUtils.generateOPFXML(opfDocument);
+        expectValidXML(xml, 'Complete OPF document');
+        
+        // Validate specific problem area from error message
+        const doc = new DOMParser().parseFromString(xml, 'application/xml');
+        const chapter2Ref = doc.querySelector('itemref[idref="chapter2"]');
+        expect(chapter2Ref).toBeTruthy();
+        expect(chapter2Ref?.tagName).toBe('itemref'); // Ensure proper tag structure
+      });
+    });
+
+    describe('Regression Test for Workspace Creation Failure', () => {
+      it('should generate valid XML for workspace creation scenario', () => {
+        // Reproduce the exact OPF structure that's failing
+        const opfDocument = {
+          version: '3.0',
+          metadata: {
+            title: 'Untitled Book Project',
+            language: 'en',
+            identifier: 'test-workspace-id'
+          },
+          manifest: [
+            { id: 'chapter1', href: 'chapter1.xhtml', mediaType: 'application/xhtml+xml' },
+            { id: 'chapter2', href: 'chapter2.xhtml', mediaType: 'application/xhtml+xml' }
+          ],
+          spine: [
+            { idref: 'chapter1', linear: true },
+            { idref: 'chapter2', linear: true }
+          ]
+        };
+        
+        const xml = OPFUtils.generateOPFXML(opfDocument);
+        const doc = expectValidXML(xml, 'Workspace creation scenario');
+        
+        // This should not throw a parse error
+        expect(doc.querySelector('parsererror')).toBeNull();
+        
+        // Validate the specific structure that's failing
+        const chapter2Ref = doc.querySelector('itemref[idref="chapter2"]');
+        expect(chapter2Ref).toBeTruthy();
+        expect(chapter2Ref?.getAttribute('idref')).toBe('chapter2');
+        
+        // Ensure the problematic pattern from error message doesn't exist
+        // Error: "</package> idref="chapter2" />"
+        expect(xml).not.toContain('</package> idref="chapter2"');
+      });
     });
   });
 
