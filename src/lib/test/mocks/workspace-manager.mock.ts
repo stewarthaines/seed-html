@@ -23,6 +23,7 @@
 
 import { vi } from 'vitest';
 import type { OPFDocument, ManifestItem, SpineItem, EPUBMetadata } from '../../epub/opf-utils.js';
+import type { IWorkspaceManager } from '../../workspace/types.js';
 
 export interface MockOPFDocument extends Omit<OPFDocument, 'metadata'> {
   manifest: ManifestItem[];
@@ -53,7 +54,7 @@ export type WorkspaceFailureMode =
  * - Rich helper methods for test setup and verification
  * - Full compatibility with WorkspaceManager interface
  */
-export class MockWorkspaceManager implements Partial<any> {
+export class MockWorkspaceManager implements IWorkspaceManager {
   private workspaceOPFs = new Map<string, MockOPFDocument>();
   private workspaceFiles = new Map<string, Map<string, string | ArrayBuffer>>();
   private failureMode: WorkspaceFailureMode | null = null;
@@ -117,6 +118,101 @@ export class MockWorkspaceManager implements Partial<any> {
 
   // Core WorkspaceManager methods
 
+  // Workspace lifecycle
+  async init(): Promise<void> {
+    this.operationCount++;
+    // Mock initialization - nothing to do
+  }
+
+  async listWorkspacesWithMetadata(): Promise<any[]> {
+    this.operationCount++;
+    // Return mock workspace list
+    return [
+      {
+        id: 'workspace-1',
+        title: 'Mock Workspace 1',
+        author: 'Test Author',
+        language: 'en',
+        lastModified: new Date(),
+        fileCount: 5,
+        totalSize: 1024,
+        epubVersion: '3.0'
+      }
+    ];
+  }
+
+  async createEPUBWorkspace(metadata: EPUBMetadata): Promise<string> {
+    this.operationCount++;
+    const workspaceId = `workspace-${crypto.randomUUID()}`;
+    
+    // Create OPF document with metadata
+    const opf: MockOPFDocument = {
+      manifest: [],
+      spine: [],
+      metadata
+    };
+    
+    this.workspaceOPFs.set(workspaceId, opf);
+    this.ensureWorkspace(workspaceId);
+    
+    return workspaceId;
+  }
+
+  async createLocalizedEPUBWorkspace(metadata: Partial<EPUBMetadata>, locale: string): Promise<string> {
+    this.operationCount++;
+    const workspaceId = `workspace-localized-${crypto.randomUUID()}`;
+    
+    // Build complete metadata with defaults and locale
+    const fullMetadata: EPUBMetadata = {
+      title: metadata.title || 'Untitled',
+      language: metadata.language || locale,
+      identifier: metadata.identifier || `urn:uuid:${crypto.randomUUID()}`,
+      creator: metadata.creator || [],
+      ...metadata
+    };
+    
+    // Create OPF document with metadata
+    const opf: MockOPFDocument = {
+      manifest: [],
+      spine: [],
+      metadata: fullMetadata
+    };
+    
+    this.workspaceOPFs.set(workspaceId, opf);
+    this.ensureWorkspace(workspaceId);
+    
+    return workspaceId;
+  }
+
+  async switchWorkspace(workspaceId: string): Promise<any> {
+    this.operationCount++;
+    if (this.failureMode === 'workspace-not-found') {
+      throw new Error(`Workspace not found: ${workspaceId}`);
+    }
+    
+    // Return mock workspace info
+    return {
+      id: workspaceId,
+      title: 'Mock Workspace',
+      author: 'Test Author',
+      language: 'en',
+      lastModified: new Date(),
+      fileCount: 5,
+      totalSize: 1024,
+      epubVersion: '3.0'
+    };
+  }
+
+  async deleteWorkspace(workspaceId: string): Promise<void> {
+    this.operationCount++;
+    if (this.failureMode === 'workspace-not-found') {
+      throw new Error(`Workspace not found: ${workspaceId}`);
+    }
+    
+    this.workspaceOPFs.delete(workspaceId);
+    this.workspaceFiles.delete(workspaceId);
+  }
+
   async getWorkspaceOPF(workspaceId: string): Promise<MockOPFDocument | any> {
     this.operationCount++;
     if (this.failureMode === 'opf-read') {
@@ -147,7 +243,7 @@ export class MockWorkspaceManager implements Partial<any> {
     return opf;
   }
 
-  async addManifestItem(workspaceId: string, item: any): Promise<void> {
+  async addManifestItem(workspaceId: string, item: Partial<ManifestItem>): Promise<ManifestItem> {
     this.operationCount++;
     if (this.failureMode === 'manifest-add') {
       throw new Error('Failed to add manifest item');
@@ -155,20 +251,29 @@ export class MockWorkspaceManager implements Partial<any> {
 
     const opf = (await this.getWorkspaceOPF(workspaceId)) as MockOPFDocument;
 
+    // Build complete ManifestItem from partial
+    const fullItem: ManifestItem = {
+      id: item.id || `item-${crypto.randomUUID()}`,
+      href: item.href || 'untitled.xhtml',
+      mediaType: item.mediaType || 'application/xhtml+xml',
+      ...item
+    };
+
     // Check for duplicate IDs
-    if (opf.manifest.some(existing => existing.id === item.id)) {
-      throw new Error(`Manifest item with ID '${item.id}' already exists`);
+    if (opf.manifest.some(existing => existing.id === fullItem.id)) {
+      throw new Error(`Manifest item with ID '${fullItem.id}' already exists`);
     }
 
     // Store rollback operation
     this.rollbackStack.push(() => {
-      const index = opf.manifest.findIndex(m => m.id === item.id);
+      const index = opf.manifest.findIndex(m => m.id === fullItem.id);
       if (index !== -1) {
         opf.manifest.splice(index, 1);
       }
     });
 
-    opf.manifest.push(item);
+    opf.manifest.push(fullItem);
+    return fullItem;
   }
 
   async removeManifestItem(workspaceId: string, itemId: string): Promise<void> {
@@ -435,6 +540,11 @@ export class MockWorkspaceManager implements Partial<any> {
     this.workspaceOPFs.set(workspaceId, opf);
   }
 
+  async updateWorkspaceOPF(workspaceId: string, opf: OPFDocument): Promise<void> {
+    // This is the new method name that replaces saveOPF
+    return this.saveOPF(workspaceId, opf as MockOPFDocument);
+  }
+
   async listSourceFiles(workspaceId: string): Promise<any[]> {
     this.operationCount++;
     if (this.failureMode === 'workspace-not-found') {
@@ -476,6 +586,93 @@ export class MockWorkspaceManager implements Partial<any> {
     }
 
     return this.workspaceOPFs.has(workspaceId) || this.workspaceFiles.has(workspaceId);
+  }
+
+  // Metadata operations
+  async getWorkspaceMetadata(workspaceId: string): Promise<EPUBMetadata> {
+    this.operationCount++;
+    const opf = await this.getWorkspaceOPF(workspaceId);
+    return opf.metadata || {
+      title: 'Untitled',
+      language: 'en',
+      identifier: `urn:uuid:${crypto.randomUUID()}`,
+      creator: []
+    };
+  }
+
+  async updateMetadata(workspaceId: string, metadata: EPUBMetadata): Promise<void> {
+    this.operationCount++;
+    const opf = await this.getWorkspaceOPF(workspaceId);
+    opf.metadata = metadata;
+    await this.updateWorkspaceOPF(workspaceId, opf);
+  }
+
+  // Validation and utilities
+  async validateWorkspaceStructure(workspaceId: string): Promise<any> {
+    this.operationCount++;
+    if (this.failureMode === 'workspace-not-found') {
+      throw new Error(`Workspace not found: ${workspaceId}`);
+    }
+    
+    return {
+      isValid: true,
+      errors: [],
+      warnings: [],
+      summary: {
+        totalFiles: 5,
+        validFiles: 5,
+        missingFiles: 0,
+        orphanedFiles: 0
+      }
+    };
+  }
+
+  async getWorkspacePathInfo(workspaceId: string): Promise<any> {
+    this.operationCount++;
+    if (this.failureMode === 'workspace-not-found') {
+      throw new Error(`Workspace not found: ${workspaceId}`);
+    }
+    
+    return {
+      rootfilePath: 'OEBPS/content.opf',
+      basePath: 'OEBPS',
+      opfFileName: 'content.opf'
+    };
+  }
+
+  async cleanupOrphanedWorkspaces(): Promise<{ cleaned: string[]; errors: string[] }> {
+    this.operationCount++;
+    return {
+      cleaned: [],
+      errors: []
+    };
+  }
+
+  async generateWorkspacePreview(workspaceId: string): Promise<any> {
+    this.operationCount++;
+    if (this.failureMode === 'workspace-not-found') {
+      throw new Error(`Workspace not found: ${workspaceId}`);
+    }
+    
+    const metadata = await this.getWorkspaceMetadata(workspaceId);
+    return {
+      metadata,
+      manifestSummary: {
+        textItems: 3,
+        imageItems: 1,
+        audioItems: 0,
+        videoItems: 0,
+        fontItems: 0,
+        otherItems: 1
+      },
+      spineOrder: ['chapter1', 'chapter2'],
+      estimatedEPUBSize: 1024,
+      dependencies: {
+        orphanedFiles: [],
+        missingDependencies: [],
+        circularReferences: []
+      }
+    };
   }
 
   // Test utility methods
@@ -643,6 +840,11 @@ export function createMockWorkspaceManagerVi() {
       .fn()
       .mockImplementation((workspaceId: string, opf: MockOPFDocument) =>
         mock.saveOPF(workspaceId, opf)
+      ),
+    updateWorkspaceOPF: vi
+      .fn()
+      .mockImplementation((workspaceId: string, opf: OPFDocument) =>
+        mock.updateWorkspaceOPF(workspaceId, opf)
       ),
     addManifestItem: vi
       .fn()

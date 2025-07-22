@@ -17,10 +17,12 @@
 
   // Helper function to determine if mediaType represents text content
   const isTextMediaType = (mediaType: string): boolean => {
-    return mediaType.startsWith('text/') || 
-           mediaType.includes('json') ||
-           mediaType.includes('xml') ||
-           mediaType.includes('javascript');
+    return (
+      mediaType.startsWith('text/') ||
+      mediaType.includes('json') ||
+      mediaType.includes('xml') ||
+      mediaType.includes('javascript')
+    );
   };
 
   $: if (selectedItem && selectedItemType && manifestManager && workspaceId) {
@@ -68,7 +70,9 @@
           metadata: {
             characterCount: textContent ? textContent.length : undefined,
             lineCount: textContent ? textContent.split('\n').length : undefined,
-            wordCount: textContent ? textContent.split(/\s+/).filter(w => w.length > 0).length : undefined,
+            wordCount: textContent
+              ? textContent.split(/\s+/).filter(w => w.length > 0).length
+              : undefined,
           },
         };
       }
@@ -192,9 +196,9 @@
         <!-- Action buttons moved to header -->
         <div class="preview-actions">
           {#if selectedItemType === 'manifest'}
-            <button type="button" class="action-button edit-button" on:click={handleEditClick}>
+            <!-- <button type="button" class="action-button edit-button" on:click={handleEditClick}>
               {$t('Edit')}
-            </button>
+            </button> -->
           {/if}
           <button
             type="button"

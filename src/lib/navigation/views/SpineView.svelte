@@ -1,14 +1,14 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { navigationStore } from '../navigation-store';
-  import type { WorkspaceManager } from '../../workspace';
+  import type { IWorkspaceManager } from '../../workspace/types';
   import type { SpineItemWithSource } from '../../spine/types';
   import type { SpineItemManager } from '../../spine/spine-item-manager';
   import { t } from '../../i18n';
 
   // Props
   export let workspaceId: string;
-  export let workspaceManager: WorkspaceManager;
+  export let workspaceManager: IWorkspaceManager;
   export let spineManager: SpineItemManager;
   export let selectedItemId: string | null = null;
 

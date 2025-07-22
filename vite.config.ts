@@ -7,6 +7,7 @@ import { viteSingleFile } from "vite-plugin-singlefile";
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import { visualizer } from "rollup-plugin-visualizer";
 import analyzer from "rollup-plugin-analyzer";
+import checker from "vite-plugin-checker";
 
 const dirname =
   typeof __dirname !== "undefined"
@@ -31,6 +32,15 @@ export default defineConfig({
     __DEV__: process.env.NODE_ENV !== 'production',
   },
   plugins: [
+    // TypeScript checking during development - this will catch API mismatches!
+    checker({
+      typescript: {
+        tsconfigPath: 'tsconfig.app.json'
+      },
+      overlay: {
+        initialIsOpen: false,
+      },
+    }),
     svelte(),
     // Embed translation data URL into HTML for single-file deployment
     {

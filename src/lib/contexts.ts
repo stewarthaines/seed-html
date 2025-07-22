@@ -5,7 +5,7 @@
  * Production App.svelte creates real managers when no context is provided.
  */
 
-import type { WorkspaceManager } from './workspace';
+import type { IWorkspaceManager } from './workspace/types';
 import type { ManifestManagerImpl } from './manifest/manifest-manager';
 import type { MetadataManagerImpl } from './metadata/MetadataManager';
 
@@ -17,14 +17,14 @@ export const WORKSPACE_ID_CONTEXT = Symbol('workspaceId');
 
 // Context value types
 export interface AppContexts {
-  workspaceManager?: WorkspaceManager;
+  workspaceManager?: IWorkspaceManager;
   manifestManager?: ManifestManagerImpl;
   metadataManager?: MetadataManagerImpl;
   workspaceId?: string;
 }
 
 // Type-safe context getters
-export type WorkspaceManagerContext = WorkspaceManager | undefined;
+export type WorkspaceManagerContext = IWorkspaceManager | undefined;
 export type ManifestManagerContext = ManifestManagerImpl | undefined;
 export type MetadataManagerContext = MetadataManagerImpl | undefined;
 export type WorkspaceIdContext = string | undefined;

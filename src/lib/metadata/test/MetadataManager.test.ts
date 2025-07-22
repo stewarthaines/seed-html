@@ -152,20 +152,20 @@ describe('MetadataManager', () => {
       ).rejects.toThrow();
     });
 
-    it('should handle StorageQuotaExceededError', async () => {
-      mockWorkspaceManager.setFailureMode('file-write');
-
-      await expect(
-        metadataManager.updateField('workspace-1', 'title', 'Updated Title')
-      ).rejects.toThrow();
-    });
-
-    it('should handle NetworkError', async () => {
-      mockWorkspaceManager.setFailureMode('file-write');
-
-      await expect(
-        metadataManager.updateField('workspace-1', 'title', 'Updated Title')
-      ).rejects.toThrow();
+    it('should call updateWorkspaceOPF with correct OPF structure when updating fields', async () => {
+      const spy = vi.spyOn(mockWorkspaceManager, 'updateWorkspaceOPF');
+      
+      await metadataManager.updateField('workspace-1', 'title', 'Updated Title');
+      
+      expect(spy).toHaveBeenCalledWith('workspace-1', expect.objectContaining({
+        metadata: expect.objectContaining({
+          title: 'Updated Title',
+          // Should preserve other existing metadata
+          language: 'en',
+          identifier: 'urn:uuid:123e4567-e89b-12d3-a456-426614174000',
+          creator: ['John Doe', 'Jane Smith']
+        })
+      }));
     });
   });
 
@@ -751,25 +751,6 @@ describe('MetadataManager', () => {
       );
     });
 
-    it('should propagate StorageQuotaExceededError from workspace manager', async () => {
-      mockWorkspaceManager.setWorkspaceOPF('workspace-1', { metadata: VALID_METADATA });
-      await metadataManager.loadMetadata('workspace-1');
-      mockWorkspaceManager.setFailureMode('file-write');
-
-      await expect(
-        metadataManager.updateField('workspace-1', 'title', 'New Title')
-      ).rejects.toThrow();
-    });
-
-    it('should propagate NetworkError from workspace manager', async () => {
-      mockWorkspaceManager.setWorkspaceOPF('workspace-1', { metadata: VALID_METADATA });
-      await metadataManager.loadMetadata('workspace-1');
-      mockWorkspaceManager.setFailureMode('file-write');
-
-      await expect(
-        metadataManager.updateField('workspace-1', 'title', 'New Title')
-      ).rejects.toThrow();
-    });
 
     it('should throw ValidationError for critical validation failures', () => {
       const validationResult = metadataManager.validateMetadata(INVALID_METADATA);

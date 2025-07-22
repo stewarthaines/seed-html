@@ -10,6 +10,7 @@
   import ManifestContainer from './lib/components/manifest/ManifestContainer.svelte';
   import ManifestPreview from './lib/components/manifest/ManifestPreview.svelte';
   import { WorkspaceManager } from './lib/workspace';
+  import type { IWorkspaceManager } from './lib/workspace/types';
   import { ManifestManagerImpl } from './lib/manifest/manifest-manager';
   import { MetadataManagerImpl } from './lib/metadata/MetadataManager';
   import { SpineItemManager } from './lib/spine/spine-item-manager';
@@ -38,7 +39,7 @@
   $: isExpanded = $layoutStore.sidebar.isExpanded;
 
   // Spine management state
-  let currentWorkspaceManager: WorkspaceManager;
+  let currentWorkspaceManager: IWorkspaceManager;
   let currentWorkspaceId: string | null = null;
   let selectedSpineItemId: string | null = null;
   let initialized = false;

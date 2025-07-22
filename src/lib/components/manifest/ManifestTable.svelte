@@ -418,7 +418,7 @@
               </td>
               <!-- Hover-based action buttons -->
               {#if itemType === 'manifest'}
-                <td class="actions-overlay">
+                <!-- <td class="actions-overlay">
                   <div class="row-actions">
                     <button
                       type="button"
@@ -439,7 +439,7 @@
                       🗑️
                     </button>
                   </div>
-                </td>
+                </td> -->
               {/if}
             </tr>
           {/each}

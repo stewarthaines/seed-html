@@ -29,6 +29,11 @@ vi.mock('../../epub/index.js', () => ({
   },
 }));
 
+// Mock SampleContentGenerator class
+vi.mock('../../content/sample-content-generator.js', () => ({
+  SampleContentGenerator: vi.fn(),
+}));
+
 // Create mock instances directly
 const mockSampleContentGeneratorInstance = {
   generateLocalizedContent: vi.fn(),
@@ -181,6 +186,10 @@ describe('WorkspaceManager.createLocalizedEPUBWorkspace', () => {
 
     // Setup mocks for dependencies
     const { translate, documentDirection, i18nService } = await import('../../i18n/index.js');
+    const { SampleContentGenerator } = await import('../../content/sample-content-generator.js');
+    
+    // Set up SampleContentGenerator constructor mock
+    (SampleContentGenerator as any).mockImplementation(() => mockSampleContentGeneratorInstance);
     
     mockSampleContentGenerator = mockSampleContentGeneratorInstance;
     mockTransformExecutor = mockTransformExecutorInstance;
@@ -202,8 +211,8 @@ describe('WorkspaceManager.createLocalizedEPUBWorkspace', () => {
     // Create reference to i18nService.translate for test assertions
     mockI18nServiceTranslate = (i18nService as any).translate;
 
-    // Create WorkspaceManager instance with injected dependencies
-    workspaceManager = new WorkspaceManager(undefined, mockSampleContentGenerator, mockTransformExecutor);
+    // Create WorkspaceManager instance with correct constructor signature
+    workspaceManager = new WorkspaceManager(undefined, mockTransformExecutor);
 
     // Inject mocked dependencies
     (workspaceManager as any).storage = mockStorage;

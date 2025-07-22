@@ -2,8 +2,7 @@
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import { navigationStore } from '../navigation-store';
   import { t, currentLocale } from '../../i18n';
-  import { WorkspaceManager } from '../../workspace/workspace-manager';
-  import type { WorkspaceInfo } from '../../workspace/types';
+  import type { IWorkspaceManager, WorkspaceInfo } from '../../workspace/types';
   import type { EPUBMetadata } from '../../epub/opf-utils';
   import type { SpineItemManager } from '../../spine/spine-item-manager';
   import CurrentWorkspaceBar from '../../components/workspace/CurrentWorkspaceBar.svelte';
@@ -17,7 +16,7 @@
   }>();
 
   // Props for dependency injection
-  export let workspaceManager: WorkspaceManager;
+  export let workspaceManager: IWorkspaceManager;
   export let spineManager: SpineItemManager;
   export let onWorkspaceChange: ((workspaceId: string | null) => void) | null = null;
   export let currentWorkspaceId: string | null = null;

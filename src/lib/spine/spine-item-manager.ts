@@ -29,7 +29,7 @@
  * ```
  */
 
-import type { WorkspaceManager } from '../workspace/index.js';
+import type { IWorkspaceManager } from '../workspace/types.js';
 import type { ManifestItem, SpineItem } from '../epub/opf-utils.js';
 import type {
   SpineItemWithSource,
@@ -42,9 +42,9 @@ import type {
 } from './types.js';
 
 export class SpineItemManager {
-  private workspaceManager: WorkspaceManager;
+  private workspaceManager: IWorkspaceManager;
 
-  constructor(workspaceManager: WorkspaceManager) {
+  constructor(workspaceManager: IWorkspaceManager) {
     this.workspaceManager = workspaceManager;
   }
 

@@ -6,7 +6,7 @@
  * for metadata manipulation.
  */
 
-import type { WorkspaceManager } from '../workspace/index.js';
+import type { IWorkspaceManager } from '../workspace/types.js';
 import type { EPUBMetadata } from '../epub/opf-utils.js';
 import { MetadataValidator, type ValidationResult } from './MetadataValidator.js';
 import { MetadataUtils, type LanguageOption, type AccessibilityOptions } from './MetadataUtils.js';
@@ -44,10 +44,10 @@ export interface IMetadataManager {
 }
 
 export class MetadataManagerImpl implements IMetadataManager {
-  private workspaceManager: WorkspaceManager;
+  private workspaceManager: IWorkspaceManager;
   private metadataCache = new Map<string, EPUBMetadata>();
 
-  constructor(workspaceManager: WorkspaceManager) {
+  constructor(workspaceManager: IWorkspaceManager) {
     this.workspaceManager = workspaceManager;
   }
 

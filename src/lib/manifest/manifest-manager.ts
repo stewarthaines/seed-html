@@ -29,6 +29,7 @@ import { ManifestValidator } from './validation.js';
 import { ManifestUtils } from './utils.js';
 import { resolveManifestPath } from '../blob-url/utils.js';
 import type { WorkspaceManager } from '../workspace/index.js';
+import type { IWorkspaceManager } from '../workspace/types.js';
 
 /**
  * Interface defining the complete ManifestManager API
@@ -89,7 +90,7 @@ export class ManifestManagerImpl implements IManifestManager {
   private readonly CONTENT_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB
   private readonly CACHE_SIZE_LIMIT = 10 * 1024 * 1024; // 10MB
 
-  constructor(private workspaceManager: WorkspaceManager) {
+  constructor(private workspaceManager: IWorkspaceManager) {
     this.cache = {
       manifests: new Map(),
       content: new Map(),
@@ -184,7 +185,7 @@ export class ManifestManagerImpl implements IManifestManager {
       // Save back to workspace
       const opf = await this.workspaceManager.getWorkspaceOPF(workspaceId);
       opf.manifest = manifest;
-      await this.workspaceManager.saveOPF(workspaceId, opf);
+      await this.workspaceManager.updateWorkspaceOPF(workspaceId, opf);
 
       // Update cache
       this.cache.manifests.set(workspaceId, manifest);
@@ -220,7 +221,7 @@ export class ManifestManagerImpl implements IManifestManager {
       // Save updated manifest
       const opf = await this.workspaceManager.getWorkspaceOPF(workspaceId);
       opf.manifest = manifest;
-      await this.workspaceManager.saveOPF(workspaceId, opf);
+      await this.workspaceManager.updateWorkspaceOPF(workspaceId, opf);
 
       // Update cache and clear item-specific content cache
       this.cache.manifests.set(workspaceId, manifest);
@@ -310,7 +311,7 @@ export class ManifestManagerImpl implements IManifestManager {
         // Save updated manifest
         const opf = await this.workspaceManager.getWorkspaceOPF(workspaceId);
         opf.manifest = manifest;
-        await this.workspaceManager.saveOPF(workspaceId, opf);
+        await this.workspaceManager.updateWorkspaceOPF(workspaceId, opf);
         
         this.cache.manifests.set(workspaceId, manifest);
       }
@@ -437,7 +438,7 @@ export class ManifestManagerImpl implements IManifestManager {
       // Save updated manifest
       const opf = await this.workspaceManager.getWorkspaceOPF(workspaceId);
       opf.manifest = manifest;
-      await this.workspaceManager.saveOPF(workspaceId, opf);
+      await this.workspaceManager.updateWorkspaceOPF(workspaceId, opf);
 
       // Update cache
       this.cache.manifests.set(workspaceId, manifest);
@@ -503,7 +504,7 @@ export class ManifestManagerImpl implements IManifestManager {
       // Save updated manifest
       const opf = await this.workspaceManager.getWorkspaceOPF(workspaceId);
       opf.manifest = manifest;
-      await this.workspaceManager.saveOPF(workspaceId, opf);
+      await this.workspaceManager.updateWorkspaceOPF(workspaceId, opf);
 
       // Update cache
       this.cache.manifests.set(workspaceId, manifest);
@@ -568,7 +569,7 @@ export class ManifestManagerImpl implements IManifestManager {
       // Save updated manifest
       const opf = await this.workspaceManager.getWorkspaceOPF(workspaceId);
       opf.manifest = reorderedManifest;
-      await this.workspaceManager.saveOPF(workspaceId, opf);
+      await this.workspaceManager.updateWorkspaceOPF(workspaceId, opf);
 
       // Update cache
       this.cache.manifests.set(workspaceId, reorderedManifest);

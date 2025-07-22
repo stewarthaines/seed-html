@@ -5,11 +5,11 @@
   import SpineItem from './SpineItem.svelte';
   import type { SpineItemManager } from '../spine/spine-item-manager';
   import type { SpineItemWithSource } from '../spine/types';
-  import type { WorkspaceManager } from '../workspace';
+  import type { IWorkspaceManager } from '../workspace/types';
 
   // Props
   export let workspaceId: string;
-  export let workspaceManager: WorkspaceManager;
+  export let workspaceManager: IWorkspaceManager;
   export let spineManager: SpineItemManager;
   export let selectedItemId: string | null = null;
   export let isExpanded = true;

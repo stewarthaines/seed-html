@@ -547,12 +547,13 @@ describe('SpineItemManager Error Handling', () => {
       let manifestAdded = false;
       const originalAddManifest = mockWorkspaceManager.addManifestItem;
       mockWorkspaceManager.addManifestItem = async (...args) => {
-        await originalAddManifest.apply(mockWorkspaceManager, args);
+        const result = await originalAddManifest.apply(mockWorkspaceManager, args);
         manifestAdded = true;
         if (manifestAdded) {
           cleanupAttempted = true;
           setupErrorScenario(mockWorkspaceManager, 'spine-add');
         }
+        return result;
       };
 
       // Should still throw the original error, not the cleanup error

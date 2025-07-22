@@ -4,7 +4,7 @@
  * Type definitions for workspace management, OPF operations, and error handling.
  */
 
-import type { EPUBMetadata, ManifestItem } from '../epub/opf-utils.js';
+import type { EPUBMetadata, ManifestItem, OPFDocument, SpineItem } from '../epub/opf-utils.js';
 
 // Re-export ManifestItem for convenience
 export type { ManifestItem };
@@ -115,6 +115,64 @@ export interface WorkspaceCacheEntry {
 
 export interface WorkspaceCache {
   [workspaceId: string]: WorkspaceCacheEntry;
+}
+
+/**
+ * Critical interface that defines ALL methods ManifestManager depends on.
+ * 
+ * ⚠️ BREAKING CHANGE PREVENTION: Any method used by ManifestManager MUST be declared here.
+ * This interface serves as a CONTRACT that prevents missing method errors like the saveOPF issue.
+ * 
+ * If you need to add a new method to WorkspaceManager that ManifestManager will use:
+ * 1. Add it to this interface first
+ * 2. Then implement it in the WorkspaceManager class
+ * 3. TypeScript will enforce this contract and catch missing implementations
+ */
+export interface IWorkspaceManager {
+  // Workspace lifecycle
+  init(): Promise<void>;
+  listWorkspacesWithMetadata(): Promise<WorkspaceInfo[]>;
+  createEPUBWorkspace(metadata: EPUBMetadata): Promise<string>;
+  createLocalizedEPUBWorkspace(metadata: Partial<EPUBMetadata>, locale: string): Promise<string>;
+  switchWorkspace(workspaceId: string): Promise<WorkspaceInfo>;
+  deleteWorkspace(workspaceId: string): Promise<void>;
+  
+  // OPF Management - CRITICAL: This is where the saveOPF error came from!
+  getWorkspaceOPF(workspaceId: string): Promise<OPFDocument>;
+  updateWorkspaceOPF(workspaceId: string, opf: OPFDocument): Promise<void>;
+  // NOTE: saveOPF method does NOT exist - this is the correct method: ↑
+  
+  // Manifest operations
+  addManifestItem(workspaceId: string, item: Partial<ManifestItem>): Promise<ManifestItem>;
+  removeManifestItem(workspaceId: string, itemId: string): Promise<void>;
+  
+  // Spine operations  
+  updateSpineOrder(workspaceId: string, spineItems: string[]): Promise<void>;
+  addSpineItem(workspaceId: string, item: SpineItem, insertIndex?: number): Promise<void>;
+  removeSpineItem(workspaceId: string, idref: string): Promise<void>;
+  
+  // File operations
+  fileExists(workspaceId: string, path: string): Promise<boolean>;
+  writeTextFile(workspaceId: string, path: string, content: string): Promise<void>;
+  readTextFile(workspaceId: string, path: string): Promise<string>;
+  readFile(workspaceId: string, path: string): Promise<ArrayBuffer>;
+  writeFile(workspaceId: string, path: string, content: string | ArrayBuffer): Promise<void>;
+  deleteFile(workspaceId: string, path: string): Promise<void>;
+  
+  // Metadata operations
+  getWorkspaceMetadata(workspaceId: string): Promise<EPUBMetadata>;
+  updateMetadata(workspaceId: string, metadata: EPUBMetadata): Promise<void>;
+  
+  // Validation and utilities
+  validateWorkspaceStructure(workspaceId: string): Promise<ValidationResult>;
+  getWorkspacePathInfo(workspaceId: string): Promise<WorkspacePathInfo>;
+  cleanupOrphanedWorkspaces(): Promise<{ cleaned: string[]; errors: string[] }>;
+  
+  // Advanced features
+  isAdvancedModeEnabled(workspaceId: string): Promise<boolean>;
+  listSourceFiles(workspaceId: string): Promise<any[]>;
+  getSourceFile(workspaceId: string, sourcePath: string): Promise<ArrayBuffer | string>;
+  generateWorkspacePreview(workspaceId: string): Promise<WorkspacePreview>;
 }
 
 // Error classes
