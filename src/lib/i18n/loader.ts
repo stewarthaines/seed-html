@@ -72,11 +72,9 @@ class TranslationLoader implements I18nLoader {
         );
       }
 
-      console.log(`📄 Found ${zip.entries.length} files in ZIP`);
 
       // Initialize storage if needed
       if (!this.storage.isInitialized()) {
-        console.log('🔧 Initializing storage manager...');
         await this.storage.init();
       }
 
@@ -111,7 +109,6 @@ class TranslationLoader implements I18nLoader {
 
           // Write to storage
           await this.storage.writeTextFile(LOCALES_WORKSPACE_ID, entry.fileName, content);
-          console.log(`✅ Wrote ${entry.fileName} to storage`);
 
           // Verification
           try {
@@ -183,15 +180,9 @@ class TranslationLoader implements I18nLoader {
         }
       }
 
-      // After all writes, list what's actually in the workspace
+      // After all writes, verify the workspace exists
       try {
-        const allFiles = await this.storage.listFiles(LOCALES_WORKSPACE_ID);
-        console.log(`📋 Final workspace contents: ${allFiles.length} files:`, allFiles);
-
-        // Also check if the workspace exists
-        const workspaces = await this.storage.listWorkspaces();
-        console.log(`🔍 Available workspaces:`, workspaces);
-        console.log(`🔍 Locales workspace exists: ${workspaces.includes(LOCALES_WORKSPACE_ID)}`);
+        await this.storage.listFiles(LOCALES_WORKSPACE_ID);
       } catch (listError) {
         console.error(`❌ Failed to list workspace contents:`, listError);
         console.error(`❌ Storage backend: ${this.storage.getBackendType()}`);
@@ -229,8 +220,6 @@ class TranslationLoader implements I18nLoader {
             jsonData = JSON.parse(content);
           } catch (parseError) {
             console.error(`❌ ${filePath}: JSON parse failed:`, parseError);
-            console.log(`🔍 ${filePath}: first 100 chars: "${content.slice(0, 100)}"`);
-            console.log(`🔍 ${filePath}: last 100 chars: "${content.slice(-100)}"`);
             throw parseError;
           }
 

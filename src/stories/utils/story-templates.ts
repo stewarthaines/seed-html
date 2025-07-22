@@ -73,7 +73,6 @@ export function createWorkspaceStoryComposition(): WorkspaceStoryComposition {
    * Initialize the story with given configuration
    */
   const initializeStory = async (config: StoryConfiguration): Promise<void> => {
-    console.log('🎬 Story initializeStory called with config:', config);
     currentConfig = config;
 
     // Reset state
@@ -81,38 +80,27 @@ export function createWorkspaceStoryComposition(): WorkspaceStoryComposition {
     logger.clearLogs();
     selectedItemId = null;
 
-    console.log('🔄 State reset, starting initialization...');
-
     // Start initialization
     state.isLoading = true;
     logger.addLog('info', 'Initializing workspace story...');
-    console.log('⏳ Set isLoading to true');
 
     try {
       // Handle error simulation
       if (config.errorHandling?.simulateError) {
-        console.log('❌ Simulating error as requested');
         throw new Error(config.errorHandling.errorMessage || 'Simulated error for testing');
       }
 
       // Get scenario configuration
-      console.log('📖 Processing scenario:', config.scenario);
       const scenario =
         typeof config.scenario === 'string'
           ? generateTestScenarios()[config.scenario]
           : config.scenario;
 
-      console.log('📋 Generated scenario object:', scenario);
-
       if (!scenario) {
-        console.log('❌ No scenario found!');
         throw new Error('Invalid scenario configuration');
       }
 
       logger.addLog('info', `Loading scenario: ${scenario.name}`);
-      console.log(
-        `✅ Scenario "${scenario.name}" loaded with ${scenario.chapters.length} chapters`
-      );
 
       // Create workspace with scenario content
       const setupOptions: WorkspaceSetupOptions = {
@@ -123,12 +111,7 @@ export function createWorkspaceStoryComposition(): WorkspaceStoryComposition {
         includeImages: false, // Keep demos lightweight
       };
 
-      console.log('🛠️ Setup options:', setupOptions);
-      console.log('🚀 Calling initializeStoryWorkspace...');
-
       const result = await initializeStoryWorkspace(setupOptions);
-
-      console.log('✅ initializeStoryWorkspace completed:', result);
 
       // Update state
       state.workspaceManager = result.workspaceManager;
@@ -136,10 +119,6 @@ export function createWorkspaceStoryComposition(): WorkspaceStoryComposition {
       state.initialized = true;
       state.error = null;
 
-      console.log('📝 State updated:');
-      console.log('  - workspaceManager:', state.workspaceManager);
-      console.log('  - workspaceId:', state.workspaceId);
-      console.log('  - initialized:', state.initialized);
 
       logger.addLog('success', `Workspace created: ${result.workspaceId}`);
       logger.addLog('info', `Added ${scenario.chapters.length} chapters`);
@@ -149,11 +128,9 @@ export function createWorkspaceStoryComposition(): WorkspaceStoryComposition {
         setLayoutState(config.layout);
       }
     } catch (error) {
-      console.log('❌ Error in initializeStory:', error);
       handleError(error as Error);
     } finally {
       state.isLoading = false;
-      console.log('🏁 initializeStory complete. Final state isLoading:', state.isLoading);
     }
   };
 

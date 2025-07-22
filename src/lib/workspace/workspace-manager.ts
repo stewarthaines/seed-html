@@ -29,8 +29,12 @@ import type {
 import type { SourceItem } from '../manifest/types.js';
 import type { EPUBMetadata, OPFDocument, ManifestItem, SpineItem } from '../epub/opf-utils.js';
 import { getMimeType } from '../utils/mime-types.js';
-import { WorkspaceError, ValidationError, DEFAULT_WORKSPACE_CONFIG, RESERVED_WORKSPACE_IDS } from './types.js';
-
+import {
+  WorkspaceError,
+  ValidationError,
+  DEFAULT_WORKSPACE_CONFIG,
+  RESERVED_WORKSPACE_IDS,
+} from './types.js';
 
 export class WorkspaceManager {
   private storage: FileStorageAPI;
@@ -40,10 +44,7 @@ export class WorkspaceManager {
   private transformExecutor: TransformExecutor;
   private config: WorkspaceConfig;
 
-  constructor(
-    config?: Partial<WorkspaceConfig>,
-    transformExecutor?: TransformExecutor
-  ) {
+  constructor(config?: Partial<WorkspaceConfig>, transformExecutor?: TransformExecutor) {
     this.config = { ...DEFAULT_WORKSPACE_CONFIG, ...config };
     this.storage = new FileStorageAPI();
     this.cache = new WorkspaceMetadataCache(this.storage, this.config.cache);
@@ -150,10 +151,9 @@ export class WorkspaceManager {
    * Create a new EPUB workspace with localized sample content
    */
   async createLocalizedEPUBWorkspace(
-    metadata: Partial<EPUBMetadata> = {}, 
+    metadata: Partial<EPUBMetadata> = {},
     locale = 'en'
   ): Promise<string> {
-    console.log('🏗️ WorkspaceManager.createLocalizedEPUBWorkspace: Starting with metadata:', metadata, 'locale:', locale);
     try {
       // Step 1: Create base workspace using existing method
       const fullMetadata: EPUBMetadata = {
@@ -162,22 +162,14 @@ export class WorkspaceManager {
         identifier: metadata.identifier || `epub-${Date.now()}`,
         ...metadata,
       };
-      console.log('  📋 Full metadata prepared:', fullMetadata);
-      console.log('  🏗️ Calling createEPUBWorkspace...');
       const workspaceId = await this.createEPUBWorkspace(fullMetadata);
-      console.log('  ✅ Base workspace created with ID:', workspaceId);
 
       // Step 2: Install universal assets
-      console.log('  📦 Installing universal assets...');
       await this.installUniversalAssets(workspaceId);
-      console.log('  ✅ Universal assets installed');
 
       // Step 3: Generate and install sample content
-      console.log('  📝 Generating localized sample content...');
       await this.generateLocalizedSampleContent(workspaceId, locale);
-      console.log('  ✅ Sample content generated');
 
-      console.log('🏗️ WorkspaceManager.createLocalizedEPUBWorkspace: Completed successfully with ID:', workspaceId);
       return workspaceId;
     } catch (error) {
       console.error('❌ WorkspaceManager.createLocalizedEPUBWorkspace: Failed with error:', error);
@@ -194,7 +186,11 @@ export class WorkspaceManager {
     await this.storage.writeTextFile(workspaceId, 'OEBPS/Styles/page.css', pageCSS);
 
     // Install transform scripts
-    await this.storage.writeTextFile(workspaceId, 'SOURCE/scripts/transformText.js', transformTextJS);
+    await this.storage.writeTextFile(
+      workspaceId,
+      'SOURCE/scripts/transformText.js',
+      transformTextJS
+    );
     await this.storage.writeTextFile(workspaceId, 'SOURCE/scripts/transformDom.js', transformDomJS);
 
     // Create settings.json with transform configuration
@@ -212,23 +208,24 @@ export class WorkspaceManager {
       },
     };
 
-    await this.storage.writeTextFile(workspaceId, 'SOURCE/settings.json', JSON.stringify(settings, null, 2));
+    await this.storage.writeTextFile(
+      workspaceId,
+      'SOURCE/settings.json',
+      JSON.stringify(settings, null, 2)
+    );
   }
 
   /**
    * Generate localized sample content and create EPUB files
    */
-  private async generateLocalizedSampleContent(
-    workspaceId: string, 
-    locale: string
-  ): Promise<void> {
+  private async generateLocalizedSampleContent(workspaceId: string, locale: string): Promise<void> {
     // Ensure catalogs are loaded before creating SampleContentGenerator
     await this.ensureCatalogsLoaded();
-    
+
     // Create fresh SampleContentGenerator with loaded catalogs
     const catalogs = i18nService.getCatalogs();
     const contentGenerator = new SampleContentGenerator(catalogs);
-    
+
     // Generate sample content
     const sampleContent = await contentGenerator.generateLocalizedContent(locale);
 
@@ -269,8 +266,6 @@ export class WorkspaceManager {
     // Transform text to XHTML and create OEBPS files
     for (const chapter of chapters) {
       try {
-        console.log(`  📄 Processing chapter: ${chapter.id}`);
-        
         // Execute text transform
         const htmlContent = await this.transformExecutor.executeTextTransform(
           transformTextJS,
@@ -278,7 +273,6 @@ export class WorkspaceManager {
           chapter.content,
           {}
         );
-        console.log(`  ✅ Text transform complete for ${chapter.id}, content length: ${htmlContent.length}`);
 
         // Create DOM document
         const parser = new DOMParser();
@@ -291,7 +285,6 @@ export class WorkspaceManager {
           console.error(`  ❌ DOM parsing error for ${chapter.id}:`, parseError.textContent);
           throw new Error(`DOM parsing failed for ${chapter.id}: ${parseError.textContent}`);
         }
-        console.log(`  ✅ DOM parsing complete for ${chapter.id}`);
 
         // Execute DOM transform
         const transformedDoc = await this.transformExecutor.executeDOMTransform(
@@ -299,7 +292,6 @@ export class WorkspaceManager {
           'transformDom.js',
           doc
         );
-        console.log(`  ✅ DOM transform complete for ${chapter.id}`);
 
         // Generate complete XHTML document
         const xhtmlContent = `<?xml version="1.0" encoding="UTF-8"?>
@@ -314,10 +306,11 @@ ${transformedDoc.documentElement.innerHTML}
 </body>
 </html>`;
 
-        console.log(`  💾 Writing XHTML file for ${chapter.id}, content length: ${xhtmlContent.length}`);
-        await this.storage.writeTextFile(workspaceId, `OEBPS/Text/${chapter.id}.xhtml`, xhtmlContent);
-        console.log(`  ✅ XHTML file written for ${chapter.id}`);
-
+        await this.storage.writeTextFile(
+          workspaceId,
+          `OEBPS/Text/${chapter.id}.xhtml`,
+          xhtmlContent
+        );
       } catch (error) {
         console.error(`  ❌ Failed to process chapter ${chapter.id}:`, error);
         throw error;
@@ -334,7 +327,12 @@ ${transformedDoc.documentElement.innerHTML}
   /**
    * Create localized navigation document
    */
-  private async createNavigationDocument(workspaceId: string, chapters: any[], locale: string, isRTL: boolean): Promise<void> {
+  private async createNavigationDocument(
+    workspaceId: string,
+    chapters: any[],
+    locale: string,
+    isRTL: boolean
+  ): Promise<void> {
     const navTitle = i18nService.translate('navigation.title');
     const tocTitle = i18nService.translate('navigation.tableOfContents');
 
@@ -1453,7 +1451,7 @@ ${chapterLinks}
         size: fileInfo.size,
         type: 'file' as const, // Map all to 'file' for SourceItem compatibility
         modified: new Date(), // SourceFileInfo doesn't have modified date, use current date
-        mediaType: getMimeType(fileInfo.path) // Add mediaType using existing utility
+        mediaType: getMimeType(fileInfo.path), // Add mediaType using existing utility
       }));
     } catch (error: any) {
       return [];

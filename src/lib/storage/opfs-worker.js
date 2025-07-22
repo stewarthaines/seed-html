@@ -100,6 +100,8 @@ async function writeFile(data) {
     const syncHandle = await fileHandle.createSyncAccessHandle();
 
     try {
+      // Truncate the file first to ensure complete overwrite
+      syncHandle.truncate(data.content.byteLength);
       syncHandle.write(data.content, { at: 0 });
       syncHandle.flush();
     } finally {

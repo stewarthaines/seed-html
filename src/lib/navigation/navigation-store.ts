@@ -170,10 +170,6 @@ function createNavigationStore(): NavigationStore {
 
         // Clear spine item selection when navigating away from spine view
         if (currentState.currentView === 'spine' && view !== 'spine') {
-          console.log(
-            '[NavigationStore] Clearing spine selection - navigating from spine to',
-            view
-          );
           const clearEvent = new CustomEvent('clear-spine-selection');
           window.dispatchEvent(clearEvent);
         }

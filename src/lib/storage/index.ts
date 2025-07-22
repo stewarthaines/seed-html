@@ -186,6 +186,8 @@ export class OPFSAsyncBackend implements StorageBackend {
       if ('createSyncAccessHandle' in fileHandle) {
         const syncHandle = await (fileHandle as any).createSyncAccessHandle();
         try {
+          // Truncate the file first to ensure complete overwrite
+          syncHandle.truncate(content.byteLength);
           syncHandle.write(content, { at: 0 });
           syncHandle.flush();
         } finally {
