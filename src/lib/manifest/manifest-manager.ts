@@ -211,9 +211,11 @@ export class ManifestManagerImpl implements IManifestManager {
       // Remove the item from manifest
       manifest.splice(itemIndex, 1);
 
-      // Delete the associated file
+      // Delete the associated file using resolved path
       try {
-        await this.workspaceManager.deleteFile(workspaceId, item.href);
+        const pathInfo = await this.workspaceManager.getWorkspacePathInfo(workspaceId);
+        const resolvedPath = resolveManifestPath(item.href, pathInfo.basePath);
+        await this.workspaceManager.deleteFile(workspaceId, resolvedPath);
       } catch (error) {
         // File might not exist, continue with manifest update
       }
@@ -292,8 +294,10 @@ export class ManifestManagerImpl implements IManifestManager {
       // Get item info
       const item = await this.getManifestItem(workspaceId, itemId);
       
-      // Write content to workspace
-      await this.workspaceManager.writeFile(workspaceId, item.href, content);
+      // Write content to workspace using resolved path
+      const pathInfo = await this.workspaceManager.getWorkspacePathInfo(workspaceId);
+      const resolvedPath = resolveManifestPath(item.href, pathInfo.basePath);
+      await this.workspaceManager.writeFile(workspaceId, resolvedPath, content);
 
       // Update cache
       const cacheKey = `${workspaceId}:${itemId}`;

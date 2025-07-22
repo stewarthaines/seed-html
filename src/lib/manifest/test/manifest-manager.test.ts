@@ -124,7 +124,7 @@ describe('ManifestManager', () => {
     it('should get existing item returns correct data', async () => {
       const mockItem = {
         id: 'chapter1',
-        href: 'OEBPS/chapter1.xhtml',
+        href: 'chapter1.xhtml',
         mediaType: 'application/xhtml+xml',
         size: 2048,
         modified: new Date('2024-01-01'),
@@ -151,7 +151,7 @@ describe('ManifestManager', () => {
     it('should use cached manifest when available', async () => {
       const mockItem = {
         id: 'chapter1',
-        href: 'OEBPS/chapter1.xhtml',
+        href: 'chapter1.xhtml',
         mediaType: 'application/xhtml+xml',
       };
 
@@ -173,7 +173,7 @@ describe('ManifestManager', () => {
     it('should update valid fields successfully', async () => {
       const originalItem = {
         id: 'chapter1',
-        href: 'OEBPS/chapter1.xhtml',
+        href: 'chapter1.xhtml',
         mediaType: 'application/xhtml+xml',
       };
 
@@ -195,7 +195,7 @@ describe('ManifestManager', () => {
     it('should handle partial updates correctly', async () => {
       const originalItem = {
         id: 'chapter1',
-        href: 'OEBPS/chapter1.xhtml',
+        href: 'chapter1.xhtml',
         mediaType: 'application/xhtml+xml',
         properties: ['existing'],
       };
@@ -212,7 +212,7 @@ describe('ManifestManager', () => {
       const updatedOPF = await mockWorkspaceManager.getWorkspaceOPF(testWorkspaceId);
       const updatedItem = updatedOPF.manifest.find((item: any) => item.id === 'chapter1');
       expect(updatedItem.mediaType).toBe('text/html');
-      expect(updatedItem.href).toBe('OEBPS/chapter1.xhtml'); // unchanged
+      expect(updatedItem.href).toBe('chapter1.xhtml'); // unchanged
       expect(updatedItem.properties).toEqual(['existing']); // unchanged
     });
 
@@ -231,7 +231,7 @@ describe('ManifestManager', () => {
     it('should throw ValidationError for invalid updates', async () => {
       const originalItem = {
         id: 'chapter1',
-        href: 'OEBPS/chapter1.xhtml',
+        href: 'chapter1.xhtml',
         mediaType: 'application/xhtml+xml',
       };
 
@@ -248,8 +248,8 @@ describe('ManifestManager', () => {
 
     it('should throw DuplicateItemError for duplicate href', async () => {
       const items = [
-        { id: 'chapter1', href: 'OEBPS/chapter1.xhtml', mediaType: 'application/xhtml+xml' },
-        { id: 'chapter2', href: 'OEBPS/chapter2.xhtml', mediaType: 'application/xhtml+xml' },
+        { id: 'chapter1', href: 'chapter1.xhtml', mediaType: 'application/xhtml+xml' },
+        { id: 'chapter2', href: 'chapter2.xhtml', mediaType: 'application/xhtml+xml' },
       ];
 
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
@@ -258,7 +258,7 @@ describe('ManifestManager', () => {
 
       await expect(
         manifestManager.updateManifestItem(testWorkspaceId, 'chapter1', {
-          href: 'OEBPS/chapter2.xhtml', // Already exists
+          href: 'chapter2.xhtml', // Already exists
         })
       ).rejects.toThrow('Duplicate item');
     });
@@ -267,8 +267,8 @@ describe('ManifestManager', () => {
   describe('deleteManifestItem', () => {
     it('should delete existing item successfully', async () => {
       const items = [
-        { id: 'chapter1', href: 'OEBPS/chapter1.xhtml', mediaType: 'application/xhtml+xml' },
-        { id: 'chapter2', href: 'OEBPS/chapter2.xhtml', mediaType: 'application/xhtml+xml' },
+        { id: 'chapter1', href: 'chapter1.xhtml', mediaType: 'application/xhtml+xml' },
+        { id: 'chapter2', href: 'chapter2.xhtml', mediaType: 'application/xhtml+xml' },
       ];
 
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
@@ -305,7 +305,7 @@ describe('ManifestManager', () => {
     it('should clear content cache for deleted item', async () => {
       const item = {
         id: 'chapter1',
-        href: 'OEBPS/chapter1.xhtml',
+        href: 'chapter1.xhtml',
         mediaType: 'application/xhtml+xml',
       };
 
@@ -343,7 +343,7 @@ describe('ManifestManager', () => {
 
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
         manifest: [
-          { id: 'text-item', href: 'OEBPS/text-item.xhtml', mediaType: 'application/xhtml+xml' },
+          { id: 'text-item', href: 'text-item.xhtml', mediaType: 'application/xhtml+xml' },
         ],
       });
 
@@ -363,7 +363,7 @@ describe('ManifestManager', () => {
 
       // Set up manifest with binary item
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
-        manifest: [{ id: 'binary-item', href: 'OEBPS/image.jpg', mediaType: 'image/jpeg' }],
+        manifest: [{ id: 'binary-item', href: 'image.jpg', mediaType: 'image/jpeg' }],
       });
 
       const result = await manifestManager.getItemContent(testWorkspaceId, 'binary-item');
@@ -379,7 +379,7 @@ describe('ManifestManager', () => {
       });
 
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
-        manifest: [{ id: 'test-item', href: 'OEBPS/test.txt', mediaType: 'text/plain' }],
+        manifest: [{ id: 'test-item', href: 'test.txt', mediaType: 'text/plain' }],
       });
 
       // First call should read from workspace
@@ -394,7 +394,7 @@ describe('ManifestManager', () => {
 
     it('should throw error for missing file', async () => {
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
-        manifest: [{ id: 'missing-item', href: 'OEBPS/missing.txt', mediaType: 'text/plain' }],
+        manifest: [{ id: 'missing-item', href: 'missing.txt', mediaType: 'text/plain' }],
       });
 
       await expect(manifestManager.getItemContent(testWorkspaceId, 'missing-item')).rejects.toThrow(
@@ -409,7 +409,7 @@ describe('ManifestManager', () => {
       const newContent = '<html>Updated</html>';
 
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
-        manifest: [{ id: 'text-item', href: 'OEBPS/text.html', mediaType: 'text/html' }],
+        manifest: [{ id: 'text-item', href: 'text.html', mediaType: 'text/html' }],
       });
 
       mockWorkspaceManager.addTestFiles(testWorkspaceId, {
@@ -431,7 +431,7 @@ describe('ManifestManager', () => {
 
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
         manifest: [
-          { id: 'binary-item', href: 'OEBPS/data.bin', mediaType: 'application/octet-stream' },
+          { id: 'binary-item', href: 'data.bin', mediaType: 'application/octet-stream' },
         ],
       });
 
@@ -443,7 +443,7 @@ describe('ManifestManager', () => {
     });
 
     it('should update content cache after save', async () => {
-      const item = { id: 'text-item', href: 'OEBPS/text.html', mediaType: 'text/html' };
+      const item = { id: 'text-item', href: 'text.html', mediaType: 'text/html' };
       const newContent = '<html>New content</html>';
 
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
@@ -466,7 +466,7 @@ describe('ManifestManager', () => {
       mockWorkspaceManager.setFailureMode('file-write');
 
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
-        manifest: [{ id: 'text-item', href: 'OEBPS/text.html', mediaType: 'text/html' }],
+        manifest: [{ id: 'text-item', href: 'text.html', mediaType: 'text/html' }],
       });
 
       await expect(
@@ -486,7 +486,7 @@ describe('ManifestManager', () => {
 
       // Set up manifest with image item
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
-        manifest: [{ id: 'image-item', href: 'OEBPS/cover.jpg', mediaType: 'image/jpeg' }],
+        manifest: [{ id: 'image-item', href: 'cover.jpg', mediaType: 'image/jpeg' }],
       });
 
       // Call REAL ManifestManager method (will fail until implemented)
@@ -511,7 +511,7 @@ describe('ManifestManager', () => {
 
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
         manifest: [
-          { id: 'chapter1', href: 'OEBPS/chapter1.xhtml', mediaType: 'application/xhtml+xml' },
+          { id: 'chapter1', href: 'chapter1.xhtml', mediaType: 'application/xhtml+xml' },
         ],
       });
 
@@ -532,7 +532,7 @@ describe('ManifestManager', () => {
 
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
         manifest: [
-          { id: 'unknown-item', href: 'OEBPS/unknown.xyz', mediaType: 'application/octet-stream' },
+          { id: 'unknown-item', href: 'unknown.xyz', mediaType: 'application/octet-stream' },
         ],
       });
 
@@ -606,7 +606,7 @@ describe('ManifestManager', () => {
     it('should throw DuplicateItemError for existing ID', async () => {
       const existingItem = {
         id: 'chapter1',
-        href: 'OEBPS/chapter1.xhtml',
+        href: 'chapter1.xhtml',
         mediaType: 'application/xhtml+xml',
       };
 
@@ -769,7 +769,7 @@ describe('ManifestManager', () => {
     it('should return empty array for valid item', () => {
       const validItem = {
         id: 'chapter1',
-        href: 'OEBPS/chapter1.xhtml',
+        href: 'chapter1.xhtml',
         mediaType: 'application/xhtml+xml',
         properties: ['nav'],
       };
@@ -952,7 +952,7 @@ describe('ManifestManager', () => {
       });
 
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
-        manifest: [{ id: 'test-item', href: 'OEBPS/test.txt', mediaType: 'text/plain' }],
+        manifest: [{ id: 'test-item', href: 'test.txt', mediaType: 'text/plain' }],
       });
 
       // First call should read from workspace
@@ -977,9 +977,9 @@ describe('ManifestManager', () => {
 
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
         manifest: [
-          { id: 'item1', href: 'OEBPS/large1.txt', mediaType: 'text/plain' },
-          { id: 'item2', href: 'OEBPS/large2.txt', mediaType: 'text/plain' },
-          { id: 'item3', href: 'OEBPS/large3.txt', mediaType: 'text/plain' },
+          { id: 'item1', href: 'large1.txt', mediaType: 'text/plain' },
+          { id: 'item2', href: 'large2.txt', mediaType: 'text/plain' },
+          { id: 'item3', href: 'large3.txt', mediaType: 'text/plain' },
         ],
       });
 
@@ -1082,7 +1082,7 @@ describe('ManifestManager', () => {
       const largeContent = 'x'.repeat(10 * 1024 * 1024); // 10MB content
 
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
-        manifest: [{ id: 'large-item', href: 'OEBPS/large.txt', mediaType: 'text/plain' }],
+        manifest: [{ id: 'large-item', href: 'large.txt', mediaType: 'text/plain' }],
       });
 
       const start = performance.now();
