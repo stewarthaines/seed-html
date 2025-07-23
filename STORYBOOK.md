@@ -30,13 +30,13 @@ The Storybook toolbar includes a 🌍 globe icon for testing internationalizatio
 
 ```
 src/stories/
-├── ComponentName.stories.svelte     // UI component stories
-├── FeatureDemo.svelte               // Backend feature demo component
-├── FeatureDemo.stories.svelte       // Backend feature stories
-├── feature-demo.css                 // Demo-specific styling
-└── components/                      // Reusable demo components
-    ├── ConsoleLog.svelte           // Reusable console component
-    └── DemoControls.svelte         // Reusable control panel
+├── ConsoleLog.svelte           // Reusable console component
+├── DemoControls.svelte         // Reusable control panel
+└── component/                      // UI component
+    ├── ComponentName.stories.svelte     // UI component stories
+    ├── FeatureDemo.svelte               // Backend feature demo component
+    ├── FeatureDemo.stories.svelte       // Backend feature stories
+    └── feature-demo.css                 // Demo-specific styling
 ```
 
 ## Story Categories & Patterns
@@ -97,15 +97,15 @@ src/stories/
 
 ```bash
 # Create demo component for new feature
-touch src/stories/FeatureDemo.svelte
-touch src/stories/FeatureDemo.stories.svelte
-touch src/stories/feature-demo.css
+touch src/stories/component/FeatureDemo.svelte
+touch src/stories/component/FeatureDemo.stories.svelte
+touch src/stories/component/feature-demo.css
 ```
 
 ### 2. **Choose Your Pattern**
 
 - **Backend Feature**: Follow [STORYBOOK_backend.md](./STORYBOOK_backend.md) patterns for API demonstrations
-- **Component Feature**: Follow [STORYBOOK_feature.md](./STORYBOOK_feature.md) patterns for component development
+- **Component Feature**: Follow [STORYBOOK_component.md](./STORYBOOK_component.md) patterns for component development
 - **UI Component**: Follow traditional component story patterns
 
 ### 3. **Test and Capture**
@@ -119,11 +119,13 @@ npm run test:stories        # Run story-based tests
 ## Quick Reference: Story Pattern Selection
 
 ### When to Use Args Pattern
+
 - **Application Stories**: Components that accept mock data providers
 - **Component Stories**: Traditional UI components with configurable props
 - **Layout Components**: Complex components with multiple configuration options
 
 ### When to Use Direct Instantiation
+
 - **Backend Stories**: API demos with real backend initialization
 - **Feature Stories**: Components with complex setup and state management
 - **Demo Wrappers**: Components that manage their own initialization
@@ -133,6 +135,7 @@ npm run test:stories        # Run story-based tests
 ### ✅ **Correct Story Patterns**
 
 **Args Pattern (Application/Component Stories):**
+
 ```svelte
 <Story name="Demo" args={{ workspaceManager: mockData, showEmpty: true }}>
   <ComponentName />
@@ -140,6 +143,7 @@ npm run test:stories        # Run story-based tests
 ```
 
 **Direct Instantiation (Backend/Feature Stories):**
+
 ```svelte
 <Story name="Demo">
   <DemoWrapper />
@@ -147,6 +151,7 @@ npm run test:stories        # Run story-based tests
 ```
 
 **Play Functions (All Types):**
+
 ```svelte
 <Story
   name="Interactive Demo"
@@ -163,30 +168,22 @@ npm run test:stories        # Run story-based tests
 ### ❌ **Problematic Patterns**
 
 ```svelte
-<!-- WRONG: Mixed patterns -->
-<Story name="Demo" args={{ prop: value }}>
-  <DemoWrapper />  <!-- Should use direct props or no args -->
-</Story>
-
 <!-- WRONG: Complex logic in stories file -->
 <script>
   let complexState = {};
   // 100+ lines of component logic - move to separate component
 </script>
+
+<!-- WRONG: Mixed patterns -->
+<Story name="Demo" args={{ prop: value }}>
+  <DemoWrapper />
+  <!-- Should use direct props or no args -->
+</Story>
 ```
 
 ## Component Separation Pattern
 
 ### ✅ DO: Follow Component Separation Pattern
-
-**Correct Structure:**
-
-```
-src/stories/
-├── FeatureDemo.stories.svelte    # Story definitions only
-├── FeatureDemo.svelte            # Component logic
-└── feature-demo.css              # Component styles
-```
 
 **Stories File (`*.stories.svelte`):**
 
@@ -237,6 +234,7 @@ src/stories/
 ### ✅ **Do**
 
 - Use real APIs, not mocks, for authentic testing
+- When mocks make sense check if there are existing mocks in `src/lib/test/mocks`
 - Include comprehensive error handling
 - Provide reset functionality for clean demos
 - Use descriptive logging with timestamps
@@ -310,6 +308,7 @@ npm run test:stories                # Should pass story tests
 
 **Cause**: Wrong story pattern for category or missing component files
 **Solution**:
+
 1. **Check Pattern**: Use args for Application/Component, direct instantiation for Backend/Feature
 2. **Verify Files**: Ensure component file exists before importing
 3. **Fix Imports**: Check all import paths are correct
@@ -318,6 +317,7 @@ npm run test:stories                # Should pass story tests
 
 **Cause**: Complex logic in stories file or mixed patterns
 **Solution**:
+
 1. **Move Logic**: Extract all component logic to separate `.svelte` file (< 500 lines)
 2. **Minimal Stories**: Keep stories file to < 100 lines (just `defineMeta` and `<Story>`)
 3. **Consistent Pattern**: Don't mix args and direct instantiation
@@ -326,6 +326,7 @@ npm run test:stories                # Should pass story tests
 
 **Cause**: Wrong testing library imports or timing issues
 **Solution**:
+
 1. **Standard Imports**: `const { within } = await import('@testing-library/dom')`
 2. **Proper Timing**: Add `await new Promise(resolve => setTimeout(resolve, ms))` for real operations
 3. **Error Handling**: Wrap interactions in try/catch blocks
@@ -334,6 +335,7 @@ npm run test:stories                # Should pass story tests
 
 **Cause**: Unclear pattern selection
 **Solution**:
+
 1. **Application**: Use for layout/full-app demos with args pattern
 2. **Component**: Use for reusable UI with configurable props
 3. **Backend**: Use for API demos with direct instantiation

@@ -258,7 +258,7 @@ Mock spine items with various configurations:
 ### Basic Auto-Generation
 
 ```typescript
-import { OutlineGenerator } from '$lib/outline/OutlineGenerator';
+import { OutlineGenerator } from './outline-generator.js';
 
 const navigationDoc = await OutlineGenerator.generateFromSpine(
   spineItems,

@@ -1,5 +1,48 @@
 # Claude Code Project Instructions
 
+## Claude Interaction Guidelines
+
+If it's not been established yet ask the user whether this session is primarily DOCUMENTATION, TESTING or DEVELOPMENT based.
+
+**See [DEVELOPMENT.md](./DEVELOPMENT.md) for complete AI coding agent requirements and development best practices.**
+
+**See [TESTING.md](./TESTING.md) for complete AI coding agent testing best practices.**
+
+### 🚨 MANDATORY Quality Validation for Claude
+
+**TypeScript Compliance**: Claude MUST run `npm run check` after any code modification and resolve ALL TypeScript errors before considering any task complete.
+
+**Quality Gates**: Every coding task must include:
+
+1. ✅ TypeScript validation (`npm run check`)
+2. ✅ ESLint compliance (`npm run lint` - < 500 problems, zero critical errors)
+3. ✅ Test execution (`npm test`)
+4. ✅ Build verification (`npm run build`)
+
+**Never Complete Tasks With**:
+
+- Outstanding TypeScript errors
+- Critical ESLint errors (undefined variables, syntax errors)
+- Failing tests due to type issues
+- Missing imports or class instantiation
+- Commented-out critical code (especially test setup)
+
+### Interaction Style
+
+- **Quality First**: Always prioritize TypeScript compliance and test validity
+- **Error Resolution**: Fix type errors immediately, never defer or ignore
+- **Validation Workflow**: Run quality checks frequently during development
+- **Documentation**: When planning under-specified work, ask the user for clarification
+- **IMPORTANT:** Ask the user one question at a time, not a list of questions
+
+## Claude Interaction Memory
+
+- The user usually has Storybook running. If Claude wants a screenshot, ask the user
+- The user is the system architecture expert. Instead of searching the whole project, try asking the user for guidance
+- **CRITICAL**: The user expects zero TypeScript errors in the codebase at all times
+- The user will run the npm dev server, so the agent never needs to
+- When writing api docs only document methods specified. do not invent features that haven't been requested.
+
 ## EDITME.html - EPUB Editor
 
 This is a Svelte-based EPUB editor that runs in modern browsers, replacing a previous Vue.js version. It allows users to create and edit EPUB files using plain text sources that are transformed to XHTML.
@@ -107,8 +150,7 @@ mimetype
 META-INF/content.opf
 OEBPS/ (standard EPUB content)
 ├── SOURCE.zip (editor source files - extracted to SOURCE/ during editing)
-├── EDITME.html (editor app - to be extracted by the user to edit the EPUB file)
-└── EXTRACT_EDITOR.txt (instructions for extracting the editor)
+└── EDITME.html (editor app - to be extracted by the user to edit the EPUB file)
 ```
 
 **Note**: The `SOURCE.zip` file contains all editor-specific files (settings, plain text sources, transform scripts, extensions) and is extracted to a `SOURCE/` directory in the workspace during editing.
@@ -268,42 +310,3 @@ import { documentDirection } from '../i18n';
 ## Component Development Guidelines
 
 **See [DEVELOPMENT.md](./DEVELOPMENT.md) for component development guidelines including accessibility checklist, development patterns, reference components, and testing requirements.**
-
-## Claude Interaction Guidelines
-
-### 🚨 MANDATORY Quality Validation for Claude
-
-**TypeScript Compliance**: Claude MUST run `npm run check` after any code modification and resolve ALL TypeScript errors before considering any task complete.
-
-**Quality Gates**: Every coding task must include:
-
-1. ✅ TypeScript validation (`npm run check`)
-2. ✅ ESLint compliance (`npm run lint` - < 500 problems, zero critical errors)
-3. ✅ Test execution (`npm test`)
-4. ✅ Build verification (`npm run build`)
-
-**Never Complete Tasks With**:
-
-- Outstanding TypeScript errors
-- Critical ESLint errors (undefined variables, syntax errors)
-- Failing tests due to type issues
-- Missing imports or class instantiation
-- Commented-out critical code (especially test setup)
-
-### Interaction Style
-
-- **Quality First**: Always prioritize TypeScript compliance and test validity
-- **Error Resolution**: Fix type errors immediately, never defer or ignore
-- **Validation Workflow**: Run quality checks frequently during development
-- **Documentation**: When planning under-specified work, ask the user for clarification
-- **IMPORTANT:** Ask the user one question at a time, not a list of questions
-
-**See [DEVELOPMENT.md](./DEVELOPMENT.md) for complete AI coding agent requirements and development best practices.**
-
-## Claude Interaction Memory
-
-- The user usually has Storybook running. If Claude wants a screenshot, ask the user
-- The user is the system architecture expert. Instead of searching the whole project, try asking the user for guidance
-- **CRITICAL**: The user expects zero TypeScript errors in the codebase at all times
-- The user will run the npm dev server, so the agent never needs to
-- When writing api docs only document methods specified. do not invent features that haven't been requests.

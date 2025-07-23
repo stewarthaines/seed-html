@@ -699,7 +699,8 @@ describe('Performance Tests', () => {
 **WorkspaceManager Mock (using existing infrastructure):**
 ```typescript
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { MockWorkspaceManager, createMockWorkspaceManagerVi } from '../../test/mocks/workspace-manager.mock.js';
+import { MockWorkspaceManager } from '../../test/mocks/workspace-manager.mock.js';
+import { createMockWorkspaceManagerVi } from '../../test/mocks/workspace-manager-vitest.mock.js';
 import { ManifestManagerImpl } from '../manifest-manager.js';
 
 describe('ManifestManager', () => {

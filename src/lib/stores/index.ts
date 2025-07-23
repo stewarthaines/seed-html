@@ -33,6 +33,8 @@ export interface TextEditorStore {
   reset(): void;
   /** Get current content without subscribing */
   getContent(): string;
+  /** Cleanup and destroy the store */
+  destroy(): void;
 }
 
 /**

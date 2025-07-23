@@ -369,7 +369,7 @@ import type { SpineItemWithSource } from '../../spine/types.js';
 import { MockWorkspaceManager } from '../../test/mocks/workspace-manager.mock.js';
 
 // ❌ Don't use $lib paths in test files
-import type { IWorkspaceManager } from '$lib/workspace/types';
+import type { IWorkspaceManager } from '../workspace/types';
 ```
 
 ## Quality Gates

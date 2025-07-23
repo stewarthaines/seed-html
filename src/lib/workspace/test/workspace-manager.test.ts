@@ -8,7 +8,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { WorkspaceManager } from '../workspace-manager.js';
 import { WorkspaceError, ValidationError, CacheError } from '../types.js';
-import { createVitestMockFileStorage } from '../../test/mocks/file-storage.mock.js';
+import { createVitestMockFileStorage } from '../../test/mocks/file-storage-vitest.mock.js';
 import type {
   WorkspaceInfo,
   ValidationResult,

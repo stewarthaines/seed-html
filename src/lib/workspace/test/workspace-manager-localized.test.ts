@@ -9,7 +9,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { WorkspaceManager } from '../workspace-manager.js';
-import { createVitestMockFileStorage } from '../../test/mocks/file-storage.mock.js';
+import { createVitestMockFileStorage } from '../../test/mocks/file-storage-vitest.mock.js';
 import type { EPUBMetadata } from '../../epub/opf-utils.js';
 
 // Mock File Storage API

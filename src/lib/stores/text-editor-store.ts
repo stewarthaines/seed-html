@@ -114,14 +114,19 @@ export function createTextEditorStore(
   // Cleanup and Return
   // ============================================================================
 
-  // TODO: Implement cleanup mechanism when store is no longer referenced
-  // This would require WeakRef or similar mechanism to detect when store
-  // is garbage collected and remove from activeEditorIds registry
+  /**
+   * Cleanup function to remove the editor ID from the registry
+   * Should be called when the component using this store is destroyed
+   */
+  function destroy(): void {
+    activeEditorIds.delete(editorId);
+  }
 
   return {
     subscribe,
     updateContent,
     reset,
     getContent,
+    destroy,
   };
 }
