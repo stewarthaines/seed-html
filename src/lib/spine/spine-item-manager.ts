@@ -134,7 +134,12 @@ export class SpineItemManager {
 
     // Create XHTML file
     const xhtmlContent = this.generateXHTMLContent(chapterData.title);
-    await this.workspaceManager.writeTextFile(workspaceId, `OEBPS/${href}`, xhtmlContent);
+    const pathInfo = await this.workspaceManager.getWorkspacePathInfo(workspaceId);
+    await this.workspaceManager.writeTextFile(
+      workspaceId,
+      `${pathInfo.basePath}/${href}`,
+      xhtmlContent
+    );
 
     // Create source file if requested (default: true)
     let hasSourceFile = false;

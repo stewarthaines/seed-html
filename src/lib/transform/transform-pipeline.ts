@@ -119,7 +119,7 @@ export class TransformPipeline {
   async transformText(
     plainText: string,
     workspaceId: string,
-    spineItemId: string
+    _spineItemId: string
   ): Promise<TransformResult> {
     const startTime = Date.now();
 
@@ -189,7 +189,7 @@ export class TransformPipeline {
   async transformDOM(
     document: Document,
     workspaceId: string,
-    spineItemId: string
+    _spineItemId: string
   ): Promise<Document> {
     try {
       // Load transform scripts

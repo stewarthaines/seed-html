@@ -106,6 +106,36 @@ console.log('Result:', result);
 - **Integration points** - Document any APIs that other features will consume
 - **Complex workflows** - Show end-to-end integration patterns
 
+## Naming Conventions
+
+### File Naming Standards
+
+**TypeScript Files**: Use kebab-case for all TypeScript filenames to maintain consistency across the codebase.
+
+**Svelte Files**: Use PascalCase for Svelte component filenames following Svelte conventions.
+
+```bash
+# ✅ Correct naming conventions
+outline-generator.ts      # TypeScript - kebab-case
+settings-manager.ts       # TypeScript - kebab-case
+workspace-cache.ts        # TypeScript - kebab-case
+ContentPreview.svelte     # Svelte - PascalCase
+ThemeToggle.svelte        # Svelte - PascalCase
+NavigationEditor.svelte   # Svelte - PascalCase
+
+# ❌ Incorrect naming conventions
+OutlineGenerator.ts       # TypeScript should be kebab-case
+settingsManager.ts        # TypeScript should be kebab-case
+content-preview.svelte    # Svelte should be PascalCase
+theme-toggle.svelte       # Svelte should be PascalCase
+```
+
+**Rationale**: TypeScript files use kebab-case for consistency and readability across different operating systems. Svelte files use PascalCase to follow established Svelte component naming conventions and maintain compatibility with component import patterns.
+
+**Exceptions**: 
+- Documentation files: `API.md`, `README.md`, `TESTING.md` (UPPERCASE)
+- Configuration files: Follow their respective conventions (`package.json`, `tsconfig.json`, etc.)
+
 ## Component Development Guidelines
 
 When creating new components, follow these accessibility and development standards:
