@@ -16,6 +16,11 @@ const dirname =
 
 // https://vite.dev/config/
 export default defineConfig({
+  resolve: {
+    alias: {
+      '$lib': path.resolve(dirname, 'src/lib')
+    }
+  },
   build: {
     target: 'es2022',
     minify: true,

@@ -273,7 +273,7 @@ const workspaceId = await workspaceManager.createLocalizedEPUBWorkspace(metadata
 
 ### **Leverage Existing Patterns**
 - Build on successful Phase 1 storage integration test
-- Use established Backend story patterns from `STORYBOOK_backend.md`
+- Use established Backend story patterns from `STORYBOOK_ADVANCED.md`
 - Follow component separation from `STORYBOOK.md`
 
 ### **Cross-Browser Testing**

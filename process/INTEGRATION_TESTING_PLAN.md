@@ -15,8 +15,7 @@ This document details the implementation of comprehensive browser-based integrat
 This implementation strictly follows the project's established Storybook patterns:
 
 - **STORYBOOK.md**: Component Separation Pattern, story categories, testing guidelines
-- **STORYBOOK_backend.md**: Real backend integration, console logging, reset functionality  
-- **STORYBOOK_feature.md**: Promise-based operations, accessibility patterns, error handling
+- **STORYBOOK_ADVANCED.md**: Real backend integration, console logging, reset functionality, promise-based operations, accessibility patterns, error handling
 
 ### Leveraging Existing Infrastructure
 
@@ -85,7 +84,7 @@ src/stories/
   let workspaceManager: WorkspaceManager;
   let contentGenerator: SampleContentGenerator;
 
-  // Real backend initialization (STORYBOOK_feature.md pattern)
+  // Real backend initialization (STORYBOOK_ADVANCED.md pattern)
   async function initializeBackends() {
     try {
       addLog('info', 'Initializing storage backend...');
@@ -254,7 +253,7 @@ The adventure starts here with some **bold text** and *italic text*.`;
     }
   }
 
-  // Reset functionality (STORYBOOK_backend.md pattern)
+  // Reset functionality (STORYBOOK_ADVANCED.md pattern)
   async function resetDemo() {
     logs = [];
     testResults = [];
@@ -299,12 +298,12 @@ The adventure starts here with some **bold text** and *italic text*.`;
     return 'Unknown';
   }
 
-  // Initialize on mount (STORYBOOK_feature.md pattern)
+  // Initialize on mount (STORYBOOK_ADVANCED.md pattern)
   onMount(() => {
     initializeBackends();
   });
 
-  // Expose reset for play functions (STORYBOOK_feature.md pattern)
+  // Expose reset for play functions (STORYBOOK_ADVANCED.md pattern)
   if (typeof window !== 'undefined') {
     (window as any).resetWorkspaceIntegrationDemo = resetDemo;
     (window as any).runWorkspaceIntegrationTest = runCompleteWorkspaceCreation;
@@ -403,7 +402,7 @@ The adventure starts here with some **bold text** and *italic text*.`;
       </div>
     {/if}
 
-    <!-- Console Log (STORYBOOK_backend.md pattern) -->
+    <!-- Console Log (STORYBOOK_ADVANCED.md pattern) -->
     <div class="console-log">
       <div class="console-header">
         <h3>Integration Test Log</h3>
@@ -540,7 +539,7 @@ This story serves as both debugging tool and regression test:
       // Wait for backend initialization (real backends take time)
       await new Promise(resolve => setTimeout(resolve, 3000));
 
-      // Reset to clean state (STORYBOOK_feature.md pattern)
+      // Reset to clean state (STORYBOOK_ADVANCED.md pattern)
       if (window.resetWorkspaceIntegrationDemo) {
         await window.resetWorkspaceIntegrationDemo();
         await new Promise(resolve => setTimeout(resolve, 1500));

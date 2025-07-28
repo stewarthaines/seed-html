@@ -6,394 +6,273 @@ This project uses Storybook for component development, testing, and documentatio
 
 ## Documentation Structure
 
-This guide is split into focused documents:
+- **📖 [STORYBOOK.md](./STORYBOOK.md)** (this file) - Main patterns, organization, and quick reference
+- **🔧 [STORYBOOK_ADVANCED.md](./STORYBOOK_ADVANCED.md)** - Backend integration, complex patterns, and troubleshooting
 
-- **📖 [STORYBOOK.md](./STORYBOOK.md)** (this file) - Main overview, organization, and general patterns
-- **🔧 [STORYBOOK_backend.md](./STORYBOOK_backend.md)** - Backend feature demonstration patterns and API testing
-- **🎯 [STORYBOOK_feature.md](./STORYBOOK_feature.md)** - Feature development patterns and accessibility integration
-
-## Global Storybook Features
+## Global Features
 
 ### Internationalization (i18n) Locale Switcher
 
-The Storybook toolbar includes a 🌍 globe icon for testing internationalization features:
+The Storybook toolbar includes a 🌍 globe icon for testing internationalization:
 
 - **7 Languages**: English, German, Arabic, Hebrew, Japanese, Georgian, Chinese Traditional
 - **Instant Switching**: All components update reactively when locale changes
 - **RTL Support**: Automatic layout direction switching for Arabic and Hebrew
-- **Flag Indicators**: Demo translations show country flag prefixes for visual confirmation
 - **Testing**: Use to verify all UI text is properly internationalized
 
-**Usage**: Click the 🌍 globe icon in the toolbar and select any language to see live translation updates throughout all components.
+**Usage**: Click the 🌍 globe icon in the toolbar and select any language.
 
 ## File Organization
 
 ```
 src/stories/
-├── ConsoleLog.svelte           // Reusable console component
-├── DemoControls.svelte         // Reusable control panel
-└── component/                      // UI component
-    ├── ComponentName.stories.svelte     // UI component stories
-    ├── FeatureDemo.svelte               // Backend feature demo component
-    ├── FeatureDemo.stories.svelte       // Backend feature stories
-    └── feature-demo.css                 // Demo-specific styling
+├── Application/          # Complete app demonstrations
+├── Backend/             # Backend feature demos (non-UI)
+├── Components/          # Individual UI components
+└── Features/           # Feature development stories
 ```
 
 ## Story Categories & Patterns
 
 ### Application Stories: `title: 'Application/ComponentName'`
+Complete application demonstrations with layout, navigation, and full functionality.
 
-**Purpose**: Layout components, full-app demos, and cross-component interaction testing
-**Pattern**: Use `args` pattern with mock data providers
-**Examples**: `App.visual.stories.svelte`, `LayoutManager.stories.svelte`
-
-```svelte
-<Story name="Demo" args={{ workspaceManager: mockManager, data: mockData }}>
-  <ComponentName />
-</Story>
-```
+**Use for**: Layout systems, navigation routers, complete app flows
 
 ### Component Stories: `title: 'Components/Category/ComponentName'`
+Individual UI components with various states and props.
 
-**Purpose**: Reusable UI components with configurable props
-**Pattern**: Use `args` pattern for prop demonstrations
-**Examples**: `WorkspaceComponents.stories.svelte`, `MetadataEditor.stories.svelte`
-
-```svelte
-<Story name="Demo" args={{ prop1: value1, prop2: value2 }}>
-  <ComponentName />
-</Story>
-```
+**Use for**: Buttons, forms, cards, modals - reusable UI components
 
 ### Backend Stories: `title: 'Backend/FeatureName'`
+Non-UI features that need demonstration and testing.
 
-**Purpose**: API demonstration and testing with real browser integration
-**Pattern**: Direct component instantiation (no args)
-**Examples**: `StorageDemo.stories.svelte`, `EPUBUnpackerDemo.stories.svelte`
-**See [STORYBOOK_backend.md](./STORYBOOK_backend.md) for detailed patterns**
-
-```svelte
-<Story name="Demo">
-  <DemoComponent />
-</Story>
-```
+**Use for**: APIs, file systems, data processing, storage systems
 
 ### Feature Stories: `title: 'Features/FeatureName'`
+Development-focused stories for building and testing new features.
 
-**Purpose**: Component development with real backend integration
-**Pattern**: Direct component instantiation with backend initialization
-**Examples**: Feature demos with full API integration
-**See [STORYBOOK_feature.md](./STORYBOOK_feature.md) for detailed patterns**
-
-```svelte
-<Story name="Demo">
-  <FeatureDemoWrapper />
-</Story>
-```
+**Use for**: Work-in-progress features, integration testing, accessibility development
 
 ## Development Workflow
 
 ### 1. **Create Demo Component**
-
 ```bash
 # Create demo component for new feature
-touch src/stories/component/FeatureDemo.svelte
-touch src/stories/component/FeatureDemo.stories.svelte
-touch src/stories/component/feature-demo.css
+src/stories/FeatureNameDemo.svelte
 ```
 
 ### 2. **Choose Your Pattern**
-
-- **Backend Feature**: Follow [STORYBOOK_backend.md](./STORYBOOK_backend.md) patterns for API demonstrations
-- **Component Feature**: Follow [STORYBOOK_component.md](./STORYBOOK_component.md) patterns for component development
-- **UI Component**: Follow traditional component story patterns
+- **Simple components**: Use args pattern with controls
+- **Complex features**: Use direct instantiation with play functions
+- **Backend features**: Use backend demo pattern with real APIs
 
 ### 3. **Test and Capture**
-
 ```bash
-npm run storybook           # Start Storybook
-npm run screenshots         # Capture automated screenshots
-npm run test:stories        # Run story-based tests
+npm run screenshots  # Capture component screenshots
 ```
 
 ## Quick Reference: Story Pattern Selection
 
 ### When to Use Args Pattern
+- Simple components with clear props
+- Need interactive controls in Storybook
+- Component state can be controlled via props
 
-- **Application Stories**: Components that accept mock data providers
-- **Component Stories**: Traditional UI components with configurable props
-- **Layout Components**: Complex components with multiple configuration options
+```typescript
+export const Default: Story = {
+  args: {
+    title: 'Sample Title',
+    disabled: false
+  }
+};
+```
 
 ### When to Use Direct Instantiation
+- Complex state management
+- Need custom initialization logic
+- Backend API integration
 
-- **Backend Stories**: API demos with real backend initialization
-- **Feature Stories**: Components with complex setup and state management
-- **Demo Wrappers**: Components that manage their own initialization
+```typescript
+export const WithBackend: Story = {
+  render: () => new ComponentDemo({ target: document.body })
+};
+```
 
 ## Story Syntax Guidelines
 
 ### ✅ **Correct Story Patterns**
 
-**Args Pattern (Application/Component Stories):**
+**Args Pattern for Simple Components:**
+```typescript
+import type { Meta, StoryObj } from '@storybook/svelte';
+import ComponentDemo from './ComponentDemo.svelte';
 
-```svelte
-<Story name="Demo" args={{ workspaceManager: mockData, showEmpty: true }}>
-  <ComponentName />
-</Story>
+const meta: Meta<ComponentDemo> = {
+  title: 'Components/Category/ComponentName',
+  component: ComponentDemo,
+  parameters: { layout: 'centered' }
+};
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: { title: 'Hello World' }
+};
 ```
 
-**Direct Instantiation (Backend/Feature Stories):**
-
-```svelte
-<Story name="Demo">
-  <DemoWrapper />
-</Story>
-```
-
-**Play Functions (All Types):**
-
-```svelte
-<Story
-  name="Interactive Demo"
-  play={async ({ canvasElement }) => {
-    const { within } = await import('@testing-library/dom');
-    const { default: userEvent } = await import('@testing-library/user-event');
-    // Interaction logic
-  }}
->
-  <ComponentName />
-</Story>
+**Direct Instantiation for Complex Features:**
+```typescript
+export const BackendIntegration: Story = {
+  render: () => new FeatureDemo({ target: document.body }),
+  parameters: { layout: 'fullscreen' }
+};
 ```
 
 ### ❌ **Problematic Patterns**
 
-```svelte
-<!-- WRONG: Complex logic in stories file -->
-<script>
-  let complexState = {};
-  // 100+ lines of component logic - move to separate component
-</script>
-
-<!-- WRONG: Mixed patterns -->
-<Story name="Demo" args={{ prop: value }}>
-  <DemoWrapper />
-  <!-- Should use direct props or no args -->
-</Story>
+**Don't use constructor calls in args:**
+```typescript
+// ❌ This will cause parsing errors
+export const Bad: Story = {
+  args: {
+    manager: new WorkspaceManager() // Constructor in args
+  }
+};
 ```
 
 ## Component Separation Pattern
 
 ### ✅ DO: Follow Component Separation Pattern
 
-**Stories File (`*.stories.svelte`):**
+**1. Component (MyComponent.svelte)**
+```svelte
+<script lang="ts">
+  export let title: string;
+  export let onAction: () => void;
+</script>
 
-- Use `defineMeta` from `@storybook/addon-svelte-csf`
-- Import component from separate `.svelte` file
-- Keep story definitions minimal and focused
-- NO component logic or large `<script>` blocks
+<button on:click={onAction}>{title}</button>
+```
 
-**Component File (`*.svelte`):**
+**2. Demo Component (MyComponentDemo.svelte)**
+```svelte
+<script lang="ts">
+  import MyComponent from './MyComponent.svelte';
+  
+  let message = '';
+  const handleAction = () => { message = 'Clicked!'; };
+</script>
 
-- Contains all component logic, state, and interactions
-- Import dedicated CSS file for styles
-- Follow TypeScript patterns with proper type annotations
-- Handle all business logic and API calls
+<MyComponent title="Demo Button" onAction={handleAction} />
+{#if message}<p>{message}</p>{/if}
+```
 
-**CSS File (`*.css`):**
+**3. Story (MyComponent.stories.ts)**
+```typescript
+import MyComponentDemo from './MyComponentDemo.svelte';
 
-- Dedicated styling following project design system
-- Responsive design patterns
-- Accessibility-focused styles
+export default {
+  title: 'Components/UI/MyComponent',
+  component: MyComponentDemo
+};
+
+export const Interactive = {
+  render: () => new MyComponentDemo({ target: document.body })
+};
+```
 
 ### ❌ DON'T: Common Anti-Patterns
 
-**Never mix export default with defineMeta:**
-
+**Don't mix demo logic in the main component:**
 ```svelte
-<!-- ❌ WRONG -->
-<script context="module">
-  export default { title: '...' }; // Don't do this
-</script>
-```
-
-**Never put component logic in stories file:**
-
-```svelte
-<!-- ❌ WRONG -->
+<!-- ❌ MyComponent.svelte -->
 <script>
-  let complexState = {};
-  async function handleComplexLogic() {
-    /* ... */
-  }
-  // 100+ lines of component code
+  import { onMount } from 'svelte';
+  
+  // Don't put demo-specific code in main component
+  onMount(() => {
+    console.log('Demo initialized'); // Demo-specific
+  });
 </script>
 ```
 
 ## Best Practices
 
 ### ✅ **Do**
-
-- Use real APIs, not mocks, for authentic testing
-- When mocks make sense check if there are existing mocks in `src/lib/test/mocks`
-- Include comprehensive error handling
-- Provide reset functionality for clean demos
-- Use descriptive logging with timestamps
-- Make demos self-contained and reproducible
-- Include both manual and automated story variants
-- Follow accessibility-first development patterns
+- Use descriptive story names that explain the scenario
+- Add parameters for layout (`centered`, `fullscreen`, `padded`)
+- Include JSDoc comments for complex components
+- Use play functions for complex interactions
+- Follow the component separation pattern
 
 ### ❌ **Don't**
-
-- Mock critical browser APIs (defeats the purpose)
-- Skip error handling (demos should be robust)
-- Forget reset functionality (leads to state accumulation)
-- Overload a single demo (keep focused on one feature)
-- Skip documentation in story descriptions
-- Use `args` and `parameters` props directly on `<Story>` components (causes compilation errors)
-
-## Integration with Screenshot Automation
-
-### Automated Screenshot Capture
-
-The project includes automated screenshot capture for all stories:
-
-```javascript
-// scripts/capture-screenshots.js
-const stories = [
-  { name: 'feature-demo-interactive', url: 'http://localhost:6006/iframe.html?...' },
-  { name: 'feature-demo-with-data', url: 'http://localhost:6006/iframe.html?...' },
-];
-
-// For stories with play functions, allow extra time
-if (story.name.includes('demo')) {
-  await page.waitForTimeout(8000); // Wait for play function to complete
-}
-```
-
-Run screenshots: `npm run screenshots`
-
-### Benefits for Documentation
-
-- **Visual Documentation**: Screenshots show the feature working
-- **Automated Testing**: Play functions test the actual feature
-- **Consistent Examples**: Same demo state every time
-- **Real Browser Testing**: Uses actual browser APIs, not mocks
+- Put constructor calls or complex object creation in args
+- Mix demo-specific code in main components
+- Create overly complex stories that test multiple features
+- Forget to test with different locales using the i18n switcher
 
 ## Testing Your Story
 
-Before committing, verify:
-
-```bash
-npm run storybook                    # Should start without parsing errors
-npm run build-storybook             # Should build successfully
-npm run test:stories                # Should pass story tests
-```
+### Basic Verification
+1. Story loads without errors
+2. Interactive elements work as expected
+3. Responsive behavior functions correctly
+4. i18n switching works (use 🌍 globe icon)
 
 ### Playwright Verification
-
-**For AI Coding Agents**: Use Playwright to verify that stories actually work in the browser. The user will have Storybook running at http://localhost:6006 for this purpose.
-
-## Reference Examples
-
-- ✅ `StorageDemo.stories.svelte` - Backend feature demo pattern
-- ✅ `EPUBUnpackerDemo.stories.svelte` - Complex backend feature demo
-- ✅ `WorkspaceOPFDemo.stories.svelte` - Comprehensive backend showcase
-- ✅ `SpineManagerDemo.stories.svelte` - Feature development with real backend
-- ✅ `LayoutManager.stories.svelte` - Fullscreen layout with interactive demos
-- ✅ `App.stories.svelte` - Complete application state demonstration
+```bash
+npm run test:stories  # Run Storybook tests with Vitest
+```
 
 ## Common Failure Scenarios & Solutions
 
 ### **Problem: "Failed to fetch dynamically imported module"**
-
-**Cause**: Wrong story pattern for category or missing component files
-**Solution**:
-
-1. **Check Pattern**: Use args for Application/Component, direct instantiation for Backend/Feature
-2. **Verify Files**: Ensure component file exists before importing
-3. **Fix Imports**: Check all import paths are correct
+**Solution**: Check import paths and ensure all dependencies are properly installed.
 
 ### **Problem: "Storybook stories indexer parser threw an unrecognized error"**
-
-**Cause**: Complex logic in stories file or mixed patterns
-**Solution**:
-
-1. **Move Logic**: Extract all component logic to separate `.svelte` file (< 500 lines)
-2. **Minimal Stories**: Keep stories file to < 100 lines (just `defineMeta` and `<Story>`)
-3. **Consistent Pattern**: Don't mix args and direct instantiation
+**Solution**: Verify story syntax, especially export statements and meta configuration.
 
 ### **Problem: Story loads but interactions don't work**
-
-**Cause**: Wrong testing library imports or timing issues
-**Solution**:
-
-1. **Standard Imports**: `const { within } = await import('@testing-library/dom')`
-2. **Proper Timing**: Add `await new Promise(resolve => setTimeout(resolve, ms))` for real operations
-3. **Error Handling**: Wrap interactions in try/catch blocks
+**Solution**: Use play functions for complex interactions, ensure proper event handling.
 
 ### **Problem: Story category doesn't match functionality**
-
-**Cause**: Unclear pattern selection
-**Solution**:
-
-1. **Application**: Use for layout/full-app demos with args pattern
-2. **Component**: Use for reusable UI with configurable props
-3. **Backend**: Use for API demos with direct instantiation
-4. **Feature**: Use for complex demos with backend integration
+**Solution**: Use correct title prefix - `Application/`, `Components/`, `Backend/`, or `Features/`.
 
 ## Development Checklist
 
 ### **Pre-Development:**
-
-- [ ] **Choose Story Type**: Application | Component | Backend | Feature
-- [ ] **Select Pattern**: Args pattern or Direct instantiation (see Quick Reference)
-- [ ] **Plan Files**: `Story.stories.svelte` + `DemoComponent.svelte` + `demo.css`
-- [ ] **Review Examples**: Find similar story in the same category
+- [ ] Review existing similar stories for patterns
+- [ ] Choose appropriate story category and title
+- [ ] Plan demo component structure
 
 ### **Component Creation:**
-
-- [ ] **Create Component First**: `FeatureDemo.svelte` (< 500 lines)
-- [ ] **TypeScript Types**: Proper interfaces and error handling
-- [ ] **Dedicated CSS**: `feature-demo.css` with design system tokens
-- [ ] **Test Independently**: Component works without story
+- [ ] Create main component with clear props interface
+- [ ] Create separate demo component for Storybook
+- [ ] Follow component separation pattern
 
 ### **Story Creation:**
-
-- [ ] **Use defineMeta**: `import { defineMeta } from '@storybook/addon-svelte-csf'`
-- [ ] **Follow Pattern**: Args vs Direct instantiation based on story type
-- [ ] **Minimal Stories File**: < 100 lines, no complex logic
-- [ ] **Rich Documentation**: Comprehensive component and story descriptions
-
-### **Play Functions (if needed):**
-
-- [ ] **Standard Imports**: `await import('@testing-library/dom')`
-- [ ] **Error Handling**: Try/catch with meaningful logs
-- [ ] **Timing**: Appropriate waits for real operations
-- [ ] **Testing Purpose**: Verify specific user interactions
+- [ ] Choose appropriate pattern (args vs direct instantiation)
+- [ ] Add descriptive story names and documentation
+- [ ] Include proper layout parameters
 
 ### **Verification:**
-
-- [ ] **Storybook Starts**: `npm run storybook` (no parsing errors)
-- [ ] **Story Loads**: No "Failed to fetch" errors
-- [ ] **Playwright Verification**: Use Playwright to confirm stories actually work in browser
-- [ ] **Interactions Work**: Play functions complete successfully
-- [ ] **No Console Errors**: Clean browser console
-- [ ] **Pattern Compliance**: Follows category conventions
+- [ ] Story loads without errors in Storybook
+- [ ] Test with different i18n locales
+- [ ] Verify responsive behavior
+- [ ] Run `npm run test:stories` for automated testing
 
 ### **Quality Assurance:**
+- [ ] Screenshot capture works (`npm run screenshots`)
+- [ ] No console errors during story interaction
+- [ ] Story follows established patterns from this guide
 
-- [ ] **Category Correct**: Title matches purpose and pattern
-- [ ] **Documentation Complete**: Features, usage, technical details
-- [ ] **Responsive Design**: Works across screen sizes
-- [ ] **Accessibility**: Keyboard navigation and screen readers
+## Reference Examples
 
-## Key Prevention Strategies
+- **Simple Component**: `src/stories/Components/UI/Button.stories.ts`
+- **Backend Feature**: `src/stories/Backend/FileStorage.stories.ts`
+- **Application Layout**: `src/stories/Application/Layout.stories.ts`
+- **Feature Development**: `src/stories/Features/WorkspaceManagement.stories.ts`
 
-1. **Always start with component creation first, then story**
-2. **Follow existing successful patterns** (StorageDemo, EPUBUnpackerDemo, WorkspaceOPFDemo, SpineManagerDemo)
-3. **Keep stories minimal** - just configuration and story definitions
-4. **Separate concerns**: Component logic ≠ Story configuration
-5. **Test early and often** with `npm run storybook` during development
-6. **Use TypeScript** for better error detection and IDE support
-7. **Plan for error states** - demos should handle failures gracefully
-8. **Choose the right pattern** - backend vs feature development approaches
+For advanced patterns, backend integration, and troubleshooting, see [STORYBOOK_ADVANCED.md](./STORYBOOK_ADVANCED.md).
