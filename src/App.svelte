@@ -46,6 +46,7 @@
   let currentManifestManager: ManifestManagerImpl | null = $state(null);
   let currentMetadataManager: MetadataManagerImpl | null = $state(null);
   let currentSpineManager: SpineItemManager | null = $state(null);
+  let spineSidebar: any = $state(null); // Reference to SpineSidebar component
 
   // Manifest preview state
   let selectedManifestItem: ManifestItem | SourceItem | null = $state(null);
@@ -76,19 +77,16 @@
           const tempWorkspaceManager = new WorkspaceManager();
           await tempWorkspaceManager.init();
 
-          // Get the first available workspace
-          const workspaces = await tempWorkspaceManager.listWorkspacesWithMetadata();
-          if (workspaces.length > 0) {
-            currentWorkspaceId = workspaces[0].id;
-          }
-
           // Create real manifest, metadata, and spine managers
           currentManifestManager = new ManifestManagerImpl(tempWorkspaceManager);
           currentMetadataManager = new MetadataManagerImpl(tempWorkspaceManager);
           currentSpineManager = new SpineItemManager(tempWorkspaceManager);
 
-          // Set manager only after full initialization
+          // Set manager immediately - enables UI
           currentWorkspaceManager = tempWorkspaceManager;
+
+          // Start background workspace loading (non-blocking)
+          tempWorkspaceManager.startLoadingWorkspaces();
         }
 
         initialized = true;
@@ -119,12 +117,32 @@
       window.removeEventListener('clear-spine-selection', handleClearSpineSelection);
     };
   });
+
+  // Subscribe to reactive workspace store for auto-updating currentWorkspaceId
+  $effect(() => {
+    if (currentWorkspaceManager && currentWorkspaceManager.workspaces) {
+      currentWorkspaceManager.workspaces.subscribe((workspaces: any[]) => {
+        if (!currentWorkspaceId && workspaces.length > 0) {
+          currentWorkspaceId = workspaces[0].id;
+        }
+      });
+    }
+  });
 </script>
 
 <LayoutManager hasWorkspace={!!currentWorkspaceId}>
   <svelte:fragment slot="sidebar-spine">
-    {#if initialized && currentWorkspaceId && currentWorkspaceManager && currentSpineManager}
+    {#if !initialized}
+      <div class="placeholder-content">
+        <p>{$t('Loading workspace…')}</p>
+      </div>
+    {:else if !currentWorkspaceId}
+      <div class="placeholder-content">
+        <p>{$t('No workspace selected')}</p>
+      </div>
+    {:else if currentWorkspaceManager && currentSpineManager}
       <SpineSidebar
+        bind:this={spineSidebar}
         workspaceId={currentWorkspaceId}
         spineManager={currentSpineManager}
         selectedItemId={selectedSpineItemId}
@@ -146,6 +164,13 @@
         {currentWorkspaceId}
         onWorkspaceChange={workspaceId => {
           currentWorkspaceId = workspaceId;
+        }}
+        on:workspaceOpened={async () => {
+          // Refresh spine items when a workspace is opened/created
+          if (spineSidebar) {
+            console.log('🔄 App: Refreshing spine items after workspace opened');
+            await spineSidebar.refreshSpineItems();
+          }
         }}
       />
     {:else if currentView === 'metadata'}

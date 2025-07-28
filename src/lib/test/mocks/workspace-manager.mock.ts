@@ -64,6 +64,69 @@ export class MockWorkspaceManager implements IWorkspaceManager {
     this.reset();
   }
 
+  // IWorkspaceManager interface implementation
+
+  async init(): Promise<void> {
+    this.operationCount++;
+    // Mock initialization - no actual work needed
+  }
+
+  async listWorkspacesWithMetadata(): Promise<any[]> {
+    this.operationCount++;
+    const workspaces = Array.from(this.workspaceOPFs.keys()).map(id => ({
+      id,
+      title: this.workspaceOPFs.get(id)?.metadata?.title || 'Mock Workspace',
+      author: this.workspaceOPFs.get(id)?.metadata?.creator?.[0] || 'Test Author',
+      language: this.workspaceOPFs.get(id)?.metadata?.language || 'en',
+      lastModified: new Date(),
+      fileCount: 5,
+      totalSize: 1024,
+      epubVersion: 'EPUB 3.0',
+    }));
+    return workspaces;
+  }
+
+  async startLoadingWorkspaces(): Promise<void> {
+    this.operationCount++;
+    // Mock non-blocking loading - nothing to do since this is a mock
+  }
+
+  // Reactive store getters for mock compatibility
+  get workspaces(): any {
+    // Return a mock store-like object
+    return {
+      subscribe: (callback: (workspaces: any[]) => void) => {
+        // Immediately call with current workspaces
+        const workspaces = Array.from(this.workspaceOPFs.keys()).map(id => ({
+          id,
+          title: this.workspaceOPFs.get(id)?.metadata?.title || 'Mock Workspace',
+          author: this.workspaceOPFs.get(id)?.metadata?.creator?.[0] || 'Test Author',
+          language: this.workspaceOPFs.get(id)?.metadata?.language || 'en',
+          lastModified: new Date(),
+          fileCount: 5,
+          totalSize: 1024,
+          epubVersion: 'EPUB 3.0',
+        }));
+        callback(workspaces);
+        return () => {}; // Unsubscribe function
+      }
+    };
+  }
+
+  get isLoadingWorkspaces(): any {
+    // Return a mock store-like object
+    return {
+      subscribe: (callback: (loading: boolean) => void) => {
+        callback(false); // Mock always not loading
+        return () => {}; // Unsubscribe function
+      }
+    };
+  }
+
+  get hasStartedLoadingWorkspaces(): boolean {
+    return true; // Mock always started loading
+  }
+
   /**
    * Reset mock to initial state
    * Clears all workspaces, failure modes, and operation counters
@@ -116,29 +179,6 @@ export class MockWorkspaceManager implements IWorkspaceManager {
   }
 
   // Core WorkspaceManager methods
-
-  // Workspace lifecycle
-  async init(): Promise<void> {
-    this.operationCount++;
-    // Mock initialization - nothing to do
-  }
-
-  async listWorkspacesWithMetadata(): Promise<any[]> {
-    this.operationCount++;
-    // Return mock workspace list
-    return [
-      {
-        id: 'workspace-1',
-        title: 'Mock Workspace 1',
-        author: 'Test Author',
-        language: 'en',
-        lastModified: new Date(),
-        fileCount: 5,
-        totalSize: 1024,
-        epubVersion: '3.0'
-      }
-    ];
-  }
 
   async createEPUBWorkspace(metadata: EPUBMetadata): Promise<string> {
     this.operationCount++;

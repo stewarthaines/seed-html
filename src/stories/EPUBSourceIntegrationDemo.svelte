@@ -37,7 +37,7 @@
   // Initialize storage and EPUB managers
   onMount(async () => {
     try {
-      fileStorage = new FileStorageAPI();
+      fileStorage = FileStorageAPI.getInstance();
       await fileStorage.init();
       sourceManager = new SourceManager(fileStorage);
       epubPackager = new EPUBPackager();

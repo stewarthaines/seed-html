@@ -28,6 +28,19 @@
   let hasUnsavedChanges = false;
   let guardId: string;
 
+  // Subscribe to reactive workspace store
+  $: if (workspaceManager) {
+    // Subscribe to workspaces store
+    workspaceManager.workspaces.subscribe((data: WorkspaceInfo[]) => {
+      workspaces = data;
+    });
+    
+    // Subscribe to loading store
+    workspaceManager.isLoadingWorkspaces.subscribe((isLoading: boolean) => {
+      loading = isLoading;
+    });
+  }
+
   // Reactive: Update currentWorkspace when prop changes
   $: {
     if (currentWorkspaceId && workspaces.length > 0) {
@@ -61,27 +74,26 @@
     // Reactive statement now handles workspace sync
     // This function remains for compatibility but doesn't need to do anything
   };
-
-  // Reactive: load workspaces when manager becomes available
-  $: if (workspaceManager) {
-    loadWorkspaces();
+  
+  // Start loading when manager becomes available
+  $: if (workspaceManager && !workspaceManager.hasStartedLoadingWorkspaces) {
+    workspaceManager.startLoadingWorkspaces();
   }
 
-  // Load workspaces from WorkspaceManager
+  // Load workspaces from WorkspaceManager (legacy method for manual refresh)
   const loadWorkspaces = async () => {
     if (!workspaceManager) return; // Guard against undefined
 
     try {
-      loading = true;
       error = null;
-      workspaces = await workspaceManager.listWorkspacesWithMetadata();
+      // Start loading if not already started
+      if (!workspaceManager.hasStartedLoadingWorkspaces) {
+        await workspaceManager.startLoadingWorkspaces();
+      }
       loadCurrentWorkspace();
     } catch (err) {
       console.error('Failed to load workspaces:', err);
       error = $t('Failed to load workspaces');
-      workspaces = [];
-    } finally {
-      loading = false;
     }
   };
 
@@ -109,17 +121,24 @@
       // Use enhanced workspace creation with localized sample content
       console.log('  ⚙️ Calling workspaceManager.createLocalizedEPUBWorkspace...');
       const workspaceId = await workspaceManager.createLocalizedEPUBWorkspace(metadata, locale);
-      console.log('  ✅ Workspace created with ID:', workspaceId);
+      console.log('  ✅ Workspace fully created with content, ID:', workspaceId);
 
-      // Refresh workspace list
-      console.log('  🔄 Refreshing workspace list...');
-      await loadWorkspaces();
-      console.log('  ✅ Workspace list refreshed');
+      // Refresh workspace list (cache should already be updated in createLocalizedEPUBWorkspace)
+      console.log('  🔄 Ensuring workspace appears in list...');
+      if (workspaceManager.hasStartedLoadingWorkspaces) {
+        // Cache is already active, just ensure the new workspace is visible
+        // The cache was already updated in createLocalizedEPUBWorkspace
+        console.log('  ✅ Workspace already added to cache during creation');
+      } else {
+        // Fallback: start loading if cache wasn't initialized yet
+        await workspaceManager.startLoadingWorkspaces();
+        console.log('  ✅ Started workspace loading');
+      }
 
-      // Set as current workspace
+      // Set as current workspace (now that it's fully created with content)
       console.log('  📌 Setting current workspace to:', workspaceId);
       setCurrentWorkspace(workspaceId);
-      console.log('  ✅ Current workspace set');
+      console.log('  ✅ Current workspace set - SpineSidebar should now load spine items');
 
       // Navigate to first content (prologue) for immediate preview
       console.log('  🧭 Dispatching navigation request...');
@@ -257,8 +276,8 @@
         setCurrentWorkspace(null);
       }
 
-      // Refresh workspace list
-      await loadWorkspaces();
+      // Workspace is automatically removed from cache by deleteWorkspace method
+      // No need to manually refresh the entire list
     } catch (err) {
       console.error('Failed to delete workspace:', err);
       alert(
@@ -313,8 +332,8 @@
         );
       }
 
-      // Refresh workspace list
-      await loadWorkspaces();
+      // Workspaces are automatically removed from cache by cleanupOrphanedWorkspaces method
+      // No need to manually refresh the entire list
     } catch (err) {
       console.error('Failed to cleanup orphaned workspaces:', err);
       alert(

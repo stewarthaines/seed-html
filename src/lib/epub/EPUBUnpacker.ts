@@ -40,7 +40,7 @@ export class EPUBUnpacker {
   private fileStorage: FileStorageAPI;
 
   constructor() {
-    this.fileStorage = new FileStorageAPI();
+    this.fileStorage = FileStorageAPI.getInstance();
   }
 
   /**

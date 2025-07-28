@@ -19,7 +19,7 @@
 
   onMount(async () => {
     try {
-      storage = new FileStorageAPI();
+      storage = FileStorageAPI.getInstance();
       await storage.init();
       addLog('success', `Storage initialized with ${storage.getBackendType()} backend`);
       await refreshData();

@@ -59,7 +59,7 @@
       addLog('action', 'Initializing Settings Manager Demo...');
 
       // Initialize file storage
-      fileStorage = new FileStorageAPI();
+      fileStorage = FileStorageAPI.getInstance();
       await fileStorage.init();
       addLog('success', `File storage initialized with ${fileStorage.getBackendType()} backend`);
 

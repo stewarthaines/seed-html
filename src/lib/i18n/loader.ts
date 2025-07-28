@@ -16,8 +16,7 @@ export function createI18nLoader(): I18nLoader {
 }
 
 class TranslationLoader implements I18nLoader {
-  private storage = new FileStorageAPI();
-  private indexedDbStorage: FileStorageAPI | null = null;
+  private storage = FileStorageAPI.getInstance();
 
   /**
    * Always extract translations from ZIP bundle on startup

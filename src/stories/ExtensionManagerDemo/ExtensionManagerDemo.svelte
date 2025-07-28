@@ -112,7 +112,7 @@
   // Initialize Extension Manager
   onMount(async () => {
     try {
-      fileStorage = new FileStorageAPI();
+      fileStorage = FileStorageAPI.getInstance();
       await fileStorage.init();
       extensionManager = new ExtensionManager(fileStorage);
 

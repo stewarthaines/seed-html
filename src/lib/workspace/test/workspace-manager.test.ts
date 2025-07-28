@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { WorkspaceManager } from '../workspace-manager.js';
-import { WorkspaceError, ValidationError, CacheError } from '../types.js';
+import { WorkspaceError, ValidationError } from '../types.js';
 import { createVitestMockFileStorage } from '../../test/mocks/file-storage-vitest.mock.js';
 import type {
   WorkspaceInfo,
@@ -90,7 +90,7 @@ describe('WorkspaceManager', () => {
     // Inject mock storage into WorkspaceManager and all its dependencies
     workspaceManager = new WorkspaceManager();
     (workspaceManager as any).storage = mockStorage;
-    (workspaceManager as any).cache.storage = mockStorage;
+    // Reactive cache doesn't need storage reference
     (workspaceManager as any).dependencyTracker.storage = mockStorage;
     (workspaceManager as any).sourceManager.fileStorage = mockStorage;
 
@@ -156,17 +156,20 @@ describe('WorkspaceManager', () => {
       expect(result[0].title).toContain('Error');
     });
 
-    it('should use cached metadata when fresh', async () => {
+    it('should load workspaces through reactive cache', async () => {
       // Create workspace in mock storage
       await createValidWorkspace('workspace-123');
 
-      vi.spyOn(workspaceManager as any, 'loadCachedMetadata').mockResolvedValue(mockWorkspaceInfo);
-      vi.spyOn(workspaceManager as any, 'isCacheFresh').mockResolvedValue(true);
+      // Mock parseWorkspaceMetadata to return valid workspace info
+      vi.spyOn(workspaceManager as any, 'parseWorkspaceMetadata').mockResolvedValue(
+        mockWorkspaceInfo
+      );
 
       const result = await workspaceManager.listWorkspacesWithMetadata();
 
       expect(result).toHaveLength(1);
-      expect(result[0]).toEqual(mockWorkspaceInfo);
+      expect(result[0].id).toBe('workspace-123');
+      expect(result[0].title).toBe('Test Book');
     });
 
     it('should exclude reserved workspace IDs (like locales)', async () => {
@@ -450,11 +453,11 @@ describe('WorkspaceManager', () => {
 
       vi.spyOn(workspaceManager as any, 'generateManifestId').mockReturnValue('chapter2');
       vi.spyOn(workspaceManager as any, 'detectMediaType').mockReturnValue('application/xhtml+xml');
-      const invalidateSpy = vi.spyOn(workspaceManager as any, 'invalidateCache');
 
       await workspaceManager.addManifestItem('workspace-123', partialItem);
 
-      expect(invalidateSpy).toHaveBeenCalledWith('workspace-123');
+      // Verify that the item was added to the manifest
+      expect(OPFUtils.generateOPFXML).toHaveBeenCalled();
     });
   });
 
@@ -659,21 +662,6 @@ describe('WorkspaceManager', () => {
       }
     });
 
-    it('should throw CacheError for cache-related issues', async () => {
-      vi.spyOn(workspaceManager as any, 'loadCachedMetadata').mockRejectedValue(
-        new CacheError('Cache corrupted', 'CORRUPTED', 'workspace-123')
-      );
-
-      try {
-        await workspaceManager.listWorkspacesWithMetadata();
-        // Should handle gracefully or rethrow
-      } catch (error) {
-        if (error instanceof CacheError) {
-          expect(error.reason).toBe('CORRUPTED');
-          expect(error.workspaceId).toBe('workspace-123');
-        }
-      }
-    });
   });
 
   describe('configuration', () => {
@@ -814,12 +802,14 @@ describe('WorkspaceManager', () => {
         expect(savedView[1]).toBe(0xd8);
       });
 
-      it('should invalidate cache after writing', async () => {
-        const invalidateSpy = vi.spyOn(workspaceManager as any, 'invalidateCache');
-
+      it('should write file successfully', async () => {
         await workspaceManager.writeFile(WORKSPACE_ID, 'OEBPS/test.txt', 'test content');
 
-        expect(invalidateSpy).toHaveBeenCalledWith(WORKSPACE_ID);
+        expect(mockStorage.writeFile).toHaveBeenCalledWith(
+          WORKSPACE_ID,
+          'OEBPS/test.txt',
+          expect.any(ArrayBuffer)
+        );
       });
 
       it('should throw WorkspaceError on storage failure', async () => {

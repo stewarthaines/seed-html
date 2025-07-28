@@ -38,6 +38,19 @@
   // Reactive: Load spine items when workspaceId changes
   $: if (workspaceId && spineManager) {
     loadSpineItems();
+  } else if (!workspaceId) {
+    // No workspace selected - show empty state
+    spineItems = [];
+    isLoading = false;
+    error = null;
+  }
+
+
+  // Public method to refresh spine items (can be called by parent)
+  export async function refreshSpineItems() {
+    if (workspaceId && spineManager) {
+      await loadSpineItems();
+    }
   }
 
   // Load spine items
@@ -46,10 +59,13 @@
     error = null;
 
     try {
-      spineItems = await spineManager.loadSpineItems(workspaceId);
+      const items = await spineManager.loadSpineItems(workspaceId);
+      console.log('✅ SpineSidebar: Loaded', items.length, 'spine items for workspace', workspaceId);
+      spineItems = items;
     } catch (err) {
+      console.error('❌ SpineSidebar: Error loading spine items:', err);
       error = err instanceof Error ? err.message : 'Failed to load spine items';
-      // Failed to load spine items
+      spineItems = [];
     } finally {
       isLoading = false;
     }
@@ -196,7 +212,7 @@
         {$t('Retry')}
       </button>
     </div>
-  {:else}
+  {:else if spineItems.length > 0}
     <div class="spine-list" role="list">
       {#each spineItems as item, index (item.id)}
         <div
@@ -226,6 +242,17 @@
         </div>
       {/each}
     </div>
+  {:else if workspaceId && !isLoading}
+    <div class="empty-state">
+      <p>{$t('No spine items yet')}</p>
+      <button class="retry-button" on:click={loadSpineItems}>
+        {$t('Refresh')}
+      </button>
+    </div>
+  {:else}
+    <div class="empty-state">
+      <p>{$t('No workspace selected')}</p>
+    </div>
   {/if}
 </div>
 
@@ -241,7 +268,8 @@
   }
 
   .loading,
-  .error {
+  .error,
+  .empty-state {
     padding: var(--space-2); /* More compact */
     text-align: center;
     color: var(--color-text-secondary);

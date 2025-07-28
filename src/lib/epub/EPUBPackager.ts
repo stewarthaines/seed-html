@@ -57,7 +57,7 @@ export class EPUBPackager {
   private sourceManager: SourceManager;
 
   constructor() {
-    this.fileStorage = new FileStorageAPI();
+    this.fileStorage = FileStorageAPI.getInstance();
     this.sourceManager = new SourceManager(this.fileStorage);
   }
 
@@ -65,10 +65,7 @@ export class EPUBPackager {
     const startTime = Date.now();
 
     try {
-      // Ensure storage is initialized
-      if (!this.fileStorage.isInitialized()) {
-        await this.fileStorage.init();
-      }
+      // Storage should already be initialized via singleton pattern
 
       // 1. Read all workspace files using File Storage API
       const files = await this.readWorkspaceFiles(workspaceId);

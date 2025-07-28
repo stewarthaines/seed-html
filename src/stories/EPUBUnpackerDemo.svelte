@@ -25,7 +25,7 @@
 
   onMount(async () => {
     try {
-      storage = new FileStorageAPI();
+      storage = FileStorageAPI.getInstance();
       await storage.init();
       unpacker = new EPUBUnpacker();
       addLog('success', 'EPUB Unpacker initialized');

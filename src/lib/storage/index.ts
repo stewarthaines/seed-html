@@ -21,6 +21,7 @@ export type {
 
 export class StorageBackendFactory {
   private static featureDetector = new FeatureDetector();
+  private static cachedBackend: StorageBackend | null = null;
 
   static async detectStorageBackend(): Promise<BackendType> {
     return await this.featureDetector.detectOptimalBackend();
@@ -31,6 +32,10 @@ export class StorageBackendFactory {
   }
 
   static async create(): Promise<StorageBackend> {
+    if (StorageBackendFactory.cachedBackend) {
+      return StorageBackendFactory.cachedBackend;
+    }
+
     const backendType = await this.detectStorageBackend();
 
     let backend: StorageBackend;
@@ -50,6 +55,7 @@ export class StorageBackendFactory {
         throw new Error(`Unsupported backend: ${backendType}`);
     }
 
+    StorageBackendFactory.cachedBackend = backend;
     return backend;
   }
 
@@ -65,6 +71,7 @@ export class StorageBackendFactory {
    */
   static clearCache(): void {
     this.featureDetector.clearCache();
+    StorageBackendFactory.cachedBackend = null;
   }
 }
 
@@ -798,17 +805,73 @@ export class StorageManager {
  * Provides a clean interface matching the API design specification
  */
 export class FileStorageAPI {
+  private static instance: FileStorageAPI | null = null;
   private manager: StorageManager;
+  private initPromise: Promise<void> | null = null;
 
-  constructor() {
+  private constructor() {
     this.manager = new StorageManager();
+  }
+
+  /**
+   * Get the singleton instance of FileStorageAPI
+   */
+  static getInstance(): FileStorageAPI {
+    if (!FileStorageAPI.instance) {
+      FileStorageAPI.instance = new FileStorageAPI();
+    }
+    return FileStorageAPI.instance;
+  }
+
+  /**
+   * Get an initialized singleton instance of FileStorageAPI
+   */
+  static async getInitializedInstance(): Promise<FileStorageAPI> {
+    const instance = FileStorageAPI.getInstance();
+    if (!instance.isInitialized()) {
+      await instance.init();
+    }
+    return instance;
+  }
+
+  /**
+   * Reset the singleton instance (mainly for testing)
+   */
+  static resetInstance(): void {
+    if (FileStorageAPI.instance) {
+      FileStorageAPI.instance.destroy();
+      FileStorageAPI.instance = null;
+    }
   }
 
   /**
    * Initialize the storage system
    */
   async init(): Promise<void> {
+    // Return immediately if already initialized
+    if (this.manager.isInitialized()) {
+      return;
+    }
+
+    // If initialization is in progress, wait for it
+    if (this.initPromise) {
+      await this.initPromise;
+      return;
+    }
+
+    // Start new initialization
+    this.initPromise = this.doInit();
+    
+    try {
+      await this.initPromise;
+    } finally {
+      this.initPromise = null;
+    }
+  }
+
+  private async doInit(): Promise<void> {
     await this.manager.init();
+    console.log('FileStorageAPI initialized with backend:', this.manager.getBackendType());
   }
 
   /**

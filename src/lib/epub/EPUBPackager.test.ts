@@ -5,8 +5,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { EPUBPackager } from './EPUBPackager.js';
 import type { WorkspaceFile, PackageOptions, EPUBMetadata } from './EPUBPackager.js';
+import { createVitestMockFileStorage } from '../test/mocks/file-storage-vitest.mock.js';
 
-// Mock the ZIP and storage modules
+// Mock the ZIP modules
 vi.mock('../zip/index.js', () => ({
   ZipWriter: vi.fn(() => ({
     addFile: vi.fn(),
@@ -15,13 +16,12 @@ vi.mock('../zip/index.js', () => ({
   downloadBlob: vi.fn(),
 }));
 
-vi.mock('../storage/index.js', () => ({
-  FileStorageAPI: vi.fn(() => ({
-    init: vi.fn(),
-    isInitialized: vi.fn(() => true),
-    listFiles: vi.fn(),
-    readFile: vi.fn(),
-  })),
+// Mock the FileStorageAPI singleton
+const mockFileStorageInstance = createVitestMockFileStorage();
+vi.mock('../storage/index.ts', () => ({
+  FileStorageAPI: {
+    getInstance: vi.fn(() => mockFileStorageInstance),
+  },
 }));
 
 // Mock OPFUtils to avoid happy-dom namespace parsing issues
@@ -43,14 +43,15 @@ vi.mock('./opf-utils.js', () => ({
 
 describe('EPUBPackager', () => {
   let packager: EPUBPackager;
-  let mockStorage: any;
+  let mockStorage: ReturnType<typeof createVitestMockFileStorage>;
 
   beforeEach(async () => {
     // Reset all mocks
     vi.clearAllMocks();
 
+    // The mockFileStorageInstance is already available via the module mock
+    mockStorage = mockFileStorageInstance;
     packager = new EPUBPackager();
-    mockStorage = (packager as any).fileStorage;
   });
 
   afterEach(() => {
@@ -163,15 +164,6 @@ describe('EPUBPackager', () => {
       expect(progressCallback).toHaveBeenCalledWith(expect.objectContaining({ phase: 'complete' }));
     });
 
-    it('should handle storage initialization', async () => {
-      mockStorage.isInitialized.mockReturnValue(false);
-      mockStorage.init.mockResolvedValue(undefined);
-
-      const result = await packager.packageEPUB(mockWorkspaceId);
-
-      expect(mockStorage.init).toHaveBeenCalled();
-      expect(result.success).toBe(true);
-    });
   });
 
   describe('optimizeCompression', () => {

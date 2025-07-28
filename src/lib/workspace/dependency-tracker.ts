@@ -109,7 +109,7 @@ export class ManifestDependencyTracker {
       });
 
       return dependencies;
-    } catch (_error) {
+    } catch {
       // If DOM parsing fails completely, fall back to regex
       try {
         const content = await this.storage.readTextFile(workspaceId, manifestItem.href);

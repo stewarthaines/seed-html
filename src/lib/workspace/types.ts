@@ -101,21 +101,6 @@ export interface ValidationWarning {
   severity: 'warning';
 }
 
-// Cache types
-export interface WorkspaceCacheEntry {
-  version: number; // Cache format version
-  workspaceId: string;
-  lastCacheUpdate: number; // Timestamp when cache was last updated
-  opfFileModified: number; // Timestamp of content.opf file when cached
-  metadata: EPUBMetadata;
-  fileCount: number;
-  totalSize: number;
-  epubVersion: string;
-}
-
-export interface WorkspaceCache {
-  [workspaceId: string]: WorkspaceCacheEntry;
-}
 
 /**
  * Critical interface that defines ALL methods ManifestManager depends on.
@@ -132,10 +117,16 @@ export interface IWorkspaceManager {
   // Workspace lifecycle
   init(): Promise<void>;
   listWorkspacesWithMetadata(): Promise<WorkspaceInfo[]>;
+  startLoadingWorkspaces(): Promise<void>;
   createEPUBWorkspace(metadata: EPUBMetadata): Promise<string>;
   createLocalizedEPUBWorkspace(metadata: Partial<EPUBMetadata>, locale: string): Promise<string>;
   switchWorkspace(workspaceId: string): Promise<WorkspaceInfo>;
   deleteWorkspace(workspaceId: string): Promise<void>;
+  
+  // Reactive stores
+  get workspaces(): any; // Svelte readable store
+  get isLoadingWorkspaces(): any; // Svelte readable store
+  get hasStartedLoadingWorkspaces(): boolean;
   
   // OPF Management - CRITICAL: This is where the saveOPF error came from!
   getWorkspaceOPF(workspaceId: string): Promise<OPFDocument>;
@@ -198,16 +189,6 @@ export class ValidationError extends WorkspaceError {
   }
 }
 
-export class CacheError extends WorkspaceError {
-  constructor(
-    message: string,
-    public reason: 'CORRUPTED' | 'MISSING' | 'STALE',
-    workspaceId?: string
-  ) {
-    super(message, 'CACHE_ERROR', workspaceId);
-    this.name = 'CacheError';
-  }
-}
 
 // Default configuration
 export const DEFAULT_WORKSPACE_CONFIG: WorkspaceConfig = {

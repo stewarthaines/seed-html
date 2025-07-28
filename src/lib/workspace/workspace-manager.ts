@@ -6,7 +6,7 @@
 
 import { FileStorageAPI } from '../storage/index.js';
 import { OPFUtils } from '../epub/index.js';
-import { WorkspaceMetadataCache } from './workspace-cache.js';
+import { ReactiveWorkspaceCache } from './workspace-cache.js';
 import { ManifestDependencyTracker } from './dependency-tracker.js';
 import { SourceManager } from '../source/index.js';
 import { SampleContentGenerator } from '../content/sample-content-generator.js';
@@ -23,7 +23,6 @@ import type {
   WorkspacePathInfo,
   ValidationIssue,
   ValidationWarning,
-  WorkspaceCacheEntry,
 } from './types.js';
 import type { SourceItem } from '../manifest/types.js';
 import type { EPUBMetadata, OPFDocument, ManifestItem, SpineItem } from '../epub/opf-utils.js';
@@ -37,7 +36,7 @@ import {
 
 export class WorkspaceManager {
   private storage: FileStorageAPI;
-  private cache: WorkspaceMetadataCache;
+  private cache: ReactiveWorkspaceCache;
   private dependencyTracker: ManifestDependencyTracker;
   private sourceManager: SourceManager;
   private transformExecutor: TransformExecutor;
@@ -45,8 +44,8 @@ export class WorkspaceManager {
 
   constructor(config?: Partial<WorkspaceConfig>, transformExecutor?: TransformExecutor) {
     this.config = { ...DEFAULT_WORKSPACE_CONFIG, ...config };
-    this.storage = new FileStorageAPI();
-    this.cache = new WorkspaceMetadataCache(this.storage, this.config.cache);
+    this.storage = FileStorageAPI.getInstance();
+    this.cache = new ReactiveWorkspaceCache();
     this.dependencyTracker = new ManifestDependencyTracker(this.storage);
     this.sourceManager = new SourceManager(this.storage);
     this.transformExecutor = transformExecutor || new TransformExecutor();
@@ -56,7 +55,30 @@ export class WorkspaceManager {
    * Initialize the workspace manager
    */
   async init(): Promise<void> {
-    await this.storage.init();
+    if (!this.storage.isInitialized()) {
+      await this.storage.init();
+    }
+  }
+
+  /**
+   * Reactive store of all workspaces (auto-updates as workspaces are loaded)
+   */
+  get workspaces() {
+    return this.cache.workspaces;
+  }
+
+  /**
+   * Reactive store indicating if workspaces are currently loading
+   */
+  get isLoadingWorkspaces() {
+    return this.cache.isLoading;
+  }
+
+  /**
+   * Check if workspace loading has been started
+   */
+  get hasStartedLoadingWorkspaces() {
+    return this.cache.getHasStartedLoading();
   }
 
   /**
@@ -69,49 +91,37 @@ export class WorkspaceManager {
   }
 
   /**
-   * List all workspaces with metadata, sorted by last modified date
-   * Excludes reserved workspace IDs used internally by the system
+   * Start non-blocking background loading of all workspaces
+   * Uses reactive cache for progressive UI updates
+   */
+  async startLoadingWorkspaces(): Promise<void> {
+    return this.cache.startLoading(this.storage, (workspaceId) => this.parseWorkspaceMetadata(workspaceId));
+  }
+
+  /**
+   * Refresh a single workspace in cache by re-parsing its metadata
+   */
+  async refreshWorkspace(workspaceId: string): Promise<void> {
+    return this.cache.refreshWorkspace(workspaceId, (id) => this.parseWorkspaceMetadata(id));
+  }
+
+  /**
+   * List all workspaces with metadata (blocking - for backward compatibility)
+   * @deprecated Use startLoadingWorkspaces() + reactive workspaces store instead
    */
   async listWorkspacesWithMetadata(): Promise<WorkspaceInfo[]> {
-    try {
-      const allWorkspaceIds = await this.storage.listWorkspaces();
-      // Filter out reserved workspace IDs (e.g., 'locales' used by i18n system)
-      const workspaceIds = allWorkspaceIds.filter(id => !RESERVED_WORKSPACE_IDS.has(id));
-      const workspaceInfos: WorkspaceInfo[] = [];
-
-      for (const workspaceId of workspaceIds) {
-        try {
-          const cachedInfo = await this.loadCachedMetadata(workspaceId);
-          if (cachedInfo && (await this.isCacheFresh(workspaceId, cachedInfo))) {
-            workspaceInfos.push(cachedInfo);
-          } else {
-            // Cache miss/stale - parse OPF and update cache
-            const freshInfo = await this.parseWorkspaceMetadata(workspaceId);
-            await this.cache.updateCache(workspaceId, freshInfo);
-            workspaceInfos.push(freshInfo);
-          }
-        } catch {
-          // Workspace has issues - include with error state
-          workspaceInfos.push({
-            id: workspaceId,
-            title: `Workspace ${workspaceId} (Error)`,
-            language: 'unknown',
-            lastModified: new Date(),
-            fileCount: 0,
-            totalSize: 0,
-            epubVersion: 'unknown',
-            hasError: true,
-          });
-        }
-      }
-
-      return workspaceInfos.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime());
-    } catch (error) {
-      throw new WorkspaceError(
-        `Failed to list workspaces: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'STORAGE_ERROR'
-      );
+    // If cache hasn't started loading, start it and wait
+    if (!this.cache.getHasStartedLoading()) {
+      await this.startLoadingWorkspaces();
     }
+    
+    // Get current workspaces from cache
+    let currentWorkspaces: WorkspaceInfo[] = [];
+    this.cache.workspaces.subscribe(workspaces => {
+      currentWorkspaces = workspaces;
+    })(); // Immediately unsubscribe
+    
+    return currentWorkspaces;
   }
 
   /**
@@ -127,8 +137,12 @@ export class WorkspaceManager {
       // Create EPUB structure
       await this.createEPUBStructure(workspaceId, metadata);
 
-      // Update cache
-      await this.invalidateCache(workspaceId);
+      // Refresh cache to include the new workspace
+      if (this.cache.getHasStartedLoading()) {
+        // If cache was already loaded, parse metadata for the new workspace
+        const workspaceInfo = await this.parseWorkspaceMetadata(workspaceId);
+        this.cache.set(workspaceId, workspaceInfo);
+      }
 
       return workspaceId;
     } catch (error) {
@@ -168,6 +182,12 @@ export class WorkspaceManager {
 
       // Step 3: Generate and install sample content
       await this.generateLocalizedSampleContent(workspaceId, locale);
+
+      // Step 4: Update cache with final workspace state after content generation
+      if (this.cache.getHasStartedLoading()) {
+        const workspaceInfo = await this.parseWorkspaceMetadata(workspaceId);
+        this.cache.set(workspaceId, workspaceInfo);
+      }
 
       return workspaceId;
     } catch (error) {
@@ -408,7 +428,7 @@ ${chapterLinks}
       }
 
       // Update cache
-      await this.cache.updateCache(workspaceId, workspaceInfo);
+      this.cache.set(workspaceId, workspaceInfo);
 
       return workspaceInfo;
     } catch (error) {
@@ -426,7 +446,7 @@ ${chapterLinks}
   async deleteWorkspace(workspaceId: string): Promise<void> {
     try {
       // Step 1: Invalidate cache first to prevent issues if storage deletion fails
-      await this.invalidateCache(workspaceId);
+      this.cache.delete(workspaceId);
 
       // Step 2: Attempt storage deletion
       await this.storage.deleteWorkspace(workspaceId);
@@ -569,8 +589,10 @@ ${chapterLinks}
       const pathInfo = await this.getWorkspacePathInfo(workspaceId);
       await this.storage.writeTextFile(workspaceId, pathInfo.rootfilePath, opfXML);
 
-      // Invalidate cache
-      await this.invalidateCache(workspaceId);
+      // Refresh cache with updated metadata
+      if (this.cache.getHasStartedLoading()) {
+        await this.refreshWorkspace(workspaceId);
+      }
     } catch (error) {
       if (error instanceof ValidationError) {
         throw error;
@@ -822,8 +844,10 @@ ${chapterLinks}
   async writeTextFile(workspaceId: string, path: string, content: string): Promise<void> {
     try {
       await this.storage.writeTextFile(workspaceId, path, content);
-      // Invalidate cache since workspace contents changed
-      await this.invalidateCache(workspaceId);
+      // Refresh cache since workspace contents changed
+      if (this.cache.getHasStartedLoading()) {
+        await this.refreshWorkspace(workspaceId);
+      }
     } catch (error) {
       throw new WorkspaceError(
         `Failed to write file: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -875,8 +899,10 @@ ${chapterLinks}
           : content;
 
       await this.storage.writeFile(workspaceId, path, bufferContent);
-      // Invalidate cache since workspace contents changed
-      await this.invalidateCache(workspaceId);
+      // Refresh cache since workspace contents changed
+      if (this.cache.getHasStartedLoading()) {
+        await this.refreshWorkspace(workspaceId);
+      }
     } catch (error) {
       throw new WorkspaceError(
         `Failed to write file: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -892,8 +918,10 @@ ${chapterLinks}
   async deleteFile(workspaceId: string, path: string): Promise<void> {
     try {
       await this.storage.deleteFile(workspaceId, path);
-      // Invalidate cache since workspace contents changed
-      await this.invalidateCache(workspaceId);
+      // Refresh cache since workspace contents changed
+      if (this.cache.getHasStartedLoading()) {
+        await this.refreshWorkspace(workspaceId);
+      }
     } catch (error) {
       throw new WorkspaceError(
         `Failed to delete file: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -1226,23 +1254,6 @@ ${chapterLinks}
     return `${basePath}/${href}`;
   }
 
-  /**
-   * Resolve file path to manifest href
-   */
-  private resolveManifestHref(filePath: string, basePath: string): string {
-    // If no base path, return file path as-is
-    if (!basePath) {
-      return filePath;
-    }
-
-    // If file path starts with base path, make it relative
-    if (filePath.startsWith(basePath + '/')) {
-      return filePath.substring(basePath.length + 1);
-    }
-
-    // Otherwise return as-is
-    return filePath;
-  }
 
   private async createEPUBStructure(workspaceId: string, metadata: EPUBMetadata): Promise<void> {
     // Create mimetype
@@ -1374,48 +1385,8 @@ ${chapterLinks}
     return mediaTypeMap[extension] || 'application/octet-stream';
   }
 
-  /**
-   * Load cached metadata for a workspace
-   */
-  private async loadCachedMetadata(workspaceId: string): Promise<WorkspaceInfo | null> {
-    return await this.cache.get(workspaceId);
-  }
 
-  /**
-   * Check if cached metadata is fresh
-   */
-  private async isCacheFresh(workspaceId: string, workspaceInfo: WorkspaceInfo): Promise<boolean> {
-    const cacheEntry = this.workspaceInfoToCacheEntry(workspaceInfo);
-    return await this.cache.isCacheFresh(workspaceId, cacheEntry);
-  }
 
-  /**
-   * Convert WorkspaceInfo to WorkspaceCacheEntry format
-   */
-  private workspaceInfoToCacheEntry(workspaceInfo: WorkspaceInfo): WorkspaceCacheEntry {
-    return {
-      version: 1, // Using version 1 as default
-      workspaceId: workspaceInfo.id,
-      lastCacheUpdate: Date.now(),
-      opfFileModified: workspaceInfo.lastModified.getTime(),
-      metadata: {
-        title: workspaceInfo.title,
-        language: workspaceInfo.language,
-        identifier: workspaceInfo.id, // Using workspace ID as identifier fallback
-        creator: workspaceInfo.author ? [workspaceInfo.author] : undefined,
-      },
-      fileCount: workspaceInfo.fileCount,
-      totalSize: workspaceInfo.totalSize,
-      epubVersion: workspaceInfo.epubVersion,
-    };
-  }
-
-  /**
-   * Invalidate cache for a workspace
-   */
-  private async invalidateCache(workspaceId: string): Promise<void> {
-    await this.cache.invalidateCache(workspaceId);
-  }
 
   /**
    * Check if advanced mode is enabled for a workspace
