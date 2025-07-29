@@ -42,7 +42,11 @@ export class WorkspaceManager {
   private transformExecutor: TransformExecutor;
   private config: WorkspaceConfig;
 
-  constructor(storage?: FileStorageAPI, config?: Partial<WorkspaceConfig>, transformExecutor?: TransformExecutor) {
+  constructor(
+    storage?: FileStorageAPI,
+    config?: Partial<WorkspaceConfig>,
+    transformExecutor?: TransformExecutor
+  ) {
     this.config = { ...DEFAULT_WORKSPACE_CONFIG, ...config };
     this.storage = storage || FileStorageAPI.getInstance();
     this.cache = new ReactiveWorkspaceCache();
@@ -95,14 +99,16 @@ export class WorkspaceManager {
    * Uses reactive cache for progressive UI updates
    */
   async startLoadingWorkspaces(): Promise<void> {
-    return this.cache.startLoading(this.storage, (workspaceId) => this.parseWorkspaceMetadata(workspaceId));
+    return this.cache.startLoading(this.storage, workspaceId =>
+      this.parseWorkspaceMetadata(workspaceId)
+    );
   }
 
   /**
    * Refresh a single workspace in cache by re-parsing its metadata
    */
   async refreshWorkspace(workspaceId: string): Promise<void> {
-    return this.cache.refreshWorkspace(workspaceId, (id) => this.parseWorkspaceMetadata(id));
+    return this.cache.refreshWorkspace(workspaceId, id => this.parseWorkspaceMetadata(id));
   }
 
   /**
@@ -114,13 +120,13 @@ export class WorkspaceManager {
     if (!this.cache.getHasStartedLoading()) {
       await this.startLoadingWorkspaces();
     }
-    
+
     // Get current workspaces from cache
     let currentWorkspaces: WorkspaceInfo[] = [];
     this.cache.workspaces.subscribe(workspaces => {
       currentWorkspaces = workspaces;
     })(); // Immediately unsubscribe
-    
+
     return currentWorkspaces;
   }
 
@@ -312,6 +318,13 @@ export class WorkspaceManager {
           doc
         );
 
+        // Extract only the body content from the transformed document
+        const bodyElement = transformedDoc.querySelector('body');
+        let bodyContent = bodyElement ? bodyElement.innerHTML : '';
+        
+        // Remove xmlns attributes from generated content to avoid namespace pollution
+        bodyContent = bodyContent.replace(/\s+xmlns="http:\/\/www\.w3\.org\/1999\/xhtml"/g, '');
+
         // Generate complete XHTML document
         const xhtmlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
@@ -321,7 +334,7 @@ export class WorkspaceManager {
   <link rel="stylesheet" type="text/css" href="../Styles/page.css"/>
 </head>
 <body>
-${transformedDoc.documentElement.innerHTML}
+${bodyContent}
 </body>
 </html>`;
 
@@ -1254,7 +1267,6 @@ ${chapterLinks}
     return `${basePath}/${href}`;
   }
 
-
   private async createEPUBStructure(workspaceId: string, metadata: EPUBMetadata): Promise<void> {
     // Create mimetype
     await this.storage.writeTextFile(workspaceId, 'mimetype', 'application/epub+zip');
@@ -1384,9 +1396,6 @@ ${chapterLinks}
 
     return mediaTypeMap[extension] || 'application/octet-stream';
   }
-
-
-
 
   /**
    * Check if advanced mode is enabled for a workspace

@@ -1,6 +1,6 @@
 /**
  * OutlineGenerator - EPUB Navigation Generation Utility
- * 
+ *
  * Generates EPUB-compliant navigation documents from spine items
  * and processes user-written navigation content through transform pipeline.
  */
@@ -17,13 +17,13 @@ import type { TransformPipeline } from '../transform/transform-pipeline';
 export interface NavigationDocument {
   /** Complete EPUB navigation XHTML content */
   xhtmlContent: string;
-  
+
   /** Navigation metadata for OPF manifest */
   metadata: NavigationMetadata;
-  
+
   /** Generation timestamp */
   generatedAt: Date;
-  
+
   /** Source type: 'auto-generated' | 'user-content' */
   sourceType: 'auto-generated' | 'user-content';
 }
@@ -34,16 +34,16 @@ export interface NavigationDocument {
 export interface NavigationMetadata {
   /** Manifest item ID (typically 'nav') */
   id: string;
-  
+
   /** File path relative to OEBPS (typically 'nav.xhtml') */
   href: string;
-  
+
   /** Media type (always 'application/xhtml+xml') */
   mediaType: string;
-  
+
   /** EPUB properties (always ['nav']) */
   properties: string[];
-  
+
   /** Spine inclusion flag (typically false for navigation) */
   linear: boolean;
 }
@@ -54,13 +54,13 @@ export interface NavigationMetadata {
 export interface GenerationOptions {
   /** Include spine items without titles */
   includeUntitled?: boolean;
-  
+
   /** Custom title generation strategy */
   titleStrategy?: 'filename' | 'heading' | 'fallback';
-  
+
   /** Navigation document title */
   documentTitle?: string;
-  
+
   /** Additional CSS classes for styling */
   cssClasses?: Record<string, string>;
 }
@@ -71,10 +71,10 @@ export interface GenerationOptions {
 export interface ProcessingOptions {
   /** Validation strictness level */
   validationLevel?: 'strict' | 'lenient';
-  
+
   /** Error handling strategy */
   errorHandling?: 'throw' | 'fallback';
-  
+
   /** Navigation document title */
   documentTitle?: string;
 }
@@ -85,7 +85,7 @@ export interface ProcessingOptions {
 export class OutlineGenerator {
   /**
    * Generate complete EPUB navigation from spine items
-   * 
+   *
    * @param spineItems Array of spine items with source file information
    * @param workspaceManager Workspace manager instance for file access
    * @param workspaceId Workspace identifier for file operations
@@ -103,7 +103,7 @@ export class OutlineGenerator {
       titleStrategy: 'heading' as const,
       documentTitle: 'Table of Contents',
       cssClasses: {},
-      ...options
+      ...options,
     };
 
     // Get workspace basePath to correctly construct file paths
@@ -123,19 +123,24 @@ export class OutlineGenerator {
         // Construct full file path using workspace basePath
         const fullFilePath = `${pathInfo.basePath}/${spineItem.href}`;
         const xhtmlContent = await workspaceManager.readTextFile(workspaceId, fullFilePath);
-        
+
         // Extract title from XHTML content
-        const title = this.extractTitleFromXHTML(xhtmlContent, spineItem.href, chapterNumber, opts.titleStrategy);
-        
+        const title = this.extractTitleFromXHTML(
+          xhtmlContent,
+          spineItem.href,
+          chapterNumber,
+          opts.titleStrategy
+        );
+
         // Only add if we can extract title or includeUntitled is true
         if (title || opts.includeUntitled) {
           const navItem = {
             href: spineItem.href,
-            title: title || `Chapter ${chapterNumber}`
+            title: title || `Chapter ${chapterNumber}`,
           };
           navItems.push(navItem);
         }
-        
+
         chapterNumber++;
       } catch (error) {
         // If it's a workspace-level error (workspace not found), let it bubble up
@@ -149,28 +154,32 @@ export class OutlineGenerator {
     }
 
     // Generate EPUB-compliant XHTML
-    const xhtmlContent = this.generateNavigationXHTML(navItems, opts.documentTitle, opts.cssClasses);
-    
+    const xhtmlContent = this.generateNavigationXHTML(
+      navItems,
+      opts.documentTitle,
+      opts.cssClasses
+    );
+
     // Create navigation metadata
     const metadata: NavigationMetadata = {
       id: 'nav',
       href: 'nav.xhtml',
       mediaType: 'application/xhtml+xml',
       properties: ['nav'],
-      linear: false
+      linear: false,
     };
 
     return {
       xhtmlContent,
       metadata,
       generatedAt: new Date(),
-      sourceType: 'auto-generated'
+      sourceType: 'auto-generated',
     };
   }
 
   /**
    * Process user-written navigation content through transform pipeline
-   * 
+   *
    * @param navText User-written navigation content (plain text)
    * @param transformPipeline Transform pipeline instance for content processing
    * @param workspaceId Workspace identifier for context
@@ -187,41 +196,41 @@ export class OutlineGenerator {
       validationLevel: 'strict' as const,
       errorHandling: 'throw' as const,
       documentTitle: 'Navigation',
-      ...options
+      ...options,
     };
 
     try {
-      // Transform user text through transform pipeline  
+      // Transform user text through transform pipeline
       const result = await transformPipeline.transformText(navText, workspaceId, 'nav');
-      
+
       // Use transformed content as navigation XHTML
       let xhtmlContent = result.transformedText || '';
-      
+
       // If transformed content is empty or doesn't have EPUB structure, generate proper structure
       if (!xhtmlContent || !xhtmlContent.includes('<?xml version="1.0" encoding="UTF-8"?>')) {
         xhtmlContent = this.generateNavigationXHTML([], opts.documentTitle);
       }
-      
+
       // Create navigation metadata
       const metadata: NavigationMetadata = {
         id: 'nav',
         href: 'nav.xhtml',
         mediaType: 'application/xhtml+xml',
         properties: ['nav'],
-        linear: false
+        linear: false,
       };
 
       return {
         xhtmlContent,
         metadata,
         generatedAt: new Date(),
-        sourceType: 'user-content'
+        sourceType: 'user-content',
       };
     } catch (error) {
       if (opts.errorHandling === 'throw') {
         throw error;
       }
-      
+
       // Fallback - generate empty navigation
       const xhtmlContent = this.generateNavigationXHTML([], opts.documentTitle);
       const metadata: NavigationMetadata = {
@@ -229,14 +238,14 @@ export class OutlineGenerator {
         href: 'nav.xhtml',
         mediaType: 'application/xhtml+xml',
         properties: ['nav'],
-        linear: false
+        linear: false,
       };
 
       return {
         xhtmlContent,
         metadata,
         generatedAt: new Date(),
-        sourceType: 'user-content'
+        sourceType: 'user-content',
       };
     }
   }
@@ -250,46 +259,41 @@ export class OutlineGenerator {
     chapterNumber: number,
     titleStrategy: 'filename' | 'heading' | 'fallback'
   ): string | null {
-    try {
-      // Parse XHTML content using DOMParser
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(xhtmlContent, 'application/xml');
-      
-      // Check for parsing errors - if malformed, throw error to skip item
-      const parserError = doc.querySelector('parsererror');
-      if (parserError) {
-        throw new Error('Malformed XHTML');
-      }
+    // Parse XHTML content using DOMParser
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(xhtmlContent, 'application/xml');
 
-      // Additional check for malformed content by looking for basic structure
-      const htmlElement = doc.querySelector('html');
-      if (!htmlElement) {
-        throw new Error('Invalid XHTML structure');
-      }
-
-      // Try to extract title from headings (H1, H2, H3, etc.)
-      const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
-      for (const heading of headings) {
-        const titleText = heading.textContent?.trim();
-        if (titleText) {
-          // Strip HTML tags from title and return plain text
-          return titleText;
-        }
-      }
-
-      // Fallback to document title if no headings found
-      const titleElement = doc.querySelector('title');
-      const docTitle = titleElement?.textContent?.trim();
-      if (docTitle) {
-        return docTitle;
-      }
-
-      // Use fallback strategy
-      return this.getFallbackTitle(href, chapterNumber, titleStrategy);
-    } catch (error) {
-      // If parsing fails or XHTML is malformed, re-throw to skip this item
-      throw error;
+    // Check for parsing errors - if malformed, throw error to skip item
+    const parserError = doc.querySelector('parsererror');
+    if (parserError) {
+      throw new Error('Malformed XHTML');
     }
+
+    // Additional check for malformed content by looking for basic structure
+    const htmlElement = doc.querySelector('html');
+    if (!htmlElement) {
+      throw new Error('Invalid XHTML structure');
+    }
+
+    // Try to extract title from headings (H1, H2, H3, etc.)
+    const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    for (const heading of headings) {
+      const titleText = heading.textContent?.trim();
+      if (titleText) {
+        // Strip HTML tags from title and return plain text
+        return titleText;
+      }
+    }
+
+    // Fallback to document title if no headings found
+    const titleElement = doc.querySelector('title');
+    const docTitle = titleElement?.textContent?.trim();
+    if (docTitle) {
+      return docTitle;
+    }
+
+    // Use fallback strategy
+    return this.getFallbackTitle(href, chapterNumber, titleStrategy);
   }
 
   /**
@@ -306,11 +310,11 @@ export class OutlineGenerator {
       const nameWithoutExt = filename.replace(/\.[^/.]+$/, '');
       return nameWithoutExt || null;
     }
-    
+
     if (titleStrategy === 'fallback') {
       return `Chapter ${chapterNumber}`;
     }
-    
+
     // For 'heading' strategy, return null if no heading found
     return null;
   }
@@ -324,9 +328,9 @@ export class OutlineGenerator {
     cssClasses: Record<string, string> = {}
   ): string {
     // Generate list items
-    const listItems = navItems.map(item => 
-      `      <li><a href="${item.href}">${this.escapeXML(item.title)}</a></li>`
-    ).join('\n');
+    const listItems = navItems
+      .map(item => `      <li><a href="${item.href}">${this.escapeXML(item.title)}</a></li>`)
+      .join('\n');
 
     // Apply CSS classes if specified
     const navClass = cssClasses.nav ? ` class="${cssClasses.nav}"` : '';
