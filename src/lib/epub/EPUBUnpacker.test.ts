@@ -1,16 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { EPUBUnpacker } from './EPUBUnpacker.js';
 import type { ZipEntry } from '../zip/types.js';
+import { createVitestMockFileStorage } from '../test/mocks/file-storage-vitest.mock.js';
+
+// Create a singleton mock instance for consistent access across tests
+const mockFileStorageInstance = createVitestMockFileStorage();
 
 // Mock the FileStorageAPI
 vi.mock('../storage/index.js', () => ({
-  FileStorageAPI: vi.fn(() => ({
-    init: vi.fn(),
-    isInitialized: vi.fn(() => true),
-    createWorkspace: vi.fn(),
-    writeFile: vi.fn(),
-    destroy: vi.fn(),
-  })),
+  FileStorageAPI: {
+    getInstance: vi.fn(() => mockFileStorageInstance),
+  },
 }));
 
 // Mock the ZIP library to avoid DecompressionStream issues in happy-dom

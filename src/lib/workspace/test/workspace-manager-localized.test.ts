@@ -14,7 +14,9 @@ import type { EPUBMetadata } from '../../epub/opf-utils.js';
 
 // Mock File Storage API
 vi.mock('../../storage/index.js', () => ({
-  FileStorageAPI: vi.fn(),
+  FileStorageAPI: {
+    getInstance: vi.fn(() => null), // Return null to force using provided storage
+  },
 }));
 
 // Mock OPF Utils
@@ -159,11 +161,20 @@ describe('WorkspaceManager.createLocalizedEPUBWorkspace', () => {
     'appendix.txt': '# Appendix\n\nAdditional information and references...',
   };
 
-  // Mock DOM for transform pipeline
+  // Mock DOM for transform pipeline - create a proper mock Document
   const mockDOM = {
     documentElement: {
       innerHTML: '<h1 id="transformed">Transformed Content</h1>',
     },
+    querySelector: vi.fn((selector: string) => {
+      if (selector === 'body') {
+        return {
+          outerHTML: '<body xmlns="http://www.w3.org/1999/xhtml"><h1 id="transformed">Transformed Content</h1></body>',
+          innerHTML: '<h1 id="transformed">Transformed Content</h1>',
+        };
+      }
+      return null;
+    }),
   };
 
   // Mock translation function
@@ -212,13 +223,7 @@ describe('WorkspaceManager.createLocalizedEPUBWorkspace', () => {
     mockI18nServiceTranslate = (i18nService as any).translate;
 
     // Create WorkspaceManager instance with correct constructor signature
-    workspaceManager = new WorkspaceManager(undefined, mockTransformExecutor);
-
-    // Inject mocked dependencies
-    (workspaceManager as any).storage = mockStorage;
-    (workspaceManager as any).cache.storage = mockStorage;
-    (workspaceManager as any).dependencyTracker.storage = mockStorage;
-    (workspaceManager as any).sourceManager.fileStorage = mockStorage;
+    workspaceManager = new WorkspaceManager(mockStorage as any, undefined, mockTransformExecutor);
 
     // Mock manifest and spine methods that are called during content generation
     vi.spyOn(workspaceManager, 'addManifestItem').mockResolvedValue({

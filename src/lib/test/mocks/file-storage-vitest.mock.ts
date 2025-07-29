@@ -84,6 +84,8 @@ export function createVitestMockFileStorage() {
 
     // System methods
     getQuota: vi.fn().mockImplementation(() => mockStorage.getQuota()),
+    init: vi.fn().mockImplementation(() => mockStorage.init()),
+    isInitialized: vi.fn().mockImplementation(() => mockStorage.isInitialized()),
 
     // Test utility methods - direct access to underlying MockFileStorage
     addTestFiles: vi

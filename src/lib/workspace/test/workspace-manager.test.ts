@@ -17,9 +17,13 @@ import type {
 } from '../types.js';
 import type { EPUBMetadata, OPFDocument, ManifestItem } from '../../epub/opf-utils.js';
 
-// Mock File Storage API with shared mock
+// Mock FileStorageAPI using shared mock infrastructure
+const mockFileStorageInstance = createVitestMockFileStorage();
+
 vi.mock('../../storage/index.js', () => ({
-  FileStorageAPI: vi.fn(),
+  FileStorageAPI: {
+    getInstance: vi.fn(() => mockFileStorageInstance),
+  },
 }));
 
 // Mock OPF Utils

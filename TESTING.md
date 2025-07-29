@@ -229,6 +229,42 @@ Object.defineProperty(window, 'localStorage', {
 });
 ```
 
+### Shared Mock Infrastructure
+
+**Check for existing shared mocks before writing custom inline mocks.** The project maintains reusable mock utilities in `src/lib/test/mocks/` to ensure consistency and reduce duplication.
+
+```typescript
+// ✅ PREFERRED: Use shared mock infrastructure
+import { createVitestMockFileStorage } from '../test/mocks/file-storage-vitest.mock.js';
+
+const mockFileStorageInstance = createVitestMockFileStorage();
+
+vi.mock('../storage/index.js', () => ({
+  FileStorageAPI: {
+    getInstance: vi.fn(() => mockFileStorageInstance),
+  },
+}));
+
+// ❌ AVOID: Custom inline mocks when shared alternatives exist
+vi.mock('../storage/index.js', () => ({
+  FileStorageAPI: {
+    getInstance: vi.fn(() => ({
+      init: vi.fn(),
+      isInitialized: vi.fn(() => true),
+      // ... duplicated mock implementation 
+    })),
+  },
+}));
+```
+
+Available shared mocks:
+- `createVitestMockFileStorage()` - Complete FileStorageAPI mock with Vitest spies
+- `createMockFileStorage()` - Basic FileStorageAPI mock without Vitest dependencies
+
+### TypeScript Mock Compatibility
+
+When creating new mocks, ensure they provide complete interface implementations to avoid runtime errors. Use TypeScript's interface definitions to guide mock completeness.
+
 ### Shared Test Utilities
 
 Create reusable test utilities in `src/lib/test/`:

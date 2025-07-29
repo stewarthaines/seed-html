@@ -82,9 +82,9 @@ describe('OutlineGenerator', () => {
 
         // Verify titles extracted from XHTML
         expectNavigationLinks(result.xhtmlContent, [
-          { href: 'OEBPS/chapter1.xhtml', title: 'Chapter 1' },
-          { href: 'OEBPS/chapter2.xhtml', title: 'Chapter 2' },
-          { href: 'OEBPS/chapter3.xhtml', title: 'Chapter 3' },
+          { href: 'chapter1.xhtml', title: 'Chapter 1' },
+          { href: 'chapter2.xhtml', title: 'Chapter 2' },
+          { href: 'chapter3.xhtml', title: 'Chapter 3' },
         ]);
       });
 
@@ -344,7 +344,7 @@ describe('OutlineGenerator', () => {
           {
             idref: 'test',
             id: 'test',
-            href: 'OEBPS/test.xhtml',
+            href: 'test.xhtml',
             mediaType: 'application/xhtml+xml',
             linear: true,
             properties: [],
@@ -375,7 +375,7 @@ describe('OutlineGenerator', () => {
           {
             idref: 'test',
             id: 'test',
-            href: 'OEBPS/test.xhtml',
+            href: 'test.xhtml',
             mediaType: 'application/xhtml+xml',
             linear: true,
             properties: [],
@@ -405,7 +405,7 @@ describe('OutlineGenerator', () => {
           {
             idref: 'test',
             id: 'test',
-            href: 'OEBPS/test.xhtml',
+            href: 'test.xhtml',
             mediaType: 'application/xhtml+xml',
             linear: true,
             properties: [],
@@ -435,7 +435,7 @@ describe('OutlineGenerator', () => {
           {
             idref: 'test',
             id: 'test',
-            href: 'OEBPS/my-chapter.xhtml',
+            href: 'my-chapter.xhtml',
             mediaType: 'application/xhtml+xml',
             linear: true,
             properties: [],
@@ -465,7 +465,7 @@ describe('OutlineGenerator', () => {
           {
             idref: 'test',
             id: 'test',
-            href: 'OEBPS/untitled.xhtml',
+            href: 'untitled.xhtml',
             mediaType: 'application/xhtml+xml',
             linear: true,
             properties: [],
@@ -496,7 +496,7 @@ describe('OutlineGenerator', () => {
           {
             idref: 'test',
             id: 'test',
-            href: 'OEBPS/test.xhtml',
+            href: 'test.xhtml',
             mediaType: 'application/xhtml+xml',
             linear: true,
             properties: [],
@@ -527,7 +527,7 @@ describe('OutlineGenerator', () => {
           {
             idref: 'test',
             id: 'test',
-            href: 'OEBPS/test.xhtml',
+            href: 'test.xhtml',
             mediaType: 'application/xhtml+xml',
             linear: true,
             properties: [],
@@ -557,7 +557,7 @@ describe('OutlineGenerator', () => {
           {
             idref: 'test',
             id: 'test',
-            href: 'OEBPS/test.xhtml',
+            href: 'test.xhtml',
             mediaType: 'application/xhtml+xml',
             linear: true,
             properties: [],
@@ -610,9 +610,9 @@ describe('OutlineGenerator', () => {
       it('should handle spine items with special characters in hrefs', async () => {
         // Setup
         const mockManager = createTestWorkspaceManager();
-        const specialPath = 'OEBPS/ch@pter-1&2.xhtml';
+        const specialPath = 'ch@pter-1&2.xhtml';
         mockManager.addTestFiles(workspaceId, {
-          [specialPath]:
+          [`OEBPS/${specialPath}`]:
             '<html><head><title>Special</title></head><body><h1>Special Chapter</h1></body></html>',
         });
         const spineItems = [
@@ -646,7 +646,7 @@ describe('OutlineGenerator', () => {
         const files: Record<string, string> = {};
 
         for (let i = 1; i <= 100; i++) {
-          const href = `OEBPS/chapter${i}.xhtml`;
+          const href = `chapter${i}.xhtml`;
           largeSpineItems.push({
             idref: `chapter${i}`,
             id: `chapter${i}`,
@@ -656,7 +656,7 @@ describe('OutlineGenerator', () => {
             properties: [],
             hasSourceFile: false,
           });
-          files[href] =
+          files[`OEBPS/${href}`] =
             `<html><head><title>Chapter ${i}</title></head><body><h1>Chapter ${i}</h1></body></html>`;
         }
 
@@ -691,7 +691,7 @@ describe('OutlineGenerator', () => {
           {
             idref: 'good1',
             id: 'good1',
-            href: 'OEBPS/good1.xhtml',
+            href: 'good1.xhtml',
             mediaType: 'application/xhtml+xml',
             linear: true,
             properties: [],
@@ -700,7 +700,7 @@ describe('OutlineGenerator', () => {
           {
             idref: 'missing',
             id: 'missing',
-            href: 'OEBPS/missing.xhtml',
+            href: 'missing.xhtml',
             mediaType: 'application/xhtml+xml',
             linear: true,
             properties: [],
@@ -709,7 +709,7 @@ describe('OutlineGenerator', () => {
           {
             idref: 'good2',
             id: 'good2',
-            href: 'OEBPS/good2.xhtml',
+            href: 'good2.xhtml',
             mediaType: 'application/xhtml+xml',
             linear: true,
             properties: [],
@@ -892,9 +892,9 @@ describe('OutlineGenerator', () => {
       );
 
       // Verify valid href attributes
-      expect(result.xhtmlContent).toContain('href="OEBPS/chapter1.xhtml"');
-      expect(result.xhtmlContent).toContain('href="OEBPS/chapter2.xhtml"');
-      expect(result.xhtmlContent).toContain('href="OEBPS/chapter3.xhtml"');
+      expect(result.xhtmlContent).toContain('href="chapter1.xhtml"');
+      expect(result.xhtmlContent).toContain('href="chapter2.xhtml"');
+      expect(result.xhtmlContent).toContain('href="chapter3.xhtml"');
     });
 
     it('should generate flat list structure (not nested)', async () => {
@@ -986,7 +986,7 @@ describe('OutlineGenerator', () => {
         {
           idref: 'good',
           id: 'good',
-          href: 'OEBPS/good.xhtml',
+          href: 'good.xhtml',
           mediaType: 'application/xhtml+xml',
           linear: true,
           properties: [],
@@ -995,7 +995,7 @@ describe('OutlineGenerator', () => {
         {
           idref: 'bad',
           id: 'bad',
-          href: 'OEBPS/bad.xhtml',
+          href: 'bad.xhtml',
           mediaType: 'application/xhtml+xml',
           linear: true,
           properties: [],
