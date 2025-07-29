@@ -20,12 +20,6 @@ export interface NavigationDocument {
 
   /** Navigation metadata for OPF manifest */
   metadata: NavigationMetadata;
-
-  /** Generation timestamp */
-  generatedAt: Date;
-
-  /** Source type: 'auto-generated' | 'user-content' */
-  sourceType: 'auto-generated' | 'user-content';
 }
 
 /**
@@ -172,8 +166,6 @@ export class OutlineGenerator {
     return {
       xhtmlContent,
       metadata,
-      generatedAt: new Date(),
-      sourceType: 'auto-generated',
     };
   }
 
@@ -223,8 +215,6 @@ export class OutlineGenerator {
       return {
         xhtmlContent,
         metadata,
-        generatedAt: new Date(),
-        sourceType: 'user-content',
       };
     } catch (error) {
       if (opts.errorHandling === 'throw') {
@@ -244,8 +234,6 @@ export class OutlineGenerator {
       return {
         xhtmlContent,
         metadata,
-        generatedAt: new Date(),
-        sourceType: 'user-content',
       };
     }
   }
