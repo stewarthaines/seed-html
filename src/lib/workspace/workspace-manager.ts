@@ -320,10 +320,7 @@ export class WorkspaceManager {
 
         // Extract only the body content from the transformed document
         const bodyElement = transformedDoc.querySelector('body');
-        let bodyContent = bodyElement ? bodyElement.innerHTML : '';
-        
-        // Remove xmlns attributes from generated content to avoid namespace pollution
-        bodyContent = bodyContent.replace(/\s+xmlns="http:\/\/www\.w3\.org\/1999\/xhtml"/g, '');
+        let bodyContent = bodyElement ? bodyElement.outerHTML : '';
 
         // Generate complete XHTML document
         const xhtmlContent = `<?xml version="1.0" encoding="UTF-8"?>
@@ -333,9 +330,7 @@ export class WorkspaceManager {
   <title>${chapter.title}</title>
   <link rel="stylesheet" type="text/css" href="../Styles/page.css"/>
 </head>
-<body>
 ${bodyContent}
-</body>
 </html>`;
 
         await this.storage.writeTextFile(
