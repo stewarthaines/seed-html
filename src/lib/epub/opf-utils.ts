@@ -580,6 +580,103 @@ export class OPFUtils {
 }
 
 // Type-safe helper functions for metadata field access
+/**
+ * EPUB Directory Mapping for Media Types
+ * Maps MIME types to their appropriate EPUB directory structure
+ */
+export interface DirectoryMapping {
+  [mediaType: string]: string;
+}
+
+export const EPUB_DIRECTORY_MAP: DirectoryMapping = {
+  // Text content
+  'application/xhtml+xml': 'Text/',
+  'text/html': 'Text/',
+  
+  // Stylesheets  
+  'text/css': 'Styles/',
+  
+  // Scripts
+  'text/javascript': 'Scripts/',
+  'application/javascript': 'Scripts/',
+  
+  // Images
+  'image/jpeg': 'Images/',
+  'image/png': 'Images/', 
+  'image/gif': 'Images/',
+  'image/svg+xml': 'Images/',
+  'image/webp': 'Images/',
+  
+  // Audio
+  'audio/mpeg': 'Audio/',
+  'audio/ogg': 'Audio/',
+  'audio/wav': 'Audio/',
+  'audio/mp4': 'Audio/',
+  
+  // Video
+  'video/mp4': 'Video/',
+  'video/webm': 'Video/',
+  'video/ogg': 'Video/',
+  
+  // Fonts
+  'font/ttf': 'Fonts/',
+  'font/otf': 'Fonts/',
+  'font/woff': 'Fonts/',
+  'font/woff2': 'Fonts/',
+  'application/font-woff': 'Fonts/',
+  
+  // Documents
+  'application/pdf': 'Misc/',
+  'text/plain': 'Text/',
+};
+
+/**
+ * Get the appropriate EPUB directory for a given media type
+ * @param mediaType - MIME type of the file
+ * @returns Directory path with trailing slash
+ */
+export function getDirectoryFromMediaType(mediaType: string): string {
+  // Normalize media type (remove charset, etc.)
+  const normalizedType = mediaType.split(';')[0].trim().toLowerCase();
+  
+  // Return mapped directory or default (root relative to OPF)
+  return EPUB_DIRECTORY_MAP[normalizedType] || '';
+}
+
+/**
+ * Generate full EPUB manifest href from filename and media type
+ * @param filename - Name of the file
+ * @param mediaType - MIME type of the file
+ * @returns Manifest href relative to OPF file (e.g., "Scripts/app.js")
+ * @note This is for manifest hrefs, not file system paths
+ */
+export function generateEPUBPath(filename: string, mediaType: string): string {
+  const directory = getDirectoryFromMediaType(mediaType);
+  return directory + filename;
+}
+
+/**
+ * Extract directory from existing EPUB path
+ * @param path - Full EPUB path
+ * @returns Directory portion with trailing slash
+ */
+export function extractDirectoryFromPath(path: string): string {
+  const lastSlash = path.lastIndexOf('/');
+  if (lastSlash === -1) return '';
+  return path.substring(0, lastSlash + 1);
+}
+
+/**
+ * Validate if a path follows EPUB directory conventions
+ * @param path - Full EPUB path to validate
+ * @param mediaType - Expected media type
+ * @returns True if path is in correct directory for media type
+ */
+export function validateEPUBPath(path: string, mediaType: string): boolean {
+  const expectedDirectory = getDirectoryFromMediaType(mediaType);
+  return path.startsWith(expectedDirectory);
+}
+
 export class MetadataUtils {
   /**
    * Safely get an array field from metadata

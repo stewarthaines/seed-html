@@ -107,6 +107,9 @@ export function createMockWorkspaceManagerVi() {
     isAdvancedModeEnabled: vi
       .fn()
       .mockImplementation((workspaceId: string) => mock.isAdvancedModeEnabled(workspaceId)),
+    getWorkspacePathInfo: vi
+      .fn()
+      .mockImplementation((workspaceId: string) => mock.getWorkspacePathInfo(workspaceId)),
     exists: vi.fn().mockImplementation((workspaceId: string) => mock.exists(workspaceId)),
 
     // Expose mock instance for direct manipulation

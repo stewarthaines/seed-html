@@ -430,9 +430,7 @@ describe('ManifestManager', () => {
       const binaryContent = new ArrayBuffer(2048);
 
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
-        manifest: [
-          { id: 'binary-item', href: 'data.bin', mediaType: 'application/octet-stream' },
-        ],
+        manifest: [{ id: 'binary-item', href: 'data.bin', mediaType: 'application/octet-stream' }],
       });
 
       await manifestManager.setItemContent(testWorkspaceId, 'binary-item', binaryContent);
@@ -510,9 +508,7 @@ describe('ManifestManager', () => {
       });
 
       mockWorkspaceManager.setWorkspaceOPF(testWorkspaceId, {
-        manifest: [
-          { id: 'chapter1', href: 'chapter1.xhtml', mediaType: 'application/xhtml+xml' },
-        ],
+        manifest: [{ id: 'chapter1', href: 'chapter1.xhtml', mediaType: 'application/xhtml+xml' }],
       });
 
       const preview = await manifestManager.getContentPreview(testWorkspaceId, 'chapter1');
@@ -563,12 +559,12 @@ describe('ManifestManager', () => {
       const result = await manifestManager.createTextItem(testWorkspaceId, itemData);
 
       expect(result.id).toBe('chapter3');
-      expect(result.href).toBe('OEBPS/chapter3.xhtml');
+      expect(result.href).toBe('Text/chapter3.xhtml');
       expect(result.mediaType).toBe('application/xhtml+xml');
 
       // Verify file was created in workspace
       const workspaceFiles = mockWorkspaceManager.getWorkspaceFiles(testWorkspaceId);
-      expect(workspaceFiles.has('OEBPS/chapter3.xhtml')).toBe(true);
+      expect(workspaceFiles.has('OEBPS/Text/chapter3.xhtml')).toBe(true);
     });
 
     it('should use provided ID when given', async () => {
@@ -585,7 +581,7 @@ describe('ManifestManager', () => {
       const result = await manifestManager.createTextItem(testWorkspaceId, itemData);
 
       expect(result.id).toBe('custom-id');
-      expect(result.href).toBe('OEBPS/custom.xhtml');
+      expect(result.href).toBe('Text/custom.xhtml');
     });
 
     it('should detect media type when not provided', async () => {
@@ -655,12 +651,12 @@ describe('ManifestManager', () => {
       const result = await manifestManager.createFileItem(testWorkspaceId, mockFile as File);
 
       expect(result.id).toBe('styles');
-      expect(result.href).toBe('OEBPS/styles.css');
+      expect(result.href).toBe('Styles/styles.css');
       expect(result.mediaType).toBe('text/css');
 
       // Verify file was stored through WorkspaceManager
       const workspaceFiles = mockWorkspaceManager.getWorkspaceFiles(testWorkspaceId);
-      expect(workspaceFiles.has('OEBPS/styles.css')).toBe(true);
+      expect(workspaceFiles.has('OEBPS/Styles/styles.css')).toBe(true);
     });
 
     it('should handle binary file upload', async () => {
@@ -674,7 +670,7 @@ describe('ManifestManager', () => {
       const result = await manifestManager.createFileItem(testWorkspaceId, mockFile as File);
 
       expect(result.mediaType).toBe('image/jpeg');
-      expect(result.href).toBe('OEBPS/cover.jpg');
+      expect(result.href).toBe('Images/cover.jpg');
     });
 
     it('should use custom target path when provided', async () => {
@@ -910,7 +906,7 @@ describe('ManifestManager', () => {
 
       // Verify file was saved through real implementation
       const workspaceFiles = mockWorkspaceManager.getWorkspaceFiles(testWorkspaceId);
-      expect(workspaceFiles.has(item.href)).toBe(true);
+      expect(workspaceFiles.has('OEBPS/' + item.href)).toBe(true);
     });
 
     it('should handle concurrent operations correctly', async () => {

@@ -27,6 +27,7 @@ import {
 import { ManifestValidator } from './validation.js';
 import { ManifestUtils } from './utils.js';
 import { resolveManifestPath } from '../blob-url/utils.js';
+import { getDirectoryFromMediaType, generateEPUBPath } from '../epub/opf-utils.js';
 import type { IWorkspaceManager } from '../workspace/types.js';
 
 /**
@@ -418,8 +419,8 @@ export class ManifestManagerImpl implements IManifestManager {
       // Detect media type if not provided
       const mediaType = itemData.mediaType || this.detectMediaType(itemData.fileName);
 
-      // Build target path
-      const targetDirectory = itemData.targetDirectory || 'OEBPS/';
+      // Build manifest href using media type routing (relative to OPF file)
+      const targetDirectory = itemData.targetDirectory || getDirectoryFromMediaType(mediaType);
       const href = targetDirectory + itemData.fileName;
 
       // Check for existing ID or href
@@ -454,8 +455,12 @@ export class ManifestManagerImpl implements IManifestManager {
         throw new ValidationError(errors[0].message);
       }
 
+      // Get workspace path info to use proper base path
+      const pathInfo = await this.workspaceManager.getWorkspacePathInfo(workspaceId);
+      const fileSystemPath = pathInfo.basePath + '/' + href;
+
       // Write the file
-      await this.workspaceManager.writeFile(workspaceId, href, itemData.content);
+      await this.workspaceManager.writeFile(workspaceId, fileSystemPath, itemData.content);
 
       // Add to manifest
       manifest.push(newItem);
@@ -494,14 +499,14 @@ export class ManifestManagerImpl implements IManifestManager {
       // Read file content
       const content = await file.arrayBuffer();
 
-      // Generate target path if not provided
-      const href = targetPath || `OEBPS/${file.name}`;
+      // Detect media type
+      const mediaType = this.detectMediaType(file.name, content);
+
+      // Generate target path if not provided using proper directory routing
+      const href = targetPath || generateEPUBPath(file.name, mediaType);
 
       // Generate ID from filename
       const id = this.generateItemId(file.name);
-
-      // Detect media type
-      const mediaType = this.detectMediaType(file.name, content);
 
       // Check for duplicates
       const manifest = await this.loadManifest(workspaceId);
@@ -524,8 +529,12 @@ export class ManifestManagerImpl implements IManifestManager {
         modified: new Date(),
       };
 
+      // Get workspace path info to use proper base path for file system operations
+      const pathInfo = await this.workspaceManager.getWorkspacePathInfo(workspaceId);
+      const fileSystemPath = pathInfo.basePath + '/' + href;
+
       // Write the file
-      await this.workspaceManager.writeFile(workspaceId, href, content);
+      await this.workspaceManager.writeFile(workspaceId, fileSystemPath, content);
 
       // Add to manifest
       manifest.push(newItem);
@@ -762,7 +771,7 @@ export class ManifestManagerImpl implements IManifestManager {
   }
 
   private getContentType(mediaType: string): 'text' | 'image' | 'audio' | 'video' | 'binary' {
-    if (mediaType.startsWith('text/') || mediaType.includes('xml') || mediaType.includes('json')) {
+    if (mediaType.startsWith('text/') || mediaType.includes('xml') || mediaType.includes('json') || mediaType.includes('javascript')) {
       return 'text';
     }
     if (mediaType.startsWith('image/')) {

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { t } from '../../i18n';
+  import { generateEPUBPath } from '../../epub/opf-utils.js';
   import type { ManifestItem, SourceItem, ValidationResult } from '../../manifest/types';
 
   export let itemEditorMode: 'create-text' | 'create-file' | 'edit' = 'create-text';
@@ -76,6 +77,12 @@
     }
   };
 
+  const handleBackdropKeydown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape' && event.target === modalRef) {
+      handleClose();
+    }
+  };
+
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape') {
       handleClose();
@@ -92,7 +99,8 @@
         formData.id = selectedFile.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9-_]/g, '_');
       }
       if (!formData.href) {
-        formData.href = `OEBPS/${selectedFile.name}`;
+        const mediaType = selectedFile.type || detectMediaType(selectedFile.name);
+        formData.href = generateEPUBPath(selectedFile.name, mediaType);
       }
       if (!formData.mediaType) {
         formData.mediaType = selectedFile.type || detectMediaType(selectedFile.name);
@@ -160,7 +168,8 @@
   const generateHrefFromId = () => {
     if (formData.id && !formData.href) {
       const extension = getExtensionFromMediaType(formData.mediaType || '');
-      formData.href = `OEBPS/${formData.id}${extension}`;
+      const filename = formData.id + extension;
+      formData.href = generateEPUBPath(filename, formData.mediaType || '');
     }
   };
 
@@ -200,6 +209,7 @@
   class="modal-overlay"
   bind:this={modalRef}
   on:click={handleBackdropClick}
+  on:keydown={handleBackdropKeydown}
   role="dialog"
   aria-modal="true"
   aria-labelledby="modal-title"
@@ -304,8 +314,9 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">{$t('EPUB Properties')}</label>
-          <div class="checkbox-group">
+          <fieldset class="checkbox-fieldset">
+            <legend class="form-label">{$t('EPUB Properties')}</legend>
+            <div class="checkbox-group">
             {#each epubProperties as property}
               <label class="checkbox-label">
                 <input
@@ -317,7 +328,8 @@
                 {property.label}
               </label>
             {/each}
-          </div>
+            </div>
+          </fieldset>
         </div>
 
         {#if itemEditorMode === 'create-text'}
@@ -372,9 +384,9 @@
   }
 
   .modal-content {
-    background-color: var(--color-surface);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
+    background-color: var(--color-surface-primary);
+    border-radius: var(--radius-modal);
+    box-shadow: var(--elevation-modal);
     max-width: 600px;
     width: 90%;
     max-height: 90vh;
@@ -441,7 +453,7 @@
   }
 
   .required {
-    color: var(--color-error);
+    color: var(--color-error-text);
   }
 
   .form-input,
@@ -450,8 +462,8 @@
     width: 100%;
     padding: 0.75rem;
     border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-surface);
+    border-radius: var(--radius-input);
+    background-color: var(--color-input-bg);
     color: var(--color-text-primary);
     font-size: 0.875rem;
     transition: border-color 0.2s ease;
@@ -461,27 +473,27 @@
   .form-select:focus,
   .form-textarea:focus {
     outline: none;
-    border-color: var(--color-focus-ring);
-    box-shadow: 0 0 0 2px var(--color-focus-ring);
+    border-color: var(--color-input-border-focus);
+    box-shadow: 0 0 0 2px var(--color-focus);
   }
 
   .form-input.error,
   .form-select.error,
   .form-textarea.error {
-    border-color: var(--color-error);
+    border-color: var(--color-error-text);
   }
 
   .form-input::placeholder,
   .form-textarea::placeholder {
-    color: var(--color-text-placeholder);
+    color: var(--color-input-placeholder);
   }
 
   .file-input {
     width: 100%;
     padding: 0.75rem;
     border: 2px dashed var(--color-border-default);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-surface-secondary);
+    border-radius: var(--radius-input);
+    background-color: var(--color-bg-secondary);
     cursor: pointer;
     transition: border-color 0.2s ease;
   }
@@ -492,13 +504,25 @@
 
   .file-input:focus {
     outline: none;
-    border-color: var(--color-focus-ring);
+    border-color: var(--color-focus);
   }
 
   .file-info {
     margin-top: 0.5rem;
     font-size: 0.875rem;
     color: var(--color-text-secondary);
+  }
+
+  .checkbox-fieldset {
+    border: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .checkbox-fieldset .form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
   }
 
   .checkbox-group {
@@ -521,24 +545,24 @@
     height: 1rem;
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-xs);
-    background-color: var(--color-surface);
+    background-color: var(--color-input-bg);
     cursor: pointer;
   }
 
   .checkbox-input:checked {
-    background-color: var(--color-primary);
-    border-color: var(--color-primary);
+    background-color: var(--color-interactive-primary);
+    border-color: var(--color-interactive-primary);
   }
 
   .checkbox-input:focus {
     outline: none;
-    box-shadow: 0 0 0 2px var(--color-focus-ring);
+    box-shadow: 0 0 0 2px var(--color-focus);
   }
 
   .error-message {
     margin-top: 0.25rem;
     font-size: 0.8125rem;
-    color: var(--color-error);
+    color: var(--color-error-text);
   }
 
   .field-help {
@@ -559,7 +583,7 @@
   .save-button {
     padding: 0.75rem 1.5rem;
     border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-button);
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
@@ -567,19 +591,19 @@
   }
 
   .cancel-button {
-    background-color: var(--color-surface);
+    background-color: var(--color-button-secondary-bg);
     color: var(--color-text-primary);
   }
 
   .cancel-button:hover {
-    background-color: var(--color-surface-hover);
-    border-color: var(--color-border-hover);
+    background-color: var(--color-button-secondary-bg-hover);
+    border-color: var(--color-border-default);
   }
 
   .save-button {
-    background-color: var(--color-primary);
-    color: var(--color-surface);
-    border-color: var(--color-primary);
+    background-color: var(--color-interactive-primary);
+    color: var(--color-white);
+    border-color: var(--color-interactive-primary);
   }
 
   .save-button:hover {
@@ -590,7 +614,7 @@
   .cancel-button:focus,
   .save-button:focus {
     outline: none;
-    box-shadow: 0 0 0 2px var(--color-focus-ring);
+    box-shadow: 0 0 0 2px var(--color-focus);
   }
 
   /* Mobile responsive */
