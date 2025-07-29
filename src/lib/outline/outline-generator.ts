@@ -106,6 +106,9 @@ export class OutlineGenerator {
       ...options
     };
 
+    // Get workspace basePath to correctly construct file paths
+    const pathInfo = await workspaceManager.getWorkspacePathInfo(workspaceId);
+
     // Generate navigation items from spine items
     const navItems: Array<{ href: string; title: string }> = [];
     let chapterNumber = 1;
@@ -117,18 +120,20 @@ export class OutlineGenerator {
       }
 
       try {
-        // Read XHTML file from workspace
-        const xhtmlContent = await workspaceManager.readTextFile(workspaceId, spineItem.href);
+        // Construct full file path using workspace basePath
+        const fullFilePath = `${pathInfo.basePath}/${spineItem.href}`;
+        const xhtmlContent = await workspaceManager.readTextFile(workspaceId, fullFilePath);
         
         // Extract title from XHTML content
         const title = this.extractTitleFromXHTML(xhtmlContent, spineItem.href, chapterNumber, opts.titleStrategy);
         
         // Only add if we can extract title or includeUntitled is true
         if (title || opts.includeUntitled) {
-          navItems.push({
+          const navItem = {
             href: spineItem.href,
             title: title || `Chapter ${chapterNumber}`
-          });
+          };
+          navItems.push(navItem);
         }
         
         chapterNumber++;

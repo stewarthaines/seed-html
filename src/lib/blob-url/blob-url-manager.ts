@@ -367,4 +367,12 @@ export class BlobURLManager {
       }
     }
   }
+
+  /**
+   * Get loaded extension libraries for transform context
+   * Currently returns empty object - extension library loading not yet implemented
+   */
+  getLoadedGlobals(): Record<string, any> {
+    return {};
+  }
 }

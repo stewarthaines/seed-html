@@ -9,11 +9,16 @@
   import SpineSidebar from './lib/components/SpineSidebar.svelte';
   import ManifestContainer from './lib/components/manifest/ManifestContainer.svelte';
   import ManifestPreview from './lib/components/manifest/ManifestPreview.svelte';
+  import OutlineView from './lib/components/outline/OutlineView.svelte';
+  import ContentPreview from './lib/components/preview/ContentPreview.svelte';
   import { WorkspaceManager } from './lib/workspace';
   import type { IWorkspaceManager } from './lib/workspace/types';
   import { ManifestManagerImpl } from './lib/manifest/manifest-manager';
   import { MetadataManagerImpl } from './lib/metadata/MetadataManager';
   import { SpineItemManager } from './lib/spine/spine-item-manager';
+  import { TransformPipeline } from './lib/transform';
+  import { BlobURLManager } from './lib/blob-url';
+  import { FileStorageAPI } from './lib/storage';
   import { layoutStore } from './lib/stores/layout';
   import { t } from './lib/i18n';
   import type { ManifestItem, SourceItem } from './lib/manifest/types';
@@ -38,19 +43,59 @@
   let currentView = $derived($navigationStore.currentView);
   let isExpanded = $derived($layoutStore.sidebar.isExpanded);
 
-  // Spine management state
+  // Root-level dependencies (shared across workspaces)
+  let fileStorageAPI: FileStorageAPI | null = $state(null);
   let currentWorkspaceManager: IWorkspaceManager = $state()!;
+  
+  // Workspace state
   let currentWorkspaceId: string | null = $state(null);
   let selectedSpineItemId: string | null = $state(null);
   let initialized = $state(false);
+  
+  // Workspace managers
   let currentManifestManager: ManifestManagerImpl | null = $state(null);
   let currentMetadataManager: MetadataManagerImpl | null = $state(null);
   let currentSpineManager: SpineItemManager | null = $state(null);
+  
+  // Workspace-specific dependencies (recreated per workspace)
+  let currentTransformPipeline: TransformPipeline | null = $state(null);
+  let currentBlobURLManager: BlobURLManager | null = $state(null);
+  
   let spineSidebar: any = $state(null); // Reference to SpineSidebar component
 
   // Manifest preview state
   let selectedManifestItem: ManifestItem | SourceItem | null = $state(null);
   let selectedManifestItemType: 'manifest' | 'source' | null = $state(null);
+
+  // Navigation preview state
+  let navigationPreviewContent: string = $state('');
+
+  // Create workspace-specific dependencies when workspace is loaded
+  async function createWorkspaceSpecificDependencies(workspaceId: string) {
+    if (!fileStorageAPI || !currentWorkspaceManager) {
+      return;
+    }
+
+    try {
+      // Get workspace-specific basePath from container.xml
+      const pathInfo = await currentWorkspaceManager.getWorkspacePathInfo(workspaceId);
+      
+      // Create BlobURLManager with correct basePath
+      currentBlobURLManager = new BlobURLManager({
+        fileStorage: fileStorageAPI,
+        basePath: pathInfo.basePath, // e.g., "OEBPS" from container.xml
+        maxBlobURLs: 100,
+      });
+
+      // Create TransformPipeline with full BlobURLManager
+      currentTransformPipeline = new TransformPipeline(
+        fileStorageAPI,
+        currentBlobURLManager
+      );
+    } catch (error) {
+      console.error('Failed to create workspace-specific dependencies:', error);
+    }
+  }
 
   // Handler for manifest item selection
   const handleManifestItemSelect = (
@@ -58,6 +103,13 @@
   ) => {
     selectedManifestItem = event.detail.item;
     selectedManifestItemType = event.detail.type;
+  };
+
+  // Handler for navigation preview updates
+  const handleNavigationPreviewUpdate = (
+    event: CustomEvent<{ xhtml: string; warnings?: string[] }>
+  ) => {
+    navigationPreviewContent = event.detail.xhtml;
   };
 
   // Initialize workspace manager
@@ -72,20 +124,27 @@
           currentManifestManager = contextManifestManager || null;
           currentMetadataManager = contextMetadataManager || null;
           currentSpineManager = new SpineItemManager(contextWorkspaceManager);
+          // Note: context mode doesn't create workspace-specific dependencies yet
         } else {
           // Production: create and initialize real managers
-          const tempWorkspaceManager = new WorkspaceManager();
+          
+          // 1. Create and initialize FileStorageAPI first
+          fileStorageAPI = FileStorageAPI.getInstance();
+          await fileStorageAPI.init();
+
+          // 2. Create WorkspaceManager with FileStorageAPI dependency injection
+          const tempWorkspaceManager = new WorkspaceManager(fileStorageAPI);
           await tempWorkspaceManager.init();
 
-          // Create real manifest, metadata, and spine managers
+          // 3. Create workspace managers that depend on WorkspaceManager
           currentManifestManager = new ManifestManagerImpl(tempWorkspaceManager);
           currentMetadataManager = new MetadataManagerImpl(tempWorkspaceManager);
           currentSpineManager = new SpineItemManager(tempWorkspaceManager);
 
-          // Set manager immediately - enables UI
+          // 4. Set manager immediately - enables UI
           currentWorkspaceManager = tempWorkspaceManager;
 
-          // Start background workspace loading (non-blocking)
+          // 5. Start background workspace loading (non-blocking)
           tempWorkspaceManager.startLoadingWorkspaces();
         }
 
@@ -128,6 +187,13 @@
       });
     }
   });
+
+  // Create workspace-specific dependencies when workspace changes
+  $effect(() => {
+    if (currentWorkspaceId && currentWorkspaceManager && fileStorageAPI) {
+      createWorkspaceSpecificDependencies(currentWorkspaceId);
+    }
+  });
 </script>
 
 <LayoutManager hasWorkspace={!!currentWorkspaceId}>
@@ -168,7 +234,6 @@
         on:workspaceOpened={async () => {
           // Refresh spine items when a workspace is opened/created
           if (spineSidebar) {
-            console.log('🔄 App: Refreshing spine items after workspace opened');
             await spineSidebar.refreshSpineItems();
           }
         }}
@@ -201,12 +266,22 @@
         />
       {/if}
     {:else if currentView === 'navigation'}
-      <PlaceholderView
-        viewType="navigation"
-        title={$t('Table of Contents')}
-        description={$t('Edit navigation structure and TOC')}
-        icon="📖"
-      />
+      {#if initialized && currentWorkspaceId && currentWorkspaceManager && currentSpineManager && currentTransformPipeline}
+        <OutlineView
+          workspaceId={currentWorkspaceId}
+          workspaceManager={currentWorkspaceManager}
+          spineItemManager={currentSpineManager}
+          transformPipeline={currentTransformPipeline}
+          on:previewUpdate={handleNavigationPreviewUpdate}
+        />
+      {:else}
+        <PlaceholderView
+          viewType="navigation"
+          title={$t('Table of Contents')}
+          description={$t('Loading workspace…')}
+          icon="📖"
+        />
+      {/if}
     {:else if currentView === 'spine'}
       {#if initialized && currentWorkspaceId && currentWorkspaceManager && currentSpineManager}
         <SpineView
@@ -246,6 +321,18 @@
         workspaceId={currentWorkspaceId}
         manifestManager={currentManifestManager}
       />
+    {:else if currentView === 'navigation'}
+      {#if navigationPreviewContent}
+        <ContentPreview
+          content={navigationPreviewContent}
+          deviceSize="responsive"
+        />
+      {:else}
+        <div class="placeholder-content">
+          <h3>{$t('Navigation Preview')}</h3>
+          <p>{$t('Navigation preview will appear here once content is generated')}</p>
+        </div>
+      {/if}
     {:else}
       <div class="placeholder-content">
         <h3>{$t('Preview Pane')}</h3>

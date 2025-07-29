@@ -180,7 +180,6 @@
   function handleEditorContentChanged(event: CustomEvent) {
     // The reactive statement above handles the actual processing
     // This just receives the lightweight event from OutlineEditor
-    console.log('Editor content changed:', event.detail);
   }
 
   // References for screen reader announcements
@@ -221,42 +220,32 @@
 
   // Component lifecycle management
   onMount(async () => {
-    console.log('OutlineView: onMount called');
     if (!initializationPromise) {
-      console.log('OutlineView: Creating initialization promise');
       initializationPromise = initializeComponent();
-    } else {
-      console.log('OutlineView: Using existing initialization promise');
     }
-    console.log('OutlineView: Awaiting initialization...');
     await initializationPromise;
-    console.log('OutlineView: Initialization complete');
   });
 
   onDestroy(() => {
-    console.log('OutlineView: onDestroy called, cleaning up store');
     isComponentReady = false;
     initializationPromise = null;
     
     // Clean up the text editor store
     outlineStore.destroy();
-    console.log('OutlineView: Store destroyed');
     
     dispatch('destroyed', { timestamp: Date.now() });
   });
 
   async function initializeComponent(): Promise<void> {
     try {
-      console.log('OutlineView: Starting initialization...');
-      
       // Mark component as ready
       isComponentReady = true;
-      console.log('OutlineView: Component marked as ready');
       
       // Dispatch ready event
-      console.log('OutlineView: Dispatching ready event');
       dispatch('ready', { timestamp: Date.now() });
-      console.log('OutlineView: Ready event dispatched');
+      
+      // Load navigation content (triggers auto-generation if no nav.txt exists)
+      await loadNavigationContent();
     } catch (error) {
       console.error('Failed to initialize OutlineView:', error);
       dispatch('error', {

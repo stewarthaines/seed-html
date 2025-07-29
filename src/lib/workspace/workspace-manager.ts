@@ -42,9 +42,9 @@ export class WorkspaceManager {
   private transformExecutor: TransformExecutor;
   private config: WorkspaceConfig;
 
-  constructor(config?: Partial<WorkspaceConfig>, transformExecutor?: TransformExecutor) {
+  constructor(storage?: FileStorageAPI, config?: Partial<WorkspaceConfig>, transformExecutor?: TransformExecutor) {
     this.config = { ...DEFAULT_WORKSPACE_CONFIG, ...config };
-    this.storage = FileStorageAPI.getInstance();
+    this.storage = storage || FileStorageAPI.getInstance();
     this.cache = new ReactiveWorkspaceCache();
     this.dependencyTracker = new ManifestDependencyTracker(this.storage);
     this.sourceManager = new SourceManager(this.storage);

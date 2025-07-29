@@ -114,7 +114,8 @@ describe('WorkspaceManager', () => {
         validation: { strict: true, checkDependencies: false, allowOrphanedFiles: false },
       };
 
-      const manager = new WorkspaceManager(config);
+      const mockStorage = createVitestMockFileStorage();
+      const manager = new WorkspaceManager(mockStorage as any, config);
       expect(manager).toBeInstanceOf(WorkspaceManager);
     });
   });
@@ -526,7 +527,8 @@ describe('WorkspaceManager', () => {
     });
 
     it('should handle validation with strict mode', async () => {
-      const strictManager = new WorkspaceManager({
+      const mockStorage = createVitestMockFileStorage();
+      const strictManager = new WorkspaceManager(mockStorage as any, {
         validation: { strict: true, checkDependencies: true, allowOrphanedFiles: false },
       });
 
@@ -674,7 +676,8 @@ describe('WorkspaceManager', () => {
         },
       };
 
-      const manager = new WorkspaceManager(config);
+      const mockStorage = createVitestMockFileStorage();
+      const manager = new WorkspaceManager(mockStorage as any, config);
       // Configuration should be applied internally
       expect(manager).toBeInstanceOf(WorkspaceManager);
     });
@@ -688,7 +691,8 @@ describe('WorkspaceManager', () => {
         },
       };
 
-      const manager = new WorkspaceManager(config);
+      const mockStorage = createVitestMockFileStorage();
+      const manager = new WorkspaceManager(mockStorage as any, config);
       expect(manager).toBeInstanceOf(WorkspaceManager);
     });
 
@@ -701,7 +705,8 @@ describe('WorkspaceManager', () => {
         },
       };
 
-      const manager = new WorkspaceManager(config);
+      const mockStorage = createVitestMockFileStorage();
+      const manager = new WorkspaceManager(mockStorage as any, config);
       expect(manager).toBeInstanceOf(WorkspaceManager);
     });
   });
