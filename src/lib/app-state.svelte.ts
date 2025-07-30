@@ -1,9 +1,7 @@
 import { FileStorageAPI } from './storage';
 import { WorkspaceManager } from './workspace';
 import type { IWorkspaceManager } from './workspace/types';
-import { ManifestManagerImpl } from './manifest/manifest-manager';
 import { MetadataManagerImpl } from './metadata/MetadataManager';
-import { SpineItemManager } from './spine/spine-item-manager';
 import { TransformPipeline } from './transform';
 import { BlobURLManager } from './blob-url';
 import type { ManifestItem, SourceItem } from './manifest/types';
@@ -44,10 +42,8 @@ export class AppState {
   selectedSpineItemId = $state<string | null>(null);
   initialized = $state(false);
 
-  // Workspace managers (legacy, to be migrated)
-  currentManifestManager = $state<ManifestManagerImpl | null>(null);
+  // Legacy managers (being phased out)
   currentMetadataManager = $state<MetadataManagerImpl | null>(null);
-  currentSpineManager = $state<SpineItemManager | null>(null);
 
   // Workspace-specific dependencies (recreated per workspace)
   currentTransformPipeline = $state<TransformPipeline | null>(null);
@@ -76,7 +72,7 @@ export class AppState {
   }
 
   get isNavigationReady(): boolean {
-    return this.isWorkspaceReady && !!this.currentSpineManager && !!this.currentTransformPipeline;
+    return this.isWorkspaceReady && !!this.spineService && !!this.currentTransformPipeline;
   }
 
   // Public setters with validation
@@ -131,9 +127,7 @@ export class AppState {
       const tempWorkspaceManager = new WorkspaceManager(this.fileStorageAPI);
       await tempWorkspaceManager.init();
 
-      this.currentManifestManager = new ManifestManagerImpl(tempWorkspaceManager);
       this.currentMetadataManager = new MetadataManagerImpl(tempWorkspaceManager);
-      this.currentSpineManager = new SpineItemManager(tempWorkspaceManager);
       this.currentWorkspaceManager = tempWorkspaceManager;
 
       // Start background workspace loading (for non-migrated components)
@@ -156,12 +150,7 @@ export class AppState {
     // Use context-provided managers (from stories)
     this.currentWorkspaceManager = contextWorkspaceManager || null;
     this.currentWorkspaceId = contextWorkspaceId || null;
-    this.currentManifestManager = contextManifestManager || null;
     this.currentMetadataManager = contextMetadataManager || null;
-
-    if (contextWorkspaceManager) {
-      this.currentSpineManager = new SpineItemManager(contextWorkspaceManager);
-    }
 
     // Note: context mode doesn't create workspace-specific dependencies yet
     this.initialized = true;
