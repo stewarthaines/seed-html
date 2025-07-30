@@ -3,14 +3,16 @@
   import { t } from '../i18n';
   import { layoutStore as _layoutStore } from '../stores/layout';
   import SpineItem from './SpineItem.svelte';
-  import type { SpineItemManager } from '../spine/spine-item-manager';
-  import type { SpineItemWithSource } from '../spine/types';
+  import type { SpineService } from '../services/spine/spine.service.js';
+  import type { SpineItemWithSource } from '../spine/types.js';
+  import type { WorkspaceState } from '../services/workspace/workspace.service.js';
 
   // Props
-  export let workspaceId: string;
-  export let spineManager: SpineItemManager;
+  export let workspace: WorkspaceState | null = null;
+  export let spineService: SpineService;
   export let selectedItemId: string | null = null;
   export let isExpanded = true;
+  export let onWorkspaceUpdate: ((workspace: WorkspaceState) => void) | null = null;
 
   // State
   let spineItems: SpineItemWithSource[] = [];
@@ -35,10 +37,10 @@
     };
   });
 
-  // Reactive: Load spine items when workspaceId changes
-  $: if (workspaceId && spineManager) {
+  // Reactive: Load spine items when workspace changes
+  $: if (workspace && spineService) {
     loadSpineItems();
-  } else if (!workspaceId) {
+  } else if (!workspace) {
     // No workspace selected - show empty state
     spineItems = [];
     isLoading = false;
@@ -48,19 +50,21 @@
 
   // Public method to refresh spine items (can be called by parent)
   export async function refreshSpineItems() {
-    if (workspaceId && spineManager) {
+    if (workspace && spineService) {
       await loadSpineItems();
     }
   }
 
   // Load spine items
   async function loadSpineItems() {
+    if (!workspace) return;
+    
     isLoading = true;
     error = null;
 
     try {
-      const items = await spineManager.loadSpineItems(workspaceId);
-      console.log('✅ SpineSidebar: Loaded', items.length, 'spine items for workspace', workspaceId);
+      const items = await spineService.loadSpineItems(workspace);
+      console.log('✅ SpineSidebar: Loaded', items.length, 'spine items for workspace', workspace.id);
       spineItems = items;
     } catch (err) {
       console.error('❌ SpineSidebar: Error loading spine items:', err);
@@ -84,31 +88,49 @@
 
   // Handle append new chapter
   async function handleAppendChapter() {
+    if (!workspace) return;
+    
     try {
-      const newChapter = await spineManager.addChapter(workspaceId, {
+      isLoading = true;
+      const result = await spineService.addChapter(workspace, {
         title: 'New Chapter',
         linear: true,
         createSourceFile: true,
       });
 
-      // Reload spine items
+      // Update workspace state
+      workspace = result.updatedWorkspace;
+      if (onWorkspaceUpdate) {
+        onWorkspaceUpdate(workspace);
+      }
+
+      // Reload spine items with updated workspace
       await loadSpineItems();
 
       // Select the new chapter
-      handleSelectItem(newChapter.id);
+      handleSelectItem(result.newChapter.id);
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to create chapter';
-      // Failed to create chapter
+    } finally {
+      isLoading = false;
     }
   }
 
   // Handle move up
   async function handleMoveUp(index: number) {
-    if (isReordering || index === 0) return;
+    if (isReordering || index === 0 || !workspace) return;
 
     isReordering = true;
     try {
-      spineItems = await spineManager.moveChapterUp(workspaceId, index);
+      const result = await spineService.moveChapterUp(workspace, index);
+      
+      // Update workspace state
+      workspace = result.updatedWorkspace;
+      if (onWorkspaceUpdate) {
+        onWorkspaceUpdate(workspace);
+      }
+      
+      spineItems = result.newOrder;
 
       // Announce move for screen readers
       announceMove(spineItems[index - 1].id, index, index - 1);
@@ -123,11 +145,19 @@
 
   // Handle move down
   async function handleMoveDown(index: number) {
-    if (isReordering || index === spineItems.length - 1) return;
+    if (isReordering || index === spineItems.length - 1 || !workspace) return;
 
     isReordering = true;
     try {
-      spineItems = await spineManager.moveChapterDown(workspaceId, index);
+      const result = await spineService.moveChapterDown(workspace, index);
+      
+      // Update workspace state
+      workspace = result.updatedWorkspace;
+      if (onWorkspaceUpdate) {
+        onWorkspaceUpdate(workspace);
+      }
+      
+      spineItems = result.newOrder;
 
       // Announce move for screen readers
       announceMove(spineItems[index + 1].id, index, index + 1);
@@ -184,9 +214,19 @@
 
     if (dragIndex === dropIndex) return;
 
+    if (!workspace) return;
+    
     isReordering = true;
     try {
-      spineItems = await spineManager.reorderItems(workspaceId, dragIndex, dropIndex);
+      const result = await spineService.reorderItems(workspace, dragIndex, dropIndex);
+      
+      // Update workspace state
+      workspace = result.updatedWorkspace;
+      if (onWorkspaceUpdate) {
+        onWorkspaceUpdate(workspace);
+      }
+      
+      spineItems = result.newOrder;
 
       // Announce move for screen readers
       announceMove(spineItems[dropIndex].id, dragIndex, dropIndex);
@@ -242,7 +282,7 @@
         </div>
       {/each}
     </div>
-  {:else if workspaceId && !isLoading}
+  {:else if workspace && !isLoading}
     <div class="empty-state">
       <p>{$t('No spine items yet')}</p>
       <button class="retry-button" on:click={loadSpineItems}>

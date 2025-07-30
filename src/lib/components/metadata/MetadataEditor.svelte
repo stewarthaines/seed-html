@@ -4,12 +4,14 @@
   import MetadataTabBar from './MetadataTabBar.svelte';
   import BasicInfoFields from './BasicInfoFields.svelte';
   import AdvancedFields from './AdvancedFields.svelte';
-  import type { MetadataManagerImpl } from '../../metadata/MetadataManager';
-  import type { ValidationResult } from '../../metadata/MetadataValidator';
   import type { EPUBMetadata } from '../../epub';
 
-  export let workspaceId = '';
-  export let metadataManager: MetadataManagerImpl | null = null;
+  // Service layer imports
+  import type { MetadataService, ValidationResult } from '../../services/metadata/metadata.service.js';
+  import type { WorkspaceState } from '../../services/workspace/workspace.service.js';
+
+  export let workspace: WorkspaceState | null = null;
+  export let metadataService: MetadataService;
 
   let metadata: EPUBMetadata = { title: '', language: '', identifier: '' };
   let validationErrors: ValidationResult[] = [];
@@ -73,13 +75,13 @@
     return validationErrors.filter(error => tabFields.includes(error.field));
   };
 
-  const loadMetadata = async () => {
-    if (!metadataManager || !workspaceId) return;
+  const loadMetadata = () => {
+    if (!workspace) return;
 
     try {
       loading = true;
-      metadata = await metadataManager.loadMetadata(workspaceId);
-      validationErrors = metadataManager.validateMetadata(metadata);
+      metadata = metadataService.loadMetadata(workspace);
+      validationErrors = metadataService.validateMetadata(metadata);
       error = null;
     } catch (err) {
       console.error('Failed to load metadata:', err);
@@ -96,19 +98,17 @@
     metadata = { ...metadata, [field]: value };
 
     // Update validation errors
-    if (metadataManager) {
-      validationErrors = metadataManager.validateMetadata(metadata);
-    }
+    validationErrors = metadataService.validateMetadata(metadata);
   };
 
   const handleFieldSave = async (event: { detail: any }) => {
     const { field, value } = event.detail;
 
-    if (!metadataManager || !workspaceId) return;
+    if (!workspace) return;
 
     try {
       // Save in background without blocking UI
-      await metadataManager.updateField(workspaceId, field, value);
+      workspace = await metadataService.updateField(workspace, field, value);
     } catch (err) {
       console.error(`Failed to save field ${field}:`, err);
       // Show error indicator - in a real implementation, you might want to
@@ -119,22 +119,17 @@
   const handleArrayAdd = async (event: { detail: { field: any } }) => {
     const { field } = event.detail;
 
-    if (!metadataManager || !workspaceId) return;
+    if (!workspace) return;
 
     try {
       saving = true;
 
-      if (field === 'creator') {
-        await metadataManager.addCreator(workspaceId);
-      } else if (field === 'subject') {
-        await metadataManager.addSubject(workspaceId);
-      } else if (field === 'contributor') {
-        await metadataManager.addContributor(workspaceId);
+      if (field === 'creator' || field === 'subject' || field === 'contributor') {
+        // Add new item using service
+        workspace = await metadataService.addArrayItem(workspace, field);
+        metadata = metadataService.loadMetadata(workspace);
+        validationErrors = metadataService.validateMetadata(metadata);
       }
-
-      // Refresh metadata from manager
-      metadata = await metadataManager.loadMetadata(workspaceId);
-      validationErrors = metadataManager.validateMetadata(metadata);
     } catch (err) {
       console.error(`Failed to add ${field}:`, err);
     } finally {
@@ -145,22 +140,17 @@
   const handleArrayRemove = async (event: { detail: { field: any; index: any } }) => {
     const { field, index } = event.detail;
 
-    if (!metadataManager || !workspaceId) return;
+    if (!workspace) return;
 
     try {
       saving = true;
 
-      if (field === 'creator') {
-        await metadataManager.removeCreator(workspaceId, index);
-      } else if (field === 'subject') {
-        await metadataManager.removeSubject(workspaceId, index);
-      } else if (field === 'contributor') {
-        await metadataManager.removeContributor(workspaceId, index);
+      if (field === 'creator' || field === 'subject' || field === 'contributor') {
+        // Remove item using service
+        workspace = await metadataService.removeArrayItem(workspace, field, index);
+        metadata = metadataService.loadMetadata(workspace);
+        validationErrors = metadataService.validateMetadata(metadata);
       }
-
-      // Refresh metadata from manager
-      metadata = await metadataManager.loadMetadata(workspaceId);
-      validationErrors = metadataManager.validateMetadata(metadata);
     } catch (err) {
       console.error(`Failed to remove ${field}:`, err);
     } finally {
@@ -169,9 +159,8 @@
   };
 
   const handleGenerateIdentifier = async () => {
-    if (!metadataManager) return;
-
-    const newIdentifier = metadataManager.generateIdentifier();
+    // Generate a new UUID for the identifier
+    const newIdentifier = `urn:uuid:${crypto.randomUUID()}`;
     handleFieldChange({ detail: { field: 'identifier', value: newIdentifier } });
     await handleFieldSave({ detail: { field: 'identifier', value: newIdentifier } });
   };
@@ -193,7 +182,7 @@
 
   // Load metadata when component mounts or dependencies change
   onMount(loadMetadata);
-  $: if (workspaceId && metadataManager) {
+  $: if (workspace && metadataService) {
     loadMetadata();
   }
 </script>

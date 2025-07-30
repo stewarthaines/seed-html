@@ -3,10 +3,10 @@
   import { t } from '../../i18n';
   import ManifestContainer from './ManifestContainer.svelte';
   import ManifestPreview from './ManifestPreview.svelte';
-  import type { IManifestManager } from '../../manifest/manifest-manager';
+  import type { WorkspaceService, WorkspaceState } from '../../services/workspace/workspace.service.js';
 
-  export let workspaceId = '';
-  export let manifestManager: IManifestManager | null = null;
+  export let workspace: WorkspaceState | null = null;
+  export let workspaceService: WorkspaceService;
   export let advancedMode = true;
   
   // Make advancedMode reactive
@@ -66,8 +66,8 @@
     <!-- Left pane: Manifest table -->
     <div class="table-pane">
       <ManifestContainer
-        {workspaceId}
-        {manifestManager}
+        {workspace}
+        {workspaceService}
         advancedMode={internalAdvancedMode}
         on:itemSelect={handleItemSelection}
       />
@@ -75,7 +75,7 @@
 
     <!-- Right pane: Content preview -->
     <div class="preview-pane">
-      <ManifestPreview {selectedItem} {selectedItemType} {workspaceId} {manifestManager} />
+      <ManifestPreview {selectedItem} {selectedItemType} {workspace} {workspaceService} />
     </div>
   </div>
 </div>

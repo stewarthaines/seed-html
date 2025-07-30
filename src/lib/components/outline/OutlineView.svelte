@@ -3,15 +3,15 @@
   import OutlineEditor from './OutlineEditor.svelte';
   import { createTextEditorStore } from '../../stores/index.js';
   import type { TextEditorStore } from '../../stores/index.js';
-  import type { IWorkspaceManager } from '../../workspace/types.js';
-  import { SpineItemManager } from '../../spine/spine-item-manager.js';
+  import type { WorkspaceService, WorkspaceState } from '../../services/workspace/workspace.service.js';
+  import type { SpineService } from '../../services/spine/spine.service.js';
   import type { TransformPipeline } from '../../transform/transform-pipeline.js';
   import { OutlineGenerator } from '../../outline/outline-generator.js';
 
-  // Props interface matching API specification
-  export let workspaceId: string;
-  export let workspaceManager: IWorkspaceManager;
-  export let spineItemManager: SpineItemManager;
+  // Props interface using clean service architecture
+  export let workspace: WorkspaceState;
+  export let workspaceService: WorkspaceService;
+  export let spineService: SpineService;
   export let transformPipeline: TransformPipeline;
 
   // Event dispatcher with typed events
@@ -66,13 +66,14 @@
   async function generateFromSpine() {
     try {
       // Load spine items for the workspace
-      const spineItems = await spineItemManager.loadSpineItems(workspaceId);
+      const spineItems = await spineService.loadSpineItems(workspace);
       
-      // Generate navigation document from spine
+      // Generate navigation from spine items (simplified - just use existing XHTML files)
       const navigationDoc = await OutlineGenerator.generateFromSpine(
         spineItems,
-        workspaceManager,
-        workspaceId
+        workspaceService,
+        workspace.id,
+        workspace.pathInfo
       );
       
       dispatch('previewUpdate', { xhtml: navigationDoc.xhtmlContent });
@@ -93,7 +94,7 @@
       const navigationDoc = await OutlineGenerator.processUserContent(
         content,
         transformPipeline,
-        workspaceId
+        workspace.id
       );
       
       dispatch('previewUpdate', { 
@@ -115,10 +116,11 @@
     try {
       // Try to load existing nav.txt from SOURCE/text/
       const navPath = 'SOURCE/text/nav.txt';
-      const hasNavFile = await workspaceManager.fileExists(workspaceId, navPath);
+      const hasNavFile = await workspaceService.fileExists(workspace.id, navPath);
       
       if (hasNavFile) {
-        const navContent = await workspaceManager.readTextFile(workspaceId, navPath);
+        const navBuffer = await workspaceService.readFile(workspace.id, navPath);
+        const navContent = new TextDecoder().decode(navBuffer);
         outlineStore.updateContent(navContent);
       } else {
         // Start with empty content (triggers auto-generation)
@@ -140,30 +142,31 @@
       
       // Save nav.txt source file
       const navSourcePath = 'SOURCE/text/nav.txt';
-      await workspaceManager.writeTextFile(workspaceId, navSourcePath, content);
+      await workspaceService.writeFile(workspace.id, navSourcePath, content);
       
       // Generate and save nav.xhtml
       let navigationDoc;
       if (content.trim() === '') {
         // Auto-generation mode
-        const spineItems = await spineItemManager.loadSpineItems(workspaceId);
+        const spineItems = await spineService.loadSpineItems(workspace);
         navigationDoc = await OutlineGenerator.generateFromSpine(
           spineItems,
-          workspaceManager,
-          workspaceId
+          workspaceService,
+          workspace.id,
+          workspace.pathInfo
         );
       } else {
         // User content mode
         navigationDoc = await OutlineGenerator.processUserContent(
           content,
           transformPipeline,
-          workspaceId
+          workspace.id
         );
       }
       
       // Save nav.xhtml to OEBPS
       const navXHTMLPath = 'OEBPS/nav.xhtml';
-      await workspaceManager.writeTextFile(workspaceId, navXHTMLPath, navigationDoc.xhtmlContent);
+      await workspaceService.writeFile(workspace.id, navXHTMLPath, navigationDoc.xhtmlContent);
       
       // TODO: Update OPF manifest with navigation metadata
       // This would require OPF manager integration

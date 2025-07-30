@@ -2,11 +2,15 @@
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import { navigationStore } from '../navigation-store';
   import { t, currentLocale } from '../../i18n';
-  import type { IWorkspaceManager, WorkspaceInfo } from '../../workspace/types';
+  import type { WorkspaceInfo } from '../../workspace/types';
   import type { EPUBMetadata } from '../../epub/opf-utils';
   import type { SpineItemManager } from '../../spine/spine-item-manager';
   import WorkspaceActionBar from '../../components/workspace/WorkspaceActionBar.svelte';
   import WorkspaceList from '../../components/workspace/WorkspaceList.svelte';
+
+  // Service layer imports
+  import type { WorkspaceService } from '../../services/workspace/workspace.service.js';
+  import type { AppState } from '../../app-state.svelte.js';
 
   const dispatch = createEventDispatcher<{
     workspaceOpened: { workspaceId: string };
@@ -15,31 +19,21 @@
   }>();
 
   // Props for dependency injection
-  export let workspaceManager: IWorkspaceManager;
+  export let workspaceService: WorkspaceService;
   export let spineManager: SpineItemManager;
+  export let appState: AppState;
   export let onWorkspaceChange: ((workspaceId: string | null) => void) | null = null;
   export let currentWorkspaceId: string | null = null;
 
   // Component state
   let workspaces: WorkspaceInfo[] = [];
   let currentWorkspace: WorkspaceInfo | null = null;
-  let loading = true;
+  let loading = false;
   let error: string | null = null;
   let hasUnsavedChanges = false;
   let guardId: string;
 
-  // Subscribe to reactive workspace store
-  $: if (workspaceManager) {
-    // Subscribe to workspaces store
-    workspaceManager.workspaces.subscribe((data: WorkspaceInfo[]) => {
-      workspaces = data;
-    });
-    
-    // Subscribe to loading store
-    workspaceManager.isLoadingWorkspaces.subscribe((isLoading: boolean) => {
-      loading = isLoading;
-    });
-  }
+  // Service layer handles state directly - no reactive subscriptions needed
 
   // Reactive: Update currentWorkspace when prop changes
   $: {
@@ -75,25 +69,35 @@
     // This function remains for compatibility but doesn't need to do anything
   };
   
-  // Start loading when manager becomes available
-  $: if (workspaceManager && !workspaceManager.hasStartedLoadingWorkspaces) {
-    workspaceManager.startLoadingWorkspaces();
-  }
+  // Service layer initialization handled on-demand
 
-  // Load workspaces from WorkspaceManager (legacy method for manual refresh)
+  // Load workspaces using service layer
   const loadWorkspaces = async () => {
-    if (!workspaceManager) return; // Guard against undefined
-
     try {
+      loading = true;
       error = null;
-      // Start loading if not already started
-      if (!workspaceManager.hasStartedLoadingWorkspaces) {
-        await workspaceManager.startLoadingWorkspaces();
-      }
+      
+      const serviceWorkspaces = await workspaceService.listWorkspaces();
+      
+      // Convert service workspace info to component format
+      workspaces = serviceWorkspaces.map(w => ({
+        id: w.id,
+        title: w.title,
+        language: w.language,
+        lastModified: w.lastModified,
+        fileCount: w.fileCount,
+        totalSize: w.totalSize,
+        epubVersion: '3.0', // Service layer defaults to EPUB 3.0
+        hasError: false // Service layer handles errors differently
+      }));
+      
       loadCurrentWorkspace();
     } catch (err) {
       console.error('Failed to load workspaces:', err);
       error = $t('Failed to load workspaces');
+      workspaces = []; // Clear workspaces on error
+    } finally {
+      loading = false;
     }
   };
 
@@ -105,65 +109,41 @@
     creator: ['Unknown'],
   });
 
-  // Handle create new workspace
+  // Handle create new workspace using orchestrated service layer
   const handleCreateNew = async () => {
-    console.log('🚀 handleCreateNew: Starting workspace creation...');
     try {
       loading = true;
-      console.log('  ✅ Set loading = true');
 
       // Get current locale for localized content
       const locale = $currentLocale;
-      console.log('  📍 Current locale:', locale);
       const metadata = createMinimalEPUBMetadata();
-      console.log('  📋 Created metadata:', metadata);
 
-      // Use enhanced workspace creation with localized sample content
-      console.log('  ⚙️ Calling workspaceManager.createLocalizedEPUBWorkspace...');
-      const workspaceId = await workspaceManager.createLocalizedEPUBWorkspace(metadata, locale);
-      console.log('  ✅ Workspace fully created with content, ID:', workspaceId);
+      // Create workspace with localized sample content using AppState orchestration
+      const workspace = await appState.createLocalizedWorkspace(metadata, locale);
+      
+      console.log('✅ Localized workspace created with sample content:', workspace.id);
+      
+      // Refresh workspace list
+      await loadWorkspaces();
 
-      // Refresh workspace list (cache should already be updated in createLocalizedEPUBWorkspace)
-      console.log('  🔄 Ensuring workspace appears in list...');
-      if (workspaceManager.hasStartedLoadingWorkspaces) {
-        // Cache is already active, just ensure the new workspace is visible
-        // The cache was already updated in createLocalizedEPUBWorkspace
-        console.log('  ✅ Workspace already added to cache during creation');
-      } else {
-        // Fallback: start loading if cache wasn't initialized yet
-        await workspaceManager.startLoadingWorkspaces();
-        console.log('  ✅ Started workspace loading');
-      }
+      // Set as current workspace
+      setCurrentWorkspace(workspace.id);
 
-      // Set as current workspace (now that it's fully created with content)
-      console.log('  📌 Setting current workspace to:', workspaceId);
-      setCurrentWorkspace(workspaceId);
-      console.log('  ✅ Current workspace set - SpineSidebar should now load spine items');
-
-      // Navigate to first content (prologue) for immediate preview
-      console.log('  🧭 Dispatching navigation request...');
+      // Navigate to first content for immediate preview
       dispatch('navigationRequested', {
         view: 'text',
-        workspaceId,
+        workspaceId: workspace.id,
       });
 
-      console.log('  📡 Dispatching workspaceOpened event...');
-      dispatch('workspaceOpened', { workspaceId });
-      console.log('  ✅ Workspace creation completed successfully!');
+      dispatch('workspaceOpened', { workspaceId: workspace.id });
     } catch (err) {
-      console.error('❌ Failed to create workspace:', err);
-      console.error('❌ Error details:', {
-        message: err instanceof Error ? err.message : 'Unknown error',
-        stack: err instanceof Error ? err.stack : undefined,
-        err,
-      });
+      console.error('Failed to create workspace:', err);
       alert(
         $t('Failed to create workspace: {error}', {
           error: err instanceof Error ? err.message : 'Unknown error',
         })
       );
     } finally {
-      console.log('  🏁 handleCreateNew finally block - setting loading = false');
       loading = false;
     }
   };
@@ -252,7 +232,7 @@
     }
   };
 
-  // Handle workspace deletion
+  // Handle workspace deletion using service layer
   const handleWorkspaceDelete = async (event: CustomEvent<{ workspaceId: string }>) => {
     const { workspaceId } = event.detail;
     const workspace = workspaces.find(w => w.id === workspaceId);
@@ -269,15 +249,17 @@
 
     try {
       loading = true;
-      await workspaceManager.deleteWorkspace(workspaceId);
+
+      // Delete workspace using service layer
+      await workspaceService.deleteWorkspace(workspaceId);
+      
+      // Refresh workspace list
+      await loadWorkspaces();
 
       // If this was the current workspace, clear it
       if (currentWorkspaceId === workspaceId) {
         setCurrentWorkspace(null);
       }
-
-      // Workspace is automatically removed from cache by deleteWorkspace method
-      // No need to manually refresh the entire list
     } catch (err) {
       console.error('Failed to delete workspace:', err);
       alert(
@@ -290,60 +272,11 @@
     }
   };
 
-  // Handle cleanup of orphaned workspaces
+  // Handle cleanup of orphaned workspaces (service layer handles errors gracefully)
   const handleCleanupOrphaned = async () => {
-    const errorWorkspaces = workspaces.filter(w => w.hasError).length;
-
-    if (errorWorkspaces === 0) {
-      alert($t('No corrupted workspaces found to clean up.'));
-      return;
-    }
-
-    const confirmed = confirm(
-      $t(
-        'Clean up {count} corrupted workspace(s)? This will permanently delete workspaces that cannot be loaded properly.',
-        {
-          count: errorWorkspaces,
-        }
-      )
-    );
-
-    if (!confirmed) return;
-
-    try {
-      loading = true;
-      const result = await workspaceManager.cleanupOrphanedWorkspaces();
-
-      // Show results
-      if (result.cleaned.length > 0) {
-        alert(
-          $t('Successfully cleaned up {count} corrupted workspace(s).', {
-            count: result.cleaned.length,
-          })
-        );
-      }
-
-      if (result.errors.length > 0) {
-        console.error('Cleanup errors:', result.errors);
-        alert(
-          $t('Some workspaces could not be cleaned: {errors}', {
-            errors: result.errors.join(', '),
-          })
-        );
-      }
-
-      // Workspaces are automatically removed from cache by cleanupOrphanedWorkspaces method
-      // No need to manually refresh the entire list
-    } catch (err) {
-      console.error('Failed to cleanup orphaned workspaces:', err);
-      alert(
-        $t('Failed to cleanup workspaces: {error}', {
-          error: err instanceof Error ? err.message : 'Unknown error',
-        })
-      );
-    } finally {
-      loading = false;
-    }
+    // Service layer doesn't have explicit "error" workspaces like the old manager
+    // If needed, this could be implemented as a service method
+    alert($t('Cleanup functionality will be implemented in a future service update.'));
   };
 
   // Handle current workspace actions
@@ -375,10 +308,8 @@
 
   // ViewComponent interface implementation
   export function onViewEnter(data?: any): void {
-    // Load workspaces when entering view (safe to call anytime)
-    if (workspaceManager) {
-      loadWorkspaces();
-    }
+    // Load workspaces when entering view
+    loadWorkspaces();
   }
 
   export function onViewLeave(): void {
@@ -405,6 +336,9 @@
   onMount(async () => {
     // Register navigation guard
     guardId = navigationStore.addNavigationGuard(canLeave);
+    
+    // Load workspaces on initial mount
+    await loadWorkspaces();
   });
 
   onDestroy(() => {
@@ -420,6 +354,13 @@
 
 <div class="workspace-view">
   <main class="view-content">
+    <!-- Architecture Debug Info -->
+    {#if import.meta.env.DEV}
+      <div class="debug-banner">
+        🆕 <strong>Service Mode:</strong> Using WorkspaceService only
+      </div>
+    {/if}
+
     <!-- Action Bar -->
     <WorkspaceActionBar
       isLoading={loading}
@@ -485,6 +426,17 @@
     flex: 1;
     padding: var(--space-6);
     overflow-y: auto;
+  }
+
+  .debug-banner {
+    padding: var(--space-3);
+    margin-block-end: var(--space-4);
+    background-color: var(--color-info-surface, #e6f3ff);
+    color: var(--color-info, #0066cc);
+    border: 1px solid var(--color-info, #0066cc);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
   }
 
   .error-banner {

@@ -2,12 +2,12 @@
   import { createEventDispatcher } from 'svelte';
   import { t } from '../../i18n';
   import type { ManifestItem, SourceItem, ContentPreview } from '../../manifest/types';
-  import type { IManifestManager } from '../../manifest/manifest-manager';
+  import type { WorkspaceService, WorkspaceState } from '../../services/workspace/workspace.service.js';
 
   export let selectedItem: ManifestItem | SourceItem | null = null;
   export let selectedItemType: 'manifest' | 'source' | null = null;
-  export let workspaceId = '';
-  export let manifestManager: IManifestManager | null = null;
+  export let workspace: WorkspaceState | null = null;
+  export let workspaceService: WorkspaceService;
 
   const dispatch = createEventDispatcher();
 
@@ -25,12 +25,12 @@
     );
   };
 
-  $: if (selectedItem && selectedItemType && manifestManager && workspaceId) {
+  $: if (selectedItem && selectedItemType && workspaceService && workspace) {
     loadContentPreview();
   }
 
   const loadContentPreview = async () => {
-    if (!selectedItem || !selectedItemType || !manifestManager || !workspaceId) {
+    if (!selectedItem || !selectedItemType || !workspaceService || !workspace) {
       contentPreview = null;
       return;
     }
@@ -41,40 +41,76 @@
 
       if (selectedItemType === 'manifest') {
         const manifestItem = selectedItem as ManifestItem;
-        contentPreview = await manifestManager.getContentPreview(workspaceId, manifestItem.id);
-      } else {
-        const sourceItem = selectedItem as SourceItem;
-        // For SOURCE items, we need to get content differently
-        const content = await manifestManager.getSourceItemContent(workspaceId, sourceItem.path);
-        const mediaType = sourceItem.mediaType || 'text/plain';
-        const isText = isTextMediaType(mediaType);
-
-        // Convert ArrayBuffer to string for text files
-        let textContent: string | undefined;
-        if (isText) {
-          if (typeof content === 'string') {
-            textContent = content;
-          } else {
-            // Convert ArrayBuffer to string for text files
+        // For now, create a simplified preview since we don't have getContentPreview in WorkspaceService yet
+        const filePath = manifestItem.href.startsWith(workspace.pathInfo.basePath + '/') ? 
+          manifestItem.href : 
+          `${workspace.pathInfo.basePath}/${manifestItem.href}`;
+        
+        try {
+          const content = await workspaceService.readFile(workspace.id, filePath);
+          const isText = isTextMediaType(manifestItem.mediaType);
+          
+          let textContent: string | undefined;
+          if (isText) {
             const decoder = new TextDecoder('utf-8');
             textContent = decoder.decode(content);
           }
+          
+          contentPreview = {
+            itemId: manifestItem.id,
+            mediaType: manifestItem.mediaType,
+            contentType: isText ? 'text' : 'binary',
+            textContent,
+            metadata: {
+              characterCount: textContent ? textContent.length : undefined,
+              lineCount: textContent ? textContent.split('\n').length : undefined,
+              wordCount: textContent
+                ? textContent.split(/\s+/).filter(w => w.length > 0).length
+                : undefined,
+            },
+          };
+        } catch {
+          contentPreview = {
+            itemId: manifestItem.id,
+            mediaType: manifestItem.mediaType,
+            contentType: 'binary',
+            error: 'Failed to load content'
+          };
         }
-
-        // Create a basic preview for SOURCE items
-        contentPreview = {
-          itemId: sourceItem.path,
-          mediaType,
-          contentType: isText ? 'text' : 'binary',
-          textContent,
-          metadata: {
-            characterCount: textContent ? textContent.length : undefined,
-            lineCount: textContent ? textContent.split('\n').length : undefined,
-            wordCount: textContent
-              ? textContent.split(/\s+/).filter(w => w.length > 0).length
-              : undefined,
-          },
-        };
+      } else {
+        // Handle SOURCE items - read and display their content
+        const sourceItem = selectedItem as SourceItem;
+        try {
+          const content = await workspaceService.readFile(workspace.id, sourceItem.path);
+          const isText = isTextMediaType(sourceItem.mediaType || 'text/plain');
+          
+          let textContent: string | undefined;
+          if (isText) {
+            const decoder = new TextDecoder('utf-8');
+            textContent = decoder.decode(content);
+          }
+          
+          contentPreview = {
+            itemId: sourceItem.path,
+            mediaType: sourceItem.mediaType || 'text/plain',
+            contentType: isText ? 'text' : 'binary',
+            textContent,
+            metadata: {
+              characterCount: textContent ? textContent.length : undefined,
+              lineCount: textContent ? textContent.split('\n').length : undefined,
+              wordCount: textContent
+                ? textContent.split(/\s+/).filter(w => w.length > 0).length
+                : undefined,
+            },
+          };
+        } catch {
+          contentPreview = {
+            itemId: sourceItem.path,
+            mediaType: sourceItem.mediaType || 'text/plain',
+            contentType: 'text',
+            error: 'Failed to load SOURCE file content'
+          };
+        }
       }
     } catch {
       error = $t('Failed to load content preview');
@@ -97,21 +133,11 @@
   };
 
   const handleDownloadClick = () => {
-    if (!selectedItem || !manifestManager || !workspaceId) return;
+    if (!selectedItem || !workspaceService || !workspace) return;
 
-    // Create a download link
-    const link = document.createElement('a');
-
-    if (selectedItemType === 'manifest') {
-      const manifestItem = selectedItem as ManifestItem;
-      link.href = `#download:${manifestItem.id}`;
-      link.download = manifestItem.href.split('/').pop() || manifestItem.id;
-    } else {
-      const sourceItem = selectedItem as SourceItem;
-      link.href = `#download:${sourceItem.path}`;
-      link.download = sourceItem.name;
-    }
-
+    // For now, just log - proper download implementation would need file content handling
+    console.log('Download requested for:', selectedItem);
+    
     // Note: In a real implementation, you would need to get the actual file content
     // and create a blob URL. This is a placeholder.
   };

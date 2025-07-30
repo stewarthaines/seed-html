@@ -7,6 +7,14 @@ import { SpineItemManager } from './spine/spine-item-manager';
 import { TransformPipeline } from './transform';
 import { BlobURLManager } from './blob-url';
 import type { ManifestItem, SourceItem } from './manifest/types';
+
+// New service layer imports
+import { WorkspaceService, type WorkspaceState } from './services/workspace/workspace.service.js';
+import { MetadataService } from './services/metadata/metadata.service.js';
+import { SpineService } from './services/spine/spine.service.js';
+import { ContentService } from './services/content/content.service.js';
+import { TransformExecutor } from './transform/transform-executor.js';
+import { i18nService } from './i18n/index.js';
 import {
   type WorkspaceManagerContext,
   type ManifestManagerContext,
@@ -24,12 +32,19 @@ export class AppState {
   fileStorageAPI = $state<FileStorageAPI | null>(null);
   currentWorkspaceManager = $state<IWorkspaceManager | null>(null);
 
+  // New service layer (Phase 2 migration)
+  workspaceService = $state<WorkspaceService | null>(null);
+  metadataService = $state<MetadataService | null>(null);
+  spineService = $state<SpineService | null>(null);
+  contentService = $state<ContentService | null>(null);
+  currentWorkspaceState = $state<WorkspaceState | null>(null);
+
   // Workspace state
   currentWorkspaceId = $state<string | null>(null);
   selectedSpineItemId = $state<string | null>(null);
   initialized = $state(false);
 
-  // Workspace managers
+  // Workspace managers (legacy, to be migrated)
   currentManifestManager = $state<ManifestManagerImpl | null>(null);
   currentMetadataManager = $state<MetadataManagerImpl | null>(null);
   currentSpineManager = $state<SpineItemManager | null>(null);
@@ -99,22 +114,33 @@ export class AppState {
       this.fileStorageAPI = FileStorageAPI.getInstance();
       await this.fileStorageAPI.init();
 
-      // 2. Create WorkspaceManager with FileStorageAPI dependency injection
+      // 2. Initialize service layer (primary architecture)
+      this.workspaceService = new WorkspaceService(this.fileStorageAPI);
+      this.metadataService = new MetadataService(this.workspaceService);
+      this.spineService = new SpineService(this.workspaceService);
+      
+      // Initialize ContentService with dependencies for sample content generation
+      const transformExecutor = new TransformExecutor();
+      this.contentService = new ContentService(
+        transformExecutor,
+        i18nService,
+        this.workspaceService
+      );
+
+      // 3. Keep minimal managers for components not yet migrated
       const tempWorkspaceManager = new WorkspaceManager(this.fileStorageAPI);
       await tempWorkspaceManager.init();
 
-      // 3. Create workspace managers that depend on WorkspaceManager
       this.currentManifestManager = new ManifestManagerImpl(tempWorkspaceManager);
       this.currentMetadataManager = new MetadataManagerImpl(tempWorkspaceManager);
       this.currentSpineManager = new SpineItemManager(tempWorkspaceManager);
-
-      // 4. Set manager immediately - enables UI
       this.currentWorkspaceManager = tempWorkspaceManager;
 
-      // 5. Start background workspace loading (non-blocking)
+      // Start background workspace loading (for non-migrated components)
       tempWorkspaceManager.startLoadingWorkspaces();
 
       this.initialized = true;
+      console.log('✅ AppState initialized: Service-first architecture with legacy support');
     } catch (error) {
       console.error('Failed to initialize for production:', error);
       throw error;
@@ -194,6 +220,34 @@ export class AppState {
     }
   }
 
+  // Service layer bridge methods (Phase 2 migration helpers)
+  async loadWorkspaceViaService(workspaceId: string): Promise<void> {
+    if (!this.workspaceService) return;
+    
+    try {
+      const workspaceState = await this.workspaceService.loadWorkspace(workspaceId);
+      this.currentWorkspaceState = workspaceState;
+      this.setWorkspaceId(workspaceId);
+    } catch (error) {
+      console.error('Failed to load workspace via service:', error);
+      throw error;
+    }
+  }
+
+  async createWorkspaceViaService(metadata: { title: string; language: string; identifier: string }): Promise<string> {
+    if (!this.workspaceService) throw new Error('WorkspaceService not initialized');
+    
+    try {
+      const workspaceState = await this.workspaceService.createWorkspace(metadata);
+      this.currentWorkspaceState = workspaceState;
+      this.setWorkspaceId(workspaceState.id);
+      return workspaceState.id;
+    } catch (error) {
+      console.error('Failed to create workspace via service:', error);
+      throw error;
+    }
+  }
+
   // Event handlers
   handleManifestItemSelect(
     event: CustomEvent<{ item: ManifestItem | SourceItem; type: 'manifest' | 'source' }>
@@ -207,12 +261,48 @@ export class AppState {
 
   onWorkspaceChange(workspaceId: string | null): void {
     this.setWorkspaceId(workspaceId);
+    
+    // Load workspace state for services
+    if (workspaceId && this.workspaceService) {
+      this.loadWorkspaceViaService(workspaceId);
+    } else {
+      this.currentWorkspaceState = null;
+    }
   }
 
   async onWorkspaceOpened(): Promise<void> {
     // Refresh spine items when a workspace is opened/created
     if (this.spineSidebar) {
       await this.spineSidebar.refreshSpineItems();
+    }
+  }
+
+  /**
+   * Create localized workspace with sample content (SERVICE ORCHESTRATION)
+   */
+  async createLocalizedWorkspace(metadata: any, locale: string): Promise<WorkspaceState> {
+    if (!this.workspaceService || !this.contentService) {
+      throw new Error('Services not initialized. Call initializeForProduction() first.');
+    }
+
+    try {
+      // Step 1: Create basic workspace using WorkspaceService
+      let workspace = await this.workspaceService.createWorkspace({
+        title: metadata.title || 'Untitled Book Project',
+        language: locale,
+        identifier: metadata.identifier || crypto.randomUUID()
+      });
+
+      // Step 2: Add localized sample content using ContentService
+      workspace = await this.contentService.addLocalizedSampleContent(workspace, locale);
+
+      // Step 3: Update current workspace state
+      this.currentWorkspaceState = workspace;
+
+      return workspace;
+    } catch (error) {
+      console.error('Failed to create localized workspace:', error);
+      throw error;
     }
   }
 

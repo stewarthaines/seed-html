@@ -42,12 +42,17 @@
   let selectedSpineItemId = $derived(appState.selectedSpineItemId);
   let initialized = $derived(appState.initialized);
   let currentManifestManager = $derived(appState.currentManifestManager);
-  let currentMetadataManager = $derived(appState.currentMetadataManager);
   let currentSpineManager = $derived(appState.currentSpineManager);
   let currentTransformPipeline = $derived(appState.currentTransformPipeline);
   let selectedManifestItem = $derived(appState.selectedManifestItem);
   let selectedManifestItemType = $derived(appState.selectedManifestItemType);
   let navigationPreviewContent = $derived(appState.navigationPreviewContent);
+
+  // New service layer reactive getters (Phase 2 migration)
+  let workspaceService = $derived(appState.workspaceService);
+  let metadataService = $derived(appState.metadataService);
+  let spineService = $derived(appState.spineService);
+  let currentWorkspaceState = $derived(appState.currentWorkspaceState);
 
   // Initialize app state
   onMount(() => {
@@ -106,6 +111,13 @@
       appState.createWorkspaceSpecificDependencies(appState.currentWorkspaceId);
     }
   });
+
+  // Load workspace state for services when workspace changes
+  $effect(() => {
+    if (appState.currentWorkspaceId && appState.workspaceService && !appState.currentWorkspaceState) {
+      appState.loadWorkspaceViaService(appState.currentWorkspaceId);
+    }
+  });
 </script>
 
 <LayoutManager hasWorkspace={!!currentWorkspaceId}>
@@ -114,17 +126,20 @@
       <div class="placeholder-content">
         <p>{$t('Loading workspace…')}</p>
       </div>
-    {:else if !currentWorkspaceId}
+    {:else if !currentWorkspaceState}
       <div class="placeholder-content">
         <p>{$t('No workspace selected')}</p>
       </div>
-    {:else if currentWorkspaceManager && currentSpineManager}
+    {:else if currentWorkspaceState && spineService}
       <SpineSidebar
         bind:this={appState.spineSidebar}
-        workspaceId={currentWorkspaceId}
-        spineManager={currentSpineManager}
+        workspace={currentWorkspaceState}
+        {spineService}
         selectedItemId={selectedSpineItemId}
         {isExpanded}
+        onWorkspaceUpdate={(updatedWorkspace: import('./lib/services/workspace/workspace.service.js').WorkspaceState) => {
+          appState.currentWorkspaceState = updatedWorkspace;
+        }}
       />
     {:else}
       <div class="placeholder-content">
@@ -135,17 +150,18 @@
 
   <svelte:fragment slot="left-content">
     <!-- Main content area - switches based on current view -->
-    {#if currentView === 'workspace' && currentSpineManager}
+    {#if currentView === 'workspace' && currentSpineManager && workspaceService}
       <WorkspaceView
-        workspaceManager={currentWorkspaceManager!}
+        {workspaceService}
         spineManager={currentSpineManager}
         {currentWorkspaceId}
+        {appState}
         onWorkspaceChange={appState.onWorkspaceChange.bind(appState)}
         on:workspaceOpened={appState.onWorkspaceOpened.bind(appState)}
       />
     {:else if currentView === 'metadata'}
-      {#if initialized && currentWorkspaceId && currentMetadataManager}
-        <MetadataEditor workspaceId={currentWorkspaceId} metadataManager={currentMetadataManager} />
+      {#if initialized && currentWorkspaceState && metadataService}
+        <MetadataEditor workspace={currentWorkspaceState} {metadataService} />
       {:else}
         <PlaceholderView
           viewType="metadata"
@@ -155,10 +171,10 @@
         />
       {/if}
     {:else if currentView === 'manifest'}
-      {#if initialized && currentWorkspaceId && currentManifestManager}
+      {#if initialized && appState.currentWorkspaceState && appState.workspaceService}
         <ManifestContainer
-          workspaceId={currentWorkspaceId}
-          manifestManager={currentManifestManager}
+          workspace={appState.currentWorkspaceState}
+          workspaceService={appState.workspaceService}
           advancedMode={true}
           on:itemSelect={appState.handleManifestItemSelect.bind(appState)}
         />
@@ -171,11 +187,11 @@
         />
       {/if}
     {:else if currentView === 'navigation'}
-      {#if initialized && currentWorkspaceId && currentWorkspaceManager && currentSpineManager && currentTransformPipeline}
+      {#if initialized && appState.currentWorkspaceState && appState.workspaceService && appState.spineService && currentTransformPipeline}
         <OutlineView
-          workspaceId={currentWorkspaceId}
-          workspaceManager={currentWorkspaceManager!}
-          spineItemManager={currentSpineManager}
+          workspace={appState.currentWorkspaceState}
+          workspaceService={appState.workspaceService}
+          spineService={appState.spineService}
           transformPipeline={currentTransformPipeline}
           on:previewUpdate={appState.handleNavigationPreviewUpdate.bind(appState)}
         />
@@ -219,12 +235,12 @@
   </svelte:fragment>
 
   <svelte:fragment slot="right-content">
-    {#if currentView === 'manifest' && initialized && currentWorkspaceId && currentManifestManager}
+    {#if currentView === 'manifest' && initialized && appState.currentWorkspaceState && appState.workspaceService}
       <ManifestPreview
         selectedItem={selectedManifestItem}
         selectedItemType={selectedManifestItemType}
-        workspaceId={currentWorkspaceId}
-        manifestManager={currentManifestManager}
+        workspace={appState.currentWorkspaceState}
+        workspaceService={appState.workspaceService}
       />
     {:else if currentView === 'navigation'}
       {#if navigationPreviewContent}

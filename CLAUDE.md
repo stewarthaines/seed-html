@@ -55,7 +55,7 @@ The build process creates a single `EDITME.html` file (~2-3MB) with all assets i
 - **XML/HTML Parsing**: Use `DOMParser` and `querySelector` instead of regular expressions for robust parsing
 - **CSS & Styling**: Use the comprehensive design system in `src/styles/` - see `plans/features/css_design_system.md` for full documentation
 - **SOURCE.zip Handling**: Use existing ZIP library (`src/lib/zip/`) for SOURCE.zip creation/extraction
-- **Import Paths**: Use relative imports (`../`, `../../`) instead of absolute paths (`$lib/`) for consistency and explicit dependency tracking
+- **Import Paths**: Use absolute paths (`$lib/`) for new code
 - Browser-native APIs preferred over regex for structured data handling
 
 ### Build Configuration Constraints

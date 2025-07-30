@@ -6,7 +6,7 @@
  */
 
 import type { SpineItemWithSource } from '../spine/types';
-import type { IWorkspaceManager } from '../workspace/types';
+import type { WorkspaceService, WorkspacePathInfo } from '../services/workspace/workspace.service.js';
 import type { TransformPipeline } from '../transform/transform-pipeline';
 
 // Type definitions for public API
@@ -88,10 +88,25 @@ export class OutlineGenerator {
    */
   static async generateFromSpine(
     spineItems: SpineItemWithSource[],
-    workspaceManager: IWorkspaceManager,
+    workspaceService: WorkspaceService,
     workspaceId: string,
+    pathInfo?: WorkspacePathInfo,
     options?: GenerationOptions
   ): Promise<NavigationDocument> {
+    // If pathInfo is actually options (backward compatibility)
+    if (pathInfo && 'titleStrategy' in pathInfo) {
+      options = pathInfo as any;
+      pathInfo = undefined;
+    }
+    
+    // Default pathInfo if not provided
+    if (!pathInfo) {
+      pathInfo = {
+        rootfilePath: 'OEBPS/content.opf',
+        basePath: 'OEBPS',
+        opfFileName: 'content.opf'
+      };
+    }
     const opts = {
       includeUntitled: true,
       titleStrategy: 'heading' as const,
@@ -99,9 +114,6 @@ export class OutlineGenerator {
       cssClasses: {},
       ...options,
     };
-
-    // Get workspace basePath to correctly construct file paths
-    const pathInfo = await workspaceManager.getWorkspacePathInfo(workspaceId);
 
     // Generate navigation items from spine items
     const navItems: Array<{ href: string; title: string }> = [];
@@ -116,7 +128,8 @@ export class OutlineGenerator {
       try {
         // Construct full file path using workspace basePath
         const fullFilePath = `${pathInfo.basePath}/${spineItem.href}`;
-        const xhtmlContent = await workspaceManager.readTextFile(workspaceId, fullFilePath);
+        const xhtmlBuffer = await workspaceService.readFile(workspaceId, fullFilePath);
+        const xhtmlContent = new TextDecoder().decode(xhtmlBuffer);
 
         // Extract title from XHTML content
         const title = this.extractTitleFromXHTML(
