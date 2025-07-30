@@ -204,11 +204,11 @@
         />
       {/if}
     {:else if currentView === 'spine'}
-      {#if initialized && currentWorkspaceId && currentWorkspaceManager && currentSpineManager}
+      {#if initialized && currentWorkspaceState && workspaceService && spineService}
         <SpineView
-          workspaceId={currentWorkspaceId}
-          workspaceManager={currentWorkspaceManager!}
-          spineManager={currentSpineManager}
+          workspace={currentWorkspaceState}
+          workspaceService={workspaceService}
+          spineService={spineService}
           selectedItemId={selectedSpineItemId}
         />
       {:else}

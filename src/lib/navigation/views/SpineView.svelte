@@ -1,15 +1,15 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { navigationStore } from '../navigation-store';
-  import type { IWorkspaceManager } from '../../workspace/types';
+  import type { WorkspaceService, WorkspaceState } from '../../services/workspace/workspace.service.js';
+  import type { SpineService } from '../../services/spine/spine.service.js';
   import type { SpineItemWithSource } from '../../spine/types';
-  import type { SpineItemManager } from '../../spine/spine-item-manager';
   import { t } from '../../i18n';
 
-  // Props
-  export let workspaceId: string;
-  export let workspaceManager: IWorkspaceManager;
-  export let spineManager: SpineItemManager;
+  // Props using clean service architecture
+  export let workspace: WorkspaceState;
+  export let workspaceService: WorkspaceService;
+  export let spineService: SpineService;
   export let selectedItemId: string | null = null;
 
   // Component state
@@ -53,7 +53,7 @@
 
   // Load selected item data
   async function loadSelectedItem() {
-    if (!selectedItemId || !spineManager) return;
+    if (!selectedItemId || !spineService) return;
 
     isLoading = true;
     error = null;
@@ -61,14 +61,15 @@
 
     try {
       // Load spine items to find the selected one
-      const spineItems = await spineManager.loadSpineItems(workspaceId);
+      const spineItems = await spineService.loadSpineItems(workspace);
       selectedItem = spineItems.find(item => item.id === selectedItemId) || null;
 
       if (selectedItem) {
         // Load source content if available
         try {
           const sourcePath = `SOURCE/text/${selectedItemId}.txt`;
-          sourceContent = await workspaceManager.readTextFile(workspaceId, sourcePath);
+          const sourceBuffer = await workspaceService.readFile(workspace.id, sourcePath);
+          sourceContent = new TextDecoder().decode(sourceBuffer);
         } catch {
           // Source file might not exist
           sourceContent = '';
@@ -101,7 +102,7 @@
   });
 
   // React to prop changes - reload when workspace or selected item changes
-  $: if (workspaceId && spineManager) {
+  $: if (workspace && spineService) {
     // Clear selection when workspace changes, then load if item is selected
     if (selectedItemId) {
       loadSelectedItem();
