@@ -1,5 +1,6 @@
 <script module>
   import { defineMeta } from '@storybook/addon-svelte-csf';
+  import { within, userEvent } from '@storybook/test';
   import StorageDemo from './StorageDemo.svelte';
 
   const { Story } = defineMeta({
@@ -60,45 +61,38 @@ This demonstrates the complete workspace isolation and file organization used by
 <!-- Demo with Sample Data (Automated Interactions) -->
 <Story
   name="Demo with Sample Data"
-  play={async ({ canvasElement }) => {
-    // Use proper testing library imports
-    const { within } = await import('@testing-library/dom');
-    const { default: userEvent } = await import('@testing-library/user-event');
-    
-    const canvas = within(canvasElement);
-    const user = userEvent.setup();
-    
+  play={async ({ canvas, userEvent }) => {
     try {
       // Wait for storage initialization first
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await canvas.findByRole('main', {}, { timeout: 5000 });
       
       // Reset storage demo using the component's built-in method
       const resetButton = canvas.getByText('Reset Demo');
-      await user.click(resetButton);
+      await userEvent.click(resetButton);
       
       // Wait for reset to complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Create workspace
       const createButton = canvas.getByText('Create Workspace');
-      await user.click(createButton);
+      await userEvent.click(createButton);
       
       // Wait for workspace creation
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       // Add sample EPUB
       const addEpubButton = canvas.getByText('Add Sample EPUB');
-      await user.click(addEpubButton);
+      await userEvent.click(addEpubButton);
       
       // Wait for files to be created
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       // Read a file
       const mimetypeButton = canvas.getByText('mimetype');
-      await user.click(mimetypeButton);
+      await userEvent.click(mimetypeButton);
       
       // Wait to see the result
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 300));
       
     } catch (error) {
       console.log('Play function interaction failed:', error);

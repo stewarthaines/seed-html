@@ -9,6 +9,7 @@
 
 <script module>
   import { defineMeta } from '@storybook/addon-svelte-csf';
+  import { within, userEvent } from '@storybook/test';
   // Update this import to match your demo component
   import BackendFeatureDemo from './BackendFeatureDemo.template.svelte';
 
@@ -64,32 +65,25 @@ This demonstrates the complete feature workflow and validates functionality in a
 <!-- Automated Demo with Sample Data -->
 <Story
   name="Demo with Sample Data"
-  play={async ({ canvasElement }) => {
-    // Use proper testing library imports
-    const { within } = await import('@testing-library/dom');
-    const { default: userEvent } = await import('@testing-library/user-event');
-    
-    const canvas = within(canvasElement);
-    const user = userEvent.setup();
-    
+  play={async ({ canvas, userEvent }) => {
     try {
       // Wait for feature initialization
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await canvas.findByRole('main', {}, { timeout: 5000 });
       
       // Reset to clean state
       const resetButton = canvas.getByText('Reset Demo');
-      await user.click(resetButton);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await userEvent.click(resetButton);
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Perform example operation
       const exampleButton = canvas.getByText('Example Operation');
-      await user.click(exampleButton);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await userEvent.click(exampleButton);
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       // Perform another operation
       const anotherButton = canvas.getByText('Another Operation');
-      await user.click(anotherButton);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await userEvent.click(anotherButton);
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       // Add more operations as needed for your feature demo
       

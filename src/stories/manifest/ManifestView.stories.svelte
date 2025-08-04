@@ -1,5 +1,6 @@
 <script module>
   import { defineMeta } from '@storybook/addon-svelte-csf';
+  import { within, userEvent } from '@storybook/test';
   import ManifestViewDemo from './ManifestViewDemo.svelte';
 
   const { Story } = defineMeta({

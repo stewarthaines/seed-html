@@ -1,5 +1,6 @@
 <script module>
   import { defineMeta } from '@storybook/addon-svelte-csf';
+  import { within, userEvent } from '@storybook/test';
   import TransformPipelineDemo from './TransformPipelineDemo.svelte';
 
   const { Story } = defineMeta({
@@ -82,30 +83,23 @@ This demonstrates the complete transformation workflow from plain text input to 
 <!-- Automated Demo with Sample Data -->
 <Story
   name="Demo with Sample Data"
-  play={async ({ canvasElement }) => {
-    // Use proper testing library imports
-    const { within } = await import('@testing-library/dom');
-    const { default: userEvent } = await import('@testing-library/user-event');
-
-    const canvas = within(canvasElement);
-    const user = userEvent.setup();
-
+  play={async ({ canvas, userEvent }) => {
     try {
       // Wait for component initialization
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await canvas.findByRole('main', {}, { timeout: 5000 });
 
       // Reset to clean state
       const resetButton = canvas.getByText('Reset Demo');
-      await user.click(resetButton);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await userEvent.click(resetButton);
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       // Run the transform pipeline
       const transformButton = canvas.getByText('Run Transform Pipeline');
-      await user.click(transformButton);
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await userEvent.click(transformButton);
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Allow time to see the results
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
 
     } catch (error) {
       console.log('Play function interaction failed:', error);

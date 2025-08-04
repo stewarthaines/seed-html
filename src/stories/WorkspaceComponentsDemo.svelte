@@ -206,16 +206,6 @@
   </div>
 
   <div class="demo-content">
-    <!-- Current Workspace Bar -->
-    <div class="demo-section">
-      <h3>Current Workspace Bar</h3>
-      <CurrentWorkspaceBar
-        {currentWorkspace}
-        on:switchRequested={handleSwitchWorkspace}
-        on:closeRequested={handleCloseWorkspace}
-      />
-    </div>
-
     <!-- Action Bar -->
     <div class="demo-section">
       <h3>Workspace Action Bar</h3>

@@ -1,6 +1,6 @@
 <script module>
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  // Standard testing library imports will be done inside play functions
+  import { within, userEvent } from '@storybook/test';
   import LayoutManager from '../lib/LayoutManager.svelte';
 
   const { Story } = defineMeta({
@@ -179,8 +179,7 @@
       },
     },
   }}
-  play={async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play={async ({ canvas, userEvent }) => {
     const toggleButton = canvas.getByLabelText('Toggle sidebar');
     await userEvent.click(toggleButton);
   }}
@@ -244,20 +243,18 @@
       },
     },
   }}
-  play={async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play={async ({ canvas, userEvent }) => {
     // Click through different sections
     const metadataButton = canvas.getByTitle('Metadata');
     await userEvent.click(metadataButton);
 
     // Wait a moment then click manifest
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 500));
     const manifestButton = canvas.getByTitle('Manifest');
     await userEvent.click(manifestButton);
 
     // Wait a moment then click navigation
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 500));
     const navButton = canvas.getByTitle('Navigation');
     await userEvent.click(navButton);
   }}

@@ -100,7 +100,7 @@ async function resetDemo() {
 ```typescript
 // In stories file
 play: async ({ canvasElement }) => {
-  const { within } = await import('@testing-library/dom');
+  const canvas = within(canvasElement);
   const user = userEvent.setup();
 
   // Reset first

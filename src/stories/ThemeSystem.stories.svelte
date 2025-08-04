@@ -1,6 +1,6 @@
 <script module>
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  // Standard testing library imports will be done inside play functions
+  import { within, userEvent } from '@storybook/test';
   import ThemeToggle from '../lib/ThemeToggle.svelte';
 
   const { Story } = defineMeta({
@@ -332,20 +332,18 @@
       },
     },
   }}
-  play={async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play={async ({ canvas, userEvent }) => {
     // Wait for component to load
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await canvas.findByRole('main', {}, { timeout: 5000 });
 
     // Toggle theme a few times to demonstrate functionality
     const toggleButton = canvas.getByLabelText('Toggle theme');
 
     await userEvent.click(toggleButton);
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 800));
 
     await userEvent.click(toggleButton);
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 800));
 
     // Final toggle to dark for demonstration
     await userEvent.click(toggleButton);

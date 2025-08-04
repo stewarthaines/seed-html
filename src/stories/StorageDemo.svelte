@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { FileStorageAPI } from '../lib/storage/index.js';
+  import { createIsolatedMockStorage, cleanupStoryStorage } from './utils/mock-storage-factory';
   import './storage-demo.css';
 
   interface LogEntry {
@@ -19,12 +20,20 @@
 
   onMount(async () => {
     try {
-      storage = FileStorageAPI.getInstance();
+      // Use isolated mock storage instead of persistent storage
+      storage = createIsolatedMockStorage();
       await storage.init();
-      addLog('success', `Storage initialized with ${storage.getBackendType()} backend`);
+      addLog('success', 'Storage initialized with mock-isolated backend (demo mode)');
       await refreshData();
     } catch (error: unknown) {
       addLog('error', `Failed to initialize storage: ${error.message}`);
+    }
+  });
+
+  // Cleanup when story unmounts to prevent memory leaks
+  onDestroy(() => {
+    if (storage) {
+      cleanupStoryStorage(storage);
     }
   });
 
@@ -53,9 +62,9 @@
     addLog('action', 'Creating new workspace...');
 
     try {
-      const workspaceId = await storage.createWorkspace();
-      currentWorkspace = workspaceId;
-      addLog('success', `Created workspace: ${workspaceId}`);
+      const result = await storage.createWorkspace();
+      currentWorkspace = result.id;
+      addLog('success', `Created workspace: ${result.id}`);
       await refreshData();
     } catch (error: unknown) {
       addLog('error', `Failed to create workspace: ${error.message}`);

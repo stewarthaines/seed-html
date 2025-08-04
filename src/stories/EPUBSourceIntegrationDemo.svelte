@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { FileStorageAPI } from '../lib/storage';
   import { SourceManager } from '../lib/source';
   import { DEFAULT_SOURCE_SETTINGS } from '../lib/source';
   import { EPUBPackager, EPUBUnpacker } from '../lib/epub';
   import { OPFUtils } from '../lib/epub';
   import type { EPUBMetadata } from '../lib/epub';
+  import { createIsolatedMockStorage, createDemoEPUBMetadata, cleanupStoryStorage } from './utils/mock-storage-factory';
   import './epub-source-integration-demo.css';
 
   interface LogEntry {
@@ -34,20 +35,28 @@
   let epubAnalysis: any = null;
   let unpackedWorkspaceId = '';
 
-  // Initialize storage and EPUB managers
+  // Initialize isolated storage and EPUB managers for story demo
   onMount(async () => {
     try {
-      fileStorage = FileStorageAPI.getInstance();
+      // Use isolated mock storage instead of persistent storage
+      fileStorage = createIsolatedMockStorage();
       await fileStorage.init();
       sourceManager = new SourceManager(fileStorage);
       epubPackager = new EPUBPackager();
       epubUnpacker = new EPUBUnpacker();
-      addLog('success', 'EPUB integration managers initialized');
+      addLog('success', 'EPUB integration managers initialized (isolated demo mode)');
 
-      // Create a demo EPUB workspace
+      // Create a demo EPUB workspace with temporary data
       await createEPUBWorkspace();
     } catch (error: any) {
       addLog('error', `Failed to initialize: ${error.message}`);
+    }
+  });
+
+  // Cleanup when story unmounts to prevent memory leaks
+  onDestroy(() => {
+    if (fileStorage) {
+      cleanupStoryStorage(fileStorage);
     }
   });
 
@@ -94,14 +103,8 @@
       const containerXML = OPFUtils.generateContainerXML();
       await fileStorage.writeTextFile(currentWorkspaceId, 'META-INF/container.xml', containerXML);
 
-      // Create basic OPF with metadata
-      const metadata: EPUBMetadata = {
-        title: 'Demo EPUB with SOURCE Integration',
-        creator: ['EPUB Demo Author'],
-        language: 'en',
-        identifier: 'demo-epub-' + Date.now(),
-        modifiedDate: new Date().toISOString(),
-      };
+      // Create basic OPF with temporary demo metadata
+      const metadata = createDemoEPUBMetadata('Story Demo EPUB');
 
       const opfDocument = {
         version: '3.0' as const,

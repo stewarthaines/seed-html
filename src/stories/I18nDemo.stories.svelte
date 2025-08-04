@@ -1,6 +1,6 @@
 <script module>
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  // Standard testing library imports will be done inside play functions
+  import { within, userEvent } from '@storybook/test';
   import App from '../App.svelte';
 
   const { Story } = defineMeta({
@@ -29,24 +29,26 @@
       },
     },
   }}
-  play={async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    // Wait for i18n system to initialize
-    await new Promise(resolve => setTimeout(resolve, 2000));
+  play={async ({ canvas, userEvent }) => {
+    // Wait for i18n system to initialize by looking for specific elements
+    await canvas.findByRole('main', {}, { timeout: 5000 });
 
     // Demonstrate navigation in current locale
     try {
       // Click through different sections to show localized content
-      const metadataButton = canvas.getByTitle(/Metadata/);
+      const metadataButton = await canvas.findByTitle(/Metadata/, {}, { timeout: 3000 });
       await userEvent.click(metadataButton);
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Wait for metadata view to load
+      await canvas.findByRole('tabpanel', {}, { timeout: 3000 });
 
-      const manifestButton = canvas.getByTitle(/Manifest/);
+      const manifestButton = await canvas.findByTitle(/Manifest/, {}, { timeout: 3000 });
       await userEvent.click(manifestButton);
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Wait for manifest view to load
+      await canvas.findByRole('table', {}, { timeout: 3000 });
 
-      const workspaceButton = canvas.getByTitle(/Workspace/);
+      const workspaceButton = await canvas.findByTitle(/Workspace/, {}, { timeout: 3000 });
       await userEvent.click(workspaceButton);
     } catch (error) {
       // Fallback for languages where title attributes might be different
@@ -68,22 +70,24 @@
       locale: 'ar', // Default to Arabic to show RTL
     },
   }}
-  play={async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    // Wait for RTL layout to apply
-    await new Promise(resolve => setTimeout(resolve, 2000));
+  play={async ({ canvas, userEvent }) => {
+    // Wait for RTL layout to apply by checking for RTL-specific elements
+    await canvas.findByRole('main', {}, { timeout: 5000 });
 
     // Demonstrate RTL-specific interactions
     try {
       // Toggle sidebar to show RTL positioning
-      const toggleButton = canvas.getByLabelText(/Toggle sidebar/);
+      const toggleButton = await canvas.findByLabelText(/Toggle sidebar/i, {}, { timeout: 3000 });
       await userEvent.click(toggleButton);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Wait for sidebar animation/transition to complete
+      await canvas.findByRole('complementary', { hidden: true }, { timeout: 2000 });
 
       // Expand again to show RTL sidebar behavior
       await userEvent.click(toggleButton);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Wait for sidebar to expand again
+      await canvas.findByRole('complementary', {}, { timeout: 2000 });
     } catch (error) {
       console.log('RTL demo completed');
     }
@@ -100,18 +104,16 @@
       },
     },
   }}
-  play={async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    // Wait for translations to load
-    await new Promise(resolve => setTimeout(resolve, 1500));
+  play={async ({ canvas, userEvent }) => {
+    // Wait for translations to load by checking for main interface
+    await canvas.findByRole('main', {}, { timeout: 5000 });
 
     // Tour through the interface to show translated content
     const sections = ['Metadata', 'Manifest', 'Navigation', 'Spine Items', 'Settings'];
 
     for (let i = 0; i < sections.length; i++) {
       try {
-        const buttons = canvas.getAllByRole('button');
+        const buttons = await canvas.findAllByRole('button', {}, { timeout: 2000 });
         const sectionButton = buttons.find(
           btn =>
             btn.getAttribute('title')?.includes(sections[i]) ||
@@ -120,7 +122,8 @@
 
         if (sectionButton) {
           await userEvent.click(sectionButton);
-          await new Promise(resolve => setTimeout(resolve, 1200));
+          // Wait for section to load by looking for main content
+          await canvas.findByRole('main', {}, { timeout: 3000 });
         }
       } catch (error) {
         console.log(`Section ${sections[i]} navigation adapted for current locale`);
@@ -129,7 +132,7 @@
 
     // Return to workspace
     try {
-      const workspaceButton = canvas.getByTitle(/Workspace/);
+      const workspaceButton = await canvas.findByTitle(/Workspace/, {}, { timeout: 3000 });
       await userEvent.click(workspaceButton);
     } catch (error) {
       console.log('Returning to workspace');

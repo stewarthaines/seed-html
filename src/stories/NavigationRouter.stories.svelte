@@ -1,6 +1,6 @@
 <script module>
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  // Standard testing library imports will be done inside play functions
+  import { within, userEvent } from '@storybook/test';
   import App from '../App.svelte';
 
   const { Story } = defineMeta({
@@ -29,11 +29,9 @@
       },
     },
   }}
-  play={async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play={async ({ canvas, userEvent }) => {
     // Wait for initialization
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await canvas.findByRole('main', {}, { timeout: 5000 });
 
     // Navigate through each view systematically
     const views = ['metadata', 'manifest', 'navigation', 'spine', 'settings'];
@@ -73,13 +71,11 @@
       },
     },
   }}
-  play={async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play={async ({ canvas, userEvent }) => {
     // Navigate to metadata view
     const metadataButton = canvas.getByTitle('Metadata');
     await userEvent.click(metadataButton);
-    await new Promise(resolve => setTimeout(resolve, 800));
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     // Fill out metadata form
     const titleInput = canvas.getByLabelText('Title *');
@@ -115,13 +111,11 @@
       },
     },
   }}
-  play={async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play={async ({ canvas, userEvent }) => {
     // Navigate to metadata view
     const metadataButton = canvas.getByTitle('Metadata');
     await userEvent.click(metadataButton);
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     // Make changes to trigger unsaved state
     const titleInput = canvas.getByLabelText('Title *');
@@ -150,11 +144,9 @@
       },
     },
   }}
-  play={async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play={async ({ canvas, userEvent }) => {
     // Wait for app to load
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await canvas.findByRole('main', {}, { timeout: 5000 });
 
     // Ensure we're on workspace view - try multiple selectors
     let workspaceButton;
@@ -206,13 +198,11 @@
       },
     },
   }}
-  play={async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play={async ({ canvas, userEvent }) => {
     // Navigate to metadata view
     const metadataButton = canvas.getByTitle('Metadata');
     await userEvent.click(metadataButton);
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     // Fill out the form completely
     const titleInput = canvas.getByLabelText('Title *');
@@ -254,9 +244,7 @@
       },
     },
   }}
-  play={async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play={async ({ canvas, userEvent }) => {
     // Tour through placeholder views
     const placeholderViews = [
       { name: 'Manifest', title: 'Manifest' },
@@ -326,9 +314,7 @@
       },
     },
   }}
-  play={async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play={async ({ canvas, userEvent }) => {
     // Rapid navigation test
     const views = ['metadata', 'manifest', 'navigation', 'spine', 'settings'];
 

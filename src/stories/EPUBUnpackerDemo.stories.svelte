@@ -10,6 +10,7 @@
 
 <script module>
   import { defineMeta } from '@storybook/addon-svelte-csf';
+  import { within, userEvent } from '@storybook/test';
   import EPUBUnpackerDemo from './EPUBUnpackerDemo.svelte';
 
   const { Story } = defineMeta({
@@ -69,36 +70,30 @@ This demonstrates the complete EPUB processing workflow and validates functional
 <!-- Automated Demo with Sample Data -->
 <Story
   name="Demo with Sample Data"
-  play={async ({ canvasElement }) => {
-    const { within } = await import('@testing-library/dom');
-    const { default: userEvent } = await import('@testing-library/user-event');
-    
-    const canvas = within(canvasElement);
-    const user = userEvent.setup();
-    
+  play={async ({ canvas, userEvent }) => {
     try {
       // Wait for initialization
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await canvas.findByRole('main', {}, { timeout: 5000 });
       
       // Reset to clean state
       const resetButton = canvas.getByText('Reset Demo');
-      await user.click(resetButton);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await userEvent.click(resetButton);
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Test valid EPUB scenario
       const validEpubButton = canvas.getByText('Valid EPUB 3.0');
-      await user.click(validEpubButton);
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await userEvent.click(validEpubButton);
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Test analysis mode
       const analysisButton = canvas.getByText('Analysis Mode');
-      await user.click(analysisButton);
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await userEvent.click(analysisButton);
+      await new Promise(resolve => setTimeout(resolve, 800));
       
       // Test error scenario
       const errorButton = canvas.getByText('Missing Files');
-      await user.click(errorButton);
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await userEvent.click(errorButton);
+      await new Promise(resolve => setTimeout(resolve, 800));
       
     } catch (error) {
       console.log('Play function interaction failed:', error);

@@ -1,5 +1,6 @@
 <script module>
   import { defineMeta } from '@storybook/addon-svelte-csf';
+  import { within, userEvent } from '@storybook/test';
   import EPUBSourceIntegrationDemo from './EPUBSourceIntegrationDemo.svelte';
 
   const { Story } = defineMeta({
@@ -75,35 +76,29 @@ This demo showcases the complete EPUB workflow with SOURCE.zip integration, demo
 <!-- Automated demo with sample operations -->
 <Story
   name="Quick Demo"
-  play={async ({ canvasElement }) => {
-    const { within } = await import('@testing-library/dom');
-    const { default: userEvent } = await import('@testing-library/user-event');
-
-    const canvas = within(canvasElement);
-    const user = userEvent.setup();
-
+  play={async ({ canvas, userEvent }) => {
     try {
       // Wait for initialization
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await canvas.findByRole('main', {}, { timeout: 5000 });
 
       // Refresh workspace info to populate file lists
       const refreshButton = canvas.getByText('🔄 Refresh Info');
-      await user.click(refreshButton);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await userEvent.click(refreshButton);
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // Validate the workspace structure
       const validateButton = canvas.getByText('✅ Validate Workspace');
-      await user.click(validateButton);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await userEvent.click(validateButton);
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // Package to EPUB (automatically creates SOURCE.zip)
       const packageButton = canvas.getByText('📦 Package to EPUB');
-      await user.click(packageButton);
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      await userEvent.click(packageButton);
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
       // Clear logs to show clean final state
       const clearLogsButton = canvas.getByText('🧹 Clear Logs');
-      await user.click(clearLogsButton);
+      await userEvent.click(clearLogsButton);
       await new Promise(resolve => setTimeout(resolve, 500));
 
     } catch (error) {
@@ -118,43 +113,37 @@ This demo showcases the complete EPUB workflow with SOURCE.zip integration, demo
 <!-- Demo with complete EPUB workflow demonstration -->
 <Story
   name="Complete EPUB Workflow"
-  play={async ({ canvasElement }) => {
-    const { within } = await import('@testing-library/dom');
-    const { default: userEvent } = await import('@testing-library/user-event');
-
-    const canvas = within(canvasElement);
-    const user = userEvent.setup();
-
+  play={async ({ canvas, userEvent }) => {
     try {
       // Wait for initialization
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await canvas.findByRole('main', {}, { timeout: 5000 });
 
       // Step 1: Show initial workspace state
       const refreshButton = canvas.getByText('🔄 Refresh Info');
-      await user.click(refreshButton);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await userEvent.click(refreshButton);
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // Step 2: Validate workspace structure
       const validateButton = canvas.getByText('✅ Validate Workspace');
-      await user.click(validateButton);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await userEvent.click(validateButton);
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // Step 3: Package workspace to EPUB (creates SOURCE.zip automatically)
       const packageButton = canvas.getByText('📦 Package to EPUB');
-      await user.click(packageButton);
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      await userEvent.click(packageButton);
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
       // Step 4: Reset and create new workspace for unpacking demo
       const resetButton = canvas.getByText('🔄 Reset Demo');
-      await user.click(resetButton);
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Step 5: Show clean workspace state
-      await user.click(refreshButton);
+      await userEvent.click(resetButton);
       await new Promise(resolve => setTimeout(resolve, 1000));
 
+      // Step 5: Show clean workspace state
+      await userEvent.click(refreshButton);
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       // Step 6: Final validation of reset workspace
-      await user.click(validateButton);
+      await userEvent.click(validateButton);
       await new Promise(resolve => setTimeout(resolve, 1000));
 
     } catch (error) {
@@ -168,16 +157,10 @@ This demo showcases the complete EPUB workflow with SOURCE.zip integration, demo
 <!-- Demo showing round-trip EPUB workflow -->
 <Story
   name="Round-trip Integration"
-  play={async ({ canvasElement }) => {
-    const { within } = await import('@testing-library/dom');
-    const { default: userEvent } = await import('@testing-library/user-event');
-
-    const canvas = within(canvasElement);
-    const user = userEvent.setup();
-
+  play={async ({ canvas, userEvent }) => {
     try {
       // Wait for initialization
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await canvas.findByRole('main', {}, { timeout: 5000 });
 
       // Demonstrate complete round-trip:
       // 1. Workspace with EPUB + SOURCE files
@@ -186,12 +169,12 @@ This demo showcases the complete EPUB workflow with SOURCE.zip integration, demo
       // 4. Verify integrity
       
       const refreshButton = canvas.getByText('🔄 Refresh Info');
-      await user.click(refreshButton);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await userEvent.click(refreshButton);
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       const packageButton = canvas.getByText('📦 Package to EPUB');
-      await user.click(packageButton);
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await userEvent.click(packageButton);
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
       // The demo would show the complete integration workflow
       // In a real scenario, we would unpack the created EPUB

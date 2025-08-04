@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { EPUBUnpacker } from '../lib/epub/EPUBUnpacker';
   import { FileStorageAPI } from '../lib/storage';
   import { mockEPUBScenarios } from './epub-mock-data';
+  import { createIsolatedMockStorage, cleanupStoryStorage } from './utils/mock-storage-factory';
   import './_templates/backend-feature-demo.css';
 
   interface LogEntry {
@@ -25,15 +26,23 @@
 
   onMount(async () => {
     try {
-      storage = FileStorageAPI.getInstance();
+      // Use isolated mock storage instead of persistent storage
+      storage = createIsolatedMockStorage();
       await storage.init();
       unpacker = new EPUBUnpacker();
-      addLog('success', 'EPUB Unpacker initialized');
+      addLog('success', 'EPUB Unpacker initialized (isolated demo mode)');
     } catch (error: unknown) {
       addLog(
         'error',
         `Failed to initialize: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
+    }
+  });
+
+  // Cleanup when story unmounts to prevent memory leaks
+  onDestroy(() => {
+    if (storage) {
+      cleanupStoryStorage(storage);
     }
   });
 
@@ -119,9 +128,11 @@
       } else {
         // Full unpacking mode
         if (!currentWorkspace) {
-          currentWorkspace = `epub-demo-${Date.now()}`;
-          await storage.createWorkspace(currentWorkspace);
-          addLog('info', `Created workspace: ${currentWorkspace}`);
+          const timestamp = Date.now();
+          const random = Math.random().toString(36).substring(2, 8);
+          currentWorkspace = `story-epub-demo-${timestamp}-${random}`;
+          const result = await storage.createWorkspace(currentWorkspace);
+          addLog('info', `Created workspace: ${result.id}`);
         }
 
         const result = await unpacker.unpackEPUB(file, currentWorkspace);
@@ -197,9 +208,11 @@
       } else {
         // Full unpacking mode
         if (!currentWorkspace) {
-          currentWorkspace = `epub-demo-${Date.now()}`;
-          await storage.createWorkspace(currentWorkspace);
-          addLog('info', `Created workspace: ${currentWorkspace}`);
+          const timestamp = Date.now();
+          const random = Math.random().toString(36).substring(2, 8);
+          currentWorkspace = `story-epub-demo-${timestamp}-${random}`;
+          const result = await storage.createWorkspace(currentWorkspace);
+          addLog('info', `Created workspace: ${result.id}`);
         }
 
         const result = await unpacker.unpackEPUB(file, currentWorkspace);

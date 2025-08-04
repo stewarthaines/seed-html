@@ -6,9 +6,10 @@
 -->
 
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { ExtensionManager } from '../../lib/extensions/extension-manager.js';
   import { FileStorageAPI } from '../../lib/storage/index.js';
+  import { createIsolatedMockStorage, cleanupStoryStorage } from '../utils/mock-storage-factory';
   import type { ExtensionInfo } from '../../lib/extensions/types.js';
 
   // Components
@@ -112,11 +113,12 @@
   // Initialize Extension Manager
   onMount(async () => {
     try {
-      fileStorage = FileStorageAPI.getInstance();
+      // Use isolated mock storage instead of persistent storage
+      fileStorage = createIsolatedMockStorage();
       await fileStorage.init();
       extensionManager = new ExtensionManager(fileStorage);
 
-      log('info', `Extension Manager initialized with ${fileStorage.getBackendType()} backend`);
+      log('info', 'Extension Manager initialized with mock-isolated backend (demo mode)');
 
       // Pre-populate cache for demonstration
       await setupDemoEnvironment();
@@ -130,12 +132,20 @@
     }
   });
 
+  // Cleanup when story unmounts to prevent memory leaks
+  onDestroy(() => {
+    if (fileStorage) {
+      cleanupStoryStorage(fileStorage);
+    }
+  });
+
   // Setup demo environment with sample data
   async function setupDemoEnvironment() {
     log('info', 'Setting up demo environment...');
 
     // Create demo workspace
-    await fileStorage.createWorkspace();
+    const result = await fileStorage.createWorkspace();
+    log('info', `Created demo workspace: ${result.id}`);
 
     // Pre-populate cache with popular extensions
     const popularExtensions = getPopularExtensions();

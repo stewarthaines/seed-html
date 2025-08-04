@@ -44,7 +44,7 @@
     </svelte:fragment>
   </Sidebar>
 
-  <main class="main-content">
+  <div class="main-content">
     {#if showPreviewPane}
       <PaneGroup direction="horizontal" autoSaveId="editme-content-panes">
         <Pane defaultSize={50} minSize={25}>
@@ -82,7 +82,7 @@
         </div>
       </div>
     {/if}
-  </main>
+  </div>
 </div>
 
 <style>

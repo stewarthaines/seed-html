@@ -1,5 +1,6 @@
 <script module>
   import { defineMeta } from '@storybook/addon-svelte-csf';
+  import { within, userEvent } from '@storybook/test';
   import WorkspaceCreationIntegration from './WorkspaceCreationIntegration.svelte';
 
   const { Story } = defineMeta({
@@ -24,16 +25,10 @@
 <!-- Automated testing with play function -->
 <Story
   name="Automated Integration Test"
-  play={async ({ canvasElement }) => {
-    const { within } = await import('@testing-library/dom');
-    const { default: userEvent } = await import('@testing-library/user-event');
-
-    const canvas = within(canvasElement);
-    const user = userEvent.setup();
-
+  play={async ({ canvas, userEvent }) => {
     try {
       // Wait for backend initialization
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await canvas.findByRole('main', {}, { timeout: 8000 });
 
       // Reset to clean state
       if (window.resetWorkspaceIntegrationDemo) {
@@ -43,10 +38,10 @@
 
       // Run the integration test
       const testButton = canvas.getByText('Run Complete Integration Test');
-      await user.click(testButton);
+      await userEvent.click(testButton);
       
       // Wait for test completion
-      await new Promise(resolve => setTimeout(resolve, 10000));
+      await new Promise(resolve => setTimeout(resolve, 5000));
 
     } catch (error) {
       console.log('Integration test play function failed:', error);
@@ -59,16 +54,10 @@
 <!-- Cross-browser compatibility story -->
 <Story
   name="Cross-Browser Storage Test"
-  play={async ({ canvasElement }) => {
-    const { within } = await import('@testing-library/dom');
-    const { default: userEvent } = await import('@testing-library/user-event');
-
-    const canvas = within(canvasElement);
-    const user = userEvent.setup();
-
+  play={async ({ canvas, userEvent }) => {
     try {
       // Wait for initialization
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await canvas.findByRole('main', {}, { timeout: 8000 });
 
       // Run multiple tests to compare performance across browsers
       for (let i = 0; i < 2; i++) {
@@ -78,8 +67,8 @@
         }
 
         const testButton = canvas.getByText('Run Complete Integration Test');
-        await user.click(testButton);
-        await new Promise(resolve => setTimeout(resolve, 8000));
+        await userEvent.click(testButton);
+        await new Promise(resolve => setTimeout(resolve, 4000));
       }
 
     } catch (error) {

@@ -1,5 +1,6 @@
 <script context="module">
   import { defineMeta } from '@storybook/addon-svelte-csf';
+  import { within, userEvent } from '@storybook/test';
   import ContentPreviewDemo from './ContentPreviewDemo.svelte';
 
   const { Story } = defineMeta({
@@ -109,19 +110,15 @@ The component demonstrates real browser behavior with actual iframe rendering, C
 
 <Story
   name="iPad Pro Landscape (Interactive)"
-  play={async ({ canvasElement }) => {
-    const { within } = await import('@testing-library/dom');
-    const { default: userEvent } = await import('@testing-library/user-event');
-
+  play={async ({ canvas, userEvent }) => {
     // Wait for component to initialize
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await canvas.findByRole('main', {}, { timeout: 5000 });
 
     try {
       console.log('[ContentPreview Story] Testing iPad Pro landscape with interactive content');
 
       // The demo should load with complex interactive content
       // Verify iframe is present and properly scaled
-      const canvas = within(canvasElement);
       const iframe = canvas.getByTitle('Content Preview');
 
       if (iframe) {
@@ -157,16 +154,11 @@ The component demonstrates real browser behavior with actual iframe rendering, C
 
 <Story
   name="Font Control Testing"
-  play={async ({ canvasElement }) => {
-    const { within } = await import('@testing-library/dom');
-    const { default: userEvent } = await import('@testing-library/user-event');
-
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  play={async ({ canvas, userEvent }) => {
+    await canvas.findByRole('main', {}, { timeout: 5000 });
 
     try {
       console.log('[ContentPreview Story] Testing font controls');
-
-      const canvas = within(canvasElement);
 
       // Test font family changes
       const fontFamilySelect = canvas.getByLabelText(/Font Family/i);
@@ -209,16 +201,12 @@ The component demonstrates real browser behavior with actual iframe rendering, C
 
 <Story
   name="Device Switching Test"
-  play={async ({ canvasElement }) => {
-    const { within } = await import('@testing-library/dom');
-    const { default: userEvent } = await import('@testing-library/user-event');
-
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  play={async ({ canvas, userEvent }) => {
+    await canvas.findByRole('main', {}, { timeout: 5000 });
 
     try {
       console.log('[ContentPreview Story] Testing device switching');
 
-      const canvas = within(canvasElement);
       const deviceSelect = canvas.getByLabelText(/Device/i);
 
       if (deviceSelect) {
@@ -266,16 +254,12 @@ The component demonstrates real browser behavior with actual iframe rendering, C
 
 <Story
   name="Content Type Cycling"
-  play={async ({ canvasElement }) => {
-    const { within } = await import('@testing-library/dom');
-    const { default: userEvent } = await import('@testing-library/user-event');
-
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  play={async ({ canvas, userEvent }) => {
+    await canvas.findByRole('main', {}, { timeout: 5000 });
 
     try {
       console.log('[ContentPreview Story] Testing content type cycling');
 
-      const canvas = within(canvasElement);
       const contentSelect = canvas.getByLabelText(/Content Type/i);
 
       if (contentSelect) {

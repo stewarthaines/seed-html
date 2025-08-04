@@ -338,13 +338,6 @@
 
 <div class="workspace-view">
   <main class="view-content">
-    <!-- Architecture Debug Info -->
-    {#if import.meta.env.DEV}
-      <div class="debug-banner">
-        🆕 <strong>Service Mode:</strong> Using WorkspaceService only
-      </div>
-    {/if}
-
     <!-- Action Bar -->
     <WorkspaceActionBar
       isLoading={loading}

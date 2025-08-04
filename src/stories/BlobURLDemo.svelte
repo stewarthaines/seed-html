@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { FileStorageAPI } from '../lib/storage/index.js';
   import { BlobURLManager } from '../lib/blob-url/index.js';
+  import { createIsolatedMockStorage, cleanupStoryStorage } from './utils/mock-storage-factory';
   import './blob-url-demo.css';
 
   interface LogEntry {
@@ -57,11 +58,19 @@
 
   onMount(async () => {
     try {
-      storage = FileStorageAPI.getInstance();
+      // Use isolated mock storage instead of persistent storage
+      storage = createIsolatedMockStorage();
       await storage.init();
-      addLog('success', `Storage initialized with ${storage.getBackendType()} backend`);
+      addLog('success', 'Storage initialized with mock-isolated backend (demo mode)');
     } catch (error: unknown) {
       addLog('error', `Failed to initialize storage: ${(error as Error).message}`);
+    }
+  });
+
+  // Cleanup when story unmounts to prevent memory leaks
+  onDestroy(() => {
+    if (storage) {
+      cleanupStoryStorage(storage);
     }
   });
 
@@ -77,8 +86,9 @@
 
     try {
       // Create workspace
-      currentWorkspace = await storage.createWorkspace();
-      addLog('success', `Created workspace: ${currentWorkspace}`);
+      const result = await storage.createWorkspace();
+      currentWorkspace = result.id;
+      addLog('success', `Created workspace: ${result.id}`);
 
       // Initialize blob URL manager
       blobURLManager = new BlobURLManager({
