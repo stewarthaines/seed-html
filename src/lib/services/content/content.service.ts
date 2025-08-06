@@ -147,16 +147,8 @@ export class ContentService {
           path: 'SOURCE/settings.json',
           content: JSON.stringify({
             version: '1.0.0',
-            transforms: {
-              text: {
-                script: 'transformText.js',
-                enabled: true,
-              },
-              dom: {
-                script: 'transformDom.js',
-                enabled: true,
-              },
-            },
+            text_transform: 'transformText.js',
+            dom_transforms: ['transformDom.js']
           }, null, 2)
         },
         {

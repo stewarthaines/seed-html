@@ -1,0 +1,140 @@
+/**
+ * Transform Execution Environment Styles
+ * 
+ * Minimal styling for the iframe transform execution environment.
+ * Focus on functionality over appearance since this is primarily
+ * for sandboxed script execution.
+ */
+
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 
+               'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+  background: #fff;
+}
+
+/* Status display */
+.transform-status {
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  display: none;
+  border: 1px solid transparent;
+}
+
+.transform-status.visible {
+  display: block;
+}
+
+/* Status variants */
+.transform-status.info {
+  background: #e3f2fd;
+  color: #0d47a1;
+  border-color: #bbdefb;
+}
+
+.transform-status.success {
+  background: #e8f5e8;
+  color: #2e7d32;
+  border-color: #c8e6c9;
+}
+
+.transform-status.error {
+  background: #ffebee;
+  color: #c62828;
+  border-color: #ffcdd2;
+}
+
+.transform-status.warning {
+  background: #fff8e1;
+  color: #f57f17;
+  border-color: #ffecb3;
+}
+
+/* Debug information (hidden by default) */
+.debug-info {
+  margin-top: 20px;
+  padding: 12px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
+  font-size: 12px;
+  color: #666;
+  display: none;
+}
+
+.debug-info.visible {
+  display: block;
+}
+
+/* Error details */
+.error-details {
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 3px;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Minimal responsive adjustments */
+@media (max-width: 480px) {
+  body {
+    padding: 12px;
+  }
+  
+  .transform-status {
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    font-size: 13px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .transform-status.info {
+    background: #000;
+    color: #fff;
+    border-color: #fff;
+  }
+  
+  .transform-status.success {
+    background: #006600;
+    color: #fff;
+    border-color: #fff;
+  }
+  
+  .transform-status.error {
+    background: #cc0000;
+    color: #fff;
+    border-color: #fff;
+  }
+  
+  .transform-status.warning {
+    background: #cc6600;
+    color: #fff;
+    border-color: #fff;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

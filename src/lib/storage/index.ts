@@ -231,9 +231,12 @@ export class OPFSAsyncBackend implements StorageBackend {
     const workspaceHandle = await this.ensureWorkspaceDirectory(workspaceId);
     let targetDir = workspaceHandle;
 
-    if (basePath) {
+    // Sanitize basePath to remove trailing slashes for consistent API contract
+    const normalizedBasePath = basePath ? basePath.replace(/\/+$/, '') : '';
+
+    if (normalizedBasePath) {
       try {
-        targetDir = await this.ensureDirectoryPath(workspaceHandle, basePath);
+        targetDir = await this.ensureDirectoryPath(workspaceHandle, normalizedBasePath);
       } catch (error) {
         if ((error as DOMException).name === 'NotFoundError') {
           return [];
@@ -243,7 +246,7 @@ export class OPFSAsyncBackend implements StorageBackend {
     }
 
     const files: string[] = [];
-    await this.collectFiles(targetDir, basePath || '', files);
+    await this.collectFiles(targetDir, normalizedBasePath, files);
     return files.sort();
   }
 
@@ -374,7 +377,10 @@ export class OPFSSyncBackend implements StorageBackend {
   }
 
   async listFiles(workspaceId: string, path?: string): Promise<string[]> {
-    const result = await this.workerManager.listFiles(workspaceId, path);
+    // Sanitize path to remove trailing slashes for consistent API contract
+    const normalizedPath = path ? path.replace(/\/+$/, '') : undefined;
+    
+    const result = await this.workerManager.listFiles(workspaceId, normalizedPath);
     if (!result.success) {
       throw new Error(result.error?.message || 'Failed to list files');
     }
@@ -586,7 +592,9 @@ export class IndexedDBBackend implements StorageBackend {
       let paths = files.map(f => f.path);
 
       if (basePath) {
-        const prefix = basePath.endsWith('/') ? basePath : basePath + '/';
+        // Sanitize basePath to remove trailing slashes for consistent API contract
+        const normalizedBasePath = basePath.replace(/\/+$/, '');
+        const prefix = normalizedBasePath + '/';
         paths = paths.filter(path => path.startsWith(prefix));
       }
 
@@ -924,7 +932,9 @@ export class FileStorageAPI {
   }
 
   async listFiles(workspaceId: string, path?: string): Promise<string[]> {
-    return await this.manager.listFiles(workspaceId, path);
+    // Sanitize path to remove trailing slashes for consistent API contract
+    const normalizedPath = path ? path.replace(/\/+$/, '') : undefined;
+    return await this.manager.listFiles(workspaceId, normalizedPath);
   }
 
   async getFileInfo(

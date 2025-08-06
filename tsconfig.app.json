@@ -28,6 +28,7 @@
     "src/lib/storage/opfs-worker.js",
     "src/stories/**/*",
     "src/lib/zip/test/create-fixtures.js",
-    "src/stories/transform-scripts/*.js"
+    "src/stories/transform-scripts/*.js",
+    "src/assets/iframe/*.js"
   ]
 }

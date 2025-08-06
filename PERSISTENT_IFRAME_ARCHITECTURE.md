@@ -1,8 +1,32 @@
-# Simplified Persistent Iframe Transform Architecture
+# Pragmatic Spine Item Editor Architecture
 
 ## Overview
 
-This architecture provides reusable components for transform execution using a persistent iframe. The system supports both outline editing and spine item editing workflows with simplified file watching and immediate update feedback. JavaScript extensions use blob URLs for efficiency, while transform scripts are passed as content for immediate updates.
+This architecture provides a simple, spike-inspired approach to spine item editing with real-time XHTML preview. The system supports editing multiple file types (text content, CSS, JavaScript, transform scripts) with immediate visual feedback in a persistent iframe. The design prioritizes simplicity and developer experience over theoretical scalability.
+
+**Core Principle**: Text content → Transform Text → Transform DOM → Auto-save Assets → Save XHTML to Manifest → Blob URL Processing → XHTML preview, with all edits feeding into a unified real-time preview and generating the actual spine item content.
+
+**Single-File Build Constraint**: Since EDITME.html runs as a single file in the browser, workspace assets (CSS, JavaScript, images) are stored in OPFS/IndexedDB and cannot be accessed via normal file paths by the preview iframe. The BlobURLManager converts these file references to blob URLs that the iframe can access.
+
+## Editor Layout
+
+### Basic Mode: Single Editor Pane
+- **Single editor pane** with dropdown to select file type:
+  - Text content (SOURCE/text/chapter1.txt)
+  - CSS stylesheets (OEBPS/Styles/*.css)
+  - JavaScript files (OEBPS/Scripts/*.js)
+  - Transform scripts (SOURCE/scripts/*.js)
+- **Unified preview pane** showing final XHTML with all changes applied
+- **Real-time updates** with 300ms debounce for all file types
+
+### Enhanced Mode: Dual Editor Panes
+- **Toggle button** in pane header to switch between 1 or 2 editors
+- **Two stacked editor panes**, each with own file dropdown
+- **Common use cases**:
+  - Edit text content + CSS simultaneously
+  - Edit text content + transform script simultaneously
+  - Edit CSS + JavaScript simultaneously
+- **Single preview pane** that reflects changes from both editors
 
 ## File Structure
 
@@ -10,564 +34,142 @@ This architecture provides reusable components for transform execution using a p
 
 ```
 src/lib/
-├── blob-url/
-│   └── blob-url-manager.ts            # Extended with createExtensionBlobURL()
+├── components/
+│   └── spine-editor/
+│       ├── SpineItemEditor.svelte           # Main editor component
+│       ├── EditorPane.svelte                # Individual editor pane
+│       └── PreviewPane.svelte               # XHTML preview pane
+├── services/
+│   ├── content/
+│   │   └── content.service.ts               # File operations
+│   └── workspace/
+│       └── workspace.service.ts             # Workspace integration
 ├── transform/
-│   ├── persistent-transform-iframe.ts    # Main iframe coordination class
-│   ├── preview-manager.ts                # Preview coordination and file watching
-│   └── content-transform-service.ts      # Simplified transform service
-└── workspace/
-    └── file-watcher.ts                   # Simplified file watching utility
+│   ├── transform-pipeline.ts               # Simple transform execution
+│   └── preview-manager.ts                  # Real-time preview coordination
+└── extensions/
+    └── extension-manager.ts                 # JavaScript extension loading
 ```
 
-### Unit Test Locations
+## Core Architecture
 
-```
-src/lib/
-├── blob-url/
-│   └── blob-url-manager.test.ts       # Tests for extension blob URL methods
-├── transform/
-│   ├── persistent-transform-iframe.test.ts  # Iframe messaging and script loading
-│   ├── preview-manager.test.ts              # Preview coordination and debouncing
-│   └── content-transform-service.test.ts    # Transform execution and error handling
-└── workspace/
-    └── file-watcher.test.ts                 # File watching and change detection
-```
-
-### Test Coverage Focus
-
-- **blob-url-manager.test.ts**: Extension blob URL creation, updates, cleanup (added methods only)
-- **persistent-transform-iframe.test.ts**: Iframe template generation, script updates, transform execution
-- **preview-manager.test.ts**: File watching coordination, debounced rendering, context switching
-- **file-watcher.test.ts**: File path watching, change type detection, callback execution
-- **content-transform-service.test.ts**: Workspace setup, transform validation, error handling
-
-## Key Components
-
-### 1. Simplified BlobURLManager Extension
-
-The existing BlobURLManager handles JavaScript extensions via blob URLs, but transform scripts are passed directly:
+### 1. Simple Transform Pipeline
 
 ```typescript
-// Minimal extension to existing BlobURLManager
-export class BlobURLManager {
-  /**
-   * Create blob URL for JavaScript extensions only (large files)
-   */
-  async createExtensionBlobURL(workspaceId: string, extensionPath: string): Promise<string> {
-    return this.createBlobURL(extensionPath);
-  }
-
-  /**
-   * Update extension blob URL when content changes
-   */
-  async updateExtensionBlobURL(workspaceId: string, extensionPath: string): Promise<string> {
-    const oldURL = this.registry.urls.get(extensionPath);
-    if (oldURL) {
-      this.revokeBlobURL(oldURL);
-    }
-    return this.createExtensionBlobURL(workspaceId, extensionPath);
-  }
-}
-```
-
-### 2. Simplified PersistentTransformIframe
-
-```typescript
-export class PersistentTransformIframe {
+export class TransformPipeline {
   private iframe: HTMLIFrameElement;
-  private iframeReady = false;
-  private currentWorkspaceId: string | null = null;
-  private loadedExtensions = new Map<string, string>(); // extensionPath -> blobURL
-  private pendingRequests = new Map<string, PendingRequest>();
+  private extensions = new Map<string, string>(); // extension path -> blob URL
   
   constructor(
-    private blobURLManager: BlobURLManager,
-    private workspaceManager: IWorkspaceManager
+    private workspaceId: string,
+    private fileStorage: FileStorageAPI,
+    private extensionManager: ExtensionManager
   ) {
     this.createPersistentIframe();
-    this.setupMessageHandling();
   }
 
-  /**
-   * Set active workspace and load JavaScript extensions via blob URLs
-   */
-  async setWorkspace(workspaceId: string): Promise<void> {
-    if (this.currentWorkspaceId === workspaceId) return;
+  // Execute the transform pipeline: text → transform text → transform DOM
+  async executeTransform(plainText: string): Promise<TransformResult> {
+    const transformScripts = await this.loadTransformScripts();
     
-    this.currentWorkspaceId = workspaceId;
-    await this.loadWorkspaceExtensions();
-  }
-
-  /**
-   * Update transform scripts by passing content directly
-   */
-  async updateTransformScripts(textTransform?: string, domTransforms?: string[]): Promise<void> {
-    if (!this.iframeReady) {
-      await this.waitForReady();
-    }
-
-    this.sendMessage({
-      type: 'UPDATE_TRANSFORM_SCRIPTS',
+    const result = await this.sendToIframe({
+      type: 'EXECUTE_TRANSFORM',
       payload: {
-        textTransform,
-        domTransforms: domTransforms || []
+        plainText,
+        textTransform: transformScripts.textTransform,
+        domTransforms: transformScripts.domTransforms
       }
     });
-  }
-
-  /**
-   * Execute transform with current scripts
-   */
-  async executeTransform(request: TransformRequest): Promise<TransformResult> {
-    if (!this.iframeReady) {
-      await this.waitForReady();
-    }
-
-    return new Promise((resolve, reject) => {
-      const requestId = crypto.randomUUID();
-      
-      const timeout = setTimeout(() => {
-        this.pendingRequests.delete(requestId);
-        reject(new Error('Transform execution timeout'));
-      }, request.timeout || 5000);
-      
-      this.pendingRequests.set(requestId, { resolve, reject, timeout });
-      
-      this.sendMessage({
-        type: 'EXECUTE_TRANSFORM',
-        requestId,
-        payload: request
-      });
-    });
-  }
-
-  /**
-   * Update JavaScript extension when changed
-   */
-  async updateExtension(extensionPath: string): Promise<void> {
-    if (!this.currentWorkspaceId) return;
     
-    const oldBlobURL = this.loadedExtensions.get(extensionPath);
-    if (oldBlobURL) {
-      URL.revokeObjectURL(oldBlobURL);
-    }
-
-    const newBlobURL = await this.blobURLManager.updateExtensionBlobURL(
-      this.currentWorkspaceId, 
-      extensionPath
-    );
-    this.loadedExtensions.set(extensionPath, newBlobURL);
-
-    if (this.iframeReady) {
-      this.sendMessage({
-        type: 'UPDATE_EXTENSION',
-        payload: { extensionPath, blobURL: newBlobURL }
-      });
-    }
+    return result;
   }
 
-  private async loadWorkspaceExtensions(): Promise<void> {
-    if (!this.currentWorkspaceId) return;
-
-    try {
-      const extensions = await this.getWorkspaceExtensions(this.currentWorkspaceId);
-      
-      for (const extension of extensions) {
-        const blobURL = await this.blobURLManager.createExtensionBlobURL(
-          this.currentWorkspaceId, 
-          extension.path
+  // Load transform scripts from workspace
+  private async loadTransformScripts(): Promise<TransformScripts> {
+    const settings = await this.loadSettings();
+    const scripts: TransformScripts = {};
+    
+    // Load text transform script (0 or 1)
+    if (settings.transform_pipeline?.text_transform) {
+      scripts.textTransform = await this.fileStorage.readTextFile(
+        this.workspaceId,
+        `SOURCE/scripts/${settings.transform_pipeline.text_transform}`
+      );
+    }
+    
+    // Load DOM transform scripts (0 or many, in sequence)
+    if (settings.transform_pipeline?.dom_transforms) {
+      scripts.domTransforms = [];
+      for (const scriptName of settings.transform_pipeline.dom_transforms) {
+        const scriptContent = await this.fileStorage.readTextFile(
+          this.workspaceId,
+          `SOURCE/scripts/${scriptName}`
         );
-        this.loadedExtensions.set(extension.path, blobURL);
+        scripts.domTransforms.push(scriptContent);
       }
-
-      if (this.iframeReady) {
-        this.sendMessage({
-          type: 'LOAD_EXTENSIONS',
-          payload: { 
-            extensions: extensions.map(ext => ({
-              path: ext.path,
-              blobURL: this.loadedExtensions.get(ext.path)!
-            }))
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Failed to load workspace extensions:', error);
     }
+    
+    return scripts;
   }
 
-  private createPersistentIframe(): void {
-    this.iframe = document.createElement('iframe');
-    this.iframe.style.display = 'none';
-    this.iframe.sandbox = 'allow-scripts';
-    
-    const iframeTemplate = this.generateSimplifiedTemplate();
-    const blob = new Blob([iframeTemplate], { type: 'text/html' });
-    const blobURL = URL.createObjectURL(blob);
-    this.iframe.src = blobURL;
-    
-    document.body.appendChild(this.iframe);
-    
-    this.iframe.addEventListener('load', () => {
-      URL.revokeObjectURL(blobURL);
-    });
-  }
-
-  private generateSimplifiedTemplate(): string {
-    return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Transform Environment</title>
-</head>
-<body>
-  <div id="extension-container"></div>
-  <script>
-    let textTransformFunc = null;
-    let domTransformFuncs = [];
-
-    // Load JavaScript extensions via blob URLs
-    function loadExtension(extensionPath, blobURL) {
-      return new Promise((resolve, reject) => {
-        const existingScript = document.querySelector(\`script[data-extension="\${extensionPath}"]\`);
-        if (existingScript) {
-          existingScript.remove();
+  // Simple iframe communication (like the spike)
+  private sendToIframe(message: any): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const messageId = crypto.randomUUID();
+      const handler = (event: MessageEvent) => {
+        if (event.data.messageId === messageId) {
+          window.removeEventListener('message', handler);
+          resolve(event.data.result);
         }
-
-        const script = document.createElement('script');
-        script.src = blobURL;
-        script.setAttribute('data-extension', extensionPath);
-        script.onload = resolve;
-        script.onerror = () => reject(new Error(\`Failed to load extension: \${extensionPath}\`));
-        
-        document.getElementById('extension-container').appendChild(script);
-      });
-    }
-
-    // Execute transform pipeline with current functions
-    function executeTransform(plainText) {
-      try {
-        let html = plainText;
-        
-        if (textTransformFunc) {
-          html = textTransformFunc(html);
-        }
-        
-        if (domTransformFuncs.length > 0) {
-          const parser = new DOMParser();
-          let doc = parser.parseFromString(
-            \`<!DOCTYPE html><html><head></head><body>\${html}</body></html>\`,
-            'text/html'
-          );
-          
-          for (const transformFunc of domTransformFuncs) {
-            doc = transformFunc(doc) || doc;
-          }
-          
-          html = doc.body.innerHTML;
-        }
-        
-        return { success: true, html };
-      } catch (error) {
-        return {
-          success: false,
-          error: {
-            stage: 'execution',
-            message: error.message,
-            stack: error.stack
-          }
-        };
-      }
-    }
-
-    // Message handling
-    window.addEventListener('message', async (event) => {
-      const { type, requestId, payload } = event.data;
+      };
       
-      switch (type) {
-        case 'LOAD_EXTENSIONS':
-          try {
-            for (const extension of payload.extensions) {
-              await loadExtension(extension.path, extension.blobURL);
-            }
-            parent.postMessage({ type: 'EXTENSIONS_LOADED' }, '*');
-          } catch (error) {
-            parent.postMessage({ 
-              type: 'EXTENSION_LOAD_ERROR', 
-              payload: { message: error.message }
-            }, '*');
-          }
-          break;
-
-        case 'UPDATE_EXTENSION':
-          try {
-            await loadExtension(payload.extensionPath, payload.blobURL);
-            parent.postMessage({ type: 'EXTENSION_UPDATED' }, '*');
-          } catch (error) {
-            parent.postMessage({ 
-              type: 'EXTENSION_UPDATE_ERROR', 
-              payload: { message: error.message }
-            }, '*');
-          }
-          break;
-          
-        case 'UPDATE_TRANSFORM_SCRIPTS':
-          try {
-            // Update transform functions from passed content
-            if (payload.textTransform) {
-              textTransformFunc = new Function('plainText', payload.textTransform + '; return transformText(plainText);');
-            } else {
-              textTransformFunc = null;
-            }
-            
-            domTransformFuncs = payload.domTransforms.map(code => 
-              new Function('doc', code + '; return transformDom(doc);')
-            );
-            
-            parent.postMessage({ type: 'SCRIPTS_UPDATED' }, '*');
-          } catch (error) {
-            parent.postMessage({ 
-              type: 'SCRIPT_UPDATE_ERROR', 
-              payload: { message: error.message }
-            }, '*');
-          }
-          break;
-          
-        case 'EXECUTE_TRANSFORM':
-          const startTime = Date.now();
-          const result = executeTransform(payload.plainText);
-          
-          parent.postMessage({
-            type: 'TRANSFORM_RESULT',
-            requestId,
-            payload: {
-              ...result,
-              executionTime: Date.now() - startTime
-            }
-          }, '*');
-          break;
-      }
+      window.addEventListener('message', handler);
+      this.iframe.contentWindow?.postMessage({ ...message, messageId }, '*');
+      
+      // Simple timeout
+      setTimeout(() => {
+        window.removeEventListener('message', handler);
+        reject(new Error('Transform timeout'));
+      }, 3000);
     });
-    
-    parent.postMessage({ type: 'READY' }, '*');
-  </script>
-</body>
-</html>`;
-  }
-
-  private sendMessage(message: any): void {
-    if (this.iframe?.contentWindow && this.iframeReady) {
-      this.iframe.contentWindow.postMessage(message, '*');
-    }
-  }
-
-  cleanup(): void {
-    // Cleanup extension blob URLs
-    for (const blobURL of this.loadedExtensions.values()) {
-      URL.revokeObjectURL(blobURL);
-    }
-    this.loadedExtensions.clear();
-    
-    // Clear pending requests
-    for (const request of this.pendingRequests.values()) {
-      clearTimeout(request.timeout);
-      request.reject(new Error('Iframe cleanup'));
-    }
-    this.pendingRequests.clear();
-    
-    // Remove iframe
-    if (this.iframe) {
-      this.iframe.remove();
-    }
   }
 }
 ```
 
-### 3. Simplified FileWatcher
+### 2. Real-Time Preview Manager
 
 ```typescript
-export class FileWatcher {
-  private fileWatcher?: FileSystemWatcher;
-  private changeCallback?: (filePath: string, changeType: 'source' | 'script' | 'stylesheet' | 'extension') => void;
-
-  constructor(
-    private workspaceId: string,
-    private workspaceManager: IWorkspaceManager
-  ) {}
-
-  /**
-   * Watch specific files for changes
-   */
-  watchFiles(filePaths: string[]): void {
-    this.stopWatching();
-    
-    if (filePaths.length === 0) return;
-    
-    this.fileWatcher = this.workspaceManager.watchFiles(
-      this.workspaceId,
-      filePaths,
-      {
-        onChange: (filePath: string) => {
-          const changeType = this.getChangeType(filePath);
-          this.changeCallback?.(filePath, changeType);
-        }
-      }
-    );
-  }
-
-  onFileChange(callback: (filePath: string, changeType: 'source' | 'script' | 'stylesheet' | 'extension') => void): void {
-    this.changeCallback = callback;
-  }
-
-  private getChangeType(filePath: string): 'source' | 'script' | 'stylesheet' | 'extension' {
-    if (filePath.startsWith('SOURCE/text/')) return 'source';
-    if (filePath.startsWith('SOURCE/scripts/')) return 'script';
-    if (filePath.startsWith('OEBPS/Styles/')) return 'stylesheet';
-    if (filePath.startsWith('SOURCE/extensions/')) return 'extension';
-    return 'source';
-  }
-
-  stopWatching(): void {
-    this.fileWatcher?.close();
-  }
-}
-```
-
-### 4. Simplified PreviewManager
-
-```typescript
-export interface PreviewConfig {
-  includeStylesheets: boolean;           // true for spine items, false for outline
-  debounceMs: number;                    // Re-render debouncing
-  transformTimeout: number;              // Script execution timeout
-}
-
 export class PreviewManager {
-  private transformIframe: PersistentTransformIframe;
-  private fileWatcher: FileWatcher;
+  private transformPipeline: TransformPipeline;
   private debounceTimer?: number;
-  private currentSourceContent = '';
-  private currentMetadata: ChapterMetadata;
+  private currentContent = {
+    text: '',
+    css: '',
+    javascript: '',
+    metadata: {} as ChapterMetadata
+  };
 
   constructor(
     private workspaceId: string,
+    private spineItemId: string,
+    private fileStorage: FileStorageAPI,
+    private extensionManager: ExtensionManager,
     private blobURLManager: BlobURLManager,
-    private workspaceManager: IWorkspaceManager,
-    private config: PreviewConfig
+    private workspaceService: WorkspaceService,
+    private onPreviewUpdate: (xhtml: string) => void,
+    private onError: (error: TransformError) => void
   ) {
-    this.transformIframe = new PersistentTransformIframe(blobURLManager, workspaceManager);
-    this.fileWatcher = new FileWatcher(workspaceId, workspaceManager);
-    
-    this.setupFileWatching();
+    this.transformPipeline = new TransformPipeline(workspaceId, fileStorage, extensionManager);
+    this.blobURLManager.setActiveWorkspace(workspaceId);
   }
 
-  /**
-   * Set the current editing context
-   */
-  async setEditingContext(context: {
-    sourceFile?: string;
-    sourceContent: string;
-    metadata: ChapterMetadata;
-  }): Promise<void> {
-    this.currentSourceContent = context.sourceContent;
-    this.currentMetadata = context.metadata;
-    
-    // Build file list to watch
-    const watchFiles: string[] = [];
-    if (context.sourceFile) watchFiles.push(context.sourceFile);
-    
-    const scripts = await this.getConfiguredScripts();
-    watchFiles.push(...scripts);
-    
-    if (this.config.includeStylesheets) {
-      watchFiles.push(...this.currentMetadata.stylesheets);
-    }
-    
-    const extensions = await this.getConfiguredExtensions();
-    watchFiles.push(...extensions);
-    
-    this.fileWatcher.watchFiles(watchFiles);
-    
-    // Load transform scripts into iframe
-    await this.updateTransformScripts();
-    
-    // Initial render
-    await this.renderPreview();
-  }
-
-  /**
-   * Update source content (from editor typing)
-   */
-  updateSourceContent(content: string): void {
-    this.currentSourceContent = content;
+  // Update content from editor (text, CSS, or JavaScript)
+  updateContent(type: 'text' | 'css' | 'javascript', content: string): void {
+    this.currentContent[type] = content;
     this.debounceRender();
   }
 
-  private setupFileWatching(): void {
-    this.fileWatcher.onFileChange(async (filePath, changeType) => {
-      switch (changeType) {
-        case 'source':
-          // Source file changed externally - reload content
-          this.currentSourceContent = await this.workspaceManager.readTextFile(this.workspaceId, filePath);
-          await this.renderPreview();
-          break;
-          
-        case 'script':
-          // Transform script changed - reload scripts into iframe
-          await this.updateTransformScripts();
-          this.debounceRender();
-          break;
-          
-        case 'stylesheet':
-          // CSS changed - update blob URLs and re-render
-          await this.updateStylesheetBlobURLs();
-          await this.renderPreview();
-          break;
-          
-        case 'extension':
-          // Extension changed - update in iframe
-          await this.transformIframe.updateExtension(filePath);
-          this.debounceRender();
-          break;
-      }
-    });
-  }
-
-  /**
-   * Load current transform scripts into iframe
-   */
-  private async updateTransformScripts(): Promise<void> {
-    try {
-      const settings = await this.workspaceManager.readTextFile(this.workspaceId, 'SOURCE/settings.json');
-      const config = JSON.parse(settings);
-      
-      let textTransform: string | undefined;
-      const domTransforms: string[] = [];
-      
-      if (config.transform_pipeline?.text_transform) {
-        textTransform = await this.workspaceManager.readTextFile(
-          this.workspaceId, 
-          `SOURCE/scripts/${config.transform_pipeline.text_transform}`
-        );
-      }
-      
-      if (config.transform_pipeline?.dom_transforms) {
-        for (const scriptName of config.transform_pipeline.dom_transforms) {
-          const scriptContent = await this.workspaceManager.readTextFile(
-            this.workspaceId, 
-            `SOURCE/scripts/${scriptName}`
-          );
-          domTransforms.push(scriptContent);
-        }
-      }
-      
-      await this.transformIframe.updateTransformScripts(textTransform, domTransforms);
-    } catch (error) {
-      console.error('Failed to update transform scripts:', error);
-    }
-  }
-
+  // Debounced rendering (like the spike)
   private debounceRender(): void {
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
@@ -575,364 +177,509 @@ export class PreviewManager {
     
     this.debounceTimer = setTimeout(() => {
       this.renderPreview();
-    }, this.config.debounceMs);
+    }, 300); // Same as spike
   }
 
   private async renderPreview(): Promise<void> {
     try {
-      // Execute transform via persistent iframe
-      const transformResult = await this.transformIframe.executeTransform({
-        plainText: this.currentSourceContent,
-        timeout: this.config.transformTimeout
-      });
+      // Auto-save modified content to storage before preview
+      await this.autoSaveChangedContent();
+
+      // Execute transform pipeline
+      const transformResult = await this.transformPipeline.executeTransform(
+        this.currentContent.text
+      );
 
       if (transformResult.success) {
-        // Generate final XHTML with current metadata
-        const finalXHTML = this.generateXHTMLWithMetadata(transformResult.html);
+        // Generate final XHTML document
+        const xhtml = this.generateXHTML(
+          transformResult.html,
+          this.currentContent.css,
+          this.currentContent.javascript,
+          this.currentContent.metadata
+        );
         
-        // Process XHTML for preview (convert asset URLs to blob URLs)
-        const previewXHTML = await this.blobURLManager.processXHTMLForPreview(finalXHTML);
+        // Save XHTML as spine item content to manifest
+        await this.saveXHTMLToManifest(xhtml);
         
-        this.onPreviewReady?.(previewXHTML, transformResult.warnings || []);
+        // Process XHTML for blob URL substitution (preview only)
+        const processedXHTML = await this.blobURLManager.processXHTMLForPreview(xhtml);
+        
+        this.onPreviewUpdate(processedXHTML);
       } else {
-        this.onPreviewError?.(transformResult.error);
+        this.onError(transformResult.error);
       }
     } catch (error) {
-      this.onPreviewError?.(error);
+      this.onError(error);
     }
   }
 
-  private generateXHTMLWithMetadata(content: string): string {
-    const escapedTitle = this.escapeHtml(this.currentMetadata.title);
-    const stylesheetLinks = this.currentMetadata.stylesheets
-      .map(href => `    <link rel="stylesheet" type="text/css" href="${this.escapeHtml(href)}" />`)
-      .join('\n');
+  // Auto-save changed content to storage for blob URL processing
+  private async autoSaveChangedContent(): Promise<void> {
+    try {
+      // Save CSS file if changed
+      if (this.currentContent.css) {
+        await this.fileStorage.writeTextFile(
+          this.workspaceId,
+          `OEBPS/Styles/${this.spineItemId}.css`,
+          this.currentContent.css
+        );
+      }
 
+      // Save JavaScript file if changed
+      if (this.currentContent.javascript) {
+        await this.fileStorage.writeTextFile(
+          this.workspaceId,
+          `OEBPS/Scripts/${this.spineItemId}.js`,
+          this.currentContent.javascript
+        );
+      }
+
+      // Save text content file if changed
+      if (this.currentContent.text) {
+        await this.fileStorage.writeTextFile(
+          this.workspaceId,
+          `SOURCE/text/${this.spineItemId}.txt`,
+          this.currentContent.text
+        );
+      }
+    } catch (error) {
+      // Log auto-save errors but don't block preview generation
+      console.warn('Auto-save failed:', error);
+    }
+  }
+
+  // Save generated XHTML as spine item content to manifest
+  private async saveXHTMLToManifest(xhtml: string): Promise<void> {
+    try {
+      // Save XHTML as the spine item's content in the EPUB structure
+      const spineItemPath = `OEBPS/Text/${this.spineItemId}.xhtml`;
+      await this.workspaceService.writeFile(
+        this.workspaceId,
+        spineItemPath,
+        xhtml
+      );
+    } catch (error) {
+      // Log manifest save errors but don't block preview
+      console.warn('Failed to save XHTML to manifest:', error);
+    }
+  }
+
+  // Generate complete XHTML document (like the spike)
+  private generateXHTML(
+    transformedContent: string, 
+    css: string, 
+    javascript: string, 
+    metadata: ChapterMetadata
+  ): string {
     return `<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="${this.escapeHtml(this.currentMetadata.language)}" lang="${this.escapeHtml(this.currentMetadata.language)}">
-  <head>
-    <title>${escapedTitle}</title>
-${stylesheetLinks}${stylesheetLinks ? '\n' : ''}  </head>
-  <body>
-    ${content}
-  </body>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="${metadata.language}" lang="${metadata.language}">
+<head>
+  <title>${this.escapeHtml(metadata.title)}</title>
+  ${metadata.stylesheets.map(href => `<link rel="stylesheet" type="text/css" href="${href}" />`).join('\n  ')}
+  ${css ? `<style>${css}</style>` : ''}
+  ${javascript ? `<script>${javascript}</script>` : ''}
+</head>
+<body>
+  ${transformedContent}
+</body>
 </html>`;
   }
 
-  private async getConfiguredScripts(): Promise<string[]> {
-    // Load script configuration from workspace settings
-    try {
-      const settings = await this.workspaceManager.readTextFile(this.workspaceId, 'SOURCE/settings.json');
-      const config = JSON.parse(settings);
-      const scripts: string[] = [];
-      
-      if (config.transform_pipeline?.text_transform) {
-        scripts.push(`SOURCE/scripts/${config.transform_pipeline.text_transform}`);
-      }
-      if (config.transform_pipeline?.dom_transforms) {
-        config.transform_pipeline.dom_transforms.forEach((script: string) => {
-          scripts.push(`SOURCE/scripts/${script}`);
-        });
-      }
-      
-      return scripts;
-    } catch {
-      return [];
-    }
-  }
 
-  private async getConfiguredExtensions(): Promise<string[]> {
-    // Extension files don't change during editing sessions
-    // They're managed separately in settings UI
-    return [];
-  }
-
-  private async updateStylesheetBlobURLs(): void {
-    // Update blob URLs for stylesheets when they change
-    for (const stylesheet of this.currentMetadata.stylesheets) {
-      try {
-        await this.blobURLManager.updateBlobURL(this.workspaceId, stylesheet);
-      } catch (error) {
-        console.warn(`Failed to update stylesheet ${stylesheet}:`, error);
-      }
-    }
-  }
-
-  private escapeHtml(text: string): string {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  }
-
-  // Callbacks for preview updates
-  onPreviewReady?: (xhtml: string, warnings: string[]) => void;
-  onPreviewError?: (error: any) => void;
-
+  // Cleanup resources when editor is closed
   cleanup(): void {
-    this.fileWatcher.stopWatching();
-    this.transformIframe.cleanup();
-    if (this.debounceTimer) {
-      clearTimeout(this.debounceTimer);
-    }
+    this.blobURLManager.cleanup();
+    this.transformPipeline.cleanup?.();
   }
 }
 ```
+```
 
-### 5. Simplified ContentTransformService
+### 3. Spine Item Editor Component
 
-```typescript
-export class ContentTransformService {
-  private persistentIframe: PersistentTransformIframe;
+```svelte
+<script lang="ts">
+  import { onMount, onDestroy } from 'svelte';
+  import type { ChapterMetadata } from '$lib/types';
+  
+  export let workspaceId: string;
+  export let spineItemId: string;
+  export let metadata: ChapterMetadata;
+  export let fileStorage: FileStorageAPI;
+  export let extensionManager: ExtensionManager;
+  export let blobURLManager: BlobURLManager;
+  export let workspaceService: WorkspaceService;
 
-  constructor(
-    private blobURLManager: BlobURLManager,
-    private workspaceManager: IWorkspaceManager
-  ) {
-    this.persistentIframe = new PersistentTransformIframe(
+  // Editor state
+  let editorMode: 'single' | 'dual' = 'single';
+  let pane1File = 'text';
+  let pane2File = 'css';
+  let pane1Content = '';
+  let pane2Content = '';
+  let previewHtml = '';
+  let errors: TransformError[] = [];
+
+  // Available files for dropdowns
+  $: availableFiles = [
+    { value: 'text', label: 'Text Content', path: `SOURCE/text/${spineItemId}.txt` },
+    { value: 'css', label: 'Stylesheet', path: `OEBPS/Styles/${spineItemId}.css` },
+    { value: 'js', label: 'JavaScript', path: `OEBPS/Scripts/${spineItemId}.js` },
+    { value: 'transform-text', label: 'Transform Text Script', path: 'SOURCE/scripts/transformText.js' },
+    { value: 'transform-dom', label: 'Transform DOM Script', path: 'SOURCE/scripts/transformDom.js' }
+  ];
+
+  let previewManager: PreviewManager;
+
+  onMount(async () => {
+    // Initialize preview manager
+    previewManager = new PreviewManager(
+      workspaceId,
+      spineItemId,
+      fileStorage,
+      extensionManager,
       blobURLManager,
-      workspaceManager
+      workspaceService,
+      (xhtml) => { previewHtml = xhtml; errors = []; },
+      (error) => { errors = [error]; }
     );
-  }
 
-  /**
-   * Set active workspace
-   */
-  async setWorkspace(workspaceId: string): Promise<void> {
-    await this.persistentIframe.setWorkspace(workspaceId);
-  }
+    // Load initial content
+    await loadContent();
+  });
 
-  /**
-   * Execute transform with current scripts
-   */
-  async validateAndTransformUserContent(
-    plainText: string,
-    workspaceId: string,
-    contentId: string,
-    metadata: ChapterMetadata
-  ): Promise<ContentTransformResult> {
+  async function loadContent(): Promise<void> {
     try {
-      const transformResult = await this.persistentIframe.executeTransform({
-        plainText,
-        timeout: 3000
-      });
-
-      if (transformResult.success) {
-        const xhtmlString = this.generateXHTMLDocument(transformResult.html, metadata);
-        return {
-          success: true,
-          xhtml: xhtmlString,
-          warnings: transformResult.warnings
-        };
-      } else {
-        return {
-          success: false,
-          error: new TransformError({
-            stage: transformResult.error?.stage || 'execution',
-            message: transformResult.error?.message || 'Transform execution failed'
-          }),
-          warnings: transformResult.warnings
-        };
-      }
+      const textContent = await fileStorage.readTextFile(workspaceId, `SOURCE/text/${spineItemId}.txt`);
+      const cssContent = await fileStorage.readTextFile(workspaceId, `OEBPS/Styles/${spineItemId}.css`);
+      const jsContent = await fileStorage.readTextFile(workspaceId, `OEBPS/Scripts/${spineItemId}.js`);
+      
+      pane1Content = textContent;
+      pane2Content = cssContent;
+      
+      // Update preview manager
+      previewManager.updateContent('text', textContent);
+      previewManager.updateContent('css', cssContent);
+      previewManager.updateContent('javascript', jsContent);
     } catch (error) {
-      return {
-        success: false,
-        error: error,
-        warnings: ['Transform execution failed']
-      };
+      errors = [error];
     }
   }
-}
+
+  // Handle content changes
+  function handleContentChange(paneIndex: 1 | 2, content: string): void {
+    const fileType = paneIndex === 1 ? pane1File : pane2File;
+    const contentType = getContentType(fileType);
+    
+    if (contentType) {
+      previewManager.updateContent(contentType, content);
+    }
+    
+    // Auto-save
+    debounceAutoSave(paneIndex, content);
+  }
+
+  function getContentType(fileType: string): 'text' | 'css' | 'javascript' | null {
+    if (fileType === 'text') return 'text';
+    if (fileType === 'css') return 'css';
+    if (fileType === 'js') return 'javascript';
+    return null; // Transform scripts don't go through preview manager content
+  }
+
+  // Toggle between single and dual pane
+  function togglePaneMode(): void {
+    editorMode = editorMode === 'single' ? 'dual' : 'single';
+  }
+
+  onDestroy(() => {
+    previewManager?.cleanup();
+  });
+</script>
+
+<div class="spine-editor">
+  <div class="editor-section" class:dual-pane={editorMode === 'dual'}>
+    <!-- Pane Header -->
+    <div class="pane-header">
+      <button on:click={togglePaneMode} class="pane-toggle">
+        {editorMode === 'single' ? '+ Add Pane' : '- Single Pane'}
+      </button>
+    </div>
+
+    <!-- Editor Panes -->
+    <div class="editor-panes">
+      <!-- Pane 1 -->
+      <div class="editor-pane">
+        <div class="pane-controls">
+          <select bind:value={pane1File} on:change={() => loadFileInPane(1)}>
+            {#each availableFiles as file}
+              <option value={file.value}>{file.label}</option>
+            {/each}
+          </select>
+        </div>
+        <textarea
+          bind:value={pane1Content}
+          on:input={e => handleContentChange(1, e.target.value)}
+          class="code-editor"
+          placeholder="Enter content..."
+        ></textarea>
+      </div>
+
+      <!-- Pane 2 (dual mode only) -->
+      {#if editorMode === 'dual'}
+        <div class="editor-pane">
+          <div class="pane-controls">
+            <select bind:value={pane2File} on:change={() => loadFileInPane(2)}>
+              {#each availableFiles as file}
+                <option value={file.value}>{file.label}</option>
+              {/each}
+            </select>
+          </div>
+          <textarea
+            bind:value={pane2Content}
+            on:input={e => handleContentChange(2, e.target.value)}
+            class="code-editor"
+            placeholder="Enter content..."
+          ></textarea>
+        </div>
+      {/if}
+    </div>
+  </div>
+
+  <!-- Preview Section -->
+  <div class="preview-section">
+    <div class="preview-header">
+      <h3>Preview</h3>
+    </div>
+    
+    {#if errors.length > 0}
+      <div class="error-panel">
+        {#each errors as error}
+          <div class="error-item">
+            <strong>{error.stage} error:</strong> {error.message}
+            {#if error.line}(line {error.line}){/if}
+          </div>
+        {/each}
+      </div>
+    {/if}
+    
+    <div class="preview-content">
+      <iframe 
+        srcdoc={previewHtml}
+        title="Preview"
+        class="preview-iframe"
+      ></iframe>
+    </div>
+  </div>
+</div>
+
+<style>
+  .spine-editor {
+    display: flex;
+    height: 100%;
+    background: white;
+  }
+
+  .editor-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #dee2e6;
+  }
+
+  .editor-section.dual-pane .editor-panes {
+    flex-direction: column;
+  }
+
+  .pane-header {
+    padding: 10px 15px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .pane-toggle {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .editor-panes {
+    flex: 1;
+    display: flex;
+  }
+
+  .editor-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #dee2e6;
+  }
+
+  .editor-pane:last-child {
+    border-right: none;
+  }
+
+  .pane-controls {
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .pane-controls select {
+    width: 100%;
+    padding: 4px 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+  }
+
+  .code-editor {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+  }
+
+  .preview-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .preview-header {
+    padding: 10px 15px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .preview-header h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .error-panel {
+    background: #f8d7da;
+    border-bottom: 1px solid #f5c6cb;
+    padding: 10px 15px;
+    color: #721c24;
+    font-size: 13px;
+  }
+
+  .error-item {
+    margin-bottom: 5px;
+  }
+
+  .preview-content {
+    flex: 1;
+  }
+
+  .preview-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+</style>
 ```
 
-## Usage Examples
+## Key Design Principles
 
-### Outline Editor Integration
+### 1. Simplicity Over Complexity
+- **Direct approach**: No abstract interfaces or complex dependency injection
+- **Minimal layers**: Transform pipeline → Preview manager → Editor component
+- **Simple communication**: Basic iframe postMessage (like the spike)
 
+### 2. Real-Time Feedback
+- **300ms debounce** for all content changes (matching spike performance)
+- **Immediate preview updates** for text, CSS, JavaScript, and transform script changes
+- **Clear error display** when transforms fail (like spike error panel)
+
+### 3. Unified Preview Model
+- **Single XHTML output** that combines all file types
+- **All edits feed into same preview** regardless of which pane they come from
+- **Complete document preview** including CSS styles and JavaScript functionality
+
+### 4. Progressive Enhancement
+- **Start with single pane** for basic editing
+- **Add dual pane** for advanced workflows
+- **No mode complexity** - each pane simply shows a different file
+
+## Transform Pipeline Integration
+
+### Extension Loading
 ```typescript
-// Outline Editor - Navigation editing without stylesheets
-const previewManager = new PreviewManager(
-  workspaceId,
-  blobURLManager,
-  workspaceManager,
-  {
-    includeStylesheets: false,  // Navigation doesn't include CSS
-    debounceMs: 300,
-    transformTimeout: 2000
-  }
-);
-
-// Set editing context for navigation
-await previewManager.setEditingContext({
-  sourceFile: 'SOURCE/text/nav.txt',
-  sourceContent: navigationSourceText,
-  metadata: { 
-    title: 'Table of Contents', 
-    language: 'en',
-    stylesheets: [], // No CSS for navigation
-    scripts: [],
-    customHead: undefined
-  }
-});
-
-// Setup preview callbacks
-previewManager.onPreviewReady = (xhtml, warnings) => {
-  displayNavigationPreview(xhtml);
-  if (warnings.length > 0) showWarnings(warnings);
-};
-
-previewManager.onPreviewError = (error) => {
-  displayTransformError(error);
-};
-
-// Update when user types in editor
-function onNavigationTextChange(newContent: string) {
-  previewManager.updateSourceContent(newContent);
+// Extensions loaded via ExtensionManager
+const extensions = await extensionManager.listWorkspaceExtensions(workspaceId);
+for (const extension of extensions) {
+  const blobURL = await blobURLManager.createBlobURL(extension.path);
+  await loadExtensionInIframe(blobURL);
 }
 ```
 
-### Spine Item Editor Integration
-
+### Transform Execution (Simple, Like Spike)
 ```typescript
-// Spine Item Editor - Chapter editing with stylesheets
-const previewManager = new PreviewManager(
-  workspaceId,
-  blobURLManager,
-  workspaceManager,
-  {
-    includeStylesheets: true,   // Include CSS for chapters
-    debounceMs: 300,
-    transformTimeout: 2000
-  }
-);
+// Execute in iframe (same pattern as spike)
+const result = executeTransform(plainText);
 
-// Set editing context for chapter
-await previewManager.setEditingContext({
-  sourceFile: 'SOURCE/text/chapter1.txt',
-  sourceContent: chapterSourceText,
-  metadata: { 
-    title: 'Chapter 1: Introduction', 
-    language: 'en',
-    stylesheets: ['../Styles/main.css', '../Styles/chapter.css'],
-    scripts: [],
-    customHead: undefined
-  }
-});
+// Text transform
+if (textTransformScript) {
+  html = new Function('plainText', textTransformScript + '; return transformText(plainText);')(html);
+}
 
-// Setup preview callbacks
-previewManager.onPreviewReady = (xhtml, warnings) => {
-  displayChapterPreview(xhtml);
-  if (warnings.length > 0) showWarnings(warnings);
-};
-
-previewManager.onPreviewError = (error) => {
-  preventSave();
-  displayTransformError(error);
-};
-
-// Update when user types in editor
-function onChapterTextChange(newContent: string) {
-  previewManager.updateSourceContent(newContent);
+// DOM transforms (in sequence)
+for (const domTransformScript of domTransformScripts) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const transformedDoc = new Function('document', domTransformScript + '; return transformDom(document);')(doc);
+  html = transformedDoc.body.innerHTML;
 }
 ```
 
-## Workflow Integration
+## BlobURL Workflow Integration
 
-### File Change Detection
+### Single-File Build Constraint
 
-The system watches relevant files based on editing context:
+Since EDITME.html runs as a single file, workspace assets cannot be accessed via normal file paths. The workflow addresses this:
 
-**Outline Editor watches:**
-- `SOURCE/text/nav.txt` - Navigation source file
-- `SOURCE/scripts/transformText.js` - Text transform script (if configured)
-- `SOURCE/scripts/transformDom.js` - DOM transform script (if configured)
-- `SOURCE/extensions/*.js` - JavaScript extension libraries
+1. **User edits content** → Auto-save to FileStorageAPI (OPFS/IndexedDB)
+2. **Transform pipeline executes** → Generates XHTML with relative asset references
+3. **XHTML saved to manifest** → Becomes the spine item's actual content in EPUB structure
+4. **BlobURLManager processes XHTML** → Converts asset references to blob URLs for preview
+5. **Preview iframe receives processed XHTML** → Can access assets via blob URLs
 
-**Spine Item Editor watches:**
-- `SOURCE/text/chapter1.txt` - Chapter source file
-- `SOURCE/scripts/transformText.js` - Text transform script (if configured)  
-- `SOURCE/scripts/transformDom.js` - DOM transform script (if configured)
-- `OEBPS/Styles/main.css` - Stylesheets referenced in chapter metadata
-- `OEBPS/Styles/chapter.css` - Additional chapter stylesheets
-- `SOURCE/extensions/*.js` - JavaScript extension libraries
+This seamless integration ensures the editor works correctly regardless of how it's deployed (web app, standalone file, or embedded in EPUB).
 
-### Script Development Cycle
+## Benefits of This Approach
 
-1. **Developer edits** `SOURCE/scripts/transformText.js`
-2. **FileWatcher detects** change immediately  
-3. **PreviewManager** reads updated script content
-4. **Script content passed** directly to iframe (not via blob URL)
-5. **Iframe updates** transform function immediately
-6. **PreviewManager** triggers re-render with updated script
-7. **If script has errors**, transform fails and preview shows error (no XHTML saved)
+### ✅ **Maintains Spike Simplicity**
+- Same mental model as the working spike
+- Direct iframe communication without complex protocols
+- Simple debounced updates and error handling
 
-### Transform Execution Flow
+### ✅ **Adds Production Features**
+- Multi-file editing with intuitive dropdown selection
+- Service layer integration (WorkspaceService, FileStorageAPI)
+- Extension loading through ExtensionManager
+- File watching for external changes
+- Seamless blob URL management for single-file deployment
 
-1. **User content change** triggers `updateSourceContent()` call
-2. **PreviewManager** debounces and calls `renderPreview()`
-3. **PersistentTransformIframe** executes with current loaded functions
-4. **Success**: XHTML generated and displayed in preview
-5. **Failure**: Error displayed, no file saves occur
+### ✅ **Optimal User Experience**
+- Real-time preview for all file types
+- Dual-pane editing for complex workflows
+- Clear error feedback without interrupting flow
+- Fast, responsive editing with 300ms debounce
+- Assets work correctly in preview regardless of deployment method
 
-## Benefits
+### ✅ **Maintainable Architecture**
+- ~90% as simple as the spike
+- Easy to understand and debug
+- No over-engineering or enterprise patterns
+- Straightforward testing and validation
+- Elegant handling of single-file build constraints
 
-### Performance
-- **No iframe recreation**: Single persistent iframe for all transforms
-- **Direct script passing**: Transform scripts passed as content for immediate updates
-- **Blob URL efficiency**: Only large JavaScript extensions use blob URLs
-- **Reduced coordination**: Single file watcher instead of multiple systems
-
-### Developer Experience  
-- **Real-time updates**: Script changes reflected immediately without blob URL management
-- **Fast iteration**: Direct function updates in iframe memory
-- **Clear error feedback**: Transform failures prevent bad XHTML from being saved
-- **Simpler debugging**: Fewer layers of abstraction
-
-### Resource Management
-- **Simplified blob management**: Only extensions require blob URLs
-- **Automatic cleanup**: Clean separation of resources by type
-- **Memory efficient**: Single persistent iframe, direct content passing
-- **Reduced complexity**: ~50% fewer lines of code while maintaining functionality
-
-### Security
-- **Sandboxed execution**: Scripts isolated from main application
-- **Resource limits**: Transform timeouts prevent infinite loops
-- **Clean separation**: Transform errors contained within iframe
-
-## Migration Path
-
-1. **Add extension blob URL methods** to existing BlobURLManager (minimal extension)
-2. **Create simplified PersistentTransformIframe** with direct script content passing
-3. **Implement simple FileWatcher** to replace multiple watching systems
-4. **Build streamlined PreviewManager** as reusable coordinator for both editor types
-5. **Update existing editors** to use PreviewManager with direct file arrays
-6. **Test with both workflows** - outline editing and spine item editing
-7. **Verify immediate script updates** work without complex blob URL coordination
-
-## Implementation Benefits
-
-### Reusability
-- **Single simplified codebase** supports both outline and spine item editing
-- **Configurable behavior** adapts to different editor requirements with simple boolean flags
-- **Shared components** eliminate duplication while reducing complexity
-
-### Developer Experience  
-- **Immediate feedback** on script changes without complex coordination
-- **Direct file watching** monitors only relevant files for current session
-- **Streamlined error handling** provides consistent feedback with fewer abstraction layers
-
-### Performance
-- **Efficient file watching** tracks specific files with single watcher
-- **Direct content updates** eliminate blob URL management overhead for scripts
-- **Smart resource separation** uses blob URLs only where needed (large extensions)
-
-### Security & Reliability
-- **Sandboxed execution** isolates transform scripts from main application
-- **Error containment** prevents script failures from breaking editor functionality
-- **Timeout protection** prevents infinite loops in transform scripts
-- **Simpler failure modes** with fewer moving parts to debug
-
-This simplified architecture maintains all functionality of the original design while reducing complexity by ~50%, making it easier to implement, debug, and extend for future editor types.
+This architecture successfully bridges the gap between the elegant spike and production requirements, delivering a spine item editor that developers can actually build and users will enjoy using.

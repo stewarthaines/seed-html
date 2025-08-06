@@ -13,6 +13,7 @@ import type {
   CachingSummary,
   ValidationResult,
 } from './types.js';
+import type { TransformOption } from '../services/settings/settings.service.js';
 import { ExtensionCache } from './extension-cache.js';
 import {
   detectExtensionName,
@@ -527,5 +528,67 @@ export class ExtensionManager {
     }
 
     return fileMap;
+  }
+
+  /**
+   * Get available transform scripts for a workspace
+   * 
+   * @param workspaceId - Target workspace identifier
+   * @returns Promise resolving to array of available transform options
+   */
+  async getAvailableTransforms(workspaceId: string): Promise<TransformOption[]> {
+    const transforms: TransformOption[] = [];
+    
+    try {
+      // List all files in the workspace
+      const files = await this.fileStorage.listFiles(workspaceId);
+      
+      // Find JavaScript files that could be transform scripts
+      const jsFiles = files.filter(file => {
+        // Look for .js files in SOURCE/ directory (transform scripts location)
+        return file.startsWith('SOURCE/') && file.endsWith('.js');
+      });
+      
+      // Convert to TransformOption format
+      for (const filePath of jsFiles) {
+        const fileName = filePath.split('/').pop() || '';
+        
+        // Try to determine if this is a transform script
+        // Common transform script names/patterns
+        if (fileName.includes('transform') || fileName.includes('Transform') || 
+            fileName === 'transformText.js' || fileName === 'transformDom.js') {
+          
+          transforms.push({
+            path: filePath,
+            extensionName: `Transform: ${fileName}`,
+            fileName: fileName
+          });
+        }
+      }
+      
+      // Also check extensions directory for transform scripts
+      const extensionTransforms = files.filter(file => {
+        return file.startsWith('SOURCE/extensions/') && file.endsWith('.js') && 
+               (file.includes('transform') || file.includes('Transform'));
+      });
+      
+      for (const filePath of extensionTransforms) {
+        const pathParts = filePath.split('/');
+        const fileName = pathParts.pop() || '';
+        const extensionName = pathParts[2] || 'Unknown Extension';
+        
+        transforms.push({
+          path: filePath,
+          extensionName: extensionName,
+          fileName: fileName
+        });
+      }
+      
+    } catch (error) {
+      // If we can't list files, return empty array rather than throwing
+      console.warn('Failed to get available transforms:', error);
+    }
+    
+    return transforms;
   }
 }

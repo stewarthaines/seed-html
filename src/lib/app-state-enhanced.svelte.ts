@@ -23,6 +23,13 @@ import type {
   EPUBSettings,
 } from './services/settings/settings.service.js';
 import type { TransformExecutor } from './transform/transform-executor.js';
+import type { TransformEngine } from './infrastructure/transform-engine.js';
+
+// Storage keys for workspace state persistence (following navigationStore pattern)
+const STORAGE_KEYS = {
+  WORKSPACE_ID: 'editme_app_workspace_id',
+  SPINE_ITEM_ID: 'editme_app_spine_item_id',
+} as const;
 
 interface I18nSystem {
   translate: (key: string, params?: Record<string, any>) => string;
@@ -56,6 +63,7 @@ interface I18nStore {
 export class EnhancedAppState {
   // Infrastructure layer
   private fileStorage: FileStorageAPI;
+  private transformEngine: TransformEngine;
 
   // Service layer
   private workspaceService: WorkspaceService;
@@ -85,9 +93,11 @@ export class EnhancedAppState {
     extensionManager: ExtensionManager,
     themeStore: ThemeStore,
     i18nStore: I18nStore,
+    transformEngine: TransformEngine,
     private skipReactiveEffects = false
   ) {
     this.fileStorage = fileStorage;
+    this.transformEngine = transformEngine;
 
     // Initialize services with dependency injection
     // Create services without circular dependencies first
@@ -210,37 +220,46 @@ export class EnhancedAppState {
     return this.workspaceSettings?.draft_id || 0;
   }
 
+  // Infrastructure access for components
+  getTransformEngine(): TransformEngine {
+    return this.transformEngine;
+  }
+
   // ============================================================================
   // Reactive Effects ($effect)
   // ============================================================================
 
   private setupReactiveEffects(): void {
-    // Effect: Load workspace settings when workspace changes
-    $effect(() => {
-      if (this.workspace?.id) {
-        this.loadWorkspaceSettings(this.workspace.id);
-        this.loadEPUBSettings(this.workspace.id);
-      } else {
-        this.workspaceSettings = null;
-        this.epubSettings = null;
-      }
-    });
+    // Create root effect scope for EnhancedAppState reactive effects
+    // This allows $effect to work when created outside component initialization
+    $effect.root(() => {
+      // Effect: Load workspace settings when workspace changes
+      $effect(() => {
+        if (this.workspace?.id) {
+          this.loadWorkspaceSettings(this.workspace.id);
+          this.loadEPUBSettings(this.workspace.id);
+        } else {
+          this.workspaceSettings = null;
+          this.epubSettings = null;
+        }
+      });
 
-    // Effect: Update error state
-    $effect(() => {
-      if (this.errorMessage) {
-        // Auto-clear error after 5 seconds
-        setTimeout(() => {
-          this.errorMessage = null;
-        }, 5000);
-      }
-    });
+      // Effect: Update error state
+      $effect(() => {
+        if (this.errorMessage) {
+          // Auto-clear error after 5 seconds
+          setTimeout(() => {
+            this.errorMessage = null;
+          }, 5000);
+        }
+      });
 
-    // Effect: Log state changes for debugging
-    $effect(() => {
-      if (this.workspace) {
-        console.log('Workspace loaded:', this.workspace.id, this.workspace.opf.metadata.title);
-      }
+      // Effect: Log state changes for debugging
+      $effect(() => {
+        if (this.workspace) {
+          console.log('Workspace loaded:', this.workspace.id, this.workspace.opf.metadata.title);
+        }
+      });
     });
   }
 
@@ -257,6 +276,9 @@ export class EnhancedAppState {
       if (!this.fileStorage.isInitialized()) {
         await this.fileStorage.init();
       }
+
+      // Restore workspace state from localStorage (following navigationStore pattern)
+      await this.restoreWorkspaceState();
 
       this.initialized = true;
     } catch (error) {
@@ -323,6 +345,9 @@ export class EnhancedAppState {
       // Clear selections when loading new workspace
       this.selectedChapterId = null;
       this.selectedManifestItemId = null;
+
+      // Persist workspace state to localStorage (following navigationStore pattern)
+      this.persistWorkspaceId(workspaceId);
     } catch (error) {
       this.errorMessage = `Failed to load workspace: ${error instanceof Error ? error.message : 'Unknown error'}`;
       throw error;
@@ -361,6 +386,8 @@ export class EnhancedAppState {
         this.workspace = null;
         this.selectedChapterId = null;
         this.selectedManifestItemId = null;
+        // Clear persisted state when current workspace is deleted
+        this.clearPersistedState();
       }
     } catch (error) {
       this.errorMessage = `Failed to delete workspace: ${error instanceof Error ? error.message : 'Unknown error'}`;
@@ -373,6 +400,8 @@ export class EnhancedAppState {
   // Selection methods
   selectChapter(chapterId: string | null): void {
     this.selectedChapterId = chapterId;
+    // Persist spine item selection to localStorage (following navigationStore pattern)
+    this.persistSpineItemId(chapterId);
   }
 
   selectManifestItem(itemId: string | null): void {
@@ -567,6 +596,76 @@ export class EnhancedAppState {
       throw error;
     } finally {
       this.isLoading = false;
+    }
+  }
+
+  // ============================================================================
+  // Private Persistence Methods (following navigationStore pattern)
+  // ============================================================================
+
+  /**
+   * Restore workspace state from localStorage
+   */
+  private async restoreWorkspaceState(): Promise<void> {
+    try {
+      // Restore workspace ID
+      const savedWorkspaceId = localStorage.getItem(STORAGE_KEYS.WORKSPACE_ID);
+      if (savedWorkspaceId) {
+        await this.loadWorkspace(savedWorkspaceId);
+        
+        // Restore spine item selection after workspace is loaded
+        const savedSpineItemId = localStorage.getItem(STORAGE_KEYS.SPINE_ITEM_ID);
+        if (savedSpineItemId) {
+          this.selectedChapterId = savedSpineItemId;
+        }
+      }
+    } catch (error) {
+      // Ignore restoration errors and log warning (like navigationStore)
+      console.warn('Failed to restore workspace state:', error);
+      // Clear invalid stored state
+      this.clearPersistedState();
+    }
+  }
+
+  /**
+   * Persist workspace ID to localStorage
+   */
+  private persistWorkspaceId(workspaceId: string | null): void {
+    try {
+      if (workspaceId) {
+        localStorage.setItem(STORAGE_KEYS.WORKSPACE_ID, workspaceId);
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.WORKSPACE_ID);
+      }
+    } catch (error) {
+      console.warn('Failed to persist workspace ID:', error);
+    }
+  }
+
+  /**
+   * Persist spine item ID to localStorage
+   */
+  private persistSpineItemId(spineItemId: string | null): void {
+    try {
+      if (spineItemId) {
+        localStorage.setItem(STORAGE_KEYS.SPINE_ITEM_ID, spineItemId);
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.SPINE_ITEM_ID);
+      }
+    } catch (error) {
+      console.warn('Failed to persist spine item ID:', error);
+    }
+  }
+
+  /**
+   * Clear all persisted state
+   */
+  private clearPersistedState(): void {
+    try {
+      localStorage.removeItem(STORAGE_KEYS.WORKSPACE_ID);
+      localStorage.removeItem(STORAGE_KEYS.SPINE_ITEM_ID);
+    } catch (error) {
+      console.warn('Failed to clear persisted state:', error);
     }
   }
 

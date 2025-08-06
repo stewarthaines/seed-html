@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store';
+import { writable, get } from 'svelte/store';
 import type { Writable } from 'svelte/store';
 
 // TypeScript interfaces
@@ -13,6 +13,7 @@ export interface ThemeStore extends Writable<ThemeState> {
   setTheme(theme: ThemeMode): void;
   toggleTheme(): void;
   useSystemPreference(): void;
+  getCurrentTheme(): string;
 }
 
 export type ThemeMode = 'light' | 'dark';
@@ -152,6 +153,12 @@ function createThemeStore(): ThemeStore {
           current: state.systemPreference,
         };
       });
+    },
+
+    // Get current theme
+    getCurrentTheme(): string {
+      const state = get({ subscribe });
+      return state.current;
     },
   };
 }

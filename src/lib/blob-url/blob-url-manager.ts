@@ -167,6 +167,16 @@ export class BlobURLManager {
   }
 
   /**
+   * Revoke blob URL by manifest href (invalidate cache for updated files)
+   */
+  revokeFileBlob(manifestHref: string): void {
+    const blobURL = this.registry.urls.get(manifestHref);
+    if (blobURL) {
+      this.revokeBlobURL(blobURL); // Use existing method
+    }
+  }
+
+  /**
    * Clean up all blob URLs for current workspace
    */
   cleanup(): void {

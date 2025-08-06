@@ -226,6 +226,7 @@ describe('EnhancedAppState Integration Tests', () => {
   let mockExtensionManager: any;
   let mockThemeStore: any;
   let mockI18nStore: any;
+  let mockTransformEngine: any;
 
   beforeEach(() => {
     mockFileStorage = createMockFileStorage();
@@ -234,6 +235,14 @@ describe('EnhancedAppState Integration Tests', () => {
     mockExtensionManager = createMockExtensionManager();
     mockThemeStore = createMockThemeStore();
     mockI18nStore = createMockI18nStore();
+    mockTransformEngine = {
+      initialize: vi.fn(),
+      setTransformScripts: vi.fn(),
+      executeTransform: vi.fn(),
+      setDebugMode: vi.fn(),
+      ping: vi.fn(),
+      cleanup: vi.fn()
+    };
 
     appState = new EnhancedAppState(
       mockFileStorage,
@@ -242,6 +251,7 @@ describe('EnhancedAppState Integration Tests', () => {
       mockExtensionManager,
       mockThemeStore,
       mockI18nStore,
+      mockTransformEngine,
       true // Skip reactive effects in tests
     );
   });
@@ -472,6 +482,7 @@ describe('EnhancedAppState Integration Tests', () => {
         mockExtensionManager,
         mockThemeStore,
         mockI18nStore,
+        mockTransformEngine,
         true // Skip reactive effects
       );
 
@@ -496,6 +507,7 @@ describe('EnhancedAppState Integration Tests', () => {
         mockExtensionManager,
         mockThemeStore,
         mockI18nStore,
+        mockTransformEngine,
         true // Skip reactive effects
       );
 

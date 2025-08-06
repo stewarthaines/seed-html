@@ -69,6 +69,17 @@ The build process creates a single `EDITME.html` file (~2-3MB) with all assets i
 - Feature detection for `.createWritable()` support
 - Workspace-based organization with unique IDs
 
+### State Persistence Pattern
+
+Browser reload state management follows the **navigationStore pattern** for consistency:
+
+- **Storage Keys**: Prefixed constants (`editme_app_workspace_id`, `editme_nav_current_view`)
+- **Auto-Persistence**: State changes automatically persist to localStorage with try/catch error handling
+- **Restoration**: Components restore state during initialization, falling back to defaults on errors
+- **Cleanup**: Invalid state is cleared when conflicts occur
+
+**Reference Implementation**: See `src/lib/navigation/navigation-store.ts` and `src/lib/app-state-enhanced.svelte.ts` for the complete pattern.
+
 ### Text Processing Pipeline
 
 ```

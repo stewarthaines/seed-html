@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import LayoutManager from './lib/LayoutManager.svelte';
   import { navigationStore } from './lib/navigation';
   import type { ViewType } from './lib/navigation/types';
@@ -12,15 +12,18 @@
   import ManifestPreview from './lib/components/manifest/ManifestPreview.svelte';
   import OutlineView from './lib/components/outline/OutlineView.svelte';
   import ContentPreview from './lib/components/preview/ContentPreview.svelte';
+  import PreviewPane from './lib/components/spine/PreviewPane.svelte';
   import { layoutStore } from './lib/stores/layout';
   import { t } from './lib/i18n';
   import { EnhancedAppState } from './lib/app-state-enhanced.svelte.js';
   import { FileStorageAPI } from './lib/storage/index.js';
   import { TransformExecutor } from './lib/transform/transform-executor.js';
+  import { TransformEngine } from './lib/infrastructure/transform-engine.js';
   import { i18nService } from './lib/i18n/index.js';
   import { WorkspaceService } from './lib/services/workspace/workspace.service.js';
   import { SpineService } from './lib/services/spine/spine.service.js';
   import { MetadataService } from './lib/services/metadata/metadata.service.js';
+  import { BlobURLManager } from './lib/blob-url/blob-url-manager.js';
 
   // Simple implementations for required dependencies
   const simpleExtensionManager = {
@@ -47,22 +50,25 @@
   const spineService = new SpineService(workspaceService);
   const metadataService = new MetadataService(workspaceService);
   
-  const appState = new EnhancedAppState(
-    fileStorage,
-    transformExecutor,
-    i18nService,
-    simpleExtensionManager,
-    simpleThemeStore,
-    simpleI18nStore
-  );
+  // BlobURLManager will be created after FileStorageAPI is initialized
+  let blobURLManager: BlobURLManager;
+  
+  // Transform engine initialization state
+  let transformEngine: TransformEngine | null = null;
+  let transformEngineReady = $state(false);
+  let transformEngineError = $state<string | null>(null);
+  
+  // AppState created in proper Svelte context, initialized later
+  let appState = $state<EnhancedAppState | null>(null);
+  let appInitialized = $state(false);
 
   // Reactive getters for template access
   let currentView = $derived($navigationStore.currentView);
   let isExpanded = $derived($layoutStore.sidebar.isExpanded);
-  let currentWorkspaceId = $derived(appState.currentWorkspaceId);
-  let selectedSpineItemId = $derived(appState.selectedChapterId); // renamed in enhanced
-  let initialized = $derived(appState.initialized);
-  let currentWorkspaceState = $derived(appState.workspace);
+  let currentWorkspaceId = $derived(appState?.currentWorkspaceId);
+  let selectedSpineItemId = $derived(appState?.selectedChapterId); // renamed in enhanced
+  let initialized = $derived(appState?.initialized || false);
+  let currentWorkspaceState = $derived(appState?.workspace);
   
   // Manifest item selection state
   let selectedManifestItem = $state<any>(null);
@@ -70,6 +76,23 @@
   
   // Navigation preview state
   let navigationPreviewContent = $state<string | null>(null);
+  
+  // Spine preview state
+  let spinePreviewData = $state<{
+    xhtmlContent: string;
+    isTransforming: boolean;
+    transformError: any;
+    transformWarnings: string[];
+    executionTime: number;
+    spineItemId: string | null;
+  }>({
+    xhtmlContent: '',
+    isTransforming: false,
+    transformError: null,
+    transformWarnings: [],
+    executionTime: 0,
+    spineItemId: null
+  });
   
   // Services are private in EnhancedAppState - workspace operations go through app state methods
   // No direct service access needed since EnhancedAppState handles service coordination
@@ -85,19 +108,70 @@
     navigationPreviewContent = event.detail.xhtml;
   };
 
+  // Handle spine preview update
+  const handleSpinePreviewUpdate = (event: CustomEvent<{
+    xhtmlContent: string;
+    isTransforming: boolean;
+    transformError: any;
+    transformWarnings: string[];
+    executionTime: number;
+    spineItemId: string;
+  }>) => {
+    spinePreviewData = {
+      xhtmlContent: event.detail.xhtmlContent,
+      isTransforming: event.detail.isTransforming,
+      transformError: event.detail.transformError,
+      transformWarnings: event.detail.transformWarnings,
+      executionTime: event.detail.executionTime,
+      spineItemId: event.detail.spineItemId
+    };
+  };
+
   // Initialize app state
   onMount(() => {
-    // Async initialization
+    // Async initialization - transform engine first, then app state
     (async () => {
       try {
+        // Initialize FileStorageAPI first
+        await fileStorage.init();
+        
+        // Create blob URL manager after FileStorageAPI is initialized
+        blobURLManager = new BlobURLManager({
+          fileStorage,
+          basePath: 'OEBPS',
+          maxBlobURLs: 100,
+          onCapacityReached: () => {
+            console.warn('Blob URL capacity reached - consider cleanup');
+          }
+        });
+
+        // Initialize transform engine
+        transformEngine = new TransformEngine(blobURLManager);
+        await transformEngine.initialize();
+        transformEngineReady = true;
+
+        // Create AppState with transform engine
+        appState = new EnhancedAppState(
+          fileStorage,
+          transformExecutor,
+          i18nService,
+          simpleExtensionManager,
+          simpleThemeStore,
+          simpleI18nStore,
+          transformEngine
+        );
+
+        // Initialize app state (FileStorageAPI already initialized above)
         await appState.initialize();
       } catch (error) {
-        console.error('Failed to initialize app state:', error);
+        console.error('Failed to initialize app:', error);
+        transformEngineError = error instanceof Error ? error.message : 'Initialization failed';
       }
     })();
 
     // Listen for spine item selection events
     const handleSelectSpineItem = (event: Event) => {
+      if (!appState) return;
       const customEvent = event as CustomEvent<{ itemId: string }>;
       appState.selectChapter(customEvent.detail.itemId);
 
@@ -107,6 +181,7 @@
 
     // Listen for spine item clear events
     const handleClearSpineSelection = () => {
+      if (!appState) return;
       appState.selectChapter(null);
     };
 
@@ -116,12 +191,30 @@
     return () => {
       window.removeEventListener('select-spine-item', handleSelectSpineItem);
       window.removeEventListener('clear-spine-selection', handleClearSpineSelection);
-      appState.cleanup();
+      appState?.cleanup();
+      transformEngine?.cleanup();
     };
   });
 
 </script>
 
+{#if transformEngineError}
+  <div class="error-state">
+    <h2>Transform Engine Failed</h2>
+    <p>{transformEngineError}</p>
+    <p>Please refresh the page to try again.</p>
+  </div>
+{:else if !transformEngineReady}
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p>Initializing transform engine...</p>
+  </div>
+{:else if !appState}
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p>Initializing application...</p>
+  </div>
+{:else}
 <LayoutManager hasWorkspace={!!currentWorkspaceId}>
   <svelte:fragment slot="sidebar-spine">
     {#if !initialized}
@@ -139,7 +232,7 @@
         selectedItemId={selectedSpineItemId}
         {isExpanded}
         onWorkspaceUpdate={(updatedWorkspace) => {
-          appState.workspace = updatedWorkspace;
+          if (appState) appState.workspace = updatedWorkspace;
         }}
       />
     {:else}
@@ -153,10 +246,10 @@
     <!-- Main content area - switches based on current view -->
     {#if currentView === 'workspace' && initialized}
       <WorkspaceView
-        onListWorkspaces={() => appState.listWorkspaces()}
-        onCreateWorkspace={(data) => appState.createWorkspace(data.title, data.language)}
-        onDeleteWorkspace={(id) => appState.deleteWorkspace(id)}
-        onLoadWorkspace={(id) => appState.loadWorkspace(id)}
+        onListWorkspaces={() => appState?.listWorkspaces() ?? Promise.resolve([])}
+        onCreateWorkspace={(data) => appState?.createWorkspace(data.title, data.language) ?? Promise.resolve('')}
+        onDeleteWorkspace={(id) => appState?.deleteWorkspace(id) ?? Promise.resolve()}
+        onLoadWorkspace={(id) => appState?.loadWorkspace(id) ?? Promise.resolve()}
         {currentWorkspaceId}
         on:navigationRequested={(event) => {
           navigationStore.navigateTo(event.detail.view as ViewType);
@@ -206,12 +299,14 @@
         />
       {/if}
     {:else if currentView === 'spine'}
-      {#if initialized && currentWorkspaceState}
+      {#if initialized && currentWorkspaceState && appState}
         <SpineView
           workspace={currentWorkspaceState}
           {workspaceService}
           {spineService}
           selectedItemId={selectedSpineItemId}
+          transformEngine={appState.getTransformEngine()}
+          on:previewUpdate={handleSpinePreviewUpdate}
         />
       {:else}
         <PlaceholderView
@@ -255,17 +350,83 @@
           <p>{$t('Generating navigation from chapters...')}</p>
         </div>
       {/if}
+    {:else if currentView === 'spine'}
+      {#if spinePreviewData.spineItemId}
+        <PreviewPane
+          xhtmlContent={spinePreviewData.xhtmlContent}
+          isTransforming={spinePreviewData.isTransforming}
+          transformError={spinePreviewData.transformError}
+          transformWarnings={spinePreviewData.transformWarnings}
+          executionTime={spinePreviewData.executionTime}
+          spineItemId={spinePreviewData.spineItemId}
+        />
+      {:else}
+        <div class="placeholder-content">
+          <h3>{$t('Spine Preview')}</h3>
+          <p>{$t('Select a spine item to see the preview here')}</p>
+        </div>
+      {/if}
     {:else}
       <div class="placeholder-content">
         <h3>{$t('Preview Pane')}</h3>
-        <p>{$t('XHTML preview will go here (Phase 4)')}</p>
+        <p>{$t('Content preview will appear here based on the current view')}</p>
         <p class="current-view-info">{$t('Current view')}: <strong>{currentView}</strong></p>
       </div>
     {/if}
   </svelte:fragment>
 </LayoutManager>
+{/if}
 
 <style>
+  .loading-state,
+  .error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    text-align: center;
+    padding: 2rem;
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--color-border-default);
+    border-top-color: var(--color-accent-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .error-state {
+    color: var(--color-error-text);
+  }
+
+  .error-state h2 {
+    margin: 0 0 1rem 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .error-state p {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .spinner {
+      animation: none;
+    }
+  }
   .placeholder-content {
     padding: 1rem;
     color: var(--color-text-secondary);

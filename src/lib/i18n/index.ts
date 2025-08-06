@@ -235,6 +235,7 @@ export { i18nState };
 export const i18nService = {
   translate,
   getCurrentLocale: () => get(currentLocale),
+  setLocale,
   getAvailableLocales,
   hasTranslation: (locale: string, key: string) => {
     const state = get(i18nState);
