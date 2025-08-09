@@ -27,7 +27,10 @@
     "i18n:build": "npm run i18n:extract && npm run i18n:convert && npm run i18n:compress",
     "translate:demo": "node scripts/auto-translate.js",
     "translate:populate": "node scripts/populate-demo-translations.js",
-    "analyze": "npm run build && open dist/stats.html"
+    "analyze": "npm run build && open dist/stats.html",
+    "opds:install": "cd opds-server && npm install",
+    "opds:serve": "cd opds-server && npm start",
+    "opds:dev": "cd opds-server && npm run dev"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^4.0.0",
