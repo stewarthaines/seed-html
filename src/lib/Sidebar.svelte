@@ -58,7 +58,7 @@
   <div class="sidebar-header">
     <button
       class="sidebar-toggle"
-      on:click={toggleSidebar}
+      onclick={toggleSidebar}
       aria-expanded={isExpanded}
       aria-label={$t('Toggle sidebar')}
     >
@@ -66,7 +66,7 @@
     </button>
 
     {#if isExpanded}
-      <h2 class="sidebar-title">EDITME.html</h2>
+      <h2 class="sidebar-title">SEED.html</h2>
       <div class="header-actions">
         <ThemeToggle size="small" showLabel={false} />
       </div>
@@ -85,7 +85,7 @@
           class:active={activeSection === section.id}
           class:disabled={isSectionDisabled(section.id)}
           disabled={isSectionDisabled(section.id)}
-          on:click={() => setSidebarSection(section.id)}
+          onclick={() => setSidebarSection(section.id)}
           aria-current={activeSection === section.id ? 'page' : undefined}
           title={$t(section.label)}
         >
@@ -107,7 +107,7 @@
             class="append-button-nav"
             class:disabled={!hasWorkspace}
             disabled={!hasWorkspace}
-            on:click={handleAppendItem}
+            onclick={handleAppendItem}
             aria-label={$t('Append Item')}
             title={$t('Append Item')}
           >
@@ -121,7 +121,7 @@
             class="append-button-nav compact"
             class:disabled={!hasWorkspace}
             disabled={!hasWorkspace}
-            on:click={handleAppendItem}
+            onclick={handleAppendItem}
             aria-label={$t('Append Item')}
             title={$t('Append Item')}
           >
@@ -150,7 +150,7 @@
     <button
       class="sidebar-section"
       class:active={activeSection === SETTINGS_SECTION.id}
-      on:click={() => setSidebarSection(SETTINGS_SECTION.id)}
+      onclick={() => setSidebarSection(SETTINGS_SECTION.id)}
       aria-current={activeSection === SETTINGS_SECTION.id ? 'page' : undefined}
       title={$t(SETTINGS_SECTION.label)}
     >

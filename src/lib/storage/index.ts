@@ -879,6 +879,7 @@ export class FileStorageAPI {
 
   private async doInit(): Promise<void> {
     await this.manager.init();
+    // Useful diagnostic log - keep for debugging storage backend selection
     console.log('FileStorageAPI initialized with backend:', this.manager.getBackendType());
   }
 

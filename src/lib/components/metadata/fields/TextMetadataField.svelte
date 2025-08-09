@@ -51,9 +51,9 @@
     class="field-input"
     class:error={!!error}
     class:needs-attention={needsAttention}
-    on:input={handleInput}
-    on:blur={handleBlur}
-    on:focus={handleFocus}
+    oninput={handleInput}
+    onblur={handleBlur}
+    onfocus={handleFocus}
     aria-describedby={error ? `${id}-error` : undefined}
     aria-invalid={!!error}
   />

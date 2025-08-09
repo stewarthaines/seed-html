@@ -1,16 +1,16 @@
 /**
  * ContentService - Clean Service Architecture Implementation
- * 
+ *
  * Handles content transformation, navigation generation, and sample content creation
  * following the clean service architecture with single responsibility principle.
  */
 
-import type { WorkspaceState, ChapterContent, SampleContentData } from '../workspace/workspace.service.js';
+import type { ChapterContent, SampleContentData } from '../workspace/workspace.service.js';
 import type { TransformExecutor, TransformContext } from '../../transform/transform-executor.js';
 import type { TranslationFunction } from '../../i18n/types.js';
 import type { EPUBMetadata } from '../../epub/opf-utils.js';
-import { SampleContentGenerator } from '../../content/sample-content-generator.js';
-import { i18nService } from '../../i18n/index.js';
+import { generateEPUBTimestamp } from '../../epub/opf-utils.js';
+import { JavaScriptValidator } from '../../validation/javascript-validator.js';
 import pageCSS from '../../../assets/universal/page.css?raw';
 import transformTextJS from '../../../assets/universal/transformText.js?raw';
 import transformDomJS from '../../../assets/universal/transformDom.js?raw';
@@ -26,7 +26,6 @@ export interface ContentPreview {
   previewHtml: string;
   warnings: string[];
 }
-
 
 export interface NavigationDocument {
   xhtmlContent: string;
@@ -57,7 +56,10 @@ export interface LocalizedSampleContent {
 
 // Service error types
 export class ContentServiceError extends Error {
-  constructor(message: string, public code: string) {
+  constructor(
+    message: string,
+    public code: string
+  ) {
     super(message);
     this.name = 'ContentServiceError';
   }
@@ -70,16 +72,64 @@ export class UnsupportedLocaleError extends ContentServiceError {
   }
 }
 
-
 /**
  * ContentService - Single responsibility for content transformation and generation
  */
 export class ContentService {
   // Supported locales for sample content
   private static readonly SUPPORTED_LOCALES = new Set([
-    'en', 'es', 'fr', 'de', 'it', 'pt', 'nl', 'sv', 'da', 'no', 'fi', 'ru', 'pl', 'cs', 'hu', 'ro', 'bg',
-    'hr', 'sk', 'sl', 'et', 'lv', 'lt', 'el', 'tr', 'ar', 'he', 'fa', 'ur', 'hi', 'bn', 'ta', 'te', 'ml',
-    'kn', 'gu', 'pa', 'or', 'as', 'ne', 'si', 'my', 'km', 'lo', 'vi', 'th', 'id', 'ms', 'tl', 'zh', 'ja', 'ko'
+    'en',
+    'es',
+    'fr',
+    'de',
+    'it',
+    'pt',
+    'nl',
+    'sv',
+    'da',
+    'no',
+    'fi',
+    'ru',
+    'pl',
+    'cs',
+    'hu',
+    'ro',
+    'bg',
+    'hr',
+    'sk',
+    'sl',
+    'et',
+    'lv',
+    'lt',
+    'el',
+    'tr',
+    'ar',
+    'he',
+    'fa',
+    'ur',
+    'hi',
+    'bn',
+    'ta',
+    'te',
+    'ml',
+    'kn',
+    'gu',
+    'pa',
+    'or',
+    'as',
+    'ne',
+    'si',
+    'my',
+    'km',
+    'lo',
+    'vi',
+    'th',
+    'id',
+    'ms',
+    'tl',
+    'zh',
+    'ja',
+    'ko',
   ]);
 
   // RTL languages
@@ -87,7 +137,12 @@ export class ContentService {
 
   constructor(
     private transformExecutor: TransformExecutor,
-    private i18nSystem: { translate: TranslationFunction; getCatalogs: () => any; isInitialized: () => boolean; getCurrentLocale: () => string }
+    private i18nSystem: {
+      translate: TranslationFunction;
+      getCatalogs: () => any;
+      isInitialized: () => boolean;
+      getCurrentLocale: () => string;
+    }
   ) {}
 
   /**
@@ -103,7 +158,7 @@ export class ContentService {
       const transformedChapters = [];
       for (const chapter of chapters) {
         const transformedContent = await this.transformContent(chapter.content);
-        
+
         // Generate complete XHTML document
         const xhtmlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
@@ -122,7 +177,7 @@ export class ContentService {
           title: chapter.title,
           fileName: `${chapter.id}.txt`,
           content: chapter.content,
-          xhtmlContent
+          xhtmlContent,
         });
       }
 
@@ -133,28 +188,32 @@ export class ContentService {
       const assets = [
         {
           path: 'OEBPS/Styles/page.css',
-          content: pageCSS
+          content: pageCSS,
         },
         {
-          path: 'SOURCE/scripts/transformText.js', 
-          content: transformTextJS
+          path: 'SOURCE/scripts/transformText.js',
+          content: transformTextJS,
         },
         {
           path: 'SOURCE/scripts/transformDom.js',
-          content: transformDomJS
+          content: transformDomJS,
         },
         {
           path: 'SOURCE/settings.json',
-          content: JSON.stringify({
-            version: '1.0.0',
-            text_transform: 'transformText.js',
-            dom_transforms: ['transformDom.js']
-          }, null, 2)
+          content: JSON.stringify(
+            {
+              version: '1.0.0',
+              text_transform: 'transformText.js',
+              dom_transforms: ['transformDom.js'],
+            },
+            null,
+            2
+          ),
         },
         {
           path: 'OEBPS/Text/nav.xhtml',
-          content: navContent
-        }
+          content: navContent,
+        },
       ];
 
       // Generate manifest updates
@@ -174,7 +233,7 @@ export class ContentService {
           id: chapter.id,
           href: `Text/${chapter.id}.xhtml`,
           mediaType: 'application/xhtml+xml',
-        }))
+        })),
       ];
 
       // Generate spine updates
@@ -184,7 +243,7 @@ export class ContentService {
         chapters: transformedChapters,
         assets,
         manifestUpdates,
-        spineUpdates
+        spineUpdates,
       };
     } catch (error) {
       throw new ContentServiceError(
@@ -197,7 +256,11 @@ export class ContentService {
   /**
    * Generate navigation document content (PURE FUNCTION)
    */
-  private generateNavigationContent(chapters: DemoChapter[], locale: string, isRTL: boolean): string {
+  private generateNavigationContent(
+    chapters: DemoChapter[],
+    locale: string,
+    isRTL: boolean
+  ): string {
     const navTitle = this.i18nSystem.translate('navigation.title') || 'Navigation';
     const tocTitle = this.i18nSystem.translate('navigation.tableOfContents') || 'Table of Contents';
 
@@ -225,9 +288,6 @@ ${chapterLinks}
 </html>`;
   }
 
-
-
-
   /**
    * Transform plain text content to XHTML using transform pipeline
    */
@@ -249,17 +309,17 @@ ${chapterLinks}
       return {
         xhtml,
         warnings,
-        transformTime
+        transformTime,
       };
     } catch (error) {
       const transformTime = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : 'Unknown transform error';
-      
+
       // Return graceful fallback with warnings
       return {
         xhtml: `<p>${this.escapeHtml(sourceText)}</p>`,
         warnings: [errorMessage],
-        transformTime
+        transformTime,
       };
     }
   }
@@ -269,10 +329,10 @@ ${chapterLinks}
    */
   async previewContent(sourceText: string, context?: TransformContext): Promise<ContentPreview> {
     const result = await this.transformContent(sourceText, context);
-    
+
     return {
       previewHtml: result.xhtml,
-      warnings: result.warnings
+      warnings: result.warnings,
     };
   }
 
@@ -284,10 +344,12 @@ ${chapterLinks}
     const linearChapters = chapters.filter(chapter => chapter.linear);
 
     // Generate navigation entries
-    const navEntries = linearChapters.map(chapter => {
-      const title = this.extractTitleFromXHTML(chapter.xhtmlContent) || chapter.id;
-      return `    <li><a href="${chapter.href}">${this.escapeHtml(title)}</a></li>`;
-    }).join('\n');
+    const navEntries = linearChapters
+      .map(chapter => {
+        const title = this.extractTitleFromXHTML(chapter.xhtmlContent) || chapter.id;
+        return `    <li><a href="${chapter.href}">${this.escapeHtml(title)}</a></li>`;
+      })
+      .join('\n');
 
     // Generate complete navigation XHTML
     const navTitle = this.i18nSystem.translate('navigation.tableOfContents');
@@ -314,8 +376,8 @@ ${navEntries}
         href: 'nav.xhtml',
         mediaType: 'application/xhtml+xml',
         properties: ['nav'],
-        linear: false
-      }
+        linear: false,
+      },
     };
   }
 
@@ -324,7 +386,7 @@ ${navEntries}
    */
   processUserNavigation(navText: string): NavigationDocument {
     const navTitle = this.i18nSystem.translate('navigation.tableOfContents');
-    
+
     if (!navText.trim()) {
       // Handle empty navigation
       const xhtmlContent = `<?xml version="1.0" encoding="UTF-8"?>
@@ -348,16 +410,16 @@ ${navEntries}
           href: 'nav.xhtml',
           mediaType: 'application/xhtml+xml',
           properties: ['nav'],
-          linear: false
-        }
+          linear: false,
+        },
       };
     }
 
     // Parse navigation entries from user text
     const navEntries = this.parseNavigationEntries(navText);
-    const navEntriesHtml = navEntries.map(entry => 
-      `    <li><a href="${entry.href}">${this.escapeHtml(entry.title)}</a></li>`
-    ).join('\n');
+    const navEntriesHtml = navEntries
+      .map(entry => `    <li><a href="${entry.href}">${this.escapeHtml(entry.title)}</a></li>`)
+      .join('\n');
 
     const xhtmlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
@@ -382,8 +444,8 @@ ${navEntriesHtml}
         href: 'nav.xhtml',
         mediaType: 'application/xhtml+xml',
         properties: ['nav'],
-        linear: false
-      }
+        linear: false,
+      },
     };
   }
 
@@ -396,10 +458,10 @@ ${navEntriesHtml}
     }
 
     const isRTL = ContentService.RTL_LOCALES.has(locale);
-    
+
     // Generate localized metadata
     const metadata = await this.generateLocalizedMetadata(locale);
-    
+
     // Generate localized chapters
     const chapters = await this.generateLocalizedChapters(locale);
 
@@ -408,7 +470,7 @@ ${navEntriesHtml}
       metadata,
       chapters,
       isRTL,
-      pageProgressionDirection: isRTL ? 'rtl' : 'ltr'
+      pageProgressionDirection: isRTL ? 'rtl' : 'ltr',
     };
   }
 
@@ -426,7 +488,7 @@ ${navEntriesHtml}
       identifier: `urn:uuid:sample-${Date.now()}`,
       creator: [sampleAuthor || 'Sample Author'],
       description: sampleDescription || 'A sample book for demonstration purposes',
-      modifiedDate: new Date().toISOString()
+      modifiedDate: generateEPUBTimestamp(),
     };
   }
 
@@ -441,15 +503,15 @@ ${navEntriesHtml}
         title: this.i18nSystem.translate('content.chapter1') || 'Chapter 1',
         content: this.generateSampleChapterContent(locale, 1),
         linear: true,
-        mediaType: 'application/xhtml+xml'
+        mediaType: 'application/xhtml+xml',
       },
       {
         id: 'chapter2',
         title: this.i18nSystem.translate('content.chapter2') || 'Chapter 2',
         content: this.generateSampleChapterContent(locale, 2),
         linear: true,
-        mediaType: 'application/xhtml+xml'
-      }
+        mediaType: 'application/xhtml+xml',
+      },
     ];
 
     return chapters;
@@ -461,7 +523,7 @@ ${navEntriesHtml}
     try {
       const parser = new DOMParser();
       const doc = parser.parseFromString(xhtmlContent, 'text/xml');
-      
+
       // Look for headings in order of preference
       const headings = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
       for (const heading of headings) {
@@ -470,7 +532,7 @@ ${navEntriesHtml}
           return element.textContent.trim();
         }
       }
-      
+
       return null;
     } catch {
       return null;
@@ -483,7 +545,7 @@ ${navEntriesHtml}
 
     for (const line of lines) {
       const trimmedLine = line.trim();
-      
+
       // Skip empty lines and headers
       if (!trimmedLine || trimmedLine.startsWith('#')) {
         continue;
@@ -494,7 +556,7 @@ ${navEntriesHtml}
       if (markdownMatch) {
         entries.push({
           title: markdownMatch[1],
-          href: markdownMatch[2]
+          href: markdownMatch[2],
         });
         continue;
       }
@@ -504,7 +566,7 @@ ${navEntriesHtml}
       if (plainMatch) {
         entries.push({
           title: plainMatch[1].trim(),
-          href: plainMatch[2].trim()
+          href: plainMatch[2].trim(),
         });
         continue;
       }
@@ -516,7 +578,7 @@ ${navEntriesHtml}
         const title = listMatch[1].trim();
         entries.push({
           title,
-          href: `Text/${title.toLowerCase().replace(/\s+/g, '_')}.xhtml`
+          href: `Text/${title.toLowerCase().replace(/\s+/g, '_')}.xhtml`,
         });
       }
     }
@@ -527,7 +589,7 @@ ${navEntriesHtml}
   private generateSampleChapterContent(_locale: string, chapterNumber: number): string {
     // Generate basic sample content in markdown format
     const chapterTitle = `# ${this.i18nSystem.translate(`content.chapter${chapterNumber}`) || `Chapter ${chapterNumber}`}`;
-    
+
     // Simple sample content that works for any locale
     const content = `
 ${chapterTitle}
@@ -552,5 +614,22 @@ This concludes the sample chapter.
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  /**
+   * Validate file content based on file type
+   * For JavaScript files, validates both syntax and runtime errors (ReferenceError, TypeError)
+   *
+   * @param content - File content to validate
+   * @param fileType - File type identifier
+   * @returns null if valid, error message if invalid
+   */
+  validateFileContent(content: string, fileType: string): string | null {
+    if (JavaScriptValidator.shouldValidate(fileType)) {
+      return JavaScriptValidator.validateSyntax(content);
+    }
+
+    // Future: Add validation for other file types (CSS, JSON, etc.)
+    return null; // Non-validated file types are always valid
   }
 }

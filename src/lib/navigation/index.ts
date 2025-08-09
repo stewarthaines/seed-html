@@ -7,7 +7,6 @@ export type {
   NavigationGuard,
   NavigationStore,
   ViewComponent,
-  MetadataViewData,
   ManifestViewData,
   SpineViewData,
   WorkspaceViewData,

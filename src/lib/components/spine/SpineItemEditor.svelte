@@ -37,6 +37,7 @@
   export let workspaceService: any; // WorkspaceService  
   export let settingsManager: any; // SettingsManager
   export let transformEngine: any; // TransformEngine
+  export let contentService: any; // ContentService
   
   // Optional configuration
   export let config = DEFAULT_PREVIEW_CONFIG;
@@ -176,10 +177,11 @@
         transformWarnings={$transformWarnings}
         isTransforming={$isTransforming}
         executionTime={$executionTime}
-        on:paneToggle={() => {}}
-        on:fileSelect={() => {}}
-        on:contentChange={() => {}}
-        on:forceUpdate={forcePreviewUpdate}
+        {contentService}
+        onPaneToggle={() => {}}
+        onFileSelect={() => {}}
+        onContentChange={() => {}}
+        onForceUpdate={forcePreviewUpdate}
       />
     </div>
     

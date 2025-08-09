@@ -137,15 +137,15 @@
       <div class="demo-actions">
         <h4>{$t('Navigation Demo')}:</h4>
         <div class="action-buttons">
-          <button class="btn btn-primary" on:click={() => handleAction('demo_action_1')}>
+          <button class="btn btn-primary" onclick={() => handleAction('demo_action_1')}>
             {$t('Demo Action 1')}
           </button>
-          <button class="btn btn-secondary" on:click={() => handleAction('demo_action_2')}>
+          <button class="btn btn-secondary" onclick={() => handleAction('demo_action_2')}>
             {$t('Demo Action 2')}
           </button>
           <button
             class="btn btn-secondary"
-            on:click={() => navigationStore.navigateTo('workspace')}
+            onclick={() => navigationStore.navigateTo('workspace')}
           >
             {$t('Back to Workspace')}
           </button>

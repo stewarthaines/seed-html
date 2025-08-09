@@ -29,7 +29,7 @@
     <button
       type="button"
       class="action-button primary"
-      on:click={handleCreateNew}
+      onclick={handleCreateNew}
       disabled={isLoading}
       aria-label={$t('Create a new minimal EPUB project')}
     >
@@ -43,7 +43,7 @@
     <button
       type="button"
       class="action-button secondary"
-      on:click={handleLoadEpub}
+      onclick={handleLoadEpub}
       disabled={isLoading}
       aria-label={$t('Load an existing EPUB file for editing')}
     >
@@ -57,7 +57,7 @@
     <button
       type="button"
       class="action-button secondary disabled"
-      on:click={handleImportFolder}
+      onclick={handleImportFolder}
       disabled={true}
       aria-label={$t('Import from folder - coming soon')}
       title={$t('Coming soon')}

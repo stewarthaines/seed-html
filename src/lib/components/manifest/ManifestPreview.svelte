@@ -4,8 +4,8 @@
   import type { ManifestItem, SourceItem, ContentPreview } from '../../manifest/types';
   import type { WorkspaceService, WorkspaceState } from '../../services/workspace/workspace.service.js';
 
-  export let selectedItem: ManifestItem | SourceItem | null = null;
-  export let selectedItemType: 'manifest' | 'source' | null = null;
+  export let selectedItem: ManifestItem | SourceItem | any | null = null;
+  export let selectedItemType: 'manifest' | 'source' | 'opf' | null = null;
   export let workspace: WorkspaceState | null = null;
   export let workspaceService: WorkspaceService;
 
@@ -77,7 +77,7 @@
             error: 'Failed to load content'
           };
         }
-      } else {
+      } else if (selectedItemType === 'source') {
         // Handle SOURCE items - read and display their content
         const sourceItem = selectedItem as SourceItem;
         try {
@@ -109,6 +109,33 @@
             mediaType: sourceItem.mediaType || 'text/plain',
             contentType: 'text',
             error: 'Failed to load SOURCE file content'
+          };
+        }
+      } else if (selectedItemType === 'opf') {
+        // Handle OPF file - read the content.opf file directly
+        const opfItem = selectedItem as any;
+        try {
+          const content = await workspaceService.readFile(workspace.id, workspace.pathInfo.rootfilePath);
+          const decoder = new TextDecoder('utf-8');
+          const textContent = decoder.decode(content);
+          
+          contentPreview = {
+            itemId: opfItem.name,
+            mediaType: 'application/xml',
+            contentType: 'text',
+            textContent,
+            metadata: {
+              characterCount: textContent.length,
+              lineCount: textContent.split('\n').length,
+              wordCount: textContent.split(/\s+/).filter(w => w.length > 0).length,
+            },
+          };
+        } catch {
+          contentPreview = {
+            itemId: opfItem.name,
+            mediaType: 'application/xml',
+            contentType: 'text',
+            error: 'Failed to load content.opf file'
           };
         }
       }

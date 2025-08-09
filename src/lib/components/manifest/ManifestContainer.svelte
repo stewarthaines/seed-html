@@ -1,29 +1,34 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from 'svelte';
+  import { onMount } from 'svelte';
   import { t } from '../../i18n';
   import ManifestTable from './ManifestTable.svelte';
   import ManifestItemEditor from './ManifestItemEditor.svelte';
   import type { ManifestItem, SourceItem, ValidationResult } from '../../manifest/types';
   import type { WorkspaceService, WorkspaceState } from '../../services/workspace/workspace.service.js';
 
-  export let workspace: WorkspaceState | null = null;
-  export let workspaceService: WorkspaceService;
-  export let advancedMode = true;
+  // Props using Svelte 5 runes syntax
+  let {
+    workspace = null,
+    workspaceService,
+    advancedMode = true,
+    onItemSelect,
+  }: {
+    workspace?: WorkspaceState | null;
+    workspaceService: WorkspaceService;
+    advancedMode?: boolean;
+    onItemSelect?: (event: { item: ManifestItem | SourceItem | any; type: 'manifest' | 'source' | 'opf' }) => void;
+  } = $props();
 
-  // Create event dispatcher for item selection
-  const dispatch = createEventDispatcher<{
-    itemSelect: { item: ManifestItem | SourceItem; type: 'manifest' | 'source' };
-  }>();
-
-  let manifestItems: ManifestItem[] = [];
-  let sourceItems: SourceItem[] = [];
-  let selectedItem: ManifestItem | SourceItem | null = null;
-  let selectedItemType: 'manifest' | 'source' | null = null;
-  let validationErrors: ValidationResult[] = [];
-  let loading = true;
-  let error: string | null = null;
-  let showItemEditor = false;
-  let itemEditorMode: 'create-text' | 'create-file' | 'edit' = 'create-text';
+  // Component state using runes
+  let manifestItems = $state<ManifestItem[]>([]);
+  let sourceItems = $state<SourceItem[]>([]);
+  let selectedItem = $state<ManifestItem | SourceItem | any | null>(null);
+  let selectedItemType = $state<'manifest' | 'source' | 'opf' | null>(null);
+  let validationErrors = $state<ValidationResult[]>([]);
+  let loading = $state(true);
+  let error = $state<string | null>(null);
+  let showItemEditor = $state(false);
+  let itemEditorMode = $state<'create-text' | 'create-file' | 'edit'>('create-text');
 
   const loadManifest = async () => {
     if (!workspace) return;
@@ -62,8 +67,8 @@
     selectedItem = event.detail.item;
     selectedItemType = event.detail.type;
 
-    // Dispatch the selection event to parent component
-    dispatch('itemSelect', {
+    // Call the callback function to notify parent component
+    onItemSelect?.({
       item: event.detail.item,
       type: event.detail.type,
     });
@@ -169,9 +174,13 @@
 
   // Load manifest when component mounts or dependencies change
   onMount(loadManifest);
-  $: if (workspace) {
-    loadManifest();
-  }
+  
+  // React to workspace changes
+  $effect(() => {
+    if (workspace) {
+      loadManifest();
+    }
+  });
 </script>
 
 {#if loading}
@@ -181,7 +190,7 @@
 {:else if error}
   <div class="error-state">
     <p class="error-message">{error}</p>
-    <button type="button" class="retry-button" on:click={loadManifest}>
+    <button type="button" class="retry-button" onclick={loadManifest}>
       {$t('Retry')}
     </button>
   </div>

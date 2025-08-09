@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createEventDispatcher } from 'svelte';
   import { t } from '../../i18n';
   import MetadataTabBar from './MetadataTabBar.svelte';
   import BasicInfoFields from './BasicInfoFields.svelte';
@@ -9,25 +10,33 @@
   import { MetadataService } from '../../services/metadata/metadata.service.js';
   import type { WorkspaceState } from '../../services/workspace/workspace.service.js';
 
-  export let workspace: WorkspaceState | null = null;
-  export let metadataService: MetadataService;
+  const dispatch = createEventDispatcher<{
+    metadataChanged: { field: string; value: any };
+  }>();
 
-  // Reactive state derived from workspace prop
-  $: metadata = workspace?.opf.metadata ?? { title: '', language: '', identifier: '' };
-  $: validationErrors = metadataService.validateMetadata(metadata);
-  $: loading = !workspace;
+  interface Props {
+    workspace?: WorkspaceState | null;
+    metadataService: MetadataService;
+  }
+
+  let { workspace = $bindable(null), metadataService }: Props = $props();
+
+  // Reactive state using Svelte 5 runes
+  let metadata = $derived(workspace?.opf.metadata ?? { title: '', language: '', identifier: '' });
+  let validationErrors = $derived(metadataService.validateMetadata(metadata));
+  let loading = $derived(!workspace);
   
-  let activeTab = 'basic';
-  let saving = false;
-  let error: string | null = null;
+  let activeTab = $state('basic');
+  let saving = $state(false);
+  let error = $state<string | null>(null);
 
   // Tab definitions with labels
-  $: tabs = [
+  let tabs = $derived([
     { id: 'basic', label: $t('Basic Info') },
     { id: 'advanced', label: $t('Advanced') },
     { id: 'publication', label: $t('Publication Details') },
     { id: 'accessibility', label: $t('Accessibility') },
-  ];
+  ]);
 
   const getTabFields = (tabId: string) => {
     switch (tabId) {
@@ -91,6 +100,9 @@
       // Save field and update workspace via two-way binding
       workspace = await metadataService.updateField(workspace, field, value);
       
+      // Notify that metadata has changed
+      dispatch('metadataChanged', { field, value });
+      
       error = null;
     } catch (err: any) {
       console.error(`Failed to save field ${field}:`, err);
@@ -109,6 +121,9 @@
       if (field === 'creator' || field === 'subject' || field === 'contributor') {
         // Add new item using service
         workspace = await metadataService.addArrayItem(workspace, field);
+        
+        // Notify that metadata has changed
+        dispatch('metadataChanged', { field, value: workspace.opf.metadata[field as keyof EPUBMetadata] });
       }
       error = null;
     } catch (err: any) {
@@ -130,6 +145,9 @@
       if (field === 'creator' || field === 'subject' || field === 'contributor') {
         // Remove item using service
         workspace = await metadataService.removeArrayItem(workspace, field, index);
+        
+        // Notify that metadata has changed
+        dispatch('metadataChanged', { field, value: workspace.opf.metadata[field as keyof EPUBMetadata] });
       }
       error = null;
     } catch (err: any) {
@@ -177,7 +195,7 @@
     {:else if error}
       <div class="error-state">
         <p class="error-message">{error}</p>
-        <button type="button" class="retry-button" on:click={() => error = null}>
+        <button type="button" class="retry-button" onclick={() => error = null}>
           {$t('Retry')}
         </button>
       </div>
@@ -193,21 +211,21 @@
             {metadata}
             {validationErrors}
             {saving}
-            on:fieldChange={handleFieldChange}
-            on:fieldSave={handleFieldSave}
-            on:arrayAdd={handleArrayAdd}
-            on:arrayRemove={handleArrayRemove}
-            on:generateIdentifier={handleGenerateIdentifier}
+            onfieldChange={handleFieldChange}
+            onfieldSave={handleFieldSave}
+            onarrayAdd={handleArrayAdd}
+            onarrayRemove={handleArrayRemove}
+            ongenerateIdentifier={handleGenerateIdentifier}
           />
         {:else if activeTab === 'advanced'}
           <AdvancedFields
             {metadata}
             {validationErrors}
             {saving}
-            on:fieldChange={handleFieldChange}
-            on:fieldSave={handleFieldSave}
-            on:arrayAdd={handleArrayAdd}
-            on:arrayRemove={handleArrayRemove}
+            onfieldChange={handleFieldChange}
+            onfieldSave={handleFieldSave}
+            onarrayAdd={handleArrayAdd}
+            onarrayRemove={handleArrayRemove}
           />
         {:else if activeTab === 'publication'}
           <div class="placeholder-panel">

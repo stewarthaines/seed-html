@@ -40,8 +40,8 @@ export function createIsolatedMockStorage(): FileStorageAPI {
         id,
         title: `Mock Workspace ${id.split('-').pop()}`,
         language: 'en',
-        createdDate: new Date().toISOString(),
-        modifiedDate: new Date().toISOString()
+        createdDate: generateEPUBTimestamp(),
+        modifiedDate: generateEPUBTimestamp()
       }));
     },
 

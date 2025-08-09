@@ -26,13 +26,25 @@ When the user asks you to document a plan or write a new document describing det
 - When writing api docs only document methods specified. do not invent features that haven't been requested.
 - don't write fallback style code (auto-creating files, or other content) unless explicitly approved by the user
 
-## EDITME.html - EPUB Editor
+## EDITME - EPUB Editor
 
-This is a Svelte-based EPUB editor that runs in modern browsers, replacing a previous Vue.js version. It allows users to create and edit EPUB files using plain text sources that are transformed to XHTML.
+This is a **Svelte 5 application using runes mode** that runs in modern browsers, replacing a previous Vue.js version. It allows users to create and edit EPUB files using plain text sources that are transformed to XHTML.
+
+### Svelte 5 & Runes Mode
+
+The application has been modernized to use Svelte 5's runes-based reactivity system. All new components should use runes syntax:
+
+- **State**: Use `$state()` instead of `let` for reactive variables
+- **Props**: Use `$props()` instead of `export let`
+- **Bindable Props**: Use `$bindable()` for two-way binding
+- **Derived**: Use `$derived()` instead of `$:`
+- **Effects**: Use `$effect()` instead of reactive statements
+
+**Legacy Svelte 4 syntax is being phased out** - when working with existing components, prefer converting to runes syntax when making significant changes.
 
 ### Distribution Model
 
-**EDITME.html is distributed as freeware for personal use** with three deployment methods:
+**EDITME is distributed as freeware for personal use** with three deployment methods:
 
 1. **Web Application** - Hosted version accessible via browser
 2. **Standalone HTML** - Single file download for offline use

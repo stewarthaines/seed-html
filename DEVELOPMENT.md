@@ -140,6 +140,15 @@ theme-toggle.svelte       # Svelte should be PascalCase
 
 ## Component Development Guidelines
 
+### Svelte 5 Runes Migration Strategy
+
+When working with existing Svelte 4 components:
+
+- **Minor Changes**: Keep existing `export let` syntax to avoid breaking changes
+- **Major Refactoring**: Convert to runes syntax (`$props()`, `$state()`, etc.) for consistency
+- **New Components**: Always use Svelte 5 runes syntax from the start
+- **Bindable Props**: Use `$bindable()` for two-way data binding in new components
+
 ### Accessibility Requirements
 
 Before considering a component complete:
@@ -156,6 +165,7 @@ Before considering a component complete:
 - **CSS & Styling**: Use the comprehensive design system in `src/styles/`
 - **Browser APIs**: Prefer browser-native APIs over regex for structured data handling
 - **Error Handling**: Implement proper TypeScript error types and handling patterns
+- **Svelte 5 Runes**: Use runes syntax for all new components - `$props()`, `$state()`, `$derived()`, `$effect()`, and `$bindable()` for two-way binding
 
 ### Reference Components
 

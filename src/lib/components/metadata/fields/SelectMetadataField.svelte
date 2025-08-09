@@ -51,9 +51,9 @@
     class="field-select"
     class:error={!!error}
     class:needs-attention={needsAttention}
-    on:change={handleChange}
-    on:blur={handleBlur}
-    on:focus={handleFocus}
+    onchange={handleChange}
+    onblur={handleBlur}
+    onfocus={handleFocus}
     aria-describedby={error ? `${id}-error` : undefined}
     aria-invalid={!!error}
   >

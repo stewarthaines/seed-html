@@ -16,7 +16,7 @@
   class="theme-toggle"
   class:theme-toggle--small={size === 'small'}
   class:theme-toggle--large={size === 'large'}
-  on:click={handleToggle}
+  onclick={handleToggle}
   aria-label="Toggle theme"
   title={`Switch to ${isDark ? 'light' : 'dark'} theme`}
 >

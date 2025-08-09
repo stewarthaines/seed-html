@@ -59,14 +59,6 @@ export interface ViewComponent {
 }
 
 // View-specific data types for type safety
-export interface MetadataViewData {
-  title: string;
-  author: string;
-  language: string;
-  identifier: string;
-  hasUnsavedChanges: boolean;
-}
-
 export interface ManifestViewData {
   selectedItems: string[];
   sortOrder: 'name' | 'type' | 'modified';

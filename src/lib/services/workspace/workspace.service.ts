@@ -1,12 +1,13 @@
 /**
  * WorkspaceService - Clean Service Architecture Implementation
- * 
+ *
  * Consolidates workspace lifecycle and EPUB structure management from existing managers
  * following the clean service architecture with single responsibility principle.
  */
 
 import type { FileStorageAPI } from '../../storage/index.js';
 import type { EPUBMetadata, OPFDocument, ManifestItem, SpineItem } from '../../epub/opf-utils.js';
+import { generateEPUBTimestamp } from '../../epub/opf-utils.js';
 import { isSourceFile, classifySourceFile } from '../../source/source-utils.js';
 import type { SourceItem } from '../../manifest/types.js';
 
@@ -62,7 +63,11 @@ export interface SampleContentData {
 
 // Service error types
 export class WorkspaceServiceError extends Error {
-  constructor(message: string, public code: string, public workspaceId?: string) {
+  constructor(
+    message: string,
+    public code: string,
+    public workspaceId?: string
+  ) {
     super(message);
     this.name = 'WorkspaceServiceError';
   }
@@ -70,20 +75,31 @@ export class WorkspaceServiceError extends Error {
 
 export class WorkspaceNotFoundError extends WorkspaceServiceError {
   constructor(workspaceId: string) {
-    super(`Workspace not found: ${workspaceId}. Please check workspace ID.`, 'WORKSPACE_NOT_FOUND', workspaceId);
+    super(
+      `Workspace not found: ${workspaceId}. Please check workspace ID.`,
+      'WORKSPACE_NOT_FOUND',
+      workspaceId
+    );
     this.name = 'WorkspaceNotFoundError';
   }
 }
 
 export class OPFCorruptedError extends WorkspaceServiceError {
   constructor(workspaceId: string, details: string) {
-    super(`OPF file corrupted in workspace ${workspaceId}: ${details}. Try reimporting the EPUB.`, 'OPF_CORRUPTED', workspaceId);
+    super(
+      `OPF file corrupted in workspace ${workspaceId}: ${details}. Try reimporting the EPUB.`,
+      'OPF_CORRUPTED',
+      workspaceId
+    );
     this.name = 'OPFCorruptedError';
   }
 }
 
 export class ValidationError extends WorkspaceServiceError {
-  constructor(message: string, public context?: any) {
+  constructor(
+    message: string,
+    public context?: any
+  ) {
     super(message, 'VALIDATION_ERROR');
     this.name = 'ValidationError';
     this.context = context;
@@ -97,9 +113,7 @@ import { OPFUtils } from '../../epub/opf-utils.js';
  * WorkspaceService - Single responsibility for workspace lifecycle and EPUB structure
  */
 export class WorkspaceService {
-  constructor(
-    private fileStorage: FileStorageAPI
-  ) {}
+  constructor(private fileStorage: FileStorageAPI) {}
 
   /**
    * Create a new workspace with initial EPUB structure
@@ -107,11 +121,11 @@ export class WorkspaceService {
   async createWorkspace(metadata: EPUBMetadata): Promise<WorkspaceState> {
     // Generate unique workspace ID
     const id = this.generateWorkspaceId();
-    
+
     // Add automatic timestamps
     const timestampedMetadata: EPUBMetadata = {
       ...metadata,
-      modifiedDate: new Date().toISOString()
+      modifiedDate: generateEPUBTimestamp(),
     };
 
     // Create workspace in storage
@@ -122,11 +136,11 @@ export class WorkspaceService {
       version: '3.0',
       metadata: {
         ...timestampedMetadata,
-        epubVersion: '3.0'
+        epubVersion: '3.0',
       },
       manifest: [],
       spine: [],
-      guide: []
+      guide: [],
     };
 
     // Generate EPUB structure files
@@ -139,8 +153,8 @@ export class WorkspaceService {
       pathInfo: {
         rootfilePath: 'OEBPS/content.opf',
         basePath: 'OEBPS',
-        opfFileName: 'content.opf'
-      }
+        opfFileName: 'content.opf',
+      },
     };
 
     return workspaceState;
@@ -150,7 +164,10 @@ export class WorkspaceService {
    * Populate workspace with sample content data
    * Pure file I/O operation - takes structured data and writes files
    */
-  async populateWithContent(workspaceId: string, sampleData: SampleContentData): Promise<WorkspaceState> {
+  async populateWithContent(
+    workspaceId: string,
+    sampleData: SampleContentData
+  ): Promise<WorkspaceState> {
     // Write all asset files
     for (const asset of sampleData.assets) {
       await this.fileStorage.writeTextFile(workspaceId, asset.path, asset.content);
@@ -160,11 +177,11 @@ export class WorkspaceService {
     for (const chapter of sampleData.chapters) {
       // Write source text file
       await this.fileStorage.writeTextFile(
-        workspaceId, 
-        `SOURCE/text/${chapter.fileName}`, 
+        workspaceId,
+        `SOURCE/text/${chapter.fileName}`,
         chapter.content
       );
-      
+
       // Write XHTML file
       await this.fileStorage.writeTextFile(
         workspaceId,
@@ -175,12 +192,12 @@ export class WorkspaceService {
 
     // Load current workspace to update OPF
     const workspace = await this.loadWorkspace(workspaceId);
-    
+
     // Update OPF with new manifest and spine items
     const updatedOPF: OPFDocument = {
       ...workspace.opf,
       manifest: [...workspace.opf.manifest, ...sampleData.manifestUpdates],
-      spine: [...workspace.opf.spine, ...sampleData.spineUpdates]
+      spine: [...workspace.opf.spine, ...sampleData.spineUpdates],
     };
 
     // Write updated OPF
@@ -190,7 +207,7 @@ export class WorkspaceService {
     // Return updated workspace state
     return {
       ...workspace,
-      opf: updatedOPF
+      opf: updatedOPF,
     };
   }
 
@@ -207,27 +224,34 @@ export class WorkspaceService {
 
       // Get workspace path info
       const pathInfo = await this.getWorkspacePathInfo(id);
-      
+
       // Load and parse OPF
       const opfContent = await this.fileStorage.readTextFile(id, pathInfo.rootfilePath);
-      
+
       let opf: OPFDocument;
       try {
         opf = OPFUtils.parseOPFDocument(opfContent);
       } catch (error) {
-        throw new OPFCorruptedError(id, error instanceof Error ? error.message : 'Unknown parsing error');
+        throw new OPFCorruptedError(
+          id,
+          error instanceof Error ? error.message : 'Unknown parsing error'
+        );
       }
 
       return {
         id,
         opf,
-        pathInfo
+        pathInfo,
       };
     } catch (error) {
       if (error instanceof WorkspaceServiceError) {
         throw error;
       }
-      throw new WorkspaceServiceError(`Failed to load workspace: ${error instanceof Error ? error.message : 'Unknown error'}`, 'LOAD_ERROR', id);
+      throw new WorkspaceServiceError(
+        `Failed to load workspace: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'LOAD_ERROR',
+        id
+      );
     }
   }
 
@@ -241,8 +265,8 @@ export class WorkspaceService {
       ...workspace.opf,
       metadata: {
         ...workspace.opf.metadata,
-        modifiedDate: new Date().toISOString()
-      }
+        modifiedDate: generateEPUBTimestamp(),
+      },
     };
 
     // Generate and save OPF
@@ -261,7 +285,11 @@ export class WorkspaceService {
     } catch (error) {
       // Don't throw for non-existent workspaces (idempotent operation)
       if (error instanceof Error && !error.message.includes('not found')) {
-        throw new WorkspaceServiceError(`Failed to delete workspace: ${error.message}`, 'DELETE_ERROR', id);
+        throw new WorkspaceServiceError(
+          `Failed to delete workspace: ${error.message}`,
+          'DELETE_ERROR',
+          id
+        );
       }
     }
   }
@@ -269,7 +297,10 @@ export class WorkspaceService {
   /**
    * Update workspace metadata
    */
-  async updateMetadata(workspace: WorkspaceState, updates: Partial<EPUBMetadata>): Promise<WorkspaceState> {
+  async updateMetadata(
+    workspace: WorkspaceState,
+    updates: Partial<EPUBMetadata>
+  ): Promise<WorkspaceState> {
     // Validate updates
     this.validateMetadataUpdates(updates);
 
@@ -281,9 +312,9 @@ export class WorkspaceService {
         metadata: {
           ...workspace.opf.metadata,
           ...updates,
-          modifiedDate: new Date().toISOString()
-        }
-      }
+          modifiedDate: generateEPUBTimestamp(),
+        },
+      },
     };
 
     // Save to storage
@@ -293,14 +324,18 @@ export class WorkspaceService {
   /**
    * Add manifest item to workspace
    */
-  async addManifestItem(workspace: WorkspaceState, item: Partial<ManifestItem>): Promise<WorkspaceState> {
+  async addManifestItem(
+    workspace: WorkspaceState,
+    item: Partial<ManifestItem>
+  ): Promise<WorkspaceState> {
     // Validate required fields
     if (!item.href) {
       throw new ValidationError('Manifest item must have href');
     }
 
     // Generate ID if not provided
-    const id = item.id || this.generateManifestId(item.href, new Set(workspace.opf.manifest.map(m => m.id)));
+    const id =
+      item.id || this.generateManifestId(item.href, new Set(workspace.opf.manifest.map(m => m.id)));
 
     // Check for duplicate ID
     if (workspace.opf.manifest.some(m => m.id === id)) {
@@ -313,7 +348,7 @@ export class WorkspaceService {
       href: item.href,
       mediaType: item.mediaType || this.detectMediaType(item.href),
       properties: item.properties,
-      fallback: item.fallback
+      fallback: item.fallback,
     };
 
     // Create updated workspace
@@ -324,9 +359,9 @@ export class WorkspaceService {
         manifest: [...workspace.opf.manifest, manifestItem],
         metadata: {
           ...workspace.opf.metadata,
-          modifiedDate: new Date().toISOString()
-        }
-      }
+          modifiedDate: generateEPUBTimestamp(),
+        },
+      },
     };
 
     // Save to storage
@@ -351,9 +386,9 @@ export class WorkspaceService {
         spine: workspace.opf.spine.filter(spineItem => spineItem.idref !== itemId), // Remove from spine too
         metadata: {
           ...workspace.opf.metadata,
-          modifiedDate: new Date().toISOString()
-        }
-      }
+          modifiedDate: generateEPUBTimestamp(),
+        },
+      },
     };
 
     return await this.saveWorkspace(updatedWorkspace);
@@ -362,7 +397,11 @@ export class WorkspaceService {
   /**
    * Update manifest item properties
    */
-  async updateManifestItem(workspace: WorkspaceState, itemId: string, updates: Partial<ManifestItem>): Promise<WorkspaceState> {
+  async updateManifestItem(
+    workspace: WorkspaceState,
+    itemId: string,
+    updates: Partial<ManifestItem>
+  ): Promise<WorkspaceState> {
     const itemIndex = workspace.opf.manifest.findIndex(item => item.id === itemId);
     if (itemIndex === -1) {
       throw new ValidationError(`Manifest item with ID '${itemId}' not found`);
@@ -373,7 +412,7 @@ export class WorkspaceService {
     updatedManifest[itemIndex] = {
       ...updatedManifest[itemIndex],
       ...updates,
-      id: itemId // Preserve ID
+      id: itemId, // Preserve ID
     };
 
     // Create updated workspace
@@ -384,9 +423,9 @@ export class WorkspaceService {
         manifest: updatedManifest,
         metadata: {
           ...workspace.opf.metadata,
-          modifiedDate: new Date().toISOString()
-        }
-      }
+          modifiedDate: generateEPUBTimestamp(),
+        },
+      },
     };
 
     return await this.saveWorkspace(updatedWorkspace);
@@ -401,7 +440,9 @@ export class WorkspaceService {
     const invalidItems = itemIds.filter(id => !manifestIds.has(id));
 
     if (invalidItems.length > 0) {
-      throw new ValidationError(`Spine items reference missing manifest items: ${invalidItems.join(', ')}`);
+      throw new ValidationError(
+        `Spine items reference missing manifest items: ${invalidItems.join(', ')}`
+      );
     }
 
     // Create spine items
@@ -415,9 +456,9 @@ export class WorkspaceService {
         spine,
         metadata: {
           ...workspace.opf.metadata,
-          modifiedDate: new Date().toISOString()
-        }
-      }
+          modifiedDate: generateEPUBTimestamp(),
+        },
+      },
     };
 
     return await this.saveWorkspace(updatedWorkspace);
@@ -426,7 +467,11 @@ export class WorkspaceService {
   /**
    * Add spine item at specific position
    */
-  async addSpineItem(workspace: WorkspaceState, item: SpineItem, insertIndex?: number): Promise<WorkspaceState> {
+  async addSpineItem(
+    workspace: WorkspaceState,
+    item: SpineItem,
+    insertIndex?: number
+  ): Promise<WorkspaceState> {
     // Validate that referenced manifest item exists
     if (!workspace.opf.manifest.some(m => m.id === item.idref)) {
       throw new ValidationError(`Referenced manifest item not found: ${item.idref}`);
@@ -450,9 +495,9 @@ export class WorkspaceService {
         spine: updatedSpine,
         metadata: {
           ...workspace.opf.metadata,
-          modifiedDate: new Date().toISOString()
-        }
-      }
+          modifiedDate: generateEPUBTimestamp(),
+        },
+      },
     };
 
     return await this.saveWorkspace(updatedWorkspace);
@@ -475,9 +520,9 @@ export class WorkspaceService {
         spine: workspace.opf.spine.filter(item => item.idref !== idref),
         metadata: {
           ...workspace.opf.metadata,
-          modifiedDate: new Date().toISOString()
-        }
-      }
+          modifiedDate: generateEPUBTimestamp(),
+        },
+      },
     };
 
     return await this.saveWorkspace(updatedWorkspace);
@@ -500,12 +545,14 @@ export class WorkspaceService {
           id,
           title: workspace.opf.metadata.title,
           language: workspace.opf.metadata.language,
-          lastModified: workspace.opf.metadata.modifiedDate ? new Date(workspace.opf.metadata.modifiedDate) : new Date(),
+          lastModified: workspace.opf.metadata.modifiedDate
+            ? new Date(workspace.opf.metadata.modifiedDate)
+            : new Date(),
           fileCount: files.length,
           totalSize,
           author: workspace.opf.metadata.creator?.[0] || undefined,
           hasError: false,
-          epubVersion: '3.0'
+          epubVersion: '3.0',
         });
       } catch (error) {
         // Skip corrupted workspaces
@@ -531,25 +578,28 @@ export class WorkspaceService {
   /**
    * Load chapter contents for navigation generation
    */
-  async loadChapterContents(workspace: WorkspaceState, chapterIds: string[]): Promise<ChapterContent[]> {
+  async loadChapterContents(
+    workspace: WorkspaceState,
+    chapterIds: string[]
+  ): Promise<ChapterContent[]> {
     const chapters: ChapterContent[] = [];
 
     for (const id of chapterIds) {
       const manifestItem = workspace.opf.manifest.find(item => item.id === id);
       const spineItem = workspace.opf.spine.find(item => item.idref === id);
-      
+
       if (!manifestItem || !spineItem) continue;
 
       try {
         const filePath = this.resolveManifestPath(manifestItem.href, workspace.pathInfo.basePath);
         const xhtmlContent = await this.fileStorage.readTextFile(workspace.id, filePath);
-        
+
         chapters.push({
           id,
           href: manifestItem.href,
           xhtmlContent,
           linear: spineItem.linear ?? true,
-          mediaType: manifestItem.mediaType || 'application/xhtml+xml'
+          mediaType: manifestItem.mediaType || 'application/xhtml+xml',
         });
       } catch (error) {
         // Skip missing files
@@ -592,7 +642,10 @@ export class WorkspaceService {
 
   private async getWorkspacePathInfo(workspaceId: string): Promise<WorkspacePathInfo> {
     try {
-      const containerXml = await this.fileStorage.readTextFile(workspaceId, 'META-INF/container.xml');
+      const containerXml = await this.fileStorage.readTextFile(
+        workspaceId,
+        'META-INF/container.xml'
+      );
       const result = OPFUtils.parseContainerXml(containerXml);
 
       if (result.error) {
@@ -658,7 +711,7 @@ export class WorkspaceService {
 
   private detectMediaType(href: string): string {
     const extension = href.split('.').pop()?.toLowerCase() || '';
-    
+
     const mediaTypeMap: Record<string, string> = {
       xhtml: 'application/xhtml+xml',
       html: 'application/xhtml+xml',
@@ -741,7 +794,7 @@ export class WorkspaceService {
     try {
       // Get all files in workspace
       const allFiles = await this.fileStorage.listFiles(workspace.id);
-      
+
       // Filter for SOURCE files and exclude .gitkeep files
       const sourceFiles = allFiles
         .filter(path => isSourceFile(path))
@@ -754,16 +807,16 @@ export class WorkspaceService {
         try {
           // Get file size
           const fileInfo = await this.fileStorage.getFileInfo(workspace.id, filePath);
-          
+
           const sourceItem: SourceItem = {
             path: filePath,
             name: filePath.split('/').pop() || filePath,
             type: 'file',
             size: fileInfo.size,
             modified: fileInfo.lastModified,
-            mediaType: this.detectMediaTypeForSource(filePath)
+            mediaType: this.detectMediaTypeForSource(filePath),
           };
-          
+
           sourceItems.push(sourceItem);
         } catch {
           // Skip files that can't be accessed (but continue processing others)
@@ -787,7 +840,7 @@ export class WorkspaceService {
   private detectMediaTypeForSource(filePath: string): string {
     const extension = filePath.split('.').pop()?.toLowerCase() || '';
     const sourceFileType = classifySourceFile(filePath);
-    
+
     // Use SOURCE-specific media type detection
     const mediaTypeMap: Record<string, string> = {
       txt: 'text/plain',
@@ -802,12 +855,12 @@ export class WorkspaceService {
       py: 'text/x-python',
       sh: 'application/x-sh',
     };
-    
+
     // For script files, use more specific types
     if (sourceFileType === 'script') {
       return mediaTypeMap[extension] || 'text/plain';
     }
-    
+
     return mediaTypeMap[extension] || 'text/plain';
   }
 }

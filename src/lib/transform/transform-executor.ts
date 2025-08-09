@@ -162,7 +162,7 @@ export class TransformExecutor {
       'process',
       'global',
       'globalThis',
-      'window',
+      // 'window',
     ];
 
     dangerousGlobals.forEach(dangerous => {
@@ -189,11 +189,11 @@ export class TransformExecutor {
     // Wrap script content to execute in restricted scope
     const wrappedScript = `(function(${globalNames.join(', ')}) {
         ${scriptContent}
-        
+
         if (typeof ${functionName} !== 'function') {
           throw new Error('Function ${functionName} is not defined or not a function');
         }
-        
+
         return ${functionName};
       })`;
 

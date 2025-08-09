@@ -101,8 +101,8 @@
   class:compact
   class:selected={isSelected}
   class:has-error={item.hasSourceFile === false || !item.linear}
-  on:click={onSelect}
-  on:keydown={handleKeyDown}
+  onclick={onSelect}
+  onkeydown={handleKeyDown}
   role="button"
   tabindex="0"
   aria-pressed={isSelected}
@@ -122,8 +122,8 @@
     <div class="move-buttons" aria-label="Reorder controls">
       <button
         class="move-button"
-        on:click|stopPropagation={onMoveUp}
-        on:keydown|stopPropagation={handleMoveUpKeyboard}
+        onclick={(e) => { e.stopPropagation(); onMoveUp(); }}
+        onkeydown={(e) => { e.stopPropagation(); handleMoveUpKeyboard(e); }}
         disabled={isFirstItem}
         aria-label={`Move ${item.id} up`}
         title={`Move ${item.id} up`}
@@ -132,8 +132,8 @@
       </button>
       <button
         class="move-button"
-        on:click|stopPropagation={onMoveDown}
-        on:keydown|stopPropagation={handleMoveDownKeyboard}
+        onclick={(e) => { e.stopPropagation(); onMoveDown(); }}
+        onkeydown={(e) => { e.stopPropagation(); handleMoveDownKeyboard(e); }}
         disabled={isLastItem}
         aria-label={`Move ${item.id} down`}
         title={`Move ${item.id} down`}
