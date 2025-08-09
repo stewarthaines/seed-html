@@ -3,7 +3,11 @@
   import { t } from '../../i18n';
   import type { WorkspaceInfo } from '../../services/workspace/workspace.service.js';
 
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher<{
+    selected: { workspaceId: string };
+    deleteRequested: { workspaceId: string };
+    packageRequested: { workspaceId: string };
+  }>();
 
   export let workspace: WorkspaceInfo;
   export let isCurrent = false;
@@ -16,6 +20,11 @@
   const handleDeleteRequest = (event: Event) => {
     event.stopPropagation(); // Prevent workspace selection
     dispatch('deleteRequested', { workspaceId: workspace.id });
+  };
+
+  const handlePackageRequest = (event: Event) => {
+    event.stopPropagation(); // Prevent workspace selection
+    dispatch('packageRequested', { workspaceId: workspace.id });
   };
 
   const handleKeyDown = (event: KeyboardEvent) => {
@@ -61,8 +70,8 @@
   class:error={hasError || workspace.hasError}
   role="button"
   tabindex="0"
-  on:click={handleSelect}
-  on:keydown={handleKeyDown}
+  onclick={handleSelect}
+  onkeydown={handleKeyDown}
   aria-label={$t('Open workspace: {title}', { title: workspace.title })}
 >
   <div class="workspace-main">
@@ -103,10 +112,22 @@
   </div>
 
   <div class="workspace-actions">
+    {#if isCurrent}
+      <button
+        type="button"
+        class="package-button"
+        onclick={handlePackageRequest}
+        aria-label={$t('Package EPUB: {title}', { title: workspace.title })}
+        title={$t('Package EPUB')}
+      >
+        <span aria-hidden="true">📦</span>
+        <span class="package-text">{$t('Package EPUB')}</span>
+      </button>
+    {/if}
     <button
       type="button"
       class="delete-button"
-      on:click={handleDeleteRequest}
+      onclick={handleDeleteRequest}
       aria-label={$t('Delete workspace: {title}', { title: workspace.title })}
       title={$t('Delete workspace')}
     >
@@ -259,15 +280,6 @@
     flex-shrink: 0;
   }
 
-  .error-message {
-    margin-block-start: var(--space-1);
-  }
-
-  .error-text {
-    font-size: var(--text-sm);
-    color: var(--color-warning);
-    font-weight: 500;
-  }
 
   .workspace-actions {
     display: flex;
@@ -301,6 +313,39 @@
     outline: none;
     border-color: var(--color-error);
     box-shadow: inset 0 0 0 2px var(--color-focus-ring);
+  }
+
+  .package-button {
+    min-width: auto;
+    min-height: 44px;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-success);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-success);
+    color: var(--color-surface);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--duration-fast) ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1);
+  }
+
+  .package-button:hover {
+    background-color: var(--color-success-hover);
+    border-color: var(--color-success-hover);
+  }
+
+  .package-button:focus-visible {
+    outline: none;
+    border-color: var(--color-success);
+    box-shadow: inset 0 0 0 2px var(--color-focus-ring);
+  }
+
+  .package-text {
+    white-space: nowrap;
   }
 
   /* Mobile adjustments */

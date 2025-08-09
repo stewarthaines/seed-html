@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { t } from '../../i18n';
   import TextMetadataField from './fields/TextMetadataField.svelte';
   import SelectMetadataField from './fields/SelectMetadataField.svelte';
@@ -8,11 +7,25 @@
   import type { EPUBMetadata } from '../../epub';
   import { MetadataUtils, type ArrayMetadataFields } from '../../epub/opf-utils';
 
-  const dispatch = createEventDispatcher();
+  interface Props {
+    metadata?: EPUBMetadata;
+    validationErrors?: ValidationResult[];
+    saving?: boolean;
+    onfieldChange?: (event: CustomEvent<{ field: string; value: any }>) => void;
+    onfieldSave?: (event: CustomEvent<{ field: string; value: any }>) => void;
+    onarrayAdd?: (event: CustomEvent<{ field: ArrayMetadataFields }>) => void;
+    onarrayRemove?: (event: CustomEvent<{ field: ArrayMetadataFields; index: number }>) => void;
+  }
 
-  export let metadata: EPUBMetadata = { title: '', language: '', identifier: '' };
-  export let validationErrors: ValidationResult[] = [];
-  export let saving = false;
+  let {
+    metadata = { title: '', language: '', identifier: '' },
+    validationErrors = [],
+    saving = false,
+    onfieldChange,
+    onfieldSave,
+    onarrayAdd,
+    onarrayRemove
+  }: Props = $props();
 
   // Content type options
   const typeOptions = [
@@ -33,19 +46,19 @@
   };
 
   const handleFieldChange = (field: string, value: any[]) => {
-    dispatch('fieldChange', { field, value });
+    onfieldChange?.(new CustomEvent('fieldChange', { detail: { field, value } }));
   };
 
   const handleFieldSave = (field: string, value: any) => {
-    dispatch('fieldSave', { field, value });
+    onfieldSave?.(new CustomEvent('fieldSave', { detail: { field, value } }));
   };
 
   const handleArrayAdd = (field: ArrayMetadataFields) => {
-    dispatch('arrayAdd', { field });
+    onarrayAdd?.(new CustomEvent('arrayAdd', { detail: { field } }));
   };
 
   const handleArrayRemove = (field: ArrayMetadataFields, index: number) => {
-    dispatch('arrayRemove', { field, index });
+    onarrayRemove?.(new CustomEvent('arrayRemove', { detail: { field, index } }));
   };
 
   const updateArrayItem = (field: ArrayMetadataFields, index: number, value: string) => {
@@ -166,7 +179,7 @@
               <button
                 type="button"
                 class="remove-button"
-                on:click={() => handleArrayRemove('subject', index)}
+                onclick={() => handleArrayRemove('subject', index)}
                 disabled={saving}
                 aria-label={$t('Remove subject')}
               >
@@ -178,7 +191,7 @@
           <button
             type="button"
             class="add-button"
-            on:click={() => handleArrayAdd('subject')}
+            onclick={() => handleArrayAdd('subject')}
             disabled={saving}
           >
             {$t('Add Subject')}
@@ -203,7 +216,7 @@
               <button
                 type="button"
                 class="remove-button"
-                on:click={() => handleArrayRemove('contributor', index)}
+                onclick={() => handleArrayRemove('contributor', index)}
                 disabled={saving}
                 aria-label={$t('Remove contributor')}
               >
@@ -215,7 +228,7 @@
           <button
             type="button"
             class="add-button"
-            on:click={() => handleArrayAdd('contributor')}
+            onclick={() => handleArrayAdd('contributor')}
             disabled={saving}
           >
             {$t('Add Contributor')}

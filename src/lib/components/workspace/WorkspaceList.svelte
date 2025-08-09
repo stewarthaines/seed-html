@@ -7,6 +7,7 @@
   const dispatch = createEventDispatcher<{
     workspaceSelected: { workspaceId: string };
     workspaceDeleted: { workspaceId: string };
+    packageRequested: { workspaceId: string };
   }>();
 
   export let workspaces: WorkspaceInfo[] = [];
@@ -42,6 +43,10 @@
 
   const handleWorkspaceDelete = (event: CustomEvent<{ workspaceId: string }>) => {
     dispatch('workspaceDeleted', event.detail);
+  };
+
+  const handlePackageRequest = (event: CustomEvent<{ workspaceId: string }>) => {
+    dispatch('packageRequested', event.detail);
   };
 
   const handleSearchInput = (event: Event) => {
@@ -134,6 +139,7 @@
             hasError={workspace.hasError || false}
             on:selected={handleWorkspaceSelect}
             on:deleteRequested={handleWorkspaceDelete}
+            on:packageRequested={handlePackageRequest}
           />
         {/each}
       </div>
@@ -165,12 +171,6 @@
     gap: var(--space-3);
   }
 
-  .list-title {
-    margin: 0;
-    font-size: var(--text-lg);
-    font-weight: 600;
-    color: var(--color-text-primary);
-  }
 
   .search-container {
     display: flex;

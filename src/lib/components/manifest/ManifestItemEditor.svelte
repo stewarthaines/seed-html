@@ -478,8 +478,7 @@
   }
 
   .form-input.error,
-  .form-select.error,
-  .form-textarea.error {
+  .form-select.error {
     border-color: var(--color-error-text);
   }
 

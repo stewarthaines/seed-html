@@ -9,6 +9,7 @@
 
   // Props
   export let workspace: WorkspaceState | null = null;
+  // oxlint-disable-next-line no-unassigned-vars
   export let spineService: SpineService;
   export let selectedItemId: string | null = null;
   export let isExpanded = true;
@@ -47,7 +48,6 @@
     error = null;
   }
 
-
   // Public method to refresh spine items (can be called by parent)
   export async function refreshSpineItems() {
     if (workspace && spineService) {
@@ -58,13 +58,12 @@
   // Load spine items
   async function loadSpineItems() {
     if (!workspace) return;
-    
+
     isLoading = true;
     error = null;
 
     try {
       const items = await spineService.loadSpineItems(workspace);
-      console.log('✅ SpineSidebar: Loaded', items.length, 'spine items for workspace', workspace.id);
       spineItems = items;
     } catch (err) {
       console.error('❌ SpineSidebar: Error loading spine items:', err);
@@ -89,7 +88,7 @@
   // Handle append new chapter
   async function handleAppendChapter() {
     if (!workspace) return;
-    
+
     try {
       isLoading = true;
       const result = await spineService.addChapter(workspace, {
@@ -123,13 +122,13 @@
     isReordering = true;
     try {
       const result = await spineService.moveChapterUp(workspace, index);
-      
+
       // Update workspace state
       workspace = result.updatedWorkspace;
       if (onWorkspaceUpdate) {
         onWorkspaceUpdate(workspace);
       }
-      
+
       spineItems = result.newOrder;
 
       // Announce move for screen readers
@@ -150,13 +149,13 @@
     isReordering = true;
     try {
       const result = await spineService.moveChapterDown(workspace, index);
-      
+
       // Update workspace state
       workspace = result.updatedWorkspace;
       if (onWorkspaceUpdate) {
         onWorkspaceUpdate(workspace);
       }
-      
+
       spineItems = result.newOrder;
 
       // Announce move for screen readers
@@ -215,17 +214,17 @@
     if (dragIndex === dropIndex) return;
 
     if (!workspace) return;
-    
+
     isReordering = true;
     try {
       const result = await spineService.reorderItems(workspace, dragIndex, dropIndex);
-      
+
       // Update workspace state
       workspace = result.updatedWorkspace;
       if (onWorkspaceUpdate) {
         onWorkspaceUpdate(workspace);
       }
-      
+
       spineItems = result.newOrder;
 
       // Announce move for screen readers
@@ -248,7 +247,7 @@
   {:else if error}
     <div class="error">
       <p>{error}</p>
-      <button class="retry-button" on:click={loadSpineItems}>
+      <button class="retry-button" onclick={loadSpineItems}>
         {$t('Retry')}
       </button>
     </div>
@@ -258,9 +257,9 @@
         <div
           class="spine-item-wrapper"
           draggable={sidebarExpanded}
-          on:dragstart={e => handleDragStart(e, index)}
-          on:dragover={handleDragOver}
-          on:drop={e => handleDrop(e, index)}
+          ondragstart={e => handleDragStart(e, index)}
+          ondragover={handleDragOver}
+          ondrop={e => handleDrop(e, index)}
           role="listitem"
         >
           <SpineItem
@@ -285,7 +284,7 @@
   {:else if workspace && !isLoading}
     <div class="empty-state">
       <p>{$t('No spine items yet')}</p>
-      <button class="retry-button" on:click={loadSpineItems}>
+      <button class="retry-button" onclick={loadSpineItems}>
         {$t('Refresh')}
       </button>
     </div>

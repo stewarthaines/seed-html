@@ -27,37 +27,37 @@
 
   // Simple implementations for required dependencies
   const simpleExtensionManager = {
-    getAvailableTransforms: async () => []
+    getAvailableTransforms: async () => [],
   };
-  
+
   const simpleThemeStore = {
     setTheme: () => {},
     useSystemPreference: () => {},
-    getCurrentTheme: () => 'system'
+    getCurrentTheme: () => 'system',
   };
-  
+
   const simpleI18nStore = {
     setLocale: () => {},
-    getCurrentLocale: () => 'en'
+    getCurrentLocale: () => 'en',
   };
 
   // Create singleton FileStorageAPI and services with shared instance
   const fileStorage = FileStorageAPI.getInstance();
   const transformExecutor = new TransformExecutor();
-  
+
   // Create services using shared FileStorageAPI
   const workspaceService = new WorkspaceService(fileStorage);
   const spineService = new SpineService(workspaceService);
   const metadataService = new MetadataService(workspaceService);
-  
+
   // BlobURLManager will be created after FileStorageAPI is initialized
   let blobURLManager: BlobURLManager;
-  
+
   // Transform engine initialization state
   let transformEngine: TransformEngine | null = null;
   let transformEngineReady = $state(false);
   let transformEngineError = $state<string | null>(null);
-  
+
   // AppState created in proper Svelte context, initialized later
   let appState = $state<EnhancedAppState | null>(null);
   let appInitialized = $state(false);
@@ -69,14 +69,20 @@
   let selectedSpineItemId = $derived(appState?.selectedChapterId); // renamed in enhanced
   let initialized = $derived(appState?.initialized || false);
   let currentWorkspaceState = $derived(appState?.workspace);
-  
+
+  // Dynamic window title based on workspace
+  let windowTitle = $derived.by(() => {
+    const workspaceTitle = currentWorkspaceState?.opf?.metadata?.title;
+    return workspaceTitle ? `${workspaceTitle}` : 'EDITME';
+  });
+
   // Manifest item selection state
   let selectedManifestItem = $state<any>(null);
-  let selectedManifestItemType = $state<'manifest' | 'source' | null>(null);
-  
+  let selectedManifestItemType = $state<'manifest' | 'source' | 'opf' | null>(null);
+
   // Navigation preview state
   let navigationPreviewContent = $state<string | null>(null);
-  
+
   // Spine preview state
   let spinePreviewData = $state<{
     xhtmlContent: string;
@@ -91,39 +97,58 @@
     transformError: null,
     transformWarnings: [],
     executionTime: 0,
-    spineItemId: null
+    spineItemId: null,
   });
-  
+
   // Services are private in EnhancedAppState - workspace operations go through app state methods
   // No direct service access needed since EnhancedAppState handles service coordination
 
   // Handle manifest item selection
-  const handleManifestItemSelect = (event: CustomEvent<{ item: any; type: 'manifest' | 'source' }>) => {
-    selectedManifestItem = event.detail.item;
-    selectedManifestItemType = event.detail.type;
+  const handleManifestItemSelect = (
+    event: { item: any; type: 'manifest' | 'source' | 'opf' }
+  ) => {
+    selectedManifestItem = event.item;
+    selectedManifestItemType = event.type;
+  };
+
+  // Handle metadata changes - refresh workspace list when author/title changes
+  const handleMetadataChanged = async (event: CustomEvent<{ field: string; value: any }>) => {
+    const { field } = event.detail;
+
+    // Refresh workspace list for fields that affect workspace display
+    if (field === 'creator' || field === 'title' || field === 'language') {
+      // Trigger workspace list refresh by dispatching event to WorkspaceView
+      // Since we don't have direct access to the loadWorkspaces function,
+      // we'll emit a custom event that the WorkspaceView can listen for
+      window.dispatchEvent(new CustomEvent('workspace-list-refresh'));
+    }
   };
 
   // Handle navigation preview update
-  const handleNavigationPreviewUpdate = (event: CustomEvent<{ xhtml: string; warnings?: string[] }>) => {
+  const handleNavigationPreviewUpdate = (
+    event: CustomEvent<{ xhtml: string; warnings?: string[] }>
+  ) => {
     navigationPreviewContent = event.detail.xhtml;
   };
 
   // Handle spine preview update
-  const handleSpinePreviewUpdate = (event: CustomEvent<{
-    xhtmlContent: string;
-    isTransforming: boolean;
-    transformError: any;
-    transformWarnings: string[];
-    executionTime: number;
-    spineItemId: string;
-  }>) => {
+  const handleSpinePreviewUpdate = (
+    event: CustomEvent<{
+      xhtmlContent: string;
+      isTransforming: boolean;
+      transformError: any;
+      transformWarnings: string[];
+      executionTime: number;
+      spineItemId: string;
+    }>
+  ) => {
     spinePreviewData = {
       xhtmlContent: event.detail.xhtmlContent,
       isTransforming: event.detail.isTransforming,
       transformError: event.detail.transformError,
       transformWarnings: event.detail.transformWarnings,
       executionTime: event.detail.executionTime,
-      spineItemId: event.detail.spineItemId
+      spineItemId: event.detail.spineItemId,
     };
   };
 
@@ -134,7 +159,7 @@
       try {
         // Initialize FileStorageAPI first
         await fileStorage.init();
-        
+
         // Create blob URL manager after FileStorageAPI is initialized
         blobURLManager = new BlobURLManager({
           fileStorage,
@@ -142,7 +167,7 @@
           maxBlobURLs: 100,
           onCapacityReached: () => {
             console.warn('Blob URL capacity reached - consider cleanup');
-          }
+          },
         });
 
         // Initialize transform engine
@@ -195,8 +220,11 @@
       transformEngine?.cleanup();
     };
   });
-
 </script>
+
+<svelte:head>
+  <title>{windowTitle}</title>
+</svelte:head>
 
 {#if transformEngineError}
   <div class="error-state">
@@ -215,166 +243,176 @@
     <p>Initializing application...</p>
   </div>
 {:else}
-<LayoutManager hasWorkspace={!!currentWorkspaceId}>
-  <svelte:fragment slot="sidebar-spine">
-    {#if !initialized}
-      <div class="placeholder-content">
-        <p>{$t('Loading workspace…')}</p>
-      </div>
-    {:else if !currentWorkspaceState}
-      <div class="placeholder-content">
-        <p>{$t('No workspace selected')}</p>
-      </div>
-    {:else if currentWorkspaceState}
-      <SpineSidebar
-        workspace={currentWorkspaceState}
-        {spineService}
-        selectedItemId={selectedSpineItemId}
-        {isExpanded}
-        onWorkspaceUpdate={(updatedWorkspace) => {
-          if (appState) appState.workspace = updatedWorkspace;
-        }}
-      />
-    {:else}
-      <div class="placeholder-content">
-        <p>{$t('Loading workspace…')}</p>
-      </div>
-    {/if}
-  </svelte:fragment>
-
-  <svelte:fragment slot="left-content">
-    <!-- Main content area - switches based on current view -->
-    {#if currentView === 'workspace' && initialized}
-      <WorkspaceView
-        onListWorkspaces={() => appState?.listWorkspaces() ?? Promise.resolve([])}
-        onCreateWorkspace={(data) => appState?.createWorkspace(data.title, data.language) ?? Promise.resolve('')}
-        onDeleteWorkspace={(id) => appState?.deleteWorkspace(id) ?? Promise.resolve()}
-        onLoadWorkspace={(id) => appState?.loadWorkspace(id) ?? Promise.resolve()}
-        {currentWorkspaceId}
-        on:navigationRequested={(event) => {
-          navigationStore.navigateTo(event.detail.view as ViewType);
-        }}
-      />
-    {:else if currentView === 'metadata'}
-      {#if initialized && currentWorkspaceState}
-        <MetadataEditor bind:workspace={currentWorkspaceState} {metadataService} />
-      {:else}
-        <PlaceholderView
-          viewType="metadata"
-          title={$t('EPUB Metadata')}
-          description={$t('Configure publication metadata and details')}
-          icon="📝"
-        />
-      {/if}
-    {:else if currentView === 'manifest'}
-      {#if initialized && currentWorkspaceState}
-        <ManifestContainer
+  <LayoutManager hasWorkspace={!!currentWorkspaceId}>
+    <svelte:fragment slot="sidebar-spine">
+      {#if !initialized}
+        <div class="placeholder-content">
+          <p>{$t('Loading workspace…')}</p>
+        </div>
+      {:else if !currentWorkspaceState}
+        <div class="placeholder-content">
+          <p>{$t('No workspace selected')}</p>
+        </div>
+      {:else if currentWorkspaceState}
+        <SpineSidebar
           workspace={currentWorkspaceState}
-          {workspaceService}
-          advancedMode={true}
-          on:itemSelect={handleManifestItemSelect}
-        />
-      {:else}
-        <PlaceholderView
-          viewType="manifest"
-          title={$t('File Manifest')}
-          description={$t('Manage EPUB files and resources')}
-          icon="📋"
-        />
-      {/if}
-    {:else if currentView === 'navigation'}
-      {#if initialized && currentWorkspaceState}
-        <OutlineView
-          workspace={currentWorkspaceState}
-          {workspaceService}
-          {spineService}
-          on:previewUpdate={handleNavigationPreviewUpdate}
-        />
-      {:else}
-        <PlaceholderView
-          viewType="navigation"
-          title={$t('Table of Contents')}
-          description={$t('Loading workspace…')}
-          icon="📖"
-        />
-      {/if}
-    {:else if currentView === 'spine'}
-      {#if initialized && currentWorkspaceState && appState}
-        <SpineView
-          workspace={currentWorkspaceState}
-          {workspaceService}
           {spineService}
           selectedItemId={selectedSpineItemId}
-          transformEngine={appState.getTransformEngine()}
-          on:previewUpdate={handleSpinePreviewUpdate}
+          {isExpanded}
+          onWorkspaceUpdate={updatedWorkspace => {
+            if (appState) appState.workspace = updatedWorkspace;
+          }}
         />
       {:else}
-        <PlaceholderView
-          viewType="spine"
-          title={$t('Spine Items')}
-          description={$t('Loading workspace…')}
-          icon="📚"
-        />
+        <div class="placeholder-content">
+          <p>{$t('Loading workspace…')}</p>
+        </div>
       {/if}
-    {:else if currentView === 'settings'}
-      <PlaceholderView
-        viewType="settings"
-        title={$t('Application Settings')}
-        description={$t('Configure preferences and options')}
-        icon="⚙️"
-      />
-    {:else}
-      <div class="placeholder-content">
-        <h3>{$t('Unknown View')}</h3>
-        <p>{$t('View type')}: {currentView}</p>
-      </div>
-    {/if}
-  </svelte:fragment>
+    </svelte:fragment>
 
-  <svelte:fragment slot="right-content">
-    {#if currentView === 'manifest' && initialized && currentWorkspaceState}
-      <ManifestPreview
-        selectedItem={selectedManifestItem}
-        selectedItemType={selectedManifestItemType}
-        workspace={currentWorkspaceState}
-        {workspaceService}
-      />
-    {:else if currentView === 'navigation'}
-      {#if navigationPreviewContent}
-        <ContentPreview
-          content={navigationPreviewContent}
+    <svelte:fragment slot="left-content">
+      <!-- Main content area - switches based on current view -->
+      {#if currentView === 'workspace' && initialized}
+        <WorkspaceView
+          onListWorkspaces={() => appState?.listWorkspaces() ?? Promise.resolve([])}
+          onCreateWorkspace={data =>
+            appState?.createWorkspace(data.title, data.language) ?? Promise.resolve('')}
+          onDeleteWorkspace={id => appState?.deleteWorkspace(id) ?? Promise.resolve()}
+          onLoadWorkspace={id => appState?.loadWorkspace(id) ?? Promise.resolve()}
+          {currentWorkspaceId}
+          onNavigationRequested={view => {
+            navigationStore.navigateTo(view as ViewType);
+          }}
+          onWorkspaceOpened={() => {
+            // Workspace opened
+          }}
+          onWorkspaceChanged={() => {
+            // Workspace changed
+          }}
+        />
+      {:else if currentView === 'metadata'}
+        {#if initialized && currentWorkspaceState && appState}
+          <MetadataEditor
+            bind:workspace={appState.workspace}
+            {metadataService}
+            on:metadataChanged={handleMetadataChanged}
+          />
+        {:else}
+          <PlaceholderView
+            viewType="metadata"
+            title={$t('EPUB Metadata')}
+            description={$t('Configure publication metadata and details')}
+            icon="📝"
+          />
+        {/if}
+      {:else if currentView === 'manifest'}
+        {#if initialized && currentWorkspaceState}
+          <ManifestContainer
+            workspace={currentWorkspaceState}
+            {workspaceService}
+            advancedMode={true}
+            onItemSelect={handleManifestItemSelect}
+          />
+        {:else}
+          <PlaceholderView
+            viewType="manifest"
+            title={$t('File Manifest')}
+            description={$t('Manage EPUB files and resources')}
+            icon="📋"
+          />
+        {/if}
+      {:else if currentView === 'navigation'}
+        {#if initialized && currentWorkspaceState}
+          <OutlineView
+            workspace={currentWorkspaceState}
+            {workspaceService}
+            {spineService}
+            on:previewUpdate={handleNavigationPreviewUpdate}
+          />
+        {:else}
+          <PlaceholderView
+            viewType="navigation"
+            title={$t('Table of Contents')}
+            description={$t('Loading workspace…')}
+            icon="📖"
+          />
+        {/if}
+      {:else if currentView === 'spine'}
+        {#if initialized && currentWorkspaceState && appState}
+          <SpineView
+            workspace={currentWorkspaceState}
+            {workspaceService}
+            {spineService}
+            selectedItemId={selectedSpineItemId}
+            transformEngine={appState.getTransformEngine()}
+            contentService={appState.getContentService()}
+            on:previewUpdate={handleSpinePreviewUpdate}
+          />
+        {:else}
+          <PlaceholderView
+            viewType="spine"
+            title={$t('Spine Items')}
+            description={$t('Loading workspace…')}
+            icon="📚"
+          />
+        {/if}
+      {:else if currentView === 'settings'}
+        <PlaceholderView
+          viewType="settings"
+          title={$t('Application Settings')}
+          description={$t('Configure preferences and options')}
+          icon="⚙️"
         />
       {:else}
         <div class="placeholder-content">
-          <h3>{$t('Navigation Preview')}</h3>
-          <p>{$t('Generating navigation from chapters...')}</p>
+          <h3>{$t('Unknown View')}</h3>
+          <p>{$t('View type')}: {currentView}</p>
         </div>
       {/if}
-    {:else if currentView === 'spine'}
-      {#if spinePreviewData.spineItemId}
-        <PreviewPane
-          xhtmlContent={spinePreviewData.xhtmlContent}
-          isTransforming={spinePreviewData.isTransforming}
-          transformError={spinePreviewData.transformError}
-          transformWarnings={spinePreviewData.transformWarnings}
-          executionTime={spinePreviewData.executionTime}
-          spineItemId={spinePreviewData.spineItemId}
+    </svelte:fragment>
+
+    <svelte:fragment slot="right-content">
+      {#if currentView === 'manifest' && initialized && currentWorkspaceState}
+        <ManifestPreview
+          selectedItem={selectedManifestItem}
+          selectedItemType={selectedManifestItemType}
+          workspace={currentWorkspaceState}
+          {workspaceService}
         />
+      {:else if currentView === 'navigation'}
+        {#if navigationPreviewContent}
+          <ContentPreview content={navigationPreviewContent} />
+        {:else}
+          <div class="placeholder-content">
+            <h3>{$t('Navigation Preview')}</h3>
+            <p>{$t('Generating navigation from chapters...')}</p>
+          </div>
+        {/if}
+      {:else if currentView === 'spine'}
+        {#if spinePreviewData.spineItemId}
+          <PreviewPane
+            xhtmlContent={spinePreviewData.xhtmlContent}
+            isTransforming={spinePreviewData.isTransforming}
+            transformError={spinePreviewData.transformError}
+            transformWarnings={spinePreviewData.transformWarnings}
+            executionTime={spinePreviewData.executionTime}
+            spineItemId={spinePreviewData.spineItemId}
+          />
+        {:else}
+          <div class="placeholder-content">
+            <h3>{$t('Spine Preview')}</h3>
+            <p>{$t('Select a spine item to see the preview here')}</p>
+          </div>
+        {/if}
       {:else}
         <div class="placeholder-content">
-          <h3>{$t('Spine Preview')}</h3>
-          <p>{$t('Select a spine item to see the preview here')}</p>
+          <h3>{$t('Preview Pane')}</h3>
+          <p>{$t('Content preview will appear here based on the current view')}</p>
+          <p class="current-view-info">{$t('Current view')}: <strong>{currentView}</strong></p>
         </div>
       {/if}
-    {:else}
-      <div class="placeholder-content">
-        <h3>{$t('Preview Pane')}</h3>
-        <p>{$t('Content preview will appear here based on the current view')}</p>
-        <p class="current-view-info">{$t('Current view')}: <strong>{currentView}</strong></p>
-      </div>
-    {/if}
-  </svelte:fragment>
-</LayoutManager>
+    </svelte:fragment>
+  </LayoutManager>
 {/if}
 
 <style>

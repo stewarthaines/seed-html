@@ -1,9 +1,9 @@
 <!--
   Preview Pane Component
-  
+
   Right pane of the spine editor displaying real-time XHTML preview
   with transform status, error handling, and device simulation options.
-  
+
   Features:
   - Real-time XHTML preview in iframe
   - Device simulation (iPhone, iPad, etc.)
@@ -17,7 +17,7 @@
   import { writable } from 'svelte/store';
   import type { TransformError } from '$lib/types/spine-editor.js';
   import { t } from '$lib/i18n';
-  
+
   // Props
   export let xhtmlContent: string = '';
   export let isTransforming: boolean = false;
@@ -25,56 +25,56 @@
   export let transformWarnings: string[] = [];
   export let executionTime: number = 0;
   export let spineItemId: string;
-  
+
   // Preview configuration
   const DEVICE_PRESETS = [
     { id: 'desktop', name: 'Desktop', width: '100%', height: '100%', icon: '🖥️' },
     { id: 'iphone', name: 'iPhone', width: '375px', height: '667px', icon: '📱' },
     { id: 'iphone-plus', name: 'iPhone Plus', width: '414px', height: '736px', icon: '📱' },
     { id: 'ipad', name: 'iPad', width: '768px', height: '1024px', icon: '📱' },
-    { id: 'kindle', name: 'Kindle', width: '600px', height: '800px', icon: '📚' }
+    { id: 'kindle', name: 'Kindle', width: '600px', height: '800px', icon: '📚' },
   ] as const;
-  
+
   // Component state
   let selectedDevice = 'desktop';
   let showSource = false;
   let previewIframe: HTMLIFrameElement;
   let previewContainer: HTMLDivElement;
-  
+
   // Reactive state
   const lastUpdateTime = writable<number>(Date.now());
-  
+
   // Update iframe content when XHTML changes
   $: updatePreviewContent(xhtmlContent);
-  
+
   /**
    * Update iframe with new XHTML content
    */
   function updatePreviewContent(content: string): void {
     if (!previewIframe || !content) return;
-    
+
     try {
       const iframeDoc = previewIframe.contentDocument;
       if (!iframeDoc) return;
-      
+
       // Clear existing content
       iframeDoc.open();
       iframeDoc.write(content);
       iframeDoc.close();
-      
+
       lastUpdateTime.set(Date.now());
     } catch (error) {
       console.error('Failed to update preview content:', error);
     }
   }
-  
+
   /**
    * Handle device preset selection
    */
   function handleDeviceChange(deviceId: string): void {
     selectedDevice = deviceId;
     const device = DEVICE_PRESETS.find(d => d.id === deviceId);
-    
+
     if (device && previewContainer) {
       if (device.id === 'desktop') {
         previewContainer.style.width = '100%';
@@ -89,14 +89,19 @@
       }
     }
   }
-  
+
   /**
    * Toggle source view
    */
   function toggleSourceView(): void {
     showSource = !showSource;
+    if (!showSource) {
+      setTimeout(() => {
+        updatePreviewContent(xhtmlContent);
+      }, 0);
+    }
   }
-  
+
   /**
    * Format execution time for display
    */
@@ -106,14 +111,14 @@
     }
     return `${(ms / 1000).toFixed(1)}s`;
   }
-  
+
   /**
    * Format timestamp for display
    */
   function formatTimestamp(timestamp: number): string {
     return new Date(timestamp).toLocaleTimeString();
   }
-  
+
   /**
    * Handle iframe load event
    */
@@ -129,13 +134,13 @@
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
           line-height: 1.6;
         }
-        
+
         /* Ensure images are responsive */
         img {
           max-width: 100%;
           height: auto;
         }
-        
+
         /* Add some visual feedback for empty content */
         body:empty::before {
           content: 'No content to preview';
@@ -149,7 +154,7 @@
       previewIframe.contentDocument.head.appendChild(style);
     }
   }
-  
+
   /**
    * Copy XHTML source to clipboard
    */
@@ -161,7 +166,7 @@
       console.error('Failed to copy to clipboard:', error);
     }
   }
-  
+
   /**
    * Download XHTML as file
    */
@@ -176,7 +181,7 @@
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
-  
+
   onMount(() => {
     // Initialize with default device
     handleDeviceChange(selectedDevice);
@@ -193,22 +198,23 @@
         <span class="preview-timing">({formatExecutionTime(executionTime)})</span>
       {/if}
     </div>
-    
+
     <div class="preview-controls">
       <!-- Device selector -->
       <select
         class="device-selector"
         bind:value={selectedDevice}
-        on:change={(e) => handleDeviceChange((e.target as HTMLSelectElement).value)}
+        on:change={e => handleDeviceChange((e.target as HTMLSelectElement).value)}
         aria-label="Select device preset"
       >
         {#each DEVICE_PRESETS as device}
           <option value={device.id}>
-            {device.icon} {device.name}
+            {device.icon}
+            {device.name}
           </option>
         {/each}
       </select>
-      
+
       <!-- View toggle -->
       <button
         type="button"
@@ -220,30 +226,9 @@
       >
         {showSource ? '👁️' : '📄'}
       </button>
-      
-      <!-- Source actions -->
-      {#if showSource}
-        <button
-          type="button"
-          class="source-action"
-          on:click={copySourceToClipboard}
-          title="Copy XHTML to clipboard"
-        >
-          📋
-        </button>
-        
-        <button
-          type="button"
-          class="source-action"
-          on:click={downloadXHTML}
-          title="Download XHTML file"
-        >
-          📥
-        </button>
-      {/if}
     </div>
   </div>
-  
+
   <!-- Transform status -->
   {#if isTransforming}
     <div class="transform-status transforming">
@@ -261,7 +246,7 @@
       <span>{transformWarnings.length} warnings</span>
     </div>
   {/if}
-  
+
   <!-- Preview content -->
   <div class="preview-content">
     {#if showSource}
@@ -296,7 +281,6 @@
               bind:this={previewIframe}
               class="preview-iframe"
               title="XHTML Preview"
-              sandbox="allow-same-origin allow-scripts"
               on:load={handleIframeLoad}
             ></iframe>
           {:else}
@@ -312,18 +296,18 @@
       </div>
     {/if}
   </div>
-  
+
   <!-- Footer with meta info -->
   <div class="preview-footer">
     <div class="meta-info">
       {#if $lastUpdateTime}
         <span class="update-time">Updated: {formatTimestamp($lastUpdateTime)}</span>
       {/if}
-      
+
       {#if xhtmlContent}
         <span class="content-size">{Math.round(xhtmlContent.length / 1024)}KB</span>
       {/if}
-      
+
       {#if transformWarnings.length > 0}
         <span class="warning-count">{transformWarnings.length} warnings</span>
       {/if}
@@ -338,7 +322,7 @@
     height: 100%;
     background: var(--color-bg-secondary);
   }
-  
+
   .preview-header {
     display: flex;
     justify-content: space-between;
@@ -347,7 +331,7 @@
     border-bottom: 1px solid var(--color-border-default);
     background: var(--color-bg-tertiary);
   }
-  
+
   .preview-title {
     display: flex;
     align-items: center;
@@ -355,19 +339,19 @@
     font-weight: var(--font-medium);
     color: var(--color-text-primary);
   }
-  
+
   .preview-timing {
     font-size: var(--text-xs);
     color: var(--color-text-tertiary);
     font-weight: var(--font-normal);
   }
-  
+
   .preview-controls {
     display: flex;
     align-items: center;
     gap: var(--space-2);
   }
-  
+
   .device-selector {
     padding: var(--space-1) var(--space-2);
     border: 1px solid var(--color-border-default);
@@ -377,14 +361,13 @@
     font-size: var(--text-xs);
     cursor: pointer;
   }
-  
+
   .device-selector:focus {
     outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
     outline-offset: var(--focus-ring-offset);
   }
-  
-  .view-toggle,
-  .source-action {
+
+  .view-toggle {
     padding: var(--space-1);
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-sm);
@@ -393,18 +376,17 @@
     font-size: var(--text-sm);
     transition: all var(--duration-fast) ease;
   }
-  
-  .view-toggle:hover,
-  .source-action:hover {
+
+  .view-toggle:hover {
     background: var(--color-bg-hover);
   }
-  
+
   .view-toggle.active {
     background: var(--color-accent-primary);
     color: var(--color-accent-contrast);
     border-color: var(--color-accent-primary);
   }
-  
+
   .transform-status {
     display: flex;
     align-items: center;
@@ -413,22 +395,22 @@
     font-size: var(--text-sm);
     font-weight: var(--font-medium);
   }
-  
+
   .transform-status.transforming {
     background: var(--color-info-bg);
     color: var(--color-info-text);
   }
-  
+
   .transform-status.error {
     background: var(--color-error-bg);
     color: var(--color-error-text);
   }
-  
+
   .transform-status.warning {
     background: var(--color-warning-bg);
     color: var(--color-warning-text);
   }
-  
+
   .status-spinner {
     width: 16px;
     height: 16px;
@@ -437,23 +419,27 @@
     border-radius: 50%;
     animation: spin var(--duration-normal) linear infinite;
   }
-  
+
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
-  
+
   .preview-content {
     flex: 1;
     overflow: hidden;
     background: var(--color-bg-primary);
   }
-  
+
   .source-view {
     height: 100%;
     overflow: auto;
   }
-  
+
   .source-code {
     margin: 0;
     padding: var(--space-3);
@@ -465,7 +451,7 @@
     white-space: pre-wrap;
     word-break: break-all;
   }
-  
+
   .preview-viewport {
     height: 100%;
     overflow: auto;
@@ -474,7 +460,7 @@
     align-items: flex-start;
     padding: var(--space-2);
   }
-  
+
   .preview-frame-container {
     width: 100%;
     height: 100%;
@@ -484,19 +470,19 @@
     background: white;
     position: relative;
   }
-  
+
   .preview-frame-container.device-frame {
     box-shadow: var(--shadow-lg);
     border: 2px solid var(--color-border-strong);
   }
-  
+
   .preview-iframe {
     width: 100%;
     height: 100%;
     border: none;
     background: white;
   }
-  
+
   .preview-error,
   .preview-empty {
     display: flex;
@@ -505,27 +491,27 @@
     height: 100%;
     padding: var(--space-4);
   }
-  
+
   .error-content,
   .empty-content {
     text-align: center;
     max-width: 400px;
   }
-  
+
   .error-content {
     color: var(--color-error-text);
   }
-  
+
   .error-content h3 {
     margin: 0 0 var(--space-2) 0;
     font-size: var(--text-lg);
   }
-  
+
   .error-content p {
     margin: var(--space-1) 0;
     font-size: var(--text-sm);
   }
-  
+
   .error-stack {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
@@ -536,34 +522,34 @@
     margin-top: var(--space-2);
     overflow-x: auto;
   }
-  
+
   .empty-content {
     color: var(--color-text-secondary);
   }
-  
+
   .empty-icon {
     font-size: var(--text-4xl);
     display: block;
     margin-bottom: var(--space-3);
   }
-  
+
   .empty-content h3 {
     margin: 0 0 var(--space-2) 0;
     font-size: var(--text-lg);
     color: var(--color-text-primary);
   }
-  
+
   .empty-content p {
     margin: 0;
     font-size: var(--text-sm);
   }
-  
+
   .preview-footer {
     padding: var(--space-2);
     border-top: 1px solid var(--color-border-default);
     background: var(--color-bg-tertiary);
   }
-  
+
   .meta-info {
     display: flex;
     justify-content: space-between;
@@ -571,34 +557,33 @@
     font-size: var(--text-xs);
     color: var(--color-text-tertiary);
   }
-  
+
   .meta-info > span {
     margin-right: var(--space-3);
   }
-  
+
   .meta-info > span:last-child {
     margin-right: 0;
   }
-  
+
   .warning-count {
     color: var(--color-warning-text);
     background: var(--color-warning-bg);
     padding: var(--space-1) var(--space-2);
     border-radius: var(--radius-sm);
   }
-  
+
   /* Reduced motion support */
   @media (prefers-reduced-motion: reduce) {
     .status-spinner {
       animation: none;
     }
-    
-    .view-toggle,
-    .source-action {
+
+    .view-toggle {
       transition: none;
     }
   }
-  
+
   /* High contrast mode support */
   @media (prefers-contrast: high) {
     .preview-frame-container {

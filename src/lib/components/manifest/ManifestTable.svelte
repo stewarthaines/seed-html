@@ -8,7 +8,7 @@
   export let advancedMode = true;
   export let validationErrors: ValidationResult[] = [];
   export let selectedItem: ManifestItem | SourceItem | null = null;
-  export let selectedItemType: 'manifest' | 'source' | null = null;
+  export let selectedItemType: 'manifest' | 'source' | 'opf' | null = null;
   export let loading = false;
 
   const dispatch = createEventDispatcher();
@@ -16,6 +16,7 @@
   // Filter state
   let filterText = '';
   let dragActive = false;
+  // oxlint-disable-next-line no-unassigned-vars
   let fileInputRef: HTMLInputElement;
 
   type SortableFields = 'id' | 'href' | 'size';
@@ -26,22 +27,17 @@
   $: allItems = [
     ...manifestItems.map(item => ({ ...item, _type: 'manifest' as const })),
     ...(advancedMode ? sourceItems.map(item => ({ ...item, _type: 'source' as const })) : []),
+    ...(advancedMode
+      ? [
+          {
+            name: 'content.opf',
+            path: 'content.opf',
+            size: undefined,
+            _type: 'opf' as const,
+          },
+        ]
+      : []),
   ];
-
-  // Debug logging for combined items
-  $: {
-    if (sourceItems.length > 0) {
-      console.log(
-        '🔍 ManifestTable: Showing',
-        manifestItems.length,
-        'manifest +',
-        sourceItems.length,
-        'SOURCE items =',
-        allItems.length,
-        'total'
-      );
-    }
-  }
 
   // Filter items based on filter text
   $: filteredItems = allItems.filter(item => {
@@ -57,19 +53,27 @@
         manifestItem.properties?.some(prop => prop.toLowerCase().includes(searchText)) ||
         false
       );
-    } else {
+    } else if (item._type === 'source') {
       const sourceItem = item as SourceItem & { _type: 'source' };
       return (
         sourceItem.name.toLowerCase().includes(searchText) ||
         sourceItem.path.toLowerCase().includes(searchText)
       );
+    } else {
+      // OPF item
+      const opfItem = item as any;
+      return (
+        opfItem.name.toLowerCase().includes(searchText) ||
+        opfItem.path.toLowerCase().includes(searchText)
+      );
     }
   });
 
-  // Sort filtered items - manifest items first, then source items (each group sorted internally)
+  // Sort filtered items - manifest items first, then source items, then OPF items (each group sorted internally)
   $: sortedItems = (() => {
     const manifestItems = filteredItems.filter(item => item._type === 'manifest');
     const sourceItems = filteredItems.filter(item => item._type === 'source');
+    const opfItems = filteredItems.filter(item => item._type === 'opf');
 
     const sortGroup = (items: typeof filteredItems) => {
       return [...items].sort((a, b) => {
@@ -77,11 +81,31 @@
         let bValue: string | number | Date = '';
 
         if (sortField === 'id') {
-          aValue = a._type === 'manifest' ? (a as ManifestItem).id : (a as SourceItem).name;
-          bValue = b._type === 'manifest' ? (b as ManifestItem).id : (b as SourceItem).name;
+          aValue =
+            a._type === 'manifest'
+              ? (a as ManifestItem).id
+              : a._type === 'source'
+                ? (a as SourceItem).name
+                : (a as any).name;
+          bValue =
+            b._type === 'manifest'
+              ? (b as ManifestItem).id
+              : b._type === 'source'
+                ? (b as SourceItem).name
+                : (b as any).name;
         } else if (sortField === 'href') {
-          aValue = a._type === 'manifest' ? (a as ManifestItem).href : (a as SourceItem).path;
-          bValue = b._type === 'manifest' ? (b as ManifestItem).href : (b as SourceItem).path;
+          aValue =
+            a._type === 'manifest'
+              ? (a as ManifestItem).href
+              : a._type === 'source'
+                ? (a as SourceItem).path
+                : (a as any).path;
+          bValue =
+            b._type === 'manifest'
+              ? (b as ManifestItem).href
+              : b._type === 'source'
+                ? (b as SourceItem).path
+                : (b as any).path;
         } else if (sortField === 'size') {
           aValue = a.size || 0;
           bValue = b.size || 0;
@@ -93,7 +117,7 @@
       });
     };
 
-    return [...sortGroup(manifestItems), ...sortGroup(sourceItems)];
+    return [...sortGroup(manifestItems), ...sortGroup(sourceItems), ...sortGroup(opfItems)];
   })();
 
   const handleSort = (field: SortableFields) => {
@@ -105,14 +129,17 @@
     }
   };
 
-  const handleRowClick = (item: ManifestItem | SourceItem, type: 'manifest' | 'source') => {
+  const handleRowClick = (
+    item: ManifestItem | SourceItem | any,
+    type: 'manifest' | 'source' | 'opf'
+  ) => {
     dispatch('itemSelect', { item, type });
   };
 
   const handleRowKeyDown = (
     event: KeyboardEvent,
-    item: ManifestItem | SourceItem,
-    type: 'manifest' | 'source'
+    item: ManifestItem | SourceItem | any,
+    type: 'manifest' | 'source' | 'opf'
   ) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
@@ -130,13 +157,18 @@
     dispatch('itemDelete', { itemId: item.id });
   };
 
-  const isItemSelected = (item: ManifestItem | SourceItem, type: 'manifest' | 'source') => {
+  const isItemSelected = (
+    item: ManifestItem | SourceItem | any,
+    type: 'manifest' | 'source' | 'opf'
+  ) => {
     if (!selectedItem || selectedItemType !== type) return false;
 
     if (type === 'manifest') {
       return (item as ManifestItem).id === (selectedItem as ManifestItem).id;
-    } else {
+    } else if (type === 'source') {
       return (item as SourceItem).path === (selectedItem as SourceItem).path;
+    } else {
+      return (item as any).path === (selectedItem as any).path;
     }
   };
 
@@ -241,9 +273,9 @@
     role="toolbar"
     aria-label={$t('Manifest actions')}
     tabindex="0"
-    on:dragover={handleDragOver}
-    on:dragleave={handleDragLeave}
-    on:drop={handleDrop}
+    ondragover={handleDragOver}
+    ondragleave={handleDragLeave}
+    ondrop={handleDrop}
   >
     <!-- Filter input -->
     <div class="filter-section">
@@ -257,7 +289,7 @@
           class="filter-input"
           placeholder={$t('Filter by ID, path, or media type...')}
           value={filterText}
-          on:input={handleFilterInput}
+          oninput={handleFilterInput}
           disabled={loading}
         />
         {#if filterText}
@@ -265,7 +297,7 @@
             type="button"
             class="clear-filter-button"
             aria-label={$t('Clear filter')}
-            on:click={handleClearFilter}
+            onclick={handleClearFilter}
           >
             ×
           </button>
@@ -278,7 +310,7 @@
       <button
         type="button"
         class="action-button primary"
-        on:click={handleLoadFileClick}
+        onclick={handleLoadFileClick}
         disabled={loading}
       >
         📁 {$t('Load File')}
@@ -287,7 +319,7 @@
       <button
         type="button"
         class="action-button secondary"
-        on:click={handleCreateTextClick}
+        onclick={handleCreateTextClick}
         disabled={loading}
       >
         📝 {$t('Create Text File')}
@@ -301,7 +333,7 @@
       multiple
       accept="*/*"
       style="display: none;"
-      on:change={handleFileInputChange}
+      onchange={handleFileInputChange}
     />
 
     <!-- Drag and drop overlay -->
@@ -334,7 +366,7 @@
               <button
                 type="button"
                 class="sort-button"
-                on:click={() => handleSort('id')}
+                onclick={() => handleSort('id')}
                 aria-label={$t('Sort by ID')}
               >
                 {$t('ID')}
@@ -345,7 +377,7 @@
               <button
                 type="button"
                 class="sort-button"
-                on:click={() => handleSort('href')}
+                onclick={() => handleSort('href')}
                 aria-label={$t('Sort by path')}
               >
                 {$t('Path')}
@@ -356,7 +388,7 @@
               <button
                 type="button"
                 class="sort-button"
-                on:click={() => handleSort('size')}
+                onclick={() => handleSort('size')}
                 aria-label={$t('Sort by size')}
               >
                 {$t('Size')}
@@ -374,6 +406,7 @@
               itemType === 'manifest' ? hasValidationError(item as ManifestItem) : false}
             {@const prevItemType = index > 0 ? sortedItems[index - 1]._type : null}
             {@const showSourceSeparator = itemType === 'source' && prevItemType === 'manifest'}
+            {@const showOpfSeparator = itemType === 'opf' && prevItemType === 'source'}
 
             <!-- Source items separator -->
             {#if showSourceSeparator}
@@ -385,26 +418,44 @@
                 </td>
               </tr>
             {/if}
+
+            <!-- OPF items separator -->
+            {#if showOpfSeparator}
+              <tr class="source-separator">
+                <td colspan="4" class="separator-cell">
+                  <div class="separator-content">
+                    <span class="separator-label">Package Files</span>
+                  </div>
+                </td>
+              </tr>
+            {/if}
             <tr
               class="manifest-row"
               class:selected={isSelected}
               class:error={hasError}
               class:source-item={itemType === 'source'}
+              class:opf-item={itemType === 'opf'}
               tabindex="0"
               aria-selected={isSelected}
-              on:click={() => handleRowClick(item, itemType)}
-              on:keydown={event => handleRowKeyDown(event, item, itemType)}
+              onclick={() => handleRowClick(item, itemType)}
+              onkeydown={event => handleRowKeyDown(event, item, itemType)}
             >
               <td class="id-cell">
                 <span class="item-id">
-                  {itemType === 'manifest' ? (item as ManifestItem).id : (item as SourceItem).name}
+                  {itemType === 'manifest'
+                    ? (item as ManifestItem).id
+                    : itemType === 'source'
+                      ? (item as SourceItem).name
+                      : (item as any).name}
                 </span>
               </td>
               <td class="href-cell">
                 <span class="item-href">
                   {itemType === 'manifest'
                     ? (item as ManifestItem).href
-                    : (item as SourceItem).path}
+                    : itemType === 'source'
+                      ? (item as SourceItem).path
+                      : (item as any).path}
                 </span>
               </td>
               <td class="size-cell">
@@ -430,7 +481,7 @@
                       class="action-button edit-button"
                       title={$t('Edit {id}', { id: (item as ManifestItem).id })}
                       tabindex={isSelected ? 0 : -1}
-                      on:click={event => handleEditClick(event, item as ManifestItem)}
+                      onclick={event => handleEditClick(event, item as ManifestItem)}
                     >
                       ✏️
                     </button>
@@ -439,7 +490,7 @@
                       class="action-button delete-button"
                       title={$t('Delete {id}', { id: (item as ManifestItem).id })}
                       tabindex={isSelected ? 0 : -1}
-                      on:click={event => handleDeleteClick(event, item as ManifestItem)}
+                      onclick={event => handleDeleteClick(event, item as ManifestItem)}
                     >
                       🗑️
                     </button>

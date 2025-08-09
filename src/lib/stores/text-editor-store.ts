@@ -148,3 +148,11 @@ export function createTextEditorStore(
     destroy,
   };
 }
+
+/**
+ * Global cleanup function to clear all active text editor stores
+ * Should be called when switching workspaces to prevent ID collisions
+ */
+export function clearAllTextEditorStores(): void {
+  activeEditorIds.clear();
+}

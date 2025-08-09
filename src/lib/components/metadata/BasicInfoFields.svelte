@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { t } from '../../i18n';
   import TextMetadataField from './fields/TextMetadataField.svelte';
   import SelectMetadataField from './fields/SelectMetadataField.svelte';
@@ -8,11 +7,35 @@
   import type { ValidationResult } from '../../metadata/MetadataValidator';
   import { MetadataUtils, type ArrayMetadataFields } from '../../epub/opf-utils';
 
-  const dispatch = createEventDispatcher();
+  interface Props {
+    metadata?: EPUBMetadata;
+    validationErrors?: ValidationResult[];
+    saving?: boolean;
+    onfieldChange?: (event: CustomEvent<{ field: string; value: any }>) => void;
+    onfieldSave?: (event: CustomEvent<{ field: string; value: any }>) => void;
+    onarrayAdd?: (event: CustomEvent<{ field: ArrayMetadataFields }>) => void;
+    onarrayRemove?: (event: CustomEvent<{ field: ArrayMetadataFields; index: number }>) => void;
+    ongenerateIdentifier?: (event: CustomEvent<void>) => void;
+  }
 
-  export let metadata: EPUBMetadata = { title: '', language: '', identifier: '' };
-  export let validationErrors: ValidationResult[] = [];
-  export let saving = false;
+  let {
+    metadata = { title: '', language: '', identifier: '' },
+    validationErrors = [],
+    saving = false,
+    onfieldChange,
+    onfieldSave,
+    onarrayAdd,
+    onarrayRemove,
+    ongenerateIdentifier
+  }: Props = $props();
+
+  // Track current array states for proper persistence
+  let currentCreators = $state<string[]>([]);
+  
+  // Initialize and sync current arrays with metadata
+  $effect(() => {
+    currentCreators = metadata.creator || [];
+  });
 
   // Language options - simplified for now
   const languageOptions = [
@@ -59,30 +82,36 @@
   };
 
   const handleFieldChange = (field: string, value: any[]) => {
-    dispatch('fieldChange', { field, value });
+    onfieldChange?.(new CustomEvent('fieldChange', { detail: { field, value } }));
   };
 
   const handleFieldSave = (field: string, value: string[] | undefined) => {
-    dispatch('fieldSave', { field, value });
+    onfieldSave?.(new CustomEvent('fieldSave', { detail: { field, value } }));
   };
 
   const handleArrayAdd = (field: ArrayMetadataFields) => {
-    dispatch('arrayAdd', { field });
+    onarrayAdd?.(new CustomEvent('arrayAdd', { detail: { field } }));
   };
 
   const handleArrayRemove = (field: ArrayMetadataFields, index: number) => {
-    dispatch('arrayRemove', { field, index });
+    onarrayRemove?.(new CustomEvent('arrayRemove', { detail: { field, index } }));
   };
 
   const updateArrayItem = (field: ArrayMetadataFields, index: number, value: string) => {
-    const currentArray = MetadataUtils.getArrayField(metadata, field);
-    const newArray = [...currentArray];
-    newArray[index] = value;
-    handleFieldChange(field, newArray);
+    if (field === 'creator') {
+      currentCreators[index] = value;
+      handleFieldChange(field, currentCreators);
+    } else {
+      // Fallback for other array fields not yet tracked
+      const currentArray = MetadataUtils.getArrayField(metadata, field);
+      const newArray = [...currentArray];
+      newArray[index] = value;
+      handleFieldChange(field, newArray);
+    }
   };
 
   const generateIdentifier = () => {
-    dispatch('generateIdentifier');
+    ongenerateIdentifier?.(new CustomEvent('generateIdentifier'));
   };
 </script>
 
@@ -129,7 +158,7 @@
           <button
             type="button"
             class="generate-button"
-            on:click={generateIdentifier}
+            onclick={generateIdentifier}
             disabled={saving}
           >
             {$t('Generate')}
@@ -141,7 +170,7 @@
         <legend class="group-title" tabindex="-1">{$t('Authors')}</legend>
 
         <div class="array-field">
-          {#each metadata.creator || [] as author, index}
+          {#each currentCreators as author, index}
             <div class="array-item">
               <TextMetadataField
                 id="creator-{index}"
@@ -149,12 +178,12 @@
                 placeholder={$t('Author name')}
                 error={getFieldError(`creator[${index}]`)}
                 on:change={e => updateArrayItem('creator', index, e.detail.value)}
-                on:blur={() => handleFieldSave('creator', metadata.creator)}
+                on:blur={() => handleFieldSave('creator', currentCreators)}
               />
               <button
                 type="button"
                 class="remove-button"
-                on:click={() => handleArrayRemove('creator', index)}
+                onclick={() => handleArrayRemove('creator', index)}
                 disabled={saving}
                 aria-label={$t('Remove author')}
               >
@@ -166,7 +195,7 @@
           <button
             type="button"
             class="add-button"
-            on:click={() => handleArrayAdd('creator')}
+            onclick={() => handleArrayAdd('creator')}
             disabled={saving}
           >
             {$t('Add Author')}

@@ -109,7 +109,7 @@ export class EnhancedAppState {
     );
     this.epubProcessor = new EPUBProcessor(fileStorage);
     this.workspaceService = new WorkspaceService(fileStorage);
-    
+
     // Create ContentService without dependencies (pure functions only)
     this.contentService = new ContentService(transformExecutor, i18nSystem);
 
@@ -151,7 +151,7 @@ export class EnhancedAppState {
       totalSize: 0, // Could be enhanced with actual size calculation
       author: this.workspace.opf.metadata.creator?.[0] || undefined,
       hasError: false,
-      epubVersion: '3.0'
+      epubVersion: '3.0',
     };
   }
 
@@ -225,6 +225,10 @@ export class EnhancedAppState {
     return this.transformEngine;
   }
 
+  getContentService(): ContentService {
+    return this.contentService;
+  }
+
   // ============================================================================
   // Reactive Effects ($effect)
   // ============================================================================
@@ -254,12 +258,6 @@ export class EnhancedAppState {
         }
       });
 
-      // Effect: Log state changes for debugging
-      $effect(() => {
-        if (this.workspace) {
-          console.log('Workspace loaded:', this.workspace.id, this.workspace.opf.metadata.title);
-        }
-      });
     });
   }
 
@@ -321,7 +319,10 @@ export class EnhancedAppState {
       const sampleContentData = await this.contentService.generateSampleContentData(language);
 
       // Step 3: Populate workspace with sample content (file I/O operation)
-      const populatedWorkspace = await this.workspaceService.populateWithContent(workspace.id, sampleContentData);
+      const populatedWorkspace = await this.workspaceService.populateWithContent(
+        workspace.id,
+        sampleContentData
+      );
 
       // Set the newly created workspace
       this.workspace = populatedWorkspace;
@@ -612,7 +613,7 @@ export class EnhancedAppState {
       const savedWorkspaceId = localStorage.getItem(STORAGE_KEYS.WORKSPACE_ID);
       if (savedWorkspaceId) {
         await this.loadWorkspace(savedWorkspaceId);
-        
+
         // Restore spine item selection after workspace is loaded
         const savedSpineItemId = localStorage.getItem(STORAGE_KEYS.SPINE_ITEM_ID);
         if (savedSpineItemId) {

@@ -1,46 +1,60 @@
 <script lang="ts">
-  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { navigationStore } from '../navigation-store';
   import { t, currentLocale } from '../../i18n';
   import type { EPUBMetadata } from '../../epub/opf-utils';
   import WorkspaceActionBar from '../../components/workspace/WorkspaceActionBar.svelte';
   import WorkspaceList from '../../components/workspace/WorkspaceList.svelte';
+  import { EPUBPackager } from '../../epub/EPUBPackager.js';
 
   // Service layer types for return values
   import type { WorkspaceInfo } from '../../services/workspace/workspace.service.js';
 
-  const dispatch = createEventDispatcher<{
-    workspaceOpened: { workspaceId: string };
-    navigationRequested: { view: string; workspaceId?: string };
-    workspaceChanged: { workspaceId: string | null };
-  }>();
+  // Props using Svelte 5 runes syntax
+  let {
+    onListWorkspaces,
+    onCreateWorkspace,
+    onDeleteWorkspace,
+    onLoadWorkspace,
+    onWorkspaceChange = null,
+    onWorkspaceOpened,
+    onNavigationRequested,
+    onWorkspaceChanged,
+    currentWorkspaceId = null,
+  }: {
+    onListWorkspaces: () => Promise<WorkspaceInfo[]>;
+    onCreateWorkspace: (data: { title: string; language: string }) => Promise<string>;
+    onDeleteWorkspace: (id: string) => Promise<void>;
+    onLoadWorkspace: (id: string) => Promise<void>;
+    onWorkspaceChange?: ((workspaceId: string | null) => void) | null;
+    onWorkspaceOpened?: (workspaceId: string) => void;
+    onNavigationRequested?: (view: string, workspaceId?: string) => void;
+    onWorkspaceChanged?: (workspaceId: string | null) => void;
+    currentWorkspaceId?: string | null;
+  } = $props();
 
-  // Props for callback-based operations
-  export let onListWorkspaces: () => Promise<WorkspaceInfo[]>;
-  export let onCreateWorkspace: (data: { title: string; language: string }) => Promise<string>;
-  export let onDeleteWorkspace: (id: string) => Promise<void>;
-  export let onLoadWorkspace: (id: string) => Promise<void>;
-  export let onWorkspaceChange: ((workspaceId: string | null) => void) | null = null;
-  export let currentWorkspaceId: string | null = null;
+  // Component state using $state()
+  let workspaces = $state<WorkspaceInfo[]>([]);
+  let currentWorkspace = $state<WorkspaceInfo | null>(null);
+  let loading = $state(false);
+  let error = $state<string | null>(null);
+  let hasUnsavedChanges = $state(false);
+  let guardId = $state<string>('');
+  let isPackaging = $state(false);
 
-  // Component state
-  let workspaces: WorkspaceInfo[] = [];
-  let currentWorkspace: WorkspaceInfo | null = null;
-  let loading = false;
-  let error: string | null = null;
-  let hasUnsavedChanges = false;
-  let guardId: string;
+  // Initialize EPUB packager
+  const epubPackager = new EPUBPackager();
 
   // Service layer handles state directly - no reactive subscriptions needed
 
-  // Reactive: Update currentWorkspace when prop changes
-  $: {
+  // Derived: Update currentWorkspace when prop changes
+  $effect(() => {
     if (currentWorkspaceId && workspaces.length > 0) {
       currentWorkspace = workspaces.find(w => w.id === currentWorkspaceId) || null;
     } else {
       currentWorkspace = null;
     }
-  }
+  });
 
   // Helper to update workspace selection and notify parent
   const setCurrentWorkspace = async (workspaceId: string | null) => {
@@ -64,8 +78,8 @@
       onWorkspaceChange(workspaceId);
     }
 
-    // Dispatch event for backward compatibility
-    dispatch('workspaceChanged', { workspaceId });
+    // Call callback for workspace change notification
+    onWorkspaceChanged?.(workspaceId);
   };
 
   // Load current workspace from props (reactive statement handles the sync)
@@ -82,18 +96,8 @@
       loading = true;
       error = null;
       
-      const serviceWorkspaces = await onListWorkspaces();
-      
-      // Convert service workspace info to component format
-      workspaces = serviceWorkspaces.map(w => ({
-        id: w.id,
-        title: w.title,
-        language: w.language,
-        lastModified: w.lastModified,
-        fileCount: w.fileCount,
-        totalSize: w.totalSize,
-        epubVersion: '3.0' // Service layer defaults to EPUB 3.0
-      }));
+      // Direct assignment - no transformation needed
+      workspaces = await onListWorkspaces();
       
       loadCurrentWorkspace();
     } catch (err) {
@@ -137,12 +141,9 @@
       await setCurrentWorkspace(workspaceId);
 
       // Navigate to metadata view for immediate review
-      dispatch('navigationRequested', {
-        view: 'metadata',
-        workspaceId: workspaceId,
-      });
+      onNavigationRequested?.('metadata', workspaceId);
 
-      dispatch('workspaceOpened', { workspaceId: workspaceId });
+      onWorkspaceOpened?.(workspaceId);
     } catch (err) {
       console.error('Failed to create workspace:', err);
       alert(
@@ -200,12 +201,9 @@
       await setCurrentWorkspace(workspaceId);
 
       // Navigate to metadata view after opening workspace
-      dispatch('navigationRequested', {
-        view: 'metadata',
-        workspaceId,
-      });
+      onNavigationRequested?.('metadata', workspaceId);
 
-      dispatch('workspaceOpened', { workspaceId });
+      onWorkspaceOpened?.(workspaceId);
     } catch (err) {
       console.error('Failed to open workspace:', err);
       alert(
@@ -253,6 +251,43 @@
       );
     } finally {
       loading = false;
+    }
+  };
+
+  // Handle EPUB packaging and download
+  const handlePackageRequest = async (event: CustomEvent<{ workspaceId: string }>) => {
+    const { workspaceId } = event.detail;
+    const workspace = workspaces.find(w => w.id === workspaceId);
+
+    if (!workspace) return;
+
+    try {
+      isPackaging = true;
+      
+      // Package EPUB with progress tracking
+      const result = await epubPackager.packageEPUB(workspaceId, {
+        progressCallback: (progress) => {
+          console.log(`Packaging progress: ${progress.phase} - ${progress.processedFiles}/${progress.totalFiles} files`);
+        }
+      });
+
+      if (result.success && result.blob && result.filename) {
+        // Immediately download the packaged EPUB
+        epubPackager.downloadEPUB(result.blob, result.filename);
+        
+        console.log(`✅ Successfully packaged and downloaded: ${result.filename}`);
+      } else {
+        throw new Error(result.error || 'Unknown packaging error');
+      }
+    } catch (err) {
+      console.error('Failed to package EPUB:', err);
+      alert(
+        $t('Failed to package EPUB: {error}', {
+          error: err instanceof Error ? err.message : 'Unknown error',
+        })
+      );
+    } finally {
+      isPackaging = false;
     }
   };
 
@@ -316,10 +351,18 @@
     }
   }
 
+  // Handle workspace list refresh event
+  const handleWorkspaceListRefresh = () => {
+    loadWorkspaces();
+  };
+
   // Component lifecycle
   onMount(async () => {
     // Register navigation guard
     guardId = navigationStore.addNavigationGuard(canLeave);
+    
+    // Listen for workspace list refresh events
+    window.addEventListener('workspace-list-refresh', handleWorkspaceListRefresh);
     
     // Load workspaces on initial mount
     await loadWorkspaces();
@@ -330,6 +373,9 @@
     if (guardId) {
       navigationStore.removeNavigationGuard(guardId);
     }
+
+    // Clean up event listener
+    window.removeEventListener('workspace-list-refresh', handleWorkspaceListRefresh);
 
     // Call onViewLeave
     onViewLeave();
@@ -350,7 +396,7 @@
       <div class="error-banner">
         <span class="error-icon" aria-hidden="true">⚠️</span>
         <span class="error-text">{error}</span>
-        <button type="button" class="retry-button" on:click={loadWorkspaces}>
+        <button type="button" class="retry-button" onclick={loadWorkspaces}>
           {$t('Retry')}
         </button>
       </div>
@@ -362,9 +408,10 @@
     <WorkspaceList
       {workspaces}
       {currentWorkspaceId}
-      isLoading={loading}
+      isLoading={loading || isPackaging}
       on:workspaceSelected={handleWorkspaceSelect}
       on:workspaceDeleted={handleWorkspaceDelete}
+      on:packageRequested={handlePackageRequest}
     />
 
     <!-- Unsaved Changes Indicator -->
@@ -392,16 +439,6 @@
     overflow-y: auto;
   }
 
-  .debug-banner {
-    padding: var(--space-3);
-    margin-block-end: var(--space-4);
-    background-color: var(--color-info-surface, #e6f3ff);
-    color: var(--color-info, #0066cc);
-    border: 1px solid var(--color-info, #0066cc);
-    border-radius: var(--radius-md);
-    font-size: var(--text-sm);
-    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-  }
 
   .error-banner {
     display: flex;
@@ -448,50 +485,6 @@
     box-shadow: inset 0 0 0 2px var(--color-focus-ring);
   }
 
-  .cleanup-banner {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-4);
-    margin-block-end: var(--space-6);
-    background-color: var(--color-warning-surface);
-    color: var(--color-warning);
-    border: 1px solid var(--color-warning);
-    border-radius: var(--radius-md);
-  }
-
-  .cleanup-icon {
-    font-size: 1.25rem;
-    flex-shrink: 0;
-  }
-
-  .cleanup-text {
-    flex: 1;
-    font-weight: 500;
-  }
-
-  .cleanup-button {
-    padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--color-warning);
-    border-radius: var(--radius-sm);
-    background-color: transparent;
-    color: var(--color-warning);
-    font-size: var(--text-sm);
-    font-weight: 500;
-    cursor: pointer;
-    transition: all var(--duration-fast) ease;
-    min-height: 44px; /* Accessibility: min touch target */
-  }
-
-  .cleanup-button:hover {
-    background-color: var(--color-warning);
-    color: var(--color-surface);
-  }
-
-  .cleanup-button:focus-visible {
-    outline: none;
-    box-shadow: inset 0 0 0 2px var(--color-focus-ring);
-  }
 
   .unsaved-indicator {
     display: flex;

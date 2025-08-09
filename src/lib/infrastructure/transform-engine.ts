@@ -124,8 +124,7 @@ export class TransformEngine {
     iframe.style.width = '1px';
     iframe.style.height = '1px';
     
-    // Configure sandbox for security - allow scripts and same-origin for blob URLs
-    iframe.sandbox.add('allow-scripts', 'allow-same-origin');
+    // No sandbox restrictions - iframe needs full access for transform scripts and blob URLs
     
     // Create iframe document using blob URL (CSP-compatible)
     const iframeDocument = this.createIframeDocument();
