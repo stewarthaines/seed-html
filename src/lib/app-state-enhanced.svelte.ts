@@ -24,6 +24,7 @@ import type {
 } from './services/settings/settings.service.js';
 import type { TransformExecutor } from './transform/transform-executor.js';
 import type { TransformEngine } from './infrastructure/transform-engine.js';
+import type { ExtensionManager } from './extensions/extension-manager.js';
 
 // Storage keys for workspace state persistence (following navigationStore pattern)
 const STORAGE_KEYS = {
@@ -38,15 +39,6 @@ interface I18nSystem {
   getCurrentLocale: () => string;
 }
 
-interface ExtensionManager {
-  getAvailableTransforms: (workspaceId: string) => Promise<
-    Array<{
-      path: string;
-      extensionName: string;
-      fileName: string;
-    }>
-  >;
-}
 
 interface ThemeStore {
   setTheme: (theme: 'light' | 'dark') => void;
@@ -64,6 +56,7 @@ export class EnhancedAppState {
   // Infrastructure layer
   private fileStorage: FileStorageAPI;
   private transformEngine: TransformEngine;
+  private extensionManager: ExtensionManager;
 
   // Service layer
   private workspaceService: WorkspaceService;
@@ -98,6 +91,7 @@ export class EnhancedAppState {
   ) {
     this.fileStorage = fileStorage;
     this.transformEngine = transformEngine;
+    this.extensionManager = extensionManager;
 
     // Initialize services with dependency injection
     // Create services without circular dependencies first
@@ -220,6 +214,10 @@ export class EnhancedAppState {
     return this.workspaceSettings?.draft_id || 0;
   }
 
+  get isAdvancedMode(): boolean {
+    return this.workspaceSettings?.editor?.advanced_mode ?? false;
+  }
+
   // Infrastructure access for components
   getTransformEngine(): TransformEngine {
     return this.transformEngine;
@@ -227,6 +225,13 @@ export class EnhancedAppState {
 
   getContentService(): ContentService {
     return this.contentService;
+  }
+  getSettingsService(): SettingsService {
+    return this.settingsService;
+  }
+
+  getExtensionManager(): ExtensionManager {
+    return this.extensionManager;
   }
 
   // ============================================================================

@@ -15,7 +15,7 @@ class TransformExecutionEngine {
   constructor() {
     this.textTransformScript = '';
     this.domTransformScripts = [];
-    this.extensionGlobals = {};
+    this.loadedExtensionScripts = [];
     this.debugMode = false;
     this.messageHandlers = new Map();
 
@@ -41,7 +41,7 @@ class TransformExecutionEngine {
 
     // Register message handlers
     this.messageHandlers.set('SET_TRANSFORM_SCRIPTS', this.setTransformScripts.bind(this));
-    this.messageHandlers.set('SET_EXTENSION_GLOBALS', this.setExtensionGlobals.bind(this));
+    this.messageHandlers.set('SET_EXTENSION_SCRIPTS', this.setExtensionScripts.bind(this));
     this.messageHandlers.set('EXECUTE_TRANSFORM', this.executeTransform.bind(this));
     this.messageHandlers.set('SET_DEBUG_MODE', this.setDebugMode.bind(this));
     this.messageHandlers.set('PING', this.handlePing.bind(this));
@@ -157,24 +157,33 @@ class TransformExecutionEngine {
   }
 
   /**
-   * Set extension global variables
+   * Load extension scripts dynamically into iframe context
    */
-  setExtensionGlobals(globals, messageId) {
+  async setExtensionScripts(scripts, messageId) {
     try {
-      this.extensionGlobals = globals || {};
-      const extensionCount = Object.keys(this.extensionGlobals).length;
+      // Clear any previously loaded extension scripts
+      this.clearLoadedExtensions();
+      
+      const scriptCount = scripts.length;
+      this.updateStatus(`Loading ${scriptCount} extension scripts...`, 'info');
 
-      this.updateStatus(`Loaded ${extensionCount} extension libraries`, 'info');
+      // Load each script sequentially to avoid race conditions
+      for (const script of scripts) {
+        await this.loadExtensionScript(script.name, script.blobUrl);
+      }
+
+      this.updateStatus(`Successfully loaded ${scriptCount} extension libraries`, 'success');
 
       if (this.debugMode) {
-        this.debugLog('Extension globals updated', {
-          extensionCount,
-          extensions: Object.keys(this.extensionGlobals),
+        this.debugLog('Extension scripts loaded', {
+          scriptCount,
+          scripts: scripts.map(s => s.name)
         });
       }
 
       this.respondToParent(messageId, { success: true });
     } catch (error) {
+      this.updateStatus(`Failed to load extension scripts: ${error.message}`, 'error');
       this.respondToParent(messageId, {
         success: false,
         error: {
@@ -184,6 +193,58 @@ class TransformExecutionEngine {
       });
     }
   }
+
+  /**
+   * Load a single extension script
+   */
+  async loadExtensionScript(name, blobUrl) {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = blobUrl;
+      
+      // Set ID for easy identification in browser inspector
+      // Convert name to valid HTML ID (replace invalid characters)
+      const scriptId = `extension-${name.replace(/[^a-zA-Z0-9-_]/g, '-')}`;
+      script.id = scriptId;
+      
+      script.onload = () => {
+        if (this.debugMode) {
+          this.debugLog(`Loaded extension script: ${name} (id: ${scriptId})`);
+        }
+        // Clean up blob URL after loading
+        URL.revokeObjectURL(blobUrl);
+        resolve();
+      };
+      script.onerror = (error) => {
+        URL.revokeObjectURL(blobUrl);
+        reject(new Error(`Failed to load extension script ${name}: ${error}`));
+      };
+      
+      // Add script to head to execute
+      document.head.appendChild(script);
+      
+      // Store reference for cleanup
+      if (!this.loadedExtensionScripts) {
+        this.loadedExtensionScripts = [];
+      }
+      this.loadedExtensionScripts.push(script);
+    });
+  }
+
+  /**
+   * Clear previously loaded extension scripts
+   */
+  clearLoadedExtensions() {
+    if (this.loadedExtensionScripts) {
+      for (const script of this.loadedExtensionScripts) {
+        if (script.parentNode) {
+          script.parentNode.removeChild(script);
+        }
+      }
+      this.loadedExtensionScripts = [];
+    }
+  }
+
 
   /**
    * Execute the complete transform pipeline
@@ -440,8 +501,7 @@ class TransformExecutionEngine {
       document: typeof document !== 'undefined' ? document : undefined,
       DOMParser: typeof DOMParser !== 'undefined' ? DOMParser : undefined,
 
-      // Extension libraries from workspace
-      ...this.extensionGlobals,
+      // Extension libraries are available as native window globals after dynamic loading
     };
 
     // Explicitly remove dangerous globals that could break sandbox

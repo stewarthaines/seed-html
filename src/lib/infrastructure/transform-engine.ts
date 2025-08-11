@@ -12,6 +12,8 @@ import type {
   TransformError
 } from '../types/spine-editor.js';
 import type { BlobURLManager } from '../blob-url/blob-url-manager.js';
+import type { ExtensionManager } from '../extensions/extension-manager.js';
+import { FileStorageAPI } from '../storage/index.js';
 
 // Import iframe assets as raw text for blob URL creation
 import editorHtml from '../../assets/iframe/editor.html?raw';
@@ -28,7 +30,7 @@ export class TransformEngine {
   }>();
   private blobURLManager: BlobURLManager;
 
-  constructor(blobURLManager: BlobURLManager) {
+  constructor(blobURLManager: BlobURLManager, private extensionManager?: ExtensionManager) {
     this.blobURLManager = blobURLManager;
   }
 
@@ -45,6 +47,7 @@ export class TransformEngine {
     
     // Wait for iframe ready signal
     await this.waitForReady();
+    
   }
 
   /**
@@ -90,6 +93,65 @@ export class TransformEngine {
     
     return await this.sendMessage('PING', payload);
   }
+
+  /**
+   * Set workspace extensions for transform execution
+   */
+  async setWorkspaceExtensions(workspaceId: string): Promise<void> {
+    if (!this.extensionManager) {
+      // No extension manager available, skip extension loading
+      return;
+    }
+
+    try {
+      const extensionScripts = await this.loadExtensionScripts(workspaceId);
+      await this.sendMessage('SET_EXTENSION_SCRIPTS', extensionScripts);
+    } catch (error) {
+      console.error('Failed to load workspace extensions:', error);
+      // Continue without extensions rather than breaking transforms
+    }
+  }
+
+  /**
+   * Load workspace extension scripts as blob URLs for iframe loading
+   */
+  private async loadExtensionScripts(workspaceId: string): Promise<Array<{name: string, blobUrl: string}>> {
+    if (!this.extensionManager) {
+      return [];
+    }
+
+    const extensions = await this.extensionManager.listWorkspaceExtensions(workspaceId);
+    const scripts: Array<{name: string, blobUrl: string}> = [];
+
+    for (const extension of extensions) {
+      try {
+        // Process each JavaScript file in the extension
+        const jsFiles = extension.files.filter(file => file.type === 'javascript');
+        
+        for (const jsFile of jsFiles) {
+          const filePath = `SOURCE/extensions/${extension.name}/${jsFile.filename}`;
+          
+          // Use FileStorageAPI directly since SOURCE files are not part of EPUB manifest structure
+          const fileStorage = FileStorageAPI.getInstance();
+          const content = await fileStorage.readFile(workspaceId, filePath);
+          const mimeType = 'application/javascript';
+          const blob = new Blob([content], { type: mimeType });
+          const blobUrl = URL.createObjectURL(blob);
+          
+          scripts.push({
+            name: `${extension.name}/${jsFile.filename}`,
+            blobUrl: blobUrl
+          });
+        }
+      } catch (error) {
+        console.warn(`Failed to load extension ${extension.name}:`, error);
+        // Continue with other extensions
+      }
+    }
+
+    return scripts;
+  }
+
 
   /**
    * Clean up resources (only on app shutdown)

@@ -26,18 +26,27 @@
   // Combine and filter items
   $: allItems = [
     ...manifestItems.map(item => ({ ...item, _type: 'manifest' as const })),
+    // Always show content.opf in both modes
+    {
+      name: 'content.opf',
+      path: 'content.opf',
+      size: undefined,
+      _type: 'opf' as const,
+    },
+    // Advanced mode: show individual SOURCE files
     ...(advancedMode ? sourceItems.map(item => ({ ...item, _type: 'source' as const })) : []),
-    ...(advancedMode
-      ? [
-          {
-            name: 'content.opf',
-            path: 'content.opf',
-            size: undefined,
-            _type: 'opf' as const,
-          },
-        ]
-      : []),
+    // Non-advanced mode: show SOURCE.zip placeholder
+    ...(!advancedMode ? [
+      {
+        name: 'SOURCE.zip',
+        path: 'SOURCE.zip',
+        size: undefined,
+        _type: 'source-zip' as const,
+        isPlaceholder: true,
+      },
+    ] : []),
   ];
+
 
   // Filter items based on filter text
   $: filteredItems = allItems.filter(item => {
@@ -59,6 +68,13 @@
         sourceItem.name.toLowerCase().includes(searchText) ||
         sourceItem.path.toLowerCase().includes(searchText)
       );
+    } else if (item._type === 'source-zip') {
+      // SOURCE.zip placeholder
+      const sourceZipItem = item as any;
+      return (
+        sourceZipItem.name.toLowerCase().includes(searchText) ||
+        sourceZipItem.path.toLowerCase().includes(searchText)
+      );
     } else {
       // OPF item
       const opfItem = item as any;
@@ -73,6 +89,7 @@
   $: sortedItems = (() => {
     const manifestItems = filteredItems.filter(item => item._type === 'manifest');
     const sourceItems = filteredItems.filter(item => item._type === 'source');
+    const sourceZipItems = filteredItems.filter(item => item._type === 'source-zip');
     const opfItems = filteredItems.filter(item => item._type === 'opf');
 
     const sortGroup = (items: typeof filteredItems) => {
@@ -86,12 +103,16 @@
               ? (a as ManifestItem).id
               : a._type === 'source'
                 ? (a as SourceItem).name
+                : a._type === 'source-zip'
+                  ? (a as any).name
                 : (a as any).name;
           bValue =
             b._type === 'manifest'
               ? (b as ManifestItem).id
               : b._type === 'source'
                 ? (b as SourceItem).name
+                : b._type === 'source-zip'
+                  ? (b as any).name
                 : (b as any).name;
         } else if (sortField === 'href') {
           aValue =
@@ -99,12 +120,16 @@
               ? (a as ManifestItem).href
               : a._type === 'source'
                 ? (a as SourceItem).path
+                : a._type === 'source-zip'
+                  ? (a as any).path
                 : (a as any).path;
           bValue =
             b._type === 'manifest'
               ? (b as ManifestItem).href
               : b._type === 'source'
                 ? (b as SourceItem).path
+                : b._type === 'source-zip'
+                  ? (b as any).path
                 : (b as any).path;
         } else if (sortField === 'size') {
           aValue = a.size || 0;
@@ -117,7 +142,7 @@
       });
     };
 
-    return [...sortGroup(manifestItems), ...sortGroup(sourceItems), ...sortGroup(opfItems)];
+    return [...sortGroup(manifestItems), ...sortGroup(sourceItems), ...sortGroup(opfItems), ...sortGroup(sourceZipItems)];
   })();
 
   const handleSort = (field: SortableFields) => {
@@ -131,15 +156,17 @@
 
   const handleRowClick = (
     item: ManifestItem | SourceItem | any,
-    type: 'manifest' | 'source' | 'opf'
+    type: 'manifest' | 'source' | 'opf' | 'source-zip'
   ) => {
-    dispatch('itemSelect', { item, type });
+    // Treat source-zip as 'source' for compatibility with parent component
+    const dispatchType = type === 'source-zip' ? 'source' : type;
+    dispatch('itemSelect', { item, type: dispatchType });
   };
 
   const handleRowKeyDown = (
     event: KeyboardEvent,
     item: ManifestItem | SourceItem | any,
-    type: 'manifest' | 'source' | 'opf'
+    type: 'manifest' | 'source' | 'opf' | 'source-zip'
   ) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
@@ -159,13 +186,17 @@
 
   const isItemSelected = (
     item: ManifestItem | SourceItem | any,
-    type: 'manifest' | 'source' | 'opf'
+    type: 'manifest' | 'source' | 'opf' | 'source-zip'
   ) => {
-    if (!selectedItem || selectedItemType !== type) return false;
+    if (!selectedItem) return false;
+    
+    // Treat source-zip as 'source' for selection comparison
+    const compareType = type === 'source-zip' ? 'source' : type;
+    if (selectedItemType !== compareType) return false;
 
     if (type === 'manifest') {
       return (item as ManifestItem).id === (selectedItem as ManifestItem).id;
-    } else if (type === 'source') {
+    } else if (type === 'source' || type === 'source-zip') {
       return (item as SourceItem).path === (selectedItem as SourceItem).path;
     } else {
       return (item as any).path === (selectedItem as any).path;
@@ -406,7 +437,8 @@
               itemType === 'manifest' ? hasValidationError(item as ManifestItem) : false}
             {@const prevItemType = index > 0 ? sortedItems[index - 1]._type : null}
             {@const showSourceSeparator = itemType === 'source' && prevItemType === 'manifest'}
-            {@const showOpfSeparator = itemType === 'opf' && prevItemType === 'source'}
+            {@const showSourceZipSeparator = itemType === 'source-zip' && prevItemType === 'opf'}
+            {@const showOpfSeparator = itemType === 'opf' && (prevItemType === 'manifest' || prevItemType === 'source')}
 
             <!-- Source items separator -->
             {#if showSourceSeparator}
@@ -414,6 +446,17 @@
                 <td colspan="4" class="separator-cell">
                   <div class="separator-content">
                     <span class="separator-label">{$t('SOURCE.zip')}</span>
+                  </div>
+                </td>
+              </tr>
+            {/if}
+
+            <!-- SOURCE.zip separator (non-advanced mode) -->
+            {#if showSourceZipSeparator}
+              <tr class="source-separator">
+                <td colspan="4" class="separator-cell">
+                  <div class="separator-content">
+                    <span class="separator-label">Source Files</span>
                   </div>
                 </td>
               </tr>
@@ -434,6 +477,7 @@
               class:selected={isSelected}
               class:error={hasError}
               class:source-item={itemType === 'source'}
+              class:source-zip-item={itemType === 'source-zip'}
               class:opf-item={itemType === 'opf'}
               tabindex="0"
               aria-selected={isSelected}
@@ -444,8 +488,8 @@
                 <span class="item-id">
                   {itemType === 'manifest'
                     ? (item as ManifestItem).id
-                    : itemType === 'source'
-                      ? (item as SourceItem).name
+                    : itemType === 'source' || itemType === 'source-zip'
+                      ? (item as SourceItem).name || (item as any).name
                       : (item as any).name}
                 </span>
               </td>
@@ -453,8 +497,8 @@
                 <span class="item-href">
                   {itemType === 'manifest'
                     ? (item as ManifestItem).href
-                    : itemType === 'source'
-                      ? (item as SourceItem).path
+                    : itemType === 'source' || itemType === 'source-zip'
+                      ? (item as SourceItem).path || (item as any).path
                       : (item as any).path}
                 </span>
               </td>
@@ -771,6 +815,17 @@
 
   .manifest-row.error {
     background-color: var(--color-bg-error);
+  }
+
+  .manifest-row.source-zip-item {
+    opacity: 0.8;
+    font-style: italic;
+    background-color: var(--color-bg-muted, rgba(0, 0, 0, 0.05));
+  }
+
+  .manifest-row.source-zip-item .item-id,
+  .manifest-row.source-zip-item .item-href {
+    color: var(--color-text-secondary);
   }
 
   .source-separator {

@@ -159,6 +159,11 @@
 
       // Clear global TextEditorStore registry to prevent ID collisions
       clearAllTextEditorStores();
+
+      // Load workspace extensions into transform engine
+      transformEngine.setWorkspaceExtensions(workspace.id).catch(error => {
+        console.error('Failed to load workspace extensions:', error);
+      });
     }
 
     // Update tracking

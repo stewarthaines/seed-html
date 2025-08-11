@@ -174,6 +174,27 @@
 
   // Load manifest when component mounts or dependencies change
   onMount(loadManifest);
+
+  // React to advancedMode changes
+  $effect(() => {
+    if (!workspace) return;
+
+    // When advancedMode changes, reload source items
+    if (advancedMode) {
+      // Load SOURCE items if advanced mode is enabled
+      workspaceService.listSourceFiles(workspace)
+        .then(items => {
+          sourceItems = items;
+        })
+        .catch(error => {
+          console.warn('Failed to load SOURCE items:', error);
+          sourceItems = [];
+        });
+    } else {
+      // Clear SOURCE items if advanced mode is disabled
+      sourceItems = [];
+    }
+  });
   
   // React to workspace changes
   $effect(() => {

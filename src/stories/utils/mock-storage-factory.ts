@@ -93,12 +93,8 @@ export function createIsolatedMockStorage(): FileStorageAPI {
         filePaths = filePaths.filter(path => path.startsWith(normalizedDir));
       }
       
-      return filePaths.map(path => ({
-        path,
-        isDirectory: false,
-        size: workspaceFiles.get(path)?.byteLength || 0,
-        lastModified: new Date()
-      }));
+      // Return only the paths as strings to match FileStorageAPI interface
+      return filePaths;
     },
 
     async createDirectory(workspaceId: string, path: string) {

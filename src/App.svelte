@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount } from 'svelte';
   import LayoutManager from './lib/LayoutManager.svelte';
   import { navigationStore } from './lib/navigation';
   import type { ViewType } from './lib/navigation/types';
@@ -7,6 +7,7 @@
   import MetadataEditor from './lib/components/metadata/MetadataEditor.svelte';
   import PlaceholderView from './lib/navigation/views/PlaceholderView.svelte';
   import SpineView from './lib/navigation/views/SpineView.svelte';
+  import SettingsView from './lib/navigation/views/SettingsView.svelte';
   import SpineSidebar from './lib/components/SpineSidebar.svelte';
   import ManifestContainer from './lib/components/manifest/ManifestContainer.svelte';
   import ManifestPreview from './lib/components/manifest/ManifestPreview.svelte';
@@ -24,11 +25,10 @@
   import { SpineService } from './lib/services/spine/spine.service.js';
   import { MetadataService } from './lib/services/metadata/metadata.service.js';
   import { BlobURLManager } from './lib/blob-url/blob-url-manager.js';
+import { ExtensionManager } from './lib/extensions/extension-manager.js';
 
-  // Simple implementations for required dependencies
-  const simpleExtensionManager = {
-    getAvailableTransforms: async () => [],
-  };
+  // Extension manager instance
+  let extensionManager: ExtensionManager;
 
   const simpleThemeStore = {
     setTheme: () => {},
@@ -60,7 +60,6 @@
 
   // AppState created in proper Svelte context, initialized later
   let appState = $state<EnhancedAppState | null>(null);
-  let appInitialized = $state(false);
 
   // Reactive getters for template access
   let currentView = $derived($navigationStore.currentView);
@@ -160,6 +159,9 @@
         // Initialize FileStorageAPI first
         await fileStorage.init();
 
+        // Create extension manager after FileStorageAPI is initialized
+        extensionManager = new ExtensionManager(fileStorage);
+
         // Create blob URL manager after FileStorageAPI is initialized
         blobURLManager = new BlobURLManager({
           fileStorage,
@@ -171,7 +173,7 @@
         });
 
         // Initialize transform engine
-        transformEngine = new TransformEngine(blobURLManager);
+        transformEngine = new TransformEngine(blobURLManager, extensionManager);
         await transformEngine.initialize();
         transformEngineReady = true;
 
@@ -180,7 +182,7 @@
           fileStorage,
           transformExecutor,
           i18nService,
-          simpleExtensionManager,
+          extensionManager,
           simpleThemeStore,
           simpleI18nStore,
           transformEngine
@@ -310,7 +312,7 @@
           <ManifestContainer
             workspace={currentWorkspaceState}
             {workspaceService}
-            advancedMode={true}
+            advancedMode={appState.isAdvancedMode}
             onItemSelect={handleManifestItemSelect}
           />
         {:else}
@@ -357,11 +359,17 @@
           />
         {/if}
       {:else if currentView === 'settings'}
-        <PlaceholderView
-          viewType="settings"
-          title={$t('Application Settings')}
-          description={$t('Configure preferences and options')}
-          icon="⚙️"
+        <SettingsView
+          settingsService={appState.getSettingsService()}
+          extensionManager={appState.getExtensionManager()}
+          transformEngine={appState.getTransformEngine()}
+          workspaceId={appState.currentWorkspaceId}
+          onSettingsChanged={() => {
+            // Reload workspace settings in AppState after they're changed in SettingsView
+            if (appState?.currentWorkspaceId) {
+              appState.loadWorkspaceSettings(appState.currentWorkspaceId);
+            }
+          }}
         />
       {:else}
         <div class="placeholder-content">

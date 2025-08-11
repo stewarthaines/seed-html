@@ -6,8 +6,8 @@
 
 import type { EPUBMetadata, ManifestItem, OPFDocument, SpineItem } from '../epub/opf-utils.js';
 
-// Re-export ManifestItem for convenience
-export type { ManifestItem };
+// Re-export types for convenience
+export type { ManifestItem, OPFDocument, SpineItem };
 
 // Reserved workspace IDs that should be excluded from user workspace lists
 export const RESERVED_WORKSPACE_IDS = new Set([

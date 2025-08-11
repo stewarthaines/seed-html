@@ -14,7 +14,7 @@
   $: sidebarWidth = sidebar.isExpanded ? '250px' : '48px';
 
   // Determine which sections should show preview pane
-  $: showPreviewPane = sidebar.activeSection !== 'workspace';
+  $: showPreviewPane = sidebar.activeSection !== 'workspace' && sidebar.activeSection !== 'settings';
 </script>
 
 <div class="app-layout" style="grid-template-columns: {sidebarWidth} 1fr">
@@ -72,7 +72,7 @@
         </Pane>
       </PaneGroup>
     {:else}
-      <!-- Single pane mode for workspace view -->
+      <!-- Single pane mode for workspace and settings views -->
       <div class="single-pane-container">
         <div class="pane-header">
           <slot name="left-header" />
