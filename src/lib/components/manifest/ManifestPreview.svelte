@@ -31,6 +31,21 @@
     return mediaType.startsWith('image/');
   };
 
+  // Helper function to determine if content should use LTR direction (for technical files)
+  const shouldUseLtrDirection = (mediaType: string): boolean => {
+    return (
+      mediaType.includes('css') ||
+      mediaType.includes('javascript') ||
+      mediaType.includes('json') ||
+      mediaType.includes('xml') ||
+      mediaType.startsWith('text/css') ||
+      mediaType.startsWith('text/javascript') ||
+      mediaType.startsWith('application/json') ||
+      mediaType.startsWith('application/xml') ||
+      mediaType.startsWith('application/xhtml+xml')
+    );
+  };
+
   // Clean up blob URLs to prevent memory leaks
   const cleanupBlobUrl = () => {
     if (activeBlobUrl) {
@@ -321,7 +336,10 @@
             </div>
           {:else if contentPreview.contentType === 'text' && contentPreview.textContent}
             <div class="text-preview">
-              <pre class="text-content">{contentPreview.textContent}</pre>
+              <pre 
+                class="text-content" 
+                dir={shouldUseLtrDirection(contentPreview.mediaType) ? 'ltr' : undefined}
+              >{contentPreview.textContent}</pre>
             </div>
           {:else if contentPreview.contentType === 'image' && contentPreview.previewUrl}
             <div class="image-preview">

@@ -136,9 +136,9 @@ export async function initI18n(): Promise<void> {
     const preferredLocale = getBrowserLocale();
     const initialLocale = catalogs[preferredLocale] ? preferredLocale : DEFAULT_LOCALE;
 
-    // Apply document direction
+    // Apply document direction using data attribute
     if (typeof document !== 'undefined') {
-      document.documentElement.dir = isRTL(initialLocale) ? 'rtl' : 'ltr';
+      document.documentElement.setAttribute('data-dir', isRTL(initialLocale) ? 'rtl' : 'ltr');
       document.documentElement.setAttribute('data-locale', initialLocale);
     }
 
@@ -181,9 +181,9 @@ export async function setLocale(locale: string): Promise<void> {
     console.warn(`Translation catalog for ${locale} not loaded, falling back to English`);
   }
 
-  // Update document direction
+  // Update document direction using data attribute
   if (typeof document !== 'undefined') {
-    document.documentElement.dir = isRTL(locale) ? 'rtl' : 'ltr';
+    document.documentElement.setAttribute('data-dir', isRTL(locale) ? 'rtl' : 'ltr');
     document.documentElement.setAttribute('data-locale', locale);
   }
 

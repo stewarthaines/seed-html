@@ -26,6 +26,15 @@ html {
   text-size-adjust: none;
 }
 
+/* Principal writing mode using :root pseudo-class */
+:root[data-dir="rtl"] {
+  direction: rtl;
+}
+
+:root[data-dir="ltr"] {
+  direction: ltr;
+}
+
 body {
   min-height: 100vh;
   line-height: var(--leading-normal);

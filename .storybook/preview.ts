@@ -98,9 +98,9 @@ const preview: Preview = {
       const { locale = 'en' } = globals;
 
       if (typeof window !== 'undefined') {
-        // Set document direction for RTL languages
+        // Set document direction using data attribute for RTL languages
         const direction = isRTL(locale) ? 'rtl' : 'ltr';
-        document.documentElement.dir = direction;
+        document.documentElement.setAttribute('data-dir', direction);
         document.documentElement.setAttribute('data-locale', locale);
 
         // Defer locale switching to avoid state mutation during render

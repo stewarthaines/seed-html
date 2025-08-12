@@ -266,6 +266,7 @@
             bind:value={formData.id}
             on:blur={generateHrefFromId}
             placeholder={$t('Unique identifier for this item')}
+            dir="ltr"
             required
           />
           {#if getFieldError('id')}
@@ -285,6 +286,7 @@
             bind:value={formData.href}
             on:blur={generateIdFromHref}
             placeholder={$t('OEBPS/filename.ext')}
+            dir="ltr"
             required
           />
           {#if getFieldError('href')}

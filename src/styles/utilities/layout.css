@@ -632,22 +632,22 @@
 }
 
 /* RTL-aware object positioning */
-[dir='rtl'] .object-start {
+[data-dir='rtl'] .object-start {
   object-position: right;
 }
-[dir='rtl'] .object-start-bottom {
+[data-dir='rtl'] .object-start-bottom {
   object-position: right bottom;
 }
-[dir='rtl'] .object-start-top {
+[data-dir='rtl'] .object-start-top {
   object-position: right top;
 }
-[dir='rtl'] .object-end {
+[data-dir='rtl'] .object-end {
   object-position: left;
 }
-[dir='rtl'] .object-end-bottom {
+[data-dir='rtl'] .object-end-bottom {
   object-position: left bottom;
 }
-[dir='rtl'] .object-end-top {
+[data-dir='rtl'] .object-end-top {
   object-position: left top;
 }
 

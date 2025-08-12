@@ -113,7 +113,7 @@ p {
 }
 
 /* RTL-specific physical fallback */
-[dir='rtl'] p {
+[data-dir='rtl'] p {
   text-align: right;
 }
 

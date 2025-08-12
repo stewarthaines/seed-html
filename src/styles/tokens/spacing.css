@@ -130,7 +130,7 @@
      ============================================ */
 
   /* Direction-aware spacing */
-  --layout-direction: ltr; /* Default, overridden by [dir="rtl"] */
+  --layout-direction: ltr; /* Default, overridden by [data-dir="rtl"] */
 
   /* RTL-aware content alignment */
   --content-align-start: left; /* Overridden in RTL */
@@ -200,7 +200,7 @@
    Direction-specific token overrides for RTL languages
    ============================================ */
 
-[dir='rtl'] {
+[data-dir='rtl'] {
   --layout-direction: rtl;
   --content-align-start: right;
   --content-align-end: left;

@@ -5,39 +5,39 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: EDITME EPUB Editor\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-28T02:25:14.570Z\n"
-"PO-Revision-Date: 2025-07-28T02:25:14.610Z\n"
+"POT-Creation-Date: 2025-08-12T06:01:11.926Z\n"
+"PO-Revision-Date: 2025-08-12T06:01:11.975Z\n"
 "Language: de\n"
 "Language-Team: \n"
 "Last-Translator: \n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/lib/components/workspace/WorkspaceItem.svelte:40
+#: src/lib/components/workspace/WorkspaceItem.svelte:49
 msgid "1 day ago"
 msgstr ""
 
-#: src/lib/navigation/views/MetadataView.svelte:164
-msgid "A unique identifier for this EPUB (ISBN, URI, UUID, etc.)"
-msgstr "🇩🇪 A unique identifier for this EPUB (ISBN, URI, UUID, etc.)"
-
-#: src/lib/components/metadata/MetadataEditor.svelte:259
-#: src/lib/components/metadata/MetadataEditor.svelte:26
+#: src/lib/components/metadata/MetadataEditor.svelte:243
+#: src/lib/components/metadata/MetadataEditor.svelte:38
 msgid "Accessibility"
 msgstr "🇩🇪 Accessibility"
 
-#: src/lib/components/metadata/MetadataEditor.svelte:259
+#: src/lib/components/metadata/MetadataEditor.svelte:243
 msgid "Accessibility features, hazards, and certification information"
 msgstr "🇩🇪 Accessibility features, hazards, and certification information"
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:172
+#: src/lib/components/metadata/BasicInfoFields.svelte:201
 msgid "Add Author"
 msgstr "🇩🇪 Add Author"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:221
+#: src/lib/components/metadata/AdvancedFields.svelte:234
 msgid "Add Contributor"
 msgstr "🇩🇪 Add Contributor"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:184
+#: src/lib/components/spine/EditorPane.svelte:326
+msgid "Add Pane"
+msgstr ""
+
+#: src/lib/components/metadata/AdvancedFields.svelte:197
 msgid "Add Subject"
 msgstr "🇩🇪 Add Subject"
 
@@ -45,20 +45,11 @@ msgstr "🇩🇪 Add Subject"
 msgid "Add/remove manifest items"
 msgstr "🇩🇪 Add/remove manifest items"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:107
+#: src/lib/components/metadata/AdvancedFields.svelte:120
 msgid "Additional Information"
 msgstr "🇩🇪 Additional Information"
 
-#: src/lib/navigation/views/MetadataView.svelte:173
-msgid ""
-"Additional metadata fields (publisher, date, description, etc.) will be "
-"implemented in Phase 3."
-msgstr ""
-"🇩🇪 Additional metadata fields (publisher, date, description, etc.) will "
-"be implemented in Phase 3."
-
-#: src/lib/components/metadata/MetadataEditor.svelte:24
-#: src/lib/components/manifest/ManifestView.svelte:59
+#: src/lib/components/metadata/MetadataEditor.svelte:36
 msgid "Advanced"
 msgstr ""
 
@@ -66,7 +57,7 @@ msgstr ""
 msgid "Advanced configurations"
 msgstr "🇩🇪 Advanced configurations"
 
-#: src/lib/components/workspace/WorkspaceList.svelte:113
+#: src/lib/components/workspace/WorkspaceList.svelte:118
 msgid "All your work is saved automatically"
 msgstr "🇩🇪 All your work is saved automatically"
 
@@ -81,11 +72,8 @@ msgstr "🇩🇪 Append Item"
 msgid "Application preferences"
 msgstr "🇩🇪 Application preferences"
 
-#: src/App.svelte:204
-msgid "Application Settings"
-msgstr "🇩🇪 Application Settings"
-
-#: src/lib/components/manifest/ManifestContainer.svelte:87
+#: src/App.svelte:172
+#: src/lib/components/manifest/ManifestContainer.svelte:92
 msgid "Are you sure you want to delete this item?"
 msgstr ""
 
@@ -93,20 +81,16 @@ msgstr ""
 msgid "at"
 msgstr "🇩🇪 at"
 
-#: src/lib/navigation/views/MetadataView.svelte:127
-msgid "Author"
-msgstr "🇩🇪 Author"
-
-#: src/lib/components/metadata/BasicInfoFields.svelte:149
+#: src/lib/components/metadata/BasicInfoFields.svelte:178
 msgid "Author name"
 msgstr "🇩🇪 Author name"
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:141
+#: src/lib/components/metadata/BasicInfoFields.svelte:170
 msgid "Authors"
 msgstr "🇩🇪 Authors"
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:45
-#: src/lib/components/metadata/BasicInfoFields.svelte:51
+#: src/lib/components/metadata/BasicInfoFields.svelte:68
+#: src/lib/components/metadata/BasicInfoFields.svelte:74
 msgid "Auto"
 msgstr ""
 
@@ -114,35 +98,27 @@ msgstr ""
 msgid "Auto-generation from spine"
 msgstr "🇩🇪 Auto-generation from spine"
 
-#: src/lib/navigation/views/SpineView.svelte:180
-msgid "Available"
+#: src/lib/navigation/views/PlaceholderView.svelte:150
+msgid "Back to Projects"
 msgstr ""
 
-#: src/lib/navigation/views/PlaceholderView.svelte:150
-msgid "Back to Workspace"
-msgstr "🇩🇪 Back to Workspace"
-
-#: src/lib/components/metadata/MetadataEditor.svelte:23
+#: src/lib/components/metadata/MetadataEditor.svelte:35
 msgid "Basic Info"
 msgstr ""
 
-#: src/lib/navigation/views/MetadataView.svelte:112
-msgid "Basic Information"
-msgstr "🇩🇪 Basic Information"
-
-#: src/lib/components/manifest/ManifestPreview.svelte:261
+#: src/lib/components/manifest/ManifestPreview.svelte:371
 msgid "Binary file - preview not available"
 msgstr "🇩🇪 Binary file - preview not available"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:24
+#: src/lib/components/metadata/AdvancedFields.svelte:37
 msgid "Biography"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:53
+#: src/lib/components/metadata/BasicInfoFields.svelte:76
 msgid "Both"
 msgstr ""
 
-#: src/lib/components/manifest/ManifestItemEditor.svelte:344
+#: src/lib/components/manifest/ManifestItemEditor.svelte:358
 msgid "Cancel"
 msgstr "🇩🇪 Cancel"
 
@@ -154,37 +130,33 @@ msgstr ""
 msgid "Chapter ordering interface"
 msgstr "🇩🇪 Chapter ordering interface"
 
-#: src/lib/components/manifest/ManifestPreview.svelte:272
+#: src/lib/components/manifest/ManifestPreview.svelte:382
 msgid "Characters"
 msgstr "🇩🇪 Characters"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:27
+#: src/lib/components/metadata/AdvancedFields.svelte:40
 msgid "Children"
 msgstr ""
 
-#: src/lib/navigation/views/MetadataView.svelte:147
-msgid "Chinese"
-msgstr "🇩🇪 Chinese"
-
-#: src/lib/navigation/views/WorkspaceView.svelte:432
-msgid "Clean Up"
-msgstr "🇩🇪 Clean Up"
+#: src/lib/navigation/views/WorkspaceView.svelte:298
+msgid "Cleanup functionality will be implemented in a future service update."
+msgstr ""
 
 #: src/lib/components/manifest/ManifestToolbar.svelte:88
-#: src/lib/components/manifest/ManifestTable.svelte:261
+#: src/lib/components/manifest/ManifestTable.svelte:330
 msgid "Clear filter"
 msgstr "🇩🇪 Clear filter"
 
-#: src/lib/components/workspace/WorkspaceList.svelte:83
-#: src/lib/components/workspace/WorkspaceList.svelte:125
+#: src/lib/components/workspace/WorkspaceList.svelte:88
+#: src/lib/components/workspace/WorkspaceList.svelte:130
 msgid "Clear search"
 msgstr "🇩🇪 Clear search"
 
-#: src/lib/components/manifest/ManifestPreview.svelte:162
+#: src/lib/components/manifest/ManifestPreview.svelte:269
 msgid "Click on any row in the table to see details"
 msgstr "🇩🇪 Click on any row in the table to see details"
 
-#: src/lib/components/manifest/ManifestItemEditor.svelte:219
+#: src/lib/components/manifest/ManifestItemEditor.svelte:229
 msgid "Close"
 msgstr "🇩🇪 Close"
 
@@ -193,8 +165,8 @@ msgid "Coming soon"
 msgstr "🇩🇪 Coming soon"
 
 #: src/lib/navigation/views/PlaceholderView.svelte:97
-#: src/lib/components/metadata/MetadataEditor.svelte:248
-#: src/lib/components/metadata/MetadataEditor.svelte:257
+#: src/lib/components/metadata/MetadataEditor.svelte:232
+#: src/lib/components/metadata/MetadataEditor.svelte:241
 msgid "Coming Soon"
 msgstr "🇩🇪 Coming Soon"
 
@@ -202,23 +174,19 @@ msgstr "🇩🇪 Coming Soon"
 msgid "Complex Interactive"
 msgstr ""
 
-#: src/lib/navigation/views/MetadataView.svelte:106
-msgid "Configure basic information about your EPUB publication"
-msgstr "🇩🇪 Configure basic information about your EPUB publication"
-
-#: src/App.svelte:205
-msgid "Configure preferences and options"
-msgstr "🇩🇪 Configure preferences and options"
-
-#: src/App.svelte:158
+#: src/App.svelte:348
 msgid "Configure publication metadata and details"
 msgstr "🇩🇪 Configure publication metadata and details"
 
-#: src/lib/components/manifest/ManifestPreview.svelte:269
+#: src/lib/components/manifest/ManifestPreview.svelte:379
 msgid "Content Details"
 msgstr "🇩🇪 Content Details"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:96
+#: src/App.svelte:462
+msgid "Content preview will appear here based on the current view"
+msgstr ""
+
+#: src/lib/components/metadata/AdvancedFields.svelte:109
 msgid "Content Type"
 msgstr "🇩🇪 Content Type"
 
@@ -226,15 +194,15 @@ msgstr "🇩🇪 Content Type"
 msgid "Content Type:"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:198
+#: src/lib/components/metadata/AdvancedFields.svelte:211
 msgid "Contributor name"
 msgstr "🇩🇪 Contributor name"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:190
+#: src/lib/components/metadata/AdvancedFields.svelte:203
 msgid "Contributors"
 msgstr "🇩🇪 Contributors"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:131
+#: src/lib/components/metadata/AdvancedFields.svelte:144
 msgid "Coverage"
 msgstr "🇩🇪 Coverage"
 
@@ -246,22 +214,22 @@ msgstr "🇩🇪 Create a new minimal EPUB project"
 msgid "Create New"
 msgstr "🇩🇪 Create New"
 
-#: src/lib/components/workspace/WorkspaceList.svelte:111
+#: src/lib/components/workspace/WorkspaceList.svelte:116
 msgid "Create New: Start with a template or blank project"
 msgstr "🇩🇪 Create New: Start with a template or blank project"
 
 #: src/lib/components/manifest/ManifestToolbar.svelte:114
-#: src/lib/components/manifest/ManifestTable.svelte:287
-#: src/lib/components/manifest/ManifestItemEditor.svelte:212
-#: src/lib/components/manifest/ManifestItemEditor.svelte:348
+#: src/lib/components/manifest/ManifestTable.svelte:356
+#: src/lib/components/manifest/ManifestItemEditor.svelte:222
+#: src/lib/components/manifest/ManifestItemEditor.svelte:362
 msgid "Create Text File"
 msgstr "🇩🇪 Create Text File"
 
-#: src/lib/components/manifest/ManifestTable.svelte:320
+#: src/lib/components/manifest/ManifestTable.svelte:389
 msgid "Create your first item using the buttons above"
 msgstr "🇩🇪 Create your first item using the buttons above"
 
-#: src/lib/components/workspace/WorkspaceItem.svelte:86
+#: src/lib/components/workspace/WorkspaceItem.svelte:95
 msgid "Current"
 msgstr "🇩🇪 Current"
 
@@ -269,26 +237,26 @@ msgstr "🇩🇪 Current"
 msgid "Current Settings:"
 msgstr ""
 
-#: src/App.svelte:228
+#: src/App.svelte:463
 msgid "Current view"
 msgstr "🇩🇪 Current view"
 
-#: src/lib/components/workspace/WorkspaceItem.svelte:86
+#: src/lib/components/workspace/WorkspaceItem.svelte:95
 msgid "Currently open"
 msgstr "🇩🇪 Currently open"
 
 #: src/stories/preview/ContentPreviewDemo.svelte:139
-#: src/lib/components/metadata/BasicInfoFields.svelte:39
+#: src/lib/components/metadata/BasicInfoFields.svelte:62
 msgid "Default"
 msgstr ""
 
-#: src/lib/components/manifest/ManifestPreview.svelte:212
+#: src/lib/components/manifest/ManifestPreview.svelte:319
 msgid "Delete"
 msgstr "🇩🇪 Delete"
 
-#: src/lib/components/workspace/WorkspaceItem.svelte:111
-msgid "Delete workspace"
-msgstr "🇩🇪 Delete workspace"
+#: src/lib/components/workspace/WorkspaceItem.svelte:132
+msgid "Delete project"
+msgstr ""
 
 #: src/lib/navigation/views/PlaceholderView.svelte:141
 msgid "Demo Action 1"
@@ -302,7 +270,7 @@ msgstr "🇩🇪 Demo Action 2"
 msgid "Demo Controls"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:180
+#: src/lib/components/metadata/BasicInfoFields.svelte:209
 msgid "Description"
 msgstr "🇩🇪 Description"
 
@@ -311,11 +279,11 @@ msgstr "🇩🇪 Description"
 msgid "Device:"
 msgstr ""
 
-#: src/lib/components/manifest/ManifestPreview.svelte:284
+#: src/lib/components/manifest/ManifestPreview.svelte:394
 msgid "Dimensions"
 msgstr "🇩🇪 Dimensions"
 
-#: src/lib/components/manifest/ManifestPreview.svelte:208
+#: src/lib/components/manifest/ManifestPreview.svelte:315
 msgid "Download"
 msgstr "🇩🇪 Download"
 
@@ -323,155 +291,138 @@ msgstr "🇩🇪 Download"
 msgid "Drag-and-drop reordering"
 msgstr "🇩🇪 Drag-and-drop reordering"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:23
+#: src/lib/components/metadata/AdvancedFields.svelte:36
 msgid "Drama"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestToolbar.svelte:132
-#: src/lib/components/manifest/ManifestTable.svelte:305
+#: src/lib/components/manifest/ManifestTable.svelte:374
 msgid "Drop files here to add them to the manifest"
 msgstr "🇩🇪 Drop files here to add them to the manifest"
 
-#: src/lib/components/manifest/ManifestPreview.svelte:288
+#: src/lib/components/manifest/ManifestPreview.svelte:398
 msgid "Duration"
 msgstr "🇩🇪 Duration"
 
-#: src/lib/components/manifest/ManifestPreview.svelte:200
+#: src/lib/components/manifest/ManifestPreview.svelte:307
 msgid "Edit"
 msgstr "🇩🇪 Edit"
 
-#: src/lib/components/manifest/ManifestItemEditor.svelte:216
+#: src/lib/components/manifest/ManifestItemEditor.svelte:226
 msgid "Edit Manifest Item"
 msgstr "🇩🇪 Edit Manifest Item"
-
-#: src/App.svelte:182
-msgid "Edit navigation structure and TOC"
-msgstr "🇩🇪 Edit navigation structure and TOC"
-
-#: src/lib/navigation/views/SpineView.svelte:217
-msgid "Edit source content with syntax highlighting and validation (Phase 4)"
-msgstr "🇩🇪 Edit source content with syntax highlighting and validation (Phase 4)"
-
-#: src/lib/navigation/views/MetadataView.svelte:141
-msgid "English"
-msgstr "🇩🇪 English"
 
 #: src/lib/navigation/views/PlaceholderView.svelte:129
 msgid "Enhanced functionality"
 msgstr "🇩🇪 Enhanced functionality"
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:123
+#: src/lib/components/metadata/BasicInfoFields.svelte:152
 msgid "Enter a unique identifier"
 msgstr "🇩🇪 Enter a unique identifier"
 
-#: src/lib/navigation/views/MetadataView.svelte:133
-msgid "Enter author name"
-msgstr "🇩🇪 Enter author name"
-
-#: src/lib/components/metadata/BasicInfoFields.svelte:186
+#: src/lib/components/metadata/BasicInfoFields.svelte:215
 msgid "Enter book description"
 msgstr "🇩🇪 Enter book description"
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:99
+#: src/lib/components/metadata/BasicInfoFields.svelte:128
 msgid "Enter book title"
 msgstr "🇩🇪 Enter book title"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:88
+#: src/lib/components/metadata/AdvancedFields.svelte:101
 msgid "Enter copyright information"
 msgstr "🇩🇪 Enter copyright information"
 
-#: src/lib/navigation/views/MetadataView.svelte:121
-msgid "Enter EPUB title"
-msgstr "🇩🇪 Enter EPUB title"
-
-#: src/lib/components/metadata/AdvancedFields.svelte:143
+#: src/lib/components/metadata/AdvancedFields.svelte:156
 msgid "Enter format information"
 msgstr "🇩🇪 Enter format information"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:69
+#: src/lib/components/metadata/AdvancedFields.svelte:82
 msgid "Enter publisher name"
 msgstr "🇩🇪 Enter publisher name"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:123
+#: src/lib/components/metadata/AdvancedFields.svelte:136
 msgid "Enter related work information"
 msgstr "🇩🇪 Enter related work information"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:113
+#: src/lib/components/metadata/AdvancedFields.svelte:126
 msgid "Enter source information"
 msgstr "🇩🇪 Enter source information"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:133
+#: src/lib/components/metadata/AdvancedFields.svelte:146
 msgid "Enter spatial or temporal coverage"
 msgstr "🇩🇪 Enter spatial or temporal coverage"
 
-#: src/lib/components/manifest/ManifestItemEditor.svelte:332
+#: src/lib/components/manifest/ManifestItemEditor.svelte:346
 msgid "Enter the initial content for this text file…"
 msgstr ""
 
-#: src/lib/navigation/views/WorkspaceView.svelte:169
+#: src/lib/navigation/views/WorkspaceView.svelte:176
 msgid ""
 "EPUB import functionality is coming soon. For now, use \"Create New\" to "
 "start a fresh project."
 msgstr ""
 
-#: src/App.svelte:157
-#: src/lib/navigation/views/MetadataView.svelte:105
+#: src/App.svelte:347
 msgid "EPUB Metadata"
 msgstr "🇩🇪 EPUB Metadata"
 
-#: src/lib/components/manifest/ManifestItemEditor.svelte:307
+#: src/lib/components/manifest/ManifestItemEditor.svelte:320
 msgid "EPUB Properties"
 msgstr "🇩🇪 EPUB Properties"
 
-#: src/lib/components/workspace/WorkspaceItem.svelte:73
+#: src/lib/components/workspace/WorkspaceItem.svelte:82
 msgid "Error"
 msgstr "🇩🇪 Error"
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:93
+#: src/lib/components/metadata/BasicInfoFields.svelte:122
 msgid "Essential Information"
 msgstr "🇩🇪 Essential Information"
-
-#: src/lib/navigation/views/SpineView.svelte:207
-msgid "Expected at"
-msgstr "🇩🇪 Expected at"
 
 #: src/lib/navigation/views/PlaceholderView.svelte:126
 msgid "Export/import settings"
 msgstr "🇩🇪 Export/import settings"
 
-#: src/lib/components/manifest/ManifestContainer.svelte:100
+#: src/lib/components/metadata/MetadataEditor.svelte:131
+msgid "Failed to add metadata item"
+msgstr ""
+
+#: src/lib/components/manifest/ManifestContainer.svelte:105
 msgid "Failed to delete item"
 msgstr "🇩🇪 Failed to delete item"
 
-#: src/lib/components/manifest/ManifestPreview.svelte:80
+#: src/lib/components/manifest/ManifestPreview.svelte:200
 msgid "Failed to load content preview"
 msgstr "🇩🇪 Failed to load content preview"
 
-#: src/lib/components/manifest/ManifestContainer.svelte:53
+#: src/lib/components/manifest/ManifestContainer.svelte:58
 msgid "Failed to load manifest"
 msgstr "🇩🇪 Failed to load manifest"
 
-#: src/lib/components/metadata/MetadataEditor.svelte:86
-msgid "Failed to load metadata"
-msgstr "🇩🇪 Failed to load metadata"
+#: src/lib/navigation/views/WorkspaceView.svelte:105
+msgid "Failed to load projects"
+msgstr ""
 
-#: src/lib/navigation/views/WorkspaceView.svelte:81
-msgid "Failed to load workspaces"
-msgstr "🇩🇪 Failed to load workspaces"
+#: src/lib/components/metadata/MetadataEditor.svelte:155
+msgid "Failed to remove metadata item"
+msgstr ""
 
-#: src/lib/components/manifest/ManifestContainer.svelte:128
+#: src/lib/components/manifest/ManifestContainer.svelte:134
 msgid "Failed to save item"
 msgstr "🇩🇪 Failed to save item"
 
-#: src/lib/components/manifest/ManifestContainer.svelte:144
+#: src/lib/components/metadata/MetadataEditor.svelte:109
+msgid "Failed to save metadata field"
+msgstr ""
+
+#: src/lib/components/manifest/ManifestContainer.svelte:167
 msgid "Failed to upload files"
 msgstr "🇩🇪 Failed to upload files"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:20
+#: src/lib/components/metadata/AdvancedFields.svelte:33
 msgid "Fiction"
 msgstr ""
 
-#: src/lib/components/manifest/ManifestPreview.svelte:304
+#: src/lib/components/manifest/ManifestPreview.svelte:414
 msgid "File Information"
 msgstr "🇩🇪 File Information"
 
@@ -479,26 +430,25 @@ msgstr "🇩🇪 File Information"
 msgid "File listing and management"
 msgstr "🇩🇪 File listing and management"
 
-#: src/App.svelte:173
-#: src/lib/components/manifest/ManifestView.svelte:50
+#: src/App.svelte:363
 msgid "File Manifest"
 msgstr "🇩🇪 File Manifest"
 
-#: src/lib/components/manifest/ManifestItemEditor.svelte:268
+#: src/lib/components/manifest/ManifestItemEditor.svelte:279
 msgid "File Path"
 msgstr "🇩🇪 File Path"
 
-#: src/lib/components/workspace/WorkspaceItem.svelte:99
+#: src/lib/components/workspace/WorkspaceItem.svelte:108
 msgid "files"
 msgstr "🇩🇪 files"
 
 #: src/lib/components/manifest/ManifestToolbar.svelte:72
-#: src/lib/components/manifest/ManifestTable.svelte:245
+#: src/lib/components/manifest/ManifestTable.svelte:314
 msgid "Filter"
 msgstr "🇩🇪 Filter"
 
 #: src/lib/components/manifest/ManifestToolbar.svelte:79
-#: src/lib/components/manifest/ManifestTable.svelte:252
+#: src/lib/components/manifest/ManifestTable.svelte:321
 msgid "Filter by ID, path, or media type..."
 msgstr "🇩🇪 Filter by ID, path, or media type..."
 
@@ -514,13 +464,9 @@ msgstr ""
 msgid "Font:"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:141
+#: src/lib/components/metadata/AdvancedFields.svelte:154
 msgid "Format"
 msgstr "🇩🇪 Format"
-
-#: src/lib/navigation/views/MetadataView.svelte:143
-msgid "French"
-msgstr "🇩🇪 French"
 
 #: src/lib/components/workspace/WorkspaceActionBar.svelte:67
 msgid "From Folder"
@@ -530,34 +476,32 @@ msgstr "🇩🇪 From Folder"
 msgid "Future"
 msgstr "🇩🇪 Future"
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:135
+#: src/lib/components/metadata/BasicInfoFields.svelte:164
 msgid "Generate"
 msgstr "🇩🇪 Generate"
 
-#: src/lib/navigation/views/MetadataView.svelte:144
-msgid "German"
-msgstr "🇩🇪 German"
+#: src/App.svelte:439
+msgid "Generating navigation from chapters..."
+msgstr ""
 
 #: src/lib/components/workspace/WorkspaceActionBar.svelte:27
 msgid "Get Started"
 msgstr "🇩🇪 Get Started"
 
-#: src/lib/components/workspace/WorkspaceList.svelte:106
+#: src/lib/components/workspace/WorkspaceList.svelte:111
 msgid "Get started by creating your first EPUB"
 msgstr "🇩🇪 Get started by creating your first EPUB"
 
-#: src/lib/navigation/views/SpineView.svelte:156
-#: src/lib/components/manifest/ManifestTable.svelte:334
-#: src/lib/components/manifest/ManifestItemEditor.svelte:249
+#: src/lib/components/manifest/ManifestTable.svelte:403
+#: src/lib/components/manifest/ManifestItemEditor.svelte:259
 msgid "ID"
 msgstr "🇩🇪 ID"
 
-#: src/lib/navigation/views/MetadataView.svelte:154
-#: src/lib/components/metadata/BasicInfoFields.svelte:121
+#: src/lib/components/metadata/BasicInfoFields.svelte:150
 msgid "Identifier"
 msgstr "🇩🇪 Identifier"
 
-#: src/lib/components/workspace/WorkspaceList.svelte:112
+#: src/lib/components/workspace/WorkspaceList.svelte:117
 msgid "Import EPUB: Convert existing .epub files to edit"
 msgstr "🇩🇪 Import EPUB: Convert existing .epub files to edit"
 
@@ -573,9 +517,13 @@ msgstr "🇩🇪 Import from folder - coming soon"
 msgid "Improved user interface"
 msgstr "🇩🇪 Improved user interface"
 
-#: src/lib/components/manifest/ManifestItemEditor.svelte:326
+#: src/lib/components/manifest/ManifestItemEditor.svelte:340
 msgid "Initial Content"
 msgstr "🇩🇪 Initial Content"
+
+#: src/lib/navigation/views/SpineView.svelte:1281
+msgid "Initializing editor..."
+msgstr ""
 
 #: src/stories/preview/ContentPreviewDemo.svelte:87
 msgid "iPad Air (820×1180)"
@@ -601,37 +549,16 @@ msgstr ""
 msgid "iPhone SE (375×667)"
 msgstr ""
 
-#: src/lib/navigation/views/MetadataView.svelte:160
-msgid "ISBN, URI, or unique identifier"
-msgstr "🇩🇪 ISBN, URI, or unique identifier"
-
-#: src/lib/navigation/views/MetadataView.svelte:145
-msgid "Italian"
-msgstr "🇩🇪 Italian"
-
-#: src/lib/navigation/views/SpineView.svelte:153
-msgid "Item Information"
-msgstr "🇩🇪 Item Information"
-
-#: src/lib/navigation/views/MetadataView.svelte:148
-msgid "Japanese"
-msgstr "🇩🇪 Japanese"
-
-#: src/lib/components/workspace/WorkspaceItem.svelte:36
+#: src/lib/components/workspace/WorkspaceItem.svelte:45
 msgid "Just now"
 msgstr ""
 
-#: src/lib/navigation/views/MetadataView.svelte:149
-msgid "Korean"
-msgstr "🇩🇪 Korean"
-
 #: src/stories/preview/ContentPreviewDemo.svelte:108
-#: src/lib/components/metadata/BasicInfoFields.svelte:46
+#: src/lib/components/metadata/BasicInfoFields.svelte:69
 msgid "Landscape"
 msgstr ""
 
-#: src/lib/navigation/views/MetadataView.svelte:139
-#: src/lib/components/metadata/BasicInfoFields.svelte:108
+#: src/lib/components/metadata/BasicInfoFields.svelte:137
 msgid "Language"
 msgstr "🇩🇪 Language"
 
@@ -639,29 +566,21 @@ msgstr "🇩🇪 Language"
 msgid "Last action"
 msgstr "🇩🇪 Last action"
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:199
+#: src/lib/components/metadata/BasicInfoFields.svelte:228
 msgid "Layout"
 msgstr "🇩🇪 Layout"
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:40
+#: src/lib/components/metadata/BasicInfoFields.svelte:63
 msgid "Left to Right"
 msgstr ""
 
-#: src/lib/navigation/views/SpineView.svelte:164
-msgid "Linear"
-msgstr "🇩🇪 Linear"
-
-#: src/lib/components/manifest/ManifestPreview.svelte:276
+#: src/lib/components/manifest/ManifestPreview.svelte:386
 msgid "Lines"
 msgstr "🇩🇪 Lines"
 
 #: src/lib/navigation/views/PlaceholderView.svelte:122
 msgid "Link to source files"
 msgstr "🇩🇪 Link to source files"
-
-#: src/lib/navigation/views/SpineView.svelte:222
-msgid "Live preview with device emulation (Phase 5)"
-msgstr "🇩🇪 Live preview with device emulation (Phase 5)"
 
 #: src/lib/components/workspace/WorkspaceActionBar.svelte:48
 msgid "Load an existing EPUB file for editing"
@@ -672,37 +591,39 @@ msgid "Load EPUB"
 msgstr "🇩🇪 Load EPUB"
 
 #: src/lib/components/manifest/ManifestToolbar.svelte:105
-#: src/lib/components/manifest/ManifestTable.svelte:278
+#: src/lib/components/manifest/ManifestTable.svelte:347
 msgid "Load File"
 msgstr "🇩🇪 Load File"
 
-#: src/lib/components/manifest/ManifestContainer.svelte:161
+#: src/lib/components/manifest/ManifestContainer.svelte:209
 msgid "Loading manifest…"
 msgstr ""
 
-#: src/lib/components/metadata/MetadataEditor.svelte:209
+#: src/lib/components/metadata/MetadataEditor.svelte:193
 msgid "Loading metadata…"
 msgstr ""
 
-#: src/lib/components/manifest/ManifestPreview.svelte:166
+#: src/lib/components/manifest/ManifestPreview.svelte:273
 msgid "Loading preview…"
 msgstr ""
 
-#: src/lib/navigation/views/SpineView.svelte:136
+#: src/App.svelte:294
+#: src/App.svelte:312
+#: src/App.svelte:380
+#: src/App.svelte:399
+msgid "Loading project…"
+msgstr ""
+
+#: src/lib/components/workspace/WorkspaceList.svelte:104
+msgid "Loading projects…"
+msgstr ""
+
+#: src/lib/navigation/views/SpineView.svelte:1240
 msgid "Loading spine item..."
 msgstr "🇩🇪 Loading spine item..."
 
-#: src/lib/components/SpineSidebar.svelte:190
+#: src/lib/components/SpineSidebar.svelte:245
 msgid "Loading spine items…"
-msgstr ""
-
-#: src/App.svelte:135
-#: src/App.svelte:197
-msgid "Loading workspace…"
-msgstr ""
-
-#: src/lib/components/workspace/WorkspaceList.svelte:99
-msgid "Loading workspaces…"
 msgstr ""
 
 #: src/lib/Sidebar.svelte:81
@@ -713,7 +634,7 @@ msgstr "🇩🇪 Main navigation"
 msgid "Malformed XHTML"
 msgstr ""
 
-#: src/App.svelte:174
+#: src/App.svelte:364
 msgid "Manage EPUB files and resources"
 msgstr "🇩🇪 Manage EPUB files and resources"
 
@@ -722,15 +643,15 @@ msgid "Manifest"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestToolbar.svelte:63
-#: src/lib/components/manifest/ManifestTable.svelte:236
+#: src/lib/components/manifest/ManifestTable.svelte:305
 msgid "Manifest actions"
 msgstr "🇩🇪 Manifest actions"
 
-#: src/lib/components/manifest/ManifestPreview.svelte:187
+#: src/lib/components/manifest/ManifestPreview.svelte:294
 msgid "Manifest Item"
 msgstr ""
 
-#: src/lib/components/manifest/ManifestItemEditor.svelte:287
+#: src/lib/components/manifest/ManifestItemEditor.svelte:299
 msgid "Media Type"
 msgstr "🇩🇪 Media Type"
 
@@ -754,16 +675,7 @@ msgstr ""
 msgid "metadata.tab.publication"
 msgstr ""
 
-#: src/lib/navigation/views/SpineView.svelte:180
-msgid "Missing"
-msgstr ""
-
-#: src/lib/components/manifest/ManifestView.svelte:59
-msgid "Mode"
-msgstr ""
-
-#: src/lib/components/manifest/ManifestTable.svelte:367
-#: src/lib/components/manifest/ManifestPreview.svelte:308
+#: src/lib/components/manifest/ManifestPreview.svelte:418
 msgid "Modified"
 msgstr "🇩🇪 Modified"
 
@@ -787,51 +699,56 @@ msgstr "🇩🇪 Navigation Demo"
 msgid "Navigation link management"
 msgstr "🇩🇪 Navigation link management"
 
+#: src/App.svelte:438
+msgid "Navigation Preview"
+msgstr ""
+
 #: src/lib/navigation/views/PlaceholderView.svelte:132
 msgid "New capabilities"
 msgstr "🇩🇪 New capabilities"
 
-#: src/lib/navigation/views/SpineView.svelte:166
-msgid "No"
-msgstr ""
-
-#: src/lib/navigation/views/WorkspaceView.svelte:279
-msgid "No corrupted workspaces found to clean up."
-msgstr ""
-
-#: src/lib/components/manifest/ManifestTable.svelte:316
+#: src/lib/components/manifest/ManifestTable.svelte:385
 msgid "No items match your filter"
 msgstr "🇩🇪 No items match your filter"
 
-#: src/lib/components/manifest/ManifestTable.svelte:319
+#: src/lib/components/manifest/ManifestTable.svelte:388
 msgid "No manifest items found"
 msgstr "🇩🇪 No manifest items found"
 
-#: src/lib/navigation/views/SpineView.svelte:146
+#: src/App.svelte:298
+#: src/lib/components/SpineSidebar.svelte:293
+msgid "No project selected"
+msgstr ""
+
+#: src/lib/components/workspace/WorkspaceList.svelte:125
+msgid "No projects found"
+msgstr ""
+
+#: src/lib/components/workspace/WorkspaceList.svelte:109
+msgid "No projects yet"
+msgstr ""
+
+#: src/lib/navigation/views/SpineView.svelte:1250
 msgid "No spine item selected"
 msgstr "🇩🇪 No spine item selected"
 
-#: src/lib/components/workspace/WorkspaceList.svelte:120
-msgid "No workspaces found"
-msgstr "🇩🇪 No workspaces found"
+#: src/lib/components/SpineSidebar.svelte:286
+msgid "No spine items yet"
+msgstr ""
 
-#: src/lib/components/workspace/WorkspaceList.svelte:104
-msgid "No workspaces yet"
-msgstr "🇩🇪 No workspaces yet"
-
-#: src/lib/components/metadata/AdvancedFields.svelte:21
+#: src/lib/components/metadata/AdvancedFields.svelte:34
 msgid "Non-fiction"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:52
+#: src/lib/components/metadata/BasicInfoFields.svelte:75
 msgid "None"
 msgstr ""
 
-#: src/lib/components/manifest/ManifestItemEditor.svelte:277
+#: src/lib/components/manifest/ManifestItemEditor.svelte:288
 msgid "OEBPS/filename.ext"
 msgstr "🇩🇪 OEBPS/filename.ext"
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:219
+#: src/lib/components/metadata/BasicInfoFields.svelte:248
 msgid "Orientation"
 msgstr "🇩🇪 Orientation"
 
@@ -840,11 +757,16 @@ msgstr "🇩🇪 Orientation"
 msgid "Orientation:"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:209
+#: src/lib/components/workspace/WorkspaceItem.svelte:121
+#: src/lib/components/workspace/WorkspaceItem.svelte:124
+msgid "Package EPUB"
+msgstr ""
+
+#: src/lib/components/metadata/BasicInfoFields.svelte:238
 msgid "Page Progression"
 msgstr "🇩🇪 Page Progression"
 
-#: src/lib/components/manifest/ManifestTable.svelte:345
+#: src/lib/components/manifest/ManifestTable.svelte:414
 msgid "Path"
 msgstr "🇩🇪 Path"
 
@@ -852,36 +774,28 @@ msgstr "🇩🇪 Path"
 msgid "Planned Features"
 msgstr "🇩🇪 Planned Features"
 
-#: src/lib/components/manifest/ManifestItemEditor.svelte:130
+#: src/lib/components/manifest/ManifestItemEditor.svelte:138
 msgid "Please fill in all required fields"
 msgstr ""
 
-#: src/lib/components/metadata/MetadataEditor.svelte:186
+#: src/lib/components/metadata/MetadataEditor.svelte:175
 msgid "Please fix errors before switching tabs"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:22
+#: src/lib/components/metadata/AdvancedFields.svelte:35
 msgid "Poetry"
 msgstr ""
 
 #: src/stories/preview/ContentPreviewDemo.svelte:101
-#: src/lib/components/metadata/BasicInfoFields.svelte:47
+#: src/lib/components/metadata/BasicInfoFields.svelte:70
 msgid "Portrait"
 msgstr ""
 
-#: src/lib/navigation/views/MetadataView.svelte:146
-msgid "Portuguese"
-msgstr "🇩🇪 Portuguese"
-
-#: src/lib/components/metadata/BasicInfoFields.svelte:35
+#: src/lib/components/metadata/BasicInfoFields.svelte:58
 msgid "Pre-paginated"
 msgstr ""
 
-#: src/lib/navigation/views/SpineView.svelte:221
-msgid "Preview"
-msgstr "🇩🇪 Preview"
-
-#: src/lib/components/manifest/ManifestPreview.svelte:228
+#: src/lib/components/manifest/ManifestPreview.svelte:335
 msgid "Preview Error"
 msgstr "🇩🇪 Preview Error"
 
@@ -889,77 +803,81 @@ msgstr "🇩🇪 Preview Error"
 msgid "Preview file contents"
 msgstr "🇩🇪 Preview file contents"
 
-#: src/App.svelte:226
+#: src/App.svelte:461
 msgid "Preview Pane"
 msgstr "🇩🇪 Preview Pane"
 
-#: src/lib/components/manifest/ManifestTable.svelte:371
-#: src/lib/components/manifest/ManifestPreview.svelte:311
+#: src/lib/components/workspace/WorkspaceItem.svelte:83
+msgid "Project has errors"
+msgstr ""
+
+#: src/lib/Sidebar.svelte:17
+#: src/lib/components/workspace/WorkspaceList.svelte:66
+msgid "Projects"
+msgstr ""
+
+#: src/lib/components/manifest/ManifestTable.svelte:429
+#: src/lib/components/manifest/ManifestPreview.svelte:421
 msgid "Properties"
 msgstr "🇩🇪 Properties"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:63
+#: src/lib/components/metadata/AdvancedFields.svelte:76
 msgid "Publication"
 msgstr "🇩🇪 Publication"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:77
+#: src/lib/components/metadata/AdvancedFields.svelte:90
 msgid "Publication Date"
 msgstr "🇩🇪 Publication Date"
 
-#: src/lib/navigation/views/MetadataView.svelte:170
-#: src/lib/components/metadata/MetadataEditor.svelte:250
-#: src/lib/components/metadata/MetadataEditor.svelte:25
+#: src/lib/components/metadata/MetadataEditor.svelte:234
+#: src/lib/components/metadata/MetadataEditor.svelte:37
 msgid "Publication Details"
 msgstr "🇩🇪 Publication Details"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:67
+#: src/lib/components/metadata/AdvancedFields.svelte:80
 msgid "Publisher"
 msgstr "🇩🇪 Publisher"
 
-#: src/lib/components/workspace/WorkspaceList.svelte:109
+#: src/lib/components/workspace/WorkspaceList.svelte:114
 msgid "Quick Start Tips:"
 msgstr "🇩🇪 Quick Start Tips:"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:26
+#: src/lib/components/metadata/AdvancedFields.svelte:39
 msgid "Reference"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:34
+#: src/lib/components/metadata/BasicInfoFields.svelte:57
 msgid "Reflowable"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:121
+#: src/lib/components/SpineSidebar.svelte:288
+msgid "Refresh"
+msgstr ""
+
+#: src/lib/components/metadata/AdvancedFields.svelte:134
 msgid "Relation"
 msgstr "🇩🇪 Relation"
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:159
+#: src/lib/components/metadata/BasicInfoFields.svelte:188
 msgid "Remove author"
 msgstr "🇩🇪 Remove author"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:208
+#: src/lib/components/metadata/AdvancedFields.svelte:221
 msgid "Remove contributor"
 msgstr "🇩🇪 Remove contributor"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:171
+#: src/lib/components/metadata/AdvancedFields.svelte:184
 msgid "Remove subject"
 msgstr "🇩🇪 Remove subject"
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:195
+#: src/lib/components/metadata/BasicInfoFields.svelte:224
 msgid "Rendition Properties"
 msgstr "🇩🇪 Rendition Properties"
 
 #: src/lib/components/metadata/fields/TextareaMetadataField.svelte:37
-#: src/lib/components/metadata/fields/DateMetadataField.svelte:40
+#: src/lib/components/metadata/fields/DateMetadataField.svelte:41
 msgid "Required field"
 msgstr "🇩🇪 Required field"
-
-#: src/lib/navigation/views/MetadataView.svelte:181
-msgid "Reset"
-msgstr "🇩🇪 Reset"
-
-#: src/lib/navigation/views/MetadataView.svelte:87
-msgid "Reset all metadata to defaults?"
-msgstr ""
 
 #: src/stories/preview/ContentPreviewDemo.svelte:177
 msgid "Reset Demo"
@@ -969,19 +887,19 @@ msgstr ""
 msgid "Responsive"
 msgstr ""
 
-#: src/lib/components/SpineSidebar.svelte:196
-#: src/lib/navigation/views/WorkspaceView.svelte:417
-#: src/lib/components/metadata/MetadataEditor.svelte:215
-#: src/lib/components/manifest/ManifestPreview.svelte:172
-#: src/lib/components/manifest/ManifestContainer.svelte:167
+#: src/lib/components/SpineSidebar.svelte:251
+#: src/lib/navigation/views/WorkspaceView.svelte:400
+#: src/lib/components/metadata/MetadataEditor.svelte:199
+#: src/lib/components/manifest/ManifestPreview.svelte:279
+#: src/lib/components/manifest/ManifestContainer.svelte:215
 msgid "Retry"
 msgstr "🇩🇪 Retry"
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:41
+#: src/lib/components/metadata/BasicInfoFields.svelte:64
 msgid "Right to Left"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:86
+#: src/lib/components/metadata/AdvancedFields.svelte:99
 msgid "Rights"
 msgstr "🇩🇪 Rights"
 
@@ -1057,11 +975,7 @@ msgstr "🇩🇪 Sample Publisher"
 msgid "Sans-serif"
 msgstr ""
 
-#: src/lib/navigation/views/MetadataView.svelte:186
-msgid "Save & Continue"
-msgstr "🇩🇪 Save & Continue"
-
-#: src/lib/components/manifest/ManifestItemEditor.svelte:352
+#: src/lib/components/manifest/ManifestItemEditor.svelte:366
 msgid "Save Changes"
 msgstr "🇩🇪 Save Changes"
 
@@ -1073,44 +987,48 @@ msgstr "🇩🇪 Seamless integration"
 msgid "Search and filter files"
 msgstr "🇩🇪 Search and filter files"
 
-#: src/lib/components/workspace/WorkspaceList.svelte:76
-msgid "Search workspaces"
-msgstr "🇩🇪 Search workspaces"
-
-#: src/lib/components/workspace/WorkspaceList.svelte:73
-msgid "Search workspaces…"
+#: src/lib/components/workspace/WorkspaceList.svelte:81
+msgid "Search projects"
 msgstr ""
 
-#: src/lib/navigation/views/SpineView.svelte:147
-msgid "Select a spine item from the sidebar to view its details"
-msgstr "🇩🇪 Select a spine item from the sidebar to view its details"
+#: src/lib/components/workspace/WorkspaceList.svelte:78
+msgid "Search projects…"
+msgstr ""
 
-#: src/lib/components/manifest/ManifestPreview.svelte:161
+#: src/lib/navigation/views/SpineView.svelte:1251
+msgid "Select a spine item from the sidebar to start editing"
+msgstr ""
+
+#: src/App.svelte:456
+msgid "Select a spine item to see the preview here"
+msgstr ""
+
+#: src/lib/components/manifest/ManifestPreview.svelte:268
 msgid "Select an item to preview its content"
 msgstr "🇩🇪 Select an item to preview its content"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:99
-#: src/lib/components/metadata/AdvancedFields.svelte:19
+#: src/lib/components/metadata/AdvancedFields.svelte:112
+#: src/lib/components/metadata/AdvancedFields.svelte:32
 msgid "Select content type"
 msgstr "🇩🇪 Select content type"
 
-#: src/lib/components/manifest/ManifestItemEditor.svelte:229
+#: src/lib/components/manifest/ManifestItemEditor.svelte:239
 msgid "Select File"
 msgstr "🇩🇪 Select File"
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:111
+#: src/lib/components/metadata/BasicInfoFields.svelte:140
 msgid "Select language"
 msgstr "🇩🇪 Select language"
 
-#: src/lib/components/manifest/ManifestItemEditor.svelte:296
+#: src/lib/components/manifest/ManifestItemEditor.svelte:308
 msgid "Select media type…"
 msgstr ""
 
-#: src/lib/components/manifest/ManifestItemEditor.svelte:241
+#: src/lib/components/manifest/ManifestItemEditor.svelte:251
 msgid "Selected"
 msgstr "🇩🇪 Selected"
 
-#: src/lib/components/metadata/MetadataEditor.svelte:250
+#: src/lib/components/metadata/MetadataEditor.svelte:234
 msgid "Series information, EPUB version, and publication-specific metadata"
 msgstr "🇩🇪 Series information, EPUB version, and publication-specific metadata"
 
@@ -1118,7 +1036,7 @@ msgstr "🇩🇪 Series information, EPUB version, and publication-specific meta
 msgid "Serif"
 msgstr ""
 
-#: src/lib/components/metadata/fields/DateMetadataField.svelte:67
+#: src/lib/components/metadata/fields/DateMetadataField.svelte:68
 msgid "Set to today"
 msgstr "🇩🇪 Set to today"
 
@@ -1126,70 +1044,54 @@ msgstr "🇩🇪 Set to today"
 msgid "Settings"
 msgstr ""
 
-#: src/lib/components/manifest/ManifestTable.svelte:356
-#: src/lib/components/manifest/ManifestPreview.svelte:306
+#: src/lib/components/spine/EditorPane.svelte:326
+msgid "Single Pane"
+msgstr ""
+
+#: src/lib/components/manifest/ManifestTable.svelte:425
+#: src/lib/components/manifest/ManifestPreview.svelte:416
 msgid "Size"
 msgstr "🇩🇪 Size"
 
-#: src/lib/components/manifest/ManifestTable.svelte:332
+#: src/lib/components/manifest/ManifestTable.svelte:401
 msgid "Sort by ID"
 msgstr "🇩🇪 Sort by ID"
 
-#: src/lib/components/manifest/ManifestTable.svelte:365
-msgid "Sort by modification date"
-msgstr "🇩🇪 Sort by modification date"
-
-#: src/lib/components/manifest/ManifestTable.svelte:343
+#: src/lib/components/manifest/ManifestTable.svelte:412
 msgid "Sort by path"
 msgstr "🇩🇪 Sort by path"
 
-#: src/lib/components/manifest/ManifestTable.svelte:354
+#: src/lib/components/manifest/ManifestTable.svelte:423
 msgid "Sort by size"
 msgstr "🇩🇪 Sort by size"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:111
+#: src/lib/components/metadata/AdvancedFields.svelte:124
 msgid "Source"
 msgstr "🇩🇪 Source"
 
-#: src/lib/navigation/views/SpineView.svelte:189
-msgid "Source Content"
-msgstr "🇩🇪 Source Content"
-
-#: src/lib/navigation/views/SpineView.svelte:206
-msgid "Source file not found"
-msgstr "🇩🇪 Source file not found"
-
-#: src/lib/components/manifest/ManifestPreview.svelte:187
+#: src/lib/components/manifest/ManifestPreview.svelte:294
 msgid "SOURCE Item"
 msgstr ""
 
-#: src/lib/navigation/views/SpineView.svelte:174
-msgid "Source Path"
-msgstr "🇩🇪 Source Path"
-
-#: src/lib/navigation/views/SpineView.svelte:178
-msgid "Source Status"
-msgstr "🇩🇪 Source Status"
-
-#: src/lib/navigation/views/MetadataView.svelte:142
-msgid "Spanish"
-msgstr "🇩🇪 Spanish"
-
-#: src/lib/navigation/views/SpineView.svelte:128
-msgid "Spine Item Details"
-msgstr "🇩🇪 Spine Item Details"
+#: src/lib/components/manifest/ManifestTable.svelte:448
+msgid "SOURCE.zip"
+msgstr ""
 
 #: src/lib/navigation/views/PlaceholderView.svelte:121
 msgid "Spine item management"
 msgstr "🇩🇪 Spine item management"
 
-#: src/App.svelte:196
+#: src/App.svelte:398
 #: src/lib/Sidebar.svelte:105
 #: src/lib/Sidebar.svelte:119
 msgid "Spine Items"
 msgstr "🇩🇪 Spine Items"
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:229
+#: src/App.svelte:455
+msgid "Spine Preview"
+msgstr ""
+
+#: src/lib/components/metadata/BasicInfoFields.svelte:258
 msgid "Spread"
 msgstr "🇩🇪 Spread"
 
@@ -1197,15 +1099,15 @@ msgstr "🇩🇪 Spread"
 msgid "Start fresh"
 msgstr "🇩🇪 Start fresh"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:161
+#: src/lib/components/metadata/AdvancedFields.svelte:174
 msgid "Subject or keyword"
 msgstr "🇩🇪 Subject or keyword"
 
-#: src/lib/components/metadata/AdvancedFields.svelte:153
+#: src/lib/components/metadata/AdvancedFields.svelte:166
 msgid "Subjects"
 msgstr "🇩🇪 Subjects"
 
-#: src/App.svelte:181
+#: src/App.svelte:379
 msgid "Table of Contents"
 msgstr "🇩🇪 Table of Contents"
 
@@ -1213,11 +1115,7 @@ msgstr "🇩🇪 Table of Contents"
 msgid "Table of contents editing"
 msgstr "🇩🇪 Table of contents editing"
 
-#: src/lib/navigation/views/SpineView.svelte:216
-msgid "Text Editor"
-msgstr "🇩🇪 Text Editor"
-
-#: src/lib/components/metadata/AdvancedFields.svelte:25
+#: src/lib/components/metadata/AdvancedFields.svelte:38
 msgid "Textbook"
 msgstr ""
 
@@ -1225,9 +1123,7 @@ msgstr ""
 msgid "Theme and UI settings"
 msgstr "🇩🇪 Theme and UI settings"
 
-#: src/lib/navigation/views/SpineView.svelte:160
-#: src/lib/navigation/views/MetadataView.svelte:115
-#: src/lib/components/metadata/BasicInfoFields.svelte:97
+#: src/lib/components/metadata/BasicInfoFields.svelte:126
 msgid "Title"
 msgstr "🇩🇪 Title"
 
@@ -1235,7 +1131,7 @@ msgstr "🇩🇪 Title"
 msgid "TOC structure editing"
 msgstr "🇩🇪 TOC structure editing"
 
-#: src/lib/components/metadata/fields/DateMetadataField.svelte:69
+#: src/lib/components/metadata/fields/DateMetadataField.svelte:70
 msgid "Today"
 msgstr "🇩🇪 Today"
 
@@ -1247,97 +1143,56 @@ msgstr ""
 msgid "Toggle sidebar"
 msgstr "🇩🇪 Toggle sidebar"
 
-#: src/lib/components/manifest/ManifestTable.svelte:317
+#: src/lib/components/manifest/ManifestTable.svelte:386
 msgid "Try adjusting your search terms"
 msgstr "🇩🇪 Try adjusting your search terms"
 
-#: src/lib/navigation/views/SpineView.svelte:201
-msgid "Unable to load source content"
-msgstr "🇩🇪 Unable to load source content"
-
-#: src/lib/components/manifest/ManifestItemEditor.svelte:258
+#: src/lib/components/manifest/ManifestItemEditor.svelte:268
 msgid "Unique identifier for this item"
 msgstr "🇩🇪 Unique identifier for this item"
 
-#: src/lib/components/workspace/WorkspaceItem.svelte:93
+#: src/lib/components/workspace/WorkspaceItem.svelte:102
 msgid "Unknown Author"
 msgstr ""
 
-#: src/App.svelte:210
+#: src/App.svelte:418
 msgid "Unknown View"
 msgstr "🇩🇪 Unknown View"
 
-#: src/lib/navigation/views/SpineView.svelte:161
-msgid "Untitled"
-msgstr ""
-
-#: src/lib/components/manifest/ManifestItemEditor.svelte:214
-#: src/lib/components/manifest/ManifestItemEditor.svelte:350
+#: src/lib/components/manifest/ManifestItemEditor.svelte:224
+#: src/lib/components/manifest/ManifestItemEditor.svelte:364
 msgid "Upload File"
 msgstr "🇩🇪 Upload File"
 
-#: src/lib/components/manifest/ManifestPreview.svelte:262
+#: src/lib/components/manifest/ManifestPreview.svelte:372
 msgid "Use the download button to access the file"
 msgstr "🇩🇪 Use the download button to access the file"
 
-#: src/lib/navigation/views/SpineView.svelte:129
-msgid "View and manage spine item content"
-msgstr "🇩🇪 View and manage spine item content"
-
-#: src/App.svelte:211
+#: src/App.svelte:419
 msgid "View type"
 msgstr "🇩🇪 View type"
 
-#: src/lib/components/manifest/ManifestPreview.svelte:280
+#: src/lib/components/manifest/ManifestPreview.svelte:390
 msgid "Words"
 msgstr "🇩🇪 Words"
 
-#: src/lib/Sidebar.svelte:17
-msgid "Workspace"
-msgstr ""
-
-#: src/lib/components/workspace/WorkspaceItem.svelte:74
-msgid "Workspace has errors"
-msgstr "🇩🇪 Workspace has errors"
-
-#: src/lib/components/workspace/WorkspaceList.svelte:61
-msgid "Workspaces"
-msgstr "🇩🇪 Workspaces"
-
-#: src/lib/navigation/views/SpineView.svelte:170
-msgid "XHTML Path"
-msgstr "🇩🇪 XHTML Path"
-
-#: src/App.svelte:227
-msgid "XHTML preview will go here (Phase 4)"
-msgstr "🇩🇪 XHTML preview will go here (Phase 4)"
-
-#: src/lib/navigation/views/SpineView.svelte:166
-msgid "Yes"
-msgstr ""
-
-#: src/lib/components/manifest/ManifestItemEditor.svelte:336
+#: src/lib/components/manifest/ManifestItemEditor.svelte:350
 msgid "You can edit the content later in the main editor"
 msgstr "🇩🇪 You can edit the content later in the main editor"
 
-#: src/lib/navigation/views/WorkspaceView.svelte:450
-#: src/lib/navigation/views/MetadataView.svelte:193
+#: src/lib/navigation/views/WorkspaceView.svelte:421
 msgid "You have unsaved changes"
 msgstr "🇩🇪 You have unsaved changes"
 
-#: src/lib/navigation/views/MetadataView.svelte:46
-msgid "You have unsaved metadata changes. Continue?"
+#: src/lib/navigation/views/WorkspaceView.svelte:312
+#: src/lib/navigation/views/WorkspaceView.svelte:323
+msgid "You have unsaved project changes. Continue?"
 msgstr ""
 
-#: src/lib/navigation/views/WorkspaceView.svelte:341
-#: src/lib/navigation/views/WorkspaceView.svelte:352
-msgid "You have unsaved workspace changes. Continue?"
-msgstr ""
-
-#: src/lib/components/manifest/ManifestPreview.svelte:248
+#: src/lib/components/manifest/ManifestPreview.svelte:358
 msgid "Your browser does not support the audio element."
 msgstr "🇩🇪 Your browser does not support the audio element."
 
-#: src/lib/components/manifest/ManifestPreview.svelte:256
+#: src/lib/components/manifest/ManifestPreview.svelte:366
 msgid "Your browser does not support the video element."
 msgstr "🇩🇪 Your browser does not support the video element."

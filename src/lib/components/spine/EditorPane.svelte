@@ -68,7 +68,7 @@
     onFileSelect?: (pane: 1 | 2, filePath: string, fileType: string) => void;
     onContentChange?: (pane: 1 | 2, content: string) => void;
     onForceUpdate?: () => void;
-    onPreviewClick?: (detail: { text: string; documentPosition: number; elementType: string }) => void;
+    onPreviewClick?: ((detail: { text: string; documentPosition: number; elementType: string }) => void) | null;
   } = $props();
 
   /**
@@ -160,6 +160,16 @@
     if (fileType.includes('javascript') || fileType.includes('js')) return 'syntax-js';
     if (fileType.includes('transform')) return 'syntax-js';
     return 'syntax-text';
+  }
+
+  /**
+   * Determine if file type should use LTR direction (for code syntax)
+   */
+  function shouldUseLtrDirection(fileType: string): boolean {
+    return fileType.includes('css') || 
+           fileType.includes('javascript') || 
+           fileType.includes('js') || 
+           fileType.includes('transform');
   }
 
   /**
@@ -390,6 +400,7 @@
               autocomplete="off"
               autocapitalize="off"
               aria-label="Pane 2 content"
+              dir={shouldUseLtrDirection(pane2SelectedFile) ? 'ltr' : undefined}
             ></textarea>
             {#if pane2Error}
               <div class="pane-error-overlay">
@@ -429,6 +440,7 @@
             autocomplete="off"
             autocapitalize="off"
             aria-label="Pane 1 content"
+            dir={shouldUseLtrDirection(pane1SelectedFile) ? 'ltr' : undefined}
           ></textarea>
           {#if pane1Error}
             <div class="pane-error-overlay">

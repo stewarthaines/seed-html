@@ -463,7 +463,7 @@
     {#if showSource}
       <!-- Source view -->
       <div class="source-view">
-        <pre class="source-code">{xhtmlContent || '<!-- No content generated yet -->'}</pre>
+        <pre class="source-code" dir="ltr">{xhtmlContent || '<!-- No content generated yet -->'}</pre>
       </div>
     {:else}
       <!-- Live preview -->

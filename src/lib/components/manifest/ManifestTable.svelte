@@ -485,7 +485,7 @@
               onkeydown={event => handleRowKeyDown(event, item, itemType)}
             >
               <td class="id-cell">
-                <span class="item-id">
+                <span class="item-id" dir="ltr">
                   {itemType === 'manifest'
                     ? (item as ManifestItem).id
                     : itemType === 'source' || itemType === 'source-zip'
@@ -494,7 +494,7 @@
                 </span>
               </td>
               <td class="href-cell">
-                <span class="item-href">
+                <span class="item-href" dir="ltr">
                   {itemType === 'manifest'
                     ? (item as ManifestItem).href
                     : itemType === 'source' || itemType === 'source-zip'

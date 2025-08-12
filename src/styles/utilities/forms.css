@@ -108,7 +108,7 @@
 }
 
 /* RTL support for select arrow */
-[dir='rtl'] .select {
+[data-dir='rtl'] .select {
   background-position: left var(--space-2) center;
 }
 
