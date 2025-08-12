@@ -91,7 +91,6 @@
     }
   }
 
-
   /**
    * Force immediate preview update
    */
@@ -104,7 +103,7 @@
    */
   function handlePane1Input(event: Event): void {
     const content = (event.target as HTMLTextAreaElement).value;
-    
+
     if (!pane1FileStore) {
       console.warn('🚫 No file store available for input in pane 1');
       return;
@@ -112,7 +111,7 @@
 
     // Validation-first: validate before persistence
     const validationError = contentService.validateFileContent(content, pane1SelectedFile);
-    
+
     if (validationError) {
       pane1Error = validationError;
       // Block persistence - store keeps last valid content
@@ -120,7 +119,7 @@
     } else {
       pane1Error = null;
     }
-    
+
     // Only persist valid content (or non-validated content)
     pane1FileStore.updateContent(content);
   }
@@ -130,7 +129,7 @@
    */
   function handlePane2Input(event: Event): void {
     const content = (event.target as HTMLTextAreaElement).value;
-    
+
     if (!pane2FileStore) {
       console.warn('🚫 No file store available for input in pane 2');
       return;
@@ -138,7 +137,7 @@
 
     // Validation-first: validate before persistence
     const validationError = contentService.validateFileContent(content, pane2SelectedFile);
-    
+
     if (validationError) {
       pane2Error = validationError;
       // Block persistence - store keeps last valid content
@@ -146,7 +145,7 @@
     } else {
       pane2Error = null;
     }
-    
+
     // Only persist valid content (or non-validated content)
     pane2FileStore.updateContent(content);
   }

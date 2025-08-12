@@ -1,16 +1,12 @@
 /**
  * Transform Engine - Infrastructure Layer
- * 
+ *
  * Provides persistent iframe-based transform execution for the entire application.
  * Eliminates race conditions by maintaining a single iframe that persists across
  * component lifecycles and navigation changes.
  */
 
-import type { 
-  TransformResult, 
-  TransformScripts,
-  TransformError
-} from '../types/spine-editor.js';
+import type { TransformResult, TransformScripts, TransformError } from '../types/spine-editor.js';
 import type { BlobURLManager } from '../blob-url/blob-url-manager.js';
 import type { ExtensionManager } from '../extensions/extension-manager.js';
 import { FileStorageAPI } from '../storage/index.js';
@@ -23,14 +19,20 @@ import editorJs from '../../assets/iframe/editor.js?raw';
 export class TransformEngine {
   private iframe: HTMLIFrameElement | null = null;
   private messageId = 0;
-  private pendingMessages = new Map<number, { 
-    resolve: (value: any) => void; 
-    reject: (error: any) => void; 
-    timeout: ReturnType<typeof setTimeout>;
-  }>();
+  private pendingMessages = new Map<
+    number,
+    {
+      resolve: (value: any) => void;
+      reject: (error: any) => void;
+      timeout: ReturnType<typeof setTimeout>;
+    }
+  >();
   private blobURLManager: BlobURLManager;
 
-  constructor(blobURLManager: BlobURLManager, private extensionManager?: ExtensionManager) {
+  constructor(
+    blobURLManager: BlobURLManager,
+    private extensionManager?: ExtensionManager
+  ) {
     this.blobURLManager = blobURLManager;
   }
 
@@ -41,13 +43,12 @@ export class TransformEngine {
     // Create iframe with transform scripts
     this.iframe = this.createPersistentIframe();
     document.body.appendChild(this.iframe);
-    
+
     // Setup message handling
     window.addEventListener('message', this.handleMessage.bind(this));
-    
+
     // Wait for iframe ready signal
     await this.waitForReady();
-    
   }
 
   /**
@@ -57,7 +58,7 @@ export class TransformEngine {
     if (!this.iframe) {
       throw new Error('Transform engine not initialized');
     }
-    
+
     await this.sendMessage('SET_TRANSFORM_SCRIPTS', scripts);
   }
 
@@ -68,7 +69,7 @@ export class TransformEngine {
     if (!this.iframe) {
       throw new Error('Transform engine not initialized');
     }
-    
+
     return await this.sendMessage('EXECUTE_TRANSFORM', { plainText, timeout });
   }
 
@@ -79,7 +80,7 @@ export class TransformEngine {
     if (!this.iframe) {
       throw new Error('Transform engine not initialized');
     }
-    
+
     await this.sendMessage('SET_DEBUG_MODE', enabled);
   }
 
@@ -90,7 +91,7 @@ export class TransformEngine {
     if (!this.iframe) {
       throw new Error('Transform engine not initialized');
     }
-    
+
     return await this.sendMessage('PING', payload);
   }
 
@@ -115,32 +116,34 @@ export class TransformEngine {
   /**
    * Load workspace extension scripts as blob URLs for iframe loading
    */
-  private async loadExtensionScripts(workspaceId: string): Promise<Array<{name: string, blobUrl: string}>> {
+  private async loadExtensionScripts(
+    workspaceId: string
+  ): Promise<Array<{ name: string; blobUrl: string }>> {
     if (!this.extensionManager) {
       return [];
     }
 
     const extensions = await this.extensionManager.listWorkspaceExtensions(workspaceId);
-    const scripts: Array<{name: string, blobUrl: string}> = [];
+    const scripts: Array<{ name: string; blobUrl: string }> = [];
 
     for (const extension of extensions) {
       try {
         // Process each JavaScript file in the extension
         const jsFiles = extension.files.filter(file => file.type === 'javascript');
-        
+
         for (const jsFile of jsFiles) {
           const filePath = `SOURCE/extensions/${extension.name}/${jsFile.filename}`;
-          
+
           // Use FileStorageAPI directly since SOURCE files are not part of EPUB manifest structure
           const fileStorage = FileStorageAPI.getInstance();
           const content = await fileStorage.readFile(workspaceId, filePath);
           const mimeType = 'application/javascript';
           const blob = new Blob([content], { type: mimeType });
           const blobUrl = URL.createObjectURL(blob);
-          
+
           scripts.push({
             name: `${extension.name}/${jsFile.filename}`,
-            blobUrl: blobUrl
+            blobUrl: blobUrl,
           });
         }
       } catch (error) {
@@ -151,7 +154,6 @@ export class TransformEngine {
 
     return scripts;
   }
-
 
   /**
    * Clean up resources (only on app shutdown)
@@ -185,21 +187,21 @@ export class TransformEngine {
     iframe.style.top = '0px';
     iframe.style.width = '800px';
     iframe.style.height = '600px';
-    
+
     // No sandbox restrictions - iframe needs full access for transform scripts and blob URLs
-    
+
     // Create iframe document using blob URL (CSP-compatible)
     const iframeDocument = this.createIframeDocument();
     const blob = new Blob([iframeDocument], { type: 'text/html' });
     const blobUrl = URL.createObjectURL(blob);
-    
+
     iframe.src = blobUrl;
-    
+
     // Clean up blob URL after iframe loads
     iframe.onload = () => {
       URL.revokeObjectURL(blobUrl);
     };
-    
+
     return iframe;
   }
 
@@ -230,14 +232,14 @@ ${editorJs}
    */
   private async sendMessage(type: string, payload: any): Promise<any> {
     const id = ++this.messageId;
-    
+
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
         this.pendingMessages.delete(id);
         reject(new Error(`Message timeout: ${type}`));
       }, 5000); // 5 second timeout
-      
-      this.pendingMessages.set(id, { 
+
+      this.pendingMessages.set(id, {
         resolve: (result: any) => {
           clearTimeout(timeout);
           resolve(result);
@@ -246,16 +248,19 @@ ${editorJs}
           clearTimeout(timeout);
           reject(error);
         },
-        timeout
+        timeout,
       });
-      
+
       // Send message to iframe
       if (this.iframe?.contentWindow) {
-        this.iframe.contentWindow.postMessage({ 
-          type, 
-          payload, 
-          messageId: id 
-        }, '*');
+        this.iframe.contentWindow.postMessage(
+          {
+            type,
+            payload,
+            messageId: id,
+          },
+          '*'
+        );
       } else {
         this.pendingMessages.delete(id);
         clearTimeout(timeout);
@@ -274,12 +279,12 @@ ${editorJs}
     }
 
     const { type, messageId, payload } = event.data;
-    
+
     if (type === 'TRANSFORM_RESULT' && messageId) {
       const pending = this.pendingMessages.get(messageId);
       if (pending) {
         this.pendingMessages.delete(messageId);
-        
+
         if (payload?.result?.success) {
           pending.resolve(payload.result);
         } else {
@@ -289,7 +294,7 @@ ${editorJs}
             message: String(error.message || error || 'Transform failed'),
             line: error.line,
             column: error.column,
-            stack: error.stack
+            stack: error.stack,
           };
           pending.reject(transformError);
         }
@@ -301,7 +306,6 @@ ${editorJs}
       console.error(`Transform engine ${type.toLowerCase()}:`, payload);
     }
   }
-
 
   /**
    * Wait for iframe ready signal
@@ -319,7 +323,7 @@ ${editorJs}
           resolve();
         }
       };
-      
+
       window.addEventListener('message', handler);
     });
   }

@@ -1,12 +1,12 @@
 /**
  * Spine Item Preview Manager
- * 
+ *
  * Coordinates real-time preview updates with 300ms debounce, auto-save workflow,
  * XHTML manifest persistence, and BlobURLManager integration for single-file deployment.
- * 
+ *
  * Key Features:
  * - Real-time preview with debounced updates (300ms)
- * - Auto-save workflow for blob URL processing  
+ * - Auto-save workflow for blob URL processing
  * - XHTML persistence as spine item content to manifest
  * - Multi-file content management (text, CSS, JavaScript)
  * - Error handling and user feedback
@@ -28,7 +28,7 @@ import type {
   PreviewManagerConfig,
   PreviewUpdateEvent,
   PreviewErrorEvent,
-  AutoSaveResult
+  AutoSaveResult,
 } from '../types/spine-editor.js';
 
 /**
@@ -98,7 +98,7 @@ export class SpinePreviewManager {
 
     // Initialize content state
     this.currentContent = {
-      text: ''
+      text: '',
     };
 
     // Set active workspace for blob URL manager
@@ -120,7 +120,6 @@ export class SpinePreviewManager {
     this.currentContent[type] = content;
     this.debounceRender();
   }
-
 
   /**
    * Load initial content from workspace files
@@ -145,7 +144,6 @@ export class SpinePreviewManager {
       this.handleError('initialization', error);
     }
   }
-
 
   /**
    * Get current content state
@@ -199,10 +197,7 @@ export class SpinePreviewManager {
 
       // Step 3: Auto-generate metadata and create final XHTML document
       const metadata = await this.generateChapterMetadata();
-      const xhtml = this.generateXHTML(
-        transformResult.html || '',
-        metadata
-      );
+      const xhtml = this.generateXHTML(transformResult.html || '', metadata);
 
       // Step 4: Save XHTML as spine item content to manifest
       if (this.config.persistToManifest) {
@@ -220,9 +215,8 @@ export class SpinePreviewManager {
         xhtml: processedXHTML,
         warnings: transformResult.warnings || [],
         executionTime: Math.round(executionTime),
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
-
     } catch (error) {
       this.handleError('preview', error);
     } finally {
@@ -238,7 +232,7 @@ export class SpinePreviewManager {
     const result: AutoSaveResult = {
       success: true,
       savedFiles: [],
-      errors: []
+      errors: [],
     };
 
     // Only auto-save text content (per-chapter)
@@ -246,22 +240,19 @@ export class SpinePreviewManager {
     const textFile = {
       path: `SOURCE/text/${this.spineItemId}.txt`,
       content: this.currentContent.text,
-      type: 'text'
+      type: 'text',
     };
 
-    if (textFile.content.trim()) { // Only save non-empty text
+    if (textFile.content.trim()) {
+      // Only save non-empty text
       try {
-        await this.fileStorage.writeTextFile(
-          this.workspaceId,
-          textFile.path,
-          textFile.content
-        );
+        await this.fileStorage.writeTextFile(this.workspaceId, textFile.path, textFile.content);
         result.savedFiles.push(textFile.path);
       } catch (error) {
         result.success = false;
         result.errors.push({
           file: textFile.path,
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
       }
     }
@@ -276,11 +267,7 @@ export class SpinePreviewManager {
     try {
       // Save XHTML as the spine item's content in the EPUB structure
       const spineItemPath = `OEBPS/Text/${this.spineItemId}.xhtml`;
-      await this.workspaceService.writeFile(
-        this.workspaceId,
-        spineItemPath,
-        xhtml
-      );
+      await this.workspaceService.writeFile(this.workspaceId, spineItemPath, xhtml);
     } catch (error) {
       // Log manifest save errors but don't block preview
       console.warn('Failed to save XHTML to manifest:', error);
@@ -293,7 +280,7 @@ export class SpinePreviewManager {
   private async generateChapterMetadata(): Promise<ChapterMetadata> {
     // Title: use spine item ID
     const title = this.spineItemId;
-    
+
     // Language: get from workspace EPUB metadata (fallback to 'en')
     let language = 'en';
     try {
@@ -302,7 +289,7 @@ export class SpinePreviewManager {
     } catch (error) {
       console.warn('Could not load workspace language, using default:', error);
     }
-    
+
     // Stylesheets: auto-discover all CSS files from manifest
     const stylesheets: string[] = [];
     try {
@@ -317,8 +304,8 @@ export class SpinePreviewManager {
     } catch (error) {
       // No CSS files found, that's okay
     }
-    
-    // Scripts: auto-discover all JS files from manifest  
+
+    // Scripts: auto-discover all JS files from manifest
     const scripts: string[] = [];
     try {
       const jsFiles = await this.fileStorage.listFiles(this.workspaceId, 'OEBPS/Scripts');
@@ -332,28 +319,30 @@ export class SpinePreviewManager {
     } catch (error) {
       // No JS files found, that's okay
     }
-    
+
     return {
       title,
       language,
       stylesheets,
-      scripts
+      scripts,
     };
   }
 
   /**
    * Generate complete XHTML document with external file references only
    */
-  private generateXHTML(
-    transformedContent: string,
-    metadata: ChapterMetadata
-  ): string {
+  private generateXHTML(transformedContent: string, metadata: ChapterMetadata): string {
     const stylesheetLinks = metadata.stylesheets
-      .map(href => `  <link rel="stylesheet" type="text/css" href="${this.escapeHtml(convertManifestPathToXHTMLPath(href))}" />`)
+      .map(
+        href =>
+          `  <link rel="stylesheet" type="text/css" href="${this.escapeHtml(convertManifestPathToXHTMLPath(href))}" />`
+      )
       .join('\n');
 
     const scriptTags = metadata.scripts
-      .map(src => `  <script src="${this.escapeHtml(convertManifestPathToXHTMLPath(src))}"></script>`)
+      .map(
+        src => `  <script src="${this.escapeHtml(convertManifestPathToXHTMLPath(src))}"></script>`
+      )
       .join('\n');
 
     return `<?xml version="1.0" encoding="utf-8"?>
@@ -389,13 +378,13 @@ ${transformedContent}
     const transformError: TransformError = {
       stage,
       message: error?.message || (typeof error === 'string' ? error : 'Unknown error'),
-      stack: error?.stack
+      stack: error?.stack,
     };
 
     this.onError({
       error: transformError,
       stage,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
@@ -407,8 +396,8 @@ ${transformedContent}
       isTransforming: this.isTransforming,
       lastTransformTime: this.lastTransformTime,
       contentLength: {
-        text: this.currentContent.text.length
-      }
+        text: this.currentContent.text.length,
+      },
     };
   }
 
@@ -420,7 +409,7 @@ ${transformedContent}
       clearTimeout(this.debounceTimer);
       this.debounceTimer = undefined;
     }
-    
+
     await this.renderPreview();
   }
 
@@ -453,7 +442,6 @@ ${transformedContent}
    * This maintains workspace-level resources while updating spine-specific context
    */
   async switchToSpineItem(newSpineItemId: string, newSpineItem?: any): Promise<void> {
-    
     // Clear any pending operations
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
@@ -470,7 +458,7 @@ ${transformedContent}
 
     // Reset content state for new spine item
     this.currentContent = {
-      text: ''
+      text: '',
     };
 
     // Load initial content for new spine item
@@ -525,7 +513,7 @@ export function createSpinePreviewManager(
     debounceMs: 300,
     transformTimeout: 3000,
     autoSave: true,
-    persistToManifest: true
+    persistToManifest: true,
   };
 
   const finalConfig = { ...defaultConfig, ...config };
@@ -553,5 +541,5 @@ export const DEFAULT_PREVIEW_CONFIG: PreviewManagerConfig = {
   debounceMs: 300,
   transformTimeout: 3000,
   autoSave: true,
-  persistToManifest: true
+  persistToManifest: true,
 };

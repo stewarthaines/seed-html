@@ -1,6 +1,6 @@
 /**
  * Spine Item Transform Pipeline
- * 
+ *
  * Enhanced transform pipeline using global transform engine for real-time
  * spine item editing. Uses persistent app-level iframe for sandboxed transform
  * execution with message-based communication.
@@ -11,14 +11,7 @@ import type { ExtensionManager } from '../extensions/extension-manager.js';
 import type { SettingsService } from '../services/settings/settings.service.js';
 import type { BlobURLManager } from '../blob-url/blob-url-manager.js';
 import type { TransformEngine } from '../infrastructure/transform-engine.js';
-import type { 
-  TransformResult, 
-  TransformScripts, 
-  TransformError, 
-  TransformRequest,
-  EditorMessage,
-  EditorResponse
-} from '../types/spine-editor.js';
+import type { TransformResult, TransformScripts } from '../types/spine-editor.js';
 
 /**
  * Spine-specific transform pipeline using global transform engine
@@ -51,8 +44,8 @@ export class SpineTransformPipeline {
         success: false,
         error: {
           stage: 'communication',
-          message: error instanceof Error ? error.message : String(error)
-        }
+          message: String((error as any)?.message || error),
+        },
       };
     }
   }
@@ -64,13 +57,13 @@ export class SpineTransformPipeline {
     try {
       const scripts: TransformScripts = {
         textTransform: '',
-        domTransforms: []
+        domTransforms: [],
       };
 
       if (this.settingsService) {
         // Load settings and resolve transform scripts
         const settings = await this.settingsService.loadEPUBSettings(this.workspaceId);
-        
+
         if (settings.text_transform) {
           try {
             scripts.textTransform = await this.fileStorage.readTextFile(
@@ -100,7 +93,9 @@ export class SpineTransformPipeline {
 
       return scripts;
     } catch (error) {
-      throw new Error(`Failed to load transform scripts: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to load transform scripts: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
