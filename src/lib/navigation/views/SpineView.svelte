@@ -95,6 +95,9 @@
 
   // Loading guard to prevent concurrent spine item loads
   let isLoadingSpineItem = false;
+  
+  // Editor reference for preview click navigation
+  let editorPaneRef: any;
 
   // Spine editor configuration interface for persistence (content never persisted)
   interface SpineEditorConfig {
@@ -1010,6 +1013,13 @@
     }
   }
 
+  // Handle preview click for text selection in editor
+  function handleSpinePreviewClick(event: CustomEvent<{ text: string; documentPosition: number; elementType: string }>) {
+    if (editorPaneRef && typeof editorPaneRef.findAndSelectText === 'function') {
+      editorPaneRef.findAndSelectText(event.detail);
+    }
+  }
+
   // Race condition prevention
   let currentSpineItemLoadPromise: Promise<void> | null = null;
 
@@ -1242,26 +1252,29 @@
   </div>
 {:else if selectedItem && servicesInitialized && previewManager}
   <!-- Editor Pane -->
-  <EditorPane
-    {availableFiles1}
-    {availableFiles2}
-    transformError={$transformError}
-    transformWarnings={$transformWarnings}
-    isTransforming={$isTransforming}
-    executionTime={$executionTime}
-    editorMode={paneState.mode}
-    pane1SelectedFile={paneState.pane1.selectedFileValue}
-    pane2SelectedFile={paneState.pane2.selectedFileValue}
-    bind:pane1Error
-    bind:pane2Error
-    pane1FileStore={pane1Store}
-    pane2FileStore={pane2Store}
-    {contentService}
-    onPaneToggle={() => handlePaneToggle()}
-    onFileSelect={(pane, filePath, fileType) => handleFileSelect({ detail: { pane, filePath, fileType } } as CustomEvent<{ pane: 1 | 2; filePath: string; fileType: string }>)}
-    onContentChange={(pane, content) => handlePaneContentChange({ detail: { pane, content } } as CustomEvent<{ pane: 1 | 2; content: string }>)}
-    onForceUpdate={() => forcePreviewUpdate()}
-  />
+  <div data-spine-view on:preview-click={handleSpinePreviewClick} class="spine-editor-wrapper">
+    <EditorPane
+      bind:this={editorPaneRef}
+      {availableFiles1}
+      {availableFiles2}
+      transformError={$transformError}
+      transformWarnings={$transformWarnings}
+      isTransforming={$isTransforming}
+      executionTime={$executionTime}
+      editorMode={paneState.mode}
+      pane1SelectedFile={paneState.pane1.selectedFileValue}
+      pane2SelectedFile={paneState.pane2.selectedFileValue}
+      bind:pane1Error
+      bind:pane2Error
+      pane1FileStore={pane1Store}
+      pane2FileStore={pane2Store}
+      {contentService}
+      onPaneToggle={() => handlePaneToggle()}
+      onFileSelect={(pane, filePath, fileType) => handleFileSelect({ detail: { pane, filePath, fileType } } as CustomEvent<{ pane: 1 | 2; filePath: string; fileType: string }>)}
+      onContentChange={(pane, content) => handlePaneContentChange({ detail: { pane, content } } as CustomEvent<{ pane: 1 | 2; content: string }>)}
+      onForceUpdate={() => forcePreviewUpdate()}
+    />
+  </div>
 {:else}
   <div class="loading-state">
     <div class="spinner"></div>
@@ -1326,6 +1339,13 @@
     margin: 0;
     color: var(--color-text-secondary);
     font-size: var(--text-sm);
+  }
+
+  /* Spine editor wrapper for event handling */
+  .spine-editor-wrapper {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   /* Reduced motion support */

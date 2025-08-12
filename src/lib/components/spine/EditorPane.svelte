@@ -38,6 +38,7 @@
     onFileSelect,
     onContentChange,
     onForceUpdate,
+    onPreviewClick = null,
   }: {
     transformError?: TransformError | null;
     transformWarnings?: string[];
@@ -67,6 +68,7 @@
     onFileSelect?: (pane: 1 | 2, filePath: string, fileType: string) => void;
     onContentChange?: (pane: 1 | 2, content: string) => void;
     onForceUpdate?: () => void;
+    onPreviewClick?: (detail: { text: string; documentPosition: number; elementType: string }) => void;
   } = $props();
 
   /**
@@ -188,6 +190,113 @@
     }
     return `${(ms / 1000).toFixed(1)}s`;
   }
+
+  // Textarea references for navigation
+  let pane1Textarea: HTMLTextAreaElement;
+  let pane2Textarea: HTMLTextAreaElement;
+
+  /**
+   * Normalize text for better matching by removing/standardizing punctuation and whitespace
+   */
+  function normalizeText(text: string): string {
+    // Use character code approach for apostrophe normalization
+    let result = text.trim();
+    
+    // Convert curly quotes to straight quotes using character codes
+    result = result.split('').map(char => {
+      const code = char.charCodeAt(0);
+      if (code === 8217 || code === 8216) { // ' and ' (apostrophes)
+        return "'";
+      }
+      if (code === 8221 || code === 8220) { // " and " (double quotes)
+        return '"';
+      }
+      return char;
+    }).join('');
+    
+    // Normalize other quote variants
+    result = result.replace(/[""„‚]/g, '"');
+    
+    // Normalize whitespace
+    result = result.replace(/\s+/g, ' ');
+    
+    return result;
+  }
+
+  /**
+   * Find and select text in the editor based on preview click
+   */
+  function findAndSelectText(detail: { text: string; documentPosition: number; elementType: string }): void {
+    const { text } = detail;
+    
+    // Try both panes to find content
+    let textarea: HTMLTextAreaElement | null = null;
+    let content = '';
+    
+    // Check pane 1 first
+    if (pane1FileStore && pane1SelectedFile && pane1Textarea && $pane1FileStore?.content) {
+      textarea = pane1Textarea;
+      content = $pane1FileStore.content;
+    }
+    // Then check pane 2
+    else if (pane2FileStore && pane2SelectedFile && pane2Textarea && $pane2FileStore?.content) {
+      textarea = pane2Textarea;
+      content = $pane2FileStore.content;
+    }
+    
+    if (!textarea || !content) return;
+
+    const searchText = text.trim();
+    
+    
+    // Normalize the preview text (convert curly quotes to straight quotes)
+    const normalizedSearchText = normalizeText(searchText);
+    
+    // Try exact match with normalized preview text (case-insensitive)
+    const contentLower = content.toLowerCase();
+    const normalizedSearchLower = normalizedSearchText.toLowerCase();
+    
+    let index = contentLower.indexOf(normalizedSearchLower);
+    if (index !== -1) {
+      selectTextRange(textarea, index, index + normalizedSearchText.length);
+      return;
+    }
+
+    // If normalized search fails and text is substantial, try exact original search as fallback
+    if (searchText.length >= 8) {
+      const searchLower = searchText.toLowerCase();
+      index = contentLower.indexOf(searchLower);
+      if (index !== -1) {
+        selectTextRange(textarea, index, index + searchText.length);
+        return;
+      }
+    }
+
+    // No good match found - fail silently rather than select wrong text
+  }
+
+  /**
+   * Select text range in textarea and scroll to it
+   */
+  function selectTextRange(textarea: HTMLTextAreaElement, start: number, end: number): void {
+    // Focus the textarea
+    textarea.focus();
+    
+    // Set selection
+    textarea.setSelectionRange(start, end);
+    
+    // Scroll to the selection
+    const lines = textarea.value.substring(0, start).split('\n');
+    const targetLine = lines.length - 1;
+    const lineHeight = parseInt(getComputedStyle(textarea).lineHeight) || 20;
+    const scrollTop = targetLine * lineHeight;
+    
+    // Scroll to make the selection visible
+    textarea.scrollTop = Math.max(0, scrollTop - textarea.clientHeight / 2);
+  }
+
+  // Export the findAndSelectText function for parent component access
+  export { findAndSelectText };
 </script>
 
 <div class="editor-pane-container">
@@ -271,6 +380,7 @@
 
           <div class="textarea-container">
             <textarea
+              bind:this={pane2Textarea}
               class="content-textarea {getSyntaxClass(pane2SelectedFile)}"
               class:has-error={pane2Error}
               value={pane2FileStore ? $pane2FileStore?.content || '' : ''}
@@ -309,6 +419,7 @@
 
         <div class="textarea-container">
           <textarea
+            bind:this={pane1Textarea}
             class="content-textarea {getSyntaxClass(pane1SelectedFile)}"
             class:has-error={pane1Error}
             value={pane1FileStore ? $pane1FileStore?.content || '' : ''}

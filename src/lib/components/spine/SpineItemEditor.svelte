@@ -60,6 +60,7 @@
 
   // Component state
   let initialized = false;
+  let editorPaneRef: any;
 
   /**
    * Initialize preview manager and load initial content
@@ -169,6 +170,15 @@
       }
     );
   }
+
+  /**
+   * Handle preview click - find and select corresponding text in editor
+   */
+  function handlePreviewClick(detail: { text: string; documentPosition: number; elementType: string }): void {
+    if (editorPaneRef && typeof editorPaneRef.findAndSelectText === 'function') {
+      editorPaneRef.findAndSelectText(detail);
+    }
+  }
 </script>
 
 {#if initialized}
@@ -176,6 +186,7 @@
     <!-- Editor Pane (Left) -->
     <div class="editor-pane">
       <EditorPane
+        bind:this={editorPaneRef}
         availableFiles1={[]}
         availableFiles2={[]}
         transformError={$transformError}
@@ -187,6 +198,7 @@
         onFileSelect={() => {}}
         onContentChange={() => {}}
         onForceUpdate={forcePreviewUpdate}
+        onPreviewClick={handlePreviewClick}
       />
     </div>
 
@@ -199,6 +211,7 @@
         transformWarnings={$transformWarnings}
         executionTime={$executionTime}
         {spineItemId}
+        onPreviewClick={handlePreviewClick}
       />
     </div>
   </div>

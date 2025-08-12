@@ -18,13 +18,24 @@
   import type { TransformError } from '$lib/types/spine-editor.js';
   import { t } from '$lib/i18n';
 
-  // Props
-  export let xhtmlContent: string = '';
-  export let isTransforming: boolean = false;
-  export let transformError: TransformError | null = null;
-  export let transformWarnings: string[] = [];
-  export let executionTime: number = 0;
-  export let spineItemId: string;
+  // Props using Svelte 5 runes syntax
+  let {
+    xhtmlContent = '',
+    isTransforming = false,
+    transformError = null,
+    transformWarnings = [],
+    executionTime = 0,
+    spineItemId,
+    onPreviewClick = null
+  }: {
+    xhtmlContent?: string;
+    isTransforming?: boolean;
+    transformError?: TransformError | null;
+    transformWarnings?: string[];
+    executionTime?: number;
+    spineItemId: string;
+    onPreviewClick?: ((detail: { text: string; documentPosition: number; elementType: string }) => void) | null;
+  } = $props();
 
   // Preview configuration
   const DEVICE_PRESETS = [
@@ -36,8 +47,8 @@
   ] as const;
 
   // Component state
-  let selectedDevice = 'desktop';
-  let showSource = false;
+  let selectedDevice = $state('desktop');
+  let showSource = $state(false);
   let previewIframe: HTMLIFrameElement;
   let previewContainer: HTMLDivElement;
 
@@ -45,7 +56,9 @@
   const lastUpdateTime = writable<number>(Date.now());
 
   // Update iframe content when XHTML changes
-  $: updatePreviewContent(xhtmlContent);
+  $effect(() => {
+    updatePreviewContent(xhtmlContent);
+  });
 
   /**
    * Find a scroll anchor element that can be used to restore scroll position
@@ -164,9 +177,10 @@
       iframeDoc.write(content);
       iframeDoc.close();
 
-      // Restore scroll position after DOM is ready
+      // Re-attach event listeners and styling after content update
       requestAnimationFrame(() => {
         restoreScrollPosition(iframeDoc, scrollAnchor, scrollTop);
+        setupIframeInteractivity(iframeDoc);
       });
 
       lastUpdateTime.set(Date.now());
@@ -227,38 +241,128 @@
   }
 
   /**
+   * Estimate the position of an element within the source document
+   */
+  function estimateDocumentPosition(element: Element): number {
+    const iframeDoc = previewIframe?.contentDocument;
+    if (!iframeDoc) return 0;
+
+    try {
+      // Create a tree walker to traverse all text nodes before the target element
+      const walker = iframeDoc.createTreeWalker(
+        iframeDoc.body,
+        NodeFilter.SHOW_TEXT,
+        null,
+        false
+      );
+
+      let position = 0;
+      let node: Node | null;
+      
+      while ((node = walker.nextNode())) {
+        // Stop if we've reached our target element
+        if (element.contains(node)) {
+          break;
+        }
+        position += (node.textContent?.length || 0);
+      }
+
+      return position;
+    } catch (error) {
+      console.warn('Failed to estimate document position:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Handle clicks on elements in the preview iframe
+   */
+  function handlePreviewClick(event: MouseEvent): void {
+    if (!onPreviewClick) return;
+
+    const target = event.target as Element;
+    if (!target) return;
+
+    // Find the best text-containing element
+    const textElement = target.closest('p, h1, h2, h3, h4, h5, h6, div, span, li, blockquote, td, th') || target;
+    const clickedText = textElement.textContent?.trim();
+
+    // Skip if no meaningful text content (increased minimum length)
+    if (!clickedText || clickedText.length < 8) return;
+
+    // Skip if text is too long (likely not a good match target)
+    if (clickedText.length > 500) return;
+
+    try {
+      const documentPosition = estimateDocumentPosition(textElement);
+      const elementType = textElement.tagName.toLowerCase();
+
+      onPreviewClick({
+        text: clickedText,
+        documentPosition,
+        elementType
+      });
+    } catch (error) {
+      console.warn('Failed to handle preview click:', error);
+    }
+  }
+
+  /**
+   * Set up iframe interactivity (event listeners and styling)
+   * Called both on initial load and after content updates
+   */
+  function setupIframeInteractivity(iframeDoc: Document): void {
+    // Add click event listener to the iframe document
+    iframeDoc.addEventListener('click', handlePreviewClick);
+
+    // Add any global styles or scripts for preview enhancement
+    const style = iframeDoc.createElement('style');
+    style.textContent = `
+      body {
+        margin: 0;
+        padding: 1rem;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        line-height: 1.6;
+      }
+
+      /* Ensure images are responsive */
+      img {
+        max-width: 100%;
+        height: auto;
+      }
+
+      /* Add some visual feedback for empty content */
+      body:empty::before {
+        content: 'No content to preview';
+        color: #666;
+        font-style: italic;
+        display: block;
+        text-align: center;
+        padding: 2rem;
+      }
+
+      /* Indicate clickable text elements */
+      p, h1, h2, h3, h4, h5, h6, div, span, li, blockquote, td, th {
+        cursor: pointer;
+      }
+
+      /* Visual feedback on hover */
+      p:hover, h1:hover, h2:hover, h3:hover, h4:hover, h5:hover, h6:hover, 
+      div:hover, span:hover, li:hover, blockquote:hover, td:hover, th:hover {
+        background-color: rgba(59, 130, 246, 0.1);
+        outline: 1px solid rgba(59, 130, 246, 0.3);
+        outline-offset: 1px;
+      }
+    `;
+    iframeDoc.head.appendChild(style);
+  }
+
+  /**
    * Handle iframe load event
    */
   function handleIframeLoad(): void {
-    // Apply any post-load styling or setup if needed
     if (previewIframe?.contentDocument) {
-      // Add any global styles or scripts for preview enhancement
-      const style = previewIframe.contentDocument.createElement('style');
-      style.textContent = `
-        body {
-          margin: 0;
-          padding: 1rem;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          line-height: 1.6;
-        }
-
-        /* Ensure images are responsive */
-        img {
-          max-width: 100%;
-          height: auto;
-        }
-
-        /* Add some visual feedback for empty content */
-        body:empty::before {
-          content: 'No content to preview';
-          color: #666;
-          font-style: italic;
-          display: block;
-          text-align: center;
-          padding: 2rem;
-        }
-      `;
-      previewIframe.contentDocument.head.appendChild(style);
+      setupIframeInteractivity(previewIframe.contentDocument);
     }
   }
 

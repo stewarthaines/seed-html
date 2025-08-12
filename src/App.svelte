@@ -151,6 +151,20 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
     };
   };
 
+  // Handle preview click for text selection in editor
+  const handlePreviewClick = (detail: { text: string; documentPosition: number; elementType: string }) => {
+    // Dispatch custom event to SpineView to handle text selection
+    const spineViewElement = document.querySelector('[data-spine-view]');
+    if (spineViewElement) {
+      spineViewElement.dispatchEvent(
+        new CustomEvent('preview-click', {
+          detail,
+          bubbles: true
+        })
+      );
+    }
+  };
+
   // Handle manifest item deletion
   const handleManifestItemDelete = async (event: CustomEvent<{ itemId: string }>) => {
     if (!currentWorkspaceState || !appState) return;
@@ -434,6 +448,7 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
             transformWarnings={spinePreviewData.transformWarnings}
             executionTime={spinePreviewData.executionTime}
             spineItemId={spinePreviewData.spineItemId}
+            onPreviewClick={handlePreviewClick}
           />
         {:else}
           <div class="placeholder-content">
