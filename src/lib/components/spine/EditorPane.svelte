@@ -202,8 +202,8 @@
   }
 
   // Textarea references for navigation
-  let pane1Textarea: HTMLTextAreaElement;
-  let pane2Textarea: HTMLTextAreaElement;
+  let pane1Textarea: HTMLTextAreaElement | undefined = $state();
+  let pane2Textarea: HTMLTextAreaElement | undefined = $state();
 
   /**
    * Normalize text for better matching by removing/standardizing punctuation and whitespace

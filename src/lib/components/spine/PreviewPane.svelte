@@ -49,8 +49,9 @@
   // Component state
   let selectedDevice = $state('desktop');
   let showSource = $state(false);
-  let previewIframe: HTMLIFrameElement;
-  let previewContainer: HTMLDivElement;
+  let previewIframe: HTMLIFrameElement | undefined = $state();
+  let previewContainer: HTMLDivElement | undefined = $state();
+  let pendingScrollRestore: { anchor: { element: Element | null; id: string | null; offset: number } | null; fallbackScrollTop: number } | null = $state(null);
 
   // Reactive state
   const lastUpdateTime = writable<number>(Date.now());
@@ -113,7 +114,9 @@
     if (!anchor) {
       // Simple fallback to pixel position
       iframeDoc.documentElement.scrollTop = fallbackScrollTop;
-      iframeDoc.body.scrollTop = fallbackScrollTop;
+      if (iframeDoc.body) {
+        iframeDoc.body.scrollTop = fallbackScrollTop;
+      }
       return;
     }
 
@@ -140,21 +143,27 @@
         
         // Apply additional offset if needed
         if (anchor.offset !== 0) {
-          const currentScroll = iframeDoc.documentElement.scrollTop || iframeDoc.body.scrollTop;
+          const currentScroll = iframeDoc.documentElement.scrollTop || (iframeDoc.body?.scrollTop || 0);
           const newScroll = Math.max(0, currentScroll + anchor.offset);
           iframeDoc.documentElement.scrollTop = newScroll;
-          iframeDoc.body.scrollTop = newScroll;
+          if (iframeDoc.body) {
+            iframeDoc.body.scrollTop = newScroll;
+          }
         }
       } else {
         // Fallback to pixel position
         iframeDoc.documentElement.scrollTop = fallbackScrollTop;
-        iframeDoc.body.scrollTop = fallbackScrollTop;
+        if (iframeDoc.body) {
+          iframeDoc.body.scrollTop = fallbackScrollTop;
+        }
       }
     } catch (error) {
       console.warn('Failed to restore scroll position:', error);
       // Final fallback
       iframeDoc.documentElement.scrollTop = fallbackScrollTop;
-      iframeDoc.body.scrollTop = fallbackScrollTop;
+      if (iframeDoc.body) {
+        iframeDoc.body.scrollTop = fallbackScrollTop;
+      }
     }
   }
 
@@ -169,19 +178,16 @@
       if (!iframeDoc) return;
 
       // Save scroll position and find anchor before updating
-      const scrollTop = iframeDoc.documentElement.scrollTop || iframeDoc.body.scrollTop;
+      const scrollTop = iframeDoc.documentElement.scrollTop || (iframeDoc.body?.scrollTop || 0);
       const scrollAnchor = scrollTop > 0 ? findScrollAnchor(iframeDoc) : null;
+
+      // Store scroll restoration data for when the content loads
+      pendingScrollRestore = { anchor: scrollAnchor, fallbackScrollTop: scrollTop };
 
       // Update content (preserves XHTML and blob URLs)
       iframeDoc.open();
       iframeDoc.write(content);
       iframeDoc.close();
-
-      // Re-attach event listeners and styling after content update
-      requestAnimationFrame(() => {
-        restoreScrollPosition(iframeDoc, scrollAnchor, scrollTop);
-        setupIframeInteractivity(iframeDoc);
-      });
 
       lastUpdateTime.set(Date.now());
     } catch (error) {
@@ -252,8 +258,7 @@
       const walker = iframeDoc.createTreeWalker(
         iframeDoc.body,
         NodeFilter.SHOW_TEXT,
-        null,
-        false
+        null
       );
 
       let position = 0;
@@ -362,7 +367,20 @@
    */
   function handleIframeLoad(): void {
     if (previewIframe?.contentDocument) {
-      setupIframeInteractivity(previewIframe.contentDocument);
+      const iframeDoc = previewIframe.contentDocument;
+      
+      // Set up interactivity first
+      setupIframeInteractivity(iframeDoc);
+      
+      // Restore scroll position if we have pending data
+      if (pendingScrollRestore) {
+        // Use requestAnimationFrame to ensure DOM is fully ready
+        requestAnimationFrame(() => {
+          restoreScrollPosition(iframeDoc, pendingScrollRestore!.anchor, pendingScrollRestore!.fallbackScrollTop);
+          // Clear the pending data
+          pendingScrollRestore = null;
+        });
+      }
     }
   }
 
@@ -415,7 +433,7 @@
       <select
         class="device-selector"
         bind:value={selectedDevice}
-        on:change={e => handleDeviceChange((e.target as HTMLSelectElement).value)}
+        onchange={e => handleDeviceChange((e.target as HTMLSelectElement).value)}
         aria-label="Select device preset"
       >
         {#each DEVICE_PRESETS as device}
@@ -431,7 +449,7 @@
         type="button"
         class="view-toggle"
         class:active={showSource}
-        on:click={toggleSourceView}
+        onclick={toggleSourceView}
         title="Toggle source view"
         aria-pressed={showSource}
       >
@@ -492,7 +510,7 @@
               bind:this={previewIframe}
               class="preview-iframe"
               title="XHTML Preview"
-              on:load={handleIframeLoad}
+              onload={handleIframeLoad}
             ></iframe>
           {:else}
             <div class="preview-empty">
