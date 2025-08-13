@@ -3,6 +3,7 @@
   import { t } from '../../i18n';
   import ManifestTable from './ManifestTable.svelte';
   import ManifestItemEditor from './ManifestItemEditor.svelte';
+  import { ManifestUtils } from '../../manifest/utils.js';
   import type { ManifestItem, SourceItem, ValidationResult } from '../../manifest/types';
   import type { WorkspaceService, WorkspaceState } from '../../services/workspace/workspace.service.js';
 
@@ -38,7 +39,32 @@
       error = null;
 
       // Load manifest items directly from workspace state
-      manifestItems = workspace.opf.manifest;
+      const baseManifestItems = workspace.opf.manifest;
+
+      // Populate file sizes for manifest items
+      const manifestItemsWithSizes = await Promise.all(
+        baseManifestItems.map(async (item) => {
+          try {
+            // Resolve manifest item href to full workspace path
+            const resolvedPath = workspace!.pathInfo.basePath 
+              ? `${workspace!.pathInfo.basePath}/${item.href}`
+              : item.href;
+            
+            // Get file info using workspace service method
+            const fileInfo = await workspaceService.getFileInfo(workspace!.id, resolvedPath);
+            
+            return {
+              ...item,
+              size: fileInfo.size
+            };
+          } catch {
+            // If file doesn't exist or can't be accessed, keep item without size
+            return item;
+          }
+        })
+      );
+
+      manifestItems = manifestItemsWithSizes;
 
       // Load SOURCE items if advanced mode is enabled
       if (advancedMode) {
@@ -142,10 +168,19 @@
       const files = event.detail.files;
 
       for (const file of files) {        
-        // Create manifest item
+        // Create manifest item with reliable media type detection
+        const browserType = file.type;
+        const filenameType = ManifestUtils.detectMediaType(file.name);
+        
+        // For font files, always use filename detection (browsers are unreliable)
+        // For other files, prefer browser detection unless it's generic
+        const isGeneric = !browserType || browserType === 'application/octet-stream';
+        const isFontFile = filenameType.startsWith('font/');
+        const reliableMediaType = (isGeneric || isFontFile) ? filenameType : browserType;
+        
         const manifestItem = {
           href: file.name,
-          mediaType: file.type || 'application/octet-stream'
+          mediaType: reliableMediaType
         };
         
         workspace = await workspaceService.addManifestItem(workspace, manifestItem);
@@ -174,6 +209,13 @@
 
   // Load manifest when component mounts or dependencies change
   onMount(loadManifest);
+
+  // React to workspace changes (e.g., after delete/add operations)
+  $effect(() => {
+    if (workspace) {
+      loadManifest();
+    }
+  });
 
   // React to advancedMode changes
   $effect(() => {

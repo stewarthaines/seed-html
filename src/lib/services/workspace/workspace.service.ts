@@ -352,7 +352,7 @@ export class WorkspaceService {
     };
 
     // Create updated workspace
-    const updatedWorkspace: WorkspaceState = {
+    let updatedWorkspace: WorkspaceState = {
       ...workspace,
       opf: {
         ...workspace.opf,
@@ -363,6 +363,11 @@ export class WorkspaceService {
         },
       },
     };
+
+    // Update scripted properties if JavaScript file was added
+    if (manifestItem.mediaType === 'text/javascript' || manifestItem.mediaType === 'application/javascript') {
+      updatedWorkspace = this.addScriptedPropertiesToChapters(updatedWorkspace);
+    }
 
     // Save to storage
     return await this.saveWorkspace(updatedWorkspace);
@@ -377,8 +382,21 @@ export class WorkspaceService {
       throw new ValidationError(`Manifest item with ID '${itemId}' not found`);
     }
 
+    // Get the manifest item before removing it
+    const removedItem = workspace.opf.manifest[itemIndex];
+    const removingJavaScript = removedItem.mediaType === 'text/javascript' || removedItem.mediaType === 'application/javascript';
+
+    // Delete the actual file using existing path resolution infrastructure
+    try {
+      const filePath = this.resolveManifestPath(removedItem.href, workspace.pathInfo.basePath);
+      await this.fileStorage.deleteFile(workspace.id, filePath);
+    } catch (error) {
+      // Log warning but don't fail if file doesn't exist
+      console.warn(`Failed to delete file for manifest item ${itemId}:`, error);
+    }
+
     // Create updated workspace without the item
-    const updatedWorkspace: WorkspaceState = {
+    let updatedWorkspace: WorkspaceState = {
       ...workspace,
       opf: {
         ...workspace.opf,
@@ -390,6 +408,11 @@ export class WorkspaceService {
         },
       },
     };
+
+    // Update scripted properties if JavaScript file was removed
+    if (removingJavaScript) {
+      updatedWorkspace = this.addScriptedPropertiesToChapters(updatedWorkspace);
+    }
 
     return await this.saveWorkspace(updatedWorkspace);
   }
@@ -407,6 +430,11 @@ export class WorkspaceService {
       throw new ValidationError(`Manifest item with ID '${itemId}' not found`);
     }
 
+    // Check if media type changed to/from JavaScript
+    const oldItem = workspace.opf.manifest[itemIndex];
+    const oldIsJS = oldItem.mediaType === 'text/javascript' || oldItem.mediaType === 'application/javascript';
+    const newIsJS = updates.mediaType === 'text/javascript' || updates.mediaType === 'application/javascript';
+
     // Update manifest item
     const updatedManifest = [...workspace.opf.manifest];
     updatedManifest[itemIndex] = {
@@ -416,7 +444,7 @@ export class WorkspaceService {
     };
 
     // Create updated workspace
-    const updatedWorkspace: WorkspaceState = {
+    let updatedWorkspace: WorkspaceState = {
       ...workspace,
       opf: {
         ...workspace.opf,
@@ -427,6 +455,11 @@ export class WorkspaceService {
         },
       },
     };
+
+    // Update scripted properties if JavaScript status changed
+    if (oldIsJS !== newIsJS) {
+      updatedWorkspace = this.addScriptedPropertiesToChapters(updatedWorkspace);
+    }
 
     return await this.saveWorkspace(updatedWorkspace);
   }
@@ -688,6 +721,45 @@ export class WorkspaceService {
     }
   }
 
+  private addScriptedPropertiesToChapters(workspace: WorkspaceState): WorkspaceState {
+    const hasJavaScript = workspace.opf.manifest.some(item => 
+      item.mediaType === 'text/javascript' || 
+      item.mediaType === 'application/javascript'
+    );
+
+    const updatedManifest = workspace.opf.manifest.map(item => {
+      // Only update chapter items (XHTML but NOT nav)
+      if (item.mediaType === 'application/xhtml+xml' && 
+          item.id !== 'nav' && 
+          !item.properties?.includes('nav')) {
+        
+        const properties = item.properties || [];
+        const hasScripted = properties.includes('scripted');
+
+        if (hasJavaScript && !hasScripted) {
+          // Add scripted property
+          return { ...item, properties: [...properties, 'scripted'] };
+        } else if (!hasJavaScript && hasScripted) {
+          // Remove scripted property
+          const filteredProperties = properties.filter(p => p !== 'scripted');
+          return { 
+            ...item, 
+            properties: filteredProperties.length > 0 ? filteredProperties : undefined 
+          };
+        }
+      }
+      return item;
+    });
+
+    return {
+      ...workspace,
+      opf: {
+        ...workspace.opf,
+        manifest: updatedManifest
+      }
+    };
+  }
+
   private generateManifestId(href: string, existingIds: Set<string>): string {
     // Extract base name from href
     const fileName = href.split('/').pop() || 'item';
@@ -877,5 +949,12 @@ export class WorkspaceService {
     }
 
     return mediaTypeMap[extension] || 'text/plain';
+  }
+
+  /**
+   * Get file information (size and modification date)
+   */
+  async getFileInfo(workspaceId: string, path: string): Promise<{ size: number; lastModified: Date }> {
+    return await this.fileStorage.getFileInfo(workspaceId, path);
   }
 }
