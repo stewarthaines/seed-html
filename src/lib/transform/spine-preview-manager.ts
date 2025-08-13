@@ -30,6 +30,8 @@ import type {
   PreviewErrorEvent,
   AutoSaveResult,
 } from '../types/spine-editor.js';
+import type { WorkspaceState } from '../services/workspace/workspace.service.js';
+import type { ManifestItem } from '../epub/opf-utils.js';
 
 /**
  * Preview manager for real-time spine item editing
@@ -265,12 +267,90 @@ export class SpinePreviewManager {
    */
   private async saveXHTMLToManifest(xhtml: string): Promise<void> {
     try {
-      // Save XHTML as the spine item's content in the EPUB structure
-      const spineItemPath = `OEBPS/Text/${this.spineItemId}.xhtml`;
+      // Load workspace to get proper path info and manifest
+      const workspace = await this.workspaceService.loadWorkspace(this.workspaceId);
+      
+      // Find the current spine item in manifest
+      const manifestItem = workspace.opf.manifest.find(item => item.id === this.spineItemId);
+      if (!manifestItem) {
+        console.warn(`Manifest item not found for spine item: ${this.spineItemId}`);
+        return;
+      }
+      
+      // Use existing path resolution logic
+      const spineItemPath = this.resolveManifestPath(manifestItem.href, workspace.pathInfo.basePath);
+      
       await this.workspaceService.writeFile(this.workspaceId, spineItemPath, xhtml);
+      
+      // Analyze XHTML for SVG content and update manifest properties
+      await this.updateSVGProperty(xhtml, workspace, manifestItem);
     } catch (error) {
       // Log manifest save errors but don't block preview
       console.warn('Failed to save XHTML to manifest:', error);
+    }
+  }
+
+  /**
+   * Resolve manifest href to actual file path (same logic as workspace service)
+   */
+  private resolveManifestPath(href: string, basePath: string): string {
+    if (!basePath || href.startsWith(basePath + '/')) {
+      return href;
+    }
+    return `${basePath}/${href}`;
+  }
+
+  /**
+   * Detect inline SVG elements in XHTML content
+   */
+  private detectInlineSVG(xhtml: string): boolean {
+    try {
+      // Use DOMParser for robust HTML parsing (following codebase preferences)
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xhtml, 'text/html');
+      
+      // Check for any <svg> elements in the document
+      const svgElements = doc.querySelectorAll('svg');
+      return svgElements.length > 0;
+    } catch (error) {
+      console.warn('Failed to parse XHTML for SVG detection:', error);
+      return false; // Fail safe - don't add property if parsing fails
+    }
+  }
+
+  /**
+   * Update SVG property on manifest item based on XHTML content
+   */
+  private async updateSVGProperty(
+    xhtml: string, 
+    workspace: WorkspaceState, 
+    manifestItem: ManifestItem
+  ): Promise<void> {
+    try {
+      // Only process XHTML items
+      if (manifestItem.mediaType !== 'application/xhtml+xml') {
+        return;
+      }
+      
+      const hasSVG = this.detectInlineSVG(xhtml);
+      const currentProperties = manifestItem.properties || [];
+      const hasSVGProperty = currentProperties.includes('svg');
+      
+      // Update property if state changed
+      if (hasSVG && !hasSVGProperty) {
+        // Add svg property
+        await this.workspaceService.updateManifestItem(workspace, this.spineItemId, {
+          properties: [...currentProperties, 'svg']
+        });
+      } else if (!hasSVG && hasSVGProperty) {
+        // Remove svg property
+        const filteredProperties = currentProperties.filter(p => p !== 'svg');
+        await this.workspaceService.updateManifestItem(workspace, this.spineItemId, {
+          properties: filteredProperties.length > 0 ? filteredProperties : undefined
+        });
+      }
+    } catch (error) {
+      console.warn('Failed to update SVG property:', error);
     }
   }
 
@@ -290,34 +370,30 @@ export class SpinePreviewManager {
       console.warn('Could not load workspace language, using default:', error);
     }
 
-    // Stylesheets: auto-discover all CSS files from manifest
+    // Auto-discover CSS and JS files from manifest
     const stylesheets: string[] = [];
-    try {
-      const cssFiles = await this.fileStorage.listFiles(this.workspaceId, 'OEBPS/Styles');
-      for (const cssFile of cssFiles) {
-        if (cssFile.endsWith('.css')) {
-          // Use relative path from OEBPS root
-          const relativePath = cssFile.startsWith('OEBPS/') ? cssFile.substring(6) : cssFile;
-          stylesheets.push(relativePath);
-        }
-      }
-    } catch (error) {
-      // No CSS files found, that's okay
-    }
-
-    // Scripts: auto-discover all JS files from manifest
     const scripts: string[] = [];
     try {
-      const jsFiles = await this.fileStorage.listFiles(this.workspaceId, 'OEBPS/Scripts');
-      for (const jsFile of jsFiles) {
-        if (jsFile.endsWith('.js')) {
-          // Use relative path from OEBPS root
-          const relativePath = jsFile.startsWith('OEBPS/') ? jsFile.substring(6) : jsFile;
-          scripts.push(relativePath);
-        }
-      }
+      const workspace = await this.workspaceService.loadWorkspace(this.workspaceId);
+      
+      // Stylesheets: filter CSS files from manifest
+      workspace.opf.manifest
+        .filter(item => item.mediaType === 'text/css')
+        .forEach(item => {
+          stylesheets.push(item.href); // Use manifest href directly - already relative to OPF
+        });
+
+      // Scripts: filter JS files from manifest
+      workspace.opf.manifest
+        .filter(item => 
+          item.mediaType === 'text/javascript' || 
+          item.mediaType === 'application/javascript'
+        )
+        .forEach(item => {
+          scripts.push(item.href); // Use manifest href directly - already relative to OPF
+        });
     } catch (error) {
-      // No JS files found, that's okay
+      // No CSS/JS files found, that's okay
     }
 
     return {
