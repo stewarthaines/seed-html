@@ -179,8 +179,8 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
         event.detail.itemId
       );
       
-      // Update the workspace state in appState
-      await appState.loadWorkspace(updatedWorkspace.id);
+      // Update the workspace state in appState (same pattern as upload)
+      appState.workspace = updatedWorkspace;
       
       // Clear selection if deleted item was selected
       if (selectedManifestItem && selectedManifestItem.id === event.detail.itemId) {
