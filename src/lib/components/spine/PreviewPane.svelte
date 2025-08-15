@@ -50,6 +50,7 @@
 
   // Component state
   let selectedDevice = $state('desktop');
+  let deviceOrientation = $state<'portrait' | 'landscape'>('portrait');
   let showSource = $state(false);
   let previewIframe: HTMLIFrameElement | undefined = $state();
   let previewContainer: HTMLDivElement | undefined = $state();
@@ -209,27 +210,38 @@
   }
 
   /**
+   * Get device dimensions accounting for orientation
+   */
+  function getDeviceDimensions(device: (typeof DEVICE_PRESETS)[number]) {
+    const originalWidth = parseInt(device.width.replace('px', ''));
+    const originalHeight = parseInt(device.height.replace('px', ''));
+
+    if (deviceOrientation === 'landscape') {
+      // Swap width and height for landscape
+      return { width: originalHeight, height: originalWidth };
+    }
+    
+    return { width: originalWidth, height: originalHeight };
+  }
+
+  /**
    * Calculate optimal scale for device preview to fit available space
    */
-  function calculateOptimalScale(
-    container: HTMLElement,
-    device: (typeof DEVICE_PRESETS)[number]
-  ): number {
+  function calculateOptimalScale(device: (typeof DEVICE_PRESETS)[number]): number {
     if (device.id === 'desktop') return 1;
 
     try {
-      // Get the preview viewport (parent container)
-      const viewport = container.parentElement;
+      // Get the actual preview viewport (not the wrapper)
+      const viewport = document.querySelector('.preview-viewport') as HTMLElement;
       if (!viewport) return 1;
 
       const viewportRect = viewport.getBoundingClientRect();
       // Account for padding and some breathing room
-      const availableWidth = Math.max(200, viewportRect.width);
-      const availableHeight = Math.max(200, viewportRect.height);
+      const availableWidth = Math.max(200, viewportRect.width - 40);
+      const availableHeight = Math.max(200, viewportRect.height - 40);
 
-      // Get device dimensions
-      const deviceWidth = parseInt(device.width.replace('px', ''));
-      const deviceHeight = parseInt(device.height.replace('px', ''));
+      // Get device dimensions (accounting for orientation)
+      const { width: deviceWidth, height: deviceHeight } = getDeviceDimensions(device);
 
       // Calculate aspect ratios
       const containerAspectRatio = availableWidth / availableHeight;
@@ -263,8 +275,17 @@
 
     const device = DEVICE_PRESETS.find(d => d.id === selectedDevice);
     if (device) {
-      deviceScale = calculateOptimalScale(previewContainer, device);
+      deviceScale = calculateOptimalScale(device);
     }
+  }
+
+  /**
+   * Toggle device orientation between portrait and landscape
+   */
+  function toggleOrientation(): void {
+    deviceOrientation = deviceOrientation === 'portrait' ? 'landscape' : 'portrait';
+    // Recalculate scaling and container dimensions for new orientation
+    handleDeviceChange(selectedDevice);
   }
 
   /**
@@ -275,23 +296,43 @@
     const device = DEVICE_PRESETS.find(d => d.id === deviceId);
 
     if (device && previewContainer) {
+      const wrapper = previewContainer.parentElement;
+      
       if (device.id === 'desktop') {
         // Desktop: fill available space
         previewContainer.style.width = '100%';
         previewContainer.style.height = '100%';
         previewContainer.style.maxWidth = 'none';
         previewContainer.style.maxHeight = 'none';
+        
+        // Wrapper fills available space for desktop
+        if (wrapper) {
+          wrapper.style.width = '100%';
+          wrapper.style.height = '100%';
+        }
+        
         deviceScale = 1;
       } else {
-        // Set container to DEVICE dimensions (iframe gets authentic device size)
-        previewContainer.style.width = device.width;
-        previewContainer.style.height = device.height;
-        previewContainer.style.maxWidth = device.width;
-        previewContainer.style.maxHeight = device.height;
-
         // Calculate scale for container transform
         setTimeout(() => {
-          updateDeviceScale();
+          if (previewContainer) {
+            const scale = calculateOptimalScale(device);
+            const { width: deviceWidth, height: deviceHeight } = getDeviceDimensions(device);
+            
+            // Set container to device dimensions (accounting for orientation)
+            previewContainer.style.width = deviceWidth + 'px';
+            previewContainer.style.height = deviceHeight + 'px';
+            previewContainer.style.maxWidth = deviceWidth + 'px';
+            previewContainer.style.maxHeight = deviceHeight + 'px';
+            
+            // Set wrapper to scaled dimensions for proper flex centering
+            if (wrapper) {
+              wrapper.style.width = Math.round(deviceWidth * scale) + 'px';
+              wrapper.style.height = Math.round(deviceHeight * scale) + 'px';
+            }
+            
+            deviceScale = scale;
+          }
         }, 0);
       }
     }
@@ -310,10 +351,13 @@
     console.log('🔄 State toggled from', oldState, 'to', showSource);
 
     if (!showSource) {
-      console.log('🔄 About to call updatePreviewContent');
+      console.log('🔄 About to call updatePreviewContent and re-apply device settings');
       setTimeout(() => {
         console.log('🔄 updatePreviewContent called');
         updatePreviewContent(xhtmlContent);
+        
+        // Re-apply device dimensions and scaling after toggling back to preview
+        handleDeviceChange(selectedDevice);
       }, 0);
     }
 
@@ -560,6 +604,19 @@
     </div>
 
     <div class="preview-controls">
+      <!-- Orientation toggle (only show for mobile devices) -->
+      {#if selectedDevice !== 'desktop'}
+        <button
+          type="button"
+          class="orientation-toggle"
+          onclick={toggleOrientation}
+          title="Toggle orientation"
+          aria-label="Toggle device orientation"
+        >
+          {deviceOrientation === 'portrait' ? '▯' : '▭'}
+        </button>
+      {/if}
+
       <!-- Device selector -->
       <select
         class="device-selector"
@@ -606,13 +663,14 @@
     {:else}
       <!-- Live preview -->
       <div class="preview-viewport">
-        <div
-          class="preview-frame-container"
-          class:device-frame={selectedDevice !== 'desktop'}
-          style:transform={selectedDevice !== 'desktop' ? `scale(${deviceScale})` : 'none'}
-          style:transform-origin="top left"
-          bind:this={previewContainer}
-        >
+        <div class="preview-frame-wrapper">
+          <div
+            class="preview-frame-container"
+            class:device-frame={selectedDevice !== 'desktop'}
+            style:transform={selectedDevice !== 'desktop' ? `scale(${deviceScale})` : 'none'}
+            style:transform-origin="top left"
+            bind:this={previewContainer}
+          >
           {#if transformError}
             <div class="preview-error">
               <div class="error-content">
@@ -643,6 +701,7 @@
               </div>
             </div>
           {/if}
+          </div>
         </div>
       </div>
     {/if}
@@ -701,6 +760,30 @@
     display: flex;
     align-items: center;
     gap: var(--space-2);
+  }
+
+  .orientation-toggle {
+    padding: var(--space-1) var(--space-2);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
+    cursor: pointer;
+    margin-right: var(--space-2);
+    min-width: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .orientation-toggle:hover {
+    background: var(--color-bg-hover);
+  }
+
+  .orientation-toggle:focus {
+    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
+    outline-offset: var(--focus-ring-offset);
   }
 
   .device-selector {
@@ -804,9 +887,15 @@
 
   .preview-viewport {
     height: 100%;
-    display: grid;
-    place-items: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     background-color: var(--color-bg-tertiary);
+  }
+
+  .preview-frame-wrapper {
+    /* Wrapper dimensions will be set dynamically via JavaScript */
+    position: relative;
   }
 
   .preview-frame-container {
