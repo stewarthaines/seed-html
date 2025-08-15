@@ -44,8 +44,14 @@
     { id: 'desktop', name: 'Desktop', width: '100%', height: '100%', icon: '🖥️' },
     { id: 'iphone', name: 'iPhone', width: '375px', height: '667px', icon: '📱' },
     { id: 'iphone-plus', name: 'iPhone Plus', width: '414px', height: '736px', icon: '📱' },
+    { id: 'iphone-14-pro-max', name: 'iPhone 14 Pro Max', width: '430px', height: '932px', icon: '📱' },
+    { id: 'galaxy-s23', name: 'Galaxy S23', width: '360px', height: '800px', icon: '📱' },
+    { id: 'pixel-7', name: 'Pixel 7', width: '393px', height: '851px', icon: '📱' },
     { id: 'ipad', name: 'iPad', width: '768px', height: '1024px', icon: '📱' },
+    { id: 'ipad-air', name: 'iPad Air', width: '820px', height: '1180px', icon: '📱' },
+    { id: 'galaxy-tab-s9', name: 'Galaxy Tab S9', width: '800px', height: '1280px', icon: '📱' },
     { id: 'kindle', name: 'Kindle', width: '600px', height: '800px', icon: '📚' },
+    { id: 'kobo-clara-2e', name: 'Kobo Clara 2E', width: '758px', height: '1024px', icon: '📚' },
   ] as const;
 
   // Component state
@@ -54,6 +60,7 @@
   let showSource = $state(false);
   let previewIframe: HTMLIFrameElement | undefined = $state();
   let previewContainer: HTMLDivElement | undefined = $state();
+  let previewContentEl: HTMLDivElement | undefined = $state();
   let deviceScale = $state(1);
   let pendingScrollRestore: {
     anchor: { element: Element | null; id: string | null; offset: number } | null;
@@ -231,11 +238,10 @@
     if (device.id === 'desktop') return 1;
 
     try {
-      // Get the actual preview viewport (not the wrapper)
-      const viewport = document.querySelector('.preview-viewport') as HTMLElement;
-      if (!viewport) return 1;
+      // Get the preview content element (responds to split pane changes)
+      if (!previewContentEl) return 1;
 
-      const viewportRect = viewport.getBoundingClientRect();
+      const viewportRect = previewContentEl.getBoundingClientRect();
       // Account for padding and some breathing room
       const availableWidth = Math.max(200, viewportRect.width - 40);
       const availableHeight = Math.max(200, viewportRect.height - 40);
@@ -559,20 +565,19 @@
       resizeObserver = new ResizeObserver(() => {
         // Debounce resize events
         setTimeout(() => {
-          updateDeviceScale();
-        }, 100);
+          handleDeviceChange(selectedDevice);
+        }, 400);
       });
 
-      // Observe the preview viewport for size changes
-      const viewport = document.querySelector('.preview-viewport');
-      if (viewport) {
-        resizeObserver.observe(viewport);
+      // Observe the preview content element for size changes
+      if (previewContentEl) {
+        resizeObserver.observe(previewContentEl);
       }
     }
 
     // Fallback: window resize listener
     const handleResize = () => {
-      setTimeout(() => updateDeviceScale(), 100);
+      setTimeout(() => handleDeviceChange(selectedDevice), 400);
     };
     window.addEventListener('resize', handleResize);
 
@@ -596,11 +601,6 @@
       >
         {showSource ? '👁️' : '📄'}
       </button>
-
-      <span>Preview</span>
-      {#if executionTime > 0}
-        <span class="preview-timing">({formatExecutionTime(executionTime)})</span>
-      {/if}
     </div>
 
     <div class="preview-controls">
@@ -653,7 +653,7 @@
   {/if}
 
   <!-- Preview content -->
-  <div class="preview-content">
+  <div class="preview-content" bind:this={previewContentEl}>
     {#if showSource}
       <!-- Source view -->
       <div class="source-view">
@@ -750,11 +750,6 @@
     color: var(--color-text-primary);
   }
 
-  .preview-timing {
-    font-size: var(--text-xs);
-    color: var(--color-text-tertiary);
-    font-weight: var(--font-normal);
-  }
 
   .preview-controls {
     display: flex;
