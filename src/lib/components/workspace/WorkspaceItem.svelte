@@ -101,7 +101,10 @@
         <span class="meta-separator">•</span>
         <span class="workspace-stats">
           {workspace.fileCount}
-          {$t('files')} • {formatFileSize(workspace.totalSize)}
+          {$t('files')}
+          {#if workspace.totalSize > 0}
+            • {formatFileSize(workspace.totalSize)}
+          {/if}
           {#if workspace.extensionIds && workspace.extensionIds.length > 0}
             • {workspace.extensionIds.join(', ')}
           {/if}

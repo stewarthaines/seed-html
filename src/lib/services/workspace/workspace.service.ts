@@ -591,7 +591,8 @@ export class WorkspaceService {
       try {
         const workspace = await this.loadWorkspace(id);
         const files = await this.fileStorage.listFiles(id);
-        const totalSize = await this.fileStorage.estimateWorkspaceSize(id);
+        // Note: totalSize calculation removed for performance - was too expensive
+        const totalSize = 0;
 
         // Get OPF file modification time for workspace last modified timestamp
         let lastModified: Date;

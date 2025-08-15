@@ -303,6 +303,23 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
     });
   };
 
+  // Handle smart navigation to first spine item (reuses EPUB import logic)
+  const handleSmartNavigation = (workspaceId: string) => {
+    if (!appState) return;
+
+    // Navigate to first spine item if available (same logic as EPUB import)
+    const firstSpineItem = appState.workspace?.opf?.spine?.[0];
+    if (firstSpineItem) {
+      // Select first spine item
+      appState.selectChapter(firstSpineItem.idref);
+      // Navigate to spine view
+      navigationStore.navigateTo('spine');
+    } else {
+      // Fallback to metadata view if no spine items
+      navigationStore.navigateTo('metadata');
+    }
+  };
+
   // Handle EPUB package request
   const handlePackageRequest = async (workspaceId: string) => {
     if (!currentWorkspaceState) return;
@@ -499,6 +516,7 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
           onNavigationRequested={view => {
             navigationStore.navigateTo(view as ViewType);
           }}
+          onSmartNavigationRequested={handleSmartNavigation}
           onWorkspaceOpened={() => {
             // Workspace opened
           }}

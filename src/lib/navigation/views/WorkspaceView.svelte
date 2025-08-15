@@ -20,6 +20,7 @@
     onWorkspaceChange = null,
     onWorkspaceOpened,
     onNavigationRequested,
+    onSmartNavigationRequested,
     onWorkspaceChanged,
     currentWorkspaceId = null,
   }: {
@@ -31,6 +32,7 @@
     onWorkspaceChange?: ((workspaceId: string | null) => void) | null;
     onWorkspaceOpened?: (workspaceId: string) => void;
     onNavigationRequested?: (view: string, workspaceId?: string) => void;
+    onSmartNavigationRequested?: (workspaceId: string) => void;
     onWorkspaceChanged?: (workspaceId: string | null) => void;
     currentWorkspaceId?: string | null;
   } = $props();
@@ -186,8 +188,8 @@
       // Set as current workspace
       await setCurrentWorkspace(workspaceId);
 
-      // Navigate to metadata view after opening workspace
-      onNavigationRequested?.('metadata', workspaceId);
+      // Use smart navigation to go to first spine item (or metadata fallback)
+      onSmartNavigationRequested?.(workspaceId);
 
       onWorkspaceOpened?.(workspaceId);
     } catch (err) {
@@ -313,8 +315,8 @@
 
   // ViewComponent interface implementation
   export function onViewEnter(data?: any): void {
-    // Load workspaces when entering view
-    loadWorkspaces();
+    // Component is recreated on navigation, so onMount handles loading
+    // No need to reload workspaces here
   }
 
   export function onViewLeave(): void {
