@@ -53,6 +53,7 @@
   let showSource = $state(false);
   let previewIframe: HTMLIFrameElement | undefined = $state();
   let previewContainer: HTMLDivElement | undefined = $state();
+  let deviceScale = $state(1);
   let pendingScrollRestore: {
     anchor: { element: Element | null; id: string | null; offset: number } | null;
     fallbackScrollTop: number;
@@ -208,6 +209,65 @@
   }
 
   /**
+   * Calculate optimal scale for device preview to fit available space
+   */
+  function calculateOptimalScale(
+    container: HTMLElement,
+    device: (typeof DEVICE_PRESETS)[number]
+  ): number {
+    if (device.id === 'desktop') return 1;
+
+    try {
+      // Get the preview viewport (parent container)
+      const viewport = container.parentElement;
+      if (!viewport) return 1;
+
+      const viewportRect = viewport.getBoundingClientRect();
+      // Account for padding and some breathing room
+      const availableWidth = Math.max(200, viewportRect.width);
+      const availableHeight = Math.max(200, viewportRect.height);
+
+      // Get device dimensions
+      const deviceWidth = parseInt(device.width.replace('px', ''));
+      const deviceHeight = parseInt(device.height.replace('px', ''));
+
+      // Calculate aspect ratios
+      const containerAspectRatio = availableWidth / availableHeight;
+      const deviceAspectRatio = deviceWidth / deviceHeight;
+
+      let scale;
+      if (containerAspectRatio > deviceAspectRatio) {
+        // Container is wider than device → fill height
+        scale = availableHeight / deviceHeight;
+      } else {
+        // Container is taller than device → fill width
+        scale = availableWidth / deviceWidth;
+      }
+
+      // Apply reasonable bounds (10% to 200%)
+      return Math.min(Math.max(scale, 0.1), 2.0);
+    } catch (error) {
+      console.warn('Failed to calculate optimal scale:', error);
+      return 1;
+    }
+  }
+
+  /**
+   * Update device scaling for current container and device
+   */
+  function updateDeviceScale(): void {
+    if (!previewContainer || selectedDevice === 'desktop') {
+      deviceScale = 1;
+      return;
+    }
+
+    const device = DEVICE_PRESETS.find(d => d.id === selectedDevice);
+    if (device) {
+      deviceScale = calculateOptimalScale(previewContainer, device);
+    }
+  }
+
+  /**
    * Handle device preset selection
    */
   function handleDeviceChange(deviceId: string): void {
@@ -216,15 +276,23 @@
 
     if (device && previewContainer) {
       if (device.id === 'desktop') {
+        // Desktop: fill available space
         previewContainer.style.width = '100%';
         previewContainer.style.height = '100%';
         previewContainer.style.maxWidth = 'none';
         previewContainer.style.maxHeight = 'none';
+        deviceScale = 1;
       } else {
+        // Set container to DEVICE dimensions (iframe gets authentic device size)
         previewContainer.style.width = device.width;
         previewContainer.style.height = device.height;
         previewContainer.style.maxWidth = device.width;
         previewContainer.style.maxHeight = device.height;
+
+        // Calculate scale for container transform
+        setTimeout(() => {
+          updateDeviceScale();
+        }, 0);
       }
     }
   }
@@ -435,9 +503,39 @@
     URL.revokeObjectURL(url);
   }
 
+  // Add resize listener to update scaling when viewport changes
+  let resizeObserver: ResizeObserver | null = null;
+
   onMount(() => {
     // Initialize with default device
     handleDeviceChange(selectedDevice);
+
+    // Set up resize observer for responsive scaling
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        // Debounce resize events
+        setTimeout(() => {
+          updateDeviceScale();
+        }, 100);
+      });
+
+      // Observe the preview viewport for size changes
+      const viewport = document.querySelector('.preview-viewport');
+      if (viewport) {
+        resizeObserver.observe(viewport);
+      }
+    }
+
+    // Fallback: window resize listener
+    const handleResize = () => {
+      setTimeout(() => updateDeviceScale(), 100);
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', handleResize);
+    };
   });
 </script>
 
@@ -511,6 +609,8 @@
         <div
           class="preview-frame-container"
           class:device-frame={selectedDevice !== 'desktop'}
+          style:transform={selectedDevice !== 'desktop' ? `scale(${deviceScale})` : 'none'}
+          style:transform-origin="top left"
           bind:this={previewContainer}
         >
           {#if transformError}
@@ -704,11 +804,9 @@
 
   .preview-viewport {
     height: 100%;
-    overflow: auto;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: var(--space-2);
+    display: grid;
+    place-items: center;
+    background-color: var(--color-bg-tertiary);
   }
 
   .preview-frame-container {
@@ -717,8 +815,6 @@
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-md);
     overflow: hidden;
-    background: white;
-    position: relative;
   }
 
   .preview-frame-container.device-frame {
