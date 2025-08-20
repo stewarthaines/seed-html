@@ -1,12 +1,4 @@
 /**
- * Universal DOM Transform Script
- *
- * Adds ID attributes to H2 elements to make them usable as URL fragments
- * in nav.xhtml for table of contents linking. Works universally across
- * all languages without any locale-specific logic.
- */
-
-/**
  * Transform DOM by adding IDs to H2 headings for navigation
  * @param {Document} htmlDocument - HTML document to transform
  * @returns {Document} Transformed document with H2 IDs
@@ -54,9 +46,4 @@ function transformDOM(htmlDocument) {
     console.error('DOM transform error:', error);
     return htmlDocument;
   }
-}
-
-// Export for use in EPUB transform pipeline
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { transformDOM };
 }

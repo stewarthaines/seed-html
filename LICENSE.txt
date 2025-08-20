@@ -1,6 +1,6 @@
-EDITME.html Freeware - License
+SEED.html Freeware - License
 
-This software is provided free of charge for personal use only.
+This software is provided free of charge for personal, non-commercial use only.
 You may not otherwise use this software without obtaining a separate commercial license agreement with the author.
 You may not modify, decompile or reverse-engineer this software.
 You may redistribute this software provided this license agreement and copyright notice are included in all copies.

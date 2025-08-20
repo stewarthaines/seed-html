@@ -68,7 +68,9 @@
     onFileSelect?: (pane: 1 | 2, filePath: string, fileType: string) => void;
     onContentChange?: (pane: 1 | 2, content: string) => void;
     onForceUpdate?: () => void;
-    onPreviewClick?: ((detail: { text: string; documentPosition: number; elementType: string }) => void) | null;
+    onPreviewClick?:
+      | ((detail: { text: string; documentPosition: number; elementType: string }) => void)
+      | null;
   } = $props();
 
   /**
@@ -166,10 +168,12 @@
    * Determine if file type should use LTR direction (for code syntax)
    */
   function shouldUseLtrDirection(fileType: string): boolean {
-    return fileType.includes('css') || 
-           fileType.includes('javascript') || 
-           fileType.includes('js') || 
-           fileType.includes('transform');
+    return (
+      fileType.includes('css') ||
+      fileType.includes('javascript') ||
+      fileType.includes('js') ||
+      fileType.includes('transform')
+    );
   }
 
   /**
@@ -211,38 +215,47 @@
   function normalizeText(text: string): string {
     // Use character code approach for apostrophe normalization
     let result = text.trim();
-    
+
     // Convert curly quotes to straight quotes using character codes
-    result = result.split('').map(char => {
-      const code = char.charCodeAt(0);
-      if (code === 8217 || code === 8216) { // ' and ' (apostrophes)
-        return "'";
-      }
-      if (code === 8221 || code === 8220) { // " and " (double quotes)
-        return '"';
-      }
-      return char;
-    }).join('');
-    
+    result = result
+      .split('')
+      .map(char => {
+        const code = char.charCodeAt(0);
+        if (code === 8217 || code === 8216) {
+          // ' and ' (apostrophes)
+          return "'";
+        }
+        if (code === 8221 || code === 8220) {
+          // " and " (double quotes)
+          return '"';
+        }
+        return char;
+      })
+      .join('');
+
     // Normalize other quote variants
     result = result.replace(/[""„‚]/g, '"');
-    
+
     // Normalize whitespace
     result = result.replace(/\s+/g, ' ');
-    
+
     return result;
   }
 
   /**
    * Find and select text in the editor based on preview click
    */
-  function findAndSelectText(detail: { text: string; documentPosition: number; elementType: string }): void {
+  function findAndSelectText(detail: {
+    text: string;
+    documentPosition: number;
+    elementType: string;
+  }): void {
     const { text } = detail;
-    
+
     // Try both panes to find content
     let textarea: HTMLTextAreaElement | null = null;
     let content = '';
-    
+
     // Check pane 1 first
     if (pane1FileStore && pane1SelectedFile && pane1Textarea && $pane1FileStore?.content) {
       textarea = pane1Textarea;
@@ -253,19 +266,18 @@
       textarea = pane2Textarea;
       content = $pane2FileStore.content;
     }
-    
+
     if (!textarea || !content) return;
 
     const searchText = text.trim();
-    
-    
+
     // Normalize the preview text (convert curly quotes to straight quotes)
     const normalizedSearchText = normalizeText(searchText);
-    
+
     // Try exact match with normalized preview text (case-insensitive)
     const contentLower = content.toLowerCase();
     const normalizedSearchLower = normalizedSearchText.toLowerCase();
-    
+
     let index = contentLower.indexOf(normalizedSearchLower);
     if (index !== -1) {
       selectTextRange(textarea, index, index + normalizedSearchText.length);
@@ -291,16 +303,16 @@
   function selectTextRange(textarea: HTMLTextAreaElement, start: number, end: number): void {
     // Focus the textarea
     textarea.focus();
-    
+
     // Set selection
     textarea.setSelectionRange(start, end);
-    
+
     // Scroll to the selection
     const lines = textarea.value.substring(0, start).split('\n');
     const targetLine = lines.length - 1;
     const lineHeight = parseInt(getComputedStyle(textarea).lineHeight) || 20;
     const scrollTop = targetLine * lineHeight;
-    
+
     // Scroll to make the selection visible
     textarea.scrollTop = Math.max(0, scrollTop - textarea.clientHeight / 2);
   }
@@ -323,7 +335,7 @@
           {editorMode === 'single' ? '⊞' : '⊟'}
         </span>
         <span class="toggle-label">
-          {editorMode === 'single' ? $t('Add Pane') : $t('Single Pane')}
+          {editorMode === 'single' ? $t('Split Pane') : $t('Single Pane')}
         </span>
       </button>
     </div>

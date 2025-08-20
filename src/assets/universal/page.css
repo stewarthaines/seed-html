@@ -1,5 +1,26 @@
 /* Universal CSS for all locales with EPUB reading system compatibility */
 
+code-sample {
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 0.7rem;
+}
+
+.action {
+  text-align: center;
+  margin: 3em 0 4em;
+}
+
+.action a {
+  text-decoration: none;
+  background-color: #00e;
+  color: white;
+  padding: 0.6em 1em 0.5em;
+  border-radius: 0.5em;
+  font-family: sans-serif;
+  font-weight: 600;
+}
+
 body {
   /* System fonts with enhanced stack for global language support */
   font-family:
@@ -52,11 +73,6 @@ body {
   hyphens: auto;
   -webkit-hyphens: auto;
   -ms-hyphens: auto;
-}
-
-/* Inherits direction from html[dir] set by i18n system */
-body {
-  direction: inherit;
 }
 
 /* Headings with progressive enhancement for logical spacing */

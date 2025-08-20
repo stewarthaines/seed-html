@@ -1,11 +1,4 @@
 /**
- * Universal Text Transform Script
- *
- * Converts markdown text to HTML without any locale-specific logic.
- * Works identically for all languages, scripts, and text directions.
- */
-
-/**
  * Convert simple markdown to well-formed XHTML
  * @param {string} markdown - Markdown text
  * @returns {string} Valid XHTML output
@@ -29,7 +22,7 @@ function transformText(markdown) {
       // Process as paragraph content
       let paragraphContent = processInlineFormatting(trimmedBlock);
       // Convert single newlines to <br/> within paragraphs
-      paragraphContent = paragraphContent.replace(/\n/g, '<br/>');
+      paragraphContent = paragraphContent.replace(/\n/g, '<br />');
       htmlBlocks.push(`<p>${paragraphContent}</p>`);
     }
   }
@@ -44,16 +37,11 @@ function transformText(markdown) {
  */
 function processInlineFormatting(text) {
   let result = text;
-  
+
   // Bold and italic (process bold first to handle overlap correctly)
   result = result.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
   result = result.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   result = result.replace(/\*(.*?)\*/g, '<em>$1</em>');
-  
-  return result;
-}
 
-// Export for use in EPUB transform pipeline
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { transformText };
+  return result;
 }
