@@ -37,7 +37,7 @@ The application has been modernized to use Svelte 5's runes-based reactivity sys
 - **State**: Use `$state()` instead of `let` for reactive variables
 - **Props**: Use `$props()` instead of `export let`
 - **Bindable Props**: Use `$bindable()` for two-way binding
-- **Derived**: Use `$derived()` instead of `$:`
+- **Derived**: Use `$derived()` for simple expressions, `$derived.by()` for function bodies
 - **Effects**: Use `$effect()` instead of reactive statements
 
 **Legacy Svelte 4 syntax is being phased out** - when working with existing components, prefer converting to runes syntax when making significant changes.

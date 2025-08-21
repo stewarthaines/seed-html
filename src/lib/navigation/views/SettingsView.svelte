@@ -8,6 +8,7 @@
   import type { ExtensionManager } from '../../extensions/extension-manager.js';
   import type { TransformEngine } from '../../infrastructure/transform-engine.js';
   import ExtensionItem from '../../components/extensions/ExtensionItem.svelte';
+  import { t } from '../../i18n';
 
   interface Props {
     settingsService: SettingsService;
@@ -39,7 +40,7 @@
       try {
         workspaceSettings = await settingsService.loadWorkspaceSettings(workspaceId);
       } catch (err) {
-        error = err instanceof Error ? err.message : 'Failed to load settings';
+        error = err instanceof Error ? err.message : $t('Failed to load settings');
         workspaceSettings = settingsService.getDefaultWorkspaceSettings();
       } finally {
         loading = false;
@@ -91,7 +92,7 @@
       // Notify parent that settings have changed
       onSettingsChanged?.();
     } catch (err) {
-      error = err instanceof Error ? err.message : 'Failed to save settings';
+      error = err instanceof Error ? err.message : $t('Failed to save settings');
       // Revert optimistic update
       workspaceSettings = {
         ...workspaceSettings,
@@ -105,6 +106,11 @@
 
   // Handle extension import
   async function handleExtensionImport(event: Event): Promise<void> {
+    // Check advanced mode first
+    if (!isAdvancedMode) {
+      return;
+    }
+
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file || !workspaceId) return;
@@ -123,7 +129,7 @@
       input.value = '';
     } catch (err) {
       console.error('Failed to import extension:', err);
-      error = err instanceof Error ? err.message : 'Failed to import extension';
+      error = err instanceof Error ? err.message : $t('Failed to import extension');
     }
   }
 
@@ -141,7 +147,7 @@
       await transformEngine.setWorkspaceExtensions(workspaceId);
     } catch (err) {
       console.error('Failed to remove extension:', err);
-      error = err instanceof Error ? err.message : 'Failed to remove extension';
+      error = err instanceof Error ? err.message : $t('Failed to remove extension');
     }
   }
 
@@ -152,17 +158,17 @@
 
 <div class="settings-view">
   <div class="settings-header">
-    <h1>Settings</h1>
+    <h1>{$t('Settings')}</h1>
     {#if !workspaceId}
-      <p class="no-workspace-message">Please select a workspace to configure settings.</p>
+      <p class="no-workspace-message">{$t('Please select a workspace to configure settings.')}</p>
     {:else if loading}
-      <p class="loading-message">Loading settings...</p>
+      <p class="loading-message">{$t('Loading settings...')}</p>
     {/if}
   </div>
 
   {#if error}
     <div class="error-message" role="alert">
-      <strong>Error:</strong>
+      <strong>{$t('Error')}:</strong>
       {error}
     </div>
   {/if}
@@ -171,7 +177,7 @@
     <div class="settings-content">
       <!-- Full-width settings layout with responsive grid -->
       <section class="workspace-settings">
-        <h2>Project Settings</h2>
+        <h2>{$t('Project Settings')}</h2>
 
         <div class="setting-group">
           <label class="setting-label">
@@ -181,21 +187,23 @@
               onchange={handleAdvancedModeChange}
               disabled={loading}
             />
-            <span class="setting-text">Advanced Mode</span>
+            <span class="setting-text">{$t('Advanced Mode')}</span>
           </label>
           <p class="setting-description">
-            Enable advanced editing features and additional controls for power users.
+            {$t('Enable advanced editing features and additional controls for power users.')}
           </p>
         </div>
       </section>
 
       <!-- Extension Management -->
       <section class="extensions-settings">
-        <h2>Extensions</h2>
+        <h2>{$t('Extensions')}</h2>
         
         <!-- Import Extension -->
-        <div class="extension-import">
-          <label for="extension-file">Import JavaScript Extension:</label>
+        <div class="extension-import" class:disabled={!isAdvancedMode}>
+          <label for="extension-file">
+            {$t('Import JavaScript Extension')}: {$t('Please copy license text into the License field below to comply with open source requirements.')}
+          </label>
           <input
             id="extension-file"
             type="file"
@@ -203,13 +211,16 @@
             onchange={handleExtensionImport}
             disabled={extensionsLoading}
           />
+          {#if !isAdvancedMode}
+            <p class="advanced-mode-note">{$t('Advanced Mode required for extension management')}</p>
+          {/if}
         </div>
 
         <!-- Extensions List -->
         {#if extensionsLoading}
-          <p>Loading extensions...</p>
+          <p>{$t('Loading extensions...')}</p>
         {:else if extensions.length === 0}
-          <p>No extensions installed.</p>
+          <p>{$t('No extensions installed.')}</p>
         {:else}
           <ul class="extensions-list">
             {#each extensions as extension}
@@ -339,16 +350,23 @@
     cursor: not-allowed;
   }
 
+  .extension-import.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .advanced-mode-note {
+    font-size: var(--text-sm);
+    color: var(--color-text-tertiary);
+    font-style: italic;
+    margin-top: var(--space-2);
+    margin-bottom: 0;
+  }
+
   .extensions-list {
     list-style: none;
     padding: 0;
     margin: 0;
-  }
-
-  /* Loading state */
-  .settings-content:has([disabled]) {
-    opacity: 0.6;
-    pointer-events: none;
   }
 
   /* Focus styles for accessibility */

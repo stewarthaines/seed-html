@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { ExtensionInfo } from '../../extensions/types.js';
   import type { ExtensionManager } from '../../extensions/extension-manager.js';
+  import { t } from '../../i18n';
 
   interface Props {
     extension: ExtensionInfo;
@@ -92,14 +93,15 @@
         onclick={toggleLicense}
         disabled={isLoading}
       >
-        License
+        {$t('License')}
       </button>
       <button
         type="button"
         class="remove-button"
         onclick={onRemove}
+        disabled={!isAdvancedMode}
       >
-        Remove
+        {$t('Remove')}
       </button>
     </div>
   </div>
@@ -114,7 +116,7 @@
     <div class="license-section">
       <textarea
         class="license-textarea"
-        placeholder="Paste {extension.name} license text here"
+        placeholder={$t('Paste {name} license text here', { name: extension.name })}
         readonly={!isAdvancedMode}
         bind:value={licenseText}
         oninput={handleLicenseChange}
@@ -181,6 +183,11 @@
 
   .remove-button:hover:not(:disabled) {
     background: var(--error-hover, #c82333);
+  }
+
+  .remove-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   .license-preview {

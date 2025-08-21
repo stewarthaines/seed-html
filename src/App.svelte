@@ -16,6 +16,7 @@
   import OutlineView from './lib/components/outline/OutlineView.svelte';
   import ContentPreview from './lib/components/preview/ContentPreview.svelte';
   import PreviewPane from './lib/components/spine/PreviewPane.svelte';
+  import WorkspaceHeader from './lib/components/workspace/WorkspaceHeader.svelte';
   import { layoutStore } from './lib/stores/layout';
   import { t } from './lib/i18n';
   import { EnhancedAppState } from './lib/app-state-enhanced.svelte.js';
@@ -501,6 +502,18 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
         <div class="placeholder-content">
           <p>{$t('Loading project…')}</p>
         </div>
+      {/if}
+    </svelte:fragment>
+
+    <svelte:fragment slot="left-header">
+      {#if currentWorkspaceState && 
+           currentView !== 'about' && 
+           currentView !== 'workspace' && 
+           currentView !== 'metadata'}
+        <WorkspaceHeader 
+          workspace={currentWorkspaceState}
+          {extensionManager}
+        />
       {/if}
     </svelte:fragment>
 
