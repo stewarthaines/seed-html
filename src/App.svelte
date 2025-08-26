@@ -34,7 +34,7 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
   import { generateEPUBTimestamp } from './lib/epub/opf-utils.js';
 
   // Extension manager instance
-  let extensionManager: ExtensionManager;
+  let extensionManager = $state<ExtensionManager>();
 
   const simpleThemeStore = {
     setTheme: () => {},
@@ -307,7 +307,7 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
   };
 
   // Handle smart navigation to first spine item (reuses EPUB import logic)
-  const handleSmartNavigation = (workspaceId: string) => {
+  const handleSmartNavigation = (_workspaceId: string) => {
     if (!appState) return;
 
     // Navigate to first spine item if available (same logic as EPUB import)
@@ -509,7 +509,8 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
       {#if currentWorkspaceState && 
            currentView !== 'about' && 
            currentView !== 'workspace' && 
-           currentView !== 'metadata'}
+           currentView !== 'metadata' &&
+           extensionManager}
         <WorkspaceHeader 
           workspace={currentWorkspaceState}
           {extensionManager}

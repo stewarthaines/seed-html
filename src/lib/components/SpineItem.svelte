@@ -2,22 +2,37 @@
   import type { SpineItemWithSource } from '../spine/types';
   import { t } from '$lib/i18n';
 
-  // Props
-  export let item: SpineItemWithSource;
-  export const index: number = 0; // External reference only
-  export let isSelected = false;
-  export let isExpanded = true;
-  export let compact = false;
-  export let dragHandleProps = {};
-  export let isFirstItem = false;
-  export let isLastItem = false;
+  interface Props {
+    item: SpineItemWithSource;
+    index?: number;
+    isSelected?: boolean;
+    isExpanded?: boolean;
+    compact?: boolean;
+    dragHandleProps?: Record<string, any>;
+    isFirstItem?: boolean;
+    isLastItem?: boolean;
+    onSelect: () => void;
+    onMoveUp: () => Promise<void>;
+    onMoveDown: () => Promise<void>;
+    onRenameId: () => Promise<void>;
+    onDelete: () => Promise<void>;
+  }
 
-  // Event handlers
-  export let onSelect: () => void;
-  export let onMoveUp: () => Promise<void>;
-  export let onMoveDown: () => Promise<void>;
-  export let onRenameId: () => Promise<void>;
-  export let onDelete: () => Promise<void>;
+  let {
+    item,
+    index: _index = 0, // External reference only
+    isSelected = false,
+    isExpanded = true,
+    compact = false,
+    dragHandleProps = {},
+    isFirstItem = false,
+    isLastItem = false,
+    onSelect,
+    onMoveUp,
+    onMoveDown,
+    onRenameId,
+    onDelete
+  }: Props = $props();
 
   function handleKeyDown(event: KeyboardEvent & { currentTarget: EventTarget & HTMLDivElement }) {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -68,7 +83,7 @@
   }
 
   // Determine if we should show move buttons (only when selected and not compact)
-  $: showMoveButtons = isSelected && !compact;
+  const showMoveButtons = $derived(isSelected && !compact);
 
   // Generate compact label for collapsed sidebar
   function generateCompactLabel(itemId: string): string {
@@ -96,7 +111,7 @@
     }
   }
 
-  $: displayLabel = compact ? generateCompactLabel(item.id) : item.id;
+  const displayLabel = $derived(compact ? generateCompactLabel(item.id) : item.id);
 </script>
 
 <div

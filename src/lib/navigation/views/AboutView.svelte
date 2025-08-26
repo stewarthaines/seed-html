@@ -67,11 +67,6 @@
     margin: 0 0 var(--space-2) 0;
   }
 
-  .app-subtitle {
-    font-size: var(--text-lg);
-    color: var(--color-text-secondary);
-    margin: 0 0 var(--space-2) 0;
-  }
 
   .app-version {
     font-size: var(--text-sm);

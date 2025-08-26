@@ -264,23 +264,6 @@
     color: var(--color-text-secondary);
   }
 
-  .empty-icon {
-    font-size: 4rem;
-    margin-block-end: var(--space-4);
-    display: block;
-  }
-
-  .empty-title {
-    margin: 0 0 var(--space-2) 0;
-    font-size: var(--text-xl);
-    font-weight: 600;
-    color: var(--color-text-primary);
-  }
-
-  .empty-description {
-    margin: 0 0 var(--space-6) 0;
-    font-size: var(--text-base);
-  }
 
   .empty-tips {
     max-width: 400px;
@@ -384,10 +367,6 @@
 
     .empty-state {
       padding: var(--space-6) var(--space-2);
-    }
-
-    .empty-icon {
-      font-size: 3rem;
     }
 
     .empty-tips {

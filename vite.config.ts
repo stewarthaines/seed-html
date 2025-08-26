@@ -5,8 +5,8 @@ import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { viteSingleFile } from "vite-plugin-singlefile";
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
-import { visualizer } from "rollup-plugin-visualizer";
-import analyzer from "rollup-plugin-analyzer";
+// import { visualizer } from "rollup-plugin-visualizer";
+// import analyzer from "rollup-plugin-analyzer";
 import checker from "vite-plugin-checker";
 import packageJson from "./package.json";
 
@@ -72,17 +72,17 @@ export default defineConfig({
     },
     viteSingleFile(),
     // Bundle analysis plugins
-    visualizer({
-      filename: 'dist/stats.html',
-      template: 'treemap',
-      open: false,
-      gzipSize: true,
-      brotliSize: true
-    }),
-    analyzer({
-      summaryOnly: true,
-      limit: 15
-    })
+    // visualizer({
+    //   filename: 'dist/stats.html',
+    //   template: 'treemap',
+    //   open: false,
+    //   gzipSize: true,
+    //   brotliSize: true
+    // }),
+    // analyzer({
+    //   summaryOnly: true,
+    //   limit: 15
+    // })
   ],
   test: {
     projects: [
