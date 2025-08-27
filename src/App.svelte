@@ -77,9 +77,15 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
   let initialized = $derived(appState?.initialized || false);
   let currentWorkspaceState = $derived(appState?.workspace);
 
+  // Metadata field focus tracking for OPF preview highlighting
+  let focusedMetadataField = $state<keyof import('./lib/epub/opf-utils.js').EPUBMetadata | null>(null);
+
+  // Granular reactive signals to prevent loading flicker during metadata updates
+  let workspaceMetadata = $derived(currentWorkspaceState?.opf?.metadata);
+  let workspaceTitle = $derived(workspaceMetadata?.title);
+
   // Dynamic window title based on workspace
   let windowTitle = $derived.by(() => {
-    const workspaceTitle = currentWorkspaceState?.opf?.metadata?.title;
     return workspaceTitle ? `${workspaceTitle}` : 'EDITME';
   });
 
@@ -129,6 +135,11 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
       // we'll emit a custom event that the WorkspaceView can listen for
       window.dispatchEvent(new CustomEvent('workspace-list-refresh'));
     }
+  };
+
+  // Handle metadata field focus for OPF preview highlighting
+  const handleMetadataFieldFocus = (event: CustomEvent<{ field: keyof import('./lib/epub/opf-utils.js').EPUBMetadata | null }>) => {
+    focusedMetadataField = event.detail.field;
   };
 
   // Handle navigation preview update
@@ -494,7 +505,7 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
     <p>Initializing application...</p>
   </div>
 {:else}
-  <LayoutManager hasWorkspace={!!currentWorkspaceId} currentWorkspace={currentWorkspaceState} {extensionManager}>
+  <LayoutManager hasWorkspace={!!currentWorkspaceId} currentWorkspace={currentWorkspaceState} {workspaceTitle} {extensionManager}>
     <svelte:fragment slot="sidebar-spine">
       {#if !initialized}
         <div class="placeholder-content">
@@ -565,6 +576,7 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
             bind:workspace={appState.workspace}
             {metadataService}
             on:metadataChanged={handleMetadataChanged}
+            on:fieldFocus={handleMetadataFieldFocus}
           />
         {:else}
           <PlaceholderView
@@ -653,6 +665,7 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
         <OPFPreview
           workspace={currentWorkspaceState}
           {workspaceService}
+          focusedField={focusedMetadataField}
         />
       {:else if currentView === 'manifest' && initialized && currentWorkspaceState}
         <ManifestPreview

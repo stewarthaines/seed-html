@@ -306,20 +306,15 @@ export class WorkspaceService {
     // Validate updates
     this.validateMetadataUpdates(updates);
 
-    // Create updated workspace preserving structure
-    const updatedWorkspace: WorkspaceState = {
-      ...workspace,
-      opf: {
-        ...workspace.opf,
-        metadata: {
-          ...workspace.opf.metadata,
-          ...updates,
-        },
-      },
-    };
+    // Create new metadata object to trigger reactivity while preserving workspace reference
+    // This allows XML preview to update while preventing loading states in sidebar components
+    workspace.opf.metadata = { ...workspace.opf.metadata, ...updates };
 
-    // Save to storage
-    return await this.saveWorkspace(updatedWorkspace);
+    // Save to storage immediately (preserves user requirement for no data loss)
+    await this.saveWorkspace(workspace);
+    
+    // Return same workspace object (not new one) to prevent reactive cascade
+    return workspace;
   }
 
   /**

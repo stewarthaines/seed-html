@@ -1,35 +1,49 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { t } from '../../../i18n';
 
-  const dispatch = createEventDispatcher();
+  interface Props {
+    value?: string;
+    required?: boolean;
+    disabled?: boolean;
+    error?: string;
+    label?: string;
+    id?: string;
+    onchange?: (event: { value: string }) => void;
+    onblur?: (event: { value: string }) => void;
+    onfocus?: (event: { field: string }) => void;
+  }
 
-  export let value = '';
-  export let required = false;
-  export let disabled = false;
-  export let error = '';
-  export let label = '';
-  export let id = '';
+  let {
+    value = '',
+    required = false,
+    disabled = false,
+    error = '',
+    label = '',
+    id = '',
+    onchange,
+    onblur,
+    onfocus
+  }: Props = $props();
 
   // Check if field needs attention (required but empty)
-  $: needsAttention = required && (!value || value.trim() === '');
+  let needsAttention = $derived(required && (!value || value.trim() === ''));
 
   const handleInput = (event: Event) => {
-    dispatch('change', { value: (event.target as HTMLInputElement).value });
+    onchange?.({ value: (event.target as HTMLInputElement).value });
   };
 
   const handleBlur = (event: FocusEvent) => {
-    dispatch('blur', { value: (event.target as HTMLInputElement).value });
+    onblur?.({ value: (event.target as HTMLInputElement).value });
   };
 
   const handleFocus = () => {
-    dispatch('focus', { field: id });
+    onfocus?.({ field: id });
   };
 
   const setToday = () => {
     const today = new Date().toISOString().split('T')[0];
-    dispatch('change', { value: today });
-    dispatch('blur', { value: today }); // Also trigger blur to save the value
+    onchange?.({ value: today });
+    onblur?.({ value: today }); // Also trigger blur to save the value
   };
 </script>
 
@@ -53,9 +67,9 @@
       class="field-input"
       class:error={!!error}
       class:needs-attention={needsAttention}
-      on:input={handleInput}
-      on:blur={handleBlur}
-      on:focus={handleFocus}
+      oninput={handleInput}
+      onblur={handleBlur}
+      onfocus={handleFocus}
       aria-describedby={error ? `${id}-error` : undefined}
       aria-invalid={!!error}
     />
@@ -64,7 +78,7 @@
       <button
         type="button"
         class="today-button"
-        on:click={setToday}
+        onclick={setToday}
         aria-label={$t('Set to today')}
       >
         {$t('Today')}

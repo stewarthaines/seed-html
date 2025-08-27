@@ -13,6 +13,7 @@
     saving?: boolean;
     onfieldChange?: (event: CustomEvent<{ field: string; value: any }>) => void;
     onfieldSave?: (event: CustomEvent<{ field: string; value: any }>) => void;
+    onfieldFocus?: (event: CustomEvent<{ field: keyof EPUBMetadata | null }>) => void;
     onarrayAdd?: (event: CustomEvent<{ field: ArrayMetadataFields }>) => void;
     onarrayRemove?: (event: CustomEvent<{ field: ArrayMetadataFields; index: number }>) => void;
     ongenerateIdentifier?: (event: CustomEvent<void>) => void;
@@ -24,6 +25,7 @@
     saving = false,
     onfieldChange,
     onfieldSave,
+    onfieldFocus,
     onarrayAdd,
     onarrayRemove,
     ongenerateIdentifier
@@ -83,6 +85,10 @@
     onfieldSave?.(new CustomEvent('fieldSave', { detail: { field, value } }));
   };
 
+  const handleFieldFocus = (field: keyof EPUBMetadata | null) => {
+    onfieldFocus?.(new CustomEvent('fieldFocus', { detail: { field } }));
+  };
+
   const handleArrayAdd = (field: ArrayMetadataFields) => {
     onarrayAdd?.(new CustomEvent('arrayAdd', { detail: { field } }));
   };
@@ -122,6 +128,7 @@
           error={getFieldError('title')}
           onchange={e => handleFieldChange('title', e.value)}
           onblur={e => handleFieldSave('title', e.value)}
+          onfocus={() => handleFieldFocus('title')}
         />
 
         <SelectMetadataField
@@ -134,6 +141,7 @@
           error={getFieldError('language')}
           onchange={e => handleFieldChange('language', e.value)}
           onblur={e => handleFieldSave('language', e.value)}
+          onfocus={() => handleFieldFocus('language')}
         />
 
         <div class="identifier-field">
@@ -146,6 +154,7 @@
             error={getFieldError('identifier')}
             onchange={e => handleFieldChange('identifier', e.value)}
             onblur={e => handleFieldSave('identifier', e.value)}
+            onfocus={() => handleFieldFocus('identifier')}
           />
           <button
             type="button"
@@ -171,6 +180,7 @@
                 error={getFieldError(`creator[${index}]`)}
                 onchange={e => updateArrayItem('creator', index, e.value)}
                 onblur={e => handleCreatorBlur(index, e.value)}
+                onfocus={() => handleFieldFocus('creator')}
               />
               <button
                 type="button"
@@ -210,6 +220,7 @@
           rows={3}
           onchange={e => handleFieldChange('description', e.value)}
           onblur={e => handleFieldSave('description', e.value)}
+          onfocus={() => handleFieldFocus('description')}
         />
       </fieldset>
 
@@ -224,6 +235,7 @@
           error={getFieldError('renditionLayout')}
           onchange={e => handleFieldChange('renditionLayout', e.value)}
           onblur={e => handleFieldSave('renditionLayout', e.value)}
+          onfocus={() => handleFieldFocus('renditionLayout')}
         />
 
         <SelectMetadataField
@@ -234,6 +246,7 @@
           error={getFieldError('pageProgressionDirection')}
           onchange={e => handleFieldChange('pageProgressionDirection', e.value)}
           onblur={e => handleFieldSave('pageProgressionDirection', e.value)}
+          onfocus={() => handleFieldFocus('pageProgressionDirection')}
         />
 
         <SelectMetadataField
@@ -244,6 +257,7 @@
           error={getFieldError('renditionOrientation')}
           onchange={e => handleFieldChange('renditionOrientation', e.value)}
           onblur={e => handleFieldSave('renditionOrientation', e.value)}
+          onfocus={() => handleFieldFocus('renditionOrientation')}
         />
 
         <SelectMetadataField
@@ -254,6 +268,7 @@
           error={getFieldError('renditionSpread')}
           onchange={e => handleFieldChange('renditionSpread', e.value)}
           onblur={e => handleFieldSave('renditionSpread', e.value)}
+          onfocus={() => handleFieldFocus('renditionSpread')}
         />
       </fieldset>
     </div>

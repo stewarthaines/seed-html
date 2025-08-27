@@ -9,6 +9,7 @@
     activeSection?: SidebarSection;
     hasWorkspace?: boolean;
     currentWorkspace?: any;
+    workspaceTitle?: string;
     extensionManager?: any;
   }
 
@@ -17,6 +18,7 @@
     activeSection = 'workspace',
     hasWorkspace = false,
     currentWorkspace = null,
+    workspaceTitle = undefined,
     extensionManager = null,
   }: Props = $props();
 
@@ -120,9 +122,9 @@
                 <div class="workspace-title-header">
                   <h3
                     class="workspace-title"
-                    title={currentWorkspace.opf?.metadata?.title || 'Untitled Project'}
+                    title={workspaceTitle || 'Untitled Project'}
                   >
-                    {currentWorkspace.opf?.metadata?.title || 'Untitled Project'}
+                    {workspaceTitle || 'Untitled Project'}
                   </h3>
                   {#if extensions.length > 0 || extensionsLoading}
                     <span class="workspace-extensions">
@@ -138,9 +140,9 @@
                 <div class="workspace-title-header compact">
                   <div
                     class="workspace-title-compact"
-                    title={currentWorkspace.opf?.metadata?.title || 'Untitled Project'}
+                    title={workspaceTitle || 'Untitled Project'}
                   >
-                    {(currentWorkspace.opf?.metadata?.title || 'Untitled Project')
+                    {(workspaceTitle || 'Untitled Project')
                       .slice(0, 2)
                       .toUpperCase()}
                   </div>
@@ -308,7 +310,6 @@
     margin: 0; /* Simple reset */
     margin-inline-start: var(--space-2);
     font-size: var(--text-sm); /* Even smaller for compact look */
-    font-weight: var(--font-normal);
     color: var(--color-text-secondary); /* Subdued like Craigslist */
     flex: 1; /* Take remaining space */
   }

@@ -39,8 +39,10 @@
     };
   });
 
-  // Reactive: Load spine items when workspace changes
-  $: if (workspace && spineService) {
+  // Reactive: Load spine items when workspace ID changes (not metadata updates)
+  // Using workspace?.id to avoid reloading on metadata-only changes
+  $: workspaceId = workspace?.id;
+  $: if (workspaceId && spineService) {
     loadSpineItems();
   } else if (!workspace) {
     // No workspace selected - show empty state

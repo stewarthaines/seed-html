@@ -12,6 +12,7 @@
 
   const dispatch = createEventDispatcher<{
     metadataChanged: { field: string; value: any };
+    fieldFocus: { field: keyof EPUBMetadata | null };
   }>();
 
   interface Props {
@@ -83,6 +84,10 @@
   const handleFieldChange = (_event: { detail: any }) => {
     // Field changes are handled by the input component's internal state
     // No action needed here since we only persist on blur/save
+  };
+
+  const handleFieldFocus = (event: { detail: { field: keyof EPUBMetadata | null } }) => {
+    dispatch('fieldFocus', event.detail);
   };
 
   const handleFieldSave = async (event: { detail: any }) => {
@@ -211,6 +216,7 @@
             {saving}
             onfieldChange={handleFieldChange}
             onfieldSave={handleFieldSave}
+            onfieldFocus={handleFieldFocus}
             onarrayAdd={handleArrayAdd}
             onarrayRemove={handleArrayRemove}
             ongenerateIdentifier={handleGenerateIdentifier}
@@ -222,6 +228,7 @@
             {saving}
             onfieldChange={handleFieldChange}
             onfieldSave={handleFieldSave}
+            onfieldFocus={handleFieldFocus}
             onarrayAdd={handleArrayAdd}
             onarrayRemove={handleArrayRemove}
           />

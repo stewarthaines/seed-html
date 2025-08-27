@@ -13,6 +13,7 @@
     saving?: boolean;
     onfieldChange?: (event: CustomEvent<{ field: string; value: any }>) => void;
     onfieldSave?: (event: CustomEvent<{ field: string; value: any }>) => void;
+    onfieldFocus?: (event: CustomEvent<{ field: keyof EPUBMetadata | null }>) => void;
     onarrayAdd?: (event: CustomEvent<{ field: ArrayMetadataFields }>) => void;
     onarrayRemove?: (event: CustomEvent<{ field: ArrayMetadataFields; index: number }>) => void;
   }
@@ -23,6 +24,7 @@
     saving = false,
     onfieldChange,
     onfieldSave,
+    onfieldFocus,
     onarrayAdd,
     onarrayRemove
   }: Props = $props();
@@ -44,12 +46,16 @@
     return error ? error.message : '';
   };
 
-  const handleFieldChange = (field: string, value: any[]) => {
+  const handleFieldChange = (field: string, value: any) => {
     onfieldChange?.(new CustomEvent('fieldChange', { detail: { field, value } }));
   };
 
   const handleFieldSave = (field: string, value: any) => {
     onfieldSave?.(new CustomEvent('fieldSave', { detail: { field, value } }));
+  };
+
+  const handleFieldFocus = (field: keyof EPUBMetadata | null) => {
+    onfieldFocus?.(new CustomEvent('fieldFocus', { detail: { field } }));
   };
 
   const handleArrayAdd = (field: ArrayMetadataFields) => {
@@ -90,8 +96,9 @@
           value={metadata.publisher || ''}
           placeholder={$t('Enter publisher name')}
           error={getFieldError('publisher')}
-          on:change={e => handleFieldChange('publisher', e.detail.value)}
-          on:blur={e => handleFieldSave('publisher', e.detail.value)}
+          onchange={e => handleFieldChange('publisher', e.value)}
+          onblur={e => handleFieldSave('publisher', e.value)}
+          onfocus={() => handleFieldFocus('publisher')}
         />
 
         <DateMetadataField
@@ -99,8 +106,9 @@
           label={$t('Publication Date')}
           value={metadata.date || ''}
           error={getFieldError('date')}
-          on:change={e => handleFieldChange('date', e.detail.value)}
-          on:blur={e => handleFieldSave('date', e.detail.value)}
+          onchange={e => handleFieldChange('date', e.value)}
+          onblur={e => handleFieldSave('date', e.value)}
+          onfocus={() => handleFieldFocus('date')}
         />
 
         <TextMetadataField
@@ -109,8 +117,9 @@
           value={metadata.rights || ''}
           placeholder={$t('Enter copyright information')}
           error={getFieldError('rights')}
-          on:change={e => handleFieldChange('rights', e.detail.value)}
-          on:blur={e => handleFieldSave('rights', e.detail.value)}
+          onchange={e => handleFieldChange('rights', e.value)}
+          onblur={e => handleFieldSave('rights', e.value)}
+          onfocus={() => handleFieldFocus('rights')}
         />
 
         <SelectMetadataField
@@ -120,8 +129,9 @@
           options={typeOptions}
           placeholder={$t('Select content type')}
           error={getFieldError('type')}
-          on:change={e => handleFieldChange('type', e.detail.value)}
-          on:blur={e => handleFieldSave('type', e.detail.value)}
+          onchange={e => handleFieldChange('type', e.value)}
+          onblur={e => handleFieldSave('type', e.value)}
+          onfocus={() => handleFieldFocus('type')}
         />
       </fieldset>
 
@@ -134,8 +144,9 @@
           value={metadata.source || ''}
           placeholder={$t('Enter source information')}
           error={getFieldError('source')}
-          on:change={e => handleFieldChange('source', e.detail.value)}
-          on:blur={e => handleFieldSave('source', e.detail.value)}
+          onchange={e => handleFieldChange('source', e.value)}
+          onblur={e => handleFieldSave('source', e.value)}
+          onfocus={() => handleFieldFocus('source')}
         />
 
         <TextMetadataField
@@ -144,8 +155,9 @@
           value={metadata.relation || ''}
           placeholder={$t('Enter related work information')}
           error={getFieldError('relation')}
-          on:change={e => handleFieldChange('relation', e.detail.value)}
-          on:blur={e => handleFieldSave('relation', e.detail.value)}
+          onchange={e => handleFieldChange('relation', e.value)}
+          onblur={e => handleFieldSave('relation', e.value)}
+          onfocus={() => handleFieldFocus('relation')}
         />
 
         <TextMetadataField
@@ -154,8 +166,9 @@
           value={metadata.coverage || ''}
           placeholder={$t('Enter spatial or temporal coverage')}
           error={getFieldError('coverage')}
-          on:change={e => handleFieldChange('coverage', e.detail.value)}
-          on:blur={e => handleFieldSave('coverage', e.detail.value)}
+          onchange={e => handleFieldChange('coverage', e.value)}
+          onblur={e => handleFieldSave('coverage', e.value)}
+          onfocus={() => handleFieldFocus('coverage')}
         />
 
         <TextMetadataField
@@ -164,8 +177,9 @@
           value={metadata.format || ''}
           placeholder={$t('Enter format information')}
           error={getFieldError('format')}
-          on:change={e => handleFieldChange('format', e.detail.value)}
-          on:blur={e => handleFieldSave('format', e.detail.value)}
+          onchange={e => handleFieldChange('format', e.value)}
+          onblur={e => handleFieldSave('format', e.value)}
+          onfocus={() => handleFieldFocus('format')}
         />
       </fieldset>
     </div>
@@ -182,8 +196,9 @@
                 value={subject}
                 placeholder={$t('Subject or keyword')}
                 error={getFieldError(`subject[${index}]`)}
-                on:change={e => updateArrayItem('subject', index, e.detail.value)}
-                on:blur={e => handleSubjectBlur(index, e.detail.value)}
+                onchange={e => updateArrayItem('subject', index, e.value)}
+                onblur={e => handleSubjectBlur(index, e.value)}
+                onfocus={() => handleFieldFocus('subject')}
               />
               <button
                 type="button"
@@ -220,8 +235,9 @@
                 value={contributor}
                 placeholder={$t('Contributor name')}
                 error={getFieldError(`contributor[${index}]`)}
-                on:change={e => updateArrayItem('contributor', index, e.detail.value)}
-                on:blur={e => handleContributorBlur(index, e.detail.value)}
+                onchange={e => updateArrayItem('contributor', index, e.value)}
+                onblur={e => handleContributorBlur(index, e.value)}
+                onfocus={() => handleFieldFocus('contributor')}
               />
               <button
                 type="button"

@@ -7,6 +7,7 @@
   // Props
   export let hasWorkspace: boolean = false;
   export let currentWorkspace: any = null;
+  export let workspaceTitle: string | undefined = undefined;
   export let extensionManager: any = null;
 
   // Subscribe to layout store
@@ -20,7 +21,7 @@
 </script>
 
 <div class="app-layout" style="grid-template-columns: {sidebarWidth} 1fr">
-  <Sidebar isExpanded={sidebar.isExpanded} activeSection={sidebar.activeSection} {hasWorkspace} {currentWorkspace} {extensionManager}>
+  <Sidebar isExpanded={sidebar.isExpanded} activeSection={sidebar.activeSection} {hasWorkspace} {currentWorkspace} {workspaceTitle} {extensionManager}>
     <svelte:fragment slot="sidebar-workspace">
       <slot name="sidebar-workspace" />
     </svelte:fragment>

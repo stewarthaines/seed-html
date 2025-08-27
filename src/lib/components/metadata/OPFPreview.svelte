@@ -1,48 +1,56 @@
 <script lang="ts">
   import { t } from '../../i18n';
-  import type {
-    WorkspaceService,
-    WorkspaceState,
-  } from '../../services/workspace/workspace.service.js';
+  import { xmlHighlighter } from '../../utils/xml-highlighter.js';
+  import { OPFUtils } from '../../epub/opf-utils.js';
+  import type { WorkspaceState } from '../../services/workspace/workspace.service.js';
+  import type { EPUBMetadata } from '../../epub/opf-utils.js';
 
   interface Props {
     workspace: WorkspaceState;
-    workspaceService: WorkspaceService;
+    focusedField?: keyof EPUBMetadata | null;
   }
 
-  let { workspace, workspaceService }: Props = $props();
+  let { workspace, focusedField = null }: Props = $props();
 
-  let opfContent = $state<string>('');
-  let loading = $state(false);
+  let highlightedContent = $state<string>('');
   let error = $state<string | null>(null);
 
-  // Reactive: Load OPF content when workspace changes
-  $effect(() => {
-    if (workspace && workspaceService) {
-      loadOPFContent();
+  // Generate OPF content from workspace data (derived state)
+  let opfContent = $derived(() => {
+    if (!workspace) return '';
+    try {
+      return OPFUtils.generateOPFXML(workspace.opf);
+    } catch (err) {
+      console.error('Failed to generate OPF XML:', err);
+      return '';
     }
   });
 
-  const loadOPFContent = async () => {
-    if (!workspace || !workspaceService) return;
+  // Reactive: Update highlighting when workspace or focused field changes
+  $effect(() => {
+    updateHighlighting();
+  });
+
+  const updateHighlighting = () => {
+    if (!opfContent()) {
+      highlightedContent = '';
+      return;
+    }
 
     try {
-      loading = true;
+      const result = xmlHighlighter.highlightOPFContent(opfContent(), {
+        focusedField,
+        highlightValues: true,
+        highlightTags: true,
+        pageProgressionDirection: workspace?.opf?.metadata?.pageProgressionDirection,
+      });
+
+      highlightedContent = result.highlightedXML;
       error = null;
-
-      const content = await workspaceService.readFile(
-        workspace.id,
-        workspace.pathInfo.rootfilePath
-      );
-
-      const decoder = new TextDecoder('utf-8');
-      opfContent = decoder.decode(content);
     } catch (err) {
-      console.error('Failed to load content.opf:', err);
-      error = $t('Failed to load content.opf file');
-      opfContent = '';
-    } finally {
-      loading = false;
+      console.error('Failed to highlight XML:', err);
+      error = $t('Failed to generate XML preview');
+      highlightedContent = '';
     }
   };
 </script>
@@ -53,21 +61,17 @@
     <span class="file-name">content.opf</span>
   </div>
 
-  {#if loading}
-    <div class="loading-state">
-      <p>{$t('Loading preview…')}</p>
-    </div>
-  {:else if error}
+  {#if error}
     <div class="error-state">
       <p class="error-message">{error}</p>
-      <button type="button" class="retry-button" onclick={loadOPFContent}>
+      <button type="button" class="retry-button" onclick={updateHighlighting}>
         {$t('Retry')}
       </button>
     </div>
-  {:else if opfContent}
+  {:else if highlightedContent}
     <div class="preview-body">
       <div class="text-preview">
-        <pre class="text-content" dir="ltr">{opfContent}</pre>
+        <pre class="text-content highlighted-xml" dir="ltr">{@html highlightedContent}</pre>
       </div>
     </div>
   {:else}
@@ -125,13 +129,12 @@
     border: none;
     margin: 0;
     padding: 0;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
+    height: 100%;
+    overflow: auto;
+    white-space: pre;
     tab-size: 2;
   }
 
-  .loading-state,
   .error-state,
   .no-content {
     display: flex;
@@ -171,5 +174,53 @@
   .retry-button:focus-visible {
     outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
     outline-offset: var(--focus-ring-offset);
+  }
+
+  /* XML Syntax Highlighting Styles */
+  .highlighted-xml :global(.metadata-value) {
+    font-weight: var(--font-bold);
+    color: var(--color-text-primary);
+  }
+
+  .highlighted-xml :global(.metadata-value-focused) {
+    font-weight: var(--font-bold);
+    color: var(--color-interactive-primary);
+    background: var(--color-bg-accent);
+    border-radius: var(--radius-xs);
+  }
+
+  .highlighted-xml :global(.metadata-tag) {
+    color: var(--color-syntax-tag);
+  }
+
+  .highlighted-xml :global(.metadata-tag-focused) {
+    color: var(--color-interactive-primary);
+    font-weight: var(--font-medium);
+  }
+
+  /* Enhanced XML syntax highlighting */
+  .highlighted-xml {
+    font-family: var(--font-mono);
+    line-height: var(--leading-relaxed);
+  }
+
+  /* XML element styling */
+  .highlighted-xml :global(meta),
+  .highlighted-xml :global(dc\\:title),
+  .highlighted-xml :global(dc\\:language),
+  .highlighted-xml :global(dc\\:identifier),
+  .highlighted-xml :global(dc\\:creator),
+  .highlighted-xml :global(dc\\:contributor),
+  .highlighted-xml :global(dc\\:subject),
+  .highlighted-xml :global(dc\\:publisher),
+  .highlighted-xml :global(dc\\:date),
+  .highlighted-xml :global(dc\\:description),
+  .highlighted-xml :global(dc\\:rights) {
+    display: inline;
+  }
+
+  /* Structural element de-emphasis */
+  .highlighted-xml :global(.structural-element) {
+    color: var(--color-text-tertiary);
   }
 </style>
