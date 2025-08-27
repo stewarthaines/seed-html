@@ -15,6 +15,7 @@
   import ManifestPreview from './lib/components/manifest/ManifestPreview.svelte';
   import OutlineView from './lib/components/outline/OutlineView.svelte';
   import ContentPreview from './lib/components/preview/ContentPreview.svelte';
+  import OPFPreview from './lib/components/metadata/OPFPreview.svelte';
   import PreviewPane from './lib/components/spine/PreviewPane.svelte';
   import { layoutStore } from './lib/stores/layout';
   import { t } from './lib/i18n';
@@ -648,6 +649,11 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
     <svelte:fragment slot="right-content">
       {#if currentView === 'about'}
         <ThirdPartyView />
+      {:else if currentView === 'metadata' && initialized && currentWorkspaceState}
+        <OPFPreview
+          workspace={currentWorkspaceState}
+          {workspaceService}
+        />
       {:else if currentView === 'manifest' && initialized && currentWorkspaceState}
         <ManifestPreview
           selectedItem={selectedManifestItem}

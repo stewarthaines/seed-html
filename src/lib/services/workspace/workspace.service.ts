@@ -10,6 +10,7 @@ import type { EPUBMetadata, OPFDocument, ManifestItem, SpineItem } from '../../e
 import { generateEPUBTimestamp } from '../../epub/opf-utils.js';
 import { isSourceFile, classifySourceFile } from '../../source/source-utils.js';
 import type { SourceItem } from '../../manifest/types.js';
+import { getBrowserLocale } from '../../i18n/locale-config.js';
 
 // Service-specific types
 export interface WorkspaceState {
@@ -128,9 +129,11 @@ export class WorkspaceService {
     // Generate unique workspace ID
     const id = this.generateWorkspaceId();
 
-    // Add automatic timestamps
+    // Add automatic timestamps and browser language detection
     const timestampedMetadata: EPUBMetadata = {
       ...metadata,
+      // Auto-detect browser language if not provided
+      language: metadata.language || getBrowserLocale(),
       modifiedDate: generateEPUBTimestamp(),
     };
 

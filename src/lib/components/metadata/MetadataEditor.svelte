@@ -80,12 +80,6 @@
     }
   };
 
-  const validateCurrentTab = (tabId: string, _metadata: EPUBMetadata) => {
-    const tabFields = getTabFields(tabId);
-    return validationErrors.filter(error => tabFields.includes(error.field));
-  };
-
-
   const handleFieldChange = (_event: { detail: any }) => {
     // Field changes are handled by the input component's internal state
     // No action needed here since we only persist on blur/save
@@ -96,8 +90,19 @@
 
     if (!workspace) return;
 
+    // Validate field update before saving to workspace
+    const updates = { [field]: value };
+    const validationResults = metadataService.validateMetadataUpdates(updates);
+    const fieldErrors = validationResults.filter(result => result.type === 'error');
+    
+    if (fieldErrors.length > 0) {
+      // Don't save invalid data - let inline error display show the issue
+      // The validation errors will be displayed via the existing getFieldError system
+      return;
+    }
+
     try {
-      // Save field and update workspace via two-way binding
+      // Only save valid data to workspace
       workspace = await metadataService.updateField(workspace, field, value);
       
       // Notify that metadata has changed
@@ -168,15 +173,8 @@
   const handleTabSwitch = async (event: { detail: { tabId: any } }) => {
     const newTabId = event.detail.tabId;
 
-    // Check for errors in current tab
-    const currentTabErrors = validateCurrentTab(activeTab, metadata);
-    if (currentTabErrors.length > 0) {
-      // Show validation alert and prevent tab switch
-      alert($t('Please fix errors before switching tabs'));
-      return;
-    }
-
-    // Switch tab
+    // Allow tab switching - validation errors will be shown inline
+    // No need to block navigation, users should be able to access all tabs
     activeTab = newTabId;
   };
 

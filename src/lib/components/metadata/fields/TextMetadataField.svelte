@@ -1,30 +1,62 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { t as _t } from '../../../i18n';
 
-  const dispatch = createEventDispatcher();
+  interface Props {
+    value?: string;
+    placeholder?: string;
+    required?: boolean;
+    disabled?: boolean;
+    error?: string;
+    label?: string;
+    id?: string;
+    onchange?: (event: { value: string }) => void;
+    onblur?: (event: { value: string }) => void;
+    onfocus?: (event: { field: string }) => void;
+  }
 
-  export let value = '';
-  export let placeholder = '';
-  export let required = false;
-  export let disabled = false;
-  export let error = '';
-  export let label = '';
-  export let id = '';
+  let {
+    value = '',
+    placeholder = '',
+    required = false,
+    disabled = false,
+    error = '',
+    label = '',
+    id = '',
+    onchange,
+    onblur,
+    onfocus
+  }: Props = $props();
 
-  // Check if field needs attention (required but empty)
-  $: needsAttention = required && (!value || value.trim() === '');
+  // Local state that tracks the actual DOM input value
+  let localValue = $state(value);
+  
+  // Sync local value with prop when prop changes (from parent updates)
+  $effect(() => {
+    localValue = value;
+  });
+
+  // Check if field needs attention based on visual/DOM state, not prop state
+  let needsAttention = $derived(required && (!localValue || localValue.trim() === ''));
 
   const handleInput = (event: Event) => {
-    dispatch('change', { value: (event.target as HTMLInputElement).value });
+    localValue = (event.target as HTMLInputElement).value;
+    onchange?.({ value: localValue });
   };
 
   const handleBlur = (event: FocusEvent) => {
-    dispatch('blur', { value: (event.target as HTMLInputElement).value });
+    localValue = (event.target as HTMLInputElement).value;
+    onblur?.({ value: localValue });
   };
 
   const handleFocus = () => {
-    dispatch('focus', { field: id });
+    onfocus?.({ field: id });
+  };
+
+  const handleKeydown = (event: KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      localValue = (event.target as HTMLInputElement).value;
+      onblur?.({ value: localValue });
+    }
   };
 </script>
 
@@ -44,7 +76,7 @@
   <input
     {id}
     type="text"
-    {value}
+    bind:value={localValue}
     {placeholder}
     {required}
     {disabled}
@@ -54,8 +86,9 @@
     oninput={handleInput}
     onblur={handleBlur}
     onfocus={handleFocus}
+    onkeydown={handleKeydown}
     aria-describedby={error ? `${id}-error` : undefined}
-    aria-invalid={!!error}
+    aria-invalid={!!error || needsAttention}
   />
 </div>
 

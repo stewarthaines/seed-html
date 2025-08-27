@@ -1,31 +1,55 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { t } from '../../../i18n';
 
-  const dispatch = createEventDispatcher();
+  interface Props {
+    value?: string;
+    placeholder?: string;
+    required?: boolean;
+    disabled?: boolean;
+    error?: string;
+    label?: string;
+    id?: string;
+    rows?: number;
+    onchange?: (event: { value: string }) => void;
+    onblur?: (event: { value: string }) => void;
+    onfocus?: (event: { field: string }) => void;
+  }
 
-  export let value = '';
-  export let placeholder = '';
-  export let required = false;
-  export let disabled = false;
-  export let error = '';
-  export let label = '';
-  export let id = '';
-  export let rows = 4;
+  let {
+    value = '',
+    placeholder = '',
+    required = false,
+    disabled = false,
+    error = '',
+    label = '',
+    id = '',
+    rows = 4,
+    onchange,
+    onblur,
+    onfocus
+  }: Props = $props();
 
   // Check if field needs attention (required but empty)
-  $: needsAttention = required && (!value || value.trim() === '');
+  let needsAttention = $derived(required && (!value || value.trim() === ''));
 
   const handleInput = (event: Event) => {
-    dispatch('change', { value: (event.target as HTMLTextAreaElement).value });
+    onchange?.({ value: (event.target as HTMLTextAreaElement).value });
   };
 
   const handleBlur = (event: FocusEvent) => {
-    dispatch('blur', { value: (event.target as HTMLTextAreaElement).value });
+    onblur?.({ value: (event.target as HTMLTextAreaElement).value });
   };
 
   const handleFocus = () => {
-    dispatch('focus', { field: id });
+    onfocus?.({ field: id });
+  };
+
+  const handleKeydown = (event: KeyboardEvent) => {
+    // Ctrl+Enter or Cmd+Enter to save (common pattern for multi-line text)
+    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      onblur?.({ value: (event.target as HTMLTextAreaElement).value });
+    }
   };
 </script>
 
@@ -49,11 +73,12 @@
     class="field-textarea"
     class:error={!!error}
     class:needs-attention={needsAttention}
-    on:input={handleInput}
-    on:blur={handleBlur}
-    on:focus={handleFocus}
+    oninput={handleInput}
+    onblur={handleBlur}
+    onfocus={handleFocus}
+    onkeydown={handleKeydown}
     aria-describedby={error ? `${id}-error` : undefined}
-    aria-invalid={!!error}
+    aria-invalid={!!error || needsAttention}
   ></textarea>
 
   {#if error}

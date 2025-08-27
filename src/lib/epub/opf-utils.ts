@@ -221,10 +221,24 @@ export class OPFUtils {
   static parseOPFMetadata(doc: Document): EPUBMetadata {
     const DC_NS = 'http://purl.org/dc/elements/1.1/';
 
-    // Extract required metadata fields using namespace-aware methods
-    const titleElements = doc.getElementsByTagNameNS(DC_NS, 'title');
-    const languageElements = doc.getElementsByTagNameNS(DC_NS, 'language');
-    const identifierElements = doc.getElementsByTagNameNS(DC_NS, 'identifier');
+    // Extract required metadata fields using namespace-aware methods with fallback
+    let titleElements: HTMLCollectionOf<Element> | NodeListOf<Element> =
+      doc.getElementsByTagNameNS(DC_NS, 'title');
+    if (titleElements.length === 0) {
+      titleElements = doc.querySelectorAll('dc\\:title, title');
+    }
+
+    let languageElements: HTMLCollectionOf<Element> | NodeListOf<Element> =
+      doc.getElementsByTagNameNS(DC_NS, 'language');
+    if (languageElements.length === 0) {
+      languageElements = doc.querySelectorAll('dc\\:language, language');
+    }
+
+    let identifierElements: HTMLCollectionOf<Element> | NodeListOf<Element> =
+      doc.getElementsByTagNameNS(DC_NS, 'identifier');
+    if (identifierElements.length === 0) {
+      identifierElements = doc.querySelectorAll('dc\\:identifier, identifier');
+    }
 
     // Check for required fields
     if (titleElements.length === 0 || !titleElements[0].textContent?.trim()) {
@@ -281,6 +295,15 @@ export class OPFUtils {
       .map(el => el.textContent?.trim())
       .filter(Boolean) as string[];
 
+    // Parse rendition properties
+    const layoutMeta = doc.querySelector('meta[property="rendition:layout"]');
+    const orientationMeta = doc.querySelector('meta[property="rendition:orientation"]');
+    const spreadMeta = doc.querySelector('meta[property="rendition:spread"]');
+
+    // Parse spine page-progression-direction
+    const spineElement = doc.querySelector('spine');
+    const pageProgression = spineElement?.getAttribute('page-progression-direction');
+
     return {
       title: titleElements[0].textContent!.trim(),
       language: languageElements[0].textContent!.trim(),
@@ -301,6 +324,10 @@ export class OPFUtils {
       format: formatElements.length > 0 ? formatElements[0].textContent?.trim() : undefined,
       modifiedDate:
         modifiedElements.length > 0 ? modifiedElements[0].textContent?.trim() : undefined,
+      renditionLayout: layoutMeta?.textContent?.trim() || undefined,
+      renditionOrientation: orientationMeta?.textContent?.trim() || undefined,
+      renditionSpread: spreadMeta?.textContent?.trim() || undefined,
+      pageProgressionDirection: pageProgression || undefined,
     };
   }
 
@@ -418,7 +445,7 @@ export class OPFUtils {
     const uniqueId = manifest.find(item => item.id === 'uuid')?.id || 'uuid';
 
     let xml = `<?xml version="1.0" encoding="utf-8"?>
-<package version="${version}" xmlns="http://www.idpf.org/2007/opf" unique-identifier="${uniqueId}" prefix="ibooks: http://vocabulary.itunes.apple.com/rdf/ibooks/vocabulary-extensions-1.0/">
+<package version="${version}" xmlns="http://www.idpf.org/2007/opf" unique-identifier="${uniqueId}" prefix="rendition: http://www.idpf.org/vocab/rendition/# ibooks: http://vocabulary.itunes.apple.com/rdf/ibooks/vocabulary-extensions-1.0/">
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:ibooks="http://vocabulary.itunes.apple.com/rdf/ibooks/vocabularies/2012/01/ibooks-specific">
     <dc:title>${escapeXML(metadata.title)}</dc:title>
     <dc:language>${escapeXML(metadata.language)}</dc:language>
@@ -472,6 +499,19 @@ export class OPFUtils {
       xml += `\n    <meta property="dcterms:modified">${escapeXML(metadata.modifiedDate)}</meta>`;
     }
 
+    // Add rendition properties only when they differ from defaults
+    if (metadata.renditionLayout && metadata.renditionLayout !== 'reflowable') {
+      xml += `\n    <meta property="rendition:layout">${escapeXML(metadata.renditionLayout)}</meta>`;
+    }
+
+    if (metadata.renditionOrientation && metadata.renditionOrientation !== 'auto') {
+      xml += `\n    <meta property="rendition:orientation">${escapeXML(metadata.renditionOrientation)}</meta>`;
+    }
+
+    if (metadata.renditionSpread && metadata.renditionSpread !== 'auto') {
+      xml += `\n    <meta property="rendition:spread">${escapeXML(metadata.renditionSpread)}</meta>`;
+    }
+
     xml += '\n    <meta property="ibooks:specified-fonts">true</meta>';
 
     xml += `\n  </metadata>
@@ -489,8 +529,14 @@ export class OPFUtils {
       xml += ' />';
     });
 
-    xml += `\n  </manifest>
-  <spine>`;
+    xml += `\n  </manifest>`;
+
+    // Add spine with optional page-progression-direction
+    if (metadata.pageProgressionDirection && metadata.pageProgressionDirection !== 'default') {
+      xml += `\n  <spine page-progression-direction="${escapeXML(metadata.pageProgressionDirection)}">`;
+    } else {
+      xml += `\n  <spine>`;
+    }
 
     // Add spine items
     spine.forEach(item => {

@@ -1,32 +1,54 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  interface Props {
+    value?: string;
+    options?: Array<{ value: string; label: string }>;
+    required?: boolean;
+    disabled?: boolean;
+    error?: string;
+    label?: string;
+    id?: string;
+    placeholder?: string;
+    onchange?: (event: { value: string }) => void;
+    onblur?: (event: { value: string }) => void;
+    onfocus?: (event: { field: string }) => void;
+  }
 
-  const dispatch = createEventDispatcher();
-
-  export let value = '';
-  export let options: Array<{ value: string; label: string }> = [];
-  export let required = false;
-  export let disabled = false;
-  export let error = '';
-  export let label = '';
-  export let id = '';
-  export let placeholder = '';
+  let {
+    value = '',
+    options = [],
+    required = false,
+    disabled = false,
+    error = '',
+    label = '',
+    id = '',
+    placeholder = '',
+    onchange,
+    onblur,
+    onfocus
+  }: Props = $props();
 
   // Check if field needs attention (required but empty)
-  $: needsAttention = required && (!value || value.trim() === '');
+  let needsAttention = $derived(required && (!value || value.trim() === ''));
 
   const handleChange = (event: Event) => {
     const target = event.target as HTMLSelectElement;
-    dispatch('change', { value: target.value });
+    // onchange?.({ value: target.value });
+    onblur?.({ value: target.value });
   };
 
   const handleBlur = (event: Event) => {
     const target = event.target as HTMLSelectElement;
-    dispatch('blur', { value: target.value });
+    onblur?.({ value: target.value });
   };
 
   const handleFocus = () => {
-    dispatch('focus', { field: id });
+    onfocus?.({ field: id });
+  };
+
+  const handleKeydown = (event: KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      onblur?.({ value: (event.target as HTMLSelectElement).value });
+    }
   };
 </script>
 
@@ -54,10 +76,11 @@
     onchange={handleChange}
     onblur={handleBlur}
     onfocus={handleFocus}
+    onkeydown={handleKeydown}
     aria-describedby={error ? `${id}-error` : undefined}
-    aria-invalid={!!error}
+    aria-invalid={!!error || needsAttention}
   >
-    {#if placeholder}
+    {#if placeholder && !required}
       <option value="">{placeholder}</option>
     {/if}
     {#each options as option}

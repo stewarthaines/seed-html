@@ -29,13 +29,7 @@
     ongenerateIdentifier
   }: Props = $props();
 
-  // Track current array states for proper persistence
-  let currentCreators = $state<string[]>([]);
-  
-  // Initialize and sync current arrays with metadata
-  $effect(() => {
-    currentCreators = metadata.creator || [];
-  });
+  // Removed reactive state tracking - work directly with metadata props
 
   // Language options - simplified for now
   const languageOptions = [
@@ -81,11 +75,11 @@
     return error ? error.message : '';
   };
 
-  const handleFieldChange = (field: string, value: any[]) => {
+  const handleFieldChange = (field: string, value: any) => {
     onfieldChange?.(new CustomEvent('fieldChange', { detail: { field, value } }));
   };
 
-  const handleFieldSave = (field: string, value: string[] | undefined) => {
+  const handleFieldSave = (field: string, value: string) => {
     onfieldSave?.(new CustomEvent('fieldSave', { detail: { field, value } }));
   };
 
@@ -97,17 +91,15 @@
     onarrayRemove?.(new CustomEvent('arrayRemove', { detail: { field, index } }));
   };
 
-  const updateArrayItem = (field: ArrayMetadataFields, index: number, value: string) => {
-    if (field === 'creator') {
-      currentCreators[index] = value;
-      handleFieldChange(field, currentCreators);
-    } else {
-      // Fallback for other array fields not yet tracked
-      const currentArray = MetadataUtils.getArrayField(metadata, field);
-      const newArray = [...currentArray];
-      newArray[index] = value;
-      handleFieldChange(field, newArray);
-    }
+  const updateArrayItem = (_field: ArrayMetadataFields, _index: number, _value: string) => {
+    // Do nothing on change - input manages its own state until blur
+    // This prevents reactive updates that cause flickering
+  };
+
+  const handleCreatorBlur = (index: number, value: string) => {
+    const newArray = [...(metadata.creator || [])];
+    newArray[index] = value;
+    onfieldSave?.(new CustomEvent('fieldSave', { detail: { field: 'creator', value: newArray } }));
   };
 
   const generateIdentifier = () => {
@@ -128,8 +120,8 @@
           placeholder={$t('Enter book title')}
           required={true}
           error={getFieldError('title')}
-          on:change={e => handleFieldChange('title', e.detail.value)}
-          on:blur={e => handleFieldSave('title', e.detail.value)}
+          onchange={e => handleFieldChange('title', e.value)}
+          onblur={e => handleFieldSave('title', e.value)}
         />
 
         <SelectMetadataField
@@ -140,8 +132,8 @@
           placeholder={$t('Select language')}
           required={true}
           error={getFieldError('language')}
-          on:change={e => handleFieldChange('language', e.detail.value)}
-          on:blur={e => handleFieldSave('language', e.detail.value)}
+          onchange={e => handleFieldChange('language', e.value)}
+          onblur={e => handleFieldSave('language', e.value)}
         />
 
         <div class="identifier-field">
@@ -152,8 +144,8 @@
             placeholder={$t('Enter a unique identifier')}
             required={true}
             error={getFieldError('identifier')}
-            on:change={e => handleFieldChange('identifier', e.detail.value)}
-            on:blur={e => handleFieldSave('identifier', e.detail.value)}
+            onchange={e => handleFieldChange('identifier', e.value)}
+            onblur={e => handleFieldSave('identifier', e.value)}
           />
           <button
             type="button"
@@ -170,15 +162,15 @@
         <legend class="group-title" tabindex="-1">{$t('Authors')}</legend>
 
         <div class="array-field">
-          {#each currentCreators as author, index}
+          {#each metadata.creator || [] as author, index}
             <div class="array-item">
               <TextMetadataField
                 id="creator-{index}"
                 value={author}
                 placeholder={$t('Author name')}
                 error={getFieldError(`creator[${index}]`)}
-                on:change={e => updateArrayItem('creator', index, e.detail.value)}
-                on:blur={() => handleFieldSave('creator', currentCreators)}
+                onchange={e => updateArrayItem('creator', index, e.value)}
+                onblur={e => handleCreatorBlur(index, e.value)}
               />
               <button
                 type="button"
@@ -192,13 +184,14 @@
             </div>
           {/each}
 
+          <!-- i18n: Button to add an additional author field to the list -->
           <button
             type="button"
             class="add-button"
             onclick={() => handleArrayAdd('creator')}
             disabled={saving}
           >
-            {$t('Add Author')}
+            {$t('Add Another Author')}
           </button>
         </div>
       </fieldset>
@@ -215,8 +208,8 @@
           placeholder={$t('Enter book description')}
           error={getFieldError('description')}
           rows={3}
-          on:change={e => handleFieldChange('description', e.detail.value)}
-          on:blur={e => handleFieldSave('description', e.detail.value)}
+          onchange={e => handleFieldChange('description', e.value)}
+          onblur={e => handleFieldSave('description', e.value)}
         />
       </fieldset>
 
@@ -229,8 +222,8 @@
           value={metadata.renditionLayout || 'reflowable'}
           options={layoutOptions}
           error={getFieldError('renditionLayout')}
-          on:change={e => handleFieldChange('renditionLayout', e.detail.value)}
-          on:blur={e => handleFieldSave('renditionLayout', e.detail.value)}
+          onchange={e => handleFieldChange('renditionLayout', e.value)}
+          onblur={e => handleFieldSave('renditionLayout', e.value)}
         />
 
         <SelectMetadataField
@@ -239,8 +232,8 @@
           value={metadata.pageProgressionDirection || 'default'}
           options={progressionOptions}
           error={getFieldError('pageProgressionDirection')}
-          on:change={e => handleFieldChange('pageProgressionDirection', e.detail.value)}
-          on:blur={e => handleFieldSave('pageProgressionDirection', e.detail.value)}
+          onchange={e => handleFieldChange('pageProgressionDirection', e.value)}
+          onblur={e => handleFieldSave('pageProgressionDirection', e.value)}
         />
 
         <SelectMetadataField
@@ -249,8 +242,8 @@
           value={metadata.renditionOrientation || 'auto'}
           options={orientationOptions}
           error={getFieldError('renditionOrientation')}
-          on:change={e => handleFieldChange('renditionOrientation', e.detail.value)}
-          on:blur={e => handleFieldSave('renditionOrientation', e.detail.value)}
+          onchange={e => handleFieldChange('renditionOrientation', e.value)}
+          onblur={e => handleFieldSave('renditionOrientation', e.value)}
         />
 
         <SelectMetadataField
@@ -259,8 +252,8 @@
           value={metadata.renditionSpread || 'auto'}
           options={spreadOptions}
           error={getFieldError('renditionSpread')}
-          on:change={e => handleFieldChange('renditionSpread', e.detail.value)}
-          on:blur={e => handleFieldSave('renditionSpread', e.detail.value)}
+          onchange={e => handleFieldChange('renditionSpread', e.value)}
+          onblur={e => handleFieldSave('renditionSpread', e.value)}
         />
       </fieldset>
     </div>

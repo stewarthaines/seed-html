@@ -29,7 +29,6 @@
 
   // Content type options
   const typeOptions = [
-    { value: '', label: $t('Select content type') },
     { value: 'fiction', label: $t('Fiction') },
     { value: 'non-fiction', label: $t('Non-fiction') },
     { value: 'poetry', label: $t('Poetry') },
@@ -61,11 +60,21 @@
     onarrayRemove?.(new CustomEvent('arrayRemove', { detail: { field, index } }));
   };
 
-  const updateArrayItem = (field: ArrayMetadataFields, index: number, value: string) => {
-    const currentArray = MetadataUtils.getArrayField(metadata, field);
-    const newArray = [...currentArray];
+  const updateArrayItem = (_field: ArrayMetadataFields, _index: number, _value: string) => {
+    // Do nothing on change - input manages its own state until blur
+    // This prevents reactive updates that cause flickering
+  };
+
+  const handleSubjectBlur = (index: number, value: string) => {
+    const newArray = [...(metadata.subject || [])];
     newArray[index] = value;
-    handleFieldChange(field, newArray);
+    handleFieldSave('subject', newArray);
+  };
+
+  const handleContributorBlur = (index: number, value: string) => {
+    const newArray = [...(metadata.contributor || [])];
+    newArray[index] = value;
+    handleFieldSave('contributor', newArray);
   };
 </script>
 
@@ -174,7 +183,7 @@
                 placeholder={$t('Subject or keyword')}
                 error={getFieldError(`subject[${index}]`)}
                 on:change={e => updateArrayItem('subject', index, e.detail.value)}
-                on:blur={() => handleFieldSave('subject', metadata.subject)}
+                on:blur={e => handleSubjectBlur(index, e.detail.value)}
               />
               <button
                 type="button"
@@ -188,13 +197,14 @@
             </div>
           {/each}
 
+          <!-- i18n: Button to add an additional subject/keyword field to the list -->
           <button
             type="button"
             class="add-button"
             onclick={() => handleArrayAdd('subject')}
             disabled={saving}
           >
-            {$t('Add Subject')}
+            {$t('Add Another Subject')}
           </button>
         </div>
       </fieldset>
@@ -211,7 +221,7 @@
                 placeholder={$t('Contributor name')}
                 error={getFieldError(`contributor[${index}]`)}
                 on:change={e => updateArrayItem('contributor', index, e.detail.value)}
-                on:blur={() => handleFieldSave('contributor', metadata.contributor)}
+                on:blur={e => handleContributorBlur(index, e.detail.value)}
               />
               <button
                 type="button"
@@ -225,13 +235,14 @@
             </div>
           {/each}
 
+          <!-- i18n: Button to add an additional contributor field to the list -->
           <button
             type="button"
             class="add-button"
             onclick={() => handleArrayAdd('contributor')}
             disabled={saving}
           >
-            {$t('Add Contributor')}
+            {$t('Add Another Contributor')}
           </button>
         </div>
       </fieldset>

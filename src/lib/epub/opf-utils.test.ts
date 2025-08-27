@@ -600,4 +600,42 @@ describe('OPFUtils', () => {
       expect(errors[0]).toContain('chapter2');
     });
   });
+
+  describe('Rendition Properties', () => {
+    it('should include rendition properties in generated OPF when non-default', () => {
+      const testDoc = createTestOPFDocument();
+      testDoc.metadata.renditionLayout = 'pre-paginated';
+      testDoc.metadata.renditionOrientation = 'landscape';
+      testDoc.metadata.renditionSpread = 'none';
+      testDoc.metadata.pageProgressionDirection = 'rtl';
+
+      const xml = OPFUtils.generateOPFXML(testDoc);
+      expectValidXML(xml, 'OPF with rendition properties');
+
+      expect(xml).toContain('prefix="rendition: http://www.idpf.org/vocab/rendition/#');
+      expect(xml).toContain('<meta property="rendition:layout">pre-paginated</meta>');
+      expect(xml).toContain('<meta property="rendition:orientation">landscape</meta>');
+      expect(xml).toContain('<meta property="rendition:spread">none</meta>');
+      expect(xml).toContain('<spine page-progression-direction="rtl">');
+    });
+
+    it('should omit rendition properties when they are default values', () => {
+      const testDoc = createTestOPFDocument();
+      testDoc.metadata.renditionLayout = 'reflowable';
+      testDoc.metadata.renditionOrientation = 'auto';
+      testDoc.metadata.renditionSpread = 'auto';
+      testDoc.metadata.pageProgressionDirection = 'default';
+
+      const xml = OPFUtils.generateOPFXML(testDoc);
+
+      expect(xml).not.toContain('rendition:layout');
+      expect(xml).not.toContain('rendition:orientation');
+      expect(xml).not.toContain('rendition:spread');
+      expect(xml).not.toContain('page-progression-direction');
+      expect(xml).toContain('<spine>');
+    });
+
+    // Note: Parsing tests require getElementsByTagNameNS which doesn't work in happy-dom
+    // Round-trip parsing functionality is tested in browser environment via Storybook
+  });
 });

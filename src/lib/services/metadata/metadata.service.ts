@@ -213,9 +213,10 @@ export class MetadataService {
     return results;
   }
 
-  // Private helper methods
-
-  private validateMetadataUpdates(updates: Partial<EPUBMetadata>): ValidationResult[] {
+  /**
+   * Validate specific metadata field updates
+   */
+  validateMetadataUpdates(updates: Partial<EPUBMetadata>): ValidationResult[] {
     const results: ValidationResult[] = [];
 
     // Validate title
@@ -255,6 +256,8 @@ export class MetadataService {
 
     return results;
   }
+
+  // Private helper methods
 
   private getDefaultArrayValue(field: 'creator' | 'contributor' | 'subject'): string {
     switch (field) {
