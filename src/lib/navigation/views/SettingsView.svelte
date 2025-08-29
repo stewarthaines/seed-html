@@ -2,6 +2,7 @@
   import type {
     SettingsService,
     WorkspaceSettings,
+    EPUBSettings,
   } from '../../services/settings/settings.service.js';
   import type { ExtensionInfo } from '../../extensions/types.js';
 
@@ -22,7 +23,9 @@
 
   // State management
   let workspaceSettings = $state<WorkspaceSettings | null>(null);
+  let epubSettings = $state<EPUBSettings | null>(null);
   let loading = $state(false);
+  let epubLoading = $state(false);
   let error = $state<string | null>(null);
 
   // Extension management state
@@ -47,7 +50,22 @@
       }
     };
 
+    const loadEPUBSettings = async () => {
+      epubLoading = true;
+      
+      try {
+        epubSettings = await settingsService.loadEPUBSettings(workspaceId);
+      } catch (err) {
+        console.error('Failed to load EPUB settings:', err);
+        epubSettings = settingsService.getDefaultEPUBSettings();
+      } finally {
+        epubLoading = false;
+      }
+    };
+
+    // Actually call the functions
     loadSettings();
+    loadEPUBSettings();
   });
 
   // Load extensions when workspaceId changes
@@ -133,6 +151,41 @@
     }
   }
 
+  // Handle audio clip template change
+  async function handleAudioTemplateChange(event: Event): Promise<void> {
+    if (!workspaceId || !epubSettings) return;
+
+    const target = event.target as HTMLInputElement;
+    const newTemplate = target.value;
+
+    // Validate template
+    const validation = settingsService.validateEPUBSettings({ audio_clip_template: newTemplate });
+    if (!validation.isValid) {
+      error = validation.errors[0] || 'Invalid template format';
+      return;
+    }
+
+    // Optimistic update
+    const updatedSettings: EPUBSettings = {
+      ...epubSettings,
+      audio_clip_template: newTemplate,
+    };
+
+    epubSettings = updatedSettings;
+
+    try {
+      await settingsService.saveEPUBSettings(workspaceId, updatedSettings);
+      onSettingsChanged?.();
+    } catch (err) {
+      error = err instanceof Error ? err.message : $t('Failed to save EPUB settings');
+      // Revert optimistic update
+      epubSettings = {
+        ...epubSettings,
+        audio_clip_template: epubSettings.audio_clip_template,
+      };
+    }
+  }
+
   // Handle extension removal
   async function handleExtensionRemoval(extensionName: string): Promise<void> {
     if (!workspaceId) return;
@@ -154,6 +207,7 @@
   // Derived states
   const isAdvancedMode = $derived(workspaceSettings?.editor?.advanced_mode ?? false);
   const canEditSettings = $derived(workspaceId !== null && workspaceSettings !== null);
+  const canEditEPUBSettings = $derived(workspaceId !== null && epubSettings !== null);
 </script>
 
 <div class="settings-view">
@@ -194,6 +248,31 @@
           </p>
         </div>
       </section>
+
+      <!-- EPUB Settings -->
+      {#if canEditEPUBSettings && isAdvancedMode}
+        <section class="epub-settings">
+          <h2>{$t('EPUB Settings')}</h2>
+          
+          <div class="setting-group">
+            <label for="audio-clip-template" class="setting-label-text">
+              {$t('Audio Clip Template')}
+            </label>
+            <input
+              id="audio-clip-template"
+              type="text"
+              class="template-input"
+              value={epubSettings?.audio_clip_template || ''}
+              placeholder=":clip[label]&#123;src=href begin=begin end=end&#125;"
+              onblur={handleAudioTemplateChange}
+              disabled={epubLoading}
+            />
+            <p class="setting-description">
+              Template for inserting audio clip directives. Use placeholders: &lt;href&gt;, &lt;begin&gt;, &lt;end&gt;, &lt;label&gt;, &lt;rate&gt;
+            </p>
+          </div>
+        </section>
+      {/if}
 
       <!-- Extension Management -->
       <section class="extensions-settings">
@@ -324,6 +403,36 @@
     color: var(--text-muted, #666);
     font-size: 0.875rem;
     line-height: 1.4;
+  }
+
+  .setting-label-text {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary, #333);
+  }
+
+  .template-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 0.25rem;
+    font-family: var(--font-mono, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace);
+    font-size: 0.875rem;
+    background: var(--input-bg, #fff);
+    color: var(--text-primary, #333);
+  }
+
+  .template-input:focus {
+    outline: none;
+    border-color: var(--focus-color, #007acc);
+    box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.2);
+  }
+
+  .template-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: var(--input-disabled-bg, #f5f5f5);
   }
 
   .extension-import {

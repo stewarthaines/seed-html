@@ -12,6 +12,7 @@ import { WorkspaceService } from './services/workspace/workspace.service.js';
 import { ContentService } from './services/content/content.service.js';
 import { SettingsService } from './services/settings/settings.service.js';
 import { EPUBProcessor } from './services/epub/epub-processor.service.js';
+import { AudioClipService } from './audio/audio-clip.service.js';
 import type {
   WorkspaceState,
   WorkspaceInfo,
@@ -63,6 +64,7 @@ export class EnhancedAppState {
   private contentService: ContentService;
   private settingsService: SettingsService;
   private epubProcessor: EPUBProcessor;
+  private audioClipService: AudioClipService;
 
   // Core reactive state - single source of truth
   workspace = $state<WorkspaceState | null>(null);
@@ -92,6 +94,7 @@ export class EnhancedAppState {
     this.fileStorage = fileStorage;
     this.transformEngine = transformEngine;
     this.extensionManager = extensionManager;
+    
 
     // Initialize services with dependency injection
     // Create services without circular dependencies first
@@ -106,6 +109,9 @@ export class EnhancedAppState {
 
     // Create ContentService without dependencies (pure functions only)
     this.contentService = new ContentService(transformExecutor, i18nSystem);
+
+    // Initialize AudioClipService with required dependencies
+    this.audioClipService = new AudioClipService(this.fileStorage, this.workspaceService, this.settingsService);
 
     // Initialize global settings immediately
     this.loadGlobalSettings();
@@ -229,6 +235,11 @@ export class EnhancedAppState {
   getSettingsService(): SettingsService {
     return this.settingsService;
   }
+
+  getAudioClipService(): AudioClipService {
+    return this.audioClipService;
+  }
+
 
   getExtensionManager(): ExtensionManager {
     return this.extensionManager;

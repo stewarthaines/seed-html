@@ -627,6 +627,7 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
             selectedItemId={selectedSpineItemId}
             transformEngine={appState.getTransformEngine()}
             contentService={appState.getContentService()}
+            audioClipService={appState.getAudioClipService()}
             on:previewUpdate={handleSpinePreviewUpdate}
           />
         {:else}

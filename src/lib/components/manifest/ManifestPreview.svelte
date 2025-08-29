@@ -10,7 +10,7 @@
   export let selectedItem: ManifestItem | SourceItem | any | null = null;
   export let selectedItemType: 'manifest' | 'source' | 'opf' | null = null;
   export let workspace: WorkspaceState | null = null;
-  export let workspaceService: WorkspaceService;
+  export let workspaceService: WorkspaceService | undefined = undefined;
 
   const dispatch = createEventDispatcher();
 
@@ -32,6 +32,16 @@
   // Helper function to determine if mediaType represents image content
   const isImageMediaType = (mediaType: string): boolean => {
     return mediaType.startsWith('image/');
+  };
+
+  // Helper function to determine if mediaType represents audio content
+  const isAudioMediaType = (mediaType: string): boolean => {
+    return mediaType.startsWith('audio/');
+  };
+
+  // Helper function to determine if mediaType represents video content
+  const isVideoMediaType = (mediaType: string): boolean => {
+    return mediaType.startsWith('video/');
   };
 
   // Helper function to determine if content should use LTR direction (for technical files)
@@ -96,10 +106,12 @@
 
           const isText = isTextMediaType(manifestItem.mediaType);
           const isImage = isImageMediaType(manifestItem.mediaType);
+          const isAudio = isAudioMediaType(manifestItem.mediaType);
+          const isVideo = isVideoMediaType(manifestItem.mediaType);
 
           let textContent: string | undefined;
           let previewUrl: string | undefined;
-          let contentType: string;
+          let contentType: 'text' | 'image' | 'audio' | 'video' | 'binary';
 
           if (isText) {
             const decoder = new TextDecoder('utf-8');
@@ -111,6 +123,18 @@
             previewUrl = URL.createObjectURL(blob);
             activeBlobUrl = previewUrl;
             contentType = 'image';
+          } else if (isAudio) {
+            // Create blob URL for audio preview
+            const blob = new Blob([content], { type: manifestItem.mediaType });
+            previewUrl = URL.createObjectURL(blob);
+            activeBlobUrl = previewUrl;
+            contentType = 'audio';
+          } else if (isVideo) {
+            // Create blob URL for video preview
+            const blob = new Blob([content], { type: manifestItem.mediaType });
+            previewUrl = URL.createObjectURL(blob);
+            activeBlobUrl = previewUrl;
+            contentType = 'video';
           } else {
             contentType = 'binary';
           }
@@ -256,7 +280,6 @@
         mimeType = sourceItem.mediaType || 'application/octet-stream';
         
       } else if (selectedItemType === 'opf') {
-        const opfItem = selectedItem as any;
         content = await workspaceService.readFile(workspace.id, workspace.pathInfo.rootfilePath);
         filename = 'content.opf';
         mimeType = 'application/xml';
@@ -287,28 +310,6 @@
     }
   };
 
-  const formatFileSize = (bytes: number | undefined) => {
-    if (!bytes) return '-';
-
-    const units = ['B', 'KB', 'MB', 'GB'];
-    let size = bytes;
-    let unitIndex = 0;
-
-    while (size >= 1024 && unitIndex < units.length - 1) {
-      size /= 1024;
-      unitIndex++;
-    }
-
-    return `${size.toFixed(unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
-  };
-
-  const formatDate = (date: Date | undefined) => {
-    if (!date) return '-';
-    return new Intl.DateTimeFormat('en-US', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(date);
-  };
 
   const getContentIcon = (contentType: string) => {
     switch (contentType) {

@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: EDITME EPUB Editor\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-27T02:27:04.359Z\n"
-"PO-Revision-Date: 2025-08-27T02:27:04.382Z\n"
+"POT-Creation-Date: 2025-08-29T09:56:10.671Z\n"
+"PO-Revision-Date: 2025-08-29T09:56:10.703Z\n"
 "Language: en\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -16,7 +16,7 @@ msgstr ""
 msgid "1 day ago"
 msgstr ""
 
-#: src/lib/Sidebar.svelte:54
+#: src/lib/Sidebar.svelte:56
 msgid "About"
 msgstr "About"
 
@@ -62,24 +62,24 @@ msgstr "Version"
 msgid "about.website.link"
 msgstr "stewarthaines.com/epub"
 
-#: src/lib/components/metadata/MetadataEditor.svelte:241
-#: src/lib/components/metadata/MetadataEditor.svelte:38
+#: src/lib/components/metadata/MetadataEditor.svelte:248
+#: src/lib/components/metadata/MetadataEditor.svelte:39
 msgid "Accessibility"
 msgstr ""
 
-#: src/lib/components/metadata/MetadataEditor.svelte:241
+#: src/lib/components/metadata/MetadataEditor.svelte:248
 msgid "Accessibility features, hazards, and certification information"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:194
+#: src/lib/components/metadata/BasicInfoFields.svelte:204
 msgid "Add Another Author"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:245
+#: src/lib/components/metadata/AdvancedFields.svelte:261
 msgid "Add Another Contributor"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:207
+#: src/lib/components/metadata/AdvancedFields.svelte:222
 msgid "Add Another Subject"
 msgstr ""
 
@@ -87,11 +87,11 @@ msgstr ""
 msgid "Add/remove manifest items"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:129
+#: src/lib/components/metadata/AdvancedFields.svelte:139
 msgid "Additional Information"
 msgstr ""
 
-#: src/lib/components/metadata/MetadataEditor.svelte:36
+#: src/lib/components/metadata/MetadataEditor.svelte:37
 msgid "Advanced"
 msgstr ""
 
@@ -99,18 +99,18 @@ msgstr ""
 msgid "Advanced configurations"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte:190
+#: src/lib/navigation/views/SettingsView.svelte:240
 msgid "Advanced Mode"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte:215
+#: src/lib/navigation/views/SettingsView.svelte:290
 msgid "Advanced Mode required for extension management"
 msgstr ""
 
-#: src/lib/Sidebar.svelte:207
-#: src/lib/Sidebar.svelte:208
-#: src/lib/Sidebar.svelte:219
-#: src/lib/Sidebar.svelte:220
+#: src/lib/Sidebar.svelte:209
+#: src/lib/Sidebar.svelte:210
+#: src/lib/Sidebar.svelte:221
+#: src/lib/Sidebar.svelte:222
 msgid "Append Item"
 msgstr ""
 
@@ -118,7 +118,7 @@ msgstr ""
 msgid "Application preferences"
 msgstr ""
 
-#: src/App.svelte:197
+#: src/App.svelte:208
 #: src/lib/components/manifest/ManifestContainer.svelte:119
 msgid "Are you sure you want to delete this item?"
 msgstr ""
@@ -127,16 +127,21 @@ msgstr ""
 msgid "at"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:170
+#: src/lib/navigation/views/SettingsView.svelte:255
+msgid "Audio Clip Template"
+msgstr ""
+
+#: src/lib/components/metadata/BasicInfoFields.svelte:179
 msgid "Author name"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:162
+#: src/lib/components/metadata/SimpleMetadataView.svelte:37
+#: src/lib/components/metadata/BasicInfoFields.svelte:171
 msgid "Authors"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:62
-#: src/lib/components/metadata/BasicInfoFields.svelte:68
+#: src/lib/components/metadata/BasicInfoFields.svelte:64
+#: src/lib/components/metadata/BasicInfoFields.svelte:70
 msgid "Auto"
 msgstr ""
 
@@ -148,19 +153,19 @@ msgstr ""
 msgid "Back to Projects"
 msgstr ""
 
-#: src/lib/components/metadata/MetadataEditor.svelte:35
+#: src/lib/components/metadata/MetadataEditor.svelte:36
 msgid "Basic Info"
 msgstr ""
 
-#: src/lib/components/manifest/ManifestPreview.svelte:419
+#: src/lib/components/manifest/ManifestPreview.svelte:420
 msgid "Binary file - preview not available"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:36
+#: src/lib/components/metadata/AdvancedFields.svelte:38
 msgid "Biography"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:70
+#: src/lib/components/metadata/BasicInfoFields.svelte:72
 msgid "Both"
 msgstr ""
 
@@ -176,12 +181,12 @@ msgstr ""
 msgid "Chapter ordering interface"
 msgstr ""
 
-#: src/lib/Sidebar.svelte:203
-#: src/lib/Sidebar.svelte:215
+#: src/lib/Sidebar.svelte:205
+#: src/lib/Sidebar.svelte:217
 msgid "Chapters"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:39
+#: src/lib/components/metadata/AdvancedFields.svelte:41
 msgid "Children"
 msgstr ""
 
@@ -199,7 +204,7 @@ msgstr ""
 msgid "Clear search"
 msgstr ""
 
-#: src/lib/components/manifest/ManifestPreview.svelte:333
+#: src/lib/components/manifest/ManifestPreview.svelte:334
 msgid "Click on any row in the table to see details"
 msgstr ""
 
@@ -212,8 +217,8 @@ msgid "Coming soon"
 msgstr ""
 
 #: src/lib/navigation/views/PlaceholderView.svelte:97
-#: src/lib/components/metadata/MetadataEditor.svelte:230
-#: src/lib/components/metadata/MetadataEditor.svelte:239
+#: src/lib/components/metadata/MetadataEditor.svelte:237
+#: src/lib/components/metadata/MetadataEditor.svelte:246
 msgid "Coming Soon"
 msgstr ""
 
@@ -231,15 +236,15 @@ msgstr ""
 msgid "Complex Interactive"
 msgstr ""
 
-#: src/App.svelte:573
+#: src/App.svelte:585
 msgid "Configure publication metadata and details"
 msgstr ""
 
-#: src/App.svelte:694
+#: src/App.svelte:708
 msgid "Content preview will appear here based on the current view"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:118
+#: src/lib/components/metadata/AdvancedFields.svelte:127
 msgid "Content Type"
 msgstr ""
 
@@ -247,15 +252,15 @@ msgstr ""
 msgid "Content Type:"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:221
+#: src/lib/components/metadata/AdvancedFields.svelte:236
 msgid "Contributor name"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:213
+#: src/lib/components/metadata/AdvancedFields.svelte:228
 msgid "Contributors"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:153
+#: src/lib/components/metadata/AdvancedFields.svelte:165
 msgid "Coverage"
 msgstr ""
 
@@ -290,7 +295,7 @@ msgstr ""
 msgid "Current Settings:"
 msgstr ""
 
-#: src/App.svelte:695
+#: src/App.svelte:709
 msgid "Current view"
 msgstr ""
 
@@ -299,11 +304,11 @@ msgid "Currently open"
 msgstr ""
 
 #: src/stories/preview/ContentPreviewDemo.svelte:139
-#: src/lib/components/metadata/BasicInfoFields.svelte:56
+#: src/lib/components/metadata/BasicInfoFields.svelte:58
 msgid "Default"
 msgstr ""
 
-#: src/lib/components/manifest/ManifestPreview.svelte:366
+#: src/lib/components/manifest/ManifestPreview.svelte:367
 msgid "Delete"
 msgstr ""
 
@@ -323,7 +328,8 @@ msgstr ""
 msgid "Demo Controls"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:202
+#: src/lib/components/metadata/SimpleMetadataView.svelte:48
+#: src/lib/components/metadata/BasicInfoFields.svelte:212
 msgid "Description"
 msgstr ""
 
@@ -332,7 +338,7 @@ msgstr ""
 msgid "Device:"
 msgstr ""
 
-#: src/lib/components/manifest/ManifestPreview.svelte:362
+#: src/lib/components/manifest/ManifestPreview.svelte:363
 msgid "Download"
 msgstr ""
 
@@ -340,7 +346,7 @@ msgstr ""
 msgid "Drag-and-drop reordering"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:35
+#: src/lib/components/metadata/AdvancedFields.svelte:37
 msgid "Drama"
 msgstr ""
 
@@ -349,7 +355,7 @@ msgstr ""
 msgid "Drop files here to add them to the manifest"
 msgstr ""
 
-#: src/lib/components/manifest/ManifestPreview.svelte:354
+#: src/lib/components/manifest/ManifestPreview.svelte:355
 msgid "Edit"
 msgstr ""
 
@@ -365,7 +371,7 @@ msgstr ""
 msgid "Edit Manifest Item"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte:193
+#: src/lib/navigation/views/SettingsView.svelte:243
 msgid "Enable advanced editing features and additional controls for power users."
 msgstr ""
 
@@ -373,39 +379,39 @@ msgstr ""
 msgid "Enhanced functionality"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:144
+#: src/lib/components/metadata/BasicInfoFields.svelte:152
 msgid "Enter a unique identifier"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:208
+#: src/lib/components/metadata/BasicInfoFields.svelte:218
 msgid "Enter book description"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:120
+#: src/lib/components/metadata/BasicInfoFields.svelte:126
 msgid "Enter book title"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:110
+#: src/lib/components/metadata/AdvancedFields.svelte:118
 msgid "Enter copyright information"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:165
+#: src/lib/components/metadata/AdvancedFields.svelte:178
 msgid "Enter format information"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:91
+#: src/lib/components/metadata/AdvancedFields.svelte:97
 msgid "Enter publisher name"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:145
+#: src/lib/components/metadata/AdvancedFields.svelte:156
 msgid "Enter related work information"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:135
+#: src/lib/components/metadata/AdvancedFields.svelte:145
 msgid "Enter source information"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:155
+#: src/lib/components/metadata/AdvancedFields.svelte:167
 msgid "Enter spatial or temporal coverage"
 msgstr ""
 
@@ -413,7 +419,7 @@ msgstr ""
 msgid "Enter the initial content for this text file…"
 msgstr ""
 
-#: src/App.svelte:572
+#: src/App.svelte:584
 msgid "EPUB Metadata"
 msgstr ""
 
@@ -421,12 +427,16 @@ msgstr ""
 msgid "EPUB Properties"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte:171
+#: src/lib/navigation/views/SettingsView.svelte:251
+msgid "EPUB Settings"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte:221
 #: src/lib/components/workspace/WorkspaceItem.svelte:77
 msgid "Error"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:114
+#: src/lib/components/metadata/BasicInfoFields.svelte:120
 msgid "Essential Information"
 msgstr ""
 
@@ -434,7 +444,7 @@ msgstr ""
 msgid "Export/import settings"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte:200
+#: src/lib/navigation/views/SettingsView.svelte:275
 msgid "Extensions"
 msgstr ""
 
@@ -443,7 +453,7 @@ msgstr ""
 msgid "Extra Large"
 msgstr ""
 
-#: src/lib/components/metadata/MetadataEditor.svelte:136
+#: src/lib/components/metadata/MetadataEditor.svelte:141
 msgid "Failed to add metadata item"
 msgstr ""
 
@@ -451,16 +461,16 @@ msgstr ""
 msgid "Failed to delete item"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte:132
+#: src/lib/components/metadata/OPFPreview.svelte:54
+msgid "Failed to generate XML preview"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte:146
 msgid "Failed to import extension"
 msgstr ""
 
-#: src/lib/components/manifest/ManifestPreview.svelte:206
+#: src/lib/components/manifest/ManifestPreview.svelte:230
 msgid "Failed to load content preview"
-msgstr ""
-
-#: src/lib/components/metadata/OPFPreview.svelte:42
-msgid "Failed to load content.opf file"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestContainer.svelte:85
@@ -471,27 +481,31 @@ msgstr ""
 msgid "Failed to load projects"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte:43
+#: src/lib/navigation/views/SettingsView.svelte:46
 msgid "Failed to load settings"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte:150
+#: src/lib/navigation/views/SettingsView.svelte:199
 msgid "Failed to remove extension"
 msgstr ""
 
-#: src/lib/components/metadata/MetadataEditor.svelte:160
+#: src/lib/components/metadata/MetadataEditor.svelte:165
 msgid "Failed to remove metadata item"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte:176
+msgid "Failed to save EPUB settings"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestContainer.svelte:161
 msgid "Failed to save item"
 msgstr ""
 
-#: src/lib/components/metadata/MetadataEditor.svelte:114
+#: src/lib/components/metadata/MetadataEditor.svelte:119
 msgid "Failed to save metadata field"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte:95
+#: src/lib/navigation/views/SettingsView.svelte:109
 msgid "Failed to save settings"
 msgstr ""
 
@@ -499,7 +513,7 @@ msgstr ""
 msgid "Failed to upload all files"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:32
+#: src/lib/components/metadata/AdvancedFields.svelte:34
 msgid "Fiction"
 msgstr ""
 
@@ -507,7 +521,7 @@ msgstr ""
 msgid "File listing and management"
 msgstr ""
 
-#: src/App.svelte:588
+#: src/App.svelte:600
 msgid "File Manifest"
 msgstr ""
 
@@ -546,7 +560,7 @@ msgstr ""
 msgid "Font:"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:163
+#: src/lib/components/metadata/AdvancedFields.svelte:176
 msgid "Format"
 msgstr ""
 
@@ -558,11 +572,11 @@ msgstr ""
 msgid "Future"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:156
+#: src/lib/components/metadata/BasicInfoFields.svelte:165
 msgid "Generate"
 msgstr ""
 
-#: src/App.svelte:671
+#: src/App.svelte:685
 msgid "Generating navigation from chapters..."
 msgstr ""
 
@@ -580,7 +594,8 @@ msgstr ""
 msgid "ID"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:142
+#: src/lib/components/metadata/SimpleMetadataView.svelte:54
+#: src/lib/components/metadata/BasicInfoFields.svelte:150
 msgid "Identifier"
 msgstr ""
 
@@ -588,7 +603,7 @@ msgstr ""
 msgid "Import from folder - coming soon"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte:205
+#: src/lib/navigation/views/SettingsView.svelte:280
 msgid "Import JavaScript Extension"
 msgstr ""
 
@@ -600,7 +615,7 @@ msgstr ""
 msgid "Initial Content"
 msgstr ""
 
-#: src/lib/navigation/views/SpineView.svelte:1281
+#: src/lib/navigation/views/SpineView.svelte:1287
 msgid "Initializing editor..."
 msgstr ""
 
@@ -633,11 +648,12 @@ msgid "Just now"
 msgstr ""
 
 #: src/stories/preview/ContentPreviewDemo.svelte:108
-#: src/lib/components/metadata/BasicInfoFields.svelte:63
+#: src/lib/components/metadata/BasicInfoFields.svelte:65
 msgid "Landscape"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:129
+#: src/lib/components/metadata/SimpleMetadataView.svelte:31
+#: src/lib/components/metadata/BasicInfoFields.svelte:136
 msgid "Language"
 msgstr ""
 
@@ -650,11 +666,11 @@ msgstr ""
 msgid "Last action"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:221
+#: src/lib/components/metadata/BasicInfoFields.svelte:232
 msgid "Layout"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:57
+#: src/lib/components/metadata/BasicInfoFields.svelte:59
 msgid "Left to Right"
 msgstr ""
 
@@ -683,7 +699,7 @@ msgstr ""
 msgid "Load File"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte:221
+#: src/lib/navigation/views/SettingsView.svelte:296
 msgid "Loading extensions..."
 msgstr ""
 
@@ -691,19 +707,18 @@ msgstr ""
 msgid "Loading manifest…"
 msgstr ""
 
-#: src/lib/components/metadata/MetadataEditor.svelte:191
+#: src/lib/components/metadata/MetadataEditor.svelte:196
 msgid "Loading metadata…"
 msgstr ""
 
-#: src/lib/components/metadata/OPFPreview.svelte:58
-#: src/lib/components/manifest/ManifestPreview.svelte:337
+#: src/lib/components/manifest/ManifestPreview.svelte:338
 msgid "Loading preview…"
 msgstr ""
 
-#: src/App.svelte:501
-#: src/App.svelte:519
-#: src/App.svelte:605
-#: src/App.svelte:624
+#: src/App.svelte:512
+#: src/App.svelte:530
+#: src/App.svelte:617
+#: src/App.svelte:637
 msgid "Loading project…"
 msgstr ""
 
@@ -711,19 +726,19 @@ msgstr ""
 msgid "Loading projects…"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte:165
+#: src/lib/navigation/views/SettingsView.svelte:215
 msgid "Loading settings..."
 msgstr ""
 
-#: src/lib/navigation/views/SpineView.svelte:1240
+#: src/lib/navigation/views/SpineView.svelte:1242
 msgid "Loading spine item..."
 msgstr ""
 
-#: src/lib/components/SpineSidebar.svelte:324
+#: src/lib/components/SpineSidebar.svelte:326
 msgid "Loading spine items…"
 msgstr ""
 
-#: src/lib/Sidebar.svelte:112
+#: src/lib/Sidebar.svelte:114
 msgid "Main navigation"
 msgstr ""
 
@@ -731,11 +746,11 @@ msgstr ""
 msgid "Malformed XHTML"
 msgstr ""
 
-#: src/App.svelte:589
+#: src/App.svelte:601
 msgid "Manage EPUB files and resources"
 msgstr ""
 
-#: src/lib/Sidebar.svelte:58
+#: src/lib/Sidebar.svelte:60
 msgid "Manifest"
 msgstr ""
 
@@ -748,8 +763,12 @@ msgstr ""
 msgid "Media Type"
 msgstr ""
 
-#: src/lib/Sidebar.svelte:57
+#: src/lib/Sidebar.svelte:59
 msgid "Metadata"
+msgstr ""
+
+#: src/lib/components/metadata/SimpleMetadataView.svelte:19
+msgid "Metadata Summary"
 msgstr ""
 
 #: src/lib/components/metadata/MetadataTabBar.svelte:15
@@ -772,7 +791,7 @@ msgstr ""
 msgid "Monospace"
 msgstr ""
 
-#: src/lib/Sidebar.svelte:59
+#: src/lib/Sidebar.svelte:61
 msgid "Navigation"
 msgstr ""
 
@@ -788,7 +807,7 @@ msgstr ""
 msgid "Navigation link management"
 msgstr ""
 
-#: src/App.svelte:670
+#: src/App.svelte:684
 msgid "Navigation Preview"
 msgstr ""
 
@@ -796,11 +815,11 @@ msgstr ""
 msgid "New capabilities"
 msgstr ""
 
-#: src/lib/components/metadata/OPFPreview.svelte:75
+#: src/lib/components/metadata/OPFPreview.svelte:82
 msgid "No content available"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte:223
+#: src/lib/navigation/views/SettingsView.svelte:298
 msgid "No extensions installed."
 msgstr ""
 
@@ -812,8 +831,12 @@ msgstr ""
 msgid "No manifest items found"
 msgstr ""
 
-#: src/App.svelte:505
-#: src/lib/components/SpineSidebar.svelte:374
+#: src/lib/components/metadata/SimpleMetadataView.svelte:61
+msgid "No metadata available"
+msgstr ""
+
+#: src/App.svelte:516
+#: src/lib/components/SpineSidebar.svelte:376
 msgid "No project selected"
 msgstr ""
 
@@ -821,27 +844,32 @@ msgstr ""
 msgid "No projects found"
 msgstr ""
 
-#: src/lib/navigation/views/SpineView.svelte:1250
+#: src/lib/navigation/views/SpineView.svelte:1252
 msgid "No spine item selected"
 msgstr ""
 
-#: src/lib/components/SpineSidebar.svelte:367
+#: src/lib/components/SpineSidebar.svelte:369
 msgid "No spine items yet"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:33
+#: src/lib/components/metadata/AdvancedFields.svelte:35
 msgid "Non-fiction"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:69
+#: src/lib/components/metadata/BasicInfoFields.svelte:71
 msgid "None"
+msgstr ""
+
+#: src/lib/components/metadata/SimpleMetadataView.svelte:32
+#: src/lib/components/metadata/SimpleMetadataView.svelte:55
+msgid "Not specified"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestItemEditor.svelte:276
 msgid "OEBPS/filename.ext"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:241
+#: src/lib/components/metadata/BasicInfoFields.svelte:254
 msgid "Orientation"
 msgstr ""
 
@@ -850,12 +878,12 @@ msgstr ""
 msgid "Orientation:"
 msgstr ""
 
-#: src/App.svelte:530
-#: src/App.svelte:532
+#: src/App.svelte:541
+#: src/App.svelte:543
 msgid "Package EPUB"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:231
+#: src/lib/components/metadata/BasicInfoFields.svelte:243
 msgid "Page Progression"
 msgstr ""
 
@@ -867,7 +895,7 @@ msgstr ""
 msgid "Planned Features"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte:205
+#: src/lib/navigation/views/SettingsView.svelte:280
 msgid ""
 "Please copy license text into the License field below to comply with open "
 "source requirements."
@@ -877,7 +905,7 @@ msgstr ""
 msgid "Please fill in all required fields"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte:163
+#: src/lib/navigation/views/SettingsView.svelte:213
 msgid "Please select a workspace to configure settings."
 msgstr ""
 
@@ -891,20 +919,20 @@ msgstr ""
 msgid "Pocket"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:34
+#: src/lib/components/metadata/AdvancedFields.svelte:36
 msgid "Poetry"
 msgstr ""
 
 #: src/stories/preview/ContentPreviewDemo.svelte:101
-#: src/lib/components/metadata/BasicInfoFields.svelte:64
+#: src/lib/components/metadata/BasicInfoFields.svelte:66
 msgid "Portrait"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:52
+#: src/lib/components/metadata/BasicInfoFields.svelte:54
 msgid "Pre-paginated"
 msgstr ""
 
-#: src/lib/components/manifest/ManifestPreview.svelte:382
+#: src/lib/components/manifest/ManifestPreview.svelte:383
 msgid "Preview Error"
 msgstr ""
 
@@ -912,7 +940,7 @@ msgstr ""
 msgid "Preview file contents"
 msgstr ""
 
-#: src/App.svelte:693
+#: src/App.svelte:707
 msgid "Preview Pane"
 msgstr ""
 
@@ -920,11 +948,11 @@ msgstr ""
 msgid "Project has errors"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte:180
+#: src/lib/navigation/views/SettingsView.svelte:230
 msgid "Project Settings"
 msgstr ""
 
-#: src/lib/Sidebar.svelte:55
+#: src/lib/Sidebar.svelte:57
 #: src/lib/components/workspace/WorkspaceList.svelte:61
 msgid "Projects"
 msgstr ""
@@ -933,20 +961,20 @@ msgstr ""
 msgid "Properties"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:85
+#: src/lib/components/metadata/AdvancedFields.svelte:91
 msgid "Publication"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:99
+#: src/lib/components/metadata/AdvancedFields.svelte:106
 msgid "Publication Date"
 msgstr ""
 
-#: src/lib/components/metadata/MetadataEditor.svelte:232
-#: src/lib/components/metadata/MetadataEditor.svelte:37
+#: src/lib/components/metadata/MetadataEditor.svelte:239
+#: src/lib/components/metadata/MetadataEditor.svelte:38
 msgid "Publication Details"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:89
+#: src/lib/components/metadata/AdvancedFields.svelte:95
 msgid "Publisher"
 msgstr ""
 
@@ -954,19 +982,19 @@ msgstr ""
 msgid "Quick Start Tips:"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:38
+#: src/lib/components/metadata/AdvancedFields.svelte:40
 msgid "Reference"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:51
+#: src/lib/components/metadata/BasicInfoFields.svelte:53
 msgid "Reflowable"
 msgstr ""
 
-#: src/lib/components/SpineSidebar.svelte:369
+#: src/lib/components/SpineSidebar.svelte:371
 msgid "Refresh"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:143
+#: src/lib/components/metadata/AdvancedFields.svelte:154
 msgid "Relation"
 msgstr ""
 
@@ -974,24 +1002,24 @@ msgstr ""
 msgid "Remove"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:180
+#: src/lib/components/metadata/BasicInfoFields.svelte:190
 msgid "Remove author"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:231
+#: src/lib/components/metadata/AdvancedFields.svelte:247
 msgid "Remove contributor"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:193
+#: src/lib/components/metadata/AdvancedFields.svelte:208
 msgid "Remove subject"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:217
+#: src/lib/components/metadata/BasicInfoFields.svelte:228
 msgid "Rendition Properties"
 msgstr ""
 
 #: src/lib/components/metadata/fields/TextareaMetadataField.svelte:61
-#: src/lib/components/metadata/fields/DateMetadataField.svelte:41
+#: src/lib/components/metadata/fields/DateMetadataField.svelte:55
 msgid "Required field"
 msgstr ""
 
@@ -1005,20 +1033,20 @@ msgstr ""
 msgid "Responsive"
 msgstr ""
 
-#: src/lib/components/SpineSidebar.svelte:330
+#: src/lib/components/SpineSidebar.svelte:332
 #: src/lib/navigation/views/WorkspaceView.svelte:388
-#: src/lib/components/metadata/OPFPreview.svelte:64
-#: src/lib/components/metadata/MetadataEditor.svelte:197
-#: src/lib/components/manifest/ManifestPreview.svelte:343
+#: src/lib/components/metadata/OPFPreview.svelte:71
+#: src/lib/components/metadata/MetadataEditor.svelte:202
+#: src/lib/components/manifest/ManifestPreview.svelte:344
 #: src/lib/components/manifest/ManifestContainer.svelte:286
 msgid "Retry"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:58
+#: src/lib/components/metadata/BasicInfoFields.svelte:60
 msgid "Right to Left"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:108
+#: src/lib/components/metadata/AdvancedFields.svelte:116
 msgid "Rights"
 msgstr ""
 
@@ -1112,19 +1140,19 @@ msgstr ""
 msgid "SEED.html home page"
 msgstr ""
 
-#: src/lib/navigation/views/SpineView.svelte:1251
+#: src/lib/navigation/views/SpineView.svelte:1253
 msgid "Select a spine item from the sidebar to start editing"
 msgstr ""
 
-#: src/App.svelte:688
+#: src/App.svelte:702
 msgid "Select a spine item to see the preview here"
 msgstr ""
 
-#: src/lib/components/manifest/ManifestPreview.svelte:332
+#: src/lib/components/manifest/ManifestPreview.svelte:333
 msgid "Select an item to preview its content"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:121
+#: src/lib/components/metadata/AdvancedFields.svelte:130
 msgid "Select content type"
 msgstr ""
 
@@ -1136,7 +1164,7 @@ msgstr ""
 msgid "Select File"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:132
+#: src/lib/components/metadata/BasicInfoFields.svelte:139
 msgid "Select language"
 msgstr ""
 
@@ -1148,7 +1176,7 @@ msgstr ""
 msgid "Selected"
 msgstr ""
 
-#: src/lib/components/metadata/MetadataEditor.svelte:232
+#: src/lib/components/metadata/MetadataEditor.svelte:239
 msgid "Series information, EPUB version, and publication-specific metadata"
 msgstr ""
 
@@ -1156,16 +1184,16 @@ msgstr ""
 msgid "Serif"
 msgstr ""
 
-#: src/lib/components/metadata/fields/DateMetadataField.svelte:68
+#: src/lib/components/metadata/fields/DateMetadataField.svelte:82
 msgid "Set to today"
 msgstr ""
 
-#: src/lib/Sidebar.svelte:56
-#: src/lib/navigation/views/SettingsView.svelte:161
+#: src/lib/Sidebar.svelte:58
+#: src/lib/navigation/views/SettingsView.svelte:211
 msgid "Settings"
 msgstr ""
 
-#: src/lib/components/spine/EditorPane.svelte:338
+#: src/lib/components/spine/EditorPane.svelte:430
 msgid "Single Pane"
 msgstr ""
 
@@ -1189,7 +1217,7 @@ msgstr ""
 msgid "Sort by size"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:133
+#: src/lib/components/metadata/AdvancedFields.svelte:143
 msgid "Source"
 msgstr ""
 
@@ -1201,19 +1229,19 @@ msgstr ""
 msgid "Spine item management"
 msgstr ""
 
-#: src/App.svelte:623
+#: src/App.svelte:636
 msgid "Spine Items"
 msgstr ""
 
-#: src/App.svelte:687
+#: src/App.svelte:701
 msgid "Spine Preview"
 msgstr ""
 
-#: src/lib/components/spine/EditorPane.svelte:338
+#: src/lib/components/spine/EditorPane.svelte:430
 msgid "Split Pane"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:251
+#: src/lib/components/metadata/BasicInfoFields.svelte:265
 msgid "Spread"
 msgstr ""
 
@@ -1226,15 +1254,15 @@ msgstr ""
 msgid "Start fresh"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:183
+#: src/lib/components/metadata/AdvancedFields.svelte:197
 msgid "Subject or keyword"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:175
+#: src/lib/components/metadata/AdvancedFields.svelte:189
 msgid "Subjects"
 msgstr ""
 
-#: src/App.svelte:604
+#: src/App.svelte:616
 msgid "Table of Contents"
 msgstr ""
 
@@ -1242,7 +1270,7 @@ msgstr ""
 msgid "Table of contents editing"
 msgstr ""
 
-#: src/lib/components/metadata/AdvancedFields.svelte:37
+#: src/lib/components/metadata/AdvancedFields.svelte:39
 msgid "Textbook"
 msgstr ""
 
@@ -1250,7 +1278,8 @@ msgstr ""
 msgid "Theme and UI settings"
 msgstr ""
 
-#: src/lib/components/metadata/BasicInfoFields.svelte:118
+#: src/lib/components/metadata/SimpleMetadataView.svelte:26
+#: src/lib/components/metadata/BasicInfoFields.svelte:124
 msgid "Title"
 msgstr ""
 
@@ -1258,7 +1287,7 @@ msgstr ""
 msgid "TOC structure editing"
 msgstr ""
 
-#: src/lib/components/metadata/fields/DateMetadataField.svelte:70
+#: src/lib/components/metadata/fields/DateMetadataField.svelte:84
 msgid "Today"
 msgstr ""
 
@@ -1266,7 +1295,7 @@ msgstr ""
 msgid "Toggle Empty State"
 msgstr ""
 
-#: src/lib/Sidebar.svelte:94
+#: src/lib/Sidebar.svelte:96
 msgid "Toggle sidebar"
 msgstr ""
 
@@ -1283,8 +1312,12 @@ msgstr ""
 msgid "Unique identifier for this item"
 msgstr ""
 
-#: src/App.svelte:643
+#: src/App.svelte:656
 msgid "Unknown View"
+msgstr ""
+
+#: src/lib/components/metadata/SimpleMetadataView.svelte:27
+msgid "Untitled"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestItemEditor.svelte:212
@@ -1292,11 +1325,11 @@ msgstr ""
 msgid "Upload File"
 msgstr ""
 
-#: src/lib/components/manifest/ManifestPreview.svelte:420
+#: src/lib/components/manifest/ManifestPreview.svelte:421
 msgid "Use the download button to access the file"
 msgstr ""
 
-#: src/App.svelte:644
+#: src/App.svelte:657
 msgid "View type"
 msgstr ""
 
@@ -1313,10 +1346,10 @@ msgstr ""
 msgid "You have unsaved project changes. Continue?"
 msgstr ""
 
-#: src/lib/components/manifest/ManifestPreview.svelte:406
+#: src/lib/components/manifest/ManifestPreview.svelte:407
 msgid "Your browser does not support the audio element."
 msgstr ""
 
-#: src/lib/components/manifest/ManifestPreview.svelte:414
+#: src/lib/components/manifest/ManifestPreview.svelte:415
 msgid "Your browser does not support the video element."
 msgstr ""

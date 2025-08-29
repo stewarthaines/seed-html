@@ -104,7 +104,7 @@ export class ValidationError extends WorkspaceServiceError {
   ) {
     super(message, 'VALIDATION_ERROR');
     this.name = 'ValidationError';
-    this.context = context;
+    // Context is already assigned via parameter property
   }
 }
 
@@ -438,9 +438,9 @@ export class WorkspaceService {
       if (await this.fileStorage.fileExists(workspace.id, oldFullPath)) {
         try {
           await this.fileStorage.renameFile(workspace.id, oldFullPath, newFullPath);
-        } catch (error) {
+        } catch (_error) {
           throw new WorkspaceServiceError(
-            `Failed to move file from ${oldItem.href} to ${updates.href}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            `Failed to move file from ${oldItem.href} to ${updates.href}: ${_error instanceof Error ? _error.message : 'Unknown error'}`,
             'FILE_MOVE_ERROR',
             workspace.id
           );
@@ -613,7 +613,7 @@ export class WorkspaceService {
         try {
           const opfFileInfo = await this.fileStorage.getFileInfo(id, workspace.pathInfo.rootfilePath);
           lastModified = opfFileInfo.lastModified;
-        } catch (error) {
+        } catch (_error) {
           // Fallback to metadata timestamp or current date if file info unavailable
           lastModified = workspace.opf.metadata.modifiedDate
             ? new Date(workspace.opf.metadata.modifiedDate)
@@ -643,7 +643,7 @@ export class WorkspaceService {
           epubVersion: '3.0',
           extensionIds,
         });
-      } catch (error) {
+      } catch (_error) {
         // Skip corrupted workspaces
         continue;
       }
@@ -690,7 +690,7 @@ export class WorkspaceService {
           linear: spineItem.linear ?? true,
           mediaType: manifestItem.mediaType || 'application/xhtml+xml',
         });
-      } catch (error) {
+      } catch (_error) {
         // Skip missing files
         continue;
       }

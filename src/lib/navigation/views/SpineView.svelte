@@ -7,6 +7,7 @@
   } from '../../services/workspace/workspace.service.js';
   import type { SpineService } from '../../services/spine/spine.service.js';
   import type { ContentService } from '../../services/content/content.service.js';
+  import type { AudioClipService } from '../../audio/audio-clip.service.js';
   import type { SpineItemWithSource } from '../../spine/types';
   import EditorPane from '../../components/spine/EditorPane.svelte';
   import PreviewPane from '../../components/spine/PreviewPane.svelte';
@@ -38,13 +39,14 @@
   import { getTextFilePath } from '../../source/source-utils.js';
   import type { TextEditorStore } from '../../stores/index.js';
 
-  // Props using clean service architecture
-  export let workspace: WorkspaceState;
-  export let workspaceService: WorkspaceService;
-  export let spineService: SpineService;
+  // Props using clean service architecture  
+  export let workspace: WorkspaceState = null as any;
+  export let workspaceService: WorkspaceService = null as any;
+  export let spineService: SpineService = null as any;
   export let contentService: ContentService;
+  export let audioClipService: AudioClipService | null = null;
   export let selectedItemId: string | null = null;
-  export let transformEngine: TransformEngine;
+  export let transformEngine: TransformEngine = null as any;
 
   // Component state
   let selectedItem: SpineItemWithSource | null = null;
@@ -1252,7 +1254,7 @@
   </div>
 {:else if selectedItem && servicesInitialized && previewManager}
   <!-- Editor Pane -->
-  <div data-spine-view on:preview-click={handleSpinePreviewClick} class="spine-editor-wrapper">
+  <div data-spine-view class="spine-editor-wrapper">
     <EditorPane
       bind:this={editorPaneRef}
       {availableFiles1}
@@ -1273,6 +1275,10 @@
       onFileSelect={(pane, filePath, fileType) => handleFileSelect({ detail: { pane, filePath, fileType } } as CustomEvent<{ pane: 1 | 2; filePath: string; fileType: string }>)}
       onContentChange={(pane, content) => handlePaneContentChange({ detail: { pane, content } } as CustomEvent<{ pane: 1 | 2; content: string }>)}
       onForceUpdate={() => forcePreviewUpdate()}
+      {workspace}
+      {audioClipService}
+      {workspaceService}
+      {settingsService}
     />
   </div>
 {:else}

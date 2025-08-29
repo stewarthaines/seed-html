@@ -16,7 +16,11 @@
   import type { TransformError } from '$lib/types/spine-editor.js';
   import type { TextEditorStore } from '$lib/stores/index.js';
   import type { ContentService } from '$lib/services/content/content.service.js';
+  import type { AudioClipService } from '$lib/audio/audio-clip.service.js';
+  import type { WorkspaceService, WorkspaceState } from '$lib/services/workspace/workspace.service.js';
+  import type { SettingsService } from '$lib/services/settings/settings.service.js';
   import { t } from '$lib/i18n';
+  import AudioClipEditor from '$lib/components/audio/AudioClipEditor.svelte';
 
   // Props using Svelte 5 runes syntax
   let {
@@ -36,9 +40,14 @@
     contentService,
     onPaneToggle,
     onFileSelect,
-    onContentChange,
+    onContentChange: _onContentChange,
     onForceUpdate,
-    onPreviewClick = null,
+    onPreviewClick: _onPreviewClick = null,
+    // Audio clip editor integration props
+    workspace = null,
+    audioClipService = null,
+    workspaceService = null,
+    settingsService = null,
   }: {
     transformError?: TransformError | null;
     transformWarnings?: string[];
@@ -71,6 +80,11 @@
     onPreviewClick?:
       | ((detail: { text: string; documentPosition: number; elementType: string }) => void)
       | null;
+    // Audio clip editor integration props
+    workspace?: WorkspaceState | null;
+    audioClipService?: AudioClipService | null;
+    workspaceService?: WorkspaceService | null;
+    settingsService?: SettingsService | null;
   } = $props();
 
   /**
@@ -78,6 +92,57 @@
    */
   function togglePaneMode(): void {
     onPaneToggle?.();
+  }
+
+  /**
+   * Toggle audio clip editor visibility
+   */
+  function toggleAudioEditor(): void {
+    audioEditorVisible = !audioEditorVisible;
+  }
+
+  /**
+   * Handle textarea selection change for audio editor
+   */
+  function handleTextareaSelection(pane: 1 | 2): void {
+    const textarea = pane === 1 ? pane1Textarea : pane2Textarea;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    
+    if (start !== end) {
+      textareaSelection = { start, end };
+    } else {
+      textareaSelection = null;
+    }
+  }
+
+  /**
+   * Insert clip directive at current cursor position
+   */
+  function insertClipDirective(clipText: string): void {
+    const textarea = textContentPane === 1 ? pane1Textarea : pane2Textarea;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const currentValue = textarea.value;
+    
+    // Insert the clip directive at cursor position
+    const newValue = currentValue.slice(0, start) + clipText + currentValue.slice(end);
+    textarea.value = newValue;
+    
+    // Update cursor position after insertion
+    const newCursorPos = start + clipText.length;
+    textarea.setSelectionRange(newCursorPos, newCursorPos);
+    
+    // Trigger input event to update store
+    const inputEvent = new Event('input', { bubbles: true });
+    textarea.dispatchEvent(inputEvent);
+    
+    // Focus back to textarea
+    textarea.focus();
   }
 
   /**
@@ -209,6 +274,33 @@
   let pane1Textarea: HTMLTextAreaElement | undefined = $state();
   let pane2Textarea: HTMLTextAreaElement | undefined = $state();
 
+  // Audio clip editor state
+  let audioEditorVisible = $state<boolean>(false);
+  let textareaSelection = $state<{ start: number; end: number } | null>(null);
+
+  // Check if workspace has audio files (derived reactive)
+  let hasAudioFiles = $derived((() => {
+    if (!workspace?.opf?.manifest) return false;
+    return workspace.opf.manifest.some(item => 
+      item.mediaType && item.mediaType.startsWith('audio/')
+    );
+  })());
+
+  // Determine which pane has text content
+  let textContentPane = $derived((() => {
+    if (pane1SelectedFile === 'text') return 1;
+    if (pane2SelectedFile === 'text') return 2;
+    return null;
+  })());
+
+  // Text content for audio editor (bindable)
+  let textContent = $derived.by(() => {
+    const pane = textContentPane;
+    if (pane === 1) return pane1FileStore ? ($pane1FileStore?.content || '') : '';
+    if (pane === 2) return pane2FileStore ? ($pane2FileStore?.content || '') : '';
+    return '';
+  });
+
   /**
    * Normalize text for better matching by removing/standardizing punctuation and whitespace
    */
@@ -338,6 +430,19 @@
           {editorMode === 'single' ? $t('Split Pane') : $t('Single Pane')}
         </span>
       </button>
+      
+      {#if ((pane1SelectedFile === 'text' && editorMode === 'single') || (editorMode === 'dual' && (pane1SelectedFile === 'text' || pane2SelectedFile === 'text'))) && hasAudioFiles && audioClipService && workspace}
+        <button
+          type="button"
+          class="audio-toggle-btn"
+          class:active={audioEditorVisible}
+          onclick={toggleAudioEditor}
+          title={audioEditorVisible ? 'Hide Audio Clip Editor' : 'Show Audio Clip Editor'}
+          aria-label={audioEditorVisible ? 'Hide Audio Clip Editor' : 'Show Audio Clip Editor'}
+        >
+          🎵 Audio Clip Editor
+        </button>
+      {/if}
     </div>
 
     <div class="editor-status">
@@ -387,17 +492,33 @@
       {#if editorMode === 'dual'}
         <div class="editor-pane pane-2">
           <div class="pane-header">
-            <select
-              class="file-selector"
-              value={pane2SelectedFile}
-              onchange={e => handleFileSelect(2, e)}
-              aria-label="Select file for pane 2"
-            >
-              <option value="" disabled>Select file...</option>
-              {#each availableFiles2 as file}
-                <option value={file.value}>{file.label}</option>
-              {/each}
-            </select>
+            <div class="pane-header-content">
+              <select
+                class="file-selector"
+                value={pane2SelectedFile}
+                onchange={e => handleFileSelect(2, e)}
+                aria-label="Select file for pane 2"
+              >
+                <option value="" disabled>Select file...</option>
+                {#each availableFiles2 as file}
+                  <option value={file.value}>{file.label}</option>
+                {/each}
+              </select>
+            </div>
+            
+            {#if pane2SelectedFile === 'text' && audioEditorVisible && hasAudioFiles && audioClipService && workspace && settingsService && workspaceService}
+              <div class="audio-editor-panel">
+                <AudioClipEditor
+                  {workspace}
+                  {audioClipService}
+                  {workspaceService}
+                  {settingsService}
+                  {textContent}
+                  {textareaSelection}
+                  onInsertClip={insertClipDirective}
+                />
+              </div>
+            {/if}
           </div>
 
           <div class="textarea-container">
@@ -408,6 +529,9 @@
               value={pane2FileStore ? $pane2FileStore?.content || '' : ''}
               placeholder={getPlaceholder(pane2SelectedFile)}
               oninput={handlePane2Input}
+              onselect={() => pane2SelectedFile === 'text' && handleTextareaSelection(2)}
+              onmouseup={() => pane2SelectedFile === 'text' && handleTextareaSelection(2)}
+              onkeyup={() => pane2SelectedFile === 'text' && handleTextareaSelection(2)}
               spellcheck={pane2SelectedFile === 'text'}
               autocomplete="off"
               autocapitalize="off"
@@ -427,17 +551,33 @@
       <!-- Pane 1 (always visible, bottom when in dual mode) -->
       <div class="editor-pane pane-1">
         <div class="pane-header">
-          <select
-            class="file-selector"
-            value={pane1SelectedFile}
-            onchange={e => handleFileSelect(1, e)}
-            aria-label="Select file for pane 1"
-          >
-            <option value="" disabled>Select file...</option>
-            {#each availableFiles1 as file}
-              <option value={file.value}>{file.label}</option>
-            {/each}
-          </select>
+          <div class="pane-header-content">
+            <select
+              class="file-selector"
+              value={pane1SelectedFile}
+              onchange={e => handleFileSelect(1, e)}
+              aria-label="Select file for pane 1"
+            >
+              <option value="" disabled>Select file...</option>
+              {#each availableFiles1 as file}
+                <option value={file.value}>{file.label}</option>
+              {/each}
+            </select>
+          </div>
+          
+          {#if pane1SelectedFile === 'text' && audioEditorVisible && hasAudioFiles && audioClipService && workspace && settingsService && workspaceService}
+            <div class="audio-editor-panel">
+              <AudioClipEditor
+                {workspace}
+                {audioClipService}
+                {workspaceService}
+                {settingsService}
+                {textContent}
+                {textareaSelection}
+                onInsertClip={insertClipDirective}
+              />
+            </div>
+          {/if}
         </div>
 
         <div class="textarea-container">
@@ -448,6 +588,9 @@
             value={pane1FileStore ? $pane1FileStore?.content || '' : ''}
             placeholder={getPlaceholder(pane1SelectedFile)}
             oninput={handlePane1Input}
+            onselect={() => pane1SelectedFile === 'text' && handleTextareaSelection(1)}
+            onmouseup={() => pane1SelectedFile === 'text' && handleTextareaSelection(1)}
+            onkeyup={() => pane1SelectedFile === 'text' && handleTextareaSelection(1)}
             spellcheck={pane1SelectedFile === 'text'}
             autocomplete="off"
             autocapitalize="off"
@@ -655,13 +798,19 @@
   }
 
   .pane-header {
-    padding: var(--space-2);
     background: var(--color-bg-tertiary);
     border-bottom: 1px solid var(--color-border-default);
   }
 
+  .pane-header-content {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2);
+  }
+
   .file-selector {
-    width: 100%;
+    flex: 1;
     padding: var(--space-2);
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-sm);
@@ -675,6 +824,42 @@
     outline: none;
     border-color: var(--color-accent-primary);
     box-shadow: 0 0 0 var(--focus-ring-width) var(--color-focus);
+  }
+
+  .audio-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    cursor: pointer;
+    transition: all var(--duration-fast) ease;
+    white-space: nowrap;
+  }
+
+  .audio-toggle-btn:hover {
+    background: var(--color-bg-hover);
+    border-color: var(--color-accent-primary);
+  }
+
+  .audio-toggle-btn:focus-visible {
+    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  .audio-toggle-btn.active {
+    background: var(--color-accent-primary);
+    color: var(--color-accent-contrast);
+    border-color: var(--color-accent-primary);
+  }
+
+  .audio-editor-panel {
+    border-top: 1px solid var(--color-border-default);
   }
 
   .textarea-container {

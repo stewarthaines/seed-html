@@ -61,6 +61,10 @@ export class BlobURLManager {
    * processing pipeline which loops through elements sequentially.
    */
   async createBlobURL(filePath: string): Promise<string> {
+    console.log('🔗 BlobURLManager: Creating blob URL for path:', filePath);
+    console.log('🔗 BlobURLManager: Base path:', this.basePath);
+    console.log('🔗 BlobURLManager: Active workspace:', this.activeWorkspaceId);
+    
     // Check capacity before creating
     if (this.registry.count >= this.registry.maxCount) {
       this.onCapacityReached?.();
@@ -69,6 +73,7 @@ export class BlobURLManager {
 
     // Check if already cached
     if (this.registry.urls.has(filePath)) {
+      console.log('🔗 BlobURLManager: Using cached blob URL for:', filePath);
       return this.registry.urls.get(filePath)!;
     }
 
@@ -78,6 +83,7 @@ export class BlobURLManager {
 
     // Resolve to full workspace path
     const resolvedPath = this.resolveManifestPath(filePath);
+    console.log('🔗 BlobURLManager: Resolved full path:', resolvedPath);
 
     try {
       let blobURL: string;
@@ -113,6 +119,7 @@ export class BlobURLManager {
 
       // Register for cleanup
       this.addToRegistry(filePath, blobURL);
+      console.log('🔗 BlobURLManager: Final blob URL created:', blobURL);
 
       return blobURL;
     } catch (error) {

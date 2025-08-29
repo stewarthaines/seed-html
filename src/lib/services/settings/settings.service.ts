@@ -27,6 +27,7 @@ export interface EPUBSettings {
   text_transform: string;
   dom_transforms: string[];
   spine_basename: string;
+  audio_clip_template?: string;
   cover?: {
     template: string;
     background_color: string;
@@ -260,6 +261,7 @@ export class SettingsService {
         text_transform: settings.text_transform ?? defaults.text_transform,
         dom_transforms: settings.dom_transforms ?? defaults.dom_transforms,
         spine_basename: settings.spine_basename ?? defaults.spine_basename,
+        audio_clip_template: settings.audio_clip_template ?? defaults.audio_clip_template,
         cover: settings.cover ? {
           template: settings.cover.template ?? 'default',
           background_color: settings.cover.background_color ?? '#ffffff',
@@ -294,7 +296,8 @@ export class SettingsService {
     return {
       text_transform: 'SOURCE/scripts/transformText.js',
       dom_transforms: ['SOURCE/scripts/transformDom.js'],
-      spine_basename: 'chapter'
+      spine_basename: 'chapter',
+      audio_clip_template: ':clip[<label>]{src=<href> begin=<begin> end=<end>}'
     };
   }
 
@@ -491,6 +494,17 @@ export class SettingsService {
     // Validate spine basename
     if (settings.spine_basename !== undefined && !settings.spine_basename.trim()) {
       errors.push('Spine basename cannot be empty');
+    }
+
+    // Validate audio clip template
+    if (settings.audio_clip_template !== undefined && settings.audio_clip_template) {
+      const template = settings.audio_clip_template;
+      const requiredPlaceholders = ['<href>', '<begin>', '<end>'];
+      const missingPlaceholders = requiredPlaceholders.filter(placeholder => !template.includes(placeholder));
+      
+      if (missingPlaceholders.length > 0) {
+        errors.push(`Audio clip template missing required placeholders: ${missingPlaceholders.join(', ')}`);
+      }
     }
 
     // Validate cover settings
