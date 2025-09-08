@@ -10,7 +10,7 @@
   import type { AudioClipService } from '../../audio/audio-clip.service.js';
   import type { SpineItemWithSource } from '../../spine/types';
   import EditorPane from '../../components/spine/EditorPane.svelte';
-  import PreviewPane from '../../components/spine/PreviewPane.svelte';
+  // import PreviewPane from '../../components/spine/PreviewPane.svelte';
   import {
     createSpinePreviewManager,
     DEFAULT_PREVIEW_CONFIG,
@@ -39,19 +39,32 @@
   import { getTextFilePath } from '../../source/source-utils.js';
   import type { TextEditorStore } from '../../stores/index.js';
 
-  // Props using clean service architecture  
-  export let workspace: WorkspaceState = null as any;
-  export let workspaceService: WorkspaceService = null as any;
-  export let spineService: SpineService = null as any;
-  export let contentService: ContentService;
-  export let audioClipService: AudioClipService | null = null;
-  export let selectedItemId: string | null = null;
-  export let transformEngine: TransformEngine = null as any;
+  // Element reference for event binding
+  let spineViewElement = $state<HTMLElement>();
 
-  // Component state
-  let selectedItem: SpineItemWithSource | null = null;
-  let isLoading = false;
-  let error: string | null = null;
+  // Props using clean service architecture with Svelte 5 runes
+  let {
+    workspace = null as any,
+    workspaceService = null as any,
+    spineService = null as any,
+    contentService,
+    audioClipService = null,
+    selectedItemId = null,
+    transformEngine = null as any,
+  }: {
+    workspace: WorkspaceState;
+    workspaceService: WorkspaceService;
+    spineService: SpineService;
+    contentService: ContentService;
+    audioClipService: AudioClipService | null;
+    selectedItemId: string | null;
+    transformEngine: TransformEngine;
+  } = $props();
+
+  // Component state - using $state() for reactivity in Svelte 5
+  let selectedItem = $state<SpineItemWithSource | null>(null);
+  let isLoading = $state(false);
+  let error = $state<string | null>(null);
   let guardId: string;
 
   // Service dependencies for spine editor
@@ -59,10 +72,10 @@
   let extensionManager: ExtensionManager;
   let blobURLManager: BlobURLManager;
   let settingsService: SettingsService;
-  let servicesInitialized = false;
+  let servicesInitialized = $state(false);
 
   // Spine editor state
-  let previewManager: any = null;
+  let previewManager = $state<any>(null);
   let currentContent: CurrentContent = {
     text: '',
   };
@@ -77,29 +90,33 @@
   }> = [];
 
   // Pane-specific available files (filtered to prevent conflicts)
-  let availableFiles1: Array<{
-    value: string;
-    label: string;
-    path: string;
-    href: string;
-    type: 'text' | 'css' | 'javascript' | 'transform';
-  }> = [];
-  let availableFiles2: Array<{
-    value: string;
-    label: string;
-    path: string;
-    href: string;
-    type: 'text' | 'css' | 'javascript' | 'transform';
-  }> = [];
+  let availableFiles1 = $state<
+    Array<{
+      value: string;
+      label: string;
+      path: string;
+      href: string;
+      type: 'text' | 'css' | 'javascript' | 'transform';
+    }>
+  >([]);
+  let availableFiles2 = $state<
+    Array<{
+      value: string;
+      label: string;
+      path: string;
+      href: string;
+      type: 'text' | 'css' | 'javascript' | 'transform';
+    }>
+  >([]);
 
   // Track previous selectedItemId to prevent unnecessary reloads
   let previousSelectedItemId: string | null = null;
 
   // Loading guard to prevent concurrent spine item loads
   let isLoadingSpineItem = false;
-  
+
   // Editor reference for preview click navigation
-  let editorPaneRef: any;
+  let editorPaneRef = $state<any>(null);
 
   // Spine editor configuration interface for persistence (content never persisted)
   interface SpineEditorConfig {
@@ -109,7 +126,7 @@
   }
 
   // Complete pane state tracking including UI state (content for non-text files only)
-  let paneState = {
+  let paneState = $state({
     mode: 'single' as 'single' | 'dual',
     pane1: {
       filePath: '',
@@ -127,7 +144,7 @@
       selectedFileValue: '', // For dropdown display
       content: '', // For CSS/JS files
     },
-  };
+  });
 
   // Reactive stores for spine editor
   const previewContent = writable<string>('');
@@ -137,23 +154,22 @@
   const executionTime = writable<number>(0);
 
   // Pane-specific error state for inline error display
-  let pane1Error: string | null = null;
-  let pane2Error: string | null = null;
+  let pane1Error = $state<string | null>(null);
+  let pane2Error = $state<string | null>(null);
 
   // File-backed content stores for any text-based file (text, CSS, JS, transform scripts)
   let fileContentStores = new Map<string, TextEditorStore>();
 
   // Simple reactive store variables - assigned imperatively in handleFileSelect
-  let pane1Store: TextEditorStore | null = null;
-  let pane2Store: TextEditorStore | null = null;
+  let pane1Store = $state<TextEditorStore | null>(null);
+  let pane2Store = $state<TextEditorStore | null>(null);
 
   // Workspace change tracking for store cleanup
   let previousWorkspaceId: string | null = null;
 
   // Workspace change detection - cleanup stores when workspace switches
-  $: {
+  $effect(() => {
     if (workspace?.id && (previousWorkspaceId === null || workspace.id !== previousWorkspaceId)) {
-
       // Clean up local stores
       for (const [filePath, store] of fileContentStores) {
         store.destroy();
@@ -173,7 +189,7 @@
 
     // Update tracking
     previousWorkspaceId = workspace?.id || null;
-  }
+  });
 
   // Store subscriptions will be handled after implementing direct assignment
 
@@ -497,7 +513,6 @@
 
       // Create or reuse preview manager (workspace singleton pattern)
       if (!previewManager) {
-
         // First time creation - initialize workspace-scoped preview manager
         previewManager = createSpinePreviewManager(
           workspace.id,
@@ -520,7 +535,6 @@
         // Load initial content and render
         await previewManager.loadInitialContent();
       } else {
-
         // Existing preview manager - switch spine context
         await previewManager.switchToSpineItem(selectedItem.idref, selectedItem);
       }
@@ -640,7 +654,6 @@
     // Persist pane configuration to navigationStore
     persistPaneConfiguration();
 
-
     // Get or create store for this file (stores are cached in fileContentStores map)
     const store = await getOrCreateFileStore(selectedFile, workspace.id, workspaceService);
 
@@ -696,7 +709,10 @@
     const { contentType, filePath, fileHref, fileType } = paneState[paneKey];
 
     // Validate JavaScript syntax for JS and transform files
-    if ((fileType.includes('javascript') || fileType.includes('js') || fileType === 'transform') && content.trim()) {
+    if (
+      (fileType.includes('javascript') || fileType.includes('js') || fileType === 'transform') &&
+      content.trim()
+    ) {
       const syntaxError = validateJavaScriptSyntax(content);
       if (syntaxError) {
         // Set pane-specific error for inline display
@@ -1016,11 +1032,37 @@
   }
 
   // Handle preview click for text selection in editor
-  function handleSpinePreviewClick(event: CustomEvent<{ text: string; documentPosition: number; elementType: string }>) {
+  export function handlePreviewClick(
+    event: CustomEvent<{ text: string; documentPosition: number; elementType: string }>
+  ) {
+    console.log('handlePreviewClick', event.detail.text);
     if (editorPaneRef && typeof editorPaneRef.findAndSelectText === 'function') {
       editorPaneRef.findAndSelectText(event.detail);
     }
   }
+
+  // Set up preview-click event listener using Svelte 5 runes
+  $effect(() => {
+    if (!spineViewElement) return;
+
+    const handlePreviewClickEvent = (event: Event) => {
+      const customEvent = event as CustomEvent<{
+        text: string;
+        documentPosition: number;
+        elementType: string;
+      }>;
+      handlePreviewClick(customEvent);
+    };
+
+    spineViewElement.addEventListener('preview-click', handlePreviewClickEvent);
+
+    // Cleanup function
+    return () => {
+      if (spineViewElement) {
+        spineViewElement.removeEventListener('preview-click', handlePreviewClickEvent);
+      }
+    };
+  });
 
   // Race condition prevention
   let currentSpineItemLoadPromise: Promise<void> | null = null;
@@ -1212,7 +1254,7 @@
   });
 
   // React to prop changes - only reload when selectedItemId actually changes
-  $: {
+  $effect(() => {
     // Only react if selectedItemId actually changed
     if (selectedItemId !== previousSelectedItemId) {
       previousSelectedItemId = selectedItemId;
@@ -1233,7 +1275,7 @@
         }
       }
     }
-  }
+  });
 </script>
 
 {#if isLoading}
@@ -1254,7 +1296,7 @@
   </div>
 {:else if selectedItem && servicesInitialized && previewManager}
   <!-- Editor Pane -->
-  <div data-spine-view class="spine-editor-wrapper">
+  <div bind:this={spineViewElement} data-spine-view class="spine-editor-wrapper">
     <EditorPane
       bind:this={editorPaneRef}
       {availableFiles1}
@@ -1272,8 +1314,17 @@
       pane2FileStore={pane2Store}
       {contentService}
       onPaneToggle={() => handlePaneToggle()}
-      onFileSelect={(pane, filePath, fileType) => handleFileSelect({ detail: { pane, filePath, fileType } } as CustomEvent<{ pane: 1 | 2; filePath: string; fileType: string }>)}
-      onContentChange={(pane, content) => handlePaneContentChange({ detail: { pane, content } } as CustomEvent<{ pane: 1 | 2; content: string }>)}
+      onFileSelect={(pane, filePath, fileType) =>
+        handleFileSelect({ detail: { pane, filePath, fileType } } as CustomEvent<{
+          pane: 1 | 2;
+          filePath: string;
+          fileType: string;
+        }>)}
+      onContentChange={(pane, content) =>
+        handlePaneContentChange({ detail: { pane, content } } as CustomEvent<{
+          pane: 1 | 2;
+          content: string;
+        }>)}
       onForceUpdate={() => forcePreviewUpdate()}
       {workspace}
       {audioClipService}

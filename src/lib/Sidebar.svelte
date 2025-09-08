@@ -120,31 +120,23 @@
             <div class="workspace-title-section">
               {#if isExpanded}
                 <div class="workspace-title-header">
-                  <h3
-                    class="workspace-title"
-                    title={workspaceTitle || 'Untitled Project'}
-                  >
+                  <h3 class="workspace-title" title={workspaceTitle || 'Untitled Project'}>
                     {workspaceTitle || 'Untitled Project'}
                   </h3>
                   {#if extensions.length > 0 || extensionsLoading}
-                    <span class="workspace-extensions">
+                    <h3 class="workspace-extensions">
                       {#if extensionsLoading}
                         Loading...
                       {:else}
                         {extensions.map(ext => ext.name).join(', ')}
                       {/if}
-                    </span>
+                    </h3>
                   {/if}
                 </div>
               {:else}
                 <div class="workspace-title-header compact">
-                  <div
-                    class="workspace-title-compact"
-                    title={workspaceTitle || 'Untitled Project'}
-                  >
-                    {(workspaceTitle || 'Untitled Project')
-                      .slice(0, 2)
-                      .toUpperCase()}
+                  <div class="workspace-title-compact" title={workspaceTitle || 'Untitled Project'}>
+                    {(workspaceTitle || 'Untitled Project').slice(0, 2).toUpperCase()}
                   </div>
                   {#if extensions.length > 0 && !extensionsLoading}
                     <div
@@ -564,12 +556,13 @@
 
   .workspace-title-header {
     display: flex;
-    align-items: center;
+    align-items: left;
     gap: var(--space-2);
-    padding-block: var(--space-3);
+    padding-block: var(--space-2);
     padding-inline: var(--space-2);
     min-block-size: var(--touch-target-min);
-    overflow: hidden;
+    /*overflow: hidden;*/
+    flex-direction: column;
   }
 
   .workspace-title-header.compact {

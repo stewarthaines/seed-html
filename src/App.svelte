@@ -28,7 +28,7 @@
   import { SpineService } from './lib/services/spine/spine.service.js';
   import { MetadataService } from './lib/services/metadata/metadata.service.js';
   import { BlobURLManager } from './lib/blob-url/blob-url-manager.js';
-import { ExtensionManager } from './lib/extensions/extension-manager.js';
+  import { ExtensionManager } from './lib/extensions/extension-manager.js';
   import { EPUBPackager } from './lib/epub/EPUBPackager.js';
   import { EPUBUnpacker } from './lib/epub/EPUBUnpacker.js';
   import { generateEPUBTimestamp } from './lib/epub/opf-utils.js';
@@ -78,7 +78,9 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
   let currentWorkspaceState = $derived(appState?.workspace);
 
   // Metadata field focus tracking for OPF preview highlighting
-  let focusedMetadataField = $state<keyof import('./lib/epub/opf-utils.js').EPUBMetadata | null>(null);
+  let focusedMetadataField = $state<keyof import('./lib/epub/opf-utils.js').EPUBMetadata | null>(
+    null
+  );
 
   // Granular reactive signals to prevent loading flicker during metadata updates
   let workspaceMetadata = $derived(currentWorkspaceState?.opf?.metadata);
@@ -117,9 +119,7 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
   // No direct service access needed since EnhancedAppState handles service coordination
 
   // Handle manifest item selection
-  const handleManifestItemSelect = (
-    event: { item: any; type: 'manifest' | 'source' | 'opf' }
-  ) => {
+  const handleManifestItemSelect = (event: { item: any; type: 'manifest' | 'source' | 'opf' }) => {
     selectedManifestItem = event.item;
     selectedManifestItemType = event.type;
   };
@@ -138,29 +138,30 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
   };
 
   // Handle metadata field focus for OPF preview highlighting
-  const handleMetadataFieldFocus = (event: CustomEvent<{ field: keyof import('./lib/epub/opf-utils.js').EPUBMetadata | null }>) => {
+  const handleMetadataFieldFocus = (
+    event: CustomEvent<{ field: keyof import('./lib/epub/opf-utils.js').EPUBMetadata | null }>
+  ) => {
     focusedMetadataField = event.detail.field;
   };
 
   // Handle navigation preview update
-  const handleNavigationPreviewUpdate = (
-    event: CustomEvent<{ xhtml: string; warnings?: string[] }>
-  ) => {
-    navigationPreviewContent = event.detail.xhtml;
+  const handleNavigationPreviewUpdate = (event: { xhtml: string; warnings?: string[] }) => {
+    navigationPreviewContent = event.xhtml;
   };
 
   // Handle navigation anchor clicks
   function handleNavigationClick(chapterId: string) {
+    console.log('handleNavigationClick', chapterId);
     // Find manifest item by matching href
-    const manifestItem = currentWorkspaceState?.opf?.manifest?.find(item => 
+    const manifestItem = currentWorkspaceState?.opf?.manifest?.find(item =>
       item.href?.includes(`${chapterId}.xhtml`)
     );
-    
+
     if (manifestItem) {
       // Use the exact same event flow as SpineSidebar
       const event = new CustomEvent('select-spine-item', {
         detail: { itemId: manifestItem.id },
-        bubbles: true
+        bubbles: true,
       });
       window.dispatchEvent(event);
     }
@@ -188,14 +189,19 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
   };
 
   // Handle preview click for text selection in editor
-  const handlePreviewClick = (detail: { text: string; documentPosition: number; elementType: string }) => {
+  const handlePreviewClick = (detail: {
+    text: string;
+    documentPosition: number;
+    elementType: string;
+  }) => {
     // Dispatch custom event to SpineView to handle text selection
     const spineViewElement = document.querySelector('[data-spine-view]');
     if (spineViewElement) {
+      console.log('handlePreviewClick', detail);
       spineViewElement.dispatchEvent(
         new CustomEvent('preview-click', {
           detail,
-          bubbles: true
+          bubbles: true,
         })
       );
     }
@@ -211,13 +217,13 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
     try {
       // Use workspaceService to remove the manifest item
       const updatedWorkspace = await workspaceService.removeManifestItem(
-        currentWorkspaceState, 
+        currentWorkspaceState,
         event.detail.itemId
       );
-      
+
       // Update the workspace state in appState (same pattern as upload)
       appState.workspace = updatedWorkspace;
-      
+
       // Clear selection if deleted item was selected
       if (selectedManifestItem && selectedManifestItem.id === event.detail.itemId) {
         selectedManifestItem = null;
@@ -246,7 +252,7 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
         // Remote URL provided - fetch the EPUB directly
         console.log(`Downloading EPUB from: ${sourceUrl}`);
         const response = await fetch(sourceUrl);
-        
+
         if (!response.ok) {
           throw new Error(`Failed to download EPUB: ${response.status} ${response.statusText}`);
         }
@@ -271,7 +277,9 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
         throw new Error(result.error || 'Failed to unpack EPUB');
       }
 
-      console.log(`✅ Successfully imported EPUB: ${result.extractedFiles?.length} files extracted`);
+      console.log(
+        `✅ Successfully imported EPUB: ${result.extractedFiles?.length} files extracted`
+      );
 
       // Load the new workspace
       await appState.loadWorkspace(workspaceId);
@@ -290,7 +298,6 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
 
       // Clear hash to clean up URL after successful import
       location.hash = '';
-
     } catch (error) {
       console.error('Failed to import EPUB:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -317,7 +324,7 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
       input.type = 'file';
       input.accept = '.epub';
 
-      input.onchange = (event) => {
+      input.onchange = event => {
         const file = (event.target as HTMLInputElement).files?.[0];
         if (file) {
           resolve(file);
@@ -358,7 +365,7 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
     try {
       // Update metadata.modifiedDate first
       const updatedWorkspace = await workspaceService.updateMetadata(currentWorkspaceState, {
-        modifiedDate: generateEPUBTimestamp()
+        modifiedDate: generateEPUBTimestamp(),
       });
 
       // Update the workspace state in appState
@@ -368,15 +375,17 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
 
       // Then package EPUB with progress tracking
       const result = await epubPackager.packageEPUB(workspaceId, {
-        progressCallback: (progress) => {
-          console.log(`Packaging progress: ${progress.phase} - ${progress.processedFiles}/${progress.totalFiles} files`);
-        }
+        progressCallback: progress => {
+          console.log(
+            `Packaging progress: ${progress.phase} - ${progress.processedFiles}/${progress.totalFiles} files`
+          );
+        },
       });
 
       if (result.success && result.blob && result.filename) {
         // Immediately download the packaged EPUB
         epubPackager.downloadEPUB(result.blob, result.filename);
-        
+
         console.log(`✅ Successfully packaged and downloaded: ${result.filename}`);
       } else {
         throw new Error(result.error || 'Unknown packaging error');
@@ -412,6 +421,7 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
         transformEngine = new TransformEngine(blobURLManager, extensionManager);
         await transformEngine.initialize();
         transformEngineReady = true;
+        // transformEngine.setDebugMode(true);
 
         // Create AppState with transform engine
         appState = new EnhancedAppState(
@@ -451,7 +461,7 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
     // Handle hashchange events for remote EPUB imports
     const handleHashChange = () => {
       const fragment = window.location.hash.slice(1); // Remove #
-      
+
       if (fragment.startsWith('http')) {
         // URL-encoded EPUB URL in hash fragment
         try {
@@ -505,7 +515,12 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
     <p>Initializing application...</p>
   </div>
 {:else}
-  <LayoutManager hasWorkspace={!!currentWorkspaceId} currentWorkspace={currentWorkspaceState} {workspaceTitle} {extensionManager}>
+  <LayoutManager
+    hasWorkspace={!!currentWorkspaceId}
+    currentWorkspace={currentWorkspaceState}
+    {workspaceTitle}
+    {extensionManager}
+  >
     <svelte:fragment slot="sidebar-spine">
       {#if !initialized}
         <div class="placeholder-content">
@@ -608,7 +623,12 @@ import { ExtensionManager } from './lib/extensions/extension-manager.js';
             workspace={currentWorkspaceState}
             {workspaceService}
             {spineService}
-            on:previewUpdate={handleNavigationPreviewUpdate}
+            transformEngine={appState.getTransformEngine()}
+            settingsService={appState.getSettingsService()}
+            extensionManager={appState.getExtensionManager()}
+            {blobURLManager}
+            {fileStorage}
+            previewUpdate={handleNavigationPreviewUpdate}
           />
         {:else}
           <PlaceholderView

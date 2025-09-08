@@ -163,17 +163,17 @@
   function handleIframeLoad() {
     if (iframeElement) {
       injectDeviceStyles(iframeElement, deviceSize, fontFamily, fontSizeAdjustment);
-      
+
       // Add click handler for navigation
       if (onNavigate && iframeElement.contentDocument) {
-        iframeElement.contentDocument.addEventListener('click', (e) => {
+        iframeElement.contentDocument.addEventListener('click', e => {
           const target = e.target as HTMLAnchorElement;
           if (target.tagName === 'A' && target.href) {
             const href = target.getAttribute('href');
             if (href && href.includes('.xhtml')) {
               e.preventDefault();
               // Extract chapter ID from Text/chapter1.xhtml
-              const match = href.match(/([^/]+)\.xhtml$/);
+              const match = href.match(/([^/]+)\.xhtml(#.*)?$/);
               if (match) {
                 const chapterId = match[1];
                 onNavigate(chapterId);

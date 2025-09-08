@@ -483,14 +483,14 @@ class TransformExecutionEngine {
       // Create a body element with the container's attributes and content
       const serializer = new XMLSerializer();
       const bodyElement = document.createElement('body');
-      
+
       // Copy all attributes from container to body
       for (let i = 0; i < tempContainer.attributes.length; i++) {
         const attr = tempContainer.attributes[i];
         bodyElement.setAttribute(attr.name, attr.value);
       }
       bodyElement.innerHTML = tempContainer.innerHTML;
-      
+
       return serializer.serializeToString(bodyElement);
     } finally {
       this.cleanupTempAttachment(tempContainer);

@@ -61,10 +61,6 @@ export class BlobURLManager {
    * processing pipeline which loops through elements sequentially.
    */
   async createBlobURL(filePath: string): Promise<string> {
-    console.log('🔗 BlobURLManager: Creating blob URL for path:', filePath);
-    console.log('🔗 BlobURLManager: Base path:', this.basePath);
-    console.log('🔗 BlobURLManager: Active workspace:', this.activeWorkspaceId);
-    
     // Check capacity before creating
     if (this.registry.count >= this.registry.maxCount) {
       this.onCapacityReached?.();
@@ -73,7 +69,6 @@ export class BlobURLManager {
 
     // Check if already cached
     if (this.registry.urls.has(filePath)) {
-      console.log('🔗 BlobURLManager: Using cached blob URL for:', filePath);
       return this.registry.urls.get(filePath)!;
     }
 
@@ -83,7 +78,6 @@ export class BlobURLManager {
 
     // Resolve to full workspace path
     const resolvedPath = this.resolveManifestPath(filePath);
-    console.log('🔗 BlobURLManager: Resolved full path:', resolvedPath);
 
     try {
       let blobURL: string;
@@ -100,10 +94,13 @@ export class BlobURLManager {
       } else {
         // IndexedDB approach OR CSS processing
         let content: ArrayBuffer;
-        
+
         if (isCSSFile) {
           // CSS files: read as text, process font URLs, then convert back to ArrayBuffer
-          const textContent = await this.fileStorage.readTextFile(this.activeWorkspaceId, resolvedPath);
+          const textContent = await this.fileStorage.readTextFile(
+            this.activeWorkspaceId,
+            resolvedPath
+          );
           const processedCSS = await this.processCSSFontURLs(textContent);
           const uint8Array = new TextEncoder().encode(processedCSS);
           content = uint8Array.buffer as ArrayBuffer;
@@ -111,7 +108,7 @@ export class BlobURLManager {
           // Non-CSS files: read as binary
           content = await this.fileStorage.readFile(this.activeWorkspaceId, resolvedPath);
         }
-        
+
         const mimeType = this.getMimeType(filePath);
         const blob = new Blob([content], { type: mimeType });
         blobURL = URL.createObjectURL(blob);
@@ -119,7 +116,6 @@ export class BlobURLManager {
 
       // Register for cleanup
       this.addToRegistry(filePath, blobURL);
-      console.log('🔗 BlobURLManager: Final blob URL created:', blobURL);
 
       return blobURL;
     } catch (error) {
@@ -298,7 +294,6 @@ export class BlobURLManager {
    * Process a single asset element
    */
   private async processAssetElement(element: Element): Promise<void> {
-
     // Determine attribute name
     let attr: string;
     if (element.hasAttribute('src')) {
@@ -436,11 +431,10 @@ export class BlobURLManager {
         // Create blob URL for the font file (recursive call but for non-CSS file)
         // createBlobURL() will handle path resolution internally
         const blobURL = await this.createBlobURL(manifestPath);
-        
+
         // Replace the URL in CSS while preserving quotes and syntax
         const replacement = `url(${quote}${blobURL}${quote})`;
         processedCSS = processedCSS.replace(fullMatch, replacement);
-
       } catch (error) {
         // Log CSS URL processing errors but don't break the whole CSS
         console.warn(`Failed to process CSS url(${url}):`, error);

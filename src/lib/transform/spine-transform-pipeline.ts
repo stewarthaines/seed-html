@@ -31,7 +31,11 @@ export class SpineTransformPipeline {
   /**
    * Execute transform pipeline with text input
    */
-  async executeTransform(plainText: string, timeout = 3000, idref?: string): Promise<TransformResult> {
+  async executeTransform(
+    plainText: string,
+    timeout = 3000,
+    idref?: string
+  ): Promise<TransformResult> {
     try {
       // Load and set transform scripts in engine
       const scripts = await this.loadTransformScripts();

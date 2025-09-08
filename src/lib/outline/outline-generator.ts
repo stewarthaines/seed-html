@@ -6,8 +6,13 @@
  */
 
 import type { SpineItemWithSource } from '../spine/types';
-import type { WorkspaceService, WorkspacePathInfo } from '../services/workspace/workspace.service.js';
-import type { TransformPipeline } from '../transform/transform-pipeline';
+import type {
+  WorkspaceService,
+  WorkspacePathInfo,
+} from '../services/workspace/workspace.service.js';
+import type { SpineTransformPipeline } from '$lib/transform/spine-transform-pipeline';
+// import type { TransformEngine } from '$lib/infrastructure/transform-engine';
+// import type { TransformPipeline } from '$lib/transform/transform-pipeline';
 
 // Type definitions for public API
 
@@ -93,14 +98,14 @@ export class OutlineGenerator {
     pathInfo?: WorkspacePathInfo
   ): Promise<NavigationDocument> {
     // Default pathInfo if not provided
-    if (!pathInfo) {
-      pathInfo = {
-        rootfilePath: 'OEBPS/content.opf',
-        basePath: 'OEBPS',
-        opfFileName: 'content.opf'
-      };
-    }
-    
+    // if (!pathInfo) {
+    //   pathInfo = {
+    //     rootfilePath: 'OEBPS/content.opf',
+    //     basePath: 'OEBPS',
+    //     opfFileName: 'content.opf',
+    //   };
+    // }
+
     // Use fixed options for the current architecture
     const opts = {
       includeUntitled: true,
@@ -121,7 +126,7 @@ export class OutlineGenerator {
 
       try {
         // Construct full file path using workspace basePath
-        const fullFilePath = `${pathInfo.basePath}/${spineItem.href}`;
+        const fullFilePath = `${pathInfo?.basePath}/${spineItem.href}`;
         const xhtmlBuffer = await workspaceService.readFile(workspaceId, fullFilePath);
         const xhtmlContent = new TextDecoder().decode(xhtmlBuffer);
 
@@ -187,62 +192,59 @@ export class OutlineGenerator {
    */
   static async processUserContent(
     navText: string,
-    transformPipeline: TransformPipeline,
+    transformPipeline: SpineTransformPipeline,
     workspaceId: string,
     options?: ProcessingOptions
   ): Promise<NavigationDocument> {
     const opts = {
       validationLevel: 'strict' as const,
-      errorHandling: 'throw' as const,
+      // errorHandling: 'throw' as const,
       documentTitle: 'Navigation',
       ...options,
     };
 
-    try {
-      // Transform user text through transform pipeline
-      const result = await transformPipeline.transformText(navText, workspaceId, 'nav');
+    // Transform user text through transform pipeline
+    //transformPipeline.setDebugMode(true);
+    const result = await transformPipeline.executeTransform(navText, 2000, 'nav');
 
-      // Use transformed content as navigation XHTML
-      let xhtmlContent = result.transformedText || '';
+    // const result = await transformEngine.executeTransform(navText, 2000, 'nav');
+    // Use transformed content as navigation XHTML
+    let xhtmlContent = result.html?.replace(/<body.*?>(.*)<\/body>/s, '$1') || '';
+    const documentTitle =
+      this.extractTitleFromXHTML(
+        `<?xml version="1.0" encoding="UTF-8"?><html><body>${xhtmlContent}</body></html>`,
+        'nav.xhtml',
+        0,
+        'heading'
+      ) || opts.documentTitle;
 
-      // If transformed content is empty or doesn't have EPUB structure, generate proper structure
-      if (!xhtmlContent || !xhtmlContent.includes('<?xml version="1.0" encoding="UTF-8"?>')) {
-        xhtmlContent = this.generateNavigationXHTML([], opts.documentTitle);
-      }
+    xhtmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
+<head>
+  <title>${this.escapeXML(documentTitle)}</title>
+  <meta charset="UTF-8"/>
+</head>
+<body>
+  <nav epub:type="toc" role="navigation">
+    ${xhtmlContent}
+  </nav>
+</body>
+</html>`;
 
-      // Create navigation metadata
-      const metadata: NavigationMetadata = {
-        id: 'nav',
-        href: 'nav.xhtml',
-        mediaType: 'application/xhtml+xml',
-        properties: ['nav'],
-        linear: false,
-      };
+    // Create navigation metadata
+    const metadata: NavigationMetadata = {
+      id: 'nav',
+      href: 'nav.xhtml',
+      mediaType: 'application/xhtml+xml',
+      properties: ['nav'],
+      linear: false,
+    };
 
-      return {
-        xhtmlContent,
-        metadata,
-      };
-    } catch (error) {
-      if (opts.errorHandling === 'throw') {
-        throw error;
-      }
-
-      // Fallback - generate empty navigation
-      const xhtmlContent = this.generateNavigationXHTML([], opts.documentTitle);
-      const metadata: NavigationMetadata = {
-        id: 'nav',
-        href: 'nav.xhtml',
-        mediaType: 'application/xhtml+xml',
-        properties: ['nav'],
-        linear: false,
-      };
-
-      return {
-        xhtmlContent,
-        metadata,
-      };
-    }
+    return {
+      xhtmlContent,
+      metadata,
+    };
   }
 
   /**
