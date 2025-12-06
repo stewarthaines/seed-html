@@ -1,10 +1,10 @@
-# EDITME.html - EPUB Editor
+# SEED.html - Simple EPUB EDitor
 
 A modern browser-based EPUB editor that transforms plain text into beautifully formatted ebooks. Built with Svelte, TypeScript, and cutting-edge web technologies.
 
 ## Overview
 
-EDITME.html is a sophisticated EPUB editing application that runs entirely in your web browser. It enables authors to create, edit, and publish EPUB files using a simple plain text workflow with powerful transformation capabilities.
+SEED.html is a sophisticated EPUB editing application that runs entirely in your web browser. It enables authors to create, edit, and publish EPUB files using a simple plain text workflow with powerful transformation capabilities.
 
 ### Key Features
 
@@ -18,11 +18,11 @@ EDITME.html is a sophisticated EPUB editing application that runs entirely in yo
 
 ## Distribution
 
-EDITME.html is distributed as **freeware for personal use** under three models:
+SEED.html is distributed under the terms of the MIT license. It is free to use, modify and distribute. In addition to the source repository it may be available in these ways;
 
-1. **Web Application** - Access at [coming soon] for immediate use
-2. **Downloadable HTML** - Save locally for offline editing
-3. **Embedded in EPUBs** - Active EPUB format includes the editor
+1. **Web Application** - Access at [stewarthaines.com](https://stewarthaines.com/epub) for immediate use
+2. **Downloadable HTML** - Save locally from the above site for offline authoring
+3. **Embedded in EPUBs** - The SEED.html app can be added to an EPUB as a manifest item, so it travels with the book for the life of that artifact
 
 See [USER_GUIDE.md](./USER_GUIDE.md) for detailed usage instructions.
 
@@ -37,7 +37,7 @@ See [USER_GUIDE.md](./USER_GUIDE.md) for detailed usage instructions.
 
 ## Development
 
-This section is for developers maintaining or extending EDITME.html.
+This section is for developers maintaining or extending SEED.html.
 
 ### Prerequisites
 
@@ -49,7 +49,7 @@ This section is for developers maintaining or extending EDITME.html.
 
 ```bash
 # Clone the repository
-git clone [repository-url]
+git clone https://github.com/stewarthaines/editme-svelte.git
 cd editme-svelte
 
 # Install dependencies
@@ -102,14 +102,14 @@ npm run build
 npm run preview
 ```
 
-The build creates a single `EDITME.html` file in the `dist/` directory with all assets inlined.
+The build creates a single `index.html` file in the `dist/` directory with all assets inlined.
 
 ## License
 
-EDITME.html Freeware - (c) 2025 Stewart Haines
+(c) 2025 Stewart Haines
 
-This software is provided free of charge for personal use only. Commercial use requires a separate license agreement. See [LICENSE.txt](./LICENSE.txt) for full terms.
+This software open source under the terms of the MIT license. See [LICENSE.txt](./LICENSE.txt) for full terms.
 
 ## Support
 
-For bug reports and feature requests, please [contact info coming soon].
+For bug reports and feature requests, please use [github](https://github.com/stewarthaines/editme-svelte).
