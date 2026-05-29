@@ -644,7 +644,7 @@
             workspace={currentWorkspaceState}
             {workspaceService}
             {spineService}
-            selectedItemId={selectedSpineItemId}
+            selectedItemId={selectedSpineItemId ?? null}
             transformEngine={appState.getTransformEngine()}
             contentService={appState.getContentService()}
             audioClipService={appState.getAudioClipService()}

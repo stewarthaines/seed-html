@@ -140,7 +140,8 @@
 
   // Device size labels
   const getDeviceLabel = (device: (typeof DEVICE_PRESETS)[number]) => {
-    switch (device.name) {
+    const name: string = device.name;
+    switch (name) {
       case 'Fill':
         // i18n: Responsive view that fills all available preview space
         return $t('Fill');
@@ -163,7 +164,7 @@
         // i18n: Device size for largest tablet screens
         return $t('Extra Large');
       default:
-        return device.name;
+        return name;
     }
   };
 
