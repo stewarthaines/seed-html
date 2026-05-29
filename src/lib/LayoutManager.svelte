@@ -17,7 +17,10 @@
   $: sidebarWidth = sidebar.isExpanded ? '250px' : '48px';
 
   // Determine which sections should show preview pane
-  $: showPreviewPane = sidebar.activeSection !== 'workspace' && sidebar.activeSection !== 'settings';
+  $: showPreviewPane =
+    sidebar.activeSection !== 'workspace' &&
+    sidebar.activeSection !== 'settings' &&
+    sidebar.activeSection !== 'publish';
 </script>
 
 <div class="app-layout" style="grid-template-columns: {sidebarWidth} 1fr">

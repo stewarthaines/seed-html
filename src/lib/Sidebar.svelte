@@ -55,6 +55,7 @@
   }> = [
     { id: 'about', icon: 'ℹ️', label: $t('About') },
     { id: 'workspace', icon: '🏠', label: $t('Projects') },
+    { id: 'publish', icon: '📤', label: $t('Publish') },
     { id: 'settings', icon: '⚙️', label: $t('Settings') },
     { id: 'metadata', icon: '📄', label: $t('Metadata'), requiresWorkspace: true },
     { id: 'manifest', icon: '📋', label: $t('Manifest'), requiresWorkspace: true },

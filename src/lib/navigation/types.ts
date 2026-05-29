@@ -8,6 +8,7 @@ export type ViewType =
   | 'manifest' // File listing and management
   | 'navigation' // Table of contents editing
   | 'spine' // Chapter ordering
+  | 'publish' // Packaged epub output management
   | 'settings'; // Application settings
 
 // Navigation store state

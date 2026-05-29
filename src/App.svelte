@@ -9,6 +9,7 @@
   import MetadataEditor from './lib/components/metadata/MetadataEditor.svelte';
   import PlaceholderView from './lib/navigation/views/PlaceholderView.svelte';
   import SpineView from './lib/navigation/views/SpineView.svelte';
+  import PublishView from './lib/navigation/views/PublishView.svelte';
   import SettingsView from './lib/navigation/views/SettingsView.svelte';
   import SpineSidebar from './lib/components/SpineSidebar.svelte';
   import ManifestContainer from './lib/components/manifest/ManifestContainer.svelte';
@@ -27,6 +28,7 @@
   import { WorkspaceService } from './lib/services/workspace/workspace.service.js';
   import { SpineService } from './lib/services/spine/spine.service.js';
   import { MetadataService } from './lib/services/metadata/metadata.service.js';
+  import { PublishService } from './lib/services/publish/publish.service.js';
   import { BlobURLManager } from './lib/blob-url/blob-url-manager.js';
   import { ExtensionManager } from './lib/extensions/extension-manager.js';
   import { EPUBPackager } from './lib/epub/EPUBPackager.js';
@@ -55,6 +57,7 @@
   const workspaceService = new WorkspaceService(fileStorage);
   const spineService = new SpineService(workspaceService);
   const metadataService = new MetadataService(workspaceService);
+  const publishService = new PublishService(fileStorage);
   const epubPackager = new EPUBPackager();
   const epubUnpacker = new EPUBUnpacker();
 
@@ -383,10 +386,15 @@
       });
 
       if (result.success && result.blob && result.filename) {
-        // Immediately download the packaged EPUB
-        epubPackager.downloadEPUB(result.blob, result.filename);
+        console.log(`✅ Successfully packaged: ${result.filename}`);
 
-        console.log(`✅ Successfully packaged and downloaded: ${result.filename}`);
+        // Take the user to the Publish view to see the newly packaged epub.
+        // (No-op if already there; its onMount load picks up the new file when
+        // navigating in fresh.)
+        navigationStore.navigateTo('publish');
+
+        // Notify the Publish view (if already open) to refresh its list.
+        window.dispatchEvent(new CustomEvent('epub-packaged'));
       } else {
         throw new Error(result.error || 'Unknown packaging error');
       }
@@ -658,6 +666,8 @@
             icon="📚"
           />
         {/if}
+      {:else if currentView === 'publish'}
+        <PublishView {publishService} />
       {:else if currentView === 'settings'}
         <SettingsView
           settingsService={appState.getSettingsService()}
