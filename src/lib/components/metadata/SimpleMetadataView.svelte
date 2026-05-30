@@ -34,10 +34,10 @@
 
         {#if metadata.creator && metadata.creator.length > 0}
           <div class="field-row" class:focused={focusedField === 'creator'}>
-            <div class="field-label">{$t('Authors')}</div>
+            <div class="field-label">{$t('Creators')}</div>
             <div class="field-value">
-              {#each metadata.creator as author, index}
-                {author}{#if index < metadata.creator.length - 1}, {/if}
+              {#each metadata.creator as creator, index}
+                {creator.name}{#if index < metadata.creator.length - 1}, {/if}
               {/each}
             </div>
           </div>

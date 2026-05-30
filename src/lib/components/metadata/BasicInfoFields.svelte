@@ -154,9 +154,9 @@
         field="creator"
         creators={metadata.creator ?? []}
         {saving}
-        legend={$t('Authors')}
-        addLabel={$t('Add Another Author')}
-        namePlaceholder={$t('Author name')}
+        legend={$t('Creators')}
+        addLabel={$t('Add Another Creator')}
+        namePlaceholder={$t('Creator name')}
         {getFieldError}
         {onfieldSave}
         {onarrayAdd}
