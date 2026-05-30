@@ -123,7 +123,7 @@
     title: 'Untitled Book Project',
     // Note: language is intentionally omitted so createLocalizedEPUBWorkspace can set it from locale
     identifier: crypto.randomUUID(),
-    creator: ['Unknown'],
+    creator: [{ name: 'Unknown', roles: [] }],
   });
 
   // Handle create new workspace using callback

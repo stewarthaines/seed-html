@@ -7,7 +7,7 @@
 
 import { ZipWriter, downloadBlob } from '../zip/index.js';
 import { FileStorageAPI } from '../storage/index.js';
-import { OPFUtils, type EPUBMetadata } from './opf-utils.js';
+import { OPFUtils, creatorName, type EPUBMetadata } from './opf-utils.js';
 import { getMimeType } from '../utils/mime-types.js';
 import { SourceManager } from '../source/index.js';
 import { PUBLISH_WORKSPACE_ID } from '../workspace/types.js';
@@ -245,7 +245,8 @@ export class EPUBPackager {
 
   generateFilename(metadata: EPUBMetadata): string {
     const title = this.sanitizeFilename(metadata.title || 'Untitled');
-    const author = metadata.creator?.[0] ? this.sanitizeFilename(metadata.creator[0]) : null;
+    const authorName = creatorName(metadata.creator?.[0]);
+    const author = authorName ? this.sanitizeFilename(authorName) : null;
     const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
     const parts = [title];

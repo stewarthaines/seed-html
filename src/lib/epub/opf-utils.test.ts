@@ -1,6 +1,71 @@
 import { describe, it, expect } from 'vitest';
-import { OPFUtils } from './opf-utils.js';
+import {
+  OPFUtils,
+  toCreator,
+  normalizeCreators,
+  creatorName,
+  creatorNames,
+  parseCreatorList,
+} from './opf-utils.js';
 import type { OPFDocument } from './opf-utils.js';
+
+// Minimal Element-like stub for parseCreatorList (avoids happy-dom namespace issues).
+function el(textContent: string, id?: string): Element {
+  return {
+    textContent,
+    getAttribute: (attr: string) => (attr === 'id' ? (id ?? null) : null),
+  } as unknown as Element;
+}
+
+describe('parseCreatorList', () => {
+  it('attaches roles to a creator by id refinement', () => {
+    const lookup = (rid: string) => (rid === 'c1' ? ['aut'] : []);
+    const result = parseCreatorList([el('Lewis Carroll', 'c1')], lookup);
+    expect(result).toEqual([{ name: 'Lewis Carroll', roles: ['aut'], id: 'c1' }]);
+  });
+
+  it('supports multiple roles for one creator (Example 92)', () => {
+    const lookup = (rid: string) => (rid === 'c1' ? ['aut', 'ill'] : []);
+    const result = parseCreatorList([el('Maurice Sendak', 'c1')], lookup);
+    expect(result[0].roles).toEqual(['aut', 'ill']);
+  });
+
+  it('returns empty roles for a creator with no id', () => {
+    const result = parseCreatorList([el('No Id')], () => ['aut']);
+    expect(result).toEqual([{ name: 'No Id', roles: [], id: undefined }]);
+  });
+
+  it('skips entries with empty names', () => {
+    const result = parseCreatorList([el('   '), el('Real', 'c1')], () => []);
+    expect(result.map(c => c.name)).toEqual(['Real']);
+  });
+});
+
+describe('creator helpers', () => {
+  it('toCreator wraps a bare string', () => {
+    expect(toCreator('Lewis Carroll')).toEqual({ name: 'Lewis Carroll', roles: [] });
+  });
+
+  it('toCreator passes a Creator through, defaulting roles', () => {
+    expect(toCreator({ name: 'A', roles: ['aut'] })).toEqual({ name: 'A', roles: ['aut'] });
+    expect(toCreator({ name: 'B' } as any)).toEqual({ name: 'B', roles: [] });
+  });
+
+  it('normalizeCreators maps mixed strings and objects', () => {
+    expect(normalizeCreators(['A', { name: 'B', roles: ['edt'] }])).toEqual([
+      { name: 'A', roles: [] },
+      { name: 'B', roles: ['edt'] },
+    ]);
+    expect(normalizeCreators(undefined)).toEqual([]);
+  });
+
+  it('creatorName / creatorNames extract display names', () => {
+    expect(creatorName({ name: 'A', roles: [] })).toBe('A');
+    expect(creatorName('B')).toBe('B');
+    expect(creatorName(undefined)).toBe('');
+    expect(creatorNames([{ name: 'A', roles: [] }, 'B'])).toEqual(['A', 'B']);
+  });
+});
 
 // Diagnostic helper functions for XML validation testing
 
@@ -46,7 +111,7 @@ function createTestOPFDocument(): OPFDocument {
     version: '3.0',
     metadata: {
       title: 'Test EPUB',
-      creator: ['Test Author'],
+      creator: [{ name: 'Test Author', roles: [] }],
       language: 'en',
       identifier: 'test-123',
     },
@@ -65,6 +130,56 @@ function createTestOPFDocument(): OPFDocument {
     ],
   };
 }
+
+describe('generateOPFXML - creator roles', () => {
+  function docWith(metadata: Partial<OPFDocument['metadata']>): OPFDocument {
+    const base = createTestOPFDocument();
+    return { ...base, metadata: { ...base.metadata, ...metadata } as OPFDocument['metadata'] };
+  }
+
+  it('emits an id and a meta refines role per creator role', () => {
+    const xml = OPFUtils.generateOPFXML(
+      docWith({ creator: [{ name: 'Lewis Carroll', roles: ['aut'] }] })
+    );
+    expect(xml).toContain('<dc:creator id="creator1">Lewis Carroll</dc:creator>');
+    expect(xml).toContain(
+      '<meta refines="#creator1" property="role" scheme="marc:relators">aut</meta>'
+    );
+  });
+
+  it('emits multiple role metas for a multi-role creator (Example 92)', () => {
+    const xml = OPFUtils.generateOPFXML(
+      docWith({ creator: [{ name: 'Maurice Sendak', roles: ['aut', 'ill'] }] })
+    );
+    expect(xml).toContain('<meta refines="#creator1" property="role" scheme="marc:relators">aut</meta>');
+    expect(xml).toContain('<meta refines="#creator1" property="role" scheme="marc:relators">ill</meta>');
+  });
+
+  it('assigns sequential ids across creators and contributors', () => {
+    const xml = OPFUtils.generateOPFXML(
+      docWith({
+        creator: [{ name: 'A', roles: ['aut'] }],
+        contributor: [{ name: 'B', roles: ['edt'] }],
+      })
+    );
+    expect(xml).toContain('<dc:creator id="creator1">A</dc:creator>');
+    expect(xml).toContain('<dc:contributor id="creator2">B</dc:contributor>');
+    expect(xml).toContain('<meta refines="#creator2" property="role" scheme="marc:relators">edt</meta>');
+  });
+
+  it('emits an id but no meta when a creator has no roles', () => {
+    const xml = OPFUtils.generateOPFXML(docWith({ creator: [{ name: 'No Role', roles: [] }] }));
+    expect(xml).toContain('<dc:creator id="creator1">No Role</dc:creator>');
+    expect(xml).not.toContain('refines="#creator1"');
+  });
+
+  it('escapes special characters in names and roles', () => {
+    const xml = OPFUtils.generateOPFXML(
+      docWith({ creator: [{ name: 'Tom & Jerry', roles: ['aut'] }] })
+    );
+    expect(xml).toContain('<dc:creator id="creator1">Tom &amp; Jerry</dc:creator>');
+  });
+});
 
 describe('OPFUtils', () => {
   describe('parseContainerXml', () => {

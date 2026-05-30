@@ -5,7 +5,8 @@
  * following the clean service architecture with single responsibility principle.
  */
 
-import type { EPUBMetadata } from '../../epub/opf-utils.js';
+import type { EPUBMetadata, Creator } from '../../epub/opf-utils.js';
+import { creatorName } from '../../epub/opf-utils.js';
 import type { WorkspaceService, WorkspaceState } from '../workspace/workspace.service.js';
 
 // Use existing ValidationResult from MetadataValidator for compatibility
@@ -108,10 +109,16 @@ export class MetadataService {
    */
   async addArrayItem(workspace: WorkspaceState, field: 'creator' | 'contributor' | 'subject', value: string = ''): Promise<WorkspaceState> {
     try {
-      const currentArray = workspace.opf.metadata[field] || [];
-      
+      const currentArray: any[] = (workspace.opf.metadata as any)[field] || [];
+
+      // Creators/contributors are structured (name + roles); subjects are strings.
+      const newItem: string | Creator =
+        field === 'subject'
+          ? value || this.getDefaultArrayValue(field)
+          : { name: value, roles: [] };
+
       const updates = {
-        [field]: [...currentArray, value || this.getDefaultArrayValue(field)]
+        [field]: [...currentArray, newItem],
       };
 
       return await this.workspaceService.updateMetadata(workspace, updates);
@@ -202,7 +209,7 @@ export class MetadataService {
     }
 
     // Creator validation
-    if (metadata.creator && metadata.creator.some(c => !c.trim())) {
+    if (metadata.creator && metadata.creator.some(c => !creatorName(c).trim())) {
       results.push({
         field: 'creator',
         message: 'Creator entries cannot be empty',

@@ -152,7 +152,7 @@ export class SampleContentGenerator {
       title: this.translate(locale, 'sample.book.title'),
       language: locale,
       identifier,
-      creator: [this.translate(locale, 'sample.author.name')],
+      creator: [{ name: this.translate(locale, 'sample.author.name'), roles: [] }],
       publisher: this.translate(locale, 'sample.publisher.name'),
       description: this.translate(locale, 'sample.book.description'),
       pageProgressionDirection,

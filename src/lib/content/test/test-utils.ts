@@ -86,7 +86,7 @@ export function expectEPUBMetadata(actual: any, locale: string): void {
     title: expect.any(String),
     language: locale,
     identifier: expect.stringMatching(/^sample-content-[a-z-]+-\d+$/),
-    creator: expect.arrayContaining([expect.any(String)]),
+    creator: expect.arrayContaining([expect.objectContaining({ name: expect.any(String) })]),
     publisher: expect.any(String),
     description: expect.any(String),
     pageProgressionDirection: expect.stringMatching(/^(ltr|rtl)$/),

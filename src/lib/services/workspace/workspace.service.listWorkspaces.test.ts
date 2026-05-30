@@ -31,6 +31,7 @@ vi.mock('../../epub/opf-utils.js', () => ({
     }),
   },
   generateEPUBTimestamp: vi.fn(() => '2026-01-01T00:00:00Z'),
+  creatorName: (c: any) => (typeof c === 'string' ? c : (c?.name ?? '')),
 }));
 
 import { WorkspaceService } from './workspace.service.js';

@@ -3,9 +3,10 @@
   import TextMetadataField from './fields/TextMetadataField.svelte';
   import SelectMetadataField from './fields/SelectMetadataField.svelte';
   import DateMetadataField from './fields/DateMetadataField.svelte';
+  import CreatorRoleEditor from './CreatorRoleEditor.svelte';
   import type { ValidationResult } from '../../metadata/MetadataValidator';
   import type { EPUBMetadata } from '../../epub';
-  import { MetadataUtils, type ArrayMetadataFields } from '../../epub/opf-utils';
+  import { MetadataUtils, type ArrayMetadataFields, type EditableArrayField } from '../../epub/opf-utils';
 
   interface Props {
     metadata?: EPUBMetadata;
@@ -14,8 +15,8 @@
     onfieldChange?: (event: CustomEvent<{ field: string; value: any }>) => void;
     onfieldSave?: (event: CustomEvent<{ field: string; value: any }>) => void;
     onfieldFocus?: (event: CustomEvent<{ field: keyof EPUBMetadata | null }>) => void;
-    onarrayAdd?: (event: CustomEvent<{ field: ArrayMetadataFields }>) => void;
-    onarrayRemove?: (event: CustomEvent<{ field: ArrayMetadataFields; index: number }>) => void;
+    onarrayAdd?: (event: CustomEvent<{ field: EditableArrayField }>) => void;
+    onarrayRemove?: (event: CustomEvent<{ field: EditableArrayField; index: number }>) => void;
   }
 
   let {
@@ -75,12 +76,6 @@
     const newArray = [...(metadata.subject || [])];
     newArray[index] = value;
     handleFieldSave('subject', newArray);
-  };
-
-  const handleContributorBlur = (index: number, value: string) => {
-    const newArray = [...(metadata.contributor || [])];
-    newArray[index] = value;
-    handleFieldSave('contributor', newArray);
   };
 </script>
 
@@ -224,44 +219,19 @@
         </div>
       </fieldset>
 
-      <fieldset class="field-group">
-        <legend class="group-title" tabindex="-1">{$t('Contributors')}</legend>
-
-        <div class="array-field">
-          {#each metadata.contributor || [] as contributor, index}
-            <div class="array-item">
-              <TextMetadataField
-                id="contributor-{index}"
-                value={contributor}
-                placeholder={$t('Contributor name')}
-                error={getFieldError(`contributor[${index}]`)}
-                onchange={e => updateArrayItem('contributor', index, e.value)}
-                onblur={e => handleContributorBlur(index, e.value)}
-                onfocus={() => handleFieldFocus('contributor')}
-              />
-              <button
-                type="button"
-                class="remove-button"
-                onclick={() => handleArrayRemove('contributor', index)}
-                disabled={saving}
-                aria-label={$t('Remove contributor')}
-              >
-                ×
-              </button>
-            </div>
-          {/each}
-
-          <!-- i18n: Button to add an additional contributor field to the list -->
-          <button
-            type="button"
-            class="add-button"
-            onclick={() => handleArrayAdd('contributor')}
-            disabled={saving}
-          >
-            {$t('Add Another Contributor')}
-          </button>
-        </div>
-      </fieldset>
+      <CreatorRoleEditor
+        field="contributor"
+        creators={metadata.contributor ?? []}
+        {saving}
+        legend={$t('Contributors')}
+        addLabel={$t('Add Another Contributor')}
+        namePlaceholder={$t('Contributor name')}
+        {getFieldError}
+        {onfieldSave}
+        {onarrayAdd}
+        {onarrayRemove}
+        {onfieldFocus}
+      />
     </div>
   </div>
 </div>

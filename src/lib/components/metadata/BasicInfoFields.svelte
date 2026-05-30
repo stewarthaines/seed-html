@@ -3,9 +3,10 @@
   import TextMetadataField from './fields/TextMetadataField.svelte';
   import SelectMetadataField from './fields/SelectMetadataField.svelte';
   import TextareaMetadataField from './fields/TextareaMetadataField.svelte';
+  import CreatorRoleEditor from './CreatorRoleEditor.svelte';
   import type { EPUBMetadata } from '../../epub';
   import type { ValidationResult } from '../../metadata/MetadataValidator';
-  import { MetadataUtils, type ArrayMetadataFields } from '../../epub/opf-utils';
+  import { MetadataUtils, type EditableArrayField } from '../../epub/opf-utils';
 
   interface Props {
     metadata?: EPUBMetadata;
@@ -14,8 +15,8 @@
     onfieldChange?: (event: CustomEvent<{ field: string; value: any }>) => void;
     onfieldSave?: (event: CustomEvent<{ field: string; value: any }>) => void;
     onfieldFocus?: (event: CustomEvent<{ field: keyof EPUBMetadata | null }>) => void;
-    onarrayAdd?: (event: CustomEvent<{ field: ArrayMetadataFields }>) => void;
-    onarrayRemove?: (event: CustomEvent<{ field: ArrayMetadataFields; index: number }>) => void;
+    onarrayAdd?: (event: CustomEvent<{ field: EditableArrayField }>) => void;
+    onarrayRemove?: (event: CustomEvent<{ field: EditableArrayField; index: number }>) => void;
     ongenerateIdentifier?: (event: CustomEvent<void>) => void;
   }
 
@@ -90,25 +91,6 @@
     onfieldFocus?.(new CustomEvent('fieldFocus', { detail: { field } }));
   };
 
-  const handleArrayAdd = (field: ArrayMetadataFields) => {
-    onarrayAdd?.(new CustomEvent('arrayAdd', { detail: { field } }));
-  };
-
-  const handleArrayRemove = (field: ArrayMetadataFields, index: number) => {
-    onarrayRemove?.(new CustomEvent('arrayRemove', { detail: { field, index } }));
-  };
-
-  const updateArrayItem = (_field: ArrayMetadataFields, _index: number, _value: string) => {
-    // Do nothing on change - input manages its own state until blur
-    // This prevents reactive updates that cause flickering
-  };
-
-  const handleCreatorBlur = (index: number, value: string) => {
-    const newArray = [...(metadata.creator || [])];
-    newArray[index] = value;
-    onfieldSave?.(new CustomEvent('fieldSave', { detail: { field: 'creator', value: newArray } }));
-  };
-
   const generateIdentifier = () => {
     ongenerateIdentifier?.(new CustomEvent('generateIdentifier'));
   };
@@ -168,44 +150,19 @@
         </div>
       </fieldset>
 
-      <fieldset class="field-group">
-        <legend class="group-title" tabindex="-1">{$t('Authors')}</legend>
-
-        <div class="array-field">
-          {#each metadata.creator || [] as author, index}
-            <div class="array-item">
-              <TextMetadataField
-                id="creator-{index}"
-                value={author}
-                placeholder={$t('Author name')}
-                error={getFieldError(`creator[${index}]`)}
-                onchange={e => updateArrayItem('creator', index, e.value)}
-                onblur={e => handleCreatorBlur(index, e.value)}
-                onfocus={() => handleFieldFocus('creator')}
-              />
-              <button
-                type="button"
-                class="remove-button"
-                onclick={() => handleArrayRemove('creator', index)}
-                disabled={saving}
-                aria-label={$t('Remove author')}
-              >
-                ×
-              </button>
-            </div>
-          {/each}
-
-          <!-- i18n: Button to add an additional author field to the list -->
-          <button
-            type="button"
-            class="add-button"
-            onclick={() => handleArrayAdd('creator')}
-            disabled={saving}
-          >
-            {$t('Add Another Author')}
-          </button>
-        </div>
-      </fieldset>
+      <CreatorRoleEditor
+        field="creator"
+        creators={metadata.creator ?? []}
+        {saving}
+        legend={$t('Authors')}
+        addLabel={$t('Add Another Author')}
+        namePlaceholder={$t('Author name')}
+        {getFieldError}
+        {onfieldSave}
+        {onarrayAdd}
+        {onarrayRemove}
+        {onfieldFocus}
+      />
     </div>
 
     <div class="column">

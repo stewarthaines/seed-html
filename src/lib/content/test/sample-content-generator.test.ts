@@ -210,7 +210,7 @@ describe('SampleContentGenerator', () => {
         expectEPUBMetadata(result, 'en');
         expect(result.title).toBe('Introduction to EPUB');
         expect(result.language).toBe('en');
-        expect(result.creator).toEqual(['EDITME Editorial Team']);
+        expect(result.creator).toEqual([{ name: 'EDITME Editorial Team', roles: [] }]);
         expect(result.publisher).toBe('EDITME Publishing');
         expect(result.pageProgressionDirection).toBe('ltr');
       });
@@ -221,7 +221,7 @@ describe('SampleContentGenerator', () => {
         expectEPUBMetadata(result, 'ar');
         expect(result.title).toBe('مقدمة إلى EPUB');
         expect(result.language).toBe('ar');
-        expect(result.creator).toEqual(['فريق تحرير EDITME']);
+        expect(result.creator).toEqual([{ name: 'فريق تحرير EDITME', roles: [] }]);
         expect(result.pageProgressionDirection).toBe('rtl');
       });
 
@@ -264,7 +264,7 @@ describe('SampleContentGenerator', () => {
 
         expectEPUBMetadata(result, 'fr');
         expect(result.title).toBe('Introduction à EPUB');
-        expect(result.creator).toEqual(['Équipe éditoriale EDITME']);
+        expect(result.creator).toEqual([{ name: 'Équipe éditoriale EDITME', roles: [] }]);
         expect(result.publisher).toBe('Éditions EDITME');
       });
     });
@@ -574,7 +574,7 @@ describe('SampleContentGenerator', () => {
       // Metadata should match between methods
       expect(content.metadata.title).toBe(metadata.title);
       expect(content.metadata.description).toBe(metadata.description);
-      expect(content.metadata.author).toBe(metadata.creator?.[0]);
+      expect(content.metadata.author).toBe(metadata.creator?.[0]?.name);
       expect(content.metadata.publisher).toBe(metadata.publisher);
 
       // Chapters should match between methods

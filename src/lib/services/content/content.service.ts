@@ -492,7 +492,7 @@ ${navEntriesHtml}
       title: sampleTitle || 'Sample Book',
       language: locale,
       identifier: `urn:uuid:sample-${Date.now()}`,
-      creator: [sampleAuthor || 'Sample Author'],
+      creator: [{ name: sampleAuthor || 'Sample Author', roles: [] }],
       description: sampleDescription || 'A sample book for demonstration purposes',
       modifiedDate: generateEPUBTimestamp(),
     };

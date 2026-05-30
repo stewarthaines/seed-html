@@ -7,7 +7,7 @@
 
 import type { FileStorageAPI } from '../../storage/index.js';
 import type { EPUBMetadata, OPFDocument, ManifestItem, SpineItem } from '../../epub/opf-utils.js';
-import { generateEPUBTimestamp } from '../../epub/opf-utils.js';
+import { generateEPUBTimestamp, creatorName } from '../../epub/opf-utils.js';
 import { isSourceFile, classifySourceFile } from '../../source/source-utils.js';
 import type { SourceItem } from '../../manifest/types.js';
 import { getBrowserLocale } from '../../i18n/locale-config.js';
@@ -648,7 +648,7 @@ export class WorkspaceService {
       title: metadata.title,
       language: metadata.language,
       lastModified,
-      author: metadata.creator?.[0] || undefined,
+      author: creatorName(metadata.creator?.[0]) || undefined,
       hasError: false,
       epubVersion: '3.0',
     };

@@ -18,6 +18,7 @@ import type {
   WorkspaceInfo,
   ChapterContent,
 } from './services/workspace/workspace.service.js';
+import { creatorName } from './epub/opf-utils.js';
 import type {
   GlobalSettings,
   WorkspaceSettings,
@@ -149,7 +150,7 @@ export class EnhancedAppState {
       lastModified: new Date(), // Could be enhanced with actual timestamp
       fileCount: this.workspace.opf.manifest.length,
       totalSize: 0, // Could be enhanced with actual size calculation
-      author: this.workspace.opf.metadata.creator?.[0] || undefined,
+      author: creatorName(this.workspace.opf.metadata.creator?.[0]) || undefined,
       hasError: false,
       epubVersion: '3.0',
     };

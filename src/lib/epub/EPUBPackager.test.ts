@@ -39,6 +39,7 @@ vi.mock('./opf-utils.js', () => ({
     parseContainerXml: vi.fn(() => ({ rootfilePath: 'OEBPS/content.opf' })),
     parseRootfilePath: vi.fn(() => 'OEBPS/content.opf'),
   },
+  creatorName: (c: any) => (typeof c === 'string' ? c : (c?.name ?? '')),
 }));
 
 describe('EPUBPackager', () => {

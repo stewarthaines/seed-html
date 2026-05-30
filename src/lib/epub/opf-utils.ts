@@ -17,6 +17,58 @@ export function generateEPUBTimestamp(): string {
   return new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
 }
 
+/**
+ * A creator or contributor with optional MARC relator roles.
+ * `id` is the OPF id used by role refinements (`<meta refines="#id">`); it is
+ * read on parse and re-minted on generate.
+ */
+export interface Creator {
+  name: string;
+  roles: string[];
+  id?: string;
+}
+
+/** Normalize a creator value, tolerating legacy bare-string data. */
+export function toCreator(value: Creator | string): Creator {
+  if (typeof value === 'string') return { name: value, roles: [] };
+  return { name: value.name, roles: value.roles ?? [], id: value.id };
+}
+
+/** Normalize a list of creator values (tolerating legacy strings). */
+export function normalizeCreators(list?: (Creator | string)[]): Creator[] {
+  return (list ?? []).map(toCreator);
+}
+
+/** Display name for a single creator value (tolerant of legacy strings). */
+export function creatorName(value?: Creator | string): string {
+  if (!value) return '';
+  return typeof value === 'string' ? value : value.name;
+}
+
+/** Display names for a list of creator values (tolerant of legacy strings). */
+export function creatorNames(list?: (Creator | string)[]): string[] {
+  return (list ?? []).map(creatorName).filter(Boolean);
+}
+
+/**
+ * Build Creator[] from dc:creator/dc:contributor elements, attaching MARC roles
+ * via a refines lookup (id -> role codes). Pure and DOM-namespace-free so it can
+ * be unit-tested without happy-dom's unreliable getElementsByTagNameNS.
+ */
+export function parseCreatorList(
+  elements: ArrayLike<Element>,
+  refinesLookup: (id: string) => string[]
+): Creator[] {
+  return Array.from(elements)
+    .map(el => {
+      const name = el.textContent?.trim() ?? '';
+      const id = el.getAttribute('id') || undefined;
+      const roles = id ? refinesLookup(id) : [];
+      return { name, roles, id };
+    })
+    .filter(c => c.name.length > 0);
+}
+
 export interface EPUBMetadata {
   // Required Dublin Core elements
   title: string;
@@ -24,8 +76,8 @@ export interface EPUBMetadata {
   identifier: string;
 
   // Optional Dublin Core elements
-  creator?: string[];
-  contributor?: string[];
+  creator?: Creator[];
+  contributor?: Creator[];
   publisher?: string;
   date?: string;
   description?: string;
@@ -57,9 +109,10 @@ export interface EPUBMetadata {
 
 // Type mapping for strict field access
 export interface MetadataFieldTypes {
+  // Creator fields (name + roles)
+  creator: Creator[];
+  contributor: Creator[];
   // Array fields
-  creator: string[];
-  contributor: string[];
   subject: string[];
   accessMode: string[];
   accessModeSufficient: string[];
@@ -98,6 +151,13 @@ export type ArrayMetadataFields = {
 export type StringMetadataFields = {
   [K in keyof MetadataFieldTypes]: MetadataFieldTypes[K] extends string ? K : never;
 }[keyof MetadataFieldTypes];
+
+// Creator/contributor are index-addressable arrays (of Creator) and so are still
+// editable via the add/remove array UI, even though they are not string[].
+export type CreatorMetadataFields = 'creator' | 'contributor';
+
+// Fields that the add/remove array UI can operate on.
+export type EditableArrayField = ArrayMetadataFields | CreatorMetadataFields;
 
 export type RequiredMetadataFields = 'title' | 'language' | 'identifier';
 
@@ -285,14 +345,22 @@ export class OPFUtils {
     // Parse dcterms:modified meta element (EPUB 3 specific)
     const modifiedElements = doc.querySelectorAll('meta[property="dcterms:modified"]');
 
-    // Convert NodeLists to arrays
-    const creators = Array.from(creatorElements)
-      .map(el => el.textContent?.trim())
-      .filter(Boolean) as string[];
+    // Build a refines -> role-codes index from `<meta property="role">` elements,
+    // then attach roles to each creator/contributor by id.
+    const roleRefines = new Map<string, string[]>();
+    doc.querySelectorAll('meta[property="role"]').forEach(meta => {
+      const refines = meta.getAttribute('refines');
+      const code = meta.textContent?.trim();
+      if (!refines || !code) return;
+      const id = refines.replace(/^#/, '');
+      const existing = roleRefines.get(id) ?? [];
+      existing.push(code);
+      roleRefines.set(id, existing);
+    });
+    const roleLookup = (id: string) => roleRefines.get(id) ?? [];
 
-    const contributors = Array.from(contributorElements)
-      .map(el => el.textContent?.trim())
-      .filter(Boolean) as string[];
+    const creators = parseCreatorList(creatorElements, roleLookup);
+    const contributors = parseCreatorList(contributorElements, roleLookup);
     const subjects = Array.from(subjectElements)
       .map(el => el.textContent?.trim())
       .filter(Boolean) as string[];
@@ -463,16 +531,22 @@ export class OPFUtils {
     <dc:language>${escapeXML(metadata.language)}</dc:language>
     <dc:identifier id="${uniqueId}">${escapeXML(metadata.identifier)}</dc:identifier>`;
 
-    // Add optional metadata
+    // Add optional metadata. Creators/contributors emit an id plus a
+    // `<meta refines property="role">` per MARC relator role (EPUB 3).
+    let creatorIdCounter = 0;
+    const emitCreator = (value: Creator | string, tag: 'dc:creator' | 'dc:contributor') => {
+      const creator = toCreator(value);
+      const id = `creator${++creatorIdCounter}`;
+      xml += `\n    <${tag} id="${id}">${escapeXML(creator.name)}</${tag}>`;
+      for (const role of creator.roles) {
+        xml += `\n    <meta refines="#${id}" property="role" scheme="marc:relators">${escapeXML(role)}</meta>`;
+      }
+    };
     if (metadata.creator && metadata.creator.length > 0) {
-      metadata.creator.forEach(creator => {
-        xml += `\n    <dc:creator>${escapeXML(creator)}</dc:creator>`;
-      });
+      metadata.creator.forEach(creator => emitCreator(creator, 'dc:creator'));
     }
     if (metadata.contributor && metadata.contributor.length > 0) {
-      metadata.contributor.forEach(contributor => {
-        xml += `\n    <dc:contributor>${escapeXML(contributor)}</dc:contributor>`;
-      });
+      metadata.contributor.forEach(contributor => emitCreator(contributor, 'dc:contributor'));
     }
     if (metadata.publisher) {
       xml += `\n    <dc:publisher>${escapeXML(metadata.publisher)}</dc:publisher>`;
