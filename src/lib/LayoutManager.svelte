@@ -25,33 +25,13 @@
 
 <div class="app-layout" style="grid-template-columns: {sidebarWidth} 1fr">
   <Sidebar isExpanded={sidebar.isExpanded} activeSection={sidebar.activeSection} {hasWorkspace} {currentWorkspace} {workspaceTitle} {extensionManager}>
-    <svelte:fragment slot="sidebar-workspace">
-      <slot name="sidebar-workspace" />
-    </svelte:fragment>
-
-    <svelte:fragment slot="sidebar-metadata">
-      <slot name="sidebar-metadata" />
-    </svelte:fragment>
-
-    <svelte:fragment slot="sidebar-manifest">
-      <slot name="sidebar-manifest" />
-    </svelte:fragment>
-
-    <svelte:fragment slot="sidebar-navigation">
-      <slot name="sidebar-navigation" />
-    </svelte:fragment>
-
-    <svelte:fragment slot="sidebar-spine">
-      <slot name="sidebar-spine" />
-    </svelte:fragment>
-
-    <svelte:fragment slot="sidebar-settings">
-      <slot name="sidebar-settings" />
-    </svelte:fragment>
-
-    <svelte:fragment slot="sidebar-footer">
-      <slot name="sidebar-footer" />
-    </svelte:fragment>
+    {#snippet sidebarWorkspace()}<slot name="sidebar-workspace" />{/snippet}
+    {#snippet sidebarMetadata()}<slot name="sidebar-metadata" />{/snippet}
+    {#snippet sidebarManifest()}<slot name="sidebar-manifest" />{/snippet}
+    {#snippet sidebarNavigation()}<slot name="sidebar-navigation" />{/snippet}
+    {#snippet sidebarSpine()}<slot name="sidebar-spine" />{/snippet}
+    {#snippet sidebarSettings()}<slot name="sidebar-settings" />{/snippet}
+    {#snippet sidebarFooter()}<slot name="sidebar-footer" />{/snippet}
   </Sidebar>
 
   <div class="main-content">

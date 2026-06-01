@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import { layoutStore, type SidebarSection } from './stores/layout';
   import { t } from '../lib/i18n';
   import ThemeToggle from './ThemeToggle.svelte';
@@ -11,6 +12,15 @@
     currentWorkspace?: any;
     workspaceTitle?: string;
     extensionManager?: any;
+    // Per-section content (snippets replace the former named slots).
+    sidebarSpine?: Snippet;
+    sidebarAbout?: Snippet;
+    sidebarWorkspace?: Snippet;
+    sidebarMetadata?: Snippet;
+    sidebarManifest?: Snippet;
+    sidebarNavigation?: Snippet;
+    sidebarSettings?: Snippet;
+    sidebarFooter?: Snippet;
   }
 
   let {
@@ -20,6 +30,14 @@
     currentWorkspace = null,
     workspaceTitle = undefined,
     extensionManager = null,
+    sidebarSpine,
+    sidebarAbout,
+    sidebarWorkspace,
+    sidebarMetadata,
+    sidebarManifest,
+    sidebarNavigation,
+    sidebarSettings,
+    sidebarFooter,
   }: Props = $props();
 
   // Extension state
@@ -223,22 +241,22 @@
 
     <!-- Always visible spine items -->
     <div class="spine-items-container">
-      <slot name="sidebar-spine" />
+      {@render sidebarSpine?.()}
     </div>
 
-    <!-- Content slots for different sections -->
+    <!-- Content snippets for different sections -->
     <div class="section-content">
-      <slot name="sidebar-about" />
-      <slot name="sidebar-workspace" />
-      <slot name="sidebar-metadata" />
-      <slot name="sidebar-manifest" />
-      <slot name="sidebar-navigation" />
-      <slot name="sidebar-settings" />
+      {@render sidebarAbout?.()}
+      {@render sidebarWorkspace?.()}
+      {@render sidebarMetadata?.()}
+      {@render sidebarManifest?.()}
+      {@render sidebarNavigation?.()}
+      {@render sidebarSettings?.()}
     </div>
   </div>
 
   <div class="sidebar-footer">
-    <slot name="sidebar-footer" />
+    {@render sidebarFooter?.()}
   </div>
 </aside>
 
