@@ -6,6 +6,7 @@
   interface Props {
     subjects?: (string | SubjectEntry)[];
     saving?: boolean;
+    advancedMode?: boolean;
     getFieldError?: (name: string) => string;
     onfieldSave?: (event: CustomEvent<{ field: string; value: any }>) => void;
     onfieldFocus?: (event: CustomEvent<{ field: keyof EPUBMetadata | null }>) => void;
@@ -14,6 +15,7 @@
   let {
     subjects = [],
     saving = false,
+    advancedMode = false,
     getFieldError = () => '',
     onfieldSave,
     onfieldFocus,
@@ -64,25 +66,27 @@
         </button>
       </div>
 
-      <div class="subject-scheme-row">
-        <input
-          type="text"
-          class="scheme-input"
-          list="subject-authorities"
-          value={entry.authority ?? ''}
-          placeholder={$t('Authority (e.g. BISAC)')}
-          aria-label={$t('Subject authority')}
-          onblur={e => updateEntry(index, { authority: e.currentTarget.value })}
-        />
-        <input
-          type="text"
-          class="scheme-input"
-          value={entry.term ?? ''}
-          placeholder={$t('Term (e.g. FIC028000)')}
-          aria-label={$t('Subject term')}
-          onblur={e => updateEntry(index, { term: e.currentTarget.value })}
-        />
-      </div>
+      {#if advancedMode || entry.authority?.trim() || entry.term?.trim()}
+        <div class="subject-scheme-row">
+          <input
+            type="text"
+            class="scheme-input"
+            list="subject-authorities"
+            value={entry.authority ?? ''}
+            placeholder={$t('Authority (e.g. BISAC)')}
+            aria-label={$t('Subject authority')}
+            onblur={e => updateEntry(index, { authority: e.currentTarget.value })}
+          />
+          <input
+            type="text"
+            class="scheme-input"
+            value={entry.term ?? ''}
+            placeholder={$t('Term (e.g. FIC028000)')}
+            aria-label={$t('Subject term')}
+            onblur={e => updateEntry(index, { term: e.currentTarget.value })}
+          />
+        </div>
+      {/if}
     </div>
   {/each}
 

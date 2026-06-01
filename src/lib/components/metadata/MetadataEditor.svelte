@@ -18,9 +18,10 @@
   interface Props {
     workspace?: WorkspaceState | null;
     metadataService: MetadataService;
+    advancedMode?: boolean;
   }
 
-  let { workspace = $bindable(null), metadataService }: Props = $props();
+  let { workspace = $bindable(null), metadataService, advancedMode = false }: Props = $props();
 
   // Reactive state using Svelte 5 runes
   let metadata = $derived(workspace?.opf.metadata ?? { title: '', language: [], identifier: '' });
@@ -224,6 +225,7 @@
             {metadata}
             {validationErrors}
             {saving}
+            {advancedMode}
             onfieldChange={handleFieldChange}
             onfieldSave={handleFieldSave}
             onfieldFocus={handleFieldFocus}
@@ -236,6 +238,7 @@
             {metadata}
             {validationErrors}
             {saving}
+            {advancedMode}
             onfieldChange={handleFieldChange}
             onfieldSave={handleFieldSave}
             onfieldFocus={handleFieldFocus}

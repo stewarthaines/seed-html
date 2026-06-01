@@ -13,6 +13,7 @@
     metadata?: EPUBMetadata;
     validationErrors?: ValidationResult[];
     saving?: boolean;
+    advancedMode?: boolean;
     onfieldChange?: (event: CustomEvent<{ field: string; value: any }>) => void;
     onfieldSave?: (event: CustomEvent<{ field: string; value: any }>) => void;
     onfieldFocus?: (event: CustomEvent<{ field: keyof EPUBMetadata | null }>) => void;
@@ -24,6 +25,7 @@
     metadata = { title: '', language: [], identifier: '' },
     validationErrors = [],
     saving = false,
+    advancedMode = false,
     onfieldChange,
     onfieldSave,
     onfieldFocus,
@@ -168,6 +170,7 @@
         <SubjectEditor
           subjects={metadata.subject}
           {saving}
+          {advancedMode}
           {getFieldError}
           {onfieldSave}
           {onfieldFocus}
@@ -178,6 +181,7 @@
         field="contributor"
         creators={metadata.contributor ?? []}
         {saving}
+        {advancedMode}
         legend={$t('Contributors')}
         addLabel={$t('Add Another Contributor')}
         namePlaceholder={$t('Contributor name')}

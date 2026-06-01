@@ -10,6 +10,7 @@
     identifierType?: string;
     additionalIdentifiers?: IdentifierEntry[];
     saving?: boolean;
+    advancedMode?: boolean;
     getFieldError?: (name: string) => string;
     onfieldChange?: (event: CustomEvent<{ field: string; value: any }>) => void;
     onfieldSave?: (event: CustomEvent<{ field: string; value: any }>) => void;
@@ -22,12 +23,17 @@
     identifierType = '',
     additionalIdentifiers = [],
     saving = false,
+    advancedMode = false,
     getFieldError = () => '',
     onfieldChange,
     onfieldSave,
     onfieldFocus,
     ongenerateIdentifier,
   }: Props = $props();
+
+  // Advanced refinements show in advanced mode, or when already populated.
+  const showType = $derived(advancedMode || !!identifierType?.trim());
+  const showAdditional = $derived(advancedMode || additionalIdentifiers.length > 0);
 
   const typeOptions = $derived(
     IDENTIFIER_TYPE_OPTIONS.map(o => ({ value: o.value, label: $t(o.label) }))
@@ -68,14 +74,16 @@
     </button>
   </div>
 
-  <SelectMetadataField
-    id="identifierType"
-    label={$t('Identifier type')}
-    value={identifierType ?? ''}
-    options={typeOptions}
-    onblur={e => save('identifierType', e.value)}
-    onfocus={() => focus('identifierType' as keyof EPUBMetadata)}
-  />
+  {#if showType}
+    <SelectMetadataField
+      id="identifierType"
+      label={$t('Identifier type')}
+      value={identifierType ?? ''}
+      options={typeOptions}
+      onblur={e => save('identifierType', e.value)}
+      onfocus={() => focus('identifierType' as keyof EPUBMetadata)}
+    />
+  {/if}
 </div>
 
 {#each additionalIdentifiers as entry, index (index)}
@@ -109,9 +117,11 @@
   </div>
 {/each}
 
-<button type="button" class="add-button" onclick={addEntry} disabled={saving}>
-  {$t('Add another identifier')}
-</button>
+{#if showAdditional}
+  <button type="button" class="add-button" onclick={addEntry} disabled={saving}>
+    {$t('Add another identifier')}
+  </button>
+{/if}
 
 <style>
   .identifier-field {

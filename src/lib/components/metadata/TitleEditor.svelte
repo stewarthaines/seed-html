@@ -9,6 +9,7 @@
     titleFileAs?: string;
     additionalTitles?: TitleEntry[];
     saving?: boolean;
+    advancedMode?: boolean;
     getFieldError?: (name: string) => string;
     onfieldChange?: (event: CustomEvent<{ field: string; value: any }>) => void;
     onfieldSave?: (event: CustomEvent<{ field: string; value: any }>) => void;
@@ -20,11 +21,17 @@
     titleFileAs = '',
     additionalTitles = [],
     saving = false,
+    advancedMode = false,
     getFieldError = () => '',
     onfieldChange,
     onfieldSave,
     onfieldFocus,
   }: Props = $props();
+
+  // Advanced refinements show in advanced mode, or whenever they already carry a
+  // value (so populated metadata is never hidden).
+  const showFileAs = $derived(advancedMode || !!titleFileAs?.trim());
+  const showAdditional = $derived(advancedMode || additionalTitles.length > 0);
 
   // Additional titles use the EPUB title-type vocabulary minus "main" (that is
   // the primary title above).
@@ -64,16 +71,18 @@
   onfocus={() => focus('title')}
 />
 
-<TextMetadataField
-  id="titleFileAs"
-  label={$t('Sort as')}
-  value={titleFileAs || ''}
-  placeholder={$t('e.g. Hobbit, The')}
-  error={getFieldError('titleFileAs')}
-  onchange={e => change('titleFileAs', e.value)}
-  onblur={e => save('titleFileAs', e.value)}
-  onfocus={() => focus('titleFileAs' as keyof EPUBMetadata)}
-/>
+{#if showFileAs}
+  <TextMetadataField
+    id="titleFileAs"
+    label={$t('Sort as')}
+    value={titleFileAs || ''}
+    placeholder={$t('e.g. Hobbit, The')}
+    error={getFieldError('titleFileAs')}
+    onchange={e => change('titleFileAs', e.value)}
+    onblur={e => save('titleFileAs', e.value)}
+    onfocus={() => focus('titleFileAs' as keyof EPUBMetadata)}
+  />
+{/if}
 
 {#each additionalTitles as entry, index (index)}
   <div class="title-entry">
@@ -112,9 +121,11 @@
   </div>
 {/each}
 
-<button type="button" class="add-button" onclick={addEntry} disabled={saving}>
-  {$t('Add another title')}
-</button>
+{#if showAdditional}
+  <button type="button" class="add-button" onclick={addEntry} disabled={saving}>
+    {$t('Add another title')}
+  </button>
+{/if}
 
 <style>
   .title-entry {

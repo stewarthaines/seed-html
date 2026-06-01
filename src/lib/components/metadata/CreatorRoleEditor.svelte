@@ -8,6 +8,7 @@
     field: CreatorMetadataFields;
     creators?: Creator[];
     saving?: boolean;
+    advancedMode?: boolean;
     legend: string;
     addLabel: string;
     namePlaceholder: string;
@@ -22,6 +23,7 @@
     field,
     creators = [],
     saving = false,
+    advancedMode = false,
     legend,
     addLabel,
     namePlaceholder,
@@ -127,16 +129,18 @@
           </div>
         {/if}
 
-        <div class="file-as-row">
-          <TextMetadataField
-            id="{field}-fileas-{index}"
-            label={$t('Sort as')}
-            value={creator.fileAs ?? ''}
-            placeholder={$t('e.g. Tolkien, J. R. R.')}
-            onblur={e => updateFileAs(index, e.value)}
-            onfocus={focus}
-          />
-        </div>
+        {#if advancedMode || creator.fileAs?.trim()}
+          <div class="file-as-row">
+            <TextMetadataField
+              id="{field}-fileas-{index}"
+              label={$t('Sort as')}
+              value={creator.fileAs ?? ''}
+              placeholder={$t('e.g. Tolkien, J. R. R.')}
+              onblur={e => updateFileAs(index, e.value)}
+              onfocus={focus}
+            />
+          </div>
+        {/if}
       </div>
     {/each}
 

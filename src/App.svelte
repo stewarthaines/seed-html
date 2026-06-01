@@ -600,6 +600,7 @@
           <MetadataEditor
             bind:workspace={appState.workspace}
             {metadataService}
+            advancedMode={appState.isAdvancedMode}
             on:metadataChanged={handleMetadataChanged}
             on:fieldFocus={handleMetadataFieldFocus}
           />
