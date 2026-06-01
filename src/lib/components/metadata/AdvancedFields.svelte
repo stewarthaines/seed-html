@@ -203,6 +203,8 @@
 <style>
   .advanced-fields {
     padding: 1.5rem;
+    /* Query the pane width, not the viewport (this form sits in a split pane). */
+    container-type: inline-size;
   }
 
   .form-columns {
@@ -211,7 +213,7 @@
     gap: 2rem;
   }
 
-  @media (min-width: 768px) {
+  @container (min-width: 640px) {
     .form-columns {
       grid-template-columns: 1fr 1fr;
     }

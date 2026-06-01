@@ -122,137 +122,162 @@
 {/snippet}
 
 <div class="accessibility-fields">
-  {@render checkboxGroup($t('Access modes'), ACCESS_MODES, metadata.accessMode, 'accessMode')}
-  {@render checkboxGroup(
-    $t('Accessibility features'),
-    ACCESSIBILITY_FEATURES,
-    metadata.accessibilityFeature,
-    'accessibilityFeature'
-  )}
-  {@render checkboxGroup(
-    $t('Hazards'),
-    ACCESSIBILITY_HAZARDS,
-    metadata.accessibilityHazard,
-    'accessibilityHazard'
-  )}
+  <div class="form-columns">
+    <div class="column">
+      {@render checkboxGroup($t('Access modes'), ACCESS_MODES, metadata.accessMode, 'accessMode')}
+      {@render checkboxGroup(
+        $t('Hazards'),
+        ACCESSIBILITY_HAZARDS,
+        metadata.accessibilityHazard,
+        'accessibilityHazard'
+      )}
 
-  <fieldset class="field-group">
-    <legend class="group-title" tabindex="-1">{$t('Conformance')}</legend>
-    <SelectMetadataField
-      id="accessibilityConformance"
-      label={$t('Conformance level')}
-      value={metadata.accessibilityConformance || ''}
-      options={conformanceOptions}
-      onblur={e => save('accessibilityConformance', e.value)}
-      onfocus={() => focus('accessibilityConformance' as keyof EPUBMetadata)}
-    />
-  </fieldset>
+      <fieldset class="field-group">
+        <legend class="group-title" tabindex="-1">{$t('Conformance')}</legend>
+        <SelectMetadataField
+          id="accessibilityConformance"
+          label={$t('Conformance level')}
+          value={metadata.accessibilityConformance || ''}
+          options={conformanceOptions}
+          onblur={e => save('accessibilityConformance', e.value)}
+          onfocus={() => focus('accessibilityConformance' as keyof EPUBMetadata)}
+        />
+      </fieldset>
 
-  <fieldset class="field-group">
-    <legend class="group-title" tabindex="-1">{$t('Summary')}</legend>
-    <TextareaMetadataField
-      id="accessibilitySummary"
-      value={metadata.accessibilitySummary || ''}
-      placeholder={$t('Human-readable summary of the accessibility of this publication')}
-      rows={3}
-      error={getFieldError('accessibilitySummary')}
-      onblur={e => save('accessibilitySummary', e.value)}
-      onfocus={() => focus('accessibilitySummary')}
-    />
-  </fieldset>
+      {#if showControls}
+        {@render checkboxGroup(
+          $t('Control methods'),
+          ACCESSIBILITY_CONTROLS,
+          metadata.accessibilityControl,
+          'accessibilityControl'
+        )}
+      {/if}
 
-  {#if showSufficient}
-    <fieldset class="field-group">
-      <legend class="group-title" tabindex="-1">{$t('Sufficient access modes')}</legend>
-      <p class="field-hint">
-        {$t('Each row is one combination of modes that is enough on its own to read the whole publication.')}
-      </p>
+      {#if showApi}
+        {@render checkboxGroup(
+          $t('Accessibility API'),
+          ACCESSIBILITY_APIS,
+          metadata.accessibilityAPI,
+          'accessibilityAPI'
+        )}
+      {/if}
+    </div>
 
-      {#each sufficientSets as set, index (index)}
-        <div class="sufficient-row">
-          <div class="mode-toggles">
-            {#each availableModes as mode (mode.value)}
-              <label class="mode-chip" class:selected={setTokens(set).includes(mode.value)}>
-                <input
-                  type="checkbox"
-                  checked={setTokens(set).includes(mode.value)}
-                  disabled={saving}
-                  onchange={e => toggleInSet(index, mode.value, e.currentTarget.checked)}
-                />
-                <span>{mode.label}</span>
-              </label>
-            {/each}
-          </div>
-          <button
-            type="button"
-            class="remove-button"
-            onclick={() => removeSet(index)}
-            disabled={saving}
-            aria-label={$t('Remove')}
-          >
-            ×
+    <div class="column">
+      {@render checkboxGroup(
+        $t('Accessibility features'),
+        ACCESSIBILITY_FEATURES,
+        metadata.accessibilityFeature,
+        'accessibilityFeature'
+      )}
+
+      <fieldset class="field-group">
+        <legend class="group-title" tabindex="-1">{$t('Summary')}</legend>
+        <TextareaMetadataField
+          id="accessibilitySummary"
+          value={metadata.accessibilitySummary || ''}
+          placeholder={$t('Human-readable summary of the accessibility of this publication')}
+          rows={3}
+          error={getFieldError('accessibilitySummary')}
+          onblur={e => save('accessibilitySummary', e.value)}
+          onfocus={() => focus('accessibilitySummary')}
+        />
+      </fieldset>
+
+      {#if showSufficient}
+        <fieldset class="field-group">
+          <legend class="group-title" tabindex="-1">{$t('Sufficient access modes')}</legend>
+          <p class="field-hint">
+            {$t('Each row is one combination of modes that is enough on its own to read the whole publication.')}
+          </p>
+
+          {#each sufficientSets as set, index (index)}
+            <div class="sufficient-row">
+              <div class="mode-toggles">
+                {#each availableModes as mode (mode.value)}
+                  <label class="mode-chip" class:selected={setTokens(set).includes(mode.value)}>
+                    <input
+                      type="checkbox"
+                      checked={setTokens(set).includes(mode.value)}
+                      disabled={saving}
+                      onchange={e => toggleInSet(index, mode.value, e.currentTarget.checked)}
+                    />
+                    <span>{mode.label}</span>
+                  </label>
+                {/each}
+              </div>
+              <button
+                type="button"
+                class="remove-button"
+                onclick={() => removeSet(index)}
+                disabled={saving}
+                aria-label={$t('Remove')}
+              >
+                ×
+              </button>
+            </div>
+          {/each}
+
+          <button type="button" class="add-button" onclick={addSet} disabled={saving}>
+            {$t('Add a sufficient set')}
           </button>
-        </div>
-      {/each}
+        </fieldset>
+      {/if}
 
-      <button type="button" class="add-button" onclick={addSet} disabled={saving}>
-        {$t('Add a sufficient set')}
-      </button>
-    </fieldset>
-  {/if}
-
-  {#if showControls}
-    {@render checkboxGroup(
-      $t('Control methods'),
-      ACCESSIBILITY_CONTROLS,
-      metadata.accessibilityControl,
-      'accessibilityControl'
-    )}
-  {/if}
-
-  {#if showApi}
-    {@render checkboxGroup(
-      $t('Accessibility API'),
-      ACCESSIBILITY_APIS,
-      metadata.accessibilityAPI,
-      'accessibilityAPI'
-    )}
-  {/if}
-
-  {#if showCertification}
-    <fieldset class="field-group">
-      <legend class="group-title" tabindex="-1">{$t('Certification')}</legend>
-      <TextMetadataField
-        id="accessibilityCertifiedBy"
-        label={$t('Certified by')}
-        value={metadata.accessibilityCertifiedBy || ''}
-        placeholder={$t('Name of the certifying party')}
-        onblur={e => save('accessibilityCertifiedBy', e.value)}
-        onfocus={() => focus('accessibilityCertifiedBy' as keyof EPUBMetadata)}
-      />
-      <TextMetadataField
-        id="accessibilityCertifierCredential"
-        label={$t('Certifier credential')}
-        value={metadata.accessibilityCertifierCredential || ''}
-        placeholder={$t('Credential of the certifier')}
-        onblur={e => save('accessibilityCertifierCredential', e.value)}
-        onfocus={() => focus('accessibilityCertifierCredential' as keyof EPUBMetadata)}
-      />
-      <TextMetadataField
-        id="accessibilityCertifierReport"
-        label={$t('Certifier report (URL)')}
-        value={metadata.accessibilityCertifierReport || ''}
-        placeholder={$t('https://example.com/report')}
-        onblur={e => save('accessibilityCertifierReport', e.value)}
-        onfocus={() => focus('accessibilityCertifierReport' as keyof EPUBMetadata)}
-      />
-    </fieldset>
-  {/if}
+      {#if showCertification}
+        <fieldset class="field-group">
+          <legend class="group-title" tabindex="-1">{$t('Certification')}</legend>
+          <TextMetadataField
+            id="accessibilityCertifiedBy"
+            label={$t('Certified by')}
+            value={metadata.accessibilityCertifiedBy || ''}
+            placeholder={$t('Name of the certifying party')}
+            onblur={e => save('accessibilityCertifiedBy', e.value)}
+            onfocus={() => focus('accessibilityCertifiedBy' as keyof EPUBMetadata)}
+          />
+          <TextMetadataField
+            id="accessibilityCertifierCredential"
+            label={$t('Certifier credential')}
+            value={metadata.accessibilityCertifierCredential || ''}
+            placeholder={$t('Credential of the certifier')}
+            onblur={e => save('accessibilityCertifierCredential', e.value)}
+            onfocus={() => focus('accessibilityCertifierCredential' as keyof EPUBMetadata)}
+          />
+          <TextMetadataField
+            id="accessibilityCertifierReport"
+            label={$t('Certifier report (URL)')}
+            value={metadata.accessibilityCertifierReport || ''}
+            placeholder={$t('https://example.com/report')}
+            onblur={e => save('accessibilityCertifierReport', e.value)}
+            onfocus={() => focus('accessibilityCertifierReport' as keyof EPUBMetadata)}
+          />
+        </fieldset>
+      {/if}
+    </div>
+  </div>
 </div>
 
 <style>
   .accessibility-fields {
     padding: 1.5rem;
+    /* Query the pane width, not the viewport (this form sits in a split pane). */
+    container-type: inline-size;
+  }
+
+  .form-columns {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  @container (min-width: 640px) {
+    .form-columns {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .column {
+    min-width: 0;
   }
 
   .field-group {

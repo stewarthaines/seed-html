@@ -242,6 +242,9 @@
 <style>
   .basic-info-fields {
     padding: 1.5rem;
+    /* Query the pane width, not the viewport: this form sits in a split pane,
+       so it must collapse to one column on the pane's width. */
+    container-type: inline-size;
   }
 
   .form-columns {
@@ -250,7 +253,7 @@
     gap: 2rem;
   }
 
-  @media (min-width: 768px) {
+  @container (min-width: 640px) {
     .form-columns {
       grid-template-columns: 1fr 1fr;
     }
@@ -278,114 +281,4 @@
     color: var(--color-text-primary);
   }
 
-  .array-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .array-item {
-    display: flex;
-    gap: 0;
-    align-items: flex-start;
-    background-color: var(--color-bg-primary);
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-sm);
-    padding: 0;
-    overflow: hidden;
-    position: relative;
-  }
-
-  .array-item :global(.metadata-field) {
-    flex: 1;
-    margin-block-end: 0;
-  }
-
-  .array-item :global(.field-input) {
-    border: none;
-    background-color: transparent;
-    border-radius: 0;
-  }
-
-  .array-item :global(.field-input:focus) {
-    border: none;
-    box-shadow: inset 0 0 0 2px var(--color-focus);
-  }
-
-  .array-item :global(.field-input.error:focus) {
-    box-shadow: inset 0 0 0 2px var(--color-error);
-  }
-
-  .array-item :global(.field-input.needs-attention:focus) {
-    box-shadow: inset 0 0 0 2px var(--color-success-600);
-  }
-
-  .remove-button {
-    width: 2.5rem;
-    height: calc(
-      1rem * 1.5 + 0.75rem * 2 - 1px
-    ); /* Match input total height: line-height + padding + border */
-    border: none;
-    border-inline-start: 1px solid var(--color-border-default);
-    border-radius: 0;
-    background-color: var(--color-bg-secondary);
-    color: var(--color-error);
-    font-size: 1.25rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-block-start: 0;
-    flex-shrink: 0;
-  }
-
-  .remove-button:hover:not(:disabled) {
-    background-color: var(--color-error-bg);
-    border-inline-start-color: var(--color-error-600);
-  }
-
-  .remove-button:focus {
-    outline: none;
-    background-color: var(--color-error-bg);
-    border-inline-start-color: var(--color-error-600);
-    box-shadow:
-      inset 0 0 0 2px var(--color-focus-ring),
-      inset 0 0 0 1px var(--color-error-600);
-  }
-
-  .remove-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .add-button {
-    padding: 0.75rem 1rem;
-    border: 1px dashed var(--color-border-default);
-    border-radius: var(--radius-sm);
-    background-color: transparent;
-    color: var(--color-primary);
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .add-button:hover:not(:disabled) {
-    background-color: var(--color-primary-surface);
-    border-color: var(--color-primary);
-    border-style: solid;
-  }
-
-  .add-button:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: inset 0 0 0 2px var(--color-focus-ring);
-    border-style: solid;
-  }
-
-  .add-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
 </style>
