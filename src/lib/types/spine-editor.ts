@@ -5,6 +5,11 @@
  * implementation following the pragmatic, spike-inspired architecture.
  */
 
+// ChapterMetadata has a single canonical definition in the transform package;
+// import it here (and re-export below) so the spine editor shares one source of
+// truth. Fixed-layout is expressed via its optional `viewport` field.
+import type { ChapterMetadata } from '../transform/types.js';
+
 /**
  * Result of a transform operation
  */
@@ -50,15 +55,9 @@ export interface TransformError {
 }
 
 /**
- * Chapter metadata for XHTML generation
+ * Chapter metadata for XHTML generation (re-exported canonical definition).
  */
-export interface ChapterMetadata {
-  title: string;
-  language: string;
-  stylesheets: string[];
-  scripts: string[];
-  fixed_layout: boolean;
-}
+export type { ChapterMetadata };
 
 /**
  * Message protocol for iframe communication - Parent to Iframe

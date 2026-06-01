@@ -108,6 +108,9 @@ export interface EPUBMetadata {
   pageProgressionDirection?: string;
   renditionOrientation?: string;
   renditionSpread?: string;
+  // Package-level fixed-layout viewport, e.g. "width=1200, height=600"
+  // (EPUB 3.0 rendition:viewport; one per publication in our model).
+  renditionViewport?: string;
 
   // EPUB 3 accessibility metadata
   accessMode?: string[];
@@ -150,6 +153,7 @@ export interface MetadataFieldTypes {
   pageProgressionDirection: string;
   renditionOrientation: string;
   renditionSpread: string;
+  renditionViewport: string;
   accessibilitySummary: string;
 }
 
@@ -379,6 +383,7 @@ export class OPFUtils {
     const layoutMeta = doc.querySelector('meta[property="rendition:layout"]');
     const orientationMeta = doc.querySelector('meta[property="rendition:orientation"]');
     const spreadMeta = doc.querySelector('meta[property="rendition:spread"]');
+    const viewportMeta = doc.querySelector('meta[property="rendition:viewport"]');
 
     // Parse spine page-progression-direction
     const spineElement = doc.querySelector('spine');
@@ -409,6 +414,7 @@ export class OPFUtils {
       renditionLayout: layoutMeta?.textContent?.trim() || undefined,
       renditionOrientation: orientationMeta?.textContent?.trim() || undefined,
       renditionSpread: spreadMeta?.textContent?.trim() || undefined,
+      renditionViewport: viewportMeta?.textContent?.trim() || undefined,
       pageProgressionDirection: pageProgression || undefined,
     };
   }
@@ -620,6 +626,10 @@ export class OPFUtils {
 
     if (metadata.renditionSpread && metadata.renditionSpread !== 'auto') {
       xml += `\n    <meta property="rendition:spread">${escapeXML(metadata.renditionSpread)}</meta>`;
+    }
+
+    if (metadata.renditionViewport) {
+      xml += `\n    <meta property="rendition:viewport">${escapeXML(metadata.renditionViewport)}</meta>`;
     }
 
     xml += '\n    <meta property="ibooks:specified-fonts">true</meta>';

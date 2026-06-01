@@ -365,7 +365,9 @@ export class SpinePreviewManager {
   private async generateChapterMetadata(): Promise<ChapterMetadata> {
     // Title: use spine item ID
     const title = this.spineItemId;
-    let fixed_layout = false;
+    // Reflowable default; replaced with the fixed-layout viewport below when the
+    // publication is pre-paginated.
+    let viewport = 'width=device-width, initial-scale=1.0';
 
     // Language: get from workspace EPUB metadata (fallback to 'en')
     let language = 'en';
@@ -382,7 +384,12 @@ export class SpinePreviewManager {
     try {
       const workspace = await this.workspaceService.loadWorkspace(this.workspaceId);
 
-      fixed_layout = workspace.opf.metadata.renditionLayout == 'pre-paginated';
+      // Fixed-layout publications carry a single package-level viewport
+      // (rendition:viewport); fall back to a sane default if it is absent.
+      if (workspace.opf.metadata.renditionLayout === 'pre-paginated') {
+        viewport =
+          workspace.opf.metadata.renditionViewport || 'width=1200, height=1600, initial-scale=1.0';
+      }
 
       // Stylesheets: filter CSS files from manifest
       workspace.opf.manifest
@@ -409,7 +416,7 @@ export class SpinePreviewManager {
       language,
       stylesheets,
       scripts,
-      fixed_layout,
+      viewport,
     };
   }
 
@@ -430,9 +437,9 @@ export class SpinePreviewManager {
       )
       .join('\n');
 
-    const viewport = metadata.fixed_layout
-      ? '<meta name="viewport" content="width=320, height=460, initial-scale=1.0" />'
-      : '<meta name="viewport" content="width=device-width, initial-scale=1.0" />';
+    const viewport = metadata.viewport
+      ? `<meta name="viewport" content="${this.escapeHtml(metadata.viewport)}" />`
+      : '';
 
     return `<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html>

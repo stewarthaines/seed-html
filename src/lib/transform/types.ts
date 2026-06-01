@@ -80,7 +80,14 @@ export interface ChapterMetadata {
   language: string;
   stylesheets: string[];
   scripts: string[];
+  /** Arbitrary author-supplied <head> passthrough. */
   customHead?: string;
+  /**
+   * Fixed-layout viewport, as the `content` value of a <meta name="viewport">
+   * (e.g. "width=1200, height=600"). Synthesised for preview from the package's
+   * rendition:viewport; omitted for reflowable content.
+   */
+  viewport?: string;
 }
 
 export interface BlobUrlManager {
