@@ -219,7 +219,7 @@
   }
 
   .highlighted-xml :global(.metadata-tag-tab.metadata-line) {
-    border-inline-start-color: var(--color-border-default);
+    border-inline-start-color: var(--color-border-strong);
   }
 
   .highlighted-xml :global(.metadata-tag-focused.metadata-line) {
