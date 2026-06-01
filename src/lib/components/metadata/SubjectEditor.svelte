@@ -76,6 +76,7 @@
             placeholder={$t('Authority (e.g. BISAC)')}
             aria-label={$t('Subject authority')}
             onblur={e => updateEntry(index, { authority: e.currentTarget.value })}
+            onfocus={focus}
           />
           <input
             type="text"
@@ -84,6 +85,7 @@
             placeholder={$t('Term (e.g. FIC028000)')}
             aria-label={$t('Subject term')}
             onblur={e => updateEntry(index, { term: e.currentTarget.value })}
+            onfocus={focus}
           />
         </div>
       {/if}

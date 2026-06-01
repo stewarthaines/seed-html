@@ -18,6 +18,16 @@ describe('xmlHighlighter — new metadata focus', () => {
     expect(highlightedXML).toMatch(/metadata-value-focused[^>]*>The Chronicles/);
   });
 
+  it('highlights collection refinements (collection-type) along with the collection', () => {
+    const { highlightedXML } = xmlHighlighter.highlightOPFContent(SAMPLE_OPF, {
+      focusedField: 'collections',
+    });
+    // Both the belongs-to-collection name and its collection-type refinement
+    // are highlighted as part of the same field.
+    expect(highlightedXML).toMatch(/metadata-value-focused[^>]*>The Chronicles/);
+    expect(highlightedXML).toMatch(/metadata-value-focused[^>]*>series/);
+  });
+
   it('highlights dcterms:conformsTo when conformance is focused', () => {
     const { highlightedXML } = xmlHighlighter.highlightOPFContent(SAMPLE_OPF, {
       focusedField: 'accessibilityConformance',

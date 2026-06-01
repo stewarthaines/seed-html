@@ -65,6 +65,7 @@
         value={entry.type ?? 'series'}
         options={typeOptions}
         onblur={e => updateEntry(index, { type: e.value })}
+        onfocus={focus}
       />
       <TextMetadataField
         id="collection-position-{index}"
@@ -72,6 +73,7 @@
         value={entry.position ?? ''}
         placeholder={$t('e.g. 2')}
         onblur={e => updateEntry(index, { position: e.value })}
+        onfocus={focus}
       />
     </div>
   </div>

@@ -36,6 +36,9 @@ const METADATA_MAPPINGS: MetadataFieldMapping[] = [
   { field: 'creator', xmlPattern: 'dublin-core', selector: 'dc:creator', displayName: 'Creator', isArray: true },
   { field: 'contributor', xmlPattern: 'dublin-core', selector: 'dc:contributor', displayName: 'Contributor', isArray: true },
   { field: 'subject', xmlPattern: 'dublin-core', selector: 'dc:subject', displayName: 'Subject', isArray: true },
+  // Subject scheme refinements (authority/term are subject-only properties)
+  { field: 'subject', xmlPattern: 'meta-property', selector: 'meta[property="authority"]', displayName: 'Subject authority', isArray: true },
+  { field: 'subject', xmlPattern: 'meta-property', selector: 'meta[property="term"]', displayName: 'Subject term', isArray: true },
   
   // EPUB 3 Meta Properties
   { field: 'renditionLayout', xmlPattern: 'meta-property', selector: 'meta[property="rendition:layout"]', displayName: 'Layout' },
@@ -51,6 +54,9 @@ const METADATA_MAPPINGS: MetadataFieldMapping[] = [
 
   // Collections
   { field: 'collections', xmlPattern: 'meta-property', selector: 'meta[property="belongs-to-collection"]', displayName: 'Collections', isArray: true },
+  // Collection refinements (collection-type/group-position are collection-only properties)
+  { field: 'collections', xmlPattern: 'meta-property', selector: 'meta[property="collection-type"]', displayName: 'Collection type', isArray: true },
+  { field: 'collections', xmlPattern: 'meta-property', selector: 'meta[property="group-position"]', displayName: 'Collection position', isArray: true },
 
   // Accessibility (Schema.org discovery + EPUB Accessibility 1.1)
   { field: 'accessMode', xmlPattern: 'meta-property', selector: 'meta[property="schema:accessMode"]', displayName: 'Access modes', isArray: true },
