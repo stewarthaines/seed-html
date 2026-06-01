@@ -4,9 +4,10 @@
   import SelectMetadataField from './fields/SelectMetadataField.svelte';
   import DateMetadataField from './fields/DateMetadataField.svelte';
   import CreatorRoleEditor from './CreatorRoleEditor.svelte';
+  import SubjectEditor from './SubjectEditor.svelte';
   import type { ValidationResult } from '../../metadata/MetadataValidator';
   import type { EPUBMetadata } from '../../epub';
-  import { MetadataUtils, type ArrayMetadataFields, type EditableArrayField } from '../../epub/opf-utils';
+  import { type EditableArrayField } from '../../epub/opf-utils';
 
   interface Props {
     metadata?: EPUBMetadata;
@@ -57,25 +58,6 @@
 
   const handleFieldFocus = (field: keyof EPUBMetadata | null) => {
     onfieldFocus?.(new CustomEvent('fieldFocus', { detail: { field } }));
-  };
-
-  const handleArrayAdd = (field: ArrayMetadataFields) => {
-    onarrayAdd?.(new CustomEvent('arrayAdd', { detail: { field } }));
-  };
-
-  const handleArrayRemove = (field: ArrayMetadataFields, index: number) => {
-    onarrayRemove?.(new CustomEvent('arrayRemove', { detail: { field, index } }));
-  };
-
-  const updateArrayItem = (_field: ArrayMetadataFields, _index: number, _value: string) => {
-    // Do nothing on change - input manages its own state until blur
-    // This prevents reactive updates that cause flickering
-  };
-
-  const handleSubjectBlur = (index: number, value: string) => {
-    const newArray = [...(metadata.subject || [])];
-    newArray[index] = value;
-    handleFieldSave('subject', newArray);
   };
 </script>
 
@@ -183,40 +165,13 @@
       <fieldset class="field-group">
         <legend class="group-title" tabindex="-1">{$t('Subjects')}</legend>
 
-        <div class="array-field">
-          {#each metadata.subject || [] as subject, index}
-            <div class="array-item">
-              <TextMetadataField
-                id="subject-{index}"
-                value={subject}
-                placeholder={$t('Subject or keyword')}
-                error={getFieldError(`subject[${index}]`)}
-                onchange={e => updateArrayItem('subject', index, e.value)}
-                onblur={e => handleSubjectBlur(index, e.value)}
-                onfocus={() => handleFieldFocus('subject')}
-              />
-              <button
-                type="button"
-                class="remove-button"
-                onclick={() => handleArrayRemove('subject', index)}
-                disabled={saving}
-                aria-label={$t('Remove subject')}
-              >
-                ×
-              </button>
-            </div>
-          {/each}
-
-          <!-- i18n: Button to add an additional subject/keyword field to the list -->
-          <button
-            type="button"
-            class="add-button"
-            onclick={() => handleArrayAdd('subject')}
-            disabled={saving}
-          >
-            {$t('Add Another Subject')}
-          </button>
-        </div>
+        <SubjectEditor
+          subjects={metadata.subject}
+          {saving}
+          {getFieldError}
+          {onfieldSave}
+          {onfieldFocus}
+        />
       </fieldset>
 
       <CreatorRoleEditor
@@ -275,114 +230,4 @@
     color: var(--color-text-primary);
   }
 
-  .array-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .array-item {
-    display: flex;
-    gap: 0;
-    align-items: flex-start;
-    background-color: var(--color-bg-primary);
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-sm);
-    padding: 0;
-    overflow: hidden;
-    position: relative;
-  }
-
-  .array-item :global(.metadata-field) {
-    flex: 1;
-    margin-block-end: 0;
-  }
-
-  .array-item :global(.field-input) {
-    border: none;
-    background-color: transparent;
-    border-radius: 0;
-  }
-
-  .array-item :global(.field-input:focus) {
-    border: none;
-    box-shadow: inset 0 0 0 2px var(--color-focus);
-  }
-
-  .array-item :global(.field-input.error:focus) {
-    box-shadow: inset 0 0 0 2px var(--color-error);
-  }
-
-  .array-item :global(.field-input.needs-attention:focus) {
-    box-shadow: inset 0 0 0 2px var(--color-success-600);
-  }
-
-  .remove-button {
-    width: 2.5rem;
-    height: calc(
-      1rem * 1.5 + 0.75rem * 2 - 1px
-    ); /* Match input total height: line-height + padding + border */
-    border: none;
-    border-inline-start: 1px solid var(--color-border-default);
-    border-radius: 0;
-    background-color: var(--color-bg-secondary);
-    color: var(--color-error);
-    font-size: 1.25rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-block-start: 0;
-    flex-shrink: 0;
-  }
-
-  .remove-button:hover:not(:disabled) {
-    background-color: var(--color-error-bg);
-    border-inline-start-color: var(--color-error-600);
-  }
-
-  .remove-button:focus {
-    outline: none;
-    background-color: var(--color-error-bg);
-    border-inline-start-color: var(--color-error-600);
-    box-shadow:
-      inset 0 0 0 2px var(--color-focus-ring),
-      inset 0 0 0 1px var(--color-error-600);
-  }
-
-  .remove-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .add-button {
-    padding: 0.75rem 1rem;
-    border: 1px dashed var(--color-border-default);
-    border-radius: var(--radius-sm);
-    background-color: transparent;
-    color: var(--color-primary);
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .add-button:hover:not(:disabled) {
-    background-color: var(--color-primary-surface);
-    border-color: var(--color-primary);
-    border-style: solid;
-  }
-
-  .add-button:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: inset 0 0 0 2px var(--color-focus-ring);
-    border-style: solid;
-  }
-
-  .add-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
 </style>

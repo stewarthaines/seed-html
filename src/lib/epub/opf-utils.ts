@@ -56,6 +56,17 @@ export interface IdentifierEntry {
   id?: string;
 }
 
+/**
+ * A dc:subject. `authority` names a subject scheme (e.g. "BISAC", "thema") and
+ * `term` is the code within it; per the spec the two must appear together. A
+ * plain keyword subject has neither.
+ */
+export interface SubjectEntry {
+  value: string;
+  authority?: string;
+  term?: string;
+}
+
 /** Normalize a creator value, tolerating legacy bare-string data. */
 export function toCreator(value: Creator | string): Creator {
   if (typeof value === 'string') return { name: value, roles: [] };
@@ -65,6 +76,22 @@ export function toCreator(value: Creator | string): Creator {
 /** Normalize a list of creator values (tolerating legacy strings). */
 export function normalizeCreators(list?: (Creator | string)[]): Creator[] {
   return (list ?? []).map(toCreator);
+}
+
+/** Normalize a subject value, tolerating legacy bare-string data. */
+export function toSubject(value: string | SubjectEntry): SubjectEntry {
+  return typeof value === 'string' ? { value } : value;
+}
+
+/** Display value for a single subject (tolerant of legacy strings). */
+export function subjectValue(value?: string | SubjectEntry): string {
+  if (!value) return '';
+  return typeof value === 'string' ? value : value.value;
+}
+
+/** Plain string values for a list of subjects (tolerant of legacy strings). */
+export function subjectValues(list?: (string | SubjectEntry)[]): string[] {
+  return (list ?? []).map(subjectValue).filter(Boolean);
 }
 
 /** Display name for a single creator value (tolerant of legacy strings). */
@@ -129,7 +156,7 @@ export interface EPUBMetadata {
   publisher?: string;
   date?: string;
   description?: string;
-  subject?: string[];
+  subject?: (string | SubjectEntry)[];
   rights?: string;
   source?: string;
   relation?: string;
@@ -168,7 +195,7 @@ export interface MetadataFieldTypes {
   contributor: Creator[];
   // Array fields
   language: string[];
-  subject: string[];
+  subject: (string | SubjectEntry)[];
   accessMode: string[];
   accessModeSufficient: string[];
   accessibilityFeature: string[];
@@ -460,9 +487,16 @@ export class OPFUtils {
     const fileAsLookup = (id: string) => refineValue(id, 'file-as');
     const creators = parseCreatorList(creatorElements, roleLookup, fileAsLookup);
     const contributors = parseCreatorList(contributorElements, roleLookup, fileAsLookup);
-    const subjects = Array.from(subjectElements)
-      .map(el => el.textContent?.trim())
-      .filter(Boolean) as string[];
+    const subjects: SubjectEntry[] = Array.from(subjectElements)
+      .map(el => {
+        const id = el.getAttribute('id');
+        return {
+          value: el.textContent?.trim() ?? '',
+          authority: refineValue(id, 'authority'),
+          term: refineValue(id, 'term'),
+        };
+      })
+      .filter(s => s.value);
 
     // Parse rendition properties
     const layoutMeta = doc.querySelector('meta[property="rendition:layout"]');
@@ -735,8 +769,20 @@ export class OPFUtils {
       xml += `\n    <dc:description>${escapeXML(metadata.description)}</dc:description>`;
     }
     if (metadata.subject && metadata.subject.length > 0) {
-      metadata.subject.forEach(subject => {
-        xml += `\n    <dc:subject>${escapeXML(subject)}</dc:subject>`;
+      let subjectIdCounter = 0;
+      metadata.subject.forEach(raw => {
+        const subj = toSubject(raw);
+        if (!subj.value?.trim()) return;
+        // authority and term must appear together; only refine when both exist.
+        const hasScheme = !!subj.authority?.trim() && !!subj.term?.trim();
+        if (!hasScheme) {
+          xml += `\n    <dc:subject>${escapeXML(subj.value)}</dc:subject>`;
+          return;
+        }
+        const id = `subject${++subjectIdCounter}`;
+        xml += `\n    <dc:subject id="${id}">${escapeXML(subj.value)}</dc:subject>`;
+        xml += refinementMeta(id, 'authority', subj.authority!.trim());
+        xml += refinementMeta(id, 'term', subj.term!.trim());
       });
     }
     if (metadata.rights) {

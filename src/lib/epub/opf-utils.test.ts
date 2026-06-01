@@ -863,6 +863,41 @@ describe('OPFUtils', () => {
     });
   });
 
+  describe('Subject metadata', () => {
+    it('emits a plain dc:subject (no id/refines) for a keyword without a scheme', () => {
+      const testDoc = createTestOPFDocument();
+      testDoc.metadata.subject = ['Fiction'];
+
+      const xml = OPFUtils.generateOPFXML(testDoc);
+
+      expect(xml).toContain('<dc:subject>Fiction</dc:subject>');
+      expect(xml).not.toContain('property="authority"');
+    });
+
+    it('emits authority + term refinements when both are present', () => {
+      const testDoc = createTestOPFDocument();
+      testDoc.metadata.subject = [{ value: 'Science Fiction', authority: 'BISAC', term: 'FIC028000' }];
+
+      const xml = OPFUtils.generateOPFXML(testDoc);
+      expectValidXML(xml, 'OPF with coded subject');
+
+      expect(xml).toContain('<dc:subject id="subject1">Science Fiction</dc:subject>');
+      expect(xml).toContain('<meta refines="#subject1" property="authority">BISAC</meta>');
+      expect(xml).toContain('<meta refines="#subject1" property="term">FIC028000</meta>');
+    });
+
+    it('omits the scheme when only one of authority/term is set (spec: both or neither)', () => {
+      const testDoc = createTestOPFDocument();
+      testDoc.metadata.subject = [{ value: 'Fiction', term: 'FIC028000' }];
+
+      const xml = OPFUtils.generateOPFXML(testDoc);
+
+      expect(xml).toContain('<dc:subject>Fiction</dc:subject>');
+      expect(xml).not.toContain('property="term"');
+      expect(xml).not.toContain('property="authority"');
+    });
+  });
+
   describe('Rendition Properties', () => {
     it('should include rendition properties in generated OPF when non-default', () => {
       const testDoc = createTestOPFDocument();
