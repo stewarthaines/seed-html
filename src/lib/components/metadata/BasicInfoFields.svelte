@@ -3,6 +3,7 @@
   import TextMetadataField from './fields/TextMetadataField.svelte';
   import SelectMetadataField from './fields/SelectMetadataField.svelte';
   import TextareaMetadataField from './fields/TextareaMetadataField.svelte';
+  import ViewportField from './fields/ViewportField.svelte';
   import CreatorRoleEditor from './CreatorRoleEditor.svelte';
   import LanguageEditor from './LanguageEditor.svelte';
   import type { EPUBMetadata } from '../../epub';
@@ -56,7 +57,15 @@
   const spreadOptions = [
     { value: 'auto', label: $t('Auto') },
     { value: 'none', label: $t('None') },
+    { value: 'landscape', label: $t('Landscape') },
     { value: 'both', label: $t('Both') },
+  ];
+
+  const flowOptions = [
+    { value: 'auto', label: $t('Auto') },
+    { value: 'paginated', label: $t('Paginated') },
+    { value: 'scrolled-continuous', label: $t('Scrolled (continuous)') },
+    { value: 'scrolled-doc', label: $t('Scrolled (per document)') },
   ];
 
   const getFieldError = (fieldName: string) => {
@@ -211,13 +220,23 @@
           onfocus={() => handleFieldFocus('renditionSpread')}
         />
 
+        <SelectMetadataField
+          id="renditionFlow"
+          label={$t('Flow')}
+          value={metadata.renditionFlow || 'auto'}
+          options={flowOptions}
+          error={getFieldError('renditionFlow')}
+          onchange={e => handleFieldChange('renditionFlow', e.value)}
+          onblur={e => handleFieldSave('renditionFlow', e.value)}
+          onfocus={() => handleFieldFocus('renditionFlow')}
+        />
+
         <!-- Viewport only applies to fixed-layout publications (rendition:viewport). -->
         {#if (metadata.renditionLayout || 'reflowable') === 'pre-paginated'}
-          <TextMetadataField
+          <ViewportField
             id="renditionViewport"
             label={$t('Viewport')}
             value={metadata.renditionViewport || ''}
-            placeholder={$t('width=1200, height=1600')}
             error={getFieldError('renditionViewport')}
             onchange={e => handleFieldChange('renditionViewport', e.value)}
             onblur={e => handleFieldSave('renditionViewport', e.value)}

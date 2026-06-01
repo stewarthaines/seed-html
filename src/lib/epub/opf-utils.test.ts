@@ -786,6 +786,7 @@ describe('OPFUtils', () => {
       testDoc.metadata.renditionOrientation = 'landscape';
       testDoc.metadata.renditionSpread = 'none';
       testDoc.metadata.renditionViewport = 'width=1200, height=600';
+      testDoc.metadata.renditionFlow = 'scrolled-doc';
       testDoc.metadata.pageProgressionDirection = 'rtl';
 
       const xml = OPFUtils.generateOPFXML(testDoc);
@@ -796,6 +797,7 @@ describe('OPFUtils', () => {
       expect(xml).toContain('<meta property="rendition:orientation">landscape</meta>');
       expect(xml).toContain('<meta property="rendition:spread">none</meta>');
       expect(xml).toContain('<meta property="rendition:viewport">width=1200, height=600</meta>');
+      expect(xml).toContain('<meta property="rendition:flow">scrolled-doc</meta>');
       expect(xml).toContain('<spine page-progression-direction="rtl">');
     });
 
@@ -804,6 +806,7 @@ describe('OPFUtils', () => {
       testDoc.metadata.renditionLayout = 'reflowable';
       testDoc.metadata.renditionOrientation = 'auto';
       testDoc.metadata.renditionSpread = 'auto';
+      testDoc.metadata.renditionFlow = 'auto';
       testDoc.metadata.pageProgressionDirection = 'default';
 
       const xml = OPFUtils.generateOPFXML(testDoc);
@@ -812,6 +815,7 @@ describe('OPFUtils', () => {
       expect(xml).not.toContain('rendition:orientation');
       expect(xml).not.toContain('rendition:spread');
       expect(xml).not.toContain('rendition:viewport');
+      expect(xml).not.toContain('rendition:flow');
       expect(xml).not.toContain('page-progression-direction');
       expect(xml).toContain('<spine>');
     });
