@@ -13,7 +13,7 @@
  */
 
 import type { FileStorageAPI } from '../storage/index.js';
-import { convertManifestPathToXHTMLPath } from '../epub/path-utils.js';
+import { generateXHTMLDocument } from './xhtml-template.js';
 import { primaryLanguage } from '../epub/opf-utils.js';
 import type { ExtensionManager } from '../extensions/extension-manager.js';
 import type { SettingsService } from '../services/settings/settings.service.js';
@@ -199,9 +199,12 @@ export class SpinePreviewManager {
         return;
       }
 
-      // Step 3: Auto-generate metadata and create final XHTML document
+      // Step 3: Auto-generate metadata and create final XHTML document.
+      // The transform engine returns a full <body> element; extract its inner
+      // HTML so the shared template generator can wrap it consistently.
       const metadata = await this.generateChapterMetadata();
-      const xhtml = this.generateXHTML(transformResult.html || '', metadata);
+      const bodyContent = this.extractBodyContent(transformResult.html || '');
+      const xhtml = generateXHTMLDocument(bodyContent, metadata);
 
       // Step 4: Save XHTML as spine item content to manifest
       if (this.config.persistToManifest) {
@@ -421,49 +424,13 @@ export class SpinePreviewManager {
   }
 
   /**
-   * Generate complete XHTML document with external file references only
+   * Extract the inner HTML of the transform engine's <body> output so it can be
+   * wrapped by the shared generateXHTMLDocument template. Uses DOMParser rather
+   * than string surgery (per codebase parsing preferences).
    */
-  private generateXHTML(transformedContent: string, metadata: ChapterMetadata): string {
-    const stylesheetLinks = metadata.stylesheets
-      .map(
-        href =>
-          `  <link rel="stylesheet" type="text/css" href="${this.escapeHtml(convertManifestPathToXHTMLPath(href))}" />`
-      )
-      .join('\n');
-
-    const scriptTags = metadata.scripts
-      .map(
-        src => `  <script src="${this.escapeHtml(convertManifestPathToXHTMLPath(src))}"></script>`
-      )
-      .join('\n');
-
-    const viewport = metadata.viewport
-      ? `<meta name="viewport" content="${this.escapeHtml(metadata.viewport)}" />`
-      : '';
-
-    return `<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="${this.escapeHtml(metadata.language)}" lang="${this.escapeHtml(metadata.language)}">
-<head>
-  <title>${this.escapeHtml(metadata.title)}</title>
-${stylesheetLinks}
-${scriptTags}
-${viewport}
-</head>
-${transformedContent}
-</html>`;
-  }
-
-  /**
-   * Escape HTML entities
-   */
-  private escapeHtml(text: string): string {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+  private extractBodyContent(html: string): string {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body?.innerHTML ?? html;
   }
 
   /**

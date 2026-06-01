@@ -20,7 +20,10 @@ export function generateXHTMLDocument(content: string, metadata: ChapterMetadata
   const escapedTitle = escapeHtml(metadata.title);
 
   const stylesheetLinks = metadata.stylesheets
-    .map(href => `    <link rel="stylesheet" type="text/css" href="${escapeHtml(href)}" />`)
+    .map(
+      href =>
+        `    <link rel="stylesheet" type="text/css" href="${escapeHtml(convertManifestPathToXHTMLPath(href))}" />`
+    )
     .join('\n');
 
   const scriptTags = metadata.scripts

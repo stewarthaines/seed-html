@@ -54,6 +54,34 @@ describe('TransformPipeline', () => {
       expect(xhtml).toContain('<meta name="chapter" content="2" />');
     });
 
+    it('pins the unified output: wraps body, converts manifest stylesheet paths, emits viewport', () => {
+      // Mirrors the spine-preview path now that it shares this generator:
+      // manifest-relative stylesheet hrefs are resolved to XHTML-relative, the
+      // body content is wrapped, and a fixed-layout viewport is emitted.
+      const xhtml = transformPipeline.generateXHTMLDocument('<h1>Hi</h1>', {
+        title: 'chapter1',
+        language: 'en',
+        stylesheets: ['Styles/page.css'],
+        scripts: [],
+        viewport: 'width=1200, height=1600, initial-scale=1.0',
+      });
+
+      expect(xhtml).toMatchInlineSnapshot(`
+        "<?xml version="1.0" encoding="utf-8"?>
+        <!DOCTYPE html>
+        <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+          <head>
+            <title>chapter1</title>
+            <meta name="viewport" content="width=1200, height=1600, initial-scale=1.0" />
+            <link rel="stylesheet" type="text/css" href="../Styles/page.css" />
+          </head>
+          <body>
+            <h1>Hi</h1>
+          </body>
+        </html>"
+      `);
+    });
+
     it('should handle different languages correctly', () => {
       const content = '<h1>Chapitre de test</h1>';
 
