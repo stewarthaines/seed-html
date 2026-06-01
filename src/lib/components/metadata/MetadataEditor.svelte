@@ -66,9 +66,12 @@
           'accessModeSufficient',
           'accessibilityFeature',
           'accessibilityHazard',
+          'accessibilityControl',
+          'accessibilityAPI',
           'accessibilitySummary',
-          'accessibilityCertification',
-          'accessibilityCertifier',
+          'accessibilityConformance',
+          'accessibilityCertifiedBy',
+          'accessibilityCertifierCredential',
         ];
       default:
         return [];

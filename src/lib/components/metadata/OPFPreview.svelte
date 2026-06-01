@@ -208,16 +208,22 @@
 
   /* Left-border markers: a soft grey bar for fields owned by the active tab,
      and the focused-field accent (blue) for the field currently in focus.
-     Applied only to the opening tag (.metadata-line) so the bar sits at the
-     start of the element's line, not before the closing tag. */
-  .highlighted-xml :global(.metadata-tag-tab.metadata-line) {
-    border-inline-start: 3px solid var(--color-border-default);
+     The bar is on the opening tag (.metadata-line) so it sits at the start of
+     the element's line. Every highlightable line reserves the bar's width with
+     a transparent border + compensating negative margin, so the bar
+     appearing/disappearing never shifts the element horizontally. */
+  .highlighted-xml :global(.metadata-line) {
+    border-inline-start: 3px solid transparent;
     padding-inline-start: 0.4rem;
+    margin-inline-start: calc(-0.4rem - 3px);
+  }
+
+  .highlighted-xml :global(.metadata-tag-tab.metadata-line) {
+    border-inline-start-color: var(--color-border-default);
   }
 
   .highlighted-xml :global(.metadata-tag-focused.metadata-line) {
-    border-inline-start: 3px solid var(--color-interactive-primary);
-    padding-inline-start: 0.4rem;
+    border-inline-start-color: var(--color-interactive-primary);
   }
 
   /* Enhanced XML syntax highlighting */
