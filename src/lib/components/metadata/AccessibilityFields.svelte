@@ -44,8 +44,32 @@
   const focus = (field: keyof EPUBMetadata) =>
     onfieldFocus?.(new CustomEvent('fieldFocus', { detail: { field } }));
 
+  // Hazard exclusivity (per EPUB/DAISY guidance): the blanket values are
+  // mutually exclusive with everything, and each positive/negative pair is
+  // mutually exclusive (you can't assert a hazard and its absence at once).
+  const HAZARD_BLANKET = ['none', 'unknown'];
+  const HAZARD_OPPOSITE: Record<string, string> = {
+    flashing: 'noFlashingHazard',
+    noFlashingHazard: 'flashing',
+    sound: 'noSoundHazard',
+    noSoundHazard: 'sound',
+    motionSimulation: 'noMotionSimulationHazard',
+    noMotionSimulationHazard: 'motionSimulation',
+  };
+  const nextHazards = (current: string[], value: string, on: boolean): string[] => {
+    if (!on) return current.filter(v => v !== value);
+    if (HAZARD_BLANKET.includes(value)) return [value]; // blanket clears the rest
+    const opposite = HAZARD_OPPOSITE[value];
+    const kept = current.filter(v => !HAZARD_BLANKET.includes(v) && v !== opposite);
+    return [...kept, value];
+  };
+
   // Add/remove a value from a multi-valued field and save the whole array.
   const toggle = (field: string, current: string[] | undefined, value: string, on: boolean) => {
+    if (field === 'accessibilityHazard') {
+      save(field, nextHazards(current ?? [], value, on));
+      return;
+    }
     const set = new Set(current ?? []);
     if (on) set.add(value);
     else set.delete(value);
