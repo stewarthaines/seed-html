@@ -132,26 +132,47 @@
 </fieldset>
 
 <style>
+  /* Mirror the canonical metadata fieldset styling (see AdvancedFields.svelte
+     "Subjects") so Creators/Contributors match the rest of the editor. */
+  .field-group {
+    margin-block-end: 2rem;
+    background-color: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    padding: 1.5rem;
+  }
+
+  .field-group:last-child {
+    margin-block-end: 0;
+  }
+
+  .group-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
   .creator-list {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3, 0.75rem);
+    gap: 0.75rem;
   }
 
   .creator-item {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2, 0.5rem);
-    padding: var(--space-2, 0.5rem);
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-bg-primary);
+    gap: 0.5rem;
   }
 
+  /* Seamless input + controls in a single bordered box, matching .array-item. */
   .creator-name-row {
     display: flex;
     align-items: flex-start;
     gap: 0;
+    background-color: var(--color-bg-primary);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
   }
 
   .creator-name-row :global(.metadata-field) {
@@ -159,43 +180,58 @@
     margin-block-end: 0;
   }
 
-  .remove-button {
+  .creator-name-row :global(.field-input) {
+    border: none;
+    background-color: transparent;
+    border-radius: 0;
+  }
+
+  .creator-name-row :global(.field-input:focus) {
+    border: none;
+    box-shadow: inset 0 0 0 2px var(--color-focus);
+  }
+
+  .creator-name-row :global(.field-input.error:focus) {
+    box-shadow: inset 0 0 0 2px var(--color-error);
+  }
+
+  /* Match the input's total height: line-height + padding + border. */
+  .remove-button,
+  .add-role-select {
     width: 2.5rem;
-    align-self: stretch;
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-sm);
+    height: calc(1rem * 1.5 + 0.75rem * 2 - 1px);
+    flex-shrink: 0;
+    border: none;
+    border-inline-start: 1px solid var(--color-border-default);
+    border-radius: 0;
     background-color: var(--color-bg-secondary);
-    color: var(--color-error);
     font-size: 1.25rem;
-    font-weight: 700;
     cursor: pointer;
     transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .remove-button {
+    color: var(--color-error);
+    font-weight: 700;
   }
 
   .remove-button:hover:not(:disabled) {
-    background-color: var(--color-error);
-    color: white;
+    background-color: var(--color-error-bg);
+    border-inline-start-color: var(--color-error-600);
   }
 
   /* Compact "add role" control, sized to match the remove (×) button so the two
      sit as an even pair to the right of the name. Shows a centered "+". */
   .add-role-select {
-    width: 2.5rem;
-    flex: none;
-    align-self: stretch;
     appearance: none;
     -webkit-appearance: none;
-    border: none;
-    border-inline-start: 1px solid var(--color-border-default);
-    border-radius: 0;
-    background-color: var(--color-bg-secondary);
     color: var(--color-text-secondary);
-    font-size: 1.25rem;
     line-height: 1;
     text-align: center;
     text-align-last: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
   }
 
   .add-role-select:hover:not(:disabled) {
@@ -203,6 +239,7 @@
     color: var(--color-text-primary);
   }
 
+  .remove-button:disabled,
   .add-role-select:disabled {
     cursor: not-allowed;
     opacity: 0.6;
@@ -242,17 +279,24 @@
   }
 
   .add-button {
-    align-self: flex-start;
-    padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+    padding: 0.75rem 1rem;
     border: 1px dashed var(--color-border-default);
     border-radius: var(--radius-sm);
     background-color: transparent;
-    color: var(--color-interactive-primary, var(--color-text-primary));
-    font-size: var(--text-sm, 0.875rem);
+    color: var(--color-primary);
+    font-size: 0.875rem;
     cursor: pointer;
+    transition: all 0.2s ease;
   }
 
   .add-button:hover:not(:disabled) {
-    background-color: var(--color-bg-secondary);
+    background-color: var(--color-primary-surface);
+    border-color: var(--color-primary);
+    border-style: solid;
+  }
+
+  .add-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 </style>
