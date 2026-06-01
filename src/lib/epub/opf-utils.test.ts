@@ -779,6 +779,45 @@ describe('OPFUtils', () => {
     });
   });
 
+  describe('Title metadata', () => {
+    it('emits a plain dc:title (no id/refines) for a single simple title', () => {
+      const testDoc = createTestOPFDocument();
+      testDoc.metadata.title = 'A Simple Book';
+      testDoc.metadata.titleFileAs = undefined;
+      testDoc.metadata.additionalTitles = undefined;
+
+      const xml = OPFUtils.generateOPFXML(testDoc);
+
+      expect(xml).toContain('<dc:title>A Simple Book</dc:title>');
+      expect(xml).not.toContain('property="title-type"');
+    });
+
+    it('emits a file-as refinement for the primary title', () => {
+      const testDoc = createTestOPFDocument();
+      testDoc.metadata.title = 'The Hobbit';
+      testDoc.metadata.titleFileAs = 'Hobbit, The';
+
+      const xml = OPFUtils.generateOPFXML(testDoc);
+      expectValidXML(xml, 'OPF with title file-as');
+
+      expect(xml).toMatch(/<dc:title id="title1">The Hobbit<\/dc:title>/);
+      expect(xml).toContain('<meta refines="#title1" property="file-as">Hobbit, The</meta>');
+    });
+
+    it('marks the primary title-type="main" and emits typed additional titles', () => {
+      const testDoc = createTestOPFDocument();
+      testDoc.metadata.title = 'Main Title';
+      testDoc.metadata.additionalTitles = [{ value: 'A Subtitle', type: 'subtitle' }];
+
+      const xml = OPFUtils.generateOPFXML(testDoc);
+      expectValidXML(xml, 'OPF with subtitle');
+
+      expect(xml).toContain('<meta refines="#title1" property="title-type">main</meta>');
+      expect(xml).toMatch(/<dc:title id="title2">A Subtitle<\/dc:title>/);
+      expect(xml).toContain('<meta refines="#title2" property="title-type">subtitle</meta>');
+    });
+  });
+
   describe('Rendition Properties', () => {
     it('should include rendition properties in generated OPF when non-default', () => {
       const testDoc = createTestOPFDocument();

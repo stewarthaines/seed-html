@@ -28,6 +28,21 @@ export interface Creator {
   id?: string;
 }
 
+/** EPUB title-type vocabulary (refines a dc:title). */
+export type TitleType = 'main' | 'subtitle' | 'short' | 'collection' | 'edition' | 'expanded';
+
+/**
+ * A dc:title beyond the primary one (subtitle, collection, edition, …). The
+ * primary title stays on EPUBMetadata.title as a plain string; these carry the
+ * title-type and file-as refinements the spec allows.
+ */
+export interface TitleEntry {
+  value: string;
+  type?: TitleType;
+  fileAs?: string;
+  id?: string;
+}
+
 /** Normalize a creator value, tolerating legacy bare-string data. */
 export function toCreator(value: Creator | string): Creator {
   if (typeof value === 'string') return { name: value, roles: [] };
@@ -81,7 +96,11 @@ export function parseCreatorList(
 
 export interface EPUBMetadata {
   // Required Dublin Core elements
-  title: string;
+  title: string; // primary (main) title
+  // file-as (sort form) refinement for the primary title
+  titleFileAs?: string;
+  // Additional titles beyond the primary one (subtitle, collection, edition, …)
+  additionalTitles?: TitleEntry[];
   language: string[]; // BCP 47 tags; at least one required
   identifier: string;
 
@@ -363,19 +382,44 @@ export class OPFUtils {
     // Parse dcterms:modified meta element (EPUB 3 specific)
     const modifiedElements = doc.querySelectorAll('meta[property="dcterms:modified"]');
 
-    // Build a refines -> role-codes index from `<meta property="role">` elements,
-    // then attach roles to each creator/contributor by id.
-    const roleRefines = new Map<string, string[]>();
-    doc.querySelectorAll('meta[property="role"]').forEach(meta => {
+    // Build a general refines index (id -> list of {property, value}) from every
+    // `<meta refines>` element, then read specific refinements off it by id.
+    const refinementsById = new Map<string, { property: string; value: string }[]>();
+    doc.querySelectorAll('meta[refines]').forEach(meta => {
       const refines = meta.getAttribute('refines');
-      const code = meta.textContent?.trim();
-      if (!refines || !code) return;
+      const property = meta.getAttribute('property');
+      const value = meta.textContent?.trim();
+      if (!refines || !property || !value) return;
       const id = refines.replace(/^#/, '');
-      const existing = roleRefines.get(id) ?? [];
-      existing.push(code);
-      roleRefines.set(id, existing);
+      const existing = refinementsById.get(id) ?? [];
+      existing.push({ property, value });
+      refinementsById.set(id, existing);
     });
-    const roleLookup = (id: string) => roleRefines.get(id) ?? [];
+    const refineValue = (id: string | null | undefined, property: string): string | undefined =>
+      id ? refinementsById.get(id)?.find(r => r.property === property)?.value : undefined;
+    const roleLookup = (id: string) =>
+      (refinementsById.get(id) ?? []).filter(r => r.property === 'role').map(r => r.value);
+
+    // Parse all dc:title elements, separating the primary (title-type="main", or
+    // the first when none is typed) from any additional titles.
+    const parsedTitles = Array.from(titleElements)
+      .map(el => {
+        const id = el.getAttribute('id');
+        return {
+          value: el.textContent?.trim() ?? '',
+          type: refineValue(id, 'title-type') as TitleType | undefined,
+          fileAs: refineValue(id, 'file-as'),
+        };
+      })
+      .filter(t => t.value);
+    const mainTitleIndex = Math.max(
+      0,
+      parsedTitles.findIndex(t => t.type === 'main')
+    );
+    const primaryTitle = parsedTitles[mainTitleIndex] ?? { value: '', fileAs: undefined };
+    const extraTitles: TitleEntry[] = parsedTitles
+      .filter((_, i) => i !== mainTitleIndex)
+      .map(t => ({ value: t.value, type: t.type, fileAs: t.fileAs }));
 
     const creators = parseCreatorList(creatorElements, roleLookup);
     const contributors = parseCreatorList(contributorElements, roleLookup);
@@ -395,7 +439,9 @@ export class OPFUtils {
     const pageProgression = spineElement?.getAttribute('page-progression-direction');
 
     return {
-      title: titleElements[0].textContent!.trim(),
+      title: primaryTitle.value || titleElements[0].textContent!.trim(),
+      titleFileAs: primaryTitle.fileAs || undefined,
+      additionalTitles: extraTitles.length > 0 ? extraTitles : undefined,
       language: Array.from(languageElements)
         .map(el => el.textContent?.trim())
         .filter(Boolean) as string[],
@@ -560,10 +606,44 @@ export class OPFUtils {
       .map(tag => `<dc:language>${escapeXML(tag)}</dc:language>`)
       .join('\n    ');
 
+    // A single `<meta refines>` line. The shared shape behind every property
+    // refinement we emit (title-type, file-as, role, …).
+    const refinementMeta = (id: string, property: string, value: string, scheme?: string) =>
+      `\n    <meta refines="#${id}" property="${property}"${scheme ? ` scheme="${scheme}"` : ''}>${escapeXML(value)}</meta>`;
+
+    // Build the title block: the primary title plus any additional titles. A
+    // title only gets an id + refinements when it needs them (a title-type or
+    // file-as); the primary is marked title-type="main" only when other titles
+    // are present, so a lone simple title stays `<dc:title>X</dc:title>`.
+    const additionalTitles = metadata.additionalTitles?.filter(t => t.value?.trim()) ?? [];
+    const titleEntries: { value: string; type?: string; fileAs?: string }[] = [
+      {
+        value: metadata.title,
+        type: additionalTitles.length > 0 ? 'main' : undefined,
+        fileAs: metadata.titleFileAs,
+      },
+      ...additionalTitles.map(t => ({ value: t.value, type: t.type, fileAs: t.fileAs })),
+    ];
+    let titleIdCounter = 0;
+    const titleLines: string[] = [];
+    titleEntries
+      .filter(t => t.value?.trim())
+      .forEach(t => {
+        if (!t.type && !t.fileAs) {
+          titleLines.push(`<dc:title>${escapeXML(t.value)}</dc:title>`);
+          return;
+        }
+        const id = `title${++titleIdCounter}`;
+        titleLines.push(`<dc:title id="${id}">${escapeXML(t.value)}</dc:title>`);
+        if (t.type) titleLines.push(refinementMeta(id, 'title-type', t.type).trimStart());
+        if (t.fileAs) titleLines.push(refinementMeta(id, 'file-as', t.fileAs).trimStart());
+      });
+    const titleXML = titleLines.join('\n    ');
+
     let xml = `<?xml version="1.0" encoding="utf-8"?>
 <package version="${version}" xmlns="http://www.idpf.org/2007/opf" unique-identifier="${uniqueId}" prefix="rendition: http://www.idpf.org/vocab/rendition/# ibooks: http://vocabulary.itunes.apple.com/rdf/ibooks/vocabulary-extensions-1.0/" xml:lang="en">
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:ibooks="http://vocabulary.itunes.apple.com/rdf/ibooks/vocabularies/2012/01/ibooks-specific">
-    <dc:title>${escapeXML(metadata.title)}</dc:title>
+    ${titleXML}
     ${languageXML}
     <dc:identifier id="${uniqueId}">${escapeXML(metadata.identifier)}</dc:identifier>`;
 
@@ -575,7 +655,7 @@ export class OPFUtils {
       const id = `creator${++creatorIdCounter}`;
       xml += `\n    <${tag} id="${id}">${escapeXML(creator.name)}</${tag}>`;
       for (const role of creator.roles) {
-        xml += `\n    <meta refines="#${id}" property="role" scheme="marc:relators">${escapeXML(role)}</meta>`;
+        xml += refinementMeta(id, 'role', role, 'marc:relators');
       }
     };
     if (metadata.creator && metadata.creator.length > 0) {
