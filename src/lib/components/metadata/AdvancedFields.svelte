@@ -1,7 +1,6 @@
 <script lang="ts">
   import { t } from '../../i18n';
   import TextMetadataField from './fields/TextMetadataField.svelte';
-  import SelectMetadataField from './fields/SelectMetadataField.svelte';
   import DateMetadataField from './fields/DateMetadataField.svelte';
   import CreatorRoleEditor from './CreatorRoleEditor.svelte';
   import SubjectEditor from './SubjectEditor.svelte';
@@ -32,18 +31,6 @@
     onarrayAdd,
     onarrayRemove
   }: Props = $props();
-
-  // Content type options
-  const typeOptions = [
-    { value: 'fiction', label: $t('Fiction') },
-    { value: 'non-fiction', label: $t('Non-fiction') },
-    { value: 'poetry', label: $t('Poetry') },
-    { value: 'drama', label: $t('Drama') },
-    { value: 'biography', label: $t('Biography') },
-    { value: 'textbook', label: $t('Textbook') },
-    { value: 'reference', label: $t('Reference') },
-    { value: 'children', label: $t('Children') },
-  ];
 
   const getFieldError = (fieldName: string) => {
     const error = validationErrors.find(err => err.field === fieldName);
@@ -101,12 +88,11 @@
           onfocus={() => handleFieldFocus('rights')}
         />
 
-        <SelectMetadataField
+        <TextMetadataField
           id="type"
           label={$t('Content Type')}
           value={metadata.type || ''}
-          options={typeOptions}
-          placeholder={$t('Select content type')}
+          placeholder={$t('e.g. fiction, dictionary, textbook')}
           error={getFieldError('type')}
           onchange={e => handleFieldChange('type', e.value)}
           onblur={e => handleFieldSave('type', e.value)}
