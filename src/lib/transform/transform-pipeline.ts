@@ -9,7 +9,7 @@ import type { FileStorageAPI } from '../storage/index.js';
 import { TransformManager } from './transform-manager.js';
 import { TransformExecutor, type TransformContext } from './transform-executor.js';
 import { TransformError } from './transform-error.js';
-import { generateXHTMLDocument, type ChapterMetadata } from './xhtml-template.js';
+import { generateXHTMLDocument, serializeInnerXHTML, type ChapterMetadata } from './xhtml-template.js';
 
 export interface TransformResult {
   success: boolean;
@@ -80,9 +80,11 @@ export class TransformPipeline {
       // Step 3: Execute DOM transformations
       const transformedDocument = await this.transformDOM(document, workspaceId, spineItemId);
 
-      // Step 4: Generate final XHTML document
-      const bodyContent =
-        transformedDocument.querySelector('div')?.innerHTML || transformedDocument.body.innerHTML;
+      // Step 4: Generate final XHTML document. Serialize as XHTML (not via
+      // innerHTML) so void elements stay self-closed and the result parses as
+      // application/xhtml+xml below.
+      const container = transformedDocument.querySelector('div') ?? transformedDocument.body;
+      const bodyContent = container ? serializeInnerXHTML(container) : '';
       const xhtmlString = this.generateXHTMLDocument(bodyContent, metadata);
 
       // Parse XHTML to Document object

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { TransformPipeline } from '../transform-pipeline.js';
+import { serializeInnerXHTML } from '../xhtml-template.js';
 import { TransformError } from '../transform-error.js';
 import { MockFileStorage } from '../../test/mocks/file-storage.mock.js';
 import { MockBlobUrlManager } from './mocks/blob-url-manager.mock.js';
@@ -80,6 +81,18 @@ describe('TransformPipeline', () => {
           </body>
         </html>"
       `);
+    });
+
+    it('keeps void elements self-closed so the XHTML preview parses (regression: <br>)', () => {
+      // Reading an HTML-parsed element's innerHTML emits <br>/<hr>/<img> without
+      // the self-closing slash, which is not well-formed inside the
+      // application/xhtml+xml document the template builds — the preview then
+      // throws "mismatched tag. Expected </br>". serializeInnerXHTML must keep
+      // void elements self-closed and not add per-child xmlns.
+      const div = document.createElement('div');
+      div.innerHTML = '<p>line one<br>line two</p><hr><img src="cover.png">';
+
+      expect(serializeInnerXHTML(div)).toBe('<p>line one<br />line two</p><hr /><img src="cover.png" />');
     });
 
     it('should handle different languages correctly', () => {

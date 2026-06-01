@@ -13,7 +13,7 @@
  */
 
 import type { FileStorageAPI } from '../storage/index.js';
-import { generateXHTMLDocument } from './xhtml-template.js';
+import { generateXHTMLDocument, serializeInnerXHTML } from './xhtml-template.js';
 import { primaryLanguage } from '../epub/opf-utils.js';
 import { DEFAULT_FXL_VIEWPORT } from '../epub/fixed-layout.js';
 import type { ExtensionManager } from '../extensions/extension-manager.js';
@@ -430,7 +430,10 @@ export class SpinePreviewManager {
    */
   private extractBodyContent(html: string): string {
     const doc = new DOMParser().parseFromString(html, 'text/html');
-    return doc.body?.innerHTML ?? html;
+    // Serialize as XHTML so void elements (<br/>, <hr/>, <img/>) stay
+    // self-closed; reading innerHTML would emit HTML-style <br>, which breaks
+    // the application/xhtml+xml document the shared template produces.
+    return doc.body ? serializeInnerXHTML(doc.body) : html;
   }
 
   /**

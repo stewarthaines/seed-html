@@ -49,6 +49,33 @@ ${viewportTag}${viewportTag ? '\n' : ''}${stylesheetLinks}${stylesheetLinks ? '\
 }
 
 /**
+ * Serialize an element's inner content as XHTML.
+ *
+ * The transform engine emits valid XHTML (e.g. `<br />`), but reading an
+ * HTML-parsed element's `.innerHTML` re-serializes void elements the HTML way
+ * (`<br>`, `<hr>`, `<img>`), which is not well-formed once embedded in the
+ * `application/xhtml+xml` document that {@link generateXHTMLDocument} builds —
+ * the preview's XML parser then rejects it ("mismatched tag. Expected </br>").
+ *
+ * Using XMLSerializer keeps void elements self-closed. We serialize the whole
+ * element and strip its own start/end tags so the top-level children don't each
+ * carry a redundant `xmlns` (they inherit it from the wrapper during
+ * serialization, and from the `<html xmlns>` of the final document when
+ * embedded).
+ */
+export function serializeInnerXHTML(element: Element): string {
+  const xml = new XMLSerializer().serializeToString(element);
+  const openEnd = xml.indexOf('>');
+  const closeStart = xml.lastIndexOf('</');
+  // Fall back to innerHTML if the wrapper was self-closed (no children) or the
+  // shape is unexpected.
+  if (openEnd === -1 || closeStart === -1 || closeStart < openEnd) {
+    return element.innerHTML;
+  }
+  return xml.slice(openEnd + 1, closeStart);
+}
+
+/**
  * Escape HTML entities in text content
  */
 function escapeHtml(text: string): string {
