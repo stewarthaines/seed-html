@@ -123,66 +123,10 @@
 
 <div class="accessibility-fields">
   <div class="form-columns">
+    <!-- Column 1: the priority "ways of reading" + conformance fields the
+         W3C/DAISY display guide calls out as most important. -->
     <div class="column">
       {@render checkboxGroup($t('Access modes'), ACCESS_MODES, metadata.accessMode, 'accessMode')}
-      {@render checkboxGroup(
-        $t('Hazards'),
-        ACCESSIBILITY_HAZARDS,
-        metadata.accessibilityHazard,
-        'accessibilityHazard'
-      )}
-
-      <fieldset class="field-group">
-        <legend class="group-title" tabindex="-1">{$t('Conformance')}</legend>
-        <SelectMetadataField
-          id="accessibilityConformance"
-          label={$t('Conformance level')}
-          value={metadata.accessibilityConformance || ''}
-          options={conformanceOptions}
-          onblur={e => save('accessibilityConformance', e.value)}
-          onfocus={() => focus('accessibilityConformance' as keyof EPUBMetadata)}
-        />
-      </fieldset>
-
-      {#if showControls}
-        {@render checkboxGroup(
-          $t('Control methods'),
-          ACCESSIBILITY_CONTROLS,
-          metadata.accessibilityControl,
-          'accessibilityControl'
-        )}
-      {/if}
-
-      {#if showApi}
-        {@render checkboxGroup(
-          $t('Accessibility API'),
-          ACCESSIBILITY_APIS,
-          metadata.accessibilityAPI,
-          'accessibilityAPI'
-        )}
-      {/if}
-    </div>
-
-    <div class="column">
-      {@render checkboxGroup(
-        $t('Accessibility features'),
-        ACCESSIBILITY_FEATURES,
-        metadata.accessibilityFeature,
-        'accessibilityFeature'
-      )}
-
-      <fieldset class="field-group">
-        <legend class="group-title" tabindex="-1">{$t('Summary')}</legend>
-        <TextareaMetadataField
-          id="accessibilitySummary"
-          value={metadata.accessibilitySummary || ''}
-          placeholder={$t('Human-readable summary of the accessibility of this publication')}
-          rows={3}
-          error={getFieldError('accessibilitySummary')}
-          onblur={e => save('accessibilitySummary', e.value)}
-          onfocus={() => focus('accessibilitySummary')}
-        />
-      </fieldset>
 
       {#if showSufficient}
         <fieldset class="field-group">
@@ -224,6 +168,18 @@
         </fieldset>
       {/if}
 
+      <fieldset class="field-group">
+        <legend class="group-title" tabindex="-1">{$t('Conformance')}</legend>
+        <SelectMetadataField
+          id="accessibilityConformance"
+          label={$t('Conformance level')}
+          value={metadata.accessibilityConformance || ''}
+          options={conformanceOptions}
+          onblur={e => save('accessibilityConformance', e.value)}
+          onfocus={() => focus('accessibilityConformance' as keyof EPUBMetadata)}
+        />
+      </fieldset>
+
       {#if showCertification}
         <fieldset class="field-group">
           <legend class="group-title" tabindex="-1">{$t('Certification')}</legend>
@@ -253,6 +209,54 @@
           />
         </fieldset>
       {/if}
+    </div>
+
+    <!-- Column 2: supporting detail; the free-text Summary complements the
+         structured fields and so comes last. -->
+    <div class="column">
+      {@render checkboxGroup(
+        $t('Accessibility features'),
+        ACCESSIBILITY_FEATURES,
+        metadata.accessibilityFeature,
+        'accessibilityFeature'
+      )}
+      {@render checkboxGroup(
+        $t('Hazards'),
+        ACCESSIBILITY_HAZARDS,
+        metadata.accessibilityHazard,
+        'accessibilityHazard'
+      )}
+
+      {#if showControls}
+        {@render checkboxGroup(
+          $t('Control methods'),
+          ACCESSIBILITY_CONTROLS,
+          metadata.accessibilityControl,
+          'accessibilityControl'
+        )}
+      {/if}
+
+      {#if showApi}
+        {@render checkboxGroup(
+          $t('Accessibility API'),
+          ACCESSIBILITY_APIS,
+          metadata.accessibilityAPI,
+          'accessibilityAPI'
+        )}
+      {/if}
+
+      <fieldset class="field-group">
+        <legend class="group-title" tabindex="-1">{$t('Summary')}</legend>
+        <TextareaMetadataField
+          id="accessibilitySummary"
+          value={metadata.accessibilitySummary || ''}
+          placeholder={$t('Human-readable summary of the accessibility of this publication')}
+          rows={3}
+          error={getFieldError('accessibilitySummary')}
+          onblur={e => save('accessibilitySummary', e.value)}
+          onfocus={() => focus('accessibilitySummary')}
+        />
+      </fieldset>
     </div>
   </div>
 </div>
