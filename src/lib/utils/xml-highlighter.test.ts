@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { xmlHighlighter } from './xml-highlighter';
 
-const SAMPLE_OPF = `<?xml version="1.0"?><package><metadata>` +
+const SAMPLE_OPF = `<?xml version="1.0"?><package><metadata xmlns:dc="http://purl.org/dc/elements/1.1/">` +
   `<dc:title>A Book</dc:title>` +
   `<meta property="belongs-to-collection" id="collection1">The Chronicles</meta>` +
   `<meta refines="#collection1" property="collection-type">series</meta>` +
@@ -57,6 +57,25 @@ describe('xmlHighlighter — new metadata focus', () => {
       focusedField: 'accessMode',
     });
     expect(withFocus.highlightedXML).toMatch(/metadata-value-focused[^>]*>textual/);
+  });
+
+  it('attributes shared refinements to the right parent by id (file-as/role)', () => {
+    const xml =
+      `<?xml version="1.0"?><package><metadata xmlns:dc="http://purl.org/dc/elements/1.1/">` +
+      `<dc:creator id="creator1">Jane Author</dc:creator>` +
+      `<meta refines="#creator1" property="role" scheme="marc:relators">aut</meta>` +
+      `<meta refines="#creator1" property="file-as">Author, Jane</meta>` +
+      `<dc:contributor id="creator2">Sam Editor</dc:contributor>` +
+      `<meta refines="#creator2" property="file-as">Editor, Sam</meta>` +
+      `</metadata></package>`;
+
+    const { highlightedXML } = xmlHighlighter.highlightOPFContent(xml, { focusedField: 'creator' });
+
+    // The creator's role and file-as are highlighted with the creator…
+    expect(highlightedXML).toMatch(/metadata-value-focused[^>]*>aut/);
+    expect(highlightedXML).toMatch(/metadata-value-focused[^>]*>Author, Jane/);
+    // …but the contributor's file-as is NOT (it belongs to a different field).
+    expect(highlightedXML).not.toMatch(/metadata-value-focused[^>]*>Editor, Sam/);
   });
 
   it('leaves unrelated fields unfocused', () => {

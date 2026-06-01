@@ -81,7 +81,7 @@
       value={identifierType ?? ''}
       options={typeOptions}
       onblur={e => save('identifierType', e.value)}
-      onfocus={() => focus('identifierType' as keyof EPUBMetadata)}
+      onfocus={() => focus('identifier')}
     />
   {/if}
 </div>

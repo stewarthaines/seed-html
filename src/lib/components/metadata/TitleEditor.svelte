@@ -80,7 +80,7 @@
     error={getFieldError('titleFileAs')}
     onchange={e => change('titleFileAs', e.value)}
     onblur={e => save('titleFileAs', e.value)}
-    onfocus={() => focus('titleFileAs' as keyof EPUBMetadata)}
+    onfocus={() => focus('title')}
   />
 {/if}
 
