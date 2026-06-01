@@ -7,9 +7,9 @@
     "verbatimModuleSyntax": true,
     "composite": true,
     "lib": ["ESNext", "DOM", "DOM.Iterable", "DOM.AsyncIterable"],
-    "baseUrl": ".",
     "paths": {
-      "$lib/*": ["./src/lib/*"]
+      "$lib/*": ["./src/lib/*"],
+      "*": ["./src/*"]
     },
     /**
      * Typecheck JS in `.svelte` and `.js` files by default.
