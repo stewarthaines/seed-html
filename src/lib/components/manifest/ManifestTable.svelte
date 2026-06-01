@@ -15,7 +15,6 @@
 
   // Filter state
   let filterText = '';
-  let dragActive = false;
   // oxlint-disable-next-line no-unassigned-vars
   let fileInputRef: HTMLInputElement;
 
@@ -244,25 +243,6 @@
     }
   };
 
-  const handleDragOver = (event: DragEvent) => {
-    event.preventDefault();
-    dragActive = true;
-  };
-
-  const handleDragLeave = (event: DragEvent) => {
-    event.preventDefault();
-    dragActive = false;
-  };
-
-  const handleDrop = (event: DragEvent) => {
-    event.preventDefault();
-    dragActive = false;
-
-    if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
-      dispatch('fileUpload', { files: event.dataTransfer.files });
-    }
-  };
-
   const handleClearFilter = () => {
     filterText = '';
   };
@@ -272,13 +252,9 @@
   <!-- Toolbar -->
   <div
     class="manifest-toolbar"
-    class:drag-active={dragActive}
     role="toolbar"
     aria-label={$t('Manifest actions')}
     tabindex="0"
-    ondragover={handleDragOver}
-    ondragleave={handleDragLeave}
-    ondrop={handleDrop}
   >
     <!-- Filter input -->
     <div class="filter-section">
@@ -329,15 +305,6 @@
       style="display: none;"
       onchange={handleFileInputChange}
     />
-
-    <!-- Drag and drop overlay -->
-    {#if dragActive}
-      <div class="drag-overlay">
-        <div class="drag-message">
-          <p>{$t('Drop files here to add them to the manifest')}</p>
-        </div>
-      </div>
-    {/if}
   </div>
 
   <!-- Table container -->
@@ -637,39 +604,6 @@
   .action-button:focus {
     outline: none;
     box-shadow: 0 0 0 2px var(--color-focus-ring);
-  }
-
-  .drag-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(var(--color-primary-rgb), 0.1);
-    border: 2px dashed var(--color-primary);
-    border-radius: var(--radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-  }
-
-  .drag-message {
-    padding: 1rem;
-    background-color: var(--color-surface);
-    border-radius: var(--radius-sm);
-    box-shadow: var(--shadow-sm);
-  }
-
-  .drag-message p {
-    margin: 0;
-    font-size: 0.875rem;
-    color: var(--color-text-primary);
-    text-align: center;
-  }
-
-  .drag-active {
-    background-color: rgba(var(--color-primary-rgb), 0.05);
   }
 
   .table-container {

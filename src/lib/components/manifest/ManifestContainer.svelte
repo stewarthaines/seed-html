@@ -244,7 +244,51 @@
       loadManifest();
     }
   });
+
+  // --- Window-wide drag-and-drop ---------------------------------------------
+  // This component is mounted only while the Manifest view is active, so a file
+  // dropped anywhere in the window is unambiguous intent to add it. Listen at
+  // the window level and route the files through the same upload path as the
+  // Load File button.
+  let isDragging = $state(false);
+  let dragDepth = 0; // enter/leave counter so nested elements don't flicker
+
+  const dragHasFiles = (event: DragEvent) =>
+    Array.from(event.dataTransfer?.types ?? []).includes('Files');
+
+  const handleWindowDragEnter = (event: DragEvent) => {
+    if (!dragHasFiles(event)) return;
+    dragDepth += 1;
+    isDragging = true;
+  };
+
+  const handleWindowDragOver = (event: DragEvent) => {
+    if (!dragHasFiles(event)) return;
+    event.preventDefault(); // required for a drop to fire
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+  };
+
+  const handleWindowDragLeave = (event: DragEvent) => {
+    if (!dragHasFiles(event)) return;
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (dragDepth === 0) isDragging = false;
+  };
+
+  const handleWindowDrop = (event: DragEvent) => {
+    dragDepth = 0;
+    isDragging = false;
+    if (!event.dataTransfer?.files?.length) return;
+    event.preventDefault();
+    handleFileUpload({ detail: { files: Array.from(event.dataTransfer.files) } });
+  };
 </script>
+
+<svelte:window
+  ondragenter={handleWindowDragEnter}
+  ondragover={handleWindowDragOver}
+  ondragleave={handleWindowDragLeave}
+  ondrop={handleWindowDrop}
+/>
 
 {#if loading}
   <div class="loading-state">
@@ -271,7 +315,50 @@
   />
 {/if}
 
+{#if isDragging}
+  <div class="drop-overlay" aria-hidden="true">
+    <div class="drop-message">
+      <p class="drop-title">{$t('Drop to add to the manifest')}</p>
+      <p class="drop-subtitle">{$t('Release the file anywhere to add it')}</p>
+    </div>
+  </div>
+{/if}
+
 <style>
+  .drop-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    /* Let drag events fall through to the window handlers. */
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(var(--color-primary-rgb), 0.12);
+    border: 3px dashed var(--color-primary);
+  }
+
+  .drop-message {
+    padding: 1.5rem 2rem;
+    background-color: var(--color-surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg, var(--shadow-sm));
+    text-align: center;
+  }
+
+  .drop-title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  .drop-subtitle {
+    margin: 0.25rem 0 0;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+  }
+
   .loading-state,
   .error-state {
     display: flex;
