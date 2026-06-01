@@ -9,10 +9,11 @@
   interface Props {
     workspace: WorkspaceState;
     focusedField?: keyof EPUBMetadata | null;
+    tabFields?: string[];
     isAdvancedMode?: boolean;
   }
 
-  let { workspace, focusedField = null, isAdvancedMode = false }: Props = $props();
+  let { workspace, focusedField = null, tabFields = [], isAdvancedMode = false }: Props = $props();
 
   let highlightedContent = $state<string>('');
   let error = $state<string | null>(null);
@@ -42,6 +43,7 @@
     try {
       const result = xmlHighlighter.highlightOPFContent(opfContent(), {
         focusedField,
+        tabFields,
         highlightValues: true,
         highlightTags: true,
         pageProgressionDirection: workspace?.opf?.metadata?.pageProgressionDirection,
@@ -202,6 +204,20 @@
   .highlighted-xml :global(.metadata-tag-focused) {
     color: var(--color-interactive-primary);
     font-weight: var(--font-medium);
+  }
+
+  /* Left-border markers: a soft grey bar for fields owned by the active tab,
+     and the focused-field accent (blue) for the field currently in focus.
+     Applied only to the opening tag (.metadata-line) so the bar sits at the
+     start of the element's line, not before the closing tag. */
+  .highlighted-xml :global(.metadata-tag-tab.metadata-line) {
+    border-inline-start: 3px solid var(--color-border-default);
+    padding-inline-start: 0.4rem;
+  }
+
+  .highlighted-xml :global(.metadata-tag-focused.metadata-line) {
+    border-inline-start: 3px solid var(--color-interactive-primary);
+    padding-inline-start: 0.4rem;
   }
 
   /* Enhanced XML syntax highlighting */

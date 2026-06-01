@@ -84,6 +84,7 @@
   let focusedMetadataField = $state<keyof import('./lib/epub/opf-utils.js').EPUBMetadata | null>(
     null
   );
+  let activeMetadataTabFields = $state<string[]>([]);
 
   // Granular reactive signals to prevent loading flicker during metadata updates
   let workspaceMetadata = $derived(currentWorkspaceState?.opf?.metadata);
@@ -145,6 +146,13 @@
     event: CustomEvent<{ field: keyof import('./lib/epub/opf-utils.js').EPUBMetadata | null }>
   ) => {
     focusedMetadataField = event.detail.field;
+  };
+
+  // Track the active metadata tab's fields (for soft group highlighting), and
+  // drop a stale focused field when the tab changes.
+  const handleMetadataTabFields = (event: CustomEvent<{ fields: string[] }>) => {
+    activeMetadataTabFields = event.detail.fields;
+    focusedMetadataField = null;
   };
 
   // Handle navigation preview update
@@ -603,6 +611,7 @@
             advancedMode={appState.isAdvancedMode}
             on:metadataChanged={handleMetadataChanged}
             on:fieldFocus={handleMetadataFieldFocus}
+            on:tabFieldsChange={handleMetadataTabFields}
           />
         {:else}
           <PlaceholderView
@@ -699,6 +708,7 @@
         <OPFPreview
           workspace={currentWorkspaceState}
           focusedField={focusedMetadataField}
+          tabFields={activeMetadataTabFields}
           isAdvancedMode={appState?.isAdvancedMode ?? false}
         />
       {:else if currentView === 'manifest' && initialized && currentWorkspaceState}

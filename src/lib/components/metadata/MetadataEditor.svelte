@@ -14,6 +14,7 @@
   const dispatch = createEventDispatcher<{
     metadataChanged: { field: string; value: any };
     fieldFocus: { field: keyof EPUBMetadata | null };
+    tabFieldsChange: { fields: string[] };
   }>();
 
   interface Props {
@@ -185,6 +186,12 @@
     // No need to block navigation, users should be able to access all tabs
     activeTab = newTabId;
   };
+
+  // Tell the preview which fields the active tab owns, so it can softly
+  // highlight that group in the content.opf.
+  $effect(() => {
+    dispatch('tabFieldsChange', { fields: getTabFields(activeTab) });
+  });
 
 </script>
 

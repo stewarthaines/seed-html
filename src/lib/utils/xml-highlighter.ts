@@ -67,10 +67,15 @@ const METADATA_MAPPINGS: MetadataFieldMapping[] = [
 
 export interface HighlightingOptions {
   focusedField?: keyof EPUBMetadata | null;
+  /** Fields owned by the active editor tab — softly highlighted as a group. */
+  tabFields?: string[];
   highlightValues?: boolean;
   highlightTags?: boolean;
   pageProgressionDirection?: string;
 }
+
+/** Highlight strength for a field: the focused field wins over the active tab. */
+type HighlightLevel = 'focused' | 'tab' | 'none';
 
 export interface HighlightResult {
   highlightedXML: string;
@@ -91,7 +96,7 @@ export class XMLHighlighter {
    * Highlight XML content with metadata field highlighting
    */
   highlightOPFContent(xmlContent: string, options: HighlightingOptions = {}): HighlightResult {
-    const { focusedField, highlightValues = true, highlightTags = true, pageProgressionDirection } = options;
+    const { focusedField, tabFields, highlightValues = true, highlightTags = true, pageProgressionDirection } = options;
 
     try {
       // Format XML first, then escape and highlight
@@ -100,8 +105,13 @@ export class XMLHighlighter {
 
       // Apply regex-based highlighting for each field mapping
       for (const mapping of this.mappings) {
-        const isFocused = focusedField === mapping.field;
-        highlightedXML = this.highlightFieldInXML(highlightedXML, mapping, isFocused, highlightValues, highlightTags);
+        const level: HighlightLevel =
+          focusedField === mapping.field
+            ? 'focused'
+            : tabFields?.includes(mapping.field)
+              ? 'tab'
+              : 'none';
+        highlightedXML = this.highlightFieldInXML(highlightedXML, mapping, level, highlightValues, highlightTags);
       }
 
       // Apply structural element de-emphasis
@@ -126,63 +136,58 @@ export class XMLHighlighter {
    * Highlight a specific field in XML using regex patterns
    */
   private highlightFieldInXML(
-    xml: string, 
-    mapping: MetadataFieldMapping, 
-    isFocused: boolean, 
-    highlightValues: boolean, 
+    xml: string,
+    mapping: MetadataFieldMapping,
+    level: HighlightLevel,
+    highlightValues: boolean,
     highlightTags: boolean
   ): string {
     if (mapping.xmlPattern === 'dublin-core') {
-      return this.highlightDublinCoreField(xml, mapping, isFocused, highlightValues, highlightTags);
+      return this.highlightDublinCoreField(xml, mapping, level, highlightValues, highlightTags);
     } else {
-      return this.highlightMetaPropertyField(xml, mapping, isFocused, highlightValues, highlightTags);
+      return this.highlightMetaPropertyField(xml, mapping, level, highlightValues, highlightTags);
     }
+  }
+
+  /** Class for an opening/closing tag at a given highlight level. */
+  private tagClassFor(level: HighlightLevel): string {
+    return level === 'focused'
+      ? 'metadata-tag-focused'
+      : level === 'tab'
+        ? 'metadata-tag-tab'
+        : 'metadata-tag';
+  }
+
+  /** Class for a value at a given highlight level (only the focused field is strong). */
+  private valueClassFor(level: HighlightLevel): string {
+    return level === 'focused' ? 'metadata-value-focused' : 'metadata-value';
   }
 
   /**
    * Highlight Dublin Core fields like <dc:title>content</dc:title>
    */
   private highlightDublinCoreField(
-    xml: string, 
-    mapping: MetadataFieldMapping, 
-    isFocused: boolean, 
-    highlightValues: boolean, 
+    xml: string,
+    mapping: MetadataFieldMapping,
+    level: HighlightLevel,
+    highlightValues: boolean,
     highlightTags: boolean
   ): string {
     // Extract element name from selector (dc:title -> title)
     const elementName = mapping.selector.replace('dc:', '');
-    
+
     // Pattern to match <dc:elementName [attributes]>content</dc:elementName>
     // Use [^<]* to match everything up to the next < character
     const pattern = new RegExp(`(&lt;dc:${elementName}[^<]*?&gt;)(.*?)(&lt;/dc:${elementName}&gt;)`, 'gi');
-    
+
+    const tagClass = this.tagClassFor(level);
+    const valueClass = this.valueClassFor(level);
+
     return xml.replace(pattern, (match, openTag, content, closeTag) => {
       let result = '';
-      
-      // Highlight opening and closing tags if requested
-      if (highlightTags) {
-        const tagClass = isFocused ? 'metadata-tag-focused' : 'metadata-tag';
-        result += `<span class="${tagClass}">${openTag}</span>`;
-      } else {
-        result += openTag;
-      }
-      
-      // Highlight content/value if requested and not empty
-      if (highlightValues && content.trim()) {
-        const valueClass = isFocused ? 'metadata-value-focused' : 'metadata-value';
-        result += `<span class="${valueClass}">${content}</span>`;
-      } else {
-        result += content;
-      }
-      
-      // Highlight closing tag if requested
-      if (highlightTags) {
-        const tagClass = isFocused ? 'metadata-tag-focused' : 'metadata-tag';
-        result += `<span class="${tagClass}">${closeTag}</span>`;
-      } else {
-        result += closeTag;
-      }
-      
+      result += highlightTags ? `<span class="${tagClass} metadata-line">${openTag}</span>` : openTag;
+      result += highlightValues && content.trim() ? `<span class="${valueClass}">${content}</span>` : content;
+      result += highlightTags ? `<span class="${tagClass}">${closeTag}</span>` : closeTag;
       return result;
     });
   }
@@ -191,16 +196,16 @@ export class XMLHighlighter {
    * Highlight meta property fields like <meta property="dcterms:modified">content</meta>
    */
   private highlightMetaPropertyField(
-    xml: string, 
-    mapping: MetadataFieldMapping, 
-    isFocused: boolean, 
-    highlightValues: boolean, 
+    xml: string,
+    mapping: MetadataFieldMapping,
+    level: HighlightLevel,
+    highlightValues: boolean,
     highlightTags: boolean
   ): string {
     // Extract property value from selector
     const propertyMatch = mapping.selector.match(/property="([^"]+)"/);
     if (!propertyMatch) return xml;
-    
+
     const propertyValue = propertyMatch[1];
     const escapedProperty = propertyValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -211,34 +216,15 @@ export class XMLHighlighter {
       `(&lt;meta(?:(?!&gt;)[\\s\\S])*?property=&quot;${escapedProperty}&quot;(?:(?!&gt;)[\\s\\S])*?&gt;)(.*?)(&lt;/meta&gt;)`,
       'gi'
     );
-    
+
+    const tagClass = this.tagClassFor(level);
+    const valueClass = this.valueClassFor(level);
+
     return xml.replace(pattern, (match, openTag, content, closeTag) => {
       let result = '';
-      
-      // Highlight opening and closing tags if requested
-      if (highlightTags) {
-        const tagClass = isFocused ? 'metadata-tag-focused' : 'metadata-tag';
-        result += `<span class="${tagClass}">${openTag}</span>`;
-      } else {
-        result += openTag;
-      }
-      
-      // Highlight content/value if requested and not empty
-      if (highlightValues && content.trim()) {
-        const valueClass = isFocused ? 'metadata-value-focused' : 'metadata-value';
-        result += `<span class="${valueClass}">${content}</span>`;
-      } else {
-        result += content;
-      }
-      
-      // Highlight closing tag if requested
-      if (highlightTags) {
-        const tagClass = isFocused ? 'metadata-tag-focused' : 'metadata-tag';
-        result += `<span class="${tagClass}">${closeTag}</span>`;
-      } else {
-        result += closeTag;
-      }
-      
+      result += highlightTags ? `<span class="${tagClass} metadata-line">${openTag}</span>` : openTag;
+      result += highlightValues && content.trim() ? `<span class="${valueClass}">${content}</span>` : content;
+      result += highlightTags ? `<span class="${tagClass}">${closeTag}</span>` : closeTag;
       return result;
     });
   }

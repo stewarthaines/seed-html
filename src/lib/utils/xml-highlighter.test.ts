@@ -33,6 +33,22 @@ describe('xmlHighlighter — new metadata focus', () => {
     expect(highlightedXML).toMatch(/metadata-value-focused[^>]*>textual/);
   });
 
+  it('softly marks active-tab fields and lets the focused field win', () => {
+    const tabFields = ['accessMode', 'accessibilityConformance', 'collections'];
+
+    // No focus: tab fields get the soft tab marker on their opening tag.
+    const tabOnly = xmlHighlighter.highlightOPFContent(SAMPLE_OPF, { tabFields });
+    expect(tabOnly.highlightedXML).toContain('metadata-tag-tab metadata-line');
+
+    // Focused field within the tab is promoted to the strong (focused) marker,
+    // not the soft one.
+    const withFocus = xmlHighlighter.highlightOPFContent(SAMPLE_OPF, {
+      tabFields,
+      focusedField: 'accessMode',
+    });
+    expect(withFocus.highlightedXML).toMatch(/metadata-value-focused[^>]*>textual/);
+  });
+
   it('leaves unrelated fields unfocused', () => {
     const { highlightedXML } = xmlHighlighter.highlightOPFContent(SAMPLE_OPF, {
       focusedField: 'title',
