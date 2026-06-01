@@ -18,27 +18,10 @@
   const dispatch = createEventDispatcher();
 
   // --- Inline manifest-item editing -------------------------------------------
-  const MEDIA_TYPES = [
-    { value: 'application/xhtml+xml', label: 'XHTML' },
-    { value: 'text/css', label: 'CSS' },
-    { value: 'text/javascript', label: 'JavaScript' },
-    { value: 'image/jpeg', label: 'JPEG Image' },
-    { value: 'image/png', label: 'PNG Image' },
-    { value: 'image/gif', label: 'GIF Image' },
-    { value: 'image/svg+xml', label: 'SVG Image' },
-    { value: 'audio/mpeg', label: 'MP3 Audio' },
-    { value: 'audio/mp4', label: 'MP4 Audio' },
-    { value: 'audio/ogg', label: 'OGG Audio' },
-    { value: 'video/mp4', label: 'MP4 Video' },
-    { value: 'video/webm', label: 'WebM Video' },
-    { value: 'font/woff', label: 'WOFF Font' },
-    { value: 'font/woff2', label: 'WOFF2 Font' },
-    { value: 'font/ttf', label: 'TrueType Font' },
-    { value: 'application/pdf', label: 'PDF' },
-  ];
-
-  const EPUB_PROPERTIES = [
-    { value: 'cover-image', label: 'Cover Image' },
+  // EPUB properties that apply to XHTML content documents. (cover-image is the
+  // only manifest property that targets an image rather than XHTML; it isn't
+  // offered here.)
+  const XHTML_PROPERTIES = [
     { value: 'mathml', label: 'MathML' },
     { value: 'nav', label: 'Navigation' },
     { value: 'remote-resources', label: 'Remote Resources' },
@@ -49,7 +32,6 @@
   let liveItem: ManifestItem | null = null;
   let editId = '';
   let editHref = '';
-  let editMediaType = '';
   let editProperties: string[] = [];
   let editError: string | null = null;
 
@@ -57,8 +39,13 @@
   // and content.opf stay preview-only.
   $: isManifestItem = selectedItemType === 'manifest' && !!selectedItem && 'id' in selectedItem;
   // XHTML content documents (chapters, nav) are named via the spine/chapter
-  // system — their id and href are managed there, so they're read-only here.
-  $: identityLocked = isManifestItem && (selectedItem as ManifestItem).mediaType === 'application/xhtml+xml';
+  // system, so we don't expose id/href here; instead they get EPUB properties.
+  // Other media (images, audio, fonts, CSS, JS) get editable id/href, no
+  // properties. Media type is fixed at upload and shown read-only in the header.
+  $: isXhtmlItem = isManifestItem && (selectedItem as ManifestItem).mediaType === 'application/xhtml+xml';
+  // Images can additionally be marked as the publication cover (cover-image is
+  // the one manifest property that targets an image rather than XHTML).
+  $: isImageItem = isManifestItem && (selectedItem as ManifestItem).mediaType.startsWith('image/');
 
   // Reseed the form whenever the selected item changes (not on our own edits).
   $: if (isManifestItem) {
@@ -71,7 +58,6 @@
     liveItem = item;
     editId = item.id;
     editHref = item.href;
-    editMediaType = item.mediaType;
     editProperties = [...(item.properties ?? [])];
     editError = null;
   }
@@ -93,7 +79,7 @@
   }
 
   const commitId = () => {
-    if (!liveItem || identityLocked) return;
+    if (!liveItem || isXhtmlItem) return;
     const value = editId.trim();
     if (!value || value === liveItem.id) {
       editId = liveItem.id;
@@ -103,7 +89,7 @@
   };
 
   const commitHref = () => {
-    if (!liveItem || identityLocked) return;
+    if (!liveItem || isXhtmlItem) return;
     const value = editHref.trim();
     if (!value || value === liveItem.href) {
       editHref = liveItem.href;
@@ -112,16 +98,43 @@
     persistEdit({ href: value });
   };
 
-  const commitMediaType = () => {
-    if (!liveItem || !editMediaType || editMediaType === liveItem.mediaType) return;
-    persistEdit({ mediaType: editMediaType });
-  };
-
   const toggleProperty = (value: string, checked: boolean) => {
     editProperties = checked
       ? [...editProperties, value]
       : editProperties.filter(p => p !== value);
     persistEdit({ properties: editProperties.length ? editProperties : undefined });
+  };
+
+  // Mark/unmark this image as the cover. EPUB allows a single cover image, so
+  // marking one clears the property from any other item that carries it.
+  const setCoverImage = async (checked: boolean) => {
+    const item = liveItem;
+    if (!workspace || !workspaceService || !item) return;
+    try {
+      let ws = workspace;
+      if (checked) {
+        for (const other of ws.opf.manifest) {
+          if (other.id !== item.id && other.properties?.includes('cover-image')) {
+            ws = await workspaceService.updateManifestItem(ws, other.id, {
+              properties: other.properties.filter(p => p !== 'cover-image'),
+            });
+          }
+        }
+      }
+      const nextProps = checked
+        ? [...editProperties.filter(p => p !== 'cover-image'), 'cover-image']
+        : editProperties.filter(p => p !== 'cover-image');
+      editProperties = nextProps;
+      const updated = await workspaceService.updateManifestItem(ws, item.id, {
+        properties: nextProps.length ? nextProps : undefined,
+      });
+      liveItem = updated.opf.manifest.find(m => m.id === item.id) ?? item;
+      editError = null;
+      onWorkspaceUpdate?.(updated);
+    } catch (err) {
+      editError = err instanceof Error ? err.message : $t('Failed to update item');
+      seedEditForm(item);
+    }
   };
 
   let contentPreview: ContentPreview | null = null;
@@ -470,72 +483,62 @@
       </div>
 
       {#if isManifestItem}
-        <!-- Inline manifest-item editor (compact; saves on blur / toggle) -->
+        <!-- Inline manifest-item editor (compact; saves on blur / toggle).
+             XHTML items show EPUB properties; other media show editable
+             id/href. Media type is fixed at upload (shown in the header). -->
         <div class="item-edit-form">
-          <div class="edit-field">
-            <label class="edit-label" for="manifest-edit-id">{$t('ID')}</label>
-            <input
-              id="manifest-edit-id"
-              class="edit-input"
-              type="text"
-              dir="ltr"
-              bind:value={editId}
-              on:blur={commitId}
-              readonly={identityLocked}
-              aria-readonly={identityLocked}
-            />
-          </div>
-
-          <div class="edit-field">
-            <label class="edit-label" for="manifest-edit-href">{$t('File Path')}</label>
-            <input
-              id="manifest-edit-href"
-              class="edit-input"
-              type="text"
-              dir="ltr"
-              bind:value={editHref}
-              on:blur={commitHref}
-              readonly={identityLocked}
-              aria-readonly={identityLocked}
-            />
-          </div>
-
-          {#if identityLocked}
-            <p class="edit-hint">{$t('ID and file path for chapters are managed in the spine sidebar.')}</p>
-          {/if}
-
-          <div class="edit-field">
-            <label class="edit-label" for="manifest-edit-mediatype">{$t('Media Type')}</label>
-            <select
-              id="manifest-edit-mediatype"
-              class="edit-input"
-              bind:value={editMediaType}
-              on:change={commitMediaType}
-            >
-              {#if !MEDIA_TYPES.some(m => m.value === editMediaType)}
-                <option value={editMediaType}>{editMediaType}</option>
-              {/if}
-              {#each MEDIA_TYPES as mediaType}
-                <option value={mediaType.value}>{mediaType.label}</option>
-              {/each}
-            </select>
-          </div>
-
-          <fieldset class="edit-properties">
-            <legend class="edit-label">{$t('EPUB Properties')}</legend>
-            <div class="edit-properties-grid">
-              {#each EPUB_PROPERTIES as property}
-                <label class="edit-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={editProperties.includes(property.value)}
-                    on:change={e => toggleProperty(property.value, e.currentTarget.checked)}
-                  />
-                  {property.label}
-                </label>
-              {/each}
+          {#if isXhtmlItem}
+            <fieldset class="edit-properties">
+              <legend class="edit-label">{$t('EPUB Properties')}</legend>
+              <div class="edit-properties-grid">
+                {#each XHTML_PROPERTIES as property}
+                  <label class="edit-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={editProperties.includes(property.value)}
+                      on:change={e => toggleProperty(property.value, e.currentTarget.checked)}
+                    />
+                    {property.label}
+                  </label>
+                {/each}
+              </div>
+            </fieldset>
+          {:else}
+            <div class="edit-field">
+              <label class="edit-label" for="manifest-edit-id">{$t('ID')}</label>
+              <input
+                id="manifest-edit-id"
+                class="edit-input"
+                type="text"
+                dir="ltr"
+                bind:value={editId}
+                on:blur={commitId}
+              />
             </div>
-          </fieldset>
+
+            <div class="edit-field">
+              <label class="edit-label" for="manifest-edit-href">{$t('File Path')}</label>
+              <input
+                id="manifest-edit-href"
+                class="edit-input"
+                type="text"
+                dir="ltr"
+                bind:value={editHref}
+                on:blur={commitHref}
+              />
+            </div>
+
+            {#if isImageItem}
+              <label class="edit-checkbox">
+                <input
+                  type="checkbox"
+                  checked={editProperties.includes('cover-image')}
+                  on:change={e => setCoverImage(e.currentTarget.checked)}
+                />
+                {$t('Cover image')}
+              </label>
+            {/if}
+          {/if}
 
           {#if editError}
             <p class="edit-error" role="alert">{editError}</p>
@@ -720,19 +723,6 @@
     outline: none;
     border-color: var(--color-focus-ring);
     box-shadow: 0 0 0 2px var(--color-focus-ring);
-  }
-
-  .edit-input[readonly] {
-    background-color: var(--color-bg-tertiary);
-    color: var(--color-text-secondary);
-    cursor: default;
-  }
-
-  .edit-hint {
-    margin: 0;
-    font-size: 0.75rem;
-    color: var(--color-text-secondary);
-    font-style: italic;
   }
 
   .edit-properties {
