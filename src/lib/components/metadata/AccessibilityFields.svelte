@@ -52,16 +52,38 @@
     save(field, Array.from(set));
   };
 
-  // accessModeSufficient is a list of comma-separated mode sets; edit it as one
-  // set per line (power-user feature, advanced-gated).
-  const sufficientText = $derived((metadata.accessModeSufficient ?? []).join('\n'));
-  const saveSufficient = (text: string) =>
+  // accessModeSufficient is a list of comma-separated mode sets. Build each set
+  // from the modes the publication actually declares (falling back to all when
+  // none are declared yet), keeping tokens in canonical order.
+  const availableModes = $derived(
+    metadata.accessMode?.length
+      ? ACCESS_MODES.filter(m => metadata.accessMode!.includes(m.value))
+      : ACCESS_MODES
+  );
+  const sufficientSets = $derived(metadata.accessModeSufficient ?? []);
+  const setTokens = (set: string) =>
+    set
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+  const toggleInSet = (index: number, mode: string, on: boolean) => {
+    const tokens = new Set(setTokens(sufficientSets[index] ?? ''));
+    if (on) tokens.add(mode);
+    else tokens.delete(mode);
+    // Re-order to the canonical access-mode order.
+    const ordered = ACCESS_MODES.filter(m => tokens.has(m.value)).map(m => m.value);
+    const next = [...sufficientSets];
+    next[index] = ordered.join(',');
+    save('accessModeSufficient', next);
+  };
+  const addSet = () => {
+    const initial = availableModes.map(m => m.value).join(',') || 'textual';
+    save('accessModeSufficient', [...sufficientSets, initial]);
+  };
+  const removeSet = (index: number) =>
     save(
       'accessModeSufficient',
-      text
-        .split('\n')
-        .map(line => line.trim())
-        .filter(Boolean)
+      sufficientSets.filter((_, i) => i !== index)
     );
 
   const conformanceOptions = $derived(
@@ -142,14 +164,40 @@
   {#if showSufficient}
     <fieldset class="field-group">
       <legend class="group-title" tabindex="-1">{$t('Sufficient access modes')}</legend>
-      <TextareaMetadataField
-        id="accessModeSufficient"
-        value={sufficientText}
-        placeholder={$t('One sufficient set per line, e.g. textual,visual')}
-        rows={2}
-        onblur={e => saveSufficient(e.value)}
-        onfocus={() => focus('accessModeSufficient')}
-      />
+      <p class="field-hint">
+        {$t('Each row is one combination of modes that is enough on its own to read the whole publication.')}
+      </p>
+
+      {#each sufficientSets as set, index (index)}
+        <div class="sufficient-row">
+          <div class="mode-toggles">
+            {#each availableModes as mode (mode.value)}
+              <label class="mode-chip" class:selected={setTokens(set).includes(mode.value)}>
+                <input
+                  type="checkbox"
+                  checked={setTokens(set).includes(mode.value)}
+                  disabled={saving}
+                  onchange={e => toggleInSet(index, mode.value, e.currentTarget.checked)}
+                />
+                <span>{mode.label}</span>
+              </label>
+            {/each}
+          </div>
+          <button
+            type="button"
+            class="remove-button"
+            onclick={() => removeSet(index)}
+            disabled={saving}
+            aria-label={$t('Remove')}
+          >
+            ×
+          </button>
+        </div>
+      {/each}
+
+      <button type="button" class="add-button" onclick={addSet} disabled={saving}>
+        {$t('Add a sufficient set')}
+      </button>
     </fieldset>
   {/if}
 
@@ -243,5 +291,75 @@
   .checkbox-item input {
     flex: none;
     cursor: pointer;
+  }
+
+  .field-hint {
+    margin-block: 0 0.75rem;
+    color: var(--color-text-secondary);
+    font-size: 0.8125rem;
+  }
+
+  .sufficient-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-block-end: 0.5rem;
+  }
+
+  .mode-toggles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    flex: 1;
+  }
+
+  .mode-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-pill, 9999px);
+    background-color: var(--color-bg-primary);
+    font-size: 0.8125rem;
+    cursor: pointer;
+  }
+
+  .mode-chip.selected {
+    background-color: var(--color-primary-surface, var(--color-bg-accent));
+    border-color: var(--color-primary);
+  }
+
+  .remove-button {
+    flex: none;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-bg-secondary);
+    color: var(--color-error);
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .remove-button:hover:not(:disabled) {
+    background-color: var(--color-error-bg);
+  }
+
+  .add-button {
+    padding: 0.5rem 0.875rem;
+    border: 1px dashed var(--color-border-default);
+    border-radius: var(--radius-sm);
+    background-color: transparent;
+    color: var(--color-primary);
+    font-size: 0.875rem;
+    cursor: pointer;
+  }
+
+  .add-button:hover:not(:disabled) {
+    background-color: var(--color-primary-surface);
+    border-color: var(--color-primary);
+    border-style: solid;
   }
 </style>
