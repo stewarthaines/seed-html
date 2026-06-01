@@ -111,19 +111,6 @@
         />
       </fieldset>
 
-      {#if showCollections}
-        <fieldset class="field-group">
-          <legend class="group-title" tabindex="-1">{$t('Collections')}</legend>
-          <CollectionsEditor
-            collections={metadata.collections}
-            {saving}
-            {getFieldError}
-            {onfieldSave}
-            {onfieldFocus}
-          />
-        </fieldset>
-      {/if}
-
       {#if showAdditionalInfo}
         <fieldset class="field-group">
           <legend class="group-title" tabindex="-1">{$t('Additional Information')}</legend>
@@ -211,6 +198,19 @@
         {onarrayRemove}
         {onfieldFocus}
       />
+
+      {#if showCollections}
+        <fieldset class="field-group">
+          <legend class="group-title" tabindex="-1">{$t('Collections')}</legend>
+          <CollectionsEditor
+            collections={metadata.collections}
+            {saving}
+            {getFieldError}
+            {onfieldSave}
+            {onfieldFocus}
+          />
+        </fieldset>
+      {/if}
     </div>
   </div>
 </div>
