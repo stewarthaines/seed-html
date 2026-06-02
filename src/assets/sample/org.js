@@ -33,42 +33,42 @@ var Org = (function () {
 
     define: function (name, syntax) {
       this.rules[name] = syntax;
-      var methodName = "is" + name.substring(0, 1).toUpperCase() + name.substring(1);
+      var methodName = 'is' + name.substring(0, 1).toUpperCase() + name.substring(1);
       this[methodName] = function (line) {
         return this.rules[name].exec(line);
       };
-    }
+    },
   };
 
-  Syntax.define("header", /^(\*+)\s+(.*)$/); // m[1] => level, m[2] => content
-  Syntax.define("preformatted", /^(\s*):(?: (.*)$|$)/); // m[1] => indentation, m[2] => content
-  Syntax.define("unorderedListElement", /^(\s*)(?:-|\+|\s+\*)\s+(.*)$/); // m[1] => indentation, m[2] => content
-  Syntax.define("orderedListElement", /^(\s*)(\d+)(?:\.|\))\s+(.*)$/); // m[1] => indentation, m[2] => number, m[3] => content
-  Syntax.define("tableSeparator", /^(\s*)\|((?:\+|-)*?)\|?$/); // m[1] => indentation, m[2] => content
-  Syntax.define("tableRow", /^(\s*)\|(.*?)\|?$/); // m[1] => indentation, m[2] => content
-  Syntax.define("blank", /^$/);
-  Syntax.define("horizontalRule", /^(\s*)-{5,}$/); //
-  Syntax.define("directive", /^(\s*)#\+(?:(begin|end)_)?(.*)$/i); // m[1] => indentation, m[2] => type, m[3] => content
-  Syntax.define("comment", /^(\s*)#(.*)$/);
-  Syntax.define("line", /^(\s*)(.*)$/);
+  Syntax.define('header', /^(\*+)\s+(.*)$/); // m[1] => level, m[2] => content
+  Syntax.define('preformatted', /^(\s*):(?: (.*)$|$)/); // m[1] => indentation, m[2] => content
+  Syntax.define('unorderedListElement', /^(\s*)(?:-|\+|\s+\*)\s+(.*)$/); // m[1] => indentation, m[2] => content
+  Syntax.define('orderedListElement', /^(\s*)(\d+)(?:\.|\))\s+(.*)$/); // m[1] => indentation, m[2] => number, m[3] => content
+  Syntax.define('tableSeparator', /^(\s*)\|((?:\+|-)*?)\|?$/); // m[1] => indentation, m[2] => content
+  Syntax.define('tableRow', /^(\s*)\|(.*?)\|?$/); // m[1] => indentation, m[2] => content
+  Syntax.define('blank', /^$/);
+  Syntax.define('horizontalRule', /^(\s*)-{5,}$/); //
+  Syntax.define('directive', /^(\s*)#\+(?:(begin|end)_)?(.*)$/i); // m[1] => indentation, m[2] => type, m[3] => content
+  Syntax.define('comment', /^(\s*)#(.*)$/);
+  Syntax.define('line', /^(\s*)(.*)$/);
 
   // ------------------------------------------------------------
   // Token
   // ------------------------------------------------------------
 
-  function Token() {
-  }
+  function Token() {}
 
   Token.prototype = {
     isListElement: function () {
-      return this.type === Lexer.tokens.orderedListElement ||
-        this.type === Lexer.tokens.unorderedListElement;
+      return (
+        this.type === Lexer.tokens.orderedListElement ||
+        this.type === Lexer.tokens.unorderedListElement
+      );
     },
 
     isTableElement: function () {
-      return this.type === Lexer.tokens.tableSeparator ||
-        this.type === Lexer.tokens.tableRow;
-    }
+      return this.type === Lexer.tokens.tableSeparator || this.type === Lexer.tokens.tableRow;
+    },
   };
 
   // ------------------------------------------------------------
@@ -86,63 +86,60 @@ var Org = (function () {
       token.fromLineNumber = this.stream.lineNumber;
 
       if (Syntax.isHeader(line)) {
-        token.type        = Lexer.tokens.header;
+        token.type = Lexer.tokens.header;
         token.indentation = 0;
-        token.content     = RegExp.$2;
+        token.content = RegExp.$2;
         // specific
-        token.level       = RegExp.$1.length;
+        token.level = RegExp.$1.length;
       } else if (Syntax.isPreformatted(line)) {
-        token.type        = Lexer.tokens.preformatted;
+        token.type = Lexer.tokens.preformatted;
         token.indentation = RegExp.$1.length;
-        token.content     = RegExp.$2;
+        token.content = RegExp.$2;
       } else if (Syntax.isUnorderedListElement(line)) {
-        token.type        = Lexer.tokens.unorderedListElement;
+        token.type = Lexer.tokens.unorderedListElement;
         token.indentation = RegExp.$1.length;
-        token.content     = RegExp.$2;
+        token.content = RegExp.$2;
       } else if (Syntax.isOrderedListElement(line)) {
-        token.type        = Lexer.tokens.orderedListElement;
+        token.type = Lexer.tokens.orderedListElement;
         token.indentation = RegExp.$1.length;
-        token.content     = RegExp.$3;
+        token.content = RegExp.$3;
         // specific
-        token.number      = RegExp.$2;
+        token.number = RegExp.$2;
       } else if (Syntax.isTableSeparator(line)) {
-        token.type        = Lexer.tokens.tableSeparator;
+        token.type = Lexer.tokens.tableSeparator;
         token.indentation = RegExp.$1.length;
-        token.content     = RegExp.$2;
+        token.content = RegExp.$2;
       } else if (Syntax.isTableRow(line)) {
-        token.type        = Lexer.tokens.tableRow;
+        token.type = Lexer.tokens.tableRow;
         token.indentation = RegExp.$1.length;
-        token.content     = RegExp.$2;
+        token.content = RegExp.$2;
       } else if (Syntax.isBlank(line)) {
-        token.type        = Lexer.tokens.blank;
+        token.type = Lexer.tokens.blank;
         token.indentation = 0;
-        token.content     = null;
+        token.content = null;
       } else if (Syntax.isHorizontalRule(line)) {
-        token.type        = Lexer.tokens.horizontalRule;
+        token.type = Lexer.tokens.horizontalRule;
         token.indentation = RegExp.$1.length;
-        token.content     = null;
+        token.content = null;
       } else if (Syntax.isDirective(line)) {
-        token.type        = Lexer.tokens.directive;
+        token.type = Lexer.tokens.directive;
         token.indentation = RegExp.$1.length;
-        token.content     = RegExp.$3;
+        token.content = RegExp.$3;
         // decide directive type (begin, end or oneshot)
         var directiveTypeString = RegExp.$2;
-        if (/^begin/i.test(directiveTypeString))
-          token.beginDirective = true;
-        else if (/^end/i.test(directiveTypeString))
-          token.endDirective = true;
-        else
-          token.oneshotDirective = true;
+        if (/^begin/i.test(directiveTypeString)) token.beginDirective = true;
+        else if (/^end/i.test(directiveTypeString)) token.endDirective = true;
+        else token.oneshotDirective = true;
       } else if (Syntax.isComment(line)) {
-        token.type        = Lexer.tokens.comment;
+        token.type = Lexer.tokens.comment;
         token.indentation = RegExp.$1.length;
-        token.content     = RegExp.$2;
+        token.content = RegExp.$2;
       } else if (Syntax.isLine(line)) {
-        token.type        = Lexer.tokens.line;
+        token.type = Lexer.tokens.line;
         token.indentation = RegExp.$1.length;
-        token.content     = RegExp.$2;
+        token.content = RegExp.$2;
       } else {
-        throw new Error("SyntaxError: Unknown line: " + line);
+        throw new Error('SyntaxError: Unknown line: ' + line);
       }
 
       return token;
@@ -159,23 +156,19 @@ var Org = (function () {
     },
 
     peekStackedToken: function () {
-      return this.tokenStack.length > 0 ?
-        this.tokenStack[this.tokenStack.length - 1] : null;
+      return this.tokenStack.length > 0 ? this.tokenStack[this.tokenStack.length - 1] : null;
     },
 
     getStackedToken: function () {
-      return this.tokenStack.length > 0 ?
-        this.tokenStack.pop() : null;
+      return this.tokenStack.length > 0 ? this.tokenStack.pop() : null;
     },
 
     peekNextToken: function () {
-      return this.peekStackedToken() ||
-        this.tokenize(this.stream.peekNextLine());
+      return this.peekStackedToken() || this.tokenize(this.stream.peekNextLine());
     },
 
     getNextToken: function () {
-      return this.getStackedToken() ||
-        this.tokenize(this.stream.getNextLine());
+      return this.getStackedToken() || this.tokenize(this.stream.getNextLine());
     },
 
     hasNext: function () {
@@ -184,22 +177,22 @@ var Org = (function () {
 
     getLineNumber: function () {
       return this.stream.lineNumber;
-    }
+    },
   };
 
   Lexer.tokens = {};
   [
-    "header",
-    "orderedListElement",
-    "unorderedListElement",
-    "tableRow",
-    "tableSeparator",
-    "preformatted",
-    "line",
-    "horizontalRule",
-    "blank",
-    "directive",
-    "comment"
+    'header',
+    'orderedListElement',
+    'unorderedListElement',
+    'tableRow',
+    'tableSeparator',
+    'preformatted',
+    'line',
+    'horizontalRule',
+    'blank',
+    'directive',
+    'comment',
   ].forEach(function (tokenName, i) {
     Lexer.tokens[tokenName] = i;
   });
@@ -208,8 +201,7 @@ var Org = (function () {
   // Exports
   // ------------------------------------------------------------
 
-  if (typeof exports !== "undefined")
-    exports.Lexer = Lexer;
+  if (typeof exports !== 'undefined') exports.Lexer = Lexer;
 
   function PrototypeNode(type, children) {
     this.type = type;
@@ -225,35 +217,39 @@ var Org = (function () {
     previousSibling: null,
     parent: null,
     get firstChild() {
-      return this.children.length < 1 ?
-        null : this.children[0];
+      return this.children.length < 1 ? null : this.children[0];
     },
     get lastChild() {
-      return this.children.length < 1 ?
-        null : this.children[this.children.length - 1];
+      return this.children.length < 1 ? null : this.children[this.children.length - 1];
     },
     appendChild: function (newChild) {
-      var previousSibling = this.children.length < 1 ?
-            null : this.lastChild;
+      var previousSibling = this.children.length < 1 ? null : this.lastChild;
       this.children.push(newChild);
       newChild.previousSibling = previousSibling;
       newChild.parent = this;
     },
     toString: function () {
-      var string = "<" + this.type + ">";
+      var string = '<' + this.type + '>';
 
-      if (typeof this.value !== "undefined") {
-        string += " " + this.value;
+      if (typeof this.value !== 'undefined') {
+        string += ' ' + this.value;
       } else if (this.children) {
-        string += "\n" + this.children.map(function (child, idx) {
-          return "#" + idx + " " + child.toString();
-        }).join("\n").split("\n").map(function (line) {
-          return "  " + line;
-        }).join("\n");
+        string +=
+          '\n' +
+          this.children
+            .map(function (child, idx) {
+              return '#' + idx + ' ' + child.toString();
+            })
+            .join('\n')
+            .split('\n')
+            .map(function (line) {
+              return '  ' + line;
+            })
+            .join('\n');
       }
 
       return string;
-    }
+    },
   };
 
   var Node = {
@@ -262,53 +258,51 @@ var Org = (function () {
     define: function (name, postProcess) {
       this.types[name] = name;
 
-      var methodName = "create" + name.substring(0, 1).toUpperCase() + name.substring(1);
-      var postProcessGiven = typeof postProcess === "function";
+      var methodName = 'create' + name.substring(0, 1).toUpperCase() + name.substring(1);
+      var postProcessGiven = typeof postProcess === 'function';
 
       this[methodName] = function (children, options) {
         var node = new PrototypeNode(name, children);
 
-        if (postProcessGiven)
-          postProcess(node, options || {});
+        if (postProcessGiven) postProcess(node, options || {});
 
         return node;
       };
-    }
+    },
   };
 
-  Node.define("text", function (node, options) {
+  Node.define('text', function (node, options) {
     node.value = options.value;
   });
-  Node.define("header", function (node, options) {
+  Node.define('header', function (node, options) {
     node.level = options.level;
   });
-  Node.define("orderedList");
-  Node.define("unorderedList");
-  Node.define("definitionList");
-  Node.define("listElement");
-  Node.define("paragraph");
-  Node.define("preformatted");
-  Node.define("table");
-  Node.define("tableRow");
-  Node.define("tableCell");
-  Node.define("horizontalRule");
-  Node.define("directive");
+  Node.define('orderedList');
+  Node.define('unorderedList');
+  Node.define('definitionList');
+  Node.define('listElement');
+  Node.define('paragraph');
+  Node.define('preformatted');
+  Node.define('table');
+  Node.define('tableRow');
+  Node.define('tableCell');
+  Node.define('horizontalRule');
+  Node.define('directive');
 
   // Inline
-  Node.define("inlineContainer");
+  Node.define('inlineContainer');
 
-  Node.define("bold");
-  Node.define("italic");
-  Node.define("underline");
-  Node.define("code");
-  Node.define("verbatim");
-  Node.define("dashed");
-  Node.define("link", function (node, options) {
+  Node.define('bold');
+  Node.define('italic');
+  Node.define('underline');
+  Node.define('code');
+  Node.define('verbatim');
+  Node.define('dashed');
+  Node.define('link', function (node, options) {
     node.src = options.src;
   });
 
-  if (typeof exports !== "undefined")
-    exports.Node = Node;
+  if (typeof exports !== 'undefined') exports.Node = Node;
 
   function Stream(sequence) {
     this.sequences = sequence.split(/\r?\n/);
@@ -328,7 +322,7 @@ var Org = (function () {
     return this.lineNumber < this.totalLines;
   };
 
-  if (typeof exports !== "undefined") {
+  if (typeof exports !== 'undefined') {
     exports.Stream = Stream;
   }
 
@@ -349,18 +343,17 @@ var Org = (function () {
 
   Parser.prototype = {
     initStatus: function (stream, options) {
-      if (typeof stream === "string")
-        stream = new Stream(stream);
+      if (typeof stream === 'string') stream = new Stream(stream);
       this.lexer = new Lexer(stream);
       this.nodes = [];
       this.options = {
         toc: true,
         num: true,
-        "^": "{}",
-        multilineCell: false
+        '^': '{}',
+        multilineCell: false,
       };
       // Override option values
-      if (options && typeof options === "object") {
+      if (options && typeof options === 'object') {
         for (var key in options) {
           this.options[key] = options[key];
         }
@@ -370,7 +363,7 @@ var Org = (function () {
         convert: function (ConverterClass, exportOptions) {
           var converter = new ConverterClass(this, exportOptions);
           return converter.result;
-        }
+        },
       };
     },
 
@@ -382,7 +375,7 @@ var Org = (function () {
     },
 
     createErrorReport: function (message) {
-      return new Error(message + " at line " + this.lexer.getLineNumber());
+      return new Error(message + ' at line ' + this.lexer.getLineNumber());
     },
 
     skipBlank: function () {
@@ -422,11 +415,9 @@ var Org = (function () {
     parseTitle: function () {
       this.skipBlank();
 
-      if (this.lexer.hasNext() &&
-          this.lexer.peekNextToken().type === Lexer.tokens.line)
+      if (this.lexer.hasNext() && this.lexer.peekNextToken().type === Lexer.tokens.line)
         this.document.title = this.createTextNode(this.lexer.getNextToken().content);
-      else
-        this.document.title = null;
+      else this.document.title = null;
 
       this.lexer.pushDummyTokenByType(Lexer.tokens.blank);
     },
@@ -441,45 +432,44 @@ var Org = (function () {
       var element = null;
 
       switch (this.lexer.peekNextToken().type) {
-      case Lexer.tokens.header:
-        element = this.parseHeader();
-        break;
-      case Lexer.tokens.preformatted:
-        element = this.parsePreformatted();
-        break;
-      case Lexer.tokens.orderedListElement:
-      case Lexer.tokens.unorderedListElement:
-        element = this.parseList();
-        break;
-      case Lexer.tokens.line:
-        element = this.parseText();
-        break;
-      case Lexer.tokens.tableRow:
-      case Lexer.tokens.tableSeparator:
-        element = this.parseTable();
-        break;
-      case Lexer.tokens.blank:
-        this.skipBlank();
-        if (this.lexer.hasNext()) {
-          if (this.lexer.peekNextToken().type === Lexer.tokens.line)
-            element = this.parseParagraph();
-          else
-            element = this.parseElement();
-        }
-        break;
-      case Lexer.tokens.horizontalRule:
-        this.lexer.getNextToken();
-        element = Node.createHorizontalRule();
-        break;
-      case Lexer.tokens.directive:
-        element = this.parseDirective();
-        break;
-      case Lexer.tokens.comment:
-        // Skip
-        this.lexer.getNextToken();
-        break;
-      default:
-        throw this.createErrorReport("Unhandled token: " + this.lexer.peekNextToken().type);
+        case Lexer.tokens.header:
+          element = this.parseHeader();
+          break;
+        case Lexer.tokens.preformatted:
+          element = this.parsePreformatted();
+          break;
+        case Lexer.tokens.orderedListElement:
+        case Lexer.tokens.unorderedListElement:
+          element = this.parseList();
+          break;
+        case Lexer.tokens.line:
+          element = this.parseText();
+          break;
+        case Lexer.tokens.tableRow:
+        case Lexer.tokens.tableSeparator:
+          element = this.parseTable();
+          break;
+        case Lexer.tokens.blank:
+          this.skipBlank();
+          if (this.lexer.hasNext()) {
+            if (this.lexer.peekNextToken().type === Lexer.tokens.line)
+              element = this.parseParagraph();
+            else element = this.parseElement();
+          }
+          break;
+        case Lexer.tokens.horizontalRule:
+          this.lexer.getNextToken();
+          element = Node.createHorizontalRule();
+          break;
+        case Lexer.tokens.directive:
+          element = this.parseDirective();
+          break;
+        case Lexer.tokens.comment:
+          // Skip
+          this.lexer.getNextToken();
+          break;
+        default:
+          throw this.createErrorReport('Unhandled token: ' + this.lexer.peekNextToken().type);
       }
 
       return element;
@@ -496,8 +486,10 @@ var Org = (function () {
     },
 
     parseElementBesidesDirectiveEndBody: function () {
-      if (this.lexer.peekNextToken().type === Lexer.tokens.directive &&
-          this.lexer.peekNextToken().endDirective) {
+      if (
+        this.lexer.peekNextToken().type === Lexer.tokens.directive &&
+        this.lexer.peekNextToken().endDirective
+      ) {
         return null;
       }
 
@@ -513,9 +505,12 @@ var Org = (function () {
 
     parseHeader: function () {
       var headerToken = this.lexer.getNextToken();
-      var header = Node.createHeader([
-        this.createTextNode(headerToken.content) // TODO: Parse inline markups
-      ], { level: headerToken.level });
+      var header = Node.createHeader(
+        [
+          this.createTextNode(headerToken.content), // TODO: Parse inline markups
+        ],
+        { level: headerToken.level }
+      );
       this.setNodeOriginFromToken(header, headerToken);
 
       return header;
@@ -537,14 +532,18 @@ var Org = (function () {
 
       while (this.lexer.hasNext()) {
         var token = this.lexer.peekNextToken();
-        if (token.type !== Lexer.tokens.preformatted ||
-            token.indentation < preformattedFirstToken.indentation)
+        if (
+          token.type !== Lexer.tokens.preformatted ||
+          token.indentation < preformattedFirstToken.indentation
+        )
           break;
         this.lexer.getNextToken();
         textContents.push(token.content);
       }
 
-      preformatted.appendChild(this.createTextNode(textContents.join("\n"), true /* no emphasis */));
+      preformatted.appendChild(
+        this.createTextNode(textContents.join('\n'), true /* no emphasis */)
+      );
 
       return preformatted;
     },
@@ -569,22 +568,23 @@ var Org = (function () {
         list = Node.createDefinitionList([]);
         isDefinitionList = true;
       } else {
-        list = rootToken.type === Lexer.tokens.unorderedListElement ?
-          Node.createUnorderedList([]) : Node.createOrderedList([]);
+        list =
+          rootToken.type === Lexer.tokens.unorderedListElement
+            ? Node.createUnorderedList([])
+            : Node.createOrderedList([]);
       }
       this.setNodeOriginFromToken(list, rootToken);
 
       while (this.lexer.hasNext()) {
         var nextToken = this.lexer.peekNextToken();
-        if (!nextToken.isListElement() || nextToken.indentation !== rootToken.indentation)
-          break;
+        if (!nextToken.isListElement() || nextToken.indentation !== rootToken.indentation) break;
         list.appendChild(this.parseListElement(rootToken.indentation, isDefinitionList));
       }
 
       return list;
     },
 
-    unknownDefinitionTerm: "???",
+    unknownDefinitionTerm: '???',
 
     parseListElement: function (rootIndentation, isDefinitionList) {
       var listElementToken = this.lexer.getNextToken();
@@ -596,7 +596,7 @@ var Org = (function () {
       if (isDefinitionList) {
         var match = this.definitionPattern.exec(listElementToken.content);
         listElement.term = [
-          this.createTextNode(match && match[1] ? match[1] : this.unknownDefinitionTerm)
+          this.createTextNode(match && match[1] ? match[1] : this.unknownDefinitionTerm),
         ];
         listElement.appendChild(this.createTextNode(match ? match[2] : listElementToken.content));
       } else {
@@ -605,18 +605,14 @@ var Org = (function () {
 
       while (this.lexer.hasNext()) {
         var blankToken = this.skipBlank();
-        if (!this.lexer.hasNext())
-          break;
+        if (!this.lexer.hasNext()) break;
 
         var notBlankNextToken = this.lexer.peekNextToken();
-        if (blankToken && !notBlankNextToken.isListElement())
-          this.lexer.pushToken(blankToken); // Recover blank token only when next line is not listElement.
-        if (notBlankNextToken.indentation <= rootIndentation)
-          break;                  // end of the list
+        if (blankToken && !notBlankNextToken.isListElement()) this.lexer.pushToken(blankToken); // Recover blank token only when next line is not listElement.
+        if (notBlankNextToken.indentation <= rootIndentation) break; // end of the list
 
         var element = this.parseElement(); // recursive
-        if (element)
-          listElement.appendChild(element);
+        if (element) listElement.appendChild(element);
       }
 
       return listElement;
@@ -632,10 +628,10 @@ var Org = (function () {
       this.setNodeOriginFromToken(table, nextToken);
       var sawSeparator = false;
 
-      var allowMultilineCell = nextToken.type === Lexer.tokens.tableSeparator && this.options.multilineCell;
+      var allowMultilineCell =
+        nextToken.type === Lexer.tokens.tableSeparator && this.options.multilineCell;
 
-      while (this.lexer.hasNext() &&
-             (nextToken = this.lexer.peekNextToken()).isTableElement()) {
+      while (this.lexer.hasNext() && (nextToken = this.lexer.peekNextToken()).isTableElement()) {
         if (nextToken.type === Lexer.tokens.tableRow) {
           var tableRow = this.parseTableRow(allowMultilineCell);
           table.appendChild(tableRow);
@@ -670,15 +666,15 @@ var Org = (function () {
       }
 
       if (!tableRowTokens.length) {
-        throw this.createErrorReport("Expected table row");
+        throw this.createErrorReport('Expected table row');
       }
 
       var firstTableRowToken = tableRowTokens.shift();
-      var tableCellTexts = firstTableRowToken.content.split("|");
+      var tableCellTexts = firstTableRowToken.content.split('|');
 
       tableRowTokens.forEach(function (rowToken) {
-        rowToken.content.split("|").forEach(function (cellText, cellIdx) {
-          tableCellTexts[cellIdx] = (tableCellTexts[cellIdx] || "") + "\n" + cellText;
+        rowToken.content.split('|').forEach(function (cellText, cellIdx) {
+          tableCellTexts[cellIdx] = (tableCellTexts[cellIdx] || '') + '\n' + cellText;
         });
       });
 
@@ -687,7 +683,9 @@ var Org = (function () {
         // TODO: consider '|' escape?
         function (text) {
           return Node.createTableCell(Parser.parseStream(text));
-        }, this);
+        },
+        this
+      );
 
       return this.setNodeOriginFromToken(Node.createTableRow(tableCells), firstTableRowToken);
     },
@@ -701,7 +699,9 @@ var Org = (function () {
       var directiveNode = this.createDirectiveNodeFromToken(directiveToken);
 
       if (directiveToken.endDirective)
-        throw this.createErrorReport("Unmatched 'end' directive for " + directiveNode.directiveName);
+        throw this.createErrorReport(
+          "Unmatched 'end' directive for " + directiveNode.directiveName
+        );
 
       if (directiveToken.oneshotDirective) {
         this.interpretDirective(directiveNode);
@@ -709,14 +709,13 @@ var Org = (function () {
       }
 
       if (!directiveToken.beginDirective)
-        throw this.createErrorReport("Invalid directive " + directiveNode.directiveName);
+        throw this.createErrorReport('Invalid directive ' + directiveNode.directiveName);
 
       // Parse begin ~ end
       directiveNode.children = [];
       if (this.isVerbatimDirective(directiveNode))
         return this.parseDirectiveBlockVerbatim(directiveNode);
-      else
-        return this.parseDirectiveBlock(directiveNode);
+      else return this.parseDirectiveBlock(directiveNode);
     },
 
     createDirectiveNodeFromToken: function (directiveToken) {
@@ -734,7 +733,7 @@ var Org = (function () {
 
     isVerbatimDirective: function (directiveNode) {
       var directiveName = directiveNode.directiveName;
-      return directiveName === "src" || directiveName === "example";
+      return directiveName === 'src' || directiveName === 'example';
     },
 
     parseDirectiveBlock: function (directiveNode, verbatim) {
@@ -742,19 +741,20 @@ var Org = (function () {
 
       while (this.lexer.hasNext()) {
         var nextToken = this.lexer.peekNextToken();
-        if (nextToken.type === Lexer.tokens.directive &&
-            nextToken.endDirective &&
-            this.createDirectiveNodeFromToken(nextToken).directiveName === directiveNode.directiveName) {
+        if (
+          nextToken.type === Lexer.tokens.directive &&
+          nextToken.endDirective &&
+          this.createDirectiveNodeFromToken(nextToken).directiveName === directiveNode.directiveName
+        ) {
           // Close directive
           this.lexer.getNextToken();
           return directiveNode;
         }
         var element = this.parseElementBesidesDirectiveEnd();
-        if (element)
-          directiveNode.appendChild(element);
+        if (element) directiveNode.appendChild(element);
       }
 
-      throw this.createErrorReport("Unclosed directive " + directiveNode.directiveName);
+      throw this.createErrorReport('Unclosed directive ' + directiveNode.directiveName);
     },
 
     parseDirectiveBlockVerbatim: function (directiveNode) {
@@ -762,66 +762,67 @@ var Org = (function () {
 
       while (this.lexer.hasNext()) {
         var nextToken = this.lexer.peekNextToken();
-        if (nextToken.type === Lexer.tokens.directive &&
-            nextToken.endDirective &&
-            this.createDirectiveNodeFromToken(nextToken).directiveName === directiveNode.directiveName) {
+        if (
+          nextToken.type === Lexer.tokens.directive &&
+          nextToken.endDirective &&
+          this.createDirectiveNodeFromToken(nextToken).directiveName === directiveNode.directiveName
+        ) {
           this.lexer.getNextToken();
-          directiveNode.appendChild(this.createTextNode(textContent.join("\n"), true));
+          directiveNode.appendChild(this.createTextNode(textContent.join('\n'), true));
           return directiveNode;
         }
         textContent.push(this.lexer.stream.getNextLine());
       }
 
-      throw this.createErrorReport("Unclosed directive " + directiveNode.directiveName);
+      throw this.createErrorReport('Unclosed directive ' + directiveNode.directiveName);
     },
 
     parseDirectiveArguments: function (parameters) {
       return parameters.split(/[ ]+/).filter(function (param) {
-        return param.length && param[0] !== "-";
+        return param.length && param[0] !== '-';
       });
     },
 
     parseDirectiveOptions: function (parameters) {
       return parameters.split(/[ ]+/).filter(function (param) {
-        return param.length && param[0] === "-";
+        return param.length && param[0] === '-';
       });
     },
 
     interpretDirective: function (directiveNode) {
       // http://orgmode.org/manual/Export-options.html
       switch (directiveNode.directiveName) {
-      case "options:":
-        this.interpretOptionDirective(directiveNode);
-        break;
-      case "title:":
-        this.document.title = directiveNode.directiveRawValue;
-        break;
-      case "author:":
-        this.document.author = directiveNode.directiveRawValue;
-        break;
-      case "email:":
-        this.document.email = directiveNode.directiveRawValue;
-        break;
+        case 'options:':
+          this.interpretOptionDirective(directiveNode);
+          break;
+        case 'title:':
+          this.document.title = directiveNode.directiveRawValue;
+          break;
+        case 'author:':
+          this.document.author = directiveNode.directiveRawValue;
+          break;
+        case 'email:':
+          this.document.email = directiveNode.directiveRawValue;
+          break;
       }
     },
 
     interpretOptionDirective: function (optionDirectiveNode) {
       optionDirectiveNode.directiveArguments.forEach(function (pairString) {
-        var pair = pairString.split(":");
+        var pair = pairString.split(':');
         this.options[pair[0]] = this.convertLispyValue(pair[1]);
       }, this);
     },
 
     convertLispyValue: function (lispyValue) {
       switch (lispyValue) {
-      case "t":
-        return true;
-      case "nil":
-        return false;
-      default:
-        if (/^[0-9]+$/.test(lispyValue))
-          return parseInt(lispyValue);
-        return lispyValue;
+        case 't':
+          return true;
+        case 'nil':
+          return false;
+        default:
+          if (/^[0-9]+$/.test(lispyValue)) return parseInt(lispyValue);
+          return lispyValue;
       }
     },
 
@@ -838,14 +839,16 @@ var Org = (function () {
 
       while (this.lexer.hasNext()) {
         var nextToken = this.lexer.peekNextToken();
-        if (nextToken.type !== Lexer.tokens.line
-            || nextToken.indentation < paragraphFisrtToken.indentation)
+        if (
+          nextToken.type !== Lexer.tokens.line ||
+          nextToken.indentation < paragraphFisrtToken.indentation
+        )
           break;
         this.lexer.getNextToken();
         textContents.push(nextToken.content);
       }
 
-      paragraph.appendChild(this.createTextNode(textContents.join("\n")));
+      paragraph.appendChild(this.createTextNode(textContents.join('\n')));
 
       return paragraph;
     },
@@ -860,9 +863,10 @@ var Org = (function () {
     // ------------------------------------------------------------
 
     createTextNode: function (text, noEmphasis) {
-      return noEmphasis ? Node.createText(null, { value: text })
+      return noEmphasis
+        ? Node.createText(null, { value: text })
         : this.inlineParser.parseEmphasis(text);
-    }
+    },
   };
   Parser.prototype.originalParseElement = Parser.prototype.parseElement;
 
@@ -873,11 +877,11 @@ var Org = (function () {
   // ------------------------------------------------------------
 
   function InlineParser() {
-    this.preEmphasis     = " \t\\('\"";
-    this.postEmphasis    = "- \t.,:!?;'\"\\)";
-    this.borderForbidden = " \t\r\n,\"'";
-    this.bodyRegexp      = "[\\s\\S]*?";
-    this.markers         = "*/_=~+";
+    this.preEmphasis = ' \t\\(\'"';
+    this.postEmphasis = '- \t.,:!?;\'"\\)';
+    this.borderForbidden = ' \t\r\n,"\'';
+    this.bodyRegexp = '[\\s\\S]*?';
+    this.markers = '*/_=~+';
 
     this.emphasisPattern = this.buildEmphasisPattern();
     this.linkPattern = /\[\[([^\]]*)\](?:\[([^\]]*)\])?\]/g; // \1 => link, \2 => text
@@ -889,16 +893,16 @@ var Org = (function () {
       emphasisPattern.lastIndex = 0;
 
       var result = [],
-          match,
-          previousLast = 0,
-          savedLastIndex;
+        match,
+        previousLast = 0,
+        savedLastIndex;
 
       while ((match = emphasisPattern.exec(text))) {
-        var whole  = match[0];
-        var pre    = match[1];
+        var whole = match[0];
+        var pre = match[1];
         var marker = match[2];
-        var body   = match[3];
-        var post   = match[4];
+        var body = match[3];
+        var post = match[4];
 
         {
           // parse links
@@ -916,8 +920,7 @@ var Org = (function () {
         previousLast = emphasisPattern.lastIndex - post.length;
       }
 
-      if (emphasisPattern.lastIndex === 0 ||
-          emphasisPattern.lastIndex !== text.length - 1)
+      if (emphasisPattern.lastIndex === 0 || emphasisPattern.lastIndex !== text.length - 1)
         result.push(this.parseLink(text.substring(previousLast)));
 
       if (result.length === 1) {
@@ -934,13 +937,13 @@ var Org = (function () {
       linkPattern.lastIndex = 0;
 
       var match,
-          result = [],
-          previousLast = 0,
-          savedLastIndex;
+        result = [],
+        previousLast = 0,
+        savedLastIndex;
 
       while ((match = linkPattern.exec(text))) {
         var whole = match[0];
-        var src   = match[1];
+        var src = match[1];
         var title = match[2];
 
         // parse before content
@@ -963,8 +966,7 @@ var Org = (function () {
         previousLast = linkPattern.lastIndex;
       }
 
-      if (linkPattern.lastIndex === 0 ||
-          linkPattern.lastIndex !== text.length - 1)
+      if (linkPattern.lastIndex === 0 || linkPattern.lastIndex !== text.length - 1)
         result.push(Node.createText(null, { value: text.substring(previousLast) }));
 
       return Node.createInlineContainer(result);
@@ -972,55 +974,66 @@ var Org = (function () {
 
     emphasizeElementByMarker: function (element, marker) {
       switch (marker) {
-      case "*":
-        return Node.createBold(element);
-      case "/":
-        return Node.createItalic(element);
-      case "_":
-        return Node.createUnderline(element);
-      case "=":
-      case "~":
-        return Node.createCode(element);
-      case "+":
-        return Node.createDashed(element);
+        case '*':
+          return Node.createBold(element);
+        case '/':
+          return Node.createItalic(element);
+        case '_':
+          return Node.createUnderline(element);
+        case '=':
+        case '~':
+          return Node.createCode(element);
+        case '+':
+          return Node.createDashed(element);
       }
     },
 
     buildEmphasisPattern: function () {
       return new RegExp(
-        "([" + this.preEmphasis + "]|^|\r?\n)" +               // \1 => pre
-          "([" + this.markers + "])" +                         // \2 => marker
-          "([^" + this.borderForbidden + "]|" +                // \3 => body
-          "[^" + this.borderForbidden + "]" +
+        '([' +
+          this.preEmphasis +
+          ']|^|\r?\n)' + // \1 => pre
+          '([' +
+          this.markers +
+          '])' + // \2 => marker
+          '([^' +
+          this.borderForbidden +
+          ']|' + // \3 => body
+          '[^' +
+          this.borderForbidden +
+          ']' +
           this.bodyRegexp +
-          "[^" + this.borderForbidden + "])" +
-          "\\2" +
-          "([" + this.postEmphasis +"]|$|\r?\n)",              // \4 => post
-          // flags
-          "g"
+          '[^' +
+          this.borderForbidden +
+          '])' +
+          '\\2' +
+          '([' +
+          this.postEmphasis +
+          ']|$|\r?\n)', // \4 => post
+        // flags
+        'g'
       );
-    }
+    },
   };
 
-  if (typeof exports !== "undefined") {
+  if (typeof exports !== 'undefined') {
     exports.Parser = Parser;
     exports.InlineParser = InlineParser;
   }
 
   // var Node = require("../node.js").Node;
 
-  function Converter() {
-  }
+  function Converter() {}
 
   Converter.prototype = {
     exportOptions: {
       headerOffset: 1,
       exportFromLineNumber: false,
       suppressSubScriptHandling: false,
-      suppressAutoLink: false
+      suppressAutoLink: false,
     },
 
-    untitled: "Untitled",
+    untitled: 'Untitled',
     result: null,
 
     // TODO: Manage TODO lists
@@ -1032,32 +1045,30 @@ var Org = (function () {
 
       this.headers = [];
       this.headerOffset =
-        typeof this.exportOptions.headerOffset === "number" ? this.exportOptions.headerOffset : 1;
+        typeof this.exportOptions.headerOffset === 'number' ? this.exportOptions.headerOffset : 1;
       this.sectionNumbers = [0];
     },
 
     createTocItem: function (headerNode, parentTocs) {
-        var childTocs = [];
-        childTocs.parent = parentTocs;
-        var tocItem = { headerNode: headerNode, childTocs: childTocs };
-        return tocItem;
+      var childTocs = [];
+      childTocs.parent = parentTocs;
+      var tocItem = { headerNode: headerNode, childTocs: childTocs };
+      return tocItem;
     },
 
     computeToc: function (exportTocLevel) {
-      if (typeof exportTocLevel !== "number")
-        exportTocLevel = Infinity;
+      if (typeof exportTocLevel !== 'number') exportTocLevel = Infinity;
 
       var toc = [];
       toc.parent = null;
 
       var previousLevel = 1;
-      var currentTocs = toc;  // first
+      var currentTocs = toc; // first
 
       for (var i = 0; i < this.headers.length; ++i) {
         var headerNode = this.headers[i];
 
-        if (headerNode.level > exportTocLevel)
-          continue;
+        if (headerNode.level > exportTocLevel) continue;
 
         var levelDiff = headerNode.level - previousLevel;
         if (levelDiff > 0) {
@@ -1065,9 +1076,9 @@ var Org = (function () {
             if (currentTocs.length === 0) {
               // Create a dummy tocItem
               var dummyHeader = Node.createHeader([], {
-                level: previousLevel + j
+                level: previousLevel + j,
               });
-              dummyHeader.sectionNumberText = "";
+              dummyHeader.sectionNumberText = '';
               currentTocs.push(this.createTocItem(dummyHeader, currentTocs));
             }
             currentTocs = currentTocs[currentTocs.length - 1].childTocs;
@@ -1090,8 +1101,7 @@ var Org = (function () {
     convertNode: function (node, recordHeader, insideCodeElement) {
       if (!insideCodeElement) {
         if (node.type === Node.types.directive) {
-          if (node.directiveName === "example" ||
-              node.directiveName === "src") {
+          if (node.directiveName === 'example' || node.directiveName === 'src') {
             insideCodeElement = true;
           }
         } else if (node.type === Node.types.preformatted) {
@@ -1099,135 +1109,130 @@ var Org = (function () {
         }
       }
 
-      if (typeof node === "string") {
+      if (typeof node === 'string') {
         node = Node.createText(null, { value: node });
       }
 
-      var childText = node.children ? this.convertNodes(node.children, recordHeader, insideCodeElement) : "";
+      var childText = node.children
+        ? this.convertNodes(node.children, recordHeader, insideCodeElement)
+        : '';
       var text;
 
       var auxData = this.computeAuxDataForNode(node);
 
       switch (node.type) {
-      case Node.types.header:
-        // Parse task status
-        var taskStatus = null;
-        if (childText.indexOf("TODO ") === 0)
-          taskStatus = "todo";
-        else if (childText.indexOf("DONE ") === 0)
-          taskStatus = "done";
+        case Node.types.header:
+          // Parse task status
+          var taskStatus = null;
+          if (childText.indexOf('TODO ') === 0) taskStatus = 'todo';
+          else if (childText.indexOf('DONE ') === 0) taskStatus = 'done';
 
-        // Compute section number
-        var sectionNumberText = null;
-        if (recordHeader) {
-          var thisHeaderLevel = node.level;
-          var previousHeaderLevel = this.sectionNumbers.length;
-          if (thisHeaderLevel > previousHeaderLevel) {
-            // Fill missing section number
-            var levelDiff = thisHeaderLevel - previousHeaderLevel;
-            for (var j = 0; j < levelDiff; ++j) {
-              this.sectionNumbers[thisHeaderLevel - 1 - j] = 0; // Extend
+          // Compute section number
+          var sectionNumberText = null;
+          if (recordHeader) {
+            var thisHeaderLevel = node.level;
+            var previousHeaderLevel = this.sectionNumbers.length;
+            if (thisHeaderLevel > previousHeaderLevel) {
+              // Fill missing section number
+              var levelDiff = thisHeaderLevel - previousHeaderLevel;
+              for (var j = 0; j < levelDiff; ++j) {
+                this.sectionNumbers[thisHeaderLevel - 1 - j] = 0; // Extend
+              }
+            } else if (thisHeaderLevel < previousHeaderLevel) {
+              this.sectionNumbers.length = thisHeaderLevel; // Collapse
             }
-          } else if (thisHeaderLevel < previousHeaderLevel) {
-            this.sectionNumbers.length = thisHeaderLevel; // Collapse
+            this.sectionNumbers[thisHeaderLevel - 1]++;
+            sectionNumberText = this.sectionNumbers.join('.');
+            node.sectionNumberText = sectionNumberText; // Can be used in ToC
           }
-          this.sectionNumbers[thisHeaderLevel - 1]++;
-          sectionNumberText = this.sectionNumbers.join(".");
-          node.sectionNumberText = sectionNumberText; // Can be used in ToC
-        }
 
-        text = this.convertHeader(node, childText, auxData,
-                                  taskStatus, sectionNumberText);
+          text = this.convertHeader(node, childText, auxData, taskStatus, sectionNumberText);
 
-        if (recordHeader)
-          this.headers.push(node);
-        break;
-      case Node.types.orderedList:
-        text = this.convertOrderedList(node, childText, auxData);
-        break;
-      case Node.types.unorderedList:
-        text = this.convertUnorderedList(node, childText, auxData);
-        break;
-      case Node.types.definitionList:
-        text = this.convertDefinitionList(node, childText, auxData);
-        break;
-      case Node.types.listElement:
-        if (node.isDefinitionList) {
-          var termText = this.convertNodes(node.term, recordHeader, insideCodeElement);
-          text = this.convertDefinitionItem(node, childText, auxData,
-                                            termText, childText);
-        } else {
-          text = this.convertListItem(node, childText, auxData);
-        }
-        break;
-      case Node.types.paragraph:
-        text = this.convertParagraph(node, childText, auxData);
-        break;
-      case Node.types.preformatted:
-        text = this.convertPreformatted(node, childText, auxData);
-        break;
-      case Node.types.table:
-        text = this.convertTable(node, childText, auxData);
-        break;
-      case Node.types.tableRow:
-        text = this.convertTableRow(node, childText, auxData);
-        break;
-      case Node.types.tableCell:
-        if (node.isHeader)
-          text = this.convertTableHeader(node, childText, auxData);
-        else
-          text = this.convertTableCell(node, childText, auxData);
-        break;
-      case Node.types.horizontalRule:
-        text = this.convertHorizontalRule(node, childText, auxData);
-        break;
+          if (recordHeader) this.headers.push(node);
+          break;
+        case Node.types.orderedList:
+          text = this.convertOrderedList(node, childText, auxData);
+          break;
+        case Node.types.unorderedList:
+          text = this.convertUnorderedList(node, childText, auxData);
+          break;
+        case Node.types.definitionList:
+          text = this.convertDefinitionList(node, childText, auxData);
+          break;
+        case Node.types.listElement:
+          if (node.isDefinitionList) {
+            var termText = this.convertNodes(node.term, recordHeader, insideCodeElement);
+            text = this.convertDefinitionItem(node, childText, auxData, termText, childText);
+          } else {
+            text = this.convertListItem(node, childText, auxData);
+          }
+          break;
+        case Node.types.paragraph:
+          text = this.convertParagraph(node, childText, auxData);
+          break;
+        case Node.types.preformatted:
+          text = this.convertPreformatted(node, childText, auxData);
+          break;
+        case Node.types.table:
+          text = this.convertTable(node, childText, auxData);
+          break;
+        case Node.types.tableRow:
+          text = this.convertTableRow(node, childText, auxData);
+          break;
+        case Node.types.tableCell:
+          if (node.isHeader) text = this.convertTableHeader(node, childText, auxData);
+          else text = this.convertTableCell(node, childText, auxData);
+          break;
+        case Node.types.horizontalRule:
+          text = this.convertHorizontalRule(node, childText, auxData);
+          break;
         // ============================================================ //
         // Inline
         // ============================================================ //
-      case Node.types.inlineContainer:
-        text = this.convertInlineContainer(node, childText, auxData);
-        break;
-      case Node.types.bold:
-        text = this.convertBold(node, childText, auxData);
-        break;
-      case Node.types.italic:
-        text = this.convertItalic(node, childText, auxData);
-        break;
-      case Node.types.underline:
-        text = this.convertUnderline(node, childText, auxData);
-        break;
-      case Node.types.code:
-        text = this.convertCode(node, childText, auxData);
-        break;
-      case Node.types.dashed:
-        text = this.convertDashed(node, childText, auxData);
-        break;
-      case Node.types.link:
-        text = this.convertLink(node, childText, auxData);
-        break;
-      case Node.types.directive:
-        switch (node.directiveName) {
-        case "quote":
-          text = this.convertQuote(node, childText, auxData);
+        case Node.types.inlineContainer:
+          text = this.convertInlineContainer(node, childText, auxData);
           break;
-        case "example":
-          text = this.convertExample(node, childText, auxData);
+        case Node.types.bold:
+          text = this.convertBold(node, childText, auxData);
           break;
-        case "src":
-          text = this.convertSrc(node, childText, auxData);
+        case Node.types.italic:
+          text = this.convertItalic(node, childText, auxData);
+          break;
+        case Node.types.underline:
+          text = this.convertUnderline(node, childText, auxData);
+          break;
+        case Node.types.code:
+          text = this.convertCode(node, childText, auxData);
+          break;
+        case Node.types.dashed:
+          text = this.convertDashed(node, childText, auxData);
+          break;
+        case Node.types.link:
+          text = this.convertLink(node, childText, auxData);
+          break;
+        case Node.types.directive:
+          switch (node.directiveName) {
+            case 'quote':
+              text = this.convertQuote(node, childText, auxData);
+              break;
+            case 'example':
+              text = this.convertExample(node, childText, auxData);
+              break;
+            case 'src':
+              text = this.convertSrc(node, childText, auxData);
+              break;
+            default:
+              text = childText;
+          }
+          break;
+        case Node.types.text:
+          text = this.convertText(node.value, insideCodeElement);
           break;
         default:
-          text = childText;
-        }
-        break;
-      case Node.types.text:
-        text = this.convertText(node.value, insideCodeElement);
-        break;
-      default:
-        throw "Unknown node type: " + node.type;
+          throw 'Unknown node type: ' + node.type;
       }
 
-      if (typeof this.postProcess === "function") {
+      if (typeof this.postProcess === 'function') {
         text = this.postProcess(node, text, insideCodeElement);
       }
 
@@ -1248,63 +1253,63 @@ var Org = (function () {
     },
 
     convertNodes: function (nodes, recordHeader, insideCodeElement) {
-      return nodes.map(function (node) {
-        return this.convertNode(node, recordHeader, insideCodeElement);
-      }, this).join("");
+      return nodes
+        .map(function (node) {
+          return this.convertNode(node, recordHeader, insideCodeElement);
+        }, this)
+        .join('');
     },
 
     getNodeTextContent: function (node) {
-      if (node.type === Node.types.text)
-        return this.escapeSpecialChars(node.value);
-      else
-        return node.children ? node.children.map(this.getNodeTextContent, this).join("") : "";
+      if (node.type === Node.types.text) return this.escapeSpecialChars(node.value);
+      else return node.children ? node.children.map(this.getNodeTextContent, this).join('') : '';
     },
 
     // @Override
     escapeSpecialChars: function (text) {
-      throw "Implement escapeSpecialChars";
+      throw 'Implement escapeSpecialChars';
     },
 
     // http://daringfireball.net/2010/07/improved_regex_for_matching_urls
-    urlPattern: /\b(?:https?:\/\/|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’])/i,
+    urlPattern:
+      /\b(?:https?:\/\/|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’])/i,
 
     // @Override
     linkURL: function (text) {
       var self = this;
       return text.replace(this.urlPattern, function (matched) {
-        if (matched.indexOf("://") < 0)
-          matched = "http://" + matched;
+        if (matched.indexOf('://') < 0) matched = 'http://' + matched;
         return self.makeLink(matched);
       });
     },
 
     makeLink: function (url) {
-      throw "Implement makeLink";
+      throw 'Implement makeLink';
     },
 
     makeSubscripts: function (text) {
-      if (this.documentOptions["^"] === "{}")
-        return text.replace(/\b([^_ \t]*)_{([^}]*)}/g,
-                            this.makeSubscript);
-      else if (this.documentOptions["^"])
-        return text.replace(/\b([^_ \t]*)_([^_]*)\b/g,
-                            this.makeSubscript);
-      else
-        return text;
+      if (this.documentOptions['^'] === '{}')
+        return text.replace(/\b([^_ \t]*)_{([^}]*)}/g, this.makeSubscript);
+      else if (this.documentOptions['^'])
+        return text.replace(/\b([^_ \t]*)_([^_]*)\b/g, this.makeSubscript);
+      else return text;
     },
 
     makeSubscript: function (match, body, subscript) {
-      throw "Implement makeSubscript";
+      throw 'Implement makeSubscript';
     },
 
-    imageExtensionPattern: new RegExp("(" + [
-      "bmp", "png", "jpeg", "jpg", "gif", "tiff",
-      "tif", "xbm", "xpm", "pbm", "pgm", "ppm"
-    ].join("|") + ")$", "i")
+    imageExtensionPattern: new RegExp(
+      '(' +
+        ['bmp', 'png', 'jpeg', 'jpg', 'gif', 'tiff', 'tif', 'xbm', 'xpm', 'pbm', 'pgm', 'ppm'].join(
+          '|'
+        ) +
+        ')$',
+      'i'
+    ),
   };
 
-  if (typeof exports !== "undefined")
-    exports.Converter = Converter;
+  if (typeof exports !== 'undefined') exports.Converter = Converter;
 
   // var Converter = require("./converter.js").Converter;
   // var Node = require("../node.js").Node;
@@ -1319,9 +1324,9 @@ var Org = (function () {
 
     convert: function () {
       var title = this.orgDocument.title ? this.convertNode(this.orgDocument.title) : this.untitled;
-      var titleHTML = this.tag("h1", title);
+      var titleHTML = this.tag('h1', title);
       var contentHTML = this.convertNodes(this.orgDocument.nodes, true /* record headers */);
-      var toc = this.computeToc(this.documentOptions["toc"]);
+      var toc = this.computeToc(this.documentOptions['toc']);
       var tocHTML = this.tocToHTML(toc);
 
       return {
@@ -1331,45 +1336,49 @@ var Org = (function () {
         tocHTML: tocHTML,
         toc: toc,
         toString: function () {
-          return titleHTML + tocHTML + "\n" + contentHTML;
-        }
+          return titleHTML + tocHTML + '\n' + contentHTML;
+        },
       };
     },
 
     tocToHTML: function (toc) {
       function tocToHTMLFunction(tocList) {
-        var html = "";
+        var html = '';
         for (var i = 0; i < tocList.length; ++i) {
           var tocItem = tocList[i];
           var sectionNumberText = tocItem.headerNode.sectionNumberText;
-          var sectionNumber = this.documentOptions.num ?
-                this.inlineTag("span", sectionNumberText, {
-                  "class": "section-number"
-                }) : "";
+          var sectionNumber = this.documentOptions.num
+            ? this.inlineTag('span', sectionNumberText, {
+                class: 'section-number',
+              })
+            : '';
           var header = this.getNodeTextContent(tocItem.headerNode);
-          var headerLink = this.inlineTag("a", sectionNumber + header, {
-            href: "#header-" + sectionNumberText.replace(/\./g, "-")
+          var headerLink = this.inlineTag('a', sectionNumber + header, {
+            href: '#header-' + sectionNumberText.replace(/\./g, '-'),
           });
-          var subList = tocItem.childTocs.length ? tocToHTMLFunction.call(this, tocItem.childTocs) : "";
-          html += this.tag("li", headerLink + subList);
+          var subList = tocItem.childTocs.length
+            ? tocToHTMLFunction.call(this, tocItem.childTocs)
+            : '';
+          html += this.tag('li', headerLink + subList);
         }
-        return this.tag("ul", html);
+        return this.tag('ul', html);
       }
 
       return tocToHTMLFunction.call(this, toc);
     },
 
     computeAuxDataForNode: function (node) {
-      while (node.parent &&
-             node.parent.type === Node.types.inlineContainer) {
+      while (node.parent && node.parent.type === Node.types.inlineContainer) {
         node = node.parent;
       }
       var attributesNode = node.previousSibling;
-      var attributesText = "";
-      while (attributesNode &&
-             attributesNode.type === Node.types.directive &&
-             attributesNode.directiveName === "attr_html:") {
-        attributesText += attributesNode.directiveRawValue + " ";
+      var attributesText = '';
+      while (
+        attributesNode &&
+        attributesNode.type === Node.types.directive &&
+        attributesNode.directiveName === 'attr_html:'
+      ) {
+        attributesText += attributesNode.directiveRawValue + ' ';
         attributesNode = attributesNode.previousSibling;
       }
       return attributesText;
@@ -1379,105 +1388,103 @@ var Org = (function () {
     // Node conversion
     // ----------------------------------------------------
 
-    convertHeader: function (node, childText, auxData,
-                             taskStatus, sectionNumberText) {
+    convertHeader: function (node, childText, auxData, taskStatus, sectionNumberText) {
       var headerAttributes = {};
 
       if (taskStatus) {
-        childText = this.inlineTag("span", childText.substring(0, 4), {
-          "class": "task-status " + taskStatus
-        }) + childText.substring(5);
+        childText =
+          this.inlineTag('span', childText.substring(0, 4), {
+            class: 'task-status ' + taskStatus,
+          }) + childText.substring(5);
       }
 
       if (sectionNumberText) {
-        childText = this.inlineTag("span", sectionNumberText, {
-          "class": "section-number"
-        }) + childText;
-        headerAttributes["id"] = "header-" + sectionNumberText.replace(/\./g, "-");
+        childText =
+          this.inlineTag('span', sectionNumberText, {
+            class: 'section-number',
+          }) + childText;
+        headerAttributes['id'] = 'header-' + sectionNumberText.replace(/\./g, '-');
       }
 
-      if (taskStatus)
-        headerAttributes["class"] = "task-status " + taskStatus;
+      if (taskStatus) headerAttributes['class'] = 'task-status ' + taskStatus;
 
-      return this.tag("h" + (this.headerOffset + node.level),
-                      childText, headerAttributes, auxData);
+      return this.tag('h' + (this.headerOffset + node.level), childText, headerAttributes, auxData);
     },
 
     convertOrderedList: function (node, childText, auxData) {
-      return this.tag("ol", childText, null, auxData);
+      return this.tag('ol', childText, null, auxData);
     },
 
     convertUnorderedList: function (node, childText, auxData) {
-      return this.tag("ul", childText, null, auxData);
+      return this.tag('ul', childText, null, auxData);
     },
 
     convertDefinitionList: function (node, childText, auxData) {
-      return this.tag("dl", childText, null, auxData);
+      return this.tag('dl', childText, null, auxData);
     },
 
-    convertDefinitionItem: function (node, childText, auxData,
-                                     term, definition) {
-      return this.tag("dt", term) + this.tag("dd", definition);
+    convertDefinitionItem: function (node, childText, auxData, term, definition) {
+      return this.tag('dt', term) + this.tag('dd', definition);
     },
 
     convertListItem: function (node, childText, auxData) {
       if (this.exportOptions.suppressCheckboxHandling) {
-        return this.tag("li", childText, null, auxData);
+        return this.tag('li', childText, null, auxData);
       } else {
         var listItemAttributes = {};
         var listItemText = childText;
         // Embed checkbox
         if (/^\s*\[(X| |-)\]([\s\S]*)/.exec(listItemText)) {
-          listItemText = RegExp.$2 ;
+          listItemText = RegExp.$2;
           var checkboxIndicator = RegExp.$1;
 
-          var checkboxAttributes = { type: "checkbox" };
+          var checkboxAttributes = { type: 'checkbox' };
           switch (checkboxIndicator) {
-          case "X":
-            checkboxAttributes["checked"] = "true";
-            listItemAttributes["data-checkbox-status"] = "done";
-            break;
-          case "-":
-            listItemAttributes["data-checkbox-status"] = "intermediate";
-            break;
-          default:
-            listItemAttributes["data-checkbox-status"] = "undone";
-            break;
+            case 'X':
+              checkboxAttributes['checked'] = 'true';
+              listItemAttributes['data-checkbox-status'] = 'done';
+              break;
+            case '-':
+              listItemAttributes['data-checkbox-status'] = 'intermediate';
+              break;
+            default:
+              listItemAttributes['data-checkbox-status'] = 'undone';
+              break;
           }
 
-          listItemText = this.inlineTag("input", null, checkboxAttributes) + listItemText;
+          listItemText = this.inlineTag('input', null, checkboxAttributes) + listItemText;
         }
 
-        return this.tag("li", listItemText, listItemAttributes, auxData);
+        return this.tag('li', listItemText, listItemAttributes, auxData);
       }
     },
 
     convertParagraph: function (node, childText, auxData) {
-      return this.tag("p", childText, null, auxData);
+      return this.tag('p', childText, null, auxData);
     },
 
     convertPreformatted: function (node, childText, auxData) {
-      return this.tag("pre", childText, null, auxData);
+      return this.tag('pre', childText, null, auxData);
     },
 
     convertTable: function (node, childText, auxData) {
-      return this.tag("table", this.tag("tbody", childText), null, auxData);
+      return this.tag('table', this.tag('tbody', childText), null, auxData);
     },
 
     convertTableRow: function (node, childText, auxData) {
-      return this.tag("tr", childText);
+      return this.tag('tr', childText);
     },
 
     convertTableHeader: function (node, childText, auxData) {
-      return this.tag("th", childText);
+      return this.tag('th', childText);
     },
 
     convertTableCell: function (node, childText, auxData) {
-      return this.tag("td", childText);
+      return this.tag('td', childText);
     },
 
     convertHorizontalRule: function (node, childText, auxData) {
-      return this.tag("hr", null, null, auxData);
+      return this.tag('hr', null, null, auxData);
     },
 
     convertInlineContainer: function (node, childText, auxData) {
@@ -1485,57 +1492,65 @@ var Org = (function () {
     },
 
     convertBold: function (node, childText, auxData) {
-      return this.inlineTag("b", childText);
+      return this.inlineTag('b', childText);
     },
 
     convertItalic: function (node, childText, auxData) {
-      return this.inlineTag("i", childText);
+      return this.inlineTag('i', childText);
     },
 
     convertUnderline: function (node, childText, auxData) {
-      return this.inlineTag("span", childText, {
-        style: "text-decoration:underline;"
+      return this.inlineTag('span', childText, {
+        style: 'text-decoration:underline;',
       });
     },
 
     convertCode: function (node, childText, auxData) {
-      return this.inlineTag("code", childText);
+      return this.inlineTag('code', childText);
     },
 
     convertDashed: function (node, childText, auxData) {
-      return this.inlineTag("del", childText);
+      return this.inlineTag('del', childText);
     },
 
     convertLink: function (node, childText, auxData) {
       if (this.imageExtensionPattern.exec(node.src)) {
         var imgText = this.getNodeTextContent(node);
-        return this.inlineTag("img", null, {
-          src: node.src,
-          alt: imgText,
-          title: imgText
-        }, auxData);
+        return this.inlineTag(
+          'img',
+          null,
+          {
+            src: node.src,
+            alt: imgText,
+            title: imgText,
+          },
+          auxData
+        );
       } else {
-        return this.inlineTag("a", childText, { href: node.src });
+        return this.inlineTag('a', childText, { href: node.src });
       }
     },
 
     convertQuote: function (node, childText, auxData) {
-      return this.tag("blockquote", childText, null, auxData);
+      return this.tag('blockquote', childText, null, auxData);
     },
 
     convertExample: function (node, childText, auxData) {
-      return this.tag("pre", childText, null, auxData);
+      return this.tag('pre', childText, null, auxData);
     },
 
     convertSrc: function (node, childText, auxData) {
-      var codeLanguage = node.directiveArguments.length
-            ? node.directiveArguments[0]
-            : "unknown";
-      childText = this.tag("code", childText, {
-        "class": "language-" + codeLanguage
-      }, auxData);
-      return this.tag("pre", childText, {
-        "class": "prettyprint"
+      var codeLanguage = node.directiveArguments.length ? node.directiveArguments[0] : 'unknown';
+      childText = this.tag(
+        'code',
+        childText,
+        {
+          class: 'language-' + codeLanguage,
+        },
+        auxData
+      );
+      return this.tag('pre', childText, {
+        class: 'prettyprint',
       });
     },
 
@@ -1545,14 +1560,17 @@ var Org = (function () {
 
     replaceMap: {
       // [replacing pattern, predicate]
-      "&": ["&#38;", null],
-      "<": ["&#60;", null],
-      ">": ["&#62;", null],
-      '"': ["&#34;", null],
-      "'": ["&#39;", null],
-      "->": ["&#10132;", function (text, insideCodeElement) {
-        return this.exportOptions.translateSymbolArrow && !insideCodeElement;
-      }]
+      '&': ['&#38;', null],
+      '<': ['&#60;', null],
+      '>': ['&#62;', null],
+      '"': ['&#34;', null],
+      "'": ['&#39;', null],
+      '->': [
+        '&#10132;',
+        function (text, insideCodeElement) {
+          return this.exportOptions.translateSymbolArrow && !insideCodeElement;
+        },
+      ],
     },
 
     replaceRegexp: null,
@@ -1560,19 +1578,18 @@ var Org = (function () {
     // @implement @override
     escapeSpecialChars: function (text, insideCodeElement) {
       if (!this.replaceRegexp) {
-        this.replaceRegexp = new RegExp(Object.keys(this.replaceMap).join("|"), "g");
+        this.replaceRegexp = new RegExp(Object.keys(this.replaceMap).join('|'), 'g');
       }
 
       var replaceMap = this.replaceMap;
       var self = this;
       return text.replace(this.replaceRegexp, function (matched) {
         if (!replaceMap[matched]) {
-          throw "escapeSpecialChars: Invalid match";
+          throw 'escapeSpecialChars: Invalid match';
         }
 
         var predicate = replaceMap[matched][1];
-        if (typeof predicate === "function" &&
-            !predicate.call(self, text, insideCodeElement)) {
+        if (typeof predicate === 'function' && !predicate.call(self, text, insideCodeElement)) {
           // Not fullfill the predicate
           return matched;
         }
@@ -1583,11 +1600,10 @@ var Org = (function () {
 
     // @implement
     postProcess: function (node, currentText, insideCodeElement) {
-      if (this.exportOptions.exportFromLineNumber &&
-          typeof node.fromLineNumber === "number") {
+      if (this.exportOptions.exportFromLineNumber && typeof node.fromLineNumber === 'number') {
         // Wrap with line number information
-        currentText = this.inlineTag("div", currentText, {
-          "data-line-number": node.fromLineNumber
+        currentText = this.inlineTag('div', currentText, {
+          'data-line-number': node.fromLineNumber,
         });
       }
       return currentText;
@@ -1595,16 +1611,18 @@ var Org = (function () {
 
     // @implement
     makeLink: function (url) {
-      return "<a href=\"" + url + "\">" + decodeURIComponent(url) + "</a>";
+      return '<a href="' + url + '">' + decodeURIComponent(url) + '</a>';
     },
 
     // @implement
     makeSubscript: function (match, body, subscript) {
-      return "<span class=\"org-subscript-parent\">" +
+      return (
+        '<span class="org-subscript-parent">' +
         body +
-        "</span><span class=\"org-subscript-child\">" +
+        '</span><span class="org-subscript-child">' +
         subscript +
-        "</span>";
+        '</span>'
+      );
     },
 
     // ----------------------------------------------------
@@ -1612,10 +1630,10 @@ var Org = (function () {
     // ----------------------------------------------------
 
     attributesObjectToString: function (attributesObject) {
-      var attributesString = "";
+      var attributesString = '';
       for (var attributeName in attributesObject) {
         if (attributesObject.hasOwnProperty(attributeName)) {
-          attributesString += " " + attributeName + "=\"" + attributesObject[attributeName] + "\"";
+          attributesString += ' ' + attributeName + '="' + attributesObject[attributeName] + '"';
         }
       }
       return attributesString;
@@ -1624,27 +1642,24 @@ var Org = (function () {
     inlineTag: function (name, innerText, attributesObject, auxAttributesText) {
       attributesObject = attributesObject || {};
 
-      var htmlString = "<" + name;
+      var htmlString = '<' + name;
       // TODO: check duplicated attributes
-      if (auxAttributesText)
-        htmlString += " " + auxAttributesText;
+      if (auxAttributesText) htmlString += ' ' + auxAttributesText;
       htmlString += this.attributesObjectToString(attributesObject);
 
-      if (innerText === null)
-        return htmlString + "/>";
+      if (innerText === null) return htmlString + '/>';
 
-      htmlString += ">" + innerText + "</" + name + ">";
+      htmlString += '>' + innerText + '</' + name + '>';
 
       return htmlString;
     },
 
     tag: function (name, innerText, attributesObject, auxAttributesText) {
-      return this.inlineTag(name, innerText, attributesObject, auxAttributesText) + "\n";
-    }
+      return this.inlineTag(name, innerText, attributesObject, auxAttributesText) + '\n';
+    },
   };
 
-  if (typeof exports !== "undefined")
-    exports.ConverterHTML = ConverterHTML;
+  if (typeof exports !== 'undefined') exports.ConverterHTML = ConverterHTML;
 
   return exports;
 })();

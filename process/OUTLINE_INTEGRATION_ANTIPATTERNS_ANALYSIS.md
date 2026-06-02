@@ -27,6 +27,7 @@ let currentBlobURLManager: BlobURLManager | null = $state(null);
 ```
 
 **Problems**:
+
 - Single Responsibility Principle violation
 - Complex initialization logic mixed with UI concerns
 - Difficult to test individual components
@@ -35,15 +36,19 @@ let currentBlobURLManager: BlobURLManager | null = $state(null);
 ### 2. Workspace-Specific Dependency Recreation Anti-Pattern
 
 **Current Implementation**:
+
 ```typescript
 async function createWorkspaceSpecificDependencies(workspaceId: string) {
   // Recreates TransformPipeline and BlobURLManager for each workspace
   currentTransformPipeline = new TransformPipeline(fileStorageAPI, currentBlobURLManager);
-  currentBlobURLManager = new BlobURLManager({ /* config */ });
+  currentBlobURLManager = new BlobURLManager({
+    /* config */
+  });
 }
 ```
 
 **Issues**:
+
 - Inefficient object creation on every workspace change
 - Potential memory leaks from unreleased instances
 - Race conditions during rapid workspace switching
@@ -52,11 +57,13 @@ async function createWorkspaceSpecificDependencies(workspaceId: string) {
 ### 3. Mixed Dependency Injection Patterns
 
 **Current Architecture**:
+
 - Context API for Storybook testing
 - Direct prop passing for production
 - Inconsistent initialization paths
 
 **Problems**:
+
 - Confusing mental model for developers
 - Two different code paths to maintain
 - Difficult to reason about component dependencies
@@ -64,6 +71,7 @@ async function createWorkspaceSpecificDependencies(workspaceId: string) {
 ### 4. Static Method Over-Reliance
 
 **Current OutlineGenerator**:
+
 ```typescript
 static async generateFromSpine(
   spineItems: SpineItemWithSource[],
@@ -74,6 +82,7 @@ static async generateFromSpine(
 ```
 
 **Issues**:
+
 - Excessive parameter passing (4+ parameters)
 - No state management or caching capabilities
 - Difficult to test and mock
@@ -82,11 +91,13 @@ static async generateFromSpine(
 ### 5. Path Construction Fragility
 
 **Current Implementation**:
+
 ```typescript
 const fullFilePath = `${pathInfo.basePath}/${spineItem.href}`;
 ```
 
 **Risks**:
+
 - Platform-specific path separator issues
 - Double slash problems
 - No path validation or normalization
@@ -98,12 +109,14 @@ const fullFilePath = `${pathInfo.basePath}/${spineItem.href}`;
 Svelte 5 introduces runes (`$state`, `$derived`, `$effect`) for explicit reactive state management:
 
 **Key Benefits**:
+
 - **Universal Reactivity**: Works in both components and `.svelte.ts` files
 - **Fine-grained Updates**: More efficient than previous reactivity system
 - **Explicit Dependencies**: Clear dependency tracking
 - **Better Performance**: Signals-based architecture
 
 **Modern State Pattern**:
+
 ```typescript
 // workspace-state.svelte.ts
 export const currentWorkspace = $state<WorkspaceInfo | null>(null);
@@ -116,14 +129,15 @@ export const isWorkspaceLoading = $derived(currentWorkspace === null);
 **Principle**: Single location where all dependencies are composed together.
 
 **Svelte 5 Implementation**:
+
 ```typescript
 // dependency-container.svelte.ts
 class DependencyContainer {
   private static instance: DependencyContainer;
-  
+
   readonly fileStorage = $state<FileStorageAPI>(FileStorageAPI.getInstance());
   readonly workspaceManager = $derived(new WorkspaceManager(this.fileStorage));
-  
+
   static getInstance(): DependencyContainer {
     if (!this.instance) {
       this.instance = new DependencyContainer();
@@ -136,15 +150,16 @@ class DependencyContainer {
 ### Context Providers with Proper Lifecycle
 
 **Modern Pattern**:
+
 ```typescript
 // WorkspaceProvider.svelte
 <script>
   import { setContext, onDestroy } from 'svelte';
-  
+
   let workspaceServices = $state(createWorkspaceServices());
-  
+
   setContext('workspace', workspaceServices);
-  
+
   onDestroy(() => {
     workspaceServices.cleanup();
   });
@@ -162,12 +177,12 @@ class DependencyContainer {
 export class WorkspaceService {
   private storage = $state<FileStorageAPI>(FileStorageAPI.getInstance());
   private workspaces = $state<Map<string, WorkspaceManager>>(new Map());
-  
+
   readonly currentWorkspace = $state<string | null>(null);
-  readonly currentManager = $derived(() => 
+  readonly currentManager = $derived(() =>
     this.currentWorkspace ? this.workspaces.get(this.currentWorkspace) : null
   );
-  
+
   async switchWorkspace(workspaceId: string) {
     if (!this.workspaces.has(workspaceId)) {
       const manager = new WorkspaceManager(this.storage);
@@ -176,7 +191,7 @@ export class WorkspaceService {
     }
     this.currentWorkspace = workspaceId;
   }
-  
+
   cleanup() {
     this.workspaces.forEach(manager => manager.cleanup?.());
     this.workspaces.clear();
@@ -195,12 +210,12 @@ export const workspaceService = new WorkspaceService();
 <script lang="ts">
   import { setContext, onDestroy } from 'svelte';
   import { workspaceService } from '../services/workspace-service.svelte.js';
-  
+
   export let workspaceId: string;
-  
+
   let workspaceDependencies = $derived(() => {
     if (!workspaceId) return null;
-    
+
     return {
       workspaceManager: workspaceService.currentManager,
       spineManager: new SpineItemManager(workspaceService.currentManager),
@@ -208,15 +223,15 @@ export const workspaceService = new WorkspaceService();
       transformPipeline: createTransformPipeline(workspaceId)
     };
   });
-  
+
   setContext('workspace-deps', workspaceDependencies);
-  
+
   $effect(() => {
     if (workspaceId) {
       workspaceService.switchWorkspace(workspaceId);
     }
   });
-  
+
   onDestroy(() => {
     // Cleanup handled by service
   });
@@ -237,10 +252,10 @@ export const workspaceService = new WorkspaceService();
   import { navigationStore } from './lib/stores/navigation.js';
   import WorkspaceProvider from './lib/providers/WorkspaceProvider.svelte';
   import ViewRouter from './lib/components/ViewRouter.svelte';
-  
+
   let currentView = $derived($navigationStore.currentView);
   let currentWorkspaceId = $derived(workspaceService.currentWorkspace);
-  
+
   onMount(async () => {
     await workspaceService.init();
   });
@@ -265,29 +280,26 @@ export const workspaceService = new WorkspaceService();
 // src/lib/outline/outline-generator.ts
 export class OutlineGenerator {
   private pathCache = new Map<string, string>();
-  
+
   constructor(
     private workspaceManager: IWorkspaceManager,
     private workspaceId: string
   ) {}
-  
+
   async generateFromSpine(
     spineItems: SpineItemWithSource[],
     options?: GenerationOptions
   ): Promise<NavigationDocument> {
     const pathInfo = await this.getWorkspacePathInfo();
     const navItems: Array<{ href: string; title: string }> = [];
-    
+
     for (const spineItem of spineItems) {
       if (!spineItem.href) continue;
-      
+
       try {
         const fullPath = this.resolveFilePath(pathInfo.basePath, spineItem.href);
-        const xhtmlContent = await this.workspaceManager.readTextFile(
-          this.workspaceId, 
-          fullPath
-        );
-        
+        const xhtmlContent = await this.workspaceManager.readTextFile(this.workspaceId, fullPath);
+
         const title = this.extractTitleFromXHTML(xhtmlContent, spineItem.href);
         if (title) {
           navItems.push({ href: spineItem.href, title });
@@ -297,10 +309,10 @@ export class OutlineGenerator {
         continue;
       }
     }
-    
+
     return this.createNavigationDocument(navItems, options);
   }
-  
+
   private async getWorkspacePathInfo() {
     const cacheKey = this.workspaceId;
     if (!this.pathCache.has(cacheKey)) {
@@ -309,7 +321,7 @@ export class OutlineGenerator {
     }
     return { basePath: this.pathCache.get(cacheKey)! };
   }
-  
+
   private resolveFilePath(basePath: string, href: string): string {
     // Proper path joining logic
     return [basePath, href].filter(Boolean).join('/').replace(/\/+/g, '/');
@@ -327,18 +339,18 @@ export class OutlineGenerator {
   import { getContext } from 'svelte';
   import { createTextEditorStore } from '../../stores/index.js';
   import { OutlineGenerator } from '../../outline/outline-generator.js';
-  
+
   export let workspaceId: string;
-  
+
   const workspaceDeps = getContext('workspace-deps');
-  
+
   const outlineStore = createTextEditorStore(`outline-${workspaceId}`);
-  const outlineGenerator = $derived(() => 
+  const outlineGenerator = $derived(() =>
     workspaceDeps ? new OutlineGenerator(workspaceDeps.workspaceManager, workspaceId) : null
   );
-  
+
   let navigationContent = $state('');
-  
+
   $effect(async () => {
     if (outlineGenerator && $outlineStore.isEmpty) {
       const spineItems = await workspaceDeps.spineManager.loadSpineItems(workspaceId);
@@ -349,8 +361,8 @@ export class OutlineGenerator {
 </script>
 
 <!-- Simplified template -->
-<OutlineEditor 
-  editorStore={outlineStore} 
+<OutlineEditor
+  editorStore={outlineStore}
   on:contentChanged={handleContentChange}
 />
 ```
@@ -358,21 +370,25 @@ export class OutlineGenerator {
 ## 📋 Migration Strategy
 
 ### Phase 1: Service Layer (Week 1)
+
 1. Create `workspace-service.svelte.ts`
 2. Create `outline-service.svelte.ts`
 3. Migrate state management from App.svelte to services
 
 ### Phase 2: Context Providers (Week 2)
+
 1. Implement `WorkspaceProvider.svelte`
 2. Create workspace-scoped dependency injection
 3. Add proper cleanup lifecycle management
 
 ### Phase 3: Component Refactoring (Week 3)
+
 1. Refactor OutlineView to use context
 2. Convert OutlineGenerator to instance-based
 3. Implement proper error boundaries
 
 ### Phase 4: App.svelte Simplification (Week 4)
+
 1. Remove dependency management from App.svelte
 2. Implement ViewRouter component
 3. Add comprehensive testing for new architecture
@@ -380,12 +396,14 @@ export class OutlineGenerator {
 ## 🔧 Implementation Benefits
 
 ### Immediate Benefits
+
 - **Reduced Complexity**: App.svelte becomes 70% smaller
 - **Better Testing**: Components can be tested in isolation
 - **Improved Performance**: Proper cleanup prevents memory leaks
 - **Type Safety**: Better TypeScript inference with proper DI
 
 ### Long-term Benefits
+
 - **Maintainability**: Clear separation of concerns
 - **Scalability**: Easy to add new views and services
 - **Developer Experience**: Clearer mental model and debugging

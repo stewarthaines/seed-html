@@ -21,14 +21,22 @@ The project currently supports 7 languages:
 Add your new locale to the configuration files:
 
 **File: `src/lib/i18n/locale-config.ts`**
+
 ```typescript
 export const SUPPORTED_LOCALES = [
-  'en', 'de', 'ka', 'ar', 'he', 'zh-Hant', 'ja',
-  'fr'  // Add your new locale here
+  'en',
+  'de',
+  'ka',
+  'ar',
+  'he',
+  'zh-Hant',
+  'ja',
+  'fr', // Add your new locale here
 ] as const;
 ```
 
 **File: `build-scripts/i18n-extract.js`**
+
 ```javascript
 const locales = ['en', 'de', 'ka', 'ar', 'he', 'zh-Hant', 'ja', 'fr'];
 ```
@@ -50,6 +58,7 @@ This creates `locales/fr.po` with all translatable strings ready for translation
 🌐 **[translate.codeberg.org/projects/editme-html](https://translate.codeberg.org/projects/editme-html/)**
 
 Weblate provides:
+
 - **Web-based interface**: No software installation required
 - **Translation suggestions**: Automatic suggestions and translation memory
 - **Collaboration features**: Multiple translators can work together
@@ -57,10 +66,12 @@ Weblate provides:
 - **Progress tracking**: See completion status for each language
 
 **Alternative methods**:
+
 - **[Poedit](https://poedit.net/)**: Desktop application for offline translation
 - **Text editor**: Direct editing of `.po` files (advanced users)
 
 The translation files contain entries like:
+
 ```po
 #: src/lib/components/workspace/WorkspaceList.svelte:106
 msgid "Get started by creating your first EPUB"
@@ -68,6 +79,7 @@ msgstr ""  # Add your translation here
 ```
 
 Fill in the `msgstr` values with your translations:
+
 ```po
 msgstr "Commencez par créer votre premier EPUB"
 ```
@@ -75,6 +87,7 @@ msgstr "Commencez par créer votre premier EPUB"
 ### 4. Set Locale Metadata
 
 Update the file headers in your `.po` file:
+
 ```po
 "Language: fr\n"
 "Last-Translator: Your Name <your.email@example.com>\n"
@@ -110,6 +123,7 @@ npm run i18n:compress
 For right-to-left languages (Arabic, Hebrew), add RTL configuration:
 
 **File: `src/lib/i18n/locale-config.ts`**
+
 ```typescript
 export const RTL_LOCALES = ['ar', 'he', 'ur'] as const; // Add new RTL locale
 ```
@@ -134,24 +148,28 @@ export const RTL_LOCALES = ['ar', 'he', 'ur'] as const; // Add new RTL locale
 Developers can add context for translators using comments in source files. The extraction script supports multiple comment formats:
 
 **HTML comments** (in template sections):
+
 ```html
 <!-- i18n: This button creates a new EPUB project -->
 <button>{$t('Create New')}</button>
 ```
 
 **JavaScript line comments** (in script sections):
+
 ```javascript
 // i18n: Message shown when saving is successful
 const message = $t('Saved successfully');
 ```
 
 **JavaScript block comments** (in script sections):
+
 ```javascript
 /* i18n: Label for the main navigation menu */
 const navLabel = $t('Navigation');
 ```
 
 These comments appear in translation files as extracted comments:
+
 ```po
 #. This button creates a new EPUB project
 #: src/components/Button.svelte:45
@@ -166,6 +184,7 @@ The extraction script automatically finds comments within 3 lines before transla
 For languages with complex plural rules, update:
 
 **File: `locales/[locale].po`**
+
 ```po
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 ```

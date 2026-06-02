@@ -1,6 +1,6 @@
 /**
  * OutlineGenerator - EPUB Navigation Generation Utility
- * 
+ *
  * Provides utilities for generating EPUB-compliant navigation documents
  * from spine items and processing user-written navigation content.
  */
@@ -16,6 +16,6 @@ export type {
   ProcessingOptions,
 } from './outline-generator';
 
-// Re-export related types from other modules for convenience  
+// Re-export related types from other modules for convenience
 export type { SpineItemWithSource } from '../spine/types';
 export type { TransformPipeline } from '../transform/transform-pipeline';

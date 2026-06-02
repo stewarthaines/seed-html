@@ -126,7 +126,12 @@
   );
 </script>
 
-{#snippet checkboxGroup(legend: string, options: VocabOption[], selected: string[] | undefined, field: string)}
+{#snippet checkboxGroup(
+  legend: string,
+  options: VocabOption[],
+  selected: string[] | undefined,
+  field: string
+)}
   <fieldset class="field-group">
     <legend class="group-title" tabindex="-1">{legend}</legend>
     <div class="checkbox-grid">
@@ -157,7 +162,9 @@
         <fieldset class="field-group">
           <legend class="group-title" tabindex="-1">{$t('Sufficient access modes')}</legend>
           <p class="field-hint">
-            {$t('Each row is one combination of modes that is enough on its own to read the whole publication.')}
+            {$t(
+              'Each row is one combination of modes that is enough on its own to read the whole publication.'
+            )}
           </p>
 
           {#each sufficientSets as set, index (index)}

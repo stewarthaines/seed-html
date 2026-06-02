@@ -125,8 +125,12 @@ export class MockBlobUrlManager {
           },
           Editor: function (elementId: string, options: any = {}) {
             return {
-              paramChanged: () => {/* mock noop */},
-              setNotation: () => {/* mock noop */},
+              paramChanged: () => {
+                /* mock noop */
+              },
+              setNotation: () => {
+                /* mock noop */
+              },
             };
           },
         };
@@ -136,7 +140,9 @@ export class MockBlobUrlManager {
           highlight: (code: string, language: any, grammarName: string) => {
             return `<span class="token">${code}</span>`;
           },
-          highlightAll: () => {/* mock noop */},
+          highlightAll: () => {
+            /* mock noop */
+          },
           languages: {
             javascript: {},
             css: {},
@@ -148,7 +154,9 @@ export class MockBlobUrlManager {
         // Generic mock library
         return {
           version: '1.0.0-mock',
-          init: () => {/* mock noop */},
+          init: () => {
+            /* mock noop */
+          },
           process: (input: any) => input,
           render: (input: any) => `<div class="mock-${globalName}">${input}</div>`,
         };

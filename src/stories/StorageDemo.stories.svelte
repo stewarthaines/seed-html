@@ -65,35 +65,34 @@ This demonstrates the complete workspace isolation and file organization used by
     try {
       // Wait for storage initialization first
       await canvas.findByRole('main', {}, { timeout: 5000 });
-      
+
       // Reset storage demo using the component's built-in method
       const resetButton = canvas.getByText('Reset Demo');
       await userEvent.click(resetButton);
-      
+
       // Wait for reset to complete
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // Create workspace
       const createButton = canvas.getByText('Create Workspace');
       await userEvent.click(createButton);
-      
+
       // Wait for workspace creation
       await new Promise(resolve => setTimeout(resolve, 300));
-      
+
       // Add sample EPUB
       const addEpubButton = canvas.getByText('Add Sample EPUB');
       await userEvent.click(addEpubButton);
-      
+
       // Wait for files to be created
       await new Promise(resolve => setTimeout(resolve, 300));
-      
+
       // Read a file
       const mimetypeButton = canvas.getByText('mimetype');
       await userEvent.click(mimetypeButton);
-      
+
       // Wait to see the result
       await new Promise(resolve => setTimeout(resolve, 300));
-      
     } catch (error) {
       console.log('Play function interaction failed:', error);
       // Continue anyway to show current state

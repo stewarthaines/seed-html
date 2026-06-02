@@ -359,7 +359,7 @@ export function createVisualMockManifestManager(scenario: VisualScenario = 'with
       return Promise.resolve({
         type: 'text',
         content: 'Sample preview content',
-        metadata: { size: 1234, lastModified: new Date() }
+        metadata: { size: 1234, lastModified: new Date() },
       });
     },
 
@@ -410,14 +410,14 @@ export function createVisualMockManifestManager(scenario: VisualScenario = 'with
           severity: 'warning',
           message: 'Missing source file',
           itemId: 'titlepage',
-          type: 'missing-source'
+          type: 'missing-source',
         },
         {
-          severity: 'warning', 
+          severity: 'warning',
           message: 'Non-linear item in spine',
           itemId: 'appendix',
-          type: 'spine-validation'
-        }
+          type: 'spine-validation',
+        },
       ]);
     },
 
@@ -435,12 +435,14 @@ export function createVisualMockManifestManager(scenario: VisualScenario = 'with
           type: 'text',
           size: 2345,
           modified: new Date(Date.now() - 1 * 60 * 60 * 1000),
-        }
+        },
       ]);
     },
 
     async getSourceItemContent(workspaceId: string, sourcePath: string) {
-      return Promise.resolve('# Sample Source Content\n\nThis is plain text content that would be transformed to XHTML.');
+      return Promise.resolve(
+        '# Sample Source Content\n\nThis is plain text content that would be transformed to XHTML.'
+      );
     },
 
     async isAdvancedModeEnabled(workspaceId: string) {
@@ -468,7 +470,7 @@ export function createVisualMockManifestManager(scenario: VisualScenario = 'with
         image: ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml'],
         audio: ['audio/mpeg', 'audio/ogg', 'audio/wav'],
         video: ['video/mp4', 'video/ogg', 'video/webm'],
-        binary: ['application/octet-stream', 'application/pdf']
+        binary: ['application/octet-stream', 'application/pdf'],
       };
     },
 
@@ -512,7 +514,7 @@ export function createVisualMockMetadataManager(scenario: VisualScenario = 'with
         source: '',
         relation: '',
         coverage: '',
-        format: ''
+        format: '',
       };
     }
 
@@ -528,17 +530,17 @@ export function createVisualMockMetadataManager(scenario: VisualScenario = 'with
       rights: 'Copyright © 2024 Digital Publishing House. All rights reserved.',
       subject: [
         'Technology',
-        'Digital Transformation', 
+        'Digital Transformation',
         'Fiction',
         'Contemporary Literature',
-        'Human-Computer Interaction'
+        'Human-Computer Interaction',
       ],
       contributor: ['Jane Editor (Editor)', 'Bob Illustrator (Illustrator)'],
       type: 'fiction',
       source: 'Original digital manuscript',
       relation: 'Part of the Digital Chronicles series',
       coverage: 'Global, 21st century',
-      format: 'EPUB 3.0'
+      format: 'EPUB 3.0',
     };
   };
 
@@ -562,14 +564,14 @@ export function createVisualMockMetadataManager(scenario: VisualScenario = 'with
 
     validateMetadata(metadata: any) {
       const errors = [];
-      
+
       // Mock validation errors for demonstration
       if (!metadata.title?.trim()) {
         errors.push({
           field: 'title',
           severity: 'error' as const,
           message: 'Title is required',
-          code: 'REQUIRED_FIELD'
+          code: 'REQUIRED_FIELD',
         });
       }
 
@@ -578,7 +580,7 @@ export function createVisualMockMetadataManager(scenario: VisualScenario = 'with
           field: 'identifier',
           severity: 'error' as const,
           message: 'Identifier is required',
-          code: 'REQUIRED_FIELD'
+          code: 'REQUIRED_FIELD',
         });
       }
 
@@ -587,7 +589,7 @@ export function createVisualMockMetadataManager(scenario: VisualScenario = 'with
           field: 'language',
           severity: 'warning' as const,
           message: 'Language should follow BCP 47 format (e.g., en, en-US)',
-          code: 'INVALID_FORMAT'
+          code: 'INVALID_FORMAT',
         });
       }
 
@@ -641,14 +643,14 @@ export function createVisualMockMetadataManager(scenario: VisualScenario = 'with
         { code: 'ja', name: 'Japanese' },
         { code: 'ko', name: 'Korean' },
         { code: 'ar', name: 'Arabic' },
-        { code: 'he', name: 'Hebrew' }
+        { code: 'he', name: 'Hebrew' },
       ]);
     },
 
     async generateIdentifier() {
-      const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0;
-        const v = c == 'x' ? r : (r & 0x3 | 0x8);
+      const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        const r = (Math.random() * 16) | 0;
+        const v = c == 'x' ? r : (r & 0x3) | 0x8;
         return v.toString(16);
       });
       return Promise.resolve(`urn:uuid:${uuid}`);
@@ -661,15 +663,15 @@ export function createVisualMockMetadataManager(scenario: VisualScenario = 'with
           field: 'title',
           oldValue: 'The Digital Chronicles (Draft)',
           newValue: metadata.title,
-          action: 'update'
+          action: 'update',
         },
         {
           timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
           field: 'description',
           oldValue: '',
           newValue: metadata.description,
-          action: 'update'
-        }
+          action: 'update',
+        },
       ]);
     },
 
@@ -706,6 +708,6 @@ export function createVisualMockMetadataManager(scenario: VisualScenario = 'with
 
     async preloadMetadata(workspaceId: string) {
       return Promise.resolve();
-    }
+    },
   };
 }

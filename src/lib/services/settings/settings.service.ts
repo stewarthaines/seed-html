@@ -1,7 +1,7 @@
 /**
  * SettingsService - Clean Service Architecture Implementation
- * 
- * Manages application settings across three storage tiers following 
+ *
+ * Manages application settings across three storage tiers following
  * the clean service architecture with single responsibility principle.
  */
 
@@ -50,7 +50,10 @@ export interface TransformOption {
 
 // Service error types
 export class SettingsServiceError extends Error {
-  constructor(message: string, public code: string) {
+  constructor(
+    message: string,
+    public code: string
+  ) {
     super(message);
     this.name = 'SettingsServiceError';
   }
@@ -79,7 +82,21 @@ interface ExtensionManager {
 export class SettingsService {
   private static readonly GLOBAL_SETTINGS_KEY = 'editme_global_settings';
   private static readonly SUPPORTED_LOCALES = new Set([
-    'en', 'de', 'ar', 'he', 'ja', 'ka', 'zh-hant', 'fr', 'es', 'it', 'pt', 'ru', 'pl', 'nl', 'sv'
+    'en',
+    'de',
+    'ar',
+    'he',
+    'ja',
+    'ka',
+    'zh-hant',
+    'fr',
+    'es',
+    'it',
+    'pt',
+    'ru',
+    'pl',
+    'nl',
+    'sv',
   ]);
   private static readonly VALID_THEMES = new Set(['light', 'dark', 'system']);
 
@@ -166,7 +183,7 @@ export class SettingsService {
     return {
       theme: 'system',
       locale: 'en',
-      editor_font_size: 14
+      editor_font_size: 14,
     };
   }
 
@@ -179,9 +196,12 @@ export class SettingsService {
    */
   async loadWorkspaceSettings(workspaceId: string): Promise<WorkspaceSettings> {
     try {
-      const metadataContent = await this.fileStorage.readTextFile(workspaceId, '.workspace-metadata.json');
+      const metadataContent = await this.fileStorage.readTextFile(
+        workspaceId,
+        '.workspace-metadata.json'
+      );
       const metadata = JSON.parse(metadataContent);
-      
+
       // Extract settings from metadata, use defaults for missing fields
       const defaults = this.getDefaultWorkspaceSettings();
       return {
@@ -189,8 +209,8 @@ export class SettingsService {
         draft_id: metadata.draft_id ?? defaults.draft_id,
         editor: {
           preview_delay_ms: metadata.editor?.preview_delay_ms ?? defaults.editor!.preview_delay_ms,
-          advanced_mode: metadata.editor?.advanced_mode ?? defaults.editor!.advanced_mode
-        }
+          advanced_mode: metadata.editor?.advanced_mode ?? defaults.editor!.advanced_mode,
+        },
       };
     } catch {
       // Return defaults when file doesn't exist or is corrupted
@@ -206,7 +226,10 @@ export class SettingsService {
       // Read existing metadata to preserve other fields
       let existingMetadata = {};
       try {
-        const existingContent = await this.fileStorage.readTextFile(workspaceId, '.workspace-metadata.json');
+        const existingContent = await this.fileStorage.readTextFile(
+          workspaceId,
+          '.workspace-metadata.json'
+        );
         existingMetadata = JSON.parse(existingContent);
       } catch {
         // File doesn't exist, use empty object
@@ -217,10 +240,14 @@ export class SettingsService {
         ...existingMetadata,
         bust_cache: settings.bust_cache,
         draft_id: settings.draft_id,
-        editor: settings.editor
+        editor: settings.editor,
       };
 
-      await this.fileStorage.writeTextFile(workspaceId, '.workspace-metadata.json', JSON.stringify(updatedMetadata, null, 2));
+      await this.fileStorage.writeTextFile(
+        workspaceId,
+        '.workspace-metadata.json',
+        JSON.stringify(updatedMetadata, null, 2)
+      );
     } catch (error) {
       throw new SettingsServiceError(
         `Failed to save workspace settings: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -238,8 +265,8 @@ export class SettingsService {
       draft_id: 0,
       editor: {
         preview_delay_ms: 500,
-        advanced_mode: false
-      }
+        advanced_mode: false,
+      },
     };
   }
 
@@ -252,9 +279,12 @@ export class SettingsService {
    */
   async loadEPUBSettings(workspaceId: string): Promise<EPUBSettings> {
     try {
-      const settingsContent = await this.fileStorage.readTextFile(workspaceId, 'SOURCE/settings.json');
+      const settingsContent = await this.fileStorage.readTextFile(
+        workspaceId,
+        'SOURCE/settings.json'
+      );
       const settings = JSON.parse(settingsContent);
-      
+
       // Merge with defaults for missing fields
       const defaults = this.getDefaultEPUBSettings();
       return {
@@ -262,12 +292,14 @@ export class SettingsService {
         dom_transforms: settings.dom_transforms ?? defaults.dom_transforms,
         spine_basename: settings.spine_basename ?? defaults.spine_basename,
         audio_clip_template: settings.audio_clip_template ?? defaults.audio_clip_template,
-        cover: settings.cover ? {
-          template: settings.cover.template ?? 'default',
-          background_color: settings.cover.background_color ?? '#ffffff',
-          text_color: settings.cover.text_color ?? '#000000',
-          font_family: settings.cover.font_family ?? 'serif'
-        } : undefined
+        cover: settings.cover
+          ? {
+              template: settings.cover.template ?? 'default',
+              background_color: settings.cover.background_color ?? '#ffffff',
+              text_color: settings.cover.text_color ?? '#000000',
+              font_family: settings.cover.font_family ?? 'serif',
+            }
+          : undefined,
       };
     } catch {
       // Return defaults when file doesn't exist or is corrupted
@@ -280,7 +312,11 @@ export class SettingsService {
    */
   async saveEPUBSettings(workspaceId: string, settings: EPUBSettings): Promise<void> {
     try {
-      await this.fileStorage.writeTextFile(workspaceId, 'SOURCE/settings.json', JSON.stringify(settings, null, 2));
+      await this.fileStorage.writeTextFile(
+        workspaceId,
+        'SOURCE/settings.json',
+        JSON.stringify(settings, null, 2)
+      );
     } catch (error) {
       throw new SettingsServiceError(
         `Failed to save EPUB settings: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -297,7 +333,7 @@ export class SettingsService {
       text_transform: 'SOURCE/scripts/transformText.js',
       dom_transforms: ['SOURCE/scripts/transformDom.js'],
       spine_basename: 'chapter',
-      audio_clip_template: ':clip[<label>]{src=<href> begin=<begin> end=<end>}'
+      audio_clip_template: ':clip[<label>]{src=<href> begin=<begin> end=<end>}',
     };
   }
 
@@ -311,10 +347,10 @@ export class SettingsService {
   async incrementDraftId(workspaceId: string): Promise<number> {
     const settings = await this.loadWorkspaceSettings(workspaceId);
     const newDraftId = settings.draft_id + 1;
-    
+
     await this.saveWorkspaceSettings(workspaceId, {
       ...settings,
-      draft_id: newDraftId
+      draft_id: newDraftId,
     });
 
     return newDraftId;
@@ -332,17 +368,17 @@ export class SettingsService {
    */
   extractDraftInfo(title: string): { baseTitle: string; draftId: number | null } {
     const draftMatch = title.match(/^(.+?)\s+\(Draft\s+(\d+)\)$/);
-    
+
     if (draftMatch) {
       return {
         baseTitle: draftMatch[1],
-        draftId: parseInt(draftMatch[2], 10)
+        draftId: parseInt(draftMatch[2], 10),
       };
     }
 
     return {
       baseTitle: title,
-      draftId: null
+      draftId: null,
     };
   }
 
@@ -367,7 +403,10 @@ export class SettingsService {
   /**
    * Resolve transform scripts to their content
    */
-  async resolveTransformScripts(workspaceId: string, settings: EPUBSettings): Promise<{
+  async resolveTransformScripts(
+    workspaceId: string,
+    settings: EPUBSettings
+  ): Promise<{
     textTransform: string | null;
     domTransforms: string[];
   }> {
@@ -396,7 +435,7 @@ export class SettingsService {
 
       return {
         textTransform,
-        domTransforms
+        domTransforms,
       };
     } catch (error) {
       throw new SettingsServiceError(
@@ -428,14 +467,17 @@ export class SettingsService {
     }
 
     // Validate font size
-    if (settings.editor_font_size !== undefined && !this.isValidFontSize(settings.editor_font_size)) {
+    if (
+      settings.editor_font_size !== undefined &&
+      !this.isValidFontSize(settings.editor_font_size)
+    ) {
       errors.push(`Font size must be between 8-32 pixels`);
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -447,7 +489,10 @@ export class SettingsService {
     const warnings: string[] = [];
 
     // Validate draft ID
-    if (settings.draft_id !== undefined && (settings.draft_id < 0 || !Number.isInteger(settings.draft_id))) {
+    if (
+      settings.draft_id !== undefined &&
+      (settings.draft_id < 0 || !Number.isInteger(settings.draft_id))
+    ) {
       errors.push('Draft ID must be a non-negative integer');
     }
 
@@ -464,7 +509,7 @@ export class SettingsService {
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -500,21 +545,25 @@ export class SettingsService {
     if (settings.audio_clip_template !== undefined && settings.audio_clip_template) {
       const template = settings.audio_clip_template;
       const requiredPlaceholders = ['<href>', '<begin>', '<end>'];
-      const missingPlaceholders = requiredPlaceholders.filter(placeholder => !template.includes(placeholder));
-      
+      const missingPlaceholders = requiredPlaceholders.filter(
+        placeholder => !template.includes(placeholder)
+      );
+
       if (missingPlaceholders.length > 0) {
-        errors.push(`Audio clip template missing required placeholders: ${missingPlaceholders.join(', ')}`);
+        errors.push(
+          `Audio clip template missing required placeholders: ${missingPlaceholders.join(', ')}`
+        );
       }
     }
 
     // Validate cover settings
     if (settings.cover) {
       const { background_color, text_color } = settings.cover;
-      
+
       if (background_color && !this.isValidColor(background_color)) {
         errors.push('Invalid background color format');
       }
-      
+
       if (text_color && !this.isValidColor(text_color)) {
         errors.push('Invalid text color format');
       }
@@ -523,7 +572,7 @@ export class SettingsService {
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 

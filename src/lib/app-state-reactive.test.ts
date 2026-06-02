@@ -1,6 +1,6 @@
 /**
  * Reactive AppState Pattern Tests
- * 
+ *
  * Tests the key reactive patterns and service integration concepts
  * for the enhanced AppState implementation.
  */
@@ -15,7 +15,7 @@ class MockReactiveAppState {
   isLoading: boolean = false;
   errorMessage: string | null = null;
 
-  // Settings state  
+  // Settings state
   globalSettings: { theme: 'light' | 'dark' | 'system'; locale: string } | null = null;
 
   // Mock services
@@ -25,7 +25,7 @@ class MockReactiveAppState {
   constructor(workspaceService: any, settingsService: any) {
     this.mockWorkspaceService = workspaceService;
     this.mockSettingsService = settingsService;
-    
+
     // Initialize global settings
     this.globalSettings = this.mockSettingsService.loadGlobalSettings();
   }
@@ -45,7 +45,7 @@ class MockReactiveAppState {
 
   get availableChapters(): Array<{ id: string; title: string }> {
     if (!this.workspace) return [];
-    
+
     return this.workspace.manifest
       .filter(item => item.mediaType === 'application/xhtml+xml')
       .map(item => ({ id: item.id, title: item.id }));
@@ -59,10 +59,9 @@ class MockReactiveAppState {
 
       const workspace = await this.mockWorkspaceService.loadWorkspace(workspaceId);
       this.workspace = workspace;
-      
+
       // Clear selections when loading new workspace
       this.selectedChapterId = null;
-
     } catch (error) {
       this.errorMessage = `Failed to load workspace: ${error instanceof Error ? error.message : 'Unknown error'}`;
       throw error;
@@ -75,11 +74,13 @@ class MockReactiveAppState {
     this.selectedChapterId = chapterId;
   }
 
-  updateGlobalSettings(settings: Partial<{ theme: 'light' | 'dark' | 'system'; locale: string }>): void {
+  updateGlobalSettings(
+    settings: Partial<{ theme: 'light' | 'dark' | 'system'; locale: string }>
+  ): void {
     if (!this.globalSettings) return;
 
     const updatedSettings = { ...this.globalSettings, ...settings };
-    
+
     try {
       this.mockSettingsService.saveGlobalSettings(updatedSettings);
       this.globalSettings = updatedSettings;
@@ -108,21 +109,18 @@ describe('Reactive AppState Patterns', () => {
         title: 'Test Book',
         manifest: [
           { id: 'chapter1', mediaType: 'application/xhtml+xml' },
-          { id: 'chapter2', mediaType: 'application/xhtml+xml' }
+          { id: 'chapter2', mediaType: 'application/xhtml+xml' },
         ],
-        spine: [
-          { idref: 'chapter1' },
-          { idref: 'chapter2' }
-        ]
-      })
+        spine: [{ idref: 'chapter1' }, { idref: 'chapter2' }],
+      }),
     };
 
     mockSettingsService = {
       loadGlobalSettings: vi.fn().mockReturnValue({
         theme: 'system',
-        locale: 'en'
+        locale: 'en',
       }),
-      saveGlobalSettings: vi.fn()
+      saveGlobalSettings: vi.fn(),
     };
 
     appState = new MockReactiveAppState(mockWorkspaceService, mockSettingsService);
@@ -136,7 +134,7 @@ describe('Reactive AppState Patterns', () => {
       expect(appState.errorMessage).toBeNull();
       expect(appState.globalSettings).toEqual({
         theme: 'system',
-        locale: 'en'
+        locale: 'en',
       });
     });
 
@@ -154,7 +152,7 @@ describe('Reactive AppState Patterns', () => {
       expect(appState.currentWorkspaceId).toBe('test-workspace');
       expect(appState.availableChapters).toEqual([
         { id: 'chapter1', title: 'chapter1' },
-        { id: 'chapter2', title: 'chapter2' }
+        { id: 'chapter2', title: 'chapter2' },
       ]);
     });
 
@@ -162,7 +160,7 @@ describe('Reactive AppState Patterns', () => {
       expect(appState.isLoading).toBe(false);
 
       const loadPromise = appState.loadWorkspace('test-workspace');
-      
+
       // Should be loading during async operation
       expect(appState.isLoading).toBe(true);
 
@@ -176,7 +174,7 @@ describe('Reactive AppState Patterns', () => {
       mockWorkspaceService.loadWorkspace.mockRejectedValue(new Error('Workspace not found'));
 
       await expect(appState.loadWorkspace('invalid-id')).rejects.toThrow('Workspace not found');
-      
+
       expect(appState.errorMessage).toContain('Failed to load workspace');
       expect(appState.isLoading).toBe(false);
     });
@@ -206,7 +204,7 @@ describe('Reactive AppState Patterns', () => {
 
       // Load different workspace
       await appState.loadWorkspace('different-workspace');
-      
+
       // Selection should be cleared
       expect(appState.selectedChapterId).toBeNull();
     });
@@ -228,12 +226,12 @@ describe('Reactive AppState Patterns', () => {
 
       expect(mockSettingsService.saveGlobalSettings).toHaveBeenCalledWith({
         theme: 'dark',
-        locale: 'fr'
+        locale: 'fr',
       });
 
       expect(appState.globalSettings).toEqual({
         theme: 'dark',
-        locale: 'fr'
+        locale: 'fr',
       });
     });
 
@@ -258,7 +256,7 @@ describe('Reactive AppState Patterns', () => {
 
     test('settings operations delegate to service layer', () => {
       expect(mockSettingsService.loadGlobalSettings).toHaveBeenCalled();
-      
+
       appState.updateGlobalSettings({ theme: 'dark' });
       expect(mockSettingsService.saveGlobalSettings).toHaveBeenCalled();
     });
@@ -330,7 +328,7 @@ describe('Reactive AppState Patterns', () => {
         'chapter-cleared',
         'chapter-selected:chapter1',
         'workspace-cleared',
-        'chapter-cleared'
+        'chapter-cleared',
       ]);
     });
   });

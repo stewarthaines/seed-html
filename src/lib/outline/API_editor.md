@@ -10,6 +10,7 @@ The Outline Editor system consists of two main UI components:
 2. **OutlineView** - Coordination component that manages editor/preview integration
 
 This system integrates with:
+
 - **TextEditorStore** - General-purpose text editor state management (see `../stores/text-editor-store-API.md`)
 - **OutlineGenerator** - Utility service for EPUB navigation generation (see `API.md`)
 
@@ -25,8 +26,8 @@ A textarea-based editor component for editing navigation content with debounced 
 
 ```typescript
 interface OutlineEditorProps {
-  editorStore: TextEditorStore;  // Required: Store instance for this editor
-  placeholder?: string;          // Optional: Placeholder text when empty
+  editorStore: TextEditorStore; // Required: Store instance for this editor
+  placeholder?: string; // Optional: Placeholder text when empty
 }
 ```
 
@@ -36,10 +37,10 @@ interface OutlineEditorProps {
 interface OutlineEditorEvents {
   contentChanged: {
     detail: {
-      editorId: string;        // Editor identifier from store
-      timestamp: number;       // When content was updated
-      isEmpty: boolean;        // True if content.trim() === ''
-    }
+      editorId: string; // Editor identifier from store
+      timestamp: number; // When content was updated
+      isEmpty: boolean; // True if content.trim() === ''
+    };
   };
 }
 ```
@@ -50,13 +51,13 @@ interface OutlineEditorEvents {
 <script>
   import OutlineEditor from '../components/outline/OutlineEditor.svelte';
   import { createTextEditorStore } from '../stores/text-editor-store.js';
-  
+
   // Create store for this editor instance
   const outlineStore = createTextEditorStore('outline-nav');
-  
+
   function handleContentChanged(event) {
     const { isEmpty } = event.detail;
-    
+
     if (isEmpty) {
       // Trigger auto-generation from spine
       generateNavigationFromSpine();
@@ -68,7 +69,7 @@ interface OutlineEditorEvents {
   }
 </script>
 
-<OutlineEditor 
+<OutlineEditor
   editorStore={outlineStore}
   placeholder="Navigation content will be auto-generated from your chapters..."
   on:contentChanged={handleContentChanged}
@@ -78,23 +79,27 @@ interface OutlineEditorEvents {
 ### Behavior
 
 **Content Management:**
+
 - Content stored in provided TextEditorStore instance (no file I/O)
 - Fills available horizontal and vertical space in container
 - Uses textarea element for multi-line text editing
 - Textarea value stays synchronized with store state
 
 **Event Emission:**
+
 - Emits `contentChanged` events debounced at 300ms after user stops typing
 - Event includes lightweight metadata (timestamp, isEmpty) without content string
 - Empty state detection uses store's derived `isEmpty` flag
 - Parent components access content via `store.getContent()` when needed
 
 **Store Integration:**
+
 - Updates store via `store.updateContent()` on user input
 - Subscribes to store changes to keep textarea synchronized
 - Store automatically handles isEmpty calculation and timestamp updates
 
 **Accessibility Features:**
+
 - Proper focus management with design system focus indicators
 - Uses semantic HTML textarea element
 - Keyboard accessible (not a focus trap)
@@ -102,6 +107,7 @@ interface OutlineEditorEvents {
 - Minimum touch target compliance for mobile accessibility
 
 **CSS Integration:**
+
 - Uses design system tokens from `src/styles/`
 - Consistent focus styles with `--color-focus-ring` and `--focus-ring-width`
 - Responsive to `prefers-reduced-motion` and `prefers-contrast` preferences
@@ -117,10 +123,10 @@ Coordination component that manages the relationship between OutlineEditor, prev
 
 ```typescript
 interface OutlineViewProps {
-  workspaceId: string;              // Required: Active workspace identifier
-  workspaceManager: IWorkspaceManager;     // Required: Workspace file operations
-  spineItemManager: SpineItemManager;      // Required: Spine management
-  transformPipeline: TransformPipeline;    // Required: Content transformation
+  workspaceId: string; // Required: Active workspace identifier
+  workspaceManager: IWorkspaceManager; // Required: Workspace file operations
+  spineItemManager: SpineItemManager; // Required: Spine management
+  transformPipeline: TransformPipeline; // Required: Content transformation
 }
 ```
 
@@ -130,16 +136,16 @@ interface OutlineViewProps {
 interface OutlineViewEvents {
   previewUpdate: {
     detail: {
-      xhtml: string;                // Generated XHTML for preview
-      warnings?: string[];          // Transform warnings
-    }
+      xhtml: string; // Generated XHTML for preview
+      warnings?: string[]; // Transform warnings
+    };
   };
-  
+
   error: {
     detail: {
-      message: string;              // Error description
-      stage: 'generation' | 'transform' | 'save';  // Where error occurred
-    }
+      message: string; // Error description
+      stage: 'generation' | 'transform' | 'save'; // Where error occurred
+    };
   };
 }
 ```
@@ -156,7 +162,8 @@ async loadNavigationContent(): Promise<void>
 
 **Output:** `Promise<void>` - Resolves when content is loaded
 
-**Side Effects:** 
+**Side Effects:**
+
 - Loads existing `nav.txt` content from workspace if it exists
 - Updates internal TextEditorStore with loaded content
 - Triggers initial preview generation
@@ -167,15 +174,15 @@ async loadNavigationContent(): Promise<void>
 <script>
   import OutlineView from '../components/outline/OutlineView.svelte';
   import { onMount } from 'svelte';
-  
+
   let outlineView;
-  
+
   onMount(async () => {
     await outlineView.loadNavigationContent();
   });
 </script>
 
-<OutlineView 
+<OutlineView
   bind:this={outlineView}
   {workspaceId}
   {workspaceManager}
@@ -197,6 +204,7 @@ async saveNavigationContent(): Promise<void>
 **Output:** `Promise<void>` - Resolves when content is saved
 
 **Side Effects:**
+
 - Saves current store content to `SOURCE/text/nav.txt`
 - Saves transformed XHTML to `OEBPS/nav.xhtml`
 - Updates OPF manifest with navigation metadata
@@ -225,20 +233,20 @@ The OutlineView component creates and manages its own TextEditorStore internally
   import OutlineEditor from './OutlineEditor.svelte';
   import { createTextEditorStore } from '../../stores/text-editor-store.js';
   import { OutlineGenerator } from '../../outline/outline-generator.js';
-  
+
   export let workspaceId;
   export let workspaceManager;
   export let spineItemManager;
   export let transformPipeline;
-  
+
   // Create store for this outline editor instance
   const outlineStore = createTextEditorStore('outline-nav');
-  
+
   // React to store changes for transform processing
   $: if ($outlineStore.lastUpdated) {
     handleContentChange($outlineStore.isEmpty);
   }
-  
+
   async function handleContentChange(isEmpty) {
     if (isEmpty) {
       // Auto-generate from spine
@@ -249,7 +257,10 @@ The OutlineView component creates and manages its own TextEditorStore internally
       // Process user content
       const content = outlineStore.getContent();
       const result = await OutlineGenerator.processUserContent(
-        content, workspaceId, 'nav', transformPipeline
+        content,
+        workspaceId,
+        'nav',
+        transformPipeline
       );
       if (result.success) {
         dispatch('previewUpdate', { xhtml: result.xhtml, warnings: result.warnings });
@@ -260,7 +271,7 @@ The OutlineView component creates and manages its own TextEditorStore internally
   }
 </script>
 
-<OutlineEditor 
+<OutlineEditor
   editorStore={outlineStore}
   placeholder="Navigation content will be auto-generated from your chapters..."
   on:contentChanged={handleContentChange}
@@ -274,16 +285,16 @@ The OutlineView component creates and manages its own TextEditorStore internally
 <script>
   import OutlineView from '../components/outline/OutlineView.svelte';
   import ContentPreview from '../components/preview/ContentPreview.svelte';
-  
+
   let outlineView;
   let previewContent = '';
   let previewWarnings = [];
-  
+
   function handlePreviewUpdate(event) {
     previewContent = event.detail.xhtml;
     previewWarnings = event.detail.warnings || [];
   }
-  
+
   function handleError(event) {
     console.error(`Outline error (${event.detail.stage}):`, event.detail.message);
     showUserNotification(event.detail.message, 'error');
@@ -292,7 +303,7 @@ The OutlineView component creates and manages its own TextEditorStore internally
 
 <div class="outline-interface">
   <div class="editor-pane">
-    <OutlineView 
+    <OutlineView
       bind:this={outlineView}
       {workspaceId}
       {workspaceManager}
@@ -302,13 +313,10 @@ The OutlineView component creates and manages its own TextEditorStore internally
       on:error={handleError}
     />
   </div>
-  
+
   <div class="preview-pane">
-    <ContentPreview 
-      content={previewContent}
-      device="responsive"
-    />
-    
+    <ContentPreview content={previewContent} device="responsive" />
+
     {#if previewWarnings.length > 0}
       <div class="warnings">
         {#each previewWarnings as warning}
@@ -325,14 +333,16 @@ The OutlineView component creates and manages its own TextEditorStore internally
 The OutlineView component automatically manages two modes:
 
 ### Auto-Generation Mode
+
 - **Triggered when:** Editor content is empty (`content.trim() === ''`)
-- **Behavior:** 
+- **Behavior:**
   - Calls `OutlineGenerator.generateFromSpine()` with current spine items
   - Generates EPUB-compliant navigation XHTML
   - Updates preview with generated content
   - Does not save to files until user adds manual content
 
-### Manual Editing Mode  
+### Manual Editing Mode
+
 - **Triggered when:** User types content into editor
 - **Behavior:**
   - Calls `OutlineGenerator.processUserContent()` with editor text
@@ -343,6 +353,7 @@ The OutlineView component automatically manages two modes:
 ## Error Handling
 
 ### Transform Errors
+
 ```typescript
 // Transform pipeline failures
 {
@@ -351,7 +362,8 @@ The OutlineView component automatically manages two modes:
 }
 ```
 
-### File Operation Errors  
+### File Operation Errors
+
 ```typescript
 // Workspace file I/O failures
 {
@@ -361,8 +373,9 @@ The OutlineView component automatically manages two modes:
 ```
 
 ### Generation Errors
+
 ```typescript
-// Spine processing failures  
+// Spine processing failures
 {
   stage: 'generation',
   message: 'No spine items found for navigation generation'
@@ -376,7 +389,7 @@ The OutlineView component is designed to work with the existing LayoutManager:
 ```svelte
 <LayoutManager>
   <svelte:fragment slot="left-content">
-    <OutlineView 
+    <OutlineView
       {workspaceId}
       {workspaceManager}
       {spineItemManager}
@@ -384,7 +397,7 @@ The OutlineView component is designed to work with the existing LayoutManager:
       on:previewUpdate={handlePreviewUpdate}
     />
   </svelte:fragment>
-  
+
   <svelte:fragment slot="right-content">
     <ContentPreview content={previewXHTML} />
   </svelte:fragment>

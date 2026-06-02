@@ -1,15 +1,12 @@
 /**
  * Test fixtures for Translation Content System
- * 
+ *
  * Provides realistic sample data for testing localized content generation
  * following the existing project patterns and TDD approach.
  */
 
 import type { TranslationCatalog } from '../../i18n/types.js';
-import type { 
-  ValidationResult,
-  SampleContentKey 
-} from '../types.js';
+import type { ValidationResult, SampleContentKey } from '../types.js';
 
 /**
  * Mock translation catalogs with sample content keys
@@ -20,7 +17,8 @@ export const mockSampleContentCatalogs = {
     messages: {
       // Book metadata
       'sample.book.title': 'Introduction to EPUB',
-      'sample.book.description': 'A comprehensive guide to creating and editing EPUB files with Active EPUB technology.',
+      'sample.book.description':
+        'A comprehensive guide to creating and editing EPUB files with Active EPUB technology.',
       'sample.author.name': 'EDITME Editorial Team',
       'sample.publisher.name': 'EDITME Publishing',
 
@@ -36,7 +34,7 @@ A heading 2 (H2) is a section heading, created with two hash marks.
 
 **This text is bold** - Bold text adds strong emphasis and is created by wrapping text in double asterisks.
 
-*This text is emphasized* - Emphasized text (usually italic) adds mild emphasis and is created by wrapping text in single asterisks.`
+*This text is emphasized* - Emphasized text (usually italic) adds mild emphasis and is created by wrapping text in single asterisks.`,
     },
     headers: {
       Language: 'en',
@@ -49,7 +47,8 @@ A heading 2 (H2) is a section heading, created with two hash marks.
     messages: {
       // Book metadata
       'sample.book.title': 'Einführung in EPUB',
-      'sample.book.description': 'Ein umfassender Leitfaden zur Erstellung und Bearbeitung von EPUB-Dateien mit Active EPUB-Technologie.',
+      'sample.book.description':
+        'Ein umfassender Leitfaden zur Erstellung und Bearbeitung von EPUB-Dateien mit Active EPUB-Technologie.',
       'sample.author.name': 'EDITME Redaktionsteam',
       'sample.publisher.name': 'EDITME Verlag',
 
@@ -65,7 +64,7 @@ Eine Überschrift 2 (H2) ist eine Abschnittsüberschrift, erstellt mit zwei Raut
 
 **Dieser Text ist fett** - Fetter Text fügt starke Betonung hinzu und wird erstellt, indem Text in doppelte Sternchen eingeschlossen wird.
 
-*Dieser Text ist hervorgehoben* - Hervorgehobener Text (normalerweise kursiv) fügt leichte Betonung hinzu und wird erstellt, indem Text in einfache Sternchen eingeschlossen wird.`
+*Dieser Text ist hervorgehoben* - Hervorgehobener Text (normalerweise kursiv) fügt leichte Betonung hinzu und wird erstellt, indem Text in einfache Sternchen eingeschlossen wird.`,
     },
     headers: {
       Language: 'de',
@@ -94,7 +93,7 @@ Eine Überschrift 2 (H2) ist eine Abschnittsüberschrift, erstellt mit zwei Raut
 
 **هذا النص غامق** - النص الغامق يضيف تأكيداً قوياً ويُنشأ بوضع النص بين نجمتين مزدوجتين.
 
-*هذا النص مؤكد* - النص المؤكد (عادة مائل) يضيف تأكيداً خفيفاً ويُنشأ بوضع النص بين نجمتين مفردتين.`
+*هذا النص مؤكد* - النص المؤكد (عادة مائل) يضيف تأكيداً خفيفاً ويُنشأ بوضع النص بين نجمتين مفردتين.`,
     },
     headers: {
       Language: 'ar',
@@ -110,8 +109,9 @@ export const expectedContentPatterns = {
   en: {
     metadata: {
       title: 'Introduction to EPUB',
-      description: 'A comprehensive guide to creating and editing EPUB files with Active EPUB technology.',
-      author: 'EDITME Editorial Team', 
+      description:
+        'A comprehensive guide to creating and editing EPUB files with Active EPUB technology.',
+      author: 'EDITME Editorial Team',
       publisher: 'EDITME Publishing',
     },
     chapters: {
@@ -125,7 +125,8 @@ export const expectedContentPatterns = {
   de: {
     metadata: {
       title: 'Einführung in EPUB',
-      description: 'Ein umfassender Leitfaden zur Erstellung und Bearbeitung von EPUB-Dateien mit Active EPUB-Technologie.',
+      description:
+        'Ein umfassender Leitfaden zur Erstellung und Bearbeitung von EPUB-Dateien mit Active EPUB-Technologie.',
       author: 'EDITME Redaktionsteam',
       publisher: 'EDITME Verlag',
     },
@@ -183,10 +184,7 @@ export const validationTestCases = {
   missing: {
     incompleteFrench: {
       isValid: false,
-      missingKeys: [
-        'sample.chapter1.title',
-        'sample.chapter1.content',
-      ],
+      missingKeys: ['sample.chapter1.title', 'sample.chapter1.content'],
       emptyKeys: [],
       locale: 'fr',
     } satisfies ValidationResult,
@@ -196,9 +194,7 @@ export const validationTestCases = {
     emptyContent: {
       isValid: false,
       missingKeys: [],
-      emptyKeys: [
-        'sample.book.title',
-      ],
+      emptyKeys: ['sample.book.title'],
       locale: 'es',
     } satisfies ValidationResult,
   },
@@ -218,7 +214,8 @@ export const errorScenarios = {
     locale: 'fr',
     missingKeys: ['sample.chapter1.title', 'sample.chapter1.content'],
     expectedError: 'TranslationMissingError',
-    expectedMessage: 'Missing translation keys for locale fr: sample.chapter1.title, sample.chapter1.content',
+    expectedMessage:
+      'Missing translation keys for locale fr: sample.chapter1.title, sample.chapter1.content',
   },
 
   invalidContent: {
@@ -272,7 +269,7 @@ export const incompleteCatalogs = {
  */
 export const requiredSampleContentKeys: SampleContentKey[] = [
   'sample.book.title',
-  'sample.book.description', 
+  'sample.book.description',
   'sample.author.name',
   'sample.publisher.name',
   'sample.chapter1.title',

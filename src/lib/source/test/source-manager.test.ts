@@ -330,7 +330,6 @@ describe('SourceManager', () => {
       expect(result).toBe(false);
     });
 
-
     it('should return true for SOURCE/ with actual content files', async () => {
       const workspaceId = TEST_WORKSPACE_IDS.MINIMAL;
       await mockFileStorage.addTestFiles(workspaceId, createMinimalSourceStructure());
@@ -357,7 +356,7 @@ describe('SourceManager', () => {
 
       await sourceManager.initializeSourceStructure(workspaceId);
 
-      // Verify settings.json was created  
+      // Verify settings.json was created
       expect(await mockFileStorage.fileExists(workspaceId, 'SOURCE/settings.json')).toBe(true);
 
       // Verify default settings.json content
@@ -555,7 +554,7 @@ describe('SourceManager', () => {
 
       expect(result.totalFiles).toBe(1); // settings.json only
       expect(result.directories.text).toBe(0); // no files in text directory
-      expect(result.directories.scripts).toBe(0); // no files in scripts directory  
+      expect(result.directories.scripts).toBe(0); // no files in scripts directory
       expect(result.directories.extensions).toBe(0); // no files in extensions directory
       expect(result.hasSettingsFile).toBe(true);
     });

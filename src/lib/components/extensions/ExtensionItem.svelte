@@ -87,20 +87,10 @@
   <div class="extension-header">
     <span class="extension-name">{extension.name}</span>
     <div class="extension-actions">
-      <button
-        type="button"
-        class="license-button"
-        onclick={toggleLicense}
-        disabled={isLoading}
-      >
+      <button type="button" class="license-button" onclick={toggleLicense} disabled={isLoading}>
         {$t('License')}
       </button>
-      <button
-        type="button"
-        class="remove-button"
-        onclick={onRemove}
-        disabled={!isAdvancedMode}
-      >
+      <button type="button" class="remove-button" onclick={onRemove} disabled={!isAdvancedMode}>
         {$t('Remove')}
       </button>
     </div>

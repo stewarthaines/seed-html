@@ -22,7 +22,7 @@
     id = '',
     placeholder = '',
     onblur,
-    onfocus
+    onfocus,
   }: Props = $props();
 
   // Check if field needs attention (required but empty)

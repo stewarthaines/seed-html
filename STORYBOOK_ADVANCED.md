@@ -9,6 +9,7 @@ This document covers advanced Storybook patterns including backend integration, 
 ### When to Use Backend Demo Patterns
 
 Use backend demo patterns for:
+
 - **Non-UI Features**: File storage, data processing, API integrations
 - **System Testing**: Testing real implementations vs mocks
 - **Development Aid**: Interactive testing of backend features
@@ -23,15 +24,15 @@ Replace mocks with real implementations for more accurate testing:
 <script lang="ts">
   import { onMount } from 'svelte';
   import { FileStorageAPI } from '../lib/storage';
-  
+
   let storage = new FileStorageAPI();
   let logs: string[] = [];
   let isReady = false;
-  
+
   const log = (message: string) => {
     logs = [...logs, `${new Date().toISOString()}: ${message}`];
   };
-  
+
   onMount(async () => {
     try {
       await storage.init();
@@ -41,7 +42,7 @@ Replace mocks with real implementations for more accurate testing:
       log(`❌ Initialization failed: ${error.message}`);
     }
   });
-  
+
   const testOperation = async () => {
     try {
       const result = await storage.createWorkspace('test-workspace');
@@ -54,12 +55,10 @@ Replace mocks with real implementations for more accurate testing:
 
 <div class="demo-container">
   <div class="controls">
-    <button disabled={!isReady} on:click={testOperation}>
-      Test Create Workspace
-    </button>
-    <button on:click={() => logs = []}>Clear Logs</button>
+    <button disabled={!isReady} on:click={testOperation}> Test Create Workspace </button>
+    <button on:click={() => (logs = [])}>Clear Logs</button>
   </div>
-  
+
   <div class="console">
     {#each logs as logEntry}
       <div class="log-entry">{logEntry}</div>
@@ -73,13 +72,13 @@ Replace mocks with real implementations for more accurate testing:
     margin: 0 auto;
     padding: 2rem;
   }
-  
+
   .controls {
     display: flex;
     gap: 1rem;
     margin-bottom: 1rem;
   }
-  
+
   .console {
     background: #1e1e1e;
     color: #fff;
@@ -90,7 +89,7 @@ Replace mocks with real implementations for more accurate testing:
     max-height: 400px;
     overflow-y: auto;
   }
-  
+
   .log-entry {
     margin-bottom: 0.25rem;
   }
@@ -112,10 +111,10 @@ const meta: Meta<BackendFeatureDemo> = {
     layout: 'fullscreen',
     docs: {
       description: {
-        story: 'Interactive demonstration of the File Storage API with real backend integration.'
-      }
-    }
-  }
+        story: 'Interactive demonstration of the File Storage API with real backend integration.',
+      },
+    },
+  },
 };
 
 export default meta;
@@ -125,17 +124,17 @@ export const Interactive: Story = {
   render: () => new BackendFeatureDemo({ target: document.body }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    
+
     // Wait for initialization
     await expect(canvas.getByText(/Storage initialized/)).toBeInTheDocument();
-    
+
     // Test workspace creation
     const createButton = canvas.getByText('Test Create Workspace');
     await createButton.click();
-    
+
     // Verify success
     await expect(canvas.getByText(/Created workspace/)).toBeInTheDocument();
-  }
+  },
 };
 ```
 
@@ -149,25 +148,25 @@ For components requiring coordination between focus management and async operati
 <!-- AdvancedComponent.svelte -->
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  
+
   const dispatch = createEventDispatcher<{ ready: Promise<void> }>();
-  
+
   let dialogRef: HTMLDialogElement;
   let isLoading = true;
-  
+
   export const open = async (): Promise<void> => {
     isLoading = true;
     dialogRef.showModal();
-    
+
     // Simulate async initialization
     await new Promise(resolve => setTimeout(resolve, 100));
-    
+
     isLoading = false;
-    
+
     // Focus management after loading
     const firstInput = dialogRef.querySelector('input');
     firstInput?.focus();
-    
+
     // Dispatch promise for parent coordination
     const readyPromise = Promise.resolve();
     dispatch('ready', readyPromise);
@@ -193,10 +192,10 @@ For components requiring coordination between focus management and async operati
 <!-- ParentComponent.svelte -->
 <script lang="ts">
   import AdvancedComponent from './AdvancedComponent.svelte';
-  
+
   let componentRef: AdvancedComponent;
   let isComponentReady = false;
-  
+
   const handleOpen = async () => {
     try {
       await componentRef.open();
@@ -206,7 +205,7 @@ For components requiring coordination between focus management and async operati
       console.error('Failed to open component:', error);
     }
   };
-  
+
   const handleComponentReady = (event: CustomEvent<Promise<void>>) => {
     event.detail.then(() => {
       console.log('Component fully initialized');
@@ -231,36 +230,37 @@ export const FullApplication: Story = {
   parameters: {
     layout: 'fullscreen',
     viewport: {
-      defaultViewport: 'desktop'
-    }
+      defaultViewport: 'desktop',
+    },
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    
+
     // Test sidebar toggle
     const sidebarToggle = canvas.getByLabelText('Toggle Sidebar');
     await sidebarToggle.click();
-    
+
     // Verify layout changes
     const sidebar = canvas.getByRole('complementary');
     expect(sidebar).toHaveClass('collapsed');
-    
+
     // Test responsive behavior
     await expect(canvas.getByRole('main')).toHaveClass('expanded');
-  }
+  },
 };
 ```
 
 ### Interactive Layout Demonstrations
 
 **Sidebar Toggle Pattern:**
+
 ```svelte
 <!-- LayoutDemo.svelte -->
 <script lang="ts">
   import { layoutStore } from '../stores/layout';
-  
+
   let sidebarExpanded = true;
-  
+
   const toggleSidebar = () => {
     sidebarExpanded = !sidebarExpanded;
     layoutStore.setSidebarExpanded(sidebarExpanded);
@@ -269,16 +269,14 @@ export const FullApplication: Story = {
 
 <div class="app-layout" class:sidebar-collapsed={!sidebarExpanded}>
   <header class="app-header">
-    <button on:click={toggleSidebar} aria-label="Toggle Sidebar">
-      ☰
-    </button>
+    <button on:click={toggleSidebar} aria-label="Toggle Sidebar"> ☰ </button>
     <h1>Application Layout Demo</h1>
   </header>
-  
+
   <aside class="app-sidebar" class:collapsed={!sidebarExpanded}>
     <nav>Navigation content</nav>
   </aside>
-  
+
   <main class="app-main">
     <p>Main content area</p>
   </main>
@@ -293,14 +291,14 @@ export const FullApplication: Story = {
 <!-- FeatureDemo.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  
+
   let loadingState: 'idle' | 'loading' | 'success' | 'error' = 'idle';
   let progress = 0;
-  
+
   const simulateAsyncOperation = async () => {
     loadingState = 'loading';
     progress = 0;
-    
+
     try {
       for (let i = 0; i <= 100; i += 10) {
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -317,7 +315,7 @@ export const FullApplication: Story = {
   <button on:click={simulateAsyncOperation} disabled={loadingState === 'loading'}>
     Start Operation
   </button>
-  
+
   {#if loadingState === 'loading'}
     <div class="progress">
       <div class="progress-bar" style="width: {progress}%"></div>
@@ -337,10 +335,12 @@ export const FullApplication: Story = {
 <!-- ErrorDemo.svelte -->
 <script lang="ts">
   let errorType: 'none' | 'network' | 'validation' | 'permission' = 'none';
-  
+
   const triggerError = (type: typeof errorType) => {
     errorType = type;
-    setTimeout(() => { errorType = 'none'; }, 3000);
+    setTimeout(() => {
+      errorType = 'none';
+    }, 3000);
   };
 </script>
 
@@ -350,7 +350,7 @@ export const FullApplication: Story = {
     <button on:click={() => triggerError('validation')}>Validation Error</button>
     <button on:click={() => triggerError('permission')}>Permission Error</button>
   </div>
-  
+
   {#if errorType !== 'none'}
     <div class="error-display" role="alert">
       {#if errorType === 'network'}
@@ -373,19 +373,16 @@ export const FullApplication: Story = {
 export const PerformanceOptimized: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    
+
     // Use efficient selectors
     const button = canvas.getByRole('button', { name: 'Submit' });
-    
+
     // Batch DOM operations
-    await Promise.all([
-      button.click(),
-      expect(canvas.getByText('Loading')).toBeInTheDocument()
-    ]);
-    
+    await Promise.all([button.click(), expect(canvas.getByText('Loading')).toBeInTheDocument()]);
+
     // Wait for specific state changes instead of arbitrary timeouts
     await canvas.findByText('Success', {}, { timeout: 5000 });
-  }
+  },
 };
 ```
 
@@ -395,24 +392,24 @@ export const PerformanceOptimized: Story = {
 <!-- MemoryEfficientDemo.svelte -->
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  
+
   let intervals: number[] = [];
   let listeners: (() => void)[] = [];
-  
+
   onDestroy(() => {
     // Clear all intervals
     intervals.forEach(clearInterval);
-    
+
     // Remove all event listeners
     listeners.forEach(cleanup => cleanup());
   });
-  
+
   const addInterval = (callback: () => void, delay: number) => {
     const id = setInterval(callback, delay);
     intervals.push(id);
     return id;
   };
-  
+
   const addEventListener = (element: Element, event: string, handler: EventListener) => {
     element.addEventListener(event, handler);
     const cleanup = () => element.removeEventListener(event, handler);

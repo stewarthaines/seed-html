@@ -5,6 +5,7 @@
 The Audio Clip Editor provides precise audio timestamp selection, clip range definition, and seamless integration with EPUB text content through the AudioClipService. This service follows the project's clean service architecture with dependency injection and integrates with workspace manifest management and blob URL handling for efficient audio file access.
 
 **Key Features:**
+
 - Event-driven audio playback with precise timing control
 - Visual and text-based timestamp editing with bi-directional synchronization
 - Configurable clip directive output formats
@@ -27,10 +28,12 @@ export class AudioClipService {
 ```
 
 **Dependencies:**
+
 - `BlobURLManager` - For creating blob URLs from workspace audio files
 - `WorkspaceService` - For accessing workspace manifest and file operations
 
 **Architecture Integration:**
+
 - Injected as service prop into components
 - No service-to-service calls - maintains clean separation
 - Follows project's error handling patterns with typed errors
@@ -44,11 +47,13 @@ async getAvailableAudioFiles(workspaceId: string): Promise<ManifestItem[]>
 ```
 
 **Input:**
+
 - `workspaceId: string` - Unique identifier for the workspace
 
 **Output:** `Promise<ManifestItem[]>` - Array of manifest items with `media-type` starting with "audio/"
 
-**Side Effects:** 
+**Side Effects:**
+
 - Loads workspace state through WorkspaceService
 - Filters manifest items by audio media types
 
@@ -64,6 +69,7 @@ audioFiles.forEach(item => console.log(`${item.id}: ${item.href}`));
 ```
 
 **Error Scenarios:**
+
 - Throws `AudioClipServiceError` with code `WORKSPACE_NOT_FOUND` if workspace doesn't exist
 - Throws `AudioClipServiceError` with code `MANIFEST_ERROR` if OPF parsing fails
 
@@ -74,12 +80,14 @@ async loadAudioFile(workspaceId: string, href: string): Promise<string>
 ```
 
 **Input:**
+
 - `workspaceId: string` - Workspace identifier
 - `href: string` - Manifest item href path to audio file
 
 **Output:** `Promise<string>` - Blob URL for use with HTML5 audio element
 
 **Side Effects:**
+
 - Creates blob URL through BlobURLManager
 - File is loaded from workspace storage
 
@@ -95,6 +103,7 @@ await audioElement.load();
 ```
 
 **Error Scenarios:**
+
 - Throws `AudioClipServiceError` with code `AUDIO_NOT_FOUND` if file doesn't exist in workspace
 - Throws `AudioClipServiceError` with code `BLOB_URL_ERROR` if blob creation fails
 
@@ -105,6 +114,7 @@ getAudioMetadata(audioElement: HTMLAudioElement): AudioMetadata
 ```
 
 **Input:**
+
 - `audioElement: HTMLAudioElement` - Audio element with loaded metadata
 
 **Output:** `AudioMetadata` - Object containing duration, format, and optional metadata
@@ -128,12 +138,14 @@ setClipRange(start: number, end: number): void
 ```
 
 **Input:**
+
 - `start: number` - Clip start time in seconds
 - `end: number` - Clip end time in seconds
 
 **Output:** `void`
 
-**Side Effects:** 
+**Side Effects:**
+
 - Updates internal clip range state
 - Validates that start < end and both are positive
 
@@ -178,11 +190,13 @@ async playClip(audioElement: HTMLAudioElement): Promise<void>
 ```
 
 **Input:**
+
 - `audioElement: HTMLAudioElement` - Audio element for playback
 
 **Output:** `Promise<void>` - Resolves when playback starts
 
 **Side Effects:**
+
 - Sets audio currentTime to clip start
 - Starts audio playback
 - Adds event listeners for `timeupdate` and `seeked`
@@ -200,6 +214,7 @@ await audioService.playClip(audioElement);
 ```
 
 **Implementation Notes:**
+
 - Uses HTML5 audio events (`timeupdate`, `seeked`) following the project's event-driven approach
 - No `requestAnimationFrame` or polling - relies on browser's native event system
 - Automatic cleanup prevents memory leaks
@@ -211,12 +226,14 @@ async playLastSeconds(audioElement: HTMLAudioElement, seconds?: number): Promise
 ```
 
 **Input:**
+
 - `audioElement: HTMLAudioElement` - Audio element for playback
 - `seconds?: number` - Number of seconds from end to play (default: 2)
 
 **Output:** `Promise<void>` - Resolves when playback starts
 
 **Side Effects:**
+
 - Calculates start time as `max(clipStart, clipEnd - seconds)`
 - Sets audio currentTime and starts playback
 - Same event-driven stopping mechanism as `playClip()`
@@ -238,11 +255,13 @@ pause(audioElement: HTMLAudioElement): void
 ```
 
 **Input:**
+
 - `audioElement: HTMLAudioElement` - Audio element to pause
 
 **Output:** `void`
 
-**Side Effects:** 
+**Side Effects:**
+
 - Pauses audio playback
 - Event listeners remain active for potential resume
 
@@ -260,11 +279,13 @@ stop(audioElement: HTMLAudioElement): void
 ```
 
 **Input:**
+
 - `audioElement: HTMLAudioElement` - Audio element to stop
 
 **Output:** `void`
 
 **Side Effects:**
+
 - Pauses audio and resets to clip start position
 - Cleans up active event listeners
 
@@ -282,6 +303,7 @@ parseClipDirective(text: string): ClipDirective | null
 ```
 
 **Input:**
+
 - `text: string` - Text potentially containing a clip directive
 
 **Output:** `ClipDirective | null` - Parsed directive object or null if invalid
@@ -301,6 +323,7 @@ if (parsed) {
 ```
 
 **Supported Formats:**
+
 - `:clip[label]{src=file.mp3 begin=h:mm:ss.dd end=h:mm:ss.dd}`
 - `:clip[]{src=file.mp3 begin=h:mm:ss.dd end=h:mm:ss.dd rate=1.5}`
 - Flexible attribute parsing with regex patterns
@@ -312,6 +335,7 @@ formatClipDirective(data: ClipData, template: string): string
 ```
 
 **Input:**
+
 - `data: ClipData` - Clip timing and file information
 - `template: string` - Template string with placeholders
 
@@ -327,7 +351,7 @@ const clipData: ClipData = {
   startTime: 83.67,
   duration: 30.0,
   endTime: 113.67,
-  playbackRate: 1.0
+  playbackRate: 1.0,
 };
 
 // Use default template
@@ -340,9 +364,10 @@ const htmlDirective = audioService.formatClipDirective(clipData, htmlTemplate);
 ```
 
 **Template Placeholders:**
+
 - `<href>` - Audio file manifest href
 - `<begin>` - Formatted start time (h:mm:ss.dd)
-- `<end>` - Formatted end time (h:mm:ss.dd)  
+- `<end>` - Formatted end time (h:mm:ss.dd)
 - `<rate>` - Playback rate (added automatically if not 1.0)
 
 ### parseTimeString()
@@ -352,6 +377,7 @@ parseTimeString(timeString: string): number
 ```
 
 **Input:**
+
 - `timeString: string` - Time in `h:mm:ss.dd` format
 
 **Output:** `number` - Time converted to total seconds
@@ -369,6 +395,7 @@ let startSeconds = $derived(audioService.parseTimeString(startTimeString));
 ```
 
 **Validation:**
+
 - Strict regex pattern: `/^(\d+):(\d{2}):(\d{2})\.(\d{2})$/`
 - Throws `AudioClipServiceError` with code `INVALID_TIME_FORMAT` for invalid input
 
@@ -379,6 +406,7 @@ formatTimeString(seconds: number): string
 ```
 
 **Input:**
+
 - `seconds: number` - Time in total seconds
 
 **Output:** `string` - Formatted time string in `h:mm:ss.dd` format
@@ -430,6 +458,7 @@ interface AudioMetadata {
 ```
 
 **Properties:**
+
 - `duration` - Audio length in seconds (required)
 - `sampleRate` - Sample rate in Hz (optional)
 - `channels` - Number of audio channels (optional)
@@ -450,6 +479,7 @@ interface ClipData {
 ```
 
 **Properties:**
+
 - `href` - Manifest item href path to audio file
 - `startTime` - Clip start in seconds
 - `duration` - Clip length in seconds
@@ -469,6 +499,7 @@ interface ClipDirective {
 ```
 
 **Properties:**
+
 - `href` - Audio file reference from src attribute
 - `begin` - Start time as formatted string (h:mm:ss.dd)
 - `end` - End time as formatted string (h:mm:ss.dd)
@@ -484,6 +515,7 @@ export class AudioClipServiceError extends Error {
 ```
 
 **Error Codes:**
+
 - `WORKSPACE_NOT_FOUND` - Workspace doesn't exist
 - `AUDIO_NOT_FOUND` - Audio file missing from workspace
 - `BLOB_URL_ERROR` - Failed to create blob URL
@@ -497,12 +529,12 @@ export class AudioClipServiceError extends Error {
 
 ```typescript
 // Component receives service via props
-let { 
+let {
   workspace,
   audioClipService,
   settingsService,
   textContent = $bindable(),
-  onInsertClip
+  onInsertClip,
 } = $props<{
   workspace: WorkspaceState;
   audioClipService: AudioClipService;
@@ -562,16 +594,17 @@ $effect(() => {
 
 // Insert formatted directive
 const insertClipDirective = () => {
-  const template = settingsService.getSetting(workspace.id, 'audioClipTemplate') || 
-                  audioClipService.getDefaultTemplate();
-  
+  const template =
+    settingsService.getSetting(workspace.id, 'audioClipTemplate') ||
+    audioClipService.getDefaultTemplate();
+
   const clipData: ClipData = {
     href: selectedAudioHref,
     startTime: startSeconds,
     duration: durationSeconds,
-    endTime: endSeconds
+    endTime: endSeconds,
   };
-  
+
   const clipText = audioClipService.formatClipDirective(clipData, template);
   onInsertClip(clipText);
 };
@@ -583,14 +616,14 @@ const insertClipDirective = () => {
 // Modify start time and reset audio position
 const jogStartTime = (deltaSeconds: number) => {
   if (!audioElement) return;
-  
+
   const newStartTime = Math.max(0, startSeconds + deltaSeconds);
   const maxStartTime = audioElement.duration - durationSeconds;
   const clampedStartTime = Math.min(newStartTime, maxStartTime);
-  
+
   startTimeString = audioClipService.formatTimeString(clampedStartTime);
   audioClipService.setClipRange(clampedStartTime, clampedStartTime + durationSeconds);
-  
+
   // Reset audio to new start position (continues playback if playing)
   audioElement.currentTime = clampedStartTime;
 };
@@ -636,7 +669,7 @@ let error = $state<string | null>(null);
 // Clear error after timeout
 $effect(() => {
   if (error) {
-    const timeoutId = setTimeout(() => error = null, 5000);
+    const timeoutId = setTimeout(() => (error = null), 5000);
     return () => clearTimeout(timeoutId);
   }
 });
@@ -650,7 +683,7 @@ $effect(() => {
 // Mock dependencies for isolated testing
 const mockBlobUrlManager = {
   createBlobUrl: vi.fn().mockResolvedValue('blob:test-url'),
-  revokeBlobUrl: vi.fn()
+  revokeBlobUrl: vi.fn(),
 };
 
 const mockWorkspaceService = {
@@ -658,10 +691,10 @@ const mockWorkspaceService = {
     opf: {
       manifest: [
         { href: 'audio1.mp3', mediaType: 'audio/mpeg', id: 'audio1' },
-        { href: 'text1.html', mediaType: 'text/html', id: 'text1' }
-      ]
-    }
-  })
+        { href: 'text1.html', mediaType: 'text/html', id: 'text1' },
+      ],
+    },
+  }),
 };
 
 const audioService = new AudioClipService(mockBlobUrlManager, mockWorkspaceService);
@@ -675,7 +708,7 @@ describe('parseTimeString', () => {
     expect(audioService.parseTimeString('1:23:45.67')).toBe(5025.67);
     expect(audioService.parseTimeString('0:00:03.50')).toBe(3.5);
   });
-  
+
   it('should throw for invalid formats', () => {
     expect(() => audioService.parseTimeString('invalid')).toThrow(AudioClipServiceError);
     expect(() => audioService.parseTimeString('1:23')).toThrow('INVALID_TIME_FORMAT');
@@ -691,14 +724,14 @@ describe('playClip integration', () => {
   it('should stop playback at clip end', async () => {
     const audioElement = document.createElement('audio');
     audioElement.duration = 100;
-    
+
     audioService.setClipRange(10, 15);
     await audioService.playClip(audioElement);
-    
+
     // Simulate timeupdate event
     audioElement.currentTime = 15.1;
     audioElement.dispatchEvent(new Event('timeupdate'));
-    
+
     expect(audioElement.paused).toBe(true);
   });
 });
@@ -709,12 +742,14 @@ describe('playClip integration', () => {
 ### Required Features
 
 **HTML5 Audio API:**
+
 - `HTMLAudioElement` with precise seeking support
 - `timeupdate` and `seeked` event handling
 - `playbackRate` control for speed adjustment
 - `currentTime` property with centisecond precision
 
 **Web APIs:**
+
 - Blob URLs for audio file access
 - Event listeners with proper cleanup
 - File API integration through BlobURLManager
@@ -749,11 +784,13 @@ const supportsPreciseSeeking = () => {
 ## Performance Characteristics
 
 ### Event-Driven Architecture
+
 - **No polling overhead** - Uses native HTML5 audio events
 - **Memory efficient** - Proper event listener cleanup prevents leaks
 - **Battery friendly** - No continuous JavaScript execution during playback
 
 ### Optimization Strategies
+
 - **Lazy loading**: Audio files loaded only when selected
 - **Blob URL management**: Automatic cleanup prevents memory accumulation
 - **Time string caching**: Efficient parsing with regex optimization

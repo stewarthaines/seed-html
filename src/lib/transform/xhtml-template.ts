@@ -27,7 +27,10 @@ export function generateXHTMLDocument(content: string, metadata: ChapterMetadata
     .join('\n');
 
   const scriptTags = metadata.scripts
-    .map(src => `    <script type="text/javascript" src="${escapeHtml(convertManifestPathToXHTMLPath(src))}"></script>`)
+    .map(
+      src =>
+        `    <script type="text/javascript" src="${escapeHtml(convertManifestPathToXHTMLPath(src))}"></script>`
+    )
     .join('\n');
 
   const viewportTag = metadata.viewport

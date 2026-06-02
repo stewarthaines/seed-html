@@ -59,7 +59,7 @@
   const setCurrentWorkspace = async (workspaceId: string | null) => {
     if (workspaceId) {
       localStorage.setItem('currentWorkspace', workspaceId);
-      
+
       // Load workspace using callback
       try {
         await onLoadWorkspace(workspaceId);
@@ -84,7 +84,7 @@
     // Reactive statement now handles workspace sync
     // This function remains for compatibility but doesn't need to do anything
   };
-  
+
   // Service layer initialization handled on-demand
 
   // Load workspaces using callback
@@ -92,10 +92,10 @@
     try {
       loading = true;
       error = null;
-      
+
       // Direct assignment - no transformation needed
       workspaces = await onListWorkspaces();
-      
+
       loadCurrentWorkspace();
     } catch (err) {
       console.error('Failed to load workspaces:', err);
@@ -126,11 +126,11 @@
       // Create workspace using callback function
       const workspaceId = await onCreateWorkspace({
         title: metadata.title || 'Untitled Book Project',
-        language: locale
+        language: locale,
       });
-      
+
       console.log('✅ Workspace created:', workspaceId);
-      
+
       // Refresh workspace list
       await loadWorkspaces();
 
@@ -158,7 +158,7 @@
     try {
       loading = true;
       await onEpubImportRequested();
-      
+
       // Refresh workspace list after import
       await loadWorkspaces();
     } catch (err) {
@@ -215,7 +215,7 @@
 
       // Delete workspace using callback
       await onDeleteWorkspace(workspaceId);
-      
+
       // Refresh workspace list
       await loadWorkspaces();
 
@@ -246,18 +246,20 @@
 
     try {
       isPackaging = true;
-      
+
       // Package EPUB with progress tracking
       const result = await epubPackager.packageEPUB(workspaceId, {
-        progressCallback: (progress) => {
-          console.log(`Packaging progress: ${progress.phase} - ${progress.processedFiles}/${progress.totalFiles} files`);
-        }
+        progressCallback: progress => {
+          console.log(
+            `Packaging progress: ${progress.phase} - ${progress.processedFiles}/${progress.totalFiles} files`
+          );
+        },
       });
 
       if (result.success && result.blob && result.filename) {
         // Immediately download the packaged EPUB
         epubPackager.downloadEPUB(result.blob, result.filename);
-        
+
         console.log(`✅ Successfully packaged and downloaded: ${result.filename}`);
       } else {
         throw new Error(result.error || 'Unknown packaging error');
@@ -317,10 +319,10 @@
   onMount(async () => {
     // Register navigation guard
     guardId = navigationStore.addNavigationGuard(canLeave);
-    
+
     // Listen for workspace list refresh events
     window.addEventListener('workspace-list-refresh', handleWorkspaceListRefresh);
-    
+
     // Load workspaces on initial mount
     await loadWorkspaces();
   });
@@ -396,7 +398,6 @@
     overflow-y: auto;
   }
 
-
   .error-banner {
     display: flex;
     align-items: center;
@@ -441,7 +442,6 @@
     outline: none;
     box-shadow: inset 0 0 0 2px var(--color-focus-ring);
   }
-
 
   .unsaved-indicator {
     display: flex;

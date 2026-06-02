@@ -321,7 +321,7 @@ export class WorkspaceService {
 
     // Save to storage immediately (preserves user requirement for no data loss)
     await this.saveWorkspace(workspace);
-    
+
     // Return same workspace object (not new one) to prevent reactive cascade
     return workspace;
   }
@@ -370,7 +370,10 @@ export class WorkspaceService {
     };
 
     // Update scripted properties if JavaScript file was added
-    if (manifestItem.mediaType === 'text/javascript' || manifestItem.mediaType === 'application/javascript') {
+    if (
+      manifestItem.mediaType === 'text/javascript' ||
+      manifestItem.mediaType === 'application/javascript'
+    ) {
       updatedWorkspace = this.addScriptedPropertiesToChapters(updatedWorkspace);
     }
 
@@ -389,7 +392,9 @@ export class WorkspaceService {
 
     // Get the manifest item before removing it
     const removedItem = workspace.opf.manifest[itemIndex];
-    const removingJavaScript = removedItem.mediaType === 'text/javascript' || removedItem.mediaType === 'application/javascript';
+    const removingJavaScript =
+      removedItem.mediaType === 'text/javascript' ||
+      removedItem.mediaType === 'application/javascript';
 
     // Create updated workspace without the item
     let updatedWorkspace: WorkspaceState = {
@@ -447,7 +452,7 @@ export class WorkspaceService {
     if (updates.href && updates.href !== oldItem.href) {
       const oldFullPath = this.resolveManifestPath(oldItem.href, workspace.pathInfo.basePath);
       const newFullPath = this.resolveManifestPath(updates.href, workspace.pathInfo.basePath);
-      
+
       // Only move if source file exists
       if (await this.fileStorage.fileExists(workspace.id, oldFullPath)) {
         try {
@@ -463,8 +468,10 @@ export class WorkspaceService {
     }
 
     // Check if media type changed to/from JavaScript
-    const oldIsJS = oldItem.mediaType === 'text/javascript' || oldItem.mediaType === 'application/javascript';
-    const newIsJS = updates.mediaType === 'text/javascript' || updates.mediaType === 'application/javascript';
+    const oldIsJS =
+      oldItem.mediaType === 'text/javascript' || oldItem.mediaType === 'application/javascript';
+    const newIsJS =
+      updates.mediaType === 'text/javascript' || updates.mediaType === 'application/javascript';
 
     // Update manifest item
     const updatedManifest = [...workspace.opf.manifest];
@@ -482,10 +489,8 @@ export class WorkspaceService {
       }
 
       // Update all spine items that reference the old ID
-      updatedSpine = workspace.opf.spine.map(spineItem => 
-        spineItem.idref === itemId 
-          ? { ...spineItem, idref: updates.id! }
-          : spineItem
+      updatedSpine = workspace.opf.spine.map(spineItem =>
+        spineItem.idref === itemId ? { ...spineItem, idref: updates.id! } : spineItem
       );
     }
 
@@ -805,17 +810,17 @@ export class WorkspaceService {
   }
 
   private addScriptedPropertiesToChapters(workspace: WorkspaceState): WorkspaceState {
-    const hasJavaScript = workspace.opf.manifest.some(item => 
-      item.mediaType === 'text/javascript' || 
-      item.mediaType === 'application/javascript'
+    const hasJavaScript = workspace.opf.manifest.some(
+      item => item.mediaType === 'text/javascript' || item.mediaType === 'application/javascript'
     );
 
     const updatedManifest = workspace.opf.manifest.map(item => {
       // Only update chapter items (XHTML but NOT nav)
-      if (item.mediaType === 'application/xhtml+xml' && 
-          item.id !== 'nav' && 
-          !item.properties?.includes('nav')) {
-        
+      if (
+        item.mediaType === 'application/xhtml+xml' &&
+        item.id !== 'nav' &&
+        !item.properties?.includes('nav')
+      ) {
         const properties = item.properties || [];
         const hasScripted = properties.includes('scripted');
 
@@ -825,9 +830,9 @@ export class WorkspaceService {
         } else if (!hasJavaScript && hasScripted) {
           // Remove scripted property
           const filteredProperties = properties.filter(p => p !== 'scripted');
-          return { 
-            ...item, 
-            properties: filteredProperties.length > 0 ? filteredProperties : undefined 
+          return {
+            ...item,
+            properties: filteredProperties.length > 0 ? filteredProperties : undefined,
           };
         }
       }
@@ -838,8 +843,8 @@ export class WorkspaceService {
       ...workspace,
       opf: {
         ...workspace.opf,
-        manifest: updatedManifest
-      }
+        manifest: updatedManifest,
+      },
     };
   }
 
@@ -952,7 +957,11 @@ export class WorkspaceService {
   /**
    * Write a binary file to the workspace
    */
-  async writeBinaryFile(workspaceId: string, filePath: string, content: ArrayBuffer): Promise<void> {
+  async writeBinaryFile(
+    workspaceId: string,
+    filePath: string,
+    content: ArrayBuffer
+  ): Promise<void> {
     try {
       await this.fileStorage.writeFile(workspaceId, filePath, content);
     } catch (error) {
@@ -1044,7 +1053,10 @@ export class WorkspaceService {
   /**
    * Get file information (size and modification date)
    */
-  async getFileInfo(workspaceId: string, path: string): Promise<{ size: number; lastModified: Date }> {
+  async getFileInfo(
+    workspaceId: string,
+    path: string
+  ): Promise<{ size: number; lastModified: Date }> {
     return await this.fileStorage.getFileInfo(workspaceId, path);
   }
 }

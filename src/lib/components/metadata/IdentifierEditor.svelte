@@ -50,7 +50,9 @@
   // Additional identifiers funnel through a single whole-array save.
   const saveList = (next: IdentifierEntry[]) => save('additionalIdentifiers', next);
   const updateEntry = (index: number, patch: Partial<IdentifierEntry>) =>
-    saveList(additionalIdentifiers.map((entry, i) => (i === index ? { ...entry, ...patch } : entry)));
+    saveList(
+      additionalIdentifiers.map((entry, i) => (i === index ? { ...entry, ...patch } : entry))
+    );
   const addEntry = () => saveList([...additionalIdentifiers, { value: '', type: '' }]);
   const removeEntry = (index: number) =>
     saveList(additionalIdentifiers.filter((_, i) => i !== index));

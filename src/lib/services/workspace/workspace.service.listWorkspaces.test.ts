@@ -98,7 +98,10 @@ describe('WorkspaceService.listWorkspaces (parallel, metadata-only)', () => {
   });
 
   it('excludes reserved workspaces (publish, locales)', async () => {
-    await seedWorkspace(storage, PUBLISH_WORKSPACE_ID, { title: 'should-not-appear', language: 'en' });
+    await seedWorkspace(storage, PUBLISH_WORKSPACE_ID, {
+      title: 'should-not-appear',
+      language: 'en',
+    });
     await seedWorkspace(storage, 'locales', { title: 'should-not-appear', language: 'en' });
 
     const list = await service.listWorkspaces();

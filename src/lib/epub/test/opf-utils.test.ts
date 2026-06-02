@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  getDirectoryFromMediaType,
-  generateEPUBPath
-} from '../opf-utils.js';
+import { getDirectoryFromMediaType, generateEPUBPath } from '../opf-utils.js';
 
 describe('EPUB Path Utilities', () => {
   describe('getDirectoryFromMediaType', () => {
@@ -36,13 +33,17 @@ describe('EPUB Path Utilities', () => {
     it('should generate correct paths for core file types', () => {
       expect(generateEPUBPath('app.js', 'text/javascript')).toBe('Scripts/app.js');
       expect(generateEPUBPath('style.css', 'text/css')).toBe('Styles/style.css');
-      expect(generateEPUBPath('chapter1.xhtml', 'application/xhtml+xml')).toBe('Text/chapter1.xhtml');
+      expect(generateEPUBPath('chapter1.xhtml', 'application/xhtml+xml')).toBe(
+        'Text/chapter1.xhtml'
+      );
       expect(generateEPUBPath('cover.jpg', 'image/jpeg')).toBe('Images/cover.jpg');
     });
 
     it('should handle filenames with special characters', () => {
       expect(generateEPUBPath('my-script.js', 'text/javascript')).toBe('Scripts/my-script.js');
-      expect(generateEPUBPath('chapter_1.xhtml', 'application/xhtml+xml')).toBe('Text/chapter_1.xhtml');
+      expect(generateEPUBPath('chapter_1.xhtml', 'application/xhtml+xml')).toBe(
+        'Text/chapter_1.xhtml'
+      );
     });
 
     it('should default to root level for unknown types', () => {

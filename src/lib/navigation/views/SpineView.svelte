@@ -323,7 +323,11 @@
 
       for (const item of workspace.opf.manifest) {
         if (item.mediaType === 'text/css') {
-          const fileName = item.href.split('/').pop()?.replace(/\.css$/, '') || item.href;
+          const fileName =
+            item.href
+              .split('/')
+              .pop()
+              ?.replace(/\.css$/, '') || item.href;
           files.push({
             value: `css-${fileName}`,
             label: `CSS: ${fileName}`,
@@ -544,7 +548,6 @@
       console.error('Failed to initialize spine editor:', err);
     }
   }
-
 
   // Restore saved pane configuration or initialize with defaults
   async function restoreOrInitializePaneContent() {

@@ -92,7 +92,9 @@ describe('TransformPipeline', () => {
       const div = document.createElement('div');
       div.innerHTML = '<p>line one<br>line two</p><hr><img src="cover.png">';
 
-      expect(serializeInnerXHTML(div)).toBe('<p>line one<br />line two</p><hr /><img src="cover.png" />');
+      expect(serializeInnerXHTML(div)).toBe(
+        '<p>line one<br />line two</p><hr /><img src="cover.png" />'
+      );
     });
 
     it('should handle different languages correctly', () => {

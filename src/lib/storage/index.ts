@@ -345,16 +345,18 @@ export class OPFSSyncBackend implements StorageBackend {
     if (!result.success) {
       throw new Error(result.error?.message || 'Failed to read file');
     }
-    
+
     // Fix: Access result.content directly, not result.data.content
     const content = (result as any).content;
-    
+
     // Validate ArrayBuffer is not detached/empty
     if (!content || !(content instanceof ArrayBuffer)) {
-      console.warn(`⚠️ Invalid ArrayBuffer received for ${path}: ${typeof content}, length: ${content?.byteLength || 'undefined'}`);
+      console.warn(
+        `⚠️ Invalid ArrayBuffer received for ${path}: ${typeof content}, length: ${content?.byteLength || 'undefined'}`
+      );
       return new ArrayBuffer(0);
     }
-    
+
     // Check for detached ArrayBuffer
     try {
       // Accessing byteLength will throw if the ArrayBuffer is detached
@@ -379,7 +381,7 @@ export class OPFSSyncBackend implements StorageBackend {
   async listFiles(workspaceId: string, path?: string): Promise<string[]> {
     // Sanitize path to remove trailing slashes for consistent API contract
     const normalizedPath = path ? path.replace(/\/+$/, '') : undefined;
-    
+
     const result = await this.workerManager.listFiles(workspaceId, normalizedPath);
     if (!result.success) {
       throw new Error(result.error?.message || 'Failed to list files');
@@ -869,7 +871,7 @@ export class FileStorageAPI {
 
     // Start new initialization
     this.initPromise = this.doInit();
-    
+
     try {
       await this.initPromise;
     } finally {

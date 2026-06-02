@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { xmlHighlighter } from './xml-highlighter';
 
-const SAMPLE_OPF = `<?xml version="1.0"?><package><metadata xmlns:dc="http://purl.org/dc/elements/1.1/">` +
+const SAMPLE_OPF =
+  `<?xml version="1.0"?><package><metadata xmlns:dc="http://purl.org/dc/elements/1.1/">` +
   `<dc:title>A Book</dc:title>` +
   `<meta property="belongs-to-collection" id="collection1">The Chronicles</meta>` +
   `<meta refines="#collection1" property="collection-type">series</meta>` +

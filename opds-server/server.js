@@ -1,6 +1,6 @@
 /**
  * EDITME OPDS Server
- * 
+ *
  * Watches ~/Downloads for EPUB files and serves OPDS feed with deduplication
  * based on dc:identifier and dcterms:modified from EPUB metadata.
  */
@@ -30,15 +30,15 @@ const app = express();
  */
 async function scanEPUBFiles() {
   console.log(`📚 Scanning ${DOWNLOADS_DIR} for EPUB files...`);
-  
+
   try {
     const files = fs.readdirSync(DOWNLOADS_DIR);
     const epubFiles = files
       .filter(file => file.toLowerCase().endsWith('.epub'))
       .map(file => path.join(DOWNLOADS_DIR, file));
-    
+
     console.log(`Found ${epubFiles.length} EPUB files`);
-    
+
     for (const epubFile of epubFiles) {
       try {
         await processEPUBFile(epubFile);
@@ -46,9 +46,11 @@ async function scanEPUBFiles() {
         console.warn(`⚠️  Failed to process ${path.basename(epubFile)}: ${error.message}`);
       }
     }
-    
+
     const catalogInfo = getCatalogInfo(bookCatalog);
-    console.log(`📖 Catalog built: ${catalogInfo.totalBooks} unique books, ${catalogInfo.totalAuthors} authors`);
+    console.log(
+      `📖 Catalog built: ${catalogInfo.totalBooks} unique books, ${catalogInfo.totalAuthors} authors`
+    );
     console.log('');
     console.log('📋 Final Catalog Contents:');
     for (const [identifier, bookData] of bookCatalog.entries()) {
@@ -58,7 +60,6 @@ async function scanEPUBFiles() {
       console.log(`      📅 Modified: ${bookData.metadata.dctermsModified}`);
       console.log('');
     }
-    
   } catch (error) {
     console.error(`❌ Failed to scan directory: ${error.message}`);
   }
@@ -69,29 +70,29 @@ async function scanEPUBFiles() {
  */
 async function processEPUBFile(epubPath) {
   console.log(`🔍 Processing: ${path.basename(epubPath)}`);
-  
+
   try {
     const metadata = await parseEPUBMetadata(epubPath);
     const { identifier, dctermsModified } = metadata;
-    
+
     console.log(`📋 Book ID: "${identifier}"`);
     console.log(`📅 Modified: ${dctermsModified}`);
     console.log(`📊 Parsed Date: ${metadata.modifiedDate.toISOString()}`);
-    
+
     // Check if we already have this book
     const existing = bookCatalog.get(identifier);
-    
+
     if (existing) {
       console.log(`🔍 Found existing entry:`);
       console.log(`   📁 Current file: ${path.basename(existing.file)}`);
       console.log(`   📅 Current modified: ${existing.metadata.dctermsModified}`);
       console.log(`   📊 Current date: ${existing.metadata.modifiedDate.toISOString()}`);
-      
+
       const isNewer = metadata.modifiedDate > existing.metadata.modifiedDate;
       const isEqual = metadata.modifiedDate.getTime() === existing.metadata.modifiedDate.getTime();
-      
+
       console.log(`⚖️  Comparison: New ${isNewer ? '>' : isEqual ? '=' : '<'} Existing`);
-      
+
       if (isNewer) {
         console.log(`🔄 REPLACING with newer version`);
         console.log(`   🗑️  Removing: ${path.basename(existing.file)}`);
@@ -108,27 +109,26 @@ async function processEPUBFile(epubPath) {
         return false;
       }
     }
-    
+
     if (!existing || metadata.modifiedDate > existing.metadata.modifiedDate) {
       // This is a newer version, update catalog
       bookCatalog.set(identifier, {
         file: epubPath,
         metadata: metadata,
-        modifiedDate: metadata.modifiedDate
+        modifiedDate: metadata.modifiedDate,
       });
-      
+
       if (existing) {
         console.log(`✅ Updated "${metadata.title}"`);
       } else {
         console.log(`✅ Added "${metadata.title}"`);
       }
-      
+
       console.log(`📚 Catalog now has ${bookCatalog.size} unique books`);
       return true; // Catalog was updated
     } else {
       return false; // No update needed
     }
-    
   } catch (error) {
     console.error(`❌ Failed to process ${path.basename(epubPath)}: ${error.message}`);
     throw error;
@@ -140,7 +140,7 @@ async function processEPUBFile(epubPath) {
  */
 function removeEPUBFile(epubPath) {
   console.log(`🗑️  Removing: ${path.basename(epubPath)}`);
-  
+
   // Find and remove the book by file path
   for (const [identifier, bookData] of bookCatalog.entries()) {
     if (bookData.file === epubPath) {
@@ -149,7 +149,7 @@ function removeEPUBFile(epubPath) {
       return true;
     }
   }
-  
+
   return false;
 }
 
@@ -158,16 +158,16 @@ function removeEPUBFile(epubPath) {
  */
 function setupFileWatcher() {
   console.log(`👀 Watching ${DOWNLOADS_DIR} for changes...`);
-  
+
   const watcher = chokidar.watch(path.join(DOWNLOADS_DIR, '*.epub'), {
     ignoreInitial: true,
     awaitWriteFinish: {
       stabilityThreshold: 1000,
-      pollInterval: 100
-    }
+      pollInterval: 100,
+    },
   });
-  
-  watcher.on('add', async (filePath) => {
+
+  watcher.on('add', async filePath => {
     console.log(`📥 New EPUB detected: ${path.basename(filePath)}`);
     try {
       await processEPUBFile(filePath);
@@ -175,8 +175,8 @@ function setupFileWatcher() {
       console.warn(`⚠️  Failed to process new file: ${error.message}`);
     }
   });
-  
-  watcher.on('change', async (filePath) => {
+
+  watcher.on('change', async filePath => {
     console.log(`📝 EPUB changed: ${path.basename(filePath)}`);
     try {
       await processEPUBFile(filePath);
@@ -184,16 +184,16 @@ function setupFileWatcher() {
       console.warn(`⚠️  Failed to process changed file: ${error.message}`);
     }
   });
-  
-  watcher.on('unlink', (filePath) => {
+
+  watcher.on('unlink', filePath => {
     console.log(`🗑️  EPUB deleted: ${path.basename(filePath)}`);
     removeEPUBFile(filePath);
   });
-  
-  watcher.on('error', (error) => {
+
+  watcher.on('error', error => {
     console.error(`❌ Watcher error: ${error.message}`);
   });
-  
+
   return watcher;
 }
 
@@ -208,15 +208,14 @@ app.get('/opds.xml', (req, res) => {
       title: 'EDITME Development Library',
       description: 'EPUB books from EDITME editor for development and testing',
       feedUrl: FEED_URL,
-      siteUrl: SITE_URL
+      siteUrl: SITE_URL,
     });
-    
+
     res.setHeader('Content-Type', 'application/atom+xml; charset=utf-8');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.send(opdsXML);
-    
+
     console.log(`📡 Served OPDS feed (${bookCatalog.size} books)`);
-    
   } catch (error) {
     console.error(`❌ Failed to generate OPDS feed: ${error.message}`);
     res.status(500).send('Failed to generate OPDS feed');
@@ -227,7 +226,7 @@ app.get('/opds.xml', (req, res) => {
 app.get('/books/:filename', (req, res) => {
   const filename = decodeURIComponent(req.params.filename);
   const filePath = path.join(DOWNLOADS_DIR, filename);
-  
+
   // Verify file exists and is in our catalog
   let bookExists = false;
   for (const bookData of bookCatalog.values()) {
@@ -236,18 +235,18 @@ app.get('/books/:filename', (req, res) => {
       break;
     }
   }
-  
+
   if (!bookExists || !fs.existsSync(filePath)) {
     return res.status(404).send('Book not found');
   }
-  
+
   res.setHeader('Content-Type', 'application/epub+zip');
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
   res.setHeader('Access-Control-Allow-Origin', '*');
-  
+
   const stream = fs.createReadStream(filePath);
   stream.pipe(res);
-  
+
   console.log(`📖 Served book: ${filename}`);
 });
 
@@ -262,7 +261,7 @@ app.get('/catalog-info', (req, res) => {
 // Debug catalog endpoint
 app.get('/debug-catalog', (req, res) => {
   const catalogEntries = [];
-  
+
   for (const [identifier, bookData] of bookCatalog.entries()) {
     catalogEntries.push({
       bookId: identifier,
@@ -272,29 +271,29 @@ app.get('/debug-catalog', (req, res) => {
       dctermsModified: bookData.metadata.dctermsModified,
       modifiedDate: bookData.metadata.modifiedDate.toISOString(),
       creator: bookData.metadata.creator,
-      description: bookData.metadata.description
+      description: bookData.metadata.description,
     });
   }
-  
+
   catalogEntries.sort((a, b) => a.title.localeCompare(b.title));
-  
+
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.json({
     totalEntries: catalogEntries.length,
-    catalogEntries: catalogEntries
+    catalogEntries: catalogEntries,
   });
-  
+
   console.log(`🐛 Debug catalog requested (${catalogEntries.length} entries)`);
 });
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     books: bookCatalog.size,
     watchingDirectory: DOWNLOADS_DIR,
-    uptime: process.uptime()
+    uptime: process.uptime(),
   });
 });
 
@@ -309,19 +308,19 @@ app.get('/', (req, res) => {
 async function startServer() {
   console.log('🚀 Starting EDITME OPDS Server...');
   console.log(`📁 Downloads directory: ${DOWNLOADS_DIR}`);
-  
+
   // Check if downloads directory exists
   if (!fs.existsSync(DOWNLOADS_DIR)) {
     console.error(`❌ Downloads directory does not exist: ${DOWNLOADS_DIR}`);
     process.exit(1);
   }
-  
+
   // Build initial catalog
   await scanEPUBFiles();
-  
+
   // Set up file watcher
   const watcher = setupFileWatcher();
-  
+
   // Start HTTP server
   const server = app.listen(PORT, () => {
     console.log(`🌐 OPDS Server running at ${SITE_URL}`);
@@ -334,7 +333,7 @@ async function startServer() {
     console.log('');
     console.log('Press Ctrl+C to stop');
   });
-  
+
   // Graceful shutdown
   process.on('SIGINT', () => {
     console.log('\\n🛑 Shutting down OPDS server...');

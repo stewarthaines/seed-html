@@ -275,5 +275,4 @@
     font-weight: 600;
     color: var(--color-text-primary);
   }
-
 </style>

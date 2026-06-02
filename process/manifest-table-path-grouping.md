@@ -35,7 +35,7 @@ changes.
 
 Group a manifest item by the **full directory path of its `href`** (everything
 before the final `/` — i.e. the dirname). Every distinct directory that
-*directly* contains files becomes its own group; nesting is fully honoured and
+_directly_ contains files becomes its own group; nesting is fully honoured and
 each level is a distinct group:
 
 - `Fonts/Inter.woff2` → group **`Fonts/`**
@@ -46,7 +46,7 @@ each level is a distinct group:
 - `Audio/intro.mp3` → group **`Audio/`**
 - `nav.xhtml` (no `/`) → **root** items (see decision R1)
 
-Because the group key is the *full* directory, a directory with no files
+Because the group key is the _full_ directory, a directory with no files
 directly in it never becomes a group on its own. So if nothing lives directly at
 `Audio/` there is **no `Audio/` heading**, yet `Audio/Recordings/` and
 `Audio/Live/` still appear as their own groups — exactly the intended behaviour.
@@ -79,17 +79,17 @@ Replace the flat `sortedItems` with a derived `groups` array built from
 
 ```ts
 type Group = {
-  key: string;          // stable id, e.g. 'dir:Audio/Recordings' | 'root' | 'source' | 'opf'
-  label: string;        // 'Audio/Recordings/', 'SOURCE.zip', 'Package Files'
+  key: string; // stable id, e.g. 'dir:Audio/Recordings' | 'root' | 'source' | 'opf'
+  label: string; // 'Audio/Recordings/', 'SOURCE.zip', 'Package Files'
   kind: 'root' | 'dir' | 'source' | 'opf';
-  depth: number;        // dir path segments (Fonts=1, Audio/Recordings=2) → heading indent
-  items: typeof filteredItems;   // already sorted by the active column
+  depth: number; // dir path segments (Fonts=1, Audio/Recordings=2) → heading indent
+  items: typeof filteredItems; // already sorted by the active column
 };
 ```
 
 - Partition `filteredItems` by `_type`. For `manifest` items derive the
   directory key from `href`: `const segs = href.split('/'); const dir =
-  segs.slice(0, -1).join('/')` — empty `dir` ⇒ root. One group per distinct
+segs.slice(0, -1).join('/')` — empty `dir` ⇒ root. One group per distinct
   non-empty `dir`; `depth = segs.length - 1`.
 - Reuse the existing `sortGroup(...)` helper to sort each group's items by the
   active column; sort the `dir` groups by `label`.

@@ -23,7 +23,10 @@
     selectedItem?: ManifestItem | SourceItem | null;
     selectedItemType?: 'manifest' | 'source' | 'opf' | null;
     loading?: boolean;
-    onItemSelect?: (detail: { item: ManifestItem | SourceItem; type: 'manifest' | 'source' | 'opf' }) => void;
+    onItemSelect?: (detail: {
+      item: ManifestItem | SourceItem;
+      type: 'manifest' | 'source' | 'opf';
+    }) => void;
     onItemDelete?: (detail: { itemId: string }) => void;
     onFileUpload?: (detail: { files: FileList }) => void;
   } = $props();
@@ -49,54 +52,57 @@
     // Advanced mode: show individual SOURCE files
     ...(advancedMode ? sourceItems.map(item => ({ ...item, _type: 'source' as const })) : []),
     // Non-advanced mode: show SOURCE.zip placeholder
-    ...(!advancedMode ? [
-      {
-        name: 'SOURCE.zip',
-        path: 'SOURCE.zip',
-        size: undefined,
-        _type: 'source-zip' as const,
-        isPlaceholder: true,
-      },
-    ] : []),
+    ...(!advancedMode
+      ? [
+          {
+            name: 'SOURCE.zip',
+            path: 'SOURCE.zip',
+            size: undefined,
+            _type: 'source-zip' as const,
+            isPlaceholder: true,
+          },
+        ]
+      : []),
   ]);
 
-
   // Filter items based on filter text
-  const filteredItems = $derived(allItems.filter(item => {
-    if (!filterText) return true;
+  const filteredItems = $derived(
+    allItems.filter(item => {
+      if (!filterText) return true;
 
-    const searchText = filterText.toLowerCase();
+      const searchText = filterText.toLowerCase();
 
-    if (item._type === 'manifest') {
-      const manifestItem = item as ManifestItem & { _type: 'manifest' };
-      return (
-        manifestItem.id.toLowerCase().includes(searchText) ||
-        manifestItem.href.toLowerCase().includes(searchText) ||
-        manifestItem.properties?.some(prop => prop.toLowerCase().includes(searchText)) ||
-        false
-      );
-    } else if (item._type === 'source') {
-      const sourceItem = item as SourceItem & { _type: 'source' };
-      return (
-        sourceItem.name.toLowerCase().includes(searchText) ||
-        sourceItem.path.toLowerCase().includes(searchText)
-      );
-    } else if (item._type === 'source-zip') {
-      // SOURCE.zip placeholder
-      const sourceZipItem = item as any;
-      return (
-        sourceZipItem.name.toLowerCase().includes(searchText) ||
-        sourceZipItem.path.toLowerCase().includes(searchText)
-      );
-    } else {
-      // OPF item
-      const opfItem = item as any;
-      return (
-        opfItem.name.toLowerCase().includes(searchText) ||
-        opfItem.path.toLowerCase().includes(searchText)
-      );
-    }
-  }));
+      if (item._type === 'manifest') {
+        const manifestItem = item as ManifestItem & { _type: 'manifest' };
+        return (
+          manifestItem.id.toLowerCase().includes(searchText) ||
+          manifestItem.href.toLowerCase().includes(searchText) ||
+          manifestItem.properties?.some(prop => prop.toLowerCase().includes(searchText)) ||
+          false
+        );
+      } else if (item._type === 'source') {
+        const sourceItem = item as SourceItem & { _type: 'source' };
+        return (
+          sourceItem.name.toLowerCase().includes(searchText) ||
+          sourceItem.path.toLowerCase().includes(searchText)
+        );
+      } else if (item._type === 'source-zip') {
+        // SOURCE.zip placeholder
+        const sourceZipItem = item as any;
+        return (
+          sourceZipItem.name.toLowerCase().includes(searchText) ||
+          sourceZipItem.path.toLowerCase().includes(searchText)
+        );
+      } else {
+        // OPF item
+        const opfItem = item as any;
+        return (
+          opfItem.name.toLowerCase().includes(searchText) ||
+          opfItem.path.toLowerCase().includes(searchText)
+        );
+      }
+    })
+  );
 
   // Sort a set of rows by the active column (reactive so the grouping below
   // re-runs when the sort changes).
@@ -174,10 +180,22 @@
       });
     }
     if (source.length) {
-      result.push({ key: 'source', label: 'SOURCE.zip', kind: 'source', indent: 0, items: sortGroup(source) });
+      result.push({
+        key: 'source',
+        label: 'SOURCE.zip',
+        kind: 'source',
+        indent: 0,
+        items: sortGroup(source),
+      });
     }
     if (opf.length) {
-      result.push({ key: 'opf', label: 'Package Files', kind: 'opf', indent: 0, items: sortGroup(opf) });
+      result.push({
+        key: 'opf',
+        label: 'Package Files',
+        kind: 'opf',
+        indent: 0,
+        items: sortGroup(opf),
+      });
     }
     return result;
   });
@@ -251,7 +269,7 @@
     type: 'manifest' | 'source' | 'opf' | 'source-zip'
   ) => {
     if (!selectedItem) return false;
-    
+
     // Treat source-zip as 'source' for selection comparison
     const compareType = type === 'source-zip' ? 'source' : type;
     if (selectedItemType !== compareType) return false;
@@ -318,12 +336,7 @@
 
 <div class="manifest-table-container">
   <!-- Toolbar -->
-  <div
-    class="manifest-toolbar"
-    role="toolbar"
-    aria-label={$t('Manifest actions')}
-    tabindex="0"
-  >
+  <div class="manifest-toolbar" role="toolbar" aria-label={$t('Manifest actions')} tabindex="0">
     <!-- Filter input -->
     <div class="filter-section">
       <label for="manifest-filter" class="filter-label">

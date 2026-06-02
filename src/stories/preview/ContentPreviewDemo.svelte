@@ -1,12 +1,25 @@
 <script lang="ts">
   import ContentPreview from '../../lib/components/preview/ContentPreview.svelte';
   import { t } from '../../lib/i18n';
-  import { navigationContent, chapterContent, complexContent, malformedContent } from './sample-content';
+  import {
+    navigationContent,
+    chapterContent,
+    complexContent,
+    malformedContent,
+  } from './sample-content';
 
   // Demo configuration props
   export let showControls: boolean = true;
-  export let initialDevice: 'responsive' | 'old-iphone' | 'recent-iphone' | 'large-iphone' | 'small-tablet' | 'medium-tablet' | 'large-tablet' = 'recent-iphone';
-  export let contentType: 'navigation' | 'chapter' | 'complex' | 'empty' | 'malformed' = 'navigation';
+  export let initialDevice:
+    | 'responsive'
+    | 'old-iphone'
+    | 'recent-iphone'
+    | 'large-iphone'
+    | 'small-tablet'
+    | 'medium-tablet'
+    | 'large-tablet' = 'recent-iphone';
+  export let contentType: 'navigation' | 'chapter' | 'complex' | 'empty' | 'malformed' =
+    'navigation';
   export let showEmptyState: boolean = false;
 
   // Component state
@@ -21,7 +34,7 @@
     chapter: chapterContent,
     complex: complexContent,
     empty: '',
-    malformed: malformedContent
+    malformed: malformedContent,
   };
 
   $: currentContent = showEmptyState ? SAMPLE_CONTENT.empty : SAMPLE_CONTENT[contentType];
@@ -42,7 +55,7 @@
       fontSizeAdjustment,
       fontFamily,
       contentType,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -71,11 +84,11 @@
   {#if showControls}
     <div class="demo-controls">
       <h3>{$t('Demo Controls')}</h3>
-      
+
       <div class="control-row">
         <label for="device-select">{$t('Device:')}</label>
-        <select 
-          id="device-select" 
+        <select
+          id="device-select"
           bind:value={deviceSize}
           on:change={() => logStateChange('Device selected', deviceSize)}
         >
@@ -93,17 +106,23 @@
         <div class="control-row">
           <label>{$t('Orientation:')}</label>
           <div class="button-group">
-            <button 
+            <button
               type="button"
               class:active={orientation === 'portrait'}
-              on:click={() => { orientation = 'portrait'; logStateChange('Orientation toggled', 'portrait'); }}
+              on:click={() => {
+                orientation = 'portrait';
+                logStateChange('Orientation toggled', 'portrait');
+              }}
             >
               {$t('Portrait')}
             </button>
-            <button 
+            <button
               type="button"
               class:active={orientation === 'landscape'}
-              on:click={() => { orientation = 'landscape'; logStateChange('Orientation toggled', 'landscape'); }}
+              on:click={() => {
+                orientation = 'landscape';
+                logStateChange('Orientation toggled', 'landscape');
+              }}
             >
               {$t('Landscape')}
             </button>
@@ -113,16 +132,22 @@
         <div class="control-row">
           <label>{$t('Font Size:')}</label>
           <div class="button-group">
-            <button 
+            <button
               type="button"
-              on:click={() => { fontSizeAdjustment--; logStateChange('Font size decreased', fontSizeAdjustment); }}
+              on:click={() => {
+                fontSizeAdjustment--;
+                logStateChange('Font size decreased', fontSizeAdjustment);
+              }}
             >
               A-
             </button>
             <span class="font-size-display">{fontSizeAdjustment}px</span>
-            <button 
+            <button
               type="button"
-              on:click={() => { fontSizeAdjustment++; logStateChange('Font size increased', fontSizeAdjustment); }}
+              on:click={() => {
+                fontSizeAdjustment++;
+                logStateChange('Font size increased', fontSizeAdjustment);
+              }}
             >
               A+
             </button>
@@ -131,8 +156,8 @@
 
         <div class="control-row">
           <label for="font-family-select">{$t('Font Family:')}</label>
-          <select 
-            id="font-family-select" 
+          <select
+            id="font-family-select"
             bind:value={fontFamily}
             on:change={() => logStateChange('Font family selected', fontFamily)}
           >
@@ -146,8 +171,8 @@
 
       <div class="control-row">
         <label for="content-type-select">{$t('Content Type:')}</label>
-        <select 
-          id="content-type-select" 
+        <select
+          id="content-type-select"
           bind:value={contentType}
           on:change={() => logStateChange('Content type selected', contentType)}
         >
@@ -160,19 +185,22 @@
 
       <div class="control-row">
         <div class="button-group">
-          <button 
+          <button
             type="button"
             class:active={showEmptyState}
-            on:click={() => { 
-              showEmptyState = !showEmptyState; 
-              logStateChange('Empty state toggled', showEmptyState); 
+            on:click={() => {
+              showEmptyState = !showEmptyState;
+              logStateChange('Empty state toggled', showEmptyState);
             }}
           >
             {$t('Toggle Empty State')}
           </button>
-          <button 
+          <button
             type="button"
-            on:click={() => { resetDemo(); logStateChange('Demo reset', 'all values'); }}
+            on:click={() => {
+              resetDemo();
+              logStateChange('Demo reset', 'all values');
+            }}
           >
             {$t('Reset Demo')}
           </button>
@@ -185,7 +213,10 @@
           <span>{$t('Device:')} {deviceSize}</span>
           {#if deviceSize !== 'responsive'}
             <span>• {$t('Orientation:')} {orientation}</span>
-            <span>• {$t('Font:')} {fontFamily} ({fontSizeAdjustment > 0 ? '+' : ''}{fontSizeAdjustment}px)</span>
+            <span
+              >• {$t('Font:')}
+              {fontFamily} ({fontSizeAdjustment > 0 ? '+' : ''}{fontSizeAdjustment}px)</span
+            >
           {/if}
         </div>
       </div>
@@ -193,7 +224,7 @@
   {/if}
 
   <div class="preview-container">
-    <ContentPreview 
+    <ContentPreview
       content={currentContent}
       {deviceSize}
       {orientation}

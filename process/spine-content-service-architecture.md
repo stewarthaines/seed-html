@@ -15,7 +15,7 @@ The current SpineView component handles **15 distinct responsibilities**:
 3. **File I/O Operations**: Reading/writing text files, CSS, JavaScript files
 4. **Content Persistence**: LocalStorage state management via NavigationStore
 5. **Auto-save Logic**: Debounced saving with race condition protection
-6. **File Type Management**: File type classification and path resolution  
+6. **File Type Management**: File type classification and path resolution
 7. **Preview Management**: Transform pipeline, XHTML generation, error handling
 8. **Spine Item Loading**: Complex loading logic with race condition protection
 9. **Content Switching**: Auto-save current content before switching spine items
@@ -29,10 +29,13 @@ The current SpineView component handles **15 distinct responsibilities**:
 ### Current Architecture Problems
 
 #### 1. **Violation of Single Responsibility Principle**
+
 SpineView has grown to **1,200+ lines** with multiple unrelated concerns mixed together.
 
 #### 2. **Race Conditions from Multiple Entry Points**
+
 Content loading can be triggered by:
+
 - `onViewEnter()` (line 185)
 - `setViewData()` (line 198)
 - Reactive statement (line 1133)
@@ -40,7 +43,9 @@ Content loading can be triggered by:
 - Component lifecycle events
 
 #### 3. **Complex State Management**
+
 Multiple interdependent state variables:
+
 ```typescript
 let selectedItem: SpineItemWithSource | null = null;
 let paneState = { mode, pane1, pane2 };
@@ -50,6 +55,7 @@ let previewManager: any;
 ```
 
 #### 4. **Tight Coupling**
+
 Direct dependencies on 6 different services with complex initialization order requirements.
 
 ## Problem Analysis
@@ -59,15 +65,16 @@ Direct dependencies on 6 different services with complex initialization order re
 The data corruption occurs because of a **perfect storm** of architectural issues:
 
 1. **Multiple Reactive Layers**: User typing (immediate) vs spine switching (async)
-2. **Content in Pane State**: Stale content persisted and restored incorrectly  
+2. **Content in Pane State**: Stale content persisted and restored incorrectly
 3. **Auto-save Race Conditions**: Path updates and content loading happen at different times
 4. **Distributed State Ownership**: Content lives in multiple places (DOM, pane state, files)
 
 ### Why Previous Attempts Failed
 
 Each attempt tried to fix **symptoms** instead of the **root cause**:
+
 - **Loading Guards**: Fixed load concurrency, not content/path desynchronization
-- **Content Persistence**: Fixed storage patterns, not timing issues  
+- **Content Persistence**: Fixed storage patterns, not timing issues
 - **State Validation**: Fixed corruption detection, not prevention
 
 ## Proposed Architecture: File-Backed Text Editor Stores
@@ -79,8 +86,8 @@ This solution leverages the **existing text-editor-store API** (see `src/lib/sto
 ```typescript
 // Existing proven pattern from the project
 async function createFileBackedEditor(
-  editorId: string, 
-  workspaceId: string, 
+  editorId: string,
+  workspaceId: string,
   filePath: string,
   workspaceManager: IWorkspaceManager
 ) {
@@ -91,9 +98,9 @@ async function createFileBackedEditor(
   } catch {
     // File doesn't exist, start with empty content
   }
-  
+
   const store = createTextEditorStore(editorId, initialContent);
-  
+
   // Auto-save to file when content changes (debounced)
   let saveTimeout;
   store.subscribe(state => {
@@ -106,7 +113,7 @@ async function createFileBackedEditor(
       }
     }, 1000); // 1 second debounce for file saves
   });
-  
+
   return store;
 }
 ```
@@ -124,7 +131,7 @@ To eliminate data corruption, spine switching will use **lazy store initializati
 // ❌ Race conditions between save/load operations
 
 // New approach (deterministic with performance):
-// 1. User switches from chapter1 to chapter2  
+// 1. User switches from chapter1 to chapter2
 // 2. Get or create chapter2 store (lazy initialization)
 // 3. Switch current store reference
 // 4. Return to chapter1 later - reuses existing store (instant)
@@ -147,27 +154,27 @@ graph LR
     SV[SpineView] --> TES[Text Editor Stores]
     TES --> WM[WorkspaceManager]
     WM --> FSA[FileStorageAPI]
-    
+
     subgraph "Component Layer"
         SV
         EP[EditorPane]
     end
-    
+
     subgraph "Store Layer (File-Backed)"
         TES
         TES --> C1[Chapter1 Store]
         TES --> C2[Chapter2 Store]
         TES --> C3[Chapter3 Store]
     end
-    
+
     subgraph "Service Layer"
         WM
     end
-    
+
     subgraph "Infrastructure Layer"
         FSA
     end
-    
+
     style TES fill:#e1f5fe
     style WM fill:#f3e5f5
     style FSA fill:#fff3e0
@@ -188,7 +195,7 @@ let currentSpineId: string | null = null;
  * Stores are cached for session-level performance
  */
 async function getOrCreateSpineStore(
-  workspaceId: string, 
+  workspaceId: string,
   spineId: string,
   workspaceManager: IWorkspaceManager
 ): Promise<TextEditorStore> {
@@ -196,18 +203,13 @@ async function getOrCreateSpineStore(
   if (spineTextStores.has(spineId)) {
     return spineTextStores.get(spineId)!;
   }
-  
+
   // Lazy initialization - create new store
   const editorId = `spine-text-${spineId}`;
   const filePath = SourceUtils.getTextFilePath(spineId);
-  
-  const store = await createFileBackedEditor(
-    editorId, 
-    workspaceId, 
-    filePath, 
-    workspaceManager
-  );
-  
+
+  const store = await createFileBackedEditor(editorId, workspaceId, filePath, workspaceManager);
+
   // Cache for future use in this session
   spineTextStores.set(spineId, store);
   return store;
@@ -226,18 +228,14 @@ async function switchToSpineItem(
   if (currentSpineId === newSpineId) {
     return;
   }
-  
+
   // Get or create store (reuses existing stores)
-  const newStore = await getOrCreateSpineStore(
-    workspaceId, 
-    newSpineId, 
-    workspaceManager
-  );
-  
+  const newStore = await getOrCreateSpineStore(workspaceId, newSpineId, workspaceManager);
+
   // Simple reference switch - no store destruction
   currentTextStore = newStore;
   currentSpineId = newSpineId;
-  
+
   // EditorPane will automatically receive new content via reactive bindings
 }
 ```
@@ -256,17 +254,20 @@ async function switchToSpineItem(
 #### Detailed 3-Step Implementation (2 Hours Total)
 
 **Step 1: Add Required Infrastructure (15 minutes)**
+
 - Add `getTextFilePath(spineId)` method to `src/lib/source/source-utils.ts`
 - Import `createTextEditorStore` from `$lib/stores/text-editor-store` in SpineView.svelte
 - **Risk**: None - pure utility function and existing import
 
 **Step 2: Implement File-Backed Store Pattern (1 hour)**
+
 - Create `createFileBackedSpineStore()` function in SpineView.svelte (implementing the pattern from API docs)
 - Add `getOrCreateSpineStore()` and `switchToSpineItem()` functions with Map-based store pool
 - Replace manual auto-save logic with store subscription auto-save
 - **Risk**: Low - uses existing createTextEditorStore with file I/O wrapper
 
 **Step 3: Update Component Integration (45 minutes)**
+
 - Remove `pane1Content` and `pane2Content` props from EditorPane
 - Add store binding pattern for EditorPane textarea elements
 - Remove content from `paneState` structure and navigation store persistence
@@ -293,11 +294,13 @@ async function switchToSpineItem(
 ### Risk Analysis
 
 #### High Risk
+
 - **Data Loss**: Migration could cause content loss if not handled carefully
 - **Regression**: Complex component behavior might be missed during extraction
 - **Breaking Changes**: Service API changes could break other components
 
 #### Mitigation Strategies
+
 - **Incremental Migration**: Phase-by-phase implementation with testing after each phase
 - **Backup Strategy**: Automatic content backup before any migration step
 - **Feature Flags**: Ability to rollback to original implementation if needed
@@ -305,12 +308,12 @@ async function switchToSpineItem(
 
 ### Implementation Timeline
 
-| Step | Duration | Dependencies | Deliverables |
-|------|----------|--------------|-------------|
-| Step 1 | 10 minutes | None | Utility method added |
-| Step 2 | 1 hour | Step 1 | Store pool functions created |
-| Step 3 | 1 hour | Step 2 | SpineView updated to use store pool |
-| **Total** | **2 hours** | | **Data corruption fix complete** |
+| Step      | Duration    | Dependencies | Deliverables                        |
+| --------- | ----------- | ------------ | ----------------------------------- |
+| Step 1    | 10 minutes  | None         | Utility method added                |
+| Step 2    | 1 hour      | Step 1       | Store pool functions created        |
+| Step 3    | 1 hour      | Step 2       | SpineView updated to use store pool |
+| **Total** | **2 hours** |              | **Data corruption fix complete**    |
 
 ## Detailed Implementation Guide
 
@@ -346,7 +349,7 @@ async function createFileBackedSpineStore(
 ): Promise<TextEditorStore> {
   const editorId = `spine-text-${spineId}`;
   const filePath = getTextFilePath(spineId);
-  
+
   // Load initial content from file
   let initialContent = '';
   try {
@@ -355,9 +358,9 @@ async function createFileBackedSpineStore(
   } catch {
     // File doesn't exist, start with empty content
   }
-  
+
   const store = createTextEditorStore(editorId, initialContent);
-  
+
   // Auto-save to file when content changes (1000ms debounce)
   let saveTimeout: ReturnType<typeof setTimeout>;
   store.subscribe(state => {
@@ -373,7 +376,7 @@ async function createFileBackedSpineStore(
       }
     }, 1000); // 1 second debounce for file saves
   });
-  
+
   return store;
 }
 ```
@@ -393,7 +396,7 @@ let currentTextStore: TextEditorStore | null = null;
 let currentSpineId: string | null = null;
 
 async function getOrCreateSpineStore(
-  workspaceId: string, 
+  workspaceId: string,
   spineId: string,
   workspaceService: WorkspaceService
 ): Promise<TextEditorStore> {
@@ -401,10 +404,10 @@ async function getOrCreateSpineStore(
   if (spineTextStores.has(spineId)) {
     return spineTextStores.get(spineId)!;
   }
-  
+
   // Create new file-backed store
   const store = await createFileBackedSpineStore(spineId, workspaceId, workspaceService);
-  
+
   // Cache for session
   spineTextStores.set(spineId, store);
   return store;
@@ -416,10 +419,10 @@ async function switchToSpineItem(
   workspaceService: WorkspaceService
 ): Promise<void> {
   if (currentSpineId === newSpineId) return;
-  
+
   // Get or create store (reuses existing stores)
   const newStore = await getOrCreateSpineStore(workspaceId, newSpineId, workspaceService);
-  
+
   // Simple reference switch - no store destruction
   currentTextStore = newStore;
   currentSpineId = newSpineId;
@@ -435,22 +438,22 @@ async function switchToSpineItem(
 // REMOVE content properties:
 let paneState = {
   mode: 'single' as 'single' | 'dual',
-  pane1: { 
-    filePath: '', 
-    fileHref: '', 
-    fileType: '', 
-    contentType: null as ContentType | null,
-    selectedFileValue: '', // For dropdown display 
-    // REMOVE: content: ''
-  },
-  pane2: { 
-    filePath: '', 
-    fileHref: '', 
-    fileType: '', 
+  pane1: {
+    filePath: '',
+    fileHref: '',
+    fileType: '',
     contentType: null as ContentType | null,
     selectedFileValue: '', // For dropdown display
     // REMOVE: content: ''
-  }
+  },
+  pane2: {
+    filePath: '',
+    fileHref: '',
+    fileType: '',
+    contentType: null as ContentType | null,
+    selectedFileValue: '', // For dropdown display
+    // REMOVE: content: ''
+  },
 };
 ```
 
@@ -464,7 +467,7 @@ let paneState = {
 // on:contentChange={handlePaneContentChange}
 
 // CHANGE TO (pass text store directly):
-bind:currentTextStore={currentTextStore}
+bind: currentTextStore = { currentTextStore };
 // Remove on:contentChange - auto-save handled by store subscription
 ```
 
@@ -484,7 +487,7 @@ export let currentTextStore: TextEditorStore | null = null;
 // <textarea bind:value={paneValue} on:input={handleInput}>
 
 // CHANGE TO:
-// <textarea 
+// <textarea
 //   value={currentTextStore ? $currentTextStore.content : ''}
 //   on:input={(e) => currentTextStore?.updateContent(e.target.value)}
 // >
@@ -496,19 +499,23 @@ export let currentTextStore: TextEditorStore | null = null;
 // MODIFY persistPaneConfiguration function
 function persistPaneConfiguration() {
   const config: SpineEditorConfig = {
-    pane1: paneState.pane1.fileType ? {
-      fileType: paneState.pane1.fileType,
-      selectedFile: paneState.pane1.filePath
-      // REMOVE: content is never persisted - always loaded fresh from disk
-    } : null,
-    pane2: paneState.pane2.fileType ? {
-      fileType: paneState.pane2.fileType,
-      selectedFile: paneState.pane2.filePath
-      // REMOVE: content is never persisted - always loaded fresh from disk
-    } : null,
-    mode: paneState.mode
+    pane1: paneState.pane1.fileType
+      ? {
+          fileType: paneState.pane1.fileType,
+          selectedFile: paneState.pane1.filePath,
+          // REMOVE: content is never persisted - always loaded fresh from disk
+        }
+      : null,
+    pane2: paneState.pane2.fileType
+      ? {
+          fileType: paneState.pane2.fileType,
+          selectedFile: paneState.pane2.filePath,
+          // REMOVE: content is never persisted - always loaded fresh from disk
+        }
+      : null,
+    mode: paneState.mode,
   };
-  
+
   navigationStore.updateSpineConfig(selectedItemId, config);
 }
 ```
@@ -522,10 +529,10 @@ function persistPaneConfiguration() {
 // CHANGE loadSpineItem function:
 async function loadSpineItem(spineId: string) {
   // ... existing loading logic ...
-  
+
   // REPLACE manual content loading with store switching:
   await switchToSpineItem(workspace.id, spineId, workspaceService);
-  
+
   // Update UI to reflect current store
   // (reactive bindings will automatically update EditorPane)
 }
@@ -576,7 +583,7 @@ let currentSpineId: string | null = null;
 let paneState = {
   mode: 'single' as 'single' | 'dual',
   pane1: { selectedFile: 'text' },
-  pane2: { selectedFile: '' }
+  pane2: { selectedFile: '' },
 };
 ```
 
@@ -586,17 +593,17 @@ let paneState = {
 // Store pool utilities
 interface SpineStorePool {
   getOrCreateStore(
-    workspaceId: string, 
+    workspaceId: string,
     spineId: string,
     workspaceManager: IWorkspaceManager
   ): Promise<TextEditorStore>;
-  
+
   switchSpineItem(
     workspaceId: string,
     newSpineId: string,
     workspaceManager: IWorkspaceManager
   ): Promise<void>;
-  
+
   getCurrentStore(): TextEditorStore | null;
   hasStore(spineId: string): boolean;
   getStoreCount(): number;
@@ -614,10 +621,11 @@ interface CleanPaneState {
 ### Error Handling Strategy
 
 #### Store Creation Errors
+
 ```typescript
 // Store pool with error handling
 async function getOrCreateSpineStore(
-  workspaceId: string, 
+  workspaceId: string,
   spineId: string,
   workspaceManager: IWorkspaceManager
 ): Promise<TextEditorStore | null> {
@@ -626,18 +634,13 @@ async function getOrCreateSpineStore(
     if (spineTextStores.has(spineId)) {
       return spineTextStores.get(spineId)!;
     }
-    
+
     // Create new store
     const editorId = `spine-text-${spineId}`;
     const filePath = SourceUtils.getTextFilePath(spineId);
-    
-    const store = await createFileBackedEditor(
-      editorId, 
-      workspaceId, 
-      filePath, 
-      workspaceManager
-    );
-    
+
+    const store = await createFileBackedEditor(editorId, workspaceId, filePath, workspaceManager);
+
     // Cache for session
     spineTextStores.set(spineId, store);
     return store;
@@ -649,7 +652,9 @@ async function getOrCreateSpineStore(
 ```
 
 #### Component Error Boundaries
+
 SpineView will handle store errors gracefully:
+
 ```typescript
 let storeError: string | null = null;
 
@@ -660,14 +665,10 @@ async function switchToSpineItem(
 ): Promise<void> {
   try {
     storeError = null;
-    
+
     // Get or create store with error handling
-    const newStore = await getOrCreateSpineStore(
-      workspaceId, 
-      newSpineId, 
-      workspaceManager
-    );
-    
+    const newStore = await getOrCreateSpineStore(workspaceId, newSpineId, workspaceManager);
+
     if (newStore) {
       currentTextStore = newStore;
       currentSpineId = newSpineId;
@@ -691,6 +692,7 @@ This **file-backed store solution** addresses the data corruption issue by:
 4. **Ensuring single source of truth** - Disk files are authoritative, no cached content
 
 **Key Benefits:**
+
 - ✅ **Eliminates data corruption** during spine item switching
 - ✅ **Uses existing project infrastructure** - No new services required
 - ✅ **Minimal implementation time** - 2 hours vs complex service architecture
@@ -698,6 +700,7 @@ This **file-backed store solution** addresses the data corruption issue by:
 - ✅ **Improves maintainability** - File-backed stores are self-contained and testable
 
 **Implementation Highlights:**
+
 - **Lazy Store Pool Pattern**: Stores created on-demand and cached for session performance
 - **Auto-Save via Subscriptions**: Content saves happen automatically when changed
 - **Clean Pane State**: Content removed from pane persistence, only file selection stored

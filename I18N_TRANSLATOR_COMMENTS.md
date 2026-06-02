@@ -138,9 +138,12 @@ i18n: File operation buttons
 - "Delete": Permanently removes file
 -->
 <div class="file-actions">
-  <button>{$t('Save')}</button>     <!-- Gets the comment -->
-  <button>{$t('Cancel')}</button>   <!-- No comment -->
-  <button>{$t('Delete')}</button>   <!-- No comment -->
+  <button>{$t('Save')}</button>
+  <!-- Gets the comment -->
+  <button>{$t('Cancel')}</button>
+  <!-- No comment -->
+  <button>{$t('Delete')}</button>
+  <!-- No comment -->
 </div>
 
 <!-- ✅ CORRECT - Each string gets context -->
@@ -198,7 +201,7 @@ When adding translator comments across the codebase:
 1. **Scan for** `$t('...')`, `{$t('...')}`, `t('...')`, and `translate('...')` calls
 2. **Check if comment exists** within 3 lines before the translation
 3. **Add individual comment** for each string that needs context (not group comments)
-4. **Focus on** accessibility labels, UI actions, and technical terms  
+4. **Focus on** accessibility labels, UI actions, and technical terms
 5. **When in doubt, add a comment** - better to provide context than leave translators guessing
 6. **Validate** HTML syntax - never place comments inside tags
 7. **Test** that comments are extracted by running `npm run build-scripts/i18n-extract.js`

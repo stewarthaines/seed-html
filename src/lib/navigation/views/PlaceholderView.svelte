@@ -151,10 +151,7 @@
           <button class="btn btn-secondary" onclick={() => handleAction('demo_action_2')}>
             {$t('Demo Action 2')}
           </button>
-          <button
-            class="btn btn-secondary"
-            onclick={() => navigationStore.navigateTo('workspace')}
-          >
+          <button class="btn btn-secondary" onclick={() => navigationStore.navigateTo('workspace')}>
             {$t('Back to Projects')}
           </button>
         </div>

@@ -1,7 +1,10 @@
 <script lang="ts">
   import { themeStore } from './stores/theme';
 
-  let { size = 'medium', showLabel = true }: {
+  let {
+    size = 'medium',
+    showLabel = true,
+  }: {
     size?: 'small' | 'medium' | 'large';
     showLabel?: boolean;
   } = $props();

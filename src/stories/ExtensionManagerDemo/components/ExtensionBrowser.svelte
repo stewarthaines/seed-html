@@ -359,7 +359,9 @@
           <div
             class="selection-checkbox"
             on:click|stopPropagation
-            on:keydown={() => {/* noop */}}
+            on:keydown={() => {
+              /* noop */
+            }}
             role="none"
           >
             <input

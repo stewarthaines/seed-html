@@ -128,7 +128,6 @@ export function createCompleteSourceStructure(): Record<string, string | ArrayBu
     files[`SOURCE/extensions/${filename}`] = content;
   }
 
-
   return files;
 }
 

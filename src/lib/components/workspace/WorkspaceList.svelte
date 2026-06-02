@@ -262,7 +262,6 @@
     color: var(--color-text-secondary);
   }
 
-
   .empty-tips {
     max-width: 400px;
     margin: 0 auto;

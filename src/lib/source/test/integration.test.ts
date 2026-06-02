@@ -142,7 +142,7 @@ describe('SourceManager Integration Tests', () => {
       // Create workspace with only settings.json
       await mockFileStorage.addTestFiles(workspaceId, createEmptySourceStructure());
 
-      // Should create SOURCE.zip even with just settings.json 
+      // Should create SOURCE.zip even with just settings.json
       const sourceZip = await sourceManager.createSourceZip(workspaceId);
       expect(sourceZip).not.toBeNull();
 

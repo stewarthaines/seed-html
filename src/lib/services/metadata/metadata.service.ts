@@ -1,6 +1,6 @@
 /**
  * MetadataService - Clean Service Architecture Implementation
- * 
+ *
  * Manages EPUB metadata with validation, field-level updates, and array operations
  * following the clean service architecture with single responsibility principle.
  */
@@ -23,14 +23,22 @@ export interface MetadataFieldUpdate {
 
 // Service error types
 export class MetadataServiceError extends Error {
-  constructor(message: string, public code: string, public workspaceId?: string) {
+  constructor(
+    message: string,
+    public code: string,
+    public workspaceId?: string
+  ) {
     super(message);
     this.name = 'MetadataServiceError';
   }
 }
 
 export class MetadataValidationError extends MetadataServiceError {
-  constructor(message: string, public validationResults: ValidationResult[], workspaceId?: string) {
+  constructor(
+    message: string,
+    public validationResults: ValidationResult[],
+    workspaceId?: string
+  ) {
     super(message, 'VALIDATION_FAILED', workspaceId);
     this.name = 'MetadataValidationError';
   }
@@ -40,9 +48,7 @@ export class MetadataValidationError extends MetadataServiceError {
  * MetadataService - Single responsibility for EPUB metadata management
  */
 export class MetadataService {
-  constructor(
-    private workspaceService: WorkspaceService
-  ) {}
+  constructor(private workspaceService: WorkspaceService) {}
 
   /**
    * Load metadata from cached workspace state
@@ -54,14 +60,22 @@ export class MetadataService {
   /**
    * Update a single metadata field
    */
-  async updateField(workspace: WorkspaceState, field: keyof EPUBMetadata, value: any): Promise<WorkspaceState> {
+  async updateField(
+    workspace: WorkspaceState,
+    field: keyof EPUBMetadata,
+    value: any
+  ): Promise<WorkspaceState> {
     try {
       // Validate the field update
       const updates = { [field]: value };
       const validationResults = this.validateMetadataUpdates(updates);
-      
+
       if (validationResults.some(r => r.type === 'error')) {
-        throw new MetadataValidationError('Field validation failed', validationResults, workspace.id);
+        throw new MetadataValidationError(
+          'Field validation failed',
+          validationResults,
+          workspace.id
+        );
       }
 
       // Update the workspace metadata
@@ -81,14 +95,21 @@ export class MetadataService {
   /**
    * Update multiple metadata fields
    */
-  async updateMetadata(workspace: WorkspaceState, updates: Partial<EPUBMetadata>): Promise<WorkspaceState> {
+  async updateMetadata(
+    workspace: WorkspaceState,
+    updates: Partial<EPUBMetadata>
+  ): Promise<WorkspaceState> {
     try {
       // Validate all updates
       const validationResults = this.validateMetadataUpdates(updates);
       const errors = validationResults.filter(r => r.type === 'error');
-      
+
       if (errors.length > 0) {
-        throw new MetadataValidationError('Metadata validation failed', validationResults, workspace.id);
+        throw new MetadataValidationError(
+          'Metadata validation failed',
+          validationResults,
+          workspace.id
+        );
       }
 
       // Update the workspace metadata
@@ -108,7 +129,11 @@ export class MetadataService {
   /**
    * Add an item to an array field (creator, contributor, subject)
    */
-  async addArrayItem(workspace: WorkspaceState, field: 'creator' | 'contributor' | 'subject' | 'language', value: string = ''): Promise<WorkspaceState> {
+  async addArrayItem(
+    workspace: WorkspaceState,
+    field: 'creator' | 'contributor' | 'subject' | 'language',
+    value: string = ''
+  ): Promise<WorkspaceState> {
     try {
       const currentArray: any[] = (workspace.opf.metadata as any)[field] || [];
 
@@ -140,17 +165,25 @@ export class MetadataService {
   /**
    * Remove an item from an array field
    */
-  async removeArrayItem(workspace: WorkspaceState, field: 'creator' | 'contributor' | 'subject' | 'language', index: number): Promise<WorkspaceState> {
+  async removeArrayItem(
+    workspace: WorkspaceState,
+    field: 'creator' | 'contributor' | 'subject' | 'language',
+    index: number
+  ): Promise<WorkspaceState> {
     try {
       const currentArray = workspace.opf.metadata[field] || [];
-      
+
       if (index < 0 || index >= currentArray.length) {
-        throw new MetadataServiceError(`Invalid index ${index} for ${field} array`, 'INVALID_INDEX', workspace.id);
+        throw new MetadataServiceError(
+          `Invalid index ${index} for ${field} array`,
+          'INVALID_INDEX',
+          workspace.id
+        );
       }
 
       const newArray = [...currentArray];
       newArray.splice(index, 1);
-      
+
       const updates = { [field]: newArray };
       return await this.workspaceService.updateMetadata(workspace, updates);
     } catch (error) {
@@ -176,7 +209,7 @@ export class MetadataService {
       results.push({
         field: 'title',
         message: 'Title is required',
-        type: 'error'
+        type: 'error',
       });
     }
 
@@ -185,7 +218,7 @@ export class MetadataService {
       results.push({
         field: 'language',
         message: 'At least one language is required',
-        type: 'error'
+        type: 'error',
       });
     }
 
@@ -193,7 +226,7 @@ export class MetadataService {
       results.push({
         field: 'identifier',
         message: 'Identifier is required',
-        type: 'error'
+        type: 'error',
       });
     }
 
@@ -203,7 +236,7 @@ export class MetadataService {
         results.push({
           field: `language[${index}]`,
           message: `Invalid language tag "${tag}" (use a BCP 47 tag, e.g. "en", "en-US", "zh-Hant")`,
-          type: 'error'
+          type: 'error',
         });
       }
     });
@@ -213,7 +246,7 @@ export class MetadataService {
       results.push({
         field: 'title',
         message: 'Title should be under 200 characters',
-        type: 'warning'
+        type: 'warning',
       });
     }
 
@@ -222,7 +255,7 @@ export class MetadataService {
       results.push({
         field: 'creator',
         message: 'Creator entries cannot be empty',
-        type: 'warning'
+        type: 'warning',
       });
     }
 
@@ -240,7 +273,7 @@ export class MetadataService {
       results.push({
         field: 'title',
         message: 'Title cannot be empty',
-        type: 'error'
+        type: 'error',
       });
     }
 
@@ -252,13 +285,13 @@ export class MetadataService {
         results.push({
           field: 'language',
           message: 'At least one language is required',
-          type: 'error'
+          type: 'error',
         });
       } else if (badTag) {
         results.push({
           field: 'language',
           message: `Invalid language tag "${badTag}"`,
-          type: 'warning'
+          type: 'warning',
         });
       }
     }
@@ -268,7 +301,7 @@ export class MetadataService {
       results.push({
         field: 'identifier',
         message: 'Identifier cannot be empty',
-        type: 'error'
+        type: 'error',
       });
     }
 

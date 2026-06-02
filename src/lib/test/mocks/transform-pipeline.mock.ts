@@ -21,7 +21,11 @@
  * ```
  */
 
-import type { TransformResult, PipelineResult, BlobUrlManager } from '../../transform/transform-pipeline.js';
+import type {
+  TransformResult,
+  PipelineResult,
+  BlobUrlManager,
+} from '../../transform/transform-pipeline.js';
 import type { FileStorageAPI } from '../../storage/index.js';
 import type { TransformManager } from '../../transform/transform-manager.js';
 import type { TransformExecutor } from '../../transform/transform-executor.js';
@@ -47,14 +51,19 @@ export type TransformFailureMode =
 export class MockTransformPipeline {
   private failureMode: TransformFailureMode | null = null;
   private operationCount = 0;
-  private transformHistory: Array<{ text: string; workspaceId: string; itemId: string; timestamp: number }> = [];
+  private transformHistory: Array<{
+    text: string;
+    workspaceId: string;
+    itemId: string;
+    timestamp: number;
+  }> = [];
 
   // Required interface properties (minimal stubs)
   public readonly transformManager: TransformManager = {} as TransformManager;
   public readonly transformExecutor: TransformExecutor = {} as TransformExecutor;
   public readonly fileStorage: FileStorageAPI = {} as FileStorageAPI;
   public readonly blobUrlManager: BlobUrlManager = {
-    getLoadedGlobals: () => ({})
+    getLoadedGlobals: () => ({}),
   };
 
   constructor() {
@@ -89,7 +98,12 @@ export class MockTransformPipeline {
   /**
    * Get transform history for verification
    */
-  getTransformHistory(): Array<{ text: string; workspaceId: string; itemId: string; timestamp: number }> {
+  getTransformHistory(): Array<{
+    text: string;
+    workspaceId: string;
+    itemId: string;
+    timestamp: number;
+  }> {
     return [...this.transformHistory];
   }
 
@@ -103,7 +117,7 @@ export class MockTransformPipeline {
     itemId: string
   ): Promise<TransformResult> {
     this.operationCount++;
-    
+
     if (this.failureMode === 'text-transform') {
       return {
         success: false,
@@ -117,12 +131,12 @@ export class MockTransformPipeline {
       text: plainText,
       workspaceId,
       itemId,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     // Rich markdown-like transformation for demo purposes
     let transformedText = plainText;
-    
+
     if (transformedText.trim()) {
       transformedText = transformedText
         // Headers
@@ -165,13 +179,9 @@ export class MockTransformPipeline {
   /**
    * Execute DOM transformation step
    */
-  async transformDOM(
-    document: Document,
-    workspaceId: string,
-    itemId: string
-  ): Promise<Document> {
+  async transformDOM(document: Document, workspaceId: string, itemId: string): Promise<Document> {
     this.operationCount++;
-    
+
     if (this.failureMode === 'dom-transform') {
       throw new Error('Mock DOM transform failure');
     }
@@ -190,7 +200,7 @@ export class MockTransformPipeline {
     metadata: any
   ): Promise<PipelineResult> {
     this.operationCount++;
-    
+
     if (this.failureMode === 'pipeline-execution') {
       return {
         success: false,
@@ -202,7 +212,7 @@ export class MockTransformPipeline {
     try {
       // Step 1: Transform text
       const textResult = await this.transformText(plainText, workspaceId, spineItemId);
-      
+
       if (!textResult.success) {
         return {
           success: false,
@@ -225,7 +235,8 @@ export class MockTransformPipeline {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error as any : new Error('Unknown pipeline error') as any,
+        error:
+          error instanceof Error ? (error as any) : (new Error('Unknown pipeline error') as any),
         executionTime: 100,
       };
     }
@@ -240,7 +251,7 @@ export class MockTransformPipeline {
     }
 
     const title = metadata?.title || 'Untitled';
-    
+
     return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -281,9 +292,9 @@ export class MockTransformPipeline {
         text: plainText,
         workspaceId,
         itemId,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
-      
+
       return {
         success: true,
         transformedText: content,
@@ -318,4 +329,3 @@ export class MockTransformPipeline {
 export function createMockTransformPipeline(): MockTransformPipeline {
   return new MockTransformPipeline();
 }
-

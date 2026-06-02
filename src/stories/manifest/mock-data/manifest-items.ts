@@ -1,6 +1,6 @@
 /**
  * Mock manifest items for Storybook stories
- * 
+ *
  * Provides factory functions for generating realistic EPUB manifest data
  * for testing and demonstration purposes.
  */
@@ -107,26 +107,29 @@ const errorManifestItems: ManifestItem[] = [
 /**
  * Factory function to create mock manifest items
  */
-export function createMockManifestItems(options: {
-  count?: number;
-  includeErrors?: boolean;
-  contentTypes?: ('text' | 'image' | 'audio' | 'video' | 'binary')[];
-} = {}): ManifestItem[] {
+export function createMockManifestItems(
+  options: {
+    count?: number;
+    includeErrors?: boolean;
+    contentTypes?: ('text' | 'image' | 'audio' | 'video' | 'binary')[];
+  } = {}
+): ManifestItem[] {
   const {
     count = 6,
     includeErrors = false,
-    contentTypes = ['text', 'image', 'audio', 'video', 'binary']
+    contentTypes = ['text', 'image', 'audio', 'video', 'binary'],
   } = options;
 
   let items: ManifestItem[] = [];
 
   // Filter by content types
   const filteredBaseItems = baseManifestItems.filter(item => {
-    if (contentTypes.includes('text') && (
-      item.mediaType.startsWith('text/') ||
-      item.mediaType.includes('xml') ||
-      item.mediaType.includes('css')
-    )) {
+    if (
+      contentTypes.includes('text') &&
+      (item.mediaType.startsWith('text/') ||
+        item.mediaType.includes('xml') ||
+        item.mediaType.includes('css'))
+    ) {
       return true;
     }
     if (contentTypes.includes('image') && item.mediaType.startsWith('image/')) {
@@ -138,10 +141,10 @@ export function createMockManifestItems(options: {
     if (contentTypes.includes('video') && item.mediaType.startsWith('video/')) {
       return true;
     }
-    if (contentTypes.includes('binary') && (
-      item.mediaType.startsWith('font/') ||
-      item.mediaType.startsWith('application/')
-    )) {
+    if (
+      contentTypes.includes('binary') &&
+      (item.mediaType.startsWith('font/') || item.mediaType.startsWith('application/'))
+    ) {
       return true;
     }
     return false;
@@ -175,7 +178,9 @@ export function createMockManifestItem(overrides: Partial<ManifestItem> = {}): M
 /**
  * Get mock manifest items by content type
  */
-export function getMockItemsByContentType(contentType: 'text' | 'image' | 'audio' | 'video' | 'binary'): ManifestItem[] {
+export function getMockItemsByContentType(
+  contentType: 'text' | 'image' | 'audio' | 'video' | 'binary'
+): ManifestItem[] {
   return createMockManifestItems({ contentTypes: [contentType], count: 10 });
 }
 

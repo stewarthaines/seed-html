@@ -28,7 +28,9 @@ function makePipeline(fileStorage: any, settings: any) {
 
 describe('SpineTransformPipeline.loadTransformScripts', () => {
   it('resolves a bare filename under SOURCE/scripts/', async () => {
-    const fs = fsWith({ 'SOURCE/scripts/transformText.js': 'function transformText(t){return t;}' });
+    const fs = fsWith({
+      'SOURCE/scripts/transformText.js': 'function transformText(t){return t;}',
+    });
     const pipeline = makePipeline(fs, { text_transform: 'transformText.js', dom_transforms: [] });
 
     const scripts = await pipeline.loadTransformScripts();
@@ -41,7 +43,9 @@ describe('SpineTransformPipeline.loadTransformScripts', () => {
     // Regression: the default settings store a full path; the pipeline used to
     // prepend SOURCE/scripts/ again, producing an unresolvable path and an empty
     // transform (the first-load "transformText is not defined" error).
-    const fs = fsWith({ 'SOURCE/scripts/transformText.js': 'function transformText(t){return t;}' });
+    const fs = fsWith({
+      'SOURCE/scripts/transformText.js': 'function transformText(t){return t;}',
+    });
     const pipeline = makePipeline(fs, {
       text_transform: 'SOURCE/scripts/transformText.js',
       dom_transforms: [],
@@ -78,7 +82,10 @@ describe('SpineTransformPipeline.loadTransformScripts', () => {
 
   it('leaves the transform empty (no throw) when a script never becomes readable', async () => {
     const fs = fsWith({}); // nothing available
-    const pipeline = makePipeline(fs, { text_transform: 'missing.js', dom_transforms: ['gone.js'] });
+    const pipeline = makePipeline(fs, {
+      text_transform: 'missing.js',
+      dom_transforms: ['gone.js'],
+    });
 
     const scripts = await pipeline.loadTransformScripts();
 

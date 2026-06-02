@@ -2,7 +2,7 @@
 
 /**
  * Compress .json translation files into a ZIP bundle using fflate
- * 
+ *
  * Uses fflate library for ZIP creation because:
  * - Cross-platform compatible (Node.js and browser)
  * - Designed for browser DecompressionStream compatibility
@@ -46,11 +46,13 @@ async function compressTranslations() {
     for (const file of jsonFiles) {
       const filePath = join(localesDir, file);
       const content = await fs.readFile(filePath, 'utf8');
-      
+
       // Validate JSON before adding
       try {
         JSON.parse(content);
-        console.log(`✅ ${file}: Valid JSON, ${Math.round(Buffer.byteLength(content, 'utf8') / 1024)}KB`);
+        console.log(
+          `✅ ${file}: Valid JSON, ${Math.round(Buffer.byteLength(content, 'utf8') / 1024)}KB`
+        );
       } catch (parseError) {
         throw new Error(`Invalid JSON in ${file}: ${parseError.message}`);
       }
@@ -63,7 +65,7 @@ async function compressTranslations() {
 
     // Create ZIP using fflate with deflate compression
     console.log('🔄 Compressing files with fflate...');
-    
+
     const zipData = await new Promise((resolve, reject) => {
       zip(zipFiles, { level: 6 }, (err, data) => {
         if (err) {
@@ -78,7 +80,10 @@ async function compressTranslations() {
     await fs.writeFile(outputPath, zipData);
 
     const compressedSize = zipData.length;
-    const compressionRatio = (((totalOriginalSize - compressedSize) / totalOriginalSize) * 100).toFixed(1);
+    const compressionRatio = (
+      ((totalOriginalSize - compressedSize) / totalOriginalSize) *
+      100
+    ).toFixed(1);
 
     console.log(`✅ Created i18n-bundle.zip with fflate`);
     console.log(`📊 Original size: ${Math.round(totalOriginalSize / 1024)}KB`);

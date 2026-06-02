@@ -12,6 +12,9 @@ node_modules/
 __screenshots__/
 *.tsbuildinfo
 
+# Vendored / third-party sample assets (not ours to reformat)
+src/assets/sample/vextab.js
+
 # Config files that should keep their original formatting
 *.config.js
 *.config.ts

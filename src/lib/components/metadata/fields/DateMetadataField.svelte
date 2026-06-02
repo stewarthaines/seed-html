@@ -22,7 +22,7 @@
     id = '',
     onchange,
     onblur,
-    onfocus
+    onfocus,
   }: Props = $props();
 
   // Check if field needs attention (required but empty)
@@ -75,12 +75,7 @@
     />
 
     {#if !disabled}
-      <button
-        type="button"
-        class="today-button"
-        onclick={setToday}
-        aria-label={$t('Set to today')}
-      >
+      <button type="button" class="today-button" onclick={setToday} aria-label={$t('Set to today')}>
         {$t('Today')}
       </button>
     {/if}

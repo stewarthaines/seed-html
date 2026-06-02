@@ -180,7 +180,6 @@ describe('EPUBPackager', () => {
       expect(progressCallback).toHaveBeenCalledWith(expect.objectContaining({ phase: 'writing' }));
       expect(progressCallback).toHaveBeenCalledWith(expect.objectContaining({ phase: 'complete' }));
     });
-
   });
 
   describe('optimizeCompression', () => {

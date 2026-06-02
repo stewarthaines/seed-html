@@ -239,9 +239,9 @@ export const i18nService = {
   getAvailableLocales,
   hasTranslation: (locale: string, key: string) => {
     const state = get(i18nState);
-    return !!(state.catalogs[locale]?.messages[key]);
+    return !!state.catalogs[locale]?.messages[key];
   },
-  isLocaleSupported: (locale: string) => !!(LOCALE_CONFIGS[locale]),
+  isLocaleSupported: (locale: string) => !!LOCALE_CONFIGS[locale],
   isRTL,
   getCatalogs: () => {
     const state = get(i18nState);

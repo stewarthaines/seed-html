@@ -41,7 +41,6 @@ interface I18nSystem {
   getCurrentLocale: () => string;
 }
 
-
 interface ThemeStore {
   setTheme: (theme: 'light' | 'dark') => void;
   useSystemPreference: () => void;
@@ -95,7 +94,6 @@ export class EnhancedAppState {
     this.fileStorage = fileStorage;
     this.transformEngine = transformEngine;
     this.extensionManager = extensionManager;
-    
 
     // Initialize services with dependency injection
     // Create services without circular dependencies first
@@ -112,7 +110,11 @@ export class EnhancedAppState {
     this.contentService = new ContentService(transformExecutor, i18nSystem);
 
     // Initialize AudioClipService with required dependencies
-    this.audioClipService = new AudioClipService(this.fileStorage, this.workspaceService, this.settingsService);
+    this.audioClipService = new AudioClipService(
+      this.fileStorage,
+      this.workspaceService,
+      this.settingsService
+    );
 
     // Initialize global settings immediately
     this.loadGlobalSettings();
@@ -241,7 +243,6 @@ export class EnhancedAppState {
     return this.audioClipService;
   }
 
-
   getExtensionManager(): ExtensionManager {
     return this.extensionManager;
   }
@@ -274,7 +275,6 @@ export class EnhancedAppState {
           }, 5000);
         }
       });
-
     });
   }
 

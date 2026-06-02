@@ -27,11 +27,11 @@ html {
 }
 
 /* Principal writing mode using :root pseudo-class */
-:root[data-dir="rtl"] {
+:root[data-dir='rtl'] {
   direction: rtl;
 }
 
-:root[data-dir="ltr"] {
+:root[data-dir='ltr'] {
   direction: ltr;
 }
 

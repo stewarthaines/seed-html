@@ -2,9 +2,15 @@
   import ManifestContainer from '../../lib/components/manifest/ManifestContainer.svelte';
   import { createMockManifestItems } from './mock-data/manifest-items.js';
   import { createMockSourceItems } from './mock-data/source-items.js';
-  import type { ManifestItem, SourceItem, ValidationResult, CreateTextItemData, ContentPreview } from '../../lib/manifest/types.js';
+  import type {
+    ManifestItem,
+    SourceItem,
+    ValidationResult,
+    CreateTextItemData,
+    ContentPreview,
+  } from '../../lib/manifest/types.js';
   import type { IManifestManager } from '../../lib/manifest/manifest-manager.js';
-  
+
   // Story props
   export let itemCount = 6;
   export let isLoading = false;
@@ -19,7 +25,7 @@
   let manifestItems: ManifestItem[] = [];
   let sourceItems: SourceItem[] = [];
   let validationErrors: ValidationResult[] = [];
-  
+
   // Mock ManifestManager implementation
   const mockManifestManager: IManifestManager = {
     // Core data operations
@@ -27,13 +33,13 @@
       if (isLoading) {
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
-      
+
       manifestItems = createMockManifestItems({
         count: itemCount,
         includeErrors: hasErrors,
-        contentTypes: contentTypes as ('text' | 'image' | 'audio' | 'video' | 'binary')[]
+        contentTypes: contentTypes as ('text' | 'image' | 'audio' | 'video' | 'binary')[],
       });
-      
+
       return manifestItems;
     },
 
@@ -45,7 +51,11 @@
       return item;
     },
 
-    async updateManifestItem(workspaceId: string, itemId: string, updates: Partial<ManifestItem>): Promise<void> {
+    async updateManifestItem(
+      workspaceId: string,
+      itemId: string,
+      updates: Partial<ManifestItem>
+    ): Promise<void> {
       const index = manifestItems.findIndex(item => item.id === itemId);
       if (index === -1) {
         throw new Error(`Item not found: ${itemId}`);
@@ -66,7 +76,11 @@
       return 'Mock content for ' + itemId;
     },
 
-    async setItemContent(workspaceId: string, itemId: string, content: ArrayBuffer | string): Promise<void> {
+    async setItemContent(
+      workspaceId: string,
+      itemId: string,
+      content: ArrayBuffer | string
+    ): Promise<void> {
       // Mock implementation
     },
 
@@ -94,7 +108,11 @@
       return newItem;
     },
 
-    async createFileItem(workspaceId: string, file: File, targetPath?: string): Promise<ManifestItem> {
+    async createFileItem(
+      workspaceId: string,
+      file: File,
+      targetPath?: string
+    ): Promise<ManifestItem> {
       const newItem: ManifestItem = {
         id: `file-${Date.now()}`,
         href: targetPath || `OEBPS/${file.name}`,
@@ -106,7 +124,11 @@
       return newItem;
     },
 
-    async importFileItem(workspaceId: string, filePath: string, content: ArrayBuffer): Promise<ManifestItem> {
+    async importFileItem(
+      workspaceId: string,
+      filePath: string,
+      content: ArrayBuffer
+    ): Promise<ManifestItem> {
       const fileName = filePath.split('/').pop() || 'imported-file';
       const newItem: ManifestItem = {
         id: `import-${Date.now()}`,
@@ -135,14 +157,14 @@
             field: 'id',
             message: 'Duplicate ID found',
             severity: 'error',
-            itemId: 'invalid-missing-href'
+            itemId: 'invalid-missing-href',
           },
           {
             field: 'href',
             message: 'Missing href attribute',
             severity: 'error',
-            itemId: 'invalid-missing-href'
-          }
+            itemId: 'invalid-missing-href',
+          },
         ];
       }
       return [];
@@ -157,7 +179,10 @@
       return [];
     },
 
-    async getSourceItemContent(workspaceId: string, sourcePath: string): Promise<ArrayBuffer | string> {
+    async getSourceItemContent(
+      workspaceId: string,
+      sourcePath: string
+    ): Promise<ArrayBuffer | string> {
       return 'Mock SOURCE content for ' + sourcePath;
     },
 
@@ -167,23 +192,26 @@
 
     // Utility operations
     generateItemId(fileName: string): string {
-      return fileName.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+      return fileName
+        .replace(/\.[^/.]+$/, '')
+        .replace(/[^a-zA-Z0-9]/g, '-')
+        .toLowerCase();
     },
 
     detectMediaType(fileName: string, content?: ArrayBuffer): string {
       const ext = fileName.split('.').pop()?.toLowerCase();
       const mediaTypeMap: Record<string, string> = {
-        'xhtml': 'application/xhtml+xml',
-        'html': 'text/html',
-        'css': 'text/css',
-        'js': 'application/javascript',
-        'jpg': 'image/jpeg',
-        'jpeg': 'image/jpeg',
-        'png': 'image/png',
-        'gif': 'image/gif',
-        'mp3': 'audio/mpeg',
-        'mp4': 'video/mp4',
-        'pdf': 'application/pdf',
+        xhtml: 'application/xhtml+xml',
+        html: 'text/html',
+        css: 'text/css',
+        js: 'application/javascript',
+        jpg: 'image/jpeg',
+        jpeg: 'image/jpeg',
+        png: 'image/png',
+        gif: 'image/gif',
+        mp3: 'audio/mpeg',
+        mp4: 'video/mp4',
+        pdf: 'application/pdf',
       };
       return mediaTypeMap[ext || ''] || 'application/octet-stream';
     },
@@ -194,7 +222,7 @@
         image: [],
         audio: [],
         video: [],
-        application: []
+        application: [],
       };
     },
 
@@ -209,7 +237,7 @@
 
     clearContentCache(workspaceId: string, itemId?: string): void {
       // Mock implementation
-    }
+    },
   };
 
   // Demo workspace ID
@@ -223,17 +251,13 @@
       <p>Create or select a workspace to manage manifest items.</p>
     </div>
   {:else}
-    <ManifestContainer
-      {workspaceId}
-      manifestManager={mockManifestManager}
-      {advancedMode}
-    />
+    <ManifestContainer {workspaceId} manifestManager={mockManifestManager} {advancedMode} />
   {/if}
 </div>
 
 <style>
   @import './manifest-demo.css';
-  
+
   .manifest-container-demo {
     height: 100vh;
     display: flex;

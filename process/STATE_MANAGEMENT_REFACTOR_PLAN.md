@@ -13,6 +13,7 @@ This document provides the implementation roadmap for refactoring EDITME.html's 
 **Primary Design Document**: [ARCHITECTURE_SIMPLIFICATION_ANALYSIS.md](./ARCHITECTURE_SIMPLIFICATION_ANALYSIS.md)
 
 **Key Design Principles**:
+
 - 3-layer architecture: Presentation → Service → Infrastructure
 - Single source of truth: `workspace` object replaces fragmented state
 - Service independence: No service-to-service calls
@@ -25,6 +26,7 @@ This document provides the implementation roadmap for refactoring EDITME.html's 
 **Testing Reference**: [TESTING_PROCESS_REACTIVE_ARCHITECTURE.md](./TESTING_PROCESS_REACTIVE_ARCHITECTURE.md)
 
 **Key Testing Patterns**:
+
 - Use `$effect.root()` and `flushSync()` for reactive testing
 - File naming: `*.svelte.test.ts` for runes code, `*.test.ts` for pure TypeScript
 - Mock services with dependency injection at infrastructure layer only
@@ -37,6 +39,7 @@ This document provides the implementation roadmap for refactoring EDITME.html's 
 **Project Instructions**: [CLAUDE.md](../CLAUDE.md)
 
 **Key Requirements**:
+
 - Zero TypeScript errors at all times
 - Follow existing code conventions and import patterns
 - Use relative imports (`../`, `../../`) instead of absolute paths
@@ -49,6 +52,7 @@ This document provides the implementation roadmap for refactoring EDITME.html's 
 #### 1a. Manager Consolidation
 
 **Target Structure**:
+
 ```
 AppState
 ├── WorkspaceService (consolidated from WorkspaceManager + ManifestManager + MetadataManager + SpineItemManager)
@@ -57,13 +61,14 @@ AppState
 ```
 
 **Implementation Steps**:
+
 1. **Create WorkspaceService** - Consolidate existing manager functionality
    - Location: `src/lib/services/workspace/workspace.service.ts`
    - Test: `src/lib/services/workspace/workspace.service.test.ts`
    - Dependencies: FileStorageAPI, EPUBProcessor (thin wrapper)
 
 2. **Create ContentService** - Pure transformation functions
-   - Location: `src/lib/services/content/content.service.ts`  
+   - Location: `src/lib/services/content/content.service.ts`
    - Test: `src/lib/services/content/content.service.test.ts`
    - Dependencies: TransformExecutor, I18nSystem
 
@@ -84,13 +89,16 @@ AppState
 **Target**: Enhanced AppState with full runes integration
 
 **Implementation Steps**:
+
 1. **Convert getters to $derived** in existing AppState
+
    ```typescript
    // Replace: get manifest() { return this.workspace?.manifest || []; }
    // With: manifest = $derived(this.workspace?.manifest || []);
    ```
 
 2. **Add reactive coordination with $effect**
+
    ```typescript
    $effect(() => {
      if (this.workspaceLoading && this.workspace?.id !== this.workspaceLoading) {
@@ -107,17 +115,19 @@ AppState
 **Target**: Full workspace-as-single-source-of-truth implementation
 
 **Implementation Steps**:
+
 1. **Enhanced AppState** with complete workspace state management
    - Single reactive object: `workspace = $state<WorkspaceState | null>(null)`
    - Loading state: `workspaceLoading = $state<string | null>(null)`
    - Derived computations for all workspace properties
 
 2. **Context-based dependency injection** for components
+
    ```svelte
    <script lang="ts">
      import { getContext } from 'svelte';
      const appState = getContext<AppState>('appState');
-     
+
      // Direct reactive access
      $: manifest = appState.manifest;
      $: isLoading = appState.isLoading;
@@ -134,6 +144,7 @@ AppState
 **Target**: Complete service-based architecture
 
 **Implementation Steps**:
+
 1. **Implement service layer** alongside existing managers
 2. **Create command classes** for complex operations (optional enhancement)
 3. **Enhanced component composition** with Svelte 5 patterns
@@ -142,6 +153,7 @@ AppState
 ## File Organization
 
 ### Directory Structure
+
 ```
 src/lib/
 ├── services/           # Service Layer
@@ -168,6 +180,7 @@ src/lib/
 **Reference**: [SHARED_TYPES_DESIGN.md](./contracts/SHARED_TYPES_DESIGN.md)
 
 **Key Types**:
+
 - `WorkspaceState` - Single source of truth for workspace data
 - `EPUBMetadata`, `ManifestItem`, `SpineItem` - EPUB structure types
 - Service interfaces and contracts
@@ -175,17 +188,20 @@ src/lib/
 ## Testing Strategy
 
 ### Test File Naming
+
 - **Reactive/Runes code**: `*.svelte.test.ts`
 - **Pure TypeScript**: `*.test.ts`
 - **Components**: `ComponentName.svelte.test.ts`
 
 ### Testing Patterns
+
 - **Services**: Test with infrastructure dependency injection only
 - **Reactive State**: Use `$effect.root()` for deterministic testing
 - **Components**: Context-based testing with AppState
 - **Integration**: Cross-layer workflow testing
 
 ### Test Utilities
+
 - Location: `test/helpers/`
 - **reactive-test-utils.ts**: Reactive testing helpers
 - **service-test-utils.ts**: Service mocking utilities
@@ -194,12 +210,14 @@ src/lib/
 ## Development Workflow
 
 ### Quality Gates
+
 1. **TypeScript compliance**: Zero type errors
 2. **Test coverage**: All new code has corresponding tests
 3. **Backward compatibility**: Existing APIs maintained during migration
 4. **Performance**: No regression in storage backend performance
 
 ### Code Review Checklist
+
 - [ ] Services only depend on infrastructure layer
 - [ ] No service-to-service calls
 - [ ] Reactive effects have proper cleanup
@@ -209,12 +227,14 @@ src/lib/
 ## Migration Strategy
 
 ### Incremental Approach
+
 1. **Implement alongside existing**: New services work with current managers
 2. **Feature flags**: Control which components use new architecture
 3. **Component-by-component**: Migrate UI components individually
 4. **Remove old layer**: Once all components migrated
 
 ### Rollback Plan
+
 - Keep existing managers until migration complete
 - Feature flags allow instant rollback
 - Database/storage format unchanged
@@ -222,12 +242,14 @@ src/lib/
 ## Success Metrics
 
 ### Immediate Benefits (Phase 1)
+
 - Reduced complexity: Fewer managers to coordinate
 - Enhanced reactivity: Better Svelte 5 performance
 - Improved testing: Simpler mocking
 - Better debugging: Clearer data flow
 
 ### Long-term Benefits (Phase 2-3)
+
 - Maintainability: Cleaner codebase
 - Developer experience: Idiomatic Svelte 5 patterns
 - Performance: Reduced overhead
@@ -245,12 +267,15 @@ src/lib/
 ## Implementation Notes
 
 ### Critical Preservation
+
 - **Storage backend complexity**: Maintain FileStorageAPI's 3-tier system (OPFS-sync → OPFS-async → IndexedDB) due to proven 16x performance benefits
 - **Existing components**: Leverage EPUBPackager, EPUBUnpacker, OPFUtils, TransformExecutor as-is
 - **Browser APIs**: Continue using DOMParser and querySelector over regex
 
 ### Agent Instructions
+
 When implementing this refactor:
+
 1. Follow TDD approach from testing document
 2. Use service contracts for interface definitions
 3. Maintain project quality standards

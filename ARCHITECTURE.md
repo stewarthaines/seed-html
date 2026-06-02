@@ -39,13 +39,13 @@ EDITME.html is a browser-based EPUB editor built with Svelte 5 and TypeScript. I
 graph TB
     subgraph "Layer 1: Presentation (Svelte Components)"
         UI1[WorkspaceView]
-        UI2[ManifestTable] 
+        UI2[ManifestTable]
         UI3[MetadataEditor]
         UI4[SpineSidebar]
         UI5[OutlineView]
         UI6[PreviewComponents]
     end
-    
+
     subgraph "Layer 2: Service Layer"
         WS[WorkspaceService]
         CS[ContentService]
@@ -53,7 +53,7 @@ graph TB
         SPS[SpineService]
         MS[MetadataService]
     end
-    
+
     subgraph "Layer 3: Infrastructure Layer"
         FSA[FileStorageAPI]
         EPUB[EPUBProcessor]
@@ -61,21 +61,21 @@ graph TB
         BUM[BlobURLManager]
         I18N[I18nSystem]
     end
-    
+
     subgraph "Layer 4: Browser APIs"
         OPFS[Origin Private File System]
         IDB[IndexedDB]
         CSA[Compression Streams]
         WW[Web Workers]
     end
-    
+
     UI1 --> WS
     UI2 --> WS
     UI3 --> MS
     UI4 --> SPS
     UI5 --> WS
     UI5 --> SPS
-    
+
     WS --> FSA
     WS --> EPUB
     CS --> TE
@@ -83,7 +83,7 @@ graph TB
     SS --> FSA
     SPS --> WS
     MS --> WS
-    
+
     FSA --> OPFS
     FSA --> IDB
     FSA --> WW
@@ -130,14 +130,14 @@ src/lib/services/
 
 ### Service Responsibilities
 
-| Service | Primary Responsibilities |
-|---------|-------------------------|
-| **WorkspaceService** | File system operations, OPF management, workspace lifecycle |
-| **ContentService** | Text transformation, XHTML generation, content processing |
-| **SettingsService** | Multi-tier settings (global, workspace, EPUB), draft mode |
-| **SpineService** | Reading order management, spine validation, chapter operations |
-| **MetadataService** | EPUB metadata operations, Dublin Core compliance |
-| **EPUBProcessor** | EPUB import/export, ZIP handling, validation |
+| Service              | Primary Responsibilities                                       |
+| -------------------- | -------------------------------------------------------------- |
+| **WorkspaceService** | File system operations, OPF management, workspace lifecycle    |
+| **ContentService**   | Text transformation, XHTML generation, content processing      |
+| **SettingsService**  | Multi-tier settings (global, workspace, EPUB), draft mode      |
+| **SpineService**     | Reading order management, spine validation, chapter operations |
+| **MetadataService**  | EPUB metadata operations, Dublin Core compliance               |
+| **EPUBProcessor**    | EPUB import/export, ZIP handling, validation                   |
 
 ### Service Interfaces
 
@@ -147,12 +147,12 @@ All services implement consistent patterns with dependency injection:
 // Example: WorkspaceService interface
 export class WorkspaceService {
   constructor(private fileStorage: FileStorageAPI) {}
-  
+
   // Core workspace operations
   async createWorkspace(title: string, language: string): Promise<string>;
   async loadWorkspace(id: string): Promise<WorkspaceState>;
   async deleteWorkspace(id: string): Promise<void>;
-  
+
   // File operations
   async writeFile(workspaceId: string, path: string, content: string | ArrayBuffer): Promise<void>;
   async readFile(workspaceId: string, path: string): Promise<ArrayBuffer>;
@@ -167,15 +167,15 @@ export class WorkspaceService {
 ```mermaid
 graph TD
     FSA[FileStorageAPI] --> FD[FeatureDetector]
-    
+
     FD --> |Best Performance| OPFS_SYNC[OPFS Synchronous]
     FD --> |Good Performance| OPFS_ASYNC[OPFS Asynchronous]
     FD --> |Broad Compatibility| IDB[IndexedDB]
-    
+
     OPFS_SYNC --> WW[Web Worker]
     OPFS_ASYNC --> MT[Main Thread]
     IDB --> MT
-    
+
     WW --> |File Operations| OPFS_API[OPFS API]
     MT --> |File Operations| OPFS_API
     MT --> |Storage Operations| IDB_API[IndexedDB API]
@@ -214,7 +214,7 @@ Storage Backend/
 │   │   ├── META-INF/
 │   │   ├── OEBPS/
 │   │   │   ├── Text/
-│   │   │   ├── Styles/  
+│   │   │   ├── Styles/
 │   │   │   ├── Images/
 │   │   │   └── Scripts/
 │   │   └── SOURCE/          # Editor-specific files
@@ -236,17 +236,17 @@ export class EnhancedAppState {
   // Single source of truth - workspace state
   workspace = $state<WorkspaceState | null>(null);
   workspaceLoading = $state<string | null>(null);
-  
+
   // Derived reactive state
   currentWorkspaceId = $derived(this.workspace?.id || null);
   isLoading = $derived(this.workspaceLoading !== null);
   initialized = $derived(this.fileStorageAPI !== null);
-  
+
   // Service instances (private)
   private workspaceService: WorkspaceService;
   private contentService: ContentService;
   private settingsService: SettingsService;
-  
+
   constructor(
     fileStorageAPI: FileStorageAPI,
     transformExecutor: TransformExecutor,
@@ -260,7 +260,7 @@ export class EnhancedAppState {
     this.contentService = new ContentService(transformExecutor, i18nService);
     this.settingsService = new SettingsService(fileStorageAPI, extensionManager);
   }
-  
+
   // Reactive coordination with $effect
   $effect(() => {
     if (this.workspaceLoading && this.workspace?.id !== this.workspaceLoading) {
@@ -276,18 +276,24 @@ Components receive services via props and use reactive state:
 
 ```svelte
 <script lang="ts">
-  import type { WorkspaceService, WorkspaceState } from '../services/workspace/workspace.service.js';
-  
+  import type {
+    WorkspaceService,
+    WorkspaceState,
+  } from '../services/workspace/workspace.service.js';
+
   // Service injection via props (runes)
-  let { workspace, workspaceService }: {
+  let {
+    workspace,
+    workspaceService,
+  }: {
     workspace: WorkspaceState;
     workspaceService: WorkspaceService;
   } = $props();
-  
+
   // Local reactive state
   let loading = $state(false);
   let error = $state<string | null>(null);
-  
+
   // Derived reactive computations
   let manifestItems = $derived(workspace?.opf?.manifest || []);
   let isValid = $derived(manifestItems.length > 0);
@@ -305,19 +311,19 @@ graph TD
         E[Event Handler]
         S[Reactive State]
     end
-    
+
     subgraph "Service Layer"
         SRV[Service Method]
         V[Validation]
         BL[Business Logic]
     end
-    
+
     subgraph "Infrastructure Layer"
         FS[FileStorageAPI]
         Cache[Cache Layer]
         Backend[Storage Backend]
     end
-    
+
     C --> E
     E --> SRV
     SRV --> V
@@ -325,7 +331,7 @@ graph TD
     BL --> FS
     FS --> Cache
     Cache --> Backend
-    
+
     Backend -.->|Success| Cache
     Cache -.->|Data| FS
     FS -.->|Result| BL
@@ -343,12 +349,12 @@ graph LR
         WS_PROP[workspaceService]
         SS_PROP[spineService]
     end
-    
+
     subgraph "Component"
         COMP[MetadataEditor]
         PROPS[Props Interface]
     end
-    
+
     AS --> WS_PROP
     AS --> SS_PROP
     WS_PROP --> PROPS
@@ -366,18 +372,18 @@ sequenceDiagram
     participant WS as WorkspaceService
     participant EP as EPUBProcessor
     participant FS as FileStorageAPI
-    
+
     U->>WS: Upload EPUB file
     WS->>EP: Process EPUB
     EP->>EP: Parse ZIP structure
     EP->>EP: Validate EPUB structure
     EP->>WS: Return file entries
-    
+
     loop For each file
         WS->>FS: Store file in workspace
         FS->>FS: Determine optimal storage path
     end
-    
+
     WS->>WS: Extract SOURCE.zip if present
     WS->>WS: Load OPF document
     WS->>U: Workspace ready
@@ -395,12 +401,12 @@ graph LR
     TD --> DOM[DOM Manipulation]
     DOM --> XHTML[XHTML Output]
     XHTML --> Preview[Content Preview]
-    
+
     subgraph "Security Context"
         SC[Security Sandbox]
         TV[Transform Validator]
     end
-    
+
     TE --> SC
     TE --> TV
 ```
@@ -437,13 +443,13 @@ async loadWorkspace(id: string): Promise<WorkspaceState> {
 
 ### Error Classification
 
-| Error Type | Source | Recovery Strategy |
-|------------|--------|------------------|
-| `WorkspaceServiceError` | WorkspaceService | Redirect to workspace selection |
-| `ContentServiceError` | ContentService | Fallback to plain text |
-| `SettingsServiceError` | SettingsService | Use default settings |
-| `StorageError` | FileStorageAPI | Retry with different backend |
-| `ValidationError` | Service validation | Show specific field errors |
+| Error Type              | Source             | Recovery Strategy               |
+| ----------------------- | ------------------ | ------------------------------- |
+| `WorkspaceServiceError` | WorkspaceService   | Redirect to workspace selection |
+| `ContentServiceError`   | ContentService     | Fallback to plain text          |
+| `SettingsServiceError`  | SettingsService    | Use default settings            |
+| `StorageError`          | FileStorageAPI     | Retry with different backend    |
+| `ValidationError`       | Service validation | Show specific field errors      |
 
 ## Browser Integration
 
@@ -456,30 +462,30 @@ graph TB
         FSA_API[File System Access API]
         SAH[Synchronous Access Handles]
     end
-    
+
     subgraph "Compression"
         CS[Compression Streams API]
         DC[DecompressionStream]
         CC[CompressionStream]
     end
-    
+
     subgraph "Workers"
         WW[Web Workers]
         SAB[SharedArrayBuffer]
         Atomics[Atomics API]
     end
-    
+
     subgraph "Storage"
         IDB[IndexedDB]
         LS[localStorage]
         Cache[Cache API]
     end
-    
+
     App[EDITME Application] --> OPFS
     App --> CS
     App --> WW
     App --> IDB
-    
+
     OPFS --> FSA_API
     OPFS --> SAH
     CS --> DC
@@ -497,16 +503,16 @@ export class FeatureDetector {
     if (await this.supportsOPFSSync()) {
       return 'opfs-sync';
     }
-    
+
     // Test for basic OPFS support
     if (await this.supportsOPFS()) {
       return 'opfs-async';
     }
-    
+
     // Fallback to IndexedDB
     return 'indexeddb';
   }
-  
+
   private static async supportsOPFSSync(): Promise<boolean> {
     try {
       const root = await navigator.storage.getDirectory();
@@ -560,7 +566,7 @@ export class FeatureDetector {
 This architecture represents a complete migration from the previous manager-based system to a clean service architecture:
 
 - **Removed**: 16,416 lines of manager code
-- **Added**: 214 lines of service code  
+- **Added**: 214 lines of service code
 - **Benefits**: Cleaner separation of concerns, better testability, improved maintainability
 - **Performance**: Preserved storage backend performance (16x OPFS advantage)
 

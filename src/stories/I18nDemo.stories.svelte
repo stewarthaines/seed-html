@@ -38,13 +38,13 @@
       // Click through different sections to show localized content
       const metadataButton = await canvas.findByTitle(/Metadata/, {}, { timeout: 3000 });
       await userEvent.click(metadataButton);
-      
+
       // Wait for metadata view to load
       await canvas.findByRole('tabpanel', {}, { timeout: 3000 });
 
       const manifestButton = await canvas.findByTitle(/Manifest/, {}, { timeout: 3000 });
       await userEvent.click(manifestButton);
-      
+
       // Wait for manifest view to load
       await canvas.findByRole('table', {}, { timeout: 3000 });
 
@@ -79,13 +79,13 @@
       // Toggle sidebar to show RTL positioning
       const toggleButton = await canvas.findByLabelText(/Toggle sidebar/i, {}, { timeout: 3000 });
       await userEvent.click(toggleButton);
-      
+
       // Wait for sidebar animation/transition to complete
       await canvas.findByRole('complementary', { hidden: true }, { timeout: 2000 });
 
       // Expand again to show RTL sidebar behavior
       await userEvent.click(toggleButton);
-      
+
       // Wait for sidebar to expand again
       await canvas.findByRole('complementary', {}, { timeout: 2000 });
     } catch (error) {

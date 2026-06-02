@@ -1,6 +1,6 @@
 /**
  * Enhanced AppState Tests - Reactive Coordination Testing
- * 
+ *
  * Tests the reactive state coordination using Svelte 5 runes
  * and service integration patterns.
  */
@@ -26,7 +26,7 @@ function createMockFileStorage(): jest.Mocked<FileStorageAPI> {
 function createMockTransformExecutor() {
   return {
     transformText: vi.fn().mockResolvedValue({ result: 'transformed text', timeMs: 100 }),
-    transformDom: vi.fn().mockResolvedValue({ result: 'transformed dom', timeMs: 50 })
+    transformDom: vi.fn().mockResolvedValue({ result: 'transformed dom', timeMs: 50 }),
   };
 }
 
@@ -36,15 +36,17 @@ function createMockI18nSystem() {
       if (key === 'Hello {name}' && params?.name) return `Hello ${params.name}`;
       return key;
     }),
-    getCurrentLocale: vi.fn().mockReturnValue('en')
+    getCurrentLocale: vi.fn().mockReturnValue('en'),
   };
 }
 
 function createMockExtensionManager() {
   return {
-    getAvailableTransforms: vi.fn().mockResolvedValue([
-      { path: 'SOURCE/scripts/transform.js', extensionName: 'Default', fileName: 'transform.js' }
-    ])
+    getAvailableTransforms: vi
+      .fn()
+      .mockResolvedValue([
+        { path: 'SOURCE/scripts/transform.js', extensionName: 'Default', fileName: 'transform.js' },
+      ]),
   };
 }
 
@@ -52,14 +54,14 @@ function createMockThemeStore() {
   return {
     setTheme: vi.fn(),
     useSystemPreference: vi.fn(),
-    getCurrentTheme: vi.fn().mockReturnValue('system')
+    getCurrentTheme: vi.fn().mockReturnValue('system'),
   };
 }
 
 function createMockI18nStore() {
   return {
     setLocale: vi.fn(),
-    getCurrentLocale: vi.fn().mockReturnValue('en')
+    getCurrentLocale: vi.fn().mockReturnValue('en'),
   };
 }
 
@@ -72,16 +74,14 @@ vi.mock('./services/workspace/workspace.service.js', () => ({
         metadata: {
           title: 'Test Book',
           language: 'en',
-          identifier: 'test-123'
+          identifier: 'test-123',
         },
         manifest: [
-          { id: 'chapter1', href: 'Text/chapter1.xhtml', mediaType: 'application/xhtml+xml' }
+          { id: 'chapter1', href: 'Text/chapter1.xhtml', mediaType: 'application/xhtml+xml' },
         ],
-        spine: [
-          { idref: 'chapter1', linear: true }
-        ]
+        spine: [{ idref: 'chapter1', linear: true }],
       },
-      pathInfo: { basePath: 'OEBPS', rootfilePath: 'OEBPS/content.opf' }
+      pathInfo: { basePath: 'OEBPS', rootfilePath: 'OEBPS/content.opf' },
     }),
     loadWorkspace: vi.fn().mockResolvedValue({
       id: 'workspace-123',
@@ -89,16 +89,14 @@ vi.mock('./services/workspace/workspace.service.js', () => ({
         metadata: {
           title: 'Test Book',
           language: 'en',
-          identifier: 'test-123'
+          identifier: 'test-123',
         },
         manifest: [
-          { id: 'chapter1', href: 'Text/chapter1.xhtml', mediaType: 'application/xhtml+xml' }
+          { id: 'chapter1', href: 'Text/chapter1.xhtml', mediaType: 'application/xhtml+xml' },
         ],
-        spine: [
-          { idref: 'chapter1', linear: true }
-        ]
+        spine: [{ idref: 'chapter1', linear: true }],
       },
-      pathInfo: { basePath: 'OEBPS', rootfilePath: 'OEBPS/content.opf' }
+      pathInfo: { basePath: 'OEBPS', rootfilePath: 'OEBPS/content.opf' },
     }),
     saveWorkspace: vi.fn().mockResolvedValue(undefined),
     deleteWorkspace: vi.fn().mockResolvedValue(undefined),
@@ -108,18 +106,16 @@ vi.mock('./services/workspace/workspace.service.js', () => ({
         metadata: {
           title: 'Test Book',
           language: 'en',
-          identifier: 'test-123'
+          identifier: 'test-123',
         },
         manifest: [
-          { id: 'chapter1', href: 'Text/chapter1.xhtml', mediaType: 'application/xhtml+xml' }
+          { id: 'chapter1', href: 'Text/chapter1.xhtml', mediaType: 'application/xhtml+xml' },
         ],
-        spine: [
-          { idref: 'chapter1', linear: true }
-        ]
+        spine: [{ idref: 'chapter1', linear: true }],
       },
-      pathInfo: { basePath: 'OEBPS', rootfilePath: 'OEBPS/content.opf' }
-    })
-  }))
+      pathInfo: { basePath: 'OEBPS', rootfilePath: 'OEBPS/content.opf' },
+    }),
+  })),
 }));
 
 vi.mock('./services/content/content.service.js', () => ({
@@ -131,30 +127,24 @@ vi.mock('./services/content/content.service.js', () => ({
           title: 'Chapter 1',
           fileName: 'chapter1.txt',
           content: '# Chapter 1\n\nThis is sample content.',
-          xhtmlContent: '<h1>Chapter 1</h1><p>This is sample content.</p>'
-        }
+          xhtmlContent: '<h1>Chapter 1</h1><p>This is sample content.</p>',
+        },
       ],
-      assets: [
-        { path: 'OEBPS/Styles/page.css', content: 'body { margin: 0; }' }
-      ],
+      assets: [{ path: 'OEBPS/Styles/page.css', content: 'body { margin: 0; }' }],
       manifestUpdates: [
-        { id: 'chapter1', href: 'Text/chapter1.xhtml', mediaType: 'application/xhtml+xml' }
+        { id: 'chapter1', href: 'Text/chapter1.xhtml', mediaType: 'application/xhtml+xml' },
       ],
-      spineUpdates: [
-        { idref: 'chapter1' }
-      ]
+      spineUpdates: [{ idref: 'chapter1' }],
     }),
     generateLocalizedContent: vi.fn().mockResolvedValue({
       metadata: {
         title: 'Sample Book',
         language: 'en',
-        creator: ['Sample Author']
+        creator: ['Sample Author'],
       },
-      chapters: [
-        { filename: 'chapter1.xhtml', title: 'Chapter 1', content: '<h1>Chapter 1</h1>' }
-      ]
-    })
-  }))
+      chapters: [{ filename: 'chapter1.xhtml', title: 'Chapter 1', content: '<h1>Chapter 1</h1>' }],
+    }),
+  })),
 }));
 
 vi.mock('./services/settings/settings.service.js', () => ({
@@ -162,40 +152,44 @@ vi.mock('./services/settings/settings.service.js', () => ({
     loadGlobalSettings: vi.fn().mockReturnValue({
       theme: 'system',
       locale: 'en',
-      editor_font_size: 14
+      editor_font_size: 14,
     }),
     saveGlobalSettings: vi.fn(),
     getDefaultGlobalSettings: vi.fn().mockReturnValue({
       theme: 'system',
       locale: 'en',
-      editor_font_size: 14
+      editor_font_size: 14,
     }),
     loadWorkspaceSettings: vi.fn().mockResolvedValue({
       bust_cache: false,
       draft_id: 0,
-      editor: { preview_delay_ms: 500, advanced_mode: false }
+      editor: { preview_delay_ms: 500, advanced_mode: false },
     }),
     saveWorkspaceSettings: vi.fn().mockResolvedValue(undefined),
     getDefaultWorkspaceSettings: vi.fn().mockReturnValue({
       bust_cache: false,
       draft_id: 0,
-      editor: { preview_delay_ms: 500, advanced_mode: false }
+      editor: { preview_delay_ms: 500, advanced_mode: false },
     }),
     loadEPUBSettings: vi.fn().mockResolvedValue({
       text_transform: 'SOURCE/scripts/transformText.js',
       dom_transforms: ['SOURCE/scripts/transformDom.js'],
-      spine_basename: 'chapter'
+      spine_basename: 'chapter',
     }),
     saveEPUBSettings: vi.fn().mockResolvedValue(undefined),
     getDefaultEPUBSettings: vi.fn().mockReturnValue({
       text_transform: 'SOURCE/scripts/transformText.js',
       dom_transforms: ['SOURCE/scripts/transformDom.js'],
-      spine_basename: 'chapter'
+      spine_basename: 'chapter',
     }),
     incrementDraftId: vi.fn().mockResolvedValue(1),
-    generateDraftTitle: vi.fn().mockImplementation((base: string, id: number) => `${base} (Draft ${id})`),
-    extractDraftInfo: vi.fn().mockImplementation((title: string) => ({ baseTitle: title, draftId: null }))
-  }))
+    generateDraftTitle: vi
+      .fn()
+      .mockImplementation((base: string, id: number) => `${base} (Draft ${id})`),
+    extractDraftInfo: vi
+      .fn()
+      .mockImplementation((title: string) => ({ baseTitle: title, draftId: null })),
+  })),
 }));
 
 vi.mock('./services/epub/epub-processor.service.js', () => ({
@@ -206,16 +200,16 @@ vi.mock('./services/epub/epub-processor.service.js', () => ({
       filename: 'test.epub',
       fileCount: 3,
       totalSize: 1024,
-      compressedSize: 512
+      compressedSize: 512,
     }),
     unpackEPUB: vi.fn().mockResolvedValue({
       success: true,
       workspaceId: 'unpacked-workspace-123',
       extractedFiles: ['mimetype', 'META-INF/container.xml', 'OEBPS/content.opf'],
       totalSize: 2048,
-      processedFiles: 3
-    })
-  }))
+      processedFiles: 3,
+    }),
+  })),
 }));
 
 describe('EnhancedAppState Integration Tests', () => {
@@ -241,7 +235,7 @@ describe('EnhancedAppState Integration Tests', () => {
       executeTransform: vi.fn(),
       setDebugMode: vi.fn(),
       ping: vi.fn(),
-      cleanup: vi.fn()
+      cleanup: vi.fn(),
     };
 
     appState = new EnhancedAppState(
@@ -268,7 +262,7 @@ describe('EnhancedAppState Integration Tests', () => {
       expect(appState.globalSettings).toEqual({
         theme: 'system',
         locale: 'en',
-        editor_font_size: 14
+        editor_font_size: 14,
       });
     });
 
@@ -315,14 +309,14 @@ describe('EnhancedAppState Integration Tests', () => {
 
     test('hasWorkspace returns correct value', () => {
       expect(appState.hasWorkspace).toBe(true);
-      
+
       appState.workspace = null;
       expect(appState.hasWorkspace).toBe(false);
     });
 
     test('workspaceInfo returns workspace information', () => {
       const info = appState.workspaceInfo;
-      
+
       expect(info).not.toBeNull();
       expect(info?.id).toBe('workspace-123');
       expect(info?.title).toBe('Test Book');
@@ -331,24 +325,24 @@ describe('EnhancedAppState Integration Tests', () => {
 
     test('navigationItems returns spine-based navigation', () => {
       const items = appState.navigationItems;
-      
+
       expect(items).toHaveLength(1);
       expect(items[0]).toEqual({
         id: 'chapter1',
         title: 'chapter1',
         href: 'Text/chapter1.xhtml',
-        order: 0
+        order: 0,
       });
     });
 
     test('availableChapters returns XHTML manifest items', () => {
       const chapters = appState.availableChapters;
-      
+
       expect(chapters).toHaveLength(1);
       expect(chapters[0]).toEqual({
         id: 'chapter1',
         title: 'chapter1',
-        href: 'Text/chapter1.xhtml'
+        href: 'Text/chapter1.xhtml',
       });
     });
   });
@@ -377,7 +371,7 @@ describe('EnhancedAppState Integration Tests', () => {
     test('selectedChapter returns chapter content info', () => {
       appState.selectChapter('chapter1');
       const chapter = appState.selectedChapter;
-      
+
       expect(chapter).not.toBeNull();
       expect(chapter?.id).toBe('chapter1');
       expect(chapter?.href).toBe('Text/chapter1.xhtml');
@@ -395,14 +389,14 @@ describe('EnhancedAppState Integration Tests', () => {
 
     test('currentTheme computed property', () => {
       expect(appState.currentTheme).toBe('system');
-      
+
       appState.updateGlobalSettings({ theme: 'dark' });
       expect(appState.currentTheme).toBe('dark');
     });
 
     test('currentLocale computed property', () => {
       expect(appState.currentLocale).toBe('en');
-      
+
       appState.updateGlobalSettings({ locale: 'fr' });
       expect(appState.currentLocale).toBe('fr');
     });
@@ -429,7 +423,7 @@ describe('EnhancedAppState Integration Tests', () => {
 
     test('isDraftMode computed property', () => {
       expect(appState.isDraftMode).toBe(false);
-      
+
       if (appState.workspaceSettings) {
         appState.workspaceSettings.draft_id = 1;
       }
@@ -457,8 +451,8 @@ describe('EnhancedAppState Integration Tests', () => {
     });
 
     test('unpackEPUB() loads workspace from file', async () => {
-      const mockFile = new File(['mock epub content'], 'test.epub', { 
-        type: 'application/epub+zip' 
+      const mockFile = new File(['mock epub content'], 'test.epub', {
+        type: 'application/epub+zip',
       });
 
       const workspaceId = await appState.unpackEPUB(mockFile);
@@ -496,7 +490,7 @@ describe('EnhancedAppState Integration Tests', () => {
         createWorkspace: vi.fn(),
         loadWorkspace: vi.fn().mockRejectedValue(new Error('Workspace not found')),
         saveWorkspace: vi.fn(),
-        deleteWorkspace: vi.fn()
+        deleteWorkspace: vi.fn(),
       };
 
       // Create new instance with failing service
@@ -514,7 +508,9 @@ describe('EnhancedAppState Integration Tests', () => {
       // Replace the workspaceService with our failing one
       (failingAppState as any).workspaceService = failingWorkspaceService;
 
-      await expect(failingAppState.loadWorkspace('invalid-id')).rejects.toThrow('Workspace not found');
+      await expect(failingAppState.loadWorkspace('invalid-id')).rejects.toThrow(
+        'Workspace not found'
+      );
       expect(failingAppState.errorMessage).toContain('Failed to load workspace');
     });
   });

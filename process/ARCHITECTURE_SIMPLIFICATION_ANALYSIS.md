@@ -11,6 +11,7 @@ The current EDITME.html architecture, while functional, exhibits signs of over-e
 ## Current Architecture Assessment
 
 ### Strengths
+
 - ✅ Clear separation of concerns
 - ✅ Comprehensive error handling
 - ✅ Modern browser API integration
@@ -20,16 +21,19 @@ The current EDITME.html architecture, while functional, exhibits signs of over-e
 ### Identified Weaknesses
 
 #### 1. **Manager Pattern Proliferation**
+
 - **Current State**: 5+ managers with overlapping responsibilities
 - **Problem**: Complex coordination, unclear boundaries, circular dependencies
 - **Impact**: Difficult onboarding, hard to test, maintenance overhead
 
 #### 2. **Multi-Layer State Management**
+
 - **Current State**: Svelte runes + stores + manager caches + component state
 - **Problem**: State synchronization complexity, debugging difficulty
 - **Impact**: Unpredictable state mutations, performance overhead
 
 #### 3. **Excessive Abstraction Layers**
+
 - **Current State**: 5-layer architecture (UI → Logic → Storage → Processing → APIs)
 - **Problem**: Unnecessary indirection, complex data flow
 - **Impact**: Performance overhead, debugging difficulty
@@ -46,7 +50,7 @@ graph TB
         OPFS[OPFS File] -->|Direct Reference| BLOB1[blob: URL]
         BLOB1 -->|No Data Copy| IFRAME[iframe Preview]
     end
-    
+
     subgraph "IndexedDB Limitation: Data Copying Required"
         IDB[IndexedDB Blob] -->|Copy to Memory| BUFFER[ArrayBuffer]
         BUFFER -->|Create Blob| BLOB2[blob: URL]
@@ -56,12 +60,12 @@ graph TB
 
 #### Performance Impact Analysis
 
-| Operation | OPFS | IndexedDB | Benefit |
-|-----------|------|-----------|---------|
-| **Small Files** (< 1MB) | ~5ms | ~15ms | 3x faster |
-| **Medium Files** (1-10MB) | ~20ms | ~150ms | 7.5x faster |
-| **Large Files** (> 10MB) | ~50ms | ~800ms | 16x faster |
-| **Memory Usage** | Zero copy | Full file copy | 50% reduction |
+| Operation                 | OPFS      | IndexedDB      | Benefit       |
+| ------------------------- | --------- | -------------- | ------------- |
+| **Small Files** (< 1MB)   | ~5ms      | ~15ms          | 3x faster     |
+| **Medium Files** (1-10MB) | ~20ms     | ~150ms         | 7.5x faster   |
+| **Large Files** (> 10MB)  | ~50ms     | ~800ms         | 16x faster    |
+| **Memory Usage**          | Zero copy | Full file copy | 50% reduction |
 
 #### XHTML Preview Use Case
 
@@ -88,6 +92,7 @@ async generatePreviewURL_IndexedDB(filePath: string): Promise<string> {
 ### 1. Manager Consolidation Strategy
 
 #### Current Manager Structure
+
 ```
 AppState
 ├── WorkspaceManager
@@ -98,17 +103,18 @@ AppState
 ```
 
 #### Proposed Simplified Structure
+
 ```mermaid
 graph LR
     AS[AppState] --> WM[WorkspaceManager]
     AS --> CM[ContentManager]
-    
+
     subgraph "WorkspaceManager Scope"
         WM --> EPUB[EPUBOperations]
-        WM --> FILES[FileOperations] 
+        WM --> FILES[FileOperations]
         WM --> META[MetadataOperations]
     end
-    
+
     subgraph "ContentManager Scope"
         CM --> TRANS[TransformPipeline]
         CM --> PREV[PreviewGeneration]
@@ -116,27 +122,33 @@ graph LR
 ```
 
 **Benefits:**
+
 - Eliminates manager-to-manager dependencies
 - Clear ownership boundaries (workspace vs content)
 - Reduced coordination complexity
 - Easier testing and mocking
 
 #### Implementation Strategy
+
 ```typescript
 // Consolidated WorkspaceManager
 class WorkspaceManager {
   // File system operations
   async readFile(workspaceId: string, path: string): Promise<ArrayBuffer>;
   async writeFile(workspaceId: string, path: string, content: ArrayBuffer): Promise<void>;
-  
+
   // EPUB operations (previously ManifestManager)
   async getManifest(workspaceId: string): Promise<ManifestItem[]>;
-  async updateManifestItem(workspaceId: string, itemId: string, updates: Partial<ManifestItem>): Promise<void>;
-  
+  async updateManifestItem(
+    workspaceId: string,
+    itemId: string,
+    updates: Partial<ManifestItem>
+  ): Promise<void>;
+
   // Metadata operations (previously MetadataManager)
   async getMetadata(workspaceId: string): Promise<EPUBMetadata>;
   async updateMetadata(workspaceId: string, metadata: Partial<EPUBMetadata>): Promise<void>;
-  
+
   // Spine operations (previously SpineItemManager)
   async getSpineOrder(workspaceId: string): Promise<string[]>;
   async reorderSpine(workspaceId: string, itemIds: string[]): Promise<void>;
@@ -145,11 +157,11 @@ class WorkspaceManager {
 // Focused ContentManager
 class ContentManager {
   constructor(private workspaceManager: WorkspaceManager) {}
-  
+
   // Transform operations
   async transformContent(workspaceId: string, itemId: string): Promise<string>;
   async validateTransforms(workspaceId: string): Promise<ValidationResult[]>;
-  
+
   // Preview operations
   async generatePreview(workspaceId: string, itemId: string): Promise<ContentPreview>;
   async createBlobURL(workspaceId: string, filePath: string): Promise<string>;
@@ -159,6 +171,7 @@ class ContentManager {
 ### 2. Unified State Management (Svelte 5 Optimized)
 
 #### Current State Fragmentation
+
 ```typescript
 // Multiple reactive systems competing
 AppState (Svelte runes - partially implemented)
@@ -170,6 +183,7 @@ AppState (Svelte runes - partially implemented)
 ```
 
 #### Proposed Unified System (Svelte 5 Best Practices)
+
 ```typescript
 export class AppState {
   // Core state using $state runes
@@ -177,7 +191,7 @@ export class AppState {
   workspace = $state<Workspace | null>(null);
   content = $state<ContentState>({ transforms: [], previews: new Map() });
   ui = $state<UIState>({ loading: false, error: null, layout: 'default' });
-  
+
   // Reactive computations using $derived (not getters)
   hasWorkspace = $derived(!!this.workspace);
   manifest = $derived(this.workspace?.manifest || []);
@@ -185,7 +199,7 @@ export class AppState {
   spineOrder = $derived(this.workspace?.spine || []);
   isLoading = $derived(this.ui.loading);
   isWorkspaceReady = $derived(this.hasWorkspace && !this.isLoading);
-  
+
   // Reactive effects for coordination (not imperative methods)
   constructor(private workspaceManager: WorkspaceManager) {
     // Auto-load workspace when ID changes
@@ -194,14 +208,14 @@ export class AppState {
         this.loadWorkspace();
       }
     });
-    
+
     // Clear derived state when workspace changes
     $effect(() => {
       if (!this.workspace) {
         this.selectedItemId = null;
       }
     });
-    
+
     // Auto-save workspace changes
     $effect(() => {
       if (this.workspace && this.hasUnsavedChanges) {
@@ -209,16 +223,16 @@ export class AppState {
       }
     });
   }
-  
+
   // Simplified action methods (reactive effects handle coordination)
   setWorkspaceId(id: string | null) {
     this.workspaceId = id;
     // $effect will handle loading automatically
   }
-  
+
   private async loadWorkspace() {
     if (!this.workspaceId) return;
-    
+
     this.ui = { ...this.ui, loading: true, error: null };
     try {
       this.workspace = await this.workspaceManager.load(this.workspaceId);
@@ -234,34 +248,36 @@ export class AppState {
 ### 3. Layer Architecture Simplification
 
 #### Current: 5-Layer Architecture
+
 ```
 Layer 1: UI Components (Svelte)
-Layer 2: Business Logic (Managers)  
+Layer 2: Business Logic (Managers)
 Layer 3: Storage Systems
 Layer 4: EPUB Processing
 Layer 5: Browser APIs
 ```
 
 #### Proposed: 3-Layer Architecture
+
 ```mermaid
 graph TB
     subgraph "Presentation Layer"
         C[Svelte Components]
         S[Stores/State]
     end
-    
+
     subgraph "Service Layer"
         WS[WorkspaceService]
         CS[ContentService]
         SS[StorageService]
     end
-    
+
     subgraph "Infrastructure Layer"
         FSA[FileStorageAPI]
         ZIP[ZIP Processing]
         TRANS[Transform Engine]
     end
-    
+
     C --> WS
     C --> CS
     WS --> SS
@@ -272,6 +288,7 @@ graph TB
 ```
 
 **Benefits:**
+
 - **Reduced indirection**: 3 layers instead of 5
 - **Clear data flow**: Top-down dependency only
 - **Service pattern**: Familiar, testable, composable
@@ -280,6 +297,7 @@ graph TB
 ### 4. Command Pattern for Complex Operations
 
 #### Current: Manager Method Orchestration
+
 ```typescript
 // Complex coordination across multiple managers
 async importEPUB(file: File) {
@@ -292,6 +310,7 @@ async importEPUB(file: File) {
 ```
 
 #### Proposed: Self-Contained Commands
+
 ```typescript
 interface Command {
   execute(): Promise<void>;
@@ -305,13 +324,13 @@ class ImportEPUBCommand implements Command {
     private workspaceService: WorkspaceService,
     private storageService: StorageService
   ) {}
-  
+
   async execute(): Promise<void> {
     // Self-contained import logic
     // All error handling and rollback included
     // Testable in isolation
   }
-  
+
   async undo(): Promise<void> {
     // Automatic cleanup on failure
   }
@@ -325,14 +344,16 @@ await command.execute();
 ### 5. Repository Pattern for Data Access
 
 #### Current: Manager-Based Data Access
+
 ```typescript
 // Multiple managers handling data operations
-manifestManager.getManifest(id)
-metadataManager.getMetadata(id)  
-spineManager.getSpineOrder(id)
+manifestManager.getManifest(id);
+metadataManager.getMetadata(id);
+spineManager.getSpineOrder(id);
 ```
 
 #### Proposed: Repository Pattern
+
 ```typescript
 interface EPUBRepository {
   // Standard CRUD operations
@@ -340,7 +361,7 @@ interface EPUBRepository {
   findAll(): Promise<EPUB[]>;
   save(epub: EPUB): Promise<void>;
   delete(id: string): Promise<void>;
-  
+
   // Query methods
   findByTitle(title: string): Promise<EPUB[]>;
   findModifiedSince(date: Date): Promise<EPUB[]>;
@@ -348,7 +369,7 @@ interface EPUBRepository {
 
 class EPUBService {
   constructor(private repository: EPUBRepository) {}
-  
+
   // Business logic methods
   async importFromFile(file: File): Promise<EPUB> {
     // Coordinates repository calls
@@ -361,12 +382,14 @@ class EPUBService {
 ## Migration Strategy (Updated for Svelte 5 Alignment)
 
 ### Phase 1a: Manager Consolidation (Low Risk)
+
 1. **Merge related managers** into WorkspaceManager and ContentManager
 2. **Update AppState** to use consolidated managers
 3. **Maintain existing APIs** for backward compatibility
 4. **Update tests** incrementally
 
 ### Phase 1b: Svelte 5 Runes Enhancement (Low Risk, High Value)
+
 1. **Convert getters to $derived** in existing AppState
    ```typescript
    // Replace: get manifest() { return this.workspace?.manifest || []; }
@@ -385,22 +408,26 @@ class EPUBService {
 4. **Update component integration** to use reactive patterns
 
 ### Phase 2: Enhanced State Management (Medium Risk, Svelte 5 Optimized)
+
 1. **Implement enhanced AppState** with full runes integration
 2. **Context-based dependency injection** for components
+
    ```svelte
    <script lang="ts">
      import { getContext } from 'svelte';
      const appState = getContext<AppState>('appState');
-     
+
      // Direct reactive access (no subscriptions needed)
      $: manifest = appState.manifest;
      $: isLoading = appState.isLoading;
    </script>
    ```
+
 3. **Migrate components** to reactive patterns one at a time
 4. **Comprehensive reactive behavior testing**
 
 ### Phase 3: Service Layer Migration (Higher Risk, Long-term Benefits)
+
 1. **Implement service layer** alongside existing managers
 2. **Create command classes** with reactive integration
 3. **Enhanced component composition** with Svelte 5 patterns
@@ -409,6 +436,7 @@ class EPUBService {
 ## Benefits Assessment
 
 ### Immediate Benefits (Phase 1a-1b)
+
 - **Reduced Complexity**: Fewer managers to coordinate
 - **Enhanced Reactivity**: Svelte 5 runes provide better performance and DX
 - **Improved Testing**: Simpler mocking and isolation
@@ -416,12 +444,14 @@ class EPUBService {
 - **Easier Debugging**: Clearer data flow with reactive patterns
 
 ### Medium-term Benefits (Phase 2)
+
 - **Svelte 5 Optimization**: Full leverage of runes system capabilities
 - **Reactive Coordination**: Automatic state synchronization via $effect
 - **Component Simplification**: Context-based dependency injection
 - **Performance Gains**: Optimal reactivity with minimal re-renders
 
 ### Long-term Benefits (Phase 3)
+
 - **Maintainability**: Simpler codebase with clear reactive patterns
 - **Developer Experience**: Idiomatic Svelte 5 development workflow
 - **Performance**: Reduced overhead with optimal reactive architecture
@@ -431,21 +461,25 @@ class EPUBService {
 ## Risks and Mitigation (Updated for Svelte 5)
 
 ### Risk: Reactive Behavior Changes
+
 - **Mitigation**: Comprehensive testing of $derived and $effect patterns
 - **Strategy**: Component-by-component migration with reactive validation
 - **Svelte 5 Specific**: Ensure $effect cleanup and dependency tracking work correctly
 
 ### Risk: Breaking Changes During Migration
+
 - **Mitigation**: Incremental migration with backward compatibility
 - **Strategy**: Feature flags for new runes-based architecture components
 - **Svelte 5 Specific**: Gradual store-to-runes migration path
 
-### Risk: Performance Regression from Reactivity Changes  
+### Risk: Performance Regression from Reactivity Changes
+
 - **Mitigation**: Benchmarking before and after reactive pattern changes
 - **Strategy**: Keep storage backend complexity (justified performance benefit)
 - **Svelte 5 Specific**: Monitor $derived computation efficiency and $effect overhead
 
 ### Risk: Developer Learning Curve
+
 - **Mitigation**: Clear migration documentation and patterns
 - **Strategy**: Team training on Svelte 5 runes system
 - **Svelte 5 Specific**: Establish coding standards for runes usage
@@ -465,7 +499,7 @@ The storage backend complexity should be **maintained** due to proven performanc
 ✅ **The updated architecture is now fully aligned with Svelte 5 best practices:**
 
 1. **$state for reactive state** - Core data uses runes instead of imperative updates
-2. **$derived for computations** - Replaces getters with more efficient reactive computations  
+2. **$derived for computations** - Replaces getters with more efficient reactive computations
 3. **$effect for coordination** - Handles side effects and state synchronization reactively
 4. **Context-based DI** - Components receive dependencies through Svelte's context system
 5. **Minimal store usage** - Eliminates traditional stores in favor of runes-based patterns

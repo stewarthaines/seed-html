@@ -30,10 +30,7 @@ describe('PublishService', () => {
       const modifiedA = new Date('2026-05-12T10:00:00Z');
       const modifiedB = new Date('2026-05-11T09:00:00Z');
 
-      storage.listFiles.mockResolvedValue([
-        'Book A - 2026-05-12.epub',
-        'Book B - 2026-05-11.epub',
-      ]);
+      storage.listFiles.mockResolvedValue(['Book A - 2026-05-12.epub', 'Book B - 2026-05-11.epub']);
       storage.getFileInfo.mockImplementation((_workspaceId: string, path: string) =>
         Promise.resolve(
           path.includes('Book A')

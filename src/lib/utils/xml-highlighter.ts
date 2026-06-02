@@ -134,7 +134,13 @@ export class XMLHighlighter {
         pageProgressionDirection !== ''
       );
 
-      const ctx: RenderContext = { fieldFor, levelFor, spineStructural, highlightValues, highlightTags };
+      const ctx: RenderContext = {
+        fieldFor,
+        levelFor,
+        spineStructural,
+        highlightValues,
+        highlightTags,
+      };
       return { highlightedXML: this.renderElement(doc.documentElement, 0, false, ctx).trimStart() };
     } catch (error) {
       console.warn('XML highlighting failed:', error);
@@ -244,7 +250,9 @@ export class XMLHighlighter {
     // Empty element with no text value (e.g. the certifier-report <link>):
     // highlight the self-closing tag itself.
     if (!value) {
-      return ctx.highlightTags ? `<span class="${tagClass} metadata-line">${selfTag}</span>` : selfTag;
+      return ctx.highlightTags
+        ? `<span class="${tagClass} metadata-line">${selfTag}</span>`
+        : selfTag;
     }
 
     const valueClass = this.valueClassFor(level);

@@ -1,6 +1,6 @@
 /**
  * AudioClipService - Audio clip editing functionality for EPUB audio integration
- * 
+ *
  * Provides precise audio timestamp selection, clip range definition, and seamless
  * integration with EPUB text content. Follows the project's service architecture
  * pattern with dependency injection.
@@ -41,7 +41,11 @@ export interface ClipDirective {
 
 // Error handling
 export class AudioClipServiceError extends Error {
-  constructor(message: string, public code: string, public audioHref?: string) {
+  constructor(
+    message: string,
+    public code: string,
+    public audioHref?: string
+  ) {
     super(message);
     this.name = 'AudioClipServiceError';
   }
@@ -91,12 +95,13 @@ export class AudioClipService {
   async getAvailableAudioFiles(workspaceId: string): Promise<ManifestItem[]> {
     try {
       const workspace = await this.workspaceService.loadWorkspace(workspaceId);
-      
+
       // Filter manifest items to only include audio files
-      const audioFiles = workspace.opf.manifest.filter(item => 
-        item.mediaType && item.mediaType.startsWith('audio/') && item.href && item.href.length > 0
+      const audioFiles = workspace.opf.manifest.filter(
+        item =>
+          item.mediaType && item.mediaType.startsWith('audio/') && item.href && item.href.length > 0
       );
-      
+
       return audioFiles;
     } catch (error) {
       throw new AudioClipServiceError(
@@ -113,15 +118,15 @@ export class AudioClipService {
   async loadAudioFile(workspaceId: string, href: string): Promise<string> {
     try {
       console.log('🎵 Service: Loading audio file - workspaceId:', workspaceId, 'href:', href);
-      
+
       // Get workspace-configured BlobURLManager
       const blobURLManager = this.getBlobURLManager(workspaceId);
-      
+
       // Create blob URL using the audio file path
       // BlobURLManager will handle loading the actual file from workspace
       const blobUrl = await blobURLManager.createBlobURL(href);
       console.log('🎵 Service: BlobURL created:', blobUrl);
-      
+
       return blobUrl;
     } catch (error) {
       console.error('🎵 Service: Audio loading failed - href:', href, 'error:', error);
@@ -132,11 +137,7 @@ export class AudioClipService {
           href
         );
       }
-      throw new AudioClipServiceError(
-        `Audio file not found: ${href}`,
-        'AUDIO_NOT_FOUND',
-        href
-      );
+      throw new AudioClipServiceError(`Audio file not found: ${href}`, 'AUDIO_NOT_FOUND', href);
     }
   }
 
@@ -145,7 +146,7 @@ export class AudioClipService {
    */
   getAudioMetadata(audioElement: HTMLAudioElement): AudioMetadata {
     const duration = isNaN(audioElement.duration) ? 0 : audioElement.duration;
-    
+
     // Extract format from src URL or default
     let format = 'unknown';
     if (audioElement.src) {
@@ -157,7 +158,7 @@ export class AudioClipService {
 
     return {
       duration,
-      format
+      format,
     };
   }
 
@@ -172,7 +173,7 @@ export class AudioClipService {
         'INVALID_CLIP_RANGE'
       );
     }
-    
+
     if (start >= end) {
       throw new AudioClipServiceError(
         `Clip start must be less than end: start=${start}, end=${end}`,
@@ -204,18 +205,18 @@ export class AudioClipService {
     // Regex pattern to match :clip[label]{attributes}
     const clipPattern = /^:clip\[([^\]]*)\]\{([^}]+)\}$/;
     const match = text.match(clipPattern);
-    
+
     if (!match) {
       return null;
     }
 
     const [, label, attributesStr] = match;
-    
+
     // Parse attributes using regex to extract key=value pairs
     const attributes: Record<string, string> = {};
     const attrPattern = /(\w+)=([^\s]+)/g;
     let attrMatch;
-    
+
     while ((attrMatch = attrPattern.exec(attributesStr)) !== null) {
       const [, key, value] = attrMatch;
       attributes[key] = value;
@@ -230,7 +231,7 @@ export class AudioClipService {
       href: attributes.src,
       begin: attributes.begin,
       end: attributes.end,
-      label: label || ''
+      label: label || '',
     };
 
     // Add optional rate if present
@@ -246,19 +247,19 @@ export class AudioClipService {
    */
   formatClipDirective(data: ClipData, template: string): string {
     let result = template;
-    
+
     // Replace placeholders
     result = result.replace('<href>', data.href);
     result = result.replace('<begin>', this.formatTimeString(data.startTime));
     result = result.replace('<end>', this.formatTimeString(data.endTime));
-    
+
     // Handle label - if empty, remove the placeholder entirely
     if (data.label && data.label.trim()) {
       result = result.replace('<label>', data.label.trim());
     } else {
       result = result.replace('<label>', '');
     }
-    
+
     // Handle playback rate
     if (data.playbackRate && data.playbackRate !== 1.0) {
       if (template.includes('<rate>')) {
@@ -275,7 +276,7 @@ export class AudioClipService {
       result = result.replace(' speed=<rate>', '');
       result = result.replace('<rate>', '');
     }
-    
+
     return result;
   }
 
@@ -285,7 +286,9 @@ export class AudioClipService {
   async getTemplate(workspaceId: string): Promise<string> {
     try {
       const epubSettings = await this.settingsService.loadEPUBSettings(workspaceId);
-      return epubSettings.audio_clip_template || ':clip[<label>]{src=<href> begin=<begin> end=<end>}';
+      return (
+        epubSettings.audio_clip_template || ':clip[<label>]{src=<href> begin=<begin> end=<end>}'
+      );
     } catch {
       // Fall back to default if settings can't be loaded
       return ':clip[<label>]{src=<href> begin=<begin> end=<end>}';
@@ -303,11 +306,11 @@ export class AudioClipService {
         'INVALID_TIME_FORMAT'
       );
     }
-    
+
     // Strict regex pattern for h:mm:ss.dd format
     const timePattern = /^(\d+):(\d{2}):(\d{2})\.(\d{2})$/;
     const match = timeString.match(timePattern);
-    
+
     if (!match) {
       throw new AudioClipServiceError(
         `Invalid time format: ${timeString}. Expected h:mm:ss.dd format`,
@@ -316,29 +319,24 @@ export class AudioClipService {
     }
 
     const [, hours, minutes, seconds, centiseconds] = match;
-    
+
     // Convert to numbers and validate ranges
     const h = parseInt(hours, 10);
     const m = parseInt(minutes, 10);
     const s = parseInt(seconds, 10);
     const cs = parseInt(centiseconds, 10);
-    
+
     // Validate time component ranges
     if (m >= 60 || s >= 60 || cs >= 100) {
-      throw new AudioClipServiceError(
-        `Invalid time format: ${timeString}`,
-        'INVALID_TIME_FORMAT'
-      );
+      throw new AudioClipServiceError(`Invalid time format: ${timeString}`, 'INVALID_TIME_FORMAT');
     }
-    
+
     // Additional validation for edge cases that shouldn't pass
-    if (h >= 25) { // Reject obviously invalid hours like 25
-      throw new AudioClipServiceError(
-        `Invalid time format: ${timeString}`,
-        'INVALID_TIME_FORMAT'
-      );
+    if (h >= 25) {
+      // Reject obviously invalid hours like 25
+      throw new AudioClipServiceError(`Invalid time format: ${timeString}`, 'INVALID_TIME_FORMAT');
     }
-    
+
     // Convert to total seconds with centisecond precision
     return h * 3600 + m * 60 + s + cs / 100;
   }
@@ -354,23 +352,26 @@ export class AudioClipService {
     } else {
       totalCentiseconds = Math.round(seconds * 100);
     }
-    
+
     // Special handling for edge cases that should overflow to next time unit
     let cs = totalCentiseconds % 100;
     let totalSecondsFromCentiseconds = Math.floor(totalCentiseconds / 100);
-    
+
     // Only round up .99 for specific edge cases that should overflow
-    if (cs === 99 && (totalSecondsFromCentiseconds % 60 === 59 || totalSecondsFromCentiseconds % 3600 === 3599)) {
+    if (
+      cs === 99 &&
+      (totalSecondsFromCentiseconds % 60 === 59 || totalSecondsFromCentiseconds % 3600 === 3599)
+    ) {
       // Round up to next second/minute/hour
       totalSecondsFromCentiseconds += 1;
       cs = 0;
     }
-    
+
     // Calculate hours, minutes, seconds
     const h = Math.floor(totalSecondsFromCentiseconds / 3600);
     const m = Math.floor((totalSecondsFromCentiseconds % 3600) / 60);
     const s = totalSecondsFromCentiseconds % 60;
-    
+
     // Format with proper padding
     return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${cs.toString().padStart(2, '0')}`;
   }
@@ -380,7 +381,7 @@ export class AudioClipService {
     if (!this.clipRange) {
       throw new AudioClipServiceError('No clip range set', 'INVALID_STATE');
     }
-    
+
     audioElement.currentTime = this.clipRange.start;
     await audioElement.play();
   }
@@ -389,7 +390,7 @@ export class AudioClipService {
     if (!this.clipRange) {
       throw new AudioClipServiceError('No clip range set', 'INVALID_STATE');
     }
-    
+
     const startTime = Math.max(this.clipRange.start, this.clipRange.end - seconds);
     audioElement.currentTime = startTime;
     await audioElement.play();

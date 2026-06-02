@@ -22,11 +22,11 @@ The application currently uses a sophisticated layout system with:
   <svelte:fragment slot="sidebar-spine">
     <!-- Always visible spine items -->
   </svelte:fragment>
-  
+
   <svelte:fragment slot="left-content">
     <!-- Main view content -->
   </svelte:fragment>
-  
+
   <svelte:fragment slot="right-content">
     <!-- Preview/secondary content -->
   </svelte:fragment>
@@ -44,36 +44,42 @@ The application currently uses a sophisticated layout system with:
 ## View Classification and Requirements
 
 ### 1. Workspace View
+
 - **Layout**: Single pane (no split)
 - **Sidebar Content**: None (spine items only)
 - **Preview Content**: N/A
 - **Current State**: ✅ Correctly implemented
 
 ### 2. Metadata View
+
 - **Layout**: Dual pane
 - **Sidebar Content**: None (spine items only)
 - **Preview Content**: Metadata form preview or validation results
 - **Current State**: ⚠️ No preview content implemented
 
 ### 3. Manifest View
+
 - **Layout**: Dual pane
 - **Sidebar Content**: File upload controls, filters, actions
 - **Preview Content**: Selected file preview with metadata
 - **Current State**: ❌ Uses custom split pane implementation
 
 ### 4. Navigation View
+
 - **Layout**: Dual pane
 - **Sidebar Content**: TOC structure outline, navigation tools
 - **Preview Content**: Selected chapter/section preview
 - **Current State**: ❌ Placeholder implementation
 
 ### 5. Spine View (Individual Item)
+
 - **Layout**: Dual pane
 - **Sidebar Content**: Item-specific actions, metadata, transforms
 - **Preview Content**: Live content preview with device emulation
 - **Current State**: ⚠️ No preview content implemented
 
 ### 6. Settings View
+
 - **Layout**: Dual pane
 - **Sidebar Content**: Settings categories, quick actions
 - **Preview Content**: Settings preview, theme demo, help documentation
@@ -105,11 +111,11 @@ The application currently uses a sophisticated layout system with:
   <svelte:fragment slot="sidebar-manifest">
     <ManifestSidebar />
   </svelte:fragment>
-  
+
   <svelte:fragment slot="left-content">
     <ManifestTable />
   </svelte:fragment>
-  
+
   <svelte:fragment slot="right-content">
     <ManifestPreview />
   </svelte:fragment>
@@ -117,6 +123,7 @@ The application currently uses a sophisticated layout system with:
 ```
 
 **Benefits**:
+
 - Leverage PaneForge's accessibility features (keyboard navigation, screen reader support)
 - Consistent pane sizing and persistence with other views
 - Remove ~100 lines of custom split pane code
@@ -136,7 +143,7 @@ The application currently uses a sophisticated layout system with:
     <button class="sidebar-action">Upload Files</button>
     <button class="sidebar-action">Create Text File</button>
   </div>
-  
+
   <div class="sidebar-section">
     <h3>Filters</h3>
     <input type="search" placeholder="Filter files..." />
@@ -155,13 +162,13 @@ The application currently uses a sophisticated layout system with:
 
 **Solution**: Implement view-specific preview components:
 
-| View | Preview Content |
-|------|-----------------|
-| Metadata | Form preview, validation results, EPUB info |
-| Manifest | Selected file content, metadata, thumbnail |
-| Navigation | Chapter/section preview, TOC visualization |
-| Spine | Live content preview, device emulation |
-| Settings | Theme demo, help docs, setting previews |
+| View       | Preview Content                             |
+| ---------- | ------------------------------------------- |
+| Metadata   | Form preview, validation results, EPUB info |
+| Manifest   | Selected file content, metadata, thumbnail  |
+| Navigation | Chapter/section preview, TOC visualization  |
+| Spine      | Live content preview, device emulation      |
+| Settings   | Theme demo, help docs, setting previews     |
 
 ## Technical Implementation
 
@@ -170,10 +177,10 @@ The application currently uses a sophisticated layout system with:
 ```typescript
 // View-specific components
 interface ViewComponents {
-  sidebar?: SvelteComponent;     // Optional sidebar content
-  main: SvelteComponent;         // Main content (left pane)
-  preview?: SvelteComponent;     // Preview content (right pane)
-  header?: SvelteComponent;      // Optional header content
+  sidebar?: SvelteComponent; // Optional sidebar content
+  main: SvelteComponent; // Main content (left pane)
+  preview?: SvelteComponent; // Preview content (right pane)
+  header?: SvelteComponent; // Optional header content
 }
 
 // View configuration
@@ -191,7 +198,7 @@ interface ViewConfig {
 ```svelte
 <script lang="ts">
   import { getViewConfig } from './lib/navigation/view-configs';
-  
+
   $: viewConfig = getViewConfig(currentView);
   $: showPreviewPane = viewConfig.useSplitPane;
 </script>
@@ -203,12 +210,12 @@ interface ViewConfig {
       <svelte:component this={viewConfig.components.sidebar} {props} />
     </svelte:fragment>
   {/if}
-  
+
   <!-- Main content -->
   <svelte:fragment slot="left-content">
     <svelte:component this={viewConfig.components.main} {props} />
   </svelte:fragment>
-  
+
   <!-- Preview content -->
   {#if viewConfig.components.preview}
     <svelte:fragment slot="right-content">
@@ -230,7 +237,7 @@ export const VIEW_CONFIGS: Record<SidebarSection, ViewConfig> = {
       main: WorkspaceView,
     },
   },
-  
+
   manifest: {
     id: 'manifest',
     useSplitPane: true,
@@ -242,7 +249,7 @@ export const VIEW_CONFIGS: Record<SidebarSection, ViewConfig> = {
     defaultPaneSize: 60,
     minPaneSize: 30,
   },
-  
+
   // ... other views
 };
 ```
@@ -268,24 +275,28 @@ The PaneForge library provides comprehensive accessibility support:
 ## Migration Roadmap
 
 ### Immediate (Week 1)
+
 - [ ] Refactor ManifestView to use LayoutManager panes
 - [ ] Remove custom split pane implementation
 - [ ] Implement ManifestSidebar component
 - [ ] Test keyboard navigation and accessibility
 
 ### Short-term (Weeks 2-3)
+
 - [ ] Implement MetadataPreview component
 - [ ] Create SpinePreview component for individual items
 - [ ] Add view configuration registry
 - [ ] Implement dynamic component loading
 
 ### Medium-term (Weeks 4-6)
+
 - [ ] Implement NavigationSidebar and NavigationPreview
 - [ ] Create SettingsSidebar and SettingsPreview
 - [ ] Add responsive pane behavior
 - [ ] Implement pane size persistence per view
 
 ### Long-term (Weeks 7-8)
+
 - [ ] Advanced preview features (device emulation, themes)
 - [ ] Performance optimization for large files
 - [ ] Integration testing across all views
@@ -299,7 +310,7 @@ The PaneForge library provides comprehensive accessibility support:
 interface LayoutManagerProps {
   // Current props
   children: ComponentChildren;
-  
+
   // New props for view-specific configuration
   viewConfig?: ViewConfig;
   paneConfiguration?: PaneConfiguration;
@@ -320,11 +331,11 @@ interface ViewComponent {
   // Required props
   workspaceId: string;
   workspaceManager: WorkspaceManager;
-  
+
   // Optional props
   selectedItemId?: string;
   filterText?: string;
-  
+
   // Event handlers
   onItemSelect?: (item: any) => void;
   onItemEdit?: (item: any) => void;
@@ -335,16 +346,19 @@ interface ViewComponent {
 ## Performance Considerations
 
 ### Lazy Loading
+
 - Load preview components only when needed
 - Implement virtual scrolling for large file lists
 - Cache rendered preview content
 
 ### Memory Management
+
 - Dispose of preview resources when switching views
 - Implement efficient blob URL management
 - Use proper cleanup in component lifecycle
 
 ### Responsive Design
+
 - Collapse to single pane on mobile devices
 - Adjust pane sizes based on screen size
 - Implement touch-friendly resizer handles
@@ -352,16 +366,19 @@ interface ViewComponent {
 ## Testing Strategy
 
 ### Unit Tests
+
 - Test view configuration loading
 - Verify component prop passing
 - Test pane size persistence
 
 ### Integration Tests
+
 - Test view switching with proper cleanup
 - Verify accessibility features work correctly
 - Test responsive behavior across devices
 
 ### Accessibility Tests
+
 - Keyboard navigation testing
 - Screen reader compatibility
 - High contrast mode verification
@@ -369,18 +386,21 @@ interface ViewComponent {
 ## Benefits Summary
 
 ### For Users
+
 - **Consistent Experience**: All views behave similarly
 - **Better Accessibility**: Professional-grade keyboard navigation
 - **Improved Performance**: Efficient pane management
 - **Responsive Design**: Works well on all devices
 
 ### For Developers
+
 - **Code Reuse**: Common pane management logic
 - **Maintainability**: Less custom layout code
 - **Extensibility**: Easy to add new views
 - **Standards Compliance**: Built-in accessibility features
 
 ### For the Project
+
 - **Reduced Complexity**: Eliminate custom split pane implementations
 - **Better Architecture**: Clear separation of concerns
 - **Future-Proof**: Based on stable, well-tested library

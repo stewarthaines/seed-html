@@ -7,6 +7,7 @@ This document describes the public API for the general-purpose text editor store
 The text editor store system provides a factory-based approach for creating isolated, performant stores for text editing components. Each editor gets its own store instance, enabling multiple editors to coexist on screen without state interference.
 
 **Use Cases:**
+
 - Outline/navigation editing (`nav.txt`)
 - Spine chapter source editing (`chapter-1.txt`)
 - Transform script editing (`transformText.js`, `transformDom.js`)
@@ -18,13 +19,11 @@ The text editor store system provides a factory-based approach for creating isol
 ### createTextEditorStore()
 
 ```typescript
-function createTextEditorStore(
-  editorId: string, 
-  initialContent?: string
-): TextEditorStore
+function createTextEditorStore(editorId: string, initialContent?: string): TextEditorStore;
 ```
 
 **Input:**
+
 - `editorId: string` - Unique identifier for this editor instance (e.g., 'outline-nav', 'chapter-1-source')
 - `initialContent?: string` - Optional initial text content (defaults to empty string)
 
@@ -58,9 +57,9 @@ try {
 
 ```typescript
 interface TextEditorState {
-  content: string;          // Current text content
-  isEmpty: boolean;         // Derived: content.trim() === ''
-  lastUpdated: number;      // Timestamp of last content change
+  content: string; // Current text content
+  isEmpty: boolean; // Derived: content.trim() === ''
+  lastUpdated: number; // Timestamp of last content change
 }
 ```
 
@@ -100,7 +99,8 @@ updateContent(newContent: string): void
 
 **Output:** None
 
-**Side Effects:** 
+**Side Effects:**
+
 - Updates store state with new content (only if input is a string)
 - Recalculates `isEmpty` flag
 - Updates `lastUpdated` timestamp
@@ -115,7 +115,7 @@ updateContent(newContent: string): void
 outlineStore.updateContent('# New Outline\n\nChapter 1...');
 
 // Empty content triggers isEmpty flag
-outlineStore.updateContent('');  // isEmpty becomes true
+outlineStore.updateContent(''); // isEmpty becomes true
 ```
 
 #### reset()
@@ -129,6 +129,7 @@ reset(): void
 **Output:** None
 
 **Side Effects:**
+
 - Clears content to empty string
 - Sets `isEmpty` to true
 - Updates `lastUpdated` timestamp
@@ -169,19 +170,19 @@ await saveToFile(currentText);
 <!-- TextEditor.svelte -->
 <script>
   import { createTextEditorStore } from '../stores/text-editor-store.js';
-  
+
   export let editorId;
   export let initialContent = '';
   export let placeholder = '';
-  
+
   // Create store for this editor instance
   const store = createTextEditorStore(editorId, initialContent);
-  
+
   let textareaValue = '';
-  
+
   // Subscribe to store updates
   $: textareaValue = $store.content;
-  
+
   // Handle textarea input with debouncing
   let debounceTimer;
   function handleInput(event) {
@@ -190,23 +191,18 @@ await saveToFile(currentText);
       store.updateContent(event.target.value);
     }, 300);
   }
-  
+
   // Dispatch lightweight change events
   $: if ($store.lastUpdated) {
     dispatch('contentChanged', {
       editorId,
       timestamp: $store.lastUpdated,
-      isEmpty: $store.isEmpty
+      isEmpty: $store.isEmpty,
     });
   }
 </script>
 
-<textarea
-  bind:value={textareaValue}
-  on:input={handleInput}
-  {placeholder}
-  class="text-editor"
-/>
+<textarea bind:value={textareaValue} on:input={handleInput} {placeholder} class="text-editor" />
 ```
 
 ### Multi-Editor Scenario
@@ -216,18 +212,18 @@ await saveToFile(currentText);
 <script>
   import { createTextEditorStore } from '../stores/text-editor-store.js';
   import TextEditor from './TextEditor.svelte';
-  
+
   export let chapterId;
   export let transformScriptId;
-  
+
   // Create separate stores for each editor
   const chapterStore = createTextEditorStore(`chapter-${chapterId}-source`);
   const transformStore = createTextEditorStore(`transform-${transformScriptId}`);
-  
+
   // Handle changes from either editor
   function handleEditorChange(event) {
     const { editorId, isEmpty } = event.detail;
-    
+
     if (editorId.includes('chapter') && !isEmpty) {
       // Process chapter content
       processChapterContent(chapterStore.getContent());
@@ -242,13 +238,13 @@ await saveToFile(currentText);
   <div class="left-pane">
     <h3>Chapter Source</h3>
     <TextEditor
-      editorId="chapter-{chapterId}-source" 
+      editorId="chapter-{chapterId}-source"
       editorStore={chapterStore}
       placeholder="Enter chapter content..."
       on:contentChanged={handleEditorChange}
     />
   </div>
-  
+
   <div class="right-pane">
     <h3>Transform Script</h3>
     <TextEditor
@@ -267,9 +263,9 @@ await saveToFile(currentText);
 <script>
   import { onDestroy } from 'svelte';
   import { createTextEditorStore } from '../stores/text-editor-store.js';
-  
+
   const store = createTextEditorStore('temp-editor');
-  
+
   // Clean up when component is destroyed
   onDestroy(() => {
     store.reset(); // Optional: clear content
@@ -285,8 +281,8 @@ await saveToFile(currentText);
 ```typescript
 // Editor that loads from and saves to workspace files
 async function createFileBackedEditor(
-  editorId: string, 
-  workspaceId: string, 
+  editorId: string,
+  workspaceId: string,
   filePath: string,
   workspaceManager: IWorkspaceManager
 ) {
@@ -297,9 +293,9 @@ async function createFileBackedEditor(
   } catch {
     // File doesn't exist, start with empty content
   }
-  
+
   const store = createTextEditorStore(editorId, initialContent);
-  
+
   // Auto-save to file when content changes (debounced)
   let saveTimeout;
   store.subscribe(state => {
@@ -312,7 +308,7 @@ async function createFileBackedEditor(
       }
     }, 1000); // 1 second debounce for file saves
   });
-  
+
   return store;
 }
 ```
@@ -323,7 +319,7 @@ async function createFileBackedEditor(
 // Editor that processes content through transform pipeline
 function createTransformEditor(editorId: string, transformer: TransformPipeline) {
   const store = createTextEditorStore(editorId);
-  
+
   // Transform content whenever it changes
   store.subscribe(async state => {
     if (!state.isEmpty) {
@@ -336,7 +332,7 @@ function createTransformEditor(editorId: string, transformer: TransformPipeline)
       }
     }
   });
-  
+
   return store;
 }
 ```
@@ -344,17 +340,20 @@ function createTransformEditor(editorId: string, transformer: TransformPipeline)
 ## Performance Characteristics
 
 **Memory Efficiency:**
+
 - Each store instance holds only necessary state (content, isEmpty, timestamp)
 - No duplicate content storage across components
 - Automatic garbage collection when editors are destroyed
 
 **Update Performance:**
+
 - Immediate, synchronous store updates (no built-in debouncing)
 - Debouncing is handled at the component level, not in the store
 - Derived `isEmpty` calculation is lightweight
 - Subscribers receive immediate notifications on state changes
 
 **Multi-Editor Scalability:**
+
 - Independent store instances prevent cross-contamination
 - Each editor only subscribes to its own store
 - No global state polling or complex coordination needed
@@ -420,6 +419,7 @@ export type EditorId = string;
 ## Testing Considerations
 
 **Unit Testing:**
+
 - Test store creation with various `editorId` and `initialContent` values
 - Test duplicate `editorId` error handling (should throw error)
 - Test `updateContent()` method with different input types (string, null, undefined, number, object)
@@ -430,6 +430,7 @@ export type EditorId = string;
 - Test store isolation (multiple stores don't interfere with each other)
 
 **Integration Testing:**
+
 - Test multiple stores coexisting without interference
 - Test component integration with store subscription/unsubscription
 - Test debounced content updates in components (store updates are immediate)
@@ -437,6 +438,7 @@ export type EditorId = string;
 - Test store cleanup on component destruction (automatic garbage collection)
 
 **Performance Testing:**
+
 - Test with large content strings (book chapter size)
 - Test rapid content updates (immediate store updates, no debouncing)
 - Test synchronous subscriber notification performance

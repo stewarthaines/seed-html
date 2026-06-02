@@ -100,7 +100,6 @@ This demo showcases the complete EPUB workflow with SOURCE.zip integration, demo
       const clearLogsButton = canvas.getByText('🧹 Clear Logs');
       await userEvent.click(clearLogsButton);
       await new Promise(resolve => setTimeout(resolve, 500));
-
     } catch (error) {
       console.log('EPUB integration demo play function failed:', error);
       // Continue to show current state
@@ -145,7 +144,6 @@ This demo showcases the complete EPUB workflow with SOURCE.zip integration, demo
       // Step 6: Final validation of reset workspace
       await userEvent.click(validateButton);
       await new Promise(resolve => setTimeout(resolve, 1000));
-
     } catch (error) {
       console.log('EPUB integration workflow demo failed:', error);
     }
@@ -167,7 +165,7 @@ This demo showcases the complete EPUB workflow with SOURCE.zip integration, demo
       // 2. Package to EPUB (SOURCE.zip created)
       // 3. Unpack EPUB (SOURCE.zip extracted)
       // 4. Verify integrity
-      
+
       const refreshButton = canvas.getByText('🔄 Refresh Info');
       await userEvent.click(refreshButton);
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -179,7 +177,6 @@ This demo showcases the complete EPUB workflow with SOURCE.zip integration, demo
       // The demo would show the complete integration workflow
       // In a real scenario, we would unpack the created EPUB
       // to demonstrate the SOURCE.zip extraction process
-      
     } catch (error) {
       console.log('Round-trip integration demo failed:', error);
     }

@@ -186,7 +186,7 @@ class SampleContentGenerator {
 
     const isRightToLeft = this.i18n.isRTL(locale);
     const title = this.i18n.translate('sample.book.title');
-    
+
     return { title, isRTL: isRightToLeft };
   }
 }
@@ -195,27 +195,33 @@ class SampleContentGenerator {
 ### Service Methods
 
 #### `translate(key: string, params?: Record<string, any>): string`
+
 - Non-reactive translation function
 - Same as standalone `translate` function
 - Supports parameter interpolation
 
 #### `getCurrentLocale(): string`
+
 - Returns current locale code
 - Non-reactive version of `currentLocale` store
 
 #### `getAvailableLocales(): LocaleConfig[]`
+
 - Returns array of available locale configurations
 - Includes locale code, name, and language direction
 
 #### `hasTranslation(locale: string, key: string): boolean`
+
 - Checks if a translation exists for specific locale and key
 - Returns `false` if locale or key not found
 
 #### `isLocaleSupported(locale: string): boolean`
+
 - Checks if locale is supported by the application
 - Returns `true` for all 7 configured languages
 
 #### `isRTL(locale: string): boolean`
+
 - Checks if locale uses right-to-left text direction
 - Returns `true` for Arabic and Hebrew
 
@@ -226,10 +232,7 @@ The unified service is designed for dependency injection patterns:
 ```typescript
 // Constructor injection
 class WorkspaceManager {
-  constructor(
-    config?: WorkspaceConfig,
-    contentGenerator?: SampleContentGenerator
-  ) {
+  constructor(config?: WorkspaceConfig, contentGenerator?: SampleContentGenerator) {
     this.contentGenerator = contentGenerator || new SampleContentGenerator(i18nService);
   }
 }

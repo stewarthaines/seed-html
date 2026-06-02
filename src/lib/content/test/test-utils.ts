@@ -7,14 +7,6 @@
 
 import { expect } from 'vitest';
 
-
-
-
-
-
-
-
-
 /**
  * Create EPUBMetadata type mock for testing (based on EPUB spec)
  */
@@ -118,8 +110,6 @@ export function expectValidationResult(
     expect(actual.emptyKeys).toHaveLength(emptyKeys.length);
   }
 }
-
-
 
 /**
  * Expected sample content keys for validation testing

@@ -11,15 +11,17 @@ This architecture provides a simple, spike-inspired approach to spine item editi
 ## Editor Layout
 
 ### Basic Mode: Single Editor Pane
+
 - **Single editor pane** with dropdown to select file type:
   - Text content (SOURCE/text/chapter1.txt)
-  - CSS stylesheets (OEBPS/Styles/*.css)
-  - JavaScript files (OEBPS/Scripts/*.js)
-  - Transform scripts (SOURCE/scripts/*.js)
+  - CSS stylesheets (OEBPS/Styles/\*.css)
+  - JavaScript files (OEBPS/Scripts/\*.js)
+  - Transform scripts (SOURCE/scripts/\*.js)
 - **Unified preview pane** showing final XHTML with all changes applied
 - **Real-time updates** with 300ms debounce for all file types
 
 ### Enhanced Mode: Dual Editor Panes
+
 - **Toggle button** in pane header to switch between 1 or 2 editors
 - **Two stacked editor panes**, each with own file dropdown
 - **Common use cases**:
@@ -59,7 +61,7 @@ src/lib/
 export class TransformPipeline {
   private iframe: HTMLIFrameElement;
   private extensions = new Map<string, string>(); // extension path -> blob URL
-  
+
   constructor(
     private workspaceId: string,
     private fileStorage: FileStorageAPI,
@@ -71,16 +73,16 @@ export class TransformPipeline {
   // Execute the transform pipeline: text → transform text → transform DOM
   async executeTransform(plainText: string): Promise<TransformResult> {
     const transformScripts = await this.loadTransformScripts();
-    
+
     const result = await this.sendToIframe({
       type: 'EXECUTE_TRANSFORM',
       payload: {
         plainText,
         textTransform: transformScripts.textTransform,
-        domTransforms: transformScripts.domTransforms
-      }
+        domTransforms: transformScripts.domTransforms,
+      },
     });
-    
+
     return result;
   }
 
@@ -88,7 +90,7 @@ export class TransformPipeline {
   private async loadTransformScripts(): Promise<TransformScripts> {
     const settings = await this.loadSettings();
     const scripts: TransformScripts = {};
-    
+
     // Load text transform script (0 or 1)
     if (settings.transform_pipeline?.text_transform) {
       scripts.textTransform = await this.fileStorage.readTextFile(
@@ -96,7 +98,7 @@ export class TransformPipeline {
         `SOURCE/scripts/${settings.transform_pipeline.text_transform}`
       );
     }
-    
+
     // Load DOM transform scripts (0 or many, in sequence)
     if (settings.transform_pipeline?.dom_transforms) {
       scripts.domTransforms = [];
@@ -108,7 +110,7 @@ export class TransformPipeline {
         scripts.domTransforms.push(scriptContent);
       }
     }
-    
+
     return scripts;
   }
 
@@ -122,10 +124,10 @@ export class TransformPipeline {
           resolve(event.data.result);
         }
       };
-      
+
       window.addEventListener('message', handler);
       this.iframe.contentWindow?.postMessage({ ...message, messageId }, '*');
-      
+
       // Simple timeout
       setTimeout(() => {
         window.removeEventListener('message', handler);
@@ -146,7 +148,7 @@ export class PreviewManager {
     text: '',
     css: '',
     javascript: '',
-    metadata: {} as ChapterMetadata
+    metadata: {} as ChapterMetadata,
   };
 
   constructor(
@@ -174,7 +176,7 @@ export class PreviewManager {
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
     }
-    
+
     this.debounceTimer = setTimeout(() => {
       this.renderPreview();
     }, 300); // Same as spike
@@ -198,13 +200,13 @@ export class PreviewManager {
           this.currentContent.javascript,
           this.currentContent.metadata
         );
-        
+
         // Save XHTML as spine item content to manifest
         await this.saveXHTMLToManifest(xhtml);
-        
+
         // Process XHTML for blob URL substitution (preview only)
         const processedXHTML = await this.blobURLManager.processXHTMLForPreview(xhtml);
-        
+
         this.onPreviewUpdate(processedXHTML);
       } else {
         this.onError(transformResult.error);
@@ -254,11 +256,7 @@ export class PreviewManager {
     try {
       // Save XHTML as the spine item's content in the EPUB structure
       const spineItemPath = `OEBPS/Text/${this.spineItemId}.xhtml`;
-      await this.workspaceService.writeFile(
-        this.workspaceId,
-        spineItemPath,
-        xhtml
-      );
+      await this.workspaceService.writeFile(this.workspaceId, spineItemPath, xhtml);
     } catch (error) {
       // Log manifest save errors but don't block preview
       console.warn('Failed to save XHTML to manifest:', error);
@@ -267,9 +265,9 @@ export class PreviewManager {
 
   // Generate complete XHTML document (like the spike)
   private generateXHTML(
-    transformedContent: string, 
-    css: string, 
-    javascript: string, 
+    transformedContent: string,
+    css: string,
+    javascript: string,
     metadata: ChapterMetadata
   ): string {
     return `<?xml version="1.0" encoding="utf-8"?>
@@ -287,7 +285,6 @@ export class PreviewManager {
 </html>`;
   }
 
-
   // Cleanup resources when editor is closed
   cleanup(): void {
     this.blobURLManager.cleanup();
@@ -295,7 +292,8 @@ export class PreviewManager {
   }
 }
 ```
-```
+
+````
 
 ### 3. Spine Item Editor Component
 
@@ -303,7 +301,7 @@ export class PreviewManager {
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import type { ChapterMetadata } from '$lib/types';
-  
+
   export let workspaceId: string;
   export let spineItemId: string;
   export let metadata: ChapterMetadata;
@@ -354,10 +352,10 @@ export class PreviewManager {
       const textContent = await fileStorage.readTextFile(workspaceId, `SOURCE/text/${spineItemId}.txt`);
       const cssContent = await fileStorage.readTextFile(workspaceId, `OEBPS/Styles/${spineItemId}.css`);
       const jsContent = await fileStorage.readTextFile(workspaceId, `OEBPS/Scripts/${spineItemId}.js`);
-      
+
       pane1Content = textContent;
       pane2Content = cssContent;
-      
+
       // Update preview manager
       previewManager.updateContent('text', textContent);
       previewManager.updateContent('css', cssContent);
@@ -371,11 +369,11 @@ export class PreviewManager {
   function handleContentChange(paneIndex: 1 | 2, content: string): void {
     const fileType = paneIndex === 1 ? pane1File : pane2File;
     const contentType = getContentType(fileType);
-    
+
     if (contentType) {
       previewManager.updateContent(contentType, content);
     }
-    
+
     // Auto-save
     debounceAutoSave(paneIndex, content);
   }
@@ -451,7 +449,7 @@ export class PreviewManager {
     <div class="preview-header">
       <h3>Preview</h3>
     </div>
-    
+
     {#if errors.length > 0}
       <div class="error-panel">
         {#each errors as error}
@@ -462,9 +460,9 @@ export class PreviewManager {
         {/each}
       </div>
     {/if}
-    
+
     <div class="preview-content">
-      <iframe 
+      <iframe
         srcdoc={previewHtml}
         title="Preview"
         class="preview-iframe"
@@ -586,26 +584,30 @@ export class PreviewManager {
     border: none;
   }
 </style>
-```
+````
 
 ## Key Design Principles
 
 ### 1. Simplicity Over Complexity
+
 - **Direct approach**: No abstract interfaces or complex dependency injection
 - **Minimal layers**: Transform pipeline → Preview manager → Editor component
 - **Simple communication**: Basic iframe postMessage (like the spike)
 
 ### 2. Real-Time Feedback
+
 - **300ms debounce** for all content changes (matching spike performance)
 - **Immediate preview updates** for text, CSS, JavaScript, and transform script changes
 - **Clear error display** when transforms fail (like spike error panel)
 
 ### 3. Unified Preview Model
+
 - **Single XHTML output** that combines all file types
 - **All edits feed into same preview** regardless of which pane they come from
 - **Complete document preview** including CSS styles and JavaScript functionality
 
 ### 4. Progressive Enhancement
+
 - **Start with single pane** for basic editing
 - **Add dual pane** for advanced workflows
 - **No mode complexity** - each pane simply shows a different file
@@ -613,6 +615,7 @@ export class PreviewManager {
 ## Transform Pipeline Integration
 
 ### Extension Loading
+
 ```typescript
 // Extensions loaded via ExtensionManager
 const extensions = await extensionManager.listWorkspaceExtensions(workspaceId);
@@ -623,19 +626,25 @@ for (const extension of extensions) {
 ```
 
 ### Transform Execution (Simple, Like Spike)
+
 ```typescript
 // Execute in iframe (same pattern as spike)
 const result = executeTransform(plainText);
 
 // Text transform
 if (textTransformScript) {
-  html = new Function('plainText', textTransformScript + '; return transformText(plainText);')(html);
+  html = new Function('plainText', textTransformScript + '; return transformText(plainText);')(
+    html
+  );
 }
 
 // DOM transforms (in sequence)
 for (const domTransformScript of domTransformScripts) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
-  const transformedDoc = new Function('document', domTransformScript + '; return transformDom(document);')(doc);
+  const transformedDoc = new Function(
+    'document',
+    domTransformScript + '; return transformDom(document);'
+  )(doc);
   html = transformedDoc.body.innerHTML;
 }
 ```
@@ -657,11 +666,13 @@ This seamless integration ensures the editor works correctly regardless of how i
 ## Benefits of This Approach
 
 ### ✅ **Maintains Spike Simplicity**
+
 - Same mental model as the working spike
 - Direct iframe communication without complex protocols
 - Simple debounced updates and error handling
 
 ### ✅ **Adds Production Features**
+
 - Multi-file editing with intuitive dropdown selection
 - Service layer integration (WorkspaceService, FileStorageAPI)
 - Extension loading through ExtensionManager
@@ -669,6 +680,7 @@ This seamless integration ensures the editor works correctly regardless of how i
 - Seamless blob URL management for single-file deployment
 
 ### ✅ **Optimal User Experience**
+
 - Real-time preview for all file types
 - Dual-pane editing for complex workflows
 - Clear error feedback without interrupting flow
@@ -676,6 +688,7 @@ This seamless integration ensures the editor works correctly regardless of how i
 - Assets work correctly in preview regardless of deployment method
 
 ### ✅ **Maintainable Architecture**
+
 - ~90% as simple as the spike
 - Easy to understand and debug
 - No over-engineering or enterprise patterns

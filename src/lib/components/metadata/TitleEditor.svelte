@@ -55,8 +55,7 @@
   const updateEntry = (index: number, patch: Partial<TitleEntry>) =>
     saveTitles(additionalTitles.map((entry, i) => (i === index ? { ...entry, ...patch } : entry)));
   const addEntry = () => saveTitles([...additionalTitles, { value: '', type: 'subtitle' }]);
-  const removeEntry = (index: number) =>
-    saveTitles(additionalTitles.filter((_, i) => i !== index));
+  const removeEntry = (index: number) => saveTitles(additionalTitles.filter((_, i) => i !== index));
 </script>
 
 <TextMetadataField

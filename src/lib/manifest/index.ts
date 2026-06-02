@@ -1,6 +1,6 @@
 /**
  * ManifestManager Public API Exports
- * 
+ *
  * Complete public interface for EPUB manifest management and content operations.
  */
 
@@ -21,7 +21,7 @@ export type {
   SourceItem,
   ValidationResult,
   MediaTypeCategories,
-  MediaTypeDefinition
+  MediaTypeDefinition,
 } from './types.js';
 
 // Error classes
@@ -32,5 +32,5 @@ export {
   DuplicateItemError,
   ValidationError,
   StorageQuotaExceededError,
-  ContentTooBigError
+  ContentTooBigError,
 } from './types.js';

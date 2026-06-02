@@ -20,11 +20,13 @@ This implementation strictly follows the project's established Storybook pattern
 ### Leveraging Existing Infrastructure
 
 **Browser Testing**: Uses existing `@vitest/browser` + Playwright configuration in `.storybook/vitest.config.ts`
+
 - Chromium: OPFS-sync (http), IndexedDB (file:// protocol)
 - Firefox: OPFS-sync support
 - Safari/Webkit: OPFS-async (http and file:// protocol)
 
 **Storage Architecture**: Tests real storage backends, not mocks
+
 - Feature detection validates capabilities per browser
 - Fallback chain: OPFS-sync → OPFS-async → IndexedDB
 - Authentic performance characteristics per backend
@@ -88,20 +90,20 @@ src/stories/
   async function initializeBackends() {
     try {
       addLog('info', 'Initializing storage backend...');
-      
+
       // Initialize storage with feature detection
       storageManager = new StorageManager();
       await storageManager.init();
-      
+
       // Initialize workspace manager with real backend
       workspaceManager = new WorkspaceManager(storageManager);
       contentGenerator = new SampleContentGenerator();
-      
+
       // Detect actual storage backend being used
       const backendInfo = await storageManager.getBackendInfo();
       addLog('success', `Storage backend initialized: ${backendInfo.type}`);
       currentBackend = backendInfo.type;
-      
+
       initialized = true;
     } catch (err) {
       error = err instanceof Error ? err.message : 'Backend initialization failed';
@@ -124,7 +126,7 @@ src/stories/
         creator: [{ name: 'Test Author', role: 'aut' }],
         language: 'en'
       };
-      
+
       // This is the exact call that's failing in production
       const workspaceId = await workspaceManager.createLocalizedEPUBWorkspace(metadata, 'en');
       addLog('success', `Workspace created: ${workspaceId}`);
@@ -134,10 +136,10 @@ src/stories/
       const allFiles = await storageManager.listFiles(workspaceId);
       addLog('info', `Total files in workspace: ${allFiles.length}`);
       addLog('info', `All files: ${allFiles.join(', ')}`);
-      
+
       // Look specifically for XHTML files in OEBPS/Text/
       const xhtmlFiles = allFiles.filter(f => f.includes('OEBPS/Text/') && f.endsWith('.xhtml'));
-      
+
       if (xhtmlFiles.length === 0) {
         // This is the current bug - manifest entries exist but no XHTML files
         const manifestFiles = allFiles.filter(f => f.includes('manifest') || f.includes('.opf'));
@@ -145,7 +147,7 @@ src/stories/
         addLog('error', 'But NO XHTML FILES FOUND in OEBPS/Text/');
         throw new Error('NO XHTML FILES FOUND - This is the bug we\'re investigating!');
       }
-      
+
       addLog('success', `Found ${xhtmlFiles.length} XHTML files: ${xhtmlFiles.join(', ')}`);
 
       // 3. Test file content and preview functionality
@@ -153,20 +155,20 @@ src/stories/
       for (const fileName of xhtmlFiles) {
         addLog('action', `Reading and validating file: ${fileName}`);
         const content = await storageManager.readTextFile(workspaceId, fileName);
-        
+
         if (!content || content.length === 0) {
           throw new Error(`File ${fileName} exists in listing but is empty when read!`);
         }
-        
+
         // Validate XHTML structure
         const parser = new DOMParser();
         const doc = parser.parseFromString(content, 'text/xml');
         const parseError = doc.querySelector('parsererror');
-        
+
         if (parseError) {
           throw new Error(`File ${fileName} contains invalid XHTML: ${parseError.textContent}`);
         }
-        
+
         totalSize += content.length;
         addLog('success', `✅ ${fileName}: ${content.length} bytes, valid XHTML`);
       }
@@ -202,7 +204,7 @@ src/stories/
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Unknown error';
       addLog('error', `❌ Integration test FAILED: ${errorMsg}`);
-      
+
       // Record failure with detailed error info
       testResults = [...testResults, {
         backend: currentBackend,
@@ -228,21 +230,21 @@ src/stories/
 
 This is the opening chapter of our story.
 
-## A New Beginning  
+## A New Beginning
 The adventure starts here with some **bold text** and *italic text*.`;
 
       // Load transform scripts from workspace SOURCE/ directory
       addLog('action', 'Loading transformText.js and transformDom.js from workspace SOURCE/...');
-      
+
       // Note: Transform scripts are copied from assets/universal during workspace creation
       // but must be loaded dynamically from the workspace SOURCE/ directory, not assets
       const transformTextScript = await storageManager.readTextFile(workspaceId, 'SOURCE/transformText.js');
       const transformDomScript = await storageManager.readTextFile(workspaceId, 'SOURCE/transformDom.js');
-      
+
       if (!transformTextScript || !transformDomScript) {
         throw new Error('Transform scripts not found in workspace SOURCE/ directory');
       }
-      
+
       addLog('success', 'Transform pipeline test completed');
 
     } catch (err) {
@@ -259,7 +261,7 @@ The adventure starts here with some **bold text** and *italic text*.`;
     testResults = [];
     error = null;
     initialized = false;
-    
+
     // Clean up any existing test workspaces
     try {
       if (storageManager) {
@@ -277,7 +279,7 @@ The adventure starts here with some **bold text** and *italic text*.`;
     } catch {
       // Storage may not be initialized, ignore
     }
-    
+
     await initializeBackends();
     addLog('success', 'Demo reset complete');
   }
@@ -348,17 +350,17 @@ The adventure starts here with some **bold text** and *italic text*.`;
           </div>
         </div>
       </div>
-      
+
       <div class="button-group">
-        <button 
-          on:click={runCompleteWorkspaceCreation} 
+        <button
+          on:click={runCompleteWorkspaceCreation}
           disabled={isRunning}
           class="primary-button"
         >
           {isRunning ? 'Running...' : 'Run Complete Integration Test'}
         </button>
-        <button 
-          on:click={runTransformPipelineTest} 
+        <button
+          on:click={runTransformPipelineTest}
           disabled={isRunning}
           class="secondary-button"
         >
@@ -513,10 +515,10 @@ This story serves as both debugging tool and regression test:
 - Validates fixes with real storage backends
 - Provides cross-browser compatibility testing
 - Enables continuous integration testing
-          `
-        }
-      }
-    }
+          `,
+        },
+      },
+    },
   });
 </script>
 
@@ -580,9 +582,9 @@ Tests storage backend behavior across different browsers:
 - **Safari**: OPFS-async + IndexedDB fallback
 
 Use Storybook's browser testing to run this story across all supported browsers.
-        `
-      }
-    }
+        `,
+      },
+    },
   }}
   play={async ({ canvasElement }) => {
     const { within } = await import('@testing-library/dom');
@@ -621,7 +623,10 @@ Use Storybook's browser testing to run this story across all supported browsers.
 ```css
 /* Integration Demo Styling */
 .integration-demo {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   max-width: 1200px;
   margin: 0 auto;
   padding: 1rem;
@@ -636,7 +641,7 @@ Use Storybook's browser testing to run this story across all supported browsers.
   padding: 1rem;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .demo-header h2 {
@@ -655,7 +660,7 @@ Use Storybook's browser testing to run this story across all supported browsers.
   padding: 3rem;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .demo-loading h2 {
@@ -674,8 +679,12 @@ Use Storybook's browser testing to run this story across all supported browsers.
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Error States */
@@ -703,7 +712,7 @@ Use Storybook's browser testing to run this story across all supported browsers.
   border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .status-info {
@@ -807,7 +816,7 @@ Use Storybook's browser testing to run this story across all supported browsers.
   border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .test-results h3 {
@@ -892,7 +901,7 @@ Use Storybook's browser testing to run this story across all supported browsers.
   background: white;
   border-radius: 8px;
   padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .console-header {
@@ -932,7 +941,8 @@ Use Storybook's browser testing to run this story across all supported browsers.
 .log-entries {
   background: #1f2937;
   color: #f9fafb;
-  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-family:
+    'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
   font-size: 0.875rem;
   line-height: 1.5;
   padding: 1rem;
@@ -992,20 +1002,20 @@ Use Storybook's browser testing to run this story across all supported browsers.
   .integration-demo {
     padding: 0.5rem;
   }
-  
+
   .status-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .button-group {
     flex-direction: column;
   }
-  
+
   .result-header {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .result-info {
     grid-template-columns: 1fr;
     width: 100%;
@@ -1018,7 +1028,7 @@ Use Storybook's browser testing to run this story across all supported browsers.
   .console-log {
     page-break-inside: avoid;
   }
-  
+
   .log-entries {
     height: auto;
     max-height: 300px;
@@ -1034,23 +1044,23 @@ Use Storybook's browser testing to run this story across all supported browsers.
 // Test configuration for different browsers
 const BROWSER_CONFIGS = {
   chromium: {
-    opfs_sync: true,     // http protocol only
-    opfs_async: false,   // Not supported
-    indexeddb: true,     // file:// protocol fallback
-    performance: 'optimal'
+    opfs_sync: true, // http protocol only
+    opfs_async: false, // Not supported
+    indexeddb: true, // file:// protocol fallback
+    performance: 'optimal',
   },
   firefox: {
-    opfs_sync: true,     // Supported
-    opfs_async: false,   // Not supported
-    indexeddb: true,     // Fallback
-    performance: 'good'
+    opfs_sync: true, // Supported
+    opfs_async: false, // Not supported
+    indexeddb: true, // Fallback
+    performance: 'good',
   },
   webkit: {
-    opfs_sync: false,    // Not supported
-    opfs_async: true,    // http and file:// protocols
-    indexeddb: true,     // Fallback
-    performance: 'acceptable'
-  }
+    opfs_sync: false, // Not supported
+    opfs_async: true, // http and file:// protocols
+    indexeddb: true, // Fallback
+    performance: 'acceptable',
+  },
 };
 ```
 
@@ -1066,11 +1076,11 @@ export default {
       name: 'chromium', // Also: firefox, webkit
       provider: 'playwright',
       headless: false, // Set to true for CI
-      api: { port: 63315 }
+      api: { port: 63315 },
     },
     testTimeout: 60000, // Extended timeout for storage operations
-    setupFiles: ['./src/stories/integration-test-setup.ts']
-  }
+    setupFiles: ['./src/stories/integration-test-setup.ts'],
+  },
 };
 ```
 
@@ -1082,7 +1092,7 @@ import { beforeEach, afterEach } from 'vitest';
 beforeEach(async () => {
   // Clear all storage backends before each test
   console.log('🧹 Clearing storage backends...');
-  
+
   // Clear service workers
   if ('serviceWorker' in navigator) {
     const registrations = await navigator.serviceWorker.getRegistrations();
@@ -1090,7 +1100,7 @@ beforeEach(async () => {
       await registration.unregister();
     }
   }
-  
+
   // Clear IndexedDB
   if ('indexedDB' in window) {
     const databases = await indexedDB.databases();
@@ -1100,7 +1110,7 @@ beforeEach(async () => {
       }
     }
   }
-  
+
   // Clear OPFS if available
   if ('storage' in navigator && 'getDirectory' in navigator.storage) {
     try {
@@ -1163,6 +1173,7 @@ const writeTime = await benchmarkStorageOperation(
 ### Real-Time Operation Tracking
 
 **Log Categories**:
+
 - `info`: General information and progress updates
 - `action`: User actions and operation starts
 - `success`: Successful operations with results
@@ -1192,14 +1203,14 @@ function addDetailedLog(
     timestamp: new Date().toISOString(),
     type,
     message,
-    ...details
+    ...details,
   };
-  
+
   logs = [...logs, entry];
-  
+
   // Also log to browser console for debugging
-  const logMethod = type === 'error' ? console.error : 
-                   type === 'success' ? console.info : console.log;
+  const logMethod =
+    type === 'error' ? console.error : type === 'success' ? console.info : console.log;
   logMethod(`[${type.toUpperCase()}]`, message, details);
 }
 ```
@@ -1216,12 +1227,12 @@ enum ErrorCategory {
   TRANSFORM_PIPELINE = 'transform_pipeline',
   FILE_WRITING = 'file_writing',
   FILE_READING = 'file_reading',
-  MANIFEST_INTEGRATION = 'manifest_integration'
+  MANIFEST_INTEGRATION = 'manifest_integration',
 }
 
 function classifyError(error: Error, context: string): ErrorCategory {
   const message = error.message.toLowerCase();
-  
+
   if (message.includes('storage') || message.includes('backend')) {
     return ErrorCategory.STORAGE_INIT;
   }
@@ -1237,7 +1248,7 @@ function classifyError(error: Error, context: string): ErrorCategory {
   if (message.includes('read') || message.includes('readTextFile')) {
     return ErrorCategory.FILE_READING;
   }
-  
+
   // Default based on context
   return context as ErrorCategory;
 }
@@ -1250,23 +1261,27 @@ Run this story manually in Storybook across different browsers to identify brows
 ## Implementation Timeline
 
 ### Phase 1: Core Integration Story (Week 1)
+
 - [ ] Create `WorkspaceCreationIntegration.svelte` component
 - [ ] Implement story definitions with play functions
 - [ ] Add CSS styling following design system
 - [ ] Test in Storybook with manual interactions
 
-### Phase 2: Automated Testing (Week 1-2)  
+### Phase 2: Automated Testing (Week 1-2)
+
 - [ ] Configure cross-browser testing with existing Playwright setup
 - [ ] Implement integration test setup and cleanup
 - [ ] Add performance benchmarking capabilities
 - [ ] Test automated play functions across browsers
 
 ### Phase 3: Enhanced Testing (Week 2)
+
 - [ ] Test with different workspace sizes
 - [ ] Add multiple file type validation
 - [ ] Document browser-specific behaviors
 
 ### Phase 3: Browser Compatibility (Week 2)
+
 - [ ] Test in Chrome (OPFS-sync/IndexedDB)
 - [ ] Test in Firefox (OPFS-sync)
 - [ ] Test in Safari (OPFS-async)
@@ -1275,18 +1290,21 @@ Run this story manually in Storybook across different browsers to identify brows
 ## Success Metrics
 
 ### Functional Validation
+
 - ✅ **Bug Identification**: Precisely identify where XHTML file writing fails
 - ✅ **Cross-Browser Testing**: Validate storage backend behavior across browsers
 - ✅ **Real Conditions**: Test with authentic storage APIs and timing
 - ✅ **Regression Prevention**: Catch similar issues in future development
 
 ### Performance Targets
+
 - **Initialization**: < 3 seconds for storage backend setup
 - **Workspace Creation**: < 10 seconds for complete workflow
 - **File Operations**: < 1 second per XHTML file write/read
 - **Cross-Browser**: Consistent behavior across all supported browsers
 
 ### Development Integration
+
 - **Real-Time Debugging**: Live error identification during development
 - **Automated Testing**: CI/CD integration catches regressions
 - **Documentation**: Self-documenting test results and error scenarios
@@ -1295,12 +1313,14 @@ Run this story manually in Storybook across different browsers to identify brows
 ## Expected Impact
 
 ### Immediate Benefits
+
 1. **Bug Resolution**: Identify exact failure point in workspace creation
 2. **Development Confidence**: Validate fixes with comprehensive testing
 3. **Cross-Browser Support**: Ensure compatibility across all target browsers
 4. **Documentation**: Living documentation of storage system behavior
 
 ### Long-Term Value
+
 1. **Regression Prevention**: Automated testing prevents similar issues
 2. **Performance Monitoring**: Track storage performance across browsers
 3. **Integration Testing**: Framework for testing complex backend workflows

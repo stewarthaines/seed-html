@@ -1,6 +1,6 @@
 /**
  * Translation Content System Type Definitions
- * 
+ *
  * Type definitions for localized sample EPUB content generation
  * based on translation catalogs and the existing i18n infrastructure.
  */

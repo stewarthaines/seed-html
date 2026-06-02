@@ -248,13 +248,15 @@
     }
   }
 
-
   // Handle delete item request
   async function handleDeleteItem(itemId: string) {
     if (!workspace) return;
 
     const confirmed = window.confirm(
-      $t('Are you sure you want to delete chapter \'{name}\'? This will permanently delete the chapter and its source file.', { name: itemId })
+      $t(
+        "Are you sure you want to delete chapter '{name}'? This will permanently delete the chapter and its source file.",
+        { name: itemId }
+      )
     );
 
     if (!confirmed) return;
@@ -292,10 +294,7 @@
   async function handleRenameId(itemId: string) {
     if (!workspace) return;
 
-    const newId = window.prompt(
-      $t('Enter new ID for {item}:', { item: itemId }),
-      itemId
-    );
+    const newId = window.prompt($t('Enter new ID for {item}:', { item: itemId }), itemId);
 
     if (!newId || newId === itemId) return;
 
@@ -383,7 +382,6 @@
       <p>{$t('No project selected')}</p>
     </div>
   {/if}
-
 </div>
 
 <style>
@@ -477,5 +475,4 @@
   .spine-list::-webkit-scrollbar-thumb:hover {
     background: var(--color-text-tertiary);
   }
-
 </style>

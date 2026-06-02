@@ -6,7 +6,11 @@
   import { EPUBPackager, EPUBUnpacker } from '../lib/epub';
   import { OPFUtils } from '../lib/epub';
   import type { EPUBMetadata } from '../lib/epub';
-  import { createIsolatedMockStorage, createDemoEPUBMetadata, cleanupStoryStorage } from './utils/mock-storage-factory';
+  import {
+    createIsolatedMockStorage,
+    createDemoEPUBMetadata,
+    cleanupStoryStorage,
+  } from './utils/mock-storage-factory';
   import './epub-source-integration-demo.css';
 
   interface LogEntry {

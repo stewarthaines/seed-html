@@ -14,7 +14,8 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
 
 ### Storybook Integration Tests (100% of testing effort)
 
-**Location**: 
+**Location**:
+
 - `src/stories/ContentPreviewDemo.stories.svelte` (story definitions)
 - `src/stories/ContentPreviewDemo.svelte` (demo component with test logic)
 - `src/stories/content-preview-demo.css` (demo styling)
@@ -24,6 +25,7 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
 ### Test Coverage Areas
 
 #### 1. Device Scaling & Simulation
+
 - ✅ CSS transform scaling for each device type
 - ✅ Aspect ratio preservation during scaling
 - ✅ Orientation switching (portrait/landscape)
@@ -31,12 +33,14 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
 - ✅ Device dimension accuracy
 
 #### 2. Font Control System
+
 - ✅ Font size adjustment (+/- buttons)
 - ✅ Font family injection (serif, sans-serif, monospace, default)
 - ✅ Device-specific base font sizes
 - ✅ Font persistence across device changes
 
 #### 3. XHTML Content Rendering
+
 - ✅ Complete XHTML document display in iframe
 - ✅ CSS and JavaScript execution within iframe
 - ✅ Large content handling with natural scrolling
@@ -44,6 +48,7 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
 - ✅ Empty content handling
 
 #### 4. User Interactions
+
 - ✅ Device dropdown functionality
 - ✅ Orientation toggle behavior
 - ✅ Font adjustment controls
@@ -51,6 +56,7 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
 - ✅ Control state management
 
 #### 5. Error Scenarios
+
 - ✅ Invalid XHTML handling
 - ✅ Empty content display
 - ✅ Control state edge cases
@@ -72,10 +78,10 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
     parameters: {
       docs: {
         description: {
-          component: 'Interactive device simulation and content preview testing'
-        }
-      }
-    }
+          component: 'Interactive device simulation and content preview testing',
+        },
+      },
+    },
   });
 </script>
 
@@ -102,15 +108,15 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
 <!-- ContentPreviewDemo.svelte -->
 <script>
   import ContentPreview from '$lib/components/preview/ContentPreview.svelte';
-  
+
   export let scenario = 'device-scaling';
-  
+
   let testResults = [];
   let deviceSize = 'recent-iphone';
   let orientation = 'portrait';
   let fontSizeAdjustment = 0;
   let fontFamily = 'default';
-  
+
   // Test content variations
   const testContent = {
     basic: `<?xml version="1.0" encoding="UTF-8"?>
@@ -122,7 +128,7 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
   <p>Testing device scaling and font controls.</p>
 </body>
 </html>`,
-    
+
     complex: `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -147,7 +153,7 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
   </script>
 </body>
 </html>`,
-    
+
     malformed: `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -156,55 +162,55 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
   <h1>Malformed Content
   <p>Missing closing tag test
 </body>`,
-    
+
     empty: ''
   };
-  
+
   let currentContent = testContent.basic;
-  
+
   // Real browser testing functions
   function testDeviceScaling() {
     const iframe = document.querySelector('.content-preview iframe');
     const container = iframe?.parentElement;
-    
+
     if (!container) {
       addTestResult('Device scaling', 'FAIL', 'iframe container not found');
       return;
     }
-    
+
     const transform = window.getComputedStyle(container).transform;
     const hasScaling = transform !== 'none' && transform !== 'matrix(1, 0, 0, 1, 0, 0)';
-    
+
     addTestResult(
       'Device scaling applied',
       hasScaling ? 'PASS' : 'FAIL',
       `Transform: ${transform}`
     );
   }
-  
+
   function testFontInjection() {
     const iframe = document.querySelector('.content-preview iframe');
     const iframeDoc = iframe?.contentDocument;
-    
+
     if (!iframeDoc) {
       addTestResult('Font injection', 'FAIL', 'iframe content not accessible');
       return;
     }
-    
+
     const bodyStyle = window.getComputedStyle(iframeDoc.body);
     const expectedSize = getExpectedFontSize(deviceSize, fontSizeAdjustment);
     const actualSize = parseInt(bodyStyle.fontSize);
-    
+
     addTestResult(
       'Font size injection',
       Math.abs(actualSize - expectedSize) <= 1 ? 'PASS' : 'FAIL',
       `Expected: ${expectedSize}px, Actual: ${actualSize}px`
     );
-    
+
     if (fontFamily !== 'default') {
       const expectedFamily = getFontFamilyString(fontFamily);
       const hasFontFamily = bodyStyle.fontFamily.includes(expectedFamily.split(',')[0]);
-      
+
       addTestResult(
         'Font family injection',
         hasFontFamily ? 'PASS' : 'FAIL',
@@ -212,26 +218,26 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
       );
     }
   }
-  
+
   function testContentRendering() {
     const iframe = document.querySelector('.content-preview iframe');
     const iframeDoc = iframe?.contentDocument;
-    
+
     if (!iframeDoc) {
       addTestResult('Content rendering', 'FAIL', 'iframe content not accessible');
       return;
     }
-    
+
     const hasContent = iframeDoc.body.innerHTML.trim().length > 0;
     const title = iframeDoc.querySelector('h1')?.textContent;
-    
+
     addTestResult(
       'XHTML content rendered',
       hasContent ? 'PASS' : 'FAIL',
       `Title found: ${title || 'none'}`
     );
   }
-  
+
   function addTestResult(test, result, details) {
     testResults = [...testResults, {
       test,
@@ -240,7 +246,7 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
       timestamp: new Date().toLocaleTimeString()
     }];
   }
-  
+
   function getExpectedFontSize(device, adjustment) {
     const baseSizes = {
       'old-iphone': 16,
@@ -253,7 +259,7 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
     };
     return (baseSizes[device] || 16) + (adjustment || 0);
   }
-  
+
   function getFontFamilyString(family) {
     const families = {
       'serif': 'Georgia, Times New Roman, Times, serif',
@@ -262,7 +268,7 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
     };
     return families[family] || '';
   }
-  
+
   function runAllTests() {
     testResults = [];
     setTimeout(() => {
@@ -281,7 +287,7 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
 ### Device Scaling Automation
 
 ```svelte
-<Story 
+<Story
   name="Automated Device Scaling"
   play={async ({ canvasElement }) => {
     const { within } = await import('@testing-library/dom');
@@ -325,7 +331,7 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
 ### Font Control Automation
 
 ```svelte
-<Story 
+<Story
   name="Automated Font Controls"
   play={async ({ canvasElement }) => {
     const { within } = await import('@testing-library/dom');
@@ -369,13 +375,15 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
 ## Testing Scenarios by Category
 
 ### 1. Device Scaling Tests
+
 - Switch between all device types
 - Verify CSS transform scaling applied
 - Test orientation toggle for each device
 - Confirm responsive mode has no scaling
 - Visual verification of aspect ratio preservation
 
-### 2. Font Control Tests  
+### 2. Font Control Tests
+
 - Font size adjustment in 1px increments
 - Font family switching between all options
 - Device base font size verification
@@ -383,6 +391,7 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
 - Combined font size + family changes
 
 ### 3. Content Rendering Tests
+
 - Basic XHTML document display
 - Complex XHTML with CSS and JavaScript
 - Large content with scrolling behavior
@@ -390,6 +399,7 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
 - Empty content edge case
 
 ### 4. Error Handling Tests
+
 - Invalid XHTML parsing
 - Missing content scenarios
 - Control state consistency
@@ -398,6 +408,7 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
 ## Benefits of Storybook-Only Testing
 
 ### Real Browser Validation
+
 - ✅ Authentic iframe behavior
 - ✅ Actual CSS transform scaling
 - ✅ Real font rendering and injection
@@ -405,12 +416,14 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
 - ✅ Performance characteristics validation
 
 ### User Experience Focus
+
 - ✅ Tests actual user interactions
 - ✅ Visual verification of device simulation
 - ✅ Real content rendering validation
 - ✅ Authentic error handling behavior
 
 ### Development Efficiency
+
 - ✅ No complex iframe mocking required
 - ✅ No CSS transform simulation needed
 - ✅ Real browser API integration testing
@@ -418,6 +431,7 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
 - ✅ Screenshot automation for documentation
 
 ### Maintenance Benefits
+
 - ✅ Tests user-facing behavior, not implementation
 - ✅ Resilient to internal refactoring
 - ✅ Clear visual feedback on failures
@@ -426,6 +440,7 @@ The ContentPreview component requires real browser APIs for iframe rendering, CS
 ## Test Execution
 
 ### Manual Testing
+
 ```bash
 npm run storybook
 # Navigate to Components/Preview/ContentPreview
@@ -433,12 +448,14 @@ npm run storybook
 ```
 
 ### Automated Testing
+
 ```bash
 npm run test:stories
 # Runs play function automation
 ```
 
 ### Screenshot Documentation
+
 ```bash
 npm run screenshots
 # Captures visual evidence of device simulation
@@ -447,18 +464,21 @@ npm run screenshots
 ## Success Criteria
 
 ### Device Simulation
+
 - [ ] All device types scale correctly within available space
 - [ ] Orientation switching works for all devices except responsive
 - [ ] CSS transforms maintain aspect ratios
 - [ ] Responsive mode fills available space without scaling
 
 ### Font Controls
+
 - [ ] Font size adjustment works in 1px increments
 - [ ] Font family injection applies correctly for all options
 - [ ] Device base fonts render at expected sizes
 - [ ] Font settings persist across device changes
 
 ### Content Rendering
+
 - [ ] XHTML documents render completely in iframe
 - [ ] CSS and JavaScript execute within iframe
 - [ ] Large content scrolls naturally
@@ -466,6 +486,7 @@ npm run screenshots
 - [ ] Empty content displays empty iframe
 
 ### User Interactions
+
 - [ ] All controls respond immediately to user input
 - [ ] Control states remain consistent
 - [ ] Multiple rapid changes handled smoothly

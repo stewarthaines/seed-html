@@ -60,7 +60,9 @@
   };
 
   const removeRole = (index: number, role: string) => {
-    save(creators.map((c, i) => (i === index ? { ...c, roles: c.roles.filter(r => r !== role) } : c)));
+    save(
+      creators.map((c, i) => (i === index ? { ...c, roles: c.roles.filter(r => r !== role) } : c))
+    );
   };
 
   const addPerson = () => onarrayAdd?.(new CustomEvent('arrayAdd', { detail: { field } }));

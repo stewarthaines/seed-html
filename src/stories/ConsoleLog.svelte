@@ -25,16 +25,12 @@
 <div class="console-log">
   <div class="console-header">
     <h4 class="console-title">{title}</h4>
-    <button class="clear-button" on:click={clearLogs} title="Clear logs">
-      Clear
-    </button>
+    <button class="clear-button" on:click={clearLogs} title="Clear logs"> Clear </button>
   </div>
-  
+
   <div class="console-content" bind:this={logContainer} style="max-height: {maxHeight}">
     {#if logs.length === 0}
-      <div class="empty-state">
-        No log entries yet...
-      </div>
+      <div class="empty-state">No log entries yet...</div>
     {:else}
       {#each logs as log, index}
         <div class="log-entry">
@@ -141,7 +137,7 @@
   }
 
   /* Dark theme adjustments */
-  [data-theme="dark"] .console-log {
+  [data-theme='dark'] .console-log {
     background-color: var(--color-surface);
     border-color: var(--color-border-subtle);
   }

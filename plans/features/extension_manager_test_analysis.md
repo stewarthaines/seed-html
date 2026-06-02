@@ -195,6 +195,7 @@ extensionManager.detectExtensionName('.js'); // Should throw "Invalid filename"
 ### Low Priority Optimizations
 
 5. **Improve Cache Performance**
+
    ```typescript
    async cacheExtension(workspaceId: string, extensionName: string): Promise<void> {
      // Check if already cached with same content first

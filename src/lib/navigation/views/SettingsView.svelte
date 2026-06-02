@@ -19,7 +19,13 @@
     onSettingsChanged?: () => void;
   }
 
-  const { settingsService, extensionManager, transformEngine, workspaceId, onSettingsChanged }: Props = $props();
+  const {
+    settingsService,
+    extensionManager,
+    transformEngine,
+    workspaceId,
+    onSettingsChanged,
+  }: Props = $props();
 
   // State management
   let workspaceSettings = $state<WorkspaceSettings | null>(null);
@@ -52,7 +58,7 @@
 
     const loadEPUBSettings = async () => {
       epubLoading = true;
-      
+
       try {
         epubSettings = await settingsService.loadEPUBSettings(workspaceId);
       } catch (err) {
@@ -136,13 +142,13 @@
     try {
       const detectedName = extensionManager.detectExtensionName(file.name);
       await extensionManager.importExtension(workspaceId, file, detectedName);
-      
+
       // Reload extensions list
       extensions = await extensionManager.listWorkspaceExtensions(workspaceId);
-      
+
       // Reload extensions in transform engine
       await transformEngine.setWorkspaceExtensions(workspaceId);
-      
+
       // Clear file input
       input.value = '';
     } catch (err) {
@@ -192,10 +198,10 @@
 
     try {
       await extensionManager.deleteWorkspaceExtension(workspaceId, extensionName);
-      
+
       // Reload extensions list
       extensions = await extensionManager.listWorkspaceExtensions(workspaceId);
-      
+
       // Reload extensions in transform engine
       await transformEngine.setWorkspaceExtensions(workspaceId);
     } catch (err) {
@@ -253,7 +259,7 @@
       {#if canEditEPUBSettings && isAdvancedMode}
         <section class="epub-settings">
           <h2>{$t('EPUB Settings')}</h2>
-          
+
           <div class="setting-group">
             <label for="audio-clip-template" class="setting-label-text">
               {$t('Audio Clip Template')}
@@ -268,7 +274,8 @@
               disabled={epubLoading}
             />
             <p class="setting-description">
-              Template for inserting audio clip directives. Use placeholders: &lt;href&gt;, &lt;begin&gt;, &lt;end&gt;, &lt;label&gt;, &lt;rate&gt;
+              Template for inserting audio clip directives. Use placeholders: &lt;href&gt;,
+              &lt;begin&gt;, &lt;end&gt;, &lt;label&gt;, &lt;rate&gt;
             </p>
           </div>
         </section>
@@ -277,11 +284,13 @@
       <!-- Extension Management -->
       <section class="extensions-settings">
         <h2>{$t('Extensions')}</h2>
-        
+
         <!-- Import Extension -->
         <div class="extension-import" class:disabled={!isAdvancedMode}>
           <label for="extension-file">
-            {$t('Import JavaScript Extension')}: {$t('Please copy license text into the License field below to comply with open source requirements.')}
+            {$t('Import JavaScript Extension')}: {$t(
+              'Please copy license text into the License field below to comply with open source requirements.'
+            )}
           </label>
           <input
             id="extension-file"
@@ -291,7 +300,9 @@
             disabled={extensionsLoading}
           />
           {#if !isAdvancedMode}
-            <p class="advanced-mode-note">{$t('Advanced Mode required for extension management')}</p>
+            <p class="advanced-mode-note">
+              {$t('Advanced Mode required for extension management')}
+            </p>
           {/if}
         </div>
 
@@ -306,7 +317,7 @@
               {#if workspaceId}
                 <ExtensionItem
                   {extension}
-                  workspaceId={workspaceId}
+                  {workspaceId}
                   {isAdvancedMode}
                   {extensionManager}
                   onRemove={() => handleExtensionRemoval(extension.name)}
@@ -348,7 +359,6 @@
     border: 1px solid var(--error-border, #fcc);
     margin-bottom: 1rem;
   }
-
 
   .settings-content {
     display: grid;
@@ -446,7 +456,7 @@
     color: var(--text-primary, #333);
   }
 
-  .extension-import input[type="file"] {
+  .extension-import input[type='file'] {
     width: 100%;
     padding: 0.5rem;
     border: 1px solid var(--border-color, #ddd);
@@ -454,7 +464,7 @@
     cursor: pointer;
   }
 
-  .extension-import input[type="file"]:disabled {
+  .extension-import input[type='file']:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }

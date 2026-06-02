@@ -314,5 +314,7 @@ export function resetAllMocks(
   mockExtensionManager.listWorkspaceExtensions.mockResolvedValue([]);
 
   mockLocalStorage.getItem.mockReturnValue(null);
-  mockLocalStorage.setItem.mockImplementation(() => {/* noop */});
+  mockLocalStorage.setItem.mockImplementation(() => {
+    /* noop */
+  });
 }

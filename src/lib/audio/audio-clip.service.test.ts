@@ -1,6 +1,6 @@
 /**
  * AudioClipService Unit Tests - Following API Specification
- * 
+ *
  * These tests implement the behavioral contracts from API.md
  * following the project's TDD patterns and service architecture.
  */
@@ -31,16 +31,16 @@ function createMockWorkspaceService(): jest.Mocked<WorkspaceService> {
         { id: 'audio1', href: 'Audio/chapter1.mp3', mediaType: 'audio/mpeg' },
         { id: 'audio2', href: 'Audio/chapter2.ogg', mediaType: 'audio/ogg' },
         { id: 'text1', href: 'Text/chapter1.xhtml', mediaType: 'application/xhtml+xml' },
-        { id: 'css1', href: 'Styles/main.css', mediaType: 'text/css' }
+        { id: 'css1', href: 'Styles/main.css', mediaType: 'text/css' },
       ],
       spine: [],
-      version: '3.0'
+      version: '3.0',
     },
     pathInfo: {
       rootfilePath: 'OEBPS/content.opf',
       basePath: 'OEBPS',
-      opfFileName: 'content.opf'
-    }
+      opfFileName: 'content.opf',
+    },
   };
 
   return {
@@ -69,12 +69,12 @@ describe('AudioClipService API Contract Tests', () => {
       expect(audioFiles[0]).toMatchObject({
         id: 'audio1',
         href: 'Audio/chapter1.mp3',
-        mediaType: 'audio/mpeg'
+        mediaType: 'audio/mpeg',
       });
       expect(audioFiles[1]).toMatchObject({
         id: 'audio2',
         href: 'Audio/chapter2.ogg',
-        mediaType: 'audio/ogg'
+        mediaType: 'audio/ogg',
       });
 
       // CONTRACT: MUST filter out non-audio items
@@ -83,14 +83,12 @@ describe('AudioClipService API Contract Tests', () => {
     });
 
     test('getAvailableAudioFiles throws WorkspaceNotFoundError for missing workspace', async () => {
-      mockWorkspaceService.loadWorkspace.mockRejectedValue(
-        new Error('Workspace not found')
-      );
+      mockWorkspaceService.loadWorkspace.mockRejectedValue(new Error('Workspace not found'));
 
       // CONTRACT: MUST throw AudioClipServiceError with WORKSPACE_NOT_FOUND code
-      await expect(
-        service.getAvailableAudioFiles('non-existent-workspace')
-      ).rejects.toThrow(AudioClipServiceError);
+      await expect(service.getAvailableAudioFiles('non-existent-workspace')).rejects.toThrow(
+        AudioClipServiceError
+      );
 
       try {
         await service.getAvailableAudioFiles('non-existent-workspace');
@@ -104,16 +102,21 @@ describe('AudioClipService API Contract Tests', () => {
       const emptyWorkspace: WorkspaceState = {
         id: 'empty-workspace',
         opf: {
-          metadata: { title: 'Empty', language: 'en', identifier: 'empty', modifiedDate: '2023-01-01' },
+          metadata: {
+            title: 'Empty',
+            language: 'en',
+            identifier: 'empty',
+            modifiedDate: '2023-01-01',
+          },
           manifest: [],
           spine: [],
-          version: '3.0'
+          version: '3.0',
         },
         pathInfo: {
           rootfilePath: 'OEBPS/content.opf',
           basePath: 'OEBPS',
-          opfFileName: 'content.opf'
-        }
+          opfFileName: 'content.opf',
+        },
       };
 
       mockWorkspaceService.loadWorkspace.mockResolvedValue(emptyWorkspace);
@@ -126,8 +129,12 @@ describe('AudioClipService API Contract Tests', () => {
 
     test('loadAudioFile creates blob URL from workspace file', async () => {
       // Add test file to mock storage
-      await mockFileStorage.writeFile('test-workspace', 'OEBPS/Audio/chapter1.mp3', new ArrayBuffer(1000));
-      
+      await mockFileStorage.writeFile(
+        'test-workspace',
+        'OEBPS/Audio/chapter1.mp3',
+        new ArrayBuffer(1000)
+      );
+
       const blobUrl = await service.loadAudioFile('test-workspace', 'Audio/chapter1.mp3');
 
       // CONTRACT: MUST return blob URL for audio file
@@ -139,9 +146,9 @@ describe('AudioClipService API Contract Tests', () => {
       // No file added to mock storage, so it should be missing
 
       // CONTRACT: MUST throw AudioClipServiceError with AUDIO_NOT_FOUND code
-      await expect(
-        service.loadAudioFile('test-workspace', 'Audio/missing.mp3')
-      ).rejects.toThrow(AudioClipServiceError);
+      await expect(service.loadAudioFile('test-workspace', 'Audio/missing.mp3')).rejects.toThrow(
+        AudioClipServiceError
+      );
 
       try {
         await service.loadAudioFile('test-workspace', 'Audio/missing.mp3');
@@ -167,9 +174,9 @@ describe('AudioClipService API Contract Tests', () => {
 
       try {
         // CONTRACT: MUST throw AudioClipServiceError with BLOB_URL_ERROR code
-        await expect(
-          service.loadAudioFile('test-workspace', 'Audio/chapter1.mp3')
-        ).rejects.toThrow(AudioClipServiceError);
+        await expect(service.loadAudioFile('test-workspace', 'Audio/chapter1.mp3')).rejects.toThrow(
+          AudioClipServiceError
+        );
 
         try {
           await service.loadAudioFile('test-workspace', 'Audio/chapter1.mp3');
@@ -209,9 +216,8 @@ describe('AudioClipService API Contract Tests', () => {
       ];
 
       invalidFormats.forEach(format => {
-        expect(() => service.parseTimeString(format))
-          .toThrow(AudioClipServiceError);
-        
+        expect(() => service.parseTimeString(format)).toThrow(AudioClipServiceError);
+
         try {
           service.parseTimeString(format);
         } catch (error: any) {
@@ -240,13 +246,7 @@ describe('AudioClipService API Contract Tests', () => {
     });
 
     test('parseTimeString and formatTimeString are inverse operations', () => {
-      const testTimes = [
-        '0:00:00.00',
-        '0:00:03.50',
-        '0:01:30.25', 
-        '1:23:45.67',
-        '10:00:00.99'
-      ];
+      const testTimes = ['0:00:00.00', '0:00:03.50', '0:01:30.25', '1:23:45.67', '10:00:00.99'];
 
       testTimes.forEach(timeString => {
         const seconds = service.parseTimeString(timeString);
@@ -259,20 +259,18 @@ describe('AudioClipService API Contract Tests', () => {
   describe('Contract: Clip Range Management', () => {
     test('setClipRange stores valid clip range', () => {
       service.setClipRange(10.5, 30.75);
-      
+
       const range = service.getClipRange();
-      
+
       // CONTRACT: MUST store exact start and end times
       expect(range).toEqual({ start: 10.5, end: 30.75 });
     });
 
     test('setClipRange validates start < end', () => {
       // CONTRACT: MUST reject invalid ranges where start >= end
-      expect(() => service.setClipRange(30, 10))
-        .toThrow(AudioClipServiceError);
-      
-      expect(() => service.setClipRange(15, 15))
-        .toThrow(AudioClipServiceError);
+      expect(() => service.setClipRange(30, 10)).toThrow(AudioClipServiceError);
+
+      expect(() => service.setClipRange(15, 15)).toThrow(AudioClipServiceError);
 
       try {
         service.setClipRange(30, 10);
@@ -283,11 +281,9 @@ describe('AudioClipService API Contract Tests', () => {
 
     test('setClipRange validates positive values', () => {
       // CONTRACT: MUST reject negative time values
-      expect(() => service.setClipRange(-1, 10))
-        .toThrow(AudioClipServiceError);
-      
-      expect(() => service.setClipRange(0, -5))
-        .toThrow(AudioClipServiceError);
+      expect(() => service.setClipRange(-1, 10)).toThrow(AudioClipServiceError);
+
+      expect(() => service.setClipRange(0, -5)).toThrow(AudioClipServiceError);
 
       try {
         service.setClipRange(-1, 10);
@@ -298,7 +294,7 @@ describe('AudioClipService API Contract Tests', () => {
 
     test('getClipRange returns null when no range is set', () => {
       const range = service.getClipRange();
-      
+
       // CONTRACT: MUST return null when no range has been set
       expect(range).toBeNull();
     });
@@ -306,9 +302,9 @@ describe('AudioClipService API Contract Tests', () => {
     test('clearClipRange resets range to null', () => {
       service.setClipRange(5, 15);
       expect(service.getClipRange()).not.toBeNull();
-      
+
       service.clearClipRange();
-      
+
       // CONTRACT: MUST reset range to null
       expect(service.getClipRange()).toBeNull();
     });
@@ -324,7 +320,7 @@ describe('AudioClipService API Contract Tests', () => {
         href: 'Audio/intro.mp3',
         begin: '0:01:23.45',
         end: '0:02:45.67',
-        label: 'Introduction'
+        label: 'Introduction',
       });
     });
 
@@ -337,12 +333,13 @@ describe('AudioClipService API Contract Tests', () => {
         href: 'Audio/music.mp3',
         begin: '1:00:00.00',
         end: '1:30:00.00',
-        label: ''
+        label: '',
       });
     });
 
     test('parseClipDirective handles playback rate parameter', () => {
-      const directive = ':clip[Fast]{src=Audio/speech.mp3 begin=0:00:10.00 end=0:00:20.00 rate=1.5}';
+      const directive =
+        ':clip[Fast]{src=Audio/speech.mp3 begin=0:00:10.00 end=0:00:20.00 rate=1.5}';
       const parsed = service.parseClipDirective(directive);
 
       // CONTRACT: MUST extract optional rate parameter
@@ -351,7 +348,7 @@ describe('AudioClipService API Contract Tests', () => {
         begin: '0:00:10.00',
         end: '0:00:20.00',
         rate: '1.5',
-        label: 'Fast'
+        label: 'Fast',
       });
     });
 
@@ -363,7 +360,7 @@ describe('AudioClipService API Contract Tests', () => {
         ':clip[label]{src=file.mp3}', // Missing begin/end
         ':clip[label]{src=file.mp3 begin=0:00:00.00}', // Missing end
         ':clip[label]{begin=0:00:00.00 end=0:00:10.00}', // Missing src
-        ''
+        '',
       ];
 
       invalidDirectives.forEach(directive => {
@@ -383,7 +380,7 @@ describe('AudioClipService API Contract Tests', () => {
         begin: '0:00:10.00',
         end: '0:00:20.00',
         rate: '2.0',
-        label: 'Test'
+        label: 'Test',
       });
     });
   });
@@ -395,10 +392,13 @@ describe('AudioClipService API Contract Tests', () => {
         startTime: 83.67,
         duration: 30.0,
         endTime: 113.67,
-        playbackRate: 1.0
+        playbackRate: 1.0,
       };
 
-      const result = service.formatClipDirective(clipData, ':clip[<label>]{src=<href> begin=<begin> end=<end>}');
+      const result = service.formatClipDirective(
+        clipData,
+        ':clip[<label>]{src=<href> begin=<begin> end=<end>}'
+      );
 
       // CONTRACT: MUST use default template format
       expect(result).toBe(':clip[]{src=Audio/chapter1.mp3 begin=0:01:23.67 end=0:01:53.67}');
@@ -410,10 +410,13 @@ describe('AudioClipService API Contract Tests', () => {
         startTime: 10.0,
         duration: 15.0,
         endTime: 25.0,
-        playbackRate: 1.5
+        playbackRate: 1.5,
       };
 
-      const result = service.formatClipDirective(clipData, ':clip[<label>]{src=<href> begin=<begin> end=<end>}');
+      const result = service.formatClipDirective(
+        clipData,
+        ':clip[<label>]{src=<href> begin=<begin> end=<end>}'
+      );
 
       // CONTRACT: MUST include rate parameter when playback rate is not 1.0
       expect(result).toBe(':clip[]{src=Audio/speech.mp3 begin=0:00:10.00 end=0:00:25.00 rate=1.5}');
@@ -424,14 +427,16 @@ describe('AudioClipService API Contract Tests', () => {
         href: 'Audio/music.mp3',
         startTime: 60.0,
         duration: 30.0,
-        endTime: 90.0
+        endTime: 90.0,
       };
 
       const customTemplate = '<audio-clip src="<href>" begin="<begin>" end="<end>"></audio-clip>';
       const result = service.formatClipDirective(clipData, customTemplate);
 
       // CONTRACT: MUST support template placeholder replacement
-      expect(result).toBe('<audio-clip src="Audio/music.mp3" begin="0:01:00.00" end="0:01:30.00"></audio-clip>');
+      expect(result).toBe(
+        '<audio-clip src="Audio/music.mp3" begin="0:01:00.00" end="0:01:30.00"></audio-clip>'
+      );
     });
 
     test('formatClipDirective handles rate placeholder in custom templates', () => {
@@ -440,14 +445,16 @@ describe('AudioClipService API Contract Tests', () => {
         startTime: 0,
         duration: 10,
         endTime: 10,
-        playbackRate: 2.0
+        playbackRate: 2.0,
       };
 
       const customTemplate = ':audio[]{file=<href> start=<begin> end=<end> speed=<rate>}';
       const result = service.formatClipDirective(clipData, customTemplate);
 
       // CONTRACT: MUST replace rate placeholder in custom templates
-      expect(result).toBe(':audio[]{file=Audio/test.mp3 start=0:00:00.00 end=0:00:10.00 speed=2.0}');
+      expect(result).toBe(
+        ':audio[]{file=Audio/test.mp3 start=0:00:00.00 end=0:00:10.00 speed=2.0}'
+      );
     });
 
     test('getTemplate returns consistent format', async () => {
@@ -463,7 +470,7 @@ describe('AudioClipService API Contract Tests', () => {
       // Create mock HTMLAudioElement
       const mockAudio = {
         duration: 120.5,
-        src: 'blob:mock-url'
+        src: 'blob:mock-url',
       } as HTMLAudioElement;
 
       const metadata = service.getAudioMetadata(mockAudio);
@@ -471,14 +478,14 @@ describe('AudioClipService API Contract Tests', () => {
       // CONTRACT: MUST extract duration and format from audio element
       expect(metadata).toMatchObject({
         duration: 120.5,
-        format: expect.any(String)
+        format: expect.any(String),
       });
     });
 
     test('getAudioMetadata handles missing metadata gracefully', () => {
       const mockAudio = {
         duration: NaN,
-        src: ''
+        src: '',
       } as HTMLAudioElement;
 
       const metadata = service.getAudioMetadata(mockAudio);
@@ -506,7 +513,7 @@ describe('AudioClipService API Contract Tests', () => {
       const errorScenarios = [
         () => service.parseTimeString('invalid'),
         () => service.setClipRange(-1, 10),
-        () => service.setClipRange(20, 10)
+        () => service.setClipRange(20, 10),
       ];
 
       for (const scenario of errorScenarios) {
@@ -524,8 +531,12 @@ describe('AudioClipService API Contract Tests', () => {
   describe('Contract: Integration Boundaries', () => {
     test('manages blob URL creation internally', async () => {
       // Add test file to storage
-      await mockFileStorage.writeFile('test-workspace', 'OEBPS/Audio/test.mp3', new ArrayBuffer(500));
-      
+      await mockFileStorage.writeFile(
+        'test-workspace',
+        'OEBPS/Audio/test.mp3',
+        new ArrayBuffer(500)
+      );
+
       const result = await service.loadAudioFile('test-workspace', 'Audio/test.mp3');
 
       // CONTRACT: Service should manage blob creation internally and return valid URL
@@ -536,7 +547,7 @@ describe('AudioClipService API Contract Tests', () => {
     test('delegates workspace loading to WorkspaceService', async () => {
       await service.getAvailableAudioFiles('test-workspace');
 
-      // CONTRACT: MUST delegate workspace operations to WorkspaceService  
+      // CONTRACT: MUST delegate workspace operations to WorkspaceService
       expect(mockWorkspaceService.loadWorkspace).toHaveBeenCalledWith('test-workspace');
     });
 
@@ -544,10 +555,10 @@ describe('AudioClipService API Contract Tests', () => {
       // CONTRACT: AudioClipService should only call infrastructure dependencies
       // This is validated by the mocks above - service only interacts with
       // BlobURLManager and WorkspaceService, not other services
-      
+
       const service = new AudioClipService(mockFileStorage, mockWorkspaceService, {} as any);
       expect(service).toBeDefined();
-      
+
       // Verify constructor accepts only expected dependencies
       expect(() => new AudioClipService({} as any, {} as any, {} as any)).not.toThrow();
     });
@@ -558,25 +569,30 @@ describe('AudioClipService API Contract Tests', () => {
       const noAudioWorkspace: WorkspaceState = {
         id: 'no-audio',
         opf: {
-          metadata: { title: 'No Audio', language: 'en', identifier: 'no-audio', modifiedDate: '2023-01-01' },
+          metadata: {
+            title: 'No Audio',
+            language: 'en',
+            identifier: 'no-audio',
+            modifiedDate: '2023-01-01',
+          },
           manifest: [
             { id: 'text1', href: 'Text/chapter1.xhtml', mediaType: 'application/xhtml+xml' },
-            { id: 'css1', href: 'Styles/main.css', mediaType: 'text/css' }
+            { id: 'css1', href: 'Styles/main.css', mediaType: 'text/css' },
           ],
           spine: [],
-          version: '3.0'
+          version: '3.0',
         },
         pathInfo: {
           rootfilePath: 'OEBPS/content.opf',
           basePath: 'OEBPS',
-          opfFileName: 'content.opf'
-        }
+          opfFileName: 'content.opf',
+        },
       };
 
       mockWorkspaceService.loadWorkspace.mockResolvedValue(noAudioWorkspace);
 
       const audioFiles = await service.getAvailableAudioFiles('no-audio');
-      
+
       // CONTRACT: MUST return empty array when no audio files exist
       expect(audioFiles).toEqual([]);
     });
@@ -585,26 +601,31 @@ describe('AudioClipService API Contract Tests', () => {
       const malformedWorkspace: WorkspaceState = {
         id: 'malformed',
         opf: {
-          metadata: { title: 'Malformed', language: 'en', identifier: 'malformed', modifiedDate: '2023-01-01' },
+          metadata: {
+            title: 'Malformed',
+            language: 'en',
+            identifier: 'malformed',
+            modifiedDate: '2023-01-01',
+          },
           manifest: [
             { id: 'audio1', href: 'Audio/test.mp3', mediaType: 'audio/mpeg' },
             { id: 'invalid', href: '', mediaType: 'audio/mpeg' }, // Invalid href
-            { id: 'audio2', href: 'Audio/test2.mp3', mediaType: 'audio/ogg' }
+            { id: 'audio2', href: 'Audio/test2.mp3', mediaType: 'audio/ogg' },
           ] as ManifestItem[],
           spine: [],
-          version: '3.0'
+          version: '3.0',
         },
         pathInfo: {
           rootfilePath: 'OEBPS/content.opf',
           basePath: 'OEBPS',
-          opfFileName: 'content.opf'
-        }
+          opfFileName: 'content.opf',
+        },
       };
 
       mockWorkspaceService.loadWorkspace.mockResolvedValue(malformedWorkspace);
 
       const audioFiles = await service.getAvailableAudioFiles('malformed');
-      
+
       // CONTRACT: MUST filter out invalid manifest items
       expect(audioFiles).toHaveLength(2);
       expect(audioFiles.every(item => item.href && item.href.length > 0)).toBe(true);
@@ -621,7 +642,7 @@ describe('AudioClipService API Contract Tests', () => {
       precisionTests.forEach(({ seconds, expected }) => {
         const formatted = service.formatTimeString(seconds);
         expect(formatted).toBe(expected);
-        
+
         // Verify round-trip maintains precision limits
         const parsed = service.parseTimeString(formatted);
         expect(Math.abs(parsed - Math.round(seconds * 100) / 100)).toBeLessThan(0.001);

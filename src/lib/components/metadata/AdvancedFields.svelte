@@ -30,7 +30,7 @@
     onfieldSave,
     onfieldFocus,
     onarrayAdd,
-    onarrayRemove
+    onarrayRemove,
   }: Props = $props();
 
   // The lesser-used Dublin Core fields are gated like other advanced refinements:

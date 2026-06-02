@@ -1,6 +1,6 @@
 /**
  * Mock Storage Factory for Isolated Storybook Stories
- * 
+ *
  * Provides isolated, non-persistent storage mocks that prevent demo data
  * pollution between story runs. Follows modern Storybook 2024-2025 best practices.
  */
@@ -41,7 +41,7 @@ export function createIsolatedMockStorage(): FileStorageAPI {
         title: `Mock Workspace ${id.split('-').pop()}`,
         language: 'en',
         createdDate: generateEPUBTimestamp(),
-        modifiedDate: generateEPUBTimestamp()
+        modifiedDate: generateEPUBTimestamp(),
       }));
     },
 
@@ -52,9 +52,7 @@ export function createIsolatedMockStorage(): FileStorageAPI {
     // File operations
     async writeFile(workspaceId: string, path: string, content: ArrayBuffer | string) {
       const workspaceFiles = files.get(workspaceId) || new Map();
-      const buffer = typeof content === 'string' 
-        ? new TextEncoder().encode(content)
-        : content;
+      const buffer = typeof content === 'string' ? new TextEncoder().encode(content) : content;
       workspaceFiles.set(path, buffer);
       files.set(workspaceId, workspaceFiles);
     },
@@ -87,12 +85,12 @@ export function createIsolatedMockStorage(): FileStorageAPI {
     async listFiles(workspaceId: string, directory?: string) {
       const workspaceFiles = files.get(workspaceId) || new Map();
       let filePaths = Array.from(workspaceFiles.keys());
-      
+
       if (directory) {
         const normalizedDir = directory.endsWith('/') ? directory : directory + '/';
         filePaths = filePaths.filter(path => path.startsWith(normalizedDir));
       }
-      
+
       // Return only the paths as strings to match FileStorageAPI interface
       return filePaths;
     },
@@ -104,16 +102,16 @@ export function createIsolatedMockStorage(): FileStorageAPI {
     async directoryExists(workspaceId: string, path: string) {
       const workspaceFiles = files.get(workspaceId) || new Map();
       const normalizedDir = path.endsWith('/') ? path : path + '/';
-      return Array.from(workspaceFiles.keys()).some(filePath => 
-        filePath.startsWith(normalizedDir)
-      );
+      return Array.from(workspaceFiles.keys()).some(filePath => filePath.startsWith(normalizedDir));
     },
 
     // Storage info
     async getStorageInfo() {
-      const totalFiles = Array.from(files.values())
-        .reduce((acc, workspaceFiles) => acc + workspaceFiles.size, 0);
-      
+      const totalFiles = Array.from(files.values()).reduce(
+        (acc, workspaceFiles) => acc + workspaceFiles.size,
+        0
+      );
+
       return {
         backend: 'mock-isolated' as const,
         isSupported: true,
@@ -121,7 +119,7 @@ export function createIsolatedMockStorage(): FileStorageAPI {
         usedBytes: 0,
         availableBytes: Infinity,
         workspaceCount: workspaces.size,
-        fileCount: totalFiles
+        fileCount: totalFiles,
       };
     },
 
@@ -138,14 +136,14 @@ export function createIsolatedMockStorage(): FileStorageAPI {
 export function createDemoEPUBMetadata(titlePrefix = 'Demo EPUB') {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 8);
-  
+
   return {
     title: `${titlePrefix} ${random}`,
     creator: ['Demo Author'],
     language: 'en',
     identifier: `demo-epub-${timestamp}-${random}`,
     modifiedDate: new Date().toISOString(),
-    description: 'Temporary demo EPUB for Storybook story'
+    description: 'Temporary demo EPUB for Storybook story',
   };
 }
 

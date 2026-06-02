@@ -25,9 +25,9 @@ export interface TransformResult {
 }
 
 export interface PreviewConfig {
-  includeStylesheets: boolean;           // true for spine items, false for outline
-  debounceMs: number;                    // Re-render debouncing
-  transformTimeout: number;              // Script execution timeout
+  includeStylesheets: boolean; // true for spine items, false for outline
+  debounceMs: number; // Re-render debouncing
+  transformTimeout: number; // Script execution timeout
 }
 
 export interface ChapterMetadata {
@@ -74,72 +74,92 @@ constructor(
 ### Public Methods
 
 #### setWorkspace
+
 ```typescript
 async setWorkspace(workspaceId: string): Promise<void>
 ```
+
 Set the active workspace and load JavaScript extensions via blob URLs.
 
 **Parameters:**
+
 - `workspaceId: string` - The workspace identifier to activate
 
 **Side Effects:**
+
 - Loads JavaScript extensions from `SOURCE/extensions/` via blob URLs
 - Sets up iframe for the specific workspace context
 
 #### updateTransformScripts
+
 ```typescript
 async updateTransformScripts(
-  textTransform?: string, 
+  textTransform?: string,
   domTransforms?: string[]
 ): Promise<void>
 ```
+
 Update transform scripts by passing content directly to iframe.
 
 **Parameters:**
+
 - `textTransform?: string` - JavaScript code for text transformation function
 - `domTransforms?: string[]` - Array of JavaScript code for DOM transformation functions
 
 **Side Effects:**
+
 - Replaces existing transform functions in iframe memory
 - No blob URL management needed - content passed directly
 
 #### executeTransform
+
 ```typescript
 async executeTransform(request: TransformRequest): Promise<TransformResult>
 ```
+
 Execute transform pipeline with current loaded scripts and extensions.
 
 **Parameters:**
+
 - `request: TransformRequest` - Transform request with plainText and optional timeout
 
 **Returns:**
+
 - `Promise<TransformResult>` - Transform result with HTML or error information
 
 **Side Effects:**
+
 - Executes transform in sandboxed iframe
 - Applies text transform followed by DOM transforms
 
 #### updateExtension
+
 ```typescript
 async updateExtension(extensionPath: string): Promise<void>
 ```
+
 Update a JavaScript extension when its file changes.
 
 **Parameters:**
+
 - `extensionPath: string` - Path to the extension file that changed
 
 **Side Effects:**
+
 - Creates new blob URL for the extension
 - Reloads extension in iframe
 - Revokes old blob URL
 
 #### cleanup
+
 ```typescript
 cleanup(): void
 ```
+
 Clean up iframe, blob URLs, and pending requests.
 
 **Side Effects:**
+
 - Removes iframe from DOM
 - Revokes all extension blob URLs
 - Clears pending transform requests
@@ -164,6 +184,7 @@ constructor(
 ### Public Methods
 
 #### setEditingContext
+
 ```typescript
 async setEditingContext(context: {
   sourceFile?: string;
@@ -171,38 +192,48 @@ async setEditingContext(context: {
   metadata: ChapterMetadata;
 }): Promise<void>
 ```
+
 Set the current editing context and start watching relevant files.
 
 **Parameters:**
+
 - `sourceFile?: string` - Optional source file path to watch
 - `sourceContent: string` - Current content being edited
 - `metadata: ChapterMetadata` - Chapter metadata for XHTML generation
 
 **Side Effects:**
+
 - Starts file watching for source, scripts, stylesheets, and extensions
 - Loads transform scripts into iframe
 - Triggers initial preview render
 
 #### updateSourceContent
+
 ```typescript
 updateSourceContent(content: string): void
 ```
+
 Update source content from editor (triggers debounced preview update).
 
 **Parameters:**
+
 - `content: string` - New source content from editor
 
 **Side Effects:**
+
 - Updates internal content state
 - Triggers debounced preview regeneration
 
 #### cleanup
+
 ```typescript
 cleanup(): void
 ```
+
 Stop file watching, clean up iframe, and clear timers.
 
 **Side Effects:**
+
 - Stops all file watchers
 - Cleans up transform iframe
 - Clears debounce timers
@@ -210,22 +241,28 @@ Stop file watching, clean up iframe, and clear timers.
 ### Callback Properties
 
 #### onPreviewReady
+
 ```typescript
 onPreviewReady?: (xhtml: string, warnings: string[]) => void
 ```
+
 Called when transform succeeds and preview XHTML is ready.
 
 **Parameters:**
+
 - `xhtml: string` - Complete XHTML document ready for preview
 - `warnings: string[]` - Non-fatal warnings from transform process
 
 #### onPreviewError
+
 ```typescript
 onPreviewError?: (error: any) => void
 ```
+
 Called when transform fails or encounters errors.
 
 **Parameters:**
+
 - `error: any` - Error object or message describing the failure
 
 ## ContentTransformService
@@ -246,19 +283,24 @@ constructor(
 ### Public Methods
 
 #### setWorkspace
+
 ```typescript
 async setWorkspace(workspaceId: string): Promise<void>
 ```
+
 Set the active workspace for transform operations.
 
 **Parameters:**
+
 - `workspaceId: string` - Workspace identifier to activate
 
 **Side Effects:**
+
 - Initializes persistent iframe for workspace
 - Loads JavaScript extensions
 
 #### validateAndTransformUserContent
+
 ```typescript
 async validateAndTransformUserContent(
   plainText: string,
@@ -267,28 +309,35 @@ async validateAndTransformUserContent(
   metadata: ChapterMetadata
 ): Promise<ContentTransformResult>
 ```
+
 Execute transform pipeline and return XHTML result or error.
 
 **Parameters:**
+
 - `plainText: string` - Source content to transform
 - `workspaceId: string` - Workspace containing transform scripts
 - `contentId: string` - Identifier for the content being transformed
 - `metadata: ChapterMetadata` - Metadata for XHTML document generation
 
 **Returns:**
+
 - `Promise<ContentTransformResult>` - Transform result with XHTML or error
 
 **Side Effects:**
+
 - Executes transform in persistent iframe
 - Generates complete XHTML document with metadata
 
 #### cleanup
+
 ```typescript
 cleanup(): void
 ```
+
 Clean up resources and iframe.
 
 **Side Effects:**
+
 - Cleans up persistent iframe
 - Revokes blob URLs
 
@@ -299,23 +348,18 @@ Clean up resources and iframe.
 ```typescript
 import { PreviewManager } from '$lib/transform/persistent-iframe/preview-manager.js';
 
-const previewManager = new PreviewManager(
-  workspaceId,
-  blobURLManager,
-  workspaceManager,
-  {
-    includeStylesheets: false,  // No CSS for outline editing
-    debounceMs: 300,
-    transformTimeout: 2000
-  }
-);
+const previewManager = new PreviewManager(workspaceId, blobURLManager, workspaceManager, {
+  includeStylesheets: false, // No CSS for outline editing
+  debounceMs: 300,
+  transformTimeout: 2000,
+});
 
 previewManager.onPreviewReady = (xhtml, warnings) => {
   displayNavigationPreview(xhtml);
   if (warnings.length > 0) showWarnings(warnings);
 };
 
-previewManager.onPreviewError = (error) => {
+previewManager.onPreviewError = error => {
   displayTransformError(error);
 };
 
@@ -327,8 +371,8 @@ await previewManager.setEditingContext({
     language: 'en',
     stylesheets: [],
     scripts: [],
-    customHead: undefined
-  }
+    customHead: undefined,
+  },
 });
 
 // Update when user types
@@ -342,23 +386,18 @@ function onTextChange(newContent: string) {
 ```typescript
 import { PreviewManager } from '$lib/transform/persistent-iframe/preview-manager.js';
 
-const previewManager = new PreviewManager(
-  workspaceId,
-  blobURLManager,
-  workspaceManager,
-  {
-    includeStylesheets: true,   // Include CSS for chapters
-    debounceMs: 300,
-    transformTimeout: 2000
-  }
-);
+const previewManager = new PreviewManager(workspaceId, blobURLManager, workspaceManager, {
+  includeStylesheets: true, // Include CSS for chapters
+  debounceMs: 300,
+  transformTimeout: 2000,
+});
 
 previewManager.onPreviewReady = (xhtml, warnings) => {
   displayChapterPreview(xhtml);
   if (warnings.length > 0) showWarnings(warnings);
 };
 
-previewManager.onPreviewError = (error) => {
+previewManager.onPreviewError = error => {
   preventSave();
   displayTransformError(error);
 };
@@ -371,8 +410,8 @@ await previewManager.setEditingContext({
     language: 'en',
     stylesheets: ['../Styles/main.css', '../Styles/chapter.css'],
     scripts: [],
-    customHead: undefined
-  }
+    customHead: undefined,
+  },
 });
 ```
 
@@ -381,10 +420,7 @@ await previewManager.setEditingContext({
 ```typescript
 import { ContentTransformService } from '$lib/transform/persistent-iframe/content-transform-service.js';
 
-const transformService = new ContentTransformService(
-  blobURLManager,
-  workspaceManager
-);
+const transformService = new ContentTransformService(blobURLManager, workspaceManager);
 
 await transformService.setWorkspace(workspaceId);
 
@@ -408,10 +444,7 @@ if (result.success) {
 ```typescript
 import { PersistentTransformIframe } from '$lib/transform/persistent-iframe/persistent-transform-iframe.js';
 
-const iframe = new PersistentTransformIframe(
-  blobURLManager,
-  workspaceManager
-);
+const iframe = new PersistentTransformIframe(blobURLManager, workspaceManager);
 
 await iframe.setWorkspace(workspaceId);
 
@@ -424,7 +457,7 @@ await iframe.updateTransformScripts(textTransformCode, domTransformCodes);
 // Execute transform
 const result = await iframe.executeTransform({
   plainText: 'Source content here...',
-  timeout: 3000
+  timeout: 3000,
 });
 
 if (result.success) {
@@ -456,6 +489,7 @@ The system automatically watches for changes to:
 - JavaScript extensions (`SOURCE/extensions/*.js`)
 
 When files change:
+
 - **Transform scripts**: Content is read and passed directly to iframe
 - **Extensions**: New blob URLs are created and loaded
 - **Stylesheets**: Blob URLs are updated for preview
@@ -476,9 +510,12 @@ All components provide comprehensive error handling:
 ```typescript
 try {
   const result = await transformService.validateAndTransformUserContent(
-    plainText, workspaceId, contentId, metadata
+    plainText,
+    workspaceId,
+    contentId,
+    metadata
   );
-  
+
   if (!result.success) {
     console.error('Transform failed:', result.error?.message);
     if (result.warnings?.length) {
@@ -491,6 +528,7 @@ try {
 ```
 
 Error types:
+
 - **Script loading errors**: Missing or invalid transform scripts
 - **Extension loading errors**: Failed to load JavaScript extensions
 - **Transform execution errors**: Runtime errors in transform functions
@@ -500,6 +538,6 @@ Error types:
 ## Dependencies
 
 - `BlobURLManager` from `../../blob-url/blob-url-manager.js`
-- `IWorkspaceManager` from `../../workspace/index.js` 
+- `IWorkspaceManager` from `../../workspace/index.js`
 - `FileWatcher` from `../../workspace/file-watcher.js`
 - Existing transform types from `../types.js`

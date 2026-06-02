@@ -9,7 +9,11 @@ import type { FileStorageAPI } from '../storage/index.js';
 import { TransformManager } from './transform-manager.js';
 import { TransformExecutor, type TransformContext } from './transform-executor.js';
 import { TransformError } from './transform-error.js';
-import { generateXHTMLDocument, serializeInnerXHTML, type ChapterMetadata } from './xhtml-template.js';
+import {
+  generateXHTMLDocument,
+  serializeInnerXHTML,
+  type ChapterMetadata,
+} from './xhtml-template.js';
 
 export interface TransformResult {
   success: boolean;

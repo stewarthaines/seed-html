@@ -10,10 +10,11 @@
     parameters: {
       docs: {
         description: {
-          component: 'Interactive demonstration of workspace creation workflow for debugging EPUB XHTML file writing issues.'
-        }
-      }
-    }
+          component:
+            'Interactive demonstration of workspace creation workflow for debugging EPUB XHTML file writing issues.',
+        },
+      },
+    },
   });
 </script>
 
@@ -39,10 +40,9 @@
       // Run the integration test
       const testButton = canvas.getByText('Run Complete Integration Test');
       await userEvent.click(testButton);
-      
+
       // Wait for test completion
       await new Promise(resolve => setTimeout(resolve, 5000));
-
     } catch (error) {
       console.log('Integration test play function failed:', error);
     }
@@ -70,7 +70,6 @@
         await userEvent.click(testButton);
         await new Promise(resolve => setTimeout(resolve, 4000));
       }
-
     } catch (error) {
       console.log('Cross-browser test failed:', error);
     }

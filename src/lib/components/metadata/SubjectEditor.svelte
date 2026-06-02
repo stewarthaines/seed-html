@@ -34,7 +34,8 @@
     save(entries.map((entry, i) => (i === index ? { ...entry, ...patch } : entry)));
   const addEntry = () => save([...entries, { value: '' }]);
   const removeEntry = (index: number) => save(entries.filter((_, i) => i !== index));
-  const focus = () => onfieldFocus?.(new CustomEvent('fieldFocus', { detail: { field: 'subject' } }));
+  const focus = () =>
+    onfieldFocus?.(new CustomEvent('fieldFocus', { detail: { field: 'subject' } }));
 </script>
 
 <datalist id="subject-authorities">

@@ -107,7 +107,6 @@ export interface ValidationWarning {
   severity: 'warning';
 }
 
-
 /**
  * Critical interface that defines ALL methods ManifestManager depends on.
  * 
@@ -139,7 +138,6 @@ export class ValidationError extends WorkspaceError {
     this.name = 'ValidationError';
   }
 }
-
 
 // Default configuration
 export const DEFAULT_WORKSPACE_CONFIG: WorkspaceConfig = {

@@ -97,7 +97,7 @@ const workspaceId = await workspaceManager.createEPUBWorkspace({
 
 ```typescript
 createLocalizedEPUBWorkspace(
-  metadata: Partial<EPUBMetadata> = {}, 
+  metadata: Partial<EPUBMetadata> = {},
   locale = 'en'
 ): Promise<string>
 ```
@@ -121,18 +121,24 @@ const workspaceId = await workspaceManager.createLocalizedEPUBWorkspace({
 });
 
 // Create workspace with German sample content
-const workspaceId = await workspaceManager.createLocalizedEPUBWorkspace({
-  title: 'Mein Lokalisiertes Buch',
-  author: 'Jane Smith',
-  language: 'de',
-}, 'de');
+const workspaceId = await workspaceManager.createLocalizedEPUBWorkspace(
+  {
+    title: 'Mein Lokalisiertes Buch',
+    author: 'Jane Smith',
+    language: 'de',
+  },
+  'de'
+);
 
 // Create workspace with Arabic sample content (RTL support)
-const workspaceId = await workspaceManager.createLocalizedEPUBWorkspace({
-  title: 'كتابي المترجم',
-  author: 'Jane Smith',
-  language: 'ar',
-}, 'ar');
+const workspaceId = await workspaceManager.createLocalizedEPUBWorkspace(
+  {
+    title: 'كتابي المترجم',
+    author: 'Jane Smith',
+    language: 'ar',
+  },
+  'ar'
+);
 ```
 
 **Features:**

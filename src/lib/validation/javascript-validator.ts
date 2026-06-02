@@ -1,6 +1,6 @@
 /**
  * JavaScript validation utilities for syntax checking
- * 
+ *
  * Pure validation functions with no dependencies, suitable for use
  * across the application infrastructure layer.
  */
@@ -8,7 +8,7 @@
 export class JavaScriptValidator {
   /**
    * Validate JavaScript syntax and catch runtime errors
-   * 
+   *
    * @param content - JavaScript source code to validate
    * @returns null if valid, error message if invalid
    */
@@ -20,23 +20,39 @@ export class JavaScriptValidator {
     try {
       // Step 1: Validate syntax using Function constructor
       const testFunction = new Function(content);
-      
+
       // Step 2: Try to execute in a safe sandbox to catch ReferenceErrors
       try {
         // Create a minimal sandbox with common globals that might exist in browser
         const sandbox = {
-          console: { log: () => {/* sandbox noop */}, warn: () => {/* sandbox noop */}, error: () => {/* sandbox noop */} },
+          console: {
+            log: () => {
+              /* sandbox noop */
+            },
+            warn: () => {
+              /* sandbox noop */
+            },
+            error: () => {
+              /* sandbox noop */
+            },
+          },
           window: {},
           document: {
             querySelector: () => null,
             createElement: () => ({}),
-            addEventListener: () => {/* sandbox noop */}
+            addEventListener: () => {
+              /* sandbox noop */
+            },
           },
           // Common browser APIs that scripts might reference
           setTimeout: () => 0,
           setInterval: () => 0,
-          clearTimeout: () => {/* sandbox noop */},
-          clearInterval: () => {/* sandbox noop */},
+          clearTimeout: () => {
+            /* sandbox noop */
+          },
+          clearInterval: () => {
+            /* sandbox noop */
+          },
           fetch: () => Promise.resolve(),
           // Allow common utility functions
           Math: Math,
@@ -52,7 +68,7 @@ export class JavaScriptValidator {
 
         // Execute in controlled environment to catch ReferenceErrors
         testFunction.call(sandbox);
-        
+
         return null; // Both syntax and runtime validation passed
       } catch (runtimeError) {
         // Catch runtime errors like ReferenceError, TypeError, etc.
@@ -77,7 +93,7 @@ export class JavaScriptValidator {
 
   /**
    * Determine if a file type should be validated as JavaScript
-   * 
+   *
    * @param fileType - File type identifier from component
    * @returns true if file should be validated as JavaScript
    */

@@ -35,21 +35,25 @@ src/stories/
 ## Story Categories & Patterns
 
 ### Application Stories: `title: 'Application/ComponentName'`
+
 Complete application demonstrations with layout, navigation, and full functionality.
 
 **Use for**: Layout systems, navigation routers, complete app flows
 
 ### Component Stories: `title: 'Components/Category/ComponentName'`
+
 Individual UI components with various states and props.
 
 **Use for**: Buttons, forms, cards, modals - reusable UI components
 
 ### Backend Stories: `title: 'Backend/FeatureName'`
+
 Non-UI features that need demonstration and testing.
 
 **Use for**: APIs, file systems, data processing, storage systems
 
 ### Feature Stories: `title: 'Features/FeatureName'`
+
 Development-focused stories for building and testing new features.
 
 **Use for**: Work-in-progress features, integration testing, accessibility development
@@ -57,17 +61,20 @@ Development-focused stories for building and testing new features.
 ## Development Workflow
 
 ### 1. **Create Demo Component**
+
 ```bash
 # Create demo component for new feature
 src/stories/FeatureNameDemo.svelte
 ```
 
 ### 2. **Choose Your Pattern**
+
 - **Simple components**: Use args pattern with controls
 - **Complex features**: Use direct instantiation with play functions
 - **Backend features**: Use backend demo pattern with real APIs
 
 ### 3. **Test and Capture**
+
 ```bash
 npm run screenshots  # Capture component screenshots
 ```
@@ -75,6 +82,7 @@ npm run screenshots  # Capture component screenshots
 ## Quick Reference: Story Pattern Selection
 
 ### When to Use Args Pattern
+
 - Simple components with clear props
 - Need interactive controls in Storybook
 - Component state can be controlled via props
@@ -83,19 +91,20 @@ npm run screenshots  # Capture component screenshots
 export const Default: Story = {
   args: {
     title: 'Sample Title',
-    disabled: false
-  }
+    disabled: false,
+  },
 };
 ```
 
 ### When to Use Direct Instantiation
+
 - Complex state management
 - Need custom initialization logic
 - Backend API integration
 
 ```typescript
 export const WithBackend: Story = {
-  render: () => new ComponentDemo({ target: document.body })
+  render: () => new ComponentDemo({ target: document.body }),
 };
 ```
 
@@ -104,6 +113,7 @@ export const WithBackend: Story = {
 ### ✅ **Correct Story Patterns**
 
 **Args Pattern for Simple Components:**
+
 ```typescript
 import type { Meta, StoryObj } from '@storybook/svelte';
 import ComponentDemo from './ComponentDemo.svelte';
@@ -111,34 +121,36 @@ import ComponentDemo from './ComponentDemo.svelte';
 const meta: Meta<ComponentDemo> = {
   title: 'Components/Category/ComponentName',
   component: ComponentDemo,
-  parameters: { layout: 'centered' }
+  parameters: { layout: 'centered' },
 };
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { title: 'Hello World' }
+  args: { title: 'Hello World' },
 };
 ```
 
 **Direct Instantiation for Complex Features:**
+
 ```typescript
 export const BackendIntegration: Story = {
   render: () => new FeatureDemo({ target: document.body }),
-  parameters: { layout: 'fullscreen' }
+  parameters: { layout: 'fullscreen' },
 };
 ```
 
 ### ❌ **Problematic Patterns**
 
 **Don't use constructor calls in args:**
+
 ```typescript
 // ❌ This will cause parsing errors
 export const Bad: Story = {
   args: {
-    manager: new WorkspaceManager() // Constructor in args
-  }
+    manager: new WorkspaceManager(), // Constructor in args
+  },
 };
 ```
 
@@ -147,6 +159,7 @@ export const Bad: Story = {
 ### ✅ DO: Follow Component Separation Pattern
 
 **1. Component (MyComponent.svelte)** — runes only
+
 ```svelte
 <script lang="ts">
   let { title, onAction }: { title: string; onAction: () => void } = $props();
@@ -156,12 +169,15 @@ export const Bad: Story = {
 ```
 
 **2. Demo Component (MyComponentDemo.svelte)**
+
 ```svelte
 <script lang="ts">
   import MyComponent from './MyComponent.svelte';
-  
+
   let message = '';
-  const handleAction = () => { message = 'Clicked!'; };
+  const handleAction = () => {
+    message = 'Clicked!';
+  };
 </script>
 
 <MyComponent title="Demo Button" onAction={handleAction} />
@@ -169,27 +185,29 @@ export const Bad: Story = {
 ```
 
 **3. Story (MyComponent.stories.ts)**
+
 ```typescript
 import MyComponentDemo from './MyComponentDemo.svelte';
 
 export default {
   title: 'Components/UI/MyComponent',
-  component: MyComponentDemo
+  component: MyComponentDemo,
 };
 
 export const Interactive = {
-  render: () => new MyComponentDemo({ target: document.body })
+  render: () => new MyComponentDemo({ target: document.body }),
 };
 ```
 
 ### ❌ DON'T: Common Anti-Patterns
 
 **Don't mix demo logic in the main component:**
+
 ```svelte
 <!-- ❌ MyComponent.svelte -->
 <script>
   import { onMount } from 'svelte';
-  
+
   // Don't put demo-specific code in main component
   onMount(() => {
     console.log('Demo initialized'); // Demo-specific
@@ -200,6 +218,7 @@ export const Interactive = {
 ## Best Practices
 
 ### ✅ **Do**
+
 - Use descriptive story names that explain the scenario
 - Add parameters for layout (`centered`, `fullscreen`, `padded`)
 - Include JSDoc comments for complex components
@@ -207,6 +226,7 @@ export const Interactive = {
 - Follow the component separation pattern
 
 ### ❌ **Don't**
+
 - Put constructor calls or complex object creation in args
 - Mix demo-specific code in main components
 - Create overly complex stories that test multiple features
@@ -215,12 +235,14 @@ export const Interactive = {
 ## Testing Your Story
 
 ### Basic Verification
+
 1. Story loads without errors
 2. Interactive elements work as expected
 3. Responsive behavior functions correctly
 4. i18n switching works (use 🌍 globe icon)
 
 ### Playwright Verification
+
 ```bash
 npm run test:stories  # Run Storybook tests with Vitest
 ```
@@ -228,41 +250,50 @@ npm run test:stories  # Run Storybook tests with Vitest
 ## Common Failure Scenarios & Solutions
 
 ### **Problem: "Failed to fetch dynamically imported module"**
+
 **Solution**: Check import paths and ensure all dependencies are properly installed.
 
 ### **Problem: "Storybook stories indexer parser threw an unrecognized error"**
+
 **Solution**: Verify story syntax, especially export statements and meta configuration.
 
 ### **Problem: Story loads but interactions don't work**
+
 **Solution**: Use play functions for complex interactions, ensure proper event handling.
 
 ### **Problem: Story category doesn't match functionality**
+
 **Solution**: Use correct title prefix - `Application/`, `Components/`, `Backend/`, or `Features/`.
 
 ## Development Checklist
 
 ### **Pre-Development:**
+
 - [ ] Review existing similar stories for patterns
 - [ ] Choose appropriate story category and title
 - [ ] Plan demo component structure
 
 ### **Component Creation:**
+
 - [ ] Create main component with clear props interface
 - [ ] Create separate demo component for Storybook
 - [ ] Follow component separation pattern
 
 ### **Story Creation:**
+
 - [ ] Choose appropriate pattern (args vs direct instantiation)
 - [ ] Add descriptive story names and documentation
 - [ ] Include proper layout parameters
 
 ### **Verification:**
+
 - [ ] Story loads without errors in Storybook
 - [ ] Test with different i18n locales
 - [ ] Verify responsive behavior
 - [ ] Run `npm run test:stories` for automated testing
 
 ### **Quality Assurance:**
+
 - [ ] Screenshot capture works (`npm run screenshots`)
 - [ ] No console errors during story interaction
 - [ ] Story follows established patterns from this guide

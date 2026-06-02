@@ -99,7 +99,7 @@ async function extractStrings() {
   console.log('🔍 Extracting translatable strings...');
 
   const extractor = new GettextExtractor();
-  
+
   // Store translator comments separately since gettext-extractor doesn't preserve custom fields
   const extractedCommentsMap = new Map(); // text -> comment
 
@@ -154,16 +154,16 @@ async function extractStrings() {
     const content = readFileSync(fullPath, 'utf8');
 
     // Parse translator comments from both HTML and JavaScript comments
-    const extractTranslatorComments = (content) => {
+    const extractTranslatorComments = content => {
       const comments = new Map(); // line number -> comment text
-      
+
       // HTML-style comments: <!-- i18n: comment -->
       const htmlCommentPattern = /<!--\s*i18n:\s*(.+?)\s*-->/gi;
-      
+
       // JavaScript-style comments: // i18n: comment or /* i18n: comment */
-      const jsLineCommentPattern = /\/\/\s*i18n:\s*(.+?)$/gmi;
+      const jsLineCommentPattern = /\/\/\s*i18n:\s*(.+?)$/gim;
       const jsBlockCommentPattern = /\/\*\s*i18n:\s*(.+?)\s*\*\//gi;
-      
+
       // Extract HTML comments
       let match;
       while ((match = htmlCommentPattern.exec(content)) !== null) {
@@ -171,28 +171,28 @@ async function extractStrings() {
         const lineNumber = content.substring(0, match.index).split('\n').length;
         comments.set(lineNumber, commentText);
       }
-      
+
       // Extract JavaScript line comments
       while ((match = jsLineCommentPattern.exec(content)) !== null) {
         const commentText = match[1].trim();
         const lineNumber = content.substring(0, match.index).split('\n').length;
         comments.set(lineNumber, commentText);
       }
-      
+
       // Extract JavaScript block comments
       while ((match = jsBlockCommentPattern.exec(content)) !== null) {
         const commentText = match[1].trim();
         const lineNumber = content.substring(0, match.index).split('\n').length;
         comments.set(lineNumber, commentText);
       }
-      
+
       return comments;
     };
 
     const translatorComments = extractTranslatorComments(content);
 
     // Find the closest translator comment for a given line
-    const findClosestComment = (lineNumber) => {
+    const findClosestComment = lineNumber => {
       // Look for comments within 3 lines before the translation
       for (let i = lineNumber - 1; i >= Math.max(1, lineNumber - 3); i--) {
         if (translatorComments.has(i)) {
@@ -304,17 +304,17 @@ async function extractStrings() {
           // Add the message to the extractor with proper reference format
           const lineNumber = content.substring(0, match.index).split('\n').length;
           const translatorComment = findClosestComment(lineNumber);
-          
+
           const messageData = {
             text: text,
             references: [`${file}:${lineNumber}`],
           };
-          
+
           // Store translator comment separately
           if (translatorComment) {
             extractedCommentsMap.set(text, translatorComment);
           }
-          
+
           extractor.addMessage(messageData);
         }
       }
@@ -379,13 +379,13 @@ async function extractStrings() {
         reference: message.references.join('\n'),
       },
     };
-    
+
     // Add extracted comments (translator comments) if present
     const extractedComment = extractedCommentsMap.get(message.text);
     if (extractedComment) {
       messageEntry.comments.extracted = extractedComment;
     }
-    
+
     potData.translations[''][message.text] = messageEntry;
   }
 

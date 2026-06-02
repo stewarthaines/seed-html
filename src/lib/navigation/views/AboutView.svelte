@@ -67,7 +67,6 @@
     margin: 0 0 var(--space-2) 0;
   }
 
-
   .app-version {
     font-size: var(--text-sm);
     color: var(--color-text-tertiary);

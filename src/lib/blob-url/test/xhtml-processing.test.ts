@@ -474,7 +474,10 @@ describe('XHTML Processing', () => {
       await rootManager.processXHTMLForPreview(xhtml);
 
       // CSS is read via readTextFile.
-      expect(mockFileStorage.readTextFile).toHaveBeenCalledWith('test-workspace', 'styles/main.css');
+      expect(mockFileStorage.readTextFile).toHaveBeenCalledWith(
+        'test-workspace',
+        'styles/main.css'
+      );
     });
   });
 

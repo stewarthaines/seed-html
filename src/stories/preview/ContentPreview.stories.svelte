@@ -190,7 +190,6 @@ The component demonstrates real browser behavior with actual iframe rendering, C
         await new Promise(resolve => setTimeout(resolve, 300));
         console.log('[ContentPreview Story] Decreased font size');
       }
-
     } catch (error) {
       console.warn('[ContentPreview Story] Font control test error:', error);
     }
@@ -243,7 +242,6 @@ The component demonstrates real browser behavior with actual iframe rendering, C
           }
         }
       }
-
     } catch (error) {
       console.warn('[ContentPreview Story] Device switching test error:', error);
     }
@@ -283,7 +281,6 @@ The component demonstrates real browser behavior with actual iframe rendering, C
           console.log('[ContentPreview Story] Toggled empty state off');
         }
       }
-
     } catch (error) {
       console.warn('[ContentPreview Story] Content cycling test error:', error);
     }

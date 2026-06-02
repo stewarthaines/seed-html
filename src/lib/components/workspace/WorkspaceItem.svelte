@@ -49,7 +49,6 @@
     onDeleteRequested?.({ workspaceId: workspace.id });
   };
 
-
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
@@ -91,10 +90,8 @@
   <div class="workspace-main">
     <div class="workspace-icon-container">
       {#if hasError || workspace.hasError}
-        <span
-          class="workspace-icon error"
-          aria-label={$t('Error')}
-          title={$t('Project has errors')}>⚠️</span
+        <span class="workspace-icon error" aria-label={$t('Error')} title={$t('Project has errors')}
+          >⚠️</span
         >
       {:else}
         <span class="workspace-icon" aria-hidden="true">📖</span>
@@ -289,7 +286,6 @@
     flex-shrink: 0;
   }
 
-
   .workspace-actions {
     display: flex;
     gap: var(--space-2);
@@ -323,7 +319,6 @@
     border-color: var(--color-error);
     box-shadow: inset 0 0 0 2px var(--color-focus-ring);
   }
-
 
   /* Mobile adjustments */
   @media (max-width: 640px) {

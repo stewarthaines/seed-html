@@ -3,7 +3,7 @@
  *
  * This file provides Vitest-specific mock utilities for TransformPipeline testing.
  * Uses vi.fn() spies and advanced mocking capabilities.
- * 
+ *
  * For basic mocking without Vitest dependencies, use transform-pipeline.mock.ts instead.
  *
  * Usage:
@@ -20,7 +20,7 @@ import { MockTransformPipeline } from './transform-pipeline.mock.js';
 
 /**
  * Create mock TransformPipeline with vi.fn() methods for advanced Vitest testing
- * 
+ *
  * This provides function spies and mock control for detailed test verification.
  * Use the base MockTransformPipeline class for Storybook or general testing.
  */
@@ -40,8 +40,9 @@ export function createMockTransformPipelineVi() {
       ),
     executeTransformPipeline: vi
       .fn()
-      .mockImplementation((plainText: string, workspaceId: string, spineItemId: string, metadata: any) =>
-        mock.executeTransformPipeline(plainText, workspaceId, spineItemId, metadata)
+      .mockImplementation(
+        (plainText: string, workspaceId: string, spineItemId: string, metadata: any) =>
+          mock.executeTransformPipeline(plainText, workspaceId, spineItemId, metadata)
       ),
 
     // Required interface properties

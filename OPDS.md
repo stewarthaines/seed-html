@@ -24,12 +24,12 @@ OPDS catalogs are XML documents based on the Atom Syndication Format with OPDS-s
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom" 
+<feed xmlns="http://www.w3.org/2005/Atom"
       xmlns:opds="http://opds-spec.org/2010/catalog">
   <id>urn:uuid:2853dacf-ed79-42f7-8e8a-a7bb3d1ae6a2</id>
   <title>Sample OPDS Catalog</title>
   <updated>2023-11-20T12:00:00Z</updated>
-  
+
   <entry>
     <title>Sample Book</title>
     <id>urn:uuid:book-123</id>
@@ -65,6 +65,7 @@ OPDS extends standard Atom link relations:
 ### Reading Applications
 
 **Desktop & Mobile**
+
 - **Calibre** - Popular ebook management with OPDS browsing
 - **Moon+ Reader** (Android) - Full OPDS catalog integration
 - **KyBook** (iOS) - Comprehensive OPDS client
@@ -73,6 +74,7 @@ OPDS extends standard Atom link relations:
 - **Aldiko** (Android) - Commercial reader with library integration
 
 **Library-Focused**
+
 - **SimplyE** - NYPL's open-source library app
 - **Palace** (formerly SimplyE) - Library consortium reader
 - **OverDrive** - Commercial library platform
@@ -81,6 +83,7 @@ OPDS extends standard Atom link relations:
 ### Server Implementations
 
 **Open Source**
+
 - **COPS** (Calibre OPDS PHP Server) - Popular Calibre integration
 - **Ubooquity** - Java-based server for comics and ebooks
 - **Komga** - Modern comic and ebook server
@@ -88,6 +91,7 @@ OPDS extends standard Atom link relations:
 - **calibre-web** - Web interface for Calibre with OPDS
 
 **Commercial**
+
 - **OverDrive** - Library content distribution
 - **Hoopla** - Digital media circulation
 - **Baker & Taylor** - Academic and library solutions
@@ -104,16 +108,19 @@ OPDS extends standard Atom link relations:
 ## Integration Possibilities with EDITME
 
 ### Direct Export
+
 - Export workspace EPUBs to OPDS-compatible directory structure
 - Generate catalog entries with metadata from workspace books
 - Create hierarchical organization based on workspace collections
 
 ### Development Server
+
 - Serve edited EPUBs during development via local OPDS feed
 - Enable real-time testing with OPDS-compatible reading apps
 - Support for draft versioning through OPDS acquisition metadata
 
 ### Publishing Workflow
+
 - Generate publication-ready OPDS catalogs for finished books
 - Integration with existing OPDS server software
 - Batch export for library and publisher distribution
@@ -131,16 +138,16 @@ function generateOPDSEntry(workspace, epubMetadata) {
       {
         rel: 'http://opds-spec.org/acquisition',
         href: `/epub/${workspace.id}/download`,
-        type: 'application/epub+zip'
+        type: 'application/epub+zip',
       },
       {
         rel: 'http://opds-spec.org/image',
         href: `/epub/${workspace.id}/cover`,
-        type: 'image/jpeg'
-      }
+        type: 'image/jpeg',
+      },
     ],
     authors: epubMetadata.creators,
-    categories: workspace.tags?.map(tag => ({ term: tag }))
+    categories: workspace.tags?.map(tag => ({ term: tag })),
   };
 }
 ```
@@ -148,11 +155,13 @@ function generateOPDSEntry(workspace, epubMetadata) {
 ## Developer Resources
 
 ### Official Specifications
+
 - **OPDS 1.2 Specification**: https://specs.opds.io/opds-1.2
 - **OPDS 2.0 Specification**: https://readium.org/opds-spec/
 - **Authentication for OPDS**: https://readium.org/opds-spec/auth.html
 
 ### Implementation Guides
+
 - **OPDS Validator**: https://github.com/readium/opds-validator
 - **Reference Implementation**: https://github.com/readium/r2-opds-kotlin
 - **Test Feeds**: https://github.com/readium/opds-test-files
@@ -160,21 +169,25 @@ function generateOPDSEntry(workspace, epubMetadata) {
 ### Tools and Libraries
 
 **JavaScript/Node.js**
+
 - `opds-parser` - Parse OPDS feeds
 - `atom-parser` - Base Atom feed parsing
 - `xml2js` - XML processing for custom OPDS handling
 
 **Python**
+
 - `feedparser` - Parse OPDS and Atom feeds
 - `lxml` - XML generation and processing
 - `python-opds` - OPDS-specific utilities
 
 **PHP**
+
 - `COPS` source code - Reference implementation
 - `SimpleXML` - Built-in PHP XML handling
 - `DOMDocument` - Advanced XML manipulation
 
 ### Testing Resources
+
 - **Internet Archive OPDS**: https://bookserver.archive.org/catalog/
 - **Standard Ebooks**: https://standardebooks.org/opds/
 - **Project Gutenberg**: https://www.gutenberg.org/ebooks/search.opds/

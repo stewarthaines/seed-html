@@ -24,12 +24,12 @@
     id = '',
     onchange,
     onblur,
-    onfocus
+    onfocus,
   }: Props = $props();
 
   // Local state that tracks the actual DOM input value
   let localValue = $state(value);
-  
+
   // Sync local value with prop when prop changes (from parent updates)
   $effect(() => {
     localValue = value;

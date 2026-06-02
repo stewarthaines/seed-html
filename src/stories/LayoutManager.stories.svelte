@@ -348,7 +348,10 @@
   <svelte:fragment slot="left-content">
     <div class="no-workspace-demo">
       <h3>No Workspace Selected</h3>
-      <p>Content sections (Metadata, Manifest, Navigation) are disabled when no workspace is available.</p>
+      <p>
+        Content sections (Metadata, Manifest, Navigation) are disabled when no workspace is
+        available.
+      </p>
       <p>This ensures proper workflow where users must create or load a workspace first.</p>
     </div>
   </svelte:fragment>

@@ -48,7 +48,7 @@ export type EditorId = string;
 
 /**
  * Creates a new text editor store with the specified ID and optional initial content.
- * 
+ *
  * @param editorId - Unique identifier for this editor instance
  * @param initialContent - Optional initial text content (defaults to empty string)
  * @returns TextEditorStore instance

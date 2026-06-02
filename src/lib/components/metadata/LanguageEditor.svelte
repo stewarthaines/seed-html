@@ -29,10 +29,12 @@
     onfieldSave?.(new CustomEvent('fieldSave', { detail: { field: 'language', value: next } }));
   const updateTag = (index: number, value: string) =>
     save(languages.map((l, i) => (i === index ? value.trim() : l)));
-  const addLanguage = () => onarrayAdd?.(new CustomEvent('arrayAdd', { detail: { field: 'language' } }));
+  const addLanguage = () =>
+    onarrayAdd?.(new CustomEvent('arrayAdd', { detail: { field: 'language' } }));
   const removeLanguage = (index: number) =>
     onarrayRemove?.(new CustomEvent('arrayRemove', { detail: { field: 'language', index } }));
-  const focus = () => onfieldFocus?.(new CustomEvent('fieldFocus', { detail: { field: 'language' } }));
+  const focus = () =>
+    onfieldFocus?.(new CustomEvent('fieldFocus', { detail: { field: 'language' } }));
 </script>
 
 <div class="language-editor">

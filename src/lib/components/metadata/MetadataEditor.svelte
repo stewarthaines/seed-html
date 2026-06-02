@@ -32,7 +32,7 @@
   let metadata = $derived(workspace?.opf.metadata ?? { title: '', language: [], identifier: '' });
   let validationErrors = $derived(metadataService.validateMetadata(metadata));
   let loading = $derived(!workspace);
-  
+
   let activeTab = $state('basic');
   let saving = $state(false);
   let error = $state<string | null>(null);
@@ -101,7 +101,7 @@
     const updates = { [field]: value };
     const validationResults = metadataService.validateMetadataUpdates(updates);
     const fieldErrors = validationResults.filter(result => result.type === 'error');
-    
+
     if (fieldErrors.length > 0) {
       // Don't save invalid data - let inline error display show the issue
       // The validation errors will be displayed via the existing getFieldError system
@@ -111,10 +111,10 @@
     try {
       // Only save valid data to workspace
       workspace = await metadataService.updateField(workspace, field, value);
-      
+
       // Notify that metadata has changed
       onMetadataChanged?.({ field, value });
-      
+
       error = null;
     } catch (err: any) {
       console.error(`Failed to save field ${field}:`, err);
@@ -167,7 +167,7 @@
       ) {
         // Remove item using service
         workspace = await metadataService.removeArrayItem(workspace, field, index);
-        
+
         // Notify that metadata has changed
         onMetadataChanged?.({ field, value: workspace.opf.metadata[field as keyof EPUBMetadata] });
       }
@@ -200,7 +200,6 @@
   $effect(() => {
     onTabFieldsChange?.({ fields: getTabFields(activeTab) });
   });
-
 </script>
 
 <div class="metadata-editor">
@@ -216,7 +215,7 @@
     {:else if error}
       <div class="error-state">
         <p class="error-message">{error}</p>
-        <button type="button" class="retry-button" onclick={() => error = null}>
+        <button type="button" class="retry-button" onclick={() => (error = null)}>
           {$t('Retry')}
         </button>
       </div>
@@ -327,5 +326,4 @@
     outline: none;
     box-shadow: 0 0 0 2px var(--color-focus-ring);
   }
-
 </style>

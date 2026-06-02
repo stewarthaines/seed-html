@@ -156,10 +156,12 @@ const selectItem = async (itemId: string, type: 'manifest' | 'source') => {
 ## Architectural Decision: Dual-API Approach for Preview
 
 **API Investigation Results**: The current ManifestManager has separate APIs for different item types:
+
 - **Manifest items**: `getContentPreview(workspaceId, itemId)` - provides rich preview with metadata, blob URLs, and content type detection
 - **SOURCE items**: `getSourceItemContent(workspaceId, sourcePath)` - provides raw file content only
 
 **Pragmatic Approach**: Use both APIs appropriately rather than forcing unification:
+
 - **Manifest items**: Rich preview with existing `getContentPreview()` method
 - **SOURCE items**: Raw text display using `getSourceItemContent()` (perfect for .txt, .js, .json files)
 
@@ -189,12 +191,16 @@ const handleItemSelection = async (event: { detail: { item: ManifestItem | Sourc
         contentPreview = await manifestManager.getContentPreview(workspaceId, selectedItem.id);
       } else {
         // SOURCE item - create simple text preview from raw content
-        const rawContent = await manifestManager.getSourceItemContent(workspaceId, selectedItem.path);
+        const rawContent = await manifestManager.getSourceItemContent(
+          workspaceId,
+          selectedItem.path
+        );
         contentPreview = {
           itemId: selectedItem.path,
           mediaType: 'text/plain',
           contentType: 'text',
-          textContent: typeof rawContent === 'string' ? rawContent : new TextDecoder().decode(rawContent)
+          textContent:
+            typeof rawContent === 'string' ? rawContent : new TextDecoder().decode(rawContent),
         };
       }
     } catch (error) {
@@ -224,10 +230,12 @@ createEventDispatcher<{
 ## API Investigation Findings
 
 ### Current ManifestManager APIs
+
 - **`getContentPreview(workspaceId, itemId)`**: Rich preview for manifest items with metadata, blob URLs, content type detection
 - **`getSourceItemContent(workspaceId, sourcePath)`**: Raw file content for SOURCE items (.txt, .js, .json files)
 
 ### Implementation Benefits
+
 - **No ManifestManager changes needed** - use existing APIs appropriately
 - **Rich preview for manifest items** - maintains existing functionality (images, videos, metadata)
 - **Raw text display for SOURCE items** - perfect for viewing code/config files
@@ -236,11 +244,13 @@ createEventDispatcher<{
 ## Key Utilities to Leverage
 
 ### 1. ManifestPreview Component
+
 - **Location**: `src/lib/components/manifest/ManifestPreview.svelte`
 - **Purpose**: Already exists and handles content preview rendering
 - **Integration**: Can be used directly in the right pane for both item types
 
 ### 2. Content Type Handling
+
 Both rich and raw content will be handled by the same preview patterns:
 
 ```svelte
@@ -258,6 +268,7 @@ Both rich and raw content will be handled by the same preview patterns:
 ```
 
 ### 3. Error States and Loading Indicators
+
 Standard loading patterns work for both APIs:
 
 ```svelte

@@ -7,12 +7,14 @@ Integrated audio clip editor within the spine item editor that enables precise t
 ## Integration Context
 
 ### Positioning & Activation
+
 - **Location**: Optional pane within spine item editor, positioned above the textarea
 - **Layout**: Single horizontal row when space permits, compact integration
 - **Activation**: Toggle-able when workspace contains manifest items with `media-type="audio/*"`
 - **Workflow**: Seamless integration with text editing - users can set clips and insert directives without leaving the spine editor
 
 ### User Experience Flow
+
 1. User edits spine item text content
 2. Audio clip editor appears when audio files available in workspace
 3. User selects audio file, sets timing, previews clip
@@ -22,6 +24,7 @@ Integrated audio clip editor within the spine item editor that enables precise t
 ## Requirements
 
 ### Core Functionality
+
 - Audio file selection from workspace manifest items
 - Precise timestamp input with 2-decimal precision (`h:mm:ss.dd`)
 - Duration-based end time calculation
@@ -30,6 +33,7 @@ Integrated audio clip editor within the spine item editor that enables precise t
 - Configurable playback rate
 
 ### Text Integration
+
 - Bi-directional synchronization with textarea content
 - Automatic parsing of selected `:clip[]{}` directives
 - Configurable output template (workspace setting)
@@ -45,6 +49,7 @@ Integrated audio clip editor within the spine item editor that enables precise t
 ## Technical Approach
 
 ### Core Technologies
+
 - HTML5 Audio API for playback control
 - Svelte 5 runes for reactive state management
 - Service architecture integration following project patterns
@@ -119,7 +124,11 @@ interface ClipDirective {
 
 // Service-specific errors
 export class AudioClipServiceError extends Error {
-  constructor(message: string, public code: string, public audioHref?: string) {
+  constructor(
+    message: string,
+    public code: string,
+    public audioHref?: string
+  ) {
     super(message);
     this.name = 'AudioClipServiceError';
   }
@@ -140,13 +149,13 @@ Integrated component using Svelte 5 runes and service injection:
   import { onMount } from 'svelte';
 
   // Service injection via props
-  let { 
+  let {
     workspace,
     audioClipService,
     settingsService,
     textContent = $bindable(),
     textareaSelection = $bindable(),
-    onInsertClip
+    onInsertClip,
   } = $props<{
     workspace: WorkspaceState;
     audioClipService: AudioClipService;
@@ -164,12 +173,12 @@ Integrated component using Svelte 5 runes and service injection:
   let isPlaying = $state(false);
   let isLoading = $state(false);
   let error = $state<string | null>(null);
-  
+
   // Clip timing state
   let startTimeString = $state('0:00:00.00');
   let durationString = $state('0:00:05.00');
   let playbackRate = $state(1.0);
-  
+
   // Derived state
   let startSeconds = $derived(audioClipService.parseTimeString(startTimeString));
   let durationSeconds = $derived(audioClipService.parseTimeString(durationString));
@@ -229,22 +238,23 @@ Integrated component using Svelte 5 runes and service injection:
   // Component methods
   const insertClipDirective = () => {
     if (!hasValidClip || !selectedAudioFile) return;
-    
-    const template = settingsService.getSetting(workspace.id, 'audioClipTemplate') || 
-                    audioClipService.getDefaultTemplate();
-    
+
+    const template =
+      settingsService.getSetting(workspace.id, 'audioClipTemplate') ||
+      audioClipService.getDefaultTemplate();
+
     const clipData: ClipData = {
       href: selectedAudioHref,
       startTime: startSeconds,
       duration: durationSeconds,
       endTime: endSeconds,
-      playbackRate: playbackRate !== 1.0 ? playbackRate : undefined
+      playbackRate: playbackRate !== 1.0 ? playbackRate : undefined,
     };
-    
+
     const clipText = audioClipService.formatClipDirective(clipData, template);
     onInsertClip(clipText);
   };
-  
+
   const loadFromSelection = () => {
     // This is handled automatically by the $effect above,
     // but we could add explicit confirmation here
@@ -253,7 +263,7 @@ Integrated component using Svelte 5 runes and service injection:
       const parsed = audioClipService.parseClipDirective(selectedText);
       if (!parsed) {
         error = 'Selected text is not a valid clip directive';
-        setTimeout(() => error = null, 3000);
+        setTimeout(() => (error = null), 3000);
       }
     }
   };
@@ -261,14 +271,14 @@ Integrated component using Svelte 5 runes and service injection:
   // Jog controls: modify start time and reset audio position
   const jogStartTime = (deltaSeconds: number) => {
     if (!audioElement) return;
-    
+
     const newStartTime = Math.max(0, startSeconds + deltaSeconds);
     const maxStartTime = audioElement.duration - durationSeconds;
     const clampedStartTime = Math.min(newStartTime, maxStartTime);
-    
+
     startTimeString = audioClipService.formatTimeString(clampedStartTime);
     audioClipService.setClipRange(clampedStartTime, clampedStartTime + durationSeconds);
-    
+
     // Reset audio to new start position
     audioElement.currentTime = clampedStartTime;
   };
@@ -276,13 +286,13 @@ Integrated component using Svelte 5 runes and service injection:
   // Slider interaction: update start time from visual slider
   const updateStartFromSlider = (newStartTime: number) => {
     if (!audioElement) return;
-    
+
     const maxStartTime = audioElement.duration - durationSeconds;
     const clampedStartTime = Math.min(newStartTime, maxStartTime);
-    
+
     startTimeString = audioClipService.formatTimeString(clampedStartTime);
     audioClipService.setClipRange(clampedStartTime, clampedStartTime + durationSeconds);
-    
+
     // Update audio position if not playing
     if (audioElement.paused) {
       audioElement.currentTime = clampedStartTime;
@@ -292,9 +302,7 @@ Integrated component using Svelte 5 runes and service injection:
 
 <div class="audio-clip-editor">
   {#if availableAudioFiles.length === 0}
-    <div class="no-audio-message">
-      No audio files found in workspace
-    </div>
+    <div class="no-audio-message">No audio files found in workspace</div>
   {:else}
     <!-- Desktop: Single row layout -->
     <div class="audio-controls-row">
@@ -319,7 +327,7 @@ Integrated component using Svelte 5 runes and service injection:
           max={audioElement?.duration || 100}
           step="0.1"
           value={startSeconds}
-          oninput={(e) => updateStartFromSlider(parseFloat(e.target.value))}
+          oninput={e => updateStartFromSlider(parseFloat(e.target.value))}
         />
       </div>
 
@@ -337,10 +345,18 @@ Integrated component using Svelte 5 runes and service injection:
 
       <!-- Jog controls -->
       <div class="control-group jog-controls">
-        <button onclick={() => jogStartTime(-1)} disabled={isLoading} title="Start -1 second">-1</button>
-        <button onclick={() => jogStartTime(-0.1)} disabled={isLoading} title="Start -0.1 second">-.1</button>
-        <button onclick={() => jogStartTime(0.1)} disabled={isLoading} title="Start +0.1 second">+.1</button>
-        <button onclick={() => jogStartTime(1)} disabled={isLoading} title="Start +1 second">+1</button>
+        <button onclick={() => jogStartTime(-1)} disabled={isLoading} title="Start -1 second"
+          >-1</button
+        >
+        <button onclick={() => jogStartTime(-0.1)} disabled={isLoading} title="Start -0.1 second"
+          >-.1</button
+        >
+        <button onclick={() => jogStartTime(0.1)} disabled={isLoading} title="Start +0.1 second"
+          >+.1</button
+        >
+        <button onclick={() => jogStartTime(1)} disabled={isLoading} title="Start +1 second"
+          >+1</button
+        >
       </div>
 
       <div class="control-group">
@@ -376,11 +392,7 @@ Integrated component using Svelte 5 runes and service injection:
       </div>
 
       <div class="control-group actions">
-        <button
-          onclick={insertClipDirective}
-          disabled={!hasValidClip}
-          class="primary"
-        >
+        <button onclick={insertClipDirective} disabled={!hasValidClip} class="primary">
           Insert
         </button>
       </div>
@@ -397,7 +409,7 @@ Integrated component using Svelte 5 runes and service injection:
           max={audioElement?.duration || 100}
           step="0.1"
           value={startSeconds}
-          oninput={(e) => updateStartFromSlider(parseFloat(e.target.value))}
+          oninput={e => updateStartFromSlider(parseFloat(e.target.value))}
         />
       </div>
 
@@ -473,7 +485,7 @@ Integrated component using Svelte 5 runes and service injection:
   }
 
   .control-group select,
-  .control-group input[type="text"] {
+  .control-group input[type='text'] {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
     padding: 0.25rem 0.5rem;
@@ -483,7 +495,7 @@ Integrated component using Svelte 5 runes and service injection:
     min-width: 120px;
   }
 
-  .control-group input[type="text"] {
+  .control-group input[type='text'] {
     width: 100px;
   }
 
@@ -630,7 +642,7 @@ Integrated component using Svelte 5 runes and service injection:
       flex-wrap: wrap;
       gap: 0.5rem;
     }
-    
+
     .mobile-row {
       margin-top: 0.75rem;
       padding-top: 0.75rem;
@@ -641,7 +653,7 @@ Integrated component using Svelte 5 runes and service injection:
       justify-content: space-between;
       min-width: auto;
     }
-    
+
     .actions {
       margin-left: 0;
       justify-content: center;
@@ -738,10 +750,7 @@ export class AudioClipService {
       audioElement.playbackRate = this.playbackRate;
       await audioElement.play();
     } catch (error) {
-      throw new AudioClipServiceError(
-        `Failed to play clip: ${error.message}`, 
-        'PLAYBACK_ERROR'
-      );
+      throw new AudioClipServiceError(`Failed to play clip: ${error.message}`, 'PLAYBACK_ERROR');
     }
   }
 
@@ -788,7 +797,7 @@ export class AudioClipService {
   parseTimeString(timeString: string): number {
     const timeRegex = /^(\d+):(\d{2}):(\d{2})\.(\d{2})$/;
     const match = timeString.match(timeRegex);
-    
+
     if (!match) {
       throw new AudioClipServiceError(`Invalid time format: ${timeString}`, 'INVALID_TIME_FORMAT');
     }
@@ -815,31 +824,31 @@ export class AudioClipService {
     // Parse :clip[label]{src=href begin=time end=time rate=rate} format
     const clipRegex = /:clip\[([^\]]*)\]\{([^}]+)\}/;
     const match = text.match(clipRegex);
-    
+
     if (!match) return null;
-    
+
     const label = match[1] || '';
     const attrs = match[2];
-    
+
     // Parse attributes
     const attrRegex = /(\w+)=([^\s}]+)/g;
     const attributes: Record<string, string> = {};
     let attrMatch;
-    
+
     while ((attrMatch = attrRegex.exec(attrs)) !== null) {
       attributes[attrMatch[1]] = attrMatch[2];
     }
-    
+
     if (!attributes.src || !attributes.begin || !attributes.end) {
       return null;
     }
-    
+
     return {
       href: attributes.src,
       begin: attributes.begin,
       end: attributes.end,
       rate: attributes.rate,
-      label: label
+      label: label,
     };
   }
 
@@ -849,7 +858,7 @@ export class AudioClipService {
       .replace('<href>', data.href)
       .replace('<begin>', this.formatTimeString(data.startTime))
       .replace('<end>', this.formatTimeString(data.endTime));
-    
+
     if (data.playbackRate && data.playbackRate !== 1.0) {
       // Add rate parameter if template supports it
       if (template.includes('<rate>')) {
@@ -862,7 +871,7 @@ export class AudioClipService {
       // Remove rate parameter if present in template
       result = result.replace(/\s*rate=<rate>/, '');
     }
-    
+
     return result;
   }
 
@@ -875,11 +884,13 @@ export class AudioClipService {
 ## Text Directive Format
 
 ### Default Output Format
+
 ```
 :clip[optional label]{src=audio.mp3 begin=1:23:45.67 end=1:28:50.33}
 ```
 
 ### Configurable Templates
+
 Workspace setting `audioClipTemplate` supports various formats:
 
 **Default**: `:clip[]{src=<href> begin=<begin> end=<end>}`
@@ -887,6 +898,7 @@ Workspace setting `audioClipTemplate` supports various formats:
 **Custom**: `:audio[]{file=<href> start=<begin> duration=<duration>}`
 
 ### Bi-directional Parsing
+
 - Automatic detection when user selects `:clip[]{}` text in textarea
 - Real-time population of editor fields from selected directive
 - Explicit "Load from Selection" button for confirmation
@@ -897,27 +909,32 @@ Workspace setting `audioClipTemplate` supports various formats:
 Following the project's 5-step development workflow:
 
 ### 1. Feature Planning ✅
+
 - This document serves as the comprehensive feature plan
 - Technical approach and integration defined
 - User experience flow documented
 
 ### 2. API Documentation 📝
+
 - Create `src/lib/audio/API.md` with complete AudioClipService documentation
 - Document all public methods with Input/Output/Side Effects/Usage examples
 - Include error scenarios and integration patterns
 
 ### 3. Unit Test Development 🧪
+
 - Write comprehensive tests for AudioClipService before implementation
 - Test time parsing/formatting, clip directive parsing, playback control
 - Use shared mocks for BlobURLManager and WorkspaceService
 - Cover error scenarios and validation
 
 ### 4. Implementation 💻
+
 - Implement AudioClipService following the API specification
 - Create AudioClipEditor component with Svelte 5 runes
 - Integrate with spine editor following established patterns
 
 ### 5. Storybook Story Creation 📖
+
 - Create interactive story demonstrating audio clip editing
 - Show integration with text content and directive insertion
 - Test browser audio APIs and real file handling
@@ -925,9 +942,14 @@ Following the project's 5-step development workflow:
 ## Error Handling
 
 ### Service-Level Errors
+
 ```typescript
 export class AudioClipServiceError extends Error {
-  constructor(message: string, public code: string, public audioHref?: string) {
+  constructor(
+    message: string,
+    public code: string,
+    public audioHref?: string
+  ) {
     super(message);
     this.name = 'AudioClipServiceError';
   }
@@ -935,6 +957,7 @@ export class AudioClipServiceError extends Error {
 ```
 
 ### Error Types & Recovery
+
 - `AUDIO_NOT_FOUND`: Audio file missing from workspace → Show file selector
 - `INVALID_TIME_FORMAT`: Bad time string → Reset to default format
 - `PLAYBACK_ERROR`: Audio playback failure → Show error, allow retry
@@ -944,16 +967,19 @@ export class AudioClipServiceError extends Error {
 ## Testing Strategy
 
 ### Unit Tests (Vitest + happy-dom)
+
 - AudioClipService methods (time parsing, directive formatting)
 - Validation logic and error handling
 - Text parsing and synchronization utilities
 
 ### Integration Tests
+
 - BlobURLManager integration for audio loading
 - WorkspaceService integration for manifest item access
 - Settings service integration for template configuration
 
 ### Storybook Tests (Real Browser)
+
 - HTML5 audio element behavior
 - File blob URL creation and playback
 - User interactions and form validation
@@ -962,11 +988,13 @@ export class AudioClipServiceError extends Error {
 ## Browser Compatibility
 
 ### Required APIs
+
 - HTML5 Audio element with precise seeking and event handling
 - Blob URLs for audio file access
 - Audio event listeners (`timeupdate`, `seeked`) for playback control
 
 ### Feature Detection
+
 - Audio format support (MP3, OGG, WAV)
 - Playback rate control capability
 - Precise currentTime seeking accuracy

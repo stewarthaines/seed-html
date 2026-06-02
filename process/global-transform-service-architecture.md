@@ -37,7 +37,7 @@ export class TransformEngine {
   private iframe: HTMLIFrameElement | null = null;
   private messageId = 0;
   private pendingMessages = new Map<number, { resolve: Function; reject: Function }>();
-  
+
   /**
    * Initialize the transform engine once at app startup
    */
@@ -45,32 +45,32 @@ export class TransformEngine {
     // Create iframe with transform scripts
     this.iframe = this.createIframe();
     document.body.appendChild(this.iframe);
-    
+
     // Setup message handling
     window.addEventListener('message', this.handleMessage.bind(this));
-    
+
     // Wait for iframe ready signal
     await this.waitForReady();
   }
-  
+
   /**
    * Update transform scripts (when switching spine items)
    */
   async setTransformScripts(scripts: TransformScripts): Promise<void> {
     if (!this.iframe) throw new Error('Transform engine not initialized');
-    
+
     await this.sendMessage('SET_TRANSFORM_SCRIPTS', scripts);
   }
-  
+
   /**
    * Execute transform on text
    */
   async executeTransform(plainText: string, timeout = 3000): Promise<TransformResult> {
     if (!this.iframe) throw new Error('Transform engine not initialized');
-    
+
     return await this.sendMessage('EXECUTE_TRANSFORM', { plainText, timeout });
   }
-  
+
   /**
    * Clean up resources (only on app shutdown)
    */
@@ -79,15 +79,16 @@ export class TransformEngine {
     this.iframe = null;
     this.pendingMessages.clear();
   }
-  
+
   private createIframe(): HTMLIFrameElement {
     const iframe = document.createElement('iframe');
     iframe.style.display = 'none';
     iframe.sandbox.add('allow-scripts');
-    
+
     // Get blob URL for editor.js from BlobURLManager
-    const editorScriptUrl = BlobURLManager.getInstance().getStaticAssetURL('assets/iframe/editor.js');
-    
+    const editorScriptUrl =
+      BlobURLManager.getInstance().getStaticAssetURL('assets/iframe/editor.js');
+
     // Create iframe HTML
     const iframeHtml = `<!DOCTYPE html>
 <html>
@@ -99,35 +100,35 @@ export class TransformEngine {
   <script src="${editorScriptUrl}"></script>
 </body>
 </html>`;
-    
+
     iframe.srcdoc = iframeHtml;
     return iframe;
   }
-  
+
   private async sendMessage(type: string, payload: any): Promise<any> {
     const id = ++this.messageId;
-    
+
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
         this.pendingMessages.delete(id);
         reject(new Error(`Message timeout: ${type}`));
       }, 5000);
-      
-      this.pendingMessages.set(id, { 
+
+      this.pendingMessages.set(id, {
         resolve: (result: any) => {
           clearTimeout(timeout);
           resolve(result);
         },
-        reject 
+        reject,
       });
-      
+
       this.iframe!.contentWindow!.postMessage({ type, payload, messageId: id }, '*');
     });
   }
-  
+
   private handleMessage(event: MessageEvent): void {
     const { type, messageId, payload } = event.data;
-    
+
     if (type === 'TRANSFORM_RESULT' && messageId) {
       const pending = this.pendingMessages.get(messageId);
       if (pending) {
@@ -140,9 +141,9 @@ export class TransformEngine {
       }
     }
   }
-  
+
   private waitForReady(): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const handler = (event: MessageEvent) => {
         if (event.data.type === 'IFRAME_READY') {
           window.removeEventListener('message', handler);
@@ -162,10 +163,10 @@ export class TransformEngine {
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { TransformEngine } from './lib/infrastructure/transform-engine.js';
-  
+
   let transformEngine: TransformEngine | null = null;
   let engineReady = false;
-  
+
   onMount(async () => {
     try {
       // Initialize transform engine once at app startup
@@ -176,7 +177,7 @@ export class TransformEngine {
       console.error('Failed to initialize transform engine:', error);
     }
   });
-  
+
   onDestroy(() => {
     // Clean up only on app shutdown
     transformEngine?.cleanup();
@@ -192,7 +193,7 @@ export class TransformEngine {
 
 ### 3. Updated SpineTransformPipeline
 
-```typescript
+````typescript
 // spine-transform-pipeline.ts - Updated to use transform engine
 export class SpineTransformPipeline {
   constructor(
@@ -207,10 +208,10 @@ export class SpineTransformPipeline {
   async loadTransformScripts(): Promise<TransformScripts> {
     // Load scripts from workspace
     const scripts = await this.loadScriptsFromWorkspace();
-    
+
     // Update engine with new scripts
     await this.transformEngine.setTransformScripts(scripts);
-    
+
     return scripts;
   }
 
@@ -239,17 +240,18 @@ export class EnhancedAppState {
     this.transformEngine = transformEngine;
     // ... initialize services
   }
-  
+
   // Pass engine to components that need transforms
   getTransformEngine(): TransformEngine {
     return this.transformEngine;
   }
 }
-```
+````
 
 ## Implementation Steps
 
 ### 1. Create Transform Engine (Infrastructure)
+
 ```bash
 src/lib/infrastructure/
 └── transform-engine.ts  # New infrastructure component
@@ -260,22 +262,26 @@ src/lib/infrastructure/
 - No complex state management or queuing
 
 ### 2. Update App.svelte
+
 - Initialize TransformEngine on mount
 - Pass to EnhancedAppState constructor
 - Handle initialization errors gracefully
 
 ### 3. Refactor Transform Pipeline
+
 - Accept TransformEngine in constructor
 - Remove iframe creation/management code
 - Update loadTransformScripts() to use engine
 - Update executeTransform() to use engine
 
 ### 4. Update Component Chain
+
 - EnhancedAppState provides engine to SpineView
 - SpineView passes engine to SpinePreviewManager
 - SpinePreviewManager passes engine to SpineTransformPipeline
 
 ### 5. Testing
+
 - Verify race conditions are eliminated
 - Test rapid spine item switching
 - Confirm performance improvements
@@ -309,6 +315,7 @@ The core issue is timing - messages sent to iframes that aren't ready or have be
 This simplified architecture solves the race condition problem by ensuring the transform iframe is always available. Instead of creating and destroying iframes with component lifecycles, we create one iframe at app startup that persists throughout the session.
 
 The implementation is straightforward:
+
 1. Create infrastructure component that owns the iframe
 2. Initialize it once at app startup
 3. Update transform scripts when switching spine items

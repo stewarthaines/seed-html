@@ -1,6 +1,6 @@
 // @ts-nocheck
 // WebGL 3D Annotation Script - runs inside preview iframe
-(function() {
+(function () {
   // Mini WebGL helper for creating rotating 3D shapes
   class Simple3D {
     constructor(canvas) {
@@ -74,14 +74,26 @@
     }
 
     createPerspectiveMatrix(fovy, aspect, near, far) {
-      const f = 1.0 / Math.tan(fovy * Math.PI / 360);
+      const f = 1.0 / Math.tan((fovy * Math.PI) / 360);
       const rangeInv = 1 / (near - far);
-      
+
       return [
-        f / aspect, 0, 0, 0,
-        0, f, 0, 0,
-        0, 0, (near + far) * rangeInv, -1,
-        0, 0, near * far * rangeInv * 2, 0
+        f / aspect,
+        0,
+        0,
+        0,
+        0,
+        f,
+        0,
+        0,
+        0,
+        0,
+        (near + far) * rangeInv,
+        -1,
+        0,
+        0,
+        near * far * rangeInv * 2,
+        0,
       ];
     }
 
@@ -90,7 +102,7 @@
       const shader = gl.createShader(type);
       gl.shaderSource(shader, source);
       gl.compileShader(shader);
-      
+
       // Check for shader compilation errors
       if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
         const error = gl.getShaderInfoLog(shader);
@@ -99,57 +111,138 @@
         gl.deleteShader(shader);
         return null;
       }
-      
-      console.log('Shader compiled successfully:', type === gl.VERTEX_SHADER ? 'vertex' : 'fragment');
+
+      console.log(
+        'Shader compiled successfully:',
+        type === gl.VERTEX_SHADER ? 'vertex' : 'fragment'
+      );
       return shader;
     }
 
     createCube() {
       const positions = [
         // Front face (z = 0.5)
-        -0.5, -0.5, 0.5,  // 0
-        0.5, -0.5, 0.5,   // 1
-        0.5, 0.5, 0.5,    // 2
-        -0.5, 0.5, 0.5,   // 3
+        -0.5,
+        -0.5,
+        0.5, // 0
+        0.5,
+        -0.5,
+        0.5, // 1
+        0.5,
+        0.5,
+        0.5, // 2
+        -0.5,
+        0.5,
+        0.5, // 3
 
         // Back face (z = -0.5)
-        -0.5, -0.5, -0.5, // 4
-        -0.5, 0.5, -0.5,  // 5
-        0.5, 0.5, -0.5,   // 6
-        0.5, -0.5, -0.5,  // 7
+        -0.5,
+        -0.5,
+        -0.5, // 4
+        -0.5,
+        0.5,
+        -0.5, // 5
+        0.5,
+        0.5,
+        -0.5, // 6
+        0.5,
+        -0.5,
+        -0.5, // 7
 
         // Top face (y = 0.5)
-        -0.5, 0.5, -0.5,  // 8
-        -0.5, 0.5, 0.5,   // 9
-        0.5, 0.5, 0.5,    // 10
-        0.5, 0.5, -0.5,   // 11
+        -0.5,
+        0.5,
+        -0.5, // 8
+        -0.5,
+        0.5,
+        0.5, // 9
+        0.5,
+        0.5,
+        0.5, // 10
+        0.5,
+        0.5,
+        -0.5, // 11
 
         // Bottom face (y = -0.5)
-        -0.5, -0.5, -0.5, // 12
-        0.5, -0.5, -0.5,  // 13
-        0.5, -0.5, 0.5,   // 14
-        -0.5, -0.5, 0.5,  // 15
+        -0.5,
+        -0.5,
+        -0.5, // 12
+        0.5,
+        -0.5,
+        -0.5, // 13
+        0.5,
+        -0.5,
+        0.5, // 14
+        -0.5,
+        -0.5,
+        0.5, // 15
 
         // Right face (x = 0.5)
-        0.5, -0.5, -0.5,  // 16
-        0.5, 0.5, -0.5,   // 17
-        0.5, 0.5, 0.5,    // 18
-        0.5, -0.5, 0.5,   // 19
+        0.5,
+        -0.5,
+        -0.5, // 16
+        0.5,
+        0.5,
+        -0.5, // 17
+        0.5,
+        0.5,
+        0.5, // 18
+        0.5,
+        -0.5,
+        0.5, // 19
 
         // Left face (x = -0.5)
-        -0.5, -0.5, -0.5, // 20
-        -0.5, -0.5, 0.5,  // 21
-        -0.5, 0.5, 0.5,   // 22
-        -0.5, 0.5, -0.5,  // 23
+        -0.5,
+        -0.5,
+        -0.5, // 20
+        -0.5,
+        -0.5,
+        0.5, // 21
+        -0.5,
+        0.5,
+        0.5, // 22
+        -0.5,
+        0.5,
+        -0.5, // 23
       ];
 
       const indices = [
-        0, 1, 2,   0, 2, 3,    // front
-        4, 5, 6,   4, 6, 7,    // back
-        8, 9, 10,  8, 10, 11,  // top
-        12, 13, 14, 12, 14, 15, // bottom
-        16, 17, 18, 16, 18, 19, // right
-        20, 21, 22, 20, 22, 23  // left
+        0,
+        1,
+        2,
+        0,
+        2,
+        3, // front
+        4,
+        5,
+        6,
+        4,
+        6,
+        7, // back
+        8,
+        9,
+        10,
+        8,
+        10,
+        11, // top
+        12,
+        13,
+        14,
+        12,
+        14,
+        15, // bottom
+        16,
+        17,
+        18,
+        16,
+        18,
+        19, // right
+        20,
+        21,
+        22,
+        20,
+        22,
+        23, // left
       ];
 
       const gl = this.gl;
@@ -204,7 +297,11 @@
       gl.uniformMatrix4fv(this.programInfo.uniformLocations.rotationMatrix, false, rotationMatrix);
 
       // Set projection matrix
-      gl.uniformMatrix4fv(this.programInfo.uniformLocations.projectionMatrix, false, this.projectionMatrix);
+      gl.uniformMatrix4fv(
+        this.programInfo.uniformLocations.projectionMatrix,
+        false,
+        this.projectionMatrix
+      );
 
       // Draw
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, shape.indices);
@@ -220,13 +317,20 @@
     getGLErrorString(error) {
       const gl = this.gl;
       switch (error) {
-        case gl.NO_ERROR: return 'NO_ERROR';
-        case gl.INVALID_ENUM: return 'INVALID_ENUM';
-        case gl.INVALID_VALUE: return 'INVALID_VALUE';
-        case gl.INVALID_OPERATION: return 'INVALID_OPERATION';
-        case gl.OUT_OF_MEMORY: return 'OUT_OF_MEMORY';
-        case gl.CONTEXT_LOST_WEBGL: return 'CONTEXT_LOST_WEBGL';
-        default: return 'UNKNOWN_ERROR';
+        case gl.NO_ERROR:
+          return 'NO_ERROR';
+        case gl.INVALID_ENUM:
+          return 'INVALID_ENUM';
+        case gl.INVALID_VALUE:
+          return 'INVALID_VALUE';
+        case gl.INVALID_OPERATION:
+          return 'INVALID_OPERATION';
+        case gl.OUT_OF_MEMORY:
+          return 'OUT_OF_MEMORY';
+        case gl.CONTEXT_LOST_WEBGL:
+          return 'CONTEXT_LOST_WEBGL';
+        default:
+          return 'UNKNOWN_ERROR';
       }
     }
   }
@@ -234,50 +338,52 @@
   // Initialize WebGL annotations when DOM is ready
   function initWebGLAnnotations() {
     console.log('WebGL Annotations: Initializing in preview frame');
-    
+
     // Find all annotation elements in the current document
     const annotations = document.querySelectorAll('.webgl-annotation, [data-shape]');
-    
+
     console.log('WebGL Annotations: Found', annotations.length, 'annotation(s)');
-    
+
     annotations.forEach((element, index) => {
       console.log('Processing annotation', index, element);
-      
+
       // Get the type from data attribute or text content
       const _type = element.dataset.shape || element.textContent.toLowerCase().trim();
-      
+
       // Create canvas
       const canvas = document.createElement('canvas');
       canvas.width = 300;
       canvas.height = 300;
-      canvas.style.cssText = 'display: block; margin: 1em auto; border: 1px solid #ccc; border-radius: 8px;';
-      
+      canvas.style.cssText =
+        'display: block; margin: 1em auto; border: 1px solid #ccc; border-radius: 8px;';
+
       console.log('Canvas created for annotation', index);
-      
+
       // Initialize WebGL
       const renderer = new Simple3D(canvas);
       if (!renderer.gl) {
         console.warn('WebGL not supported for annotation', index);
         const fallback = document.createElement('div');
-        fallback.style.cssText = 'width: 300px; height: 300px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; margin: 1em auto; border: 1px solid #ccc; border-radius: 8px;';
+        fallback.style.cssText =
+          'width: 300px; height: 300px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; margin: 1em auto; border: 1px solid #ccc; border-radius: 8px;';
         fallback.textContent = 'WebGL not supported';
         element.appendChild(fallback);
         return;
       }
-      
+
       console.log('WebGL initialized for annotation', index);
-      
+
       // Create shape and start animation
       const shape = renderer.createCube();
-      
+
       function animate() {
         renderer.render(shape);
         requestAnimationFrame(animate);
       }
       animate();
-      
+
       console.log('Animation started for annotation', index);
-      
+
       // Handle inline vs block elements differently
       if (element.tagName === 'SPAN' || element.tagName === 'EM') {
         // For inline elements, highlight and insert canvas after
@@ -287,15 +393,16 @@
         // For block elements, append canvas inside
         element.appendChild(canvas);
       }
-      
+
       console.log('WebGL canvas inserted for annotation', index);
     });
-    
+
     // Handle test markers
     const testMarkers = document.querySelectorAll('.webgl-test');
     testMarkers.forEach((marker, index) => {
       const badge = document.createElement('span');
-      badge.style.cssText = 'display: inline-block; padding: 0.25em 0.5em; background: #e3f2fd; color: #1976d2; border-radius: 4px; font-size: 0.9em; margin-left: 0.5em;';
+      badge.style.cssText =
+        'display: inline-block; padding: 0.25em 0.5em; background: #e3f2fd; color: #1976d2; border-radius: 4px; font-size: 0.9em; margin-left: 0.5em;';
       badge.textContent = 'WebGL Active ✓';
       marker.appendChild(badge);
       console.log('WebGL test marker processed', index);

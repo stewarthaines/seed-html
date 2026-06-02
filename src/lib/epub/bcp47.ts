@@ -40,7 +40,8 @@ export function isWellFormedLanguageTag(tag: string): boolean {
   if (new RegExp(`^${privateUse}$`).test(value)) return true;
 
   // A small set of irregular grandfathered tags still in use.
-  const grandfathered = /^(i-(ami|bnn|default|enochian|hak|klingon|lux|mingo|navajo|pwn|tao|tay|tsu)|en-GB-oed|sgn-(BE-FR|BE-NL|CH-DE))$/i;
+  const grandfathered =
+    /^(i-(ami|bnn|default|enochian|hak|klingon|lux|mingo|navajo|pwn|tao|tay|tsu)|en-GB-oed|sgn-(BE-FR|BE-NL|CH-DE))$/i;
   if (grandfathered.test(value)) return true;
 
   const language = '[A-Za-z]{2,3}(-[A-Za-z]{3}){0,3}'; // language + optional extlangs

@@ -75,55 +75,58 @@ const mockTransformPipeline = {
 **Purpose**: Fast testing of pure business logic and validation
 
 #### Core Logic Tests
+
 ```typescript
 describe('OutlineGenerator.generateFromSpine', () => {
   // Test real business logic - no mocks needed
-  test('generates valid EPUB navigation structure')
-  test('extracts titles from XHTML headings')
-  test('handles spine items without titles using fallback strategies')
-  test('creates proper navigation metadata for OPF')
-  test('generates flat list structure (not nested)')
-  test('handles empty spine array gracefully')
-  test('skips spine items with missing XHTML files')
-  test('skips spine items with malformed XHTML')
-  test('generates valid navigation when all items are skipped')
-  test('logs warnings for skipped items')
-  test('respects GenerationOptions configuration')
-})
+  test('generates valid EPUB navigation structure');
+  test('extracts titles from XHTML headings');
+  test('handles spine items without titles using fallback strategies');
+  test('creates proper navigation metadata for OPF');
+  test('generates flat list structure (not nested)');
+  test('handles empty spine array gracefully');
+  test('skips spine items with missing XHTML files');
+  test('skips spine items with malformed XHTML');
+  test('generates valid navigation when all items are skipped');
+  test('logs warnings for skipped items');
+  test('respects GenerationOptions configuration');
+});
 
 describe('OutlineGenerator.processUserContent', () => {
-  test('processes user content through transform pipeline')
-  test('handles transform pipeline errors gracefully')
-  test('validates resulting XHTML for navigation compliance')
-  test('creates navigation metadata from processed content')
-  test('handles empty user content')
-  test('respects ProcessingOptions configuration')
-})
+  test('processes user content through transform pipeline');
+  test('handles transform pipeline errors gracefully');
+  test('validates resulting XHTML for navigation compliance');
+  test('creates navigation metadata from processed content');
+  test('handles empty user content');
+  test('respects ProcessingOptions configuration');
+});
 ```
 
 #### File Operation Tests (Mock External Boundary)
+
 ```typescript
 describe('File Operations', () => {
   // Use shared MockWorkspaceManager for consistent file operations testing
-  test('reads XHTML files from workspace using spine item hrefs')
-  test('handles missing XHTML files by skipping items')
-  test('handles file read errors gracefully using mock.setFailureMode("file-read")')
-  test('handles permission denied errors')
-  test('continues processing remaining items after file errors')
-})
+  test('reads XHTML files from workspace using spine item hrefs');
+  test('handles missing XHTML files by skipping items');
+  test('handles file read errors gracefully using mock.setFailureMode("file-read")');
+  test('handles permission denied errors');
+  test('continues processing remaining items after file errors');
+});
 ```
 
 #### EPUB Compliance Tests
+
 ```typescript
 describe('EPUB Compliance', () => {
-  test('generates valid EPUB 3.x navigation structure')
-  test('includes required namespace declarations')
-  test('uses proper epub:type and role attributes')
-  test('creates valid anchor href references')
-  test('generates flat list structure (not nested)')
-  test('creates valid XHTML document with proper DOCTYPE')
-  test('includes proper HTML head with title and charset')
-})
+  test('generates valid EPUB 3.x navigation structure');
+  test('includes required namespace declarations');
+  test('uses proper epub:type and role attributes');
+  test('creates valid anchor href references');
+  test('generates flat list structure (not nested)');
+  test('creates valid XHTML document with proper DOCTYPE');
+  test('includes proper HTML head with title and charset');
+});
 ```
 
 ### Integration Tests (Real APIs Where Practical)
@@ -132,11 +135,11 @@ describe('EPUB Compliance', () => {
 
 ```typescript
 describe('OutlineGenerator Integration', () => {
-  test('generates navigation from real spine items and workspace')
-  test('integrates with transform pipeline for user content')
-  test('handles large numbers of spine items efficiently')
-  test('persists and loads generated navigation through full cycle')
-})
+  test('generates navigation from real spine items and workspace');
+  test('integrates with transform pipeline for user content');
+  test('handles large numbers of spine items efficiently');
+  test('persists and loads generated navigation through full cycle');
+});
 ```
 
 ### Storybook Tests (Real Browser)
@@ -159,17 +162,21 @@ describe('OutlineGenerator Integration', () => {
 OutlineGenerator should work well with happy-dom since it uses:
 
 #### ✅ Well-Supported APIs
+
 - **DOMParser**: Basic XHTML parsing for title extraction
 - **Basic DOM operations**: createElement, querySelector, innerHTML
 - **String operations**: XHTML template generation
 - **URL operations**: href reference validation
 
 #### ❌ Potential Limitations
+
 If we encounter issues with:
+
 - **Complex XML namespace parsing**: Skip and test in Storybook
 - **Advanced DOM manipulation**: Skip and test in Storybook
 
 ### Skip Pattern (If Needed)
+
 ```typescript
 // Skip: requires complex XML namespace parsing
 // This functionality is tested in browser environment via Storybook
@@ -201,7 +208,7 @@ export function createMockSpineItems(): SpineItemWithSource[] {
       mediaType: 'application/xhtml+xml',
       linear: true,
       properties: [],
-    }
+    },
   ];
 }
 
@@ -231,11 +238,13 @@ export function createMalformedXHTML(): string {
 </html>`;
 }
 
-export function createExpectedNavigationXHTML(items: Array<{href: string, title: string}>): string {
-  const listItems = items.map(item => 
-    `      <li><a href="${item.href}">${item.title}</a></li>`
-  ).join('\n');
-  
+export function createExpectedNavigationXHTML(
+  items: Array<{ href: string; title: string }>
+): string {
+  const listItems = items
+    .map(item => `      <li><a href="${item.href}">${item.title}</a></li>`)
+    .join('\n');
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
@@ -314,45 +323,50 @@ export function expectValidEPUBStructure(xhtml: string) {
 ## Specific Test Scenarios
 
 ### Title Extraction Tests
+
 ```typescript
 describe('Title Extraction', () => {
-  test('extracts title from h1 element')
-  test('extracts title from h2 when h1 not present')
-  test('extracts title from document title when no headings')
-  test('uses filename fallback when no title found')
-  test('uses "Chapter N" pattern as final fallback')
-  test('handles XHTML with multiple headings (uses first)')
-  test('handles empty headings gracefully')
-  test('strips HTML tags from extracted titles')
-})
+  test('extracts title from h1 element');
+  test('extracts title from h2 when h1 not present');
+  test('extracts title from document title when no headings');
+  test('uses filename fallback when no title found');
+  test('uses "Chapter N" pattern as final fallback');
+  test('handles XHTML with multiple headings (uses first)');
+  test('handles empty headings gracefully');
+  test('strips HTML tags from extracted titles');
+});
 ```
 
 ### Error Handling Tests
+
 ```typescript
 describe('Error Handling', () => {
   // Use shared mock's built-in failure modes for consistent error testing
-  test('skips spine items with missing XHTML files')
-  test('skips spine items with file read permission errors using mock.setFailureMode("file-read")')
-  test('skips spine items with malformed XHTML')
-  test('continues processing after individual item failures')
-  test('generates empty navigation when all items fail')
-  test('logs appropriate warnings for skipped items')
-  test('handles workspace manager errors gracefully using mock.setFailureMode("workspace-not-found")')
-  test('handles transform pipeline errors in user content processing')
-})
+  test('skips spine items with missing XHTML files');
+  test('skips spine items with file read permission errors using mock.setFailureMode("file-read")');
+  test('skips spine items with malformed XHTML');
+  test('continues processing after individual item failures');
+  test('generates empty navigation when all items fail');
+  test('logs appropriate warnings for skipped items');
+  test(
+    'handles workspace manager errors gracefully using mock.setFailureMode("workspace-not-found")'
+  );
+  test('handles transform pipeline errors in user content processing');
+});
 ```
 
 ### Edge Cases
+
 ```typescript
 describe('Edge Cases', () => {
-  test('handles empty spine items array')
-  test('handles spine items with empty hrefs')
-  test('handles spine items with relative paths')
-  test('handles spine items with special characters in hrefs')
-  test('handles extremely large numbers of spine items')
-  test('handles spine items with duplicate hrefs')
-  test('handles mixed success/failure scenarios')
-})
+  test('handles empty spine items array');
+  test('handles spine items with empty hrefs');
+  test('handles spine items with relative paths');
+  test('handles spine items with special characters in hrefs');
+  test('handles extremely large numbers of spine items');
+  test('handles spine items with duplicate hrefs');
+  test('handles mixed success/failure scenarios');
+});
 ```
 
 ## Import Path Guidelines
@@ -377,13 +391,14 @@ import type { IWorkspaceManager } from '../workspace/types';
 Before considering tests complete:
 
 1. **TypeScript Validation**: `npm run check` must pass
-2. **Test Execution**: `npm test` must pass  
+2. **Test Execution**: `npm test` must pass
 3. **Combined Validation**: `npm run check && npm test`
 4. **ESLint Compliance**: `npm run lint` must pass
 
 ## Testing Checklist
 
 ### For Pure Functions (Unit Tests)
+
 - ✅ Test all valid input combinations
 - ✅ Test all validation error cases
 - ✅ Test boundary conditions
@@ -392,6 +407,7 @@ Before considering tests complete:
 - ✅ Ensure no side effects
 
 ### For File Operations (Unit Tests + Integration)
+
 - ✅ Mock file operations in unit tests
 - ✅ Test error handling (file not found, permission denied)
 - ✅ Test with corrupted/malformed XHTML
@@ -399,6 +415,7 @@ Before considering tests complete:
 - ✅ Verify atomic operations in integration tests
 
 ### For EPUB Compliance (All Levels)
+
 - ✅ Validate generated XHTML structure
 - ✅ Test namespace declarations
 - ✅ Verify semantic markup
@@ -406,6 +423,7 @@ Before considering tests complete:
 - ✅ Visual verification of navigation
 
 ### Error Scenarios
+
 - ✅ Missing XHTML files
 - ✅ File read permissions
 - ✅ Malformed XHTML parsing
@@ -437,6 +455,7 @@ export const ContentPreviewIntegration: Story = {
 ```
 
 ### Browser Testing Focus
+
 - Real XHTML file operations
 - ContentPreview component integration
 - Visual verification of generated navigation

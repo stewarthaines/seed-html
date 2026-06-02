@@ -69,24 +69,23 @@ This demonstrates the complete feature workflow and validates functionality in a
     try {
       // Wait for feature initialization
       await canvas.findByRole('main', {}, { timeout: 5000 });
-      
+
       // Reset to clean state
       const resetButton = canvas.getByText('Reset Demo');
       await userEvent.click(resetButton);
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // Perform example operation
       const exampleButton = canvas.getByText('Example Operation');
       await userEvent.click(exampleButton);
       await new Promise(resolve => setTimeout(resolve, 300));
-      
+
       // Perform another operation
       const anotherButton = canvas.getByText('Another Operation');
       await userEvent.click(anotherButton);
       await new Promise(resolve => setTimeout(resolve, 300));
-      
+
       // Add more operations as needed for your feature demo
-      
     } catch (error) {
       console.log('Play function interaction failed:', error);
       // Continue anyway to show current state

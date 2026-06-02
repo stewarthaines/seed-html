@@ -115,9 +115,7 @@
   };
 
   const toggleProperty = (value: string, checked: boolean) => {
-    editProperties = checked
-      ? [...editProperties, value]
-      : editProperties.filter(p => p !== value);
+    editProperties = checked ? [...editProperties, value] : editProperties.filter(p => p !== value);
     persistEdit({ properties: editProperties.length ? editProperties : undefined });
   };
 
@@ -411,13 +409,11 @@
         // Extract filename from href (remove directory prefix)
         filename = manifestItem.href.split('/').pop() || manifestItem.id;
         mimeType = manifestItem.mediaType;
-        
       } else if (selectedItemType === 'source') {
         const sourceItem = selectedItem as SourceItem;
         content = await workspaceService.readFile(workspace.id, sourceItem.path);
         filename = sourceItem.name || sourceItem.path.split('/').pop() || 'source-file';
         mimeType = sourceItem.mediaType || 'application/octet-stream';
-        
       } else if (selectedItemType === 'opf') {
         content = await workspaceService.readFile(workspace.id, workspace.pathInfo.rootfilePath);
         filename = 'content.opf';
@@ -429,26 +425,24 @@
       // Create blob and download link
       const blob = new Blob([content], { type: mimeType });
       const downloadUrl = URL.createObjectURL(blob);
-      
+
       // Create temporary download link and trigger download
       const downloadLink = document.createElement('a');
       downloadLink.href = downloadUrl;
       downloadLink.download = filename;
       downloadLink.style.display = 'none';
-      
+
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
-      
+
       // Clean up blob URL
       URL.revokeObjectURL(downloadUrl);
-      
     } catch (err) {
       console.error('Download failed:', err);
       // Could dispatch an error event or show a toast notification here
     }
   };
-
 
   const getContentIcon = (contentType: string) => {
     switch (contentType) {
@@ -489,11 +483,7 @@
       <div class="preview-header">
         <!-- Action buttons moved to header -->
         <div class="preview-actions">
-          <button
-            type="button"
-            class="action-button download-button"
-            onclick={handleDownloadClick}
-          >
+          <button type="button" class="action-button download-button" onclick={handleDownloadClick}>
             {$t('Download')}
           </button>
           {#if selectedItemType === 'manifest'}
@@ -707,7 +697,6 @@
     gap: 1rem;
   }
 
-
   .item-edit-form {
     flex-shrink: 0;
     padding: 0.75rem 1rem;
@@ -863,7 +852,6 @@
     font-size: 0.875rem;
     margin-top: 0.5rem;
   }
-
 
   .preview-actions {
     flex-shrink: 0;

@@ -20,7 +20,6 @@ import {
   InvalidContentError as InvalidContentErrorClass,
 } from './types.js';
 
-
 /**
  * Required sample content translation keys
  */
@@ -38,7 +37,6 @@ const REQUIRED_SAMPLE_KEYS: SampleContentKey[] = [
  */
 export class SampleContentGenerator {
   constructor(private catalogs: Record<string, TranslationCatalog>) {}
-
 
   /**
    * Simple translation method using direct catalog lookup
@@ -69,7 +67,7 @@ export class SampleContentGenerator {
   private hasTranslation(locale: string, key: string): boolean {
     const catalog = this.catalogs[locale];
     if (!catalog) return false;
-    
+
     const translation = catalog.messages[key];
     return translation !== undefined && translation.trim() !== '';
   }
@@ -169,10 +167,7 @@ export class SampleContentGenerator {
     }
 
     // Check for missing chapter translations
-    const chapterKeys: SampleContentKey[] = [
-      'sample.chapter1.title',
-      'sample.chapter1.content',
-    ];
+    const chapterKeys: SampleContentKey[] = ['sample.chapter1.title', 'sample.chapter1.content'];
 
     const missingKeys: string[] = [];
     for (const key of chapterKeys) {
@@ -205,9 +200,7 @@ export class SampleContentGenerator {
 
     for (const locale of allLocales) {
       // Check if all required keys are available for this locale
-      const hasAllKeys = REQUIRED_SAMPLE_KEYS.every(key =>
-        this.hasTranslation(locale, key)
-      );
+      const hasAllKeys = REQUIRED_SAMPLE_KEYS.every(key => this.hasTranslation(locale, key));
 
       if (hasAllKeys) {
         availableLocales.push(locale);
@@ -237,7 +230,7 @@ export class SampleContentGenerator {
       } else {
         // Key exists, check if it's empty
         const translation = catalog.messages[key];
-        
+
         if (!translation || translation.trim() === '') {
           // Key exists but is empty
           emptyKeys.push(key);

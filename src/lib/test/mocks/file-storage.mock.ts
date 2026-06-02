@@ -380,4 +380,3 @@ export class MockFileStorage implements Partial<FileStorageAPI> {
 export function createMockFileStorage(): MockFileStorage {
   return new MockFileStorage();
 }
-

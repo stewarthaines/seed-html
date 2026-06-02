@@ -25,7 +25,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { AudioClipService, ClipData } from '$lib/audio/audio-clip.service.js';
-  import type { WorkspaceService, WorkspaceState } from '$lib/services/workspace/workspace.service.js';
+  import type {
+    WorkspaceService,
+    WorkspaceState,
+  } from '$lib/services/workspace/workspace.service.js';
   import type { SettingsService } from '$lib/services/settings/settings.service.js';
   import type { ManifestItem } from '$lib/epub/opf-utils.js';
 
@@ -61,7 +64,7 @@
   let startTimeString = $state<string>('0:00:00.00');
   let durationString = $state<string>('0:00:10.00');
   let rangeSliderValue = $state<number>(0);
-  
+
   // Clip metadata state
   let labelString = $state<string>('');
 
@@ -71,35 +74,43 @@
   let playbackMode = $state<'clip' | 'last' | null>(null);
 
   // Derived reactive computations
-  let startSeconds = $derived((() => {
-    try {
-      return audioClipService.parseTimeString(startTimeString);
-    } catch {
-      return 0;
-    }
-  })());
+  let startSeconds = $derived(
+    (() => {
+      try {
+        return audioClipService.parseTimeString(startTimeString);
+      } catch {
+        return 0;
+      }
+    })()
+  );
 
-  let durationSeconds = $derived((() => {
-    try {
-      return audioClipService.parseTimeString(durationString);
-    } catch {
-      return 10;
-    }
-  })());
+  let durationSeconds = $derived(
+    (() => {
+      try {
+        return audioClipService.parseTimeString(durationString);
+      } catch {
+        return 10;
+      }
+    })()
+  );
 
   let endSeconds = $derived(startSeconds + durationSeconds);
   let _endTimeString = $derived(audioClipService.formatTimeString(endSeconds));
 
-  let canLoadFromSelection = $derived((() => {
-    if (!textareaSelection || !textContent) return false;
-    const selectedText = textContent.slice(textareaSelection.start, textareaSelection.end);
-    const parsed = audioClipService.parseClipDirective(selectedText);
-    return parsed !== null;
-  })());
+  let canLoadFromSelection = $derived(
+    (() => {
+      if (!textareaSelection || !textContent) return false;
+      const selectedText = textContent.slice(textareaSelection.start, textareaSelection.end);
+      const parsed = audioClipService.parseClipDirective(selectedText);
+      return parsed !== null;
+    })()
+  );
 
   let audioButtonsDisabled = $derived(isLoading || !audioSrc);
   let playButtonLabel = $derived(isPlaying && playbackMode === 'clip' ? 'Stop' : 'Play');
-  let playLastButtonLabel = $derived(isPlayingLast && playbackMode === 'last' ? 'Stop' : 'Play Last 2s');
+  let playLastButtonLabel = $derived(
+    isPlayingLast && playbackMode === 'last' ? 'Stop' : 'Play Last 2s'
+  );
 
   // Load available audio files on mount
   onMount(async () => {
@@ -118,10 +129,15 @@
     if (selectedAudioHref && workspace.id) {
       (async () => {
         try {
-          console.log('🎵 Component: Loading audio - href:', selectedAudioHref, 'workspace:', workspace.id);
+          console.log(
+            '🎵 Component: Loading audio - href:',
+            selectedAudioHref,
+            'workspace:',
+            workspace.id
+          );
           isLoading = true;
           error = null;
-          
+
           const newAudioSrc = await audioClipService.loadAudioFile(workspace.id, selectedAudioHref);
           console.log('🎵 Component: Audio src received:', newAudioSrc);
           console.log('🎵 Component: Setting audioSrc, will trigger audio element load');
@@ -143,20 +159,20 @@
       console.log('🎵 Component: Audio element and src available:', {
         audioSrc,
         audioElementSrc: audioElement.src,
-        readyState: audioElement.readyState
+        readyState: audioElement.readyState,
       });
-      
+
       const handleLoadedMetadata = () => {
         if (!audioElement) return;
         console.log('🎵 Component: loadedmetadata event fired');
         console.log('🎵 Component: Audio duration:', audioElement.duration);
         console.log('🎵 Component: Audio ready state:', audioElement.readyState);
-        
+
         const metadata = audioClipService.getAudioMetadata(audioElement);
         console.log('🎵 Component: Extracted metadata:', metadata);
         audioDuration = metadata.duration;
         console.log('🎵 Component: Set audioDuration to:', audioDuration);
-        
+
         // Update clip range in service
         audioClipService.setClipRange(startSeconds, endSeconds);
       };
@@ -230,7 +246,7 @@
   function handleRangeInput(event: Event): void {
     const input = event.target as HTMLInputElement;
     rangeSliderValue = parseFloat(input.value);
-    
+
     // Directly update start time based on slider position to avoid sync conflicts
     if (audioDuration > 0) {
       const newStartSeconds = (rangeSliderValue / 100) * audioDuration;
@@ -246,7 +262,7 @@
       const currentStartSeconds = startSeconds;
       const currentDurationSeconds = durationSeconds;
       const maxDuration = audioDuration - currentStartSeconds;
-      
+
       // Clamp duration if start + duration exceeds audio length
       if (currentDurationSeconds > maxDuration) {
         durationString = audioClipService.formatTimeString(maxDuration);
@@ -261,7 +277,7 @@
   function parseFlexibleTimeInput(input: string): string {
     const trimmed = input.trim();
     if (!trimmed) return '0:00:00.00';
-    
+
     // If it's already a complete time format, try to parse it directly
     try {
       audioClipService.parseTimeString(trimmed);
@@ -269,20 +285,20 @@
     } catch {
       // Fall through to flexible parsing
     }
-    
+
     // Remove any non-digit/colon/period characters
     const cleaned = trimmed.replace(/[^\d:.]/g, '');
-    
+
     // Split by colons and periods
     const parts = cleaned.split(':');
     const lastPart = parts[parts.length - 1];
     const [seconds, centiseconds] = lastPart.split('.');
-    
+
     let hours = '0';
     let minutes = '00';
     let secs = '00';
     let cs = '00';
-    
+
     if (parts.length === 1) {
       // Just a number: treat as seconds
       secs = parts[0].padStart(2, '0');
@@ -299,7 +315,7 @@
       secs = seconds.padStart(2, '0');
       if (centiseconds) cs = centiseconds.padEnd(2, '0').substring(0, 2);
     }
-    
+
     return `${hours}:${minutes}:${secs}.${cs}`;
   }
 
@@ -310,19 +326,19 @@
   function formatTimeForDisplay(timeString: string): string {
     const parts = timeString.split(':');
     if (parts.length !== 3) return timeString;
-    
+
     const hours = parts[0];
     const minutes = parts[1];
     const secondsPart = parts[2].split('.');
     const seconds = secondsPart[0];
     const centiseconds = secondsPart[1] || '00';
-    
+
     // Remove leading zeros and unnecessary precision
     const h = parseInt(hours, 10);
     const m = parseInt(minutes, 10);
     const s = parseInt(seconds, 10);
     const cs = centiseconds.replace(/0+$/, ''); // Remove trailing zeros
-    
+
     // Build display string
     let result = '';
     if (h > 0) {
@@ -330,12 +346,12 @@
     } else {
       result += `${m}:${s.toString().padStart(2, '0')}`;
     }
-    
+
     // Add centiseconds if not zero
     if (cs && cs !== '0' && cs !== '00') {
       result += `.${cs}`;
     }
-    
+
     return result;
   }
 
@@ -345,7 +361,7 @@
   function handleTimeInput(type: 'start' | 'duration', event: Event): void {
     const input = event.target as HTMLInputElement;
     const value = input.value;
-    
+
     // Only normalize and validate on blur or enter events
     // Allow free typing without interruption
     if (event.type !== 'blur' && (event as KeyboardEvent)?.key !== 'Enter') {
@@ -355,10 +371,10 @@
     try {
       // Use flexible parsing for both start and duration inputs
       const normalizedTime = parseFlexibleTimeInput(value);
-      
+
       // Validate the normalized time
       const parsedSeconds = audioClipService.parseTimeString(normalizedTime);
-      
+
       // Clamp duration to remaining audio length
       let finalTime = normalizedTime;
       if (type === 'duration' && audioDuration > 0) {
@@ -367,14 +383,14 @@
           finalTime = audioClipService.formatTimeString(maxDuration);
         }
       }
-      
+
       // Update state with clamped value
       if (type === 'start') {
         startTimeString = finalTime;
       } else {
         durationString = finalTime;
       }
-      
+
       // Update the input field with compact display format
       input.value = formatTimeForDisplay(finalTime);
     } catch {
@@ -398,13 +414,13 @@
    */
   function jogStartTime(deltaSeconds: number): void {
     if (!audioElement) return;
-    
+
     const newStartTime = Math.max(0, startSeconds + deltaSeconds);
     const maxStartTime = Math.max(0, audioElement.duration - durationSeconds);
     const clampedStartTime = Math.min(newStartTime, maxStartTime);
-    
+
     startTimeString = audioClipService.formatTimeString(clampedStartTime);
-    
+
     // Reset audio position if playing
     if (audioElement && (isPlaying || isPlayingLast)) {
       audioElement.currentTime = clampedStartTime;
@@ -429,7 +445,7 @@
           audioClipService.stop(audioElement);
           isPlayingLast = false;
         }
-        
+
         // Start clip playback
         await audioClipService.playClip(audioElement);
         isPlaying = true;
@@ -458,7 +474,7 @@
           audioClipService.stop(audioElement);
           isPlaying = false;
         }
-        
+
         // Start last seconds playback
         await audioClipService.playLastSeconds(audioElement, 2);
         isPlayingLast = true;
@@ -474,23 +490,23 @@
    */
   function handleLoadFromSelection(): void {
     if (!textareaSelection || !textContent) return;
-    
+
     const selectedText = textContent.slice(textareaSelection.start, textareaSelection.end);
     const parsed = audioClipService.parseClipDirective(selectedText);
-    
+
     if (parsed) {
       // Find matching audio file
       const audioFile = availableAudioFiles.find(file => file.href === parsed.href);
       if (audioFile) {
         selectedAudioHref = audioFile.href;
       }
-      
+
       // Update timing
       startTimeString = parsed.begin;
-      
+
       // Update label
       labelString = parsed.label || '';
-      
+
       try {
         const endTime = audioClipService.parseTimeString(parsed.end);
         const startTime = audioClipService.parseTimeString(parsed.begin);
@@ -530,7 +546,7 @@
   // Clear error after timeout
   $effect(() => {
     if (error) {
-      const timeoutId = setTimeout(() => error = null, 5000);
+      const timeoutId = setTimeout(() => (error = null), 5000);
       return () => clearTimeout(timeoutId);
     }
   });
@@ -727,7 +743,7 @@
         class="label-input"
         value={labelString}
         placeholder="Optional label"
-        oninput={e => labelString = (e.target as HTMLInputElement).value}
+        oninput={e => (labelString = (e.target as HTMLInputElement).value)}
         aria-label="Clip label"
       />
     </div>
@@ -773,7 +789,6 @@
     gap: var(--space-2);
   }
 
-
   .control-group {
     display: flex;
     flex-direction: column;
@@ -787,7 +802,6 @@
     gap: var(--space-2);
     flex-wrap: nowrap; /* Keep paired elements together */
   }
-
 
   /* Audio selection dropdown */
   .audio-select {
@@ -884,7 +898,6 @@
     box-shadow: 0 0 0 var(--focus-ring-width) var(--color-focus);
   }
 
-
   /* Time input groupings */
   .time-input-group {
     flex-direction: row !important;
@@ -942,7 +955,6 @@
     background: var(--color-accent-secondary);
     border-color: var(--color-accent-secondary);
   }
-
 
   /* Jog controls group */
   .jog-group {
@@ -1008,8 +1020,12 @@
   }
 
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 
   /* Responsive behavior */
@@ -1017,11 +1033,11 @@
     .control-row {
       gap: var(--space-1);
     }
-    
+
     .time-input {
       width: 70px;
     }
-    
+
     .audio-select {
       min-width: 100px;
     }
@@ -1034,7 +1050,7 @@
     .time-input {
       border: 2px solid var(--color-forced-border);
     }
-    
+
     .range-slider::-webkit-slider-thumb,
     .range-slider::-moz-range-thumb {
       border: 2px solid var(--color-forced-border);

@@ -230,7 +230,7 @@ The Outline UI leverages the established `LayoutManager.svelte` pattern with its
 - Utility service with static methods
 - Simple spine item to TOC generation
 - **Transform Pipeline Dependency**: Requires `FileStorageAPI` and `BlobUrlManager` instances
-- **Pipeline Methods**: 
+- **Pipeline Methods**:
   - `generateFromSpine(spineItems)` - Auto-generation bypassing transforms
   - `processUserContent(navText, transformPipeline, workspaceId)` - User content via pipeline
 - **Metadata Creation**: Builds navigation-specific `ChapterMetadata` objects

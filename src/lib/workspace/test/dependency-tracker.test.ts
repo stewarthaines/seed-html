@@ -139,7 +139,9 @@ beforeAll(() => {
       cssText: string = '';
       parentRule: CSSRule | null = null;
       parentStyleSheet: CSSStyleSheet | null = null;
-      deleteRule: (index: number) => void = () => {/* mock noop */};
+      deleteRule: (index: number) => void = () => {
+        /* mock noop */
+      };
       insertRule: (rule: string, index?: number) => number = () => 0;
       constructor(style?: any) {
         if (style) this.style = style;

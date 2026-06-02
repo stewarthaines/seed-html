@@ -27,6 +27,7 @@ npm run opds:serve
 ```
 
 The server will:
+
 - Scan `~/Downloads` for existing EPUB files
 - Start watching for changes
 - Serve OPDS feed at `http://localhost:3001/opds.xml`
@@ -43,11 +44,13 @@ Runs with additional file watching for server code changes.
 ### Add to Reading Apps
 
 Add this OPDS catalog URL to your reading app:
+
 ```
 http://localhost:3001/opds.xml
 ```
 
 **Tested with:**
+
 - Thorium Reader
 - Calibre
 - Moon+ Reader
@@ -58,7 +61,7 @@ http://localhost:3001/opds.xml
 ### Deduplication Logic
 
 1. **Extract Metadata**: Parses each EPUB's `content.opf` file
-2. **Get Book ID**: Uses `dc:identifier` as unique book identifier  
+2. **Get Book ID**: Uses `dc:identifier` as unique book identifier
 3. **Get Modified Time**: Uses `dcterms:modified` property (EPUB 3 standard)
 4. **Deduplicate**: Keeps only the most recent version per book ID
 5. **Update Feed**: Regenerates OPDS XML when catalog changes
@@ -81,7 +84,7 @@ Perfect for EDITME's iterative development workflow:
 ## API Endpoints
 
 - **`GET /opds.xml`** - OPDS Atom feed
-- **`GET /books/:filename`** - Download EPUB file  
+- **`GET /books/:filename`** - Download EPUB file
 - **`GET /catalog-info`** - Catalog statistics (JSON)
 - **`GET /debug-catalog`** - Detailed catalog inspection with book metadata (JSON)
 - **`GET /health`** - Server health check
@@ -97,33 +100,39 @@ Environment variables:
 ## Troubleshooting
 
 ### No Books in Feed
+
 - Check that EPUB files are in `~/Downloads`
 - Verify EPUBs have valid `dc:identifier` and `dcterms:modified` metadata
 - Check server logs for parsing errors
 
 ### Reading App Not Updating
+
 - Some apps cache OPDS feeds - try refreshing manually
 - Verify the OPDS URL is exactly `http://localhost:3001/opds.xml`
 - Check that server is running on port 3001
 
 ### Permission Errors
+
 - Ensure read access to Downloads directory
 - Check file permissions on EPUB files
 
 ## Technical Details
 
 ### Dependencies
+
 - `chokidar` - File system watching
 - `node-stream-zip` + `xml2js` - EPUB metadata parsing (more robust ZIP handling)
-- `feed` - OPDS Atom XML generation  
+- `feed` - OPDS Atom XML generation
 - `express` - HTTP server
 
 ### EPUB 3 Compliance
+
 - Follows EPUB 3 specification for metadata parsing
 - Requires `dcterms:modified` property with UTC timestamps
 - Validates metadata format and structure
 
 ### Performance
+
 - Efficient file watching with debounced updates (1000ms stability threshold)
 - In-memory catalog for fast feed generation
 - Streaming file downloads for large EPUBs

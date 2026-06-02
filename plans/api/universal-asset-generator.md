@@ -21,6 +21,7 @@ These files are imported using Svelte's `?raw` import and included directly in s
 Base stylesheet that adapts automatically to any locale through CSS logical properties and system fonts.
 
 **Features:**
+
 - **System Fonts**: Uses `system-ui` font stack for optimal per-locale rendering
 - **Logical Properties**: All spacing and layout uses logical properties with physical fallbacks
 - **Direction Inheritance**: Inherits text direction from HTML element
@@ -34,6 +35,7 @@ Base stylesheet that adapts automatically to any locale through CSS logical prop
 Converts Markdown to HTML without any locale-specific logic.
 
 **Features:**
+
 - **Markdown Processing**: Handles headers, bold/italic, links, lists, code blocks
 - **Universal Compatibility**: Works identically for all scripts and languages
 - **No Dependencies**: Pure JavaScript with no external libraries
@@ -47,6 +49,7 @@ Converts Markdown to HTML without any locale-specific logic.
 Adds ID attributes to H2 elements for navigation linking.
 
 **Features:**
+
 - **Navigation Anchors**: Generates IDs from H2 text content for nav.xhtml linking
 - **Universal Compatibility**: Works across all languages and scripts
 - **Error Handling**: Graceful fallbacks with unique ID generation
@@ -115,14 +118,14 @@ padding: 1em;
 
 ### Compatibility Overview
 
-| Reader | Logical Properties | Feature Queries | Notes |
-|---|---|---|---|
-| Apple Books | ✅ Full | ✅ Yes | WebKit-based, best support |
-| Adobe Digital Editions | ⚠️ Partial | ❌ Limited | Requires fallbacks |
-| Kobo | ✅ Good | ✅ Yes | WebKit-based |
-| Amazon Kindle | ⚠️ Partial | ⚠️ Limited | Custom engine |
-| Google Play Books | ✅ Good | ✅ Yes | Chromium-based |
-| Readium | ✅ Excellent | ✅ Yes | Reference implementation |
+| Reader                 | Logical Properties | Feature Queries | Notes                      |
+| ---------------------- | ------------------ | --------------- | -------------------------- |
+| Apple Books            | ✅ Full            | ✅ Yes          | WebKit-based, best support |
+| Adobe Digital Editions | ⚠️ Partial         | ❌ Limited      | Requires fallbacks         |
+| Kobo                   | ✅ Good            | ✅ Yes          | WebKit-based               |
+| Amazon Kindle          | ⚠️ Partial         | ⚠️ Limited      | Custom engine              |
+| Google Play Books      | ✅ Good            | ✅ Yes          | Chromium-based             |
+| Readium                | ✅ Excellent       | ✅ Yes          | Reference implementation   |
 
 ### Testing Strategy
 

@@ -142,7 +142,7 @@ private generateNavigationDocument(locale: string, chapterIds: string[]): string
 **Localization Points:**
 
 - "Table of Contents" title using i18n translation keys
-- RTL text direction using existing documentDirection store  
+- RTL text direction using existing documentDirection store
 - Chapter titles using catalog-based translations
 
 ## Implementation Details
@@ -303,7 +303,7 @@ private getChapterTitle(filename: string): string {
   // Map filename to localized chapter title using translation keys
   const chapterKeyMap = {
     'prologue.txt': 'content.prologue',
-    'chapter1.txt': 'content.chapter1', 
+    'chapter1.txt': 'content.chapter1',
     'appendix.txt': 'content.appendix'
   };
 
@@ -349,6 +349,7 @@ async handleCreateNew() {
 The following translation keys need to be added to all language catalogs (`src/lib/i18n/locales/*.json`):
 
 ### Navigation Keys
+
 ```json
 {
   "navigation.title": "Navigation",
@@ -357,15 +358,17 @@ The following translation keys need to be added to all language catalogs (`src/l
 ```
 
 ### Content Keys
+
 ```json
 {
   "content.prologue": "Prologue",
-  "content.chapter1": "Chapter 1", 
+  "content.chapter1": "Chapter 1",
   "content.appendix": "Appendix"
 }
 ```
 
 ### Workspace Creation Keys
+
 ```json
 {
   "workspace.creation.success": "Workspace created successfully",

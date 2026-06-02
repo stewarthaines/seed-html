@@ -38,24 +38,27 @@ Based on the existing metadata editor patterns:
    - Content upload handling
    - Validation feedback
 
-
 ## Key UX Patterns
 
 ### Table Interaction
+
 - **Row Selection**: Click row to select and preview
 - **Sorting**: Click column headers to sort
 - **Filtering**: Real-time filter across ID, href, and media type
 - **Actions**: Inline edit/delete buttons with confirmation
 
 ### Keyboard Navigation (A11y)
+
 **Tab-based Navigation Pattern:**
+
 1. **Filter input** - Type to filter items in real-time
 2. **Load File button** - Primary creation action
-3. **Create Text File button** - Secondary creation action  
+3. **Create Text File button** - Secondary creation action
 4. **All table rows** - Manifest items + SOURCE/ items (if advanced mode enabled)
 5. **Preview pane action buttons** - Edit, Download, Delete for selected item
 
 **Row Interaction:**
+
 - Each table row is focusable (`tabindex="0"`)
 - **Enter/Space** on focused row selects it and updates preview
 - **Tab** moves to next row in sequence
@@ -63,18 +66,21 @@ Based on the existing metadata editor patterns:
 - Screen reader announces row content and selection state
 
 **Benefits:**
+
 - **Predictable**: Standard web navigation pattern
 - **Accessible**: Works seamlessly with screen readers and keyboard-only users
 - **Simple**: No custom arrow key patterns to remember
 - **Integrated**: SOURCE/ items flow naturally with manifest items
 
 ### Content Preview
+
 - **Multi-format Support**: Text, images, audio, video, and binary
 - **Metadata Display**: File size, modification date, properties
 - **Action Integration**: Edit, download, and delete actions
 - **Error Handling**: Graceful fallbacks for unsupported formats
 
 ### Item Creation
+
 - **Dual Creation Methods**: Create text files or upload files
 - **Smart Defaults**: Auto-generated IDs and media type detection
 - **Validation Feedback**: Real-time validation with error highlighting
@@ -83,16 +89,19 @@ Based on the existing metadata editor patterns:
 ## Responsive Design
 
 ### Desktop (1024px+)
+
 - Full table with all columns visible
 - Side-by-side table and preview layout
 - Toolbar with all actions visible
 
 ### Tablet (768px - 1023px)
+
 - Simplified table with key columns
 - Preview below table (stacked layout)
 - Collapsible advanced section
 
 ### Mobile (< 768px)
+
 - Card-based item list instead of table
 - Full-screen preview mode
 - Simplified toolbar with overflow menu
@@ -100,6 +109,7 @@ Based on the existing metadata editor patterns:
 ## Layout Decision
 
 **Selected: Side-by-side layout (A)**
+
 - Table on the left (60% width)
 - Preview on the right (40% width)
 - Resizable splitter between panes
@@ -108,22 +118,28 @@ Based on the existing metadata editor patterns:
 ## Questions for Refinement
 
 ### 1. ✅ Layout Preference - DECIDED
+
 Side-by-side layout with resizable splitter
 
 ### 2. ✅ Table Density - DECIDED
+
 Standard columns (ID, href, media type, size, properties)
 
 ### 3. ✅ Content Preview Scope - DECIDED
+
 Rich preview (full text, playable audio/video, detailed metadata)
 
 ### 4. ✅ Item Creation Flow - DECIDED
+
 Hybrid approach:
+
 - **Primary**: "Load File" button with file picker (90% use case)
 - **Secondary**: "Create Text File" creates with defaults, edit inline in table
 - **Convenience**: Drag-and-drop overlay for file uploads
 - **Accessibility**: All flows keyboard accessible with proper focus management
 
 ### 5. ✅ Validation Feedback - DECIDED
+
 Inline in table cells with error styling (consistent with existing field patterns)
 
 ## Complete UI Specification
@@ -203,6 +219,7 @@ src/stories/manifest/
 ### Components/Content/ Stories (Args Pattern)
 
 **`Components/Content/Manifest Container`**
+
 - Default (empty state with creation prompts)
 - With Items (populated manifest table)
 - Loading State (skeleton placeholders)
@@ -210,6 +227,7 @@ src/stories/manifest/
 - Mobile View (responsive card layout)
 
 **`Components/Content/Manifest Preview`**
+
 - No Selection (empty state message)
 - Text File Preview (XHTML/HTML with syntax highlighting)
 - Image Preview (various formats with metadata)
@@ -220,6 +238,7 @@ src/stories/manifest/
 - Error Preview (failed to load content)
 
 **`Components/Content/Manifest Item Manager`**
+
 - Create Form (new item creation interface)
 - Edit Form (modify existing item properties)
 - Validation Errors (form with various validation issues)
@@ -227,6 +246,7 @@ src/stories/manifest/
 - Loading State (disabled form during operations)
 
 **`Components/Content/Manifest Metadata Form`**
+
 - Default Form (EPUB metadata editing)
 - With Errors (validation error display)
 - Loading State (disabled during save operations)
@@ -234,6 +254,7 @@ src/stories/manifest/
 ### Application/ Stories (Args Pattern)
 
 **`Application/Manifest View`**
+
 - Full Interface (sidebar + table + preview integration)
 - Mobile Layout (stacked responsive design)
 - Item Selection Flow (demonstrates selection → preview)
@@ -244,6 +265,7 @@ src/stories/manifest/
 ### Backend/ Stories (Direct Instantiation Pattern)
 
 **`Backend/Manifest Manager`**
+
 - CRUD Operations Demo (API method demonstrations)
 - File Upload Demo (file processing workflows)
 - Metadata Extraction Demo (OPF parsing and validation)
@@ -254,10 +276,14 @@ src/stories/manifest/
 Aligned with established patterns, mock data is organized in `src/stories/manifest/mock-data/`:
 
 **`manifest-items.ts`** - Manifest item data:
+
 ```typescript
 import type { ManifestItem } from '../../../lib/manifest/types';
 
-export const createMockManifestItems = (count: number = 6, hasErrors: boolean = false): ManifestItem[] => {
+export const createMockManifestItems = (
+  count: number = 6,
+  hasErrors: boolean = false
+): ManifestItem[] => {
   const baseItems: ManifestItem[] = [
     {
       id: 'chapter1',
@@ -270,7 +296,7 @@ export const createMockManifestItems = (count: number = 6, hasErrors: boolean = 
       spineIndex: 0,
     },
     {
-      id: 'chapter2', 
+      id: 'chapter2',
       href: 'OEBPS/chapter2.xhtml',
       mediaType: 'application/xhtml+xml',
       size: 8934,
@@ -280,7 +306,7 @@ export const createMockManifestItems = (count: number = 6, hasErrors: boolean = 
     },
     {
       id: 'cover-image',
-      href: 'OEBPS/images/cover.jpg', 
+      href: 'OEBPS/images/cover.jpg',
       mediaType: 'image/jpeg',
       size: 245678,
       modified: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
@@ -289,7 +315,7 @@ export const createMockManifestItems = (count: number = 6, hasErrors: boolean = 
     {
       id: 'stylesheet',
       href: 'OEBPS/styles/main.css',
-      mediaType: 'text/css', 
+      mediaType: 'text/css',
       size: 3456,
       modified: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
     },
@@ -297,11 +323,11 @@ export const createMockManifestItems = (count: number = 6, hasErrors: boolean = 
       id: 'audio-clip',
       href: 'OEBPS/audio/pronunciation.mp3',
       mediaType: 'audio/mpeg',
-      size: 156789, 
+      size: 156789,
       modified: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
     },
   ];
-  
+
   if (hasErrors) {
     baseItems.push({
       id: 'invalid-item',
@@ -312,12 +338,13 @@ export const createMockManifestItems = (count: number = 6, hasErrors: boolean = 
       hasError: true,
     });
   }
-  
+
   return baseItems.slice(0, count);
 };
 ```
 
 **`source-items.ts`** - SOURCE directory items:
+
 ```typescript
 import type { SourceItem } from '../../../lib/manifest/types';
 
@@ -329,7 +356,7 @@ export const createMockSourceItems = (): SourceItem[] => [
     modified: new Date(Date.now() - 1 * 60 * 60 * 1000),
   },
   {
-    path: 'SOURCE/text/chapter2.txt', 
+    path: 'SOURCE/text/chapter2.txt',
     type: 'text',
     size: 6789,
     modified: new Date(Date.now() - 2 * 60 * 60 * 1000),
@@ -361,6 +388,7 @@ export const createMockSourceItems = (): SourceItem[] => [
 Following our established Storybook patterns:
 
 **Args Pattern Implementation (Components/Application categories):**
+
 ```svelte
 const { Story } = defineMeta({
   title: 'Components/Content/Manifest Container',
@@ -400,6 +428,7 @@ const { Story } = defineMeta({
 ```
 
 **Direct Instantiation Pattern (Backend category):**
+
 ```svelte
 <Story name="CRUD Operations Demo">
   <ManifestManagerDemo showCRUDOperations={true} />
@@ -407,12 +436,14 @@ const { Story } = defineMeta({
 ```
 
 **Component Separation Pattern:**
+
 - Each story has a corresponding demo component (e.g., `ManifestContainerDemo.svelte`)
 - Shared styles in `manifest-demo.css` following design system
 - Mock data providers in dedicated `mock-data/` subdirectory
 - TypeScript interfaces for consistent mock data structure
 
 **`content-previews.ts`** - Preview content for different media types:
+
 ```typescript
 export const getMockContentPreview = (href: string): string | null => {
   const contentMap: Record<string, string> = {
@@ -434,7 +465,7 @@ h1 { color: #333; margin-bottom: 1em; }
 p { margin-bottom: 1em; }`,
     'OEBPS/audio/pronunciation.mp3': 'blob:mock-audio-url',
   };
-  
+
   return contentMap[href] || null;
 };
 ```

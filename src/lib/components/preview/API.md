@@ -24,7 +24,14 @@ interface ContentPreviewProps {
   fontFamily?: FontFamily;
 }
 
-type DeviceSize = 'responsive' | 'old-iphone' | 'recent-iphone' | 'large-iphone' | 'small-tablet' | 'medium-tablet' | 'large-tablet';
+type DeviceSize =
+  | 'responsive'
+  | 'old-iphone'
+  | 'recent-iphone'
+  | 'large-iphone'
+  | 'small-tablet'
+  | 'medium-tablet'
+  | 'large-tablet';
 
 type FontFamily = 'default' | 'serif' | 'sans-serif' | 'monospace';
 ```
@@ -92,17 +99,18 @@ deviceSize?: DeviceSize
 
 **Device Types:**
 
-| Device Type | Dimensions (px) | Base Font | Base Margin | Description |
-|-------------|-----------------|-----------|-------------|-------------|
-| `responsive` | Container size | 16px | 16px | Full-width responsive (default) |
-| `old-iphone` | 375 × 667 | 16px | 12px | iPhone SE form factor |
-| `recent-iphone` | 390 × 844 | 17px | 14px | iPhone 13 form factor |
-| `large-iphone` | 430 × 932 | 18px | 16px | iPhone 15 Pro Max form factor |
-| `small-tablet` | 744 × 1133 | 20px | 20px | iPad mini form factor |
-| `medium-tablet` | 820 × 1180 | 22px | 24px | iPad Air form factor |
-| `large-tablet` | 1024 × 1366 | 24px | 28px | iPad Pro 13" form factor |
+| Device Type     | Dimensions (px) | Base Font | Base Margin | Description                     |
+| --------------- | --------------- | --------- | ----------- | ------------------------------- |
+| `responsive`    | Container size  | 16px      | 16px        | Full-width responsive (default) |
+| `old-iphone`    | 375 × 667       | 16px      | 12px        | iPhone SE form factor           |
+| `recent-iphone` | 390 × 844       | 17px      | 14px        | iPhone 13 form factor           |
+| `large-iphone`  | 430 × 932       | 18px      | 16px        | iPhone 15 Pro Max form factor   |
+| `small-tablet`  | 744 × 1133      | 20px      | 20px        | iPad mini form factor           |
+| `medium-tablet` | 820 × 1180      | 22px      | 24px        | iPad Air form factor            |
+| `large-tablet`  | 1024 × 1366     | 24px      | 28px        | iPad Pro 13" form factor        |
 
 **Scaling Behavior:**
+
 - Device previews calculate scale factor using: `Math.min(container.width/device.width, container.height/device.height)`
 - Maintains device aspect ratio with letterbox styling (black background fills unused space)
 - Scales freely to fit any container size (no minimum/maximum scale limits)
@@ -117,7 +125,8 @@ orientation?: 'portrait' | 'landscape'
 
 **Input:** Device orientation for preview display
 
-**Usage:** 
+**Usage:**
+
 - Available for all device types except 'responsive'
 - Toggles between portrait and landscape orientations
 - Affects both dimensions and any orientation-specific styling
@@ -132,6 +141,7 @@ fontSizeAdjustment?: number
 **Input:** Font size adjustment in pixels from device-specific base font size
 
 **Usage:**
+
 - Adjusts the base body font size for the device type
 - Positive values increase font size, negative values decrease
 - Recommended range: -4 to +8 pixels
@@ -146,12 +156,14 @@ fontFamily?: FontFamily
 **Input:** Font family override for EPUB reading system compatibility
 
 **Font Options:**
+
 - `'default'` - No font family specified, uses original document fonts (default)
 - `'serif'` - Standard serif font stack for EPUB readers
-- `'sans-serif'` - Standard sans-serif font stack for EPUB readers  
+- `'sans-serif'` - Standard sans-serif font stack for EPUB readers
 - `'monospace'` - Standard monospace font stack for EPUB readers
 
 **Usage:**
+
 - Overrides document font-family with EPUB-compatible font stacks
 - Applied to body element via CSS injection
 - Simulates font choices available in typical EPUB reading systems
@@ -162,71 +174,111 @@ fontFamily?: FontFamily
 ### Device Preview System
 
 **Device-Specific Styling:**
+
 - Each device type has predefined base styles (font size, margins, line height)
 - Styles are injected into the iframe as CSS overrides
 - Device styles complement but don't replace original XHTML styling
 
 **Complete Device Base Styles:**
+
 ```css
 /* Device-specific base styles injected into iframe */
 
 /* old-iphone (375×667) */
-body { font-size: 16px; margin: 12px; line-height: 1.4; }
+body {
+  font-size: 16px;
+  margin: 12px;
+  line-height: 1.4;
+}
 
 /* recent-iphone (390×844) */
-body { font-size: 17px; margin: 14px; line-height: 1.4; }
+body {
+  font-size: 17px;
+  margin: 14px;
+  line-height: 1.4;
+}
 
 /* large-iphone (430×932) */
-body { font-size: 18px; margin: 16px; line-height: 1.4; }
+body {
+  font-size: 18px;
+  margin: 16px;
+  line-height: 1.4;
+}
 
 /* small-tablet (744×1133) */
-body { font-size: 20px; margin: 20px; line-height: 1.5; }
+body {
+  font-size: 20px;
+  margin: 20px;
+  line-height: 1.5;
+}
 
 /* medium-tablet (820×1180) */
-body { font-size: 22px; margin: 24px; line-height: 1.5; }
+body {
+  font-size: 22px;
+  margin: 24px;
+  line-height: 1.5;
+}
 
 /* large-tablet (1024×1366) */
-body { font-size: 24px; margin: 28px; line-height: 1.5; }
+body {
+  font-size: 24px;
+  margin: 28px;
+  line-height: 1.5;
+}
 
 /* responsive mode - no device-specific styles injected */
 ```
 
 **Font Family Injection:**
+
 ```css
 /* Complete CSS injected for each font family option */
 
 /* When fontFamily="serif" */
-body { font-family: Georgia, 'Times New Roman', Times, serif !important; }
+body {
+  font-family: Georgia, 'Times New Roman', Times, serif !important;
+}
 
 /* When fontFamily="sans-serif" */
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif !important; }
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif !important;
+}
 
 /* When fontFamily="monospace" */
-body { font-family: 'Courier New', Courier, 'Monaco', 'Menlo', monospace !important; }
+body {
+  font-family: 'Courier New', Courier, 'Monaco', 'Menlo', monospace !important;
+}
 
 /* When fontFamily="default" - no font-family injection */
 ```
 
 **CSS Injection Implementation:**
+
 ```typescript
 // CSS injection method for iframe styling
-function injectDeviceStyles(iframe: HTMLIFrameElement, deviceType: DeviceSize, fontFamily: FontFamily, fontSizeAdjustment: number) {
+function injectDeviceStyles(
+  iframe: HTMLIFrameElement,
+  deviceType: DeviceSize,
+  fontFamily: FontFamily,
+  fontSizeAdjustment: number
+) {
   const iframeDoc = iframe.contentDocument;
   const styleElement = iframeDoc.createElement('style');
-  
+
   // Build CSS in correct order
   let css = '';
-  
+
   // 1. Device base styles (font-size, margin, line-height)
   css += getDeviceBaseCSS(deviceType, fontSizeAdjustment);
-  
+
   // 2. Font family override (if not default)
   if (fontFamily !== 'default') {
     css += getFontFamilyCSS(fontFamily);
   }
-  
+
   styleElement.textContent = css;
-  
+
   // Insert as first style element to allow XHTML CSS to override
   const firstStyleOrLink = iframeDoc.head.querySelector('style, link[rel="stylesheet"]');
   if (firstStyleOrLink) {
@@ -238,15 +290,20 @@ function injectDeviceStyles(iframe: HTMLIFrameElement, deviceType: DeviceSize, f
 ```
 
 **CSS Injection Method:**
+
 - Styles injected into iframe document head after content loads via `srcdoc`
 - Device styles inserted before existing XHTML stylesheets for proper cascade
 - XHTML document styles can override device base styles due to CSS specificity
 - Injection order: device base styles → font family → font size adjustment (combined into single `<style>` tag)
 
 **Scaling Algorithm Implementation:**
+
 ```typescript
 // Scaling calculation for device preview
-function calculateScaleFactor(containerRect: DOMRect, deviceDimensions: {width: number, height: number}): number {
+function calculateScaleFactor(
+  containerRect: DOMRect,
+  deviceDimensions: { width: number; height: number }
+): number {
   const scaleX = containerRect.width / deviceDimensions.width;
   const scaleY = containerRect.height / deviceDimensions.height;
   return Math.min(scaleX, scaleY); // Preserve aspect ratio
@@ -257,6 +314,7 @@ container.style.transform = `scale(${scaleFactor})`;
 ```
 
 **Scaling Behavior:**
+
 - Device previews calculate scale factor to fit available container space
 - Letterbox styling with black background fills unused space
 - No minimum or maximum scale limits - scales freely to fit any container
@@ -264,18 +322,19 @@ container.style.transform = `scale(${scaleFactor})`;
 - Responsive mode bypasses scaling entirely (100% width/height)
 
 **Orientation Handling:**
+
 ```typescript
 // Orientation dimension calculation
 function getDeviceDimensions(deviceType: DeviceSize, orientation: 'portrait' | 'landscape') {
   const baseDimensions = DEVICE_SPECS[deviceType]; // e.g., {width: 390, height: 844}
-  
+
   if (orientation === 'landscape') {
     return {
-      width: baseDimensions.height,  // Swap: use height as width
-      height: baseDimensions.width   // Swap: use width as height
+      width: baseDimensions.height, // Swap: use height as width
+      height: baseDimensions.width, // Swap: use width as height
     };
   }
-  
+
   return baseDimensions; // Portrait uses original dimensions
 }
 ```
@@ -288,6 +347,7 @@ function getDeviceDimensions(deviceType: DeviceSize, orientation: 'portrait' | '
 ### Preview Controls
 
 **Header Controls:**
+
 - **Device Dropdown**: Compact select for choosing device type
 - **Orientation Toggle**: Portrait/landscape switch (disabled for responsive)
 - **Font Size Adjustment**: +/- buttons for 1px increments
@@ -295,6 +355,7 @@ function getDeviceDimensions(deviceType: DeviceSize, orientation: 'portrait' | '
 - **Current Values Display**: Shows selected device and font settings
 
 **Control Behavior:**
+
 - Changes apply immediately to preview
 - Font adjustment and font family persist across device changes
 - Orientation resets to portrait when changing devices
@@ -309,11 +370,11 @@ function getDeviceDimensions(deviceType: DeviceSize, orientation: 'portrait' | '
 - Natural scrolling behavior when content exceeds iframe boundaries
 
 **Scaling Behavior:**
+
 - Device presets maintain aspect ratio when scaled to fit available preview space
 - Iframe dimensions match device preset, then CSS transform scales to fit container
 - Content appears as it would on the selected device size
 - User can switch between device sizes via compact dropdown control
-
 
 ### Reactivity
 
@@ -324,18 +385,21 @@ function getDeviceDimensions(deviceType: DeviceSize, orientation: 'portrait' | '
 ### Error Handling & State Management
 
 **Empty Content:**
+
 - Displays empty iframe when `content` is empty string
 - All controls remain enabled and functional
 - Device scaling and font injection still applied to empty iframe
 - No error messages, placeholder content, or special handling
 
 **Invalid XHTML:**
+
 - Browser handles parsing errors naturally within iframe
 - Malformed XHTML may display partially or show browser error page
 - Component does not validate or sanitize input content
 - CSS injection continues to work regardless of XHTML validity
 
 **State Management:**
+
 - Parent components manage all prop state (deviceSize, orientation, etc.)
 - Component does not emit events or manage internal state
 - All prop changes trigger immediate re-render
@@ -386,12 +450,12 @@ function getDeviceDimensions(deviceType: DeviceSize, orientation: 'portrait' | '
 </html>`;
 </script>
 
-<ContentPreview 
-  content={spineContent} 
+<ContentPreview
+  content={spineContent}
   deviceSize="recent-iphone"
   orientation="landscape"
   fontSizeAdjustment={1}
-  class="chapter-preview" 
+  class="chapter-preview"
 />
 ```
 
@@ -400,7 +464,7 @@ function getDeviceDimensions(deviceType: DeviceSize, orientation: 'portrait' | '
 ```svelte
 <script>
   import ContentPreview from '$lib/components/preview/ContentPreview.svelte';
-  
+
   let deviceSize = 'recent-iphone';
   let orientation = 'portrait';
   let fontAdjustment = 0;
@@ -416,12 +480,12 @@ function getDeviceDimensions(deviceType: DeviceSize, orientation: 'portrait' | '
 </html>`;
 </script>
 
-<ContentPreview 
-  content={content}
-  deviceSize={deviceSize}
-  orientation={orientation}
+<ContentPreview
+  {content}
+  {deviceSize}
+  {orientation}
   fontSizeAdjustment={fontAdjustment}
-  fontFamily={fontFamily}
+  {fontFamily}
 />
 ```
 
@@ -431,7 +495,7 @@ function getDeviceDimensions(deviceType: DeviceSize, orientation: 'portrait' | '
 <script>
   import ContentPreview from '$lib/components/preview/ContentPreview.svelte';
   import LayoutManager from '$lib/components/LayoutManager.svelte';
-  
+
   let xhtmlContent = '';
   let previewDevice = 'responsive';
   let previewOrientation = 'portrait';
@@ -443,7 +507,7 @@ function getDeviceDimensions(deviceType: DeviceSize, orientation: 'portrait' | '
   <div slot="left-content">
     <!-- Editor content -->
   </div>
-  
+
   <div slot="right-header">
     <!-- Device controls in header -->
     <div class="preview-controls">
@@ -453,16 +517,19 @@ function getDeviceDimensions(deviceType: DeviceSize, orientation: 'portrait' | '
         <option value="large-iphone">iPhone Plus</option>
         <option value="medium-tablet">iPad</option>
       </select>
-      
+
       {#if previewDevice !== 'responsive'}
-        <button on:click={() => previewOrientation = previewOrientation === 'portrait' ? 'landscape' : 'portrait'}>
+        <button
+          on:click={() =>
+            (previewOrientation = previewOrientation === 'portrait' ? 'landscape' : 'portrait')}
+        >
           {previewOrientation === 'portrait' ? '↻' : '↺'}
         </button>
-        
+
         <button on:click={() => fontAdjustment--}>A-</button>
         <span>{fontAdjustment}</span>
         <button on:click={() => fontAdjustment++}>A+</button>
-        
+
         <select bind:value={previewFontFamily}>
           <option value="default">Default</option>
           <option value="serif">Serif</option>
@@ -474,7 +541,7 @@ function getDeviceDimensions(deviceType: DeviceSize, orientation: 'portrait' | '
   </div>
 
   <div slot="right-content">
-    <ContentPreview 
+    <ContentPreview
       content={xhtmlContent}
       deviceSize={previewDevice}
       orientation={previewOrientation}
@@ -540,12 +607,14 @@ function getDeviceDimensions(deviceType: DeviceSize, orientation: 'portrait' | '
 ```
 
 **CSS Classes:**
+
 - `.content-preview` - Main wrapper component, accepts optional class prop
 - `.content-preview__container` - Scaling container, receives CSS transform
 - `.content-preview__letterbox` - Letterbox container with black background
 - `.content-preview__iframe` - Iframe element with device dimensions
 
 **CSS Implementation:**
+
 ```css
 .content-preview {
   display: flex;
@@ -600,6 +669,7 @@ function getDeviceDimensions(deviceType: DeviceSize, orientation: 'portrait' | '
 ### Storybook Integration Testing (Primary)
 
 **Device Simulation Testing:**
+
 - CSS transform scaling verification for all device types
 - Aspect ratio preservation across container sizes
 - Letterbox styling with black background
@@ -607,6 +677,7 @@ function getDeviceDimensions(deviceType: DeviceSize, orientation: 'portrait' | '
 - Responsive mode bypass behavior
 
 **Content Rendering Testing:**
+
 - Real EPUB navigation documents in iframe
 - Spine item XHTML content with CSS/JavaScript
 - Large content scrolling behavior
@@ -614,12 +685,14 @@ function getDeviceDimensions(deviceType: DeviceSize, orientation: 'portrait' | '
 - Empty content handling (empty iframe display)
 
 **Font Control Testing:**
+
 - Device-specific base font injection
 - Font family CSS injection verification
 - Font size adjustment (+/- pixel increments)
 - Font settings persistence across device changes
 
 **User Interaction Testing:**
+
 - Device dropdown functionality
 - Orientation toggle behavior
 - Font control responsiveness

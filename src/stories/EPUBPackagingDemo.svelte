@@ -16,7 +16,7 @@
   const mockStorage = new MockFileStorageAPI(BASIC_EPUB_WORKSPACE);
 
   // Replace the file storage with our mock
-   
+
   (packager as any).fileStorage = mockStorage;
 
   async function handlePackage() {

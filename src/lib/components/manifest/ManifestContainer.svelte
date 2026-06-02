@@ -5,7 +5,10 @@
   import { ManifestUtils } from '../../manifest/utils.js';
   import { generateEPUBPath } from '../../epub/opf-utils.js';
   import type { ManifestItem, SourceItem, ValidationResult } from '../../manifest/types';
-  import type { WorkspaceService, WorkspaceState } from '../../services/workspace/workspace.service.js';
+  import type {
+    WorkspaceService,
+    WorkspaceState,
+  } from '../../services/workspace/workspace.service.js';
 
   // Props using Svelte 5 runes syntax
   let {
@@ -18,7 +21,10 @@
     workspace?: WorkspaceState | null;
     workspaceService: WorkspaceService;
     advancedMode?: boolean;
-    onItemSelect?: (event: { item: ManifestItem | SourceItem | any; type: 'manifest' | 'source' | 'opf' }) => void;
+    onItemSelect?: (event: {
+      item: ManifestItem | SourceItem | any;
+      type: 'manifest' | 'source' | 'opf';
+    }) => void;
     onWorkspaceUpdate?: (workspace: WorkspaceState) => void;
   } = $props();
 
@@ -43,19 +49,19 @@
 
       // Populate file sizes for manifest items
       const manifestItemsWithSizes = await Promise.all(
-        baseManifestItems.map(async (item) => {
+        baseManifestItems.map(async item => {
           try {
             // Resolve manifest item href to full workspace path
-            const resolvedPath = workspace!.pathInfo.basePath 
+            const resolvedPath = workspace!.pathInfo.basePath
               ? `${workspace!.pathInfo.basePath}/${item.href}`
               : item.href;
-            
+
             // Get file info using workspace service method
             const fileInfo = await workspaceService.getFileInfo(workspace!.id, resolvedPath);
-            
+
             return {
               ...item,
-              size: fileInfo.size
+              size: fileInfo.size,
             };
           } catch {
             // If file doesn't exist or can't be accessed, keep item without size
@@ -135,17 +141,19 @@
         // Create manifest item with reliable media type detection
         const browserType = file.type;
         const filenameType = ManifestUtils.detectMediaType(file.name);
-        
+
         // For font files and JavaScript files, always use filename detection (browsers are unreliable)
         // For other files, prefer browser detection unless it's generic
         const isGeneric = !browserType || browserType === 'application/octet-stream';
         const isFontFile = filenameType.startsWith('font/');
-        const isJavaScriptFile = filenameType === 'application/javascript' || filenameType === 'text/javascript';
-        const reliableMediaType = (isGeneric || isFontFile || isJavaScriptFile) ? filenameType : browserType;
-        
+        const isJavaScriptFile =
+          filenameType === 'application/javascript' || filenameType === 'text/javascript';
+        const reliableMediaType =
+          isGeneric || isFontFile || isJavaScriptFile ? filenameType : browserType;
+
         const manifestItem = {
           href: generateEPUBPath(file.name, reliableMediaType),
-          mediaType: reliableMediaType
+          mediaType: reliableMediaType,
         };
 
         // Step 1: Add to manifest (may fail on duplicate ID). This persists content.opf.
@@ -157,7 +165,11 @@
         // entry so content.opf never references a file that isn't in storage.
         const filePath = `${workspace.pathInfo.basePath}/${manifestItem.href}`;
         try {
-          if (file.type.startsWith('text/') || file.type.includes('json') || file.type.includes('xml')) {
+          if (
+            file.type.startsWith('text/') ||
+            file.type.includes('json') ||
+            file.type.includes('xml')
+          ) {
             const text = await file.text();
             await workspaceService.writeFile(workspace.id, filePath, text);
           } else {
@@ -178,7 +190,7 @@
         console.warn(`Failed to upload ${file.name}:`, fileError);
         failedFiles.push({
           name: file.name,
-          error: fileError instanceof Error ? fileError.message : 'Unknown error'
+          error: fileError instanceof Error ? fileError.message : 'Unknown error',
         });
       }
     }
@@ -225,7 +237,8 @@
     // When advancedMode changes, reload source items
     if (advancedMode) {
       // Load SOURCE items if advanced mode is enabled
-      workspaceService.listSourceFiles(workspace)
+      workspaceService
+        .listSourceFiles(workspace)
         .then(items => {
           sourceItems = items;
         })
@@ -238,7 +251,7 @@
       sourceItems = [];
     }
   });
-  
+
   // React to workspace changes
   $effect(() => {
     if (workspace) {

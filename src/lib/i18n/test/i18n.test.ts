@@ -288,7 +288,9 @@ describe('i18n runtime system', () => {
     });
 
     it('should warn about missing catalog', async () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {/* silence */});
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+        /* silence */
+      });
 
       await setLocale('ja'); // Not in mock catalogs
 

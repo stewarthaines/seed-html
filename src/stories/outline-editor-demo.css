@@ -191,11 +191,11 @@
 }
 
 /* Dark theme adjustments */
-[data-theme="dark"] .outline-demo {
+[data-theme='dark'] .outline-demo {
   background-color: var(--color-background);
 }
 
-[data-theme="dark"] .xhtml-preview {
+[data-theme='dark'] .xhtml-preview {
   background-color: var(--color-surface);
   border-color: var(--color-border-subtle);
 }
@@ -205,7 +205,7 @@
   .demo-content {
     grid-template-columns: 1fr;
   }
-  
+
   .demo-footer {
     grid-template-columns: 1fr;
   }
@@ -216,13 +216,13 @@
     padding: var(--spacing-2);
     gap: var(--spacing-2);
   }
-  
+
   .demo-header {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-2);
   }
-  
+
   .demo-controls {
     width: 100%;
     justify-content: space-between;

@@ -28,16 +28,13 @@ let timestampCounter = 0;
 
 /**
  * Creates a new text editor store with the specified ID and optional initial content.
- * 
+ *
  * @param editorId - Unique identifier for this editor instance
  * @param initialContent - Optional initial text content (defaults to empty string)
  * @returns TextEditorStore instance
  * @throws Error if editorId is already in use
  */
-export function createTextEditorStore(
-  editorId: EditorId, 
-  initialContent = ''
-): TextEditorStore {
+export function createTextEditorStore(editorId: EditorId, initialContent = ''): TextEditorStore {
   // Validate editor ID uniqueness
   if (activeEditorIds.has(editorId)) {
     throw new Error(`Editor ID "${editorId}" is already in use`);
@@ -112,7 +109,7 @@ export function createTextEditorStore(
   function subscribe(subscriber: (state: TextEditorState) => void): () => void {
     const unsubscribe = stateStore.subscribe(subscriber);
     subscriptions.push(unsubscribe);
-    
+
     // Return a wrapped unsubscribe function that also removes from tracking
     return () => {
       unsubscribe();
@@ -135,7 +132,7 @@ export function createTextEditorStore(
     // Clean up all tracked subscriptions
     subscriptions.forEach(unsubscribe => unsubscribe());
     subscriptions.length = 0;
-    
+
     // Remove from registry
     activeEditorIds.delete(editorId);
   }

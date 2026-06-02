@@ -24,7 +24,8 @@
   parameters={{
     docs: {
       description: {
-        story: 'Shows the application in its initial state when first loaded, with empty workspace and all UI sections available for navigation.',
+        story:
+          'Shows the application in its initial state when first loaded, with empty workspace and all UI sections available for navigation.',
       },
     },
   }}

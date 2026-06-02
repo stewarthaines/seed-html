@@ -1,6 +1,6 @@
 /**
  * Mock SOURCE directory items for advanced mode demonstrations
- * 
+ *
  * Provides factory functions for generating realistic SOURCE/ directory
  * items that represent the editable source files in advanced mode.
  */
@@ -96,15 +96,17 @@ const baseSourceItems: SourceItem[] = [
 /**
  * Factory function to create mock SOURCE items
  */
-export function createMockSourceItems(options: {
-  includeDirectories?: boolean;
-  fileTypes?: ('text' | 'javascript' | 'image' | 'config')[];
-  count?: number;
-} = {}): SourceItem[] {
+export function createMockSourceItems(
+  options: {
+    includeDirectories?: boolean;
+    fileTypes?: ('text' | 'javascript' | 'image' | 'config')[];
+    count?: number;
+  } = {}
+): SourceItem[] {
   const {
     includeDirectories = true,
     fileTypes = ['text', 'javascript', 'image', 'config'],
-    count = 10
+    count = 10,
   } = options;
 
   let items: SourceItem[] = [];
@@ -116,10 +118,10 @@ export function createMockSourceItems(options: {
     }
 
     // Check file type based on path and media type
-    if (fileTypes.includes('text') && (
-      item.path.includes('/text/') ||
-      item.mediaType === 'text/plain'
-    )) {
+    if (
+      fileTypes.includes('text') &&
+      (item.path.includes('/text/') || item.mediaType === 'text/plain')
+    ) {
       return true;
     }
     if (fileTypes.includes('javascript') && item.mediaType === 'application/javascript') {
@@ -128,10 +130,10 @@ export function createMockSourceItems(options: {
     if (fileTypes.includes('image') && item.mediaType?.startsWith('image/')) {
       return true;
     }
-    if (fileTypes.includes('config') && (
-      item.mediaType === 'application/json' ||
-      item.path.includes('/config/')
-    )) {
+    if (
+      fileTypes.includes('config') &&
+      (item.mediaType === 'application/json' || item.path.includes('/config/'))
+    ) {
       return true;
     }
 

@@ -262,7 +262,11 @@
     }
   }
 
-  function handleEditorContentChanged(_detail: { editorId: string; timestamp: number; isEmpty: boolean }) {
+  function handleEditorContentChanged(_detail: {
+    editorId: string;
+    timestamp: number;
+    isEmpty: boolean;
+  }) {
     // The reactive statement above handles the actual processing
     // This just receives the lightweight event from OutlineEditor
   }

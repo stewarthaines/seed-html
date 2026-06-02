@@ -3,7 +3,7 @@
  *
  * This file provides Vitest-specific mock utilities for FileStorageAPI testing.
  * Uses vi.fn() spies and advanced mocking capabilities.
- * 
+ *
  * For basic mocking without Vitest dependencies, use file-storage.mock.ts instead.
  *
  * Usage:

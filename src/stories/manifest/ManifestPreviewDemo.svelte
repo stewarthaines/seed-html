@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { createMockContentPreview, createErrorContentPreview } from './mock-data/content-previews.js';
+  import {
+    createMockContentPreview,
+    createErrorContentPreview,
+  } from './mock-data/content-previews.js';
   import { createMockManifestItem } from './mock-data/manifest-items.js';
   import type { ManifestItem, ContentPreview } from '../../lib/manifest/types.js';
 
@@ -15,27 +18,28 @@
   // Mock data based on content type
   $: mockItem = (() => {
     if (!selectedItemId || contentType === 'none') return null;
-    
+
     const mediaTypeMap = {
       text: 'application/xhtml+xml',
       image: 'image/jpeg',
       audio: 'audio/mpeg',
       video: 'video/mp4',
-      binary: 'font/woff2'
+      binary: 'font/woff2',
     };
-    
+
     const hrefMap = {
       text: 'OEBPS/chapter1.xhtml',
       image: 'OEBPS/images/cover.jpg',
       audio: 'OEBPS/audio/pronunciation.mp3',
       video: 'OEBPS/video/introduction.mp4',
-      binary: 'OEBPS/fonts/source-serif-pro.woff2'
+      binary: 'OEBPS/fonts/source-serif-pro.woff2',
     };
 
     return createMockManifestItem({
       id: selectedItemId,
       href: hrefMap[contentType as keyof typeof hrefMap] || 'OEBPS/file.txt',
-      mediaType: mediaTypeMap[contentType as keyof typeof mediaTypeMap] || 'application/octet-stream',
+      mediaType:
+        mediaTypeMap[contentType as keyof typeof mediaTypeMap] || 'application/octet-stream',
       size: contentSize === 'small' ? 1024 : contentSize === 'large' ? 1048576 : 12456,
     });
   })();
@@ -114,10 +118,10 @@
       <div class="manifest-preview-content error">
         <div class="error-icon">⚠️</div>
         <h4>Failed to Load Content</h4>
-        <p>Could not load content for "{selectedItemId}". The file may be corrupted or inaccessible.</p>
-        <button type="button" class="retry-button" on:click={handleRetry}>
-          Try Again
-        </button>
+        <p>
+          Could not load content for "{selectedItemId}". The file may be corrupted or inaccessible.
+        </p>
+        <button type="button" class="retry-button" on:click={handleRetry}> Try Again </button>
       </div>
     </div>
   {:else if mockItem && contentPreview}
@@ -133,7 +137,11 @@
         {#if contentPreview.contentType === 'text' && contentPreview.textContent}
           <pre><code>{contentPreview.textContent}</code></pre>
         {:else if contentPreview.contentType === 'image' && contentPreview.previewUrl}
-          <img src={contentPreview.previewUrl} alt="Preview of {mockItem.id}" class="preview-image" />
+          <img
+            src={contentPreview.previewUrl}
+            alt="Preview of {mockItem.id}"
+            class="preview-image"
+          />
         {:else if contentPreview.contentType === 'audio' && contentPreview.previewUrl}
           <audio controls class="preview-audio">
             <source src={contentPreview.previewUrl} type={mockItem.mediaType} />
@@ -160,10 +168,10 @@
           <dl>
             <dt>File Size</dt>
             <dd>{formatFileSize(mockItem.size || 0)}</dd>
-            
+
             <dt>Media Type</dt>
             <dd>{mockItem.mediaType}</dd>
-            
+
             <dt>Modified</dt>
             <dd>{mockItem.modified?.toLocaleDateString() || 'Unknown'}</dd>
 
@@ -172,27 +180,27 @@
                 <dt>Dimensions</dt>
                 <dd>{contentPreview.metadata.width} × {contentPreview.metadata.height}</dd>
               {/if}
-              
+
               {#if contentPreview.metadata.duration}
                 <dt>Duration</dt>
                 <dd>{formatDuration(contentPreview.metadata.duration)}</dd>
               {/if}
-              
+
               {#if contentPreview.metadata.bitrate}
                 <dt>Bitrate</dt>
                 <dd>{contentPreview.metadata.bitrate} kbps</dd>
               {/if}
-              
+
               {#if contentPreview.metadata.characterCount}
                 <dt>Characters</dt>
                 <dd>{contentPreview.metadata.characterCount.toLocaleString()}</dd>
               {/if}
-              
+
               {#if contentPreview.metadata.wordCount}
                 <dt>Words</dt>
                 <dd>{contentPreview.metadata.wordCount.toLocaleString()}</dd>
               {/if}
-              
+
               {#if contentPreview.metadata.lineCount}
                 <dt>Lines</dt>
                 <dd>{contentPreview.metadata.lineCount.toLocaleString()}</dd>
@@ -210,15 +218,9 @@
       <!-- Action buttons -->
       {#if enableActions}
         <div class="manifest-preview-actions">
-          <button type="button" on:click={handleEdit}>
-            Edit
-          </button>
-          <button type="button" on:click={handleDownload}>
-            Download
-          </button>
-          <button type="button" class="danger" on:click={handleDelete}>
-            Delete
-          </button>
+          <button type="button" on:click={handleEdit}> Edit </button>
+          <button type="button" on:click={handleDownload}> Download </button>
+          <button type="button" class="danger" on:click={handleDelete}> Delete </button>
         </div>
       {/if}
     </div>
@@ -270,8 +272,12 @@
   }
 
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 
   .manifest-preview-content.loading {
@@ -297,8 +303,12 @@
   }
 
   @keyframes loading {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
   }
 
   .manifest-preview-content.error {

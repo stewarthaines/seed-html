@@ -146,16 +146,16 @@ theme-toggle.svelte       # Svelte should be PascalCase
 must be converted whenever you touch a file that still contains it (don't match
 its old style). Conversion reference:
 
-| Legacy (Svelte 4) | Runes (Svelte 5) |
-| --- | --- |
-| `export let x = d` | `let { x = d } = $props()` |
-| `export let x` (two-way bound) | `let { x = $bindable() } = $props()` |
-| `$: y = f(a)` (pure) | `let y = $derived(f(a))` / `$derived.by(...)` |
-| `$: { …side effects… }` | `$effect(() => { … })` |
-| `createEventDispatcher()` + `dispatch('foo', d)` | callback prop `onFoo?.(d)` |
-| parent `on:foo={h}` | parent `onFoo={h}` |
-| `<slot name="x" />` | `Snippet` prop + `{@render x?.()}` (parent passes `{#snippet x()}…{/snippet}`) |
-| `on:click` / `on:input` | `onclick` / `oninput` |
+| Legacy (Svelte 4)                                | Runes (Svelte 5)                                                               |
+| ------------------------------------------------ | ------------------------------------------------------------------------------ |
+| `export let x = d`                               | `let { x = d } = $props()`                                                     |
+| `export let x` (two-way bound)                   | `let { x = $bindable() } = $props()`                                           |
+| `$: y = f(a)` (pure)                             | `let y = $derived(f(a))` / `$derived.by(...)`                                  |
+| `$: { …side effects… }`                          | `$effect(() => { … })`                                                         |
+| `createEventDispatcher()` + `dispatch('foo', d)` | callback prop `onFoo?.(d)`                                                     |
+| parent `on:foo={h}`                              | parent `onFoo={h}`                                                             |
+| `<slot name="x" />`                              | `Snippet` prop + `{@render x?.()}` (parent passes `{#snippet x()}…{/snippet}`) |
+| `on:click` / `on:input`                          | `onclick` / `oninput`                                                          |
 
 `svelte-check` (`npm run check`) flags mixed runes/legacy in one component as an
 error, so migrate a file fully in one pass.

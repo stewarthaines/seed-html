@@ -39,9 +39,10 @@ describe('SampleContentGenerator', () => {
           'sample.author.name': 'EDITME Editorial Team',
           'sample.publisher.name': 'EDITME Publishing',
           'sample.chapter1.title': 'Getting Started',
-          'sample.chapter1.content': '# This is a Heading 1\n\nA heading 1 (H1) is the main title of a document, created with a single hash mark.\n\n## This is a Heading 2\n\nA heading 2 (H2) is a section heading, created with two hash marks.\n\n**This text is bold** - Bold text adds strong emphasis and is created by wrapping text in double asterisks.\n\n*This text is emphasized* - Emphasized text (usually italic) adds mild emphasis and is created by wrapping text in single asterisks.',
+          'sample.chapter1.content':
+            '# This is a Heading 1\n\nA heading 1 (H1) is the main title of a document, created with a single hash mark.\n\n## This is a Heading 2\n\nA heading 2 (H2) is a section heading, created with two hash marks.\n\n**This text is bold** - Bold text adds strong emphasis and is created by wrapping text in double asterisks.\n\n*This text is emphasized* - Emphasized text (usually italic) adds mild emphasis and is created by wrapping text in single asterisks.',
         },
-        headers: {}
+        headers: {},
       },
       fr: {
         locale: 'fr',
@@ -51,9 +52,10 @@ describe('SampleContentGenerator', () => {
           'sample.author.name': 'Équipe éditoriale EDITME',
           'sample.publisher.name': 'Éditions EDITME',
           'sample.chapter1.title': 'Premiers pas',
-          'sample.chapter1.content': '# Ceci est un titre 1\n\nUn titre 1 (H1) est le titre principal d\'un document, créé avec un seul dièse.\n\n## Ceci est un titre 2\n\nUn titre 2 (H2) est un titre de section, créé avec deux dièses.\n\n**Ce texte est en gras** - Le texte en gras ajoute une forte emphase et est créé en encadrant le texte de doubles astérisques.\n\n*Ce texte est mis en emphase* - Le texte mis en emphase (généralement italique) ajoute une emphase légère et est créé en encadrant le texte d\'astérisques simples.',
+          'sample.chapter1.content':
+            "# Ceci est un titre 1\n\nUn titre 1 (H1) est le titre principal d'un document, créé avec un seul dièse.\n\n## Ceci est un titre 2\n\nUn titre 2 (H2) est un titre de section, créé avec deux dièses.\n\n**Ce texte est en gras** - Le texte en gras ajoute une forte emphase et est créé en encadrant le texte de doubles astérisques.\n\n*Ce texte est mis en emphase* - Le texte mis en emphase (généralement italique) ajoute une emphase légère et est créé en encadrant le texte d'astérisques simples.",
         },
-        headers: {}
+        headers: {},
       },
       de: {
         locale: 'de',
@@ -63,9 +65,10 @@ describe('SampleContentGenerator', () => {
           'sample.author.name': 'EDITME Redaktionsteam',
           'sample.publisher.name': 'EDITME Publikationen',
           'sample.chapter1.title': 'Erste Schritte',
-          'sample.chapter1.content': '# Das ist eine Überschrift 1\n\nEine Überschrift 1 (H1) ist der Haupttitel eines Dokuments, erstellt mit einem einzigen Rautezeichen.\n\n## Das ist eine Überschrift 2\n\nEine Überschrift 2 (H2) ist eine Abschnittsüberschrift, erstellt mit zwei Rautezeichen.\n\n**Dieser Text ist fett** - Fetter Text fügt starke Betonung hinzu und wird erstellt, indem Text in doppelte Sternchen eingeschlossen wird.\n\n*Dieser Text ist hervorgehoben* - Hervorgehobener Text (normalerweise kursiv) fügt leichte Betonung hinzu und wird erstellt, indem Text in einfache Sternchen eingeschlossen wird.',
+          'sample.chapter1.content':
+            '# Das ist eine Überschrift 1\n\nEine Überschrift 1 (H1) ist der Haupttitel eines Dokuments, erstellt mit einem einzigen Rautezeichen.\n\n## Das ist eine Überschrift 2\n\nEine Überschrift 2 (H2) ist eine Abschnittsüberschrift, erstellt mit zwei Rautezeichen.\n\n**Dieser Text ist fett** - Fetter Text fügt starke Betonung hinzu und wird erstellt, indem Text in doppelte Sternchen eingeschlossen wird.\n\n*Dieser Text ist hervorgehoben* - Hervorgehobener Text (normalerweise kursiv) fügt leichte Betonung hinzu und wird erstellt, indem Text in einfache Sternchen eingeschlossen wird.',
         },
-        headers: {}
+        headers: {},
       },
       ar: {
         locale: 'ar',
@@ -75,10 +78,11 @@ describe('SampleContentGenerator', () => {
           'sample.author.name': 'فريق تحرير EDITME',
           'sample.publisher.name': 'منشورات EDITME',
           'sample.chapter1.title': 'البداية',
-          'sample.chapter1.content': '# هذا عنوان 1\n\nالعنوان 1 (H1) هو العنوان الرئيسي للوثيقة، يُنشأ بعلامة مربع واحدة.\n\n## هذا عنوان 2\n\nالعنوان 2 (H2) هو عنوان قسم، يُنشأ بعلامتي مربع.\n\n**هذا النص غامق** - النص الغامق يضيف تأكيداً قوياً ويُنشأ بوضع النص بين نجمتين مزدوجتين.\n\n*هذا النص مؤكد* - النص المؤكد (عادة مائل) يضيف تأكيداً خفيفاً ويُنشأ بوضع النص بين نجمتين مفردتين.',
+          'sample.chapter1.content':
+            '# هذا عنوان 1\n\nالعنوان 1 (H1) هو العنوان الرئيسي للوثيقة، يُنشأ بعلامة مربع واحدة.\n\n## هذا عنوان 2\n\nالعنوان 2 (H2) هو عنوان قسم، يُنشأ بعلامتي مربع.\n\n**هذا النص غامق** - النص الغامق يضيف تأكيداً قوياً ويُنشأ بوضع النص بين نجمتين مزدوجتين.\n\n*هذا النص مؤكد* - النص المؤكد (عادة مائل) يضيف تأكيداً خفيفاً ويُنشأ بوضع النص بين نجمتين مفردتين.',
         },
-        headers: {}
-      }
+        headers: {},
+      },
     };
 
     // Create generator instance with catalogs
@@ -140,7 +144,6 @@ describe('SampleContentGenerator', () => {
         expect(result.metadata.title).toBe('مقدمة إلى EPUB');
         expect(result.metadata.author).toBe('فريق تحرير EDITME');
       });
-
     });
 
     describe('error handling', () => {
@@ -163,8 +166,8 @@ describe('SampleContentGenerator', () => {
               'sample.book.title': 'Test Title',
               // Missing other required keys
             },
-            headers: {}
-          }
+            headers: {},
+          },
         };
         const incompleteGenerator = new SampleContentGenerator(incompleteCatalogs);
 
@@ -179,15 +182,15 @@ describe('SampleContentGenerator', () => {
           empty: {
             locale: 'empty',
             messages: {
-              'sample.book.title': '',  // Empty translation
+              'sample.book.title': '', // Empty translation
               'sample.book.description': 'Valid description',
               'sample.author.name': 'Valid author',
               'sample.publisher.name': 'Valid publisher',
               'sample.chapter1.title': 'Valid title',
               'sample.chapter1.content': 'Valid content',
             },
-            headers: {}
-          }
+            headers: {},
+          },
         };
         const emptyGenerator = new SampleContentGenerator(emptyCatalogs);
 
@@ -281,13 +284,10 @@ describe('SampleContentGenerator', () => {
         expect(result[0]).toEqual({
           id: 'chapter1',
           title: 'Getting Started',
-          content: expect.stringContaining(
-            '# This is a Heading 1'
-          ),
+          content: expect.stringContaining('# This is a Heading 1'),
           linear: true,
           mediaType: 'application/xhtml+xml',
         });
-
       });
 
       it('should generate chapters for German', async () => {
@@ -341,8 +341,8 @@ describe('SampleContentGenerator', () => {
               'sample.publisher.name': 'Test Publisher',
               // Missing chapter keys
             },
-            headers: {}
-          }
+            headers: {},
+          },
         };
         const incompleteGenerator = new SampleContentGenerator(incompleteCatalogs);
 
@@ -372,8 +372,8 @@ describe('SampleContentGenerator', () => {
             'sample.book.title': 'Test Title',
             // Missing other required keys
           },
-          headers: {}
-        }
+          headers: {},
+        },
       };
       const mixedGenerator = new SampleContentGenerator(mixedCatalogs);
 
@@ -397,8 +397,8 @@ describe('SampleContentGenerator', () => {
             'sample.book.title': 'Test Title',
             // Missing other required keys
           },
-          headers: {}
-        }
+          headers: {},
+        },
       };
       const emptyGenerator = new SampleContentGenerator(emptyCatalogs);
 
@@ -442,8 +442,8 @@ describe('SampleContentGenerator', () => {
               'sample.publisher.name': 'Test Publisher',
               // Missing chapter1 keys
             },
-            headers: {}
-          }
+            headers: {},
+          },
         };
         const incompleteGenerator = new SampleContentGenerator(incompleteCatalogs);
 
@@ -453,10 +453,7 @@ describe('SampleContentGenerator', () => {
           result,
           'incomplete',
           false,
-          [
-            'sample.chapter1.title',
-            'sample.chapter1.content',
-          ],
+          ['sample.chapter1.title', 'sample.chapter1.content'],
           []
         );
       });
@@ -467,27 +464,21 @@ describe('SampleContentGenerator', () => {
           empty: {
             locale: 'empty',
             messages: {
-              'sample.book.title': '',  // Empty
+              'sample.book.title': '', // Empty
               'sample.book.description': 'Test Description',
               'sample.author.name': 'Test Author',
               'sample.publisher.name': 'Test Publisher',
               'sample.chapter1.title': 'Test Chapter 1',
               'sample.chapter1.content': 'Test Content',
             },
-            headers: {}
-          }
+            headers: {},
+          },
         };
         const emptyGenerator = new SampleContentGenerator(emptyCatalogs);
 
         const result = await emptyGenerator.validateLocaleCompleteness('empty');
 
-        expectValidationResult(
-          result,
-          'empty',
-          false,
-          [],
-          ['sample.book.title']
-        );
+        expectValidationResult(result, 'empty', false, [], ['sample.book.title']);
       });
 
       it('should handle both missing and empty keys', async () => {
@@ -496,14 +487,14 @@ describe('SampleContentGenerator', () => {
           problematic: {
             locale: 'problematic',
             messages: {
-              'sample.book.title': '',  // Empty
+              'sample.book.title': '', // Empty
               'sample.book.description': 'Test Description',
               'sample.author.name': 'Test Author',
               'sample.publisher.name': 'Test Publisher',
               // Missing chapter1 keys
             },
-            headers: {}
-          }
+            headers: {},
+          },
         };
         const problematicGenerator = new SampleContentGenerator(problematicCatalogs);
         const result = await problematicGenerator.validateLocaleCompleteness('problematic');
@@ -512,10 +503,9 @@ describe('SampleContentGenerator', () => {
         expect(result.locale).toBe('problematic');
         expect(result.missingKeys.length + result.emptyKeys.length).toBeGreaterThan(0);
         expect(result.emptyKeys).toContain('sample.book.title');
-        expect(result.missingKeys).toEqual(expect.arrayContaining([
-          'sample.chapter1.title',
-          'sample.chapter1.content'
-        ]));
+        expect(result.missingKeys).toEqual(
+          expect.arrayContaining(['sample.chapter1.title', 'sample.chapter1.content'])
+        );
       });
     });
 
@@ -620,8 +610,8 @@ describe('SampleContentGenerator', () => {
             'sample.book.title': 'Test Title',
             // Missing other required keys
           },
-          headers: {}
-        }
+          headers: {},
+        },
       };
       const incompleteGenerator = new SampleContentGenerator(incompleteCatalogs);
 
@@ -656,15 +646,15 @@ describe('SampleContentGenerator', () => {
         empty: {
           locale: 'empty',
           messages: {
-            'sample.book.title': '',  // Empty translation
+            'sample.book.title': '', // Empty translation
             'sample.book.description': 'Valid description',
             'sample.author.name': 'Valid author',
             'sample.publisher.name': 'Valid publisher',
             'sample.chapter1.title': 'Valid title',
             'sample.chapter1.content': 'Valid content',
           },
-          headers: {}
-        }
+          headers: {},
+        },
       };
       const emptyGenerator = new SampleContentGenerator(emptyCatalogs);
 

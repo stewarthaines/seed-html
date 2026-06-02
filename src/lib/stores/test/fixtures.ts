@@ -17,7 +17,7 @@ import { vi } from 'vitest';
 export const VALID_EDITOR_IDS = [
   'outline-nav',
   'chapter-1-source',
-  'chapter-2-source', 
+  'chapter-2-source',
   'transform-text-js',
   'transform-dom-js',
   'spine-item-1',
@@ -45,7 +45,8 @@ Some more content here with **bold** and *italic* text.
 - List item 3
 
 The end.`,
-  LARGE_TEXT: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(50) +
+  LARGE_TEXT:
+    'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(50) +
     'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. '.repeat(30),
   EMPTY_STRING: '',
   WHITESPACE_ONLY: '   \n\t  \r\n  ',
@@ -176,8 +177,8 @@ export function validateTextEditorState(state: any): {
  */
 export function createSubscriptionTestScenario() {
   const calls: Array<{ timestamp: number; content: string }> = [];
-  
-  const subscriber = vi.fn((state) => {
+
+  const subscriber = vi.fn(state => {
     calls.push({
       timestamp: Date.now(),
       content: state.content,
@@ -203,7 +204,7 @@ export function createStoreIsolationTest(storeCount = 3) {
   }> = [];
   const subscribers: Array<ReturnType<typeof vi.fn>> = [];
   const unsubscribers: Array<() => void> = [];
-  
+
   for (let i = 0; i < storeCount; i++) {
     const editorId = createUniqueEditorId(`isolation-test-${i}`);
     // Note: Actual store creation will be done in the test
@@ -246,21 +247,23 @@ export function createErrorScenarios() {
   const scenarios = [
     {
       name: 'Subscriber throws error',
-      createBadSubscriber: () => vi.fn(() => {
-        throw new Error('Subscriber error');
-      }),
+      createBadSubscriber: () =>
+        vi.fn(() => {
+          throw new Error('Subscriber error');
+        }),
     },
     {
       name: 'Subscriber modifies state',
-      createBadSubscriber: () => vi.fn((state) => {
-        // Attempt to modify the state object
-        try {
-          state.content = 'modified';
-          state.isEmpty = !state.isEmpty;
-        } catch (e) {
-          // Ignore if state is immutable
-        }
-      }),
+      createBadSubscriber: () =>
+        vi.fn(state => {
+          // Attempt to modify the state object
+          try {
+            state.content = 'modified';
+            state.isEmpty = !state.isEmpty;
+          } catch (e) {
+            // Ignore if state is immutable
+          }
+        }),
     },
   ];
 
@@ -276,13 +279,13 @@ export function createErrorScenarios() {
  */
 export function createSubscriptionMock() {
   const subscribers = new Set<(...args: unknown[]) => unknown>();
-  
+
   return {
-    subscribe: vi.fn((callback) => {
+    subscribe: vi.fn(callback => {
       subscribers.add(callback);
       return () => subscribers.delete(callback);
     }),
-    notify: vi.fn((state) => {
+    notify: vi.fn(state => {
       subscribers.forEach(callback => callback(state));
     }),
     getSubscriberCount: () => subscribers.size,
@@ -295,10 +298,14 @@ export function createSubscriptionMock() {
  */
 export function createSynchronousExecutionTest() {
   let executionOrder: string[] = [];
-  
+
   return {
-    reset: () => { executionOrder = []; },
-    mark: (label: string) => { executionOrder.push(label); },
+    reset: () => {
+      executionOrder = [];
+    },
+    mark: (label: string) => {
+      executionOrder.push(label);
+    },
     getOrder: () => [...executionOrder],
     expectOrder: (expected: string[]) => {
       return executionOrder.join(',') === expected.join(',');
@@ -317,14 +324,14 @@ export const BOUNDARY_TEST_CASES = {
     { name: 'medium', content: 'content'.repeat(100) },
     { name: 'large', content: 'text'.repeat(10000) },
   ],
-  
+
   updateFrequencies: [
     { name: 'single update', count: 1 },
     { name: 'few updates', count: 10 },
     { name: 'many updates', count: 100 },
     { name: 'rapid updates', count: 1000 },
   ],
-  
+
   subscriberCounts: [
     { name: 'no subscribers', count: 0 },
     { name: 'single subscriber', count: 1 },

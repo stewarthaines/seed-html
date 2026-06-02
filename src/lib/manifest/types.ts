@@ -1,6 +1,6 @@
 /**
  * Type definitions for ManifestManager
- * 
+ *
  * Complete interface definitions for EPUB manifest management and content operations.
  */
 

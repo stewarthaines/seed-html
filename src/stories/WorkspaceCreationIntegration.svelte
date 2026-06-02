@@ -34,15 +34,15 @@
   async function initializeBackends() {
     try {
       addLog('info', 'Initializing storage backend...');
-      
+
       // Initialize storage with feature detection
       storageManager = new StorageManager();
       await storageManager.init();
-      
+
       // Detect actual storage backend being used
       currentBackend = storageManager.getBackendType();
       addLog('success', `✅ WORKING: Storage backend initialized: ${currentBackend}`);
-      
+
       initialized = true;
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Backend initialization failed';
@@ -65,10 +65,10 @@
 
       // 2. Create basic EPUB structure manually (simulating what createLocalizedEPUBWorkspace should do)
       addLog('action', 'Creating basic EPUB structure...');
-      
+
       // Create mimetype
       await storageManager.writeTextFile(workspaceId, 'mimetype', 'application/epub+zip');
-      
+
       // Create container.xml
       await storageManager.writeTextFile(
         workspaceId,
@@ -104,7 +104,7 @@
 
       // Create XHTML files in OEBPS/Text/ directory - THIS IS THE CRITICAL TEST
       addLog('action', 'Writing XHTML files to OEBPS/Text/ directory...');
-      
+
       const chapter1Content = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -161,39 +161,44 @@ p {
       const allFiles = await storageManager.listFiles(workspaceId);
       addLog('info', `Total files in workspace: ${allFiles.length}`);
       addLog('info', `All files: ${allFiles.join(', ')}`);
-      
+
       // Look specifically for XHTML files in OEBPS/Text/
       const xhtmlFiles = allFiles.filter(f => f.includes('OEBPS/Text/') && f.endsWith('.xhtml'));
-      
+
       if (xhtmlFiles.length === 0) {
         // This is the current bug - manifest entries exist but no XHTML files
         const manifestFiles = allFiles.filter(f => f.includes('manifest') || f.includes('.opf'));
         addLog('error', `Found manifest files: ${manifestFiles.join(', ')}`);
         addLog('error', '❌ BROKEN: NO XHTML FILES FOUND in OEBPS/Text/');
-        throw new Error('NO XHTML FILES FOUND - This is the bug we\'re investigating!');
+        throw new Error("NO XHTML FILES FOUND - This is the bug we're investigating!");
       }
-      
-      addLog('success', `✅ WORKING: Found ${xhtmlFiles.length} XHTML files: ${xhtmlFiles.join(', ')}`);
+
+      addLog(
+        'success',
+        `✅ WORKING: Found ${xhtmlFiles.length} XHTML files: ${xhtmlFiles.join(', ')}`
+      );
 
       // 4. Test file content and validate XHTML
       let totalSize = 0;
       for (const fileName of xhtmlFiles) {
         addLog('action', `Reading and validating file: ${fileName}`);
         const content = await storageManager.readTextFile(workspaceId, fileName);
-        
+
         if (!content || content.length === 0) {
           throw new Error(`❌ BROKEN: File ${fileName} exists in listing but is empty when read!`);
         }
-        
+
         // Validate XHTML structure
         const parser = new DOMParser();
         const doc = parser.parseFromString(content, 'text/xml');
         const parseError = doc.querySelector('parsererror');
-        
+
         if (parseError) {
-          throw new Error(`❌ BROKEN: File ${fileName} contains invalid XHTML: ${parseError.textContent}`);
+          throw new Error(
+            `❌ BROKEN: File ${fileName} contains invalid XHTML: ${parseError.textContent}`
+          );
         }
-        
+
         totalSize += content.length;
         addLog('success', `✅ WORKING: ${fileName}: ${content.length} bytes, valid XHTML`);
       }
@@ -214,30 +219,35 @@ p {
       }
 
       // 6. Record successful test results
-      testResults = [...testResults, {
-        backend: currentBackend,
-        browser: getBrowserName(),
-        timestamp: new Date().toISOString(),
-        success: true,
-        filesCreated: xhtmlFiles.length,
-        totalSize: totalSize
-      }];
+      testResults = [
+        ...testResults,
+        {
+          backend: currentBackend,
+          browser: getBrowserName(),
+          timestamp: new Date().toISOString(),
+          success: true,
+          filesCreated: xhtmlFiles.length,
+          totalSize: totalSize,
+        },
+      ];
 
       addLog('success', '🎉 ✅ WORKING: Complete integration test PASSED!');
       addLog('success', `Created ${xhtmlFiles.length} files, total size: ${totalSize} bytes`);
-
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Unknown error';
       addLog('error', `❌ BROKEN: Integration test FAILED: ${errorMsg}`);
-      
+
       // Record failure with detailed error info
-      testResults = [...testResults, {
-        backend: currentBackend,
-        browser: getBrowserName(),
-        timestamp: new Date().toISOString(),
-        success: false,
-        error: errorMsg
-      }];
+      testResults = [
+        ...testResults,
+        {
+          backend: currentBackend,
+          browser: getBrowserName(),
+          timestamp: new Date().toISOString(),
+          success: false,
+          error: errorMsg,
+        },
+      ];
     } finally {
       isRunning = false;
     }
@@ -249,7 +259,7 @@ p {
     testResults = [];
     error = null;
     initialized = false;
-    
+
     // Clean up any existing test workspaces
     try {
       if (storageManager) {
@@ -267,7 +277,7 @@ p {
     } catch {
       // Storage may not be initialized, ignore
     }
-    
+
     await initializeBackends();
     addLog('success', 'Demo reset complete');
   }
@@ -337,18 +347,12 @@ p {
           </div>
         </div>
       </div>
-      
+
       <div class="button-group">
-        <button 
-          on:click={runCompleteWorkspaceCreation} 
-          disabled={isRunning}
-          class="primary-button"
-        >
+        <button on:click={runCompleteWorkspaceCreation} disabled={isRunning} class="primary-button">
           {isRunning ? 'Running...' : 'Run Complete Integration Test'}
         </button>
-        <button on:click={resetDemo} disabled={isRunning} class="reset-button">
-          Reset Demo
-        </button>
+        <button on:click={resetDemo} disabled={isRunning} class="reset-button"> Reset Demo </button>
       </div>
     </div>
 
@@ -389,7 +393,7 @@ p {
       <div class="console-header">
         <h3>Integration Test Log</h3>
         <div class="console-stats">
-          <button on:click={() => logs = []} class="clear-log">Clear</button>
+          <button on:click={() => (logs = [])} class="clear-log">Clear</button>
         </div>
       </div>
       <div class="log-entries">

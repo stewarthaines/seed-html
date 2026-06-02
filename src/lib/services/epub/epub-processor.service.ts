@@ -1,6 +1,6 @@
 /**
  * EPUBProcessor - Clean Service Architecture Implementation
- * 
+ *
  * Thin wrapper over existing EPUBUnpacker, EPUBPackager, and OPFUtils components
  * providing a clean service interface for EPUB operations.
  */
@@ -12,11 +12,7 @@ import { OPFUtils } from '../../epub/opf-utils.js';
 import { Zip } from '../../zip/index.js';
 
 // Re-export types from existing components
-export type { 
-  UnpackResult, 
-  ValidationResult, 
-  ExtractionResult 
-} from '../../epub/EPUBUnpacker.js';
+export type { UnpackResult, ValidationResult, ExtractionResult } from '../../epub/EPUBUnpacker.js';
 
 export type {
   PackageResult,
@@ -24,7 +20,7 @@ export type {
   PackageProgress,
   CompressionSettings,
   WorkspaceFile,
-  EPUBMetadata
+  EPUBMetadata,
 } from '../../epub/EPUBPackager.js';
 
 export type {
@@ -33,12 +29,15 @@ export type {
   SpineItem,
   GuideItem,
   ContainerInfo,
-  XMLValidationResult
+  XMLValidationResult,
 } from '../../epub/opf-utils.js';
 
 // Service error types
 export class EPUBProcessorError extends Error {
-  constructor(message: string, public code: string) {
+  constructor(
+    message: string,
+    public code: string
+  ) {
     super(message);
     this.name = 'EPUBProcessorError';
   }
@@ -63,7 +62,10 @@ export class EPUBProcessor {
   /**
    * Unpack EPUB file to workspace
    */
-  async unpackEPUB(file: File, workspaceId: string): Promise<import('../../epub/EPUBUnpacker.js').UnpackResult> {
+  async unpackEPUB(
+    file: File,
+    workspaceId: string
+  ): Promise<import('../../epub/EPUBUnpacker.js').UnpackResult> {
     try {
       // Ensure storage is initialized
       if (!this.fileStorage.isInitialized()) {
@@ -82,7 +84,9 @@ export class EPUBProcessor {
   /**
    * Validate EPUB structure from ZIP data
    */
-  async validateEPUBStructure(zipData: ArrayBuffer): Promise<import('../../epub/EPUBUnpacker.js').ValidationResult> {
+  async validateEPUBStructure(
+    zipData: ArrayBuffer
+  ): Promise<import('../../epub/EPUBUnpacker.js').ValidationResult> {
     try {
       const zip = new Zip(zipData);
       return await this.epubUnpacker.validateEPUBStructure(zip);
@@ -91,7 +95,7 @@ export class EPUBProcessor {
       return {
         isValid: false,
         errors: [`Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
-        warnings: []
+        warnings: [],
       };
     }
   }
@@ -104,7 +108,7 @@ export class EPUBProcessor {
    * Package workspace into EPUB file
    */
   async packageEPUB(
-    workspaceId: string, 
+    workspaceId: string,
     options?: import('../../epub/EPUBPackager.js').PackageOptions
   ): Promise<import('../../epub/EPUBPackager.js').PackageResult> {
     try {
@@ -225,7 +229,7 @@ export class EPUBProcessor {
    * Validate manifest and spine consistency
    */
   validateManifestSpineConsistency(
-    manifest: import('../../epub/opf-utils.js').ManifestItem[], 
+    manifest: import('../../epub/opf-utils.js').ManifestItem[],
     spine: import('../../epub/opf-utils.js').SpineItem[]
   ): string[] {
     return OPFUtils.validateManifestSpineConsistency(manifest, spine);

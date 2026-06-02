@@ -13,6 +13,7 @@ The current two-tier workspace metadata cache system adds significant complexity
 ### Architecture Overview
 
 **Tier 1: Memory Cache**
+
 - `Map<string, WorkspaceInfo>` storing parsed metadata
 - Instant access with no I/O
 - Lost on page refresh/app restart
@@ -20,6 +21,7 @@ The current two-tier workspace metadata cache system adds significant complexity
 - Located: `WorkspaceMetadataCache.memoryCache`
 
 **Tier 2: Disk Cache**
+
 - JSON files (`.workspace-metadata.json`) in each workspace directory
 - Persists across app sessions
 - 24-hour TTL with version checking
@@ -72,7 +74,7 @@ private async parseWorkspaceMetadata(workspaceId: string): Promise<WorkspaceInfo
       totalSize += buffer.byteLength;
     } catch { /* skip */ }
   }
-  
+
   return { /* metadata object */ };
 }
 ```
@@ -80,11 +82,13 @@ private async parseWorkspaceMetadata(workspaceId: string): Promise<WorkspaceInfo
 ### Performance Analysis
 
 **Typical Workspace (50 files, 50KB average)**:
+
 - **With cache hit**: ~1ms (memory) or ~10ms (disk cache)
 - **Without cache**: ~50-100ms (50 file reads + OPF parsing)
 - **Cache miss penalty**: Full calculation + cache write operations
 
 **Actual Usage Patterns**:
+
 - Most users have <10 workspaces
 - Workspace listing called infrequently (app startup, workspace switching)
 - Total uncached time for 10 workspaces: ~500ms-1s
@@ -93,6 +97,7 @@ private async parseWorkspaceMetadata(workspaceId: string): Promise<WorkspaceInfo
 ### Race Condition Analysis
 
 **Startup Timing Issues**:
+
 1. `App.svelte` calls `listWorkspacesWithMetadata()` immediately after `workspaceManager.init()`
 2. Cache may be in inconsistent state during initial population
 3. Memory cache empty, disk cache may not exist or be stale
@@ -103,6 +108,7 @@ private async parseWorkspaceMetadata(workspaceId: string): Promise<WorkspaceInfo
 ### Core Approach: Reactive Memory Cache
 
 Replace two-tier caching with reactive single-tier approach:
+
 1. **Remove disk cache** complexity (source of race conditions)
 2. **Convert memory cache to Svelte store** (enable reactivity)
 3. **Progressive loading** pattern (immediate startup + background population)
@@ -133,44 +139,46 @@ import { writable, derived } from 'svelte/store';
 
 class ReactiveWorkspaceCache {
   private cache = writable(new Map<string, WorkspaceInfo>());
-  
+
   // Reactive store for UI consumption
   public workspaces = derived(this.cache, cache => Array.from(cache.values()));
-  
+
   // Start non-blocking background loading
   async startLoading(storage: FileStorageAPI) {
     const workspaceIds = await storage.listWorkspaces();
-    
+
     // Load workspaces in parallel, update store as each completes
-    Promise.all(workspaceIds.map(async id => {
-      try {
-        // Parse metadata (including size calculation)
-        const metadata = await this.parseWorkspaceMetadata(id, storage);
-        
-        // Reactively update cache - triggers UI updates
-        this.cache.update(cache => {
-          cache.set(id, metadata);
-          return new Map(cache); // Trigger reactivity
-        });
-      } catch (error) {
-        // Handle individual workspace errors gracefully
-        this.cache.update(cache => {
-          cache.set(id, {
-            id,
-            title: `Workspace ${id} (Error)`,
-            language: 'unknown',
-            lastModified: new Date(),
-            fileCount: 0,
-            epubVersion: 'Unknown',
-            hasError: true,
-            errorMessage: error instanceof Error ? error.message : 'Unknown error'
+    Promise.all(
+      workspaceIds.map(async id => {
+        try {
+          // Parse metadata (including size calculation)
+          const metadata = await this.parseWorkspaceMetadata(id, storage);
+
+          // Reactively update cache - triggers UI updates
+          this.cache.update(cache => {
+            cache.set(id, metadata);
+            return new Map(cache); // Trigger reactivity
           });
-          return new Map(cache);
-        });
-      }
-    }));
+        } catch (error) {
+          // Handle individual workspace errors gracefully
+          this.cache.update(cache => {
+            cache.set(id, {
+              id,
+              title: `Workspace ${id} (Error)`,
+              language: 'unknown',
+              lastModified: new Date(),
+              fileCount: 0,
+              epubVersion: 'Unknown',
+              hasError: true,
+              errorMessage: error instanceof Error ? error.message : 'Unknown error',
+            });
+            return new Map(cache);
+          });
+        }
+      })
+    );
   }
-  
+
   // Get workspace from cache (immediate)
   get(workspaceId: string): WorkspaceInfo | undefined {
     let result: WorkspaceInfo | undefined;
@@ -179,7 +187,7 @@ class ReactiveWorkspaceCache {
     })();
     return result;
   }
-  
+
   // Clear cache (for testing)
   clear() {
     this.cache.set(new Map());
@@ -193,15 +201,15 @@ class ReactiveWorkspaceCache {
 <!-- WorkspaceView.svelte - reactive pattern -->
 <script lang="ts">
   import { workspaceManager } from '../workspace';
-  
+
   // Subscribe to reactive workspace cache
   $: workspaces = $workspaceManager.workspaces;
   $: loading = workspaces.length === 0; // Simple loading state
-  
+
   onMount(async () => {
     // Initialize storage (fast)
     await workspaceManager.init();
-    
+
     // Start background workspace loading (non-blocking)
     workspaceManager.startLoadingWorkspaces();
   });
@@ -226,33 +234,36 @@ class ReactiveWorkspaceCache {
 **Files to Modify:**
 
 1. **`src/lib/workspace/workspace-cache.ts`** - Replace with ReactiveWorkspaceCache:
+
    ```typescript
    // Remove: Complex two-tier cache (~400 lines)
    // Add: Simple reactive cache (~100 lines)
    ```
 
 2. **`src/lib/workspace/types.ts`** - Update cache-related types:
+
    ```typescript
    // Remove disk cache types
    - WorkspaceCacheEntry
    - WorkspaceCache
    - CacheError class
-   
+
    // Keep/simplify
    + Simple cache configuration
    ```
 
 3. **`src/lib/workspace/workspace-manager.ts`** - Update to use reactive cache:
+
    ```typescript
    // Replace
    - private cache: WorkspaceMetadataCache;
    + private cache: ReactiveWorkspaceCache;
-   
+
    // Replace blocking method
    - async listWorkspacesWithMetadata(): Promise<WorkspaceInfo[]>
    + startLoadingWorkspaces(): void // Non-blocking
    + get workspaces() // Reactive store getter
-   
+
    // Remove disk cache methods
    - private async loadCachedMetadata()
    - private async isCacheFresh()
@@ -267,7 +278,7 @@ class ReactiveWorkspaceCache {
 onMount(async () => {
   const tempWorkspaceManager = new WorkspaceManager();
   await tempWorkspaceManager.init();
-  
+
   // BLOCKS until all workspaces parsed
   const workspaces = await tempWorkspaceManager.listWorkspacesWithMetadata();
   if (workspaces.length > 0) {
@@ -281,11 +292,11 @@ onMount(async () => {
 onMount(async () => {
   const tempWorkspaceManager = new WorkspaceManager();
   await tempWorkspaceManager.init(); // Fast storage initialization
-  
+
   // Set manager immediately - enables UI
   currentWorkspaceManager = tempWorkspaceManager;
   initialized = true;
-  
+
   // Start background workspace loading (non-blocking)
   tempWorkspaceManager.startLoadingWorkspaces();
 });
@@ -310,10 +321,10 @@ $: {
 <script lang="ts">
   let workspaces: WorkspaceInfo[] = [];
   let loading = true;
-  
+
   const loadWorkspaces = async () => {
     if (!workspaceManager) return;
-    
+
     try {
       loading = true;
       // BLOCKS until all workspaces parsed
@@ -324,7 +335,7 @@ $: {
       loading = false;
     }
   };
-  
+
   $: if (workspaceManager) {
     loadWorkspaces(); // Triggers on manager change
   }
@@ -335,7 +346,7 @@ $: {
   // Subscribe to reactive workspace store
   $: workspaces = workspaceManager ? $workspaceManager.workspaces : [];
   $: loading = workspaces.length === 0 && workspaceManager?.isLoading;
-  
+
   // Start loading when manager becomes available
   $: if (workspaceManager && !workspaceManager.hasStartedLoading) {
     workspaceManager.startLoadingWorkspaces();
@@ -359,9 +370,12 @@ $: {
 ### Unit Tests to Update
 
 **`src/lib/workspace/test/workspace-manager.test.ts`:**
+
 ```typescript
 // Remove cache-related tests
-describe('Cache Management', () => { /* DELETE ENTIRE SECTION */ });
+describe('Cache Management', () => {
+  /* DELETE ENTIRE SECTION */
+});
 
 // Update existing tests that expect cached results
 describe('listWorkspacesWithMetadata', () => {
@@ -381,23 +395,27 @@ describe('getWorkspaceSize', () => {
 ```
 
 **Remove cache-specific test files:**
+
 - Delete any tests specifically for `WorkspaceMetadataCache`
 - Update integration tests that rely on cache behavior
 
 ### Mock Updates
 
 **`src/stories/utils/visual-mock-data.ts`:**
+
 ```typescript
 // Remove cache-related mock methods
 export class MockWorkspaceManager {
   // Remove
-  clearCache(workspaceId?: string) { /* DELETE */ }
-  
+  clearCache(workspaceId?: string) {
+    /* DELETE */
+  }
+
   // Update listWorkspacesWithMetadata to return direct results
   async listWorkspacesWithMetadata(): Promise<WorkspaceInfo[]> {
     // Return mock data directly without cache simulation
   }
-  
+
   // Add new mock method
   async getWorkspaceSize(workspaceId: string): Promise<number> {
     return this.mockWorkspaces.find(w => w.id === workspaceId)?.totalSize || 0;
@@ -410,11 +428,13 @@ export class MockWorkspaceManager {
 ### Stories Requiring Updates
 
 **`src/stories/WorkspaceList.stories.ts`:**
+
 - Update mock data to exclude `totalSize` from initial workspace info
 - Add controls for testing on-demand size loading
 - Update scenarios that test cache behavior
 
 **`src/stories/WorkspaceView.stories.ts`:**
+
 - Remove cache-related story variations
 - Add stories for progressive size loading
 - Update error state stories
@@ -422,26 +442,28 @@ export class MockWorkspaceManager {
 ### Visual Testing Updates
 
 **Components affected:**
+
 1. **WorkspaceList** - Size display changes from immediate to progressive
 2. **WorkspaceActionBar** - Remove any cache-related UI elements
 3. **WorkspaceView** - Update loading states
 
 **New story patterns needed:**
+
 ```typescript
 // Progressive loading story
 export const ProgressiveSizeLoading: Story = {
   args: {
     workspaces: mockWorkspacesWithoutSize,
-    onSizeRequested: action('size-requested')
-  }
+    onSizeRequested: action('size-requested'),
+  },
 };
 
 // Fast listing story
 export const FastListing: Story = {
   args: {
     workspaces: mockWorkspacesBasic,
-    loadingState: 'complete'
-  }
+    loadingState: 'complete',
+  },
 };
 ```
 
@@ -450,16 +472,18 @@ export const FastListing: Story = {
 ### Handling Existing Cache Files
 
 **Option A: Ignore Existing Cache**
+
 - Leave existing `.workspace-metadata.json` files in place
 - They'll be ignored by the new implementation
 - Gradual cleanup over time as workspaces are accessed
 
 **Option B: Active Cleanup**
+
 ```typescript
 // Add one-time cleanup method
 async cleanupLegacyCache(): Promise<void> {
   const workspaceIds = await this.storage.listWorkspaces();
-  
+
   for (const workspaceId of workspaceIds) {
     try {
       await this.storage.deleteFile(workspaceId, '.workspace-metadata.json');
@@ -473,6 +497,7 @@ async cleanupLegacyCache(): Promise<void> {
 ### Backward Compatibility
 
 **WorkspaceInfo type changes:**
+
 ```typescript
 // Update interface to make totalSize optional
 interface WorkspaceInfo {
@@ -482,6 +507,7 @@ interface WorkspaceInfo {
 ```
 
 **Component updates:**
+
 ```typescript
 // Handle missing totalSize gracefully
 function formatWorkspaceSize(workspace: WorkspaceInfo): string {
@@ -497,13 +523,14 @@ function formatWorkspaceSize(workspace: WorkspaceInfo): string {
 ### UX Improvements
 
 **1. Progressive Enhancement**
+
 ```typescript
 // Show basic info immediately, enhance with size later
 async loadWorkspaceList() {
   // Phase 1: Fast basic info
   const workspaces = await workspaceManager.listWorkspacesWithMetadata();
   this.workspaces = workspaces;
-  
+
   // Phase 2: Background size calculation
   for (const workspace of workspaces) {
     this.loadWorkspaceSize(workspace.id);
@@ -512,6 +539,7 @@ async loadWorkspaceList() {
 ```
 
 **2. Skeleton Loading States**
+
 ```svelte
 <!-- Show placeholder while size loads -->
 {#if workspace.totalSize !== undefined}
@@ -522,6 +550,7 @@ async loadWorkspaceList() {
 ```
 
 **3. Batch Operations**
+
 ```typescript
 // Calculate multiple workspace sizes efficiently
 async getWorkspaceSizes(workspaceIds: string[]): Promise<Map<string, number>> {
@@ -531,7 +560,7 @@ async getWorkspaceSizes(workspaceIds: string[]): Promise<Map<string, number>> {
       size: await this.getWorkspaceSize(id)
     }))
   );
-  
+
   return new Map(results.map(r => [r.id, r.size]));
 }
 ```
@@ -539,21 +568,25 @@ async getWorkspaceSizes(workspaceIds: string[]): Promise<Map<string, number>> {
 ## Implementation Timeline
 
 **Phase 1 (Foundation)** - 1-2 days
+
 - Remove cache infrastructure
 - Update TypeScript types
 - Basic test updates
 
-**Phase 2 (Core Logic)** - 1-2 days  
+**Phase 2 (Core Logic)** - 1-2 days
+
 - Implement direct metadata calculation
 - Add on-demand size calculation
 - Update core workspace manager logic
 
 **Phase 3 (UI Integration)** - 1-2 days
+
 - Update components for progressive loading
 - Add skeleton states and loading indicators
 - Update Storybook stories
 
 **Phase 4 (Testing & Polish)** - 1 day
+
 - Complete test coverage
 - Performance testing
 - Documentation updates
@@ -572,32 +605,40 @@ async getWorkspaceSizes(workspaceIds: string[]): Promise<Map<string, number>> {
 ## Risks and Mitigation
 
 **Risk: Slower perceived performance**
+
 - **Mitigation**: Progressive loading and skeleton states maintain good UX
 
 **Risk: Increased storage I/O**
+
 - **Mitigation**: Size calculation is optional and done in background
 
 **Risk: Breaking existing functionality**
+
 - **Mitigation**: Gradual rollout with backward-compatible WorkspaceInfo interface
 
 **Risk: Test maintenance overhead**
+
 - **Mitigation**: Comprehensive test updates included in implementation plan
 
 ## Alternative Approaches Considered
 
 **1. Complete Cache Elimination (Original Plan)**
+
 - Remove all caching, use direct calculation for each workspace listing
 - **Rejected**: Loses session-level performance benefits, requires more complex UX patterns
 
 **2. Fix Two-Tier Cache Race Conditions**
+
 - Keep existing cache but add proper initialization sequencing
 - **Rejected**: Still maintains high complexity without addressing root cause
 
 **3. Reactive Cache (Selected Approach)**
+
 - Remove disk cache complexity, convert memory cache to reactive store
 - **Selected**: Best balance of simplicity, performance, and user experience
 
 **4. Streaming/Incremental Loading**
+
 - Load workspace metadata incrementally as user scrolls
 - **Rejected**: Over-engineering for typical usage patterns (few workspaces)
 

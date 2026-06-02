@@ -7,6 +7,7 @@ Based on the successful Phase 1 storage integration test, we've confirmed that *
 ## Key Discovery from Phase 1
 
 ✅ **CONFIRMED WORKING:**
+
 - Storage backend initialization (OPFS/IndexedDB)
 - Basic workspace creation
 - XHTML file writing to `OEBPS/Text/`
@@ -23,6 +24,7 @@ Based on the successful Phase 1 storage integration test, we've confirmed that *
 **Test File:** `TransformPipelineIntegration.stories.svelte`
 
 **Critical Scenarios:**
+
 ```typescript
 // 1. Basic Transform Pipeline Test
 const sourceText = `# Chapter 1
@@ -33,6 +35,7 @@ This is sample content with **bold** and *italic* text.`;
 ```
 
 **Key Verification Points:**
+
 - ✅ Transform scripts load from workspace `SOURCE/` directory
 - ✅ `transformText.js` converts markdown-like syntax to HTML
 - ✅ `transformDom.js` applies CSS classes and structure
@@ -40,6 +43,7 @@ This is sample content with **bold** and *italic* text.`;
 - ✅ Files written to correct `OEBPS/Text/` paths
 
 **Expected Results:**
+
 - **If Working:** `✅ WORKING: Transform pipeline produced valid XHTML`
 - **If Broken:** `❌ BROKEN: Transform failed at [specific step]`
 
@@ -50,6 +54,7 @@ This is sample content with **bold** and *italic* text.`;
 **Test File:** `SampleContentIntegration.stories.svelte`
 
 **Critical Scenarios:**
+
 ```typescript
 // Test all 7 supported locales
 const locales = ['en', 'de', 'ar', 'he', 'ja', 'ka', 'zh-Hant'];
@@ -61,6 +66,7 @@ for (const locale of locales) {
 ```
 
 **Key Verification Points:**
+
 - ✅ Content generated for all 7 locales
 - ✅ RTL support for Arabic/Hebrew
 - ✅ Proper character encoding for Japanese/Georgian/Chinese
@@ -74,6 +80,7 @@ for (const locale of locales) {
 **Test File:** `WorkspaceManagerIntegration.stories.svelte`
 
 **Critical Scenarios:**
+
 ```typescript
 // The exact call that's failing in production
 const workspaceId = await workspaceManager.createLocalizedEPUBWorkspace(metadata, 'en');
@@ -83,6 +90,7 @@ const files = await storageManager.listFiles(workspaceId);
 ```
 
 **Key Verification Points:**
+
 - ✅ Workspace created with proper EPUB structure
 - ✅ Universal assets installed (CSS, transforms)
 - ✅ Sample content generated and processed
@@ -98,6 +106,7 @@ const files = await storageManager.listFiles(workspaceId);
 **Test File:** `LocaleWorkflowIntegration.stories.svelte`
 
 **Critical Scenarios:**
+
 - Test workspace creation for each of the 7 locales
 - Verify RTL layout handling (Arabic, Hebrew)
 - Test complex character sets (Japanese, Georgian, Chinese)
@@ -110,6 +119,7 @@ const files = await storageManager.listFiles(workspaceId);
 **Test File:** `WorkspaceErrorIntegration.stories.svelte`
 
 **Critical Scenarios:**
+
 - Missing transform scripts
 - Invalid transform script syntax
 - Content generation failures
@@ -125,7 +135,7 @@ For each integration test, follow the established pattern:
 ```
 src/stories/
 ├── TransformPipelineIntegration.stories.svelte    # Story definitions
-├── TransformPipelineIntegration.svelte            # Component logic  
+├── TransformPipelineIntegration.svelte            # Component logic
 └── transform-pipeline-integration.css             # Styling
 ```
 
@@ -146,6 +156,7 @@ addLog('error', '❌ BROKEN: transformText.js failed to load from SOURCE/');
 ### 4. **Reset Functionality** (Required)
 
 Each test must include cleanup for repeated testing:
+
 ```typescript
 async function resetDemo() {
   // Clean up test workspaces
@@ -159,6 +170,7 @@ async function resetDemo() {
 ### **Phase 2 Likely Outcomes:**
 
 **Scenario A: Transform Scripts Missing**
+
 ```
 ✅ WORKING: Storage backend initialized
 ✅ WORKING: Sample content generated
@@ -166,12 +178,14 @@ async function resetDemo() {
 ```
 
 **Scenario B: Transform Execution Failure**
+
 ```
 ✅ WORKING: Transform scripts loaded
 ❌ BROKEN: transformText.js execution failed: [error details]
 ```
 
 **Scenario C: File Writing After Transform**
+
 ```
 ✅ WORKING: Transform pipeline completed
 ❌ BROKEN: Transformed XHTML not written to OEBPS/Text/
@@ -180,12 +194,14 @@ async function resetDemo() {
 ### **Phase 3 Likely Outcomes:**
 
 **Scenario A: Content Generation Failure**
+
 ```
 ✅ WORKING: Storage backend initialized
 ❌ BROKEN: Sample content generation failed for locale 'en'
 ```
 
 **Scenario B: SOURCE Directory Issues**
+
 ```
 ✅ WORKING: Sample content generated
 ❌ BROKEN: Content not written to SOURCE/ directory
@@ -194,23 +210,27 @@ async function resetDemo() {
 ### **Phase 4 Most Likely Bug Location:**
 
 Based on the successful Phase 1 test, the bug is probably in the orchestration between:
+
 1. **Sample content generation** → **Transform pipeline** → **File writing**
-2. **Transform script installation** vs **Transform script execution**  
+2. **Transform script installation** vs **Transform script execution**
 3. **OPF manifest updates** after transform pipeline completion
 
 ## Implementation Order
 
 ### **Week 1: Transform Pipeline (Phase 2)**
+
 - Most likely location of the bug
 - Critical path for all workspace creation
 - Foundation for other tests
 
 ### **Week 2: Sample Content + Complete Workflow (Phases 3 & 4)**
+
 - Test the full end-to-end process
 - Isolate remaining integration issues
 - Validate the complete fix
 
 ### **Week 3: Cross-Locale + Error Testing (Phases 5 & 6)**
+
 - Ensure robustness across all locales
 - Test edge cases and error conditions
 - Regression prevention
@@ -218,12 +238,14 @@ Based on the successful Phase 1 test, the bug is probably in the orchestration b
 ## Success Metrics
 
 ### **Functional Validation**
+
 - ✅ **Root Cause Identified**: Precise failure point in `createLocalizedEPUBWorkspace`
 - ✅ **Cross-Browser Validated**: Consistent behavior across Chrome, Firefox, Safari
 - ✅ **Multi-Locale Support**: All 7 locales working correctly
 - ✅ **Error Recovery**: Graceful handling of failure modes
 
 ### **Development Integration**
+
 - ✅ **Debugging Tool**: Live error identification during development
 - ✅ **Regression Testing**: Automated prevention of similar issues
 - ✅ **Documentation**: Self-documenting test results and workflows
@@ -272,16 +294,19 @@ const workspaceId = await workspaceManager.createLocalizedEPUBWorkspace(metadata
 ## Integration with Existing Infrastructure
 
 ### **Leverage Existing Patterns**
+
 - Build on successful Phase 1 storage integration test
 - Use established Backend story patterns from `STORYBOOK_ADVANCED.md`
 - Follow component separation from `STORYBOOK.md`
 
 ### **Cross-Browser Testing**
+
 - Extend Phase 1 cross-browser storage testing
 - Test transform pipeline across different JavaScript engines
 - Validate locale handling across browser internationalization
 
 ### **Performance Monitoring**
+
 - Benchmark complete workflow timing
 - Track storage usage across backends
 - Monitor transform pipeline performance
@@ -289,12 +314,14 @@ const workspaceId = await workspaceManager.createLocalizedEPUBWorkspace(metadata
 ## Expected Impact
 
 ### **Immediate Benefits**
+
 1. **Root Cause Identification**: Pinpoint exact failure in `createLocalizedEPUBWorkspace`
 2. **Targeted Bug Fix**: Focus development effort on specific failing component
 3. **Validation Framework**: Test fixes with comprehensive integration coverage
 4. **Development Confidence**: Ensure complete workflow reliability
 
 ### **Long-Term Value**
+
 1. **Regression Prevention**: Automated testing prevents similar workflow failures
 2. **Cross-Locale Reliability**: Ensure internationalization works consistently
 3. **Performance Optimization**: Identify bottlenecks in complex workflows

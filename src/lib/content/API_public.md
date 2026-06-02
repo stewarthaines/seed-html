@@ -249,11 +249,7 @@ const epubMetadata = await this.contentGenerator.generateLocalizedMetadata(local
 
 // Create SOURCE text files from chapters
 for (const chapter of sampleContent.chapters) {
-  await this.storage.writeTextFile(
-    workspaceId,
-    `SOURCE/text/${chapter.id}.txt`,
-    chapter.content
-  );
+  await this.storage.writeTextFile(workspaceId, `SOURCE/text/${chapter.id}.txt`, chapter.content);
 }
 ```
 
@@ -319,7 +315,7 @@ Each content key must provide:
 The Translation Content System supports all locales available in the i18n system:
 
 - **English** (`en`) - Left-to-right, Latin script
-- **German** (`de`) - Left-to-right, Latin script  
+- **German** (`de`) - Left-to-right, Latin script
 - **Arabic** (`ar`) - Right-to-left, Arabic script
 - **Hebrew** (`he`) - Right-to-left, Hebrew script
 - **Japanese** (`ja`) - Left-to-right, Japanese scripts

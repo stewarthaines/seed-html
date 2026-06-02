@@ -70,27 +70,26 @@ This demonstrates the complete workflow used by the EPUB editor for preview ifra
     try {
       // Wait for component initialization
       await canvas.findByRole('main', {}, { timeout: 5000 });
-      
+
       // Reset demo to clean state
       const resetButton = canvas.getByText('Reset Demo');
       await userEvent.click(resetButton);
       await new Promise(resolve => setTimeout(resolve, 300));
-      
+
       // Setup demo
       const setupButton = canvas.getByText('Setup Demo');
       await userEvent.click(setupButton);
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // Create blob URLs
       const createBlobButton = canvas.getByText('Create Blob URLs');
       await userEvent.click(createBlobButton);
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // Process XHTML
       const processXHTMLButton = canvas.getByText('Process XHTML');
       await userEvent.click(processXHTMLButton);
       await new Promise(resolve => setTimeout(resolve, 500));
-      
     } catch (error) {
       console.log('Play function interaction failed:', error);
       // Continue anyway to show current state

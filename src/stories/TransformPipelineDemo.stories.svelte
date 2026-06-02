@@ -100,7 +100,6 @@ This demonstrates the complete transformation workflow from plain text input to 
 
       // Allow time to see the results
       await new Promise(resolve => setTimeout(resolve, 500));
-
     } catch (error) {
       console.log('Play function interaction failed:', error);
       // Continue anyway to show current state

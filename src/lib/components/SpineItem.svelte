@@ -31,7 +31,7 @@
     onMoveUp,
     onMoveDown,
     onRenameId,
-    onDelete
+    onDelete,
   }: Props = $props();
 
   function handleKeyDown(event: KeyboardEvent & { currentTarget: EventTarget & HTMLDivElement }) {

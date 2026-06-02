@@ -16,9 +16,8 @@ export class ReactiveWorkspaceCache {
   private hasStartedLoading: boolean = false;
 
   // Public reactive stores for UI consumption
-  public workspaces: Readable<WorkspaceInfo[]> = derived(
-    this.cache,
-    cache => Array.from(cache.values()).sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime())
+  public workspaces: Readable<WorkspaceInfo[]> = derived(this.cache, cache =>
+    Array.from(cache.values()).sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime())
   );
 
   public isLoading: Readable<boolean> = this.loadingState;
@@ -43,11 +42,11 @@ export class ReactiveWorkspaceCache {
       const workspaceIds = allWorkspaceIds.filter(id => !RESERVED_WORKSPACE_IDS.has(id));
 
       // Load workspaces in parallel, update store as each completes
-      const loadPromises = workspaceIds.map(async (id) => {
+      const loadPromises = workspaceIds.map(async id => {
         try {
           // Parse metadata (including size calculation)
           const metadata = await parseWorkspaceMetadata(id);
-          
+
           // Reactively update cache - triggers UI updates
           this.cache.update(cache => {
             const newCache = new Map(cache);
@@ -87,7 +86,7 @@ export class ReactiveWorkspaceCache {
    */
   get(workspaceId: string): WorkspaceInfo | undefined {
     let result: WorkspaceInfo | undefined;
-    
+
     // Get current cache value synchronously
     this.cache.subscribe(cache => {
       result = cache.get(workspaceId);
@@ -163,11 +162,11 @@ export class ReactiveWorkspaceCache {
   } {
     let cacheSize = 0;
     let loading = false;
-    
+
     this.cache.subscribe(cache => {
       cacheSize = cache.size;
     })();
-    
+
     this.loadingState.subscribe(state => {
       loading = state;
     })();

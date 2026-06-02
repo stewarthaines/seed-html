@@ -74,27 +74,26 @@ This demonstrates the complete EPUB processing workflow and validates functional
     try {
       // Wait for initialization
       await canvas.findByRole('main', {}, { timeout: 5000 });
-      
+
       // Reset to clean state
       const resetButton = canvas.getByText('Reset Demo');
       await userEvent.click(resetButton);
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // Test valid EPUB scenario
       const validEpubButton = canvas.getByText('Valid EPUB 3.0');
       await userEvent.click(validEpubButton);
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Test analysis mode
       const analysisButton = canvas.getByText('Analysis Mode');
       await userEvent.click(analysisButton);
       await new Promise(resolve => setTimeout(resolve, 800));
-      
+
       // Test error scenario
       const errorButton = canvas.getByText('Missing Files');
       await userEvent.click(errorButton);
       await new Promise(resolve => setTimeout(resolve, 800));
-      
     } catch (error) {
       console.log('Play function interaction failed:', error);
     }

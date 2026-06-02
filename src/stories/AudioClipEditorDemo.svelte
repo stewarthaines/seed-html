@@ -30,7 +30,7 @@
   let audioClipService: AudioClipService | null = null;
   let workspaceService: WorkspaceService | null = null;
   let settingsService: SettingsService | null = null;
-  
+
   // Demo text content and selection state
   let textContent = `# Audio Integration Demo
 
@@ -60,13 +60,13 @@ The generated directives can then be processed by the EPUB transform pipeline.`;
     locale: 'en',
     translations: {},
     isLoading: false,
-    error: null
+    error: null,
   };
 
   const mockThemeStore: ThemeStore = {
     theme: 'light',
     systemTheme: 'light',
-    preferSystemTheme: false
+    preferSystemTheme: false,
   };
 
   /**
@@ -74,7 +74,7 @@ The generated directives can then be processed by the EPUB transform pipeline.`;
    */
   function handleInsertClip(clipText: string): void {
     insertedClips = [...insertedClips, clipText];
-    
+
     // Insert at current cursor position or append
     if (textareaSelection) {
       const before = textContent.substring(0, textareaSelection.start);
@@ -92,10 +92,9 @@ The generated directives can then be processed by the EPUB transform pipeline.`;
     const textarea = event.target as HTMLTextAreaElement;
     textareaSelection = {
       start: textarea.selectionStart,
-      end: textarea.selectionEnd
+      end: textarea.selectionEnd,
     };
   }
-
 
   /**
    * Initialize demo workspace with sample audio file
@@ -112,7 +111,7 @@ The generated directives can then be processed by the EPUB transform pipeline.`;
       // Initialize services
       workspaceService = new WorkspaceService(fileStorage);
       settingsService = new SettingsService(fileStorage, null, mockThemeStore, mockI18nStore);
-      
+
       // Create demo workspace using FileStorageAPI (like other demos)
       const workspaceId = await fileStorage.createWorkspace();
       console.log('🎵 Demo: Created workspace:', workspaceId);
@@ -138,28 +137,31 @@ The generated directives can then be processed by the EPUB transform pipeline.`;
             language: 'en',
             identifier: 'demo-audio-clip-' + Date.now(),
             creator: ['Demo Author'],
-            date: new Date().toISOString().split('T')[0]
+            date: new Date().toISOString().split('T')[0],
           },
           manifest: [
             {
               id: 'audio_lesson1',
               href: 'Audio/a1-19_Lesson1_Dialogue.mp3',
-              mediaType: 'audio/mpeg'
-            }
+              mediaType: 'audio/mpeg',
+            },
           ],
-          spine: []
-        }
+          spine: [],
+        },
       };
 
       // Create AudioClipService with new architecture (owns its BlobURLManager)
       audioClipService = new AudioClipService(fileStorage, workspaceService, settingsService);
-      
+
       // Override getAvailableAudioFiles to return our demo audio file
-      const originalGetAvailableAudioFiles = audioClipService.getAvailableAudioFiles.bind(audioClipService);
+      const originalGetAvailableAudioFiles =
+        audioClipService.getAvailableAudioFiles.bind(audioClipService);
       audioClipService.getAvailableAudioFiles = async (workspaceId: string) => {
-        return workspace?.opf.manifest.filter(item => 
-          item.mediaType && item.mediaType.startsWith('audio/')
-        ) || [];
+        return (
+          workspace?.opf.manifest.filter(
+            item => item.mediaType && item.mediaType.startsWith('audio/')
+          ) || []
+        );
       };
 
       initialized = true;
@@ -198,11 +200,9 @@ The generated directives can then be processed by the EPUB transform pipeline.`;
   <div class="demo-header">
     <h1>🎵 Audio Clip Editor Demo</h1>
     <p>Interactive demonstration of the AudioClipEditor component with sample audio file</p>
-    
+
     <div class="demo-controls">
-      <button type="button" onclick={resetDemo} disabled={isLoading}>
-        🔄 Reset Demo
-      </button>
+      <button type="button" onclick={resetDemo} disabled={isLoading}> 🔄 Reset Demo </button>
     </div>
   </div>
 
@@ -227,9 +227,10 @@ The generated directives can then be processed by the EPUB transform pipeline.`;
       <div class="text-section">
         <h2>📝 Text Content</h2>
         <p class="section-description">
-          Edit the text content below. Select text or position the cursor where you want to insert clip directives.
+          Edit the text content below. Select text or position the cursor where you want to insert
+          clip directives.
         </p>
-        
+
         <div class="textarea-container">
           <textarea
             bind:value={textContent}
@@ -241,7 +242,7 @@ The generated directives can then be processed by the EPUB transform pipeline.`;
             cols="80"
             class="content-textarea"
           ></textarea>
-          
+
           {#if textareaSelection}
             <div class="selection-info">
               Selection: {textareaSelection.start} - {textareaSelection.end}
@@ -256,7 +257,7 @@ The generated directives can then be processed by the EPUB transform pipeline.`;
         <p class="section-description">
           Use the controls below to select audio clips and insert them into your content.
         </p>
-        
+
         <div class="audio-editor-container">
           <AudioClipEditor
             {workspace}
@@ -293,7 +294,8 @@ The generated directives can then be processed by the EPUB transform pipeline.`;
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family:
+      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   }
 
   .demo-header {
@@ -477,7 +479,7 @@ The generated directives can then be processed by the EPUB transform pipeline.`;
     .demo-content {
       grid-template-columns: 1fr 1fr;
     }
-    
+
     .audio-editor-section {
       grid-column: 1 / -1;
     }

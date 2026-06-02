@@ -15,7 +15,7 @@ This document provides comprehensive guidance for writing tests in the editme-sv
 #### Unit Tests (Vitest + happy-dom)
 
 - **Purpose**: Fast testing of pure business logic and validation
-- **Environment**: happy-dom (4x faster than jsdom) 
+- **Environment**: happy-dom (4x faster than jsdom)
 - **Focus**: Algorithms, validation rules, pure functions, error handling
 - **What to Mock**: External dependencies only (file system, network)
 - **What NOT to Mock**: Internal business logic, state management
@@ -36,14 +36,14 @@ This document provides comprehensive guidance for writing tests in the editme-sv
 
 ### When to Use Each Approach
 
-| Scenario                | Unit Tests | Integration Tests | Storybook | Notes                                            |
-|------------------------|------------|-------------------|-----------|--------------------------------------------------|
-| **Pure Logic**         | ✅          | ❌                 | ❌         | Algorithms, validation, calculations             |
-| **API Integration**    | ❌          | ✅                 | ❌         | Real file system, backend APIs                  |
-| **Browser APIs**       | ❌          | ❌                 | ✅         | File API, Storage API, complex DOM              |
-| **User Interactions**  | ❌          | ❌                 | ✅         | Click flows, form submissions, navigation       |
-| **Error Handling**     | ✅          | ✅                 | ✅         | Test at appropriate level for error source      |
-| **Performance**        | ❌          | ❌                 | ✅         | Real browser performance characteristics         |
+| Scenario              | Unit Tests | Integration Tests | Storybook | Notes                                      |
+| --------------------- | ---------- | ----------------- | --------- | ------------------------------------------ |
+| **Pure Logic**        | ✅         | ❌                | ❌        | Algorithms, validation, calculations       |
+| **API Integration**   | ❌         | ✅                | ❌        | Real file system, backend APIs             |
+| **Browser APIs**      | ❌         | ❌                | ✅        | File API, Storage API, complex DOM         |
+| **User Interactions** | ❌         | ❌                | ✅        | Click flows, form submissions, navigation  |
+| **Error Handling**    | ✅         | ✅                | ✅        | Test at appropriate level for error source |
+| **Performance**       | ❌         | ❌                | ✅        | Real browser performance characteristics   |
 
 ## Testing Framework Configuration
 
@@ -58,31 +58,32 @@ test: {
     // Unit Tests - happy-dom environment
     {
       test: {
-        name: "unit",
-        include: ["src/**/*.{test,spec}.{js,ts}"],
-        environment: "happy-dom"
-      }
+        name: 'unit',
+        include: ['src/**/*.{test,spec}.{js,ts}'],
+        environment: 'happy-dom',
+      },
     },
     // Storybook Tests - real browser
     {
       test: {
-        name: "storybook", 
+        name: 'storybook',
         browser: {
           enabled: true,
           headless: true,
-          provider: "playwright",
-          instances: [{ browser: "chromium", viewport: { width: 800, height: 600 } }]
+          provider: 'playwright',
+          instances: [{ browser: 'chromium', viewport: { width: 800, height: 600 } }],
         },
-        setupFiles: [".storybook/vitest.setup.ts"]
-      }
-    }
-  ]
+        setupFiles: ['.storybook/vitest.setup.ts'],
+      },
+    },
+  ];
 }
 ```
 
 ### happy-dom Limitations
 
 **What Works:**
+
 - Basic DOM manipulation and queries
 - Event dispatch and handling
 - CSS selector queries
@@ -90,6 +91,7 @@ test: {
 - Local storage simulation
 
 **What Doesn't Work (Use Storybook Instead):**
+
 - File API operations (`FileReader`, `File` objects)
 - Complex CSS layout and positioning
 - Real browser storage APIs (OPFS, IndexedDB)
@@ -107,31 +109,30 @@ import { SettingsManager } from './settings-manager';
 
 describe('SettingsManager', () => {
   let manager: SettingsManager;
-  
+
   beforeEach(() => {
     manager = new SettingsManager();
   });
-  
+
   describe('validateSettings', () => {
     it('should accept valid settings object', () => {
       const validSettings = {
         theme: 'dark',
         language: 'en',
-        autoSave: true
+        autoSave: true,
       };
-      
+
       expect(manager.validateSettings(validSettings)).toBe(true);
     });
-    
+
     it('should reject invalid theme values', () => {
       const invalidSettings = {
         theme: 'invalid-theme',
         language: 'en',
-        autoSave: true
+        autoSave: true,
       };
-      
-      expect(() => manager.validateSettings(invalidSettings))
-        .toThrow('Invalid theme');
+
+      expect(() => manager.validateSettings(invalidSettings)).toThrow('Invalid theme');
     });
   });
 });
@@ -149,26 +150,26 @@ import { join } from 'node:path';
 describe('FileStorageAPI Integration', () => {
   let storage: FileStorageAPI;
   let tempDir: string;
-  
+
   beforeEach(async () => {
     tempDir = join(process.cwd(), 'test-temp');
     await fs.mkdir(tempDir, { recursive: true });
     storage = new FileStorageAPI({ basePath: tempDir });
     await storage.init();
   });
-  
+
   afterEach(async () => {
     await fs.rm(tempDir, { recursive: true, force: true });
   });
-  
+
   it('should create and read workspace files', async () => {
     const workspaceId = 'test-workspace';
     const fileName = 'test-file.txt';
     const content = 'Hello, World!';
-    
+
     await storage.writeTextFile(workspaceId, fileName, content);
     const readContent = await storage.readTextFile(workspaceId, fileName);
-    
+
     expect(readContent).toBe(content);
   });
 });
@@ -185,7 +186,7 @@ import ComponentDemo from './ComponentDemo.svelte';
 const meta: Meta<ComponentDemo> = {
   title: 'Components/UI/Component',
   component: ComponentDemo,
-  parameters: { layout: 'centered' }
+  parameters: { layout: 'centered' },
 };
 
 export default meta;
@@ -195,14 +196,14 @@ export const InteractiveTest: Story = {
   render: () => new ComponentDemo({ target: document.body }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    
+
     // Test user interactions
     const button = canvas.getByRole('button', { name: 'Submit' });
     await userEvent.click(button);
-    
+
     // Verify results
     await expect(canvas.getByText('Success')).toBeInTheDocument();
-  }
+  },
 };
 ```
 
@@ -215,7 +216,7 @@ export const InteractiveTest: Story = {
 vi.mock('node:fs/promises', () => ({
   readFile: vi.fn(),
   writeFile: vi.fn(),
-  mkdir: vi.fn()
+  mkdir: vi.fn(),
 }));
 
 // Mock browser APIs in unit tests
@@ -224,8 +225,8 @@ Object.defineProperty(window, 'localStorage', {
     getItem: vi.fn(),
     setItem: vi.fn(),
     removeItem: vi.fn(),
-    clear: vi.fn()
-  }
+    clear: vi.fn(),
+  },
 });
 ```
 
@@ -251,13 +252,14 @@ vi.mock('../storage/index.js', () => ({
     getInstance: vi.fn(() => ({
       init: vi.fn(),
       isInitialized: vi.fn(() => true),
-      // ... duplicated mock implementation 
+      // ... duplicated mock implementation
     })),
   },
 }));
 ```
 
 Available shared mocks:
+
 - `createVitestMockFileStorage()` - Complete FileStorageAPI mock with Vitest spies
 - `createMockFileStorage()` - Basic FileStorageAPI mock without Vitest dependencies
 
@@ -275,13 +277,10 @@ export const createMockWorkspace = (id = 'test-workspace') => ({
   id,
   name: 'Test Workspace',
   createdAt: new Date().toISOString(),
-  metadata: {}
+  metadata: {},
 });
 
-export const waitForCondition = async (
-  condition: () => boolean,
-  timeout = 1000
-): Promise<void> => {
+export const waitForCondition = async (condition: () => boolean, timeout = 1000): Promise<void> => {
   const start = Date.now();
   while (!condition() && Date.now() - start < timeout) {
     await new Promise(resolve => setTimeout(resolve, 10));
@@ -303,14 +302,14 @@ Use Storybook for testing browser-specific functionality:
 <script lang="ts">
   let files: FileList;
   let status = 'idle';
-  
+
   const handleFileSelect = async (event: Event) => {
     const input = event.target as HTMLInputElement;
     if (!input.files) return;
-    
+
     files = input.files;
     status = 'processing';
-    
+
     try {
       for (const file of files) {
         const content = await file.text();
@@ -342,22 +341,22 @@ Use Storybook for testing browser-specific functionality:
 export const AccessibilityTest: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    
+
     // Test keyboard navigation
     const firstButton = canvas.getByRole('button', { name: 'First' });
     firstButton.focus();
-    
+
     await userEvent.keyboard('{Tab}');
     const secondButton = canvas.getByRole('button', { name: 'Second' });
     expect(secondButton).toHaveFocus();
-    
+
     // Test ARIA attributes
     expect(firstButton).toHaveAttribute('aria-label');
-    
+
     // Test screen reader content
     const heading = canvas.getByRole('heading', { level: 1 });
     expect(heading).toBeInTheDocument();
-  }
+  },
 };
 ```
 
@@ -377,10 +376,10 @@ it('should handle network errors gracefully', async () => {
   // Arrange
   const mockFetch = vi.fn().mockRejectedValue(new Error('Network error'));
   global.fetch = mockFetch;
-  
+
   // Act & Assert
   await expect(api.fetchData()).rejects.toThrow('Network error');
-  
+
   // Verify error handling behavior
   expect(mockErrorLogger).toHaveBeenCalledWith('Network error');
 });
@@ -391,13 +390,13 @@ it('should handle network errors gracefully', async () => {
 ```typescript
 it('should handle async operations correctly', async () => {
   const promise = service.asyncOperation();
-  
+
   // Test intermediate state
   expect(service.isLoading).toBe(true);
-  
+
   // Wait for completion
   const result = await promise;
-  
+
   // Test final state
   expect(service.isLoading).toBe(false);
   expect(result).toBeDefined();
@@ -407,16 +406,19 @@ it('should handle async operations correctly', async () => {
 ## Development Integration
 
 ### With Feature Development
+
 - Unit tests are written based on API specifications before implementation
 - Integration tests validate feature boundaries and real dependencies
 - Storybook tests provide interactive demonstrations and browser API testing
 
 ### With Quality Standards
+
 - All tests must pass TypeScript validation
 - Tests are part of the required quality gates defined in [QUALITY.md](./QUALITY.md)
 - Test coverage should focus on critical business logic and user interactions
 
 ### With Continuous Integration
+
 - Unit tests run on every commit
 - Storybook tests validate visual components and interactions
 - Integration tests verify system boundaries

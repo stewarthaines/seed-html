@@ -1,6 +1,6 @@
 /**
  * Validation utilities for ManifestManager
- * 
+ *
  * Static validation methods for manifest items, IDs, and manifest structure.
  */
 
@@ -23,7 +23,7 @@ export class ManifestValidator {
       results.push({
         field: 'id',
         message: 'ID is required and cannot be empty',
-        severity: 'error'
+        severity: 'error',
       });
     } else {
       // Validate ID format
@@ -37,7 +37,7 @@ export class ManifestValidator {
       results.push({
         field: 'href',
         message: 'HREF is required and cannot be empty',
-        severity: 'error'
+        severity: 'error',
       });
     } else {
       // Validate HREF format
@@ -51,7 +51,7 @@ export class ManifestValidator {
       results.push({
         field: 'mediaType',
         message: 'Media type is required and cannot be empty',
-        severity: 'error'
+        severity: 'error',
       });
     } else {
       // Validate media type format
@@ -82,7 +82,7 @@ export class ManifestValidator {
       return {
         field: 'id',
         message: 'ID cannot be empty',
-        severity: 'error'
+        severity: 'error',
       };
     }
 
@@ -91,7 +91,7 @@ export class ManifestValidator {
       return {
         field: 'id',
         message: `ID already exists: ${id}`,
-        severity: 'error'
+        severity: 'error',
       };
     }
 
@@ -100,18 +100,19 @@ export class ManifestValidator {
       return {
         field: 'id',
         message: 'Invalid ID pattern detected',
-        severity: 'error'
+        severity: 'error',
       };
     }
 
-    // Validate XML ID format: must start with letter or underscore, 
+    // Validate XML ID format: must start with letter or underscore,
     // followed by letters, digits, hyphens, periods, or underscores
     const xmlIdPattern = /^[a-zA-Z_][a-zA-Z0-9_.-]*$/;
     if (!xmlIdPattern.test(id)) {
       return {
         field: 'id',
-        message: 'ID must match XML ID format (start with letter/underscore, contain only alphanumeric, underscore, hyphen, or period)',
-        severity: 'error'
+        message:
+          'ID must match XML ID format (start with letter/underscore, contain only alphanumeric, underscore, hyphen, or period)',
+        severity: 'error',
       };
     }
 
@@ -130,7 +131,7 @@ export class ManifestValidator {
       return {
         field: 'href',
         message: 'HREF cannot be empty',
-        severity: 'error'
+        severity: 'error',
       };
     }
 
@@ -139,7 +140,7 @@ export class ManifestValidator {
       return {
         field: 'href',
         message: `HREF already exists: ${href}`,
-        severity: 'error'
+        severity: 'error',
       };
     }
 
@@ -148,7 +149,7 @@ export class ManifestValidator {
       return {
         field: 'href',
         message: 'HREF must be a relative path, absolute paths are not allowed',
-        severity: 'error'
+        severity: 'error',
       };
     }
 
@@ -158,7 +159,7 @@ export class ManifestValidator {
       return {
         field: 'href',
         message: 'HREF contains invalid characters',
-        severity: 'error'
+        severity: 'error',
       };
     }
 
@@ -178,17 +179,18 @@ export class ManifestValidator {
       return {
         field: 'mediaType',
         message: 'Media type cannot be empty',
-        severity: 'error'
+        severity: 'error',
       };
     }
 
     // Validate MIME type format (type/subtype)
-    const mimeTypePattern = /^[a-zA-Z][a-zA-Z0-9][a-zA-Z0-9!#$&\-^_]*\/[a-zA-Z0-9][a-zA-Z0-9!#$&\-^_.+]*$/;
+    const mimeTypePattern =
+      /^[a-zA-Z][a-zA-Z0-9][a-zA-Z0-9!#$&\-^_]*\/[a-zA-Z0-9][a-zA-Z0-9!#$&\-^_.+]*$/;
     if (!mimeTypePattern.test(mediaType)) {
       return {
         field: 'mediaType',
         message: 'Media type must be a valid MIME type (e.g., "text/html", "image/jpeg")',
-        severity: 'error'
+        severity: 'error',
       };
     }
 
@@ -207,22 +209,20 @@ export class ManifestValidator {
       results.push({
         field: 'properties',
         message: 'Properties must be an array',
-        severity: 'error'
+        severity: 'error',
       });
       return results;
     }
 
     // Known EPUB 3 properties
-    const knownProperties = [
-      'cover-image', 'mathml', 'nav', 'remote-resources', 'scripted', 'svg'
-    ];
+    const knownProperties = ['cover-image', 'mathml', 'nav', 'remote-resources', 'scripted', 'svg'];
 
     for (const property of properties) {
       if (typeof property !== 'string' || property.trim() === '') {
         results.push({
           field: 'properties',
           message: 'Property values must be non-empty strings',
-          severity: 'error'
+          severity: 'error',
         });
         continue;
       }
@@ -232,7 +232,7 @@ export class ManifestValidator {
         results.push({
           field: 'properties',
           message: `Unknown property: ${property}`,
-          severity: 'warning'
+          severity: 'warning',
         });
       }
     }
@@ -243,7 +243,7 @@ export class ManifestValidator {
       results.push({
         field: 'properties',
         message: 'Duplicate properties are not allowed',
-        severity: 'error'
+        severity: 'error',
       });
     }
 
@@ -263,7 +263,7 @@ export class ManifestValidator {
       results.push({
         field: 'manifest',
         message: 'Manifest cannot be empty, at least one item is required',
-        severity: 'error'
+        severity: 'error',
       });
       return results;
     }
@@ -275,7 +275,7 @@ export class ManifestValidator {
       results.push({
         field: 'manifest',
         message: 'Duplicate IDs found in manifest',
-        severity: 'error'
+        severity: 'error',
       });
     }
 
@@ -286,43 +286,41 @@ export class ManifestValidator {
       results.push({
         field: 'manifest',
         message: 'Duplicate HREFs found in manifest',
-        severity: 'error'
+        severity: 'error',
       });
     }
 
     // Check for required EPUB elements
-    const hasNavDocument = items.some(item => 
-      item.properties && item.properties.includes('nav')
-    );
+    const hasNavDocument = items.some(item => item.properties && item.properties.includes('nav'));
     if (!hasNavDocument) {
       results.push({
         field: 'manifest',
         message: 'No navigation document found (item with "nav" property)',
-        severity: 'warning'
+        severity: 'warning',
       });
     }
 
-    const hasCoverImage = items.some(item => 
-      item.properties && item.properties.includes('cover-image')
+    const hasCoverImage = items.some(
+      item => item.properties && item.properties.includes('cover-image')
     );
     if (!hasCoverImage) {
       results.push({
         field: 'manifest',
         message: 'No cover image found (item with "cover-image" property)',
-        severity: 'warning'
+        severity: 'warning',
       });
     }
 
     // Check media type distribution
     const mediaTypes = items.map(item => item.mediaType);
-    const hasTextContent = mediaTypes.some(type => 
-      type === 'application/xhtml+xml' || type === 'text/html'
+    const hasTextContent = mediaTypes.some(
+      type => type === 'application/xhtml+xml' || type === 'text/html'
     );
     if (!hasTextContent) {
       results.push({
         field: 'manifest',
         message: 'No text content found (XHTML or HTML files)',
-        severity: 'warning'
+        severity: 'warning',
       });
     }
 

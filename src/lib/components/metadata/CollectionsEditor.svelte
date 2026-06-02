@@ -31,7 +31,8 @@
     save(collections.map((entry, i) => (i === index ? { ...entry, ...patch } : entry)));
   const addEntry = () => save([...collections, { name: '', type: 'series' }]);
   const removeEntry = (index: number) => save(collections.filter((_, i) => i !== index));
-  const focus = () => onfieldFocus?.(new CustomEvent('fieldFocus', { detail: { field: 'collections' } }));
+  const focus = () =>
+    onfieldFocus?.(new CustomEvent('fieldFocus', { detail: { field: 'collections' } }));
 </script>
 
 {#each collections as entry, index (index)}
