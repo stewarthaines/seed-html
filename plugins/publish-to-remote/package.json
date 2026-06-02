@@ -49,6 +49,7 @@
   "license": "MIT",
   "dependencies": {
     "@likecoin/epubcheck-ts": "^0.3.0",
-    "aws4fetch": "^1.0.20"
+    "aws4fetch": "^1.0.20",
+    "paneforge": "^1.0.0"
   }
 }

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
+  import { PaneGroup, Pane, PaneResizer } from 'paneforge';
   import { dirHandle } from './store.js';
   import { readRemotes, writeRemotes } from './opfs.js';
   import {
@@ -217,28 +218,34 @@
   }
 
   async function onValidateEpub(epub: File) {
-    const status = epubValidationStatus.get(epub.name) || {
-      isValid: null,
-      isValidating: false,
-      report: null,
-    };
-    status.isValidating = true;
-    epubValidationStatus.set(epub.name, status);
+    const prev = epubValidationStatus.get(epub.name);
+    // SvelteMap only signals when the value reference changes, so set a fresh
+    // object each time rather than mutating the stored one in place — otherwise
+    // the row's tick wouldn't update until the next full reload.
+    epubValidationStatus.set(epub.name, {
+      isValid: prev?.isValid ?? null,
+      isValidating: true,
+      report: prev?.report ?? null,
+    });
 
     try {
       const report = await validateEpub(epub);
       await saveValidationReport(report);
-      status.isValid = report.isValid;
-      status.report = report;
-      status.isValidating = false;
-      epubValidationStatus.set(epub.name, status);
+      epubValidationStatus.set(epub.name, {
+        isValid: report.isValid,
+        isValidating: false,
+        report,
+      });
       showStatus(
         `${epub.name}: ${report.errorCount} errors, ${report.warningCount} warnings`,
         report.isValid ? 'success' : 'info',
       );
     } catch (error) {
-      status.isValidating = false;
-      epubValidationStatus.set(epub.name, status);
+      epubValidationStatus.set(epub.name, {
+        isValid: prev?.isValid ?? null,
+        isValidating: false,
+        report: prev?.report ?? null,
+      });
       showStatus(`Validation failed: ${String(error)}`, 'error');
     }
   }
@@ -372,87 +379,105 @@
 </script>
 
 <div class="plugin-container">
-  {#if statusMessage}
-    <div
-      class="status"
-      class:error={statusMessage.type === 'error'}
-      class:success={statusMessage.type === 'success'}
-    >
-      {statusMessage.text}
+  {#if view === 'ready'}
+    <div class="panes">
+      <PaneGroup direction="horizontal" autoSaveId="publish-remote-panes">
+        <Pane defaultSize={50} minSize={30}>
+          <div class="pane-content">
+            <div class="section">
+              <h3>Local EPUBs</h3>
+              <LocalEpubList
+                epubs={localEpubs}
+                {remoteObjects}
+                {epubValidationStatus}
+                {uploading}
+                {uploadProgress}
+                {uploadingEpubName}
+                onUpload={onUploadEpub}
+                onValidate={onValidateEpub}
+                onViewReport={onViewValidationReport}
+              />
+            </div>
+          </div>
+        </Pane>
+
+        <PaneResizer />
+
+        <Pane defaultSize={50} minSize={30}>
+          <div class="pane-content">
+            <RemoteSelector
+              {remotesStore}
+              {activeRemote}
+              {googleAuthRequired}
+              onAdd={() => onOpenConfigure()}
+              onEdit={(id) => onOpenConfigure(id)}
+              onRemove={onSignOut}
+              onSelect={onSetActiveRemote}
+              onReconnect={onReconnectGoogleDrive}
+            />
+
+            <div class="section">
+              <h3>Remote Files</h3>
+              <RemoteFileList
+                objects={remoteObjects}
+                {googleAuthRequired}
+                {onCopyUrl}
+                onDelete={onDeleteObject}
+              />
+            </div>
+
+            {#if activeRemote?.type !== 'google-drive'}
+              <div class="footer">
+                <button
+                  class="btn-secondary"
+                  onclick={onUpdateCatalog}
+                  disabled={generatingFeed}
+                >
+                  {generatingFeed ? 'Updating...' : 'Update Catalog'}
+                </button>
+              </div>
+            {/if}
+          </div>
+        </Pane>
+      </PaneGroup>
+    </div>
+  {:else}
+    <div class="centered">
+      {#if view === 'init'}
+        <div class="loading">Initializing...</div>
+      {:else if view === 'configure'}
+        <ConfigureForm
+          {editingRemote}
+          googleClientId={GOOGLE_CLIENT_ID}
+          googleApiKey={GOOGLE_API_KEY}
+          dropboxAppKey={DROPBOX_APP_KEY}
+          dropboxRedirectUri={DROPBOX_REDIRECT_URI}
+          canCancel={remotesStore.remotes.length > 0}
+          onSave={onSaveRemote}
+          onCancel={onCancelConfig}
+          onStatus={showStatus}
+        />
+      {:else if view === 'loading'}
+        <div class="loading">Connecting to storage...</div>
+      {/if}
     </div>
   {/if}
 
-  {#if view === 'init'}
-    <div class="loading">Initializing...</div>
-  {/if}
-
-  {#if view === 'configure'}
-    <ConfigureForm
-      {editingRemote}
-      googleClientId={GOOGLE_CLIENT_ID}
-      googleApiKey={GOOGLE_API_KEY}
-      dropboxAppKey={DROPBOX_APP_KEY}
-      dropboxRedirectUri={DROPBOX_REDIRECT_URI}
-      canCancel={remotesStore.remotes.length > 0}
-      onSave={onSaveRemote}
-      onCancel={onCancelConfig}
-      onStatus={showStatus}
-    />
-  {/if}
-
-  {#if view === 'loading'}
-    <div class="loading">Connecting to storage...</div>
-  {/if}
-
-  {#if view === 'ready'}
-    <div class="ready-container">
-      <div class="section">
-        <h3>Local EPUBs</h3>
-        <LocalEpubList
-          epubs={localEpubs}
-          {remoteObjects}
-          {epubValidationStatus}
-          {uploading}
-          {uploadProgress}
-          {uploadingEpubName}
-          onUpload={onUploadEpub}
-          onValidate={onValidateEpub}
-          onViewReport={onViewValidationReport}
-        />
-      </div>
-
-      <RemoteSelector
-        {remotesStore}
-        {activeRemote}
-        {googleAuthRequired}
-        onAdd={() => onOpenConfigure()}
-        onEdit={(id) => onOpenConfigure(id)}
-        onRemove={onSignOut}
-        onSelect={onSetActiveRemote}
-        onReconnect={onReconnectGoogleDrive}
-      />
-
-      <div class="section">
-        <h3>Remote Files</h3>
-        <RemoteFileList
-          objects={remoteObjects}
-          {googleAuthRequired}
-          {onCopyUrl}
-          onDelete={onDeleteObject}
-        />
-      </div>
-
-      <div class="footer">
-        {#if activeRemote?.type !== 'google-drive'}
-          <button
-            class="btn-secondary"
-            onclick={onUpdateCatalog}
-            disabled={generatingFeed}
-          >
-            {generatingFeed ? 'Updating...' : 'Update Catalog'}
-          </button>
-        {/if}
-      </div>
+  <!-- Transient status: a fixed overlay so it never reflows the panes. -->
+  {#if statusMessage}
+    <div
+      class="status-toast"
+      class:error={statusMessage.type === 'error'}
+      class:success={statusMessage.type === 'success'}
+      role="status"
+      aria-live="polite"
+    >
+      <span class="status-toast-text">{statusMessage.text}</span>
+      <button
+        class="status-toast-close"
+        aria-label="Dismiss"
+        onclick={() => (statusMessage = null)}>×</button
+      >
     </div>
   {/if}
 
@@ -465,42 +490,51 @@
 
 <style>
   .plugin-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Non-split views (init / configure / loading) keep the centered column. */
+  .centered {
+    flex: 1;
+    width: 100%;
     max-width: 900px;
     margin: 0 auto;
     padding: 16px;
+    overflow-y: auto;
   }
 
-  .status {
-    margin-bottom: 16px;
-    padding: 12px;
-    border-radius: 4px;
-    border-left: 4px solid #0074d9;
-    background: #e8f1ff;
-    color: #0074d9;
+  /* The split fills the frame; paneforge sizes the group to this wrapper. */
+  .panes {
+    flex: 1;
+    min-height: 0;
   }
 
-  .status.success {
-    border-left-color: #28a745;
-    background: #e8f5e9;
-    color: #28a745;
-  }
-
-  .status.error {
-    border-left-color: #dc3545;
-    background: #ffebee;
-    color: #dc3545;
-  }
-
-  .loading {
-    text-align: center;
-    padding: 40px 20px;
-    color: #666;
-  }
-
-  .ready-container {
+  .pane-content {
+    height: 100%;
+    overflow-y: auto;
+    padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 16px;
+  }
+
+  :global([data-pane-resizer]) {
+    width: 4px;
+    background: #e0e0e0;
+    cursor: col-resize;
+    transition: background-color 0.2s ease;
+  }
+
+  :global([data-pane-resizer]:hover),
+  :global([data-pane-resizer][data-resize-handle-active]) {
+    background: #0074d9;
+  }
+
+  :global([data-pane-resizer]:focus-visible) {
+    outline: 2px solid #0074d9;
+    outline-offset: -1px;
   }
 
   .section {
@@ -518,6 +552,61 @@
     display: flex;
     justify-content: flex-end;
     gap: 8px;
-    margin-top: 20px;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+  }
+
+  /* Fixed toast — overlays content, no layout reflow on show/hide. */
+  .status-toast {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: min(90%, 480px);
+    padding: 10px 12px 10px 16px;
+    border-radius: 6px;
+    border-left: 4px solid #0074d9;
+    background: #e8f1ff;
+    color: #0074d9;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+
+  .status-toast.success {
+    border-left-color: #28a745;
+    background: #e8f5e9;
+    color: #28a745;
+  }
+
+  .status-toast.error {
+    border-left-color: #dc3545;
+    background: #ffebee;
+    color: #dc3545;
+  }
+
+  .status-toast-text {
+    flex: 1;
+  }
+
+  .status-toast-close {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0 4px;
+    cursor: pointer;
+    opacity: 0.7;
+  }
+
+  .status-toast-close:hover {
+    opacity: 1;
   }
 </style>
