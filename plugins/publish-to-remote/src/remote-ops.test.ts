@@ -195,7 +195,10 @@ describe('deleteFile', () => {
 describe('getPublicUrl', () => {
   it('routes to S3 for s3-compatible', () => {
     getPublicUrl(s3Config, 'book.epub');
-    expect(vi.mocked(getS3PublicUrl)).toHaveBeenCalledWith(s3Config, 'book.epub');
+    expect(vi.mocked(getS3PublicUrl)).toHaveBeenCalledWith(
+      s3Config,
+      'book.epub',
+    );
   });
 
   it('routes to Google Drive for google-drive when fileId provided', () => {

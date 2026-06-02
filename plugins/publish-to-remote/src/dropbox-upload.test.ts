@@ -96,14 +96,16 @@ describe('uploadToDropbox', () => {
         .mockResolvedValueOnce({
           ok: true,
           json: async () => ({
-            links: [
-              { url: 'https://www.dropbox.com/s/abc/book.epub?dl=0' },
-            ],
+            links: [{ url: 'https://www.dropbox.com/s/abc/book.epub?dl=0' }],
           }),
         }),
     );
 
-    const result = await uploadToDropbox(config, 'book.epub', new Blob(['data']));
+    const result = await uploadToDropbox(
+      config,
+      'book.epub',
+      new Blob(['data']),
+    );
     expect(result.success).toBe(true);
     expect(result.url).toBe('https://www.dropbox.com/s/abc/book.epub');
   });
@@ -124,7 +126,9 @@ describe('uploadToDropbox', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => ({ url: 'https://www.dropbox.com/s/abc/book.epub' }),
+          json: async () => ({
+            url: 'https://www.dropbox.com/s/abc/book.epub',
+          }),
         }),
     );
 
@@ -154,7 +158,11 @@ describe('uploadToDropbox', () => {
         }),
     );
 
-    const result = await uploadToDropbox(config, 'book.epub', new Blob(['data']));
+    const result = await uploadToDropbox(
+      config,
+      'book.epub',
+      new Blob(['data']),
+    );
     expect(vi.mocked(refreshDropboxToken)).toHaveBeenCalled();
     expect(result.success).toBe(true);
   });
@@ -170,7 +178,11 @@ describe('uploadToDropbox', () => {
       }),
     );
 
-    const result = await uploadToDropbox(config, 'book.epub', new Blob(['data']));
+    const result = await uploadToDropbox(
+      config,
+      'book.epub',
+      new Blob(['data']),
+    );
     expect(result.success).toBe(false);
     expect(result.error).toContain('500');
   });
@@ -206,9 +218,7 @@ describe('listDropboxFiles', () => {
         .mockResolvedValueOnce({
           ok: true,
           json: async () => ({
-            links: [
-              { url: 'https://www.dropbox.com/s/abc/book1.epub?dl=0' },
-            ],
+            links: [{ url: 'https://www.dropbox.com/s/abc/book1.epub?dl=0' }],
           }),
         }),
     );
