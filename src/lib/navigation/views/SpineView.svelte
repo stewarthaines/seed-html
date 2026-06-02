@@ -16,7 +16,6 @@
     DEFAULT_PREVIEW_CONFIG,
   } from '../../transform/spine-preview-manager.js';
   import { writable } from 'svelte/store';
-  import { createEventDispatcher } from 'svelte';
   import type {
     PreviewUpdateEvent,
     PreviewErrorEvent,
@@ -50,6 +49,7 @@
     audioClipService = null,
     selectedItemId = null,
     transformEngine = null as any,
+    onPreviewUpdate,
   }: {
     workspace: WorkspaceState;
     workspaceService: WorkspaceService;
@@ -58,6 +58,14 @@
     audioClipService: AudioClipService | null;
     selectedItemId: string | null;
     transformEngine: TransformEngine;
+    onPreviewUpdate?: (detail: {
+      xhtmlContent: string;
+      isTransforming: boolean;
+      transformError: TransformError | null;
+      transformWarnings: string[];
+      executionTime: number;
+      spineItemId: string | null;
+    }) => void;
   } = $props();
 
   // Component state - using $state() for reactivity in Svelte 5
@@ -191,9 +199,6 @@
   });
 
   // Store subscriptions will be handled after implementing direct assignment
-
-  // Event dispatcher to notify parent of preview data changes
-  const dispatch = createEventDispatcher();
 
   // ViewComponent interface implementation
   export function onViewEnter(_data?: any): void {
@@ -952,7 +957,7 @@
     executionTime.set(event.executionTime);
 
     // Notify parent component of preview data
-    dispatch('previewUpdate', {
+    onPreviewUpdate?.({
       xhtmlContent: event.xhtml,
       isTransforming: false,
       transformError: null,
@@ -968,7 +973,7 @@
     isTransforming.set(false);
 
     // Notify parent component of error state
-    dispatch('previewUpdate', {
+    onPreviewUpdate?.({
       xhtmlContent: '',
       isTransforming: false,
       transformError: event.error,

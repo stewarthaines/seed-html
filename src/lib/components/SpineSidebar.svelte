@@ -1,29 +1,34 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { t } from '../i18n';
-  import { layoutStore as _layoutStore } from '../stores/layout';
   import SpineItem from './SpineItem.svelte';
   import type { SpineService } from '../services/spine/spine.service.js';
   import type { SpineItemWithSource } from '../spine/types.js';
   import type { WorkspaceState } from '../services/workspace/workspace.service.js';
 
   // Props
-  export let workspace: WorkspaceState | null = null;
-  // oxlint-disable-next-line no-unassigned-vars
-  export let spineService: SpineService;
-  export let selectedItemId: string | null = null;
-  export let isExpanded = true;
-  export let onWorkspaceUpdate: ((workspace: WorkspaceState) => void) | null = null;
+  let {
+    workspace = $bindable(null),
+    spineService,
+    selectedItemId = null,
+    isExpanded = true,
+    onWorkspaceUpdate = null,
+  }: {
+    workspace?: WorkspaceState | null;
+    spineService: SpineService;
+    selectedItemId?: string | null;
+    isExpanded?: boolean;
+    onWorkspaceUpdate?: ((workspace: WorkspaceState) => void) | null;
+  } = $props();
 
   // State
-  let spineItems: SpineItemWithSource[] = [];
-  let isLoading = true;
-  let error: string | null = null;
+  let spineItems = $state<SpineItemWithSource[]>([]);
+  let isLoading = $state(true);
+  let error = $state<string | null>(null);
   let isReordering = false;
 
-
   // Reactive state - use prop instead of store
-  $: sidebarExpanded = isExpanded;
+  const sidebarExpanded = $derived(isExpanded);
 
   // Initialize event listeners
   onMount(() => {
@@ -41,15 +46,17 @@
 
   // Reactive: Load spine items when workspace ID changes (not metadata updates)
   // Using workspace?.id to avoid reloading on metadata-only changes
-  $: workspaceId = workspace?.id;
-  $: if (workspaceId && spineService) {
-    loadSpineItems();
-  } else if (!workspace) {
-    // No workspace selected - show empty state
-    spineItems = [];
-    isLoading = false;
-    error = null;
-  }
+  const workspaceId = $derived(workspace?.id);
+  $effect(() => {
+    if (workspaceId && spineService) {
+      loadSpineItems();
+    } else if (!workspace) {
+      // No workspace selected - show empty state
+      spineItems = [];
+      isLoading = false;
+      error = null;
+    }
+  });
 
   // Public method to refresh spine items (can be called by parent)
   export async function refreshSpineItems() {

@@ -177,21 +177,19 @@
   }
 
   // Handle spine preview update
-  const handleSpinePreviewUpdate = (
-    event: CustomEvent<{
-      xhtmlContent: string;
-      isTransforming: boolean;
-      transformError: any;
-      transformWarnings: string[];
-      spineItemId: string;
-    }>
-  ) => {
+  const handleSpinePreviewUpdate = (detail: {
+    xhtmlContent: string;
+    isTransforming: boolean;
+    transformError: any;
+    transformWarnings: string[];
+    spineItemId: string | null;
+  }) => {
     spinePreviewData = {
-      xhtmlContent: event.detail.xhtmlContent,
-      isTransforming: event.detail.isTransforming,
-      transformError: event.detail.transformError,
-      transformWarnings: event.detail.transformWarnings,
-      spineItemId: event.detail.spineItemId,
+      xhtmlContent: detail.xhtmlContent,
+      isTransforming: detail.isTransforming,
+      transformError: detail.transformError,
+      transformWarnings: detail.transformWarnings,
+      spineItemId: detail.spineItemId,
     };
   };
 
@@ -667,7 +665,7 @@
             transformEngine={appState.getTransformEngine()}
             contentService={appState.getContentService()}
             audioClipService={appState.getAudioClipService()}
-            on:previewUpdate={handleSpinePreviewUpdate}
+            onPreviewUpdate={handleSpinePreviewUpdate}
           />
         {:else}
           <PlaceholderView
