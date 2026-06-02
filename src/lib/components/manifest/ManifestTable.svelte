@@ -733,7 +733,9 @@
     background-color: var(--color-bg-secondary);
   }
 
-  .separator-cell {
+  /* More specific than `.manifest-table td` so the heading cell keeps zero
+     padding (the toggle button supplies its own compact padding). */
+  .manifest-table td.separator-cell {
     padding: 0;
     border-bottom: 2px solid var(--color-border-strong);
     border-top: 1px solid var(--color-border-default);
@@ -760,7 +762,9 @@
   .disclosure {
     display: inline-block;
     font-size: 1.4rem;
-    line-height: 1;
+    /* Tight line box so the larger glyph paints big without inflating the
+       compact heading row. */
+    line-height: 0.6;
     color: var(--color-text-secondary);
     transition: transform 0.15s ease;
   }
@@ -771,6 +775,7 @@
 
   .separator-label {
     font-size: 0.8125rem;
+    line-height: 1;
     font-weight: 600;
     color: var(--color-text-secondary);
     letter-spacing: 0.05em;
