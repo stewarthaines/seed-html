@@ -10,12 +10,18 @@
   import type { TransformEngine } from '../../infrastructure/transform-engine.js';
   import ExtensionItem from '../../components/extensions/ExtensionItem.svelte';
   import { t } from '../../i18n';
+  import type { PluginManifestEntry } from '../../plugins/contract';
 
   interface Props {
     settingsService: SettingsService;
     extensionManager: ExtensionManager;
     transformEngine: TransformEngine;
     workspaceId: string | null;
+    /** Plugins discovered in plugins/manifest.json (empty unless served over HTTP). */
+    availablePlugins?: PluginManifestEntry[];
+    /** Ids the user has enabled (global). */
+    enabledPluginIds?: string[];
+    onTogglePlugin?: (id: string, enabled: boolean) => void;
     onSettingsChanged?: () => void;
   }
 
@@ -24,6 +30,9 @@
     extensionManager,
     transformEngine,
     workspaceId,
+    availablePlugins = [],
+    enabledPluginIds = [],
+    onTogglePlugin,
     onSettingsChanged,
   }: Props = $props();
 
@@ -278,6 +287,29 @@
               &lt;begin&gt;, &lt;end&gt;, &lt;label&gt;, &lt;rate&gt;
             </p>
           </div>
+        </section>
+      {/if}
+
+      <!-- Plugins (HTTP-only enrichment layer; enabled per browser) -->
+      {#if isAdvancedMode && availablePlugins.length > 0}
+        <section class="plugins-settings">
+          <h2>{$t('Plugins')}</h2>
+          <p class="setting-description plugins-intro">
+            {$t('Optional features available when the app is served over HTTP.')}
+          </p>
+          {#each availablePlugins as plugin (plugin.id)}
+            <div class="setting-group">
+              <label class="setting-label">
+                <input
+                  type="checkbox"
+                  checked={enabledPluginIds.includes(plugin.id)}
+                  onchange={event =>
+                    onTogglePlugin?.(plugin.id, (event.target as HTMLInputElement).checked)}
+                />
+                <span class="setting-text">{plugin.name}</span>
+              </label>
+            </div>
+          {/each}
         </section>
       {/if}
 

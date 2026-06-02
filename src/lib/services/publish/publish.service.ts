@@ -49,4 +49,13 @@ export class PublishService {
   async deletePublishedEpub(filename: string): Promise<void> {
     await this.fileStorage.deleteFile(PUBLISH_WORKSPACE_ID, filename);
   }
+
+  /**
+   * Live OPFS handle for the shared output directory, handed to the publish
+   * plugin in its `init` message. Null when OPFS isn't the active backend (the
+   * plugin can't operate, so the core feature is used instead).
+   */
+  async getOutputDirectoryHandle(): Promise<FileSystemDirectoryHandle | null> {
+    return this.fileStorage.getWorkspaceDirectoryHandle(PUBLISH_WORKSPACE_ID);
+  }
 }

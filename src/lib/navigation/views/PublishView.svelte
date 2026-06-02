@@ -1,14 +1,20 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import { t } from '$lib/i18n';
   import { downloadBlob } from '$lib/zip/index.js';
   import type { PublishService, PublishedEpub } from '$lib/services/publish/publish.service.js';
+  import { createInitMessage, isPluginReadyMessage } from '$lib/plugins/contract';
 
   interface Props {
     publishService: PublishService;
+    /** Resolved iframe src for the publish plugin, or null to use the core feature. */
+    pluginUrl?: string | null;
+    /** Identifier echoed to the plugin in its `init` message. */
+    projectId?: string;
   }
 
-  let { publishService }: Props = $props();
+  let { publishService, pluginUrl = null, projectId = 'publish' }: Props = $props();
+
+  let pluginFrame = $state<HTMLIFrameElement | null>(null);
 
   let epubs = $state<PublishedEpub[]>([]);
   let loading = $state(true);
@@ -26,13 +32,42 @@
     }
   }
 
-  onMount(() => {
+  // Core feature: list packaged epubs, refreshing as new ones are packaged.
+  // Skipped when the plugin takes over the whole frame.
+  $effect(() => {
+    if (pluginUrl) return;
     load();
-    // Refresh when the main app packages a new epub into the publish directory.
     const onPackaged = () => load();
     window.addEventListener('epub-packaged', onPackaged);
     return () => window.removeEventListener('epub-packaged', onPackaged);
   });
+
+  // Plugin surface: hand the output directory over once the plugin signals ready.
+  $effect(() => {
+    if (!pluginUrl) return;
+    const handler = (event: MessageEvent) => {
+      if (!pluginFrame || event.source !== pluginFrame.contentWindow) return;
+      if (event.origin !== window.location.origin) return;
+      if (isPluginReadyMessage(event.data)) {
+        void sendPluginInit();
+      }
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  });
+
+  async function sendPluginInit(): Promise<void> {
+    const frameWindow = pluginFrame?.contentWindow;
+    if (!frameWindow || !pluginUrl) return;
+    const handle = await publishService.getOutputDirectoryHandle();
+    if (!handle) {
+      // No OPFS backend (e.g. the IndexedDB fallback) — there's no directory handle
+      // to hand over, so the plugin stays uninitialised and shows its empty state.
+      return;
+    }
+    const targetOrigin = new URL(pluginUrl, window.location.href).origin;
+    frameWindow.postMessage(createInitMessage(projectId, handle), targetOrigin);
+  }
 
   async function handleDownload(filename: string) {
     try {
@@ -64,51 +99,63 @@
   }
 </script>
 
-<div class="publish-view">
-  <header class="publish-header">
-    <h1>{$t('Publish')}</h1>
-    <button class="refresh-button" onclick={load}>{$t('Refresh')}</button>
-  </header>
+{#if pluginUrl}
+  <iframe bind:this={pluginFrame} class="plugin-frame" src={pluginUrl} title={$t('Publish')}
+  ></iframe>
+{:else}
+  <div class="publish-view">
+    <header class="publish-header">
+      <h1>{$t('Publish')}</h1>
+      <button class="refresh-button" onclick={load}>{$t('Refresh')}</button>
+    </header>
 
-  {#if loading}
-    <p class="status">{$t('Loading…')}</p>
-  {:else if error}
-    <p class="status error">{error}</p>
-  {:else if epubs.length === 0}
-    <div class="empty-state">
-      <p>{$t('No packaged EPUBs yet.')}</p>
-      <p class="hint">{$t('Package a project to see it here.')}</p>
-    </div>
-  {:else}
-    <table class="epub-table">
-      <thead>
-        <tr>
-          <th>{$t('Name')}</th>
-          <th class="num">{$t('Size')}</th>
-          <th class="num">{$t('Modified')}</th>
-          <th class="actions">{$t('Actions')}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {#each epubs as epub (epub.filename)}
+    {#if loading}
+      <p class="status">{$t('Loading…')}</p>
+    {:else if error}
+      <p class="status error">{error}</p>
+    {:else if epubs.length === 0}
+      <div class="empty-state">
+        <p>{$t('No packaged EPUBs yet.')}</p>
+        <p class="hint">{$t('Package a project to see it here.')}</p>
+      </div>
+    {:else}
+      <table class="epub-table">
+        <thead>
           <tr>
-            <td class="name">{epub.filename}</td>
-            <td class="num">{formatSize(epub.size)}</td>
-            <td class="num">{formatDate(epub.lastModified)}</td>
-            <td class="actions">
-              <button onclick={() => handleDownload(epub.filename)}>{$t('Download')}</button>
-              <button class="danger" onclick={() => handleDelete(epub.filename)}>
-                {$t('Delete')}
-              </button>
-            </td>
+            <th>{$t('Name')}</th>
+            <th class="num">{$t('Size')}</th>
+            <th class="num">{$t('Modified')}</th>
+            <th class="actions">{$t('Actions')}</th>
           </tr>
-        {/each}
-      </tbody>
-    </table>
-  {/if}
-</div>
+        </thead>
+        <tbody>
+          {#each epubs as epub (epub.filename)}
+            <tr>
+              <td class="name">{epub.filename}</td>
+              <td class="num">{formatSize(epub.size)}</td>
+              <td class="num">{formatDate(epub.lastModified)}</td>
+              <td class="actions">
+                <button onclick={() => handleDownload(epub.filename)}>{$t('Download')}</button>
+                <button class="danger" onclick={() => handleDelete(epub.filename)}>
+                  {$t('Delete')}
+                </button>
+              </td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    {/if}
+  </div>
+{/if}
 
 <style>
+  .plugin-frame {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+  }
+
   .publish-view {
     padding: var(--space-4);
     height: 100%;

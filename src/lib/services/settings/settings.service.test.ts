@@ -107,11 +107,12 @@ describe('SettingsService Contract Tests', () => {
 
       const result = service.loadGlobalSettings();
 
-      // CONTRACT: MUST return stored settings
+      // CONTRACT: MUST return stored settings (enabled_plugins defaults in when absent)
       expect(result).toEqual({
         theme: 'dark',
         locale: 'fr',
         editor_font_size: 16,
+        enabled_plugins: [],
       });
     });
 
@@ -125,6 +126,7 @@ describe('SettingsService Contract Tests', () => {
         theme: 'system',
         locale: 'en',
         editor_font_size: 14,
+        enabled_plugins: [],
       });
     });
 

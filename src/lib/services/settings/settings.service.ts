@@ -12,6 +12,8 @@ export interface GlobalSettings {
   theme: 'light' | 'dark' | 'system';
   locale: string;
   editor_font_size: number; // 8-32 pixels
+  /** Ids of plugins the user has enabled (global scope). */
+  enabled_plugins: string[];
 }
 
 export interface WorkspaceSettings {
@@ -140,6 +142,9 @@ export class SettingsService {
         editor_font_size: this.isValidFontSize(parsed.editor_font_size)
           ? parsed.editor_font_size
           : defaults.editor_font_size,
+        enabled_plugins: Array.isArray(parsed.enabled_plugins)
+          ? parsed.enabled_plugins.filter((id: unknown) => typeof id === 'string')
+          : defaults.enabled_plugins,
       };
     } catch {
       // Return defaults on any error (corrupted data, access denied, etc.)
@@ -184,7 +189,25 @@ export class SettingsService {
       theme: 'system',
       locale: 'en',
       editor_font_size: 14,
+      enabled_plugins: [],
     };
+  }
+
+  /** Ids of plugins the user has enabled (global scope). */
+  getEnabledPlugins(): string[] {
+    return this.loadGlobalSettings().enabled_plugins;
+  }
+
+  /** Enable or disable a plugin by id, persisting the global setting. */
+  setPluginEnabled(id: string, enabled: boolean): void {
+    const settings = this.loadGlobalSettings();
+    const ids = new Set(settings.enabled_plugins);
+    if (enabled) {
+      ids.add(id);
+    } else {
+      ids.delete(id);
+    }
+    this.saveGlobalSettings({ ...settings, enabled_plugins: [...ids] });
   }
 
   // ============================================================================

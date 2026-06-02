@@ -11,6 +11,12 @@
   import SpineView from './lib/navigation/views/SpineView.svelte';
   import PublishView from './lib/navigation/views/PublishView.svelte';
   import SettingsView from './lib/navigation/views/SettingsView.svelte';
+  import {
+    loadPluginManifest,
+    findActivePlugin,
+    resolvePluginEntryUrl,
+  } from './lib/plugins/plugin-registry';
+  import type { PluginManifestEntry } from './lib/plugins/contract';
   import SpineSidebar from './lib/components/SpineSidebar.svelte';
   import ManifestContainer from './lib/components/manifest/ManifestContainer.svelte';
   import ManifestPreview from './lib/components/manifest/ManifestPreview.svelte';
@@ -77,6 +83,17 @@
 
   // AppState created in proper Svelte context, initialized later
   let appState = $state<EnhancedAppState | null>(null);
+
+  // HTTP-only plugin layer: available plugins (from plugins/manifest.json) and the
+  // user's enabled set (global setting). The publish `view` surface uses its plugin
+  // only when both available and enabled; otherwise the core Publish feature shows.
+  const PUBLISH_PLUGIN_ID = 'publish-to-remote';
+  let availablePlugins = $state<PluginManifestEntry[]>([]);
+  let enabledPluginIds = $state<string[]>([]);
+  let publishPluginUrl = $derived.by(() => {
+    const entry = findActivePlugin(availablePlugins, enabledPluginIds, PUBLISH_PLUGIN_ID);
+    return entry ? resolvePluginEntryUrl(entry) : null;
+  });
 
   // Reactive getters for template access
   let currentView = $derived($navigationStore.currentView);
@@ -453,6 +470,11 @@
         // Initialize app state (FileStorageAPI already initialized above)
         await appState.initialize();
 
+        // Discover plugins (HTTP only; no-op on file:// or when no manifest is
+        // served) and read the user's enabled set.
+        availablePlugins = await loadPluginManifest();
+        enabledPluginIds = appState.getSettingsService().getEnabledPlugins();
+
         // Check hash after appState is fully ready
         if (window.location.hash) {
           handleHashChange();
@@ -682,13 +704,23 @@
           />
         {/if}
       {:else if currentView === 'publish'}
-        <PublishView {publishService} />
+        <PublishView
+          {publishService}
+          pluginUrl={publishPluginUrl}
+          projectId={currentWorkspaceId ?? 'publish'}
+        />
       {:else if currentView === 'settings' && appState}
         <SettingsView
           settingsService={appState.getSettingsService()}
           extensionManager={appState.getExtensionManager()}
           transformEngine={appState.getTransformEngine()}
           workspaceId={appState.currentWorkspaceId}
+          {availablePlugins}
+          {enabledPluginIds}
+          onTogglePlugin={(id, enabled) => {
+            appState?.getSettingsService().setPluginEnabled(id, enabled);
+            enabledPluginIds = appState?.getSettingsService().getEnabledPlugins() ?? [];
+          }}
           onSettingsChanged={() => {
             // Reload workspace settings in AppState after they're changed in SettingsView
             if (appState?.currentWorkspaceId) {
