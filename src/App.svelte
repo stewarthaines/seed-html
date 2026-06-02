@@ -68,7 +68,7 @@
   const epubUnpacker = new EPUBUnpacker();
 
   // BlobURLManager will be created after FileStorageAPI is initialized
-  let blobURLManager: BlobURLManager;
+  let blobURLManager = $state<BlobURLManager>();
 
   // Transform engine initialization state
   let transformEngine: TransformEngine | null = null;
@@ -641,7 +641,7 @@
           />
         {/if}
       {:else if currentView === 'navigation'}
-        {#if initialized && currentWorkspaceState && appState}
+        {#if initialized && currentWorkspaceState && appState && blobURLManager}
           <OutlineView
             workspace={currentWorkspaceState}
             {workspaceService}

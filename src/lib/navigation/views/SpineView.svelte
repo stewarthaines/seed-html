@@ -78,7 +78,7 @@
   let fileStorage: FileStorageAPI;
   let extensionManager: ExtensionManager;
   let blobURLManager: BlobURLManager;
-  let settingsService: SettingsService;
+  let settingsService = $state<SettingsService>();
   let servicesInitialized = $state(false);
 
   // Spine editor state
@@ -520,7 +520,7 @@
           extensionManager,
           blobURLManager,
           workspaceService,
-          settingsService,
+          settingsService!,
           transformEngine,
           DEFAULT_PREVIEW_CONFIG,
           handlePreviewUpdate,
@@ -1261,7 +1261,7 @@
     <h3>{$t('No spine item selected')}</h3>
     <p>{$t('Select a spine item from the sidebar to start editing')}</p>
   </div>
-{:else if selectedItem && servicesInitialized && previewManager}
+{:else if selectedItem && servicesInitialized && previewManager && settingsService}
   <!-- Editor Pane -->
   <div bind:this={spineViewElement} data-spine-view class="spine-editor-wrapper">
     <EditorPane
