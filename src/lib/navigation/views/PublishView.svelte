@@ -42,7 +42,9 @@
     return () => window.removeEventListener('epub-packaged', onPackaged);
   });
 
-  // Plugin surface: hand the output directory over once the plugin signals ready.
+  // Plugin surface: hand the output directory over once the plugin signals ready,
+  // and re-hand it whenever a new epub is packaged so the plugin re-reads the dir.
+  // Re-sending `init` (with a fresh handle) is enough — no separate refresh message.
   $effect(() => {
     if (!pluginUrl) return;
     const handler = (event: MessageEvent) => {
@@ -52,8 +54,13 @@
         void sendPluginInit();
       }
     };
+    const onPackaged = () => void sendPluginInit();
     window.addEventListener('message', handler);
-    return () => window.removeEventListener('message', handler);
+    window.addEventListener('epub-packaged', onPackaged);
+    return () => {
+      window.removeEventListener('message', handler);
+      window.removeEventListener('epub-packaged', onPackaged);
+    };
   });
 
   async function sendPluginInit(): Promise<void> {

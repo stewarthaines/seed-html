@@ -132,7 +132,13 @@
       localEpubs = files;
 
       for (const file of files) {
-        const report = await loadValidationReport(file.name);
+        let report = await loadValidationReport(file.name);
+        // A report from before the file's last write is stale — the epub was
+        // re-packaged under the same name — so drop it and offer Validate again.
+        if (report && file.lastModified > report.timestamp) {
+          await deleteValidationReport(file.name);
+          report = null;
+        }
         if (report) report.isValid = report.errorCount === 0;
         epubValidationStatus.set(file.name, {
           isValid: report?.isValid ?? null,
