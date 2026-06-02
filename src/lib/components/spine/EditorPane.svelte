@@ -17,7 +17,10 @@
   import type { TextEditorStore } from '$lib/stores/index.js';
   import type { ContentService } from '$lib/services/content/content.service.js';
   import type { AudioClipService } from '$lib/audio/audio-clip.service.js';
-  import type { WorkspaceService, WorkspaceState } from '$lib/services/workspace/workspace.service.js';
+  import type {
+    WorkspaceService,
+    WorkspaceState,
+  } from '$lib/services/workspace/workspace.service.js';
   import type { SettingsService } from '$lib/services/settings/settings.service.js';
   import { t } from '$lib/i18n';
   import AudioClipEditor from '$lib/components/audio/AudioClipEditor.svelte';
@@ -110,7 +113,7 @@
 
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    
+
     if (start !== end) {
       textareaSelection = { start, end };
     } else {
@@ -128,19 +131,19 @@
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const currentValue = textarea.value;
-    
+
     // Insert the clip directive at cursor position
     const newValue = currentValue.slice(0, start) + clipText + currentValue.slice(end);
     textarea.value = newValue;
-    
+
     // Update cursor position after insertion
     const newCursorPos = start + clipText.length;
     textarea.setSelectionRange(newCursorPos, newCursorPos);
-    
+
     // Trigger input event to update store
     const inputEvent = new Event('input', { bubbles: true });
     textarea.dispatchEvent(inputEvent);
-    
+
     // Focus back to textarea
     textarea.focus();
   }
@@ -279,25 +282,29 @@
   let textareaSelection = $state<{ start: number; end: number } | null>(null);
 
   // Check if workspace has audio files (derived reactive)
-  let hasAudioFiles = $derived((() => {
-    if (!workspace?.opf?.manifest) return false;
-    return workspace.opf.manifest.some(item => 
-      item.mediaType && item.mediaType.startsWith('audio/')
-    );
-  })());
+  let hasAudioFiles = $derived(
+    (() => {
+      if (!workspace?.opf?.manifest) return false;
+      return workspace.opf.manifest.some(
+        item => item.mediaType && item.mediaType.startsWith('audio/')
+      );
+    })()
+  );
 
   // Determine which pane has text content
-  let textContentPane = $derived((() => {
-    if (pane1SelectedFile === 'text') return 1;
-    if (pane2SelectedFile === 'text') return 2;
-    return null;
-  })());
+  let textContentPane = $derived(
+    (() => {
+      if (pane1SelectedFile === 'text') return 1;
+      if (pane2SelectedFile === 'text') return 2;
+      return null;
+    })()
+  );
 
   // Text content for audio editor (bindable)
   let textContent = $derived.by(() => {
     const pane = textContentPane;
-    if (pane === 1) return pane1FileStore ? ($pane1FileStore?.content || '') : '';
-    if (pane === 2) return pane2FileStore ? ($pane2FileStore?.content || '') : '';
+    if (pane === 1) return pane1FileStore ? $pane1FileStore?.content || '' : '';
+    if (pane === 2) return pane2FileStore ? $pane2FileStore?.content || '' : '';
     return '';
   });
 
@@ -430,7 +437,7 @@
           {editorMode === 'single' ? $t('Split Pane') : $t('Single Pane')}
         </span>
       </button>
-      
+
       {#if ((pane1SelectedFile === 'text' && editorMode === 'single') || (editorMode === 'dual' && (pane1SelectedFile === 'text' || pane2SelectedFile === 'text'))) && hasAudioFiles && audioClipService && workspace}
         <button
           type="button"
@@ -505,7 +512,7 @@
                 {/each}
               </select>
             </div>
-            
+
             {#if pane2SelectedFile === 'text' && audioEditorVisible && hasAudioFiles && audioClipService && workspace && settingsService && workspaceService}
               <div class="audio-editor-panel">
                 <AudioClipEditor
@@ -564,7 +571,7 @@
               {/each}
             </select>
           </div>
-          
+
           {#if pane1SelectedFile === 'text' && audioEditorVisible && hasAudioFiles && audioClipService && workspace && settingsService && workspaceService}
             <div class="audio-editor-panel">
               <AudioClipEditor
@@ -864,7 +871,6 @@
 
   .textarea-container {
     flex: 1;
-    padding: var(--space-2);
     overflow: hidden;
     position: relative; /* For absolute positioning of error overlay */
   }
