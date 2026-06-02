@@ -1,45 +1,78 @@
 <script lang="ts">
   import { PaneGroup, Pane, PaneResizer } from 'paneforge';
+  import type { Snippet } from 'svelte';
   import Sidebar from './Sidebar.svelte';
   import { layoutStore } from './stores/layout';
   import { t as _t } from './i18n';
 
   // Props
-  export let hasWorkspace: boolean = false;
-  export let currentWorkspace: any = null;
-  export let workspaceTitle: string | undefined = undefined;
-  export let extensionManager: any = null;
+  let {
+    hasWorkspace = false,
+    currentWorkspace = null,
+    workspaceTitle = undefined,
+    extensionManager = null,
+    leftContent,
+    rightContent,
+    sidebarWorkspace,
+    sidebarMetadata,
+    sidebarManifest,
+    sidebarNavigation,
+    sidebarSpine,
+    sidebarSettings,
+    sidebarFooter,
+  }: {
+    hasWorkspace?: boolean;
+    currentWorkspace?: any;
+    workspaceTitle?: string | undefined;
+    extensionManager?: any;
+    leftContent?: Snippet;
+    rightContent?: Snippet;
+    sidebarWorkspace?: Snippet;
+    sidebarMetadata?: Snippet;
+    sidebarManifest?: Snippet;
+    sidebarNavigation?: Snippet;
+    sidebarSpine?: Snippet;
+    sidebarSettings?: Snippet;
+    sidebarFooter?: Snippet;
+  } = $props();
 
   // Subscribe to layout store
-  $: ({ sidebar } = $layoutStore);
+  const sidebar = $derived($layoutStore.sidebar);
 
   // Reactive sidebar width for grid template
-  $: sidebarWidth = sidebar.isExpanded ? '250px' : '48px';
+  const sidebarWidth = $derived(sidebar.isExpanded ? '250px' : '48px');
 
   // Determine which sections should show preview pane
-  $: showPreviewPane =
+  const showPreviewPane = $derived(
     sidebar.activeSection !== 'workspace' &&
-    sidebar.activeSection !== 'settings' &&
-    sidebar.activeSection !== 'publish';
+      sidebar.activeSection !== 'settings' &&
+      sidebar.activeSection !== 'publish'
+  );
 </script>
 
 <div class="app-layout" style="grid-template-columns: {sidebarWidth} 1fr">
-  <Sidebar isExpanded={sidebar.isExpanded} activeSection={sidebar.activeSection} {hasWorkspace} {currentWorkspace} {workspaceTitle} {extensionManager}>
-    {#snippet sidebarWorkspace()}<slot name="sidebar-workspace" />{/snippet}
-    {#snippet sidebarMetadata()}<slot name="sidebar-metadata" />{/snippet}
-    {#snippet sidebarManifest()}<slot name="sidebar-manifest" />{/snippet}
-    {#snippet sidebarNavigation()}<slot name="sidebar-navigation" />{/snippet}
-    {#snippet sidebarSpine()}<slot name="sidebar-spine" />{/snippet}
-    {#snippet sidebarSettings()}<slot name="sidebar-settings" />{/snippet}
-    {#snippet sidebarFooter()}<slot name="sidebar-footer" />{/snippet}
-  </Sidebar>
+  <Sidebar
+    isExpanded={sidebar.isExpanded}
+    activeSection={sidebar.activeSection}
+    {hasWorkspace}
+    {currentWorkspace}
+    {workspaceTitle}
+    {extensionManager}
+    {sidebarWorkspace}
+    {sidebarMetadata}
+    {sidebarManifest}
+    {sidebarNavigation}
+    {sidebarSpine}
+    {sidebarSettings}
+    {sidebarFooter}
+  />
 
   <div class="main-content">
     {#if showPreviewPane}
       <PaneGroup direction="horizontal" autoSaveId="editme-content-panes">
         <Pane defaultSize={50} minSize={25}>
           <div class="pane-content">
-            <slot name="left-content" />
+            {@render leftContent?.()}
           </div>
         </Pane>
 
@@ -47,14 +80,14 @@
 
         <Pane defaultSize={50} minSize={20}>
           <div class="pane-content">
-            <slot name="right-content" />
+            {@render rightContent?.()}
           </div>
         </Pane>
       </PaneGroup>
     {:else}
       <!-- Single pane mode for workspace and settings views -->
       <div class="single-pane-container">
-        <slot name="left-content" />
+        {@render leftContent?.()}
       </div>
     {/if}
   </div>

@@ -531,7 +531,7 @@
     {workspaceTitle}
     {extensionManager}
   >
-    <svelte:fragment slot="sidebar-spine">
+    {#snippet sidebarSpine()}
       {#if !initialized}
         <div class="placeholder-content">
           <p>{$t('Loading project…')}</p>
@@ -555,9 +555,9 @@
           <p>{$t('Loading project…')}</p>
         </div>
       {/if}
-    </svelte:fragment>
+    {/snippet}
 
-    <svelte:fragment slot="sidebar-footer">
+    {#snippet sidebarFooter()}
       {#if currentWorkspaceState}
         <div class="package-epub-section">
           <button
@@ -569,9 +569,9 @@
           </button>
         </div>
       {/if}
-    </svelte:fragment>
+    {/snippet}
 
-    <svelte:fragment slot="left-content">
+    {#snippet leftContent()}
       <!-- Main content area - switches based on current view -->
       {#if currentView === 'about'}
         <AboutView />
@@ -616,7 +616,7 @@
           />
         {/if}
       {:else if currentView === 'manifest'}
-        {#if initialized && currentWorkspaceState}
+        {#if initialized && currentWorkspaceState && appState}
           <ManifestContainer
             workspace={currentWorkspaceState}
             {workspaceService}
@@ -635,7 +635,7 @@
           />
         {/if}
       {:else if currentView === 'navigation'}
-        {#if initialized && currentWorkspaceState}
+        {#if initialized && currentWorkspaceState && appState}
           <OutlineView
             workspace={currentWorkspaceState}
             {workspaceService}
@@ -677,7 +677,7 @@
         {/if}
       {:else if currentView === 'publish'}
         <PublishView {publishService} />
-      {:else if currentView === 'settings'}
+      {:else if currentView === 'settings' && appState}
         <SettingsView
           settingsService={appState.getSettingsService()}
           extensionManager={appState.getExtensionManager()}
@@ -696,9 +696,9 @@
           <p>{$t('View type')}: {currentView}</p>
         </div>
       {/if}
-    </svelte:fragment>
+    {/snippet}
 
-    <svelte:fragment slot="right-content">
+    {#snippet rightContent()}
       {#if currentView === 'about'}
         <ThirdPartyView />
       {:else if currentView === 'metadata' && initialized && currentWorkspaceState}
@@ -751,7 +751,7 @@
           <p class="current-view-info">{$t('Current view')}: <strong>{currentView}</strong></p>
         </div>
       {/if}
-    </svelte:fragment>
+    {/snippet}
   </LayoutManager>
 {/if}
 
