@@ -12,8 +12,14 @@ export default defineConfig(({ mode }) => {
       port: 5173,
     },
     build: {
+      // es2022 supports top-level await (libxml2-wasm, via epubcheck-ts, uses it).
+      // Vite 7+ defaulted to a TLA-capable target; on Vite 6 we set it explicitly.
+      target: "es2022",
       outDir: "dist",
       sourcemap: true,
+    },
+    optimizeDeps: {
+      esbuildOptions: { target: "es2022" },
     },
     test: {
       environment: "jsdom",
