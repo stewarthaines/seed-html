@@ -87,33 +87,34 @@
     }
   };
 
-  const handleItemSelection = (event: {
-    detail: { item: ManifestItem | SourceItem; type: 'manifest' | 'source' };
+  const handleItemSelection = (detail: {
+    item: ManifestItem | SourceItem;
+    type: 'manifest' | 'source' | 'opf';
   }) => {
-    selectedItem = event.detail.item;
-    selectedItemType = event.detail.type;
+    selectedItem = detail.item;
+    selectedItemType = detail.type;
 
     // Call the callback function to notify parent component
     onItemSelect?.({
-      item: event.detail.item,
-      type: event.detail.type,
+      item: detail.item,
+      type: detail.type,
     });
   };
 
-  const handleItemDelete = async (event: { detail: { itemId: string } }) => {
+  const handleItemDelete = async (detail: { itemId: string }) => {
     if (!workspace) return;
 
     const confirmed = confirm($t('Are you sure you want to delete this item?'));
     if (!confirmed) return;
 
     try {
-      workspace = await workspaceService.removeManifestItem(workspace, event.detail.itemId);
+      workspace = await workspaceService.removeManifestItem(workspace, detail.itemId);
       // Keep global app state in sync with the persisted content.opf.
       onWorkspaceUpdate?.(workspace);
       await loadManifest(); // Refresh the manifest
 
       // Clear selection if deleted item was selected
-      if (selectedItem && 'id' in selectedItem && selectedItem.id === event.detail.itemId) {
+      if (selectedItem && 'id' in selectedItem && selectedItem.id === detail.itemId) {
         selectedItem = null;
         selectedItemType = null;
       }
@@ -122,10 +123,10 @@
     }
   };
 
-  const handleFileUpload = async (event: { detail: { files: File[] } }) => {
+  const handleFileUpload = async (detail: { files: FileList | File[] }) => {
     if (!workspace) return;
 
-    const files = event.detail.files;
+    const files = detail.files;
     const successfulFiles: string[] = [];
     const failedFiles: { name: string; error: string }[] = [];
 
@@ -279,7 +280,7 @@
     isDragging = false;
     if (!event.dataTransfer?.files?.length) return;
     event.preventDefault();
-    handleFileUpload({ detail: { files: Array.from(event.dataTransfer.files) } });
+    handleFileUpload({ files: event.dataTransfer.files });
   };
 </script>
 
@@ -309,9 +310,9 @@
     {validationErrors}
     {selectedItem}
     {selectedItemType}
-    on:itemSelect={handleItemSelection}
-    on:itemDelete={handleItemDelete}
-    on:fileUpload={handleFileUpload}
+    onItemSelect={handleItemSelection}
+    onItemDelete={handleItemDelete}
+    onFileUpload={handleFileUpload}
   />
 {/if}
 

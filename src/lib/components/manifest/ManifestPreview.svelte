@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher, onDestroy } from 'svelte';
+  import { onDestroy } from 'svelte';
   import { t } from '../../i18n';
   import type { ManifestItem, SourceItem, ContentPreview } from '../../manifest/types';
   import type {
@@ -7,15 +7,23 @@
     WorkspaceState,
   } from '../../services/workspace/workspace.service.js';
 
-  export let selectedItem: ManifestItem | SourceItem | any | null = null;
-  export let selectedItemType: 'manifest' | 'source' | 'opf' | null = null;
-  export let workspace: WorkspaceState | null = null;
-  export let workspaceService: WorkspaceService | undefined = undefined;
-  // Propagate manifest edits to global app state (keeps content.opf, the table,
-  // and the in-memory workspace in lockstep).
-  export let onWorkspaceUpdate: ((workspace: WorkspaceState) => void) | undefined = undefined;
-
-  const dispatch = createEventDispatcher();
+  let {
+    selectedItem = null,
+    selectedItemType = null,
+    workspace = null,
+    workspaceService = undefined,
+    onWorkspaceUpdate = undefined,
+    onItemDelete,
+  }: {
+    selectedItem?: ManifestItem | SourceItem | any | null;
+    selectedItemType?: 'manifest' | 'source' | 'opf' | null;
+    workspace?: WorkspaceState | null;
+    // Propagate manifest edits to global app state (keeps content.opf, the
+    // table, and the in-memory workspace in lockstep).
+    workspaceService?: WorkspaceService;
+    onWorkspaceUpdate?: (workspace: WorkspaceState) => void;
+    onItemDelete?: (detail: { itemId: string }) => void;
+  } = $props();
 
   // --- Inline manifest-item editing -------------------------------------------
   // EPUB properties that apply to XHTML content documents. (cover-image is the
@@ -29,30 +37,38 @@
     { value: 'svg', label: 'SVG' },
   ];
 
-  let liveItem: ManifestItem | null = null;
-  let editId = '';
-  let editHref = '';
-  let editProperties: string[] = [];
-  let editError: string | null = null;
+  let liveItem = $state<ManifestItem | null>(null);
+  let editId = $state('');
+  let editHref = $state('');
+  let editProperties = $state<string[]>([]);
+  let editError = $state<string | null>(null);
 
   // Only manifest items get the edit form; SOURCE files, SOURCE.zip contents
   // and content.opf stay preview-only.
-  $: isManifestItem = selectedItemType === 'manifest' && !!selectedItem && 'id' in selectedItem;
+  const isManifestItem = $derived(
+    selectedItemType === 'manifest' && !!selectedItem && 'id' in selectedItem
+  );
   // XHTML content documents (chapters, nav) are named via the spine/chapter
   // system, so we don't expose id/href here; instead they get EPUB properties.
   // Other media (images, audio, fonts, CSS, JS) get editable id/href, no
   // properties. Media type is fixed at upload and shown read-only in the header.
-  $: isXhtmlItem = isManifestItem && (selectedItem as ManifestItem).mediaType === 'application/xhtml+xml';
+  const isXhtmlItem = $derived(
+    isManifestItem && (selectedItem as ManifestItem).mediaType === 'application/xhtml+xml'
+  );
   // Images can additionally be marked as the publication cover (cover-image is
   // the one manifest property that targets an image rather than XHTML).
-  $: isImageItem = isManifestItem && (selectedItem as ManifestItem).mediaType.startsWith('image/');
+  const isImageItem = $derived(
+    isManifestItem && (selectedItem as ManifestItem).mediaType.startsWith('image/')
+  );
 
   // Reseed the form whenever the selected item changes (not on our own edits).
-  $: if (isManifestItem) {
-    seedEditForm(selectedItem as ManifestItem);
-  } else {
-    liveItem = null;
-  }
+  $effect(() => {
+    if (isManifestItem) {
+      seedEditForm(selectedItem as ManifestItem);
+    } else {
+      liveItem = null;
+    }
+  });
 
   function seedEditForm(item: ManifestItem) {
     liveItem = item;
@@ -137,9 +153,9 @@
     }
   };
 
-  let contentPreview: ContentPreview | null = null;
-  let loading = false;
-  let error: string | null = null;
+  let contentPreview = $state<ContentPreview | null>(null);
+  let loading = $state(false);
+  let error = $state<string | null>(null);
   let activeBlobUrl: string | null = null;
 
   // Helper function to determine if mediaType represents text content
@@ -190,9 +206,11 @@
     }
   };
 
-  $: if (selectedItem && selectedItemType && workspaceService && workspace) {
-    loadContentPreview();
-  }
+  $effect(() => {
+    if (selectedItem && selectedItemType && workspaceService && workspace) {
+      loadContentPreview();
+    }
+  });
 
   // Clean up on component destroy
   onDestroy(() => {
@@ -361,7 +379,7 @@
 
   const handleDeleteClick = () => {
     if (selectedItem && selectedItemType === 'manifest') {
-      dispatch('itemDelete', { itemId: (selectedItem as ManifestItem).id });
+      onItemDelete?.({ itemId: (selectedItem as ManifestItem).id });
     }
   };
 
@@ -461,7 +479,7 @@
   {:else if error}
     <div class="error-state">
       <p class="error-message">{error}</p>
-      <button type="button" class="retry-button" on:click={loadContentPreview}>
+      <button type="button" class="retry-button" onclick={loadContentPreview}>
         {$t('Retry')}
       </button>
     </div>
@@ -474,12 +492,12 @@
           <button
             type="button"
             class="action-button download-button"
-            on:click={handleDownloadClick}
+            onclick={handleDownloadClick}
           >
             {$t('Download')}
           </button>
           {#if selectedItemType === 'manifest'}
-            <button type="button" class="action-button delete-button" on:click={handleDeleteClick}>
+            <button type="button" class="action-button delete-button" onclick={handleDeleteClick}>
               {$t('Delete')}
             </button>
           {/if}
@@ -500,7 +518,7 @@
                     <input
                       type="checkbox"
                       checked={editProperties.includes(property.value)}
-                      on:change={e => toggleProperty(property.value, e.currentTarget.checked)}
+                      onchange={e => toggleProperty(property.value, e.currentTarget.checked)}
                     />
                     {property.label}
                   </label>
@@ -516,7 +534,7 @@
                 type="text"
                 dir="ltr"
                 bind:value={editId}
-                on:blur={commitId}
+                onblur={commitId}
               />
             </div>
 
@@ -528,7 +546,7 @@
                 type="text"
                 dir="ltr"
                 bind:value={editHref}
-                on:blur={commitHref}
+                onblur={commitHref}
               />
             </div>
 
@@ -537,7 +555,7 @@
                 <input
                   type="checkbox"
                   checked={editProperties.includes('cover-image')}
-                  on:change={e => setCoverImage(e.currentTarget.checked)}
+                  onchange={e => setCoverImage(e.currentTarget.checked)}
                 />
                 {$t('Cover image')}
               </label>

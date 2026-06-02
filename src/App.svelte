@@ -213,7 +213,7 @@
   };
 
   // Handle manifest item deletion
-  const handleManifestItemDelete = async (event: CustomEvent<{ itemId: string }>) => {
+  const handleManifestItemDelete = async (detail: { itemId: string }) => {
     if (!currentWorkspaceState || !appState) return;
 
     const confirmed = confirm($t('Are you sure you want to delete this item?'));
@@ -223,14 +223,14 @@
       // Use workspaceService to remove the manifest item
       const updatedWorkspace = await workspaceService.removeManifestItem(
         currentWorkspaceState,
-        event.detail.itemId
+        detail.itemId
       );
 
       // Update the workspace state in appState (same pattern as upload)
       appState.workspace = updatedWorkspace;
 
       // Clear selection if deleted item was selected
-      if (selectedManifestItem && selectedManifestItem.id === event.detail.itemId) {
+      if (selectedManifestItem && selectedManifestItem.id === detail.itemId) {
         selectedManifestItem = null;
         selectedManifestItemType = null;
       }
@@ -714,7 +714,7 @@
           selectedItemType={selectedManifestItemType}
           workspace={currentWorkspaceState}
           {workspaceService}
-          on:itemDelete={handleManifestItemDelete}
+          onItemDelete={handleManifestItemDelete}
           onWorkspaceUpdate={updatedWorkspace => {
             if (appState) appState.workspace = updatedWorkspace;
           }}

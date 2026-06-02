@@ -1,29 +1,43 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { t } from '../../i18n';
   import type { ManifestItem, SourceItem, ValidationResult } from '../../manifest/types';
 
-  export let manifestItems: ManifestItem[] = [];
-  export let sourceItems: SourceItem[] = [];
-  export let advancedMode = true;
-  export let validationErrors: ValidationResult[] = [];
-  export let selectedItem: ManifestItem | SourceItem | null = null;
-  export let selectedItemType: 'manifest' | 'source' | 'opf' | null = null;
-  export let loading = false;
+  type SortableFields = 'id' | 'href' | 'size';
 
-  const dispatch = createEventDispatcher();
+  let {
+    manifestItems = [],
+    sourceItems = [],
+    advancedMode = true,
+    validationErrors = [],
+    selectedItem = null,
+    selectedItemType = null,
+    loading = false,
+    onItemSelect,
+    onItemDelete,
+    onFileUpload,
+  }: {
+    manifestItems?: ManifestItem[];
+    sourceItems?: SourceItem[];
+    advancedMode?: boolean;
+    validationErrors?: ValidationResult[];
+    selectedItem?: ManifestItem | SourceItem | null;
+    selectedItemType?: 'manifest' | 'source' | 'opf' | null;
+    loading?: boolean;
+    onItemSelect?: (detail: { item: ManifestItem | SourceItem; type: 'manifest' | 'source' | 'opf' }) => void;
+    onItemDelete?: (detail: { itemId: string }) => void;
+    onFileUpload?: (detail: { files: FileList }) => void;
+  } = $props();
 
   // Filter state
-  let filterText = '';
+  let filterText = $state('');
   // oxlint-disable-next-line no-unassigned-vars
   let fileInputRef: HTMLInputElement;
 
-  type SortableFields = 'id' | 'href' | 'size';
-  let sortField: SortableFields = 'id';
-  let sortDirection: 'asc' | 'desc' = 'asc';
+  let sortField = $state<SortableFields>('id');
+  let sortDirection = $state<'asc' | 'desc'>('asc');
 
   // Combine and filter items
-  $: allItems = [
+  const allItems = $derived([
     ...manifestItems.map(item => ({ ...item, _type: 'manifest' as const })),
     // Always show content.opf in both modes
     {
@@ -44,11 +58,11 @@
         isPlaceholder: true,
       },
     ] : []),
-  ];
+  ]);
 
 
   // Filter items based on filter text
-  $: filteredItems = allItems.filter(item => {
+  const filteredItems = $derived(allItems.filter(item => {
     if (!filterText) return true;
 
     const searchText = filterText.toLowerCase();
@@ -82,11 +96,11 @@
         opfItem.path.toLowerCase().includes(searchText)
       );
     }
-  });
+  }));
 
   // Sort a set of rows by the active column (reactive so the grouping below
   // re-runs when the sort changes).
-  $: sortGroup = (items: typeof filteredItems) => {
+  const sortGroup = $derived((items: typeof filteredItems) => {
     return [...items].sort((a, b) => {
       let aValue: string | number | Date = '';
       let bValue: string | number | Date = '';
@@ -106,7 +120,7 @@
       if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
-  };
+  });
 
   type RowGroup = {
     key: string;
@@ -122,7 +136,7 @@
   // heading while its subgroups still do. SOURCE files stay in one flat group;
   // content.opf gets its own. Root-level files (no directory) render first
   // without a heading.
-  $: groups = ((): RowGroup[] => {
+  const groups = $derived.by((): RowGroup[] => {
     const manifest = filteredItems.filter(i => i._type === 'manifest');
     const source = filteredItems.filter(i => i._type === 'source' || i._type === 'source-zip');
     const opf = filteredItems.filter(i => i._type === 'opf');
@@ -166,10 +180,10 @@
       result.push({ key: 'opf', label: 'Package Files', kind: 'opf', indent: 0, items: sortGroup(opf) });
     }
     return result;
-  })();
+  });
 
   // While filtering, show every match regardless of collapse state.
-  $: forceExpand = filterText.trim().length > 0;
+  const forceExpand = $derived(filterText.trim().length > 0);
 
   // --- Collapse state (persisted so the table feels stable across reloads) ---
   const COLLAPSED_STORAGE_KEY = 'editme_manifest_collapsed_groups';
@@ -184,7 +198,7 @@
     return new Set();
   };
 
-  let collapsedGroups = loadCollapsedGroups();
+  let collapsedGroups = $state(loadCollapsedGroups());
 
   const toggleGroup = (key: string) => {
     const next = new Set(collapsedGroups);
@@ -213,7 +227,7 @@
   ) => {
     // Treat source-zip as 'source' for compatibility with parent component
     const dispatchType = type === 'source-zip' ? 'source' : type;
-    dispatch('itemSelect', { item, type: dispatchType });
+    onItemSelect?.({ item, type: dispatchType });
   };
 
   const handleRowKeyDown = (
@@ -229,7 +243,7 @@
 
   const _handleDeleteClick = (event: Event, item: ManifestItem) => {
     event.stopPropagation();
-    dispatch('itemDelete', { itemId: item.id });
+    onItemDelete?.({ itemId: item.id });
   };
 
   const isItemSelected = (
@@ -292,7 +306,7 @@
   const handleFileInputChange = (event: Event) => {
     const target = event.target as HTMLInputElement;
     if (target.files && target.files.length > 0) {
-      dispatch('fileUpload', { files: target.files });
+      onFileUpload?.({ files: target.files });
       target.value = ''; // Clear the input
     }
   };
