@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { t } from '../../i18n';
   import WorkspaceItem from './WorkspaceItem.svelte';
   import type {
@@ -7,47 +6,41 @@
     WorkspaceRowDetails,
   } from '../../services/workspace/workspace.service.js';
 
-  const dispatch = createEventDispatcher<{
-    workspaceSelected: { workspaceId: string };
-    workspaceDeleted: { workspaceId: string };
-    packageRequested: { workspaceId: string };
-  }>();
+  let {
+    workspaces = [],
+    currentWorkspaceId = null,
+    isLoading = false,
+    onLoadWorkspaceDetails = undefined,
+    onWorkspaceSelected,
+    onWorkspaceDeleted,
+  }: {
+    workspaces?: WorkspaceInfo[];
+    currentWorkspaceId?: string | null;
+    isLoading?: boolean;
+    onLoadWorkspaceDetails?: (id: string) => Promise<WorkspaceRowDetails>;
+    onWorkspaceSelected?: (detail: { workspaceId: string }) => void;
+    onWorkspaceDeleted?: (detail: { workspaceId: string }) => void;
+  } = $props();
 
-  export let workspaces: WorkspaceInfo[] = [];
-  export let currentWorkspaceId: string | null = null;
-  export let isLoading = false;
-  export let onLoadWorkspaceDetails: ((id: string) => Promise<WorkspaceRowDetails>) | undefined =
-    undefined;
-
-  let searchQuery = '';
+  let searchQuery = $state('');
 
   // Filter workspaces based on search query
-  $: filteredWorkspaces = workspaces.filter(workspace => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      workspace.title.toLowerCase().includes(query) ||
-      workspace.author?.toLowerCase().includes(query) ||
-      workspace.language.toLowerCase().includes(query)
-    );
-  });
+  const filteredWorkspaces = $derived(
+    workspaces.filter(workspace => {
+      if (!searchQuery) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        workspace.title.toLowerCase().includes(query) ||
+        workspace.author?.toLowerCase().includes(query) ||
+        workspace.language.toLowerCase().includes(query)
+      );
+    })
+  );
 
   // Sort workspaces by last modified (most recent first)
-  $: sortedWorkspaces = [...filteredWorkspaces].sort((a, b) => {
-    return b.lastModified.getTime() - a.lastModified.getTime();
-  });
-
-  const handleWorkspaceSelect = (event: CustomEvent<{ workspaceId: string }>) => {
-    dispatch('workspaceSelected', event.detail);
-  };
-
-  const handleWorkspaceDelete = (event: CustomEvent<{ workspaceId: string }>) => {
-    dispatch('workspaceDeleted', event.detail);
-  };
-
-  const handlePackageRequest = (event: CustomEvent<{ workspaceId: string }>) => {
-    dispatch('packageRequested', event.detail);
-  };
+  const sortedWorkspaces = $derived(
+    [...filteredWorkspaces].sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime())
+  );
 
   const handleSearchInput = (event: Event) => {
     const target = event.target as HTMLInputElement;
@@ -77,14 +70,14 @@
             class="search-input"
             placeholder={$t('Search projects…')}
             value={searchQuery}
-            on:input={handleSearchInput}
+            oninput={handleSearchInput}
             aria-label={$t('Search projects')}
           />
           {#if searchQuery}
             <button
               type="button"
               class="clear-search"
-              on:click={clearSearch}
+              onclick={clearSearch}
               aria-label={$t('Clear search')}
             >
               ×
@@ -125,7 +118,7 @@
         <p class="no-results-description">
           {$t('No projects match your search for "{query}"', { query: searchQuery })}
         </p>
-        <button type="button" class="clear-search-button" on:click={clearSearch}>
+        <button type="button" class="clear-search-button" onclick={clearSearch}>
           {$t('Clear search')}
         </button>
       </div>
@@ -137,9 +130,8 @@
             {onLoadWorkspaceDetails}
             isCurrent={workspace.id === currentWorkspaceId}
             hasError={workspace.hasError || false}
-            on:selected={handleWorkspaceSelect}
-            on:deleteRequested={handleWorkspaceDelete}
-            on:packageRequested={handlePackageRequest}
+            onSelected={onWorkspaceSelected}
+            onDeleteRequested={onWorkspaceDeleted}
           />
         {/each}
       </div>

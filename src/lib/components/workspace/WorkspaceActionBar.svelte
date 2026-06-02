@@ -1,19 +1,22 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { t } from '../../i18n';
 
-  const dispatch = createEventDispatcher();
-
-  export let isLoading = false;
+  let {
+    isLoading = false,
+    onCreateNewRequested,
+    onLoadEpubRequested,
+  }: {
+    isLoading?: boolean;
+    onCreateNewRequested?: () => void;
+    onLoadEpubRequested?: () => void;
+  } = $props();
 
   const handleCreateNew = () => {
-    console.log('🎯 WorkspaceActionBar: Create New button clicked!');
-    dispatch('createNewRequested');
-    console.log('🎯 WorkspaceActionBar: createNewRequested event dispatched');
+    onCreateNewRequested?.();
   };
 
   const handleLoadEpub = () => {
-    dispatch('loadEpubRequested');
+    onLoadEpubRequested?.();
   };
 
   // Future: import from folder functionality

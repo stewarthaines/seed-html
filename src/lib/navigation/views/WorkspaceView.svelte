@@ -174,8 +174,8 @@
   };
 
   // Handle workspace selection (open workspace) with smart navigation
-  const handleWorkspaceSelect = async (event: CustomEvent<{ workspaceId: string }>) => {
-    const { workspaceId } = event.detail;
+  const handleWorkspaceSelect = async (detail: { workspaceId: string }) => {
+    const { workspaceId } = detail;
 
     try {
       // Set as current workspace
@@ -196,8 +196,8 @@
   };
 
   // Handle workspace deletion using service layer
-  const handleWorkspaceDelete = async (event: CustomEvent<{ workspaceId: string }>) => {
-    const { workspaceId } = event.detail;
+  const handleWorkspaceDelete = async (detail: { workspaceId: string }) => {
+    const { workspaceId } = detail;
     const workspace = workspaces.find(w => w.id === workspaceId);
 
     if (!workspace) return;
@@ -235,9 +235,11 @@
     }
   };
 
-  // Handle EPUB packaging and download
-  const handlePackageRequest = async (event: CustomEvent<{ workspaceId: string }>) => {
-    const { workspaceId } = event.detail;
+  // Handle EPUB packaging and download.
+  // Currently unreachable: the project list has no per-row package action, so
+  // nothing triggers this. Kept (prefixed) until a package control is added.
+  const _handlePackageRequest = async (detail: { workspaceId: string }) => {
+    const { workspaceId } = detail;
     const workspace = workspaces.find(w => w.id === workspaceId);
 
     if (!workspace) return;
@@ -342,8 +344,8 @@
     <!-- Action Bar -->
     <WorkspaceActionBar
       isLoading={loading}
-      on:createNewRequested={handleCreateNew}
-      on:loadEpubRequested={handleLoadEpub}
+      onCreateNewRequested={handleCreateNew}
+      onLoadEpubRequested={handleLoadEpub}
     />
 
     <!-- Error State -->
@@ -365,9 +367,8 @@
       {currentWorkspaceId}
       {onLoadWorkspaceDetails}
       isLoading={loading || isPackaging}
-      on:workspaceSelected={handleWorkspaceSelect}
-      on:workspaceDeleted={handleWorkspaceDelete}
-      on:packageRequested={handlePackageRequest}
+      onWorkspaceSelected={handleWorkspaceSelect}
+      onWorkspaceDeleted={handleWorkspaceDelete}
     />
 
     <!-- Unsaved Changes Indicator -->

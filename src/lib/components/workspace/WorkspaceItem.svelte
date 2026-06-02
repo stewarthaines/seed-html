@@ -1,29 +1,35 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { onMount } from 'svelte';
   import { t } from '../../i18n';
   import type {
     WorkspaceInfo,
     WorkspaceRowDetails,
   } from '../../services/workspace/workspace.service.js';
 
-  const dispatch = createEventDispatcher<{
-    selected: { workspaceId: string };
-    deleteRequested: { workspaceId: string };
-  }>();
-
-  export let workspace: WorkspaceInfo;
-  export let isCurrent = false;
-  export let hasError = false;
-  export let onLoadWorkspaceDetails: ((id: string) => Promise<WorkspaceRowDetails>) | undefined =
-    undefined;
+  let {
+    workspace,
+    isCurrent = false,
+    hasError = false,
+    onLoadWorkspaceDetails = undefined,
+    onSelected,
+    onDeleteRequested,
+  }: {
+    workspace: WorkspaceInfo;
+    isCurrent?: boolean;
+    hasError?: boolean;
+    onLoadWorkspaceDetails?: (id: string) => Promise<WorkspaceRowDetails>;
+    onSelected?: (detail: { workspaceId: string }) => void;
+    onDeleteRequested?: (detail: { workspaceId: string }) => void;
+  } = $props();
 
   // Per-row details (file count, extensions) are loaded lazily after the list
   // renders, so the Projects view appears instantly. Prefer eager values if a
   // caller already populated them on the workspace object.
-  let details: WorkspaceRowDetails | null =
+  let details = $state<WorkspaceRowDetails | null>(
     workspace.fileCount !== undefined
       ? { fileCount: workspace.fileCount, extensionIds: workspace.extensionIds }
-      : null;
+      : null
+  );
 
   onMount(async () => {
     if (details || !onLoadWorkspaceDetails) return;
@@ -35,12 +41,12 @@
   });
 
   const handleSelect = () => {
-    dispatch('selected', { workspaceId: workspace.id });
+    onSelected?.({ workspaceId: workspace.id });
   };
 
   const handleDeleteRequest = (event: Event) => {
     event.stopPropagation(); // Prevent workspace selection
-    dispatch('deleteRequested', { workspaceId: workspace.id });
+    onDeleteRequested?.({ workspaceId: workspace.id });
   };
 
 

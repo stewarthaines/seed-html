@@ -17,7 +17,7 @@
     "test:stories": "vitest run --config .storybook/vitest.config.ts",
     "screenshots": "node scripts/capture-screenshots.js",
     "worktree": "bash scripts/new-worktree.sh",
-    "lint": "eslint . --ext .js,.ts,.svelte --max-warnings 328",
+    "lint": "eslint . --ext .js,.ts,.svelte --max-warnings 326",
     "lint:fix": "eslint . --ext .js,.ts,.svelte --fix",
     "validate": "npm run check && npm run lint && npm run test",
     "format": "prettier --write .",
