@@ -20,8 +20,6 @@ export interface PluginDiscoveryEnv {
   protocol?: string;
   /** Base URL the `plugins/` folder is resolved against. Defaults to document.baseURI. */
   baseUrl?: string;
-  /** Whether the app is running under the Vite dev server. Defaults to import.meta.env.DEV. */
-  dev?: boolean;
   /** Fetch implementation. Defaults to globalThis.fetch. */
   fetch?: typeof fetch;
 }
@@ -33,7 +31,6 @@ function resolveEnv(env: PluginDiscoveryEnv = {}): Required<PluginDiscoveryEnv> 
     protocol: env.protocol ?? (typeof location !== 'undefined' ? location.protocol : 'file:'),
     baseUrl:
       env.baseUrl ?? (typeof document !== 'undefined' ? document.baseURI : 'http://localhost/'),
-    dev: env.dev ?? Boolean(import.meta.env?.DEV),
     fetch: env.fetch ?? globalThis.fetch.bind(globalThis),
   };
 }
@@ -86,18 +83,16 @@ export async function loadPluginManifest(
 }
 
 /**
- * Resolve the iframe `src` for a plugin, environment-aware:
- *   - dev:  the live source served by the core dev server at `plugins/<id>/`
- *           (same-origin, Svelte HMR).
- *   - prod: the built single-file artifact at `plugins/<entry>`.
+ * Resolve the iframe `src` for a plugin: `plugins/<entry>`, same-origin with the
+ * core. Identical in dev and prod — in dev the core dev server serves the plugin's
+ * source at that path (with HMR); in prod it's the built single-file in dist/.
  */
 export function resolvePluginEntryUrl(
   entry: PluginManifestEntry,
   env: PluginDiscoveryEnv = {}
 ): string {
   const resolved = resolveEnv(env);
-  const relative = resolved.dev ? `plugins/${entry.id}/` : `plugins/${entry.entry}`;
-  return new URL(relative, resolved.baseUrl).href;
+  return new URL(`plugins/${entry.entry}`, resolved.baseUrl).href;
 }
 
 /**

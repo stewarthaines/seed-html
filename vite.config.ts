@@ -39,6 +39,10 @@ export default defineConfig({
     // deps (epubcheck-ts → libxml2-wasm, which uses top-level await), which aborts
     // dep optimization and leaves the dev server serving a blank app.
     entries: ['index.html'],
+    // When the plugin iframe is opened in dev, the core server serves the plugin
+    // source and optimizes its deps on demand; es2022 lets that handle top-level
+    // await (libxml2-wasm). Matches the core build target.
+    esbuildOptions: { target: 'es2022' },
   },
   define: {
     // Exclude development-only code from production builds
@@ -79,6 +83,58 @@ export default defineConfig({
       }
     },
     viteSingleFile(),
+    // Dev only: synthesize plugins/manifest.json by scanning workspace plugins, so
+    // the host can discover them against the live dev server (the built manifest is
+    // generated into dist/, which the dev server doesn't serve). The plugin source
+    // itself is served by Vite at plugins/<id>/<file> — same path the built manifest
+    // entry resolves to, so the host needs no dev/prod branch.
+    {
+      name: 'serve-plugins-manifest-dev',
+      apply: 'serve',
+      configureServer(server) {
+        server.middlewares.use('/plugins/manifest.json', async (_req, res) => {
+          const pluginsRoot = path.join(dirname, 'plugins');
+          const manifest: Array<{
+            id: string;
+            name: string;
+            entry: string;
+            presentation: string;
+          }> = [];
+          let names: string[] = [];
+          try {
+            names = await fs.readdir(pluginsRoot);
+          } catch {
+            // no plugins/ directory — nothing to serve
+          }
+          for (const name of names) {
+            try {
+              const pkg = JSON.parse(
+                await fs.readFile(path.join(pluginsRoot, name, 'package.json'), 'utf8')
+              );
+              const m = pkg.editmePlugin;
+              if (
+                m &&
+                m.id &&
+                m.name &&
+                (m.presentation === 'panel' || m.presentation === 'view') &&
+                m.buildEntry
+              ) {
+                manifest.push({
+                  id: m.id,
+                  name: m.name,
+                  entry: `${m.id}/${path.basename(m.buildEntry)}`,
+                  presentation: m.presentation,
+                });
+              }
+            } catch {
+              // not a plugin package — skip
+            }
+          }
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify(manifest));
+        });
+      },
+    },
     // Bundle analysis plugins
     // visualizer({
     //   filename: 'dist/stats.html',
