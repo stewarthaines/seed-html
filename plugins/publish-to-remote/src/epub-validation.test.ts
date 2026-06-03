@@ -9,6 +9,7 @@ import {
   validateEpub,
   publishLatestReport,
   clearLatestReport,
+  summarizeReport,
   type ValidationReport,
 } from './epub-validation.js';
 
@@ -83,6 +84,37 @@ describe('validateEpub mapping', () => {
 
     const report = await validateEpub(epubFile());
     expect(report.messages[0].location).toBeUndefined();
+  });
+});
+
+describe('summarizeReport', () => {
+  const make = (
+    levels: Array<'error' | 'warning' | 'info'>,
+  ): ValidationReport => ({
+    filename: 'book.epub',
+    isValid: levels.every((l) => l !== 'error'),
+    timestamp: 1,
+    errorCount: levels.filter((l) => l === 'error').length,
+    warningCount: levels.filter((l) => l === 'warning').length,
+    messages: levels.map((level) => ({ level, message: level })),
+  });
+
+  it('counts messages per level', () => {
+    expect(
+      summarizeReport(make(['error', 'warning', 'warning', 'info'])),
+    ).toEqual({
+      error: 1,
+      warning: 2,
+      info: 1,
+    });
+  });
+
+  it('is all-zero for a clean report', () => {
+    expect(summarizeReport(make([]))).toEqual({
+      error: 0,
+      warning: 0,
+      info: 0,
+    });
   });
 });
 

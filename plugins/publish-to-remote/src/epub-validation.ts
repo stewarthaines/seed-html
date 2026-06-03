@@ -26,6 +26,23 @@ function toLevel(severity: string): 'error' | 'warning' | 'info' {
   return 'info';
 }
 
+export interface ValidationSummary {
+  error: number;
+  warning: number;
+  info: number;
+}
+
+/**
+ * Per-level message counts for a compact at-a-glance summary. Derived from the
+ * messages (which already fold fatal→error and usage→info), so it covers every
+ * epubcheck severity and matches the report's own error/warning counts.
+ */
+export function summarizeReport(report: ValidationReport): ValidationSummary {
+  const summary: ValidationSummary = { error: 0, warning: 0, info: 0 };
+  for (const msg of report.messages) summary[msg.level] += 1;
+  return summary;
+}
+
 export async function validateEpub(file: File): Promise<ValidationReport> {
   const buffer = await file.arrayBuffer();
 
