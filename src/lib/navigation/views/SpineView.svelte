@@ -11,6 +11,7 @@
   import type { SpineItemWithSource } from '../../spine/types';
   import { readChapterMeta, writeChapterMeta } from '../../spine/chapter-metadata.js';
   import EditorPane from '../../components/spine/EditorPane.svelte';
+  import ChapterValidationPanel from '../../components/spine/ChapterValidationPanel.svelte';
   // import PreviewPane from '../../components/spine/PreviewPane.svelte';
   import {
     createSpinePreviewManager,
@@ -1327,6 +1328,7 @@
       {workspaceService}
       {settingsService}
     />
+    <ChapterValidationPanel chapterId={selectedItemId} />
   </div>
 {:else}
   <div class="loading-state">
@@ -1399,6 +1401,7 @@
     height: 100%;
     display: flex;
     flex-direction: column;
+    position: relative;
   }
 
   /* Reduced motion support */

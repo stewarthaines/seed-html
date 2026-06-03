@@ -75,6 +75,43 @@ export async function validateEpub(file: File): Promise<ValidationReport> {
   }
 }
 
+/**
+ * Shared localStorage key the core reads to mirror the latest report into the
+ * spine editor (same-origin host ↔ plugin). Mirrors the `editme_` convention used
+ * by the core's navigation/layout stores.
+ */
+const LATEST_REPORT_KEY = 'editme_validation_report';
+
+/**
+ * Drop the latest report where the same-origin host can read it (the spine
+ * editor's per-chapter reference panel). Best-effort: a quota/serialize failure
+ * must not break validation.
+ */
+export function publishLatestReport(report: ValidationReport): void {
+  try {
+    localStorage.setItem(LATEST_REPORT_KEY, JSON.stringify(report));
+  } catch {
+    // Non-fatal: the report still lives in OPFS; the editor panel just won't update.
+  }
+}
+
+/**
+ * Remove the mirrored report, but only when it's the one for `filename` — so
+ * deleting an epub the panel is referencing clears it without clobbering a newer
+ * report for a different file.
+ */
+export function clearLatestReport(filename: string): void {
+  try {
+    const raw = localStorage.getItem(LATEST_REPORT_KEY);
+    if (!raw) return;
+    const stored = JSON.parse(raw) as Partial<ValidationReport>;
+    if (stored.filename === filename)
+      localStorage.removeItem(LATEST_REPORT_KEY);
+  } catch {
+    // Malformed/absent mirror — nothing to clear.
+  }
+}
+
 export async function saveValidationReport(
   report: ValidationReport,
 ): Promise<void> {

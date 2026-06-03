@@ -2,7 +2,11 @@
   import { t } from '$lib/i18n';
   import { downloadBlob } from '$lib/zip/index.js';
   import type { PublishService, PublishedEpub } from '$lib/services/publish/publish.service.js';
-  import { createInitMessage, isPluginReadyMessage, isNavigateMessage } from '$lib/plugins/contract';
+  import {
+    createInitMessage,
+    isPluginReadyMessage,
+    isNavigateMessage,
+  } from '$lib/plugins/contract';
 
   interface Props {
     publishService: PublishService;

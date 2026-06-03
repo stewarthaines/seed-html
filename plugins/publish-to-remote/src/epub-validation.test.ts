@@ -5,7 +5,12 @@ vi.mock('@likecoin/epubcheck-ts', () => ({
 }));
 
 import { EpubCheck } from '@likecoin/epubcheck-ts';
-import { validateEpub } from './epub-validation.js';
+import {
+  validateEpub,
+  publishLatestReport,
+  clearLatestReport,
+  type ValidationReport,
+} from './epub-validation.js';
 
 const mockValidate = vi.mocked(EpubCheck.validate);
 
@@ -78,5 +83,32 @@ describe('validateEpub mapping', () => {
 
     const report = await validateEpub(epubFile());
     expect(report.messages[0].location).toBeUndefined();
+  });
+});
+
+describe('latest-report mirror (localStorage)', () => {
+  const KEY = 'editme_validation_report';
+  const report: ValidationReport = {
+    filename: 'book.epub',
+    isValid: false,
+    timestamp: 123,
+    errorCount: 1,
+    warningCount: 0,
+    messages: [{ level: 'error', message: 'boom' }],
+  };
+
+  beforeEach(() => localStorage.clear());
+
+  it('publishLatestReport writes the serialized report to the shared key', () => {
+    publishLatestReport(report);
+    expect(JSON.parse(localStorage.getItem(KEY) ?? 'null')).toEqual(report);
+  });
+
+  it('clearLatestReport removes the mirror only when the filename matches', () => {
+    publishLatestReport(report);
+    clearLatestReport('other.epub');
+    expect(localStorage.getItem(KEY)).not.toBeNull();
+    clearLatestReport('book.epub');
+    expect(localStorage.getItem(KEY)).toBeNull();
   });
 });

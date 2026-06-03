@@ -18,6 +18,8 @@
     saveValidationReport,
     loadValidationReport,
     deleteValidationReport,
+    publishLatestReport,
+    clearLatestReport,
   } from './epub-validation.js';
   import type {
     RemoteConfig,
@@ -243,6 +245,8 @@
     try {
       const report = await validateEpub(epub);
       await saveValidationReport(report);
+      // Mirror to the host so the spine editor's reference panel can read it.
+      publishLatestReport(report);
       epubValidationStatus.set(epub.name, {
         isValid: report.isValid,
         isValidating: false,
@@ -267,6 +271,7 @@
     try {
       await $dirHandle.removeEntry(epub.name);
       await deleteValidationReport(epub.name);
+      clearLatestReport(epub.name);
       epubValidationStatus.delete(epub.name);
       await loadLocalEpubs();
       showStatus(`${epub.name} deleted`, 'info');
@@ -280,6 +285,8 @@
     if (!status?.report) return;
     validationModalReport = status.report;
     showValidationModal = true;
+    // Opening an older epub's saved report makes it the editor's reference too.
+    publishLatestReport(status.report);
   }
 
   // Ask the host (same-origin parent) to open the chapter for a content path.
