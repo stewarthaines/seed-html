@@ -127,7 +127,7 @@
   <div class="publish-view">
     <header class="publish-header">
       <h1>{$t('Publish')}</h1>
-      <button class="refresh-button" onclick={load}>{$t('Refresh')}</button>
+      <button class="btn btn-secondary btn-sm" onclick={load}>{$t('Refresh')}</button>
     </header>
 
     {#if loading}
@@ -156,8 +156,13 @@
               <td class="num">{formatSize(epub.size)}</td>
               <td class="num">{formatDate(epub.lastModified)}</td>
               <td class="actions">
-                <button onclick={() => handleDownload(epub.filename)}>{$t('Download')}</button>
-                <button class="danger" onclick={() => handleDelete(epub.filename)}>
+                <button
+                  class="btn btn-secondary btn-sm"
+                  onclick={() => handleDownload(epub.filename)}
+                >
+                  {$t('Download')}
+                </button>
+                <button class="btn btn-danger btn-sm" onclick={() => handleDelete(epub.filename)}>
                   {$t('Delete')}
                 </button>
               </td>
@@ -195,20 +200,6 @@
     margin: 0;
     font-size: var(--text-xl);
     font-weight: 600;
-  }
-
-  .refresh-button {
-    padding: var(--space-1) var(--space-3);
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-bg-secondary);
-    color: var(--color-text-primary);
-    font-size: var(--text-sm);
-    cursor: pointer;
-  }
-
-  .refresh-button:hover {
-    background-color: var(--color-bg-tertiary);
   }
 
   .status {
@@ -255,31 +246,13 @@
   }
 
   .epub-table .actions {
-    text-align: right;
+    display: flex;
+    gap: var(--space-2);
+    justify-content: flex-end;
     white-space: nowrap;
   }
 
   .epub-table .name {
     word-break: break-word;
-  }
-
-  .epub-table .actions button {
-    margin-left: var(--space-2);
-    padding: var(--space-1) var(--space-2);
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-bg-secondary);
-    color: var(--color-text-primary);
-    font-size: var(--text-sm);
-    cursor: pointer;
-  }
-
-  .epub-table .actions button:hover {
-    background-color: var(--color-bg-tertiary);
-  }
-
-  .epub-table .actions button.danger {
-    color: var(--color-error-text);
-    border-color: var(--color-error-text);
   }
 </style>

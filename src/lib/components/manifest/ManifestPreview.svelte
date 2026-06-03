@@ -473,7 +473,7 @@
   {:else if error}
     <div class="error-state">
       <p class="error-message">{error}</p>
-      <button type="button" class="retry-button" onclick={loadContentPreview}>
+      <button type="button" class="btn btn-primary" onclick={loadContentPreview}>
         {$t('Retry')}
       </button>
     </div>
@@ -483,11 +483,11 @@
       <div class="preview-header">
         <!-- Action buttons moved to header -->
         <div class="preview-actions">
-          <button type="button" class="action-button download-button" onclick={handleDownloadClick}>
+          <button type="button" class="btn btn-secondary" onclick={handleDownloadClick}>
             {$t('Download')}
           </button>
           {#if selectedItemType === 'manifest'}
-            <button type="button" class="action-button delete-button" onclick={handleDeleteClick}>
+            <button type="button" class="btn btn-danger" onclick={handleDeleteClick}>
               {$t('Delete')}
             </button>
           {/if}
@@ -657,27 +657,6 @@
   .error-message {
     color: var(--color-error);
     margin-block-end: 1rem;
-  }
-
-  .retry-button {
-    padding: 0.75rem 1.5rem;
-    border: 1px solid var(--color-primary);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-primary);
-    color: var(--color-surface);
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .retry-button:hover {
-    background-color: var(--color-interactive-primary-hover);
-    border-color: var(--color-interactive-primary-hover);
-  }
-
-  .retry-button:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--color-focus-ring);
   }
 
   .preview-content {
@@ -858,36 +837,5 @@
     display: flex;
     gap: 0.5rem;
     align-items: flex-start;
-  }
-
-  .action-button {
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-surface);
-    color: var(--color-text-primary);
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .action-button:hover {
-    background-color: var(--color-surface-hover);
-    border-color: var(--color-border-hover);
-  }
-
-  .action-button:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--color-focus-ring);
-  }
-
-  .download-button:hover {
-    color: var(--color-interactive-secondary);
-    border-color: var(--color-interactive-secondary);
-  }
-
-  .delete-button:hover {
-    color: var(--color-error);
-    border-color: var(--color-error);
   }
 </style>
