@@ -775,6 +775,7 @@
             transformWarnings={spinePreviewData.transformWarnings}
             onPreviewClick={handlePreviewClick}
             onNavigate={handleNavigationClick}
+            chapterId={spinePreviewData.spineItemId}
           />
         {:else}
           <div class="placeholder-content">

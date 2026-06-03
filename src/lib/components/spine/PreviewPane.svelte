@@ -17,6 +17,7 @@
   import { writable } from 'svelte/store';
   import type { TransformError } from '$lib/types/spine-editor.js';
   import { t } from '$lib/i18n';
+  import ChapterValidationPanel from './ChapterValidationPanel.svelte';
 
   // Props using Svelte 5 runes syntax
   let {
@@ -26,6 +27,7 @@
     transformWarnings = [],
     onNavigate = undefined,
     onPreviewClick = null,
+    chapterId = null,
   }: {
     xhtmlContent?: string;
     isTransforming?: boolean;
@@ -35,6 +37,8 @@
     onPreviewClick?:
       | ((detail: { text: string; documentPosition: number; elementType: string }) => void)
       | null;
+    /** Selected spine-item id, used to filter the validation report to this chapter. */
+    chapterId?: string | null;
   } = $props();
 
   // --- Accessibility check -----------------------------------------------------
@@ -922,6 +926,9 @@
       {/if}
     </div>
   {/if}
+
+  <!-- Validation report reference (shares this band with the a11y panel) -->
+  <ChapterValidationPanel {chapterId} />
 
   <!-- Preview content -->
   <div class="preview-content" bind:this={previewContentEl}>

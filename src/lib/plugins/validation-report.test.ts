@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import {
   VALIDATION_REPORT_STORAGE_KEY,
   readValidationReport,
+  readAddressedIndices,
+  writeAddressedIndices,
   chapterIdOf,
   messagesForChapter,
   chaptersWithIssues,
@@ -44,6 +46,24 @@ describe('readValidationReport', () => {
   it('returns null for a wrong-shaped object', () => {
     localStorage.setItem(VALIDATION_REPORT_STORAGE_KEY, JSON.stringify({ filename: 'x' }));
     expect(readValidationReport()).toBeNull();
+  });
+});
+
+describe('addressed-index persistence', () => {
+  beforeEach(() => localStorage.clear());
+
+  it('round-trips indices for the matching report timestamp', () => {
+    writeAddressedIndices(1000, [0, 2, 5]);
+    expect(readAddressedIndices(1000)).toEqual([0, 2, 5]);
+  });
+
+  it('returns [] when the stored timestamp does not match (re-validated)', () => {
+    writeAddressedIndices(1000, [0, 2]);
+    expect(readAddressedIndices(2000)).toEqual([]);
+  });
+
+  it('returns [] when nothing is stored', () => {
+    expect(readAddressedIndices(1000)).toEqual([]);
   });
 });
 

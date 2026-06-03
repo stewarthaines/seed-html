@@ -11,6 +11,9 @@
 /** localStorage key the plugin writes and the core reads (the `editme_` convention). */
 export const VALIDATION_REPORT_STORAGE_KEY = 'editme_validation_report';
 
+/** localStorage key for the author's self-tracked "addressed" ticks. */
+export const VALIDATION_ADDRESSED_STORAGE_KEY = 'editme_validation_addressed';
+
 export interface ValidationMessage {
   level: 'error' | 'warning' | 'info';
   /** epubcheck rule id, e.g. "RSC-007". */
@@ -73,6 +76,44 @@ export function messagesForChapter(
   return report.messages.filter(
     (m) => m.location != null && chapterIdOf(m.location.path) === chapterId
   );
+}
+
+/**
+ * Read the addressed-message indices the author has ticked, but only when they
+ * belong to the current report (`timestamp` match) — a re-validation produces a new
+ * timestamp, so its checklist starts empty. Never throws.
+ */
+export function readAddressedIndices(timestamp: number): number[] {
+  try {
+    const raw = localStorage.getItem(VALIDATION_ADDRESSED_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      (parsed as { timestamp?: unknown }).timestamp === timestamp &&
+      Array.isArray((parsed as { indices?: unknown }).indices)
+    ) {
+      return (parsed as { indices: unknown[] }).indices.filter(
+        (i): i is number => typeof i === 'number'
+      );
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+/** Persist the addressed-message indices for `timestamp`. Best-effort. */
+export function writeAddressedIndices(timestamp: number, indices: number[]): void {
+  try {
+    localStorage.setItem(
+      VALIDATION_ADDRESSED_STORAGE_KEY,
+      JSON.stringify({ timestamp, indices })
+    );
+  } catch {
+    // Non-fatal: ticks just won't survive a reload.
+  }
 }
 
 export interface ChapterIssueSummary {

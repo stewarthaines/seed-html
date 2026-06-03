@@ -1,17 +1,20 @@
 <!--
   Chapter Validation Panel
 
-  Read-only reference panel that surfaces the latest epubcheck report (dropped into
-  localStorage by the publish plugin) inside the spine editor. Shows the current
-  chapter's issues, lets the author tick them off as they fix, and offers one-click
-  jumps to the other chapters that still have issues — so the fix-many-errors loop
-  no longer round-trips through the Publish view.
+  Read-only reference band that surfaces the latest epubcheck report (dropped into
+  localStorage by the publish plugin) inside the spine item's preview pane — sharing
+  the position of the accessibility panel. Shows the current chapter's issues, lets
+  the author tick them off as they fix (persisted, so progress survives chapter hops
+  and reloads), and offers one-click jumps to the other chapters that still have
+  issues — so the fix-many-errors loop no longer round-trips through the Publish view.
 -->
 
 <script lang="ts">
   import { SvelteSet } from 'svelte/reactivity';
   import {
     readValidationReport,
+    readAddressedIndices,
+    writeAddressedIndices,
     chapterIdOf,
     chaptersWithIssues,
     VALIDATION_REPORT_STORAGE_KEY,
@@ -21,39 +24,42 @@
 
   let { chapterId = null }: { chapterId?: string | null } = $props();
 
-  let report = $state<ValidationReport | null>(readValidationReport());
+  const initialReport = readValidationReport();
+  let report = $state<ValidationReport | null>(initialReport);
   let open = $state(true);
-  // Author's self-tracked progress. Keyed by `${timestamp}:${index}` so a
-  // re-validation (new timestamp) naturally invalidates every tick.
-  const checked = new SvelteSet<string>();
+  // Author's self-tracked progress, keyed by the message's index in the full report.
+  // Persisted under the report's timestamp, so a re-validation starts a fresh list.
+  const checked = new SvelteSet<number>(
+    initialReport ? readAddressedIndices(initialReport.timestamp) : []
+  );
 
-  // Re-read when the plugin re-validates while this view is still mounted, and drop
-  // any stale ticks (their keys can't match a fresh report's timestamp anyway).
+  // Re-read when the plugin re-validates while this view is still mounted, reseeding
+  // ticks from whatever was persisted for the new report (empty for a fresh one).
   $effect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key !== null && e.key !== VALIDATION_REPORT_STORAGE_KEY) return;
       report = readValidationReport();
       checked.clear();
+      if (report) for (const i of readAddressedIndices(report.timestamp)) checked.add(i);
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
   });
 
   // Messages for the current chapter, paired with their index in the full report so
-  // each row gets a stable tick key.
+  // each row has a stable tick key.
   const thisChapter = $derived(
     (report?.messages ?? [])
       .map((msg, index) => ({ msg, index }))
       .filter(({ msg }) => msg.location != null && chapterIdOf(msg.location.path) === chapterId)
   );
   const others = $derived(chaptersWithIssues(report).filter(c => c.chapterId !== chapterId));
-  const keyOf = (index: number) => `${report?.timestamp ?? 0}:${index}`;
-  const addressed = $derived(thisChapter.filter(({ index }) => checked.has(keyOf(index))).length);
+  const addressed = $derived(thisChapter.filter(({ index }) => checked.has(index)).length);
 
   function toggle(index: number): void {
-    const key = keyOf(index);
-    if (checked.has(key)) checked.delete(key);
-    else checked.add(key);
+    if (checked.has(index)) checked.delete(index);
+    else checked.add(index);
+    if (report) writeAddressedIndices(report.timestamp, [...checked]);
   }
 
   function jumpTo(itemId: string): void {
@@ -76,7 +82,7 @@
 </script>
 
 {#if report}
-  <div class="vpanel" class:collapsed={!open}>
+  <div class="vpanel" class:open>
     <button
       type="button"
       class="vpanel-toggle"
@@ -88,16 +94,14 @@
         {thisChapter.length === 0 ? '✓' : thisChapter.length}
       </span>
       <span class="vpanel-toggle-label">Validation</span>
+      <span class="vpanel-meta-inline">
+        {report.filename} · validated {validatedAgo(report.timestamp)}
+      </span>
       <span class="vpanel-caret">{open ? '▾' : '▸'}</span>
     </button>
 
     {#if open}
       <div class="vpanel-body" role="region" aria-label="Validation issues for this chapter">
-        <div class="vpanel-meta">
-          <span class="vpanel-file" title={report.filename}>{report.filename}</span>
-          <span class="vpanel-time">validated {validatedAgo(report.timestamp)}</span>
-        </div>
-
         <div class="vpanel-section-head">
           <strong>This chapter</strong>
           {#if thisChapter.length > 0}
@@ -110,7 +114,7 @@
         {:else}
           <ul class="vpanel-list">
             {#each thisChapter as { msg, index } (index)}
-              {@const done = checked.has(keyOf(index))}
+              {@const done = checked.has(index)}
               <li class="vpanel-item" class:done>
                 <label class="vpanel-check">
                   <input type="checkbox" checked={done} onchange={() => toggle(index)} />
@@ -156,37 +160,34 @@
 {/if}
 
 <style>
+  /* Sits in the preview pane's flow as a band, mirroring the a11y panel. */
   .vpanel {
-    position: absolute;
-    right: var(--space-3);
-    bottom: var(--space-3);
-    z-index: 20;
-    width: 320px;
-    max-width: calc(100% - var(--space-6));
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-md);
+    border-bottom: 1px solid var(--color-border-default);
     background: var(--color-bg-secondary);
-    box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.15));
     font-size: var(--text-sm);
-    overflow: hidden;
   }
 
-  .vpanel.collapsed {
-    width: auto;
+  .vpanel.open {
+    max-height: 40vh;
+    overflow-y: auto;
   }
 
   .vpanel-toggle {
+    position: sticky;
+    top: 0;
+    z-index: 1;
     display: flex;
     align-items: center;
     gap: var(--space-2);
+    width: 100%;
     padding: var(--space-2) var(--space-3);
     border: none;
-    background: var(--color-bg-tertiary);
+    border-bottom: 1px solid var(--color-border-default);
+    background: var(--color-bg-secondary);
     color: var(--color-text-primary);
     cursor: pointer;
     font-size: var(--text-sm);
+    text-align: left;
   }
 
   .vpanel-chip {
@@ -212,33 +213,19 @@
     font-weight: 600;
   }
 
-  .vpanel-caret {
-    margin-left: auto;
-    color: var(--color-text-secondary);
-  }
-
-  .vpanel-body {
-    max-height: 50vh;
-    overflow-y: auto;
-    border-top: 1px solid var(--color-border-default);
-  }
-
-  .vpanel-meta {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: var(--space-1) var(--space-2);
-    padding: var(--space-2) var(--space-3);
-    color: var(--color-text-secondary);
-    font-size: var(--text-xs);
-    border-bottom: 1px solid var(--color-border-default);
-  }
-
-  .vpanel-file {
+  .vpanel-meta-inline {
+    flex: 1;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 60%;
+    color: var(--color-text-secondary);
+    font-size: var(--text-xs);
+  }
+
+  .vpanel-caret {
+    flex-shrink: 0;
+    color: var(--color-text-secondary);
   }
 
   .vpanel-section-head {
