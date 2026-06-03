@@ -8,38 +8,54 @@ export interface ValidationReport {
   warningCount: number;
   messages: Array<{
     level: 'error' | 'warning' | 'info';
+    /** epubcheck rule id, e.g. "RSC-007". */
+    id?: string;
     message: string;
-    location?: string;
+    /** Where the issue is — the referencing file and position. */
+    location?: { path: string; line?: number; column?: number };
+    /** epubcheck's fix suggestion, when offered. */
+    suggestion?: string;
   }>;
+}
+
+// epubcheck severities: fatal | error | warning | info | usage. Fold to the three
+// the report renders so fatals count as errors and usage notes read as info.
+function toLevel(severity: string): 'error' | 'warning' | 'info' {
+  if (severity === 'fatal' || severity === 'error') return 'error';
+  if (severity === 'warning') return 'warning';
+  return 'info';
 }
 
 export async function validateEpub(file: File): Promise<ValidationReport> {
   const buffer = await file.arrayBuffer();
-  const messages: ValidationReport['messages'] = [];
 
   try {
     const result = await EpubCheck.validate(new Uint8Array(buffer));
 
-    // Extract messages from epubcheck result
-    if (result.messages) {
-      messages.push(
-        ...result.messages.map((msg: any) => ({
-          level: msg.severity?.toLowerCase() || 'info',
-          message: msg.message,
-          location: msg.path || undefined,
-        })),
-      );
-    }
-
-    const errorCount = messages.filter((m) => m.level === 'error').length;
-    const warningCount = messages.filter((m) => m.level === 'warning').length;
+    const messages: ValidationReport['messages'] = (result.messages ?? []).map(
+      (msg) => ({
+        level: toLevel(msg.severity),
+        id: msg.id || undefined,
+        message: msg.message,
+        // The path lives at msg.location.path (not msg.path) — this is what was missing.
+        location: msg.location
+          ? {
+              path: msg.location.path,
+              line: msg.location.line,
+              column: msg.location.column,
+            }
+          : undefined,
+        suggestion: msg.suggestion || undefined,
+      }),
+    );
 
     return {
       filename: file.name,
-      isValid: errorCount === 0,
+      isValid: result.valid,
       timestamp: Date.now(),
-      errorCount,
-      warningCount,
+      // Use epubcheck's own counts so fatal errors are included.
+      errorCount: result.fatalCount + result.errorCount,
+      warningCount: result.warningCount,
       messages,
     };
   } catch (error) {

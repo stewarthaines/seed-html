@@ -68,8 +68,18 @@ export interface InsertMessage {
   content: string;
 }
 
+/**
+ * plugin → main, asks the host to open the editor resource at `path` (a
+ * container-relative path such as `OEBPS/Text/chapter.xhtml`). The host resolves
+ * it to the relevant view; non-resolvable paths are ignored.
+ */
+export interface NavigateMessage {
+  type: 'navigate';
+  path: string;
+}
+
 export type MainToPlugin = InitMessage;
-export type PluginToMain = PluginReadyMessage | InsertMessage;
+export type PluginToMain = PluginReadyMessage | InsertMessage | NavigateMessage;
 
 /** Build an `init` message for a given output-dir handle. */
 export function createInitMessage(
@@ -107,5 +117,15 @@ export function isInsertMessage(value: unknown): value is InsertMessage {
     value !== null &&
     (value as { type?: unknown }).type === 'insert' &&
     typeof (value as { content?: unknown }).content === 'string'
+  );
+}
+
+/** Runtime guard: is this a `navigate` message carrying a string path? */
+export function isNavigateMessage(value: unknown): value is NavigateMessage {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    (value as { type?: unknown }).type === 'navigate' &&
+    typeof (value as { path?: unknown }).path === 'string'
   );
 }

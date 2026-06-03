@@ -2,7 +2,7 @@
   import { t } from '$lib/i18n';
   import { downloadBlob } from '$lib/zip/index.js';
   import type { PublishService, PublishedEpub } from '$lib/services/publish/publish.service.js';
-  import { createInitMessage, isPluginReadyMessage } from '$lib/plugins/contract';
+  import { createInitMessage, isPluginReadyMessage, isNavigateMessage } from '$lib/plugins/contract';
 
   interface Props {
     publishService: PublishService;
@@ -52,6 +52,16 @@
       if (event.origin !== window.location.origin) return;
       if (isPluginReadyMessage(event.data)) {
         void sendPluginInit();
+      } else if (isNavigateMessage(event.data)) {
+        // Open the chapter for a content-document path by reusing the core's
+        // spine selection event. The id is the file basename (same as the nav
+        // preview's click-to-navigate), which also drops any OEBPS/ prefix.
+        const match = event.data.path.match(/([^/]+)\.xhtml(?:#.*)?$/);
+        if (match) {
+          window.dispatchEvent(
+            new CustomEvent('select-spine-item', { detail: { itemId: match[1] } })
+          );
+        }
       }
     };
     const onPackaged = () => void sendPluginInit();

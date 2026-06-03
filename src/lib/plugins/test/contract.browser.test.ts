@@ -3,6 +3,7 @@ import {
   createInitMessage,
   isInitMessage,
   isInsertMessage,
+  isNavigateMessage,
   isPluginReadyMessage,
   type PluginManifestEntry,
 } from '../contract';
@@ -38,6 +39,13 @@ describe('contract message shapes', () => {
     expect(isInsertMessage({ type: 'insert', content: 1 })).toBe(false);
     expect(isInsertMessage({ type: 'init' })).toBe(false);
     expect(isInsertMessage(null)).toBe(false);
+  });
+
+  it('isNavigateMessage requires a string path', () => {
+    expect(isNavigateMessage({ type: 'navigate', path: 'OEBPS/Text/c.xhtml' })).toBe(true);
+    expect(isNavigateMessage({ type: 'navigate' })).toBe(false);
+    expect(isNavigateMessage({ type: 'navigate', path: 7 })).toBe(false);
+    expect(isNavigateMessage({ type: 'insert', content: 'x' })).toBe(false);
   });
 
   it('isPluginReadyMessage matches the handshake (pluginType optional)', () => {

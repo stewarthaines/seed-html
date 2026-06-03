@@ -19,7 +19,12 @@
     loadValidationReport,
     deleteValidationReport,
   } from './epub-validation.js';
-  import type { RemoteConfig, RemotesStore, S3Object } from './types.js';
+  import type {
+    RemoteConfig,
+    RemotesStore,
+    S3Object,
+    NavigateMessage,
+  } from './types.js';
   import type { ValidationReport } from './epub-validation.js';
   import ConfigureForm from './components/ConfigureForm.svelte';
   import LocalEpubList from './components/LocalEpubList.svelte';
@@ -277,6 +282,12 @@
     showValidationModal = true;
   }
 
+  // Ask the host (same-origin parent) to open the chapter for a content path.
+  function onValidationNavigate(path: string) {
+    const message: NavigateMessage = { type: 'navigate', path };
+    window.parent.postMessage(message, window.origin);
+  }
+
   async function onUploadEpub(epub: File) {
     if (!activeRemote) return;
     uploading = true;
@@ -506,6 +517,7 @@
     report={validationModalReport}
     show={showValidationModal}
     onClose={() => (showValidationModal = false)}
+    onNavigate={onValidationNavigate}
   />
 </div>
 

@@ -5,11 +5,31 @@
     report,
     show,
     onClose,
+    onNavigate,
   }: {
     report: ValidationReport | null;
     show: boolean;
     onClose: () => void;
+    /** Open the chapter for a content-document path (e.g. OEBPS/Text/chapter.xhtml). */
+    onNavigate?: (path: string) => void;
   } = $props();
+
+  function formatLocation(loc: {
+    path: string;
+    line?: number;
+    column?: number;
+  }): string {
+    if (loc.line != null) {
+      return loc.column != null
+        ? `${loc.path} (line ${loc.line}, col ${loc.column})`
+        : `${loc.path} (line ${loc.line})`;
+    }
+    return loc.path;
+  }
+
+  function isXhtml(path: string): boolean {
+    return /\.xhtml(?:#.*)?$/i.test(path);
+  }
 </script>
 
 {#if show && report}
@@ -59,11 +79,31 @@
               class:error={msg.level === 'error'}
               class:warning={msg.level === 'warning'}
             >
-              <span class="level">{msg.level.toUpperCase()}</span>
-              {#if msg.location}
-                <span class="location">{msg.location}</span>
+              <div class="message-head">
+                <span class="level">{msg.level.toUpperCase()}</span>
+                {#if msg.id}
+                  <span class="rule-id">{msg.id}</span>
+                {/if}
+                {#if msg.location}
+                  {@const path = msg.location.path}
+                  {#if onNavigate && isXhtml(path)}
+                    <button
+                      type="button"
+                      class="location location-link"
+                      onclick={() => onNavigate?.(path)}
+                      title="Open this chapter in the editor"
+                    >
+                      {formatLocation(msg.location)}
+                    </button>
+                  {:else}
+                    <span class="location">{formatLocation(msg.location)}</span>
+                  {/if}
+                {/if}
+              </div>
+              <p class="message-text">{msg.message}</p>
+              {#if msg.suggestion}
+                <p class="suggestion">💡 {msg.suggestion}</p>
               {/if}
-              <p>{msg.message}</p>
             </div>
           {/each}
         </div>
@@ -164,11 +204,46 @@
   .message .location {
     color: #999;
     font-size: 11px;
-    margin-right: 8px;
+  }
+
+  .message-head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+  }
+
+  .message .rule-id {
+    font-family: monospace;
+    font-size: 11px;
+    color: #555;
+    background: rgba(0, 0, 0, 0.06);
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
+
+  .message .location-link {
+    color: #0074d9;
+    background: none;
+    border: none;
+    margin: 0;
+    padding: 0;
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  .message .location-link:hover {
+    color: #0051a0;
   }
 
   .message p {
     margin: 4px 0 0 0;
+  }
+
+  .message .suggestion {
+    color: #2e7d32;
   }
 
   .modal-footer {

@@ -6,8 +6,15 @@ export type InitMessage = {
   opfsDirHandle: FileSystemDirectoryHandle;
 };
 
+// plugin → main: ask the host to open the editor resource at `path` (e.g. a
+// content document flagged by epubcheck). The host resolves and navigates.
+export type NavigateMessage = {
+  type: 'navigate';
+  path: string;
+};
+
 export type MainToPlugin = InitMessage;
-export type PluginToMain = never;
+export type PluginToMain = NavigateMessage;
 
 // Remote Configuration and Objects
 
