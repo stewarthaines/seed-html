@@ -27,7 +27,7 @@
 </script>
 
 <div class="workspace-action-bar">
-  <h3 class="section-title">{$t('Get Started')}</h3>
+  <h2 class="section-title">{$t('Get Started')}</h2>
   <div class="action-buttons">
     <button
       type="button"

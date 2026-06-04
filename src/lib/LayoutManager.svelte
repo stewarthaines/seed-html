@@ -67,7 +67,7 @@
     {sidebarFooter}
   />
 
-  <div class="main-content">
+  <main class="main-content">
     {#if showPreviewPane}
       <PaneGroup direction="horizontal" autoSaveId="editme-content-panes">
         <Pane defaultSize={50} minSize={25}>
@@ -90,7 +90,7 @@
         {@render leftContent?.()}
       </div>
     {/if}
-  </div>
+  </main>
 </div>
 
 <style>

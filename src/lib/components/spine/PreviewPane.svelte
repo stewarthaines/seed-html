@@ -869,7 +869,7 @@
           aria-pressed={validationPanelOpen}
           title="Validation report (epubcheck) for this chapter"
         >
-          Validation
+          Validation report
           {#if validationChapterCount > 0}
             <span class="a11y-count">{validationChapterCount}</span>
           {/if}
@@ -1436,7 +1436,7 @@
     justify-content: space-between;
     align-items: center;
     font-size: var(--text-xs);
-    color: var(--color-text-tertiary);
+    color: var(--color-text-secondary);
   }
 
   .meta-info > span {

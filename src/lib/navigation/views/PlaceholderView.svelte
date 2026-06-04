@@ -96,7 +96,7 @@
     {/if}
   </header>
 
-  <main class="view-content">
+  <div class="view-content">
     <div class="placeholder-content">
       <div class="placeholder-icon">
         <span class="large-icon">{icon}</span>
@@ -168,7 +168,7 @@
         </div>
       {/if}
     </div>
-  </main>
+  </div>
 </div>
 
 <style>
@@ -254,7 +254,7 @@
   .placeholder-description {
     margin: 0 0 var(--space-8) 0;
     font-size: var(--text-base);
-    color: var(--color-text-secondary);
+    color: var(--color-text-primary);
     line-height: var(--leading-relaxed);
   }
 

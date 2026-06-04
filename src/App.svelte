@@ -97,6 +97,22 @@
 
   // Reactive getters for template access
   let currentView = $derived($navigationStore.currentView);
+  // Single canonical page heading per view (visually hidden) for screen readers, so
+  // every view satisfies "page should contain a level-one heading".
+  let viewTitle = $derived(
+    (
+      {
+        about: $t('About'),
+        workspace: $t('Projects'),
+        metadata: $t('Metadata'),
+        manifest: $t('Manifest'),
+        navigation: $t('Navigation'),
+        spine: $t('Spine'),
+        publish: $t('Publish'),
+        settings: $t('Settings'),
+      } as Record<string, string>
+    )[currentView] ?? 'EDITME'
+  );
   let isExpanded = $derived($layoutStore.sidebar.isExpanded);
   let currentWorkspaceId = $derived(appState?.currentWorkspaceId);
   let selectedSpineItemId = $derived(appState?.selectedChapterId); // renamed in enhanced
@@ -592,6 +608,7 @@
     {/snippet}
 
     {#snippet leftContent()}
+      <h1 class="sr-only">{viewTitle}</h1>
       <!-- Main content area - switches based on current view -->
       {#if currentView === 'about'}
         <AboutView />
@@ -838,7 +855,7 @@
   }
   .placeholder-content {
     padding: 1rem;
-    color: var(--color-text-secondary);
+    color: var(--color-text-primary);
   }
 
   .placeholder-content h3 {

@@ -296,7 +296,7 @@
 </script>
 
 <div class="workspace-view">
-  <main class="view-content">
+  <div class="view-content">
     <!-- Action Bar -->
     <WorkspaceActionBar
       isLoading={loading}
@@ -334,7 +334,7 @@
         <span>{$t('You have unsaved changes')}</span>
       </div>
     {/if}
-  </main>
+  </div>
 </div>
 
 <style>

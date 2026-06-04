@@ -69,7 +69,7 @@
 
   .app-version {
     font-size: var(--text-sm);
-    color: var(--color-text-tertiary);
+    color: var(--color-text-secondary);
     margin: 0;
   }
 

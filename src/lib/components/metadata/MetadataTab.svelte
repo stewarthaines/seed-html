@@ -39,7 +39,7 @@
   {disabled}
   onclick={handleClick}
   onkeydown={handleKeydown}
-  aria-controls="metadata-panel-{id}"
+  aria-controls={active ? `metadata-panel-${id}` : undefined}
   id="metadata-tab-{id}"
 >
   <span class="tab-label">{label}</span>

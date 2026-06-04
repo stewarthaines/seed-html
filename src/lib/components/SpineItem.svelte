@@ -34,13 +34,6 @@
     onDelete,
   }: Props = $props();
 
-  function handleKeyDown(event: KeyboardEvent & { currentTarget: EventTarget & HTMLDivElement }) {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      onSelect();
-    }
-  }
-
   // Focus management for move buttons
   async function handleMoveUpKeyboard(
     event: KeyboardEvent & { currentTarget: EventTarget & HTMLButtonElement }
@@ -119,12 +112,6 @@
   class:compact
   class:selected={isSelected}
   class:has-error={item.hasSourceFile === false || !item.linear}
-  onclick={onSelect}
-  onkeydown={handleKeyDown}
-  role="button"
-  tabindex="0"
-  aria-pressed={isSelected}
-  aria-label={`${item.id}${!item.hasSourceFile ? ', has validation error' : ''}`}
 >
   {#if !compact && isExpanded}
     <div class="drag-handle" {...dragHandleProps} tabindex="-1" aria-hidden="true">
@@ -134,7 +121,15 @@
     </div>
   {/if}
 
-  <span class="chapter-id">{displayLabel}</span>
+  <button
+    type="button"
+    class="spine-select"
+    onclick={onSelect}
+    aria-pressed={isSelected}
+    aria-label={`${item.id}${!item.hasSourceFile ? ', has validation error' : ''}`}
+  >
+    <span class="chapter-id">{displayLabel}</span>
+  </button>
 
   {#if showMoveButtons}
     <div class="move-buttons" aria-label="Item controls">
@@ -222,7 +217,29 @@
     background: var(--color-bg-tertiary);
   }
 
-  .spine-item:focus-visible {
+  /* Selection is a real button so the row isn't an interactive control wrapping the
+     move/delete buttons (which would nest interactive controls). It fills the row and
+     resets button chrome so the appearance is unchanged. */
+  .spine-select {
+    flex: 1;
+    min-inline-size: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .spine-item.compact .spine-select {
+    justify-content: center;
+  }
+
+  .spine-select:focus-visible {
     outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
     /* Inset the ring so it sits inside the row rather than bleeding into the
        rows above/below. */

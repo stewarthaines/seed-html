@@ -54,7 +54,7 @@ SOFTWARE.`;
 <div class="thirdparty-view">
   <div class="thirdparty-content">
     <header class="thirdparty-header">
-      <h1>{$t('about.thirdparty.title')}</h1>
+      <h2>{$t('about.thirdparty.title')}</h2>
       <p class="thirdparty-intro">{$t('about.thirdparty.intro')}</p>
     </header>
 
@@ -104,7 +104,7 @@ SOFTWARE.`;
     border-bottom: 1px solid var(--color-border-default);
   }
 
-  .thirdparty-header h1 {
+  .thirdparty-header h2 {
     font-size: var(--text-2xl);
     font-weight: var(--font-bold);
     color: var(--color-text-primary);
@@ -171,7 +171,7 @@ SOFTWARE.`;
   .library-version {
     font-size: var(--text-sm);
     font-weight: var(--font-normal);
-    color: var(--color-text-tertiary);
+    color: var(--color-text-secondary);
     background: var(--color-bg-tertiary);
     padding: var(--space-1) var(--space-2);
     border-radius: var(--radius-xs);
@@ -185,7 +185,7 @@ SOFTWARE.`;
 
   .library-copyright {
     font-size: var(--text-xs);
-    color: var(--color-text-tertiary);
+    color: var(--color-text-secondary);
     margin: var(--space-1) 0 0 0;
     font-family: var(--font-mono);
   }
@@ -209,7 +209,7 @@ SOFTWARE.`;
       padding: var(--space-3);
     }
 
-    .thirdparty-header h1 {
+    .thirdparty-header h2 {
       font-size: var(--text-xl);
     }
 

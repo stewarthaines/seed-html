@@ -219,7 +219,6 @@
 
   .empty-state .hint {
     font-size: var(--text-sm);
-    opacity: 0.8;
   }
 
   .epub-table {

@@ -99,7 +99,7 @@
     {:else if workspaces.length === 0}
       <div class="empty-state">
         <div class="empty-tips">
-          <h5 class="tips-title">{$t('Quick Start Tips:')}</h5>
+          <h3 class="tips-title">{$t('Quick Start Tips:')}</h3>
           <ul class="tips-list">
             <li>{$t('Create New: Start with a minimal project')}</li>
             <li>{$t('Load EPUB: Load .epub file from the filesystem')}</li>
@@ -114,7 +114,7 @@
     {:else if filteredWorkspaces.length === 0}
       <div class="no-results">
         <div class="no-results-icon" aria-hidden="true">🔍</div>
-        <h4 class="no-results-title">{$t('No projects found')}</h4>
+        <h3 class="no-results-title">{$t('No projects found')}</h3>
         <p class="no-results-description">
           {$t('No projects match your search for "{query}"', { query: searchQuery })}
         </p>

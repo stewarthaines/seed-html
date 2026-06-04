@@ -746,7 +746,6 @@
   }
 
   .manifest-row.source-zip-item {
-    opacity: 0.8;
     font-style: italic;
     background-color: var(--color-bg-muted, rgba(0, 0, 0, 0.05));
   }

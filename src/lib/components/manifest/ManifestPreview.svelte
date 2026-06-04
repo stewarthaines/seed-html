@@ -640,7 +640,7 @@
 
   .no-selection-subtitle {
     font-size: 0.875rem;
-    opacity: 0.8;
+    color: var(--color-text-secondary);
   }
 
   .loading-state,

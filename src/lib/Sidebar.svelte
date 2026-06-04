@@ -126,7 +126,10 @@
       aria-expanded={isExpanded}
       aria-label={$t('Toggle sidebar')}
     >
-      {#if isExpanded}<CaretLeft size={16} />{:else}<CaretRight size={16} />{/if}
+      {#if isExpanded}<CaretLeft size={16} aria-hidden="true" />{:else}<CaretRight
+          size={16}
+          aria-hidden="true"
+        />{/if}
     </button>
 
     {#if isExpanded}
@@ -192,7 +195,11 @@
           title={$t(section.label)}
         >
           <span class="section-icon">
-            <Icon size={18} weight={activeSection === section.id ? 'fill' : 'regular'} />
+            <Icon
+              size={18}
+              weight={activeSection === section.id ? 'fill' : 'regular'}
+              aria-hidden="true"
+            />
           </span>
           {#if isExpanded}
             <span class="section-label">{$t(section.label)}</span>
@@ -212,7 +219,11 @@
             title={$t(section.label)}
           >
             <span class="section-icon">
-              <Icon size={18} weight={activeSection === section.id ? 'fill' : 'regular'} />
+              <Icon
+                size={18}
+                weight={activeSection === section.id ? 'fill' : 'regular'}
+                aria-hidden="true"
+              />
             </span>
             {#if isExpanded}
               <span class="section-label">{$t(section.label)}</span>
@@ -232,7 +243,7 @@
               aria-label={$t('Append Item')}
               title={$t('Append Item')}
             >
-              <Plus size={14} />
+              <Plus size={14} aria-hidden="true" />
             </button>
           </div>
         {:else}
@@ -244,7 +255,7 @@
               aria-label={$t('Append Item')}
               title={$t('Append Item')}
             >
-              <Plus size={14} />
+              <Plus size={14} aria-hidden="true" />
             </button>
           </div>
         {/if}
