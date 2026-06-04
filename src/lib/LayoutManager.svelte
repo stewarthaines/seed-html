@@ -8,6 +8,7 @@
   // Props
   let {
     hasWorkspace = false,
+    hasPublishedEpubs = false,
     currentWorkspace = null,
     workspaceTitle = undefined,
     extensionManager = null,
@@ -22,6 +23,7 @@
     sidebarFooter,
   }: {
     hasWorkspace?: boolean;
+    hasPublishedEpubs?: boolean;
     currentWorkspace?: any;
     workspaceTitle?: string | undefined;
     extensionManager?: any;
@@ -55,6 +57,7 @@
     isExpanded={sidebar.isExpanded}
     activeSection={sidebar.activeSection}
     {hasWorkspace}
+    {hasPublishedEpubs}
     {currentWorkspace}
     {workspaceTitle}
     {extensionManager}

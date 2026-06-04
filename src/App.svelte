@@ -113,6 +113,30 @@
     )[currentView] ?? 'EDITME'
   );
   let isExpanded = $derived($layoutStore.sidebar.isExpanded);
+
+  // Whether any packaged EPUBs exist in the OPFS /publish dir. Gates the Publish nav
+  // item — it's keyed to artifacts, not projects (you can have published epubs with
+  // no current project, or none despite having projects).
+  let hasPublishedEpubs = $state(false);
+  async function refreshHasPublishedEpubs(): Promise<void> {
+    try {
+      hasPublishedEpubs = (await publishService.listPublishedEpubs()).length > 0;
+    } catch {
+      hasPublishedEpubs = false;
+    }
+  }
+  // Re-check on first run and whenever the view changes (covers deletes done in the
+  // Publish view), plus right after a new epub is packaged.
+  $effect(() => {
+    void currentView;
+    void refreshHasPublishedEpubs();
+  });
+  $effect(() => {
+    const onPackaged = () => void refreshHasPublishedEpubs();
+    window.addEventListener('epub-packaged', onPackaged);
+    return () => window.removeEventListener('epub-packaged', onPackaged);
+  });
+
   let currentWorkspaceId = $derived(appState?.currentWorkspaceId);
   let selectedSpineItemId = $derived(appState?.selectedChapterId); // renamed in enhanced
   let initialized = $derived(appState?.initialized || false);
@@ -562,6 +586,7 @@
 {:else}
   <LayoutManager
     hasWorkspace={!!currentWorkspaceId}
+    {hasPublishedEpubs}
     currentWorkspace={currentWorkspaceState}
     {workspaceTitle}
     {extensionManager}

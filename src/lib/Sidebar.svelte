@@ -21,6 +21,7 @@
     isExpanded?: boolean;
     activeSection?: SidebarSection;
     hasWorkspace?: boolean;
+    hasPublishedEpubs?: boolean;
     currentWorkspace?: any;
     workspaceTitle?: string;
     extensionManager?: any;
@@ -39,6 +40,7 @@
     isExpanded = true,
     activeSection = 'workspace',
     hasWorkspace = false,
+    hasPublishedEpubs = false,
     currentWorkspace = null,
     workspaceTitle = undefined,
     extensionManager = null,
@@ -187,12 +189,14 @@
           {/if}
         {/if}
 
+        {@const disabled = section.id === 'publish' && !hasPublishedEpubs}
         <button
           class="sidebar-section"
           class:active={activeSection === section.id}
           onclick={() => setSidebarSection(section.id)}
+          {disabled}
           aria-current={activeSection === section.id ? 'page' : undefined}
-          title={$t(section.label)}
+          title={disabled ? $t('No published EPUBs yet') : $t(section.label)}
         >
           <span class="section-icon">
             <Icon
