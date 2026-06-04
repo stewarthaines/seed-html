@@ -51,13 +51,6 @@
     onDeleteRequested?.({ workspaceId: workspace.id });
   };
 
-  const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      handleSelect();
-    }
-  };
-
   // Format relative time
   const getRelativeTime = (date: Date): string => {
     const now = new Date();
@@ -79,58 +72,58 @@
   };
 </script>
 
-<div
-  class="workspace-item"
-  class:current={isCurrent}
-  class:error={hasError || workspace.hasError}
-  role="button"
-  tabindex="0"
-  onclick={handleSelect}
-  onkeydown={handleKeyDown}
-  aria-label={$t('Open project: {title}', { title: workspace.title })}
->
-  <div class="workspace-main">
-    <div class="workspace-icon-container">
-      {#if hasError || workspace.hasError}
-        <span class="workspace-icon error" aria-label={$t('Error')} title={$t('Project has errors')}
-          >⚠️</span
-        >
-      {:else}
-        <span class="workspace-icon" aria-hidden="true">📖</span>
-      {/if}
-    </div>
-
-    <div class="workspace-info">
-      <div class="workspace-header">
-        <h3 class="workspace-title">
-          {workspace.title}
-          {#if workspace.author}
-            <span class="workspace-author-inline"> - {workspace.author}</span>
-          {/if}
-          {#if isCurrent}
-            <span class="current-badge" aria-label={$t('Currently open')}>{$t('Current')}</span>
-          {/if}
-        </h3>
-        <span class="workspace-time">{getRelativeTime(workspace.lastModified)}</span>
+<div class="workspace-item" class:current={isCurrent} class:error={hasError || workspace.hasError}>
+  <button
+    type="button"
+    class="workspace-select"
+    onclick={handleSelect}
+    aria-label={$t('Open project: {title}', { title: workspace.title })}
+  >
+    <div class="workspace-main">
+      <div class="workspace-icon-container">
+        {#if hasError || workspace.hasError}
+          <span
+            class="workspace-icon error"
+            aria-label={$t('Error')}
+            title={$t('Project has errors')}>⚠️</span
+          >
+        {:else}
+          <span class="workspace-icon" aria-hidden="true">📖</span>
+        {/if}
       </div>
 
-      <div class="workspace-meta">
-        <span class="workspace-language">{workspace.language}</span>
-        <span class="meta-separator">•</span>
-        <span class="workspace-stats">
-          {#if details}
-            {details.fileCount}
-            {$t('files')}
-            {#if details.extensionIds && details.extensionIds.length > 0}
-              • {details.extensionIds.join(', ')}
+      <div class="workspace-info">
+        <div class="workspace-header">
+          <h3 class="workspace-title">
+            {workspace.title}
+            {#if workspace.author}
+              <span class="workspace-author-inline"> - {workspace.author}</span>
             {/if}
-          {:else}
-            <span class="stats-loading">…</span>
-          {/if}
-        </span>
+            {#if isCurrent}
+              <span class="current-badge" aria-label={$t('Currently open')}>{$t('Current')}</span>
+            {/if}
+          </h3>
+          <span class="workspace-time">{getRelativeTime(workspace.lastModified)}</span>
+        </div>
+
+        <div class="workspace-meta">
+          <span class="workspace-language">{workspace.language}</span>
+          <span class="meta-separator">•</span>
+          <span class="workspace-stats">
+            {#if details}
+              {details.fileCount}
+              {$t('files')}
+              {#if details.extensionIds && details.extensionIds.length > 0}
+                • {details.extensionIds.join(', ')}
+              {/if}
+            {:else}
+              <span class="stats-loading">…</span>
+            {/if}
+          </span>
+        </div>
       </div>
     </div>
-  </div>
+  </button>
 
   <div class="workspace-actions">
     <button
@@ -166,7 +159,24 @@
     box-shadow: var(--shadow-sm);
   }
 
-  .workspace-item:focus-visible {
+  /* The selectable area is a real button so the row isn't an interactive control
+     wrapping the delete button (which would nest interactive controls). It fills the
+     row and resets button chrome so the appearance is unchanged. */
+  .workspace-select {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .workspace-select:focus-visible {
     outline: none;
     border-color: var(--color-primary);
     box-shadow: inset 0 0 0 2px var(--color-focus-ring);

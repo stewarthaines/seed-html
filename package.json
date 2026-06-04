@@ -24,7 +24,7 @@
     "screenshots": "node scripts/capture-screenshots.js",
     "test:a11y": "node scripts/a11y-scan.mjs",
     "worktree": "bash scripts/new-worktree.sh",
-    "lint": "eslint . --ext .js,.ts,.svelte --max-warnings 320",
+    "lint": "eslint . --ext .js,.ts,.svelte --max-warnings 312",
     "lint:fix": "eslint . --ext .js,.ts,.svelte --fix",
     "validate": "npm run check && npm run lint && npm run format:check && npm run test",
     "format": "prettier --write .",

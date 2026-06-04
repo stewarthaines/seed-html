@@ -379,16 +379,16 @@
 
   .no-workspace-message,
   .loading-message {
-    color: var(--text-muted, #666);
+    color: var(--color-text-secondary);
     font-style: italic;
   }
 
   .error-message {
-    background: var(--error-bg, #fee);
-    color: var(--error-text, #c33);
+    background: var(--color-error-bg);
+    color: var(--color-error-text);
     padding: 0.75rem;
     border-radius: 0.25rem;
-    border: 1px solid var(--error-border, #fcc);
+    border: 1px solid var(--color-border-error);
     margin-bottom: 1rem;
   }
 
@@ -407,7 +407,7 @@
   }
 
   section {
-    border: 1px solid var(--border-color, #ddd);
+    border: 1px solid var(--color-border-default);
     border-radius: 0.5rem;
     padding: 1.5rem;
   }
@@ -416,7 +416,7 @@
     margin: 0 0 1rem 0;
     font-size: 1.25rem;
     font-weight: 500;
-    color: var(--text-primary, #333);
+    color: var(--color-text-primary);
   }
 
   .setting-group {
@@ -437,12 +437,12 @@
 
   .setting-text {
     font-weight: 500;
-    color: var(--text-primary, #333);
+    color: var(--color-text-primary);
   }
 
   .setting-description {
     margin: 0.5rem 0 0 1.75rem;
-    color: var(--text-muted, #666);
+    color: var(--color-text-secondary);
     font-size: 0.875rem;
     line-height: 1.4;
   }
@@ -451,30 +451,30 @@
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
-    color: var(--text-primary, #333);
+    color: var(--color-text-primary);
   }
 
   .template-input {
     width: 100%;
     padding: 0.5rem;
-    border: 1px solid var(--border-color, #ddd);
+    border: 1px solid var(--color-border-default);
     border-radius: 0.25rem;
     font-family: var(--font-mono, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace);
     font-size: 0.875rem;
-    background: var(--input-bg, #fff);
-    color: var(--text-primary, #333);
+    background: var(--color-input-bg);
+    color: var(--color-text-primary);
   }
 
   .template-input:focus {
     outline: none;
-    border-color: var(--focus-color, #007acc);
+    border-color: var(--color-focus);
     box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.2);
   }
 
   .template-input:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    background: var(--input-disabled-bg, #f5f5f5);
+    background: var(--color-surface-disabled);
   }
 
   .extension-import {
@@ -485,13 +485,13 @@
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
-    color: var(--text-primary, #333);
+    color: var(--color-text-primary);
   }
 
   .extension-import input[type='file'] {
     width: 100%;
     padding: 0.5rem;
-    border: 1px solid var(--border-color, #ddd);
+    border: 1px solid var(--color-border-default);
     border-radius: 0.25rem;
     cursor: pointer;
   }
@@ -502,7 +502,8 @@
   }
 
   .extension-import.disabled {
-    opacity: 0.6;
+    /* No opacity dimming — it drags the note text below AA contrast in dark mode.
+       The italic muted note + pointer-events convey the disabled state. */
     pointer-events: none;
   }
 
@@ -522,12 +523,12 @@
 
   /* Focus styles for accessibility */
   .setting-label:focus-within .setting-text {
-    outline: 2px solid var(--focus-color, #007acc);
+    outline: 2px solid var(--color-focus);
     outline-offset: 2px;
   }
 
   input[type='checkbox']:focus-visible {
-    outline: 2px solid var(--focus-color, #007acc);
+    outline: 2px solid var(--color-focus);
     outline-offset: 2px;
   }
 </style>

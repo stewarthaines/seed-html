@@ -33,8 +33,10 @@
   --color-text-success: var(--color-success-400);
   --color-text-warning: var(--color-warning-400);
   --color-text-error: var(--color-error-400);
-  --color-text-link: var(--color-primary-400);
-  --color-text-link-hover: var(--color-primary-300);
+  /* primary-400 (#6666ff) fails AA on the dark sidebar/content (#222); 300 (#9999ff)
+     passes (~6.4:1). Keep links readable in dark mode. */
+  --color-text-link: var(--color-primary-300);
+  --color-text-link-hover: var(--color-primary-200);
 
   /* ============================================
      BORDER COLORS - Dark Theme
