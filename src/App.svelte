@@ -903,6 +903,20 @@
     border-color: var(--color-button-primary-bg-hover);
   }
 
+  /* Dark: a tonal treatment instead of the heavy primary fill — softer on the
+     dark sidebar while still reading as the accent CTA. (Light is unchanged.) */
+  :global([data-theme='dark']) .package-epub-button {
+    background-color: var(--color-surface-elevated);
+    border-color: var(--color-border-accent);
+    color: var(--color-text-link);
+  }
+
+  :global([data-theme='dark']) .package-epub-button:hover:not(:disabled) {
+    background-color: var(--color-surface-hover);
+    border-color: var(--color-border-focus);
+    color: var(--color-text-link-hover);
+  }
+
   .package-epub-button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
