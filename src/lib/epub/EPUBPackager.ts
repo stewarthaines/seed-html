@@ -247,11 +247,16 @@ export class EPUBPackager {
     const title = this.sanitizeFilename(metadata.title || 'Untitled');
     const authorName = creatorName(metadata.creator?.[0]);
     const author = authorName ? this.sanitizeFilename(authorName) : null;
-    const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+    // Prefer the metadata publication date (dc:date); take its date portion so a
+    // full timestamp becomes YYYY-MM-DD. Fall back to the package-generation date
+    // when no publication date is set.
+    const pubDate = metadata.date?.split('T')[0].trim();
+    const date = pubDate ? this.sanitizeFilename(pubDate) : new Date().toISOString().split('T')[0];
 
     const parts = [title];
     if (author) parts.push(author);
-    parts.push(timestamp);
+    parts.push(date);
 
     return `${parts.join(' - ')}.epub`;
   }

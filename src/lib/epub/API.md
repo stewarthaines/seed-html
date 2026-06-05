@@ -164,7 +164,10 @@ generateFilename(metadata: EPUBMetadata): string
 
 **Input:** `EPUBMetadata` object with title, author, etc.
 
-**Output:** `string` - Sanitized filename
+**Output:** `string` - Sanitized filename of the form `Title - Author - Date.epub`
+(author omitted when absent). `Date` is the metadata publication date (`dc:date`,
+date portion only); when no publication date is set it falls back to the
+package-generation date.
 
 **Side Effects:** None
 

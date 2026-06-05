@@ -251,6 +251,31 @@ describe('EPUBPackager', () => {
       const filename = packager.generateFilename(metadata);
       expect(filename).toMatch(/^TestBook - TestAuthor - \d{4}-\d{2}-\d{2}\.epub$/);
     });
+
+    it('should use the publication date (dc:date) when present', () => {
+      const metadata: EPUBMetadata = {
+        title: 'Test Book',
+        creator: ['Test Author'],
+        language: 'en',
+        identifier: 'test-123',
+        date: '1999-12-31',
+      };
+
+      const filename = packager.generateFilename(metadata);
+      expect(filename).toBe('Test Book - Test Author - 1999-12-31.epub');
+    });
+
+    it('should take the date portion of a full dc:date timestamp', () => {
+      const metadata: EPUBMetadata = {
+        title: 'Test Book',
+        language: 'en',
+        identifier: 'test-123',
+        date: '2010-06-15T09:30:00Z',
+      };
+
+      const filename = packager.generateFilename(metadata);
+      expect(filename).toBe('Test Book - 2010-06-15.epub');
+    });
   });
 
   // Note: parseRootfilePath tests moved to opf-utils.test.ts
