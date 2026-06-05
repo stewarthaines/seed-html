@@ -10,6 +10,7 @@ import type {
   S3RemoteConfig,
   GoogleDriveRemoteConfig,
   DropboxRemoteConfig,
+  WebDAVRemoteConfig,
 } from './types.js';
 
 vi.mock('./s3-upload.js', () => ({
@@ -40,6 +41,16 @@ vi.mock('./dropbox-upload.js', () => ({
   uploadTextToDropbox: vi.fn().mockResolvedValue({ success: true }),
 }));
 
+vi.mock('./webdav-upload.js', () => ({
+  uploadToWebDAV: vi.fn().mockResolvedValue({ success: true }),
+  listWebDAVFiles: vi.fn().mockResolvedValue({ objects: [] }),
+  deleteWebDAVFile: vi.fn().mockResolvedValue({ success: true }),
+  getWebDAVPublicUrl: vi
+    .fn()
+    .mockReturnValue('https://dav.example.com/books/book.epub'),
+  uploadTextToWebDAV: vi.fn().mockResolvedValue({ success: true }),
+}));
+
 import {
   uploadToS3,
   listObjects,
@@ -61,6 +72,13 @@ import {
   getDropboxPublicUrl,
   uploadTextToDropbox,
 } from './dropbox-upload.js';
+import {
+  uploadToWebDAV,
+  listWebDAVFiles,
+  deleteWebDAVFile,
+  getWebDAVPublicUrl,
+  uploadTextToWebDAV,
+} from './webdav-upload.js';
 
 const s3Config: S3RemoteConfig = {
   id: '1',
@@ -92,6 +110,15 @@ const dropboxConfig: DropboxRemoteConfig = {
   accessToken: 'token',
   refreshToken: 'refresh',
   tokenExpiry: 9_999_999_999_999,
+};
+
+const webdavConfig: WebDAVRemoteConfig = {
+  id: '4',
+  name: 'WebDAV',
+  type: 'webdav',
+  url: 'https://dav.example.com/books',
+  username: 'user',
+  password: 'pass',
 };
 
 const blob = new Blob(['data']);
@@ -130,6 +157,17 @@ describe('uploadFile', () => {
     );
   });
 
+  it('routes to WebDAV for webdav', async () => {
+    await uploadFile(webdavConfig, 'book.epub', blob);
+    expect(vi.mocked(uploadToWebDAV)).toHaveBeenCalledWith(
+      webdavConfig,
+      'book.epub',
+      blob,
+      undefined,
+      undefined,
+    );
+  });
+
   it('returns error for unknown remote type', async () => {
     const unknown = { type: 'unknown' } as unknown as S3RemoteConfig;
     const result = await uploadFile(unknown, 'book.epub', blob);
@@ -152,6 +190,11 @@ describe('listFiles', () => {
   it('routes to Dropbox for dropbox', async () => {
     await listFiles(dropboxConfig);
     expect(vi.mocked(listDropboxFiles)).toHaveBeenCalledWith(dropboxConfig);
+  });
+
+  it('routes to WebDAV for webdav', async () => {
+    await listFiles(webdavConfig);
+    expect(vi.mocked(listWebDAVFiles)).toHaveBeenCalledWith(webdavConfig);
   });
 
   it('returns error for unknown remote type', async () => {
@@ -180,6 +223,14 @@ describe('deleteFile', () => {
     await deleteFile(dropboxConfig, 'book.epub');
     expect(vi.mocked(deleteDropboxFile)).toHaveBeenCalledWith(
       dropboxConfig,
+      'book.epub',
+    );
+  });
+
+  it('routes to WebDAV for webdav', async () => {
+    await deleteFile(webdavConfig, 'book.epub');
+    expect(vi.mocked(deleteWebDAVFile)).toHaveBeenCalledWith(
+      webdavConfig,
       'book.epub',
     );
   });
@@ -214,6 +265,14 @@ describe('getPublicUrl', () => {
     expect(vi.mocked(getDropboxPublicUrl)).toHaveBeenCalledWith(
       dropboxConfig,
       'https://www.dropbox.com/s/abc',
+    );
+  });
+
+  it('routes to WebDAV for webdav (no fileId needed)', () => {
+    getPublicUrl(webdavConfig, 'book.epub');
+    expect(vi.mocked(getWebDAVPublicUrl)).toHaveBeenCalledWith(
+      webdavConfig,
+      'book.epub',
     );
   });
 
@@ -253,6 +312,16 @@ describe('uploadTextFile', () => {
     await uploadTextFile(dropboxConfig, 'catalog.xml', '<xml/>');
     expect(vi.mocked(uploadTextToDropbox)).toHaveBeenCalledWith(
       dropboxConfig,
+      'catalog.xml',
+      '<xml/>',
+      undefined,
+    );
+  });
+
+  it('routes to WebDAV for webdav', async () => {
+    await uploadTextFile(webdavConfig, 'catalog.xml', '<xml/>');
+    expect(vi.mocked(uploadTextToWebDAV)).toHaveBeenCalledWith(
+      webdavConfig,
       'catalog.xml',
       '<xml/>',
       undefined,

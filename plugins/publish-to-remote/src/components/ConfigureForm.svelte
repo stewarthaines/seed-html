@@ -48,7 +48,12 @@
     onStatus: (text: string, type: 'info' | 'success' | 'error') => void;
   } = $props();
 
-  type RemoteType = 'none' | 's3-compatible' | 'google-drive' | 'dropbox';
+  type RemoteType =
+    | 'none'
+    | 's3-compatible'
+    | 'google-drive'
+    | 'dropbox'
+    | 'webdav';
 
   let remoteType: RemoteType = $state('none');
   let form = $state({
@@ -64,6 +69,9 @@
     accessToken: '',
     refreshToken: '',
     tokenExpiry: 0,
+    url: '',
+    username: '',
+    password: '',
   });
   let previousBucketForAutoName = '';
   let pickedFolderName: string | null = $state(null);
@@ -98,6 +106,9 @@
         accessToken: '',
         refreshToken: '',
         tokenExpiry: 0,
+        url: '',
+        username: '',
+        password: '',
       };
       previousBucketForAutoName = remote.bucket;
     } else if (remote.type === 'google-drive') {
@@ -115,6 +126,9 @@
         accessToken: '',
         refreshToken: '',
         tokenExpiry: 0,
+        url: '',
+        username: '',
+        password: '',
       };
       pickedFolderName = remote.folderName;
     } else if (remote.type === 'dropbox') {
@@ -133,11 +147,33 @@
         accessToken: dropboxRemote.accessToken,
         refreshToken: dropboxRemote.refreshToken,
         tokenExpiry: dropboxRemote.tokenExpiry,
+        url: '',
+        username: '',
+        password: '',
       };
       pickedFolderName = remote.folderPath;
       if (form.accessToken && form.tokenExpiry > Date.now()) {
         openDropboxBrowser(form.folderId);
       }
+    } else if (remote.type === 'webdav') {
+      remoteType = 'webdav';
+      form = {
+        name: remote.name,
+        endpoint: '',
+        bucket: '',
+        accessKeyId: '',
+        secretAccessKey: '',
+        region: '',
+        publicUrlBase: remote.publicUrlBase || '',
+        folderId: '',
+        folderName: '',
+        accessToken: '',
+        refreshToken: '',
+        tokenExpiry: 0,
+        url: remote.url,
+        username: remote.username,
+        password: remote.password,
+      };
     }
   }
 
@@ -156,6 +192,9 @@
       accessToken: '',
       refreshToken: '',
       tokenExpiry: 0,
+      url: '',
+      username: '',
+      password: '',
     };
     pickedFolderName = null;
     previousBucketForAutoName = '';
@@ -310,6 +349,20 @@
         refreshToken: form.refreshToken,
         tokenExpiry: form.tokenExpiry,
       };
+    } else if (remoteType === 'webdav') {
+      if (!form.url || !form.username || !form.password) {
+        onStatus('Please fill all required fields', 'error');
+        return null;
+      }
+      return {
+        id: editingRemote?.id || crypto.randomUUID(),
+        name: form.name.trim() || form.url.trim(),
+        type: 'webdav',
+        url: form.url.trim(),
+        username: form.username.trim(),
+        password: form.password,
+        publicUrlBase: form.publicUrlBase.trim() || undefined,
+      };
     }
     onStatus('Please select a remote type', 'error');
     return null;
@@ -338,6 +391,10 @@
         <button class="btn-type" onclick={() => (remoteType = 'dropbox')}>
           Dropbox
           <small>Upload to a Dropbox folder</small>
+        </button>
+        <button class="btn-type" onclick={() => (remoteType = 'webdav')}>
+          WebDAV
+          <small>Nextcloud, ownCloud, any WebDAV server</small>
         </button>
       </div>
       {#if canCancel}
@@ -590,6 +647,70 @@
         <button onclick={onCancel} class="btn btn-secondary">Cancel</button>
       </div>
     {/if}
+  {:else if remoteType === 'webdav'}
+    <div class="form-header">
+      <button class="btn btn-link" onclick={() => (remoteType = 'none')}
+        >← Back</button
+      >
+      <h3>WebDAV Storage</h3>
+    </div>
+
+    <div class="form-group">
+      <label for="webdav-name">Remote Name (optional)</label>
+      <input
+        id="webdav-name"
+        type="text"
+        placeholder="Auto-filled from URL"
+        bind:value={form.name}
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="webdav-url">WebDAV URL</label>
+      <input
+        id="webdav-url"
+        type="url"
+        placeholder="https://host/remote.php/dav/files/user/books"
+        bind:value={form.url}
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="webdav-username">Username</label>
+      <input
+        id="webdav-username"
+        type="text"
+        placeholder="username"
+        bind:value={form.username}
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="webdav-password">Password</label>
+      <input
+        id="webdav-password"
+        type="password"
+        placeholder="password or app token"
+        bind:value={form.password}
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="webdav-public-url">Public URL Base (optional)</label>
+      <input
+        id="webdav-public-url"
+        type="url"
+        placeholder="https://host/s/public-share"
+        bind:value={form.publicUrlBase}
+      />
+    </div>
+
+    <div class="form-actions">
+      <button onclick={handleSave} class="btn btn-primary"
+        >Save & Connect</button
+      >
+      <button onclick={onCancel} class="btn btn-secondary">Cancel</button>
+    </div>
   {/if}
 </div>
 

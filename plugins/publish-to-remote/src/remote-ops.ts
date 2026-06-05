@@ -20,6 +20,13 @@ import {
   getDropboxPublicUrl,
   uploadTextToDropbox,
 } from './dropbox-upload.js';
+import {
+  uploadToWebDAV,
+  listWebDAVFiles,
+  deleteWebDAVFile,
+  getWebDAVPublicUrl,
+  uploadTextToWebDAV,
+} from './webdav-upload.js';
 
 export async function uploadFile(
   remote: RemoteConfig,
@@ -40,6 +47,8 @@ export async function uploadFile(
     );
   } else if (remote.type === 'dropbox') {
     return uploadToDropbox(remote, objectKey, blob, contentType, onProgress);
+  } else if (remote.type === 'webdav') {
+    return uploadToWebDAV(remote, objectKey, blob, contentType, onProgress);
   }
   return { success: false, error: 'Unknown remote type' };
 }
@@ -53,6 +62,8 @@ export async function listFiles(
     return listGoogleDriveFiles(remote);
   } else if (remote.type === 'dropbox') {
     return listDropboxFiles(remote);
+  } else if (remote.type === 'webdav') {
+    return listWebDAVFiles(remote);
   }
   return { objects: [], error: 'Unknown remote type' };
 }
@@ -67,6 +78,8 @@ export async function deleteFile(
     return deleteGoogleDriveFile(remote, objectKey);
   } else if (remote.type === 'dropbox') {
     return deleteDropboxFile(remote, objectKey);
+  } else if (remote.type === 'webdav') {
+    return deleteWebDAVFile(remote, objectKey);
   }
   return { success: false, error: 'Unknown remote type' };
 }
@@ -82,6 +95,8 @@ export function getPublicUrl(
     return getGoogleDrivePublicUrl(remote, fileId);
   } else if (remote.type === 'dropbox' && fileId) {
     return getDropboxPublicUrl(remote, fileId);
+  } else if (remote.type === 'webdav') {
+    return getWebDAVPublicUrl(remote, objectKey);
   }
   return '';
 }
@@ -98,6 +113,8 @@ export async function uploadTextFile(
     return uploadTextToGoogleDrive(remote, objectKey, text, contentType);
   } else if (remote.type === 'dropbox') {
     return uploadTextToDropbox(remote, objectKey, text, contentType);
+  } else if (remote.type === 'webdav') {
+    return uploadTextToWebDAV(remote, objectKey, text, contentType);
   }
   return { success: false, error: 'Unknown remote type' };
 }

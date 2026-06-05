@@ -408,6 +408,8 @@
         feedUrl = 'https://drive.google.com/catalog.xml';
       } else if (activeRemote.type === 'dropbox') {
         feedUrl = 'https://www.dropbox.com/catalog.xml';
+      } else if (activeRemote.type === 'webdav') {
+        feedUrl = getPublicUrl(activeRemote, 'catalog.xml');
       }
       const xml = generateOpdsFeed(activeRemote, remoteObjects, feedUrl);
       const result = await uploadTextFile(activeRemote, 'catalog.xml', xml);

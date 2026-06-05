@@ -1,4 +1,5 @@
 import { getPublicUrl } from './s3-upload.js';
+import { getWebDAVPublicUrl } from './webdav-upload.js';
 import type {
   RemoteConfig,
   S3Object,
@@ -41,7 +42,9 @@ export function generateOpdsFeed(
       ? (creds as S3RemoteConfig).bucket
       : creds.type === 'google-drive'
         ? (creds as GoogleDriveRemoteConfig).folderName
-        : (creds as DropboxRemoteConfig).folderPath;
+        : creds.type === 'dropbox'
+          ? (creds as DropboxRemoteConfig).folderPath
+          : creds.name; // webdav: use the display name
   child(feed, 'id', `urn:uri:${feedUrl}`);
   child(feed, 'title', title);
   child(feed, 'updated', new Date().toISOString());
@@ -61,6 +64,8 @@ export function generateOpdsFeed(
         : '';
     } else if (creds.type === 'dropbox') {
       url = o.fileId || '';
+    } else if (creds.type === 'webdav') {
+      url = getWebDAVPublicUrl(creds, o.key);
     }
     const entry = child(feed, 'entry');
     child(entry, 'title', o.key.replace(/\.epub$/i, ''));

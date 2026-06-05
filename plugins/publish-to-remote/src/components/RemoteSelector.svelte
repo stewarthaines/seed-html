@@ -40,7 +40,9 @@
             ? remote.bucket
             : remote.type === 'google-drive'
               ? remote.folderName
-              : remote.folderPath})
+              : remote.type === 'dropbox'
+                ? remote.folderPath
+                : remote.url})
         </option>
       {/each}
     </select>

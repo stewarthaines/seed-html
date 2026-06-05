@@ -63,10 +63,25 @@ export interface DropboxRemoteConfig {
   tokenExpiry: number;
 }
 
+export interface WebDAVRemoteConfig {
+  id: string;
+  name: string;
+  type: 'webdav';
+  /** Full WebDAV folder URL (the authenticated endpoint), e.g.
+   * https://host/remote.php/dav/files/user/books */
+  url: string;
+  username: string;
+  password: string;
+  /** Optional unauthenticated read URL base for public links (mirrors S3's
+   * publicUrlBase). Falls back to `url` when unset. */
+  publicUrlBase?: string;
+}
+
 export type RemoteConfig =
   | S3RemoteConfig
   | GoogleDriveRemoteConfig
-  | DropboxRemoteConfig;
+  | DropboxRemoteConfig
+  | WebDAVRemoteConfig;
 
 export interface RemotesStore {
   remotes: RemoteConfig[];
