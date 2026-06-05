@@ -2,7 +2,7 @@
   import { t } from '../../i18n';
   import type { ManifestItem, SourceItem, ValidationResult } from '../../manifest/types';
 
-  type SortableFields = 'id' | 'href' | 'size';
+  type SortableFields = 'href' | 'size';
 
   let {
     manifestItems = [],
@@ -36,7 +36,7 @@
   // oxlint-disable-next-line no-unassigned-vars
   let fileInputRef: HTMLInputElement;
 
-  let sortField = $state<SortableFields>('id');
+  let sortField = $state<SortableFields>('href');
   let sortDirection = $state<'asc' | 'desc'>('asc');
 
   // Combine and filter items
@@ -111,10 +111,7 @@
       let aValue: string | number | Date = '';
       let bValue: string | number | Date = '';
 
-      if (sortField === 'id') {
-        aValue = a._type === 'manifest' ? (a as ManifestItem).id : (a as any).name;
-        bValue = b._type === 'manifest' ? (b as ManifestItem).id : (b as any).name;
-      } else if (sortField === 'href') {
+      if (sortField === 'href') {
         aValue = a._type === 'manifest' ? (a as ManifestItem).href : (a as any).path;
         bValue = b._type === 'manifest' ? (b as ManifestItem).href : (b as any).path;
       } else if (sortField === 'size') {
@@ -408,17 +405,6 @@
               <button
                 type="button"
                 class="sort-button"
-                onclick={() => handleSort('id')}
-                aria-label={$t('Sort by ID')}
-              >
-                {$t('ID')}
-                {getSortIcon('id')}
-              </button>
-            </th>
-            <th scope="col">
-              <button
-                type="button"
-                class="sort-button"
                 onclick={() => handleSort('href')}
                 aria-label={$t('Sort by path')}
               >
@@ -445,7 +431,7 @@
             {@const collapsed = !forceExpand && collapsedGroups.has(group.key)}
             {#if group.kind !== 'root'}
               <tr class="group-heading" class:collapsed>
-                <td colspan="4" class="separator-cell">
+                <td colspan="3" class="separator-cell">
                   <button
                     type="button"
                     class="group-toggle"
@@ -478,15 +464,6 @@
                   onclick={() => handleRowClick(item, itemType)}
                   onkeydown={event => handleRowKeyDown(event, item, itemType)}
                 >
-                  <td class="id-cell">
-                    <span class="item-id" dir="ltr">
-                      {itemType === 'manifest'
-                        ? (item as ManifestItem).id
-                        : itemType === 'source' || itemType === 'source-zip'
-                          ? (item as SourceItem).name || (item as any).name
-                          : (item as any).name}
-                    </span>
-                  </td>
                   <td class="href-cell">
                     <span class="item-href" dir="ltr">
                       {itemType === 'manifest'
@@ -750,7 +727,6 @@
     background-color: var(--color-bg-muted, rgba(0, 0, 0, 0.05));
   }
 
-  .manifest-row.source-zip-item .item-id,
   .manifest-row.source-zip-item .item-href {
     color: var(--color-text-secondary);
   }
@@ -805,18 +781,6 @@
     font-weight: 600;
     color: var(--color-text-secondary);
     letter-spacing: 0.05em;
-  }
-
-  .id-cell {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    max-width: 200px;
-  }
-
-  .item-id {
-    font-weight: 500;
-    word-break: break-word;
   }
 
   .href-cell {
