@@ -1180,7 +1180,70 @@ export function getDirectoryFromMediaType(mediaType: string): string {
  */
 export function generateEPUBPath(filename: string, mediaType: string): string {
   const directory = getDirectoryFromMediaType(mediaType);
-  return directory + filename;
+  return directory + toEpubSafeFilename(filename);
+}
+
+/**
+ * Make a single filename EPUB/OCF-safe. The OCF spec recommends restricting names
+ * to `A-Za-z0-9-_.`; epubcheck warns on spaces (PKG-009/010) and non-ASCII chars
+ * (PKG-012). This folds accents (café → cafe), replaces any other character with
+ * `-`, trims, caps length, and lowercases the extension. Idempotent; falls back to
+ * `asset` when the base would be empty.
+ */
+export function toEpubSafeFilename(name: string): string {
+  const lastDot = name.lastIndexOf('.');
+  const hasExt = lastDot > 0; // leading-dot names have no extension
+  const rawBase = hasExt ? name.slice(0, lastDot) : name;
+  const rawExt = hasExt ? name.slice(lastDot + 1) : '';
+
+  const base =
+    rawBase
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '') // strip combining diacritics (NFKD decomposed above)
+      .replace(/[^A-Za-z0-9_-]+/g, '-') // anything else → hyphen
+      .replace(/-+/g, '-') // collapse
+      .replace(/^[-.]+|[-.]+$/g, '') // trim leading/trailing - and .
+      .slice(0, 80) || 'asset';
+
+  const ext = rawExt
+    .normalize('NFKD')
+    .replace(/[^A-Za-z0-9]+/g, '')
+    .toLowerCase();
+
+  return ext ? `${base}.${ext}` : base;
+}
+
+/**
+ * Make an EPUB href/path safe segment-by-segment (cleans a full path typed into the
+ * manifest editor while preserving its directory structure). Empty segments — e.g.
+ * from `..` or stray slashes — are dropped, neutralising path traversal.
+ */
+export function toEpubSafeHref(path: string): string {
+  return path
+    .split('/')
+    .filter(segment => segment !== '')
+    .map(toEpubSafeFilename)
+    .join('/');
+}
+
+/**
+ * Return `href` unchanged if no existing href matches it case-insensitively (OCF
+ * forbids paths differing only in case); otherwise insert `-1`, `-2`, … before the
+ * extension until unique.
+ */
+export function ensureUniqueHref(href: string, existingHrefs: string[]): string {
+  const taken = new Set(existingHrefs.map(h => h.toLowerCase()));
+  if (!taken.has(href.toLowerCase())) return href;
+
+  const slash = href.lastIndexOf('/');
+  const dot = href.lastIndexOf('.');
+  const hasExt = dot > slash + 1; // dot is inside the filename, not a leading dot
+  const base = hasExt ? href.slice(0, dot) : href;
+  const ext = hasExt ? href.slice(dot) : ''; // includes the leading dot
+
+  let n = 1;
+  while (taken.has(`${base}-${n}${ext}`.toLowerCase())) n += 1;
+  return `${base}-${n}${ext}`;
 }
 
 /**

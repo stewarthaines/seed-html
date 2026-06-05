@@ -85,6 +85,9 @@
       // Track the live item by its (possibly new) id so further edits target it.
       const newId = updates.id ?? liveItem.id;
       liveItem = updated.opf.manifest.find(m => m.id === newId) ?? { ...liveItem, ...updates };
+      // Re-seed the form from the persisted item so fields reflect any
+      // normalization the service applied (e.g. a sanitized file path).
+      seedEditForm(liveItem);
       editError = null;
       onWorkspaceUpdate?.(updated);
     } catch (err) {

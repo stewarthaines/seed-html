@@ -3,7 +3,7 @@
   import { t } from '../../i18n';
   import ManifestTable from './ManifestTable.svelte';
   import { ManifestUtils } from '../../manifest/utils.js';
-  import { generateEPUBPath } from '../../epub/opf-utils.js';
+  import { generateEPUBPath, ensureUniqueHref } from '../../epub/opf-utils.js';
   import type { ManifestItem, SourceItem, ValidationResult } from '../../manifest/types';
   import type {
     WorkspaceService,
@@ -151,8 +151,13 @@
         const reliableMediaType =
           isGeneric || isFontFile || isJavaScriptFile ? filenameType : browserType;
 
+        // generateEPUBPath sanitizes the filename to an EPUB-safe form; ensure it
+        // doesn't collide (case-insensitively) with an existing manifest href.
         const manifestItem = {
-          href: generateEPUBPath(file.name, reliableMediaType),
+          href: ensureUniqueHref(
+            generateEPUBPath(file.name, reliableMediaType),
+            workspace.opf.manifest.map(m => m.href)
+          ),
           mediaType: reliableMediaType,
         };
 

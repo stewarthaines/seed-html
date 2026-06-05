@@ -7,6 +7,9 @@ import {
   creatorNames,
   parseCreatorList,
   primaryLanguage,
+  toEpubSafeFilename,
+  toEpubSafeHref,
+  ensureUniqueHref,
 } from './opf-utils.js';
 import type { OPFDocument } from './opf-utils.js';
 
@@ -1064,5 +1067,57 @@ describe('OPFUtils', () => {
 
     // Note: Parsing tests require getElementsByTagNameNS which doesn't work in happy-dom
     // Round-trip parsing functionality is tested in browser environment via Storybook
+  });
+});
+
+describe('toEpubSafeFilename', () => {
+  it('replaces spaces and special characters with hyphens', () => {
+    expect(toEpubSafeFilename('My Image (1).JPG')).toBe('My-Image-1.jpg');
+    expect(toEpubSafeFilename('a#b%c?d*e.png')).toBe('a-b-c-d-e.png');
+  });
+
+  it('folds accents and lowercases the extension', () => {
+    expect(toEpubSafeFilename('café.PNG')).toBe('cafe.png');
+    expect(toEpubSafeFilename('résumé.txt')).toBe('resume.txt');
+  });
+
+  it('trims leading dots and falls back to "asset" when empty', () => {
+    expect(toEpubSafeFilename('.hidden')).toBe('hidden');
+    expect(toEpubSafeFilename('中文.png')).toBe('asset.png');
+    expect(toEpubSafeFilename('***')).toBe('asset');
+  });
+
+  it('preserves underscores and hyphens, and caps base length at 80', () => {
+    expect(toEpubSafeFilename('a_b-c.png')).toBe('a_b-c.png');
+    expect(toEpubSafeFilename('x'.repeat(120) + '.png')).toBe('x'.repeat(80) + '.png');
+  });
+
+  it('is idempotent on an already-safe name', () => {
+    const safe = 'My-Image-1.jpg';
+    expect(toEpubSafeFilename(safe)).toBe(safe);
+  });
+});
+
+describe('toEpubSafeHref', () => {
+  it('sanitizes each path segment and preserves the directory structure', () => {
+    expect(toEpubSafeHref('Images/My File.jpg')).toBe('Images/My-File.jpg');
+  });
+
+  it('drops empty/traversal segments', () => {
+    expect(toEpubSafeHref('Images/../My File.jpg')).toBe('Images/asset/My-File.jpg');
+    expect(toEpubSafeHref('/Images//cover.png')).toBe('Images/cover.png');
+  });
+});
+
+describe('ensureUniqueHref', () => {
+  it('returns the href unchanged when no collision', () => {
+    expect(ensureUniqueHref('Images/cover.png', ['Images/other.png'])).toBe('Images/cover.png');
+  });
+
+  it('inserts a numeric suffix before the extension on a case-insensitive collision', () => {
+    expect(ensureUniqueHref('Images/cover.png', ['Images/COVER.png'])).toBe('Images/cover-1.png');
+    expect(ensureUniqueHref('Images/cover.png', ['Images/cover.png', 'Images/cover-1.png'])).toBe(
+      'Images/cover-2.png'
+    );
   });
 });

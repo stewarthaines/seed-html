@@ -669,4 +669,48 @@ describe('WorkspaceService Contract Tests', () => {
       expect(mockFileStorage.deleteFile).toHaveBeenCalledWith(workspace.id, 'OEBPS/Audio/clip.mp3');
     });
   });
+
+  describe('updateManifestItem: file path sanitization', () => {
+    test('sanitizes a renamed href to an EPUB-safe path', async () => {
+      const workspace = await service.createWorkspace({
+        title: 'Test',
+        language: 'en',
+        identifier: 'test',
+      });
+      const withImage = await service.addManifestItem(workspace, {
+        id: 'img',
+        href: 'Images/cover.png',
+        mediaType: 'image/png',
+      });
+
+      const updated = await service.updateManifestItem(withImage, 'img', {
+        href: 'Images/My Cover (final).PNG',
+      });
+
+      const item = updated.opf.manifest.find(i => i.id === 'img');
+      expect(item?.href).toBe('Images/My-Cover-final.png');
+    });
+
+    test('rejects a rename that collides with another item (case-insensitive)', async () => {
+      const workspace = await service.createWorkspace({
+        title: 'Test',
+        language: 'en',
+        identifier: 'test',
+      });
+      let ws = await service.addManifestItem(workspace, {
+        id: 'a',
+        href: 'Images/a.png',
+        mediaType: 'image/png',
+      });
+      ws = await service.addManifestItem(ws, {
+        id: 'b',
+        href: 'Images/b.png',
+        mediaType: 'image/png',
+      });
+
+      await expect(service.updateManifestItem(ws, 'b', { href: 'Images/A.png' })).rejects.toThrow(
+        /already exists/
+      );
+    });
+  });
 });

@@ -7,7 +7,12 @@
 
 import type { FileStorageAPI } from '../../storage/index.js';
 import type { EPUBMetadata, OPFDocument, ManifestItem, SpineItem } from '../../epub/opf-utils.js';
-import { generateEPUBTimestamp, creatorName, primaryLanguage } from '../../epub/opf-utils.js';
+import {
+  generateEPUBTimestamp,
+  creatorName,
+  primaryLanguage,
+  toEpubSafeHref,
+} from '../../epub/opf-utils.js';
 import { isSourceFile, classifySourceFile } from '../../source/source-utils.js';
 import type { SourceItem } from '../../manifest/types.js';
 import { getBrowserLocale } from '../../i18n/locale-config.js';
@@ -447,6 +452,24 @@ export class WorkspaceService {
 
     // Get the old item for comparison
     const oldItem = workspace.opf.manifest[itemIndex];
+
+    // Sanitize a renamed href to an EPUB-safe path before using it anywhere.
+    if (updates.href) {
+      const safe = toEpubSafeHref(updates.href);
+      if (!safe) {
+        throw new ValidationError(`Invalid file path: '${updates.href}'`);
+      }
+      // Reject a collision with a different item (OCF disallows case-only diffs).
+      if (
+        safe.toLowerCase() !== oldItem.href.toLowerCase() &&
+        workspace.opf.manifest.some(
+          (m, idx) => idx !== itemIndex && m.href.toLowerCase() === safe.toLowerCase()
+        )
+      ) {
+        throw new ValidationError(`A manifest item already exists at path '${safe}'`);
+      }
+      updates = { ...updates, href: safe };
+    }
 
     // Handle file path changes by moving the actual file
     if (updates.href && updates.href !== oldItem.href) {
