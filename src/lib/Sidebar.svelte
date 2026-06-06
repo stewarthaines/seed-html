@@ -155,11 +155,6 @@
       input.value = '';
     }
   }
-
-  function generateCompactLabel(label: string): string {
-    // Take first 2 letters of the label
-    return label.slice(0, 2).toUpperCase();
-  }
 </script>
 
 <aside class="sidebar" class:collapsed={!isExpanded}>
@@ -179,10 +174,6 @@
     {#if isExpanded}
       <h2 class="sidebar-title">Simple EPUB Editor</h2>
       <div class="header-actions">
-        <ThemeToggle size="small" showLabel={false} />
-      </div>
-    {:else}
-      <div class="header-actions compact">
         <ThemeToggle size="small" showLabel={false} />
       </div>
     {/if}
@@ -232,20 +223,11 @@
                   </button>
                 </div>
               {:else}
+                <!-- Collapsed: just the disclose button — the badge/extension
+                     count convey nothing useful at this width. Single 44px row. -->
                 <div class="workspace-title-header compact">
-                  <div class="workspace-title-compact" title={workspaceTitle || 'Untitled Project'}>
-                    {(workspaceTitle || 'Untitled Project').slice(0, 2).toUpperCase()}
-                  </div>
-                  {#if extensions.length > 0 && !extensionsLoading}
-                    <div
-                      class="extensions-indicator"
-                      title={extensions.map(ext => ext.name).join(', ')}
-                    >
-                      •{extensions.length}
-                    </div>
-                  {/if}
                   <button
-                    class="append-button-nav compact"
+                    class="append-button-nav"
                     onclick={toggleProjectNav}
                     aria-expanded={projectNavExpanded}
                     aria-label={projectNavExpanded
@@ -256,9 +238,9 @@
                       : $t('Show project sections')}
                   >
                     {#if projectNavExpanded}
-                      <CaretDown size={12} aria-hidden="true" />
+                      <CaretDown size={14} aria-hidden="true" />
                     {:else}
-                      <CaretRight size={12} aria-hidden="true" />
+                      <CaretRight size={14} aria-hidden="true" />
                     {/if}
                   </button>
                 </div>
@@ -349,26 +331,18 @@
             </div>
           </div>
         {:else}
+          <!-- Collapsed: just the append button — a single uniform-height row.
+               The title/aria identify the action; the import button is
+               expanded-only. -->
           <div class="spine-section-header compact">
-            <span class="section-label">{generateCompactLabel(spineSectionLabel)}</span>
-            <div class="spine-header-actions compact">
-              <button
-                class="append-button-nav compact"
-                onclick={handleImportTextClick}
-                aria-label={$t('Import text files as chapters')}
-                title={$t('Import text files as chapters')}
-              >
-                <FileArrowUp size={14} aria-hidden="true" />
-              </button>
-              <button
-                class="append-button-nav compact"
-                onclick={handleAppendItem}
-                aria-label={$t('Append Item')}
-                title={$t('Append Item')}
-              >
-                <Plus size={14} aria-hidden="true" />
-              </button>
-            </div>
+            <button
+              class="append-button-nav"
+              onclick={handleAppendItem}
+              aria-label={$t('Append Item')}
+              title={$t('Append Item')}
+            >
+              <Plus size={14} aria-hidden="true" />
+            </button>
           </div>
         {/if}
       {/if}
@@ -425,26 +399,24 @@
     min-block-size: var(--touch-target-min); /* 44px - meets WCAG AA requirements even for header */
   }
 
+  /* Flat icon button — matches the Chapters .append-button-nav reference. */
   .sidebar-toggle {
-    background: none;
-    border: none;
-    font-size: var(--text-lg); /* Using typography tokens */
-    cursor: pointer;
-    padding-block: var(--space-2); /* Using logical properties and spacing tokens */
-    padding-inline: var(--space-2);
-    border-radius: var(--radius-sm); /* Using border radius tokens */
-    transition: background-color var(--duration-fast) ease; /* Using motion tokens */
     display: flex;
     align-items: center;
     justify-content: center;
-    inline-size: 32px; /* Using logical properties */
-    block-size: 32px;
-    min-inline-size: var(--touch-target-min); /* Using accessibility tokens */
-    min-block-size: var(--touch-target-min);
+    inline-size: var(--touch-target-min);
+    block-size: var(--touch-target-min);
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    transition: all var(--duration-fast) ease;
   }
 
   .sidebar-toggle:hover {
-    background: var(--color-interactive-secondary-hover); /* Using design tokens */
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
   }
 
   .sidebar-toggle:focus-visible {
@@ -467,9 +439,10 @@
     margin-inline-start: var(--space-2);
   }
 
-  .header-actions.compact {
-    margin-inline-start: 0;
+  /* Collapsed: the header holds only the expand toggle — centre it. */
+  .sidebar.collapsed .sidebar-header {
     justify-content: center;
+    padding-inline: 0;
   }
 
   .sidebar-main {
@@ -568,24 +541,16 @@
     gap: var(--space-1);
   }
 
-  .spine-header-actions.compact {
-    flex-direction: column;
-  }
-
   .visually-hidden-input {
     display: none;
   }
 
+  /* Collapsed: a single centred append button, same height as every other row.
+     Reset the base's asymmetric left inline padding so it centres true. */
   .spine-section-header.compact {
     justify-content: center;
-    flex-direction: column;
-    gap: var(--space-1);
-    padding-block: var(--space-1);
-  }
-
-  .spine-section-header.compact .section-label {
-    font-size: var(--text-xs);
-    text-align: center;
+    padding-block: 0;
+    padding-inline: 0;
   }
 
   .append-button-nav {
@@ -595,7 +560,7 @@
     inline-size: var(--touch-target-min);
     block-size: var(--touch-target-min);
     border: none;
-    background: var(--color-bg-primary);
+    background: transparent;
     border-radius: var(--radius-xs);
     cursor: pointer;
     font-size: var(--text-sm);
@@ -612,12 +577,6 @@
     outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
     outline-offset: var(--focus-ring-offset);
     z-index: 1;
-  }
-
-  .append-button-nav.compact {
-    inline-size: var(--touch-target-min);
-    block-size: var(--touch-target-min);
-    font-size: var(--text-xs);
   }
 
   .section-icon {
@@ -710,12 +669,12 @@
   .append-button-nav:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    background: var(--color-bg-primary);
+    background: transparent;
     color: var(--color-text-disabled, var(--color-text-tertiary));
   }
 
   .append-button-nav:disabled:hover {
-    background: var(--color-bg-primary);
+    background: transparent;
     color: var(--color-text-disabled, var(--color-text-tertiary));
   }
 
@@ -746,11 +705,11 @@
     gap: var(--space-1);
   }
 
+  /* Collapsed: a single centred disclose button, same height as every other row. */
   .workspace-title-header.compact {
     justify-content: center;
-    flex-direction: column;
-    gap: var(--space-1);
-    padding-block: var(--space-2);
+    padding-block: 0;
+    padding-inline: 0;
   }
 
   .workspace-title {
@@ -765,13 +724,6 @@
     min-width: 0;
   }
 
-  .workspace-title-compact {
-    font-size: var(--text-xs);
-    font-weight: var(--font-medium);
-    color: var(--color-text-primary);
-    text-align: center;
-  }
-
   .workspace-extensions {
     font-size: var(--text-xs);
     color: var(--color-text-secondary);
@@ -780,12 +732,5 @@
     text-overflow: ellipsis;
     flex-shrink: 1;
     min-width: 0;
-  }
-
-  .extensions-indicator {
-    font-size: var(--text-xs);
-    color: var(--color-text-secondary);
-    text-align: center;
-    margin-block-start: var(--space-1);
   }
 </style>

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { Package } from 'phosphor-svelte';
   import LayoutManager from './lib/LayoutManager.svelte';
   import { navigationStore } from './lib/navigation';
   import type { ViewType } from './lib/navigation/types';
@@ -625,7 +626,8 @@
             onclick={() => handlePackageRequest(currentWorkspaceState.id)}
             title={$t('Package EPUB')}
           >
-            {$t('Package EPUB')}
+            <Package size={18} aria-hidden="true" />
+            <span class="package-label">{$t('Package EPUB')}</span>
           </button>
         </div>
       {/if}
@@ -886,6 +888,10 @@
 
   .package-epub-button {
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
     padding: var(--space-2) var(--space-3);
     border: 1px solid var(--color-button-primary-bg);
     border-radius: var(--radius-sm);
@@ -896,6 +902,19 @@
     cursor: pointer;
     transition: all var(--duration-fast) ease;
     min-height: 36px;
+  }
+
+  /* Collapsed sidebar: show the package icon only (the label is illegible squeezed). */
+  :global(.sidebar.collapsed) .package-epub-section {
+    padding: var(--space-2);
+  }
+
+  :global(.sidebar.collapsed) .package-epub-button {
+    padding: var(--space-2);
+  }
+
+  :global(.sidebar.collapsed) .package-epub-button .package-label {
+    display: none;
   }
 
   .package-epub-button:hover:not(:disabled) {

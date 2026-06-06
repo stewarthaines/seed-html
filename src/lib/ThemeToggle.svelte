@@ -44,32 +44,27 @@
 </button>
 
 <style>
+  /* Flat icon button — matches the sidebar's .append-button-nav reference. */
   .theme-toggle {
     display: inline-flex;
     align-items: center;
-    justify-content: center; /* center the icon when there's no label and the 44px min-width applies */
+    justify-content: center;
     gap: var(--space-2);
-    padding-block: var(--space-2); /* Using logical properties */
-    padding-inline: var(--space-3);
-    background-color: var(--color-bg-secondary);
-    color: var(--color-text-primary);
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-md);
+    inline-size: var(--touch-target-min);
+    block-size: var(--touch-target-min);
+    background-color: transparent;
+    color: var(--color-text-secondary);
+    border: none;
+    border-radius: var(--radius-xs);
     font-family: var(--font-sans);
-    font-size: var(--text-sm);
-    font-weight: var(--font-medium);
     cursor: pointer;
     transition: all var(--duration-fast) ease;
     outline: none;
-    min-inline-size: var(--touch-target-min); /* Using accessibility tokens */
-    min-block-size: var(--touch-target-min);
   }
 
   .theme-toggle:hover {
     background-color: var(--color-bg-tertiary);
-    border-color: var(--color-border-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
+    color: var(--color-text-primary);
   }
 
   .theme-toggle:focus-visible {
@@ -77,16 +72,8 @@
     outline-offset: var(--focus-ring-offset);
   }
 
-  .theme-toggle:active {
-    transform: translateY(0);
-    box-shadow: none;
-  }
-
-  /* Size variants using logical properties */
+  /* Size variants control only the icon size; the button stays a 44px touch target. */
   .theme-toggle--small {
-    padding-block: var(--space-1); /* Using logical properties */
-    padding-inline: var(--space-2);
-    font-size: var(--text-xs);
     gap: var(--space-1);
   }
 
