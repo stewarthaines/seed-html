@@ -691,18 +691,17 @@
     flex-direction: row;
     align-items: center;
     gap: var(--space-2);
-    padding-block: var(--space-2);
+    padding-block: var(--space-1);
     padding-inline: var(--space-2);
     min-block-size: var(--touch-target-min);
   }
 
-  /* Title + extensions stack vertically; the disclosure sits to their right. */
+  /* Title + extensions stack as two tight lines that fit within the 44px row. */
   .workspace-title-info {
     flex: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
   }
 
   /* Collapsed: a single centred disclose button, same height as every other row. */
@@ -716,6 +715,7 @@
     margin: 0;
     font-size: var(--text-sm);
     font-weight: var(--font-bold);
+    line-height: 1.2;
     color: var(--color-text-primary);
     white-space: nowrap;
     overflow: hidden;
@@ -725,7 +725,9 @@
   }
 
   .workspace-extensions {
+    margin: 0;
     font-size: var(--text-xs);
+    line-height: 1.2;
     color: var(--color-text-secondary);
     white-space: nowrap;
     overflow: hidden;
