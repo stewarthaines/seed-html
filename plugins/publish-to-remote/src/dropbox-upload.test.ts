@@ -189,7 +189,7 @@ describe('uploadToDropbox', () => {
 });
 
 describe('listDropboxFiles', () => {
-  it('returns epub files with shared link fileIds', async () => {
+  it('returns all files with shared link fileIds', async () => {
     vi.stubGlobal(
       'fetch',
       vi
@@ -215,7 +215,7 @@ describe('listDropboxFiles', () => {
             ],
           }),
         })
-        .mockResolvedValueOnce({
+        .mockResolvedValue({
           ok: true,
           json: async () => ({
             links: [{ url: 'https://www.dropbox.com/s/abc/book1.epub?dl=0' }],
@@ -224,34 +224,46 @@ describe('listDropboxFiles', () => {
     );
 
     const result = await listDropboxFiles(config);
-    expect(result.objects).toHaveLength(1);
-    expect(result.objects[0].key).toBe('book1.epub');
+    expect(result.objects).toHaveLength(2);
+    expect(result.objects.map((o) => o.key)).toEqual([
+      'book1.epub',
+      'cover.jpg',
+    ]);
     expect(result.objects[0].fileId).toBe(
       'https://www.dropbox.com/s/abc/book1.epub',
     );
   });
 
-  it('filters out non-epub files', async () => {
+  it('includes non-epub files (e.g. the OPDS catalog)', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          entries: [
-            {
-              '.tag': 'file',
-              name: 'image.jpg',
-              size: 512,
-              server_modified: '2024-01-01T00:00:00.000Z',
-              path_display: '/books/image.jpg',
-            },
-          ],
+      vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            entries: [
+              {
+                '.tag': 'file',
+                name: 'catalog.xml',
+                size: 512,
+                server_modified: '2024-01-01T00:00:00.000Z',
+                path_display: '/books/catalog.xml',
+              },
+            ],
+          }),
+        })
+        .mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            links: [{ url: 'https://www.dropbox.com/s/abc/catalog.xml?dl=0' }],
+          }),
         }),
-      }),
     );
 
     const result = await listDropboxFiles(config);
-    expect(result.objects).toHaveLength(0);
+    expect(result.objects).toHaveLength(1);
+    expect(result.objects[0].key).toBe('catalog.xml');
   });
 
   it('handles empty entries array', async () => {

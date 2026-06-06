@@ -123,7 +123,7 @@ export async function listDropboxFiles(
 
     const objects: S3Object[] = [];
     for (const entry of entries) {
-      if (entry['.tag'] === 'file' && entry.name.endsWith('.epub')) {
+      if (entry['.tag'] === 'file') {
         const fileId = await getOrCreateSharedLink(config, entry.path_display);
         objects.push({
           key: entry.name,

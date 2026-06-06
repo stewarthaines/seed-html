@@ -40,9 +40,11 @@ describe('uploadToWebDAV', () => {
   it('reports a clear 401 authentication error', async () => {
     vi.stubGlobal(
       'fetch',
-      vi
-        .fn()
-        .mockResolvedValue({ ok: false, status: 401, statusText: 'Unauthorized' }),
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 401,
+        statusText: 'Unauthorized',
+      }),
     );
     const result = await uploadToWebDAV(creds, 'book.epub', new Blob(['data']));
     expect(result.success).toBe(false);
@@ -63,7 +65,7 @@ describe('uploadToWebDAV', () => {
 });
 
 describe('listWebDAVFiles', () => {
-  it('PROPFINDs and parses a 207 multistatus into epub objects', async () => {
+  it('PROPFINDs and parses a 207 multistatus into file objects (all files)', async () => {
     const xml = `<?xml version="1.0" encoding="utf-8"?>
 <d:multistatus xmlns:d="DAV:">
   <d:response>
@@ -93,11 +95,17 @@ describe('listWebDAVFiles', () => {
     const result = await listWebDAVFiles(creds);
 
     expect(result.error).toBeUndefined();
+    // The collection (/books/) is skipped; all files are returned (not just epubs).
     expect(result.objects).toEqual([
       {
         key: 'book1.epub',
         size: 1024,
         lastModified: 'Mon, 01 Jan 2024 00:00:00 GMT',
+      },
+      {
+        key: 'notes.txt',
+        size: 5,
+        lastModified: '',
       },
     ]);
     expect(fetchMock.mock.calls[0][1].method).toBe('PROPFIND');

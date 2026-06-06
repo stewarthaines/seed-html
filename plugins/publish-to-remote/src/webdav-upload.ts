@@ -132,7 +132,7 @@ function davText(parent: Element, localName: string): string {
   return nodes.length ? (nodes[0].textContent ?? '') : '';
 }
 
-/** Parse a 207 Multi-Status body into the shared S3Object shape (*.epub only). */
+/** Parse a 207 Multi-Status body into the shared S3Object shape (all files). */
 function parsePropfindXml(xml: string): S3Object[] {
   const doc = new DOMParser().parseFromString(xml, 'text/xml');
   if (doc.documentElement.tagName === 'parsererror') {
@@ -151,7 +151,7 @@ function parsePropfindXml(xml: string): S3Object[] {
     const name = decodeURIComponent(
       stripTrailingSlash(href).split('/').pop() ?? '',
     );
-    if (!name.toLowerCase().endsWith('.epub')) {
+    if (!name) {
       continue;
     }
     objects.push({
