@@ -12,6 +12,7 @@
     BookOpen,
     Info,
     Plus,
+    FileArrowUp,
     CaretLeft,
     CaretRight,
     CaretDown,
@@ -132,6 +133,27 @@
       bubbles: true,
     });
     window.dispatchEvent(event);
+  }
+
+  // Import plain-text files as chapters (one chapter per file). The hidden input
+  // is triggered by the file-arrow-up button; SpineSidebar handles the creation.
+  let textFileInput = $state<HTMLInputElement | null>(null);
+
+  function handleImportTextClick() {
+    textFileInput?.click();
+  }
+
+  function handleTextFilesSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      window.dispatchEvent(
+        new CustomEvent('import-text-chapters', {
+          detail: { files: Array.from(input.files) },
+          bubbles: true,
+        })
+      );
+      input.value = '';
+    }
   }
 
   function generateCompactLabel(label: string): string {
@@ -296,29 +318,57 @@
 
       <!-- Chapters section header (non-clickable) -->
       {#if hasWorkspace}
+        <input
+          bind:this={textFileInput}
+          type="file"
+          multiple
+          accept=".txt,.md,.markdown,text/plain"
+          class="visually-hidden-input"
+          onchange={handleTextFilesSelected}
+        />
         {#if isExpanded}
           <div class="spine-section-header workspace-title-section">
             <span class="section-label">{spineSectionLabel}</span>
-            <button
-              class="append-button-nav"
-              onclick={handleAppendItem}
-              aria-label={$t('Append Item')}
-              title={$t('Append Item')}
-            >
-              <Plus size={14} aria-hidden="true" />
-            </button>
+            <div class="spine-header-actions">
+              <button
+                class="append-button-nav"
+                onclick={handleImportTextClick}
+                aria-label={$t('Import text files as chapters')}
+                title={$t('Import text files as chapters')}
+              >
+                <FileArrowUp size={14} aria-hidden="true" />
+              </button>
+              <button
+                class="append-button-nav"
+                onclick={handleAppendItem}
+                aria-label={$t('Append Item')}
+                title={$t('Append Item')}
+              >
+                <Plus size={14} aria-hidden="true" />
+              </button>
+            </div>
           </div>
         {:else}
           <div class="spine-section-header compact">
             <span class="section-label">{generateCompactLabel(spineSectionLabel)}</span>
-            <button
-              class="append-button-nav compact"
-              onclick={handleAppendItem}
-              aria-label={$t('Append Item')}
-              title={$t('Append Item')}
-            >
-              <Plus size={14} aria-hidden="true" />
-            </button>
+            <div class="spine-header-actions compact">
+              <button
+                class="append-button-nav compact"
+                onclick={handleImportTextClick}
+                aria-label={$t('Import text files as chapters')}
+                title={$t('Import text files as chapters')}
+              >
+                <FileArrowUp size={14} aria-hidden="true" />
+              </button>
+              <button
+                class="append-button-nav compact"
+                onclick={handleAppendItem}
+                aria-label={$t('Append Item')}
+                title={$t('Append Item')}
+              >
+                <Plus size={14} aria-hidden="true" />
+              </button>
+            </div>
           </div>
         {/if}
       {/if}
@@ -509,6 +559,21 @@
   .spine-section-header .section-label {
     font-size: var(--text-sm);
     font-weight: var(--font-normal);
+  }
+
+  /* Import + append buttons sit together on the right (stacked when compact). */
+  .spine-header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+
+  .spine-header-actions.compact {
+    flex-direction: column;
+  }
+
+  .visually-hidden-input {
+    display: none;
   }
 
   .spine-section-header.compact {

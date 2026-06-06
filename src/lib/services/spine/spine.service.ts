@@ -18,6 +18,12 @@ export interface ChapterCreationOptions {
   linear?: boolean;
   createSourceFile?: boolean;
   insertIndex?: number;
+  /** Derive the chapter id/idref from this name (e.g. an uploaded filename)
+   * instead of the auto-numbered chapterNN. Sanitized and made unique. */
+  baseName?: string;
+  /** Initial plain-text source for the chapter (e.g. an uploaded file's text).
+   * Written to the SOURCE file and rendered into the chapter XHTML. */
+  sourceText?: string;
 }
 
 // Service error types
@@ -87,8 +93,14 @@ export class SpineService {
     options: ChapterCreationOptions
   ): Promise<{ updatedWorkspace: WorkspaceState; newChapter: SpineItemWithSource }> {
     try {
-      // Generate unique ID for the chapter
-      const chapterId = this.generateUniqueChapterId(workspace);
+      // Generate a unique chapter id — from the supplied base name (e.g. an
+      // uploaded filename) when given, otherwise auto-numbered.
+      const chapterId = options.baseName
+        ? this.chapterIdFromName(
+            options.baseName,
+            new Set(workspace.opf.manifest.map(item => item.id))
+          )
+        : this.generateUniqueChapterId(workspace);
       const href = `Text/${chapterId}.xhtml`;
 
       // Create manifest item
@@ -114,8 +126,11 @@ export class SpineService {
         options.insertIndex
       );
 
-      // Create XHTML file
-      const xhtmlContent = this.generateChapterXHTML(options.title);
+      // Create XHTML file (render the supplied source text when present).
+      const xhtmlContent =
+        options.sourceText !== undefined
+          ? this.generateChapterXHTMLFromText(options.title, options.sourceText)
+          : this.generateChapterXHTML(options.title);
       await this.workspaceService.writeFile(workspace.id, href, xhtmlContent);
 
       // Create source file if requested
@@ -124,7 +139,8 @@ export class SpineService {
 
       if (options.createSourceFile) {
         sourceFilePath = `SOURCE/text/${chapterId}.txt`;
-        const sourceContent = `# ${options.title}\n\nYour chapter content goes here...`;
+        const sourceContent =
+          options.sourceText ?? `# ${options.title}\n\nYour chapter content goes here...`;
         await this.workspaceService.writeFile(workspace.id, sourceFilePath, sourceContent);
         hasSourceFile = true;
       }
@@ -284,6 +300,23 @@ export class SpineService {
 
   // Private helper methods
 
+  /** Derive an XML-safe, unique chapter id from a name (e.g. a filename). */
+  private chapterIdFromName(name: string, existingIds: Set<string>): string {
+    const sanitized =
+      name
+        .replace(/\.[^.]+$/, '') // drop extension
+        .replace(/[^a-zA-Z0-9-_]/g, '-')
+        .replace(/^[^a-zA-Z]/, 'item-') // ids must start with a letter
+        .toLowerCase() || 'chapter';
+
+    let id = sanitized;
+    let counter = 1;
+    while (existingIds.has(id)) {
+      id = `${sanitized}-${counter++}`;
+    }
+    return id;
+  }
+
   private generateUniqueChapterId(workspace: WorkspaceState): string {
     const existingIds = new Set(workspace.opf.manifest.map(item => item.id));
     let counter = 1;
@@ -309,6 +342,32 @@ export class SpineService {
     <section class="chapter">
         <h1>${title}</h1>
         <p>Your chapter content goes here...</p>
+    </section>
+</body>
+</html>`;
+  }
+
+  /** Render plain text into chapter XHTML: blank-line-separated paragraphs. */
+  private generateChapterXHTMLFromText(title: string, text: string): string {
+    const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const body =
+      text
+        .split(/\n\s*\n/)
+        .map(block => block.trim())
+        .filter(Boolean)
+        .map(block => `        <p>${esc(block).replace(/\n/g, '<br />')}</p>`)
+        .join('\n') || '        <p></p>';
+
+    return `<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="en">
+<head>
+    <title>${esc(title)}</title>
+    <link rel="stylesheet" type="text/css" href="../Styles/styles.css"/>
+</head>
+<body>
+    <section class="chapter">
+${body}
     </section>
 </body>
 </html>`;

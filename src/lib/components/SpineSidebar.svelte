@@ -38,9 +38,19 @@
     };
     window.addEventListener('append-spine-item', handleAppendEvent);
 
+    // Listen for "import text files as chapters" events from Sidebar
+    const handleImportEvent = (event: Event) => {
+      const detail = (event as CustomEvent<{ files: File[] }>).detail;
+      if (detail?.files?.length) {
+        void handleImportTextChapters(detail.files);
+      }
+    };
+    window.addEventListener('import-text-chapters', handleImportEvent);
+
     // Cleanup
     return () => {
       window.removeEventListener('append-spine-item', handleAppendEvent);
+      window.removeEventListener('import-text-chapters', handleImportEvent);
     };
   });
 
@@ -120,6 +130,47 @@
       handleSelectItem(result.newChapter.id);
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to create chapter';
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  // Create a chapter per uploaded plain-text file (filename → idref, text → source).
+  async function handleImportTextChapters(files: File[]) {
+    if (!workspace) return;
+
+    // Fail the whole operation if any file isn't plain text. Empty type is allowed
+    // (browsers often report '' for .txt/.md), otherwise require a text/* type.
+    const allPlainText = files.every(file => file.type === '' || file.type.startsWith('text/'));
+    if (!allPlainText) {
+      error = 'Only plain text files can be imported as chapters.';
+      return;
+    }
+
+    try {
+      isLoading = true;
+      let firstChapterId: string | null = null;
+
+      for (const file of files) {
+        const text = await file.text();
+        const result = await spineService.addChapter(workspace, {
+          title: file.name,
+          baseName: file.name,
+          sourceText: text,
+          createSourceFile: true,
+          linear: true,
+        });
+        workspace = result.updatedWorkspace;
+        if (!firstChapterId) firstChapterId = result.newChapter.id;
+      }
+
+      if (onWorkspaceUpdate) {
+        onWorkspaceUpdate(workspace);
+      }
+      await loadSpineItems();
+      if (firstChapterId) handleSelectItem(firstChapterId);
+    } catch (err) {
+      error = err instanceof Error ? err.message : 'Failed to import chapters';
     } finally {
       isLoading = false;
     }
