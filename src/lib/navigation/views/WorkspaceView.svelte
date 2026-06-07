@@ -342,8 +342,6 @@
       <!-- Left: the list of existing projects. -->
       <Pane defaultSize={50} minSize={25}>
         <div class="workspace-pane">
-          <h2 class="pane-title">{$t('Projects')}</h2>
-
           {#if error}
             <div class="error-banner">
               <span class="error-icon" aria-hidden="true">⚠️</span>

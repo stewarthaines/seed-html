@@ -199,39 +199,41 @@
           {#if hasWorkspace && currentWorkspace}
             <div class="workspace-title-section">
               {#if isExpanded}
-                <div class="workspace-title-header">
-                  <div class="workspace-title-info">
-                    <h3 class="workspace-title" title={workspaceTitle || 'Untitled Project'}>
+                <!-- The whole title row is the disclosure control. -->
+                <button
+                  type="button"
+                  class="workspace-title-header"
+                  onclick={toggleProjectNav}
+                  aria-expanded={projectNavExpanded}
+                  aria-label={projectNavExpanded
+                    ? $t('Hide project sections')
+                    : $t('Show project sections')}
+                  title={projectNavExpanded
+                    ? $t('Hide project sections')
+                    : $t('Show project sections')}
+                >
+                  <span class="workspace-title-info">
+                    <span class="workspace-title" title={workspaceTitle || 'Untitled Project'}>
                       {workspaceTitle || 'Untitled Project'}
-                    </h3>
+                    </span>
                     {#if extensions.length > 0 || extensionsLoading}
-                      <h3 class="workspace-extensions">
+                      <span class="workspace-extensions">
                         {#if extensionsLoading}
                           Loading...
                         {:else}
                           {extensions.map(ext => ext.name).join(', ')}
                         {/if}
-                      </h3>
+                      </span>
                     {/if}
-                  </div>
-                  <button
-                    class="append-button-nav"
-                    onclick={toggleProjectNav}
-                    aria-expanded={projectNavExpanded}
-                    aria-label={projectNavExpanded
-                      ? $t('Hide project sections')
-                      : $t('Show project sections')}
-                    title={projectNavExpanded
-                      ? $t('Hide project sections')
-                      : $t('Show project sections')}
-                  >
+                  </span>
+                  <span class="disclose-caret" aria-hidden="true">
                     {#if projectNavExpanded}
-                      <CaretDown size={14} aria-hidden="true" />
+                      <CaretDown size={14} />
                     {:else}
-                      <CaretRight size={14} aria-hidden="true" />
+                      <CaretRight size={14} />
                     {/if}
-                  </button>
-                </div>
+                  </span>
+                </button>
               {:else}
                 <!-- Collapsed: just the disclose button — the badge/extension
                      count convey nothing useful at this width. Single 44px row. -->
@@ -704,6 +706,34 @@
     padding-block: var(--space-1);
     padding-inline: var(--space-2);
     min-block-size: var(--touch-target-min);
+  }
+
+  /* The expanded title row is a full-width disclosure button. */
+  button.workspace-title-header {
+    inline-size: 100%;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+    transition: background var(--duration-fast) ease;
+  }
+
+  button.workspace-title-header:hover {
+    background: var(--color-bg-hover);
+  }
+
+  button.workspace-title-header:focus-visible {
+    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
+    outline-offset: calc(-1 * var(--focus-ring-width));
+  }
+
+  .disclose-caret {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    color: var(--color-text-secondary);
   }
 
   /* Title + extensions stack as two tight lines that fit within the 44px row. */
