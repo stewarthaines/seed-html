@@ -410,23 +410,6 @@
     });
   };
 
-  // Handle smart navigation to first spine item (reuses EPUB import logic)
-  const handleSmartNavigation = (_workspaceId: string) => {
-    if (!appState) return;
-
-    // Navigate to first spine item if available (same logic as EPUB import)
-    const firstSpineItem = appState.workspace?.opf?.spine?.[0];
-    if (firstSpineItem) {
-      // Select first spine item
-      appState.selectChapter(firstSpineItem.idref);
-      // Navigate to spine view
-      navigationStore.navigateTo('spine');
-    } else {
-      // Fallback to metadata view if no spine items
-      navigationStore.navigateTo('metadata');
-    }
-  };
-
   // Handle EPUB package request
   const handlePackageRequest = async (workspaceId: string) => {
     if (!currentWorkspaceState) return;
@@ -654,6 +637,7 @@
           onCreateWorkspace={data =>
             appState?.createWorkspace(data.title, data.language) ?? Promise.resolve('')}
           onDeleteWorkspace={id => appState?.deleteWorkspace(id) ?? Promise.resolve()}
+          onDuplicateWorkspace={id => appState?.duplicateWorkspace(id) ?? Promise.resolve('')}
           onLoadWorkspace={id => appState?.loadWorkspace(id) ?? Promise.resolve()}
           onLoadWorkspaceDetails={id =>
             appState?.getWorkspaceRowDetails(id) ?? Promise.resolve({ fileCount: 0 })}
@@ -662,7 +646,6 @@
           onNavigationRequested={view => {
             navigationStore.navigateTo(view as ViewType);
           }}
-          onSmartNavigationRequested={handleSmartNavigation}
           onWorkspaceOpened={() => {
             // Workspace opened
           }}

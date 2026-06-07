@@ -361,6 +361,21 @@ export class EnhancedAppState {
     }
   }
 
+  async duplicateWorkspace(srcId: string): Promise<string> {
+    try {
+      this.isLoading = true;
+      this.errorMessage = null;
+
+      const copy = await this.workspaceService.duplicateWorkspace(srcId);
+      return copy.id;
+    } catch (error) {
+      this.errorMessage = `Failed to duplicate workspace: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      throw error;
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
   async loadWorkspace(workspaceId: string): Promise<void> {
     try {
       this.isLoading = true;

@@ -184,6 +184,31 @@ export class WorkspaceService {
   }
 
   /**
+   * Deep-copy an existing workspace into a new one. Every file is copied
+   * verbatim (OEBPS content, SOURCE/, settings sidecar, nav), then the copy's
+   * OPF is re-stamped with a fresh identifier and a "(copy)" title so it is a
+   * distinct EPUB. Returns the new workspace.
+   */
+  async duplicateWorkspace(srcId: string): Promise<WorkspaceState> {
+    const newId = this.generateWorkspaceId();
+    await this.fileStorage.createWorkspace(newId);
+
+    // Copy every file as-is. readFile/writeFile use ArrayBuffer, so this is
+    // safe for both text and binary content.
+    for (const path of await this.fileStorage.listFiles(srcId)) {
+      const content = await this.fileStorage.readFile(srcId, path);
+      await this.fileStorage.writeFile(newId, path, content);
+    }
+
+    // Re-stamp identity on the copied OPF (the copy is its own EPUB).
+    const copy = await this.loadWorkspace(newId);
+    return await this.updateMetadata(copy, {
+      title: `${copy.opf.metadata.title} (copy)`,
+      identifier: `urn:uuid:${crypto.randomUUID()}`,
+    });
+  }
+
+  /**
    * Populate workspace with sample content data
    * Pure file I/O operation - takes structured data and writes files
    */

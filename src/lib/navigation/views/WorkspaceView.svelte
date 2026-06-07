@@ -19,26 +19,26 @@
     onListWorkspaces,
     onCreateWorkspace,
     onDeleteWorkspace,
+    onDuplicateWorkspace,
     onLoadWorkspace,
     onLoadWorkspaceDetails,
     onEpubImportRequested,
     onWorkspaceChange = null,
     onWorkspaceOpened,
     onNavigationRequested,
-    onSmartNavigationRequested,
     onWorkspaceChanged,
     currentWorkspaceId = null,
   }: {
     onListWorkspaces: () => Promise<WorkspaceInfo[]>;
     onCreateWorkspace: (data: { title: string; language: string }) => Promise<string>;
     onDeleteWorkspace: (id: string) => Promise<void>;
+    onDuplicateWorkspace: (id: string) => Promise<string>;
     onLoadWorkspace: (id: string) => Promise<void>;
     onLoadWorkspaceDetails: (id: string) => Promise<WorkspaceRowDetails>;
     onEpubImportRequested: (file?: File, sourceUrl?: string) => Promise<void>;
     onWorkspaceChange?: ((workspaceId: string | null) => void) | null;
     onWorkspaceOpened?: (workspaceId: string) => void;
     onNavigationRequested?: (view: string, workspaceId?: string) => void;
-    onSmartNavigationRequested?: (workspaceId: string) => void;
     onWorkspaceChanged?: (workspaceId: string | null) => void;
     currentWorkspaceId?: string | null;
   } = $props();
@@ -54,6 +54,9 @@
   // when the app runs offline from a file:// URL — the standalone SEED.html /
   // Active EPUB case. Hide the option there.
   const isFileUrl = typeof location !== 'undefined' && location.protocol === 'file:';
+
+  // Title of the currently-loaded project, for the "Duplicate …" button label.
+  const currentProjectTitle = $derived(workspaces.find(w => w.id === currentWorkspaceId)?.title);
   let guardId = $state<string>('');
 
   // Service layer handles state directly - no reactive subscriptions needed
@@ -176,6 +179,26 @@
     }
   };
 
+  // Duplicate the current project, then select the copy (staying on Projects).
+  const handleDuplicate = async () => {
+    if (!currentWorkspaceId) return;
+    try {
+      loading = true;
+      const newId = await onDuplicateWorkspace(currentWorkspaceId);
+      await loadWorkspaces();
+      await setCurrentWorkspace(newId);
+    } catch (err) {
+      console.error('Failed to duplicate project:', err);
+      alert(
+        $t('Failed to duplicate project: {error}', {
+          error: err instanceof Error ? err.message : 'Unknown error',
+        })
+      );
+    } finally {
+      loading = false;
+    }
+  };
+
   // Open the OPDS import dialog
   const handleImportFromOPDS = () => {
     showOpdsDialog = true;
@@ -188,17 +211,14 @@
     showOpdsDialog = false;
   };
 
-  // Handle workspace selection (open workspace) with smart navigation
+  // Handle workspace selection: load it as the current project but stay on the
+  // Projects view (no navigation), so the list is stable and the duplicate
+  // action can target the selection. Opening into the editor is via the sidebar.
   const handleWorkspaceSelect = async (detail: { workspaceId: string }) => {
     const { workspaceId } = detail;
 
     try {
-      // Set as current workspace
       await setCurrentWorkspace(workspaceId);
-
-      // Use smart navigation to go to first spine item (or metadata fallback)
-      onSmartNavigationRequested?.(workspaceId);
-
       onWorkspaceOpened?.(workspaceId);
     } catch (err) {
       console.error('Failed to open workspace:', err);
@@ -364,6 +384,8 @@
             onCreateNewRequested={handleCreateNew}
             onLoadEpubRequested={handleLoadEpub}
             onImportFromOPDSRequested={isFileUrl ? undefined : handleImportFromOPDS}
+            {currentProjectTitle}
+            onDuplicateRequested={currentWorkspaceId ? handleDuplicate : undefined}
           />
         </div>
       </Pane>

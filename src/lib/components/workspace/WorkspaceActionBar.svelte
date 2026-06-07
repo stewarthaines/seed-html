@@ -6,11 +6,15 @@
     onCreateNewRequested,
     onLoadEpubRequested,
     onImportFromOPDSRequested,
+    onDuplicateRequested,
+    currentProjectTitle,
   }: {
     isLoading?: boolean;
     onCreateNewRequested?: () => void;
     onLoadEpubRequested?: () => void;
     onImportFromOPDSRequested?: () => void;
+    onDuplicateRequested?: () => void;
+    currentProjectTitle?: string;
   } = $props();
 
   const handleCreateNew = () => {
@@ -23,6 +27,10 @@
 
   const handleImportFromOPDS = () => {
     onImportFromOPDSRequested?.();
+  };
+
+  const handleDuplicate = () => {
+    onDuplicateRequested?.();
   };
 
   // Future: import from folder functionality
@@ -76,6 +84,25 @@
         <div class="button-content">
           <span class="button-title">{$t('Import from OPDS')}</span>
           <span class="button-subtitle">{$t('From a catalog URL')}</span>
+        </div>
+      </button>
+    {/if}
+
+    <!-- Duplicate the current project; shown only when a project is loaded. -->
+    {#if onDuplicateRequested}
+      <button
+        type="button"
+        class="action-button secondary"
+        onclick={handleDuplicate}
+        disabled={isLoading}
+        aria-label={$t('Duplicate the current project')}
+      >
+        <span class="button-icon" aria-hidden="true">📋</span>
+        <div class="button-content">
+          <span class="button-title"
+            >{$t('Duplicate {name}', { name: currentProjectTitle ?? '' })}</span
+          >
+          <span class="button-subtitle">{$t('Copy this project')}</span>
         </div>
       </button>
     {/if}
