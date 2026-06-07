@@ -44,9 +44,12 @@
   const DROPBOX_REDIRECT_URI =
     (import.meta.env as Record<string, string>).VITE_DROPBOX_REDIRECT_URI || '';
 
-  type ViewState = 'init' | 'configure' | 'loading' | 'ready';
+  type ViewState = 'init' | 'loading' | 'ready';
 
   let view: ViewState = $state('init');
+  // Configuring is a sub-state of 'ready': the add/edit form shows in the right
+  // pane instead of taking over the whole view.
+  let configuring = $state(false);
   let remotesStore: RemotesStore = $state({
     remotes: [],
     activeRemoteId: null,
@@ -115,7 +118,12 @@
     remotesStore = saved;
     const active = saved.remotes.find((r) => r.id === saved.activeRemoteId);
     if (!active) {
-      view = 'configure';
+      // No remote yet: show the split with the configure form in the right pane
+      // (left pane still lists local EPUBs).
+      editingRemote = null;
+      configuring = true;
+      await loadLocalEpubs();
+      view = 'ready';
     } else {
       await refreshObjectList(active);
     }
@@ -170,7 +178,11 @@
       view = 'ready';
     } else if (result.error) {
       showStatus(result.error, 'error');
-      view = 'configure';
+      // Open the failing remote for fixing, in the right pane.
+      editingRemote = target;
+      configuring = true;
+      await loadLocalEpubs();
+      view = 'ready';
     } else {
       googleAuthRequired = false;
       remoteObjects = result.objects;
@@ -194,6 +206,7 @@
         remotesStore = { ...remotesStore, remotes: updated };
       }
       await writeRemotes(remotesStore);
+      configuring = false;
       view = 'loading';
       await refreshObjectList();
     } catch (error) {
@@ -205,11 +218,12 @@
     editingRemote = remoteId
       ? (remotesStore.remotes.find((r) => r.id === remoteId) ?? null)
       : null;
-    view = 'configure';
+    configuring = true;
+    view = 'ready';
   }
 
   function onCancelConfig() {
-    view = remotesStore.remotes.length > 0 ? 'ready' : 'init';
+    configuring = false;
   }
 
   async function onReconnectGoogleDrive() {
@@ -373,7 +387,12 @@
       await writeRemotes(remotesStore);
       remoteObjects = [];
       showStatus(`Removed ${name}`, 'info');
-      view = remotesStore.remotes.length > 0 ? 'ready' : 'configure';
+      // No remotes left → offer the configure form in the right pane.
+      if (remotesStore.remotes.length === 0) {
+        editingRemote = null;
+        configuring = true;
+      }
+      view = 'ready';
     } catch (error) {
       showStatus(`Sign out error: ${String(error)}`, 'error');
     }
@@ -445,8 +464,11 @@
 <div class="plugin-container">
   {#if view === 'ready'}
     <div class="panes">
-      <PaneGroup direction="horizontal" autoSaveId="publish-remote-panes">
-        <Pane defaultSize={50} minSize={30}>
+      <!-- Shares the host app's pane key (same-origin, un-sandboxed iframe) so
+           the split proportion matches the editor/Settings/Projects splits.
+           Pane constraints must match the host's for paneforge to reuse it. -->
+      <PaneGroup direction="horizontal" autoSaveId="editme-content-panes">
+        <Pane defaultSize={50} minSize={25}>
           <div class="pane-content">
             <div class="section">
               <h3>Local EPUBs</h3>
@@ -469,39 +491,53 @@
 
         <PaneResizer />
 
-        <Pane defaultSize={50} minSize={30}>
+        <Pane defaultSize={50} minSize={20}>
           <div class="pane-content">
-            <RemoteSelector
-              {remotesStore}
-              {activeRemote}
-              {googleAuthRequired}
-              onAdd={() => onOpenConfigure()}
-              onEdit={(id) => onOpenConfigure(id)}
-              onRemove={onSignOut}
-              onSelect={onSetActiveRemote}
-              onReconnect={onReconnectGoogleDrive}
-            />
-
-            <div class="section">
-              <h3>Remote Files</h3>
-              <RemoteFileList
-                objects={remoteObjects}
-                {googleAuthRequired}
-                {onCopyUrl}
-                onDelete={onDeleteObject}
+            {#if configuring}
+              <ConfigureForm
+                {editingRemote}
+                googleClientId={GOOGLE_CLIENT_ID}
+                googleApiKey={GOOGLE_API_KEY}
+                dropboxAppKey={DROPBOX_APP_KEY}
+                dropboxRedirectUri={DROPBOX_REDIRECT_URI}
+                canCancel={remotesStore.remotes.length > 0}
+                onSave={onSaveRemote}
+                onCancel={onCancelConfig}
+                onStatus={showStatus}
               />
-            </div>
+            {:else}
+              <RemoteSelector
+                {remotesStore}
+                {activeRemote}
+                {googleAuthRequired}
+                onAdd={() => onOpenConfigure()}
+                onEdit={(id) => onOpenConfigure(id)}
+                onRemove={onSignOut}
+                onSelect={onSetActiveRemote}
+                onReconnect={onReconnectGoogleDrive}
+              />
 
-            {#if activeRemote?.type !== 'google-drive'}
-              <div class="footer">
-                <button
-                  class="btn btn-secondary"
-                  onclick={onUpdateCatalog}
-                  disabled={generatingFeed}
-                >
-                  {generatingFeed ? 'Updating...' : 'Update Catalog'}
-                </button>
+              <div class="section">
+                <h3>Remote Files</h3>
+                <RemoteFileList
+                  objects={remoteObjects}
+                  {googleAuthRequired}
+                  {onCopyUrl}
+                  onDelete={onDeleteObject}
+                />
               </div>
+
+              {#if activeRemote?.type !== 'google-drive'}
+                <div class="footer">
+                  <button
+                    class="btn btn-secondary"
+                    onclick={onUpdateCatalog}
+                    disabled={generatingFeed}
+                  >
+                    {generatingFeed ? 'Updating...' : 'Update Catalog'}
+                  </button>
+                </div>
+              {/if}
             {/if}
           </div>
         </Pane>
@@ -511,18 +547,6 @@
     <div class="centered">
       {#if view === 'init'}
         <div class="loading">Initializing...</div>
-      {:else if view === 'configure'}
-        <ConfigureForm
-          {editingRemote}
-          googleClientId={GOOGLE_CLIENT_ID}
-          googleApiKey={GOOGLE_API_KEY}
-          dropboxAppKey={DROPBOX_APP_KEY}
-          dropboxRedirectUri={DROPBOX_REDIRECT_URI}
-          canCancel={remotesStore.remotes.length > 0}
-          onSave={onSaveRemote}
-          onCancel={onCancelConfig}
-          onStatus={showStatus}
-        />
       {:else if view === 'loading'}
         <div class="loading">Connecting to storage...</div>
       {/if}
