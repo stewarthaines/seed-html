@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
+  import { PaneGroup, Pane, PaneResizer } from 'paneforge';
   import { navigationStore } from '../navigation-store';
   import { t, currentLocale } from '../../i18n';
   import type { EPUBMetadata } from '../../epub/opf-utils';
@@ -310,50 +311,63 @@
 </script>
 
 <div class="workspace-view">
-  <div class="view-content">
-    <!-- Action Bar -->
-    <WorkspaceActionBar
-      isLoading={loading}
-      onCreateNewRequested={handleCreateNew}
-      onLoadEpubRequested={handleLoadEpub}
-      onImportFromOPDSRequested={handleImportFromOPDS}
-    />
+  <!-- Shares the editor's pane key so the split proportion is one global value. -->
+  <div class="workspace-panes-wrap">
+    <PaneGroup direction="horizontal" autoSaveId="editme-content-panes">
+      <!-- Left: the list of existing projects. -->
+      <Pane defaultSize={50} minSize={25}>
+        <div class="workspace-pane">
+          <h2 class="pane-title">{$t('Projects')}</h2>
 
-    {#if showOpdsDialog}
-      <OPDSImportDialog onImport={handleOpdsImport} onClose={() => (showOpdsDialog = false)} />
-    {/if}
+          {#if error}
+            <div class="error-banner">
+              <span class="error-icon" aria-hidden="true">⚠️</span>
+              <span class="error-text">{error}</span>
+              <button type="button" class="btn btn-secondary" onclick={loadWorkspaces}>
+                {$t('Retry')}
+              </button>
+            </div>
+          {/if}
 
-    <!-- Error State -->
-    {#if error}
-      <div class="error-banner">
-        <span class="error-icon" aria-hidden="true">⚠️</span>
-        <span class="error-text">{error}</span>
-        <button type="button" class="btn btn-secondary" onclick={loadWorkspaces}>
-          {$t('Retry')}
-        </button>
-      </div>
-    {/if}
+          <WorkspaceList
+            {workspaces}
+            {currentWorkspaceId}
+            {onLoadWorkspaceDetails}
+            isLoading={loading}
+            onWorkspaceSelected={handleWorkspaceSelect}
+            onWorkspaceDeleted={handleWorkspaceDelete}
+          />
 
-    <!-- Cleanup Banner removed - service layer handles error detection -->
+          {#if hasUnsavedChanges}
+            <div class="unsaved-indicator">
+              <span class="indicator-icon" aria-hidden="true">⚠️</span>
+              <span>{$t('You have unsaved changes')}</span>
+            </div>
+          {/if}
+        </div>
+      </Pane>
 
-    <!-- Workspace List -->
-    <WorkspaceList
-      {workspaces}
-      {currentWorkspaceId}
-      {onLoadWorkspaceDetails}
-      isLoading={loading}
-      onWorkspaceSelected={handleWorkspaceSelect}
-      onWorkspaceDeleted={handleWorkspaceDelete}
-    />
+      <PaneResizer />
 
-    <!-- Unsaved Changes Indicator -->
-    {#if hasUnsavedChanges}
-      <div class="unsaved-indicator">
-        <span class="indicator-icon" aria-hidden="true">⚠️</span>
-        <span>{$t('You have unsaved changes')}</span>
-      </div>
-    {/if}
+      <!-- Right: the ways to start a new project. -->
+      <Pane defaultSize={50} minSize={20}>
+        <div class="workspace-pane">
+          <h2 class="pane-title">{$t('Get Started')}</h2>
+
+          <WorkspaceActionBar
+            isLoading={loading}
+            onCreateNewRequested={handleCreateNew}
+            onLoadEpubRequested={handleLoadEpub}
+            onImportFromOPDSRequested={handleImportFromOPDS}
+          />
+        </div>
+      </Pane>
+    </PaneGroup>
   </div>
+
+  {#if showOpdsDialog}
+    <OPDSImportDialog onImport={handleOpdsImport} onClose={() => (showOpdsDialog = false)} />
+  {/if}
 </div>
 
 <style>
@@ -365,10 +379,25 @@
     color: var(--color-text-primary);
   }
 
-  .view-content {
+  .workspace-panes-wrap {
     flex: 1;
-    padding: var(--space-6);
+    min-height: 0;
+  }
+
+  .workspace-pane {
+    height: 100%;
     overflow-y: auto;
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .pane-title {
+    margin: 0;
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--color-text-primary);
   }
 
   .error-banner {
@@ -413,7 +442,7 @@
 
   /* Mobile adjustments */
   @media (max-width: 768px) {
-    .view-content {
+    .workspace-pane {
       padding: var(--space-4);
     }
   }

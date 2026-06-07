@@ -33,7 +33,6 @@
 </script>
 
 <div class="workspace-action-bar">
-  <h2 class="section-title">{$t('Get Started')}</h2>
   <div class="action-buttons">
     <button
       type="button"
@@ -96,17 +95,6 @@
 </div>
 
 <style>
-  .workspace-action-bar {
-    margin-block-end: var(--space-6);
-  }
-
-  .section-title {
-    margin: 0 0 var(--space-4) 0;
-    font-size: var(--text-lg);
-    font-weight: 600;
-    color: var(--color-text-primary);
-  }
-
   .action-buttons {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(15em, 1fr));

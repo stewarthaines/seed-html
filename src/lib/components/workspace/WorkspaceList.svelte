@@ -97,7 +97,7 @@
         <p class="loading-text">{$t('Loading projects…')}</p>
       </div>
     {:else if workspaces.length === 0}
-      <!-- No projects yet — the "Get Started" action bar above is the first-run guide. -->
+      <!-- No projects yet — the "Get Started" panel alongside is the first-run guide. -->
     {:else if filteredWorkspaces.length === 0}
       <div class="no-results">
         <div class="no-results-icon" aria-hidden="true">🔍</div>
