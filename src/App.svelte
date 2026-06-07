@@ -581,6 +581,7 @@
   <LayoutManager
     hasWorkspace={!!currentWorkspaceId}
     {hasPublishedEpubs}
+    {enabledPluginIds}
     currentWorkspace={currentWorkspaceState}
     {workspaceTitle}
     {extensionManager}

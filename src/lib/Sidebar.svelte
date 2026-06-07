@@ -24,6 +24,7 @@
     activeSection?: SidebarSection;
     hasWorkspace?: boolean;
     hasPublishedEpubs?: boolean;
+    enabledPluginIds?: string[];
     currentWorkspace?: any;
     workspaceTitle?: string;
     extensionManager?: any;
@@ -43,6 +44,7 @@
     activeSection = 'workspace',
     hasWorkspace = false,
     hasPublishedEpubs = false,
+    enabledPluginIds = [],
     currentWorkspace = null,
     workspaceTitle = undefined,
     extensionManager = null,
@@ -103,6 +105,14 @@
       ? $t('Pages')
       : $t('Chapters')
   );
+
+  // When the publish-to-remote plugin is enabled, annotate the Publish item so
+  // the user can see which plugin is driving it.
+  const PUBLISH_PLUGIN_ID = 'publish-to-remote';
+  const sectionLabel = (section: { id: SidebarSection; label: string }) =>
+    section.id === 'publish' && enabledPluginIds.includes(PUBLISH_PLUGIN_ID)
+      ? `${$t('Publish')} (${PUBLISH_PLUGIN_ID})`
+      : $t(section.label);
 
   // The book title hosts a disclosure that collapses the project nav group.
   const PROJECT_NAV_IDS: SidebarSection[] = ['settings', 'metadata', 'manifest', 'navigation'];
@@ -257,7 +267,7 @@
             onclick={() => setSidebarSection(section.id)}
             {disabled}
             aria-current={activeSection === section.id ? 'page' : undefined}
-            title={disabled ? $t('No published EPUBs yet') : $t(section.label)}
+            title={disabled ? $t('No published EPUBs yet') : sectionLabel(section)}
           >
             <span class="section-icon">
               <Icon
@@ -267,7 +277,7 @@
               />
             </span>
             {#if isExpanded}
-              <span class="section-label">{$t(section.label)}</span>
+              <span class="section-label">{sectionLabel(section)}</span>
             {/if}
           </button>
         {/if}
