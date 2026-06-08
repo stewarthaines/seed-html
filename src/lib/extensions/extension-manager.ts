@@ -115,23 +115,32 @@ export class ExtensionManager {
    * SOURCE/extensions/<id>/. The copied extension.json lets the project classify
    * libs vs transforms reliably (see getAvailableTransforms / the iframe loader).
    *
+   * Assets (e.g. a CSS theme) are different: they belong in the EPUB output, so
+   * they are written under OEBPS/<target> and returned so the caller can register
+   * them in the OPF manifest.
+   *
    * @param workspaceId - Target workspace identifier
    * @param entry - Catalog entry (from loadExtensionCatalog)
    * @param options.fetch - Fetch implementation (injectable for tests)
    * @param options.baseUrl - Base URL the extensions/ folder resolves against
+   * @returns The written EPUB assets (manifest target + media), for manifest registration
    */
   async importCatalogExtension(
     workspaceId: string,
     entry: ExtensionCatalogEntry,
     options: { fetch?: typeof fetch; baseUrl?: string } = {}
-  ): Promise<void> {
+  ): Promise<Array<{ target: string; media?: string }>> {
     const fetchImpl = options.fetch ?? globalThis.fetch.bind(globalThis);
+    // Dedupe: a license file may be referenced by several scripts/assets, or equal
+    // the extension-wide license. entry.licenses already aggregates them all.
     const files = [
-      ...entry.scripts,
-      ...entry.domTransforms,
-      ...entry.textTransforms,
-      ...(entry.license ? [entry.license] : []),
-      'extension.json',
+      ...new Set([
+        ...entry.scripts,
+        ...entry.domTransforms,
+        ...entry.textTransforms,
+        ...entry.licenses,
+        'extension.json',
+      ]),
     ];
 
     for (const file of files) {
@@ -147,6 +156,32 @@ export class ExtensionManager {
         content
       );
     }
+
+    // EPUB assets → OEBPS/<target> (book output), reported back for manifest registration.
+    const writtenAssets: Array<{ target: string; media?: string }> = [];
+    for (const asset of entry.assets ?? []) {
+      if (!this.isSafeAssetTarget(asset.target)) {
+        throw new Error(`Unsafe asset target '${asset.target}' for extension '${entry.id}'`);
+      }
+      const url = resolveExtensionFileUrl(entry.id, asset.file, { baseUrl: options.baseUrl });
+      const response = await fetchImpl(url);
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch asset ${asset.file} for extension '${entry.id}': ${response.status}`
+        );
+      }
+      const content = await response.arrayBuffer();
+      await this.fileStorage.writeFile(workspaceId, `OEBPS/${asset.target}`, content);
+      writtenAssets.push({ target: asset.target, media: asset.media });
+    }
+
+    return writtenAssets;
+  }
+
+  /** Reject absolute paths and any '..' segment so an asset can't escape OEBPS/. */
+  private isSafeAssetTarget(target: string): boolean {
+    if (!target || target.startsWith('/')) return false;
+    return !target.split('/').includes('..');
   }
 
   /**

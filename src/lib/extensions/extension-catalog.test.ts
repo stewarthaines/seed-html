@@ -24,6 +24,16 @@ describe('extension-catalog', () => {
         scripts: ['djot.js'],
         textTransforms: ['transformDjot.js'],
       },
+      // assets present (one well-formed, one malformed → dropped)
+      {
+        id: 'highlight',
+        name: 'highlight.js',
+        scripts: ['highlight.min.js'],
+        assets: [
+          { file: 'themes/default.css', target: 'Styles/highlight.css', media: 'text/css' },
+          { file: 'broken.css' }, // missing target → dropped
+        ],
+      },
       { id: 'bad' }, // missing scripts → filtered
     ];
     const fetchFn = vi.fn(async () => jsonResponse(entries));
@@ -45,6 +55,8 @@ describe('extension-catalog', () => {
         scripts: ['prism.js'],
         domTransforms: ['transformPrism.js'],
         textTransforms: [],
+        assets: [],
+        licenses: [],
       },
       {
         id: 'djot',
@@ -55,8 +67,66 @@ describe('extension-catalog', () => {
         scripts: ['djot.js'],
         domTransforms: [],
         textTransforms: ['transformDjot.js'],
+        assets: [],
+        licenses: [],
+      },
+      {
+        id: 'highlight',
+        name: 'highlight.js',
+        description: undefined,
+        url: undefined,
+        license: undefined,
+        scripts: ['highlight.min.js'],
+        domTransforms: [],
+        textTransforms: [],
+        assets: [
+          {
+            file: 'themes/default.css',
+            target: 'Styles/highlight.css',
+            media: 'text/css',
+            license: undefined,
+          },
+        ],
+        licenses: [],
       },
     ]);
+  });
+
+  it('flattens object-form scripts and aggregates per-file licenses (deduped)', async () => {
+    const entries = [
+      {
+        id: 'abc2svg',
+        name: 'abc2svg',
+        license: 'LICENSE.txt',
+        scripts: [
+          'plain.js', // bare string still accepted
+          { file: 'abc2svg-1.js', license: 'abc2svg-LICENSE.txt' },
+          { file: 'js-yaml.min.js', license: 'LICENSE.txt' }, // shared with extension-wide → deduped
+          { license: 'orphan.txt' }, // no file → dropped from scripts, license ignored too
+        ],
+        assets: [
+          {
+            file: 'fonts/music.woff',
+            target: 'Fonts/music.woff',
+            media: 'font/woff',
+            license: 'font-LICENSE.txt',
+          },
+        ],
+      },
+    ];
+    const fetchFn = vi.fn(async () => jsonResponse(entries));
+
+    const [entry] = await loadExtensionCatalog({
+      protocol: 'https:',
+      baseUrl: BASE,
+      fetch: fetchFn,
+    });
+
+    expect(entry.scripts).toEqual(['plain.js', 'abc2svg-1.js', 'js-yaml.min.js']);
+    expect(entry.assets[0].license).toBe('font-LICENSE.txt');
+    // Extension-wide first, then per-script (deduped), then per-asset. 'orphan.txt'
+    // is ignored because its entry declares no file.
+    expect(entry.licenses).toEqual(['LICENSE.txt', 'abc2svg-LICENSE.txt', 'font-LICENSE.txt']);
   });
 
   it('returns [] on file:// without fetching', async () => {

@@ -41,6 +41,8 @@ describe('ExtensionManager.importCatalogExtension', () => {
       scripts: ['prism.js'],
       domTransforms: ['transformPrism.js'],
       textTransforms: [],
+      assets: [],
+      licenses: ['LICENSE.txt'],
     };
     const bodies: Record<string, string> = {
       'prism.js': 'PRISM_LIB',
@@ -54,12 +56,114 @@ describe('ExtensionManager.importCatalogExtension', () => {
     });
 
     const mgr = new ExtensionManager(api);
-    await mgr.importCatalogExtension('ws', entry, { fetch: fetchImpl, baseUrl: 'https://x/' });
+    const written = await mgr.importCatalogExtension('ws', entry, {
+      fetch: fetchImpl,
+      baseUrl: 'https://x/',
+    });
 
     expect(dec.decode(files.get('SOURCE/extensions/prism/prism.js')!)).toBe('PRISM_LIB');
     expect(dec.decode(files.get('SOURCE/extensions/prism/transformPrism.js')!)).toBe('TRANSFORM');
     expect(files.has('SOURCE/extensions/prism/LICENSE.txt')).toBe(true);
     expect(files.has('SOURCE/extensions/prism/extension.json')).toBe(true);
+    // No assets declared → none written, none returned.
+    expect(written).toEqual([]);
+  });
+
+  it('writes EPUB assets to OEBPS/<target> and returns them for manifest registration', async () => {
+    const { api, files } = makeFileStorage();
+    const entry: ExtensionCatalogEntry = {
+      id: 'highlight',
+      name: 'highlight.js',
+      scripts: ['highlight.min.js'],
+      domTransforms: ['transformHighlight.js'],
+      textTransforms: [],
+      assets: [{ file: 'themes/default.css', target: 'Styles/highlight.css', media: 'text/css' }],
+      licenses: [],
+    };
+    const bodies: Record<string, string> = {
+      'highlight.min.js': 'HLJS',
+      'transformHighlight.js': 'TRANSFORM',
+      'extension.json': '{"id":"highlight"}',
+      'default.css': 'CSS',
+    };
+    const fetchImpl = vi.fn(async (url: string) => {
+      const file = url.split('/').pop() as string;
+      return { ok: true, arrayBuffer: async () => enc.encode(bodies[file]).buffer } as Response;
+    });
+
+    const mgr = new ExtensionManager(api);
+    const written = await mgr.importCatalogExtension('ws', entry, {
+      fetch: fetchImpl,
+      baseUrl: 'https://x/',
+    });
+
+    // The asset is fetched at extensions/<id>/<file> (preserving subdirs) ...
+    expect(fetchImpl).toHaveBeenCalledWith('https://x/extensions/highlight/themes/default.css');
+    // ... written into the EPUB output, not SOURCE/ ...
+    expect(dec.decode(files.get('OEBPS/Styles/highlight.css')!)).toBe('CSS');
+    // ... and reported back for manifest registration.
+    expect(written).toEqual([{ target: 'Styles/highlight.css', media: 'text/css' }]);
+  });
+
+  it('bundles every per-file license into SOURCE/extensions/<id>/ (deduped)', async () => {
+    const { api, files } = makeFileStorage();
+    // Two scripts + an asset, each with its own license, plus a shared extension-wide one.
+    const entry: ExtensionCatalogEntry = {
+      id: 'abc2svg',
+      name: 'abc2svg',
+      license: 'LICENSE.txt',
+      scripts: ['abc2svg-1.js', 'js-yaml.min.js'],
+      domTransforms: ['transformAbc.js'],
+      textTransforms: [],
+      assets: [{ file: 'fonts/music.woff', target: 'Fonts/music.woff', media: 'font/woff' }],
+      licenses: ['LICENSE.txt', 'abc2svg-LICENSE.txt', 'js-yaml-LICENSE.txt', 'font-LICENSE.txt'],
+    };
+    const fetchImpl = vi.fn(async (url: string) => {
+      const file = url.split('/').pop() as string;
+      return { ok: true, arrayBuffer: async () => enc.encode(file).buffer } as Response;
+    });
+
+    const mgr = new ExtensionManager(api);
+    const written = await mgr.importCatalogExtension('ws', entry, {
+      fetch: fetchImpl,
+      baseUrl: 'https://x/',
+    });
+
+    // Every declared license lands in SOURCE/ (not OEBPS/).
+    for (const lic of entry.licenses) {
+      expect(files.has(`SOURCE/extensions/abc2svg/${lic}`)).toBe(true);
+    }
+    // The font asset still goes to OEBPS/; its license is bundled to SOURCE/ above.
+    expect(files.has('OEBPS/Fonts/music.woff')).toBe(true);
+    expect(files.has('OEBPS/font-LICENSE.txt')).toBe(false);
+    expect(written).toEqual([{ target: 'Fonts/music.woff', media: 'font/woff' }]);
+    // Each unique file fetched once (LICENSE.txt not double-fetched).
+    const licenseFetches = fetchImpl.mock.calls.filter(([u]) =>
+      String(u).endsWith('/LICENSE.txt')
+    );
+    expect(licenseFetches).toHaveLength(1);
+  });
+
+  it('rejects an asset target that escapes OEBPS/', async () => {
+    const { api } = makeFileStorage();
+    const entry: ExtensionCatalogEntry = {
+      id: 'evil',
+      name: 'Evil',
+      scripts: ['lib.js'],
+      domTransforms: [],
+      textTransforms: [],
+      assets: [{ file: 'x.css', target: '../escape.css' }],
+      licenses: [],
+    };
+    const fetchImpl = vi.fn(async () => ({
+      ok: true,
+      arrayBuffer: async () => enc.encode('x').buffer,
+    })) as unknown as typeof fetch;
+
+    const mgr = new ExtensionManager(api);
+    await expect(
+      mgr.importCatalogExtension('ws', entry, { fetch: fetchImpl, baseUrl: 'https://x/' })
+    ).rejects.toThrow(/Unsafe asset target/);
   });
 });
 

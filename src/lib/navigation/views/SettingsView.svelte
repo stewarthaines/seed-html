@@ -38,6 +38,12 @@
     /** Extensions catalog from extensions/manifest.json (empty unless served over HTTP). */
     availableExtensions?: ExtensionCatalogEntry[];
     onTogglePlugin?: (id: string, enabled: boolean) => void;
+    /**
+     * Register EPUB assets an imported extension wrote to OEBPS/ (e.g. a CSS theme)
+     * in the manifest and re-link them into chapters. Owned by App (needs the
+     * workspace + transform engine); a no-op when SettingsView is used standalone.
+     */
+    onExtensionAssets?: (assets: Array<{ target: string; media?: string }>) => Promise<void>;
     onSettingsChanged?: () => void;
   }
 
@@ -50,6 +56,7 @@
     enabledPluginIds = [],
     availableExtensions = [],
     onTogglePlugin,
+    onExtensionAssets,
     onSettingsChanged,
   }: Props = $props();
 
@@ -351,11 +358,17 @@
     if (!workspaceId) return;
     importingExtensionId = entry.id;
     try {
-      await extensionManager.importCatalogExtension(workspaceId, entry);
+      const assets = await extensionManager.importCatalogExtension(workspaceId, entry);
       await transformEngine.setWorkspaceExtensions(workspaceId);
       extensions = await extensionManager.listWorkspaceExtensions(workspaceId);
       availableTransforms = await settingsService.getAvailableTransforms(workspaceId);
       availableTextTransforms = await settingsService.getAvailableTextTransforms(workspaceId);
+
+      // Register any EPUB assets (e.g. a CSS theme) in the manifest and re-link
+      // them into existing chapters — owned by App (needs the workspace + engine).
+      if (assets.length > 0) {
+        await onExtensionAssets?.(assets);
+      }
 
       // Auto-adopt the extension's text transform when the project's is still the
       // untouched default — the typical "install one text extension" flow.

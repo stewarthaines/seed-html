@@ -1,9 +1,10 @@
 {
   "id": "highlight",
   "name": "highlight.js",
-  "description": "Syntax highlighting library.",
+  "description": "Syntax highlighting for code blocks via highlight.js.",
   "license": "LICENSE.txt",
   "scripts": ["highlight.min.js"],
-  "domTransforms": [],
-  "textTransforms": []
+  "domTransforms": ["transformHighlight.js"],
+  "textTransforms": [],
+  "assets": [{ "file": "themes/default.css", "target": "Styles/highlight.css", "media": "text/css" }]
 }

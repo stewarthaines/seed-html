@@ -47,9 +47,27 @@ for (const dirent of dirents) {
   }
 
   const { id, name, description, url, license } = meta;
-  const scripts = Array.isArray(meta.scripts) ? meta.scripts : [];
+  // A scripts entry is a bare filename or { file, license? }; flatten to filenames.
+  const scriptFile = s =>
+    typeof s === 'string' ? s : s && typeof s.file === 'string' ? s.file : null;
+  const rawScripts = Array.isArray(meta.scripts) ? meta.scripts : [];
+  const scripts = rawScripts.map(scriptFile).filter(Boolean);
   const domTransforms = Array.isArray(meta.domTransforms) ? meta.domTransforms : [];
   const textTransforms = Array.isArray(meta.textTransforms) ? meta.textTransforms : [];
+  // EPUB assets the extension copies into OEBPS/ (e.g. CSS). Keep only well-formed entries.
+  const assets = (Array.isArray(meta.assets) ? meta.assets : []).filter(
+    a => a && typeof a.file === 'string' && typeof a.target === 'string'
+  );
+  // Every license file to bundle: extension-wide + per-script + per-asset, deduped.
+  const licenses = [
+    ...new Set(
+      [
+        license,
+        ...rawScripts.map(s => (s && typeof s === 'object' && scriptFile(s) ? s.license : null)),
+        ...assets.map(a => a.license),
+      ].filter(l => typeof l === 'string' && l)
+    ),
+  ];
   if (!id || !name || scripts.length === 0) {
     console.warn(
       `⚠️  ${dirent.name}: incomplete extension.json (need id, name, scripts) — skipped`
@@ -57,18 +75,21 @@ for (const dirent of dirents) {
     continue;
   }
 
-  // Copy the declared files (skip any that are missing, warn).
-  const files = [
+  // Copy the declared files (skip any that are missing, warn). Scripts/transforms/
+  // license are fetched by basename, so they flatten into the extension dir. Asset
+  // files are fetched at extensions/<id>/<file>, so their relative path (which may
+  // include subdirs, e.g. themes/default.css) is preserved.
+  const flatFiles = [
     ...scripts,
     ...domTransforms,
     ...textTransforms,
-    ...(license ? [license] : []),
+    ...licenses,
     'extension.json',
   ];
   const destDir = path.join(outDir, id);
   await fs.mkdir(destDir, { recursive: true });
   let ok = true;
-  for (const file of files) {
+  for (const file of flatFiles) {
     const src = path.join(dir, file);
     if (!(await exists(src))) {
       console.warn(`⚠️  ${id}: missing file ${file} — skipped extension`);
@@ -77,9 +98,31 @@ for (const dirent of dirents) {
     }
     await fs.copyFile(src, path.join(destDir, path.basename(file)));
   }
+  for (const asset of assets) {
+    const src = path.join(dir, asset.file);
+    if (!(await exists(src))) {
+      console.warn(`⚠️  ${id}: missing asset ${asset.file} — skipped extension`);
+      ok = false;
+      break;
+    }
+    const dest = path.join(destDir, asset.file);
+    await fs.mkdir(path.dirname(dest), { recursive: true });
+    await fs.copyFile(src, dest);
+  }
   if (!ok) continue;
 
-  manifest.push({ id, name, description, url, license, scripts, domTransforms, textTransforms });
+  manifest.push({
+    id,
+    name,
+    description,
+    url,
+    license,
+    scripts,
+    domTransforms,
+    textTransforms,
+    assets,
+    licenses,
+  });
 }
 
 await fs.mkdir(outDir, { recursive: true });

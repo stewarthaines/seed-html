@@ -158,9 +158,37 @@ export default defineConfig({
               const m = JSON.parse(
                 await fs.readFile(path.join(extensionsRoot, name, 'extension.json'), 'utf8')
               );
-              const scripts = Array.isArray(m.scripts) ? m.scripts : [];
+              // A scripts entry is a bare filename or { file, license? }; flatten.
+              const scriptFile = (s: unknown): string | null =>
+                typeof s === 'string'
+                  ? s
+                  : s && typeof (s as Record<string, unknown>).file === 'string'
+                    ? ((s as Record<string, unknown>).file as string)
+                    : null;
+              const rawScripts = Array.isArray(m.scripts) ? m.scripts : [];
+              const scripts = rawScripts.map(scriptFile).filter(Boolean);
               const domTransforms = Array.isArray(m.domTransforms) ? m.domTransforms : [];
               const textTransforms = Array.isArray(m.textTransforms) ? m.textTransforms : [];
+              const assets = (Array.isArray(m.assets) ? m.assets : []).filter(
+                (a: unknown) =>
+                  !!a &&
+                  typeof (a as Record<string, unknown>).file === 'string' &&
+                  typeof (a as Record<string, unknown>).target === 'string'
+              );
+              // Every license file to bundle: extension-wide + per-script + per-asset, deduped.
+              const licenses = [
+                ...new Set(
+                  [
+                    m.license,
+                    ...rawScripts.map((s: unknown) =>
+                      s && typeof s === 'object' && scriptFile(s)
+                        ? (s as Record<string, unknown>).license
+                        : null
+                    ),
+                    ...assets.map((a: Record<string, unknown>) => a.license),
+                  ].filter((l: unknown) => typeof l === 'string' && l)
+                ),
+              ];
               if (m.id && m.name && scripts.length > 0) {
                 manifest.push({
                   id: m.id,
@@ -171,6 +199,8 @@ export default defineConfig({
                   scripts,
                   domTransforms,
                   textTransforms,
+                  assets,
+                  licenses,
                 });
               }
             } catch {

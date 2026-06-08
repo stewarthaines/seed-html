@@ -45,6 +45,7 @@
   import { EPUBUnpacker } from './lib/epub/EPUBUnpacker.js';
   import { generateEPUBTimestamp } from './lib/epub/opf-utils.js';
   import { ensureGeneratedNav } from './lib/outline/nav-coherence.js';
+  import { createSpinePreviewManager } from './lib/transform/spine-preview-manager.js';
 
   // Extension manager instance
   let extensionManager = $state<ExtensionManager>();
@@ -420,6 +421,93 @@
     });
   };
 
+  // After a catalog extension is imported, register any EPUB assets it brought
+  // (e.g. a CSS theme written to OEBPS/) in the OPF manifest, then re-link them
+  // into existing chapters. Idempotent: an asset already in the manifest is skipped.
+  const handleExtensionAssets = async (
+    assets: Array<{ target: string; media?: string }>
+  ): Promise<void> => {
+    if (!appState || !currentWorkspaceState) return;
+
+    let workspace = currentWorkspaceState;
+    let addedStylesheet = false;
+    for (const asset of assets) {
+      if (workspace.opf.manifest.some(item => item.href === asset.target)) continue;
+      workspace = await workspaceService.addManifestItem(workspace, {
+        href: asset.target,
+        mediaType: asset.media,
+      });
+      const isCss =
+        (asset.media ?? '').startsWith('text/css') || asset.target.toLowerCase().endsWith('.css');
+      if (isCss) addedStylesheet = true;
+    }
+
+    appState.workspace = workspace;
+
+    // A new stylesheet only reaches existing chapters once their stored XHTML is
+    // regenerated (the packager zips stored files as-is).
+    if (addedStylesheet) {
+      await regenerateAllChapters(workspace.id);
+    }
+  };
+
+  // Regenerate every editor-authored chapter's stored XHTML so manifest changes
+  // (notably a newly added stylesheet) are linked into each chapter's <head>.
+  // Reuses the spine preview render+save path. Only chapters that have a text
+  // source are touched, so hand-authored XHTML without a SOURCE/text/*.txt is
+  // never overwritten with an empty render.
+  async function regenerateAllChapters(workspaceId: string): Promise<void> {
+    if (!transformEngine || !extensionManager) return;
+
+    const workspace = await workspaceService.loadWorkspace(workspaceId);
+    const spine = workspace.opf.spine ?? [];
+    if (spine.length === 0) return;
+
+    const settingsService = appState!.getSettingsService();
+    // A throwaway blob manager so the regeneration pass never revokes the
+    // app-level manager's live preview URLs on cleanup.
+    const scratchBlobs = new BlobURLManager({
+      fileStorage,
+      basePath: 'OEBPS',
+      maxBlobURLs: 100,
+      onCapacityReached: () => {
+        /* scratch pass — capacity pressure is irrelevant, URLs are discarded */
+      },
+    });
+
+    const manager = createSpinePreviewManager(
+      workspaceId,
+      spine[0].idref,
+      fileStorage,
+      extensionManager,
+      scratchBlobs,
+      workspaceService,
+      settingsService,
+      transformEngine,
+      { autoSave: false, persistToManifest: true },
+      () => {
+        /* preview output unused — this pass only persists regenerated XHTML */
+      },
+      () => {
+        /* render errors are non-fatal here; a bad chapter just isn't relinked */
+      }
+    );
+
+    try {
+      await manager.initialize();
+      for (const item of spine) {
+        const hasText = await fileStorage.fileExists(workspaceId, `SOURCE/text/${item.idref}.txt`);
+        if (!hasText) continue;
+        // switchToSpineItem (re)loads the chapter's text; force a synchronous
+        // render that persists the regenerated XHTML to the manifest.
+        await manager.switchToSpineItem(item.idref);
+        await manager.forcePreviewUpdate();
+      }
+    } finally {
+      manager.cleanup();
+    }
+  }
+
   // Handle EPUB package request
   const handlePackageRequest = async (workspaceId: string) => {
     if (!currentWorkspaceState) return;
@@ -738,6 +826,7 @@
           {availablePlugins}
           {enabledPluginIds}
           {availableExtensions}
+          onExtensionAssets={handleExtensionAssets}
           onTogglePlugin={(id, enabled) => {
             appState?.getSettingsService().setPluginEnabled(id, enabled);
             enabledPluginIds = appState?.getSettingsService().getEnabledPlugins() ?? [];

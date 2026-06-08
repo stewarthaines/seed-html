@@ -144,7 +144,21 @@ export class TransformEngine {
             await fileStorage.readTextFile(workspaceId, `${prefix}extension.json`)
           );
           if (Array.isArray(meta?.scripts)) {
-            const declared = new Set(meta.scripts.filter((s: unknown) => typeof s === 'string'));
+            // A scripts entry is a bare filename or { file, license? }; flatten to
+            // filenames so an object-form lib (e.g. js-yaml) is still recognised.
+            const declared = new Set(
+              meta.scripts
+                .map((s: unknown) =>
+                  typeof s === 'string'
+                    ? s
+                    : s &&
+                        typeof s === 'object' &&
+                        typeof (s as { file?: unknown }).file === 'string'
+                      ? (s as { file: string }).file
+                      : null
+                )
+                .filter((f: string | null): f is string => f !== null)
+            );
             libFilenames = allJs.filter(name => declared.has(name));
           }
         } catch {
