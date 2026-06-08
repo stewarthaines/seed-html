@@ -3,7 +3,6 @@
   import { Package } from 'phosphor-svelte';
   import LayoutManager from './lib/LayoutManager.svelte';
   import { navigationStore } from './lib/navigation';
-  import type { ViewType } from './lib/navigation/types';
   import AboutView from './lib/navigation/views/AboutView.svelte';
   import ThirdPartyView from './lib/navigation/views/ThirdPartyView.svelte';
   import WorkspaceView from './lib/navigation/views/WorkspaceView.svelte';
@@ -46,6 +45,8 @@
   import { generateEPUBTimestamp } from './lib/epub/opf-utils.js';
   import { ensureGeneratedNav } from './lib/outline/nav-coherence.js';
   import { createSpinePreviewManager } from './lib/transform/spine-preview-manager.js';
+  import { addTransform } from './lib/settings/dom-transforms.js';
+  import type { CreateProjectData } from './lib/components/workspace/CreateProjectDialog.svelte';
 
   // Extension manager instance
   let extensionManager = $state<ExtensionManager>();
@@ -508,6 +509,75 @@
     }
   }
 
+  // Create a project from the new-project dialog: provision it, set the author,
+  // install the chosen text-format extension, then open the first chapter — so a
+  // new author lands directly in a working chapter rendered through their format.
+  const handleCreateProject = async (data: CreateProjectData): Promise<void> => {
+    if (!appState) return;
+
+    const workspaceId = await appState.createWorkspace(data.title, data.language);
+    // Reload so the workspace id is persisted (restored on reload) and state is clean.
+    await appState.loadWorkspace(workspaceId);
+
+    if (data.author && appState.workspace) {
+      appState.workspace = await workspaceService.updateMetadata(appState.workspace, {
+        creator: [{ name: data.author, roles: [] }],
+      });
+    }
+
+    if (data.extension) {
+      await installCatalogExtension(workspaceId, data.extension);
+    }
+
+    // Open the first chapter in the spine editor (mirrors the EPUB-import tail).
+    const firstSpineItem = appState.workspace?.opf?.spine?.[0];
+    if (firstSpineItem) {
+      appState.selectChapter(firstSpineItem.idref);
+      navigationStore.navigateTo('spine');
+    } else {
+      navigationStore.navigateTo('metadata');
+    }
+  };
+
+  // Install a catalog extension into a project (the orchestration mirrored from
+  // SettingsView): copy files, load libs, then adopt its text transform / append
+  // its DOM transforms, and register any EPUB assets. Used by the create flow.
+  async function installCatalogExtension(
+    workspaceId: string,
+    entry: ExtensionCatalogEntry
+  ): Promise<void> {
+    if (!transformEngine || !extensionManager || !appState) return;
+
+    const assets = await extensionManager.importCatalogExtension(workspaceId, entry);
+    await transformEngine.setWorkspaceExtensions(workspaceId);
+
+    const settingsService = appState.getSettingsService();
+    const epub = await settingsService.loadEPUBSettings(workspaceId);
+    let next = epub;
+    for (const file of entry.domTransforms) {
+      next = {
+        ...next,
+        dom_transforms: addTransform(next.dom_transforms, `SOURCE/extensions/${entry.id}/${file}`),
+      };
+    }
+    if (entry.textTransforms.length > 0) {
+      next = {
+        ...next,
+        text_transform: `SOURCE/extensions/${entry.id}/${entry.textTransforms[0]}`,
+      };
+    }
+    if (next !== epub) {
+      await settingsService.saveEPUBSettings(workspaceId, next);
+      await appState.loadEPUBSettings(workspaceId);
+    }
+
+    // Register any EPUB assets (e.g. a CSS theme) after settings, so a regenerate
+    // uses the adopted transform. Text formats rarely carry assets.
+    if (assets.length > 0) {
+      await handleExtensionAssets(assets);
+    }
+  }
+
   // Handle EPUB package request
   const handlePackageRequest = async (workspaceId: string) => {
     if (!currentWorkspaceState) return;
@@ -734,8 +804,8 @@
       {:else if currentView === 'workspace' && initialized}
         <WorkspaceView
           onListWorkspaces={() => appState?.listWorkspaces() ?? Promise.resolve([])}
-          onCreateWorkspace={data =>
-            appState?.createWorkspace(data.title, data.language) ?? Promise.resolve('')}
+          onCreateProject={handleCreateProject}
+          {availableExtensions}
           onDeleteWorkspace={id => appState?.deleteWorkspace(id) ?? Promise.resolve()}
           onDuplicateWorkspace={id => appState?.duplicateWorkspace(id) ?? Promise.resolve('')}
           onLoadWorkspace={id => appState?.loadWorkspace(id) ?? Promise.resolve()}
@@ -743,9 +813,6 @@
             appState?.getWorkspaceRowDetails(id) ?? Promise.resolve({ fileCount: 0 })}
           onEpubImportRequested={handleEpubImport}
           {currentWorkspaceId}
-          onNavigationRequested={view => {
-            navigationStore.navigateTo(view as ViewType);
-          }}
           onWorkspaceOpened={() => {
             // Workspace opened
           }}

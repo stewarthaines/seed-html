@@ -3,10 +3,13 @@
   import { PaneGroup, Pane, PaneResizer } from 'paneforge';
   import { navigationStore } from '../navigation-store';
   import { t, currentLocale } from '../../i18n';
-  import type { EPUBMetadata } from '../../epub/opf-utils';
   import WorkspaceActionBar from '../../components/workspace/WorkspaceActionBar.svelte';
   import WorkspaceList from '../../components/workspace/WorkspaceList.svelte';
   import OPDSImportDialog from '../../components/workspace/OPDSImportDialog.svelte';
+  import CreateProjectDialog, {
+    type CreateProjectData,
+  } from '../../components/workspace/CreateProjectDialog.svelte';
+  import type { ExtensionCatalogEntry } from '../../extensions/extension-catalog';
 
   // Service layer types for return values
   import type {
@@ -17,7 +20,7 @@
   // Props using Svelte 5 runes syntax
   let {
     onListWorkspaces,
-    onCreateWorkspace,
+    onCreateProject,
     onDeleteWorkspace,
     onDuplicateWorkspace,
     onLoadWorkspace,
@@ -25,12 +28,13 @@
     onEpubImportRequested,
     onWorkspaceChange = null,
     onWorkspaceOpened,
-    onNavigationRequested,
     onWorkspaceChanged,
     currentWorkspaceId = null,
+    availableExtensions = [],
   }: {
     onListWorkspaces: () => Promise<WorkspaceInfo[]>;
-    onCreateWorkspace: (data: { title: string; language: string }) => Promise<string>;
+    /** Create a project from the new-project dialog and open its first chapter. */
+    onCreateProject: (data: CreateProjectData) => Promise<void>;
     onDeleteWorkspace: (id: string) => Promise<void>;
     onDuplicateWorkspace: (id: string) => Promise<string>;
     onLoadWorkspace: (id: string) => Promise<void>;
@@ -38,9 +42,10 @@
     onEpubImportRequested: (file?: File, sourceUrl?: string) => Promise<void>;
     onWorkspaceChange?: ((workspaceId: string | null) => void) | null;
     onWorkspaceOpened?: (workspaceId: string) => void;
-    onNavigationRequested?: (view: string, workspaceId?: string) => void;
     onWorkspaceChanged?: (workspaceId: string | null) => void;
     currentWorkspaceId?: string | null;
+    /** Extensions catalog (empty unless served over HTTP); the dialog offers text formats. */
+    availableExtensions?: ExtensionCatalogEntry[];
   } = $props();
 
   // Component state using $state()
@@ -49,6 +54,10 @@
   let error = $state<string | null>(null);
   let hasUnsavedChanges = $state(false);
   let showOpdsDialog = $state(false);
+  let showCreateDialog = $state(false);
+
+  // Only text-format extensions (markup languages) are offered in the create dialog.
+  const textFormats = $derived(availableExtensions.filter(e => e.textTransforms.length > 0));
 
   // OPDS import fetches over the network, which is pointless (and CORS-blocked)
   // when the app runs offline from a file:// URL — the standalone SEED.html /
@@ -112,51 +121,17 @@
     }
   };
 
-  // Create minimal EPUB metadata for new workspace
-  const createMinimalEPUBMetadata = (): Partial<EPUBMetadata> => ({
-    title: 'Untitled Book Project',
-    // Note: language is intentionally omitted so createLocalizedEPUBWorkspace can set it from locale
-    identifier: crypto.randomUUID(),
-    creator: [{ name: 'Unknown', roles: [] }],
-  });
+  // "Create New" now opens the new-project dialog (title/author/language +
+  // text-format choice) instead of creating from hardcoded metadata.
+  const handleCreateNew = () => {
+    showCreateDialog = true;
+  };
 
-  // Handle create new workspace using callback
-  const handleCreateNew = async () => {
-    try {
-      loading = true;
-
-      // Get current locale for localized content
-      const locale = $currentLocale;
-      const metadata = createMinimalEPUBMetadata();
-
-      // Create workspace using callback function
-      const workspaceId = await onCreateWorkspace({
-        title: metadata.title || 'Untitled Book Project',
-        language: locale,
-      });
-
-      console.log('✅ Workspace created:', workspaceId);
-
-      // Refresh workspace list
-      await loadWorkspaces();
-
-      // Set as current workspace
-      await setCurrentWorkspace(workspaceId);
-
-      // Navigate to metadata view for immediate review
-      onNavigationRequested?.('metadata', workspaceId);
-
-      onWorkspaceOpened?.(workspaceId);
-    } catch (err) {
-      console.error('Failed to create workspace:', err);
-      alert(
-        $t('Failed to create workspace: {error}', {
-          error: err instanceof Error ? err.message : 'Unknown error',
-        })
-      );
-    } finally {
-      loading = false;
-    }
+  // Confirm from the dialog: App owns the end-to-end create (project + metadata +
+  // chosen text-format extension) and navigates into the first chapter.
+  const handleCreateConfirm = async (data: CreateProjectData) => {
+    await onCreateProject(data);
+    showCreateDialog = false;
   };
 
   // Handle load EPUB file
@@ -392,6 +367,15 @@
 
   {#if showOpdsDialog}
     <OPDSImportDialog onImport={handleOpdsImport} onClose={() => (showOpdsDialog = false)} />
+  {/if}
+
+  {#if showCreateDialog}
+    <CreateProjectDialog
+      {textFormats}
+      defaultLanguage={$currentLocale}
+      onCreate={handleCreateConfirm}
+      onClose={() => (showCreateDialog = false)}
+    />
   {/if}
 </div>
 
