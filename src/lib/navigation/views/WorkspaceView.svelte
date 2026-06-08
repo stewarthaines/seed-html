@@ -220,6 +220,10 @@
 
     if (!confirmed) return;
 
+    // Capture this before deleting: onDeleteWorkspace clears the current workspace
+    // when it's the one removed, so currentWorkspaceId would already be null below.
+    const wasCurrent = currentWorkspaceId === workspaceId;
+
     try {
       loading = true;
 
@@ -229,9 +233,16 @@
       // Refresh workspace list
       await loadWorkspaces();
 
-      // If this was the current workspace, clear it
-      if (currentWorkspaceId === workspaceId) {
-        await setCurrentWorkspace(null);
+      // Deleting always removes the open project (delete is offered only there).
+      // Move the selection to the top remaining project so the sidebar repopulates
+      // immediately; clear it when none are left. The list is displayed
+      // most-recently-modified first (see WorkspaceList), so match that ordering
+      // rather than the raw onListWorkspaces() order.
+      if (wasCurrent) {
+        const top = [...workspaces].sort(
+          (a, b) => b.lastModified.getTime() - a.lastModified.getTime()
+        )[0];
+        await setCurrentWorkspace(top?.id ?? null);
       }
     } catch (err) {
       console.error('Failed to delete workspace:', err);

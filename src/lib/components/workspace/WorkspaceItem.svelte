@@ -133,17 +133,21 @@
     </div>
   </button>
 
-  <div class="workspace-actions">
-    <button
-      type="button"
-      class="delete-button"
-      onclick={handleDeleteRequest}
-      aria-label={$t('Delete project: {title}', { title: workspace.title })}
-      title={$t('Delete project')}
-    >
-      <span aria-hidden="true">🗑️</span>
-    </button>
-  </div>
+  <!-- Delete is offered only on the open project, so the user sees it populated
+       in the sidebar before deciding to remove it. -->
+  {#if isCurrent}
+    <div class="workspace-actions">
+      <button
+        type="button"
+        class="delete-button"
+        onclick={handleDeleteRequest}
+        aria-label={$t('Delete project: {title}', { title: workspace.title })}
+        title={$t('Delete project')}
+      >
+        <span aria-hidden="true">🗑️</span>
+      </button>
+    </div>
+  {/if}
 </div>
 
 <style>
