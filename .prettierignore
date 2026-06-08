@@ -21,6 +21,9 @@ src/assets/sample/vextab.js
 # Workspace plugins are separate packages with their own formatting config
 plugins/
 
+# Extensions catalog: vendored 3rd-party libs + example scripts, served as-is
+extensions/
+
 # Config files that should keep their original formatting
 *.config.js
 *.config.ts

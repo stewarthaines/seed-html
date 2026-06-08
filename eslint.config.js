@@ -161,6 +161,9 @@ export default [
       // Workspace plugins are separate packages with their own lint/format/test
       // toolchain (and newer dep majors); the core gate does not govern them.
       'plugins/',
+      // Extensions catalog: vendored 3rd-party libs + example transform scripts,
+      // served as-is (mirrors src/assets and plugins/); not linted as app modules.
+      'extensions/',
       '*.config.js',
       '*.config.ts',
       '.storybook/',

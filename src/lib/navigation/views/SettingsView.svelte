@@ -24,6 +24,7 @@
   import { LOCALE_CONFIGS } from '../../i18n/locale-config.js';
   import { themeStore } from '../../stores/theme.js';
   import type { PluginManifestEntry } from '../../plugins/contract';
+  import type { ExtensionCatalogEntry } from '../../extensions/extension-catalog';
 
   interface Props {
     settingsService: SettingsService;
@@ -34,6 +35,8 @@
     availablePlugins?: PluginManifestEntry[];
     /** Ids the user has enabled (global). */
     enabledPluginIds?: string[];
+    /** Extensions catalog from extensions/manifest.json (empty unless served over HTTP). */
+    availableExtensions?: ExtensionCatalogEntry[];
     onTogglePlugin?: (id: string, enabled: boolean) => void;
     onSettingsChanged?: () => void;
   }
@@ -45,6 +48,7 @@
     workspaceId,
     availablePlugins = [],
     enabledPluginIds = [],
+    availableExtensions = [],
     onTogglePlugin,
     onSettingsChanged,
   }: Props = $props();
@@ -314,8 +318,30 @@
     }
   }
 
+  // Import a catalog extension into the current project, then refresh the
+  // installed list, the iframe libs, and the available-transforms picker.
+  let importingExtensionId = $state<string | null>(null);
+  async function handleAddCatalogExtension(entry: ExtensionCatalogEntry): Promise<void> {
+    if (!workspaceId) return;
+    importingExtensionId = entry.id;
+    try {
+      await extensionManager.importCatalogExtension(workspaceId, entry);
+      await transformEngine.setWorkspaceExtensions(workspaceId);
+      extensions = await extensionManager.listWorkspaceExtensions(workspaceId);
+      availableTransforms = await settingsService.getAvailableTransforms(workspaceId);
+      onSettingsChanged?.();
+    } catch (err) {
+      console.error('Failed to add extension:', err);
+      error = err instanceof Error ? err.message : $t('Failed to add extension');
+    } finally {
+      importingExtensionId = null;
+    }
+  }
+
   // Derived states
   const isAdvancedMode = $derived(workspaceSettings?.editor?.advanced_mode ?? false);
+  // Extension ids already imported into the current project (dir name === id).
+  const installedExtensionIds = $derived(new Set(extensions.map(e => e.name)));
   const canEditSettings = $derived(workspaceId !== null && workspaceSettings !== null);
   const canEditEPUBSettings = $derived(workspaceId !== null && epubSettings !== null);
 
@@ -429,6 +455,41 @@
                     />
                     <span class="setting-text">{plugin.name}</span>
                   </label>
+                </div>
+              {/each}
+            </section>
+          {/if}
+
+          {#if availableExtensions.length > 0}
+            <section class="extensions-catalog">
+              <h3>{$t('Available Extensions')}</h3>
+              <p class="setting-description">
+                {$t(
+                  'Add a library and its suggested DOM transform to the current project; then enable the transform under Project Settings.'
+                )}
+              </p>
+              {#each availableExtensions as ext (ext.id)}
+                {@const installed = installedExtensionIds.has(ext.id)}
+                <div class="catalog-item">
+                  <div class="catalog-item-info">
+                    <span class="catalog-item-name">{ext.name}</span>
+                    {#if ext.description}
+                      <span class="catalog-item-desc">{ext.description}</span>
+                    {/if}
+                  </div>
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    onclick={() => handleAddCatalogExtension(ext)}
+                    disabled={installed || !workspaceId || importingExtensionId !== null}
+                    title={!workspaceId ? $t('Open a project to add extensions') : undefined}
+                  >
+                    {installed
+                      ? $t('Added')
+                      : importingExtensionId === ext.id
+                        ? $t('Adding…')
+                        : $t('Add to project')}
+                  </button>
                 </div>
               {/each}
             </section>
@@ -779,6 +840,32 @@
     opacity: 0.6;
     cursor: not-allowed;
     background: var(--color-surface-disabled);
+  }
+
+  /* Available-extensions catalog rows */
+  .catalog-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-top: 1px solid var(--color-border-default);
+  }
+
+  .catalog-item-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .catalog-item-name {
+    font-weight: 500;
+    color: var(--color-text-primary);
+  }
+
+  .catalog-item-desc {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
   }
 
   /* DOM transform list (ordered pipeline editor) */

@@ -17,6 +17,10 @@
     resolvePluginEntryUrl,
   } from './lib/plugins/plugin-registry';
   import type { PluginManifestEntry } from './lib/plugins/contract';
+  import {
+    loadExtensionCatalog,
+    type ExtensionCatalogEntry,
+  } from './lib/extensions/extension-catalog';
   import SpineSidebar from './lib/components/SpineSidebar.svelte';
   import ManifestContainer from './lib/components/manifest/ManifestContainer.svelte';
   import ManifestPreview from './lib/components/manifest/ManifestPreview.svelte';
@@ -91,6 +95,8 @@
   const PUBLISH_PLUGIN_ID = 'publish-to-remote';
   let availablePlugins = $state<PluginManifestEntry[]>([]);
   let enabledPluginIds = $state<string[]>([]);
+  // HTTP-delivered extensions catalog (extensions/manifest.json), importable per project.
+  let availableExtensions = $state<ExtensionCatalogEntry[]>([]);
   let publishPluginUrl = $derived.by(() => {
     const entry = findActivePlugin(availablePlugins, enabledPluginIds, PUBLISH_PLUGIN_ID);
     return entry ? resolvePluginEntryUrl(entry) : null;
@@ -503,6 +509,7 @@
         // served) and read the user's enabled set.
         availablePlugins = await loadPluginManifest();
         enabledPluginIds = appState.getSettingsService().getEnabledPlugins();
+        availableExtensions = await loadExtensionCatalog();
 
         // Check hash after appState is fully ready
         if (window.location.hash) {
@@ -730,6 +737,7 @@
           workspaceId={appState.currentWorkspaceId}
           {availablePlugins}
           {enabledPluginIds}
+          {availableExtensions}
           onTogglePlugin={(id, enabled) => {
             appState?.getSettingsService().setPluginEnabled(id, enabled);
             enabledPluginIds = appState?.getSettingsService().getEnabledPlugins() ?? [];

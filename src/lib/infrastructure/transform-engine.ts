@@ -128,25 +128,35 @@ export class TransformEngine {
 
     const extensions = await this.extensionManager.listWorkspaceExtensions(workspaceId);
     const scripts: Array<{ name: string; blobUrl: string }> = [];
+    const fileStorage = FileStorageAPI.getInstance();
 
     for (const extension of extensions) {
       try {
-        // Process each JavaScript file in the extension
-        const jsFiles = extension.files.filter(file => file.type === 'javascript');
+        const prefix = `SOURCE/extensions/${extension.name}/`;
+        const allJs = extension.files.filter(f => f.type === 'javascript').map(f => f.filename);
 
-        for (const jsFile of jsFiles) {
-          const filePath = `SOURCE/extensions/${extension.name}/${jsFile.filename}`;
+        // Only the 3rd-party LIB scripts load into the iframe as globals; the
+        // DOM-transform scripts are executed by the pipeline, not loaded here.
+        // Prefer the extension's manifest; otherwise exclude transform*-named .js.
+        let libFilenames = allJs.filter(name => !/transform/i.test(name));
+        try {
+          const meta = JSON.parse(
+            await fileStorage.readTextFile(workspaceId, `${prefix}extension.json`)
+          );
+          if (Array.isArray(meta?.scripts)) {
+            const declared = new Set(meta.scripts.filter((s: unknown) => typeof s === 'string'));
+            libFilenames = allJs.filter(name => declared.has(name));
+          }
+        } catch {
+          // No/!malformed manifest — keep the heuristic list above.
+        }
 
-          // Use FileStorageAPI directly since SOURCE files are not part of EPUB manifest structure
-          const fileStorage = FileStorageAPI.getInstance();
-          const content = await fileStorage.readFile(workspaceId, filePath);
-          const mimeType = 'application/javascript';
-          const blob = new Blob([content], { type: mimeType });
-          const blobUrl = URL.createObjectURL(blob);
-
+        for (const filename of libFilenames) {
+          const content = await fileStorage.readFile(workspaceId, `${prefix}${filename}`);
+          const blob = new Blob([content], { type: 'application/javascript' });
           scripts.push({
-            name: `${extension.name}/${jsFile.filename}`,
-            blobUrl: blobUrl,
+            name: `${extension.name}/${filename}`,
+            blobUrl: URL.createObjectURL(blob),
           });
         }
       } catch (error) {

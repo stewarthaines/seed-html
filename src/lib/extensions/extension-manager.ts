@@ -14,6 +14,7 @@ import type {
   ValidationResult,
 } from './types.js';
 import type { TransformOption } from '../services/settings/settings.service.js';
+import { resolveExtensionFileUrl, type ExtensionCatalogEntry } from './extension-catalog.js';
 import { ExtensionCache } from './extension-cache.js';
 import {
   detectExtensionName,
@@ -106,6 +107,45 @@ export class ExtensionManager {
       totalSize: file.size,
       location: 'workspace',
     };
+  }
+
+  /**
+   * Import a catalog extension into a project: fetch each of its files (libs,
+   * transforms, license, and its extension.json) and write them under
+   * SOURCE/extensions/<id>/. The copied extension.json lets the project classify
+   * libs vs transforms reliably (see getAvailableTransforms / the iframe loader).
+   *
+   * @param workspaceId - Target workspace identifier
+   * @param entry - Catalog entry (from loadExtensionCatalog)
+   * @param options.fetch - Fetch implementation (injectable for tests)
+   * @param options.baseUrl - Base URL the extensions/ folder resolves against
+   */
+  async importCatalogExtension(
+    workspaceId: string,
+    entry: ExtensionCatalogEntry,
+    options: { fetch?: typeof fetch; baseUrl?: string } = {}
+  ): Promise<void> {
+    const fetchImpl = options.fetch ?? globalThis.fetch.bind(globalThis);
+    const files = [
+      ...entry.scripts,
+      ...entry.transforms,
+      ...(entry.license ? [entry.license] : []),
+      'extension.json',
+    ];
+
+    for (const file of files) {
+      const url = resolveExtensionFileUrl(entry.id, file, { baseUrl: options.baseUrl });
+      const response = await fetchImpl(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ${file} for extension '${entry.id}': ${response.status}`);
+      }
+      const content = await response.arrayBuffer();
+      await this.fileStorage.writeFile(
+        workspaceId,
+        `SOURCE/extensions/${entry.id}/${file}`,
+        content
+      );
+    }
   }
 
   /**
@@ -585,56 +625,65 @@ export class ExtensionManager {
    */
   async getAvailableTransforms(workspaceId: string): Promise<TransformOption[]> {
     const transforms: TransformOption[] = [];
+    const seen = new Set<string>(); // dedupe by path
+
+    const add = (path: string, extensionName: string) => {
+      if (seen.has(path)) return;
+      seen.add(path);
+      transforms.push({ path, extensionName, fileName: path.split('/').pop() || path });
+    };
+    const isTransformName = (name: string) => /transform/i.test(name);
 
     try {
-      // List all files in the workspace
       const files = await this.fileStorage.listFiles(workspaceId);
 
-      // Find JavaScript files that could be transform scripts
-      const jsFiles = files.filter(file => {
-        // Look for .js files in SOURCE/ directory (transform scripts location)
-        return file.startsWith('SOURCE/') && file.endsWith('.js');
-      });
+      // Extension dirs: prefer extension.json `transforms[]` for precise, naming-
+      // independent classification; fall back to the transform-name heuristic for
+      // manually-uploaded extensions without a manifest.
+      const extensionDirs = new Set<string>();
+      for (const file of files) {
+        if (!file.startsWith('SOURCE/extensions/')) continue;
+        const parts = file.split('/');
+        if (parts.length >= 3) extensionDirs.add(parts[2]);
+      }
 
-      // Convert to TransformOption format
-      for (const filePath of jsFiles) {
-        const fileName = filePath.split('/').pop() || '';
+      for (const ext of extensionDirs) {
+        const prefix = `SOURCE/extensions/${ext}/`;
+        let declared: string[] | null = null;
+        if (files.includes(`${prefix}extension.json`)) {
+          try {
+            const meta = JSON.parse(
+              await this.fileStorage.readTextFile(workspaceId, `${prefix}extension.json`)
+            );
+            if (Array.isArray(meta?.transforms)) {
+              declared = meta.transforms.filter((t: unknown): t is string => typeof t === 'string');
+            }
+          } catch {
+            // Malformed manifest — fall back to the heuristic below.
+          }
+        }
 
-        // Try to determine if this is a transform script
-        // Common transform script names/patterns
-        if (
-          fileName.includes('transform') ||
-          fileName.includes('Transform') ||
-          fileName === 'transformText.js' ||
-          fileName === 'transformDom.js'
-        ) {
-          transforms.push({
-            path: filePath,
-            extensionName: `Transform: ${fileName}`,
-            fileName: fileName,
-          });
+        if (declared) {
+          for (const t of declared) add(`${prefix}${t}`, ext);
+        } else {
+          for (const file of files) {
+            if (
+              file.startsWith(prefix) &&
+              file.endsWith('.js') &&
+              isTransformName(file.split('/').pop() || '')
+            ) {
+              add(file, ext);
+            }
+          }
         }
       }
 
-      // Also check extensions directory for transform scripts
-      const extensionTransforms = files.filter(file => {
-        return (
-          file.startsWith('SOURCE/extensions/') &&
-          file.endsWith('.js') &&
-          (file.includes('transform') || file.includes('Transform'))
-        );
-      });
-
-      for (const filePath of extensionTransforms) {
-        const pathParts = filePath.split('/');
-        const fileName = pathParts.pop() || '';
-        const extensionName = pathParts[2] || 'Unknown Extension';
-
-        transforms.push({
-          path: filePath,
-          extensionName: extensionName,
-          fileName: fileName,
-        });
+      // Loose project scripts (under SOURCE/ but not extensions/): transform-named .js.
+      for (const file of files) {
+        if (!file.startsWith('SOURCE/') || file.startsWith('SOURCE/extensions/')) continue;
+        if (!file.endsWith('.js')) continue;
+        const fileName = file.split('/').pop() || '';
+        if (isTransformName(fileName)) add(file, `Transform: ${fileName}`);
       }
     } catch (error) {
       // If we can't list files, return empty array rather than throwing

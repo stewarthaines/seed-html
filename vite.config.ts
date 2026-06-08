@@ -135,6 +135,74 @@ export default defineConfig({
         });
       },
     },
+    // Dev only: serve the extensions catalog (mirrors the plugins middleware).
+    // Synthesize extensions/manifest.json from extensions/<id>/extension.json, and
+    // serve the raw extension files at extensions/<id>/<file> — raw so Vite never
+    // transforms the 3rd-party lib JS the host fetches at runtime.
+    {
+      name: 'serve-extensions-dev',
+      apply: 'serve',
+      configureServer(server) {
+        const extensionsRoot = path.join(dirname, 'extensions');
+
+        server.middlewares.use('/extensions/manifest.json', async (_req, res) => {
+          const manifest: Array<Record<string, unknown>> = [];
+          let names: string[] = [];
+          try {
+            names = await fs.readdir(extensionsRoot);
+          } catch {
+            // no extensions/ directory — nothing to serve
+          }
+          for (const name of names) {
+            try {
+              const m = JSON.parse(
+                await fs.readFile(path.join(extensionsRoot, name, 'extension.json'), 'utf8')
+              );
+              const scripts = Array.isArray(m.scripts) ? m.scripts : [];
+              const transforms = Array.isArray(m.transforms) ? m.transforms : [];
+              if (m.id && m.name && scripts.length > 0) {
+                manifest.push({
+                  id: m.id,
+                  name: m.name,
+                  description: m.description,
+                  license: m.license,
+                  scripts,
+                  transforms,
+                });
+              }
+            } catch {
+              // not an extension — skip
+            }
+          }
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify(manifest));
+        });
+
+        server.middlewares.use('/extensions/', async (req, res, next) => {
+          const rel = (req.url || '').split('?')[0].replace(/^\//, '');
+          // Block path traversal; only serve files under extensions/.
+          const target = path.join(dirname, rel);
+          if (!target.startsWith(extensionsRoot + path.sep)) {
+            next();
+            return;
+          }
+          try {
+            const data = await fs.readFile(target);
+            const ext = path.extname(target);
+            const type =
+              ext === '.js'
+                ? 'application/javascript'
+                : ext === '.json'
+                  ? 'application/json'
+                  : 'text/plain; charset=utf-8';
+            res.setHeader('Content-Type', type);
+            res.end(data);
+          } catch {
+            next();
+          }
+        });
+      },
+    },
     // Bundle analysis plugins
     // visualizer({
     //   filename: 'dist/stats.html',
