@@ -3,12 +3,22 @@
     SettingsService,
     WorkspaceSettings,
     EPUBSettings,
+    TransformOption,
   } from '../../services/settings/settings.service.js';
   import type { ExtensionInfo } from '../../extensions/types.js';
 
   import type { ExtensionManager } from '../../extensions/extension-manager.js';
   import type { TransformEngine } from '../../infrastructure/transform-engine.js';
   import ExtensionItem from '../../components/extensions/ExtensionItem.svelte';
+  import {
+    addTransform,
+    removeTransformAt,
+    moveTransform,
+    transformLabel,
+    transformGroup,
+    basename,
+  } from '../../settings/dom-transforms.js';
+  import { CaretUp, CaretDown, X } from 'phosphor-svelte';
   import { PaneGroup, Pane, PaneResizer } from 'paneforge';
   import { t, currentLocale, setLocale } from '../../i18n';
   import { LOCALE_CONFIGS } from '../../i18n/locale-config.js';
@@ -42,6 +52,7 @@
   // State management
   let workspaceSettings = $state<WorkspaceSettings | null>(null);
   let epubSettings = $state<EPUBSettings | null>(null);
+  let availableTransforms = $state<TransformOption[]>([]);
   let loading = $state(false);
   let epubLoading = $state(false);
   let error = $state<string | null>(null);
@@ -81,9 +92,19 @@
       }
     };
 
+    const loadAvailableTransforms = async () => {
+      try {
+        availableTransforms = await settingsService.getAvailableTransforms(workspaceId);
+      } catch (err) {
+        console.error('Failed to load available transforms:', err);
+        availableTransforms = [];
+      }
+    };
+
     // Actually call the functions
     loadSettings();
     loadEPUBSettings();
+    loadAvailableTransforms();
   });
 
   // Load extensions when workspaceId changes
@@ -237,6 +258,44 @@
     }
   }
 
+  // Persist a new dom_transforms order/membership (optimistic save + revert).
+  async function persistDomTransforms(next: string[]): Promise<void> {
+    if (!workspaceId || !epubSettings) return;
+
+    const validation = settingsService.validateEPUBSettings({ dom_transforms: next });
+    if (!validation.isValid) {
+      error = validation.errors[0] || 'Invalid DOM transform list';
+      return;
+    }
+
+    const previous = epubSettings.dom_transforms;
+    const updatedSettings: EPUBSettings = { ...epubSettings, dom_transforms: next };
+    epubSettings = updatedSettings;
+
+    try {
+      await settingsService.saveEPUBSettings(workspaceId, updatedSettings);
+      onSettingsChanged?.();
+    } catch (err) {
+      error = err instanceof Error ? err.message : $t('Failed to save EPUB settings');
+      epubSettings = { ...epubSettings, dom_transforms: previous };
+    }
+  }
+
+  function addDomTransform(path: string): void {
+    if (!epubSettings || !path) return;
+    persistDomTransforms(addTransform(epubSettings.dom_transforms, path));
+  }
+
+  function removeDomTransform(index: number): void {
+    if (!epubSettings) return;
+    persistDomTransforms(removeTransformAt(epubSettings.dom_transforms, index));
+  }
+
+  function moveDomTransform(index: number, dir: -1 | 1): void {
+    if (!epubSettings) return;
+    persistDomTransforms(moveTransform(epubSettings.dom_transforms, index, dir));
+  }
+
   // Handle extension removal
   async function handleExtensionRemoval(extensionName: string): Promise<void> {
     if (!workspaceId) return;
@@ -259,6 +318,29 @@
   const isAdvancedMode = $derived(workspaceSettings?.editor?.advanced_mode ?? false);
   const canEditSettings = $derived(workspaceId !== null && workspaceSettings !== null);
   const canEditEPUBSettings = $derived(workspaceId !== null && epubSettings !== null);
+
+  // Transforms offered by the "Add" picker, grouped by extension. Excludes the
+  // text transform (never a DOM transform) and anything already in the list.
+  // Matching is by path AND basename, since a default settings path can differ
+  // from the actual discovered file path for the same script.
+  const addableTransformGroups = $derived.by(() => {
+    const listed = epubSettings?.dom_transforms ?? [];
+    const usedPaths = new Set(listed);
+    const usedNames = new Set(listed.map(basename));
+    const textPath = epubSettings?.text_transform;
+    const textName = textPath ? basename(textPath) : undefined;
+
+    const groups = new Map<string, TransformOption[]>();
+    for (const t of availableTransforms) {
+      if (t.path === textPath || t.fileName === textName) continue; // text transform
+      if (usedPaths.has(t.path) || usedNames.has(t.fileName)) continue; // already listed
+      const group = transformGroup(t.path);
+      const list = groups.get(group) ?? [];
+      list.push(t);
+      groups.set(group, list);
+    }
+    return [...groups.entries()].map(([group, options]) => ({ group, options }));
+  });
 
   // App settings: theme (light/dark/system) and locale, backed by the global stores
   // the app already uses (the sidebar quick-toggle shares the theme store).
@@ -423,6 +505,89 @@
                     Template for inserting audio clip directives. Use placeholders: &lt;href&gt;,
                     &lt;begin&gt;, &lt;end&gt;, &lt;label&gt;, &lt;rate&gt;
                   </p>
+                </div>
+
+                <div class="setting-group">
+                  <span class="setting-label-text">{$t('DOM Transforms')}</span>
+                  <p class="setting-description">
+                    {$t(
+                      'Scripts run top-to-bottom over the generated DOM, each applied to the previous one’s output.'
+                    )}
+                  </p>
+
+                  {#if (epubSettings?.dom_transforms?.length ?? 0) === 0}
+                    <p class="setting-description">{$t('No DOM transforms configured.')}</p>
+                  {:else}
+                    <ul class="dom-transform-list">
+                      {#each epubSettings?.dom_transforms ?? [] as path, i (path)}
+                        {@const label = transformLabel(path)}
+                        <li class="dom-transform-row">
+                          <span class="dom-transform-name" title={path}>
+                            {label.name}
+                            {#if label.group}
+                              <span class="dom-transform-group">({label.group})</span>
+                            {/if}
+                          </span>
+                          <div class="dom-transform-actions">
+                            <button
+                              type="button"
+                              class="icon-btn"
+                              onclick={() => moveDomTransform(i, -1)}
+                              disabled={i === 0 || epubLoading}
+                              aria-label={$t('Move up')}
+                              title={$t('Move up')}
+                            >
+                              <CaretUp size={14} aria-hidden="true" />
+                            </button>
+                            <button
+                              type="button"
+                              class="icon-btn"
+                              onclick={() => moveDomTransform(i, 1)}
+                              disabled={i === (epubSettings?.dom_transforms.length ?? 0) - 1 ||
+                                epubLoading}
+                              aria-label={$t('Move down')}
+                              title={$t('Move down')}
+                            >
+                              <CaretDown size={14} aria-hidden="true" />
+                            </button>
+                            <button
+                              type="button"
+                              class="icon-btn"
+                              onclick={() => removeDomTransform(i)}
+                              disabled={epubLoading}
+                              aria-label={$t('Remove')}
+                              title={$t('Remove')}
+                            >
+                              <X size={14} aria-hidden="true" />
+                            </button>
+                          </div>
+                        </li>
+                      {/each}
+                    </ul>
+                  {/if}
+
+                  {#if addableTransformGroups.length > 0}
+                    <select
+                      class="setting-select"
+                      aria-label={$t('Add a DOM transform')}
+                      disabled={epubLoading}
+                      onchange={e => {
+                        const sel = e.currentTarget as HTMLSelectElement;
+                        const value = sel.value;
+                        sel.value = '';
+                        if (value) addDomTransform(value);
+                      }}
+                    >
+                      <option value="" disabled selected>{$t('Add a DOM transform…')}</option>
+                      {#each addableTransformGroups as grp (grp.group)}
+                        <optgroup label={grp.group}>
+                          {#each grp.options as opt (opt.path)}
+                            <option value={opt.path}>{opt.fileName}</option>
+                          {/each}
+                        </optgroup>
+                      {/each}
+                    </select>
+                  {/if}
                 </div>
               </section>
             {/if}
@@ -614,6 +779,70 @@
     opacity: 0.6;
     cursor: not-allowed;
     background: var(--color-surface-disabled);
+  }
+
+  /* DOM transform list (ordered pipeline editor) */
+  .dom-transform-list {
+    list-style: none;
+    margin: 0 0 0.5rem 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .dom-transform-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.5rem;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-primary);
+  }
+
+  .dom-transform-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-sm);
+    color: var(--color-text-primary);
+  }
+
+  .dom-transform-group {
+    color: var(--color-text-secondary);
+    font-size: var(--text-xs);
+  }
+
+  .dom-transform-actions {
+    display: flex;
+    gap: 0.25rem;
+    flex-shrink: 0;
+  }
+
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-primary);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+  }
+
+  .icon-btn:not(:disabled):hover {
+    border-color: var(--color-border-hover);
+    background: var(--color-surface-hover);
+    color: var(--color-text-primary);
+  }
+
+  .icon-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   .extension-import {

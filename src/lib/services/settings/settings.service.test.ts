@@ -279,6 +279,25 @@ describe('SettingsService Contract Tests', () => {
       });
     });
 
+    test('loadEPUBSettings canonicalizes bare transform paths to SOURCE/scripts/', async () => {
+      mockFileStorage.readTextFile.mockResolvedValue(
+        JSON.stringify({
+          text_transform: 'transformText.js',
+          dom_transforms: ['transformDom.js', 'SOURCE/extensions/x/t.js'],
+          spine_basename: 'chapter',
+        })
+      );
+
+      const result = await service.loadEPUBSettings('workspace-123');
+
+      expect(result.text_transform).toBe('SOURCE/scripts/transformText.js');
+      // Bare names get the SOURCE/scripts/ prefix; full SOURCE/ paths are left alone.
+      expect(result.dom_transforms).toEqual([
+        'SOURCE/scripts/transformDom.js',
+        'SOURCE/extensions/x/t.js',
+      ]);
+    });
+
     test('saveEPUBSettings writes to SOURCE/settings.json', async () => {
       const settings = {
         text_transform: 'SOURCE/scripts/transform.js',

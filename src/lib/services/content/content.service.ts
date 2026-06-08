@@ -204,8 +204,8 @@ export class ContentService {
           content: JSON.stringify(
             {
               version: '1.0.0',
-              text_transform: 'transformText.js',
-              dom_transforms: ['transformDom.js'],
+              text_transform: 'SOURCE/scripts/transformText.js',
+              dom_transforms: ['SOURCE/scripts/transformDom.js'],
             },
             null,
             2

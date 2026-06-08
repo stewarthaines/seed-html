@@ -12,6 +12,7 @@ import type { SettingsService } from '../services/settings/settings.service.js';
 import type { BlobURLManager } from '../blob-url/blob-url-manager.js';
 import type { TransformEngine } from '../infrastructure/transform-engine.js';
 import type { TransformResult, TransformScripts } from '../types/spine-editor.js';
+import { resolveTransformPath } from '../settings/dom-transforms.js';
 
 /**
  * Spine-specific transform pipeline using global transform engine
@@ -55,16 +56,6 @@ export class SpineTransformPipeline {
   }
 
   /**
-   * Resolve a configured transform-script reference to its workspace path.
-   * Settings may store either a bare filename ("transformText.js") or a full
-   * SOURCE path ("SOURCE/scripts/transformText.js"); accept both so we never
-   * double-prefix (which previously made the default settings unresolvable).
-   */
-  private resolveScriptPath(name: string): string {
-    return name.startsWith('SOURCE/') ? name : `SOURCE/scripts/${name}`;
-  }
-
-  /**
    * Read a transform script, retrying briefly. On a freshly downloaded/unpacked
    * EPUB the first preview can run before SOURCE/scripts has finished being
    * written; a short bounded retry lets the file appear instead of rendering
@@ -101,7 +92,7 @@ export class SpineTransformPipeline {
 
         if (settings.text_transform) {
           const content = await this.readScriptWithRetry(
-            this.resolveScriptPath(settings.text_transform)
+            resolveTransformPath(settings.text_transform)
           );
           // Leave textTransform empty if unreadable; the engine passes the input
           // through unchanged rather than erroring.
@@ -111,7 +102,7 @@ export class SpineTransformPipeline {
         if (settings.dom_transforms && settings.dom_transforms.length > 0) {
           const domTransforms: string[] = [];
           for (const scriptName of settings.dom_transforms) {
-            const content = await this.readScriptWithRetry(this.resolveScriptPath(scriptName));
+            const content = await this.readScriptWithRetry(resolveTransformPath(scriptName));
             // Skip an unreadable DOM transform rather than queueing an empty one.
             if (content !== null) domTransforms.push(content);
           }

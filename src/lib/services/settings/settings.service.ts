@@ -7,6 +7,7 @@
 
 import type { FileStorageAPI } from '../../storage/index.js';
 import { DEFAULT_FILENAME_TEMPLATE } from '../../epub/opf-utils.js';
+import { resolveTransformPath } from '../../settings/dom-transforms.js';
 
 // Service-specific types
 export interface GlobalSettings {
@@ -311,11 +312,15 @@ export class SettingsService {
       );
       const settings = JSON.parse(settingsContent);
 
-      // Merge with defaults for missing fields
+      // Merge with defaults for missing fields. Transform paths are canonicalized
+      // to full SOURCE/… paths (bare filenames are assumed under SOURCE/scripts/)
+      // so the editor, settings UI, validation and pipeline all agree.
       const defaults = this.getDefaultEPUBSettings();
       return {
-        text_transform: settings.text_transform ?? defaults.text_transform,
-        dom_transforms: settings.dom_transforms ?? defaults.dom_transforms,
+        text_transform: resolveTransformPath(settings.text_transform ?? defaults.text_transform),
+        dom_transforms: (settings.dom_transforms ?? defaults.dom_transforms).map(
+          resolveTransformPath
+        ),
         spine_basename: settings.spine_basename ?? defaults.spine_basename,
         audio_clip_template: settings.audio_clip_template ?? defaults.audio_clip_template,
         filename_template: settings.filename_template ?? defaults.filename_template,

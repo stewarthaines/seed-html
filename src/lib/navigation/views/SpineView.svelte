@@ -26,6 +26,7 @@
   } from '../../types/spine-editor.js';
   import { BlobURLManager } from '../../blob-url/blob-url-manager.js';
   import { SettingsService } from '../../services/settings/settings.service.js';
+  import { basename, extensionOf } from '../../settings/dom-transforms.js';
   import { ExtensionManager } from '../../extensions/extension-manager.js';
   import { FileStorageAPI } from '../../storage/index.js';
   import type { TransformEngine } from '../../infrastructure/transform-engine.js';
@@ -383,23 +384,27 @@
         }
       }
 
-      // Add transform scripts from SOURCE/scripts/ (if any exist)
+      // Transform scripts come from the project's configured pipeline (the text
+      // transform + the DOM transforms managed in Settings), so the dropdown
+      // matches what actually runs and reflects edits to that list.
       try {
-        const transformFiles = await fileStorage.listFiles(workspace.id, 'SOURCE/scripts');
-        for (const transformFile of transformFiles) {
-          if (transformFile.endsWith('.js')) {
-            const fileName = transformFile.split('/').pop()?.replace('.js', '') || transformFile;
-            files.push({
-              value: `transform-${fileName}`,
-              label: `Transform: ${fileName}`,
-              path: transformFile,
-              href: transformFile, // transform files don't have manifest hrefs
-              type: 'transform',
-            });
-          }
+        const epub = await settingsService!.loadEPUBSettings(workspace.id);
+        const seen = new Set<string>();
+        for (const transformPath of [epub.text_transform, ...epub.dom_transforms]) {
+          if (!transformPath || seen.has(transformPath)) continue;
+          seen.add(transformPath);
+          const ext = extensionOf(transformPath);
+          const name = basename(transformPath).replace(/\.js$/, '');
+          files.push({
+            value: `transform-${ext ? `${name}-${ext}` : name}`,
+            label: ext ? `Transform: ${name} (${ext})` : `Transform: ${name}`,
+            path: transformPath,
+            href: transformPath, // transform files don't have manifest hrefs
+            type: 'transform',
+          });
         }
       } catch {
-        // No transform files yet, that's okay
+        // Settings unavailable — no transform entries.
       }
 
       availableFiles = files;
