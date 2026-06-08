@@ -128,7 +128,8 @@ export class ExtensionManager {
     const fetchImpl = options.fetch ?? globalThis.fetch.bind(globalThis);
     const files = [
       ...entry.scripts,
-      ...entry.transforms,
+      ...entry.domTransforms,
+      ...entry.textTransforms,
       ...(entry.license ? [entry.license] : []),
       'extension.json',
     ];
@@ -637,32 +638,12 @@ export class ExtensionManager {
     try {
       const files = await this.fileStorage.listFiles(workspaceId);
 
-      // Extension dirs: prefer extension.json `transforms[]` for precise, naming-
-      // independent classification; fall back to the transform-name heuristic for
-      // manually-uploaded extensions without a manifest.
-      const extensionDirs = new Set<string>();
-      for (const file of files) {
-        if (!file.startsWith('SOURCE/extensions/')) continue;
-        const parts = file.split('/');
-        if (parts.length >= 3) extensionDirs.add(parts[2]);
-      }
-
-      for (const ext of extensionDirs) {
+      // Extension dirs: prefer extension.json `domTransforms[]` for precise,
+      // naming-independent classification; fall back to the transform-name
+      // heuristic for manually-uploaded extensions without a manifest.
+      for (const ext of this.extensionDirsOf(files)) {
         const prefix = `SOURCE/extensions/${ext}/`;
-        let declared: string[] | null = null;
-        if (files.includes(`${prefix}extension.json`)) {
-          try {
-            const meta = JSON.parse(
-              await this.fileStorage.readTextFile(workspaceId, `${prefix}extension.json`)
-            );
-            if (Array.isArray(meta?.transforms)) {
-              declared = meta.transforms.filter((t: unknown): t is string => typeof t === 'string');
-            }
-          } catch {
-            // Malformed manifest — fall back to the heuristic below.
-          }
-        }
-
+        const declared = await this.declaredTransforms(workspaceId, files, ext, 'domTransforms');
         if (declared) {
           for (const t of declared) add(`${prefix}${t}`, ext);
         } else {
@@ -691,5 +672,72 @@ export class ExtensionManager {
     }
 
     return transforms;
+  }
+
+  /**
+   * Get available TEXT-transform scripts: the default text transform plus each
+   * installed extension's declared `textTransforms`. Single-slot (text_transform)
+   * is chosen from these in Settings.
+   */
+  async getAvailableTextTransforms(workspaceId: string): Promise<TransformOption[]> {
+    const options: TransformOption[] = [];
+    const seen = new Set<string>();
+    const add = (path: string, extensionName: string) => {
+      if (seen.has(path)) return;
+      seen.add(path);
+      options.push({ path, extensionName, fileName: path.split('/').pop() || path });
+    };
+
+    try {
+      const files = await this.fileStorage.listFiles(workspaceId);
+
+      // The conventional default text transform, when present.
+      if (files.includes('SOURCE/scripts/transformText.js')) {
+        add('SOURCE/scripts/transformText.js', 'Project scripts');
+      }
+
+      // Extension-declared text transforms (naming-independent, via extension.json).
+      for (const ext of this.extensionDirsOf(files)) {
+        const declared = await this.declaredTransforms(workspaceId, files, ext, 'textTransforms');
+        for (const t of declared ?? []) add(`SOURCE/extensions/${ext}/${t}`, ext);
+      }
+    } catch {
+      // Discovery failed (e.g. workspace gone) — return whatever we have.
+    }
+
+    return options;
+  }
+
+  /** Distinct extension directory names present in the workspace file list. */
+  private extensionDirsOf(files: string[]): Set<string> {
+    const dirs = new Set<string>();
+    for (const file of files) {
+      if (!file.startsWith('SOURCE/extensions/')) continue;
+      const parts = file.split('/');
+      if (parts.length >= 3) dirs.add(parts[2]);
+    }
+    return dirs;
+  }
+
+  /**
+   * The scripts an extension declares in `extension.json[field]`, or null when the
+   * extension has no (readable) manifest — so callers can fall back to a heuristic.
+   */
+  private async declaredTransforms(
+    workspaceId: string,
+    files: string[],
+    ext: string,
+    field: 'domTransforms' | 'textTransforms'
+  ): Promise<string[] | null> {
+    const manifestPath = `SOURCE/extensions/${ext}/extension.json`;
+    if (!files.includes(manifestPath)) return null;
+    try {
+      const meta = JSON.parse(await this.fileStorage.readTextFile(workspaceId, manifestPath));
+      return Array.isArray(meta?.[field])
+        ? meta[field].filter((t: unknown): t is string => typeof t === 'string')
+        : [];
+    } catch {
+      return null; // malformed manifest → heuristic fallback
+    }
   }
 }

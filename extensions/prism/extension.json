@@ -4,5 +4,6 @@
   "description": "Syntax highlighting for code blocks via Prism.",
   "license": "LICENSE.txt",
   "scripts": ["prism.js"],
-  "transforms": ["transformPrism.js"]
+  "domTransforms": ["transformPrism.js"],
+  "textTransforms": []
 }

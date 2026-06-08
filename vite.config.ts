@@ -159,15 +159,18 @@ export default defineConfig({
                 await fs.readFile(path.join(extensionsRoot, name, 'extension.json'), 'utf8')
               );
               const scripts = Array.isArray(m.scripts) ? m.scripts : [];
-              const transforms = Array.isArray(m.transforms) ? m.transforms : [];
+              const domTransforms = Array.isArray(m.domTransforms) ? m.domTransforms : [];
+              const textTransforms = Array.isArray(m.textTransforms) ? m.textTransforms : [];
               if (m.id && m.name && scripts.length > 0) {
                 manifest.push({
                   id: m.id,
                   name: m.name,
                   description: m.description,
+                  url: m.url,
                   license: m.license,
                   scripts,
-                  transforms,
+                  domTransforms,
+                  textTransforms,
                 });
               }
             } catch {
@@ -179,9 +182,13 @@ export default defineConfig({
         });
 
         server.middlewares.use('/extensions/', async (req, res, next) => {
+          // Connect strips the '/extensions/' mount prefix, so req.url is the path
+          // *within* extensions/ (e.g. '/prism/prism.js'). Resolve against
+          // extensionsRoot and serve raw, so Vite never transforms the lib JS
+          // (which would append a sourceMappingURL comment).
           const rel = (req.url || '').split('?')[0].replace(/^\//, '');
+          const target = path.join(extensionsRoot, rel);
           // Block path traversal; only serve files under extensions/.
-          const target = path.join(dirname, rel);
           if (!target.startsWith(extensionsRoot + path.sep)) {
             next();
             return;

@@ -12,10 +12,19 @@ function jsonResponse(data: unknown): Response {
 }
 
 describe('extension-catalog', () => {
-  it('parses and validates a manifest', async () => {
+  it('parses and normalizes a manifest (coercing missing transform arrays)', async () => {
     const entries = [
-      { id: 'prism', name: 'Prism', scripts: ['prism.js'], transforms: ['transformPrism.js'] },
-      { id: 'bad' }, // missing scripts/transforms → filtered
+      // domTransforms present, textTransforms missing → coerced to []
+      { id: 'prism', name: 'Prism', scripts: ['prism.js'], domTransforms: ['transformPrism.js'] },
+      // textTransforms present, domTransforms missing → coerced to []; keeps url
+      {
+        id: 'djot',
+        name: 'Djot',
+        url: 'https://x',
+        scripts: ['djot.js'],
+        textTransforms: ['transformDjot.js'],
+      },
+      { id: 'bad' }, // missing scripts → filtered
     ];
     const fetchFn = vi.fn(async () => jsonResponse(entries));
 
@@ -27,7 +36,26 @@ describe('extension-catalog', () => {
 
     expect(fetchFn).toHaveBeenCalledWith('https://app.example.com/extensions/manifest.json');
     expect(result).toEqual([
-      { id: 'prism', name: 'Prism', scripts: ['prism.js'], transforms: ['transformPrism.js'] },
+      {
+        id: 'prism',
+        name: 'Prism',
+        description: undefined,
+        url: undefined,
+        license: undefined,
+        scripts: ['prism.js'],
+        domTransforms: ['transformPrism.js'],
+        textTransforms: [],
+      },
+      {
+        id: 'djot',
+        name: 'Djot',
+        description: undefined,
+        url: 'https://x',
+        license: undefined,
+        scripts: ['djot.js'],
+        domTransforms: [],
+        textTransforms: ['transformDjot.js'],
+      },
     ]);
   });
 

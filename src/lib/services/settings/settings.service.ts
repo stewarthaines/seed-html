@@ -79,6 +79,7 @@ interface I18nStore {
 
 interface ExtensionManager {
   getAvailableTransforms: (workspaceId: string) => Promise<TransformOption[]>;
+  getAvailableTextTransforms: (workspaceId: string) => Promise<TransformOption[]>;
   readTransformScript?: (workspaceId: string, path: string) => Promise<string>;
 }
 
@@ -428,6 +429,20 @@ export class SettingsService {
     } catch (error) {
       throw new SettingsServiceError(
         `Failed to get available transforms: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'TRANSFORM_DISCOVERY_ERROR'
+      );
+    }
+  }
+
+  /**
+   * Get available text-transform scripts (the single text_transform slot).
+   */
+  async getAvailableTextTransforms(workspaceId: string): Promise<TransformOption[]> {
+    try {
+      return await this.extensionManager.getAvailableTextTransforms(workspaceId);
+    } catch (error) {
+      throw new SettingsServiceError(
+        `Failed to get available text transforms: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'TRANSFORM_DISCOVERY_ERROR'
       );
     }

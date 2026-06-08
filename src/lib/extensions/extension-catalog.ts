@@ -25,11 +25,15 @@ export interface ExtensionCatalogEntry {
   id: string;
   name: string;
   description?: string;
+  /** Project/homepage URL for the 3rd-party library. */
+  url?: string;
   license?: string;
   /** 3rd-party lib files loaded into the transform iframe as globals. */
   scripts: string[];
   /** Suggested DOM-transform scripts (candidates for the dom_transforms list). */
-  transforms: string[];
+  domTransforms: string[];
+  /** Suggested text-transform scripts (candidates for the single text_transform). */
+  textTransforms: string[];
 }
 
 const MANIFEST_PATH = 'extensions/manifest.json';
@@ -52,17 +56,26 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every(v => typeof v === 'string');
 }
 
-function isValidCatalogEntry(value: unknown): value is ExtensionCatalogEntry {
-  if (typeof value !== 'object' || value === null) return false;
+const asString = (v: unknown): string | undefined => (typeof v === 'string' ? v : undefined);
+const asStringArray = (v: unknown): string[] => (isStringArray(v) ? v : []);
+
+/** Validate + normalize an entry (coercing missing transform arrays to []). */
+function normalizeCatalogEntry(value: unknown): ExtensionCatalogEntry | null {
+  if (typeof value !== 'object' || value === null) return null;
   const e = value as Record<string, unknown>;
-  return (
-    typeof e.id === 'string' &&
-    e.id.length > 0 &&
-    typeof e.name === 'string' &&
-    e.name.length > 0 &&
-    isStringArray(e.scripts) &&
-    isStringArray(e.transforms)
-  );
+  if (typeof e.id !== 'string' || e.id.length === 0) return null;
+  if (typeof e.name !== 'string' || e.name.length === 0) return null;
+  if (!isStringArray(e.scripts)) return null;
+  return {
+    id: e.id,
+    name: e.name,
+    description: asString(e.description),
+    url: asString(e.url),
+    license: asString(e.license),
+    scripts: e.scripts,
+    domTransforms: asStringArray(e.domTransforms),
+    textTransforms: asStringArray(e.textTransforms),
+  };
 }
 
 /**
@@ -81,7 +94,9 @@ export async function loadExtensionCatalog(
     if (!response.ok) return [];
     const data: unknown = await response.json();
     if (!Array.isArray(data)) return [];
-    return data.filter(isValidCatalogEntry);
+    return data
+      .map(normalizeCatalogEntry)
+      .filter((e): e is ExtensionCatalogEntry => e !== null);
   } catch {
     // No manifest served, or malformed — the catalog simply isn't available.
     return [];

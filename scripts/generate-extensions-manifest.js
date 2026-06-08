@@ -46,9 +46,10 @@ for (const dirent of dirents) {
     continue; // not an extension (no extension.json)
   }
 
-  const { id, name, description, license } = meta;
+  const { id, name, description, url, license } = meta;
   const scripts = Array.isArray(meta.scripts) ? meta.scripts : [];
-  const transforms = Array.isArray(meta.transforms) ? meta.transforms : [];
+  const domTransforms = Array.isArray(meta.domTransforms) ? meta.domTransforms : [];
+  const textTransforms = Array.isArray(meta.textTransforms) ? meta.textTransforms : [];
   if (!id || !name || scripts.length === 0) {
     console.warn(
       `⚠️  ${dirent.name}: incomplete extension.json (need id, name, scripts) — skipped`
@@ -57,7 +58,13 @@ for (const dirent of dirents) {
   }
 
   // Copy the declared files (skip any that are missing, warn).
-  const files = [...scripts, ...transforms, ...(license ? [license] : []), 'extension.json'];
+  const files = [
+    ...scripts,
+    ...domTransforms,
+    ...textTransforms,
+    ...(license ? [license] : []),
+    'extension.json',
+  ];
   const destDir = path.join(outDir, id);
   await fs.mkdir(destDir, { recursive: true });
   let ok = true;
@@ -72,7 +79,7 @@ for (const dirent of dirents) {
   }
   if (!ok) continue;
 
-  manifest.push({ id, name, description, license, scripts, transforms });
+  manifest.push({ id, name, description, url, license, scripts, domTransforms, textTransforms });
 }
 
 await fs.mkdir(outDir, { recursive: true });

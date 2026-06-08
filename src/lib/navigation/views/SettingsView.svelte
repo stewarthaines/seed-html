@@ -57,6 +57,7 @@
   let workspaceSettings = $state<WorkspaceSettings | null>(null);
   let epubSettings = $state<EPUBSettings | null>(null);
   let availableTransforms = $state<TransformOption[]>([]);
+  let availableTextTransforms = $state<TransformOption[]>([]);
   let loading = $state(false);
   let epubLoading = $state(false);
   let error = $state<string | null>(null);
@@ -99,9 +100,11 @@
     const loadAvailableTransforms = async () => {
       try {
         availableTransforms = await settingsService.getAvailableTransforms(workspaceId);
+        availableTextTransforms = await settingsService.getAvailableTextTransforms(workspaceId);
       } catch (err) {
         console.error('Failed to load available transforms:', err);
         availableTransforms = [];
+        availableTextTransforms = [];
       }
     };
 
@@ -300,6 +303,29 @@
     persistDomTransforms(moveTransform(epubSettings.dom_transforms, index, dir));
   }
 
+  // Persist the single text_transform (optimistic save + revert).
+  async function persistTextTransform(path: string): Promise<void> {
+    if (!workspaceId || !epubSettings || !path) return;
+
+    const validation = settingsService.validateEPUBSettings({ text_transform: path });
+    if (!validation.isValid) {
+      error = validation.errors[0] || 'Invalid text transform';
+      return;
+    }
+
+    const previous = epubSettings.text_transform;
+    const updatedSettings: EPUBSettings = { ...epubSettings, text_transform: path };
+    epubSettings = updatedSettings;
+
+    try {
+      await settingsService.saveEPUBSettings(workspaceId, updatedSettings);
+      onSettingsChanged?.();
+    } catch (err) {
+      error = err instanceof Error ? err.message : $t('Failed to save EPUB settings');
+      epubSettings = { ...epubSettings, text_transform: previous };
+    }
+  }
+
   // Handle extension removal
   async function handleExtensionRemoval(extensionName: string): Promise<void> {
     if (!workspaceId) return;
@@ -329,7 +355,16 @@
       await transformEngine.setWorkspaceExtensions(workspaceId);
       extensions = await extensionManager.listWorkspaceExtensions(workspaceId);
       availableTransforms = await settingsService.getAvailableTransforms(workspaceId);
-      onSettingsChanged?.();
+      availableTextTransforms = await settingsService.getAvailableTextTransforms(workspaceId);
+
+      // Auto-adopt the extension's text transform when the project's is still the
+      // untouched default — the typical "install one text extension" flow.
+      const defaultText = settingsService.getDefaultEPUBSettings().text_transform;
+      if (entry.textTransforms.length > 0 && epubSettings?.text_transform === defaultText) {
+        await persistTextTransform(`SOURCE/extensions/${entry.id}/${entry.textTransforms[0]}`);
+      } else {
+        onSettingsChanged?.();
+      }
     } catch (err) {
       console.error('Failed to add extension:', err);
       error = err instanceof Error ? err.message : $t('Failed to add extension');
@@ -366,6 +401,27 @@
       groups.set(group, list);
     }
     return [...groups.entries()].map(([group, options]) => ({ group, options }));
+  });
+
+  // Text-transform picker options grouped by extension, always including the
+  // current value (so a custom/unknown text_transform path still shows).
+  const textTransformGroups = $derived.by(() => {
+    const options = [...availableTextTransforms];
+    const current = epubSettings?.text_transform;
+    if (current && !options.some(o => o.path === current)) {
+      options.push({
+        path: current,
+        extensionName: 'Project scripts',
+        fileName: basename(current),
+      });
+    }
+    const groups = new Map<string, TransformOption[]>();
+    for (const t of options) {
+      const list = groups.get(t.extensionName) ?? [];
+      list.push(t);
+      groups.set(t.extensionName, list);
+    }
+    return [...groups.entries()].map(([group, opts]) => ({ group, options: opts }));
   });
 
   // App settings: theme (light/dark/system) and locale, backed by the global stores
@@ -565,6 +621,33 @@
                   <p class="setting-description">
                     Template for inserting audio clip directives. Use placeholders: &lt;href&gt;,
                     &lt;begin&gt;, &lt;end&gt;, &lt;label&gt;, &lt;rate&gt;
+                  </p>
+                </div>
+
+                <div class="setting-group">
+                  <label for="text-transform" class="setting-label-text">
+                    {$t('Text Transform')}
+                  </label>
+                  <select
+                    id="text-transform"
+                    class="setting-select"
+                    value={epubSettings?.text_transform ?? ''}
+                    onchange={e =>
+                      persistTextTransform((e.currentTarget as HTMLSelectElement).value)}
+                    disabled={epubLoading}
+                  >
+                    {#each textTransformGroups as grp (grp.group)}
+                      <optgroup label={grp.group}>
+                        {#each grp.options as opt (opt.path)}
+                          <option value={opt.path}>{opt.fileName}</option>
+                        {/each}
+                      </optgroup>
+                    {/each}
+                  </select>
+                  <p class="setting-description">
+                    {$t(
+                      'The single plain-text → XHTML step. Pick a project script or one supplied by an extension.'
+                    )}
                   </p>
                 </div>
 

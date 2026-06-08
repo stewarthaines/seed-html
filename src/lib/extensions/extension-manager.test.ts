@@ -39,7 +39,8 @@ describe('ExtensionManager.importCatalogExtension', () => {
       name: 'Prism',
       license: 'LICENSE.txt',
       scripts: ['prism.js'],
-      transforms: ['transformPrism.js'],
+      domTransforms: ['transformPrism.js'],
+      textTransforms: [],
     };
     const bodies: Record<string, string> = {
       'prism.js': 'PRISM_LIB',
@@ -63,7 +64,7 @@ describe('ExtensionManager.importCatalogExtension', () => {
 });
 
 describe('ExtensionManager.getAvailableTransforms', () => {
-  it('uses extension.json transforms[] (not the lib) and dedupes; includes loose scripts', async () => {
+  it('uses extension.json domTransforms[] (not the lib) and dedupes; includes loose scripts', async () => {
     const { api } = makeFileStorage({
       'SOURCE/scripts/transformDom.js': 'x',
       'SOURCE/scripts/transformText.js': 'x',
@@ -71,7 +72,8 @@ describe('ExtensionManager.getAvailableTransforms', () => {
       'SOURCE/extensions/prism/transformPrism.js': 't',
       'SOURCE/extensions/prism/extension.json': JSON.stringify({
         scripts: ['prism.js'],
-        transforms: ['transformPrism.js'],
+        domTransforms: ['transformPrism.js'],
+        textTransforms: [],
       }),
     });
 
@@ -91,6 +93,22 @@ describe('ExtensionManager.getAvailableTransforms', () => {
     expect(paths).toContain('SOURCE/scripts/transformText.js');
   });
 
+  it('does not offer an extension text transform (djot) as a DOM transform', async () => {
+    const { api } = makeFileStorage({
+      'SOURCE/extensions/djot/djot.js': 'lib',
+      'SOURCE/extensions/djot/transformDjot.js': 't',
+      'SOURCE/extensions/djot/extension.json': JSON.stringify({
+        scripts: ['djot.js'],
+        domTransforms: [],
+        textTransforms: ['transformDjot.js'],
+      }),
+    });
+
+    const mgr = new ExtensionManager(api);
+    const paths = (await mgr.getAvailableTransforms('ws')).map(o => o.path);
+    expect(paths).not.toContain('SOURCE/extensions/djot/transformDjot.js');
+  });
+
   it('falls back to the transform-name heuristic for an extension without a manifest', async () => {
     const { api } = makeFileStorage({
       'SOURCE/extensions/legacy/lib.js': 'lib',
@@ -102,5 +120,32 @@ describe('ExtensionManager.getAvailableTransforms', () => {
 
     expect(paths).toContain('SOURCE/extensions/legacy/transformLegacy.js');
     expect(paths).not.toContain('SOURCE/extensions/legacy/lib.js');
+  });
+});
+
+describe('ExtensionManager.getAvailableTextTransforms', () => {
+  it('returns the default text transform plus extension textTransforms', async () => {
+    const { api } = makeFileStorage({
+      'SOURCE/scripts/transformText.js': 'x',
+      'SOURCE/extensions/djot/djot.js': 'lib',
+      'SOURCE/extensions/djot/transformDjot.js': 't',
+      'SOURCE/extensions/djot/extension.json': JSON.stringify({
+        scripts: ['djot.js'],
+        domTransforms: [],
+        textTransforms: ['transformDjot.js'],
+      }),
+    });
+
+    const mgr = new ExtensionManager(api);
+    const opts = await mgr.getAvailableTextTransforms('ws');
+    const paths = opts.map(o => o.path);
+
+    expect(paths).toContain('SOURCE/scripts/transformText.js');
+    expect(paths).toContain('SOURCE/extensions/djot/transformDjot.js');
+    expect(
+      opts.find(o => o.path === 'SOURCE/extensions/djot/transformDjot.js')!.extensionName
+    ).toBe('djot');
+    // The lib is not a text transform.
+    expect(paths).not.toContain('SOURCE/extensions/djot/djot.js');
   });
 });
