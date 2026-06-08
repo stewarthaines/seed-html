@@ -1,0 +1,11 @@
+{
+  "id": "textile",
+  "name": "Textile",
+  "description": "Textile is a markup language for formatting text in a blog or a content management system.",
+  "url": "https://textile-lang.com/",
+  "license": "LICENSE.txt",
+  "chapter": "chapter.txt",
+  "scripts": ["textile.min.js"],
+  "domTransforms": [],
+  "textTransforms": ["transformTextile.js"]
+}
