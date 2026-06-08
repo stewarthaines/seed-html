@@ -185,6 +185,32 @@ export class ExtensionManager {
   }
 
   /**
+   * Fetch a catalog extension's sample chapter (plain-text source), used to seed a
+   * new project's first chapter when that extension is chosen. Returns null when the
+   * entry declares no chapter or the fetch fails — the caller falls back to the
+   * generic sample. Not written into the project; it's a create-time template.
+   *
+   * @param entry - Catalog entry (from loadExtensionCatalog)
+   * @param options.fetch - Fetch implementation (injectable for tests)
+   * @param options.baseUrl - Base URL the extensions/ folder resolves against
+   */
+  async getExtensionChapterText(
+    entry: ExtensionCatalogEntry,
+    options: { fetch?: typeof fetch; baseUrl?: string } = {}
+  ): Promise<string | null> {
+    if (!entry.chapter) return null;
+    const fetchImpl = options.fetch ?? globalThis.fetch.bind(globalThis);
+    try {
+      const url = resolveExtensionFileUrl(entry.id, entry.chapter, { baseUrl: options.baseUrl });
+      const response = await fetchImpl(url);
+      if (!response.ok) return null;
+      return await response.text();
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Adds a file to an existing extension
    *
    * @param workspaceId - Target workspace identifier

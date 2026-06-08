@@ -5,6 +5,7 @@
   "url": "https://github.com/jgm/djot.js",
   "license": "LICENSE.txt",
   "scripts": ["djot.js"],
+  "chapter": "chapter.txt",
   "domTransforms": [],
   "textTransforms": ["transformDjot.js"]
 }

@@ -531,6 +531,21 @@
 
     // Open the first chapter in the spine editor (mirrors the EPUB-import tail).
     const firstSpineItem = appState.workspace?.opf?.spine?.[0];
+
+    // Seed that first chapter with the chosen text-format extension's sample
+    // chapter, so the new project shows the format in action. The editor renders
+    // it through the adopted text transform when it loads below.
+    if (data.extension?.chapter && firstSpineItem && extensionManager) {
+      const text = await extensionManager.getExtensionChapterText(data.extension);
+      if (text != null) {
+        await fileStorage.writeTextFile(
+          workspaceId,
+          `SOURCE/text/${firstSpineItem.idref}.txt`,
+          text
+        );
+      }
+    }
+
     if (firstSpineItem) {
       appState.selectChapter(firstSpineItem.idref);
       navigationStore.navigateTo('spine');

@@ -57,6 +57,7 @@ describe('extension-catalog', () => {
         textTransforms: [],
         assets: [],
         licenses: [],
+        chapter: undefined,
       },
       {
         id: 'djot',
@@ -69,6 +70,7 @@ describe('extension-catalog', () => {
         textTransforms: ['transformDjot.js'],
         assets: [],
         licenses: [],
+        chapter: undefined,
       },
       {
         id: 'highlight',
@@ -88,6 +90,7 @@ describe('extension-catalog', () => {
           },
         ],
         licenses: [],
+        chapter: undefined,
       },
     ]);
   });
@@ -127,6 +130,23 @@ describe('extension-catalog', () => {
     // Extension-wide first, then per-script (deduped), then per-asset. 'orphan.txt'
     // is ignored because its entry declares no file.
     expect(entry.licenses).toEqual(['LICENSE.txt', 'abc2svg-LICENSE.txt', 'font-LICENSE.txt']);
+  });
+
+  it('parses the optional sample chapter filename', async () => {
+    const entries = [
+      { id: 'djot', name: 'Djot', scripts: ['djot.js'], chapter: 'chapter.txt' },
+      { id: 'prism', name: 'Prism', scripts: ['prism.js'] }, // no chapter
+    ];
+    const fetchFn = vi.fn(async () => jsonResponse(entries));
+
+    const [djot, prism] = await loadExtensionCatalog({
+      protocol: 'https:',
+      baseUrl: BASE,
+      fetch: fetchFn,
+    });
+
+    expect(djot.chapter).toBe('chapter.txt');
+    expect(prism.chapter).toBeUndefined();
   });
 
   it('returns [] on file:// without fetching', async () => {

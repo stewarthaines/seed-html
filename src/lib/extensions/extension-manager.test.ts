@@ -167,6 +167,49 @@ describe('ExtensionManager.importCatalogExtension', () => {
   });
 });
 
+describe('ExtensionManager.getExtensionChapterText', () => {
+  const baseEntry = {
+    id: 'djot',
+    name: 'Djot',
+    scripts: ['djot.js'],
+    domTransforms: [],
+    textTransforms: ['transformDjot.js'],
+    assets: [],
+    licenses: [],
+  };
+
+  it('fetches the declared chapter file text', async () => {
+    const entry: ExtensionCatalogEntry = { ...baseEntry, chapter: 'chapter.txt' };
+    const fetchImpl = vi.fn(async () => ({ ok: true, text: async () => 'CHAPTER SOURCE' }) as Response);
+
+    const mgr = new ExtensionManager(makeFileStorage().api);
+    const text = await mgr.getExtensionChapterText(entry, { fetch: fetchImpl, baseUrl: 'https://x/' });
+
+    expect(fetchImpl).toHaveBeenCalledWith('https://x/extensions/djot/chapter.txt');
+    expect(text).toBe('CHAPTER SOURCE');
+  });
+
+  it('returns null when no chapter is declared (without fetching)', async () => {
+    const entry: ExtensionCatalogEntry = { ...baseEntry };
+    const fetchImpl = vi.fn();
+
+    const mgr = new ExtensionManager(makeFileStorage().api);
+    expect(await mgr.getExtensionChapterText(entry, { fetch: fetchImpl as unknown as typeof fetch }))
+      .toBeNull();
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('returns null when the fetch is not ok', async () => {
+    const entry: ExtensionCatalogEntry = { ...baseEntry, chapter: 'chapter.txt' };
+    const fetchImpl = vi.fn(async () => ({ ok: false, text: async () => '' }) as Response);
+
+    const mgr = new ExtensionManager(makeFileStorage().api);
+    expect(
+      await mgr.getExtensionChapterText(entry, { fetch: fetchImpl, baseUrl: 'https://x/' })
+    ).toBeNull();
+  });
+});
+
 describe('ExtensionManager.getAvailableTransforms', () => {
   it('uses extension.json domTransforms[] (not the lib) and dedupes; includes loose scripts', async () => {
     const { api } = makeFileStorage({

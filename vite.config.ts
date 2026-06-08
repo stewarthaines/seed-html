@@ -189,6 +189,7 @@ export default defineConfig({
                   ].filter((l: unknown) => typeof l === 'string' && l)
                 ),
               ];
+              const chapter = typeof m.chapter === 'string' ? m.chapter : undefined;
               if (m.id && m.name && scripts.length > 0) {
                 manifest.push({
                   id: m.id,
@@ -201,6 +202,7 @@ export default defineConfig({
                   textTransforms,
                   assets,
                   licenses,
+                  chapter,
                 });
               }
             } catch {

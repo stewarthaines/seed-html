@@ -1,0 +1,17 @@
+# Achievement _Unlocked!_
+
+This is a minimal sample EPUB created in the Simple EPUB Editor app - *SEED.html*.
+
+This project provides a text processor called `djot` which is based on markdown.
+
+## Markdown-like
+
+*This is strong*  and is created by wrapping text in single asterisks.
+
+_This is emphasised_ and is created by wrapping text in single underscores.
+
+You can write also xhtml directly in `<em><strong>this</strong> EPUB</em>`{=html}.
+
+## More about djot
+
+Read more about `<a target="_blank" href="https://htmlpreview.github.io/?https://github.com/jgm/djot/blob/master/doc/syntax.html">djot syntax</a>`{=html}

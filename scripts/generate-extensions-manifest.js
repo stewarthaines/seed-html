@@ -68,6 +68,8 @@ for (const dirent of dirents) {
       ].filter(l => typeof l === 'string' && l)
     ),
   ];
+  // Optional sample chapter (plain-text source) used to seed a new project.
+  const chapter = typeof meta.chapter === 'string' ? meta.chapter : undefined;
   if (!id || !name || scripts.length === 0) {
     console.warn(
       `⚠️  ${dirent.name}: incomplete extension.json (need id, name, scripts) — skipped`
@@ -84,6 +86,7 @@ for (const dirent of dirents) {
     ...domTransforms,
     ...textTransforms,
     ...licenses,
+    ...(chapter ? [chapter] : []),
     'extension.json',
   ];
   const destDir = path.join(outDir, id);
@@ -122,6 +125,7 @@ for (const dirent of dirents) {
     textTransforms,
     assets,
     licenses,
+    chapter,
   });
 }
 

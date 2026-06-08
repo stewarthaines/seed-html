@@ -55,6 +55,8 @@ export interface ExtensionCatalogEntry {
   assets: ExtensionAsset[];
   /** All license files to bundle into SOURCE/ (extension-wide + per-script + per-asset). */
   licenses: string[];
+  /** Sample chapter (plain-text source) used to seed a new project's first chapter. */
+  chapter?: string;
 }
 
 /**
@@ -159,6 +161,7 @@ function normalizeCatalogEntry(value: unknown): ExtensionCatalogEntry | null {
     textTransforms: asStringArray(e.textTransforms),
     assets,
     licenses: collectLicenses(e.scripts, e.license, assets),
+    chapter: asString(e.chapter),
   };
 }
 
