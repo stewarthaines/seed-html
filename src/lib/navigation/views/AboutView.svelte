@@ -44,21 +44,21 @@
 
         <!-- Fan-out arrows from the source to each device -->
         <g class="g-arrows">
-          <path d="M120 116 C 220 116, 250 58, 332 58" marker-end="url(#about-arrowhead)" />
-          <path d="M120 116 C 230 116, 250 116, 330 118" marker-end="url(#about-arrowhead)" />
-          <path d="M120 116 C 220 116, 250 184, 326 184" marker-end="url(#about-arrowhead)" />
+          <path d="M120 116 C 220 116, 250 46, 332 46" marker-end="url(#about-arrowhead)" />
+          <path d="M120 116 C 230 116, 250 118, 330 118" marker-end="url(#about-arrowhead)" />
+          <path d="M120 116 C 220 116, 250 177, 326 177" marker-end="url(#about-arrowhead)" />
         </g>
 
-        <!-- Reading Systems: phone, tablet, laptop -->
+        <!-- Reading Systems: phone, tablet, laptop, stacked with even gaps. -->
         <g class="g-devices">
-          <!-- phone -->
-          <rect x="340" y="24" width="44" height="70" rx="8" />
-          <line x1="356" y1="32" x2="368" y2="32" />
-          <!-- tablet -->
-          <rect x="338" y="96" width="66" height="46" rx="6" />
-          <!-- laptop -->
-          <rect x="334" y="160" width="72" height="44" rx="3" />
-          <path d="M326 206 L414 206" />
+          <!-- phone: y 11–81 -->
+          <rect x="340" y="11" width="44" height="70" rx="8" />
+          <line x1="356" y1="19" x2="368" y2="19" />
+          <!-- tablet: y 95–141 (14px gap above) -->
+          <rect x="338" y="95" width="66" height="46" rx="6" />
+          <!-- laptop: y 155–199 (14px gap above) -->
+          <rect x="334" y="155" width="72" height="44" rx="3" />
+          <path d="M326 201 L414 201" />
         </g>
       </svg>
       <figcaption class="reach-caption">{$t('about.graphic.caption')}</figcaption>
