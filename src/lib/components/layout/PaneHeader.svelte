@@ -23,7 +23,7 @@
     gap: var(--space-2);
     min-height: 2.75rem;
     padding: 0 var(--space-3);
-    background: var(--color-bg-tertiary);
+    background: var(--color-button-secondary-bg);
     border-bottom: 1px solid var(--color-border-default);
     box-sizing: border-box;
   }

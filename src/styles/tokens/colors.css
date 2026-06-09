@@ -194,6 +194,10 @@
   --color-focus: var(--color-primary-600);
   --color-focus-ring: var(--color-primary-500);
 
+  /* Brand accent - azure highlight for interactive affordances (e.g. the pane
+     split handle on hover/drag). Mirrors the publish-to-remote plugin. */
+  --color-accent: #0074d9;
+
   /* High contrast mode support (system colors) */
   --color-forced-bg: Canvas;
   --color-forced-text: CanvasText;

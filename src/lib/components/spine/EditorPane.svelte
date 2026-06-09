@@ -675,7 +675,7 @@
     min-height: 2.75rem;
     padding: 0 var(--space-3);
     border-bottom: 1px solid var(--color-border-default);
-    background: var(--color-bg-tertiary);
+    background: var(--color-button-secondary-bg);
     box-sizing: border-box;
   }
 
@@ -748,7 +748,7 @@
   }
 
   .pane-header {
-    background: var(--color-bg-tertiary);
+    background: var(--color-button-secondary-bg);
     border-bottom: 1px solid var(--color-border-default);
   }
 

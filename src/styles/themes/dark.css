@@ -123,6 +123,10 @@
   --color-focus: var(--color-primary-400);
   --color-focus-ring: var(--color-primary-300);
 
+  /* Brand accent - lighter azure for dark backgrounds (matches the
+     publish-to-remote plugin's pane split handle). */
+  --color-accent: #4aa3ff;
+
   /* Error and validation colors (WCAG AA compliant on dark) */
   --color-error-text: #fca5a5; /* 4.5:1 contrast on dark */
   --color-error-bg: var(--color-error-950);

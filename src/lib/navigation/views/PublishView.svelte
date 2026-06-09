@@ -1,6 +1,7 @@
 <script lang="ts">
   import { t, currentLocale, documentDirection } from '$lib/i18n';
   import { themeStore } from '$lib/stores/theme';
+  import PaneHeader from '$lib/components/layout/PaneHeader.svelte';
   import { downloadBlob } from '$lib/zip/index.js';
   import type { PublishService, PublishedEpub } from '$lib/services/publish/publish.service.js';
   import {
@@ -154,52 +155,56 @@
   ></iframe>
 {:else}
   <div class="publish-view">
-    <header class="publish-header">
-      <h1>{$t('Publish')}</h1>
-      <button class="btn btn-secondary btn-sm" onclick={load}>{$t('Refresh')}</button>
-    </header>
+    <PaneHeader>
+      <h1 class="publish-title">{$t('Publish')}</h1>
+      {#snippet actions()}
+        <button class="btn btn-secondary btn-sm" onclick={load}>{$t('Refresh')}</button>
+      {/snippet}
+    </PaneHeader>
 
-    {#if loading}
-      <p class="status">{$t('Loading…')}</p>
-    {:else if error}
-      <p class="status error">{error}</p>
-    {:else if epubs.length === 0}
-      <div class="empty-state">
-        <p>{$t('No packaged EPUBs yet.')}</p>
-        <p class="hint">{$t('Package a project to see it here.')}</p>
-      </div>
-    {:else}
-      <table class="epub-table">
-        <thead>
-          <tr>
-            <th>{$t('Name')}</th>
-            <th class="num">{$t('Size')}</th>
-            <th class="num">{$t('Modified')}</th>
-            <th class="actions">{$t('Actions')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each epubs as epub (epub.filename)}
+    <div class="publish-body">
+      {#if loading}
+        <p class="status">{$t('Loading…')}</p>
+      {:else if error}
+        <p class="status error">{error}</p>
+      {:else if epubs.length === 0}
+        <div class="empty-state">
+          <p>{$t('No packaged EPUBs yet.')}</p>
+          <p class="hint">{$t('Package a project to see it here.')}</p>
+        </div>
+      {:else}
+        <table class="epub-table">
+          <thead>
             <tr>
-              <td class="name">{epub.filename}</td>
-              <td class="num">{formatSize(epub.size)}</td>
-              <td class="num">{formatDate(epub.lastModified)}</td>
-              <td class="actions">
-                <button
-                  class="btn btn-secondary btn-sm"
-                  onclick={() => handleDownload(epub.filename)}
-                >
-                  {$t('Download')}
-                </button>
-                <button class="btn btn-danger btn-sm" onclick={() => handleDelete(epub.filename)}>
-                  {$t('Delete')}
-                </button>
-              </td>
+              <th>{$t('Name')}</th>
+              <th class="num">{$t('Size')}</th>
+              <th class="num">{$t('Modified')}</th>
+              <th class="actions">{$t('Actions')}</th>
             </tr>
-          {/each}
-        </tbody>
-      </table>
-    {/if}
+          </thead>
+          <tbody>
+            {#each epubs as epub (epub.filename)}
+              <tr>
+                <td class="name">{epub.filename}</td>
+                <td class="num">{formatSize(epub.size)}</td>
+                <td class="num">{formatDate(epub.lastModified)}</td>
+                <td class="actions">
+                  <button
+                    class="btn btn-secondary btn-sm"
+                    onclick={() => handleDownload(epub.filename)}
+                  >
+                    {$t('Download')}
+                  </button>
+                  <button class="btn btn-danger btn-sm" onclick={() => handleDelete(epub.filename)}>
+                    {$t('Delete')}
+                  </button>
+                </td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      {/if}
+    </div>
   </div>
 {/if}
 
@@ -211,24 +216,26 @@
     display: block;
   }
 
+  /* Full-frame view: pinned PaneHeader + its own scrolling body, mirroring the
+     fixed-header/scrolling-body convention the split-pane views use. */
   .publish-view {
-    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
     height: 100%;
-    overflow-y: auto;
     color: var(--color-text-primary);
   }
 
-  .publish-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--space-4);
+  .publish-title {
+    margin: 0;
+    font-size: var(--text-base);
+    font-weight: 600;
   }
 
-  .publish-header h1 {
-    margin: 0;
-    font-size: var(--text-xl);
-    font-weight: 600;
+  .publish-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--space-4);
   }
 
   .status {

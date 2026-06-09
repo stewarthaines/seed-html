@@ -137,12 +137,9 @@
     transition: background-color var(--duration-fast) ease; /* Using motion tokens */
   }
 
-  :global([data-pane-resizer]:hover) {
-    background: var(--color-border-strong);
-  }
-
+  :global([data-pane-resizer]:hover),
   :global([data-pane-resizer][data-resize-handle-active]) {
-    background: var(--color-border-accent);
+    background: var(--color-accent);
   }
 
   /* Focus indicators for accessibility */

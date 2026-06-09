@@ -124,6 +124,10 @@
   --color-focus: var(--color-primary-600);
   --color-focus-ring: var(--color-primary-500);
 
+  /* Brand accent - azure highlight for interactive affordances (matches the
+     publish-to-remote plugin's pane split handle). */
+  --color-accent: #0074d9;
+
   /* Error and validation colors (WCAG AA compliant on light) */
   --color-error-text: #dc2626; /* 4.5:1 contrast on white */
   --color-error-bg: #fef2f2;

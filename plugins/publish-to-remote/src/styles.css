@@ -7,11 +7,13 @@ body,
 body {
   margin: 0;
   padding: 0;
-  font-family:
-    system-ui,
-    -apple-system,
-    sans-serif;
-  font-size: 14px;
+  /* Match the core app's typeface and weight rendering (Helvetica/Arial with
+     grayscale antialiasing) rather than the heavier OS UI font (system-ui). */
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   background: var(--color-surface-primary);
   color: var(--color-text-primary);
 }
@@ -28,6 +30,9 @@ button {
    [data-theme='dark'] block overrides them. The host sets data-theme on <html>
    via the `context` message. Usage matches core: <button class="btn btn-sm">. */
 :root {
+  /* Typography — mirror src/styles/tokens/typography.css (--font-sans). */
+  --font-sans: Helvetica, Arial, sans-serif;
+
   /* Buttons */
   --color-button-primary-bg: #0000ee;
   --color-button-primary-bg-hover: #0000cc;
