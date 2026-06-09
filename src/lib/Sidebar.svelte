@@ -108,6 +108,8 @@
       ? $t('Pages')
       : $t('Chapters')
   );
+  // Spine item count, shown beside the heading e.g. "Chapters (12)".
+  const chapterCount = $derived(currentWorkspace?.opf?.spine?.length ?? 0);
 
   // When the publish-to-remote plugin is enabled, annotate the Publish item so
   // the user can see which plugin is driving it.
@@ -325,7 +327,7 @@
         />
         {#if isExpanded}
           <div class="spine-section-header workspace-title-section">
-            <span class="section-label">{spineSectionLabel}</span>
+            <span class="section-label">{spineSectionLabel} ({chapterCount})</span>
             {#if !readOnly}
               <div class="spine-header-actions">
                 <button
