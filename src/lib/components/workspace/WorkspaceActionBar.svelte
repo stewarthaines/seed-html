@@ -49,25 +49,17 @@
       disabled={isLoading}
       aria-label={$t('Create a new minimal EPUB project')}
     >
-      <span class="button-icon" aria-hidden="true">➕</span>
-      <div class="button-content">
-        <span class="button-title">{$t('Create New')}</span>
-        <span class="button-subtitle">{$t('Start fresh')}</span>
-      </div>
+      {$t('Create New')}
     </button>
 
     <button
       type="button"
-      class="action-button secondary"
+      class="action-button"
       onclick={handleLoadEpub}
       disabled={isLoading}
       aria-label={$t('Load an existing EPUB file for editing')}
     >
-      <span class="button-icon" aria-hidden="true">📁</span>
-      <div class="button-content">
-        <span class="button-title">{$t('Load EPUB')}</span>
-        <span class="button-subtitle">{$t('Edit existing file')}</span>
-      </div>
+      {$t('Load EPUB')}
     </button>
 
     <!-- OPDS import reaches the network; shown only when a handler is wired
@@ -75,16 +67,12 @@
     {#if onImportFromOPDSRequested}
       <button
         type="button"
-        class="action-button secondary"
+        class="action-button"
         onclick={handleImportFromOPDS}
         disabled={isLoading}
         aria-label={$t('Import an EPUB from an OPDS catalog URL')}
       >
-        <span class="button-icon" aria-hidden="true">🌐</span>
-        <div class="button-content">
-          <span class="button-title">{$t('Import from OPDS')}</span>
-          <span class="button-subtitle">{$t('From a catalog URL')}</span>
-        </div>
+        {$t('Import from OPDS')}
       </button>
     {/if}
 
@@ -92,68 +80,48 @@
     {#if onDuplicateRequested}
       <button
         type="button"
-        class="action-button secondary"
+        class="action-button"
         onclick={handleDuplicate}
         disabled={isLoading}
-        aria-label={$t('Duplicate the current project')}
+        aria-label={$t('Duplicate the current project: {name}', {
+          name: currentProjectTitle ?? '',
+        })}
       >
-        <span class="button-icon" aria-hidden="true">📋</span>
-        <div class="button-content">
-          <span class="button-title"
-            >{$t('Duplicate {name}', { name: currentProjectTitle ?? '' })}</span
-          >
-          <span class="button-subtitle">{$t('Copy this project')}</span>
-        </div>
+        {$t('Duplicate')}
       </button>
     {/if}
-    <!--
-    <button
-      type="button"
-      class="action-button secondary disabled"
-      onclick={handleImportFolder}
-      disabled={true}
-      aria-label={$t('Import from folder - coming soon')}
-      title={$t('Coming soon')}
-    >
-      <span class="button-icon" aria-hidden="true">📂</span>
-      <div class="button-content">
-        <span class="button-title">{$t('From Folder')}</span>
-        <span class="button-subtitle">{$t('Future')}</span>
-      </div>
-    </button>
-    -->
   </div>
 </div>
 
 <style>
+  /* Flat, app-standard CTAs: 1px borders, no drop shadow, no icons. */
   .action-buttons {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(15em, 1fr));
-    gap: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
   }
 
   .action-button {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-4);
-    border: 2px solid var(--color-border-default);
-    border-radius: var(--radius-md);
+    min-width: 14rem;
+    padding: var(--space-2) var(--space-4);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
     background-color: var(--color-surface-primary);
     color: var(--color-text-primary);
     font-family: inherit;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    text-align: center;
     cursor: pointer;
-    transition: all var(--duration-normal) ease;
-    text-align: left;
-    min-height: 80px; /* Accessibility: larger touch target */
-    position: relative;
+    transition:
+      background-color var(--duration-fast) ease,
+      border-color var(--duration-fast) ease;
   }
 
   .action-button:not(:disabled):hover {
     border-color: var(--color-border-hover);
     background-color: var(--color-surface-hover);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
   }
 
   .action-button:focus-visible {
@@ -176,83 +144,15 @@
   .action-button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    transform: none;
   }
 
-  .action-button:disabled:hover {
-    border-color: var(--color-border-default);
-    background-color: var(--color-surface-primary);
-    transform: none;
-    box-shadow: none;
-  }
-
-  .action-button.primary:disabled:hover {
-    border-color: var(--color-primary);
-    background-color: var(--color-primary);
-  }
-
-  .button-icon {
-    font-size: 2rem;
-    flex-shrink: 0;
-  }
-
-  .button-content {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    flex: 1;
-    min-width: 0;
-  }
-
-  .button-title {
-    font-size: var(--text-base);
-    font-weight: 600;
-    line-height: 1.2;
-  }
-
-  .button-subtitle {
-    font-size: var(--text-sm);
-    opacity: 0.8;
-    line-height: 1.2;
-  }
-
-  .action-button.primary .button-subtitle {
-    opacity: 0.9;
-  }
-
-  /* Loading state */
-  .action-button:disabled .button-icon {
-    opacity: 0.5;
-  }
-
-  /* Mobile adjustments */
-  @media (max-width: 768px) {
-    .action-buttons {
-      grid-template-columns: 1fr;
-      gap: var(--space-3);
-    }
-
-    .action-button {
-      min-height: 70px;
-      padding: var(--space-3);
-    }
-
-    .button-icon {
-      font-size: 1.5rem;
-    }
-  }
-
-  /* Smaller mobile adjustments */
   @media (max-width: 480px) {
-    .action-button {
-      flex-direction: column;
-      text-align: center;
-      gap: var(--space-2);
-      min-height: 90px;
+    .action-buttons {
+      align-items: stretch;
     }
 
-    .button-content {
-      align-items: center;
+    .action-button {
+      min-width: 0;
     }
   }
 </style>

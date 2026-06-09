@@ -386,24 +386,13 @@
   {#if remoteType === 'none'}
     <div class="type-selector">
       <h3>Add Remote Storage</h3>
-      <p>Choose which type of remote storage to use:</p>
       <div class="type-buttons">
         <button class="btn-type" onclick={() => (remoteType = 's3-compatible')}>
           S3-Compatible
-          <small>Cloudflare R2, Backblaze B2, etc.</small>
         </button>
-        <button class="btn-type" onclick={onConnectGoogleDrive}>
-          Google Drive
-          <small>Upload to a Google Drive folder</small>
-        </button>
-        <button class="btn-type" onclick={() => (remoteType = 'dropbox')}>
-          Dropbox
-          <small>Upload to a Dropbox folder</small>
-        </button>
-        <button class="btn-type" onclick={() => (remoteType = 'webdav')}>
-          WebDAV
-          <small>Nextcloud, ownCloud, any WebDAV server</small>
-        </button>
+        <button class="btn-type" onclick={onConnectGoogleDrive}> Google Drive </button>
+        <button class="btn-type" onclick={() => (remoteType = 'dropbox')}> Dropbox </button>
+        <button class="btn-type" onclick={() => (remoteType = 'webdav')}> WebDAV </button>
       </div>
       {#if canCancel}
         <div class="form-actions">
