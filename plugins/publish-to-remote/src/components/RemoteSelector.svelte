@@ -35,14 +35,17 @@
     >
       {#each remotesStore.remotes as remote (remote.id)}
         <option value={remote.id}>
-          {remote.name}
-          ({remote.type === 's3-compatible'
-            ? remote.bucket
-            : remote.type === 'google-drive'
-              ? remote.folderName
-              : remote.type === 'dropbox'
-                ? remote.folderPath
-                : remote.url})
+          {#if remote.name}
+            {remote.name}
+          {:else}
+            {remote.type === 's3-compatible'
+              ? remote.bucket
+              : remote.type === 'google-drive'
+                ? remote.folderName
+                : remote.type === 'dropbox'
+                  ? remote.folderPath
+                  : remote.url}
+          {/if}
         </option>
       {/each}
     </select>
