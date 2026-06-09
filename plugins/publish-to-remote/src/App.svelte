@@ -471,7 +471,7 @@
       <PaneGroup direction="horizontal" autoSaveId="editme-content-panes">
         <Pane defaultSize={50} minSize={25}>
           <div class="pane">
-            <PaneHeader>Local epubs</PaneHeader>
+            <PaneHeader>Local Packaged EPUBs</PaneHeader>
             <div class="pane-body">
               <LocalEpubList
                 epubs={localEpubs}
@@ -494,7 +494,7 @@
 
         <Pane defaultSize={50} minSize={20}>
           <div class="pane">
-            <PaneHeader>Remote files</PaneHeader>
+            <PaneHeader>Bring-your-own File Storage</PaneHeader>
             <div class="pane-body">
               {#if configuring}
                 <ConfigureForm

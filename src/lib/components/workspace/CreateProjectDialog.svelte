@@ -148,7 +148,10 @@
           <legend class="create-label">{$t('Text format')}</legend>
           <label class="create-radio">
             <input type="radio" name="text-format" value={PLAIN} bind:group={selectedId} />
-            <span class="create-radio-text">{$t('Plain text')}</span>
+            <span class="create-radio-text"
+              >{$t('Plain text')}
+              <span class="create-radio-desc">{$t('Bold, emphasis and heading styles only.')}</span>
+            </span>
           </label>
           {#each textFormats as ext (ext.id)}
             <label class="create-radio">
