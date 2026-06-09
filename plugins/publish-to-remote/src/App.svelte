@@ -30,6 +30,7 @@
   import type { ValidationReport } from './epub-validation.js';
   import ConfigureForm from './components/ConfigureForm.svelte';
   import LocalEpubList from './components/LocalEpubList.svelte';
+  import PaneHeader from './components/PaneHeader.svelte';
   import RemoteFileList from './components/RemoteFileList.svelte';
   import RemoteSelector from './components/RemoteSelector.svelte';
   import ValidationModal from './components/ValidationModal.svelte';
@@ -469,9 +470,9 @@
            Pane constraints must match the host's for paneforge to reuse it. -->
       <PaneGroup direction="horizontal" autoSaveId="editme-content-panes">
         <Pane defaultSize={50} minSize={25}>
-          <div class="pane-content">
-            <div class="section">
-              <h3>Local EPUBs</h3>
+          <div class="pane">
+            <PaneHeader>Local epubs</PaneHeader>
+            <div class="pane-body">
               <LocalEpubList
                 epubs={localEpubs}
                 {remoteObjects}
@@ -492,53 +493,53 @@
         <PaneResizer />
 
         <Pane defaultSize={50} minSize={20}>
-          <div class="pane-content">
-            {#if configuring}
-              <ConfigureForm
-                {editingRemote}
-                googleClientId={GOOGLE_CLIENT_ID}
-                googleApiKey={GOOGLE_API_KEY}
-                dropboxAppKey={DROPBOX_APP_KEY}
-                dropboxRedirectUri={DROPBOX_REDIRECT_URI}
-                canCancel={remotesStore.remotes.length > 0}
-                onSave={onSaveRemote}
-                onCancel={onCancelConfig}
-                onStatus={showStatus}
-              />
-            {:else}
-              <RemoteSelector
-                {remotesStore}
-                {activeRemote}
-                {googleAuthRequired}
-                onAdd={() => onOpenConfigure()}
-                onEdit={(id) => onOpenConfigure(id)}
-                onRemove={onSignOut}
-                onSelect={onSetActiveRemote}
-                onReconnect={onReconnectGoogleDrive}
-              />
+          <div class="pane">
+            <PaneHeader>Remote files</PaneHeader>
+            <div class="pane-body">
+              {#if configuring}
+                <ConfigureForm
+                  {editingRemote}
+                  googleClientId={GOOGLE_CLIENT_ID}
+                  googleApiKey={GOOGLE_API_KEY}
+                  dropboxAppKey={DROPBOX_APP_KEY}
+                  dropboxRedirectUri={DROPBOX_REDIRECT_URI}
+                  canCancel={remotesStore.remotes.length > 0}
+                  onSave={onSaveRemote}
+                  onCancel={onCancelConfig}
+                  onStatus={showStatus}
+                />
+              {:else}
+                <RemoteSelector
+                  {remotesStore}
+                  {activeRemote}
+                  {googleAuthRequired}
+                  onAdd={() => onOpenConfigure()}
+                  onEdit={(id) => onOpenConfigure(id)}
+                  onRemove={onSignOut}
+                  onSelect={onSetActiveRemote}
+                  onReconnect={onReconnectGoogleDrive}
+                />
 
-              <div class="section">
-                <h3>Remote Files</h3>
                 <RemoteFileList
                   objects={remoteObjects}
                   {googleAuthRequired}
                   {onCopyUrl}
                   onDelete={onDeleteObject}
                 />
-              </div>
 
-              {#if activeRemote?.type !== 'google-drive'}
-                <div class="footer">
-                  <button
-                    class="btn btn-secondary"
-                    onclick={onUpdateCatalog}
-                    disabled={generatingFeed}
-                  >
-                    {generatingFeed ? 'Updating...' : 'Update Catalog'}
-                  </button>
-                </div>
+                {#if activeRemote?.type !== 'google-drive'}
+                  <div class="footer">
+                    <button
+                      class="btn btn-secondary"
+                      onclick={onUpdateCatalog}
+                      disabled={generatingFeed}
+                    >
+                      {generatingFeed ? 'Updating...' : 'Update Catalog'}
+                    </button>
+                  </div>
+                {/if}
               {/if}
-            {/if}
+            </div>
           </div>
         </Pane>
       </PaneGroup>
@@ -602,8 +603,15 @@
     min-height: 0;
   }
 
-  .pane-content {
+  .pane {
     height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .pane-body {
+    flex: 1;
     overflow-y: auto;
     padding: 16px;
     display: flex;
@@ -626,17 +634,6 @@
   :global([data-pane-resizer]:focus-visible) {
     outline: 2px solid var(--color-accent);
     outline-offset: -1px;
-  }
-
-  .section {
-    border: 1px solid var(--color-border-default);
-    border-radius: 8px;
-    padding: 16px;
-  }
-
-  .section h3 {
-    margin: 0 0 16px 0;
-    font-size: 16px;
   }
 
   .footer {

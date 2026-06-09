@@ -3,6 +3,7 @@
   import { xmlHighlighter } from '../../utils/xml-highlighter.js';
   import { OPFUtils } from '../../epub/opf-utils.js';
   import SimpleMetadataView from './SimpleMetadataView.svelte';
+  import PaneHeader from '../layout/PaneHeader.svelte';
   import type { WorkspaceState } from '../../services/workspace/workspace.service.js';
   import type { EPUBMetadata } from '../../epub/opf-utils.js';
 
@@ -61,9 +62,9 @@
 
 {#if isAdvancedMode}
   <div class="opf-preview">
-    <div class="preview-header">
+    <PaneHeader>
       <span class="file-name">content.opf</span>
-    </div>
+    </PaneHeader>
 
     {#if error}
       <div class="error-state">
@@ -102,15 +103,6 @@
     background: var(--color-bg-primary);
     border-radius: var(--radius-md);
     overflow: hidden;
-  }
-
-  .preview-header {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-3);
-    background: var(--color-bg-secondary);
-    border-bottom: 1px solid var(--color-border-default);
   }
 
   .file-name {

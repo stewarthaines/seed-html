@@ -81,10 +81,11 @@
 </div>
 
 <style>
+  /* Sits inside a PaneHeader, which supplies the grey bar + bottom border. */
   .metadata-tab-bar {
     display: flex;
-    border-block-end: 1px solid var(--color-border-default);
-    background-color: var(--color-surface-primary);
+    flex: 1;
+    min-width: 0;
     overflow-x: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;

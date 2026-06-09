@@ -6,6 +6,7 @@
   import WorkspaceActionBar from '../../components/workspace/WorkspaceActionBar.svelte';
   import WorkspaceList from '../../components/workspace/WorkspaceList.svelte';
   import OPDSImportDialog from '../../components/workspace/OPDSImportDialog.svelte';
+  import PaneHeader from '../../components/layout/PaneHeader.svelte';
   import CreateProjectDialog, {
     type CreateProjectData,
   } from '../../components/workspace/CreateProjectDialog.svelte';
@@ -361,16 +362,19 @@
       <!-- Right: the ways to start a new project. -->
       <Pane defaultSize={50} minSize={20}>
         <div class="workspace-pane">
-          <h2 class="pane-title">{$t('Get Started')}</h2>
-
-          <WorkspaceActionBar
-            isLoading={loading}
-            onCreateNewRequested={handleCreateNew}
-            onLoadEpubRequested={handleLoadEpub}
-            onImportFromOPDSRequested={isFileUrl ? undefined : handleImportFromOPDS}
-            {currentProjectTitle}
-            onDuplicateRequested={currentWorkspaceId ? handleDuplicate : undefined}
-          />
+          <PaneHeader>
+            <span class="pane-title">{$t('Get Started')}</span>
+          </PaneHeader>
+          <div class="workspace-pane-body">
+            <WorkspaceActionBar
+              isLoading={loading}
+              onCreateNewRequested={handleCreateNew}
+              onLoadEpubRequested={handleLoadEpub}
+              onImportFromOPDSRequested={isFileUrl ? undefined : handleImportFromOPDS}
+              {currentProjectTitle}
+              onDuplicateRequested={currentWorkspaceId ? handleDuplicate : undefined}
+            />
+          </div>
         </div>
       </Pane>
     </PaneGroup>
@@ -406,16 +410,20 @@
 
   .workspace-pane {
     height: 100%;
-    overflow-y: auto;
-    padding: var(--space-6);
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
+    overflow: hidden;
+  }
+
+  .workspace-pane-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-6);
   }
 
   .pane-title {
     margin: 0;
-    font-size: var(--text-lg);
+    font-size: var(--text-base);
     font-weight: 600;
     color: var(--color-text-primary);
   }
@@ -425,7 +433,7 @@
     align-items: center;
     gap: var(--space-3);
     padding: var(--space-4);
-    margin-block-end: var(--space-6);
+    margin: var(--space-4);
     background-color: var(--color-error-surface);
     color: var(--color-error);
     border: 1px solid var(--color-error);
@@ -447,7 +455,7 @@
     align-items: center;
     gap: var(--space-2);
     padding: var(--space-3);
-    margin-block-start: var(--space-6);
+    margin: var(--space-4);
     background-color: var(--color-warning-surface);
     color: var(--color-warning);
     border: 1px solid var(--color-warning);

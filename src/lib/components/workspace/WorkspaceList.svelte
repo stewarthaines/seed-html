@@ -1,6 +1,7 @@
 <script lang="ts">
   import { t } from '../../i18n';
   import WorkspaceItem from './WorkspaceItem.svelte';
+  import PaneHeader from '../layout/PaneHeader.svelte';
   import type {
     WorkspaceInfo,
     WorkspaceRowDetails,
@@ -53,40 +54,28 @@
 </script>
 
 <div class="workspace-list">
-  <div class="list-header">
-    <!--h3 class="list-title">
-      {#if workspaces.length === 0}
-        {$t('Projects')}
-      {:else}
-        {$t('Projects ({count} total)', { count: workspaces.length })}
+  <PaneHeader>
+    <div class="search-input-wrapper">
+      <input
+        type="search"
+        class="search-input"
+        placeholder={$t('Search projects…')}
+        value={searchQuery}
+        oninput={handleSearchInput}
+        aria-label={$t('Search projects')}
+      />
+      {#if searchQuery}
+        <button
+          type="button"
+          class="clear-search"
+          onclick={clearSearch}
+          aria-label={$t('Clear search')}
+        >
+          ×
+        </button>
       {/if}
-    </h3-->
-
-    {#if workspaces.length > 0}
-      <div class="search-container">
-        <div class="search-input-wrapper">
-          <input
-            type="search"
-            class="search-input"
-            placeholder={$t('Search projects…')}
-            value={searchQuery}
-            oninput={handleSearchInput}
-            aria-label={$t('Search projects')}
-          />
-          {#if searchQuery}
-            <button
-              type="button"
-              class="clear-search"
-              onclick={clearSearch}
-              aria-label={$t('Clear search')}
-            >
-              ×
-            </button>
-          {/if}
-        </div>
-      </div>
-    {/if}
-  </div>
+    </div>
+  </PaneHeader>
 
   <div class="list-content">
     {#if isLoading}
@@ -139,20 +128,10 @@
 
 <style>
   .workspace-list {
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
-  }
-
-  .list-header {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-  }
-
-  .search-container {
-    display: flex;
-    justify-content: flex-end;
   }
 
   .search-input-wrapper {
@@ -209,7 +188,10 @@
   }
 
   .list-content {
-    min-height: 200px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--space-4);
   }
 
   .loading-state {
@@ -306,14 +288,6 @@
 
   /* Mobile adjustments */
   @media (max-width: 768px) {
-    .list-header {
-      gap: var(--space-2);
-    }
-
-    .search-container {
-      justify-content: stretch;
-    }
-
     .search-input-wrapper {
       max-width: none;
     }

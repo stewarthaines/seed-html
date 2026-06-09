@@ -916,7 +916,7 @@
           aria-pressed={a11yPanelOpen}
           title="Accessibility check (axe-core) — re-runs as you edit while open"
         >
-          {a11yRunning ? 'Checking…' : 'Accessibility check'}
+          {a11yRunning ? 'Checking…' : 'Accessibility'}
           {#if !a11yRunning && a11yPanelOpen && a11yIssueCount !== null}
             <span class="a11y-count" class:clean={a11yIssueCount === 0}>{a11yIssueCount}</span>
           {/if}
@@ -933,7 +933,7 @@
           aria-pressed={validationPanelOpen}
           title="Validation report (epubcheck) for this chapter"
         >
-          Validation report
+          EpubCheck
           {#if validationChapterCount > 0}
             <span class="a11y-count">{validationChapterCount}</span>
           {/if}
@@ -1092,9 +1092,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--space-2);
+    min-height: 2.75rem;
+    padding: 0 var(--space-3);
     border-bottom: 1px solid var(--color-border-default);
     background: var(--color-bg-tertiary);
+    box-sizing: border-box;
   }
 
   .preview-title {

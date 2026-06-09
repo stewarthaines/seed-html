@@ -56,7 +56,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1rem;
+    padding: 0.4rem 1rem;
     border: none;
     border-block-end: 2px solid transparent;
     background-color: transparent;

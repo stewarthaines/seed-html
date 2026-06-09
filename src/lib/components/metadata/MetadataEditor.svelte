@@ -1,6 +1,7 @@
 <script lang="ts">
   import { t } from '../../i18n';
   import MetadataTabBar from './MetadataTabBar.svelte';
+  import PaneHeader from '../layout/PaneHeader.svelte';
   import BasicInfoFields from './BasicInfoFields.svelte';
   import AdvancedFields from './AdvancedFields.svelte';
   import AccessibilityFields from './AccessibilityFields.svelte';
@@ -206,9 +207,9 @@
 </script>
 
 <div class="metadata-editor">
-  <div class="pane-header" tabindex="-1">
+  <PaneHeader>
     <MetadataTabBar {activeTab} {validationErrors} {tabs} onTabClick={handleTabSwitch} />
-  </div>
+  </PaneHeader>
 
   <div class="pane-content" tabindex="-1">
     {#if loading}
@@ -280,11 +281,6 @@
     flex-direction: column;
     height: 100%;
     background-color: var(--color-surface-primary);
-  }
-
-  .pane-header {
-    flex-shrink: 0;
-    border-block-end: 1px solid var(--color-border-default);
   }
 
   .pane-content {

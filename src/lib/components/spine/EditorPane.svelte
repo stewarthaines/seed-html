@@ -672,9 +672,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--space-2);
+    min-height: 2.75rem;
+    padding: 0 var(--space-3);
     border-bottom: 1px solid var(--color-border-default);
     background: var(--color-bg-tertiary);
+    box-sizing: border-box;
   }
 
   .editor-controls {

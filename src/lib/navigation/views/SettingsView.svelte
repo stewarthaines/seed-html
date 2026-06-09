@@ -10,6 +10,7 @@
   import type { ExtensionManager } from '../../extensions/extension-manager.js';
   import type { TransformEngine } from '../../infrastructure/transform-engine.js';
   import ExtensionItem from '../../components/extensions/ExtensionItem.svelte';
+  import PaneHeader from '../../components/layout/PaneHeader.svelte';
   import {
     addTransform,
     removeTransformAt,
@@ -509,115 +510,118 @@
       <!-- App settings: global, usable without a project. -->
       <Pane defaultSize={50} minSize={25}>
         <div class="settings-pane">
-          <h2 class="pane-title">{$t('App Settings')}</h2>
+          <PaneHeader>
+            <span class="pane-title">{$t('App Settings')}</span>
+          </PaneHeader>
+          <div class="settings-pane-body">
+            <section>
+              <h3>{$t('General')}</h3>
+              <div class="setting-group">
+                <label for="theme-select" class="setting-label-text">{$t('Theme')}</label>
+                <select
+                  id="theme-select"
+                  class="setting-select"
+                  value={themeChoice}
+                  onchange={event => handleThemeChange((event.target as HTMLSelectElement).value)}
+                >
+                  <option value="light">{$t('Light')}</option>
+                  <option value="dark">{$t('Dark')}</option>
+                  <option value="system">{$t('System')}</option>
+                </select>
+              </div>
 
-          <section>
-            <h3>{$t('General')}</h3>
-            <div class="setting-group">
-              <label for="theme-select" class="setting-label-text">{$t('Theme')}</label>
-              <select
-                id="theme-select"
-                class="setting-select"
-                value={themeChoice}
-                onchange={event => handleThemeChange((event.target as HTMLSelectElement).value)}
-              >
-                <option value="light">{$t('Light')}</option>
-                <option value="dark">{$t('Dark')}</option>
-                <option value="system">{$t('System')}</option>
-              </select>
-            </div>
-
-            <div class="setting-group">
-              <label for="language-select" class="setting-label-text">{$t('Language')}</label>
-              <select
-                id="language-select"
-                class="setting-select"
-                value={$currentLocale}
-                onchange={handleLocaleChange}
-              >
-                {#each locales as loc (loc.code)}
-                  <option value={loc.code}>{loc.name}</option>
-                {/each}
-              </select>
-            </div>
-          </section>
-
-          {#if availablePlugins.length > 0}
-            <section class="plugins-settings">
-              <h3>{$t('Plugins')}</h3>
-              <p class="setting-description plugins-intro">
-                {$t('Optional features available when the app is served over HTTP.')}
-              </p>
-              {#each availablePlugins as plugin (plugin.id)}
-                <div class="setting-group">
-                  <label class="setting-label">
-                    <input
-                      type="checkbox"
-                      checked={enabledPluginIds.includes(plugin.id)}
-                      onchange={event =>
-                        onTogglePlugin?.(plugin.id, (event.target as HTMLInputElement).checked)}
-                    />
-                    <span class="setting-text">{plugin.name}</span>
-                  </label>
-                </div>
-              {/each}
+              <div class="setting-group">
+                <label for="language-select" class="setting-label-text">{$t('Language')}</label>
+                <select
+                  id="language-select"
+                  class="setting-select"
+                  value={$currentLocale}
+                  onchange={handleLocaleChange}
+                >
+                  {#each locales as loc (loc.code)}
+                    <option value={loc.code}>{loc.name}</option>
+                  {/each}
+                </select>
+              </div>
             </section>
-          {/if}
 
-          {#if availableExtensions.length > 0}
-            <section class="extensions-catalog">
-              <h3>{$t('Available Extensions')}</h3>
-              <p class="setting-description">
-                {$t(
-                  'Add a library and its suggested DOM transform to the current project; then enable the transform under Project Settings.'
-                )}
-              </p>
-              {#snippet catalogItem(ext: ExtensionCatalogEntry)}
-                {@const installed = installedExtensionIds.has(ext.id)}
-                <div class="catalog-item">
-                  <div class="catalog-item-info">
-                    <span class="catalog-item-name">{ext.name}</span>
-                    {#if ext.description}
-                      <span class="catalog-item-desc">{ext.description}</span>
-                    {/if}
+            {#if availablePlugins.length > 0}
+              <section class="plugins-settings">
+                <h3>{$t('Plugins')}</h3>
+                <p class="setting-description plugins-intro">
+                  {$t('Optional features available when the app is served over HTTP.')}
+                </p>
+                {#each availablePlugins as plugin (plugin.id)}
+                  <div class="setting-group">
+                    <label class="setting-label">
+                      <input
+                        type="checkbox"
+                        checked={enabledPluginIds.includes(plugin.id)}
+                        onchange={event =>
+                          onTogglePlugin?.(plugin.id, (event.target as HTMLInputElement).checked)}
+                      />
+                      <span class="setting-text">{plugin.name}</span>
+                    </label>
                   </div>
-                  <button
-                    type="button"
-                    class="btn btn-secondary"
-                    onclick={() => handleAddCatalogExtension(ext)}
-                    disabled={installed ||
-                      !workspaceId ||
-                      readOnly ||
-                      importingExtensionId !== null}
-                    title={readOnly
-                      ? $t("This EPUB is read-only, so extensions can't be added.")
-                      : !workspaceId
-                        ? $t('Open a project to add extensions')
-                        : undefined}
-                  >
-                    {installed
-                      ? $t('Added')
-                      : importingExtensionId === ext.id
-                        ? $t('Adding…')
-                        : $t('Add to project')}
-                  </button>
-                </div>
-              {/snippet}
+                {/each}
+              </section>
+            {/if}
 
-              {#if textFormatExtensions.length > 0}
-                <h4 class="catalog-subhead">{$t('Text formats')}</h4>
-                {#each textFormatExtensions as ext (ext.id)}
-                  {@render catalogItem(ext)}
-                {/each}
-              {/if}
-              {#if libraryExtensions.length > 0}
-                <h4 class="catalog-subhead">{$t('Libraries')}</h4>
-                {#each libraryExtensions as ext (ext.id)}
-                  {@render catalogItem(ext)}
-                {/each}
-              {/if}
-            </section>
-          {/if}
+            {#if availableExtensions.length > 0}
+              <section class="extensions-catalog">
+                <h3>{$t('Available Extensions')}</h3>
+                <p class="setting-description">
+                  {$t(
+                    'Add a library and its suggested DOM transform to the current project; then enable the transform under Project Settings.'
+                  )}
+                </p>
+                {#snippet catalogItem(ext: ExtensionCatalogEntry)}
+                  {@const installed = installedExtensionIds.has(ext.id)}
+                  <div class="catalog-item">
+                    <div class="catalog-item-info">
+                      <span class="catalog-item-name">{ext.name}</span>
+                      {#if ext.description}
+                        <span class="catalog-item-desc">{ext.description}</span>
+                      {/if}
+                    </div>
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      onclick={() => handleAddCatalogExtension(ext)}
+                      disabled={installed ||
+                        !workspaceId ||
+                        readOnly ||
+                        importingExtensionId !== null}
+                      title={readOnly
+                        ? $t("This EPUB is read-only, so extensions can't be added.")
+                        : !workspaceId
+                          ? $t('Open a project to add extensions')
+                          : undefined}
+                    >
+                      {installed
+                        ? $t('Added')
+                        : importingExtensionId === ext.id
+                          ? $t('Adding…')
+                          : $t('Add to project')}
+                    </button>
+                  </div>
+                {/snippet}
+
+                {#if textFormatExtensions.length > 0}
+                  <h4 class="catalog-subhead">{$t('Text formats')}</h4>
+                  {#each textFormatExtensions as ext (ext.id)}
+                    {@render catalogItem(ext)}
+                  {/each}
+                {/if}
+                {#if libraryExtensions.length > 0}
+                  <h4 class="catalog-subhead">{$t('Libraries')}</h4>
+                  {#each libraryExtensions as ext (ext.id)}
+                    {@render catalogItem(ext)}
+                  {/each}
+                {/if}
+              </section>
+            {/if}
+          </div>
         </div>
       </Pane>
 
@@ -626,172 +630,89 @@
       <!-- Project settings: require an open project. -->
       <Pane defaultSize={50} minSize={20}>
         <div class="settings-pane">
-          <h2 class="pane-title">{$t('Project Settings')}</h2>
-
-          {#if canEditSettings}
-            <section class="workspace-settings">
-              <h3>{$t('Editor')}</h3>
-
-              <div class="setting-group">
-                <label class="setting-label">
-                  <input
-                    type="checkbox"
-                    checked={isAdvancedMode}
-                    onchange={handleAdvancedModeChange}
-                    disabled={loading || readOnly}
-                  />
-                  <span class="setting-text">{$t('Advanced Mode')}</span>
-                </label>
-                <p class="setting-description">
-                  {$t('Enable advanced editing features and additional controls for power users.')}
-                </p>
-              </div>
-            </section>
-
-            <!-- EPUB Settings -->
-            {#if canEditEPUBSettings && isAdvancedMode}
-              <section class="epub-settings">
-                <h3>{$t('EPUB Settings')}</h3>
+          <PaneHeader>
+            <span class="pane-title">{$t('Project Settings')}</span>
+          </PaneHeader>
+          <div class="settings-pane-body">
+            {#if canEditSettings}
+              <section class="workspace-settings">
+                <h3>{$t('Editor')}</h3>
 
                 <div class="setting-group">
-                  <label for="filename-template" class="setting-label-text">
-                    {$t('Packaged Filename')}
+                  <label class="setting-label">
+                    <input
+                      type="checkbox"
+                      checked={isAdvancedMode}
+                      onchange={handleAdvancedModeChange}
+                      disabled={loading || readOnly}
+                    />
+                    <span class="setting-text">{$t('Advanced Mode')}</span>
                   </label>
-                  <input
-                    id="filename-template"
-                    type="text"
-                    class="template-input"
-                    value={epubSettings?.filename_template || ''}
-                    placeholder="&lt;title&gt; - &lt;author&gt; - &lt;date&gt;"
-                    onblur={handleFilenameTemplateChange}
-                    disabled={epubLoading}
-                  />
-                  <p class="setting-description">
-                    Template for the exported .epub filename. Use placeholders: &lt;title&gt;,
-                    &lt;author&gt;, &lt;date&gt;. Empty placeholders (e.g. no author) collapse
-                    cleanly.
-                  </p>
-                </div>
-
-                <div class="setting-group">
-                  <label for="audio-clip-template" class="setting-label-text">
-                    {$t('Audio Clip Template')}
-                  </label>
-                  <input
-                    id="audio-clip-template"
-                    type="text"
-                    class="template-input"
-                    value={epubSettings?.audio_clip_template || ''}
-                    placeholder=":clip[label]&#123;src=href begin=begin end=end&#125;"
-                    onblur={handleAudioTemplateChange}
-                    disabled={epubLoading}
-                  />
-                  <p class="setting-description">
-                    Template for inserting audio clip directives. Use placeholders: &lt;href&gt;,
-                    &lt;begin&gt;, &lt;end&gt;, &lt;label&gt;, &lt;rate&gt;
-                  </p>
-                </div>
-
-                <div class="setting-group">
-                  <label for="text-transform" class="setting-label-text">
-                    {$t('Text Transform')}
-                  </label>
-                  <select
-                    id="text-transform"
-                    class="setting-select"
-                    value={epubSettings?.text_transform ?? ''}
-                    onchange={e =>
-                      persistTextTransform((e.currentTarget as HTMLSelectElement).value)}
-                    disabled={epubLoading}
-                  >
-                    {#each textTransformGroups as grp (grp.group)}
-                      <optgroup label={grp.group}>
-                        {#each grp.options as opt (opt.path)}
-                          <option value={opt.path}>{opt.fileName}</option>
-                        {/each}
-                      </optgroup>
-                    {/each}
-                  </select>
                   <p class="setting-description">
                     {$t(
-                      'The single plain-text → XHTML step. Pick a project script or one supplied by an extension.'
+                      'Enable advanced editing features and additional controls for power users.'
                     )}
                   </p>
                 </div>
+              </section>
 
-                <div class="setting-group">
-                  <span class="setting-label-text">{$t('DOM Transforms')}</span>
-                  <p class="setting-description">
-                    {$t(
-                      'Scripts run top-to-bottom over the generated DOM, each applied to the previous one’s output.'
-                    )}
-                  </p>
+              <!-- EPUB Settings -->
+              {#if canEditEPUBSettings && isAdvancedMode}
+                <section class="epub-settings">
+                  <h3>{$t('EPUB Settings')}</h3>
 
-                  {#if (epubSettings?.dom_transforms?.length ?? 0) === 0}
-                    <p class="setting-description">{$t('No DOM transforms configured.')}</p>
-                  {:else}
-                    <ul class="dom-transform-list">
-                      {#each epubSettings?.dom_transforms ?? [] as path, i (path)}
-                        {@const label = transformLabel(path)}
-                        <li class="dom-transform-row">
-                          <span class="dom-transform-name" title={path}>
-                            {label.name}
-                            {#if label.group}
-                              <span class="dom-transform-group">({label.group})</span>
-                            {/if}
-                          </span>
-                          <div class="dom-transform-actions">
-                            <button
-                              type="button"
-                              class="icon-btn"
-                              onclick={() => moveDomTransform(i, -1)}
-                              disabled={i === 0 || epubLoading}
-                              aria-label={$t('Move up')}
-                              title={$t('Move up')}
-                            >
-                              <CaretUp size={14} aria-hidden="true" />
-                            </button>
-                            <button
-                              type="button"
-                              class="icon-btn"
-                              onclick={() => moveDomTransform(i, 1)}
-                              disabled={i === (epubSettings?.dom_transforms.length ?? 0) - 1 ||
-                                epubLoading}
-                              aria-label={$t('Move down')}
-                              title={$t('Move down')}
-                            >
-                              <CaretDown size={14} aria-hidden="true" />
-                            </button>
-                            <button
-                              type="button"
-                              class="icon-btn"
-                              onclick={() => removeDomTransform(i)}
-                              disabled={epubLoading}
-                              aria-label={$t('Remove')}
-                              title={$t('Remove')}
-                            >
-                              <X size={14} aria-hidden="true" />
-                            </button>
-                          </div>
-                        </li>
-                      {/each}
-                    </ul>
-                  {/if}
-
-                  {#if addableTransformGroups.length > 0}
-                    <select
-                      class="setting-select"
-                      aria-label={$t('Add a DOM transform')}
+                  <div class="setting-group">
+                    <label for="filename-template" class="setting-label-text">
+                      {$t('Packaged Filename')}
+                    </label>
+                    <input
+                      id="filename-template"
+                      type="text"
+                      class="template-input"
+                      value={epubSettings?.filename_template || ''}
+                      placeholder="&lt;title&gt; - &lt;author&gt; - &lt;date&gt;"
+                      onblur={handleFilenameTemplateChange}
                       disabled={epubLoading}
-                      onchange={e => {
-                        const sel = e.currentTarget as HTMLSelectElement;
-                        const value = sel.value;
-                        sel.value = '';
-                        if (value) addDomTransform(value);
-                      }}
+                    />
+                    <p class="setting-description">
+                      Template for the exported .epub filename. Use placeholders: &lt;title&gt;,
+                      &lt;author&gt;, &lt;date&gt;. Empty placeholders (e.g. no author) collapse
+                      cleanly.
+                    </p>
+                  </div>
+
+                  <div class="setting-group">
+                    <label for="audio-clip-template" class="setting-label-text">
+                      {$t('Audio Clip Template')}
+                    </label>
+                    <input
+                      id="audio-clip-template"
+                      type="text"
+                      class="template-input"
+                      value={epubSettings?.audio_clip_template || ''}
+                      placeholder=":clip[label]&#123;src=href begin=begin end=end&#125;"
+                      onblur={handleAudioTemplateChange}
+                      disabled={epubLoading}
+                    />
+                    <p class="setting-description">
+                      Template for inserting audio clip directives. Use placeholders: &lt;href&gt;,
+                      &lt;begin&gt;, &lt;end&gt;, &lt;label&gt;, &lt;rate&gt;
+                    </p>
+                  </div>
+
+                  <div class="setting-group">
+                    <label for="text-transform" class="setting-label-text">
+                      {$t('Text Transform')}
+                    </label>
+                    <select
+                      id="text-transform"
+                      class="setting-select"
+                      value={epubSettings?.text_transform ?? ''}
+                      onchange={e =>
+                        persistTextTransform((e.currentTarget as HTMLSelectElement).value)}
+                      disabled={epubLoading}
                     >
-                      <option value="" disabled selected>{$t('Add a DOM transform…')}</option>
-                      {#each addableTransformGroups as grp (grp.group)}
+                      {#each textTransformGroups as grp (grp.group)}
                         <optgroup label={grp.group}>
                           {#each grp.options as opt (opt.path)}
                             <option value={opt.path}>{opt.fileName}</option>
@@ -799,62 +720,150 @@
                         </optgroup>
                       {/each}
                     </select>
+                    <p class="setting-description">
+                      {$t(
+                        'The single plain-text → XHTML step. Pick a project script or one supplied by an extension.'
+                      )}
+                    </p>
+                  </div>
+
+                  <div class="setting-group">
+                    <span class="setting-label-text">{$t('DOM Transforms')}</span>
+                    <p class="setting-description">
+                      {$t(
+                        'Scripts run top-to-bottom over the generated DOM, each applied to the previous one’s output.'
+                      )}
+                    </p>
+
+                    {#if (epubSettings?.dom_transforms?.length ?? 0) === 0}
+                      <p class="setting-description">{$t('No DOM transforms configured.')}</p>
+                    {:else}
+                      <ul class="dom-transform-list">
+                        {#each epubSettings?.dom_transforms ?? [] as path, i (path)}
+                          {@const label = transformLabel(path)}
+                          <li class="dom-transform-row">
+                            <span class="dom-transform-name" title={path}>
+                              {label.name}
+                              {#if label.group}
+                                <span class="dom-transform-group">({label.group})</span>
+                              {/if}
+                            </span>
+                            <div class="dom-transform-actions">
+                              <button
+                                type="button"
+                                class="icon-btn"
+                                onclick={() => moveDomTransform(i, -1)}
+                                disabled={i === 0 || epubLoading}
+                                aria-label={$t('Move up')}
+                                title={$t('Move up')}
+                              >
+                                <CaretUp size={14} aria-hidden="true" />
+                              </button>
+                              <button
+                                type="button"
+                                class="icon-btn"
+                                onclick={() => moveDomTransform(i, 1)}
+                                disabled={i === (epubSettings?.dom_transforms.length ?? 0) - 1 ||
+                                  epubLoading}
+                                aria-label={$t('Move down')}
+                                title={$t('Move down')}
+                              >
+                                <CaretDown size={14} aria-hidden="true" />
+                              </button>
+                              <button
+                                type="button"
+                                class="icon-btn"
+                                onclick={() => removeDomTransform(i)}
+                                disabled={epubLoading}
+                                aria-label={$t('Remove')}
+                                title={$t('Remove')}
+                              >
+                                <X size={14} aria-hidden="true" />
+                              </button>
+                            </div>
+                          </li>
+                        {/each}
+                      </ul>
+                    {/if}
+
+                    {#if addableTransformGroups.length > 0}
+                      <select
+                        class="setting-select"
+                        aria-label={$t('Add a DOM transform')}
+                        disabled={epubLoading}
+                        onchange={e => {
+                          const sel = e.currentTarget as HTMLSelectElement;
+                          const value = sel.value;
+                          sel.value = '';
+                          if (value) addDomTransform(value);
+                        }}
+                      >
+                        <option value="" disabled selected>{$t('Add a DOM transform…')}</option>
+                        {#each addableTransformGroups as grp (grp.group)}
+                          <optgroup label={grp.group}>
+                            {#each grp.options as opt (opt.path)}
+                              <option value={opt.path}>{opt.fileName}</option>
+                            {/each}
+                          </optgroup>
+                        {/each}
+                      </select>
+                    {/if}
+                  </div>
+                </section>
+              {/if}
+
+              <!-- Extension Management -->
+              <section class="extensions-settings">
+                <h3>{$t('Extensions')}</h3>
+
+                <!-- Import Extension -->
+                <div class="extension-import" class:disabled={!isAdvancedMode}>
+                  <label for="extension-file">
+                    {$t('Import JavaScript Extension')}: {$t(
+                      'Please copy license text into the License field below to comply with open source requirements.'
+                    )}
+                  </label>
+                  <input
+                    id="extension-file"
+                    type="file"
+                    accept=".js"
+                    onchange={handleExtensionImport}
+                    disabled={extensionsLoading}
+                  />
+                  {#if !isAdvancedMode}
+                    <p class="advanced-mode-note">
+                      {$t('Advanced Mode required for extension management')}
+                    </p>
                   {/if}
                 </div>
-              </section>
-            {/if}
 
-            <!-- Extension Management -->
-            <section class="extensions-settings">
-              <h3>{$t('Extensions')}</h3>
-
-              <!-- Import Extension -->
-              <div class="extension-import" class:disabled={!isAdvancedMode}>
-                <label for="extension-file">
-                  {$t('Import JavaScript Extension')}: {$t(
-                    'Please copy license text into the License field below to comply with open source requirements.'
-                  )}
-                </label>
-                <input
-                  id="extension-file"
-                  type="file"
-                  accept=".js"
-                  onchange={handleExtensionImport}
-                  disabled={extensionsLoading}
-                />
-                {#if !isAdvancedMode}
-                  <p class="advanced-mode-note">
-                    {$t('Advanced Mode required for extension management')}
-                  </p>
+                <!-- Extensions List -->
+                {#if extensionsLoading}
+                  <p>{$t('Loading extensions...')}</p>
+                {:else if extensions.length === 0}
+                  <p>{$t('No extensions installed.')}</p>
+                {:else}
+                  <ul class="extensions-list">
+                    {#each extensions as extension}
+                      {#if workspaceId}
+                        <ExtensionItem
+                          {extension}
+                          {workspaceId}
+                          {isAdvancedMode}
+                          {extensionManager}
+                          onRemove={() => handleExtensionRemoval(extension.name)}
+                        />
+                      {/if}
+                    {/each}
+                  </ul>
                 {/if}
-              </div>
-
-              <!-- Extensions List -->
-              {#if extensionsLoading}
-                <p>{$t('Loading extensions...')}</p>
-              {:else if extensions.length === 0}
-                <p>{$t('No extensions installed.')}</p>
-              {:else}
-                <ul class="extensions-list">
-                  {#each extensions as extension}
-                    {#if workspaceId}
-                      <ExtensionItem
-                        {extension}
-                        {workspaceId}
-                        {isAdvancedMode}
-                        {extensionManager}
-                        onRemove={() => handleExtensionRemoval(extension.name)}
-                      />
-                    {/if}
-                  {/each}
-                </ul>
-              {/if}
-            </section>
-          {:else if loading}
-            <p class="loading-message">{$t('Loading settings…')}</p>
-          {:else}
-            <p class="no-workspace-message">{$t('Open a project to configure its settings.')}</p>
-          {/if}
+              </section>
+            {:else if loading}
+              <p class="loading-message">{$t('Loading settings…')}</p>
+            {:else}
+              <p class="no-workspace-message">{$t('Open a project to configure its settings.')}</p>
+            {/if}
+          </div>
         </div>
       </Pane>
     </PaneGroup>
@@ -876,6 +885,13 @@
 
   .settings-pane {
     height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .settings-pane-body {
+    flex: 1;
     overflow-y: auto;
     padding: 1rem;
     display: flex;
@@ -885,7 +901,7 @@
 
   .pane-title {
     margin: 0;
-    font-size: 1.25rem;
+    font-size: var(--text-base);
     font-weight: 600;
     color: var(--color-text-primary);
   }
