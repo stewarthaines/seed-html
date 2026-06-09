@@ -1117,6 +1117,9 @@
       let xhtmlContent = '';
       if (manifestItem && path) {
         const stored = await fileStorage.readTextFile(workspace.id, path);
+        // Resolve image/style refs against this EPUB's actual OPF directory — an
+        // imported book may not live under "OEBPS/" (the blob manager defaults to it).
+        blobURLManager.setBasePath(basePath);
         blobURLManager.setActiveWorkspace(workspace.id);
         xhtmlContent = await blobURLManager.processXHTMLForPreview(stored);
       }

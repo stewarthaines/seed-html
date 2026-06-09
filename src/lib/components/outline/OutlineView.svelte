@@ -375,6 +375,8 @@
       const buffer = await workspaceService.readFile(workspace.id, path);
       let xhtml = new TextDecoder().decode(buffer);
       try {
+        // Resolve refs against this EPUB's actual OPF directory (not the default "OEBPS/").
+        blobURLManager.setBasePath(basePath);
         blobURLManager.setActiveWorkspace(workspace.id);
         xhtml = await blobURLManager.processXHTMLForPreview(xhtml);
       } catch {

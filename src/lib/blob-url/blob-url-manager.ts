@@ -53,6 +53,15 @@ export class BlobURLManager {
   }
 
   /**
+   * Update the OPF base path used to resolve manifest hrefs to storage paths.
+   * Imported EPUBs don't always live under "OEBPS/" (the path is whatever
+   * container.xml points to), so callers set it from workspace.pathInfo.basePath.
+   */
+  setBasePath(basePath: string): void {
+    this.basePath = basePath;
+  }
+
+  /**
    * Create blob URL for a file using optimal backend path
    *
    * Note: This method is designed for serial usage (one call at a time per resource).
