@@ -214,17 +214,6 @@
     font-family: var(--font-mono);
   }
 
-  .mit-license-section {
-    margin-top: var(--space-4);
-  }
-
-  .mit-license-section h3 {
-    font-size: var(--text-base);
-    font-weight: var(--font-semibold);
-    color: var(--color-text-primary);
-    margin: 0 0 var(--space-2) 0;
-  }
-
   @media (prefers-contrast: high) {
     .license-text,
     .library-item {
