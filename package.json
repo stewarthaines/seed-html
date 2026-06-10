@@ -13,6 +13,7 @@
     "build:plugins": "npm run build --workspaces --if-present && node scripts/generate-plugin-manifest.js && node scripts/generate-extensions-manifest.js",
     "build:extensions": "node scripts/generate-extensions-manifest.js",
     "preview": "vite preview",
+    "deploy": "wrangler pages deploy dist --project-name readitinabook --branch main",
     "smoke": "node scripts/smoke-build.js",
     "check": "svelte-check --tsconfig ./tsconfig.app.json --fail-on-warnings && tsc -p tsconfig.node.json && tsc -p functions/tsconfig.json",
     "test": "vitest run --config vitest.config.unit.ts",
