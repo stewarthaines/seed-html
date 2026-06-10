@@ -23,6 +23,19 @@ const locales = ['en', 'de', 'ka', 'ar', 'he', 'zh-Hant', 'ja'];
 const dayStamp = () => new Date().toISOString().slice(0, 10);
 
 /**
+ * Stable fingerprint of a translations object's msgids + references.
+ * Used to detect whether the extracted catalog actually changed so we can
+ * preserve dates when running extract with no source changes.
+ */
+function msgidFingerprint(translations) {
+  return Object.entries(translations[''] || {})
+    .filter(([k]) => k !== '')
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => `${k}\t${v.comments?.reference ?? ''}`)
+    .join('\n');
+}
+
+/**
  * Create a .po data structure from .pot template for a specific locale
  */
 function initializePoFromPot(potData, locale) {
@@ -68,13 +81,21 @@ function mergePoWithPot(existingPo, potData, locale) {
     }
   }
 
+  // Only bump PO-Revision-Date when the set of msgids actually changed
+  // (strings added or removed). A no-content run should leave the date alone.
+  const newMsgids = new Set(Object.keys(potData.translations['']).filter(k => k !== ''));
+  const existingMsgids = new Set(
+    Object.keys(existingPo.translations[''] || {}).filter(k => k !== '')
+  );
+  const msgidsChanged =
+    newMsgids.size !== existingMsgids.size || [...newMsgids].some(k => !existingMsgids.has(k));
+
   // Create merged data structure
   const mergedPo = {
     headers: {
       ...potData.headers,
       Language: locale,
-      'PO-Revision-Date':
-        existingTranslations.size > 0 ? now : existingPo.headers['PO-Revision-Date'] || now,
+      'PO-Revision-Date': msgidsChanged ? now : existingPo.headers['PO-Revision-Date'] || now,
       'Last-Translator': existingPo.headers['Last-Translator'] || '',
       'Language-Team': existingPo.headers['Language-Team'] || '',
     },
@@ -402,8 +423,21 @@ async function extractStrings() {
     potData.translations[''][message.text] = messageEntry;
   }
 
-  // Generate .pot file
+  // Preserve POT-Creation-Date when catalog content is unchanged. Compare the
+  // msgid+reference fingerprint against the existing .pot so a no-content run
+  // leaves the date alone (and avoids a spurious diff in locales/).
   const potPath = join(projectRoot, 'locales', 'messages.pot');
+  if (existsSync(potPath)) {
+    const existingPot = gettextParser.po.parse(readFileSync(potPath));
+    if (msgidFingerprint(existingPot.translations) === msgidFingerprint(potData.translations)) {
+      const preserved = existingPot.headers['POT-Creation-Date'];
+      if (preserved) {
+        potData.headers['POT-Creation-Date'] = preserved;
+        potData.headers['PO-Revision-Date'] = preserved;
+      }
+    }
+  }
+
   const potContent = gettextParser.po.compile(potData);
   writeFileSync(potPath, potContent);
   console.log(`📝 Generated ${potPath}`);
