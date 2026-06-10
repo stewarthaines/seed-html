@@ -37,6 +37,7 @@ html {
 
 body {
   min-height: 100vh;
+  min-height: 100dvh; /* override: dynamic viewport excludes mobile browser UI */
   line-height: var(--leading-normal);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

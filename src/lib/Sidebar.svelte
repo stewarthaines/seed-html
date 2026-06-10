@@ -399,7 +399,8 @@
     flex-direction: column;
     overflow-x: visible; /* Allow active items to extend past border */
     overflow-y: hidden;
-    block-size: 100vh; /* Using logical properties */
+    block-size: 100vh;
+    block-size: 100dvh; /* dynamic viewport: excludes mobile browser UI chrome */
     position: relative; /* For absolute positioning of settings content */
   }
 

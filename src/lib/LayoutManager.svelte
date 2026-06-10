@@ -106,6 +106,7 @@
   .app-layout {
     display: grid;
     height: 100vh;
+    height: 100dvh; /* dynamic viewport: excludes mobile browser UI chrome */
     width: 100vw;
     margin: 0;
     padding: 0;
