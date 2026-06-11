@@ -43,6 +43,12 @@ export interface WorkspaceInfo {
   fileCount?: number;
   totalSize?: number;
   author?: string;
+  /** All creator names (the detail panel shows the full list). */
+  authors?: string[];
+  /** dc:description, when present. */
+  description?: string;
+  /** dc:date (publication date), when present. */
+  date?: string;
   hasError?: boolean;
   epubVersion: string;
   /** Loaded lazily per row via getWorkspaceRowDetails. */
@@ -769,12 +775,19 @@ export class WorkspaceService {
         ? new Date(metadata.modifiedDate)
         : new Date();
 
+    const authors = metadata.creator
+      ?.map(c => creatorName(c))
+      .filter((n): n is string => !!n);
+
     slot.info = {
       id,
       title: metadata.title,
       language: primaryLanguage(metadata),
       lastModified,
-      author: creatorName(metadata.creator?.[0]) || undefined,
+      author: authors?.[0],
+      authors: authors && authors.length > 0 ? authors : undefined,
+      description: metadata.description || undefined,
+      date: metadata.date || undefined,
       hasError: false,
       epubVersion: '3.0',
     };

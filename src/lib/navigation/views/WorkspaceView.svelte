@@ -3,6 +3,7 @@
   import { PaneGroup, Pane, PaneResizer } from 'paneforge';
   import { navigationStore } from '../navigation-store';
   import { t, currentLocale } from '../../i18n';
+  import { languageDisplayName } from '../../epub/bcp47';
   import WorkspaceActionBar from '../../components/workspace/WorkspaceActionBar.svelte';
   import WorkspaceList from '../../components/workspace/WorkspaceList.svelte';
   import OPDSImportDialog from '../../components/workspace/OPDSImportDialog.svelte';
@@ -93,8 +94,10 @@
   // Active EPUB case. Hide the option there.
   const isFileUrl = typeof location !== 'undefined' && location.protocol === 'file:';
 
+  // Summary info for the currently-selected project (drives the detail panel).
+  const currentInfo = $derived(workspaces.find(w => w.id === currentWorkspaceId));
   // Title of the currently-loaded project, for the "Duplicate …" button label.
-  const currentProjectTitle = $derived(workspaces.find(w => w.id === currentWorkspaceId)?.title);
+  const currentProjectTitle = $derived(currentInfo?.title);
   let guardId = $state<string>('');
 
   // Service layer handles state directly - no reactive subscriptions needed
@@ -406,13 +409,36 @@
               {currentProjectTitle}
               onDuplicateRequested={currentWorkspaceId ? handleDuplicate : undefined}
             />
-            {#if currentCoverUrl}
-              <div class="cover-display">
-                <img
-                  src={currentCoverUrl}
-                  alt={currentProjectTitle ?? ''}
-                  class="cover-preview"
-                />
+            {#if currentInfo}
+              <div class="book-detail">
+                {#if currentCoverUrl}
+                  <img src={currentCoverUrl} alt="" class="cover-preview" />
+                {/if}
+
+                <h2 class="book-title">{currentInfo.title || $t('Untitled')}</h2>
+
+                {#if currentInfo.authors && currentInfo.authors.length > 0}
+                  <p class="book-authors">{currentInfo.authors.join(', ')}</p>
+                {/if}
+
+                <dl class="book-facts">
+                  {#if currentInfo.language}
+                    <div class="book-fact">
+                      <dt>{$t('Language')}</dt>
+                      <dd>{languageDisplayName(currentInfo.language, $currentLocale)}</dd>
+                    </div>
+                  {/if}
+                  {#if currentInfo.date}
+                    <div class="book-fact">
+                      <dt>{$t('Published')}</dt>
+                      <dd>{currentInfo.date}</dd>
+                    </div>
+                  {/if}
+                </dl>
+
+                {#if currentInfo.description}
+                  <p class="book-description">{currentInfo.description}</p>
+                {/if}
               </div>
             {/if}
           </div>
@@ -517,18 +543,73 @@
     flex-shrink: 0;
   }
 
-  .cover-display {
+  /* Reading-system-style detail: centred cover, title and author, a small facts
+     list, then the description. */
+  .book-detail {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--space-2);
     padding-block-start: var(--space-8);
+    max-inline-size: 38rem;
+    margin-inline: auto;
   }
 
   .cover-preview {
     max-height: 40vh;
     max-width: 50%;
     width: auto;
+    margin-block-end: var(--space-4);
     border-radius: var(--radius-sm);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  }
+
+  .book-title {
+    margin: 0;
+    font-size: var(--text-heading-lg);
+    line-height: var(--leading-tight);
+  }
+
+  .book-authors {
+    margin: 0;
+    font-size: var(--text-lg);
+    color: var(--color-text-secondary);
+  }
+
+  .book-facts {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2) var(--space-5);
+    margin: var(--space-2) 0 0;
+  }
+
+  .book-fact {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+  }
+
+  .book-fact dt {
+    font-size: var(--text-xs);
+    font-weight: var(--font-semibold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    color: var(--color-text-secondary);
+  }
+
+  .book-fact dd {
+    margin: 0;
+    font-size: var(--text-sm);
+  }
+
+  .book-description {
+    margin: var(--space-3) 0 0;
+    text-align: start;
+    color: var(--color-text-secondary);
+    line-height: var(--leading-relaxed);
+    white-space: pre-wrap;
   }
 
   /* Mobile adjustments */
