@@ -202,10 +202,21 @@
               onclick={() => selectBook(book)}
               disabled={importing}
             >
-              <span class="opds-book-title">{book.title}</span>
-              {#if book.author}
-                <span class="opds-book-meta">{book.author}</span>
+              {#if book.thumbnailHref}
+                <img
+                  src={book.thumbnailHref}
+                  alt=""
+                  class="opds-book-cover"
+                  aria-hidden="true"
+                  onerror={e => ((e.currentTarget as HTMLImageElement).style.display = 'none')}
+                />
               {/if}
+              <span class="opds-book-text">
+                <span class="opds-book-title">{book.title}</span>
+                {#if book.author}
+                  <span class="opds-book-meta">{book.author}</span>
+                {/if}
+              </span>
             </button>
           </li>
         {/each}
@@ -370,8 +381,8 @@
 
   .opds-book {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
+    align-items: center;
+    gap: var(--space-3);
     inline-size: 100%;
     text-align: left;
     padding: var(--space-3);
@@ -382,6 +393,22 @@
     font-family: inherit;
     cursor: pointer;
     transition: all var(--duration-fast) ease;
+  }
+
+  /* Cover thumbnail, matching the projects-list style. */
+  .opds-book-cover {
+    flex-shrink: 0;
+    inline-size: 2rem;
+    block-size: 3rem;
+    object-fit: cover;
+    border-radius: var(--radius-xs);
+  }
+
+  .opds-book-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-inline-size: 0;
   }
 
   .opds-book:not(:disabled):hover {

@@ -15,6 +15,8 @@ export interface OpdsBook {
   updated?: string;
   /** Absolute acquisition URL (relative hrefs resolved against the feed URL). */
   href: string;
+  /** Cover thumbnail URL (http(s) or data:), if the entry advertises one. */
+  thumbnailHref?: string;
 }
 
 /** A parsed OPDS feed: its display title and the EPUBs it advertises. */
@@ -50,8 +52,9 @@ export function parseOpdsFeed(xml: string, feedUrl: string): OpdsFeed {
     const title = text(entry.querySelector('title')) || 'Untitled';
     const author = text(entry.querySelector('author > name')) || undefined;
     const updated = text(entry.querySelector('updated')) || undefined;
+    const thumbnailHref = thumbnailUrl(entry, feedUrl);
 
-    books.push({ title, author, updated, href });
+    books.push({ title, author, updated, href, thumbnailHref });
   }
 
   return { title: feedTitle(doc), books };
@@ -83,6 +86,30 @@ function acquisitionHref(entry: Element, feedUrl: string): string | null {
     return new URL(href, feedUrl).href;
   } catch {
     return null;
+  }
+}
+
+const THUMBNAIL_REL = 'http://opds-spec.org/image/thumbnail';
+const IMAGE_REL = 'http://opds-spec.org/image';
+
+/**
+ * Find an entry's cover thumbnail and resolve it to an absolute URL. Prefers the
+ * dedicated thumbnail relation, falling back to the full cover image. Passes
+ * through http(s) and data: URIs; resolves relative hrefs against the feed URL.
+ */
+function thumbnailUrl(entry: Element, feedUrl: string): string | undefined {
+  const links = Array.from(entry.querySelectorAll('link[rel][href]'));
+  const link =
+    links.find(l => l.getAttribute('rel') === THUMBNAIL_REL) ??
+    links.find(l => l.getAttribute('rel') === IMAGE_REL);
+
+  const href = link?.getAttribute('href');
+  if (!href) return undefined;
+
+  try {
+    return new URL(href, feedUrl).href;
+  } catch {
+    return undefined;
   }
 }
 
