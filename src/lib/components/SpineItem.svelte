@@ -240,6 +240,15 @@
     cursor: pointer;
   }
 
+  /* Stretch the select button's hit area over the whole row so a click anywhere
+     (not just the title) selects the chapter. The drag handle and move/delete
+     buttons are lifted above this overlay so they stay independently clickable. */
+  .spine-select::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
   .spine-item.compact .spine-select {
     justify-content: center;
   }
@@ -292,6 +301,8 @@
     block-size: 20px;
     color: var(--color-text-tertiary);
     cursor: grab;
+    position: relative; /* sit above the select button's full-row overlay */
+    z-index: 1;
   }
 
   .drag-handle:active {
@@ -317,6 +328,8 @@
     display: flex;
     gap: var(--space-1);
     margin-inline-start: auto;
+    position: relative; /* sit above the select button's full-row overlay */
+    z-index: 1;
   }
 
   .move-button {
