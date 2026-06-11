@@ -7,6 +7,9 @@
     objects,
     thumbnailUrls,
     activeFilenames,
+    selectedKeys,
+    onToggleSelect,
+    onToggleAllEpubs,
     googleAuthRequired,
     onCopyUrl,
     onDelete,
@@ -14,6 +17,9 @@
     objects: S3Object[];
     thumbnailUrls: Map<string, string>;
     activeFilenames: Set<string>;
+    selectedKeys: Set<string>;
+    onToggleSelect: (key: string, checked: boolean) => void;
+    onToggleAllEpubs: (checked: boolean) => void;
     googleAuthRequired: boolean;
     onCopyUrl: (key: string, fileId?: string) => void;
     onDelete: (key: string) => void;
@@ -21,11 +27,18 @@
 
   let deleteConfirmKey: string | null = $state(null);
 
+  const isEpub = (key: string) => key.toLowerCase().endsWith('.epub');
+
   // Hide the uploaded cover thumbnails (.png) from the list; they remain on the
   // remote to back the OPDS covers. Books and catalog.xml stay visible.
   const visibleObjects = $derived(
     objects.filter((o) => !o.key.toLowerCase().endsWith('.png')),
   );
+
+  // Master checkbox state across all epub rows.
+  const epubKeys = $derived(visibleObjects.filter((o) => isEpub(o.key)).map((o) => o.key));
+  const allSelected = $derived(epubKeys.length > 0 && epubKeys.every((k) => selectedKeys.has(k)));
+  const noneSelected = $derived(epubKeys.every((k) => !selectedKeys.has(k)));
 </script>
 
 {#if googleAuthRequired}
@@ -33,9 +46,32 @@
 {:else if visibleObjects.length === 0}
   <p class="empty-message">{$t('Bucket is empty')}</p>
 {:else}
+  {#if epubKeys.length > 0}
+    <label class="catalog-select-all">
+      <input
+        type="checkbox"
+        checked={allSelected}
+        indeterminate={!allSelected && !noneSelected}
+        onchange={(e) => onToggleAllEpubs(e.currentTarget.checked)}
+      />
+      {$t('Include in catalog')}
+    </label>
+  {/if}
   <div class="remote-list">
     {#each visibleObjects as obj (obj.key)}
       <div class="remote-item" class:current={activeFilenames.has(obj.key)}>
+        {#if isEpub(obj.key)}
+          <input
+            type="checkbox"
+            class="remote-check"
+            checked={selectedKeys.has(obj.key)}
+            onchange={(e) => onToggleSelect(obj.key, e.currentTarget.checked)}
+            title={$t('Include in catalog')}
+            aria-label={$t('Include in catalog')}
+          />
+        {:else}
+          <span class="remote-check-spacer" aria-hidden="true"></span>
+        {/if}
         {#if thumbnailUrls.get(obj.key)}
           <img
             src={thumbnailUrls.get(obj.key)}
@@ -90,9 +126,13 @@
 
 <style>
   .remote-list {
+    /* Fill the remaining pane height and scroll internally (keeps the remote
+       selector and the Update Catalog footer pinned). */
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
     border: 1px solid var(--color-border-default);
     border-radius: 4px;
-    overflow: hidden;
   }
 
   .remote-item {
@@ -106,6 +146,29 @@
 
   .remote-item:last-child {
     border-bottom: none;
+  }
+
+  .catalog-select-all {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+  }
+
+  .remote-check {
+    flex-shrink: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  /* Keep non-epub rows (e.g. catalog.xml) aligned with the checkbox column. */
+  .remote-check-spacer {
+    flex-shrink: 0;
+    inline-size: 13px;
   }
 
   /* The currently-open project. */

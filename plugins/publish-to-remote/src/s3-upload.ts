@@ -191,3 +191,17 @@ export async function uploadText(
   const blob = new Blob([text], { type: contentType });
   return uploadToS3(creds, objectKey, blob, contentType);
 }
+
+/** Fetch an object's text via a signed GET. Returns null if it's missing. */
+export async function getObjectText(
+  creds: S3RemoteConfig,
+  objectKey: string,
+): Promise<string | null> {
+  const awsClient = createAwsClient(creds);
+  const baseEndpoint = creds.endpoint.replace(/\/$/, '');
+  const url = `${baseEndpoint}/${creds.bucket}/${objectKey}`;
+  const response = await awsClient.fetch(url, { method: 'GET' });
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error(`Get failed: ${response.status} ${response.statusText}`);
+  return response.text();
+}

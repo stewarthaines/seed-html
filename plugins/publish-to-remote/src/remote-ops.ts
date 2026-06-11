@@ -5,6 +5,7 @@ import {
   deleteObject as deleteS3Object,
   getPublicUrl as getS3PublicUrl,
   uploadText as uploadS3Text,
+  getObjectText as getS3ObjectText,
 } from './s3-upload.js';
 import {
   uploadToGoogleDrive,
@@ -26,6 +27,7 @@ import {
   deleteWebDAVFile,
   getWebDAVPublicUrl,
   uploadTextToWebDAV,
+  getWebDAVText,
 } from './webdav-upload.js';
 
 export async function uploadFile(
@@ -99,6 +101,23 @@ export function getPublicUrl(
     return getWebDAVPublicUrl(remote, objectKey);
   }
   return '';
+}
+
+/**
+ * Fetch a remote text file's contents (e.g. the existing catalog.xml). Returns
+ * null if the file is missing or the remote type isn't supported for reads
+ * (Google Drive / Dropbox). Throws on transport errors so callers can fall back.
+ */
+export async function downloadTextFile(
+  remote: RemoteConfig,
+  objectKey: string,
+): Promise<string | null> {
+  if (remote.type === 's3-compatible') {
+    return getS3ObjectText(remote, objectKey);
+  } else if (remote.type === 'webdav') {
+    return getWebDAVText(remote, objectKey);
+  }
+  return null; // Drive/Dropbox: not supported for catalog pre-population.
 }
 
 export async function uploadTextFile(

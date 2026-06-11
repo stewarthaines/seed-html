@@ -12,11 +12,26 @@ import type {
 const ATOM_NS = 'http://www.w3.org/2005/Atom';
 const DC_NS = 'http://purl.org/dc/terms/';
 
+/** The public download URL for a remote object, per remote type. */
+export function acquisitionUrl(creds: RemoteConfig, o: S3Object): string {
+  if (creds.type === 's3-compatible') {
+    return getPublicUrl(creds as S3RemoteConfig, o.key);
+  } else if (creds.type === 'google-drive') {
+    return o.fileId ? `https://drive.google.com/uc?id=${o.fileId}&export=download` : '';
+  } else if (creds.type === 'dropbox') {
+    return o.fileId || '';
+  } else if (creds.type === 'webdav') {
+    return getWebDAVPublicUrl(creds, o.key);
+  }
+  return '';
+}
+
 export function generateOpdsFeed(
   creds: RemoteConfig,
   objects: S3Object[],
   feedUrl: string,
   metaByKey: Map<string, CatalogEntryMeta> = new Map(),
+  selectedKeys?: Set<string>,
 ): string {
   const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
   const doc = document.implementation.createDocument(ATOM_NS, 'feed', null);
@@ -68,19 +83,11 @@ export function generateOpdsFeed(
     type: 'application/atom+xml;profile=opds-catalog;kind=acquisition',
   });
 
-  for (const o of objects.filter((o) => o.key.endsWith('.epub'))) {
-    let url = '';
-    if (creds.type === 's3-compatible') {
-      url = getPublicUrl(creds as S3RemoteConfig, o.key);
-    } else if (creds.type === 'google-drive') {
-      url = o.fileId
-        ? `https://drive.google.com/uc?id=${o.fileId}&export=download`
-        : '';
-    } else if (creds.type === 'dropbox') {
-      url = o.fileId || '';
-    } else if (creds.type === 'webdav') {
-      url = getWebDAVPublicUrl(creds, o.key);
-    }
+  const epubs = objects.filter(
+    (o) => o.key.endsWith('.epub') && (!selectedKeys || selectedKeys.has(o.key)),
+  );
+  for (const o of epubs) {
+    const url = acquisitionUrl(creds, o);
     const meta = metaByKey.get(o.key);
     const entry = child(feed, 'entry');
     child(entry, 'title', meta?.title || o.key.replace(/\.epub$/i, ''));

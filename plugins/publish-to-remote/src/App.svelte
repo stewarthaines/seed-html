@@ -11,9 +11,10 @@
     deleteFile,
     getPublicUrl,
     uploadTextFile,
+    downloadTextFile,
   } from './remote-ops.js';
   import { loadGoogleScripts, authorizeGoogleDrive } from './google-drive.js';
-  import { generateOpdsFeed } from './opds.js';
+  import { generateOpdsFeed, acquisitionUrl } from './opds.js';
   import {
     validateEpub,
     saveValidationReport,
@@ -62,6 +63,10 @@
   );
 
   let remoteObjects: S3Object[] = $state([]);
+  // Remote epub keys selected for inclusion in the catalog. Initialised once per
+  // remote (from the existing catalog, or all epubs as a fallback).
+  let selectedKeys = $state<Set<string>>(new Set());
+  let selectionInitedFor: string | null = $state(null);
   let localEpubs: File[] = $state([]);
   // Per-local-epub sidecar metadata (title/author + inlined thumbnail + the
   // publication identifier), keyed by `<base>.epub`. Rebuilt on each reload.
@@ -241,6 +246,12 @@
     } else {
       googleAuthRequired = false;
       remoteObjects = result.objects;
+      // Initialise the catalog selection once per remote (from its existing
+      // catalog, or all epubs). Later refreshes preserve the user's choices.
+      if (selectionInitedFor !== target.id) {
+        selectionInitedFor = target.id;
+        selectedKeys = await computeInitialSelection(target, result.objects);
+      }
       await loadLocalEpubs();
       view = 'ready';
     }
@@ -508,17 +519,58 @@
     }
   }
 
+  // The catalog filename for a remote (configurable on S3/WebDAV; default below).
+  function catalogFilenameFor(remote: RemoteConfig): string {
+    return (remote.type === 's3-compatible' || remote.type === 'webdav') &&
+      remote.catalogFilename?.trim()
+      ? remote.catalogFilename.trim()
+      : 'catalog.xml';
+  }
+
+  function onToggleSelect(key: string, checked: boolean) {
+    const next = new Set(selectedKeys);
+    if (checked) next.add(key);
+    else next.delete(key);
+    selectedKeys = next;
+  }
+
+  function onToggleAllEpubs(checked: boolean) {
+    selectedKeys = checked
+      ? new Set(remoteObjects.filter((o) => o.key.toLowerCase().endsWith('.epub')).map((o) => o.key))
+      : new Set();
+  }
+
+  // Initial checkbox state for a remote: the epubs already in its catalog.xml
+  // (best-effort read). No catalog / unsupported remote / error → include all.
+  async function computeInitialSelection(
+    remote: RemoteConfig,
+    objects: S3Object[],
+  ): Promise<Set<string>> {
+    const epubs = objects.filter((o) => o.key.toLowerCase().endsWith('.epub'));
+    try {
+      const xml = await downloadTextFile(remote, catalogFilenameFor(remote));
+      if (xml) {
+        const doc = new DOMParser().parseFromString(xml, 'application/xml');
+        const hrefs = new Set(
+          Array.from(doc.querySelectorAll('entry link[type="application/epub+zip"]'))
+            .map((l) => l.getAttribute('href'))
+            .filter((h): h is string => !!h),
+        );
+        return new Set(
+          epubs.filter((o) => hrefs.has(acquisitionUrl(remote, o))).map((o) => o.key),
+        );
+      }
+    } catch {
+      // Fall through to all-selected.
+    }
+    return new Set(epubs.map((o) => o.key));
+  }
+
   async function onUpdateCatalog() {
     if (!activeRemote) return;
     generatingFeed = true;
     try {
-      // Configurable per remote (S3/WebDAV); defaults to catalog.xml.
-      const catalogName =
-        (activeRemote.type === 's3-compatible' ||
-          activeRemote.type === 'webdav') &&
-        activeRemote.catalogFilename?.trim()
-          ? activeRemote.catalogFilename.trim()
-          : 'catalog.xml';
+      const catalogName = catalogFilenameFor(activeRemote);
       let feedUrl = '';
       if (activeRemote.type === 's3-compatible') {
         feedUrl = getPublicUrl(activeRemote, catalogName);
@@ -539,7 +591,8 @@
       // thumbnail rather than re-uploading every time.
       const existing = new Map(remoteObjects.map((o) => [o.key, o]));
       for (const [epubKey, meta] of metaByKey) {
-        if (!meta.thumbnailBytes || !existing.has(epubKey)) continue;
+        // Only host thumbnails for epubs that are selected and on the remote.
+        if (!meta.thumbnailBytes || !existing.has(epubKey) || !selectedKeys.has(epubKey)) continue;
         const thumbKey = `${epubKey.replace(/\.epub$/i, '')}.thumb.png`;
         const already = existing.get(thumbKey);
         if (already) {
@@ -557,6 +610,7 @@
         remoteObjects,
         feedUrl,
         metaByKey,
+        selectedKeys,
       );
       const result = await uploadTextFile(activeRemote, catalogName, xml);
       if (result.success) {
@@ -652,6 +706,9 @@
                   objects={remoteObjects}
                   thumbnailUrls={remoteThumbUrls}
                   {activeFilenames}
+                  {selectedKeys}
+                  {onToggleSelect}
+                  {onToggleAllEpubs}
                   {googleAuthRequired}
                   {onCopyUrl}
                   onDelete={onDeleteObject}
@@ -744,6 +801,7 @@
 
   .pane-body {
     flex: 1;
+    min-height: 0; /* allow the flex child to shrink so overflow-y can scroll */
     overflow-y: auto;
     padding: 16px;
     display: flex;

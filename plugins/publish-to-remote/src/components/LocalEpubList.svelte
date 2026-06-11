@@ -209,6 +209,11 @@
 
 <style>
   .epub-list {
+    /* Fill the remaining pane height and scroll internally rather than letting
+       the flex parent shrink/clip the list. */
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 8px;
