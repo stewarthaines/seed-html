@@ -5,17 +5,22 @@
   let {
     value,
     disabled = false,
+    showSwatch = true,
     onInput,
   }: {
     value: number;
     disabled?: boolean;
+    /** Show the color swatch. Hidden where a live cover preview makes it redundant. */
+    showSwatch?: boolean;
     onInput: (hue: number) => void;
   } = $props();
 </script>
 
 <div class="hue-selector">
-  <span class="hue-swatch" style="background: {coverBackgroundColor(value)}" aria-hidden="true"
-  ></span>
+  {#if showSwatch}
+    <span class="hue-swatch" style="background: {coverBackgroundColor(value)}" aria-hidden="true"
+    ></span>
+  {/if}
   <input
     class="hue-slider"
     type="range"

@@ -151,6 +151,7 @@
           <HueSelector
             value={effectiveHue}
             disabled={generating}
+            showSwatch={false}
             onInput={h => (coverHue = h)}
           />
           <button
