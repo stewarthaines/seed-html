@@ -501,6 +501,10 @@ msgstr ""
 msgid "Could not load the feed."
 msgstr ""
 
+#: src/lib/components/metadata/SimpleMetadataView.svelte
+msgid "Cover"
+msgstr ""
+
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "Cover image"
 msgstr ""
@@ -525,6 +529,10 @@ msgstr "🇬🇪 Create New"
 msgid "Create your first item using the buttons above"
 msgstr "🇬🇪 Create your first item using the buttons above"
 
+#: src/lib/components/metadata/SimpleMetadataView.svelte
+msgid "Creates a new cover from the current title and author."
+msgstr ""
+
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "Creating…"
 msgstr ""
@@ -545,6 +553,10 @@ msgstr ""
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Current"
 msgstr "🇬🇪 Current"
+
+#: src/lib/components/metadata/SimpleMetadataView.svelte
+msgid "Current cover image"
+msgstr ""
 
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Current Settings:"
@@ -892,8 +904,17 @@ msgstr ""
 msgid "Generate"
 msgstr "🇬🇪 Generate"
 
+#: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/components/workspace/CreateProjectDialog.svelte
+msgid "Generate cover image"
+msgstr ""
+
 #: src/App.svelte
 msgid "Generating navigation from chapters..."
+msgstr ""
+
+#: src/lib/components/metadata/SimpleMetadataView.svelte
+msgid "Generating…"
 msgstr ""
 
 #: src/lib/navigation/views/WorkspaceView.svelte
@@ -1239,10 +1260,6 @@ msgstr ""
 
 #: src/lib/components/workspace/WorkspaceList.svelte
 msgid "No projects found"
-msgstr ""
-
-#: src/lib/Sidebar.svelte
-msgid "No published EPUBs yet"
 msgstr ""
 
 #: src/lib/navigation/views/SpineView.svelte
