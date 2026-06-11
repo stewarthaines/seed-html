@@ -507,7 +507,7 @@
     }
 
     if (data.generateCover && appState.workspace) {
-      const svg = generateCoverSvg(data.title, data.author);
+      const svg = generateCoverSvg(data.title, data.author, data.hue);
       // SVG — plain manifest item for vector-quality use (no cover-image property)
       await fileStorage.writeTextFile(workspaceId, 'OEBPS/Images/cover.svg', svg);
       appState.workspace = await workspaceService.addManifestItem(appState.workspace, {
@@ -560,7 +560,7 @@
   // never overwritten — collision-resolved to a shared cover/cover-1/... stem).
   // The new PNG becomes the cover-image; the property is moved off any prior
   // holder so exactly one cover remains.
-  const handleGenerateCover = async (): Promise<void> => {
+  const handleGenerateCover = async (hue?: number): Promise<void> => {
     if (!appState?.workspace || isReadOnly) return;
     const ws0 = appState.workspace;
     const meta = ws0.opf.metadata;
@@ -568,7 +568,32 @@
     const author = meta.creator?.[0]?.name ?? '';
     const base = ws0.pathInfo.basePath; // e.g. "OEBPS"
 
-    // Shared, non-colliding stem so the .svg/.png pair always matches.
+    const svg = generateCoverSvg(title, author, hue);
+    const pngBuffer = await generateCoverPng(svg);
+
+    // If a PNG cover-image already exists (one we generated), UPDATE it in place
+    // — overwrite the same files and keep the manifest items, so repeated tweaks
+    // don't accumulate cover-1/cover-2 entries. Otherwise CREATE a fresh pair.
+    const existing = ws0.opf.manifest.find(
+      m => m.properties?.includes('cover-image') && m.mediaType === 'image/png'
+    );
+
+    if (existing) {
+      await fileStorage.writeFile(ws0.id, `${base}/${existing.href}`, pngBuffer);
+      // The sibling SVG shares the stem (cover.png → cover.svg); update it too.
+      const svgHref = existing.href.replace(/\.[^.]+$/, '.svg');
+      if (ws0.opf.manifest.some(m => m.href === svgHref)) {
+        await fileStorage.writeTextFile(ws0.id, `${base}/${svgHref}`, svg);
+      }
+      // Bump modifiedDate so the OPF is rewritten — refreshes the row-details
+      // cache (projects thumbnail) and re-triggers the cover preview effect.
+      appState.workspace = await workspaceService.updateMetadata(ws0, {
+        modifiedDate: generateEPUBTimestamp(),
+      });
+      return;
+    }
+
+    // CREATE: a non-colliding shared stem so the .svg/.png pair always matches.
     const taken = new Set(ws0.opf.manifest.map(m => m.href.toLowerCase()));
     let stem = 'cover';
     let n = 0;
@@ -578,10 +603,7 @@
     const svgHref = `Images/${stem}.svg`;
     const pngHref = `Images/${stem}.png`;
 
-    const svg = generateCoverSvg(title, author);
-    const pngBuffer = await generateCoverPng(svg);
-
-    // 1) Strip cover-image from any current holder (the new PNG takes over).
+    // Strip cover-image from any current (non-PNG) holder; the new PNG takes over.
     let ws = ws0;
     for (const item of ws.opf.manifest) {
       if (item.properties?.includes('cover-image')) {
@@ -590,8 +612,8 @@
         });
       }
     }
-    // 2) Write + add the SVG (plain image), then the PNG (cover-image). Omit
-    //    `id` so addManifestItem auto-resolves a unique manifest id.
+    // Write + add the SVG (plain image), then the PNG (cover-image). Omit `id`
+    // so addManifestItem auto-resolves a unique manifest id.
     await fileStorage.writeTextFile(ws.id, `${base}/${svgHref}`, svg);
     ws = await workspaceService.addManifestItem(ws, {
       href: svgHref,

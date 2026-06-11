@@ -7,12 +7,18 @@
  * of the cover width — making it readable even at thumbnail scale.
  */
 
-function titleHue(title: string): number {
+/** Deterministic hue (0–359) from a title string — the default cover hue. */
+export function titleHue(title: string): number {
   let h = 5381;
   for (let i = 0; i < title.length; i++) {
     h = ((h << 5) + h + title.charCodeAt(i)) >>> 0;
   }
   return h % 360;
+}
+
+/** The cover background color for a given hue. Shared with the UI swatch. */
+export function coverBackgroundColor(hue: number): string {
+  return `hsl(${hue}, 50%, 28%)`;
 }
 
 function xmlEscape(s: string): string {
@@ -94,10 +100,9 @@ export async function generateCoverPng(svgString: string, maxDim = 512): Promise
   }
 }
 
-export function generateCoverSvg(title: string, author: string): string {
+export function generateCoverSvg(title: string, author: string, hue?: number): string {
   const safeTitle = title.trim() || 'Untitled';
-  const hue = titleHue(safeTitle);
-  const bg = `hsl(${hue}, 50%, 28%)`;
+  const bg = coverBackgroundColor(hue ?? titleHue(safeTitle));
 
   const lines = fitLines(safeTitle);
   const longestLine = lines.reduce((a, b) => (a.length >= b.length ? a : b), '');
@@ -118,8 +123,10 @@ export function generateCoverSvg(title: string, author: string): string {
     .join('\n');
 
   const safeAuthor = author.trim();
-  // Author font size: proportional to title, clamped to a readable range.
-  const authorFontSize = Math.min(42, Math.max(28, Math.round(fontSize * 0.3)));
+  // Author font size: proportional to title, clamped to a readable range. The
+  // floor matters most — multi-line titles shrink the title font, and the author
+  // must stay legible even in the small OPDS thumbnail.
+  const authorFontSize = Math.min(62, Math.max(54, Math.round(fontSize * 0.42)));
   const authorLine = safeAuthor
     ? `\n  <text x="300" y="830" font-family="Georgia,'Times New Roman',serif" font-size="${authorFontSize}" fill="rgba(255,255,255,0.7)" text-anchor="middle" font-style="italic">${xmlEscape(safeAuthor)}</text>`
     : '';

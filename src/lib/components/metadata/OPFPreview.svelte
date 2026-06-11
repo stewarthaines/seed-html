@@ -17,7 +17,7 @@
     isAdvancedMode?: boolean;
     readOnly?: boolean;
     workspaceService?: WorkspaceService;
-    onGenerateCover?: () => Promise<void>;
+    onGenerateCover?: (hue?: number) => Promise<void>;
   }
 
   let {

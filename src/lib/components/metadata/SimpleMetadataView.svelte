@@ -1,5 +1,7 @@
 <script lang="ts">
   import { t } from '../../i18n';
+  import { titleHue, generateCoverSvg } from '../../epub/cover-generator';
+  import HueSelector from '../HueSelector.svelte';
   import type {
     WorkspaceState,
     WorkspaceService,
@@ -11,7 +13,7 @@
     focusedField?: keyof EPUBMetadata | null;
     readOnly?: boolean;
     workspaceService?: WorkspaceService;
-    onGenerateCover?: () => Promise<void>;
+    onGenerateCover?: (hue?: number) => Promise<void>;
   }
 
   let {
@@ -24,6 +26,27 @@
 
   let metadata = $derived(workspace?.opf?.metadata);
   let generating = $state(false);
+  // null = follow the title-derived hue; a number = explicit user choice.
+  let coverHue = $state<number | null>(null);
+  const effectiveHue = $derived(coverHue ?? titleHue(metadata?.title ?? ''));
+
+  // Whether the project already has a cover-image — drives "Update" vs "Generate".
+  const hasCover = $derived(
+    !!workspace?.opf?.manifest?.some(m => m.properties?.includes('cover-image'))
+  );
+
+  // Live preview: once the user touches the hue, render the prospective cover SVG
+  // (vector, instant) in place of the stored cover, so they see the new hue
+  // before committing. Cleared (null) until the slider is moved.
+  const previewUrl = $derived.by(() => {
+    if (coverHue === null) return null;
+    const svg = generateCoverSvg(
+      metadata?.title ?? '',
+      metadata?.creator?.[0]?.name ?? '',
+      effectiveHue
+    );
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  });
 
   // The current cover-image, loaded from storage as a blob URL. Re-runs whenever
   // the workspace changes (e.g. after Generate replaces appState.workspace).
@@ -62,7 +85,7 @@
     if (generating || !onGenerateCover) return;
     generating = true;
     try {
-      await onGenerateCover();
+      await onGenerateCover(coverHue ?? undefined);
     } finally {
       generating = false;
     }
@@ -112,25 +135,40 @@
         </div>
       </div>
 
-      {#if coverUrl}
+      {#if previewUrl || coverUrl}
         <div class="cover-current">
           <div class="field-label">{$t('Cover')}</div>
-          <img src={coverUrl} alt={$t('Current cover image')} class="cover-image" />
+          <img
+            src={previewUrl ?? coverUrl}
+            alt={$t('Current cover image')}
+            class="cover-image"
+          />
         </div>
       {/if}
 
       {#if onGenerateCover && !readOnly}
         <div class="cover-action">
+          <HueSelector
+            value={effectiveHue}
+            disabled={generating}
+            onInput={h => (coverHue = h)}
+          />
           <button
             type="button"
             class="btn btn-secondary"
             disabled={generating}
             onclick={handleGenerate}
           >
-            {generating ? $t('Generating…') : $t('Generate cover image')}
+            {#if generating}
+              {hasCover ? $t('Updating…') : $t('Generating…')}
+            {:else}
+              {hasCover ? $t('Update cover image') : $t('Generate cover image')}
+            {/if}
           </button>
           <p class="cover-hint">
-            {$t('Creates a new cover from the current title and author.')}
+            {hasCover
+              ? $t('Updates the cover from the current title and author.')
+              : $t('Creates a new cover from the current title and author.')}
           </p>
         </div>
       {/if}

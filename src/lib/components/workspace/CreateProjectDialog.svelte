@@ -2,6 +2,8 @@
   import { onMount, untrack } from 'svelte';
   import { t, currentLocale } from '../../i18n';
   import { COMMON_LANGUAGES, languageDisplayName } from '../../epub/bcp47';
+  import { titleHue } from '../../epub/cover-generator';
+  import HueSelector from '../HueSelector.svelte';
   import type { ExtensionCatalogEntry } from '../../extensions/extension-catalog';
 
   // The data the create flow needs; `extension` is the chosen text-format
@@ -12,6 +14,8 @@
     language: string;
     extension: ExtensionCatalogEntry | null;
     generateCover: boolean;
+    /** Chosen cover background hue (0–359); omitted to use the title-derived hue. */
+    hue?: number;
   }
 
   let {
@@ -39,6 +43,9 @@
   // library; falls back to plain text when none are available.
   let selectedId = $state(untrack(() => textFormats[0]?.id ?? PLAIN));
   let generateCover = $state(false);
+  // null = follow the title-derived hue; a number = explicit user choice.
+  let coverHue = $state<number | null>(null);
+  const effectiveHue = $derived(coverHue ?? titleHue(title.trim() || DEFAULT_TITLE));
   let creating = $state(false);
   let error = $state<string | null>(null);
 
@@ -62,6 +69,7 @@
         language,
         extension: textFormats.find(e => e.id === selectedId) ?? null,
         generateCover,
+        hue: coverHue ?? undefined,
       });
       // On success the app navigates into the new project and this dialog
       // unmounts; nothing more to do here.
@@ -130,6 +138,14 @@
         <input type="checkbox" bind:checked={generateCover} disabled={creating} />
         {$t('Generate cover image')}
       </label>
+
+      {#if generateCover}
+        <HueSelector
+          value={effectiveHue}
+          disabled={creating}
+          onInput={h => (coverHue = h)}
+        />
+      {/if}
 
       <div class="create-field">
         <label class="create-label" for="create-language">{$t('Language')}</label>
