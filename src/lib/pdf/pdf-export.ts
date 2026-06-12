@@ -30,19 +30,25 @@ function xmlEscape(s: string): string {
 /**
  * Parse one chapter's XHTML and return its `<body>` inner serialized inside a
  * `<section class="pdf-chapter">` (so it starts on a fresh page under print.css),
- * plus the stylesheet hrefs the chapter links. Returns null for a malformed
- * chapter or one without a `<body>`. Shared by the PDF export and the print
- * preview so both build identical Paged.js input.
+ * plus the stylesheet hrefs the chapter links and the source `<html>` language
+ * (so a single-chapter preview can carry it onto its own `<html>`). Returns null
+ * for a malformed chapter or one without a `<body>`. Shared by the PDF export and
+ * the print preview so both build identical Paged.js input.
  */
 export function chapterToSection(
   xhtml: string
-): { section: string; hrefs: string[] } | null {
+): { section: string; hrefs: string[]; lang: string | null } | null {
   const parser = new DOMParser();
   const serializer = new XMLSerializer();
   const doc = parser.parseFromString(xhtml, 'application/xhtml+xml');
   if (doc.querySelector('parsererror')) return null;
   const body = doc.querySelector('body');
   if (!body) return null;
+  const root = doc.documentElement;
+  const lang =
+    root?.getAttribute('lang') ||
+    root?.getAttributeNS('http://www.w3.org/XML/1998/namespace', 'lang') ||
+    null;
   const hrefs: string[] = [];
   doc.querySelectorAll('link[rel~="stylesheet"][href]').forEach(link => {
     const href = link.getAttribute('href');
@@ -51,7 +57,15 @@ export function chapterToSection(
   const inner = Array.from(body.childNodes)
     .map(node => serializer.serializeToString(node))
     .join('');
-  return { section: `<section class="pdf-chapter">${inner}</section>`, hrefs };
+  // Carry the chapter's own language onto its section so a multi-language book's
+  // combined export tags each chapter correctly, overriding the book-default
+  // <html lang>. Single-language books just repeat the default (harmless).
+  const langAttr = lang ? ` lang="${xmlEscape(lang)}" xml:lang="${xmlEscape(lang)}"` : '';
+  return {
+    section: `<section class="pdf-chapter"${langAttr}>${inner}</section>`,
+    hrefs,
+    lang,
+  };
 }
 
 /**
@@ -65,21 +79,34 @@ export function chapterToSection(
  */
 export function buildPagedDocument(
   sections: string[],
-  opts: { title?: string; doneMessage?: string; stylesheetHrefs?: string[] } = {}
+  opts: { title?: string; doneMessage?: string; stylesheetHrefs?: string[]; lang?: string } = {}
 ): string {
-  const { title = 'Book', doneMessage = 'pdf-paged', stylesheetHrefs = [] } = opts;
+  const { title = 'Book', doneMessage = 'pdf-paged', stylesheetHrefs = [], lang } = opts;
   const links = stylesheetHrefs
     .map(href => `<link rel="stylesheet" href="${href}" />`)
     .join('\n');
+  // Carry the book/chapter language onto <html> so the paginated document (and
+  // the print preview that shares this builder) is accessible — without it,
+  // axe/EPUBCheck flag a missing lang. Both lang and xml:lang for XHTML.
+  const langAttr = lang
+    ? ` lang="${xmlEscape(lang)}" xml:lang="${xmlEscape(lang)}"`
+    : '';
   // PagedConfig must be set before the polyfill script runs; auto-paginates on
   // DOM load and pings the parent when done. Paged.js is vendored at the app
   // origin (resolves under any base path).
+  //
+  // In the `after` hook (margin boxes now exist) mark every .pagedjs_margin box
+  // aria-hidden so Chrome's tagged-PDF export treats the repeated page numbers /
+  // running heads as artifacts — otherwise a screen reader announces the page
+  // number on every page. aria-hidden cascades to the .pagedjs_margin-content.
   const pagedSrc = new URL('paged.polyfill.js', document.baseURI).href;
   const inject =
-    `<script>window.PagedConfig={auto:true,after:function(){parent.postMessage('${doneMessage}','*');}};</script>` +
+    `<script>window.PagedConfig={auto:true,after:function(){` +
+    `try{document.querySelectorAll('.pagedjs_margin').forEach(function(el){el.setAttribute('aria-hidden','true');});}catch(e){}` +
+    `parent.postMessage('${doneMessage}','*');}};</script>` +
     `<script src="${pagedSrc}"></script>`;
   return `<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml"${langAttr}>
 <head>
 <meta charset="utf-8" />
 <title>${xmlEscape(title)}</title>
@@ -126,6 +153,7 @@ export async function exportPdf(
   const master = buildPagedDocument(sections, {
     title: docTitle,
     stylesheetHrefs: [...stylesheetHrefs],
+    lang: meta.language?.[0],
   });
 
   // Resolve OPFS-relative assets (images, stylesheets, fonts) to blob URLs so

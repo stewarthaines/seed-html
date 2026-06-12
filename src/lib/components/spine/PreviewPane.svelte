@@ -594,6 +594,7 @@
       title: 'Print preview',
       doneMessage: PAGED_DONE,
       stylesheetHrefs: wrapped.hrefs,
+      lang: wrapped.lang ?? undefined,
     });
 
     const iframeDoc = previewIframe.contentDocument;
