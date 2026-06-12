@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Package } from 'phosphor-svelte';
+  import { Package, FilePdf } from 'phosphor-svelte';
   import LayoutManager from './lib/LayoutManager.svelte';
   import { navigationStore } from './lib/navigation';
   import AboutView from './lib/navigation/views/AboutView.svelte';
@@ -48,6 +48,7 @@
   import { addTransform } from './lib/settings/dom-transforms.js';
   import type { CreateProjectData } from './lib/components/workspace/CreateProjectDialog.svelte';
   import { generateCoverSvg, generateCoverPng } from './lib/epub/cover-generator.js';
+  import { exportPdf } from './lib/pdf/pdf-export.js';
   import { writePublishSidecar } from './lib/services/publish/publish-sidecar.js';
 
   // Extension manager instance
@@ -668,6 +669,28 @@
   }
 
   // Handle EPUB package request
+  // PDF export is an HTTP-only feature (the vendored Paged.js polyfill is fetched
+  // from the app origin; file:// can't load it), mirroring the axe-core a11y check.
+  const canGeneratePdf = typeof location !== 'undefined' && location.protocol !== 'file:';
+  let pdfGenerating = $state(false);
+
+  // Build a paginated PDF from the chapters and open the browser's Save-as-PDF
+  // dialog. Read-only safe (it only reads chapters), so it works on imported EPUBs.
+  const handleGeneratePdf = async () => {
+    if (!currentWorkspaceState || pdfGenerating) return;
+    pdfGenerating = true;
+    try {
+      await exportPdf(currentWorkspaceState, fileStorage, workspaceService);
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      if (appState) {
+        appState.errorMessage = `PDF export failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      }
+    } finally {
+      pdfGenerating = false;
+    }
+  };
+
   const handlePackageRequest = async (workspaceId: string) => {
     if (!currentWorkspaceState || isReadOnly) return;
 
@@ -901,6 +924,17 @@
             <Package size={18} aria-hidden="true" />
             <span class="package-label">{$t('Package EPUB')}</span>
           </button>
+          {#if canGeneratePdf}
+            <button
+              class="package-epub-button pdf-button"
+              onclick={handleGeneratePdf}
+              disabled={pdfGenerating}
+              title={$t('Save the book as a PDF')}
+            >
+              <FilePdf size={18} aria-hidden="true" />
+              <span class="package-label">{pdfGenerating ? $t('Preparing…') : $t('PDF')}</span>
+            </button>
+          {/if}
         </div>
       {/if}
     {/snippet}
@@ -1186,12 +1220,15 @@
 
   /* Package EPUB button styling */
   .package-epub-section {
+    display: flex;
+    gap: var(--space-2);
     padding: var(--space-3);
     border-top: 1px solid var(--color-border-default);
   }
 
   .package-epub-button {
-    width: 100%;
+    flex: 1;
+    min-width: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1252,5 +1289,25 @@
     outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
     outline-offset: var(--focus-ring-offset);
     box-shadow: none;
+  }
+
+  /* PDF is the secondary action next to the primary "Package EPUB" CTA. */
+  .pdf-button,
+  :global([data-theme='dark']) .pdf-button {
+    background-color: transparent;
+    border-color: var(--color-border-default);
+    color: var(--color-text-secondary);
+  }
+
+  .pdf-button:hover:not(:disabled),
+  :global([data-theme='dark']) .pdf-button:hover:not(:disabled) {
+    background-color: var(--color-surface-hover);
+    border-color: var(--color-border-hover);
+    color: var(--color-text-primary);
+  }
+
+  /* Collapsed sidebar is too narrow for two side-by-side buttons — stack them. */
+  :global(.sidebar.collapsed) .package-epub-section {
+    flex-direction: column;
   }
 </style>
