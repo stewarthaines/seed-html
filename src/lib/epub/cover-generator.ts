@@ -16,13 +16,22 @@ export function titleHue(title: string): number {
   return h % 360;
 }
 
+// Light/dark text choice for the generated cover.
+export type CoverMode = 'dark' | 'light';
+
 // The cover background is generated in OKLCH (a perceptually-uniform space) at
 // fixed lightness and chroma, so every hue comes out at the same perceived
-// darkness and the same gentle, muted saturation — a harmonious ribbon of deep
-// "book-cover" tones rather than HSL's uneven, sometimes garish sweep. The hue
-// is the only user-facing parameter. (Tweak these two constants to taste.)
-const COVER_OKLCH_L = 0.5;
-const COVER_OKLCH_C = 0.15;
+// darkness and saturation — a harmonious ribbon of "book-cover" tones rather
+// than HSL's uneven sweep. Two themes: 'dark' = deep, saturated background with
+// white text; 'light' = pale, low-chroma "paper" tint with near-black text.
+// (Tweak the constants to taste.)
+const COVER_THEMES: Record<
+  CoverMode,
+  { L: number; C: number; text: string; author: string }
+> = {
+  dark: { L: 0.5, C: 0.15, text: '#ffffff', author: 'rgba(255,255,255,0.72)' },
+  light: { L: 0.9, C: 0.07, text: '#1a1a1a', author: 'rgba(0,0,0,0.6)' },
+};
 
 /** OKLCH (L 0–1, chroma, hue°) → sRGB hex, clamped to the sRGB gamut. */
 function oklchToHex(L: number, C: number, hueDeg: number): string {
@@ -52,9 +61,15 @@ function oklchToHex(L: number, C: number, hueDeg: number): string {
   return `#${channel(r)}${channel(g)}${channel(bl)}`;
 }
 
-/** The cover background color for a given hue. Shared with the UI swatch. */
-export function coverBackgroundColor(hue: number): string {
-  return oklchToHex(COVER_OKLCH_L, COVER_OKLCH_C, hue);
+/** The cover background color for a given hue + mode. Shared with the UI swatch. */
+export function coverBackgroundColor(hue: number, mode: CoverMode = 'dark'): string {
+  const theme = COVER_THEMES[mode];
+  return oklchToHex(theme.L, theme.C, hue);
+}
+
+/** The cover text color for a mode (white on dark, near-black on light). */
+export function coverTextColor(mode: CoverMode = 'dark'): string {
+  return COVER_THEMES[mode].text;
 }
 
 function xmlEscape(s: string): string {
@@ -136,9 +151,15 @@ export async function generateCoverPng(svgString: string, maxDim = 512): Promise
   }
 }
 
-export function generateCoverSvg(title: string, author: string, hue?: number): string {
+export function generateCoverSvg(
+  title: string,
+  author: string,
+  hue?: number,
+  mode: CoverMode = 'dark'
+): string {
   const safeTitle = title.trim() || 'Untitled';
-  const bg = coverBackgroundColor(hue ?? titleHue(safeTitle));
+  const theme = COVER_THEMES[mode];
+  const bg = coverBackgroundColor(hue ?? titleHue(safeTitle), mode);
 
   const lines = fitLines(safeTitle);
   const longestLine = lines.reduce((a, b) => (a.length >= b.length ? a : b), '');
@@ -164,12 +185,12 @@ export function generateCoverSvg(title: string, author: string, hue?: number): s
   // must stay legible even in the small OPDS thumbnail.
   const authorFontSize = Math.min(62, Math.max(54, Math.round(fontSize * 0.42)));
   const authorLine = safeAuthor
-    ? `\n  <text x="300" y="830" font-family="Georgia,'Times New Roman',serif" font-size="${authorFontSize}" fill="rgba(255,255,255,0.7)" text-anchor="middle" font-style="italic">${xmlEscape(safeAuthor)}</text>`
+    ? `\n  <text x="300" y="830" font-family="Georgia,'Times New Roman',serif" font-size="${authorFontSize}" fill="${theme.author}" text-anchor="middle" font-style="italic">${xmlEscape(safeAuthor)}</text>`
     : '';
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="900" viewBox="0 0 600 900">
   <rect width="600" height="900" fill="${bg}"/>
-  <text y="${firstLineY}" font-family="Georgia,'Times New Roman',serif" font-size="${fontSize}" fill="white" text-anchor="middle">
+  <text y="${firstLineY}" font-family="Georgia,'Times New Roman',serif" font-size="${fontSize}" fill="${theme.text}" text-anchor="middle">
 ${tspans}
   </text>${authorLine}
 </svg>`;

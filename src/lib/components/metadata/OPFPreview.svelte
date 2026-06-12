@@ -9,6 +9,7 @@
     WorkspaceService,
   } from '../../services/workspace/workspace.service.js';
   import type { EPUBMetadata } from '../../epub/opf-utils.js';
+  import type { CoverMode } from '../../epub/cover-generator.js';
 
   interface Props {
     workspace: WorkspaceState;
@@ -17,7 +18,7 @@
     isAdvancedMode?: boolean;
     readOnly?: boolean;
     workspaceService?: WorkspaceService;
-    onGenerateCover?: (hue?: number) => Promise<void>;
+    onGenerateCover?: (hue?: number, mode?: CoverMode) => Promise<void>;
   }
 
   let {

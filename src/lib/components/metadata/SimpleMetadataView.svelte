@@ -1,6 +1,12 @@
 <script lang="ts">
   import { t } from '../../i18n';
-  import { titleHue, generateCoverSvg } from '../../epub/cover-generator';
+  import {
+    titleHue,
+    generateCoverSvg,
+    coverBackgroundColor,
+    coverTextColor,
+    type CoverMode,
+  } from '../../epub/cover-generator';
   import HueSelector from '../HueSelector.svelte';
   import type {
     WorkspaceState,
@@ -13,7 +19,7 @@
     focusedField?: keyof EPUBMetadata | null;
     readOnly?: boolean;
     workspaceService?: WorkspaceService;
-    onGenerateCover?: (hue?: number) => Promise<void>;
+    onGenerateCover?: (hue?: number, mode?: CoverMode) => Promise<void>;
   }
 
   let {
@@ -29,21 +35,24 @@
   // null = follow the title-derived hue; a number = explicit user choice.
   let coverHue = $state<number | null>(null);
   const effectiveHue = $derived(coverHue ?? titleHue(metadata?.title ?? ''));
+  // 'dark' = white text on a deep background; 'light' = near-black on a pale tint.
+  let coverMode = $state<CoverMode>('dark');
 
   // Whether the project already has a cover-image — drives "Update" vs "Generate".
   const hasCover = $derived(
     !!workspace?.opf?.manifest?.some(m => m.properties?.includes('cover-image'))
   );
 
-  // Live preview: once the user touches the hue, render the prospective cover SVG
-  // (vector, instant) in place of the stored cover, so they see the new hue
-  // before committing. Cleared (null) until the slider is moved.
+  // Live preview: once the user touches the hue or the light/dark toggle, render
+  // the prospective cover SVG (vector, instant) in place of the stored cover, so
+  // they see it before committing. Null (show stored cover) until either changes.
   const previewUrl = $derived.by(() => {
-    if (coverHue === null) return null;
+    if (coverHue === null && coverMode === 'dark') return null;
     const svg = generateCoverSvg(
       metadata?.title ?? '',
       metadata?.creator?.[0]?.name ?? '',
-      effectiveHue
+      effectiveHue,
+      coverMode
     );
     return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
   });
@@ -85,7 +94,7 @@
     if (generating || !onGenerateCover) return;
     generating = true;
     try {
-      await onGenerateCover(coverHue ?? undefined);
+      await onGenerateCover(coverHue ?? undefined, coverMode);
     } finally {
       generating = false;
     }
@@ -148,10 +157,32 @@
 
       {#if onGenerateCover && !readOnly}
         <div class="cover-action">
+          <div class="cover-theme" role="group" aria-label={$t('Cover text style')}>
+            {#each ['dark', 'light'] as const as m (m)}
+              <button
+                type="button"
+                class="cover-theme-option"
+                class:active={coverMode === m}
+                style="background: {coverBackgroundColor(
+                  effectiveHue,
+                  m
+                )}; color: {coverTextColor(m)}"
+                aria-pressed={coverMode === m}
+                title={m === 'dark'
+                  ? $t('Light text on a dark cover')
+                  : $t('Dark text on a light cover')}
+                onclick={() => (coverMode = m)}
+                disabled={generating}
+              >
+                Aa
+              </button>
+            {/each}
+          </div>
           <HueSelector
             value={effectiveHue}
             disabled={generating}
             showSwatch={false}
+            mode={coverMode}
             onInput={h => (coverHue = h)}
           />
           <button
@@ -283,6 +314,37 @@
     margin-block-start: var(--space-5);
     padding-block-start: var(--space-4);
     border-block-start: 1px solid var(--color-border-default);
+  }
+
+  /* Light/dark toggle: two "Aa" chips previewing each theme at the current hue. */
+  .cover-theme {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .cover-theme-option {
+    inline-size: 2.5rem;
+    block-size: 2rem;
+    border: 2px solid transparent;
+    border-radius: var(--radius-sm);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: var(--text-base);
+    cursor: pointer;
+    transition: border-color var(--duration-fast) ease;
+  }
+
+  .cover-theme-option.active {
+    border-color: var(--color-interactive-primary);
+  }
+
+  .cover-theme-option:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  .cover-theme-option:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
   }
 
   .cover-hint {

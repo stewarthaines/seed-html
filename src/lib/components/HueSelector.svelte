@@ -1,31 +1,35 @@
 <script lang="ts">
   import { t } from '../i18n';
-  import { coverBackgroundColor } from '../epub/cover-generator';
+  import { coverBackgroundColor, type CoverMode } from '../epub/cover-generator';
 
   let {
     value,
     disabled = false,
     showSwatch = true,
+    mode = 'dark',
     onInput,
   }: {
     value: number;
     disabled?: boolean;
     /** Show the color swatch. Hidden where a live cover preview makes it redundant. */
     showSwatch?: boolean;
+    /** Cover theme — drives which palette the swatch/track preview. */
+    mode?: CoverMode;
     onInput: (hue: number) => void;
   } = $props();
 
-  // Build the track from the actual (muted, OKLCH) cover colours so the slider
-  // previews the real palette rather than a vivid rainbow that doesn't match.
-  const trackGradient = `linear-gradient(to right, ${Array.from(
-    { length: 13 },
-    (_, i) => coverBackgroundColor(i * 30),
-  ).join(', ')})`;
+  // Build the track from the actual cover colours (for the chosen mode) so the
+  // slider previews the real palette rather than a generic rainbow.
+  const trackGradient = $derived(
+    `linear-gradient(to right, ${Array.from({ length: 13 }, (_, i) =>
+      coverBackgroundColor(i * 30, mode),
+    ).join(', ')})`,
+  );
 </script>
 
 <div class="hue-selector">
   {#if showSwatch}
-    <span class="hue-swatch" style="background: {coverBackgroundColor(value)}" aria-hidden="true"
+    <span class="hue-swatch" style="background: {coverBackgroundColor(value, mode)}" aria-hidden="true"
     ></span>
   {/if}
   <input

@@ -47,7 +47,11 @@
   import { createSpinePreviewManager } from './lib/transform/spine-preview-manager.js';
   import { addTransform } from './lib/settings/dom-transforms.js';
   import type { CreateProjectData } from './lib/components/workspace/CreateProjectDialog.svelte';
-  import { generateCoverSvg, generateCoverPng } from './lib/epub/cover-generator.js';
+  import {
+    generateCoverSvg,
+    generateCoverPng,
+    type CoverMode,
+  } from './lib/epub/cover-generator.js';
   import { exportPdf } from './lib/pdf/pdf-export.js';
   import { writePublishSidecar } from './lib/services/publish/publish-sidecar.js';
 
@@ -561,7 +565,7 @@
   // never overwritten — collision-resolved to a shared cover/cover-1/... stem).
   // The new PNG becomes the cover-image; the property is moved off any prior
   // holder so exactly one cover remains.
-  const handleGenerateCover = async (hue?: number): Promise<void> => {
+  const handleGenerateCover = async (hue?: number, mode?: CoverMode): Promise<void> => {
     if (!appState?.workspace || isReadOnly) return;
     const ws0 = appState.workspace;
     const meta = ws0.opf.metadata;
@@ -569,7 +573,7 @@
     const author = meta.creator?.[0]?.name ?? '';
     const base = ws0.pathInfo.basePath; // e.g. "OEBPS"
 
-    const svg = generateCoverSvg(title, author, hue);
+    const svg = generateCoverSvg(title, author, hue, mode);
     const pngBuffer = await generateCoverPng(svg);
 
     // If a PNG cover-image already exists (one we generated), UPDATE it in place
