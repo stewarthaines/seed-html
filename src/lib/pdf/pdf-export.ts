@@ -28,6 +28,71 @@ function xmlEscape(s: string): string {
 }
 
 /**
+ * Parse one chapter's XHTML and return its `<body>` inner serialized inside a
+ * `<section class="pdf-chapter">` (so it starts on a fresh page under print.css),
+ * plus the stylesheet hrefs the chapter links. Returns null for a malformed
+ * chapter or one without a `<body>`. Shared by the PDF export and the print
+ * preview so both build identical Paged.js input.
+ */
+export function chapterToSection(
+  xhtml: string
+): { section: string; hrefs: string[] } | null {
+  const parser = new DOMParser();
+  const serializer = new XMLSerializer();
+  const doc = parser.parseFromString(xhtml, 'application/xhtml+xml');
+  if (doc.querySelector('parsererror')) return null;
+  const body = doc.querySelector('body');
+  if (!body) return null;
+  const hrefs: string[] = [];
+  doc.querySelectorAll('link[rel~="stylesheet"][href]').forEach(link => {
+    const href = link.getAttribute('href');
+    if (href) hrefs.push(href);
+  });
+  const inner = Array.from(body.childNodes)
+    .map(node => serializer.serializeToString(node))
+    .join('');
+  return { section: `<section class="pdf-chapter">${inner}</section>`, hrefs };
+}
+
+/**
+ * Build the full Paged.js master document from already-serialized `pdf-chapter`
+ * sections: the print.css baseline first (overridable page geometry, page
+ * numbers, chapter breaks), then the book's own stylesheets, then the Paged.js
+ * polyfill plus a completion ping injected before `</body>`. Does NOT resolve
+ * blob URLs — the caller passes section HTML whose asset refs are already
+ * resolved (the live preview) or resolves the returned document itself (the PDF
+ * export). Shared so the print preview matches the exported PDF.
+ */
+export function buildPagedDocument(
+  sections: string[],
+  opts: { title?: string; doneMessage?: string; stylesheetHrefs?: string[] } = {}
+): string {
+  const { title = 'Book', doneMessage = 'pdf-paged', stylesheetHrefs = [] } = opts;
+  const links = stylesheetHrefs
+    .map(href => `<link rel="stylesheet" href="${href}" />`)
+    .join('\n');
+  // PagedConfig must be set before the polyfill script runs; auto-paginates on
+  // DOM load and pings the parent when done. Paged.js is vendored at the app
+  // origin (resolves under any base path).
+  const pagedSrc = new URL('paged.polyfill.js', document.baseURI).href;
+  const inject =
+    `<script>window.PagedConfig={auto:true,after:function(){parent.postMessage('${doneMessage}','*');}};</script>` +
+    `<script src="${pagedSrc}"></script>`;
+  return `<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8" />
+<title>${xmlEscape(title)}</title>
+<style>${printCss}</style>
+${links}
+</head>
+<body>
+${sections.join('\n')}
+${inject}</body>
+</html>`;
+}
+
+/**
  * Build the combined, paginated document and trigger the print → Save as PDF
  * flow. Resolves once the print dialog has been dismissed.
  */
@@ -42,54 +107,26 @@ export async function exportPdf(
   // Concatenate each chapter's <body> (wrapped so it starts on a new page) and
   // collect the stylesheet links the chapters reference (deduped) so the book's
   // own styling carries through — works for app-created and imported EPUBs.
-  const parser = new DOMParser();
-  const serializer = new XMLSerializer();
   const stylesheetHrefs = new Set<string>();
   const sections: string[] = [];
 
   for (const chapter of chapters) {
-    const doc = parser.parseFromString(chapter.xhtmlContent, 'application/xhtml+xml');
-    if (doc.querySelector('parsererror')) continue; // skip a malformed chapter
-    doc.querySelectorAll('link[rel~="stylesheet"][href]').forEach(link => {
-      const href = link.getAttribute('href');
-      if (href) stylesheetHrefs.add(href);
-    });
-    const body = doc.querySelector('body');
-    if (!body) continue;
-    const inner = Array.from(body.childNodes)
-      .map(node => serializer.serializeToString(node))
-      .join('');
-    sections.push(`<section class="pdf-chapter">${inner}</section>`);
+    const wrapped = chapterToSection(chapter.xhtmlContent);
+    if (!wrapped) continue; // skip a malformed chapter / one with no <body>
+    wrapped.hrefs.forEach(href => stylesheetHrefs.add(href));
+    sections.push(wrapped.section);
   }
   if (sections.length === 0) throw new Error('No readable chapter content.');
-
-  const links = [...stylesheetHrefs]
-    .map(href => `<link rel="stylesheet" href="${href}" />`)
-    .join('\n');
 
   // The print dialog suggests "<document title>.pdf", so name it after the book.
   const meta = workspace.opf.metadata;
   const author = meta.creator?.[0]?.name;
-  const docTitle = xmlEscape(
-    [meta.title?.trim() || 'Book', author?.trim()].filter(Boolean).join(' - ')
-  );
+  const docTitle = [meta.title?.trim() || 'Book', author?.trim()].filter(Boolean).join(' - ');
 
-  // Print defaults first (the overridable baseline: page geometry, page numbers,
-  // chapter breaks), then the book's own stylesheets — so a project that defines
-  // @page / @media print rules overrides the defaults per-property, while a book
-  // with no print rules still gets the sane baseline.
-  const master = `<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<meta charset="utf-8" />
-<title>${docTitle}</title>
-<style>${printCss}</style>
-${links}
-</head>
-<body>
-${sections.join('\n')}
-</body>
-</html>`;
+  const master = buildPagedDocument(sections, {
+    title: docTitle,
+    stylesheetHrefs: [...stylesheetHrefs],
+  });
 
   // Resolve OPFS-relative assets (images, stylesheets, fonts) to blob URLs so
   // they render in the print iframe. A fresh manager so the live preview's
@@ -100,15 +137,9 @@ ${sections.join('\n')}
     maxBlobURLs: 2000,
   });
   blobManager.setActiveWorkspace(workspace.id);
-  const resolved = await blobManager.processXHTMLForPreview(master);
-
-  // Inject Paged.js (vendored, app-origin) plus a completion ping. PagedConfig
-  // must be set before the polyfill script runs.
-  const pagedSrc = new URL('paged.polyfill.js', document.baseURI).href;
-  const inject =
-    `<script>window.PagedConfig={auto:true,after:function(){parent.postMessage('pdf-paged','*');}};</script>` +
-    `<script src="${pagedSrc}"></script>`;
-  const finalDoc = resolved.replace('</body>', `${inject}</body>`);
+  // The master already carries the Paged.js polyfill inject (an absolute app-origin
+  // src that asset resolution leaves alone); this resolves the OPFS-relative assets.
+  const finalDoc = await blobManager.processXHTMLForPreview(master);
 
   // Hidden but laid-out (opacity:0, not display:none) so Paged.js can measure.
   const iframe = document.createElement('iframe');

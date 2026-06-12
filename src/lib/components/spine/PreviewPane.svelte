@@ -24,6 +24,8 @@
     VALIDATION_REPORT_STORAGE_KEY,
   } from '$lib/plugins/validation-report';
   import { snippetAroundClick } from './preview-click.js';
+  import { buildPagedDocument, chapterToSection } from '$lib/pdf/pdf-export.js';
+  import { ArrowsClockwise } from 'phosphor-svelte';
 
   // Props using Svelte 5 runes syntax
   let {
@@ -60,6 +62,24 @@
   // re-check). axe-core (MPL-2.0) is vendored at public/axe.min.js and served over
   // http; file:// can't fetch it, so the button is hidden there.
   const canCheckA11y = typeof location !== 'undefined' && location.protocol !== 'file:';
+
+  // --- Print preview (Paged.js) ------------------------------------------------
+  // The "Print" device paginates the current chapter into print pages with the
+  // vendored Paged.js polyfill — the same pipeline (and print.css) as "Save as
+  // PDF" — so authors see what the printed page will look like. HTTP-only: the
+  // polyfill is fetched from the app origin, so the option is hidden on file://.
+  const canPaginate = typeof location !== 'undefined' && location.protocol !== 'file:';
+  /** Devices that fill the pane rather than rendering a scaled device frame. */
+  const isFillDevice = (id: string) => id === 'desktop' || id === 'print';
+  /** postMessage token Paged.js pings the parent with when pagination completes. */
+  const PAGED_DONE = 'preview-paged';
+
+  let printPaginating = $state(false);
+  let printStale = $state(false);
+  // Non-reactive: the content string last paginated, used to detect edits while
+  // Print is active (undefined = not yet paginated this Print session).
+  let printRenderedContent: string | undefined = undefined;
+  let printSafetyTimer: ReturnType<typeof setTimeout> | undefined;
 
   interface AxeViolation {
     id: string;
@@ -264,6 +284,16 @@
       icon: '📚',
       category: 'travel',
     },
+    {
+      // Paginated print preview (Paged.js). Dimensions are placeholders — print
+      // fills the pane and Paged.js sizes its own A4 pages (see isFillDevice).
+      id: 'print',
+      name: 'Print',
+      width: '794px',
+      height: '1123px',
+      icon: '🖨️',
+      category: 'print',
+    },
   ] as const;
 
   // Category labels for dropdown groups
@@ -281,6 +311,9 @@
       case 'travel':
         // i18n: Device category for e-reader devices designed for portable reading
         return $t('Travel (e-ink)');
+      case 'print':
+        // i18n: Device category for the paginated print-page preview
+        return $t('Print');
       default:
         return category;
     }
@@ -311,6 +344,9 @@
       case 'Extra Large':
         // i18n: Device size for largest tablet screens
         return $t('Extra Large');
+      case 'Print':
+        // i18n: The paginated print-page preview option
+        return $t('Print');
       default:
         return name;
     }
@@ -337,6 +373,8 @@
     const groups: Record<string, (typeof DEVICE_PRESETS)[number][]> = {};
 
     for (const device of DEVICE_PRESETS) {
+      // Print preview is HTTP-only (Paged.js is fetched from the app origin).
+      if (device.id === 'print' && !canPaginate) continue;
       if (!groups[device.category]) {
         groups[device.category] = [];
       }
@@ -346,9 +384,41 @@
     return groups;
   });
 
-  // Update iframe content when XHTML changes
+  // Update iframe content when the XHTML or the selected device changes. Reading
+  // both makes the effect re-run when the user switches to/from Print as well.
   $effect(() => {
-    updatePreviewContent(xhtmlContent);
+    const device = selectedDevice;
+    const content = xhtmlContent;
+    if (device !== 'print') {
+      // Leaving (or never on) print: reset its session state and render plainly.
+      printRenderedContent = undefined;
+      printStale = false;
+      printPaginating = false;
+      clearTimeout(printSafetyTimer);
+      updatePreviewContent(content);
+      return;
+    }
+    if (printRenderedContent === undefined) {
+      // First switch to Print: paginate now.
+      writePagedDoc(content);
+    } else if (content !== printRenderedContent) {
+      // Edited while Print is active: mark stale (re-paginating per keystroke is
+      // too heavy); the author refreshes on demand.
+      printStale = true;
+    }
+  });
+
+  // Paged.js pings the parent when pagination finishes: drop the spinner and fit
+  // the rendered pages to the pane width.
+  $effect(() => {
+    const onMessage = (event: MessageEvent) => {
+      if (event.source !== previewIframe?.contentWindow || event.data !== PAGED_DONE) return;
+      clearTimeout(printSafetyTimer);
+      printPaginating = false;
+      fitPrintToWidth();
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
   });
 
   /**
@@ -495,6 +565,81 @@
     }
   }
 
+  // --- Print pagination --------------------------------------------------------
+
+  /** Render the current chapter for whichever device is selected. */
+  function renderCurrent(): void {
+    if (selectedDevice === 'print') writePagedDoc(xhtmlContent);
+    else updatePreviewContent(xhtmlContent);
+  }
+
+  /**
+   * Paginate the current chapter into print pages in the preview iframe using the
+   * same Paged.js document builder as the PDF export (so the preview matches the
+   * exported PDF). The chapter content already has its assets resolved to blob
+   * URLs upstream, so no BlobURLManager is needed here. Pagination runs once per
+   * write; the 'preview-paged' ping (handled by the message effect) clears the
+   * spinner and fits the pages to the pane width.
+   */
+  function writePagedDoc(content: string): void {
+    if (!previewIframe || !content) return;
+    const wrapped = chapterToSection(content);
+    if (!wrapped) {
+      // Malformed / no <body>: fall back to the plain render rather than a blank
+      // paginated frame.
+      updatePreviewContent(content);
+      return;
+    }
+    const doc = buildPagedDocument([wrapped.section], {
+      title: 'Print preview',
+      doneMessage: PAGED_DONE,
+      stylesheetHrefs: wrapped.hrefs,
+    });
+
+    const iframeDoc = previewIframe.contentDocument;
+    if (!iframeDoc) return;
+
+    printPaginating = true;
+    printStale = false;
+    printRenderedContent = content;
+    // Print output has a different DOM than the live preview; don't carry over
+    // scroll anchors or auto-run axe against Paged.js wrapper elements.
+    pendingScrollRestore = null;
+
+    iframeDoc.open();
+    iframeDoc.write(doc);
+    iframeDoc.close();
+
+    // Safety: if Paged.js never pings (e.g. it throws), don't leave the spinner up.
+    clearTimeout(printSafetyTimer);
+    printSafetyTimer = setTimeout(() => {
+      printPaginating = false;
+    }, 10000);
+  }
+
+  /**
+   * Scale the paginated A4 pages so a full page width fits the pane (the user
+   * chose fit-to-width); scroll vertically through pages. Uses CSS `zoom` on the
+   * Paged.js page container so the scroll height reflows. Never upscales beyond
+   * 1 (real size). Safe to call repeatedly (e.g. on resize) without re-paginating.
+   */
+  function fitPrintToWidth(): void {
+    const iframeDoc = previewIframe?.contentDocument;
+    if (!iframeDoc) return;
+    const pages = iframeDoc.querySelector<HTMLElement>('.pagedjs_pages');
+    const firstPage = iframeDoc.querySelector<HTMLElement>('.pagedjs_page');
+    if (!pages || !firstPage) return;
+
+    pages.style.removeProperty('zoom');
+    const pageWidth = firstPage.offsetWidth;
+    const available = iframeDoc.documentElement.clientWidth;
+    if (!pageWidth || !available) return;
+
+    // Leave a little breathing room around the page box.
+    const scale = Math.min(1, (available * 0.94) / pageWidth);
+    pages.style.setProperty('zoom', String(scale));
+  }
+
   /**
    * Get device dimensions accounting for orientation
    */
@@ -514,7 +659,7 @@
    * Calculate optimal scale for device preview to fit available space
    */
   function calculateOptimalScale(device: (typeof DEVICE_PRESETS)[number]): number {
-    if (device.id === 'desktop') return 1;
+    if (isFillDevice(device.id)) return 1;
 
     try {
       // Get the preview content element (responds to split pane changes)
@@ -568,8 +713,8 @@
     if (device && previewContainer) {
       const wrapper = previewContainer.parentElement;
 
-      if (device.id === 'desktop') {
-        // Desktop: fill available space
+      if (isFillDevice(device.id)) {
+        // Desktop / print: fill available space (print pages size themselves).
         previewContainer.style.width = '100%';
         previewContainer.style.height = '100%';
         previewContainer.style.maxWidth = 'none';
@@ -612,26 +757,16 @@
    * Toggle source view
    */
   function toggleSourceView(): void {
-    console.log('🔄 CLICK EVENT FIRED! toggleSourceView() called');
-    console.log('🔄 Current showSource state:', showSource);
-
-    const oldState = showSource;
     showSource = !showSource;
 
-    console.log('🔄 State toggled from', oldState, 'to', showSource);
-
     if (!showSource) {
-      console.log('🔄 About to call updatePreviewContent and re-apply device settings');
       setTimeout(() => {
-        console.log('🔄 updatePreviewContent called');
-        updatePreviewContent(xhtmlContent);
-
-        // Re-apply device dimensions and scaling after toggling back to preview
+        // Re-render for the active device (paginated when Print is selected) and
+        // re-apply device dimensions/scaling after returning from the source view.
+        renderCurrent();
         handleDeviceChange(selectedDevice);
       }, 0);
     }
-
-    console.log('🔄 toggleSourceView completed');
   }
 
   /**
@@ -833,16 +968,24 @@
   let resizeObserver: ResizeObserver | null = null;
 
   onMount(() => {
+    // Print preview is HTTP-only; never start on it under file://.
+    if (selectedDevice === 'print' && !canPaginate) selectedDevice = 'desktop';
+
     // Initialize with default device
     handleDeviceChange(selectedDevice);
+
+    // Re-apply device sizing on resize. For Print, re-fit the pages to the new
+    // width instead — no re-pagination (Paged.js pages stay A4 regardless).
+    const onResize = () => {
+      if (selectedDevice === 'print') fitPrintToWidth();
+      else handleDeviceChange(selectedDevice);
+    };
 
     // Set up resize observer for responsive scaling
     if (typeof ResizeObserver !== 'undefined') {
       resizeObserver = new ResizeObserver(() => {
         // Debounce resize events
-        setTimeout(() => {
-          handleDeviceChange(selectedDevice);
-        }, 400);
+        setTimeout(onResize, 400);
       });
 
       // Observe the preview content element for size changes
@@ -853,7 +996,7 @@
 
     // Fallback: window resize listener
     const handleResize = () => {
-      setTimeout(() => handleDeviceChange(selectedDevice), 400);
+      setTimeout(onResize, 400);
     };
     window.addEventListener('resize', handleResize);
 
@@ -902,6 +1045,21 @@
           <span>{formatExecutionTime(executionTime)}</span>
         </div>
       {/if}
+
+      <!-- Print preview: refresh when the chapter changed since it was paginated.
+           Placed after the transform status (rather than among the device controls)
+           so the control order stays stable as it appears/disappears. -->
+      {#if selectedDevice === 'print' && printStale}
+        <button
+          type="button"
+          class="print-refresh"
+          onclick={() => writePagedDoc(xhtmlContent)}
+          title={$t('Preview out of date')}
+          aria-label={$t('Refresh')}
+        >
+          <ArrowsClockwise size={16} aria-hidden="true" />
+        </button>
+      {/if}
     </div>
 
     <div class="preview-controls">
@@ -940,8 +1098,8 @@
         </button>
       {/if}
 
-      <!-- Orientation toggle (only show for mobile devices) -->
-      {#if selectedDevice !== 'desktop'}
+      <!-- Orientation toggle (only show for scaled device frames, not fill/print) -->
+      {#if !isFillDevice(selectedDevice)}
         <button
           type="button"
           class="orientation-toggle"
@@ -1035,11 +1193,17 @@
     {:else}
       <!-- Live preview -->
       <div class="preview-viewport">
+        {#if printPaginating && selectedDevice === 'print'}
+          <div class="print-paginating" role="status">
+            <div class="status-spinner"></div>
+            <span>{$t('Paginating…')}</span>
+          </div>
+        {/if}
         <div class="preview-frame-wrapper">
           <div
             class="preview-frame-container"
-            class:device-frame={selectedDevice !== 'desktop'}
-            style:transform={selectedDevice !== 'desktop' ? `scale(${deviceScale})` : 'none'}
+            class:device-frame={!isFillDevice(selectedDevice)}
+            style:transform={!isFillDevice(selectedDevice) ? `scale(${deviceScale})` : 'none'}
             style:transform-origin="top left"
             bind:this={previewContainer}
           >
@@ -1092,6 +1256,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    /* Wrap the title/controls groups onto new rows when the pane is narrow,
+       matching the editor pane header (.editor-controls). */
+    flex-wrap: wrap;
+    gap: var(--space-2);
     min-height: 2.75rem;
     padding: 0 var(--space-3);
     border-bottom: 1px solid var(--color-border-default);
@@ -1102,6 +1270,7 @@
   .preview-title {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: var(--space-2);
     font-weight: var(--font-medium);
     color: var(--color-text-primary);
@@ -1110,6 +1279,7 @@
   .preview-controls {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: var(--space-2);
   }
 
@@ -1263,6 +1433,30 @@
     outline-offset: var(--focus-ring-offset);
   }
 
+  /* Icon-only "re-paginate" button, shown after the transform status when the
+     print preview is out of date. */
+  .print-refresh {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-1);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-accent, var(--color-bg-secondary));
+    color: var(--color-text-primary);
+    line-height: 0;
+    cursor: pointer;
+  }
+
+  .print-refresh:hover {
+    background: var(--color-bg-hover);
+  }
+
+  .print-refresh:focus {
+    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
+    outline-offset: var(--focus-ring-offset);
+  }
+
   .device-selector {
     padding: var(--space-1) var(--space-2);
     border: 1px solid var(--color-border-default);
@@ -1377,11 +1571,26 @@
   }
 
   .preview-viewport {
+    position: relative;
     height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
     background-color: var(--color-bg-tertiary);
+  }
+
+  /* Overlay while Paged.js paginates the print preview. */
+  .print-paginating {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--color-bg-tertiary) 80%, transparent);
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
   }
 
   .preview-frame-wrapper {
