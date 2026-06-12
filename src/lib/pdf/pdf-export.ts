@@ -65,6 +65,24 @@ function printPageCss(print: PrintSettings | undefined): string {
 }
 
 /**
+ * Screen-only chrome for the in-app "Print" device preview: float each paginated
+ * page on a neutral backdrop with a drop shadow, like the mobile/tablet device
+ * previews. Included ONLY in the preview document (never the export), so it uses
+ * plain rules with no `@media` — Paged.js strips `@media screen` blocks, and the
+ * preview is never the thing that gets printed. Values mirror the app's
+ * `--color-bg-tertiary` backdrop and `--shadow-lg` device-frame shadow (hard-coded
+ * because the iframe document has no app CSS variables).
+ */
+const PREVIEW_CHROME_CSS = `
+html { background: #f0f0f0; }
+.pagedjs_pages { padding: 16px 0; }
+.pagedjs_page {
+  margin-bottom: 16px;
+  background: #fff;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+}`;
+
+/**
  * Parse one chapter's XHTML and return its `<body>` inner serialized inside a
  * `<section class="pdf-chapter">` (so it starts on a fresh page under print.css),
  * plus the stylesheet hrefs the chapter links and the source `<html>` language
@@ -122,9 +140,18 @@ export function buildPagedDocument(
     stylesheetHrefs?: string[];
     lang?: string;
     print?: PrintSettings;
+    /** Add the on-screen page drop-shadow chrome (in-app preview only, not export). */
+    previewChrome?: boolean;
   } = {}
 ): string {
-  const { title = 'Book', doneMessage = 'pdf-paged', stylesheetHrefs = [], lang, print } = opts;
+  const {
+    title = 'Book',
+    doneMessage = 'pdf-paged',
+    stylesheetHrefs = [],
+    lang,
+    print,
+    previewChrome = false,
+  } = opts;
   const links = stylesheetHrefs
     .map(href => `<link rel="stylesheet" href="${href}" />`)
     .join('\n');
@@ -156,6 +183,7 @@ export function buildPagedDocument(
 <style>
 ${printPageCss(print)}
 ${printCss}
+${previewChrome ? PREVIEW_CHROME_CSS : ''}
 </style>
 ${links}
 </head>

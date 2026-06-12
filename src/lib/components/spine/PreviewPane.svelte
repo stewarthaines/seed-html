@@ -618,6 +618,7 @@
       stylesheetHrefs: wrapped.hrefs,
       lang: wrapped.lang ?? undefined,
       print: printSettings,
+      previewChrome: true,
     });
 
     const iframeDoc = previewIframe.contentDocument;
