@@ -10,11 +10,24 @@
 
   const VERSION = __VERSION__;
 
-  // Third-party library information
-  const THIRD_PARTY_LIBRARIES = [
+  // Online-only libraries are fetched at runtime (vendored polyfills + the
+  // publish plugin) and aren't present in the offline file:// build.
+  const isHttp = typeof location !== 'undefined' && location.protocol !== 'file:';
+
+  interface Library {
+    name: string;
+    version: string;
+    license: string;
+    url: string;
+    description: string;
+    copyright: string;
+  }
+
+  // Always bundled into the app (present under file:// too). All MIT.
+  const BUNDLED_LIBRARIES: Library[] = [
     {
       name: 'Svelte',
-      version: '^5.28.1',
+      version: '5.56.1',
       license: 'MIT',
       url: 'https://github.com/sveltejs/svelte',
       description: 'Cybernetically enhanced web apps',
@@ -22,12 +35,20 @@
     },
     {
       name: 'paneforge',
-      version: '^1.0.0',
+      version: '1.0.0',
       license: 'MIT',
       url: 'https://github.com/svecosystem/paneforge',
       description: 'Headless pane management for Svelte',
       copyright:
         'Copyright (c) 2024 Hunter Johnston <https://github.com/huntabyte> Copyright (c) 2023 Brian Vaughn <https://github.com/bvaughn>',
+    },
+    {
+      name: 'phosphor-svelte',
+      version: '3.1.0',
+      license: 'MIT',
+      url: 'https://www.npmjs.com/package/phosphor-svelte',
+      description: 'Phosphor icon set as Svelte components',
+      copyright: 'Copyright (c) 2020 Phosphor Icons',
     },
     {
       name: 'ndesmic/zip',
@@ -36,6 +57,44 @@
       url: 'https://github.com/ndesmic/zip',
       description: 'Browser-native ZIP implementation (substantial portions used)',
       copyright: 'Copyright (c) 2021 ndesmic',
+    },
+  ];
+
+  // Loaded only when the editor runs online — the vendored polyfills behind
+  // online-only features and the libraries bundled in the publish plugin (which
+  // is a separate, http-loaded iframe build).
+  const HTTP_LIBRARIES: Library[] = [
+    {
+      name: 'axe-core',
+      version: '4.10.2',
+      license: 'MPL-2.0',
+      url: 'https://github.com/dequelabs/axe-core',
+      description: 'Accessibility checks in the EPUB preview',
+      copyright: 'Copyright (c) 2015-2024 Deque Systems, Inc.',
+    },
+    {
+      name: 'Paged.js',
+      version: '0.4.3',
+      license: 'MIT',
+      url: 'https://gitlab.coko.foundation/pagedjs/pagedjs',
+      description: 'CSS Paged Media pagination for PDF export',
+      copyright: 'Copyright (c) pagedjs contributors (Coko Foundation)',
+    },
+    {
+      name: 'aws4fetch',
+      version: '1.0.20',
+      license: 'MIT',
+      url: 'https://github.com/mhart/aws4fetch',
+      description: 'AWS SigV4 request signing — publish plugin (S3/R2)',
+      copyright: 'Copyright (c) 2018 Michael Hart',
+    },
+    {
+      name: '@likecoin/epubcheck-ts',
+      version: '0.3.9',
+      license: 'GPL-3.0-only',
+      url: 'https://github.com/likecoin/epubcheck-ts',
+      description: 'EPUB validation — publish plugin (bundles W3C EPUBCheck)',
+      copyright: 'Copyright (c) LikeCoin Foundation; bundles W3C EPUBCheck',
     },
   ];
 </script>
@@ -59,27 +118,46 @@
       <pre class="license-text">{LICENSE_TEXT}</pre>
     </section>
 
+    {#snippet libraryItem(library: Library)}
+      <div class="library-item">
+        <h3 class="library-name">
+          <a href={library.url} target="_blank" rel="noopener noreferrer" class="external-link">
+            {library.name}
+          </a>
+          {#if library.version !== 'N/A'}
+            <span class="library-version">v{library.version}</span>
+          {/if}
+          <span class="library-license" title={$t('License')}>{library.license}</span>
+        </h3>
+        <p class="library-description">{library.description}</p>
+        <p class="library-copyright">{library.copyright}</p>
+      </div>
+    {/snippet}
+
     <!-- Third-party libraries folded in below the main license. -->
     <section class="thirdparty-section">
       <h2>{$t('about.thirdparty.title')}</h2>
       <p class="thirdparty-intro">{$t('about.thirdparty.intro')}</p>
 
       <div class="library-list">
-        {#each THIRD_PARTY_LIBRARIES as library (library.name)}
-          <div class="library-item">
-            <h3 class="library-name">
-              <a href={library.url} target="_blank" rel="noopener noreferrer" class="external-link">
-                {library.name}
-              </a>
-              {#if library.version !== 'N/A'}
-                <span class="library-version">v{library.version}</span>
-              {/if}
-            </h3>
-            <p class="library-description">{library.description}</p>
-            <p class="library-copyright">{library.copyright}</p>
-          </div>
+        {#each BUNDLED_LIBRARIES as library (library.name)}
+          {@render libraryItem(library)}
         {/each}
       </div>
+
+      {#if isHttp}
+        <h3 class="thirdparty-subheading">{$t('Available when running online')}</h3>
+        <p class="thirdparty-intro">
+          {$t(
+            'Additional libraries used when the editor runs online — the publish plugin and online-only features.'
+          )}
+        </p>
+        <div class="library-list">
+          {#each HTTP_LIBRARIES as library (library.name)}
+            {@render libraryItem(library)}
+          {/each}
+        </div>
+      {/if}
     </section>
   </div>
 </div>
@@ -192,13 +270,26 @@
     gap: var(--space-2);
   }
 
-  .library-version {
+  .library-version,
+  .library-license {
     font-size: var(--text-xs);
     font-weight: var(--font-normal);
     color: var(--color-text-secondary);
     background: var(--color-bg-tertiary);
     padding: var(--space-1) var(--space-2);
     border-radius: var(--radius-xs);
+  }
+
+  /* The SPDX licence reads as a label; the font-mono hints "identifier". */
+  .library-license {
+    font-family: var(--font-mono);
+  }
+
+  .thirdparty-subheading {
+    font-size: var(--text-base);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
+    margin: var(--space-4) 0 var(--space-1) 0;
   }
 
   .library-description {
