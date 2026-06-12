@@ -1,12 +1,25 @@
 /**
- * Utility functions for SOURCE.zip management
+ * Utility functions for the editor-source archive (SEED.zip) management.
  *
  * Provides helper functions for file classification, path validation,
- * and SOURCE/ directory management.
+ * and SOURCE/ directory management. Note: the EPUB archive is named SEED.zip
+ * (legacy SOURCE.zip still imported); the extracted working directory is SOURCE/.
  */
 
 import type { FileStorageAPI } from '../storage';
 import type { SourceFileType, SourceStats, SettingsValidation } from './types.js';
+
+/**
+ * Filename of the bundled editor-source archive inside a packaged EPUB. New
+ * (and re-exported) projects always write SEED.zip; imports also accept the
+ * legacy SOURCE.zip. This is the archive *filename* only — the extracted
+ * in-workspace directory is always `SOURCE/` (see validateSourcePath etc.).
+ */
+export const SOURCE_ARCHIVE_NAME = 'SEED.zip';
+/** Legacy archive filename, still read on import for older EPUBs. */
+export const LEGACY_SOURCE_ARCHIVE_NAME = 'SOURCE.zip';
+/** Archive filenames accepted on import (preferred first). */
+export const SOURCE_ARCHIVE_NAMES = [SOURCE_ARCHIVE_NAME, LEGACY_SOURCE_ARCHIVE_NAME];
 
 /**
  * Classify a SOURCE/ file by its path and extension

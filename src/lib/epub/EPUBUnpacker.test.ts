@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { EPUBUnpacker } from './EPUBUnpacker.js';
+import { SourceManager } from '../source/index.js';
 import type { ZipEntry } from '../zip/types.js';
 import { createVitestMockFileStorage } from '../test/mocks/file-storage-vitest.mock.js';
 
@@ -182,6 +183,53 @@ describe('EPUBUnpacker', () => {
       expect(result.error).toBeDefined();
       expect(result.error).toContain('Invalid EPUB structure');
     });
+
+    // The editor-source archive is named SEED.zip for new EPUBs but older EPUBs
+    // carry the legacy SOURCE.zip — both must be detected, handed to the source
+    // manager for extraction, and NOT written as a regular workspace file.
+    it.each(['SEED.zip', 'SOURCE.zip'])(
+      'detects and extracts the editor-source archive named %s',
+      async archiveName => {
+        const extractSpy = vi
+          .spyOn(SourceManager.prototype, 'extractSourceZip')
+          .mockResolvedValue(undefined);
+
+        const mockFile = new File(['mock epub data'], 'test.epub', {
+          type: 'application/epub+zip',
+        });
+        const mockEntries = [
+          createMockZipEntry('mimetype', 'application/epub+zip'),
+          createMockZipEntry(
+            'META-INF/container.xml',
+            '<?xml version="1.0"?>\\n<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">\\n' +
+              '<rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles>\\n' +
+              '</container>'
+          ),
+          createMockZipEntry('OEBPS/content.opf', '<package></package>'),
+          createMockZipEntry(archiveName, 'archive-bytes'),
+        ];
+
+        const mockZip = createMockZip(mockEntries);
+        const { Zip } = await import('../zip/index.js');
+        (Zip as any).mockReturnValue(mockZip);
+
+        mockStorage.writeFile.mockResolvedValue(true);
+        mockStorage.createWorkspace.mockResolvedValue(true);
+
+        const result = await unpacker.unpackEPUB(mockFile, 'test-workspace');
+
+        expect(result.success).toBe(true);
+        // The archive was detected and routed to the source manager…
+        expect(extractSpy).toHaveBeenCalledTimes(1);
+        // …and not written verbatim as a regular workspace file.
+        const wroteArchiveVerbatim = mockStorage.writeFile.mock.calls.some(
+          (call: any[]) => call[1] === archiveName
+        );
+        expect(wroteArchiveVerbatim).toBe(false);
+
+        extractSpy.mockRestore();
+      }
+    );
 
     it('should initialize storage if not already initialized', async () => {
       const mockFile = new File(['mock epub data'], 'test.epub', { type: 'application/epub+zip' });

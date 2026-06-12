@@ -1,8 +1,9 @@
 /**
- * SOURCE.zip Management API
+ * Editor-source archive (SEED.zip) Management API
  *
- * Complete API for managing SOURCE/ directory files and SOURCE.zip
- * creation/extraction in EPUB workspaces.
+ * Complete API for managing SOURCE/ directory files and the editor-source
+ * archive (SEED.zip; legacy SOURCE.zip still imported) creation/extraction in
+ * EPUB workspaces.
  */
 
 // Main classes
@@ -17,6 +18,9 @@ export {
   validateSettingsJson,
   calculateDirectoryStats,
   sanitizeSourcePath,
+  SOURCE_ARCHIVE_NAME,
+  LEGACY_SOURCE_ARCHIVE_NAME,
+  SOURCE_ARCHIVE_NAMES,
 } from './source-utils.js';
 
 // Type definitions

@@ -8,7 +8,7 @@
 import { Zip } from '../zip/index.js';
 import { FileStorageAPI } from '../storage/index.js';
 import { OPFUtils } from './opf-utils.js';
-import { SourceManager } from '../source/index.js';
+import { SourceManager, SOURCE_ARCHIVE_NAMES } from '../source/index.js';
 
 export interface UnpackResult {
   success: boolean;
@@ -246,7 +246,8 @@ export class EPUBUnpacker {
       }
     }
 
-    // Initialize SourceManager for SOURCE.zip handling
+    // Initialize SourceManager for the editor-source archive (SEED.zip / legacy
+    // SOURCE.zip) handling.
     const sourceManager = new SourceManager(this.fileStorage);
     let sourceZipEntry: any = null;
 
@@ -257,10 +258,15 @@ export class EPUBUnpacker {
           continue;
         }
 
-        // Check if this is SOURCE.zip - handle specially
-        if (entry.fileName === 'SOURCE.zip' || entry.fileName.endsWith('/SOURCE.zip')) {
+        // Check if this is the editor-source archive (SEED.zip or legacy
+        // SOURCE.zip) — handle it specially, after all other files.
+        const name = entry.fileName;
+        if (
+          SOURCE_ARCHIVE_NAMES.includes(name) ||
+          SOURCE_ARCHIVE_NAMES.some(n => name.endsWith('/' + n))
+        ) {
           sourceZipEntry = entry;
-          continue; // Process SOURCE.zip after all other files
+          continue;
         }
 
         // Extract file using ZIP library's built-in decompression
@@ -279,18 +285,19 @@ export class EPUBUnpacker {
       }
     }
 
-    // Handle SOURCE.zip extraction if present
+    // Extract the editor-source archive (SEED.zip / legacy SOURCE.zip) if present.
     if (sourceZipEntry) {
       try {
         const sourceZipBlob = await sourceZipEntry.extract();
         await sourceManager.extractSourceZip(workspaceId, sourceZipBlob);
 
-        // Report SOURCE.zip extraction (the ZIP itself is not stored as a workspace file)
-        extractedFiles.push('SOURCE.zip (extracted to SOURCE/ directory)');
+        // Report the archive extraction (the archive itself is not stored as a
+        // workspace file — its contents are extracted to the SOURCE/ directory).
+        extractedFiles.push(`${sourceZipEntry.fileName} (extracted to SOURCE/ directory)`);
         totalBytes += sourceZipBlob.size;
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-        errors.push(`Failed to extract SOURCE.zip: ${errorMessage}`);
+        errors.push(`Failed to extract ${sourceZipEntry.fileName}: ${errorMessage}`);
         skippedFiles.push(sourceZipEntry.fileName);
       }
     }

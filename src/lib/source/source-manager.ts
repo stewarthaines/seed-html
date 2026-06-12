@@ -1,8 +1,10 @@
 /**
- * SourceManager - Core SOURCE.zip management class
+ * SourceManager - Core editor-source archive management class
  *
- * Handles creation, extraction, and validation of SOURCE.zip files
- * for EPUB workspace management.
+ * Handles creation, extraction, and validation of the editor-source archive
+ * (packaged as SEED.zip; legacy SOURCE.zip still imported) — i.e. the SOURCE/
+ * directory tree — for EPUB workspace management. This class works on the
+ * SOURCE/ files and a Blob; the archive *filename* is owned by the packager.
  */
 
 import { ZipWriter, Zip } from '../zip';

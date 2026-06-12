@@ -261,7 +261,7 @@ To embed EDITME.html in an EPUB:
    └── OEBPS/
        ├── content.opf
        ├── EDITME.html
-       └── SOURCE.zip
+       └── SEED.zip
    ```
 
 2. **Add to Manifest** (in content.opf)

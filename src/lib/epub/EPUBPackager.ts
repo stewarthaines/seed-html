@@ -14,7 +14,7 @@ import {
   type EPUBMetadata,
 } from './opf-utils.js';
 import { getMimeType } from '../utils/mime-types.js';
-import { SourceManager } from '../source/index.js';
+import { SourceManager, SOURCE_ARCHIVE_NAME } from '../source/index.js';
 import { PUBLISH_WORKSPACE_ID } from '../workspace/types.js';
 
 export { type EPUBMetadata } from './opf-utils.js';
@@ -180,14 +180,15 @@ export class EPUBPackager {
       }
     }
 
-    // Handle SOURCE.zip creation if SOURCE/ files exist
+    // Bundle the SOURCE/ files into the editor-source archive (SEED.zip) if any
+    // exist. The archive holds the SOURCE/ tree; only its filename is SEED.zip.
     if (sourceFiles.length > 0) {
       try {
         const sourceZip = await this.sourceManager.createSourceZip(workspaceId);
         if (sourceZip) {
           const sourceZipBuffer = await sourceZip.arrayBuffer();
           files.push({
-            path: 'SOURCE.zip',
+            path: SOURCE_ARCHIVE_NAME,
             content: sourceZipBuffer,
             size: sourceZipBuffer.byteLength,
             mimeType: 'application/zip',
@@ -195,7 +196,7 @@ export class EPUBPackager {
         }
       } catch (error) {
         // eslint-disable-next-line no-console
-        console.warn('Failed to create SOURCE.zip:', error);
+        console.warn(`Failed to create ${SOURCE_ARCHIVE_NAME}:`, error);
       }
     }
 

@@ -76,7 +76,7 @@ The build process creates a single `index.html` file (~2-3MB) with all assets in
 
 - **XML/HTML Parsing**: Use `DOMParser` and `querySelector` instead of regular expressions for robust parsing
 - **CSS & Styling**: Use the comprehensive design system in `src/styles/` - see `plans/features/css_design_system.md` for full documentation
-- **SOURCE.zip Handling**: Use existing ZIP library (`src/lib/zip/`) for SOURCE.zip creation/extraction
+- **Editor-source archive (`SEED.zip`)**: Use existing ZIP library (`src/lib/zip/`) for the editor-source archive's creation/extraction. The archive name constant lives in `src/lib/source/source-utils.ts` (`SOURCE_ARCHIVE_NAME`); imports also accept the legacy `SOURCE.zip`.
 - **Import Paths**: Use absolute paths (`$lib/`) for new code
 - Browser-native APIs preferred over regex for structured data handling
 
@@ -116,11 +116,11 @@ Extension to standard EPUB structure:
 mimetype
 META-INF/content.opf
 OEBPS/ (standard EPUB content)
-├── SOURCE.zip (editor source files - extracted to SOURCE/ during editing)
+├── SEED.zip (editor source files - extracted to SOURCE/ during editing)
 └── SEED.html (editor app - to be extracted by the user to edit the EPUB file)
 ```
 
-**Note**: The `SOURCE.zip` file contains all editor-specific files (settings, plain text sources, transform scripts, extensions) and is extracted to a `SOURCE/` directory in the workspace during editing.
+**Note**: The `SEED.zip` file (formerly `SOURCE.zip`; imports still accept the old name) contains all editor-specific files (settings, plain text sources, transform scripts, extensions) and is extracted to a `SOURCE/` directory in the workspace during editing. The archive filename is `SEED.zip`; the extracted working directory remains `SOURCE/`.
 
 **Important**: When creating Active EPUBs, always include extraction instructions for end users. See [EPUB_EMBEDDING.md](./EPUB_EMBEDDING.md) for detailed embedding guidelines.
 

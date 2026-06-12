@@ -1,6 +1,7 @@
 <script lang="ts">
   import { t } from '../../i18n';
   import PaneHeader from '../layout/PaneHeader.svelte';
+  import { SOURCE_ARCHIVE_NAME } from '../../source/index.js';
   import type { ManifestItem, SourceItem, ValidationResult } from '../../manifest/types';
 
   type SortableFields = 'href' | 'size';
@@ -55,12 +56,12 @@
     },
     // Advanced mode: show individual SOURCE files
     ...(advancedMode ? sourceItems.map(item => ({ ...item, _type: 'source' as const })) : []),
-    // Non-advanced mode: show SOURCE.zip placeholder
+    // Non-advanced mode: show the bundled editor-source archive placeholder
     ...(!advancedMode
       ? [
           {
-            name: 'SOURCE.zip',
-            path: 'SOURCE.zip',
+            name: SOURCE_ARCHIVE_NAME,
+            path: SOURCE_ARCHIVE_NAME,
             size: undefined,
             _type: 'source-zip' as const,
             isPlaceholder: true,
@@ -91,7 +92,7 @@
           sourceItem.path.toLowerCase().includes(searchText)
         );
       } else if (item._type === 'source-zip') {
-        // SOURCE.zip placeholder
+        // Editor-source archive placeholder
         const sourceZipItem = item as any;
         return (
           sourceZipItem.name.toLowerCase().includes(searchText) ||
@@ -183,7 +184,7 @@
     if (source.length) {
       result.push({
         key: 'source',
-        label: 'SOURCE.zip',
+        label: SOURCE_ARCHIVE_NAME,
         kind: 'source',
         indent: 0,
         items: sortGroup(source),

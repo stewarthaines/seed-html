@@ -190,15 +190,16 @@ describe('SourceManager Integration Tests', () => {
       const sourceZip = await sourceManager.createSourceZip(workspaceId);
       expect(sourceZip).toBeInstanceOf(Blob);
 
-      // Simulate manifest item
+      // Simulate the bundled archive descriptor (note: it is added directly to
+      // the EPUB, not as an OPF manifest item).
       const manifestItem = {
         id: 'source-zip',
-        href: 'SOURCE.zip',
+        href: 'SEED.zip',
         mediaType: 'application/zip',
       };
 
       expect(manifestItem.id).toBe('source-zip');
-      expect(manifestItem.href).toBe('SOURCE.zip');
+      expect(manifestItem.href).toBe('SEED.zip');
       expect(manifestItem.mediaType).toBe('application/zip');
     });
 
@@ -249,7 +250,8 @@ describe('SourceManager Integration Tests', () => {
         true
       );
 
-      // 4. SOURCE.zip itself should not be stored as a workspace file
+      // 4. The archive itself should not be stored as a workspace file
+      expect(await mockFileStorage.fileExists(extractWorkspaceId, 'SEED.zip')).toBe(false);
       expect(await mockFileStorage.fileExists(extractWorkspaceId, 'SOURCE.zip')).toBe(false);
     });
 

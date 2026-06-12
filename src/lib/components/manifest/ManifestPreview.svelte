@@ -47,8 +47,8 @@
   let editProperties = $state<string[]>([]);
   let editError = $state<string | null>(null);
 
-  // Only manifest items get the edit form; SOURCE files, SOURCE.zip contents
-  // and content.opf stay preview-only.
+  // Only manifest items get the edit form; SOURCE/ files, the bundled editor-
+  // source archive (SEED.zip) and content.opf stay preview-only.
   const isManifestItem = $derived(
     selectedItemType === 'manifest' && !!selectedItem && 'id' in selectedItem
   );
