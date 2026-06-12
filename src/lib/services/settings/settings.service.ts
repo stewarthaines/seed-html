@@ -27,6 +27,17 @@ export interface WorkspaceSettings {
   };
 }
 
+/**
+ * Minimal print/PDF page settings exposed to novice users (the PDF export and the
+ * print preview read these). Overridable by the book's own @page CSS. `page_size`
+ * is a CSS `@page size` token (e.g. 'A4', 'A5', 'letter', 'legal').
+ */
+export interface PrintSettings {
+  page_size: string;
+  margin: 'narrow' | 'normal' | 'wide';
+  page_numbers: boolean;
+}
+
 export interface EPUBSettings {
   text_transform: string;
   dom_transforms: string[];
@@ -40,6 +51,7 @@ export interface EPUBSettings {
     text_color: string;
     font_family: string;
   };
+  print?: PrintSettings;
 }
 
 export interface SettingsValidation {
@@ -331,6 +343,13 @@ export class SettingsService {
               background_color: settings.cover.background_color ?? '#ffffff',
               text_color: settings.cover.text_color ?? '#000000',
               font_family: settings.cover.font_family ?? 'serif',
+            }
+          : undefined,
+        print: settings.print
+          ? {
+              page_size: settings.print.page_size ?? 'A4',
+              margin: settings.print.margin ?? 'normal',
+              page_numbers: settings.print.page_numbers ?? true,
             }
           : undefined,
       };

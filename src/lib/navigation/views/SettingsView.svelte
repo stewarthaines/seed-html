@@ -3,6 +3,7 @@
     SettingsService,
     WorkspaceSettings,
     EPUBSettings,
+    PrintSettings,
     TransformOption,
   } from '../../services/settings/settings.service.js';
   import type { ExtensionInfo } from '../../extensions/types.js';
@@ -273,6 +274,43 @@
         ...epubSettings,
         filename_template: epubSettings.filename_template,
       };
+    }
+  }
+
+  // --- Print settings ----------------------------------------------------------
+  // Minimal page geometry exposed to novices (drives the PDF export + print
+  // preview; still overridable by the book's own @page CSS). HTTP-only, like the
+  // Paged.js pipeline it feeds.
+  const isHttp = typeof location !== 'undefined' && location.protocol !== 'file:';
+  const DEFAULT_PRINT: PrintSettings = { page_size: 'A4', margin: 'normal', page_numbers: true };
+  // Human-readable label → CSS `@page size` token. Limited to sizes that are also
+  // in Firefox's built-in "Save to PDF" paper list (it ignores @page size and only
+  // offers a fixed set), so the chosen size is selectable there too. Notably that
+  // list's A-series stops at A5 — A6 isn't offered in Firefox, so it's excluded.
+  const PAGE_SIZE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+    { value: 'A4', label: 'A4' },
+    { value: 'A5', label: 'A5' },
+    { value: 'B5', label: 'B5' },
+    { value: 'letter', label: 'US Letter' },
+    { value: 'legal', label: 'US Legal' },
+  ];
+
+  // Persist a print-settings change (optimistic save + revert). Resolves defaults
+  // so a partial change always writes a fully-populated print object.
+  async function updatePrint(partial: Partial<PrintSettings>): Promise<void> {
+    if (!workspaceId || !epubSettings) return;
+    const previous = epubSettings.print;
+    const updatedSettings: EPUBSettings = {
+      ...epubSettings,
+      print: { ...DEFAULT_PRINT, ...epubSettings.print, ...partial },
+    };
+    epubSettings = updatedSettings;
+    try {
+      await settingsService.saveEPUBSettings(workspaceId, updatedSettings);
+      onSettingsChanged?.();
+    } catch (err) {
+      error = err instanceof Error ? err.message : $t('Failed to save EPUB settings');
+      epubSettings = { ...epubSettings, print: previous };
     }
   }
 
@@ -635,6 +673,74 @@
           </PaneHeader>
           <div class="settings-pane-body">
             {#if canEditSettings}
+              <!-- Print settings: minimal page geometry for the PDF export / print
+                   preview. HTTP-only (gated on the Paged.js pipeline's availability)
+                   and shown to all users (not just advanced). -->
+              {#if isHttp && canEditEPUBSettings}
+                <section class="print-settings">
+                  <h3>{$t('Print')}</h3>
+
+                  <div class="setting-group">
+                    <label for="print-page-size" class="setting-label-text">
+                      {$t('Page size')}
+                    </label>
+                    <select
+                      id="print-page-size"
+                      class="setting-select"
+                      value={epubSettings?.print?.page_size ?? DEFAULT_PRINT.page_size}
+                      onchange={e => updatePrint({ page_size: (e.currentTarget as HTMLSelectElement).value })}
+                      disabled={epubLoading}
+                    >
+                      {#each PAGE_SIZE_OPTIONS as opt (opt.value)}
+                        <option value={opt.value}>{opt.label}</option>
+                      {/each}
+                    </select>
+                    <p class="setting-description">
+                      {$t('Paper size for the exported PDF. Your stylesheet can override this.')}
+                    </p>
+                  </div>
+
+                  <div class="setting-group">
+                    <label for="print-margin" class="setting-label-text">
+                      {$t('Margin')}
+                    </label>
+                    <select
+                      id="print-margin"
+                      class="setting-select"
+                      value={epubSettings?.print?.margin ?? DEFAULT_PRINT.margin}
+                      onchange={e =>
+                        updatePrint({
+                          margin: (e.currentTarget as HTMLSelectElement).value as PrintSettings['margin'],
+                        })}
+                      disabled={epubLoading}
+                    >
+                      <option value="narrow">{$t('Narrow')}</option>
+                      <option value="normal">{$t('Normal')}</option>
+                      <option value="wide">{$t('Wide')}</option>
+                    </select>
+                    <p class="setting-description">
+                      {$t('Page margins for the exported PDF.')}
+                    </p>
+                  </div>
+
+                  <div class="setting-group">
+                    <label class="setting-label">
+                      <input
+                        type="checkbox"
+                        checked={epubSettings?.print?.page_numbers ?? DEFAULT_PRINT.page_numbers}
+                        onchange={e =>
+                          updatePrint({ page_numbers: (e.currentTarget as HTMLInputElement).checked })}
+                        disabled={epubLoading}
+                      />
+                      <span class="setting-text">{$t('Include page numbers')}</span>
+                    </label>
+                    <p class="setting-description">
+                      {$t('Show a page number at the bottom of each page.')}
+                    </p>
+                  </div>
+                </section>
+              {/if}
+
               <section class="workspace-settings">
                 <h3>{$t('Editor')}</h3>
 
@@ -650,7 +756,7 @@
                   </label>
                   <p class="setting-description">
                     {$t(
-                      'Enable advanced editing features and additional controls for power users.'
+                      'Enable advanced editing features and additional controls for expert users.'
                     )}
                   </p>
                 </div>

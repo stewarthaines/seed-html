@@ -17,6 +17,7 @@ import type {
   WorkspaceService,
   WorkspaceState,
 } from '../services/workspace/workspace.service.js';
+import type { PrintSettings } from '../services/settings/settings.service.js';
 import printCss from '../../assets/universal/print.css?raw';
 
 function xmlEscape(s: string): string {
@@ -25,6 +26,42 @@ function xmlEscape(s: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+/** Margin preset → uniform page margin in millimetres. */
+const MARGIN_MM: Record<PrintSettings['margin'], number> = {
+  narrow: 12,
+  normal: 18,
+  wide: 25,
+};
+
+/**
+ * Build the document's single `@page` rule from the project's minimal print
+ * settings. This is the ONLY author `@page` rule (print.css no longer declares
+ * one) — Paged.js derives the printed paper size from the first author `@page`
+ * with a `size`, so having exactly one keeps Chrome's "Save as PDF" paper size in
+ * sync with the paginated page boxes. Without this, two competing `@page` rules
+ * left the screen at the chosen size while Chrome printed onto its default paper.
+ * It stays overridable by the book's own CSS (linked after this). Undefined
+ * settings resolve to the previous defaults (A4 / 18mm / page numbers on).
+ */
+function printPageCss(print: PrintSettings | undefined): string {
+  const size = print?.page_size || 'A4';
+  const mm = MARGIN_MM[print?.margin ?? 'normal'] ?? MARGIN_MM.normal;
+  const pageNumbers = print ? print.page_numbers !== false : true;
+  const bottomCenter = pageNumbers
+    ? `
+  @bottom-center {
+    content: counter(page);
+    font-family: system-ui, sans-serif;
+    font-size: 9pt;
+    color: #555;
+  }`
+    : '';
+  return `@page {
+  size: ${size};
+  margin: ${mm}mm;${bottomCenter}
+}`;
 }
 
 /**
@@ -79,9 +116,15 @@ export function chapterToSection(
  */
 export function buildPagedDocument(
   sections: string[],
-  opts: { title?: string; doneMessage?: string; stylesheetHrefs?: string[]; lang?: string } = {}
+  opts: {
+    title?: string;
+    doneMessage?: string;
+    stylesheetHrefs?: string[];
+    lang?: string;
+    print?: PrintSettings;
+  } = {}
 ): string {
-  const { title = 'Book', doneMessage = 'pdf-paged', stylesheetHrefs = [], lang } = opts;
+  const { title = 'Book', doneMessage = 'pdf-paged', stylesheetHrefs = [], lang, print } = opts;
   const links = stylesheetHrefs
     .map(href => `<link rel="stylesheet" href="${href}" />`)
     .join('\n');
@@ -110,7 +153,10 @@ export function buildPagedDocument(
 <head>
 <meta charset="utf-8" />
 <title>${xmlEscape(title)}</title>
-<style>${printCss}</style>
+<style>
+${printPageCss(print)}
+${printCss}
+</style>
 ${links}
 </head>
 <body>
@@ -126,7 +172,8 @@ ${inject}</body>
 export async function exportPdf(
   workspace: WorkspaceState,
   fileStorage: FileStorageAPI,
-  workspaceService: WorkspaceService
+  workspaceService: WorkspaceService,
+  print?: PrintSettings
 ): Promise<void> {
   const chapters = await workspaceService.loadAllLinearChapterContents(workspace);
   if (chapters.length === 0) throw new Error('No chapters to export.');
@@ -154,6 +201,7 @@ export async function exportPdf(
     title: docTitle,
     stylesheetHrefs: [...stylesheetHrefs],
     lang: meta.language?.[0],
+    print,
   });
 
   // Resolve OPFS-relative assets (images, stylesheets, fonts) to blob URLs so

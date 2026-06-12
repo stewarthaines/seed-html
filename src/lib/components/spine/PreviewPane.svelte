@@ -25,6 +25,7 @@
   } from '$lib/plugins/validation-report';
   import { snippetAroundClick } from './preview-click.js';
   import { buildPagedDocument, chapterToSection } from '$lib/pdf/pdf-export.js';
+  import type { PrintSettings } from '$lib/services/settings/settings.service.js';
   import { ArrowsClockwise } from 'phosphor-svelte';
 
   // Props using Svelte 5 runes syntax
@@ -37,6 +38,7 @@
     onNavigate = undefined,
     onPreviewClick = null,
     chapterId = null,
+    printSettings = undefined,
   }: {
     xhtmlContent?: string;
     isTransforming?: boolean;
@@ -49,6 +51,8 @@
       | null;
     /** Selected spine-item id, used to filter the validation report to this chapter. */
     chapterId?: string | null;
+    /** Project print settings, applied to the Paged.js print preview's @page. */
+    printSettings?: PrintSettings;
   } = $props();
 
   /** Format the transform's execution time for the status indicator. */
@@ -595,6 +599,7 @@
       doneMessage: PAGED_DONE,
       stylesheetHrefs: wrapped.hrefs,
       lang: wrapped.lang ?? undefined,
+      print: printSettings,
     });
 
     const iframeDoc = previewIframe.contentDocument;

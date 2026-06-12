@@ -684,7 +684,7 @@
     if (!currentWorkspaceState || pdfGenerating) return;
     pdfGenerating = true;
     try {
-      await exportPdf(currentWorkspaceState, fileStorage, workspaceService);
+      await exportPdf(currentWorkspaceState, fileStorage, workspaceService, appState?.epubSettings?.print);
     } catch (error) {
       console.error('PDF export failed:', error);
       if (appState) {
@@ -1055,9 +1055,11 @@
             enabledPluginIds = appState?.getSettingsService().getEnabledPlugins() ?? [];
           }}
           onSettingsChanged={() => {
-            // Reload workspace settings in AppState after they're changed in SettingsView
+            // Reload workspace + EPUB settings in AppState after they're changed in
+            // SettingsView, so the print preview and PDF export see new print settings.
             if (appState?.currentWorkspaceId) {
               appState.loadWorkspaceSettings(appState.currentWorkspaceId);
+              appState.loadEPUBSettings(appState.currentWorkspaceId);
             }
           }}
         />
@@ -1114,6 +1116,7 @@
             onPreviewClick={handlePreviewClick}
             onNavigate={handleNavigationClick}
             chapterId={spinePreviewData.spineItemId}
+            printSettings={appState?.epubSettings?.print}
           />
         {:else}
           <div class="placeholder-content">

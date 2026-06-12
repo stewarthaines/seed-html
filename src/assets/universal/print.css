@@ -1,20 +1,11 @@
 /*
   Print / PDF stylesheet — layered on top of the book's own stylesheet when
-  exporting to PDF via Paged.js. Defines the page box (CSS Paged Media) and
-  pagination rules; the browser's "Save as PDF" renders it.
+  exporting to PDF via Paged.js. Holds the pagination/flow rules only; the single
+  `@page` rule (page size, margin, page numbers) is generated from the project's
+  print settings in pdf-export.ts (printPageCss). Paged.js derives the printed
+  paper size from the first author `@page` with a `size`, so declaring one here
+  too would override the settings and make Chrome print the wrong paper size.
 */
-
-@page {
-  size: A4;
-  margin: 18mm 16mm;
-
-  @bottom-center {
-    content: counter(page);
-    font-family: system-ui, sans-serif;
-    font-size: 9pt;
-    color: #555;
-  }
-}
 
 /* Each chapter starts on a fresh page (the first one doesn't force a blank). */
 section.pdf-chapter {
