@@ -24,7 +24,7 @@
     VALIDATION_REPORT_STORAGE_KEY,
   } from '$lib/plugins/validation-report';
   import { snippetAroundClick } from './preview-click.js';
-  import { buildPagedDocument, chapterToSection } from '$lib/pdf/pdf-export.js';
+  import { buildPagedDocument, chapterToSection, MARGIN_MM } from '$lib/pdf/pdf-export.js';
   import type { PrintSettings } from '$lib/services/settings/settings.service.js';
   import { ArrowsClockwise } from 'phosphor-svelte';
 
@@ -386,6 +386,24 @@
     }
 
     return groups;
+  });
+
+  // Page-size CSS token → short dropdown label.
+  const PAGE_SIZE_LABELS: Record<string, string> = {
+    A4: 'A4',
+    A5: 'A5',
+    A6: 'A6',
+    B5: 'B5',
+    letter: 'Letter',
+    legal: 'Legal',
+  };
+  // The Print option shows the current page size + margin (e.g. "A4 18mm") rather
+  // than a redundant "Print" under the "Print" group heading.
+  const printDeviceLabel = $derived.by(() => {
+    const size = printSettings?.page_size ?? 'A4';
+    const sizeLabel = PAGE_SIZE_LABELS[size] ?? size;
+    const mm = MARGIN_MM[printSettings?.margin ?? 'normal'] ?? MARGIN_MM.normal;
+    return `${sizeLabel} ${mm}mm`;
   });
 
   // Update iframe content when the XHTML or the selected device changes. Reading
@@ -1130,7 +1148,7 @@
             {#each devices as device}
               <option value={device.id}>
                 {device.icon}
-                {getDeviceLabel(device)}
+                {device.id === 'print' ? printDeviceLabel : getDeviceLabel(device)}
               </option>
             {/each}
           </optgroup>

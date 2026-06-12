@@ -29,7 +29,7 @@ function xmlEscape(s: string): string {
 }
 
 /** Margin preset → uniform page margin in millimetres. */
-const MARGIN_MM: Record<PrintSettings['margin'], number> = {
+export const MARGIN_MM: Record<PrintSettings['margin'], number> = {
   narrow: 12,
   normal: 18,
   wide: 25,
