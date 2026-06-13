@@ -9,11 +9,29 @@
 import type { TransformResult, TransformScripts, TransformError } from '../types/spine-editor.js';
 import type { BlobURLManager } from '../blob-url/blob-url-manager.js';
 import type { ExtensionManager } from '../extensions/extension-manager.js';
+import type { ManifestItem } from '../epub/opf-utils.js';
 import { FileStorageAPI } from '../storage/index.js';
+import {
+  resolveManifestStoragePath,
+  manifestMediaType,
+  resolveSourceReadPath,
+  resolveSourceWritePath,
+} from '../transform/transform-broker.js';
 
 // Import iframe assets as raw text for blob URL creation
 import editorCss from '../../assets/iframe/editor.css?raw';
 import editorJs from '../../assets/iframe/editor.js?raw';
+
+/**
+ * Context the parent uses to broker file access for transform scripts. Built per
+ * transform run from the active workspace; the parent never trusts the iframe to
+ * name a workspace, so broker requests resolve against THIS object only.
+ */
+export interface TransformBrokerContext {
+  workspaceId: string;
+  basePath: string;
+  manifest: ManifestItem[];
+}
 
 export class TransformEngine {
   private iframe: HTMLIFrameElement | null = null;
@@ -27,6 +45,9 @@ export class TransformEngine {
     }
   >();
   private blobURLManager: BlobURLManager;
+  // File-access context for the current transform run. Broker requests from the
+  // iframe are scoped against this; null means file access is unavailable.
+  private brokerContext: TransformBrokerContext | null = null;
 
   constructor(
     blobURLManager: BlobURLManager,
@@ -62,18 +83,41 @@ export class TransformEngine {
   }
 
   /**
-   * Execute transform on plain text
+   * Execute transform on plain text.
+   *
+   * `brokerContext` (when provided) enables the script-facing file-access API:
+   * the manifest + base path are forwarded to the iframe for the `ctx` object,
+   * and retained here so BROKER_REQUEST I/O is scoped to that workspace.
    */
   async executeTransform(
     plainText: string,
     timeout = 3000,
-    idref?: string
+    idref?: string,
+    brokerContext?: TransformBrokerContext
   ): Promise<TransformResult> {
     if (!this.iframe) {
       throw new Error('Transform engine not initialized');
     }
 
-    return await this.sendMessage('EXECUTE_TRANSFORM', { plainText, timeout, idref });
+    this.brokerContext = brokerContext ?? null;
+    // The script-facing half of ctx (data only; the iframe attaches the async
+    // capability methods). Sending the manifest lets scripts enumerate items.
+    const transformCtx = brokerContext
+      ? { idref, basePath: brokerContext.basePath, manifest: brokerContext.manifest }
+      : { idref, basePath: '', manifest: [] as ManifestItem[] };
+
+    // The transform may now await brokered file I/O, so the message round-trip can
+    // outlast the default 5s — give it the transform timeout plus headroom.
+    const messageTimeout = Math.max(5000, timeout + 5000);
+    try {
+      return await this.sendMessage(
+        'EXECUTE_TRANSFORM',
+        { plainText, timeout, idref, transformCtx },
+        messageTimeout
+      );
+    } finally {
+      this.brokerContext = null;
+    }
   }
 
   /**
@@ -257,14 +301,14 @@ ${editorJs}
   /**
    * Send message to iframe and wait for response
    */
-  private async sendMessage(type: string, payload: any): Promise<any> {
+  private async sendMessage(type: string, payload: any, timeoutMs = 5000): Promise<any> {
     const id = ++this.messageId;
 
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
         this.pendingMessages.delete(id);
         reject(new Error(`Message timeout: ${type}`));
-      }, 5000); // 5 second timeout
+      }, timeoutMs);
 
       this.pendingMessages.set(id, {
         resolve: (result: any) => {
@@ -307,6 +351,11 @@ ${editorJs}
 
     const { type, messageId, payload } = event.data;
 
+    if (type === 'BROKER_REQUEST') {
+      void this.handleBrokerRequest(event.data);
+      return;
+    }
+
     if (type === 'TRANSFORM_RESULT' && messageId) {
       const pending = this.pendingMessages.get(messageId);
       if (pending) {
@@ -332,6 +381,80 @@ ${editorJs}
       // Log global errors from iframe but don't reject pending messages
       console.error(`Transform engine ${type.toLowerCase()}:`, payload);
     }
+  }
+
+  /**
+   * Serve a file-access request from a transform script (the brokered capability
+   * API). All I/O goes through the path-based FileStorageAPI and is scoped by
+   * `transform-broker` helpers; the request's claimed workspace is ignored — only
+   * `this.brokerContext` (set by executeTransform) is trusted.
+   */
+  private async handleBrokerRequest(message: {
+    requestId?: number;
+    op?: string;
+    args?: { href?: string; path?: string; text?: string };
+  }): Promise<void> {
+    const { requestId, op, args = {} } = message;
+    const respond = (ok: boolean, result?: unknown, error?: string) => {
+      this.iframe?.contentWindow?.postMessage(
+        { type: 'BROKER_RESPONSE', requestId, ok, result, error },
+        '*'
+      );
+    };
+
+    const ctx = this.brokerContext;
+    if (!ctx) {
+      respond(false, undefined, 'File access is unavailable for this transform');
+      return;
+    }
+
+    try {
+      const fileStorage = FileStorageAPI.getInstance();
+
+      switch (op) {
+        case 'readManifestText': {
+          const path = resolveManifestStoragePath(ctx.manifest, ctx.basePath, args.href ?? '');
+          if (!path) throw new Error(`Not a manifest item: ${args.href}`);
+          respond(true, await fileStorage.readTextFile(ctx.workspaceId, path));
+          return;
+        }
+        case 'readManifestDataURL': {
+          const path = resolveManifestStoragePath(ctx.manifest, ctx.basePath, args.href ?? '');
+          if (!path) throw new Error(`Not a manifest item: ${args.href}`);
+          const bytes = await fileStorage.readFile(ctx.workspaceId, path);
+          const mime = manifestMediaType(ctx.manifest, args.href ?? '');
+          respond(true, await this.bytesToDataURL(bytes, mime));
+          return;
+        }
+        case 'readSourceText': {
+          const path = resolveSourceReadPath(args.path ?? '');
+          if (!path) throw new Error(`Invalid SOURCE path: ${args.path}`);
+          respond(true, await fileStorage.readTextFile(ctx.workspaceId, path));
+          return;
+        }
+        case 'writeSourceText': {
+          const path = resolveSourceWritePath(args.path ?? '');
+          if (!path) throw new Error(`Writes are limited to SOURCE/data/: ${args.path}`);
+          await fileStorage.writeTextFile(ctx.workspaceId, path, args.text ?? '');
+          respond(true, path);
+          return;
+        }
+        default:
+          throw new Error(`Unknown broker op: ${op}`);
+      }
+    } catch (error) {
+      respond(false, undefined, error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  /** Encode bytes as a data: URL (parent context has FileReader; the sandbox doesn't). */
+  private bytesToDataURL(bytes: ArrayBuffer, mime: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error ?? new Error('Failed to encode data URL'));
+      reader.readAsDataURL(new Blob([bytes], { type: mime || 'application/octet-stream' }));
+    });
   }
 
   /**

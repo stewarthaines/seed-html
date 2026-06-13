@@ -10,7 +10,7 @@ import type { FileStorageAPI } from '../storage/index.js';
 import type { ExtensionManager } from '../extensions/extension-manager.js';
 import type { SettingsService } from '../services/settings/settings.service.js';
 import type { BlobURLManager } from '../blob-url/blob-url-manager.js';
-import type { TransformEngine } from '../infrastructure/transform-engine.js';
+import type { TransformEngine, TransformBrokerContext } from '../infrastructure/transform-engine.js';
 import type { TransformResult, TransformScripts } from '../types/spine-editor.js';
 import { resolveTransformPath } from '../settings/dom-transforms.js';
 
@@ -35,15 +35,20 @@ export class SpineTransformPipeline {
   async executeTransform(
     plainText: string,
     timeout = 3000,
-    idref?: string
+    idref?: string,
+    brokerContext?: Omit<TransformBrokerContext, 'workspaceId'>
   ): Promise<TransformResult> {
     try {
       // Load and set transform scripts in engine
       const scripts = await this.loadTransformScripts();
       await this.transformEngine.setTransformScripts(scripts);
 
-      // Execute the transform using the engine
-      return await this.transformEngine.executeTransform(plainText, timeout, idref);
+      // Execute the transform using the engine, supplying the workspace-scoped
+      // file-access context (if the caller provided manifest/basePath).
+      const context: TransformBrokerContext | undefined = brokerContext
+        ? { workspaceId: this.workspaceId, ...brokerContext }
+        : undefined;
+      return await this.transformEngine.executeTransform(plainText, timeout, idref, context);
     } catch (error) {
       return {
         success: false,

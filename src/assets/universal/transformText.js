@@ -2,9 +2,13 @@
  * Convert simple text to well-formed XHTML
  * @param {string} text - plain text
  * @param {string|undefined} idref - Spine item idref for context-aware transforms
- * @returns {string} Valid XHTML output
+ * @param {object} [ctx] - File-access context. May be omitted; when present:
+ *   ctx.manifest, ctx.basePath, ctx.idref, and async methods
+ *   readManifestText(href), readManifestDataURL(href), readSourceText(path),
+ *   writeSourceText(path, text). A transform that uses these must be async.
+ * @returns {string|Promise<string>} Valid XHTML output
  */
-function transformText(text, idref) {
+function transformText(text, idref, ctx) {
   // Split content into blocks (separated by double newlines)
   const blocks = text.split(/\n\s*\n/).filter(block => block.trim());
   const htmlBlocks = [];

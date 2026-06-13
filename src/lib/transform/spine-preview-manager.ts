@@ -189,11 +189,27 @@ export class SpinePreviewManager {
         await this.autoSaveChangedContent();
       }
 
-      // Step 2: Execute transform pipeline
+      // Step 2: Execute transform pipeline. Supply the workspace's manifest +
+      // base path so transform scripts get the brokered file-access ctx (read
+      // manifest items, read/write SOURCE/data/). loadWorkspace is cached, so this
+      // doesn't add a real fetch to the per-keystroke render path.
+      let brokerContext: { basePath: string; manifest: ManifestItem[] } | undefined;
+      try {
+        const workspace = await this.workspaceService.loadWorkspace(this.workspaceId);
+        brokerContext = {
+          basePath: workspace.pathInfo.basePath,
+          manifest: workspace.opf.manifest,
+        };
+      } catch {
+        // Without workspace context, transforms still run — just without ctx file access.
+        brokerContext = undefined;
+      }
+
       const transformResult = await this.transformPipeline.executeTransform(
         this.currentContent.text,
         this.config.transformTimeout,
-        this.spineItemId
+        this.spineItemId,
+        brokerContext
       );
 
       if (!transformResult.success) {

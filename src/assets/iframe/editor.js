@@ -19,6 +19,10 @@ class TransformExecutionEngine {
     this.debugMode = false;
     this.messageHandlers = new Map();
 
+    // Brokered file-access requests awaiting a BROKER_RESPONSE from the parent.
+    this.brokerPending = new Map();
+    this.brokerRequestId = 0;
+
     this.init();
   }
 
@@ -95,6 +99,12 @@ class TransformExecutionEngine {
 
     if (this.debugMode) {
       this.debugLog(`Received message: ${type}`, payload);
+    }
+
+    // Response to a file-access request this iframe sent to the parent.
+    if (type === 'BROKER_RESPONSE') {
+      this.resolveBrokerResponse(message);
+      return;
     }
 
     try {
@@ -246,10 +256,62 @@ class TransformExecutionEngine {
   }
 
   /**
+   * Send a file-access request to the parent and await its BROKER_RESPONSE. The
+   * parent performs (and scopes) the actual I/O; this just bridges the sandbox.
+   */
+  callBroker(op, args) {
+    return new Promise((resolve, reject) => {
+      const requestId = ++this.brokerRequestId;
+      this.brokerPending.set(requestId, { resolve, reject });
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'BROKER_REQUEST', requestId, op, args }, '*');
+      } else {
+        this.brokerPending.delete(requestId);
+        reject(new Error('File access is unavailable (no parent window)'));
+      }
+    });
+  }
+
+  /** Resolve/reject the promise for a returning BROKER_RESPONSE. */
+  resolveBrokerResponse(message) {
+    const pending = this.brokerPending.get(message.requestId);
+    if (!pending) return;
+    this.brokerPending.delete(message.requestId);
+    if (message.ok) {
+      pending.resolve(message.result);
+    } else {
+      pending.reject(new Error(message.error || 'File access failed'));
+    }
+  }
+
+  /**
+   * Build the `ctx` object passed as the third argument to transform functions.
+   * Data fields (idref, basePath, manifest) come from the parent; the methods are
+   * async capabilities brokered through the parent (see callBroker).
+   */
+  createTransformContext(transformCtx) {
+    const data = transformCtx || {};
+    return {
+      idref: data.idref,
+      basePath: data.basePath || '',
+      manifest: Array.isArray(data.manifest) ? data.manifest : [],
+      // Read a manifest item (declared in the OPF) as decoded UTF-8 text.
+      readManifestText: href => this.callBroker('readManifestText', { href }),
+      // Read a manifest item as a data: URL (for binary assets like images).
+      readManifestDataURL: href => this.callBroker('readManifestDataURL', { href }),
+      // Read a file from the project's SOURCE/ tree as text.
+      readSourceText: path => this.callBroker('readSourceText', { path }),
+      // Persist text under SOURCE/data/ (the only writable area).
+      writeSourceText: (path, text) => this.callBroker('writeSourceText', { path, text }),
+    };
+  }
+
+  /**
    * Execute the complete transform pipeline
    */
   async executeTransform(request, messageId) {
-    const { plainText, timeout = 3000, idref } = request;
+    const { plainText, timeout = 3000, idref, transformCtx } = request;
+    const ctx = this.createTransformContext(transformCtx);
     const startTime = performance.now();
 
     try {
@@ -267,7 +329,7 @@ class TransformExecutionEngine {
       // Step 1: Execute text transform
       let html = plainText;
       if (this.textTransformScript.trim()) {
-        html = await this.executeTextTransformWithTimeout(plainText, timeout, idref);
+        html = await this.executeTextTransformWithTimeout(plainText, timeout, idref, ctx);
 
         if (this.debugMode) {
           this.debugLog('Text transform completed', {
@@ -279,7 +341,7 @@ class TransformExecutionEngine {
 
       // Step 2: Execute DOM transforms in sequence
       if (this.domTransformScripts.length > 0) {
-        html = await this.executeDOMTransformsWithTimeout(html, timeout, idref);
+        html = await this.executeDOMTransformsWithTimeout(html, timeout, idref, ctx);
 
         if (this.debugMode) {
           this.debugLog('DOM transforms completed', {
@@ -326,32 +388,45 @@ class TransformExecutionEngine {
    * @param {any} timeout
    * @param {any} idref
    */
-  executeTextTransformWithTimeout(plainText, timeout, idref) {
+  executeTextTransformWithTimeout(plainText, timeout, idref, ctx) {
+    // The transform may now be async (e.g. awaiting brokered file reads), so race
+    // its promise against the timeout. A timed-out transform keeps running but its
+    // result is discarded — there's no way to abort a Promise.
     return new Promise((resolve, reject) => {
+      let settled = false;
       const timeoutId = setTimeout(() => {
+        if (settled) return;
+        settled = true;
         const error = new Error(`Text transform execution timed out after ${timeout}ms`);
         error.stage = 'text-timeout';
         reject(error);
       }, timeout);
 
-      try {
-        const result = this.executeTextTransformSync(plainText, idref);
-        clearTimeout(timeoutId);
-        resolve(result);
-      } catch (error) {
-        clearTimeout(timeoutId);
-        if (error instanceof Error) error.stage = 'text';
-        reject(this.enhanceError(error));
-      }
+      Promise.resolve()
+        .then(() => this.executeTextTransform(plainText, idref, ctx))
+        .then(result => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeoutId);
+          resolve(result);
+        })
+        .catch(error => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeoutId);
+          if (error instanceof Error && !error.stage) error.stage = 'text';
+          reject(this.enhanceError(error));
+        });
     });
   }
 
   /**
-   * Execute text transform synchronously
+   * Execute text transform (may be async when the script awaits ctx file access).
    * @param {any} plainText
    * @param {any} idref
+   * @param {any} ctx
    */
-  executeTextTransformSync(plainText, idref) {
+  async executeTextTransform(plainText, idref, ctx) {
     // No text transform loaded yet (e.g. scripts still being read on first
     // load) — pass the input through unchanged rather than throwing on a
     // missing transformText function.
@@ -379,8 +454,8 @@ class TransformExecutionEngine {
     const scriptFunction = new Function('return ' + wrappedScript)();
     const transformFunction = scriptFunction(...globalValues);
 
-    // Execute transform with input text and idref
-    const result = transformFunction(plainText, idref);
+    // Execute transform with input text, idref and the file-access ctx
+    const result = await transformFunction(plainText, idref, ctx);
 
     // Ensure result is a string
     return typeof result === 'string' ? result : String(result);
@@ -392,32 +467,44 @@ class TransformExecutionEngine {
    * @param {any} timeout
    * @param {any} idref
    */
-  executeDOMTransformsWithTimeout(html, timeout, idref) {
+  executeDOMTransformsWithTimeout(html, timeout, idref, ctx) {
+    // Async-aware race (see executeTextTransformWithTimeout for the rationale).
     return new Promise((resolve, reject) => {
+      let settled = false;
       const timeoutId = setTimeout(() => {
+        if (settled) return;
+        settled = true;
         const error = new Error(`DOM transform execution timed out after ${timeout}ms`);
         error.stage = 'dom-timeout';
         reject(error);
       }, timeout);
 
-      try {
-        const result = this.executeDOMTransformsSync(html, idref);
-        clearTimeout(timeoutId);
-        resolve(result);
-      } catch (error) {
-        clearTimeout(timeoutId);
-        if (error instanceof Error) error.stage = 'dom';
-        reject(this.enhanceError(error));
-      }
+      Promise.resolve()
+        .then(() => this.executeDOMTransforms(html, idref, ctx))
+        .then(result => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeoutId);
+          resolve(result);
+        })
+        .catch(error => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeoutId);
+          if (error instanceof Error && !error.stage) error.stage = 'dom';
+          reject(this.enhanceError(error));
+        });
     });
   }
 
   /**
-   * Execute DOM transforms synchronously with direct live DOM when layout is needed
+   * Execute DOM transforms (may be async when scripts await ctx file access),
+   * using direct live DOM when layout is needed.
    * @param {any} html
    * @param {any} idref
+   * @param {any} ctx
    */
-  executeDOMTransformsSync(html, idref) {
+  async executeDOMTransforms(html, idref, ctx) {
     // Check if any transform scripts need layout calculations
     const needsLayout = this.checkIfLayoutNeeded();
 
@@ -432,10 +519,10 @@ class TransformExecutionEngine {
 
     if (needsLayout) {
       // Use live DOM approach for layout-dependent transforms
-      return this.executeDOMTransformsWithLiveDOM(html, idref);
+      return await this.executeDOMTransformsWithLiveDOM(html, idref, ctx);
     } else {
       // Use standard parsed document approach for simple transforms
-      return this.executeDOMTransformsWithParsedDOM(html, idref);
+      return await this.executeDOMTransformsWithParsedDOM(html, idref, ctx);
     }
   }
 
@@ -450,7 +537,7 @@ class TransformExecutionEngine {
   /**
    * Execute DOM transforms using live DOM for layout calculations
    */
-  executeDOMTransformsWithLiveDOM(html, idref) {
+  async executeDOMTransformsWithLiveDOM(html, idref, ctx) {
     const tempContainer = this.createLiveDOMContainer();
 
     try {
@@ -479,7 +566,7 @@ class TransformExecutionEngine {
         try {
           // Pass the live container as a document-like object
           const mockDocument = this.createMockDocument(tempContainer);
-          this.executeSingleDOMTransform(mockDocument, this.domTransformScripts[i], i, idref);
+          await this.executeSingleDOMTransform(mockDocument, this.domTransformScripts[i], i, idref, ctx);
         } catch (error) {
           if (error instanceof Error) error.stage = `dom-transform-${i}`;
           throw error;
@@ -507,7 +594,7 @@ class TransformExecutionEngine {
   /**
    * Execute DOM transforms using parsed DOM (traditional approach)
    */
-  executeDOMTransformsWithParsedDOM(html, idref) {
+  async executeDOMTransformsWithParsedDOM(html, idref, ctx) {
     // Parse HTML to DOM document
     const parser = new DOMParser();
     let document = parser.parseFromString(
@@ -518,7 +605,13 @@ class TransformExecutionEngine {
     // Execute each DOM transform in sequence
     for (let i = 0; i < this.domTransformScripts.length; i++) {
       try {
-        document = this.executeSingleDOMTransform(document, this.domTransformScripts[i], i, idref);
+        document = await this.executeSingleDOMTransform(
+          document,
+          this.domTransformScripts[i],
+          i,
+          idref,
+          ctx
+        );
       } catch (error) {
         if (error instanceof Error) error.stage = `dom-transform-${i}`;
         throw error;
@@ -627,7 +720,7 @@ class TransformExecutionEngine {
    * @param {any} index
    * @param {any} idref
    */
-  executeSingleDOMTransform(document, script, index, idref) {
+  async executeSingleDOMTransform(document, script, index, idref, ctx) {
     // Create sandboxed execution environment
     const globals = this.createSafeExecutionEnvironment();
     const globalNames = Object.keys(globals);
@@ -648,8 +741,8 @@ class TransformExecutionEngine {
     const scriptFunction = new Function('return ' + wrappedScript)();
     const transformFunction = scriptFunction(...globalValues);
 
-    // Execute transform with document and idref
-    const result = transformFunction(document, idref);
+    // Execute transform with document, idref and the file-access ctx (may be async)
+    const result = await transformFunction(document, idref, ctx);
 
     // Ensure result is a Document, return original if not
     return result instanceof Document ? result : document;
