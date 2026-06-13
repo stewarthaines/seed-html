@@ -7,6 +7,31 @@
   too would override the settings and make Chrome print the wrong paper size.
 */
 
+/*
+  Optional cover page (PDF export only): the project's cover image as a full-bleed
+  first page. The named `@page cover` overrides ONLY the margin (to 0) and clears
+  the page number — it declares no `size`, so it inherits the base paper size and
+  doesn't reintroduce a competing `@page size` (which would break Paged.js's paper
+  size, see printPageCss in pdf-export.ts).
+*/
+@page cover {
+  margin: 0;
+
+  @bottom-center {
+    content: none;
+  }
+}
+section.pdf-cover {
+  page: cover;
+  break-after: page;
+}
+section.pdf-cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 /* Each chapter starts on a fresh page (the first one doesn't force a blank). */
 section.pdf-chapter {
   break-before: page;

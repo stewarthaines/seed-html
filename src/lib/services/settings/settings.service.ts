@@ -36,6 +36,8 @@ export interface PrintSettings {
   page_size: string;
   margin: 'narrow' | 'normal' | 'wide';
   page_numbers: boolean;
+  /** Prepend the project's cover image as a full-bleed first page of the PDF. */
+  cover_page: boolean;
 }
 
 export interface EPUBSettings {
@@ -350,6 +352,7 @@ export class SettingsService {
               page_size: settings.print.page_size ?? 'A4',
               margin: settings.print.margin ?? 'normal',
               page_numbers: settings.print.page_numbers ?? true,
+              cover_page: settings.print.cover_page ?? true,
             }
           : undefined,
       };

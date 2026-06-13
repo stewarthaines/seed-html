@@ -282,7 +282,12 @@
   // preview; still overridable by the book's own @page CSS). HTTP-only, like the
   // Paged.js pipeline it feeds.
   const isHttp = typeof location !== 'undefined' && location.protocol !== 'file:';
-  const DEFAULT_PRINT: PrintSettings = { page_size: 'A4', margin: 'normal', page_numbers: true };
+  const DEFAULT_PRINT: PrintSettings = {
+    page_size: 'A4',
+    margin: 'normal',
+    page_numbers: true,
+    cover_page: true,
+  };
   // Human-readable label → CSS `@page size` token. Limited to sizes that are also
   // in Firefox's built-in "Save to PDF" paper list (it ignores @page size and only
   // offers a fixed set), so the chosen size is selectable there too. Notably that
@@ -736,6 +741,22 @@
                     </label>
                     <p class="setting-description">
                       {$t('Show a page number at the bottom of each page.')}
+                    </p>
+                  </div>
+
+                  <div class="setting-group">
+                    <label class="setting-label">
+                      <input
+                        type="checkbox"
+                        checked={epubSettings?.print?.cover_page ?? DEFAULT_PRINT.cover_page}
+                        onchange={e =>
+                          updatePrint({ cover_page: (e.currentTarget as HTMLInputElement).checked })}
+                        disabled={epubLoading}
+                      />
+                      <span class="setting-text">{$t('Include cover page')}</span>
+                    </label>
+                    <p class="setting-description">
+                      {$t("Start the PDF with the project's cover image as a full-page cover.")}
                     </p>
                   </div>
                 </section>

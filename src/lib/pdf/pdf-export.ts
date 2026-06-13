@@ -18,6 +18,7 @@ import type {
   WorkspaceState,
 } from '../services/workspace/workspace.service.js';
 import type { PrintSettings } from '../services/settings/settings.service.js';
+import type { ManifestItem } from '../epub/opf-utils.js';
 import printCss from '../../assets/universal/print.css?raw';
 
 function xmlEscape(s: string): string {
@@ -62,6 +63,27 @@ function printPageCss(print: PrintSettings | undefined): string {
   size: ${size};
   margin: ${mm}mm;${bottomCenter}
 }`;
+}
+
+/**
+ * The OPF-relative href of the cover image to render as the PDF's full-bleed first
+ * page, or null when there's no cover to show. Returns null when the print setting
+ * has cover_page explicitly off (default is on). Prefers a vector SVG sibling of
+ * the cover-image item (generated covers persist `cover.svg` beside `cover.png`)
+ * for a crisp full-page render; falls back to the cover-image item itself (e.g. an
+ * imported raster). The href resolves to a blob URL via the same asset pass the
+ * chapters use, so no extra plumbing is needed.
+ */
+export function coverImageHref(
+  manifest: ManifestItem[],
+  print: PrintSettings | undefined
+): string | null {
+  if (print && print.cover_page === false) return null;
+  const cover = manifest.find(m => m.properties?.includes('cover-image'));
+  if (!cover) return null;
+  const svgHref = cover.href.replace(/\.[^.]+$/, '.svg');
+  const svg = manifest.find(m => m.href === svgHref && m.mediaType === 'image/svg+xml');
+  return svg ? svgHref : cover.href;
 }
 
 /**
@@ -219,6 +241,14 @@ export async function exportPdf(
     sections.push(wrapped.section);
   }
   if (sections.length === 0) throw new Error('No readable chapter content.');
+
+  // Prepend the project's cover image as a full-bleed first page (Print setting,
+  // default on). The cover's relative href is resolved to a blob URL by the same
+  // asset pass below as the chapter images.
+  const coverHref = coverImageHref(workspace.opf.manifest, print);
+  if (coverHref) {
+    sections.unshift(`<section class="pdf-cover"><img src="${xmlEscape(coverHref)}" alt="" /></section>`);
+  }
 
   // The print dialog suggests "<document title>.pdf", so name it after the book.
   const meta = workspace.opf.metadata;
