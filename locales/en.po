@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: EDITME EPUB Editor\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-10\n"
-"PO-Revision-Date: 2026-06-10\n"
+"POT-Creation-Date: 2026-06-13\n"
+"PO-Revision-Date: 2026-06-13\n"
 "Language: en\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -255,6 +255,12 @@ msgstr ""
 msgid "Additional Information"
 msgstr ""
 
+#: src/lib/navigation/views/ThirdPartyView.svelte
+msgid ""
+"Additional libraries used when the editor runs online — the publish plugin "
+"and online-only features."
+msgstr ""
+
 #: src/lib/components/metadata/TitleEditor.svelte
 msgid "Additional title"
 msgstr ""
@@ -326,6 +332,10 @@ msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Available Extensions"
+msgstr ""
+
+#: src/lib/navigation/views/ThirdPartyView.svelte
+msgid "Available when running online"
 msgstr ""
 
 #: src/lib/components/metadata/MetadataEditor.svelte
@@ -522,11 +532,20 @@ msgid "Could not load the feed."
 msgstr ""
 
 #: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/PublishView.svelte
 msgid "Cover"
+msgstr ""
+
+#: src/lib/components/HueSelector.svelte
+msgid "Cover background hue"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "Cover image"
+msgstr ""
+
+#: src/lib/components/metadata/SimpleMetadataView.svelte
+msgid "Cover text style"
 msgstr ""
 
 #: src/lib/components/metadata/AdvancedFields.svelte
@@ -588,6 +607,10 @@ msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Dark"
+msgstr ""
+
+#: src/lib/components/metadata/SimpleMetadataView.svelte
+msgid "Dark text on a light cover"
 msgstr ""
 
 #: src/lib/components/metadata/BasicInfoFields.svelte
@@ -706,7 +729,7 @@ msgid "Editor"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid "Enable advanced editing features and additional controls for power users."
+msgid "Enable advanced editing features and additional controls for expert users."
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
@@ -751,6 +774,10 @@ msgstr ""
 
 #: src/lib/components/metadata/TitleEditor.svelte
 msgid "Enter title"
+msgstr ""
+
+#: src/App.svelte
+msgid "EPUB"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestPreview.svelte
@@ -1008,6 +1035,18 @@ msgstr ""
 msgid "Importing…"
 msgstr ""
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Include cover page"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
+msgid "Include in catalog"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Include page numbers"
+msgstr ""
+
 #: src/lib/navigation/views/SpineView.svelte
 msgid "Initializing editor..."
 msgstr ""
@@ -1060,6 +1099,7 @@ msgstr ""
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 #: src/lib/navigation/views/SettingsView.svelte
+#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Language"
 msgstr ""
 
@@ -1089,11 +1129,16 @@ msgid "Libraries"
 msgstr ""
 
 #: src/lib/components/extensions/ExtensionItem.svelte
+#: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "License"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Light"
+msgstr ""
+
+#: src/lib/components/metadata/SimpleMetadataView.svelte
+msgid "Light text on a dark cover"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestTable.svelte
@@ -1140,6 +1185,7 @@ msgstr ""
 msgid "Loading spine items…"
 msgstr ""
 
+#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Loading…"
@@ -1164,6 +1210,10 @@ msgstr ""
 #: src/App.svelte
 #: src/lib/Sidebar.svelte
 msgid "Manifest"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Margin"
 msgstr ""
 
 #: src/App.svelte
@@ -1209,6 +1259,10 @@ msgstr ""
 
 #: src/lib/components/metadata/AccessibilityFields.svelte
 msgid "Name of the certifying party"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Narrow"
 msgstr ""
 
 #: src/App.svelte
@@ -1298,6 +1352,10 @@ msgstr ""
 msgid "None"
 msgstr ""
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Normal"
+msgstr ""
+
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Not created in the Simple EPUB Editor — viewable but not editable."
 msgstr ""
@@ -1354,8 +1412,16 @@ msgstr ""
 msgid "Packaged Filename"
 msgstr ""
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Page margins for the exported PDF."
+msgstr ""
+
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Page Progression"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Page size"
 msgstr ""
 
 #: src/lib/Sidebar.svelte
@@ -1366,12 +1432,24 @@ msgstr ""
 msgid "Paginated"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Paginating…"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Paper size for the exported PDF. Your stylesheet can override this."
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Password"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestTable.svelte
 msgid "Path"
+msgstr ""
+
+#: src/App.svelte
+msgid "PDF"
 msgstr ""
 
 #: src/lib/components/workspace/CreateProjectDialog.svelte
@@ -1411,6 +1489,10 @@ msgstr ""
 msgid "Pre-paginated"
 msgstr ""
 
+#: src/App.svelte
+msgid "Preparing…"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Preset"
 msgstr ""
@@ -1423,8 +1505,18 @@ msgstr ""
 msgid "Preview Error"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Preview out of date"
+msgstr ""
+
 #: src/App.svelte
 msgid "Preview Pane"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/navigation/views/SettingsView.svelte
+#. The paginated print-page preview option
+msgid "Print"
 msgstr ""
 
 #: src/lib/components/workspace/WorkspaceItem.svelte
@@ -1462,6 +1554,10 @@ msgstr ""
 msgid "Publish"
 msgstr ""
 
+#: src/lib/navigation/views/WorkspaceView.svelte
+msgid "Published"
+msgstr ""
+
 #: src/lib/components/metadata/AdvancedFields.svelte
 msgid "Publisher"
 msgstr ""
@@ -1489,6 +1585,7 @@ msgid "Reflowable"
 msgstr ""
 
 #: src/lib/components/SpineSidebar.svelte
+#: src/lib/components/spine/PreviewPane.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Refresh"
 msgstr ""
@@ -1664,6 +1761,10 @@ msgstr ""
 msgid "Save & Connect"
 msgstr ""
 
+#: src/App.svelte
+msgid "Save the book as a PDF"
+msgstr ""
+
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 msgid "Saved feeds"
 msgstr ""
@@ -1747,6 +1848,10 @@ msgstr ""
 msgid "Short"
 msgstr ""
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Show a page number at the bottom of each page."
+msgstr ""
+
 #: src/lib/Sidebar.svelte
 msgid "Show project sections"
 msgstr ""
@@ -1793,6 +1898,10 @@ msgstr ""
 #: src/lib/components/spine/PreviewPane.svelte
 #. Device size for typical/common mobile phone or e-reader screen
 msgid "Standard"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Start the PDF with the project's cover image as a full-page cover."
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
@@ -1921,6 +2030,7 @@ msgid "Unknown View"
 msgstr ""
 
 #: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Untitled"
 msgstr ""
 
@@ -1928,8 +2038,20 @@ msgstr ""
 msgid "Update Catalog"
 msgstr ""
 
+#: src/lib/components/metadata/SimpleMetadataView.svelte
+msgid "Update cover image"
+msgstr ""
+
+#: src/lib/components/metadata/SimpleMetadataView.svelte
+msgid "Updates the cover from the current title and author."
+msgstr ""
+
 #: plugins/publish-to-remote/src/App.svelte
 msgid "Updating..."
+msgstr ""
+
+#: src/lib/components/metadata/SimpleMetadataView.svelte
+msgid "Updating…"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
@@ -2006,6 +2128,10 @@ msgstr ""
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "Welcome"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Wide"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
