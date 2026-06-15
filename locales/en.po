@@ -116,7 +116,7 @@ msgstr "This software is developed making extensive use of coding agents, specif
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.epub.editor"
-msgstr "This editor turns plain text into a valid EPUB with no servers, accounts, or installation. You write in simple, readable source; it's transformed into clean XHTML and packaged into a standards-compliant book you can open in any Reading System."
+msgstr "This editor turns plain text into a valid EPUB with no servers, accounts, or installation. You write in simple, readable source; it's packaged into a standards-compliant book you can open in any Reading System."
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.epub.format"
@@ -144,11 +144,11 @@ msgstr "License"
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.seed.graphic.alt"
-msgstr "SEED.html publishes three outputs: a PDF, a plain EPUB, and an EPUB with an embedded SEED.zip source. The PDF and plain EPUB are one-way destinations; only the EPUB with SEED.zip has a return arrow back to the app, showing it can be re-imported, edited, and republished as any of the three."
+msgstr "SEED.html publishes two outputs: an EPUB that embeds its own SEED.zip source, and a PDF. The PDF is a one-way destination; only the EPUB has a return arrow back to the app, showing it can be re-imported, edited, and republished."
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.seed.graphic.caption"
-msgstr "SEED.html exports a PDF, a plain EPUB, or an EPUB that embeds its own SEED.zip — and only that last one can be reopened, edited, and republished."
+msgstr "SEED.html exports an EPUB that embeds its own SEED.zip source, or a PDF — and only that EPUB can be reopened, edited, and republished."
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.seed.p1"
@@ -164,7 +164,7 @@ msgstr "What is different about a SEED EPUB?"
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.tagline"
-msgstr "Make ebooks anyone can read — right in your browser."
+msgstr "Make ebooks anyone can read — right now in your browser."
 
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "about.thirdparty.intro"

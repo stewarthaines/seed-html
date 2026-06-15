@@ -84,7 +84,7 @@
       <figure class="reach-figure">
         <svg
           class="reach-graphic seed-graphic"
-          viewBox="0 0 420 244"
+          viewBox="0 0 420 220"
           role="img"
           aria-label={$t('about.seed.graphic.alt')}
         >
@@ -122,45 +122,34 @@
             <line x1="100" y1="72" x2="122" y2="72" />
           </g>
 
-          <!-- Publish to the two one-way destinations (grouped at right) -->
+          <!-- EPUB round-trip: publish out (solid, horizontal), return to edit (dashed, flat parabola) -->
           <g class="g-arrows">
-            <path d="M138 58 C 210 58, 224 57, 298 57" marker-end="url(#seed-arrowhead)" />
-            <path d="M138 104 C 212 104, 224 129, 294 129" marker-end="url(#seed-arrowhead)" />
+            <path d="M136 72 L288 72" marker-end="url(#seed-arrowhead)" />
+            <path d="M288 92 C 237 108, 187 108, 136 92" marker-end="url(#seed-arrowhead)" />
           </g>
 
-          <!-- Round-trip with the editable SEED.zip EPUB: publish out, edit back -->
+          <!-- PDF: one-way destination, set a little further from the app -->
           <g class="g-arrows">
-            <path d="M96 138 C 136 150, 136 168, 100 180" marker-end="url(#seed-arrowhead)" />
             <path
               class="return"
-              d="M66 180 C 30 168, 30 150, 70 138"
+              d="M136 112 C 214 112, 250 178, 302 178"
               marker-end="url(#seed-arrowhead)"
             />
           </g>
 
-          <!-- Destination 1: PDF — a portrait page (folded corner) -->
+          <!-- Output 1: an EPUB that embeds its own SEED.zip source (the round-trip output) -->
+          <g class="g-book">
+            <rect x="288" y="55" width="76" height="50" rx="5" />
+            <line x1="300" y1="55" x2="300" y2="105" />
+            <rect class="inner" x="322" y="68" width="30" height="20" rx="3" />
+            <text x="326" y="124" class="lbl center">EPUB+SEED</text>
+          </g>
+
+          <!-- Output 2: PDF — a portrait page with a folded corner, one-way -->
           <g class="g-dest">
-            <path d="M300 30 L328 30 L340 42 L340 84 L300 84 Z" />
-            <path d="M328 30 L328 42 L340 42" />
-            <text x="350" y="61" class="lbl">PDF</text>
-          </g>
-
-          <!-- Destination 2: a plain EPUB -->
-          <g class="g-book">
-            <rect x="296" y="104" width="72" height="50" rx="5" />
-            <line x1="308" y1="104" x2="308" y2="154" />
-            <line x1="316" y1="120" x2="356" y2="120" />
-            <line x1="316" y1="134" x2="348" y2="134" />
-            <text x="378" y="132" class="lbl">EPUB</text>
-          </g>
-
-          <!-- The editable output: an EPUB embedding SEED.zip, near the app -->
-          <g class="g-book">
-            <rect x="46" y="182" width="72" height="52" rx="5" />
-            <line x1="58" y1="182" x2="58" y2="234" />
-            <rect class="inner" x="68" y="196" width="42" height="24" rx="3" />
-            <text x="89" y="212" class="lbl center zip">SEED.zip</text>
-            <text x="128" y="210" class="lbl">EPUB</text>
+            <path d="M304 148 L334 148 L346 160 L346 206 L304 206 Z" />
+            <path d="M334 148 L334 160 L346 160" />
+            <text x="356" y="181" class="lbl">PDF</text>
           </g>
         </svg>
         <figcaption class="reach-caption">{$t('about.seed.graphic.caption')}</figcaption>
@@ -267,7 +256,6 @@
     stroke-dasharray: 5 4;
   }
 
-  .seed-graphic .zip,
   .seed-graphic .small {
     font-size: 9px;
   }

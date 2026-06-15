@@ -116,7 +116,7 @@ msgstr "Diese Software wird unter intensivem Einsatz von Coding-Agenten entwicke
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.epub.editor"
-msgstr "Dieser Editor verwandelt reinen Text in ein gültiges EPUB — ohne Server, Konten oder Installation. Sie schreiben in einfacher, lesbarer Quelle; sie wird in sauberes XHTML umgewandelt und zu einem standardkonformen Buch gepackt, das Sie in jedem Lesesystem öffnen können."
+msgstr "Dieser Editor verwandelt reinen Text in ein gültiges EPUB — ohne Server, Konten oder Installation. Sie schreiben in einfacher, lesbarer Quelle; sie wird zu einem standardkonformen Buch gepackt, das Sie in jedem Lesesystem öffnen können."
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.epub.format"
@@ -144,11 +144,11 @@ msgstr "Lizenz"
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.seed.graphic.alt"
-msgstr "SEED.html erzeugt drei Ausgaben: ein PDF, ein einfaches EPUB und ein EPUB mit eingebettetem SEED.zip-Quelltext. PDF und einfaches EPUB sind einseitige Ziele; nur das EPUB mit SEED.zip hat einen Rückpfeil zur App und zeigt, dass es erneut importiert, bearbeitet und als beliebige der drei Ausgaben neu veröffentlicht werden kann."
+msgstr "SEED.html erzeugt zwei Ausgaben: ein EPUB, das seine eigene SEED.zip-Quelle einbettet, und ein PDF. Das PDF ist ein einseitiges Zielformat; nur das EPUB hat einen Rückkehrpfeil zur App und kann erneut importiert, bearbeitet und neu veröffentlicht werden."
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.seed.graphic.caption"
-msgstr "SEED.html exportiert ein PDF, ein einfaches EPUB oder ein EPUB, das seinen eigenen SEED.zip einbettet – und nur Letzteres lässt sich wieder öffnen, bearbeiten und neu veröffentlichen."
+msgstr "SEED.html exportiert ein EPUB, das seine eigene SEED.zip-Quelle einbettet, oder ein PDF – und nur dieses EPUB lässt sich erneut öffnen, bearbeiten und veröffentlichen."
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.seed.p1"

@@ -61,6 +61,7 @@ const ALLOW_EXACT = new Set([
   'OKLCH',
   'SEED.html',
   'SEED.zip',
+  'EPUB+SEED',
   'EDITME',
   'WebDAV',
   'S3',
