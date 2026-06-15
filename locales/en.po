@@ -24,6 +24,10 @@ msgstr ""
 msgid "· validated {ago}"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "{count} accessibility issues"
+msgstr ""
+
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "{count} days ago"
 msgstr ""
@@ -44,6 +48,10 @@ msgstr ""
 msgid "{done}/{total} addressed"
 msgstr ""
 
+#: plugins/publish-to-remote/src/App.svelte
+msgid "{key} deleted"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 msgid "{n} error"
 msgstr ""
@@ -61,7 +69,28 @@ msgid "{n} warning"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
+#: src/lib/components/spine/PreviewPane.svelte
 msgid "{n} warnings"
+msgstr ""
+
+#: plugins/publish-to-remote/src/App.svelte
+msgid "{name} deleted"
+msgstr ""
+
+#: plugins/publish-to-remote/src/App.svelte
+msgid "{name} uploaded successfully"
+msgstr ""
+
+#: plugins/publish-to-remote/src/App.svelte
+msgid "{name}: {errors} errors, {warnings} warnings"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ValidationModal.svelte
+msgid "{path} (line {line}, col {col})"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ValidationModal.svelte
+msgid "{path} (line {line})"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
@@ -202,6 +231,7 @@ msgid "Access modes"
 msgstr ""
 
 #: src/lib/components/metadata/MetadataEditor.svelte
+#: src/lib/components/spine/PreviewPane.svelte
 msgid "Accessibility"
 msgstr ""
 
@@ -285,6 +315,10 @@ msgstr ""
 
 #: src/lib/components/metadata/CreatorRoleEditor.svelte
 msgid "Add role"
+msgstr ""
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Add second editor pane"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -380,6 +414,10 @@ msgstr ""
 msgid "Authority (e.g. BISAC)"
 msgstr ""
 
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Authorization failed: {error}"
+msgstr ""
+
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Auto"
 msgstr ""
@@ -446,6 +484,18 @@ msgstr ""
 msgid "Catalog Filename (optional)"
 msgstr ""
 
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Catalog update error: {error}"
+msgstr ""
+
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Catalog update failed"
+msgstr ""
+
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Catalog updated: {url}"
+msgstr ""
+
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 msgid "Catalog URL"
 msgstr ""
@@ -490,6 +540,10 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 msgid "Checked:"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Checking…"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestTable.svelte
@@ -705,6 +759,11 @@ msgstr ""
 msgid "Currently open"
 msgstr ""
 
+#: src/lib/ThemeToggle.svelte
+msgid "dark"
+msgstr ""
+
+#: src/lib/ThemeToggle.svelte
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Dark"
 msgstr ""
@@ -739,6 +798,14 @@ msgstr ""
 
 #: src/lib/components/SpineItem.svelte
 msgid "Delete chapter {name}"
+msgstr ""
+
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Delete error: {error}"
+msgstr ""
+
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Delete failed"
 msgstr ""
 
 #: src/lib/components/workspace/WorkspaceItem.svelte
@@ -786,6 +853,14 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Dropbox"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Dropbox app key not configured"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Dropbox authorization failed: {error}"
 msgstr ""
 
 #: src/lib/components/workspace/DuplicateProjectDialog.svelte
@@ -1006,6 +1081,10 @@ msgstr ""
 msgid "Failed to load content preview"
 msgstr ""
 
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Failed to load EPUBs: {error}"
+msgstr ""
+
 #: src/lib/components/manifest/ManifestContainer.svelte
 msgid "Failed to load manifest"
 msgstr ""
@@ -1032,6 +1111,10 @@ msgstr ""
 
 #: src/lib/components/SpineSidebar.svelte
 msgid "Failed to rename chapter ID: {error}"
+msgstr ""
+
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Failed to save config: {error}"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -1136,8 +1219,20 @@ msgstr ""
 msgid "Google Drive authorization required."
 msgstr ""
 
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Google Drive credentials not configured"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Google Drive setup failed: {error}"
+msgstr ""
+
 #: src/lib/components/metadata/AccessibilityFields.svelte
 msgid "Hazards"
+msgstr ""
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Hide Audio Clip Editor"
 msgstr ""
 
 #: src/lib/Sidebar.svelte
@@ -1317,6 +1412,11 @@ msgstr ""
 msgid "License"
 msgstr ""
 
+#: src/lib/ThemeToggle.svelte
+msgid "light"
+msgstr ""
+
+#: src/lib/ThemeToggle.svelte
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Light"
 msgstr ""
@@ -1449,6 +1549,14 @@ msgstr ""
 msgid "Monospace"
 msgstr ""
 
+#: src/lib/components/SpineItem.svelte
+msgid "Move {id} down"
+msgstr ""
+
+#: src/lib/components/SpineItem.svelte
+msgid "Move {id} up"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Move down"
 msgstr ""
@@ -1471,6 +1579,10 @@ msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Move up"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "n/a"
 msgstr ""
 
 #: src/lib/navigation/views/PublishView.svelte
@@ -1517,6 +1629,10 @@ msgstr ""
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 msgid "No"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "No accessibility issues found"
 msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
@@ -1740,8 +1856,24 @@ msgid ""
 "source requirements."
 msgstr ""
 
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Please fill all required fields"
+msgstr ""
+
 #: src/App.svelte
 msgid "Please refresh the page to try again."
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Please select a folder"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Please select a folder and authorize first"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Please select a remote type"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -1918,6 +2050,10 @@ msgstr ""
 
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 msgid "Remove the selected feed from the list"
+msgstr ""
+
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Removed {name}"
 msgstr ""
 
 #: src/lib/components/SpineItem.svelte
@@ -2139,12 +2275,20 @@ msgstr ""
 msgid "Select This Folder"
 msgstr ""
 
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Selected folder: {name}"
+msgstr ""
+
 #: src/lib/components/metadata/CollectionsEditor.svelte
 msgid "Series"
 msgstr ""
 
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Serif"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Session expired — please reconnect"
 msgstr ""
 
 #: src/lib/components/metadata/CollectionsEditor.svelte
@@ -2168,12 +2312,28 @@ msgstr ""
 msgid "Show a page number at the bottom of each page."
 msgstr ""
 
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Show Audio Clip Editor"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Show generated source"
+msgstr ""
+
 #: src/lib/Sidebar.svelte
 msgid "Show project sections"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Show rendered preview"
+msgstr ""
+
 #: src/lib/components/workspace/WorkspaceList.svelte
 msgid "Showing {filtered} of {total} workspaces"
+msgstr ""
+
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Sign out error: {error}"
 msgstr ""
 
 #: src/lib/Sidebar.svelte
@@ -2277,6 +2437,14 @@ msgstr ""
 msgid "Summary"
 msgstr ""
 
+#: src/lib/ThemeToggle.svelte
+msgid "Switch to {mode} theme"
+msgstr ""
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Switch to single pane"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "System"
 msgstr ""
@@ -2299,6 +2467,10 @@ msgstr ""
 
 #: src/lib/components/metadata/SubjectEditor.svelte
 msgid "Term (e.g. FIC028000)"
+msgstr ""
+
+#: src/lib/navigation/views/SpineView.svelte
+msgid "Text Content"
 msgstr ""
 
 #: src/lib/components/workspace/CreateProjectDialog.svelte
@@ -2431,6 +2603,10 @@ msgstr ""
 msgid "Untitled"
 msgstr ""
 
+#: src/lib/Sidebar.svelte
+msgid "Untitled Project"
+msgstr ""
+
 #: plugins/publish-to-remote/src/App.svelte
 msgid "Update Catalog"
 msgstr ""
@@ -2453,6 +2629,18 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 msgid "Upload"
+msgstr ""
+
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Upload error: {error}"
+msgstr ""
+
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Upload failed"
+msgstr ""
+
+#: plugins/publish-to-remote/src/App.svelte
+msgid "URL copied to clipboard"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestPreview.svelte
@@ -2497,6 +2685,10 @@ msgstr ""
 
 #: src/lib/components/SpineItem.svelte
 msgid "Validation error"
+msgstr ""
+
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Validation failed: {error}"
 msgstr ""
 
 #: src/lib/components/spine/ChapterValidationPanel.svelte
