@@ -693,7 +693,8 @@
                       id="print-page-size"
                       class="setting-select"
                       value={epubSettings?.print?.page_size ?? DEFAULT_PRINT.page_size}
-                      onchange={e => updatePrint({ page_size: (e.currentTarget as HTMLSelectElement).value })}
+                      onchange={e =>
+                        updatePrint({ page_size: (e.currentTarget as HTMLSelectElement).value })}
                       disabled={epubLoading}
                     >
                       {#each PAGE_SIZE_OPTIONS as opt (opt.value)}
@@ -715,7 +716,8 @@
                       value={epubSettings?.print?.margin ?? DEFAULT_PRINT.margin}
                       onchange={e =>
                         updatePrint({
-                          margin: (e.currentTarget as HTMLSelectElement).value as PrintSettings['margin'],
+                          margin: (e.currentTarget as HTMLSelectElement)
+                            .value as PrintSettings['margin'],
                         })}
                       disabled={epubLoading}
                     >
@@ -734,7 +736,9 @@
                         type="checkbox"
                         checked={epubSettings?.print?.page_numbers ?? DEFAULT_PRINT.page_numbers}
                         onchange={e =>
-                          updatePrint({ page_numbers: (e.currentTarget as HTMLInputElement).checked })}
+                          updatePrint({
+                            page_numbers: (e.currentTarget as HTMLInputElement).checked,
+                          })}
                         disabled={epubLoading}
                       />
                       <span class="setting-text">{$t('Include page numbers')}</span>
@@ -750,7 +754,9 @@
                         type="checkbox"
                         checked={epubSettings?.print?.cover_page ?? DEFAULT_PRINT.cover_page}
                         onchange={e =>
-                          updatePrint({ cover_page: (e.currentTarget as HTMLInputElement).checked })}
+                          updatePrint({
+                            cover_page: (e.currentTarget as HTMLInputElement).checked,
+                          })}
                         disabled={epubLoading}
                       />
                       <span class="setting-text">{$t('Include cover page')}</span>
@@ -792,6 +798,7 @@
                     <label for="filename-template" class="setting-label-text">
                       {$t('Packaged Filename')}
                     </label>
+                    <!-- i18n-ignore: literal token/format pattern, not prose -->
                     <input
                       id="filename-template"
                       type="text"
@@ -802,9 +809,9 @@
                       disabled={epubLoading}
                     />
                     <p class="setting-description">
-                      Template for the exported .epub filename. Use placeholders: &lt;title&gt;,
-                      &lt;author&gt;, &lt;date&gt;. Empty placeholders (e.g. no author) collapse
-                      cleanly.
+                      {$t(
+                        'Template for the exported .epub filename. Use placeholders: <title>, <author>, <date>. Empty placeholders (e.g. no author) collapse cleanly.'
+                      )}
                     </p>
                   </div>
 
@@ -812,6 +819,7 @@
                     <label for="audio-clip-template" class="setting-label-text">
                       {$t('Audio Clip Template')}
                     </label>
+                    <!-- i18n-ignore: literal djot directive syntax, not prose -->
                     <input
                       id="audio-clip-template"
                       type="text"
@@ -822,8 +830,9 @@
                       disabled={epubLoading}
                     />
                     <p class="setting-description">
-                      Template for inserting audio clip directives. Use placeholders: &lt;href&gt;,
-                      &lt;begin&gt;, &lt;end&gt;, &lt;label&gt;, &lt;rate&gt;
+                      {$t(
+                        'Template for inserting audio clip directives. Use placeholders: <href>, <begin>, <end>, <label>, <rate>'
+                      )}
                     </p>
                   </div>
 

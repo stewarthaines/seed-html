@@ -35,6 +35,7 @@
     "i18n:convert": "node build-scripts/i18n-convert.js",
     "i18n:compress": "node build-scripts/i18n-compress.js",
     "i18n:build": "npm run i18n:extract && npm run i18n:convert && npm run i18n:compress",
+    "lint:i18n": "node scripts/i18n-lint.mjs",
     "translate:demo": "node scripts/auto-translate.js",
     "translate:populate": "node scripts/populate-demo-translations.js",
     "analyze": "npm run build && open dist/stats.html",
