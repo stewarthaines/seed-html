@@ -441,7 +441,9 @@ async function extractStrings() {
     }
   }
 
-  const potContent = gettextParser.po.compile(potData);
+  // foldLength: 0 disables line wrapping — one line per string keeps .po diffs
+  // minimal (an edit changes one line, not a re-wrapped paragraph).
+  const potContent = gettextParser.po.compile(potData, { foldLength: 0 });
   writeFileSync(potPath, potContent);
   console.log(`📝 Generated ${potPath}`);
 
@@ -472,8 +474,8 @@ async function extractStrings() {
         console.log(`🆕 Initialized new ${locale}.po from template`);
       }
 
-      // Write updated .po file using gettext-parser
-      const updatedContent = gettextParser.po.compile(updatedPo);
+      // Write updated .po file using gettext-parser (no line folding — see above).
+      const updatedContent = gettextParser.po.compile(updatedPo, { foldLength: 0 });
       writeFileSync(poPath, updatedContent);
     } catch (error) {
       console.error(`❌ Error updating ${locale}.po:`, error.message);

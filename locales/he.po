@@ -252,9 +252,7 @@ msgid "Add a DOM transform…"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid ""
-"Add a library and its suggested DOM transform to the current project; then "
-"enable the transform under Project Settings."
+msgid "Add a library and its suggested DOM transform to the current project; then enable the transform under Project Settings."
 msgstr ""
 
 #: src/lib/components/metadata/AccessibilityFields.svelte
@@ -322,9 +320,7 @@ msgid "Additional Information"
 msgstr "🇮🇱 Additional Information"
 
 #: src/lib/navigation/views/ThirdPartyView.svelte
-msgid ""
-"Additional libraries used when the editor runs online — the publish plugin "
-"and online-only features."
+msgid "Additional libraries used when the editor runs online — the publish plugin and online-only features."
 msgstr ""
 
 #: src/lib/components/metadata/TitleEditor.svelte
@@ -364,9 +360,7 @@ msgid "Approximate start position"
 msgstr ""
 
 #: src/lib/components/SpineSidebar.svelte
-msgid ""
-"Are you sure you want to delete chapter '{name}'? This will permanently "
-"delete the chapter and its source file."
+msgid "Are you sure you want to delete chapter '{name}'? This will permanently delete the chapter and its source file."
 msgstr ""
 
 #: src/App.svelte
@@ -509,9 +503,7 @@ msgid "Chapter title"
 msgstr ""
 
 #: src/lib/components/spine/EditorPane.svelte
-msgid ""
-"Chapter title — used in the content document <title>; defaults to the spine "
-"id"
+msgid "Chapter title — used in the content document <title>; defaults to the spine id"
 msgstr ""
 
 #: src/lib/Sidebar.svelte
@@ -656,9 +648,7 @@ msgid "Copy URL"
 msgstr ""
 
 #: src/lib/components/workspace/OPDSImportDialog.svelte
-msgid ""
-"Could not load the feed: {error}. The server may not allow cross-origin "
-"requests."
+msgid "Could not load the feed: {error}. The server may not allow cross-origin requests."
 msgstr ""
 
 #: src/lib/components/workspace/OPDSImportDialog.svelte
@@ -894,9 +884,7 @@ msgid "e.g. urn:isbn:9780000000001"
 msgstr ""
 
 #: src/lib/components/metadata/AccessibilityFields.svelte
-msgid ""
-"Each row is one combination of modes that is enough on its own to read the "
-"whole publication."
+msgid "Each row is one combination of modes that is enough on its own to read the whole publication."
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/RemoteSelector.svelte
@@ -944,10 +932,7 @@ msgid "Enter format information"
 msgstr "🇮🇱 Enter format information"
 
 #: src/lib/components/outline/OutlineEditor.svelte
-msgid ""
-"Enter navigation content in plain text. Leave empty to auto-generate from "
-"chapter titles. Press Ctrl+Enter (Cmd+Enter on Mac) to save navigation "
-"content."
+msgid "Enter navigation content in plain text. Leave empty to auto-generate from chapter titles. Press Ctrl+Enter (Cmd+Enter on Mac) to save navigation content."
 msgstr ""
 
 #: src/lib/components/SpineSidebar.svelte
@@ -1673,9 +1658,7 @@ msgid "No projects match your search for \"{query}\""
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
-msgid ""
-"No proxy was detected on this host, so this only works once the app is "
-"deployed with the WebDAV proxy."
+msgid "No proxy was detected on this host, so this only works once the app is deployed with the WebDAV proxy."
 msgstr ""
 
 #: src/lib/navigation/views/SpineView.svelte
@@ -1831,9 +1814,7 @@ msgid "Plain text"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid ""
-"Please copy license text into the License field below to comply with open "
-"source requirements."
+msgid "Please copy license text into the License field below to comply with open source requirements."
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
@@ -1961,9 +1942,7 @@ msgid "Read-only"
 msgstr ""
 
 #: src/App.svelte
-msgid ""
-"Read-only — this EPUB wasn't created in the Simple EPUB Editor, so it can't "
-"be edited."
+msgid "Read-only — this EPUB wasn't created in the Simple EPUB Editor, so it can't be edited."
 msgstr ""
 
 #: src/lib/navigation/views/SpineView.svelte
@@ -2057,9 +2036,7 @@ msgid "Requests go straight to the server, which must send CORS headers."
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
-msgid ""
-"Requests go through this app’s /dav endpoint; your WebDAV credentials "
-"transit the app host."
+msgid "Requests go through this app’s /dav endpoint; your WebDAV credentials transit the app host."
 msgstr ""
 
 #: src/lib/components/metadata/fields/DateMetadataField.svelte
@@ -2113,9 +2090,7 @@ msgstr "🇮🇱 Sample Author"
 
 #: src/lib/content/sample-content-generator.ts
 msgid "sample.book.description"
-msgstr ""
-"🇮🇱 This is a sample EPUB book created for demonstration purposes. It "
-"showcases the basic structure and content of an EPUB publication."
+msgstr "🇮🇱 This is a sample EPUB book created for demonstration purposes. It showcases the basic structure and content of an EPUB publication."
 
 #: src/lib/content/sample-content-generator.ts
 msgid "sample.book.title"
@@ -2123,11 +2098,7 @@ msgstr "🇮🇱 Sample EPUB Book"
 
 #: src/lib/content/sample-content-generator.ts
 msgid "sample.chapter1.content"
-msgstr ""
-"🇮🇱 This is the first chapter of our sample book. Here we begin our "
-"journey into the world of digital publishing. EPUB is a widely supported "
-"format that allows for reflowable text, making books readable on various "
-"devices and screen sizes."
+msgstr "🇮🇱 This is the first chapter of our sample book. Here we begin our journey into the world of digital publishing. EPUB is a widely supported format that allows for reflowable text, making books readable on various devices and screen sizes."
 
 #: src/lib/content/sample-content-generator.ts
 msgid "sample.chapter1.title"
@@ -2158,9 +2129,7 @@ msgid "Saved feeds…"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid ""
-"Scripts run top-to-bottom over the generated DOM, each applied to the "
-"previous one’s output."
+msgid "Scripts run top-to-bottom over the generated DOM, each applied to the previous one’s output."
 msgstr ""
 
 #: src/lib/components/metadata/BasicInfoFields.svelte
@@ -2406,15 +2375,11 @@ msgid "Technical Info"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid ""
-"Template for inserting audio clip directives. Use placeholders: <href>, "
-"<begin>, <end>, <label>, <rate>"
+msgid "Template for inserting audio clip directives. Use placeholders: <href>, <begin>, <end>, <label>, <rate>"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid ""
-"Template for the exported .epub filename. Use placeholders: <title>, "
-"<author>, <date>. Empty placeholders (e.g. no author) collapse cleanly."
+msgid "Template for the exported .epub filename. Use placeholders: <title>, <author>, <date>. Empty placeholders (e.g. no author) collapse cleanly."
 msgstr ""
 
 #: src/lib/components/metadata/SubjectEditor.svelte
@@ -2438,9 +2403,7 @@ msgid "Text Transform"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid ""
-"The single plain-text → XHTML step. Pick a project script or one supplied "
-"by an extension."
+msgid "The single plain-text → XHTML step. Pick a project script or one supplied by an extension."
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -2456,21 +2419,15 @@ msgid "This EPUB is read-only, so extensions can't be added."
 msgstr ""
 
 #: src/lib/components/outline/OutlineView.svelte
-msgid ""
-"This EPUB wasn't created in the Simple EPUB Editor — its navigation is "
-"shown for viewing only."
+msgid "This EPUB wasn't created in the Simple EPUB Editor — its navigation is shown for viewing only."
 msgstr ""
 
 #: src/App.svelte
-msgid ""
-"This EPUB wasn't created in the Simple EPUB Editor, so it can't be "
-"repackaged."
+msgid "This EPUB wasn't created in the Simple EPUB Editor, so it can't be repackaged."
 msgstr ""
 
 #: src/lib/navigation/views/SpineView.svelte
-msgid ""
-"This EPUB wasn't created in the Simple EPUB Editor, so its chapters can be "
-"viewed but not edited."
+msgid "This EPUB wasn't created in the Simple EPUB Editor, so its chapters can be viewed but not edited."
 msgstr ""
 
 #: src/lib/components/metadata/SimpleMetadataView.svelte
