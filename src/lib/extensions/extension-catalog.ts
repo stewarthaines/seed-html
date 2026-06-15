@@ -199,26 +199,31 @@ function asGeneratorOptionArray(v: unknown): GeneratorOption[] {
   return out;
 }
 
-/** Keep only well-formed generators (string id + name + script); normalize options. */
+/**
+ * Validate + normalize a single generator (id/name/script required; options
+ * normalized). Returns null if malformed. Shared by the catalog and the
+ * per-generator `generator.json` store.
+ */
+export function normalizeGenerator(value: unknown): GeneratorManifest | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const g = value as Record<string, unknown>;
+  if (typeof g.id !== 'string' || !g.id) return null;
+  if (typeof g.name !== 'string' || !g.name) return null;
+  if (typeof g.script !== 'string' || !g.script) return null;
+  return {
+    id: g.id,
+    name: g.name,
+    description: asString(g.description),
+    script: g.script,
+    license: asString(g.license),
+    options: asGeneratorOptionArray(g.options),
+  };
+}
+
+/** Keep only well-formed generators in an array; normalize each. */
 function asGeneratorArray(v: unknown): GeneratorManifest[] {
   if (!Array.isArray(v)) return [];
-  const out: GeneratorManifest[] = [];
-  for (const item of v) {
-    if (typeof item !== 'object' || item === null) continue;
-    const g = item as Record<string, unknown>;
-    if (typeof g.id !== 'string' || !g.id) continue;
-    if (typeof g.name !== 'string' || !g.name) continue;
-    if (typeof g.script !== 'string' || !g.script) continue;
-    out.push({
-      id: g.id,
-      name: g.name,
-      description: asString(g.description),
-      script: g.script,
-      license: asString(g.license),
-      options: asGeneratorOptionArray(g.options),
-    });
-  }
-  return out;
+  return v.map(normalizeGenerator).filter((g): g is GeneratorManifest => g !== null);
 }
 
 /** Every license file to bundle: extension-wide + per-script + per-asset + per-generator, deduped, order-stable. */

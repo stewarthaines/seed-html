@@ -14,6 +14,9 @@ function makeFileStorage(initial: Record<string, string> = {}) {
     writeFile: vi.fn(async (_ws: string, path: string, content: ArrayBuffer | Uint8Array) => {
       files.set(path, content instanceof Uint8Array ? content : new Uint8Array(content));
     }),
+    writeTextFile: vi.fn(async (_ws: string, path: string, content: string) => {
+      files.set(path, enc.encode(content));
+    }),
     readFile: vi.fn(async (_ws: string, path: string) => {
       const b = files.get(path);
       if (!b) throw new Error(`not found: ${path}`);
@@ -41,6 +44,7 @@ describe('ExtensionManager.importCatalogExtension', () => {
       scripts: ['prism.js'],
       domTransforms: ['transformPrism.js'],
       textTransforms: [],
+      generators: [],
       assets: [],
       licenses: ['LICENSE.txt'],
     };
@@ -69,6 +73,51 @@ describe('ExtensionManager.importCatalogExtension', () => {
     expect(written).toEqual([]);
   });
 
+  it('materializes declared generators into SOURCE/generators/<id>/', async () => {
+    const { api, files } = makeFileStorage();
+    const entry: ExtensionCatalogEntry = {
+      id: 'djot-figures',
+      name: 'List of Figures',
+      scripts: ['djot.js'],
+      domTransforms: [],
+      textTransforms: [],
+      generators: [
+        {
+          id: 'figures',
+          name: 'List of Figures',
+          script: 'listFigures.js',
+          license: 'figures-LICENSE.txt',
+          options: [{ type: 'string', name: 'template', label: 'Template' }],
+        },
+      ],
+      assets: [],
+      licenses: ['figures-LICENSE.txt'],
+    };
+    const bodies: Record<string, string> = {
+      'djot.js': 'DJOT',
+      'listFigures.js': 'GEN',
+      'figures-LICENSE.txt': 'GENLIC',
+      'extension.json': '{"id":"djot-figures"}',
+    };
+    const fetchImpl = vi.fn(async (url: string) => {
+      const file = url.split('/').pop() as string;
+      return { ok: true, arrayBuffer: async () => enc.encode(bodies[file]).buffer } as Response;
+    });
+
+    const mgr = new ExtensionManager(api);
+    await mgr.importCatalogExtension('ws', entry, { fetch: fetchImpl, baseUrl: 'https://x/' });
+
+    // Generator lands under SOURCE/generators/<gen.id>/ (not the extension dir), as a
+    // self-contained generator.json + script (+ license).
+    expect(dec.decode(files.get('SOURCE/generators/figures/listFigures.js')!)).toBe('GEN');
+    expect(dec.decode(files.get('SOURCE/generators/figures/figures-LICENSE.txt')!)).toBe('GENLIC');
+    const manifest = JSON.parse(dec.decode(files.get('SOURCE/generators/figures/generator.json')!));
+    expect(manifest.id).toBe('figures');
+    expect(manifest.options).toEqual([{ type: 'string', name: 'template', label: 'Template' }]);
+    // The generator script is not duplicated into the extension dir.
+    expect(files.has('SOURCE/extensions/djot-figures/listFigures.js')).toBe(false);
+  });
+
   it('writes EPUB assets to OEBPS/<target> and returns them for manifest registration', async () => {
     const { api, files } = makeFileStorage();
     const entry: ExtensionCatalogEntry = {
@@ -77,6 +126,7 @@ describe('ExtensionManager.importCatalogExtension', () => {
       scripts: ['highlight.min.js'],
       domTransforms: ['transformHighlight.js'],
       textTransforms: [],
+      generators: [],
       assets: [{ file: 'themes/default.css', target: 'Styles/highlight.css', media: 'text/css' }],
       licenses: [],
     };

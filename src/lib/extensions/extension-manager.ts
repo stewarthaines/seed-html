@@ -15,6 +15,7 @@ import type {
 } from './types.js';
 import type { TransformOption } from '../services/settings/settings.service.js';
 import { resolveExtensionFileUrl, type ExtensionCatalogEntry } from './extension-catalog.js';
+import { writeGenerator } from '../generators/generator-store.js';
 import { ExtensionCache } from './extension-cache.js';
 import {
   detectExtensionName,
@@ -155,6 +156,28 @@ export class ExtensionManager {
         `SOURCE/extensions/${entry.id}/${file}`,
         content
       );
+    }
+
+    // Generators → SOURCE/generators/<gen.id>/ (generator.json + script + license),
+    // so extension-made and hand-made generators share one on-disk shape and discovery
+    // only scans SOURCE/generators/. The scripts were copied flat into the served
+    // extension dir by the manifest build, so they fetch by basename like the rest.
+    for (const gen of entry.generators ?? []) {
+      const scriptUrl = resolveExtensionFileUrl(entry.id, gen.script, { baseUrl: options.baseUrl });
+      const scriptRes = await fetchImpl(scriptUrl);
+      if (!scriptRes.ok) {
+        throw new Error(
+          `Failed to fetch generator ${gen.script} for extension '${entry.id}': ${scriptRes.status}`
+        );
+      }
+      const scriptContent = await scriptRes.arrayBuffer();
+      let licenseContent: ArrayBuffer | undefined;
+      if (gen.license) {
+        const licUrl = resolveExtensionFileUrl(entry.id, gen.license, { baseUrl: options.baseUrl });
+        const licRes = await fetchImpl(licUrl);
+        if (licRes.ok) licenseContent = await licRes.arrayBuffer();
+      }
+      await writeGenerator(this.fileStorage, workspaceId, gen, scriptContent, licenseContent);
     }
 
     // EPUB assets → OEBPS/<target> (book output), reported back for manifest registration.
