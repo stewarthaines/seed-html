@@ -175,6 +175,26 @@ msgid "about.license.title"
 msgstr "Lizenz"
 
 #: src/lib/navigation/views/AboutView.svelte
+msgid "about.seed.graphic.alt"
+msgstr "SEED.html erzeugt drei Ausgaben: ein PDF, ein einfaches EPUB und ein EPUB mit eingebettetem SEED.zip-Quelltext. PDF und einfaches EPUB sind einseitige Ziele; nur das EPUB mit SEED.zip hat einen Rückpfeil zur App und zeigt, dass es erneut importiert, bearbeitet und als beliebige der drei Ausgaben neu veröffentlicht werden kann."
+
+#: src/lib/navigation/views/AboutView.svelte
+msgid "about.seed.graphic.caption"
+msgstr "SEED.html exportiert ein PDF, ein einfaches EPUB oder ein EPUB, das seinen eigenen SEED.zip einbettet – und nur Letzteres lässt sich wieder öffnen, bearbeiten und neu veröffentlichen."
+
+#: src/lib/navigation/views/AboutView.svelte
+msgid "about.seed.p1"
+msgstr "Die meisten Werkzeuge behandeln EPUB als Zielformat – eine fertige Datei, die man exportiert und dann hinter sich lässt. SEED kehrt das um: Das Buch, das Sie hier erstellen, ist ein gültiges, eigenständiges EPUB, das zugleich seinen eigenen bearbeitbaren Quelltext (gebündelt als SEED.zip) enthält."
+
+#: src/lib/navigation/views/AboutView.svelte
+msgid "about.seed.p2"
+msgstr "Dadurch wird das EPUB zu einem lebendigen Dokument statt zu einer Sackgasse – jede Person kann es wieder öffnen, um es zu lesen, zu überarbeiten oder die Arbeit fortzusetzen, ohne Server, Konten oder eine neu zusammenzusetzende Toolchain. Das eignet sich gut für Verteilung, Mitwirkung und langfristige Bewahrung. Wenn Sie einen festen Endpunkt möchten, können Sie weiterhin in ein echtes Zielformat wie PDF exportieren."
+
+#: src/lib/navigation/views/AboutView.svelte
+msgid "about.seed.title"
+msgstr "Was unterscheidet ein SEED-EPUB?"
+
+#: src/lib/navigation/views/AboutView.svelte
 msgid "about.tagline"
 msgstr "Erstellen Sie E-Books, die jeder lesen kann — direkt in Ihrem Browser."
 

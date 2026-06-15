@@ -175,6 +175,26 @@ msgid "about.license.title"
 msgstr ""
 
 #: src/lib/navigation/views/AboutView.svelte
+msgid "about.seed.graphic.alt"
+msgstr ""
+
+#: src/lib/navigation/views/AboutView.svelte
+msgid "about.seed.graphic.caption"
+msgstr ""
+
+#: src/lib/navigation/views/AboutView.svelte
+msgid "about.seed.p1"
+msgstr ""
+
+#: src/lib/navigation/views/AboutView.svelte
+msgid "about.seed.p2"
+msgstr ""
+
+#: src/lib/navigation/views/AboutView.svelte
+msgid "about.seed.title"
+msgstr ""
+
+#: src/lib/navigation/views/AboutView.svelte
 msgid "about.tagline"
 msgstr ""
 

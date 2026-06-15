@@ -60,6 +60,7 @@ const ALLOW_EXACT = new Set([
   'RGB',
   'OKLCH',
   'SEED.html',
+  'SEED.zip',
   'EDITME',
   'WebDAV',
   'S3',
