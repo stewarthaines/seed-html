@@ -110,38 +110,6 @@ msgstr ""
 msgid "about.attribution.content"
 msgstr ""
 
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.closing"
-msgstr ""
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.intro"
-msgstr ""
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.step1"
-msgstr ""
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.step2"
-msgstr ""
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.step3"
-msgstr ""
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.step4"
-msgstr ""
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.step5"
-msgstr ""
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.title"
-msgstr ""
-
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "about.disclaimer.summary"
 msgstr ""
@@ -208,14 +176,6 @@ msgstr ""
 
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "about.version"
-msgstr ""
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.website.intro"
-msgstr ""
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.website.link"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
@@ -703,6 +663,10 @@ msgstr ""
 #: src/lib/components/workspace/WorkspaceActionBar.svelte
 msgid "Create a new minimal EPUB project"
 msgstr "🇹🇼 Create a new minimal EPUB project"
+
+#: src/lib/navigation/views/AboutView.svelte
+msgid "Create an EPUB Now"
+msgstr ""
 
 #: src/lib/components/workspace/WorkspaceActionBar.svelte
 msgid "Create New"

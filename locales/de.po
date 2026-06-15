@@ -110,38 +110,6 @@ msgstr "Über"
 msgid "about.attribution.content"
 msgstr "Entwickelt von Stewart Haines."
 
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.closing"
-msgstr "Das war's — ein vollständiges Buch. Von hier aus können Sie das Layout verfeinern, Bilder hinzufügen, es mit EPUBCheck prüfen und im Web veröffentlichen."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.intro"
-msgstr "Sie können in wenigen Minuten ein echtes, teilbares Buch haben:"
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.step1"
-msgstr "Erstellen Sie ein neues Projekt und geben Sie ihm einen Titel und einen Autor."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.step2"
-msgstr "Schreiben oder fügen Sie ein Kapitel als reinen Text ein — eine Überschrift und ein paar Absätze genügen."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.step3"
-msgstr "Sehen Sie sich in der Live-Vorschau an, wie es auf Smartphone- und Tablet-Bildschirmen aussieht."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.step4"
-msgstr "Fügen Sie ein paar weitere Kapitel hinzu und ordnen Sie sie im Spine an."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.step5"
-msgstr "Packen Sie das EPUB und öffnen Sie es in Ihrem bevorzugten Lesesystem."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.title"
-msgstr "Erstellen Sie Ihr erstes Buch"
-
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "about.disclaimer.summary"
 msgstr "Diese Software wird unter intensivem Einsatz von Coding-Agenten entwickelt, insbesondere des Produkts Claude Code von Anthropic."
@@ -188,7 +156,7 @@ msgstr "Die meisten Werkzeuge behandeln EPUB als Zielformat – eine fertige Dat
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.seed.p2"
-msgstr "Dadurch wird das EPUB zu einem lebendigen Dokument statt zu einer Sackgasse – jede Person kann es wieder öffnen, um es zu lesen, zu überarbeiten oder die Arbeit fortzusetzen, ohne Server, Konten oder eine neu zusammenzusetzende Toolchain. Das eignet sich gut für Verteilung, Mitwirkung und langfristige Bewahrung. Wenn Sie einen festen Endpunkt möchten, können Sie weiterhin in ein echtes Zielformat wie PDF exportieren."
+msgstr "Dadurch wird das EPUB zu einem lebendigen Dokument statt zu einer Sackgasse – jede Person kann es wieder öffnen, um es zu lesen, zu überarbeiten oder die Arbeit fortzusetzen, ohne Server, Konten oder eine neu zusammenzusetzende Toolchain. Das eignet sich gut für Verteilung, Mitwirkung und langfristige Bewahrung."
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.seed.title"
@@ -209,14 +177,6 @@ msgstr "Bibliotheken von Drittanbietern"
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "about.version"
 msgstr "Version"
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.website.intro"
-msgstr "Für Anleitungen, Beispiele und den größeren Zusammenhang besuchen Sie die Website:"
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.website.link"
-msgstr "stewarthaines.com/epub"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Access Key"
@@ -703,6 +663,10 @@ msgstr "Erstellen"
 #: src/lib/components/workspace/WorkspaceActionBar.svelte
 msgid "Create a new minimal EPUB project"
 msgstr "Ein neues minimales EPUB-Projekt erstellen"
+
+#: src/lib/navigation/views/AboutView.svelte
+msgid "Create an EPUB Now"
+msgstr "Jetzt ein EPUB erstellen"
 
 #: src/lib/components/workspace/WorkspaceActionBar.svelte
 msgid "Create New"

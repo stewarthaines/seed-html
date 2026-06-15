@@ -9,10 +9,6 @@
   import OPDSImportDialog from '../../components/workspace/OPDSImportDialog.svelte';
   import PaneHeader from '../../components/layout/PaneHeader.svelte';
   import DuplicateProjectDialog from '../../components/workspace/DuplicateProjectDialog.svelte';
-  import CreateProjectDialog, {
-    type CreateProjectData,
-  } from '../../components/workspace/CreateProjectDialog.svelte';
-  import type { ExtensionCatalogEntry } from '../../extensions/extension-catalog';
 
   // Service layer types for return values
   import type {
@@ -23,7 +19,7 @@
   // Props using Svelte 5 runes syntax
   let {
     onListWorkspaces,
-    onCreateProject,
+    onCreateNewRequested,
     onDeleteWorkspace,
     onDuplicateWorkspace,
     onLoadWorkspace,
@@ -33,11 +29,10 @@
     onWorkspaceOpened,
     onWorkspaceChanged,
     currentWorkspaceId = null,
-    availableExtensions = [],
   }: {
     onListWorkspaces: () => Promise<WorkspaceInfo[]>;
-    /** Create a project from the new-project dialog and open its first chapter. */
-    onCreateProject: (data: CreateProjectData) => Promise<void>;
+    /** Open the (app-owned) new-project dialog. */
+    onCreateNewRequested: () => void;
     onDeleteWorkspace: (id: string) => Promise<void>;
     onDuplicateWorkspace: (id: string, title?: string) => Promise<string>;
     onLoadWorkspace: (id: string) => Promise<void>;
@@ -47,8 +42,6 @@
     onWorkspaceOpened?: (workspaceId: string) => void;
     onWorkspaceChanged?: (workspaceId: string | null) => void;
     currentWorkspaceId?: string | null;
-    /** Extensions catalog (empty unless served over HTTP); the dialog offers text formats. */
-    availableExtensions?: ExtensionCatalogEntry[];
   } = $props();
 
   // Component state using $state()
@@ -83,11 +76,7 @@
   let error = $state<string | null>(null);
   let hasUnsavedChanges = $state(false);
   let showOpdsDialog = $state(false);
-  let showCreateDialog = $state(false);
   let showDuplicateDialog = $state(false);
-
-  // Only text-format extensions (markup languages) are offered in the create dialog.
-  const textFormats = $derived(availableExtensions.filter(e => e.textTransforms.length > 0));
 
   // OPDS import fetches over the network, which is pointless (and CORS-blocked)
   // when the app runs offline from a file:// URL — the standalone SEED.html /
@@ -151,19 +140,6 @@
     } finally {
       loading = false;
     }
-  };
-
-  // "Create New" now opens the new-project dialog (title/author/language +
-  // text-format choice) instead of creating from hardcoded metadata.
-  const handleCreateNew = () => {
-    showCreateDialog = true;
-  };
-
-  // Confirm from the dialog: App owns the end-to-end create (project + metadata +
-  // chosen text-format extension) and navigates into the first chapter.
-  const handleCreateConfirm = async (data: CreateProjectData) => {
-    await onCreateProject(data);
-    showCreateDialog = false;
   };
 
   // Handle load EPUB file
@@ -403,7 +379,7 @@
           <div class="workspace-pane-body">
             <WorkspaceActionBar
               isLoading={loading}
-              onCreateNewRequested={handleCreateNew}
+              {onCreateNewRequested}
               onLoadEpubRequested={handleLoadEpub}
               onImportFromOPDSRequested={isFileUrl ? undefined : handleImportFromOPDS}
               {currentProjectTitle}
@@ -449,15 +425,6 @@
 
   {#if showOpdsDialog}
     <OPDSImportDialog onImport={handleOpdsImport} onClose={() => (showOpdsDialog = false)} />
-  {/if}
-
-  {#if showCreateDialog}
-    <CreateProjectDialog
-      {textFormats}
-      defaultLanguage={$currentLocale}
-      onCreate={handleCreateConfirm}
-      onClose={() => (showCreateDialog = false)}
-    />
   {/if}
 
   {#if showDuplicateDialog}

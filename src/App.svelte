@@ -28,7 +28,7 @@
   import OPFPreview from './lib/components/metadata/OPFPreview.svelte';
   import PreviewPane from './lib/components/spine/PreviewPane.svelte';
   import { layoutStore } from './lib/stores/layout';
-  import { t } from './lib/i18n';
+  import { t, currentLocale } from './lib/i18n';
   import { EnhancedAppState } from './lib/app-state-enhanced.svelte.js';
   import { FileStorageAPI } from './lib/storage/index.js';
   import { TransformExecutor } from './lib/transform/transform-executor.js';
@@ -46,7 +46,9 @@
   import { ensureGeneratedNav } from './lib/outline/nav-coherence.js';
   import { createSpinePreviewManager } from './lib/transform/spine-preview-manager.js';
   import { addTransform } from './lib/settings/dom-transforms.js';
-  import type { CreateProjectData } from './lib/components/workspace/CreateProjectDialog.svelte';
+  import CreateProjectDialog, {
+    type CreateProjectData,
+  } from './lib/components/workspace/CreateProjectDialog.svelte';
   import {
     generateCoverSvg,
     generateCoverPng,
@@ -524,6 +526,15 @@
     }
   }
 
+  // The new-project dialog is owned here so any view can open it (the Projects
+  // pane's "Create New" and the About page's "Create an EPUB Now" both do).
+  let showCreateDialog = $state(false);
+  // Only text-format extensions (markup languages) are offered in the dialog.
+  const textFormats = $derived(availableExtensions.filter(e => e.textTransforms.length > 0));
+  const openCreateDialog = () => {
+    showCreateDialog = true;
+  };
+
   // Create a project from the new-project dialog: provision it, set the author,
   // install the chosen text-format extension, then open the first chapter — so a
   // new author lands directly in a working chapter rendered through their format.
@@ -982,12 +993,11 @@
       {/if}
       <!-- Main content area - switches based on current view -->
       {#if currentView === 'about'}
-        <AboutView />
+        <AboutView onCreateEpub={openCreateDialog} />
       {:else if currentView === 'workspace' && initialized}
         <WorkspaceView
           onListWorkspaces={() => appState?.listWorkspaces() ?? Promise.resolve([])}
-          onCreateProject={handleCreateProject}
-          {availableExtensions}
+          onCreateNewRequested={openCreateDialog}
           onDeleteWorkspace={id => appState?.deleteWorkspace(id) ?? Promise.resolve()}
           onDuplicateWorkspace={(id, title) =>
             appState?.duplicateWorkspace(id, title) ?? Promise.resolve('')}
@@ -1169,6 +1179,18 @@
       {/if}
     {/snippet}
   </LayoutManager>
+
+  {#if showCreateDialog}
+    <CreateProjectDialog
+      {textFormats}
+      defaultLanguage={$currentLocale}
+      onCreate={async data => {
+        await handleCreateProject(data);
+        showCreateDialog = false;
+      }}
+      onClose={() => (showCreateDialog = false)}
+    />
+  {/if}
 {/if}
 
 <style>

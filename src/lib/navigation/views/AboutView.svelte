@@ -1,6 +1,9 @@
 <script lang="ts">
   import { t } from '../../i18n';
   import PaneHeader from '$lib/components/layout/PaneHeader.svelte';
+
+  // Opens the app-owned new-project dialog (same as the Projects pane's "Create New").
+  let { onCreateEpub }: { onCreateEpub: () => void } = $props();
 </script>
 
 <div class="about-pane">
@@ -166,32 +169,11 @@
       <p>{$t('about.seed.p2')}</p>
     </section>
 
-    <section class="about-section">
-      <h2>{$t('about.cta.title')}</h2>
-      <p>{$t('about.cta.intro')}</p>
-      <ol class="about-steps">
-        <li>{$t('about.cta.step1')}</li>
-        <li>{$t('about.cta.step2')}</li>
-        <li>{$t('about.cta.step3')}</li>
-        <li>{$t('about.cta.step4')}</li>
-        <li>{$t('about.cta.step5')}</li>
-      </ol>
-      <p>{$t('about.cta.closing')}</p>
-    </section>
-
-    <section class="about-section">
-      <p>{$t('about.website.intro')}</p>
-      <p>
-        <a
-          href="https://stewarthaines.com/epub"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="external-link"
-        >
-          {$t('about.website.link')}
-        </a>
-      </p>
-    </section>
+    <div class="about-cta">
+      <button type="button" class="cta-button" onclick={onCreateEpub}>
+        {$t('Create an EPUB Now')}
+      </button>
+    </div>
   </div>
 </div>
 
@@ -315,23 +297,46 @@
     margin: 0 0 var(--space-3) 0;
   }
 
-  .about-steps {
-    margin: 0 0 var(--space-3) 0;
-    padding-left: var(--space-5);
-    color: var(--color-text-secondary);
-    line-height: 1.6;
+  .about-cta {
+    margin: var(--space-6) 0 var(--space-3);
+    text-align: center;
   }
 
-  .about-steps li {
-    margin-bottom: var(--space-2);
+  /* Primary action, matching the "Package EPUB" button's token treatment. */
+  .cta-button {
+    display: inline-block;
+    padding: var(--space-3) var(--space-6);
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    color: white;
+    background-color: var(--color-button-primary-bg);
+    border: 1px solid var(--color-button-primary-bg);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition:
+      background-color var(--duration-fast) ease,
+      border-color var(--duration-fast) ease;
   }
 
-  .external-link {
+  .cta-button:hover {
+    background-color: var(--color-button-primary-bg-hover);
+    border-color: var(--color-button-primary-bg-hover);
+  }
+
+  .cta-button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--color-focus-ring);
+  }
+
+  /* Dark: a softer tonal fill, as the Package EPUB button does. */
+  :global([data-theme='dark']) .cta-button {
+    background-color: var(--color-surface-elevated);
+    border-color: var(--color-border-accent);
     color: var(--color-text-link);
-    text-decoration: underline;
   }
 
-  .external-link:hover {
-    color: var(--color-text-link-hover);
+  :global([data-theme='dark']) .cta-button:hover {
+    background-color: var(--color-surface-hover);
+    border-color: var(--color-border-focus);
   }
 </style>

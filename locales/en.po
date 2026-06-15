@@ -110,38 +110,6 @@ msgstr "About"
 msgid "about.attribution.content"
 msgstr "Developed by Stewart Haines."
 
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.closing"
-msgstr "That's it — a complete book. From there you can refine the styling, add images, check it against EPUBCheck, and publish it to the web."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.intro"
-msgstr "You can have a real, shareable book in a few minutes:"
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.step1"
-msgstr "Create a new project and give it a title and author."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.step2"
-msgstr "Write or paste a chapter as plain text — a heading and a few paragraphs is plenty."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.step3"
-msgstr "Use the live preview to see it laid out on phone and tablet screens."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.step4"
-msgstr "Add a few more chapters and arrange them in the spine."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.step5"
-msgstr "Package the EPUB and open it in your favourite Reading System."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.cta.title"
-msgstr "Make your first book"
-
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "about.disclaimer.summary"
 msgstr "This software is developed making extensive use of coding agents, specifically the Claude Code product from Anthropic."
@@ -184,11 +152,11 @@ msgstr "SEED.html exports a PDF, a plain EPUB, or an EPUB that embeds its own SE
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.seed.p1"
-msgstr "Most tools treat EPUB as a destination format — a finished file you export and leave behind. SEED inverts that: the book you build here is a valid, self-contained EPUB that also carries its own editable source (bundled as SEED.zip) inside it."
+msgstr "Most publishing workflows treat EPUB as a destination format — a finished file you export and leave behind. SEED subverts that: the book you build here is a valid, self-contained EPUB that also carries its own editable source (bundled as SEED.zip) inside it."
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.seed.p2"
-msgstr "That turns the EPUB into a living document rather than a dead end — anyone can reopen it to read, revise, or continue the work, with no servers, accounts, or toolchain to reassemble. It suits distribution, contribution, and long-term preservation. When you do want a fixed end point, you can still export to a true destination format like PDF."
+msgstr "That turns the EPUB into a living document rather than a dead end — anyone can reopen it to read, revise, or continue the work, with no servers, accounts, or toolchain to reassemble. It suits distribution, contribution, and long-term preservation."
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.seed.title"
@@ -209,14 +177,6 @@ msgstr "Third-Party Libraries"
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "about.version"
 msgstr "Version"
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.website.intro"
-msgstr "For guides, examples, and the bigger picture, visit the website:"
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.website.link"
-msgstr "stewarthaines.com/epub"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Access Key"
@@ -702,6 +662,10 @@ msgstr ""
 
 #: src/lib/components/workspace/WorkspaceActionBar.svelte
 msgid "Create a new minimal EPUB project"
+msgstr ""
+
+#: src/lib/navigation/views/AboutView.svelte
+msgid "Create an EPUB Now"
 msgstr ""
 
 #: src/lib/components/workspace/WorkspaceActionBar.svelte
