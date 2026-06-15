@@ -2,6 +2,7 @@
   import { onMount, onDestroy, untrack } from 'svelte';
   import { t } from '../../i18n';
   import OutlineEditor from './OutlineEditor.svelte';
+  import PaneHeader from '$lib/components/layout/PaneHeader.svelte';
   import { createTextEditorStore } from '../../stores/index.js';
   import type { TextEditorStore } from '../../stores/index.js';
   import type {
@@ -69,10 +70,14 @@
   // Component initialization state
   let isComponentReady = false;
   let initializationPromise: Promise<void> | null = null;
+  // Gates the reactive handler below: stays false until the saved nav.txt has been
+  // loaded, so the *initial empty* store doesn't trigger generateFromSpine() — which
+  // writes nav.txt='' and would clobber saved custom navigation on every re-mount.
+  let contentLoaded = $state(false);
 
-  // React to store changes for transform processing
+  // React to store changes for transform processing (only once content is loaded).
   $effect(() => {
-    if ($outlineStore.lastUpdated) {
+    if (contentLoaded && $outlineStore.lastUpdated) {
       handleContentChange($outlineStore.isEmpty);
     }
   });
@@ -129,11 +134,23 @@
     }
 
     try {
-      // Process user content through transform pipeline
+      // Supply the same brokered file-access context the chapter editor uses (manifest
+      // + base path) so nav transforms can use `ctx`. Build it from a freshly loaded
+      // workspace (plain objects), exactly like spine-preview-manager — the reactive
+      // `workspace` prop's manifest is a Svelte proxy that can't be structured-cloned
+      // to the transform iframe (DataCloneError).
+      let brokerContext;
+      try {
+        const ws = await workspaceService.loadWorkspace(workspace.id);
+        brokerContext = { basePath: ws.pathInfo.basePath, manifest: ws.opf.manifest };
+      } catch {
+        brokerContext = undefined;
+      }
       const navigationDoc = await OutlineGenerator.processUserContent(
         content,
         transformPipeline,
-        workspace.id
+        workspace.id,
+        { brokerContext }
       );
 
       previewUpdate({
@@ -342,8 +359,19 @@
         // Read-only EPUB: preview the existing nav, never auto-generate or save.
         await previewExistingNav();
       } else {
-        // Load navigation content (triggers auto-generation if no nav.txt exists)
+        // Ensure the transform iframe has this project's extension libs (e.g. djot)
+        // loaded before any nav transform runs — the nav editor uses the same pipeline
+        // as chapters but isn't guaranteed the spine view ran first (else "djot is not
+        // defined" when Navigation is opened first after a reload).
+        try {
+          await transformEngine.setWorkspaceExtensions(workspace.id);
+        } catch (e) {
+          console.warn('Failed to load extensions for navigation transform:', e);
+        }
+        // Load the saved nav source, THEN open the reactive gate so the first render
+        // reflects the loaded content (custom → transform; empty → auto-generate).
         await loadNavigationContent();
+        contentLoaded = true;
       }
 
       // Don't save during initialization - reactive statement handles auto-generation
@@ -420,29 +448,58 @@
     class="sr-only"
   ></div>
 
-  {#if readOnly}
-    <div class="readonly-notice">
-      <div class="readonly-icon" aria-hidden="true">🔒</div>
-      <h3>{$t('Read-only navigation')}</h3>
-      <p>
-        {$t(
-          "This EPUB wasn't created in the Simple EPUB Editor — its navigation is shown for viewing only."
-        )}
-      </p>
-    </div>
-  {:else}
-    <OutlineEditor
-      editorStore={outlineStore}
-      placeholder={$t('Navigation content will be auto-generated from your chapters...')}
-      onContentChanged={handleEditorContentChanged}
-    />
-  {/if}
+  <!-- File picker, mirroring the spine editor — surfaces the editable nav source and
+       encourages custom navigation content. One entry for now. -->
+  <PaneHeader>
+    <select class="file-selector" aria-label={$t('Select navigation file')} disabled={readOnly}>
+      <option value="nav">{$t('Navigation Content')}</option>
+    </select>
+  </PaneHeader>
+
+  <div class="outline-body">
+    {#if readOnly}
+      <div class="readonly-notice">
+        <div class="readonly-icon" aria-hidden="true">🔒</div>
+        <h3>{$t('Read-only navigation')}</h3>
+        <p>
+          {$t(
+            "This EPUB wasn't created in the Simple EPUB Editor — its navigation is shown for viewing only."
+          )}
+        </p>
+      </div>
+    {:else}
+      <OutlineEditor
+        editorStore={outlineStore}
+        placeholder={$t('Navigation content will be auto-generated from your chapters...')}
+        onContentChanged={handleEditorContentChanged}
+      />
+    {/if}
+  </div>
 </div>
 
 <style>
   .outline-view {
+    display: flex;
+    flex-direction: column;
     height: 100%;
     width: 100%;
+  }
+
+  .outline-body {
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* Matches the spine editor's file picker. */
+  .file-selector {
+    flex: 1 1 7rem;
+    padding: var(--space-2);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
+    cursor: pointer;
   }
 
   .readonly-notice {

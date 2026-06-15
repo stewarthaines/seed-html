@@ -25,6 +25,7 @@
   import ManifestPreview from './lib/components/manifest/ManifestPreview.svelte';
   import OutlineView from './lib/components/outline/OutlineView.svelte';
   import ContentPreview from './lib/components/preview/ContentPreview.svelte';
+  import PaneHeader from './lib/components/layout/PaneHeader.svelte';
   import OPFPreview from './lib/components/metadata/OPFPreview.svelte';
   import PreviewPane from './lib/components/spine/PreviewPane.svelte';
   import { layoutStore } from './lib/stores/layout';
@@ -1143,14 +1144,23 @@
           }}
         />
       {:else if currentView === 'navigation'}
-        {#if navigationPreviewContent}
-          <ContentPreview content={navigationPreviewContent} onNavigate={handleNavigationClick} />
-        {:else}
-          <div class="placeholder-content">
-            <h3>{$t('Navigation Preview')}</h3>
-            <p>{$t('Generating navigation from chapters...')}</p>
-          </div>
-        {/if}
+        <div class="nav-preview-pane">
+          <PaneHeader>
+            <span class="pane-title">{$t('Navigation Preview')}</span>
+          </PaneHeader>
+          {#if navigationPreviewContent}
+            <ContentPreview
+              content={navigationPreviewContent}
+              onNavigate={handleNavigationClick}
+              class="nav-preview-body"
+            />
+          {:else}
+            <div class="placeholder-content">
+              <h3>{$t('Navigation Preview')}</h3>
+              <p>{$t('Generating navigation from chapters...')}</p>
+            </div>
+          {/if}
+        </div>
       {:else if currentView === 'spine'}
         {#if spinePreviewData.spineItemId}
           <PreviewPane
@@ -1243,6 +1253,25 @@
       animation: none;
     }
   }
+  /* Navigation preview: a header over the rendered nav, matching the other panes. */
+  .nav-preview-pane {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .nav-preview-pane .pane-title {
+    font-weight: var(--font-semibold);
+  }
+
+  /* The preview fills the space under the header (its own rule is height:100%). */
+  .nav-preview-pane :global(.nav-preview-body) {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+  }
+
   .placeholder-content {
     padding: 1rem;
     color: var(--color-text-primary);

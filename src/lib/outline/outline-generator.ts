@@ -11,6 +11,7 @@ import type {
   WorkspacePathInfo,
 } from '../services/workspace/workspace.service.js';
 import type { SpineTransformPipeline } from '$lib/transform/spine-transform-pipeline';
+import type { ManifestItem } from '../epub/opf-utils.js';
 // import type { TransformEngine } from '$lib/infrastructure/transform-engine';
 // import type { TransformPipeline } from '$lib/transform/transform-pipeline';
 
@@ -76,6 +77,12 @@ export interface ProcessingOptions {
 
   /** Navigation document title */
   documentTitle?: string;
+
+  /**
+   * Brokered file-access context for the transform scripts (the project's base path +
+   * manifest), so nav transforms get the same `ctx` access as chapter transforms.
+   */
+  brokerContext?: { basePath: string; manifest: ManifestItem[] };
 }
 
 /**
@@ -203,13 +210,12 @@ export class OutlineGenerator {
       ...options,
     };
 
-    // Transform user text through transform pipeline
-    //transformPipeline.setDebugMode(true);
-    const result = await transformPipeline.executeTransform(navText, 2000, 'nav');
+    // Transform user text through transform pipeline, supplying the workspace-scoped
+    // file-access context so nav transforms get the same `ctx` as chapter transforms.
+    const result = await transformPipeline.executeTransform(navText, 2000, 'nav', opts.brokerContext);
 
-    // const result = await transformEngine.executeTransform(navText, 2000, 'nav');
-    // Use transformed content as navigation XHTML
-    let xhtmlContent = result.html?.replace(/<body.*?>(.*)<\/body>/s, '$1') || '';
+    // Coerce the transformed HTML into what an EPUB toc nav allows (heading? + <ol>).
+    let xhtmlContent = this.normalizeNavContent(result.html);
     const documentTitle =
       this.extractTitleFromXHTML(
         `<?xml version="1.0" encoding="UTF-8"?><html><body>${xhtmlContent}</body></html>`,
@@ -245,6 +251,47 @@ export class OutlineGenerator {
       xhtmlContent,
       metadata,
     };
+  }
+
+  /**
+   * Coerce transformed content into the EPUB toc-nav content model: an optional
+   * heading followed by a single <ol> of <li>(a|span, ol?). The djot text transform
+   * emits general HTML that's illegal inside <nav epub:type="toc">: headings wrapped
+   * in <section> (djot's implicit sectioning), <ul> lists, and — for "loose" lists —
+   * <p>-wrapped <li> content. We unwrap the sections, turn every <ul> into <ol>, and
+   * lift a lone block wrapper out of each <li> so the link sits directly in it. The
+   * common "heading + nested link list" pattern becomes valid; genuinely non-toc
+   * content (paragraphs, images, multiple lists) can't be a valid toc and is left as-is.
+   */
+  private static normalizeNavContent(html: string | undefined): string {
+    if (!html) return '';
+    const doc = new DOMParser().parseFromString(`<!DOCTYPE html><html>${html}</html>`, 'text/html');
+    const body = doc.body;
+
+    // 1. Unwrap every <section>, lifting its children into place (handles nesting).
+    let section: Element | null;
+    while ((section = body.querySelector('section'))) {
+      section.replaceWith(...Array.from(section.childNodes));
+    }
+
+    // 2. Convert every <ul> to <ol> (toc lists must be ordered), preserving children.
+    body.querySelectorAll('ul').forEach(ul => {
+      const ol = doc.createElement('ol');
+      for (const attr of Array.from(ul.attributes)) ol.setAttribute(attr.name, attr.value);
+      while (ul.firstChild) ol.appendChild(ul.firstChild);
+      ul.replaceWith(ol);
+    });
+
+    // 3. A toc <li> only allows (a|span, ol?). Loose lists wrap the item in a block
+    //    (<li><p><a/></p></li>) — lift a sole <p>/<div> child's contents into the <li>.
+    body.querySelectorAll('li').forEach(li => {
+      const children = Array.from(li.children);
+      if (children.length === 1 && (children[0].tagName === 'P' || children[0].tagName === 'DIV')) {
+        children[0].replaceWith(...Array.from(children[0].childNodes));
+      }
+    });
+
+    return body.innerHTML;
   }
 
   /**

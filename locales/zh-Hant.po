@@ -1641,6 +1641,10 @@ msgstr ""
 msgid "Navigation (TOC)"
 msgstr ""
 
+#: src/lib/components/outline/OutlineView.svelte
+msgid "Navigation Content"
+msgstr ""
+
 #: src/lib/components/outline/OutlineEditor.svelte
 msgid "Navigation content editor"
 msgstr ""
@@ -2300,6 +2304,10 @@ msgstr ""
 
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Select file..."
+msgstr ""
+
+#: src/lib/components/outline/OutlineView.svelte
+msgid "Select navigation file"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
