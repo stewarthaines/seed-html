@@ -13,9 +13,12 @@ import * as path from 'path';
  * with an extension.json and rebuild.
  *
  * extension.json:
- *   { id, name, description?, license?, scripts: string[], transforms: string[] }
+ *   { id, name, description?, license?, scripts: string[], domTransforms: string[],
+ *     textTransforms: string[], generators?: GeneratorManifest[] }
  *   scripts    = 3rd-party libs loaded into the transform iframe as globals
- *   transforms = suggested DOM-transform scripts (candidates for dom_transforms)
+ *   transforms = suggested DOM/text-transform scripts (candidates for the pipeline)
+ *   generators = on-demand source producers ({ id, name, script, options? }); each
+ *                script exports a fixed generateText(ctx, options)
  */
 
 const root = process.cwd();
@@ -54,6 +57,11 @@ for (const dirent of dirents) {
   const scripts = rawScripts.map(scriptFile).filter(Boolean);
   const domTransforms = Array.isArray(meta.domTransforms) ? meta.domTransforms : [];
   const textTransforms = Array.isArray(meta.textTransforms) ? meta.textTransforms : [];
+  // Generators: { id, name, script, options?, license?, description? } objects (one
+  // generateText per script). Keep only well-formed entries.
+  const generators = (Array.isArray(meta.generators) ? meta.generators : []).filter(
+    g => g && typeof g.id === 'string' && typeof g.name === 'string' && typeof g.script === 'string'
+  );
   // EPUB assets the extension copies into OEBPS/ (e.g. CSS). Keep only well-formed entries.
   const assets = (Array.isArray(meta.assets) ? meta.assets : []).filter(
     a => a && typeof a.file === 'string' && typeof a.target === 'string'
@@ -65,14 +73,21 @@ for (const dirent of dirents) {
         license,
         ...rawScripts.map(s => (s && typeof s === 'object' && scriptFile(s) ? s.license : null)),
         ...assets.map(a => a.license),
+        ...generators.map(g => (typeof g.license === 'string' ? g.license : null)),
       ].filter(l => typeof l === 'string' && l)
     ),
   ];
   // Optional sample chapter (plain-text source) used to seed a new project.
   const chapter = typeof meta.chapter === 'string' ? meta.chapter : undefined;
-  if (!id || !name || scripts.length === 0) {
+  // An extension must bring at least one of: a 3rd-party lib, a transform, or a generator.
+  const isEmpty =
+    scripts.length === 0 &&
+    domTransforms.length === 0 &&
+    textTransforms.length === 0 &&
+    generators.length === 0;
+  if (!id || !name || isEmpty) {
     console.warn(
-      `⚠️  ${dirent.name}: incomplete extension.json (need id, name, scripts) — skipped`
+      `⚠️  ${dirent.name}: incomplete extension.json (need id, name, and at least one of scripts/transforms/generators) — skipped`
     );
     continue;
   }
@@ -85,6 +100,7 @@ for (const dirent of dirents) {
     ...scripts,
     ...domTransforms,
     ...textTransforms,
+    ...generators.map(g => g.script),
     ...licenses,
     ...(chapter ? [chapter] : []),
     'extension.json',
@@ -123,6 +139,7 @@ for (const dirent of dirents) {
     scripts,
     domTransforms,
     textTransforms,
+    generators,
     assets,
     licenses,
     chapter,

@@ -34,7 +34,7 @@ describe('extension-catalog', () => {
           { file: 'broken.css' }, // missing target → dropped
         ],
       },
-      { id: 'bad' }, // missing scripts → filtered
+      { id: 'bad' }, // missing name → filtered
     ];
     const fetchFn = vi.fn(async () => jsonResponse(entries));
 
@@ -55,6 +55,7 @@ describe('extension-catalog', () => {
         scripts: ['prism.js'],
         domTransforms: ['transformPrism.js'],
         textTransforms: [],
+        generators: [],
         assets: [],
         licenses: [],
         chapter: undefined,
@@ -68,6 +69,7 @@ describe('extension-catalog', () => {
         scripts: ['djot.js'],
         domTransforms: [],
         textTransforms: ['transformDjot.js'],
+        generators: [],
         assets: [],
         licenses: [],
         chapter: undefined,
@@ -81,6 +83,7 @@ describe('extension-catalog', () => {
         scripts: ['highlight.min.js'],
         domTransforms: [],
         textTransforms: [],
+        generators: [],
         assets: [
           {
             file: 'themes/default.css',
@@ -93,6 +96,81 @@ describe('extension-catalog', () => {
         chapter: undefined,
       },
     ]);
+  });
+
+  it('normalizes generators (id/name/script required; options + license aggregated)', async () => {
+    const entries = [
+      {
+        id: 'djot-figures',
+        name: 'List of Figures',
+        scripts: ['djot.js'],
+        generators: [
+          {
+            id: 'figures',
+            name: 'List of Figures',
+            script: 'listFigures.js',
+            license: 'figures-LICENSE.txt',
+            options: [
+              { type: 'string', name: 'template', label: 'Template', placeholder: '<caption>' },
+              { type: 'boolean', name: 'show_thumbnail', label: 'Show thumbnail', default: false },
+              {
+                type: 'select',
+                name: 'style',
+                label: 'Style',
+                options: [
+                  { value: 'plain', label: 'Plain' },
+                  { value: 'bad' }, // missing label → dropped
+                ],
+              },
+              { name: 'noLabel' }, // missing label → dropped
+              { type: 'string', label: 'No name' }, // missing name → dropped
+            ],
+          },
+          { id: 'incomplete', name: 'Incomplete' }, // missing script → dropped
+        ],
+      },
+    ];
+    const fetchFn = vi.fn(async () => jsonResponse(entries));
+
+    const [entry] = await loadExtensionCatalog({ protocol: 'https:', baseUrl: BASE, fetch: fetchFn });
+
+    expect(entry.generators).toEqual([
+      {
+        id: 'figures',
+        name: 'List of Figures',
+        description: undefined,
+        script: 'listFigures.js',
+        license: 'figures-LICENSE.txt',
+        options: [
+          {
+            type: 'string',
+            name: 'template',
+            label: 'Template',
+            placeholder: '<caption>',
+            default: undefined,
+            options: undefined,
+          },
+          {
+            type: 'boolean',
+            name: 'show_thumbnail',
+            label: 'Show thumbnail',
+            placeholder: undefined,
+            default: false,
+            options: undefined,
+          },
+          {
+            type: 'select',
+            name: 'style',
+            label: 'Style',
+            placeholder: undefined,
+            default: undefined,
+            options: [{ value: 'plain', label: 'Plain' }],
+          },
+        ],
+      },
+    ]);
+    // The generator's license is bundled alongside the extension's.
+    expect(entry.licenses).toContain('figures-LICENSE.txt');
   });
 
   it('flattens object-form scripts and aggregates per-file licenses (deduped)', async () => {

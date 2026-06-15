@@ -36,6 +36,39 @@ export interface ExtensionAsset {
   license?: string;
 }
 
+/**
+ * A form-field descriptor for a generator's `options`. Rendered into the
+ * invocation form; the entered value is passed to `generateText(ctx, options)`
+ * under `options[name]`.
+ */
+export interface GeneratorOption {
+  type: 'string' | 'boolean' | 'number' | 'select';
+  /** Key in the options object passed to the generator. */
+  name: string;
+  label: string;
+  placeholder?: string;
+  default?: string | boolean | number;
+  /** Choices for `type: 'select'`. */
+  options?: { value: string; label: string }[];
+}
+
+/**
+ * A Generator: a script that *produces* source text inserted into the editor at
+ * the caret (vs. transforms, which convert content in the render pipeline). The
+ * script exports a fixed `generateText(ctx, options)` (one generator per script).
+ * Mirrors the per-generator `generator.json` stored under SOURCE/generators/<id>/.
+ */
+export interface GeneratorManifest {
+  id: string;
+  name: string;
+  description?: string;
+  /** Script filename within the extension dir; exports `generateText(ctx, options)`. */
+  script: string;
+  /** Optional license file for the generator script (bundled into SOURCE/). */
+  license?: string;
+  options: GeneratorOption[];
+}
+
 /** A catalog extension as published in extensions/manifest.json. */
 export interface ExtensionCatalogEntry {
   id: string;
@@ -51,6 +84,8 @@ export interface ExtensionCatalogEntry {
   domTransforms: string[];
   /** Suggested text-transform scripts (candidates for the single text_transform). */
   textTransforms: string[];
+  /** Generators this extension provides (on-demand source producers). */
+  generators: GeneratorManifest[];
   /** EPUB assets copied into OEBPS/ and registered in the manifest (e.g. CSS). */
   assets: ExtensionAsset[];
   /** All license files to bundle into SOURCE/ (extension-wide + per-script + per-asset). */
@@ -125,8 +160,74 @@ function asScriptArray(v: unknown): string[] {
   return out;
 }
 
-/** Every license file to bundle: extension-wide + per-script + per-asset, deduped, order-stable. */
-function collectLicenses(scripts: unknown, license: unknown, assets: ExtensionAsset[]): string[] {
+const OPTION_TYPES = new Set(['string', 'boolean', 'number', 'select']);
+
+/** A select-option choice is `{ value, label }` (both strings); else dropped. */
+function asOptionChoice(v: unknown): { value: string; label: string } | null {
+  if (typeof v !== 'object' || v === null) return null;
+  const o = v as Record<string, unknown>;
+  if (typeof o.value !== 'string' || typeof o.label !== 'string') return null;
+  return { value: o.value, label: o.label };
+}
+
+/** Keep only well-formed option descriptors (string name + label); coerce type/choices. */
+function asGeneratorOptionArray(v: unknown): GeneratorOption[] {
+  if (!Array.isArray(v)) return [];
+  const out: GeneratorOption[] = [];
+  for (const item of v) {
+    if (typeof item !== 'object' || item === null) continue;
+    const o = item as Record<string, unknown>;
+    if (typeof o.name !== 'string' || !o.name) continue;
+    if (typeof o.label !== 'string' || !o.label) continue;
+    const type = typeof o.type === 'string' && OPTION_TYPES.has(o.type) ? o.type : 'string';
+    const choices = Array.isArray(o.options)
+      ? o.options.map(asOptionChoice).filter((c): c is { value: string; label: string } => c !== null)
+      : undefined;
+    const def =
+      typeof o.default === 'string' || typeof o.default === 'boolean' || typeof o.default === 'number'
+        ? o.default
+        : undefined;
+    out.push({
+      type: type as GeneratorOption['type'],
+      name: o.name,
+      label: o.label,
+      placeholder: asString(o.placeholder),
+      default: def,
+      options: choices,
+    });
+  }
+  return out;
+}
+
+/** Keep only well-formed generators (string id + name + script); normalize options. */
+function asGeneratorArray(v: unknown): GeneratorManifest[] {
+  if (!Array.isArray(v)) return [];
+  const out: GeneratorManifest[] = [];
+  for (const item of v) {
+    if (typeof item !== 'object' || item === null) continue;
+    const g = item as Record<string, unknown>;
+    if (typeof g.id !== 'string' || !g.id) continue;
+    if (typeof g.name !== 'string' || !g.name) continue;
+    if (typeof g.script !== 'string' || !g.script) continue;
+    out.push({
+      id: g.id,
+      name: g.name,
+      description: asString(g.description),
+      script: g.script,
+      license: asString(g.license),
+      options: asGeneratorOptionArray(g.options),
+    });
+  }
+  return out;
+}
+
+/** Every license file to bundle: extension-wide + per-script + per-asset + per-generator, deduped, order-stable. */
+function collectLicenses(
+  scripts: unknown,
+  license: unknown,
+  assets: ExtensionAsset[],
+  generators: GeneratorManifest[]
+): string[] {
   const out: string[] = [];
   const add = (l: unknown) => {
     if (typeof l === 'string' && l && !out.includes(l)) out.push(l);
@@ -139,6 +240,7 @@ function collectLicenses(scripts: unknown, license: unknown, assets: ExtensionAs
     }
   }
   for (const a of assets) add(a.license);
+  for (const g of generators) add(g.license);
   return out;
 }
 
@@ -148,8 +250,8 @@ function normalizeCatalogEntry(value: unknown): ExtensionCatalogEntry | null {
   const e = value as Record<string, unknown>;
   if (typeof e.id !== 'string' || e.id.length === 0) return null;
   if (typeof e.name !== 'string' || e.name.length === 0) return null;
-  if (!Array.isArray(e.scripts)) return null;
   const assets = asAssetArray(e.assets);
+  const generators = asGeneratorArray(e.generators);
   return {
     id: e.id,
     name: e.name,
@@ -159,8 +261,9 @@ function normalizeCatalogEntry(value: unknown): ExtensionCatalogEntry | null {
     scripts: asScriptArray(e.scripts),
     domTransforms: asStringArray(e.domTransforms),
     textTransforms: asStringArray(e.textTransforms),
+    generators,
     assets,
-    licenses: collectLicenses(e.scripts, e.license, assets),
+    licenses: collectLicenses(e.scripts, e.license, assets, generators),
     chapter: asString(e.chapter),
   };
 }
