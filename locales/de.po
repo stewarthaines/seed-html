@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: EDITME EPUB Editor\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-13\n"
-"PO-Revision-Date: 2026-06-14\n"
+"POT-Creation-Date: 2026-06-15\n"
+"PO-Revision-Date: 2026-06-15\n"
 "Language: de\n"
 "Language-Team: \n"
 "Last-Translator: Claude (machine first pass)\n"
@@ -19,6 +19,50 @@ msgstr "-- Voreinstellung wählen --"
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid ".. (up)"
 msgstr ".. (nach oben)"
+
+#: src/lib/components/spine/ChapterValidationPanel.svelte
+msgid "· validated {ago}"
+msgstr ""
+
+#: src/lib/components/workspace/WorkspaceItem.svelte
+msgid "{count} days ago"
+msgstr ""
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "{count} Warnings"
+msgstr ""
+
+#: src/lib/components/workspace/WorkspaceItem.svelte
+msgid "{count}h ago"
+msgstr ""
+
+#: src/lib/components/workspace/WorkspaceItem.svelte
+msgid "{count}w ago"
+msgstr ""
+
+#: src/lib/components/spine/ChapterValidationPanel.svelte
+msgid "{done}/{total} addressed"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
+msgid "{n} error"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
+msgid "{n} errors"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
+msgid "{n} info"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
+msgid "{n} warning"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
+msgid "{n} warnings"
+msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "← Back"
@@ -39,7 +83,10 @@ msgstr "Entwickelt von Stewart Haines."
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.cta.closing"
-msgstr "Das war's — ein vollständiges Buch. Von hier aus können Sie das Layout verfeinern, Bilder hinzufügen, es mit EPUBCheck prüfen und im Web veröffentlichen."
+msgstr ""
+"Das war's — ein vollständiges Buch. Von hier aus können Sie das Layout "
+"verfeinern, Bilder hinzufügen, es mit EPUBCheck prüfen und im Web "
+"veröffentlichen."
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.cta.intro"
@@ -47,15 +94,21 @@ msgstr "Sie können in wenigen Minuten ein echtes, teilbares Buch haben:"
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.cta.step1"
-msgstr "Erstellen Sie ein neues Projekt und geben Sie ihm einen Titel und einen Autor."
+msgstr ""
+"Erstellen Sie ein neues Projekt und geben Sie ihm einen Titel und einen "
+"Autor."
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.cta.step2"
-msgstr "Schreiben oder fügen Sie ein Kapitel als reinen Text ein — eine Überschrift und ein paar Absätze genügen."
+msgstr ""
+"Schreiben oder fügen Sie ein Kapitel als reinen Text ein — eine Überschrift "
+"und ein paar Absätze genügen."
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.cta.step3"
-msgstr "Sehen Sie sich in der Live-Vorschau an, wie es auf Smartphone- und Tablet-Bildschirmen aussieht."
+msgstr ""
+"Sehen Sie sich in der Live-Vorschau an, wie es auf Smartphone- und "
+"Tablet-Bildschirmen aussieht."
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.cta.step4"
@@ -71,15 +124,28 @@ msgstr "Erstellen Sie Ihr erstes Buch"
 
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "about.disclaimer.summary"
-msgstr "Diese Software wird unter intensivem Einsatz von Coding-Agenten entwickelt, insbesondere des Produkts Claude Code von Anthropic."
+msgstr ""
+"Diese Software wird unter intensivem Einsatz von Coding-Agenten entwickelt, "
+"insbesondere des Produkts Claude Code von Anthropic."
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.epub.editor"
-msgstr "Dieser Editor verwandelt reinen Text in ein gültiges EPUB — ohne Server, Konten oder Installation. Sie schreiben in einfacher, lesbarer Quelle; sie wird in sauberes XHTML umgewandelt und zu einem standardkonformen Buch gepackt, das Sie in jedem Lesesystem öffnen können."
+msgstr ""
+"Dieser Editor verwandelt reinen Text in ein gültiges EPUB — ohne Server, "
+"Konten oder Installation. Sie schreiben in einfacher, lesbarer Quelle; sie "
+"wird in sauberes XHTML umgewandelt und zu einem standardkonformen Buch "
+"gepackt, das Sie in jedem Lesesystem öffnen können."
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.epub.format"
-msgstr "EPUB ist der offene Standard für digitale Bücher: eine einzelne, eigenständige Datei aus Text, Stilen und Bildern, die jede kompatible App öffnen kann. Die Apps und Geräte, die sie anzeigen — Apple Books, Google Play Books, Kobo, Thorium Reader und viele mehr — werden Lesesysteme genannt. Da das Format offen ist, kann ein einmal erstelltes Buch fast überall gelesen werden, indem es sich an jeden Bildschirm anpasst und auf die von jedem Leser gewählte Größe, Schrift und Kontrast eingeht."
+msgstr ""
+"EPUB ist der offene Standard für digitale Bücher: eine einzelne, "
+"eigenständige Datei aus Text, Stilen und Bildern, die jede kompatible App "
+"öffnen kann. Die Apps und Geräte, die sie anzeigen — Apple Books, Google "
+"Play Books, Kobo, Thorium Reader und viele mehr — werden Lesesysteme "
+"genannt. Da das Format offen ist, kann ein einmal erstelltes Buch fast "
+"überall gelesen werden, indem es sich an jeden Bildschirm anpasst und auf "
+"die von jedem Leser gewählte Größe, Schrift und Kontrast eingeht."
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.epub.title"
@@ -87,7 +153,9 @@ msgstr "Was ist ein EPUB?"
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.graphic.alt"
-msgstr "Ein mit dem Editor erstelltes EPUB, das sich auf Smartphones, Tablets und E-Readern öffnet."
+msgstr ""
+"Ein mit dem Editor erstelltes EPUB, das sich auf Smartphones, Tablets und "
+"E-Readern öffnet."
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.graphic.caption"
@@ -95,7 +163,11 @@ msgstr "Einmal erstellen — überall lesen: Smartphones, Tablets, E-Reader und 
 
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "about.license.summary"
-msgstr "Simple EPUB Editor (vertrieben als SEED.html) ist freie und quelloffene Software, veröffentlicht unter der MIT-Lizenz. Sie dürfen sie verwenden, verändern und weiterverbreiten — einschließlich der Einbettung in die EPUBs, die Sie erstellen."
+msgstr ""
+"Simple EPUB Editor (vertrieben als SEED.html) ist freie und quelloffene "
+"Software, veröffentlicht unter der MIT-Lizenz. Sie dürfen sie verwenden, "
+"verändern und weiterverbreiten — einschließlich der Einbettung in die "
+"EPUBs, die Sie erstellen."
 
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "about.license.title"
@@ -119,7 +191,9 @@ msgstr "Version"
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.website.intro"
-msgstr "Für Anleitungen, Beispiele und den größeren Zusammenhang besuchen Sie die Website:"
+msgstr ""
+"Für Anleitungen, Beispiele und den größeren Zusammenhang besuchen Sie die "
+"Website:"
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.website.link"
@@ -145,9 +219,17 @@ msgstr "Barrierefreiheit"
 msgid "Accessibility API"
 msgstr "Barrierefreiheits-API"
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Accessibility check (axe-core) — re-runs as you edit while open"
+msgstr ""
+
 #: src/lib/components/metadata/AccessibilityFields.svelte
 msgid "Accessibility features"
 msgstr "Barrierefreiheitsmerkmale"
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Accessibility issues"
+msgstr ""
 
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Actions"
@@ -173,7 +255,10 @@ msgstr "DOM-Transformation hinzufügen…"
 msgid ""
 "Add a library and its suggested DOM transform to the current project; then "
 "enable the transform under Project Settings."
-msgstr "Fügen Sie dem aktuellen Projekt eine Bibliothek und ihre vorgeschlagene DOM-Transformation hinzu; aktivieren Sie die Transformation anschließend unter den Projekteinstellungen."
+msgstr ""
+"Fügen Sie dem aktuellen Projekt eine Bibliothek und ihre vorgeschlagene "
+"DOM-Transformation hinzu; aktivieren Sie die Transformation anschließend "
+"unter den Projekteinstellungen."
 
 #: src/lib/components/metadata/AccessibilityFields.svelte
 msgid "Add a sufficient set"
@@ -239,7 +324,9 @@ msgstr "Zusätzliche Informationen"
 msgid ""
 "Additional libraries used when the editor runs online — the publish plugin "
 "and online-only features."
-msgstr "Zusätzliche Bibliotheken, die verwendet werden, wenn der Editor online läuft — das Veröffentlichungs-Plugin und reine Online-Funktionen."
+msgstr ""
+"Zusätzliche Bibliotheken, die verwendet werden, wenn der Editor online "
+"läuft — das Veröffentlichungs-Plugin und reine Online-Funktionen."
 
 #: src/lib/components/metadata/TitleEditor.svelte
 msgid "Additional title"
@@ -273,10 +360,24 @@ msgstr "Element anhängen"
 msgid "Apple Books"
 msgstr "Apple Books"
 
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Approximate start position"
+msgstr ""
+
+#: src/lib/components/SpineSidebar.svelte
+msgid ""
+"Are you sure you want to delete chapter '{name}'? This will permanently "
+"delete the chapter and its source file."
+msgstr ""
+
 #: src/App.svelte
 #: src/lib/components/manifest/ManifestContainer.svelte
 msgid "Are you sure you want to delete this item?"
 msgstr "Möchten Sie dieses Element wirklich löschen?"
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Audio Clip Editor"
+msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Audio Clip Template"
@@ -388,6 +489,16 @@ msgstr "Ordner ändern"
 msgid "Chapter Content"
 msgstr "Kapitelinhalt"
 
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Chapter title"
+msgstr ""
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid ""
+"Chapter title — used in the content document <title>; defaults to the spine "
+"id"
+msgstr ""
+
 #: src/lib/Sidebar.svelte
 msgid "Chapters"
 msgstr "Kapitel"
@@ -408,12 +519,26 @@ msgstr "Suche löschen"
 msgid "Click on any row in the table to see details"
 msgstr "Klicken Sie auf eine beliebige Zeile in der Tabelle, um Details anzuzeigen"
 
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Clip label"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
+#: src/lib/components/spine/ChapterValidationPanel.svelte
+#: src/lib/components/spine/PreviewPane.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 #: src/lib/components/workspace/DuplicateProjectDialog.svelte
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 msgid "Close"
 msgstr "Schließen"
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Close accessibility panel"
+msgstr ""
+
+#: src/lib/components/spine/ChapterValidationPanel.svelte
+msgid "Close validation panel"
+msgstr ""
 
 #: src/lib/components/metadata/CollectionsEditor.svelte
 #: src/lib/components/metadata/TitleEditor.svelte
@@ -475,6 +600,10 @@ msgstr "Mit Google Drive verbinden, um Dateien anzuzeigen."
 msgid "Connecting to storage..."
 msgstr "Verbindung zum Speicher wird hergestellt..."
 
+#: src/lib/components/preview/ContentPreview.svelte
+msgid "Content Preview"
+msgstr ""
+
 #: src/App.svelte
 msgid "Content preview will appear here based on the current view"
 msgstr "Die Inhaltsvorschau erscheint hier basierend auf der aktuellen Ansicht"
@@ -506,6 +635,12 @@ msgstr "Kopieren"
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 msgid "Copy URL"
 msgstr "URL kopieren"
+
+#: src/lib/components/workspace/OPDSImportDialog.svelte
+msgid ""
+"Could not load the feed: {error}. The server may not allow cross-origin "
+"requests."
+msgstr ""
 
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 msgid "Could not load the feed."
@@ -605,9 +740,29 @@ msgstr "Standard"
 msgid "Delete"
 msgstr "Löschen"
 
+#: src/lib/navigation/views/WorkspaceView.svelte
+msgid "Delete \"{title}\"? This cannot be undone."
+msgstr ""
+
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Delete {filename}? This cannot be undone."
+msgstr ""
+
+#: src/App.svelte
+msgid "Delete {name}? This cannot be undone."
+msgstr ""
+
+#: src/lib/components/SpineItem.svelte
+msgid "Delete chapter {name}"
+msgstr ""
+
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Delete project"
 msgstr "Projekt löschen"
+
+#: src/lib/components/workspace/WorkspaceItem.svelte
+msgid "Delete project: {title}"
+msgstr ""
 
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Demo Controls"
@@ -657,9 +812,17 @@ msgstr "Duplizieren"
 msgid "Duplicate Project"
 msgstr "Projekt duplizieren"
 
+#: src/lib/components/workspace/WorkspaceActionBar.svelte
+msgid "Duplicate the current project: {name}"
+msgstr ""
+
 #: src/lib/components/workspace/DuplicateProjectDialog.svelte
 msgid "Duplicating…"
 msgstr "Wird dupliziert…"
+
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Duration"
+msgstr ""
 
 #: src/lib/components/metadata/CollectionsEditor.svelte
 msgid "e.g. 2"
@@ -694,7 +857,9 @@ msgstr "z. B. urn:isbn:9780000000001"
 msgid ""
 "Each row is one combination of modes that is enough on its own to read the "
 "whole publication."
-msgstr "Jede Zeile ist eine Kombination von Modi, die für sich genommen ausreicht, um die gesamte Publikation zu lesen."
+msgstr ""
+"Jede Zeile ist eine Kombination von Modi, die für sich genommen ausreicht, "
+"um die gesamte Publikation zu lesen."
 
 #: plugins/publish-to-remote/src/components/RemoteSelector.svelte
 msgid "Edit"
@@ -708,9 +873,15 @@ msgstr "Ausgabe"
 msgid "Editor"
 msgstr "Editor"
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "element"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Enable advanced editing features and additional controls for expert users."
-msgstr "Aktiviert erweiterte Bearbeitungsfunktionen und zusätzliche Steuerelemente für erfahrene Benutzer."
+msgstr ""
+"Aktiviert erweiterte Bearbeitungsfunktionen und zusätzliche Steuerelemente "
+"für erfahrene Benutzer."
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Endpoint URL"
@@ -735,6 +906,17 @@ msgstr "Copyright-Informationen eingeben"
 #: src/lib/components/metadata/AdvancedFields.svelte
 msgid "Enter format information"
 msgstr "Formatinformationen eingeben"
+
+#: src/lib/components/outline/OutlineEditor.svelte
+msgid ""
+"Enter navigation content in plain text. Leave empty to auto-generate from "
+"chapter titles. Press Ctrl+Enter (Cmd+Enter on Mac) to save navigation "
+"content."
+msgstr ""
+
+#: src/lib/components/SpineSidebar.svelte
+msgid "Enter new ID for {item}:"
+msgstr ""
 
 #: src/lib/components/metadata/AdvancedFields.svelte
 msgid "Enter publisher name"
@@ -768,6 +950,7 @@ msgstr "EPUB-Eigenschaften"
 msgid "EPUB Settings"
 msgstr "EPUB-Einstellungen"
 
+#: src/lib/components/spine/PreviewPane.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Error"
@@ -814,6 +997,10 @@ msgstr "Projekt konnte nicht erstellt werden."
 msgid "Failed to delete item"
 msgstr "Element konnte nicht gelöscht werden"
 
+#: src/lib/navigation/views/WorkspaceView.svelte
+msgid "Failed to delete workspace: {error}"
+msgstr ""
+
 #: src/lib/components/workspace/DuplicateProjectDialog.svelte
 msgid "Failed to duplicate project."
 msgstr "Projekt konnte nicht dupliziert werden."
@@ -821,6 +1008,10 @@ msgstr "Projekt konnte nicht dupliziert werden."
 #: src/lib/components/metadata/OPFPreview.svelte
 msgid "Failed to generate XML preview"
 msgstr "XML-Vorschau konnte nicht erzeugt werden"
+
+#: src/lib/navigation/views/WorkspaceView.svelte
+msgid "Failed to import EPUB: {error}"
+msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Failed to import extension"
@@ -846,6 +1037,10 @@ msgstr "Projekte konnten nicht geladen werden"
 msgid "Failed to load settings"
 msgstr "Einstellungen konnten nicht geladen werden"
 
+#: src/lib/navigation/views/WorkspaceView.svelte
+msgid "Failed to open workspace: {error}"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Failed to remove extension"
 msgstr "Erweiterung konnte nicht entfernt werden"
@@ -853,6 +1048,10 @@ msgstr "Erweiterung konnte nicht entfernt werden"
 #: src/lib/components/metadata/MetadataEditor.svelte
 msgid "Failed to remove metadata item"
 msgstr "Metadaten-Element konnte nicht entfernt werden"
+
+#: src/lib/components/SpineSidebar.svelte
+msgid "Failed to rename chapter ID: {error}"
+msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Failed to save EPUB settings"
@@ -1027,13 +1226,29 @@ msgstr "In Katalog aufnehmen"
 msgid "Include page numbers"
 msgstr "Seitenzahlen einschließen"
 
+#: src/App.svelte
+msgid "Initializing application..."
+msgstr ""
+
 #: src/lib/navigation/views/SpineView.svelte
 msgid "Initializing editor..."
 msgstr "Editor wird initialisiert..."
 
+#: src/App.svelte
+msgid "Initializing transform engine..."
+msgstr ""
+
 #: plugins/publish-to-remote/src/App.svelte
 msgid "Initializing..."
 msgstr "Wird initialisiert..."
+
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Insert Clip Directive"
+msgstr ""
+
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Insert clip directive at cursor position"
+msgstr ""
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 msgid "Invalid"
@@ -1066,6 +1281,10 @@ msgstr "iPhone 15 Pro Max (430×932)"
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "iPhone SE (375×667)"
 msgstr "iPhone SE (375×667)"
+
+#: src/lib/components/SpineItem.svelte
+msgid "Item controls"
+msgstr ""
 
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Just now"
@@ -1100,6 +1319,10 @@ msgstr "Groß"
 msgid "Layout"
 msgstr "Layout"
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "learn more"
+msgstr ""
+
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Left to Right"
 msgstr "Links nach rechts"
@@ -1121,9 +1344,21 @@ msgstr "Hell"
 msgid "Light text on a dark cover"
 msgstr "Heller Text auf dunklem Cover"
 
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Load clip data from selected text"
+msgstr ""
+
 #: src/lib/components/manifest/ManifestTable.svelte
 msgid "Load File"
 msgstr "Datei laden"
+
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Load from Selection"
+msgstr ""
+
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Loading audio..."
+msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Loading extensions..."
@@ -1165,6 +1400,10 @@ msgstr "Spine-Element wird geladen..."
 msgid "Loading spine items…"
 msgstr "Spine-Elemente werden geladen…"
 
+#: src/lib/Sidebar.svelte
+msgid "Loading..."
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 #: src/lib/navigation/views/PublishView.svelte
@@ -1195,6 +1434,10 @@ msgstr "Manifest"
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Margin"
 msgstr "Rand"
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Message:"
+msgstr ""
 
 #: src/App.svelte
 #: src/lib/Sidebar.svelte
@@ -1229,6 +1472,22 @@ msgstr "Dicktengleich"
 msgid "Move down"
 msgstr "Nach unten"
 
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Move start time back 0.1 seconds"
+msgstr ""
+
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Move start time back 1 second"
+msgstr ""
+
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Move start time forward 0.1 seconds"
+msgstr ""
+
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Move start time forward 1 second"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Move up"
 msgstr "Nach oben"
@@ -1254,6 +1513,18 @@ msgstr "Navigation"
 msgid "Navigation (TOC)"
 msgstr "Navigation (Inhaltsverzeichnis)"
 
+#: src/lib/components/outline/OutlineEditor.svelte
+msgid "Navigation content editor"
+msgstr ""
+
+#: src/lib/components/outline/OutlineView.svelte
+msgid "Navigation content will be auto-generated from your chapters..."
+msgstr ""
+
+#: src/lib/components/outline/OutlineView.svelte
+msgid "Navigation editor"
+msgstr ""
+
 #: src/App.svelte
 msgid "Navigation Preview"
 msgstr "Navigationsvorschau"
@@ -1266,6 +1537,10 @@ msgstr "Neues Projekt"
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 msgid "No"
 msgstr "Nein"
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "No Content"
+msgstr ""
 
 #: src/lib/components/metadata/OPFPreview.svelte
 msgid "No content available"
@@ -1316,6 +1591,16 @@ msgstr "Kein Projekt ausgewählt"
 msgid "No projects found"
 msgstr "Keine Projekte gefunden"
 
+#: src/lib/components/workspace/WorkspaceList.svelte
+msgid "No projects match your search for \"{query}\""
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid ""
+"No proxy was detected on this host, so this only works once the app is "
+"deployed with the WebDAV proxy."
+msgstr ""
+
 #: src/lib/navigation/views/SpineView.svelte
 msgid "No spine item selected"
 msgstr "Kein Spine-Element ausgewählt"
@@ -1327,6 +1612,10 @@ msgstr "Noch keine Spine-Elemente"
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "No subfolders here"
 msgstr "Hier keine Unterordner"
+
+#: src/lib/components/spine/ChapterValidationPanel.svelte
+msgid "No validation issues in this chapter."
+msgstr ""
 
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "None"
@@ -1356,6 +1645,10 @@ msgstr "Öffnen Sie ein Projekt, um Erweiterungen hinzuzufügen"
 msgid "Open a project to configure its settings."
 msgstr "Öffnen Sie ein Projekt, um seine Einstellungen zu konfigurieren."
 
+#: src/lib/components/workspace/WorkspaceItem.svelte
+msgid "Open project: {title}"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 msgid "Open this chapter in the editor"
 msgstr "Dieses Kapitel im Editor öffnen"
@@ -1366,7 +1659,13 @@ msgstr "OPF-Quellvorschau"
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Optional features available when the app is served over HTTP."
-msgstr "Optionale Funktionen, die verfügbar sind, wenn die App über HTTP bereitgestellt wird."
+msgstr ""
+"Optionale Funktionen, die verfügbar sind, wenn die App über HTTP "
+"bereitgestellt wird."
+
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Optional label"
+msgstr ""
 
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Orientation"
@@ -1375,6 +1674,10 @@ msgstr "Ausrichtung"
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Orientation:"
 msgstr "Ausrichtung:"
+
+#: src/lib/components/spine/ChapterValidationPanel.svelte
+msgid "Other chapters with issues"
+msgstr ""
 
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 msgid "Overwrite?"
@@ -1416,13 +1719,31 @@ msgstr "Paginiert"
 msgid "Paginating…"
 msgstr "Wird paginiert…"
 
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Pane 1 content"
+msgstr ""
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Pane 2 content"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Paper size for the exported PDF. Your stylesheet can override this."
-msgstr "Papierformat für das exportierte PDF. Ihr Stylesheet kann dies überschreiben."
+msgstr ""
+"Papierformat für das exportierte PDF. Ihr Stylesheet kann dies "
+"überschreiben."
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Password"
 msgstr "Passwort"
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "password or app token"
+msgstr ""
+
+#: src/lib/components/extensions/ExtensionItem.svelte
+msgid "Paste {name} license text here"
+msgstr ""
 
 #: src/lib/components/manifest/ManifestTable.svelte
 msgid "Path"
@@ -1440,7 +1761,13 @@ msgstr "Reiner Text"
 msgid ""
 "Please copy license text into the License field below to comply with open "
 "source requirements."
-msgstr "Bitte kopieren Sie den Lizenztext in das untenstehende Lizenzfeld, um die Open-Source-Anforderungen zu erfüllen."
+msgstr ""
+"Bitte kopieren Sie den Lizenztext in das untenstehende Lizenzfeld, um die "
+"Open-Source-Anforderungen zu erfüllen."
+
+#: src/App.svelte
+msgid "Please refresh the page to try again."
+msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Plugins"
@@ -1550,7 +1877,9 @@ msgstr "Schreibgeschützt"
 msgid ""
 "Read-only — this EPUB wasn't created in the Simple EPUB Editor, so it can't "
 "be edited."
-msgstr "Schreibgeschützt — dieses EPUB wurde nicht im Simple EPUB Editor erstellt und kann daher nicht bearbeitet werden."
+msgstr ""
+"Schreibgeschützt — dieses EPUB wurde nicht im Simple EPUB Editor erstellt "
+"und kann daher nicht bearbeitet werden."
 
 #: src/lib/navigation/views/SpineView.svelte
 msgid "Read-only chapter"
@@ -1618,6 +1947,10 @@ msgstr "Thema entfernen"
 msgid "Remove the selected feed from the list"
 msgstr "Den ausgewählten Feed aus der Liste entfernen"
 
+#: src/lib/components/SpineItem.svelte
+msgid "Rename {item}"
+msgstr ""
+
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Rendition Properties"
 msgstr "Rendition-Eigenschaften"
@@ -1629,6 +1962,16 @@ msgstr "Ersetzen"
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 msgid "Report"
 msgstr "Bericht"
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Requests go straight to the server, which must send CORS headers."
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid ""
+"Requests go through this app’s /dav endpoint; your WebDAV credentials "
+"transit the app host."
+msgstr ""
 
 #: src/lib/components/metadata/fields/DateMetadataField.svelte
 #: src/lib/components/metadata/fields/TextareaMetadataField.svelte
@@ -1681,7 +2024,10 @@ msgstr "Beispielautor"
 
 #: src/lib/content/sample-content-generator.ts
 msgid "sample.book.description"
-msgstr "Dies ist ein Beispiel-EPUB-Buch, das zu Demonstrationszwecken erstellt wurde. Es zeigt die grundlegende Struktur und den Inhalt einer EPUB-Publikation."
+msgstr ""
+"Dies ist ein Beispiel-EPUB-Buch, das zu Demonstrationszwecken erstellt "
+"wurde. Es zeigt die grundlegende Struktur und den Inhalt einer "
+"EPUB-Publikation."
 
 #: src/lib/content/sample-content-generator.ts
 msgid "sample.book.title"
@@ -1689,7 +2035,41 @@ msgstr "Beispiel-EPUB-Buch"
 
 #: src/lib/content/sample-content-generator.ts
 msgid "sample.chapter1.content"
-msgstr "# Erfolg *freigeschaltet!*\n\nDies ist ein minimales Beispiel-EPUB, das in der Simple-EPUB-Editor-App — **SEED.html** — erstellt wurde.\n\nDieses Beispielprojekt bietet nur einen Teil der Markdown-Formatoptionen (Überschriften, Fett und Kursiv).\n\n## Markdown-Teilmenge\n\n**Das ist fett** und wird erstellt, indem Text in doppelte Sternchen eingeschlossen wird.\n\n*Das ist hervorgehoben* und wird erstellt, indem Text in einzelne Sternchen eingeschlossen wird.\n\nSie können auch XHTML direkt in <em><strong>dieses</strong> EPUB</em> schreiben, aber das verfehlt gewissermaßen den Sinn der SEED.html-App.\n\n## Ein besserer Weg\n\nFür umfangreichere Formatierungsoptionen gibt es JavaScript-Erweiterungen von Drittanbietern, die derzeit nicht in diesem Projekt vorhanden sind.\n\nFür echte Schreibprojekte beginnen Sie am besten damit, ein Beispiel-EPUB zu wählen, das für die Erzeugung von semantischem, barrierefreiem XHTML aus *reinem Textquelltext* vorkonfiguriert ist.\n\nAuf der SEED.html-Website gibt es Beispiel-EPUBs mit Unterstützung für Markdown, Textile, ABC-Notenschrift und mehr.\n\nSie finden sie auf der SEED.html-Startseite: <p class='action'><a href='https://stewarthaines.com/epub' target='_blank'>SEED.html online öffnen</a></p>"
+msgstr ""
+"# Erfolg *freigeschaltet!*\n"
+"\n"
+"Dies ist ein minimales Beispiel-EPUB, das in der Simple-EPUB-Editor-App — "
+"**SEED.html** — erstellt wurde.\n"
+"\n"
+"Dieses Beispielprojekt bietet nur einen Teil der Markdown-Formatoptionen "
+"(Überschriften, Fett und Kursiv).\n"
+"\n"
+"## Markdown-Teilmenge\n"
+"\n"
+"**Das ist fett** und wird erstellt, indem Text in doppelte Sternchen "
+"eingeschlossen wird.\n"
+"\n"
+"*Das ist hervorgehoben* und wird erstellt, indem Text in einzelne Sternchen "
+"eingeschlossen wird.\n"
+"\n"
+"Sie können auch XHTML direkt in <em><strong>dieses</strong> EPUB</em> "
+"schreiben, aber das verfehlt gewissermaßen den Sinn der SEED.html-App.\n"
+"\n"
+"## Ein besserer Weg\n"
+"\n"
+"Für umfangreichere Formatierungsoptionen gibt es JavaScript-Erweiterungen "
+"von Drittanbietern, die derzeit nicht in diesem Projekt vorhanden sind.\n"
+"\n"
+"Für echte Schreibprojekte beginnen Sie am besten damit, ein Beispiel-EPUB "
+"zu wählen, das für die Erzeugung von semantischem, barrierefreiem XHTML aus "
+"*reinem Textquelltext* vorkonfiguriert ist.\n"
+"\n"
+"Auf der SEED.html-Website gibt es Beispiel-EPUBs mit Unterstützung für "
+"Markdown, Textile, ABC-Notenschrift und mehr.\n"
+"\n"
+"Sie finden sie auf der SEED.html-Startseite: <p class='action'><a "
+"href='https://stewarthaines.com/epub' target='_blank'>SEED.html online "
+"öffnen</a></p>"
 
 #: src/lib/content/sample-content-generator.ts
 msgid "sample.chapter1.title"
@@ -1723,7 +2103,9 @@ msgstr "Gespeicherte Feeds…"
 msgid ""
 "Scripts run top-to-bottom over the generated DOM, each applied to the "
 "previous one’s output."
-msgstr "Skripte laufen von oben nach unten über das erzeugte DOM, jedes wird auf die Ausgabe des vorherigen angewendet."
+msgstr ""
+"Skripte laufen von oben nach unten über das erzeugte DOM, jedes wird auf "
+"die Ausgabe des vorherigen angewendet."
 
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Scrolled (continuous)"
@@ -1751,7 +2133,9 @@ msgstr "Secret Key"
 
 #: src/lib/navigation/views/SpineView.svelte
 msgid "Select a spine item from the sidebar to start editing"
-msgstr "Wählen Sie ein Spine-Element in der Seitenleiste aus, um mit der Bearbeitung zu beginnen"
+msgstr ""
+"Wählen Sie ein Spine-Element in der Seitenleiste aus, um mit der "
+"Bearbeitung zu beginnen"
 
 #: src/App.svelte
 msgid "Select a spine item to see the preview here"
@@ -1761,9 +2145,29 @@ msgstr "Wählen Sie ein Spine-Element aus, um die Vorschau hier zu sehen"
 msgid "Select an item to preview its content"
 msgstr "Wählen Sie ein Element aus, um seinen Inhalt in der Vorschau anzuzeigen"
 
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Select audio file"
+msgstr ""
+
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Select audio..."
+msgstr ""
+
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Select device preset"
 msgstr "Gerätevoreinstellung auswählen"
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Select file for pane 1"
+msgstr ""
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Select file for pane 2"
+msgstr ""
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Select file..."
+msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Select This Folder"
@@ -1802,6 +2206,14 @@ msgstr "Eine Seitenzahl am unteren Rand jeder Seite anzeigen."
 msgid "Show project sections"
 msgstr "Projektbereiche anzeigen"
 
+#: src/lib/components/workspace/WorkspaceList.svelte
+msgid "Showing {filtered} of {total} workspaces"
+msgstr ""
+
+#: src/lib/Sidebar.svelte
+msgid "Simple EPUB Editor"
+msgstr ""
+
 #: src/lib/components/manifest/ManifestTable.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Size"
@@ -1809,7 +2221,9 @@ msgstr "Größe"
 
 #: src/lib/components/manifest/ManifestContainer.svelte
 msgid "Some files failed to upload - see console for details"
-msgstr "Einige Dateien konnten nicht hochgeladen werden – Einzelheiten in der Konsole"
+msgstr ""
+"Einige Dateien konnten nicht hochgeladen werden – Einzelheiten in der "
+"Konsole"
 
 #: src/lib/components/metadata/CreatorRoleEditor.svelte
 #: src/lib/components/metadata/TitleEditor.svelte
@@ -1841,6 +2255,15 @@ msgstr "Spine-Vorschau"
 msgid "Spread"
 msgstr "Doppelseite"
 
+#: src/lib/components/spine/EditorPane.svelte
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Stack Trace"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Stage:"
+msgstr ""
+
 #: src/lib/components/spine/PreviewPane.svelte
 #. Device size for typical/common mobile phone or e-reader screen
 msgid "Standard"
@@ -1849,6 +2272,14 @@ msgstr "Standard"
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Start the PDF with the project's cover image as a full-page cover."
 msgstr "Das PDF mit dem Coverbild des Projekts als ganzseitigem Cover beginnen."
+
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Start time"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Start typing in the editor to see your XHTML preview here."
+msgstr ""
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 msgid "Status:"
@@ -1890,6 +2321,18 @@ msgstr "System"
 msgid "Technical Info"
 msgstr "Technische Informationen"
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid ""
+"Template for inserting audio clip directives. Use placeholders: <href>, "
+"<begin>, <end>, <label>, <rate>"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid ""
+"Template for the exported .epub filename. Use placeholders: <title>, "
+"<author>, <date>. Empty placeholders (e.g. no author) collapse cleanly."
+msgstr ""
+
 #: src/lib/components/metadata/SubjectEditor.svelte
 msgid "Term (e.g. FIC028000)"
 msgstr "Begriff (z. B. FIC028000)"
@@ -1910,33 +2353,47 @@ msgstr "Text-Transformation"
 msgid ""
 "The single plain-text → XHTML step. Pick a project script or one supplied "
 "by an extension."
-msgstr "Der einzelne Schritt von reinem Text zu XHTML. Wählen Sie ein Projektskript oder eines, das von einer Erweiterung bereitgestellt wird."
+msgstr ""
+"Der einzelne Schritt von reinem Text zu XHTML. Wählen Sie ein Projektskript "
+"oder eines, das von einer Erweiterung bereitgestellt wird."
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Theme"
 msgstr "Design"
 
+#: src/lib/components/spine/ChapterValidationPanel.svelte
+msgid "This chapter"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "This EPUB is read-only, so extensions can't be added."
-msgstr "Dieses EPUB ist schreibgeschützt, daher können keine Erweiterungen hinzugefügt werden."
+msgstr ""
+"Dieses EPUB ist schreibgeschützt, daher können keine Erweiterungen "
+"hinzugefügt werden."
 
 #: src/lib/components/outline/OutlineView.svelte
 msgid ""
 "This EPUB wasn't created in the Simple EPUB Editor — its navigation is "
 "shown for viewing only."
-msgstr "Dieses EPUB wurde nicht im Simple EPUB Editor erstellt — seine Navigation wird nur zur Ansicht angezeigt."
+msgstr ""
+"Dieses EPUB wurde nicht im Simple EPUB Editor erstellt — seine Navigation "
+"wird nur zur Ansicht angezeigt."
 
 #: src/App.svelte
 msgid ""
 "This EPUB wasn't created in the Simple EPUB Editor, so it can't be "
 "repackaged."
-msgstr "Dieses EPUB wurde nicht im Simple EPUB Editor erstellt und kann daher nicht neu gepackt werden."
+msgstr ""
+"Dieses EPUB wurde nicht im Simple EPUB Editor erstellt und kann daher nicht "
+"neu gepackt werden."
 
 #: src/lib/navigation/views/SpineView.svelte
 msgid ""
 "This EPUB wasn't created in the Simple EPUB Editor, so its chapters can be "
 "viewed but not edited."
-msgstr "Dieses EPUB wurde nicht im Simple EPUB Editor erstellt, daher können seine Kapitel angezeigt, aber nicht bearbeitet werden."
+msgstr ""
+"Dieses EPUB wurde nicht im Simple EPUB Editor erstellt, daher können seine "
+"Kapitel angezeigt, aber nicht bearbeitet werden."
 
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/metadata/TitleEditor.svelte
@@ -1949,13 +2406,53 @@ msgstr "Titel"
 msgid "Today"
 msgstr "Heute"
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Toggle device orientation"
+msgstr ""
+
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Toggle Empty State"
 msgstr "Leeren Zustand umschalten"
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Toggle orientation"
+msgstr ""
+
 #: src/lib/Sidebar.svelte
 msgid "Toggle sidebar"
 msgstr "Seitenleiste umschalten"
+
+#: src/lib/ThemeToggle.svelte
+msgid "Toggle theme"
+msgstr ""
+
+#: src/App.svelte
+msgid "Transform Engine Failed"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Transform error"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Transform Error"
+msgstr ""
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Transform Error ({stage})"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Transform in progress"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Transform successful"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Transforming..."
+msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
 #. Device category for e-reader devices designed for portable reading
@@ -2013,6 +2510,10 @@ msgid "Use the publication’s own fonts (do not re-style)"
 msgstr "Die eigenen Schriften der Publikation verwenden (nicht neu gestalten)"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "username"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Username"
 msgstr "Benutzername"
 
@@ -2036,6 +2537,30 @@ msgstr "EPUB validieren"
 msgid "Validating..."
 msgstr "Wird validiert..."
 
+#: src/lib/components/spine/ChapterValidationPanel.svelte
+msgid "Validation"
+msgstr ""
+
+#: src/lib/components/SpineItem.svelte
+msgid "Validation error"
+msgstr ""
+
+#: src/lib/components/spine/ChapterValidationPanel.svelte
+msgid "Validation issues for this chapter"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Validation report (epubcheck) for this chapter"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ValidationModal.svelte
+msgid "Validation Report: {filename}"
+msgstr ""
+
+#: src/lib/components/metadata/MetadataTab.svelte
+msgid "validation.errorsCount"
+msgstr ""
+
 #: src/App.svelte
 msgid "View type"
 msgstr "Ansichtstyp"
@@ -2055,6 +2580,10 @@ msgstr "Viewport-Höhe in Pixeln"
 #: src/lib/components/metadata/fields/ViewportField.svelte
 msgid "Viewport width in pixels"
 msgstr "Viewport-Breite in Pixeln"
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "warnings"
+msgstr ""
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 msgid "Warnings:"
@@ -2079,6 +2608,10 @@ msgstr "Willkommen"
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Wide"
 msgstr "Breit"
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "XHTML Preview"
+msgstr ""
 
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte

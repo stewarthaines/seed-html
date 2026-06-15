@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: EDITME EPUB Editor\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-13\n"
-"PO-Revision-Date: 2026-06-13\n"
+"POT-Creation-Date: 2026-06-15\n"
+"PO-Revision-Date: 2026-06-15\n"
 "Language: en\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -18,6 +18,50 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid ".. (up)"
+msgstr ""
+
+#: src/lib/components/spine/ChapterValidationPanel.svelte
+msgid "· validated {ago}"
+msgstr ""
+
+#: src/lib/components/workspace/WorkspaceItem.svelte
+msgid "{count} days ago"
+msgstr ""
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "{count} Warnings"
+msgstr ""
+
+#: src/lib/components/workspace/WorkspaceItem.svelte
+msgid "{count}h ago"
+msgstr ""
+
+#: src/lib/components/workspace/WorkspaceItem.svelte
+msgid "{count}w ago"
+msgstr ""
+
+#: src/lib/components/spine/ChapterValidationPanel.svelte
+msgid "{done}/{total} addressed"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
+msgid "{n} error"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
+msgid "{n} errors"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
+msgid "{n} info"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
+msgid "{n} warning"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
+msgid "{n} warnings"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
@@ -165,8 +209,16 @@ msgstr ""
 msgid "Accessibility API"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Accessibility check (axe-core) — re-runs as you edit while open"
+msgstr ""
+
 #: src/lib/components/metadata/AccessibilityFields.svelte
 msgid "Accessibility features"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Accessibility issues"
 msgstr ""
 
 #: src/lib/navigation/views/PublishView.svelte
@@ -293,9 +345,23 @@ msgstr ""
 msgid "Apple Books"
 msgstr ""
 
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Approximate start position"
+msgstr ""
+
+#: src/lib/components/SpineSidebar.svelte
+msgid ""
+"Are you sure you want to delete chapter '{name}'? This will permanently "
+"delete the chapter and its source file."
+msgstr ""
+
 #: src/App.svelte
 #: src/lib/components/manifest/ManifestContainer.svelte
 msgid "Are you sure you want to delete this item?"
+msgstr ""
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Audio Clip Editor"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -408,6 +474,16 @@ msgstr ""
 msgid "Chapter Content"
 msgstr ""
 
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Chapter title"
+msgstr ""
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid ""
+"Chapter title — used in the content document <title>; defaults to the spine "
+"id"
+msgstr ""
+
 #: src/lib/Sidebar.svelte
 msgid "Chapters"
 msgstr ""
@@ -428,11 +504,25 @@ msgstr ""
 msgid "Click on any row in the table to see details"
 msgstr ""
 
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Clip label"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
+#: src/lib/components/spine/ChapterValidationPanel.svelte
+#: src/lib/components/spine/PreviewPane.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 #: src/lib/components/workspace/DuplicateProjectDialog.svelte
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 msgid "Close"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Close accessibility panel"
+msgstr ""
+
+#: src/lib/components/spine/ChapterValidationPanel.svelte
+msgid "Close validation panel"
 msgstr ""
 
 #: src/lib/components/metadata/CollectionsEditor.svelte
@@ -495,6 +585,10 @@ msgstr ""
 msgid "Connecting to storage..."
 msgstr ""
 
+#: src/lib/components/preview/ContentPreview.svelte
+msgid "Content Preview"
+msgstr ""
+
 #: src/App.svelte
 msgid "Content preview will appear here based on the current view"
 msgstr ""
@@ -525,6 +619,12 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 msgid "Copy URL"
+msgstr ""
+
+#: src/lib/components/workspace/OPDSImportDialog.svelte
+msgid ""
+"Could not load the feed: {error}. The server may not allow cross-origin "
+"requests."
 msgstr ""
 
 #: src/lib/components/workspace/OPDSImportDialog.svelte
@@ -625,8 +725,28 @@ msgstr ""
 msgid "Delete"
 msgstr ""
 
+#: src/lib/navigation/views/WorkspaceView.svelte
+msgid "Delete \"{title}\"? This cannot be undone."
+msgstr ""
+
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Delete {filename}? This cannot be undone."
+msgstr ""
+
+#: src/App.svelte
+msgid "Delete {name}? This cannot be undone."
+msgstr ""
+
+#: src/lib/components/SpineItem.svelte
+msgid "Delete chapter {name}"
+msgstr ""
+
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Delete project"
+msgstr ""
+
+#: src/lib/components/workspace/WorkspaceItem.svelte
+msgid "Delete project: {title}"
 msgstr ""
 
 #: src/stories/preview/ContentPreviewDemo.svelte
@@ -677,8 +797,16 @@ msgstr ""
 msgid "Duplicate Project"
 msgstr ""
 
+#: src/lib/components/workspace/WorkspaceActionBar.svelte
+msgid "Duplicate the current project: {name}"
+msgstr ""
+
 #: src/lib/components/workspace/DuplicateProjectDialog.svelte
 msgid "Duplicating…"
+msgstr ""
+
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Duration"
 msgstr ""
 
 #: src/lib/components/metadata/CollectionsEditor.svelte
@@ -728,6 +856,10 @@ msgstr ""
 msgid "Editor"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "element"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Enable advanced editing features and additional controls for expert users."
 msgstr ""
@@ -754,6 +886,17 @@ msgstr ""
 
 #: src/lib/components/metadata/AdvancedFields.svelte
 msgid "Enter format information"
+msgstr ""
+
+#: src/lib/components/outline/OutlineEditor.svelte
+msgid ""
+"Enter navigation content in plain text. Leave empty to auto-generate from "
+"chapter titles. Press Ctrl+Enter (Cmd+Enter on Mac) to save navigation "
+"content."
+msgstr ""
+
+#: src/lib/components/SpineSidebar.svelte
+msgid "Enter new ID for {item}:"
 msgstr ""
 
 #: src/lib/components/metadata/AdvancedFields.svelte
@@ -788,6 +931,7 @@ msgstr ""
 msgid "EPUB Settings"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Error"
@@ -834,12 +978,20 @@ msgstr ""
 msgid "Failed to delete item"
 msgstr ""
 
+#: src/lib/navigation/views/WorkspaceView.svelte
+msgid "Failed to delete workspace: {error}"
+msgstr ""
+
 #: src/lib/components/workspace/DuplicateProjectDialog.svelte
 msgid "Failed to duplicate project."
 msgstr ""
 
 #: src/lib/components/metadata/OPFPreview.svelte
 msgid "Failed to generate XML preview"
+msgstr ""
+
+#: src/lib/navigation/views/WorkspaceView.svelte
+msgid "Failed to import EPUB: {error}"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -866,12 +1018,20 @@ msgstr ""
 msgid "Failed to load settings"
 msgstr ""
 
+#: src/lib/navigation/views/WorkspaceView.svelte
+msgid "Failed to open workspace: {error}"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Failed to remove extension"
 msgstr ""
 
 #: src/lib/components/metadata/MetadataEditor.svelte
 msgid "Failed to remove metadata item"
+msgstr ""
+
+#: src/lib/components/SpineSidebar.svelte
+msgid "Failed to rename chapter ID: {error}"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -1047,12 +1207,28 @@ msgstr ""
 msgid "Include page numbers"
 msgstr ""
 
+#: src/App.svelte
+msgid "Initializing application..."
+msgstr ""
+
 #: src/lib/navigation/views/SpineView.svelte
 msgid "Initializing editor..."
 msgstr ""
 
+#: src/App.svelte
+msgid "Initializing transform engine..."
+msgstr ""
+
 #: plugins/publish-to-remote/src/App.svelte
 msgid "Initializing..."
+msgstr ""
+
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Insert Clip Directive"
+msgstr ""
+
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Insert clip directive at cursor position"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
@@ -1085,6 +1261,10 @@ msgstr ""
 
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "iPhone SE (375×667)"
+msgstr ""
+
+#: src/lib/components/SpineItem.svelte
+msgid "Item controls"
 msgstr ""
 
 #: src/lib/components/workspace/WorkspaceItem.svelte
@@ -1120,6 +1300,10 @@ msgstr ""
 msgid "Layout"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "learn more"
+msgstr ""
+
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Left to Right"
 msgstr ""
@@ -1141,8 +1325,20 @@ msgstr ""
 msgid "Light text on a dark cover"
 msgstr ""
 
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Load clip data from selected text"
+msgstr ""
+
 #: src/lib/components/manifest/ManifestTable.svelte
 msgid "Load File"
+msgstr ""
+
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Load from Selection"
+msgstr ""
+
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Loading audio..."
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -1185,6 +1381,10 @@ msgstr ""
 msgid "Loading spine items…"
 msgstr ""
 
+#: src/lib/Sidebar.svelte
+msgid "Loading..."
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 #: src/lib/navigation/views/PublishView.svelte
@@ -1214,6 +1414,10 @@ msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Margin"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Message:"
 msgstr ""
 
 #: src/App.svelte
@@ -1249,6 +1453,22 @@ msgstr ""
 msgid "Move down"
 msgstr ""
 
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Move start time back 0.1 seconds"
+msgstr ""
+
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Move start time back 1 second"
+msgstr ""
+
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Move start time forward 0.1 seconds"
+msgstr ""
+
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Move start time forward 1 second"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Move up"
 msgstr ""
@@ -1274,6 +1494,18 @@ msgstr ""
 msgid "Navigation (TOC)"
 msgstr ""
 
+#: src/lib/components/outline/OutlineEditor.svelte
+msgid "Navigation content editor"
+msgstr ""
+
+#: src/lib/components/outline/OutlineView.svelte
+msgid "Navigation content will be auto-generated from your chapters..."
+msgstr ""
+
+#: src/lib/components/outline/OutlineView.svelte
+msgid "Navigation editor"
+msgstr ""
+
 #: src/App.svelte
 msgid "Navigation Preview"
 msgstr ""
@@ -1285,6 +1517,10 @@ msgstr ""
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 msgid "No"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "No Content"
 msgstr ""
 
 #: src/lib/components/metadata/OPFPreview.svelte
@@ -1336,6 +1572,16 @@ msgstr ""
 msgid "No projects found"
 msgstr ""
 
+#: src/lib/components/workspace/WorkspaceList.svelte
+msgid "No projects match your search for \"{query}\""
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid ""
+"No proxy was detected on this host, so this only works once the app is "
+"deployed with the WebDAV proxy."
+msgstr ""
+
 #: src/lib/navigation/views/SpineView.svelte
 msgid "No spine item selected"
 msgstr ""
@@ -1346,6 +1592,10 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "No subfolders here"
+msgstr ""
+
+#: src/lib/components/spine/ChapterValidationPanel.svelte
+msgid "No validation issues in this chapter."
 msgstr ""
 
 #: src/lib/components/metadata/BasicInfoFields.svelte
@@ -1376,6 +1626,10 @@ msgstr ""
 msgid "Open a project to configure its settings."
 msgstr ""
 
+#: src/lib/components/workspace/WorkspaceItem.svelte
+msgid "Open project: {title}"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 msgid "Open this chapter in the editor"
 msgstr ""
@@ -1388,12 +1642,20 @@ msgstr ""
 msgid "Optional features available when the app is served over HTTP."
 msgstr ""
 
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Optional label"
+msgstr ""
+
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Orientation"
 msgstr ""
 
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Orientation:"
+msgstr ""
+
+#: src/lib/components/spine/ChapterValidationPanel.svelte
+msgid "Other chapters with issues"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
@@ -1436,12 +1698,28 @@ msgstr ""
 msgid "Paginating…"
 msgstr ""
 
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Pane 1 content"
+msgstr ""
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Pane 2 content"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Paper size for the exported PDF. Your stylesheet can override this."
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Password"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "password or app token"
+msgstr ""
+
+#: src/lib/components/extensions/ExtensionItem.svelte
+msgid "Paste {name} license text here"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestTable.svelte
@@ -1460,6 +1738,10 @@ msgstr ""
 msgid ""
 "Please copy license text into the License field below to comply with open "
 "source requirements."
+msgstr ""
+
+#: src/App.svelte
+msgid "Please refresh the page to try again."
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -1638,6 +1920,10 @@ msgstr ""
 msgid "Remove the selected feed from the list"
 msgstr ""
 
+#: src/lib/components/SpineItem.svelte
+msgid "Rename {item}"
+msgstr ""
+
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Rendition Properties"
 msgstr ""
@@ -1648,6 +1934,16 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 msgid "Report"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Requests go straight to the server, which must send CORS headers."
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid ""
+"Requests go through this app’s /dav endpoint; your WebDAV credentials "
+"transit the app host."
 msgstr ""
 
 #: src/lib/components/metadata/fields/DateMetadataField.svelte
@@ -1815,8 +2111,28 @@ msgstr ""
 msgid "Select an item to preview its content"
 msgstr ""
 
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Select audio file"
+msgstr ""
+
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Select audio..."
+msgstr ""
+
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Select device preset"
+msgstr ""
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Select file for pane 1"
+msgstr ""
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Select file for pane 2"
+msgstr ""
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Select file..."
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
@@ -1854,6 +2170,14 @@ msgstr ""
 
 #: src/lib/Sidebar.svelte
 msgid "Show project sections"
+msgstr ""
+
+#: src/lib/components/workspace/WorkspaceList.svelte
+msgid "Showing {filtered} of {total} workspaces"
+msgstr ""
+
+#: src/lib/Sidebar.svelte
+msgid "Simple EPUB Editor"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestTable.svelte
@@ -1895,6 +2219,15 @@ msgstr ""
 msgid "Spread"
 msgstr ""
 
+#: src/lib/components/spine/EditorPane.svelte
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Stack Trace"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Stage:"
+msgstr ""
+
 #: src/lib/components/spine/PreviewPane.svelte
 #. Device size for typical/common mobile phone or e-reader screen
 msgid "Standard"
@@ -1902,6 +2235,14 @@ msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Start the PDF with the project's cover image as a full-page cover."
+msgstr ""
+
+#: src/lib/components/audio/AudioClipEditor.svelte
+msgid "Start time"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Start typing in the editor to see your XHTML preview here."
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
@@ -1944,6 +2285,18 @@ msgstr ""
 msgid "Technical Info"
 msgstr ""
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid ""
+"Template for inserting audio clip directives. Use placeholders: <href>, "
+"<begin>, <end>, <label>, <rate>"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid ""
+"Template for the exported .epub filename. Use placeholders: <title>, "
+"<author>, <date>. Empty placeholders (e.g. no author) collapse cleanly."
+msgstr ""
+
 #: src/lib/components/metadata/SubjectEditor.svelte
 msgid "Term (e.g. FIC028000)"
 msgstr ""
@@ -1968,6 +2321,10 @@ msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Theme"
+msgstr ""
+
+#: src/lib/components/spine/ChapterValidationPanel.svelte
+msgid "This chapter"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -2003,12 +2360,52 @@ msgstr ""
 msgid "Today"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Toggle device orientation"
+msgstr ""
+
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Toggle Empty State"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Toggle orientation"
+msgstr ""
+
 #: src/lib/Sidebar.svelte
 msgid "Toggle sidebar"
+msgstr ""
+
+#: src/lib/ThemeToggle.svelte
+msgid "Toggle theme"
+msgstr ""
+
+#: src/App.svelte
+msgid "Transform Engine Failed"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Transform error"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Transform Error"
+msgstr ""
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Transform Error ({stage})"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Transform in progress"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Transform successful"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Transforming..."
 msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
@@ -2067,6 +2464,10 @@ msgid "Use the publication’s own fonts (do not re-style)"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "username"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Username"
 msgstr ""
 
@@ -2090,6 +2491,30 @@ msgstr ""
 msgid "Validating..."
 msgstr ""
 
+#: src/lib/components/spine/ChapterValidationPanel.svelte
+msgid "Validation"
+msgstr ""
+
+#: src/lib/components/SpineItem.svelte
+msgid "Validation error"
+msgstr ""
+
+#: src/lib/components/spine/ChapterValidationPanel.svelte
+msgid "Validation issues for this chapter"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Validation report (epubcheck) for this chapter"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ValidationModal.svelte
+msgid "Validation Report: {filename}"
+msgstr ""
+
+#: src/lib/components/metadata/MetadataTab.svelte
+msgid "validation.errorsCount"
+msgstr ""
+
 #: src/App.svelte
 msgid "View type"
 msgstr ""
@@ -2108,6 +2533,10 @@ msgstr ""
 
 #: src/lib/components/metadata/fields/ViewportField.svelte
 msgid "Viewport width in pixels"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "warnings"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
@@ -2132,6 +2561,10 @@ msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Wide"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "XHTML Preview"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
