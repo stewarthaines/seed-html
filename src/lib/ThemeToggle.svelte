@@ -25,7 +25,7 @@
   class:theme-toggle--large={size === 'large'}
   onclick={handleToggle}
   aria-label={$t('Toggle theme')}
-  title={`Switch to ${isDark ? 'light' : 'dark'} theme`}
+  title={$t('Switch to {mode} theme', { mode: isDark ? $t('light') : $t('dark') })}
 >
   <span class="theme-toggle__icon" aria-hidden="true">
     {#if isDark}
@@ -39,7 +39,7 @@
 
   {#if showLabel}
     <span class="theme-toggle__label">
-      {isDark ? 'Light' : 'Dark'}
+      {isDark ? $t('Light') : $t('Dark')}
     </span>
   {/if}
 </button>

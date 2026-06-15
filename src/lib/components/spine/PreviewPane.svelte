@@ -1084,7 +1084,7 @@
         class="view-toggle"
         class:active={showSource}
         onclick={toggleSourceView}
-        title={showSource ? 'Show rendered preview' : 'Show generated source'}
+        title={showSource ? $t('Show rendered preview') : $t('Show generated source')}
       >
         {showSource ? $t('Preview') : $t('Source')}
       </button>
@@ -1104,7 +1104,10 @@
           <span>{$t('Error')}</span>
         </div>
       {:else if transformWarnings.length > 0}
-        <div class="status-indicator warning" title={`${transformWarnings.length} warnings`}>
+        <div
+          class="status-indicator warning"
+          title={$t('{n} warnings', { n: transformWarnings.length })}
+        >
           <span class="status-icon">⚠️</span>
           <span>{transformWarnings.length} {$t('warnings')}</span>
         </div>
@@ -1142,7 +1145,7 @@
           aria-pressed={a11yPanelOpen}
           title={$t('Accessibility check (axe-core) — re-runs as you edit while open')}
         >
-          {a11yRunning ? 'Checking…' : 'Accessibility'}
+          {a11yRunning ? $t('Checking…') : $t('Accessibility')}
           {#if !a11yRunning && a11yPanelOpen && a11yIssueCount !== null}
             <span class="a11y-count" class:clean={a11yIssueCount === 0}>{a11yIssueCount}</span>
           {/if}
@@ -1208,8 +1211,8 @@
       <div class="a11y-panel-header">
         <strong>
           {a11yViolations.length === 0
-            ? 'No accessibility issues found'
-            : `${a11yViolations.length} accessibility issue${a11yViolations.length === 1 ? '' : 's'}`}
+            ? $t('No accessibility issues found')
+            : $t('{count} accessibility issues', { count: a11yViolations.length })}
         </strong>
         <button
           type="button"
@@ -1226,7 +1229,7 @@
           {#each a11yViolations as v (v.id)}
             <li class="a11y-item">
               <span class="a11y-impact" data-impact={v.impact ?? 'minor'}>
-                {v.impact ?? 'n/a'}
+                {v.impact ?? $t('n/a')}
               </span>
               <div class="a11y-detail">
                 <span class="a11y-help" title={v.description}>{v.help}</span>

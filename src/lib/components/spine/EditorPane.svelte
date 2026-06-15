@@ -495,7 +495,7 @@
         type="button"
         class="pane-toggle-btn"
         onclick={togglePaneMode}
-        title={editorMode === 'single' ? 'Add second editor pane' : 'Switch to single pane'}
+        title={editorMode === 'single' ? $t('Add second editor pane') : $t('Switch to single pane')}
       >
         <span class="toggle-icon" aria-hidden="true">
           {editorMode === 'single' ? '⊞' : '⊟'}
@@ -513,8 +513,10 @@
           class="audio-toggle-btn"
           class:active={audioEditorVisible}
           onclick={toggleAudioEditor}
-          title={audioEditorVisible ? 'Hide Audio Clip Editor' : 'Show Audio Clip Editor'}
-          aria-label={audioEditorVisible ? 'Hide Audio Clip Editor' : 'Show Audio Clip Editor'}
+          title={audioEditorVisible ? $t('Hide Audio Clip Editor') : $t('Show Audio Clip Editor')}
+          aria-label={audioEditorVisible
+            ? $t('Hide Audio Clip Editor')
+            : $t('Show Audio Clip Editor')}
         >
           {$t('Audio Clip Editor')}
         </button>

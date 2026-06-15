@@ -171,8 +171,8 @@
           handleMoveUpKeyboard(e);
         }}
         disabled={isFirstItem}
-        aria-label={`Move ${item.id} up`}
-        title={`Move ${item.id} up`}
+        aria-label={$t('Move {id} up', { id: item.id })}
+        title={$t('Move {id} up', { id: item.id })}
       >
         ↑
       </button>
@@ -187,8 +187,8 @@
           handleMoveDownKeyboard(e);
         }}
         disabled={isLastItem}
-        aria-label={`Move ${item.id} down`}
-        title={`Move ${item.id} down`}
+        aria-label={$t('Move {id} down', { id: item.id })}
+        title={$t('Move {id} down', { id: item.id })}
       >
         ↓
       </button>

@@ -216,8 +216,8 @@
                     : $t('Show project sections')}
                 >
                   <span class="workspace-title-info">
-                    <span class="workspace-title" title={workspaceTitle || 'Untitled Project'}>
-                      {workspaceTitle || 'Untitled Project'}
+                    <span class="workspace-title" title={workspaceTitle || $t('Untitled Project')}>
+                      {workspaceTitle || $t('Untitled Project')}
                     </span>
                     {#if extensions.length > 0 || extensionsLoading}
                       <span class="workspace-extensions">
