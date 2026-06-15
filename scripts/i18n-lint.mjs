@@ -87,6 +87,9 @@ const ALLOW_REGEX = [
   /^(iPhone|iPad)\b/, // device presets (already in the catalog where shown)
   /^https?:\/\//, // URLs
   /^[\w.-]+@[\w.-]+$/, // emails
+  /^(px|KB|MB|GB|TB|kbps|Hz|ms)\b/, // units (possibly with trailing punctuation)
+  /^[+-]?\d+(\.\d+)?\s*s$/, // time deltas, e.g. "-1s", "+0.1s"
+  /^Aa$/, // font preview sample
 ];
 
 const hasLetter = s => /\p{L}/u.test(s);
@@ -98,6 +101,50 @@ const isAllowed = s => {
   const t = s.trim();
   return ALLOW_EXACT.has(t) || ALLOW_REGEX.some(r => r.test(t));
 };
+
+// Readable text of a template literal: quasis joined with a placeholder marker.
+const templateText = tpl => tpl.quasis.map(q => q.value.cooked ?? q.value.raw ?? '').join('{…}');
+
+/**
+ * Walk an embedded JS expression (ESTree, from an ExpressionTag in a display
+ * position) and emit hardcoded display strings via `emit(start, text)`: template
+ * literals containing words, and string literals used as ternary/logical branches
+ * or as the bare expression. Descends only through display-transparent containers
+ * (ternary / logical / paren / sequence) — never into comparisons, member access,
+ * object keys, or non-translation call arguments — so it stays high-precision.
+ * t/$t/_/translate calls are skipped entirely (their string is already the msgid).
+ */
+function walkExpr(node, emit) {
+  if (!node || typeof node !== 'object') return;
+  const flag = (text, start) => {
+    const t = (text || '').trim();
+    if (hasLetter(t) && !isTrivial(t) && !isAllowed(t)) emit(start, t);
+  };
+  switch (node.type) {
+    case 'Literal':
+      if (typeof node.value === 'string') flag(node.value, node.start);
+      return;
+    case 'TemplateLiteral':
+      flag(templateText(node), node.start); // the whole template is the finding
+      return;
+    case 'ConditionalExpression':
+      walkExpr(node.consequent, emit); // skip `test` — that's logic, not display
+      walkExpr(node.alternate, emit);
+      return;
+    case 'LogicalExpression':
+      walkExpr(node.left, emit);
+      walkExpr(node.right, emit);
+      return;
+    case 'ParenthesizedExpression':
+      walkExpr(node.expression, emit);
+      return;
+    case 'SequenceExpression':
+      node.expressions.forEach(e => walkExpr(e, emit));
+      return;
+    default:
+      return; // CallExpression / BinaryExpression / Identifier / Member / Object — not display-transparent
+  }
+}
 
 function lineColOf(src, offset) {
   let line = 1;
@@ -156,11 +203,20 @@ function scanFile(file) {
       const v = attr.value;
       if (v === true) continue; // boolean attribute
       const parts = Array.isArray(v) ? v : [v];
+      // Literal text parts → a hardcoded literal attribute.
       const textParts = parts.filter(p => p && p.type === 'Text');
-      if (!textParts.length) continue; // fully dynamic, e.g. ={$t(...)}
       const literal = textParts.map(p => p.data).join('');
-      if (isTrivial(literal) || isAllowed(literal)) continue;
-      record(attr.start, `attr:${attr.name}`, literal, node.start);
+      if (textParts.length && !isTrivial(literal) && !isAllowed(literal)) {
+        record(attr.start, `attr:${attr.name}`, literal, node.start);
+      }
+      // Expression parts → hardcoded display strings inside `={...}`.
+      for (const et of parts) {
+        if (et && et.type === 'ExpressionTag') {
+          walkExpr(et.expression, (start, text) =>
+            record(start, `attr-expr:${attr.name}`, text, node.start)
+          );
+        }
+      }
     }
   };
 
@@ -170,6 +226,13 @@ function scanFile(file) {
       if (SKIP_ELEMENTS.has(parentName)) return;
       if (isTrivial(node.data) || isAllowed(node.data)) return;
       record(node.start, 'text', node.data);
+      return;
+    }
+    if (node.type === 'ExpressionTag') {
+      // Visible `{...}` text — flag hardcoded display strings inside it.
+      if (!SKIP_ELEMENTS.has(parentName)) {
+        walkExpr(node.expression, (start, text) => record(start, 'expr', text));
+      }
       return;
     }
     let nextParent = parentName;
