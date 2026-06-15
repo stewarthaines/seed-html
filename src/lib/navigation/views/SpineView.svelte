@@ -451,6 +451,24 @@
         // Settings unavailable — no transform entries.
       }
 
+      // Generator scripts — editable here alongside transforms. They run on demand
+      // from the Generators panel (not the render pipeline); listing them lets you
+      // view/edit the source. Reuse the 'javascript' file type (JS syntax + save).
+      try {
+        const installed = await listGenerators(fileStorage, workspace.id);
+        for (const gen of installed) {
+          files.push({
+            value: `generator-${gen.manifest.id}`,
+            label: `Generator: ${gen.manifest.name}`,
+            path: gen.scriptPath, // SOURCE/generators/<id>/<script>
+            href: gen.scriptPath,
+            type: 'javascript',
+          });
+        }
+      } catch {
+        // Discovery failed — no generator entries.
+      }
+
       availableFiles = files;
 
       // Update pane-specific files based on current selections

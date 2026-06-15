@@ -235,7 +235,7 @@
   function getSyntaxClass(fileType: string): string {
     if (fileType.includes('css')) return 'syntax-css';
     if (fileType.includes('javascript') || fileType.includes('js')) return 'syntax-js';
-    if (fileType.includes('transform')) return 'syntax-js';
+    if (fileType.includes('transform') || fileType.includes('generator')) return 'syntax-js';
     return 'syntax-text';
   }
 
@@ -247,7 +247,8 @@
       fileType.includes('css') ||
       fileType.includes('javascript') ||
       fileType.includes('js') ||
-      fileType.includes('transform')
+      fileType.includes('transform') ||
+      fileType.includes('generator')
     );
   }
 
