@@ -2362,6 +2362,7 @@ msgid "Sufficient access modes"
 msgstr ""
 
 #: src/lib/components/metadata/AccessibilityFields.svelte
+#: src/lib/components/metadata/OPFPreview.svelte
 msgid "Summary"
 msgstr ""
 

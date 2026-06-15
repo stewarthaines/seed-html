@@ -20,6 +20,9 @@
     readOnly?: boolean;
     workspaceService?: WorkspaceService;
     onGenerateCover?: (hue?: number, mode?: CoverMode) => Promise<void>;
+    // When embedded under an external tab strip (advanced mode), hide the built-in
+    // "Metadata Summary" header so it isn't doubled up.
+    showHeader?: boolean;
   }
 
   let {
@@ -28,6 +31,7 @@
     readOnly = false,
     workspaceService,
     onGenerateCover,
+    showHeader = true,
   }: Props = $props();
 
   let metadata = $derived(workspace?.opf?.metadata);
@@ -102,9 +106,11 @@
 </script>
 
 <div class="simple-metadata-view">
-  <div class="preview-header">
-    <span class="file-name">{$t('Metadata Summary')}</span>
-  </div>
+  {#if showHeader}
+    <div class="preview-header">
+      <span class="file-name">{$t('Metadata Summary')}</span>
+    </div>
+  {/if}
 
   {#if metadata}
     <div class="preview-body">

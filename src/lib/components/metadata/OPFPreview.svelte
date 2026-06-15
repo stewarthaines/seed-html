@@ -3,6 +3,7 @@
   import { xmlHighlighter } from '../../utils/xml-highlighter.js';
   import { OPFUtils } from '../../epub/opf-utils.js';
   import SimpleMetadataView from './SimpleMetadataView.svelte';
+  import MetadataTab from './MetadataTab.svelte';
   import PaneHeader from '../layout/PaneHeader.svelte';
   import type {
     WorkspaceState,
@@ -33,6 +34,10 @@
 
   let highlightedContent = $state<string>('');
   let error = $state<string | null>(null);
+
+  // Advanced mode shows the OPF source by default, with a second tab for the
+  // metadata summary (so the cover generator stays reachable in advanced mode).
+  let activeTab = $state<'opf' | 'summary'>('opf');
 
   // Generate OPF content from workspace data (derived state)
   let opfContent = $derived(() => {
@@ -78,10 +83,34 @@
 {#if isAdvancedMode}
   <div class="opf-preview">
     <PaneHeader>
-      <span class="file-name">content.opf</span>
+      <div class="opf-tab-bar" tabindex="-1">
+        <MetadataTab
+          id="opf"
+          label="content.opf"
+          active={activeTab === 'opf'}
+          onSelect={({ tabId }) => (activeTab = tabId as typeof activeTab)}
+        />
+        <MetadataTab
+          id="summary"
+          label={$t('Summary')}
+          active={activeTab === 'summary'}
+          onSelect={({ tabId }) => (activeTab = tabId as typeof activeTab)}
+        />
+      </div>
     </PaneHeader>
 
-    {#if error}
+    {#if activeTab === 'summary'}
+      <div class="summary-panel">
+        <SimpleMetadataView
+          {workspace}
+          {focusedField}
+          {readOnly}
+          {workspaceService}
+          {onGenerateCover}
+          showHeader={false}
+        />
+      </div>
+    {:else if error}
       <div class="error-state">
         <p class="error-message">{error}</p>
         <button type="button" class="btn btn-secondary" onclick={updateHighlighting}>
@@ -126,10 +155,25 @@
     overflow: hidden;
   }
 
-  .file-name {
-    font-family: var(--font-mono);
-    font-weight: var(--font-medium);
-    color: var(--color-text-primary);
+  /* Two-tab strip inside the PaneHeader — mirrors the left pane's .metadata-tab-bar
+     so the tabs match exactly (the grey bar + border come from PaneHeader). */
+  .opf-tab-bar {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .opf-tab-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Bounds the height:100% SimpleMetadataView so its body scrolls under the tabs. */
+  .summary-panel {
+    flex: 1;
+    min-height: 0;
   }
 
   .preview-body {
