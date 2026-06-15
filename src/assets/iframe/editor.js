@@ -47,6 +47,7 @@ class TransformExecutionEngine {
     this.messageHandlers.set('SET_TRANSFORM_SCRIPTS', this.setTransformScripts.bind(this));
     this.messageHandlers.set('SET_EXTENSION_SCRIPTS', this.setExtensionScripts.bind(this));
     this.messageHandlers.set('EXECUTE_TRANSFORM', this.executeTransform.bind(this));
+    this.messageHandlers.set('EXECUTE_GENERATOR', this.executeGenerator.bind(this));
     this.messageHandlers.set('SET_DEBUG_MODE', this.setDebugMode.bind(this));
     this.messageHandlers.set('PING', this.handlePing.bind(this));
   }
@@ -458,6 +459,106 @@ class TransformExecutionEngine {
     const result = await transformFunction(plainText, idref, ctx);
 
     // Ensure result is a string
+    return typeof result === 'string' ? result : String(result);
+  }
+
+  /**
+   * Run a Generator on demand and return the produced source text.
+   *
+   * Generators *produce* source text to insert at the editor caret (vs. transforms,
+   * which convert content in the render pipeline). They are project-wide producers:
+   * the script reads via `ctx` (manifest + SOURCE) and an `options` object from the
+   * invocation form, and returns a string. The script is supplied per call (one
+   * `generateText` per script), so — unlike transforms — it isn't pre-loaded.
+   */
+  async executeGenerator(request, messageId) {
+    const { script, options = {}, timeout = 5000, transformCtx } = request;
+    const ctx = this.createTransformContext(transformCtx);
+    const startTime = performance.now();
+
+    try {
+      this.updateStatus('Running generator...', 'info');
+      const text = await this.executeGeneratorWithTimeout(script, options, timeout, ctx);
+      const executionTime = performance.now() - startTime;
+      this.updateStatus(`Generator completed in ${executionTime.toFixed(2)}ms`, 'success');
+
+      this.respondToParent(messageId, {
+        success: true,
+        text,
+        executionTime: Math.round(executionTime),
+      });
+    } catch (error) {
+      const executionTime = performance.now() - startTime;
+      this.updateStatus(
+        `Generator failed: ${error instanceof Error ? error.message : String(error)}`,
+        'error'
+      );
+      this.respondToParent(messageId, {
+        success: false,
+        error,
+        executionTime: Math.round(executionTime),
+      });
+    }
+  }
+
+  /** Race generateText against the timeout (see executeTextTransformWithTimeout). */
+  executeGeneratorWithTimeout(script, options, timeout, ctx) {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const timeoutId = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        const error = new Error(`Generator execution timed out after ${timeout}ms`);
+        error.stage = 'generator-timeout';
+        reject(error);
+      }, timeout);
+
+      Promise.resolve()
+        .then(() => this.executeGeneratorScript(script, options, ctx))
+        .then(result => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeoutId);
+          resolve(result);
+        })
+        .catch(error => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeoutId);
+          if (error instanceof Error && !error.stage) error.stage = 'generator';
+          reject(this.enhanceError(error));
+        });
+    });
+  }
+
+  /**
+   * Execute the generator script in the same sandbox as transforms; the script must
+   * define `generateText(ctx, options)` and return a string.
+   */
+  async executeGeneratorScript(script, options, ctx) {
+    if (!script || !script.trim()) {
+      throw new Error('Generator script is empty');
+    }
+
+    const globals = this.createSafeExecutionEnvironment();
+    const globalNames = Object.keys(globals);
+    const globalValues = Object.values(globals);
+
+    const wrappedScript = `(function(${globalNames.join(', ')}) {
+      ${script}
+
+      if (typeof generateText !== 'function') {
+        throw new Error('generateText function is not defined in script');
+      }
+
+      return generateText;
+    })`;
+
+    const scriptFunction = new Function('return ' + wrappedScript)();
+    const generateFunction = scriptFunction(...globalValues);
+
+    // Generators take (ctx, options) — no chapter text (project-wide producers).
+    const result = await generateFunction(ctx, options);
     return typeof result === 'string' ? result : String(result);
   }
 

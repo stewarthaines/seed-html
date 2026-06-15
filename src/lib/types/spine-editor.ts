@@ -67,6 +67,7 @@ export interface EditorMessage {
     | 'SET_TRANSFORM_SCRIPTS'
     | 'SET_EXTENSION_GLOBALS'
     | 'EXECUTE_TRANSFORM'
+    | 'EXECUTE_GENERATOR'
     | 'SET_DEBUG_MODE'
     | 'PING';
   payload: {

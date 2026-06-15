@@ -33,6 +33,13 @@ export interface TransformBrokerContext {
   manifest: ManifestItem[];
 }
 
+/** Result of running a generator: the produced source text (to insert at the caret). */
+export interface GeneratorResult {
+  success: boolean;
+  text: string;
+  executionTime?: number;
+}
+
 export class TransformEngine {
   private iframe: HTMLIFrameElement | null = null;
   private messageId = 0;
@@ -113,6 +120,46 @@ export class TransformEngine {
       return await this.sendMessage(
         'EXECUTE_TRANSFORM',
         { plainText, timeout, idref, transformCtx },
+        messageTimeout
+      );
+    } finally {
+      this.brokerContext = null;
+    }
+  }
+
+  /**
+   * Run a generator on demand and return the produced source text.
+   *
+   * Like executeTransform, `brokerContext` scopes the generator's ctx file access to
+   * the active workspace — generators are project-wide readers, so they rely on it
+   * (manifest + SOURCE reads). The script is passed per call (one generateText per
+   * script); `idref` tells the generator which chapter it was invoked in.
+   */
+  async executeGenerator(
+    script: string,
+    options: Record<string, unknown>,
+    brokerContext: TransformBrokerContext,
+    idref?: string,
+    timeout = 5000
+  ): Promise<GeneratorResult> {
+    if (!this.iframe) {
+      throw new Error('Transform engine not initialized');
+    }
+
+    this.brokerContext = brokerContext;
+    const transformCtx = {
+      idref,
+      basePath: brokerContext.basePath,
+      manifest: brokerContext.manifest,
+    };
+
+    // The generator may await brokered file I/O, so allow the round-trip to outlast
+    // the default — give it the generator timeout plus headroom (as executeTransform).
+    const messageTimeout = Math.max(5000, timeout + 5000);
+    try {
+      return await this.sendMessage(
+        'EXECUTE_GENERATOR',
+        { script, options, timeout, idref, transformCtx },
         messageTimeout
       );
     } finally {
