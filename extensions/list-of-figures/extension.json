@@ -1,0 +1,31 @@
+{
+  "id": "list-of-figures",
+  "name": "List of Figures",
+  "description": "Records the images used in each chapter and adds a generator that inserts a list of figures.",
+  "scripts": [],
+  "domTransforms": ["storeImageReferences.js"],
+  "textTransforms": [],
+  "generators": [
+    {
+      "id": "figures",
+      "name": "List of Figures",
+      "description": "Insert a list of every figure used across the project's chapters.",
+      "script": "listFigures.js",
+      "options": [
+        {
+          "type": "string",
+          "name": "template",
+          "label": "Line template",
+          "placeholder": "<caption> (<source>)",
+          "default": "<caption> (<source>)"
+        },
+        {
+          "type": "boolean",
+          "name": "show_thumbnail",
+          "label": "Include thumbnails",
+          "default": false
+        }
+      ]
+    }
+  ]
+}

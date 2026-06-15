@@ -169,6 +169,13 @@ export default defineConfig({
               const scripts = rawScripts.map(scriptFile).filter(Boolean);
               const domTransforms = Array.isArray(m.domTransforms) ? m.domTransforms : [];
               const textTransforms = Array.isArray(m.textTransforms) ? m.textTransforms : [];
+              const generators = (Array.isArray(m.generators) ? m.generators : []).filter(
+                (g: unknown) =>
+                  !!g &&
+                  typeof (g as Record<string, unknown>).id === 'string' &&
+                  typeof (g as Record<string, unknown>).name === 'string' &&
+                  typeof (g as Record<string, unknown>).script === 'string'
+              );
               const assets = (Array.isArray(m.assets) ? m.assets : []).filter(
                 (a: unknown) =>
                   !!a &&
@@ -186,11 +193,20 @@ export default defineConfig({
                         : null
                     ),
                     ...assets.map((a: Record<string, unknown>) => a.license),
+                    ...generators.map((g: Record<string, unknown>) =>
+                      typeof g.license === 'string' ? g.license : null
+                    ),
                   ].filter((l: unknown) => typeof l === 'string' && l)
                 ),
               ];
               const chapter = typeof m.chapter === 'string' ? m.chapter : undefined;
-              if (m.id && m.name && scripts.length > 0) {
+              // An extension must bring at least one of: a lib, a transform, or a generator.
+              const isEmpty =
+                scripts.length === 0 &&
+                domTransforms.length === 0 &&
+                textTransforms.length === 0 &&
+                generators.length === 0;
+              if (m.id && m.name && !isEmpty) {
                 manifest.push({
                   id: m.id,
                   name: m.name,
@@ -200,6 +216,7 @@ export default defineConfig({
                   scripts,
                   domTransforms,
                   textTransforms,
+                  generators,
                   assets,
                   licenses,
                   chapter,
