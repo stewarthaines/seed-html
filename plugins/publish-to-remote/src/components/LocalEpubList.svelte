@@ -5,6 +5,7 @@
     type ValidationReport,
   } from '../epub-validation.js';
   import FileName from './FileName.svelte';
+  import { formatFileSize } from '../format.js';
   import { t } from '../i18n.js';
 
   let {
@@ -73,15 +74,11 @@
           />
         {/if}
         <div class="epub-info">
-          {#if m?.title}
-            <span class="epub-title">{m.title}</span>
-          {:else}
-            <FileName name={epub.name} />
-          {/if}
-          {#if m?.authors && m.authors.length > 0}
-            <span class="epub-author">{m.authors.join(', ')}</span>
-          {/if}
-          <span class="epub-size">({(epub.size / 1024).toFixed(0)} KB)</span>
+          <!-- Show the packaged filename (it carries the package date in its tail),
+               not the book title — otherwise same-titled builds from different days
+               are indistinguishable in the list. -->
+          <FileName name={epub.name} />
+          <span class="epub-size">{formatFileSize(epub.size)}</span>
         </div>
         <div class="epub-actions">
           {#if uploadProgress !== null && uploadingEpubName === epub.name}
@@ -252,19 +249,6 @@
     flex-wrap: wrap;
     gap: 2px 8px;
     align-items: baseline;
-  }
-
-  .epub-title {
-    font-weight: 600;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .epub-author {
-    font-size: 12px;
-    color: var(--color-text-secondary);
   }
 
   .epub-size {

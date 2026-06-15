@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { S3Object } from '../types.js';
   import FileName from './FileName.svelte';
+  import { formatFileSize } from '../format.js';
   import { t } from '../i18n.js';
 
   let {
@@ -90,7 +91,7 @@
         <div class="remote-info">
           <FileName name={obj.key} />
           <span class="remote-meta">
-            {(obj.size / 1024).toFixed(0)} KB · {new Date(
+            {formatFileSize(obj.size)} · {new Date(
               obj.lastModified,
             ).toLocaleDateString()}
           </span>
