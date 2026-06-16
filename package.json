@@ -38,7 +38,7 @@
     "lint:i18n": "node scripts/i18n-lint.mjs",
     "translate:demo": "node scripts/auto-translate.js",
     "translate:populate": "node scripts/populate-demo-translations.js",
-    "analyze": "npm run build && open dist/stats.html",
+    "analyze": "ANALYZE=1 vite build && open dist/stats.html",
     "opds:install": "cd opds-server && npm install",
     "opds:serve": "cd opds-server && npm start",
     "opds:dev": "cd opds-server && npm run dev"

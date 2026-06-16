@@ -4,9 +4,10 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { viteSingleFile } from "vite-plugin-singlefile";
+import { sveltePhosphorOptimize } from "phosphor-svelte/vite";
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
-// import { visualizer } from "rollup-plugin-visualizer";
-// import analyzer from "rollup-plugin-analyzer";
+import { visualizer } from "rollup-plugin-visualizer";
+import analyzer from "rollup-plugin-analyzer";
 import checker from "vite-plugin-checker";
 import packageJson from "./package.json";
 
@@ -61,6 +62,10 @@ export default defineConfig({
       },
     }),
     svelte(),
+    // Rewrite barrel `import { Foo } from 'phosphor-svelte'` → per-icon subpath
+    // imports so Vite's dev pre-bundle doesn't expand the whole icon set. Runs
+    // after svelte() so it sees the compiled JS that still carries the import.
+    sveltePhosphorOptimize(),
     // Embed translation data URL into HTML for single-file deployment
     {
       name: 'embed-translations',
@@ -340,18 +345,20 @@ export default defineConfig({
         });
       },
     },
-    // Bundle analysis plugins
-    // visualizer({
-    //   filename: 'dist/stats.html',
-    //   template: 'treemap',
-    //   open: false,
-    //   gzipSize: true,
-    //   brotliSize: true
-    // }),
-    // analyzer({
-    //   summaryOnly: true,
-    //   limit: 15
-    // })
+    // Bundle analysis plugins — only when ANALYZE is set (via `npm run analyze`),
+    // so a plain `npm run build` stays clean and emits no stats.html.
+    ...(process.env.ANALYZE
+      ? [
+          visualizer({
+            filename: 'dist/stats.html',
+            template: 'treemap',
+            open: false,
+            gzipSize: true,
+            brotliSize: true,
+          }),
+          analyzer({ summaryOnly: true, limit: 20 }),
+        ]
+      : []),
   ],
   test: {
     projects: [
