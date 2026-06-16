@@ -1,8 +1,13 @@
 import { defineConfig } from 'vitest/config';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
+import packageJson from './package.json';
 
 export default defineConfig({
   plugins: [svelte()],
+  // Mirror vite.config.ts's define so __VERSION__ resolves in unit tests too.
+  define: {
+    __VERSION__: JSON.stringify(packageJson.version),
+  },
   test: {
     environment: 'happy-dom',
     include: [

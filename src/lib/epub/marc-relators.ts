@@ -29,6 +29,7 @@ export const MARC_RELATORS: MarcRelator[] = [
   { code: 'cmm', label: 'Commentator' },
   { code: 'ann', label: 'Annotator' },
   { code: 'mus', label: 'Musician' },
+  { code: 'bkp', label: 'Book producer' },
 ];
 
 const LABEL_BY_CODE: Record<string, string> = Object.fromEntries(

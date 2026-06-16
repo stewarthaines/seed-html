@@ -29,6 +29,9 @@ import type { TransformExecutor } from './transform/transform-executor.js';
 import type { TransformEngine } from './infrastructure/transform-engine.js';
 import type { ExtensionManager } from './extensions/extension-manager.js';
 
+// Injected at build time from package.json (vite define); see vite.config.ts.
+declare const __VERSION__: string;
+
 // Storage keys for workspace state persistence (following navigationStore pattern)
 const STORAGE_KEYS = {
   WORKSPACE_ID: 'editme_app_workspace_id',
@@ -341,6 +344,11 @@ export class EnhancedAppState {
         title,
         language: [language],
         identifier: `urn:uuid:${crypto.randomUUID()}`,
+        // Stamp the producing app as a "Book producer" (MARC relator bkp) — the EPUB
+        // convention for identifying the generating tool. Seeded only here, at user
+        // creation, so it's editable/removable in the Metadata pane and is never added
+        // to imported books.
+        contributor: [{ name: `SEED.html v${__VERSION__}`, roles: ['bkp'] }],
       });
 
       // Step 2: Generate sample content data (pure function - no file I/O)
