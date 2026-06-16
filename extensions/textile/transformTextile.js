@@ -4,9 +4,5 @@
  * @returns {string} Valid XHTML output
  */
 function transformText(input, idref) {
-  try {
-    return textile(input);
-  } catch (error) {
-    return error;
-  }
+  return textile(input);
 }
