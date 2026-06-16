@@ -332,8 +332,8 @@
         // i18n: Device category for e-reader devices designed for portable reading
         return $t('Travel (e-ink)');
       case 'print':
-        // i18n: Device category for the paginated print-page preview
-        return $t('Print');
+        // i18n: Dropdown group label for the paginated PDF page preview
+        return $t('PDF');
       default:
         return category;
     }

@@ -52,6 +52,18 @@ msgstr ""
 msgid "{key} deleted"
 msgstr ""
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "{n} available"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "{n} DOM transform"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "{n} DOM transforms"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 msgid "{n} error"
 msgstr ""
@@ -60,8 +72,20 @@ msgstr ""
 msgid "{n} errors"
 msgstr ""
 
+#: src/lib/components/settings/GeneratorSettings.svelte
+msgid "{n} generator"
+msgstr ""
+
+#: src/lib/components/settings/GeneratorSettings.svelte
+msgid "{n} generators"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 msgid "{n} info"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "{n} installed"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
@@ -1699,6 +1723,10 @@ msgid "No extensions installed."
 msgstr ""
 
 #: src/lib/components/settings/GeneratorSettings.svelte
+msgid "No generators"
+msgstr ""
+
+#: src/lib/components/settings/GeneratorSettings.svelte
 msgid "No generators defined."
 msgstr ""
 
@@ -1756,6 +1784,7 @@ msgid "No validation issues in this chapter."
 msgstr ""
 
 #: src/lib/components/metadata/BasicInfoFields.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "None"
 msgstr ""
 
@@ -1777,6 +1806,14 @@ msgstr ""
 
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Number"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Off"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "On"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte

@@ -18,14 +18,21 @@
     type InstalledGenerator,
   } from '$lib/generators/generator-store.js';
   import type { GeneratorManifest, GeneratorOption } from '$lib/extensions/extension-catalog.js';
+  import SettingsSection from './SettingsSection.svelte';
 
   let {
     workspaceId,
     isAdvancedMode = false,
+    group = 'project-settings',
+    open = false,
     onChanged,
   }: {
     workspaceId: string;
     isAdvancedMode?: boolean;
+    /** Accordion group this section belongs to (SettingsSection `name`). */
+    group?: string;
+    /** Start expanded. */
+    open?: boolean;
     onChanged?: () => void;
   } = $props();
 
@@ -59,6 +66,15 @@
     { value: 'boolean', label: $t('Checkbox') },
     { value: 'select', label: $t('Dropdown') },
   ];
+
+  // Collapsed-header summary: how many generators are defined.
+  const genSummary = $derived(
+    generators.length === 0
+      ? $t('No generators')
+      : generators.length === 1
+        ? $t('{n} generator', { n: generators.length })
+        : $t('{n} generators', { n: generators.length })
+  );
 
   async function refresh(): Promise<void> {
     loading = true;
@@ -275,13 +291,13 @@ function generateText(ctx, options) {
   }
 </script>
 
-<section class="generator-settings">
-  <h3>{$t('Generators')}</h3>
-  <p class="gs-intro">
-    {$t(
-      'A generator is a script (exporting generateText(ctx, options)) that produces source text to insert at the editor caret.'
-    )}
-  </p>
+<SettingsSection title={$t('Generators')} summary={genSummary} name={group} {open}>
+  <div class="generator-settings">
+    <p class="gs-intro">
+      {$t(
+        'A generator is a script (exporting generateText(ctx, options)) that produces source text to insert at the editor caret.'
+      )}
+    </p>
 
   <!-- Existing generators -->
   {#if loading}
@@ -444,7 +460,8 @@ function generateText(ctx, options) {
       </button>
     </div>
   </div>
-</section>
+  </div>
+</SettingsSection>
 
 <style>
   .generator-settings {
@@ -499,13 +516,12 @@ function generateText(ctx, options) {
     color: var(--color-text-secondary);
   }
 
+  /* No nested box/border — the SettingsSection card is the container, so the create
+     form flows in the section body like every other section's controls. */
   .gs-create {
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
-    padding: var(--space-4);
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-md);
   }
 
   .gs-create.disabled {

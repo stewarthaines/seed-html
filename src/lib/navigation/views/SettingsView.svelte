@@ -12,6 +12,7 @@
   import type { TransformEngine } from '../../infrastructure/transform-engine.js';
   import ExtensionItem from '../../components/extensions/ExtensionItem.svelte';
   import GeneratorSettings from '../../components/settings/GeneratorSettings.svelte';
+  import SettingsSection from '../../components/settings/SettingsSection.svelte';
   import PaneHeader from '../../components/layout/PaneHeader.svelte';
   import {
     addTransform,
@@ -538,7 +539,74 @@
       error = err instanceof Error ? err.message : $t('Failed to change language');
     }
   }
+
+  // --- Section summaries (shown in each collapsed disclosure header) ------------
+  const themeSummaryLabel = $derived(
+    themeChoice === 'light' ? $t('Light') : themeChoice === 'dark' ? $t('Dark') : $t('System')
+  );
+  const generalSummary = $derived(
+    `${$t('Theme')}: ${themeSummaryLabel} · ${$t('Language')}: ${
+      LOCALE_CONFIGS[$currentLocale]?.name ?? $currentLocale
+    }`
+  );
+  const pluginsSummary = $derived.by(() => {
+    const names = availablePlugins.filter(p => enabledPluginIds.includes(p.id)).map(p => p.name);
+    return names.length ? names.join(', ') : $t('None');
+  });
+  const availableExtensionsSummary = $derived(
+    $t('{n} available', { n: availableExtensions.length })
+  );
+  const printSummary = $derived.by(() => {
+    const p = epubSettings?.print ?? DEFAULT_PRINT;
+    const size = PAGE_SIZE_OPTIONS.find(o => o.value === p.page_size)?.label ?? p.page_size;
+    const margin =
+      p.margin === 'narrow' ? $t('Narrow') : p.margin === 'wide' ? $t('Wide') : $t('Normal');
+    return `${size} · ${margin}`;
+  });
+  const editorSummary = $derived(
+    `${$t('Advanced Mode')}: ${isAdvancedMode ? $t('On') : $t('Off')}`
+  );
+  const epubSummary = $derived.by(() => {
+    const tt = epubSettings?.text_transform ? transformLabel(epubSettings.text_transform).name : '';
+    const n = epubSettings?.dom_transforms?.length ?? 0;
+    const domLabel = n === 1 ? $t('{n} DOM transform', { n }) : $t('{n} DOM transforms', { n });
+    return tt ? `${tt} · ${domLabel}` : domLabel;
+  });
+  const extensionsSummary = $derived($t('{n} installed', { n: extensions.length }));
+
+  // Which section starts open in each pane (the first present one). Captured once —
+  // a plain const, so it isn't reactively re-applied and yanked open later.
+  const projectFirstOpen: 'print' | 'editor' = isHttp ? 'print' : 'editor';
 </script>
+
+{#snippet catalogItem(ext: ExtensionCatalogEntry)}
+  {@const installed = installedExtensionIds.has(ext.id)}
+  <div class="catalog-item">
+    <div class="catalog-item-info">
+      <span class="catalog-item-name">{ext.name}</span>
+      {#if ext.description}
+        <span class="catalog-item-desc">{ext.description}</span>
+      {/if}
+    </div>
+    <button
+      type="button"
+      class="btn btn-secondary"
+      onclick={() => handleAddCatalogExtension(ext)}
+      disabled={installed || !workspaceId || readOnly || importingExtensionId !== null}
+      title={readOnly
+        ? $t("This EPUB is read-only, so extensions can't be added.")
+        : !workspaceId
+          ? $t('Open a project to add extensions')
+          : undefined}
+    >
+      {installed
+        ? $t('Added')
+        : importingExtensionId === ext.id
+          ? $t('Adding…')
+          : $t('Add to project')}
+    </button>
+  </div>
+{/snippet}
 
 <div class="settings-view">
   {#if error}
@@ -558,8 +626,12 @@
             <span class="pane-title">{$t('App Settings')}</span>
           </PaneHeader>
           <div class="settings-pane-body">
-            <section>
-              <h3>{$t('General')}</h3>
+            <SettingsSection
+              title={$t('General')}
+              summary={generalSummary}
+              name="app-settings"
+              open
+            >
               <div class="setting-group">
                 <label for="theme-select" class="setting-label-text">{$t('Theme')}</label>
                 <select
@@ -587,11 +659,14 @@
                   {/each}
                 </select>
               </div>
-            </section>
+            </SettingsSection>
 
             {#if availablePlugins.length > 0}
-              <section class="plugins-settings">
-                <h3>{$t('Plugins')}</h3>
+              <SettingsSection
+                title={$t('Plugins')}
+                summary={pluginsSummary}
+                name="app-settings"
+              >
                 <p class="setting-description plugins-intro">
                   {$t('Optional features available when the app is served over HTTP.')}
                 </p>
@@ -608,48 +683,20 @@
                     </label>
                   </div>
                 {/each}
-              </section>
+              </SettingsSection>
             {/if}
 
             {#if availableExtensions.length > 0}
-              <section class="extensions-catalog">
-                <h3>{$t('Available Extensions')}</h3>
+              <SettingsSection
+                title={$t('Available Extensions')}
+                summary={availableExtensionsSummary}
+                name="app-settings"
+              >
                 <p class="setting-description">
                   {$t(
                     'Add a library and its suggested DOM transform to the current project; then enable the transform under Project Settings.'
                   )}
                 </p>
-                {#snippet catalogItem(ext: ExtensionCatalogEntry)}
-                  {@const installed = installedExtensionIds.has(ext.id)}
-                  <div class="catalog-item">
-                    <div class="catalog-item-info">
-                      <span class="catalog-item-name">{ext.name}</span>
-                      {#if ext.description}
-                        <span class="catalog-item-desc">{ext.description}</span>
-                      {/if}
-                    </div>
-                    <button
-                      type="button"
-                      class="btn btn-secondary"
-                      onclick={() => handleAddCatalogExtension(ext)}
-                      disabled={installed ||
-                        !workspaceId ||
-                        readOnly ||
-                        importingExtensionId !== null}
-                      title={readOnly
-                        ? $t("This EPUB is read-only, so extensions can't be added.")
-                        : !workspaceId
-                          ? $t('Open a project to add extensions')
-                          : undefined}
-                    >
-                      {installed
-                        ? $t('Added')
-                        : importingExtensionId === ext.id
-                          ? $t('Adding…')
-                          : $t('Add to project')}
-                    </button>
-                  </div>
-                {/snippet}
 
                 {#if textFormatExtensions.length > 0}
                   <h4 class="catalog-subhead">{$t('Text formats')}</h4>
@@ -663,7 +710,7 @@
                     {@render catalogItem(ext)}
                   {/each}
                 {/if}
-              </section>
+              </SettingsSection>
             {/if}
           </div>
         </div>
@@ -683,9 +730,12 @@
                    preview. HTTP-only (gated on the Paged.js pipeline's availability)
                    and shown to all users (not just advanced). -->
               {#if isHttp && canEditEPUBSettings}
-                <section class="print-settings">
-                  <h3>{$t('Print')}</h3>
-
+                <SettingsSection
+                  title={$t('PDF')}
+                  summary={printSummary}
+                  name="project-settings"
+                  open={projectFirstOpen === 'print'}
+                >
                   <div class="setting-group">
                     <label for="print-page-size" class="setting-label-text">
                       {$t('Page size')}
@@ -766,12 +816,15 @@
                       {$t("Start the PDF with the project's cover image as a full-page cover.")}
                     </p>
                   </div>
-                </section>
+                </SettingsSection>
               {/if}
 
-              <section class="workspace-settings">
-                <h3>{$t('Editor')}</h3>
-
+              <SettingsSection
+                title={$t('Editor')}
+                summary={editorSummary}
+                name="project-settings"
+                open={projectFirstOpen === 'editor'}
+              >
                 <div class="setting-group">
                   <label class="setting-label">
                     <input
@@ -788,13 +841,15 @@
                     )}
                   </p>
                 </div>
-              </section>
+              </SettingsSection>
 
               <!-- EPUB Settings -->
               {#if canEditEPUBSettings && isAdvancedMode}
-                <section class="epub-settings">
-                  <h3>{$t('EPUB Settings')}</h3>
-
+                <SettingsSection
+                  title={$t('EPUB Settings')}
+                  summary={epubSummary}
+                  name="project-settings"
+                >
                   <div class="setting-group">
                     <label for="filename-template" class="setting-label-text">
                       {$t('Packaged Filename')}
@@ -946,13 +1001,15 @@
                       </select>
                     {/if}
                   </div>
-                </section>
+                </SettingsSection>
               {/if}
 
               <!-- Extension Management -->
-              <section class="extensions-settings">
-                <h3>{$t('Extensions')}</h3>
-
+              <SettingsSection
+                title={$t('Extensions')}
+                summary={extensionsSummary}
+                name="project-settings"
+              >
                 <!-- Import Extension -->
                 <div class="extension-import" class:disabled={!isAdvancedMode}>
                   <label for="extension-file">
@@ -994,13 +1051,14 @@
                     {/each}
                   </ul>
                 {/if}
-              </section>
+              </SettingsSection>
 
               <!-- Generator Management -->
               {#if workspaceId}
                 <GeneratorSettings
                   {workspaceId}
                   {isAdvancedMode}
+                  group="project-settings"
                   onChanged={() => onSettingsChanged?.()}
                 />
               {/if}
@@ -1065,19 +1123,6 @@
     border-radius: 0.25rem;
     border: 1px solid var(--color-border-error);
     margin: 1rem;
-  }
-
-  section {
-    border: 1px solid var(--color-border-default);
-    border-radius: 0.5rem;
-    padding: 1.5rem;
-  }
-
-  section h3 {
-    margin: 0 0 1rem 0;
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: var(--color-text-primary);
   }
 
   .setting-group {
