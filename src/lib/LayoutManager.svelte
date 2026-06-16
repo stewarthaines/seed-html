@@ -127,9 +127,12 @@
     background: var(--color-bg-primary);
   }
 
-  /* PaneForge resizer styling - using logical properties */
+  /* PaneForge resizer styling - using logical properties.
+     border-strong (one step more contrasted than the bg-tertiary header) gives a
+     clear division in both themes: darker than the header in light (#e0e0e0 vs
+     #f0f0f0), lighter in dark (#666 vs #444). */
   :global([data-pane-resizer]) {
-    background: var(--color-border-default);
+    background: var(--color-border-strong);
     inline-size: 4px; /* Using logical properties */
     cursor: col-resize;
     transition: background-color var(--duration-fast) ease; /* Using motion tokens */

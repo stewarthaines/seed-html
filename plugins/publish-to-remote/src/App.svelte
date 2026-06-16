@@ -833,9 +833,16 @@
 
   :global([data-pane-resizer]) {
     width: 4px;
+    /* Slightly darker than the header for a clear division (#e0e0e0 vs #f0f0f0). */
     background: var(--color-border-default);
     cursor: col-resize;
     transition: background-color 0.2s ease;
+  }
+
+  /* Dark: border-default equals the header (#444), so lighten the divider to
+     border-strong (#666) — matches the core app's resizer in both themes. */
+  :global([data-theme='dark'] [data-pane-resizer]) {
+    background: var(--color-border-strong);
   }
 
   :global([data-pane-resizer]:hover),

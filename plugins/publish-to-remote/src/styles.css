@@ -57,6 +57,9 @@ button {
   --color-surface-primary: #ffffff;
   --color-surface-secondary: #f8f8f8;
   --color-surface-hover: #f0f0f0;
+  /* Header bar grey — mirror the host --color-bg-tertiary (neutral-200) so the
+     plugin's pane headers match the core sidebar/pane headers. */
+  --color-bg-tertiary: #f0f0f0;
   --color-border-default: #e0e0e0;
   --color-border-strong: #cccccc;
   --color-text-primary: #222222;
@@ -105,6 +108,8 @@ button {
   --color-surface-primary: #222222;
   --color-surface-secondary: #333333;
   --color-surface-hover: #444444;
+  /* Header bar grey — mirror the host --color-bg-tertiary (neutral-700). */
+  --color-bg-tertiary: #444444;
   --color-border-default: #444444;
   --color-border-strong: #666666;
   --color-text-primary: #ffffff;

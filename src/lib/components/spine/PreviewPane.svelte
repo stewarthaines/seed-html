@@ -1351,10 +1351,11 @@
        matching the editor pane header (.editor-controls). */
     flex-wrap: wrap;
     gap: var(--space-2);
-    min-height: 2.75rem;
+    /* Match the sidebar header height + grey (see PaneHeader) so all top bars align. */
+    min-height: calc(var(--touch-target-min) + var(--space-2) + 1px);
     padding: 0 var(--space-3);
     border-bottom: 1px solid var(--color-border-default);
-    background: var(--color-button-secondary-bg);
+    background: var(--color-bg-tertiary);
     box-sizing: border-box;
   }
 

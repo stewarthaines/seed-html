@@ -229,12 +229,16 @@
   }
 
   .preview-header {
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    padding: var(--space-3);
-    background: var(--color-bg-secondary);
+    /* Match the sidebar/pane header height + grey (see PaneHeader) so top bars align. */
+    min-height: calc(var(--touch-target-min) + var(--space-2) + 1px);
+    padding: 0 var(--space-3);
+    background: var(--color-bg-tertiary);
     border-bottom: 1px solid var(--color-border-default);
+    box-sizing: border-box;
   }
 
   .file-name {
