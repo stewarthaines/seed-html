@@ -372,6 +372,14 @@ msgstr ""
 msgid "AI Disclaimer"
 msgstr ""
 
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "API Key"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "App Key"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "App Settings"
 msgstr ""
@@ -1261,6 +1269,10 @@ msgid "Get Started"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Google Cloud API key"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Google Drive"
 msgstr ""
 
@@ -1812,6 +1824,10 @@ msgstr ""
 msgid "Number"
 msgstr ""
 
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "OAuth Client ID"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Off"
 msgstr ""
@@ -2096,6 +2112,10 @@ msgstr ""
 
 #: src/lib/components/outline/OutlineView.svelte
 msgid "Read-only navigation"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Redirect URI"
 msgstr ""
 
 #: src/lib/components/metadata/BasicInfoFields.svelte
@@ -2733,6 +2753,14 @@ msgstr ""
 
 #: src/lib/components/metadata/AdvancedFields.svelte
 msgid "Use the publication’s own fonts (do not re-style)"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Use your own Dropbox app: create one in the Dropbox App Console (scoped access), enable files.content.write and files.metadata.read, and register this exact redirect URI in the app’s settings."
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Use your own Google app: create an OAuth client ID and an API key in the Google Cloud console, enable the Drive and Picker APIs, and add this app’s origin ({origin}) to the OAuth client’s Authorized JavaScript origins."
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte

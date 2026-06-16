@@ -64,6 +64,9 @@ export interface DropboxRemoteConfig {
   name: string;
   type: 'dropbox';
   appKey: string;
+  /** OAuth redirect URI registered in the user's Dropbox app. Falls back to
+   * `window.location.origin` when unset. */
+  redirectUri?: string;
   folderId: string;
   folderPath: string;
   accessToken: string;

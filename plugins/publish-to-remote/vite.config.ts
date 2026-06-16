@@ -1,10 +1,8 @@
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { viteSingleFile } from "vite-plugin-singlefile";
 
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), "");
-
+export default defineConfig(() => {
   return {
     // The plugin is distributed as a self-contained .html (no CDN at runtime),
     // built from plugin.html (plugin-test.html is the dev-only host harness).
@@ -30,20 +28,6 @@ export default defineConfig(({ mode }) => {
     test: {
       environment: "jsdom",
       exclude: ["dist/**", "node_modules/**"],
-    },
-    define: {
-      "import.meta.env.VITE_DROPBOX_APP_KEY": JSON.stringify(
-        env.VITE_DROPBOX_APP_KEY,
-      ),
-      "import.meta.env.VITE_DROPBOX_REDIRECT_URI": JSON.stringify(
-        env.VITE_DROPBOX_REDIRECT_URI,
-      ),
-      "import.meta.env.VITE_GOOGLE_CLIENT_ID": JSON.stringify(
-        env.VITE_GOOGLE_CLIENT_ID,
-      ),
-      "import.meta.env.VITE_GOOGLE_API_KEY": JSON.stringify(
-        env.VITE_GOOGLE_API_KEY,
-      ),
     },
   };
 });

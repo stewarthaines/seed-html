@@ -30,20 +30,12 @@
 
   let {
     editingRemote,
-    googleClientId,
-    googleApiKey,
-    dropboxAppKey,
-    dropboxRedirectUri,
     canCancel,
     onSave,
     onCancel,
     onStatus,
   }: {
     editingRemote: RemoteConfig | null;
-    googleClientId: string;
-    googleApiKey: string;
-    dropboxAppKey: string;
-    dropboxRedirectUri: string;
     canCancel: boolean;
     onSave: (remote: RemoteConfig, isNew: boolean) => void;
     onCancel: () => void;
@@ -85,6 +77,28 @@
   // to using the proxy only when one is actually present on this host.
   let routeViaProxy = $state(true);
   let proxyAvailable = $state(false);
+
+  // This app's origin — the value to register as a Google "Authorized JavaScript
+  // origin" (Google wants an origin, not a full URL).
+  const appOrigin =
+    typeof window !== 'undefined' ? window.location.origin : '';
+  // The plugin's OWN page URL (origin + path, no query). The Dropbox OAuth callback
+  // must land here — where App.svelte's onMount handles `?code=&state=` and posts it
+  // back to the opener — NOT on the host app's root, which has no such handler.
+  const pluginPageUrl =
+    typeof window !== 'undefined'
+      ? window.location.origin + window.location.pathname
+      : '';
+
+  // Provider OAuth app credentials, entered by the user per remote (bring-your-own
+  // OAuth app) and persisted in the saved config. Kept out of `form` — like
+  // routeViaProxy — so the wholesale `form = {...}` resets don't each need them.
+  let googleClientId = $state('');
+  let googleApiKey = $state('');
+  let dropboxAppKey = $state('');
+  // Prefilled with the plugin page URL — the value to register as the Dropbox app's
+  // redirect URI; dropbox.ts falls back to it when left empty.
+  let dropboxRedirectUri = $state(pluginPageUrl);
 
   onMount(async () => {
     try {
@@ -154,6 +168,8 @@
         password: '',
         catalogFilename: '',
       };
+      googleClientId = remote.clientId;
+      googleApiKey = remote.apiKey;
       pickedFolderName = remote.folderName;
     } else if (remote.type === 'dropbox') {
       remoteType = 'dropbox';
@@ -176,6 +192,8 @@
         password: '',
         catalogFilename: '',
       };
+      dropboxAppKey = dropboxRemote.appKey;
+      dropboxRedirectUri = dropboxRemote.redirectUri || pluginPageUrl;
       pickedFolderName = remote.folderPath;
       if (form.accessToken && form.tokenExpiry > Date.now()) {
         openDropboxBrowser(form.folderId);
@@ -226,6 +244,10 @@
     };
     pickedFolderName = null;
     previousBucketForAutoName = '';
+    googleClientId = '';
+    googleApiKey = '';
+    dropboxAppKey = '';
+    dropboxRedirectUri = pluginPageUrl;
     dbxBrowserPath = '';
     dbxBrowserFolders = [];
     dbxBrowserLoading = false;
@@ -369,8 +391,8 @@
         id: editingRemote?.id || crypto.randomUUID(),
         name: form.name.trim() || form.folderName.trim(),
         type: 'google-drive',
-        clientId: googleClientId,
-        apiKey: googleApiKey,
+        clientId: googleClientId.trim(),
+        apiKey: googleApiKey.trim(),
         folderId: form.folderId.trim(),
         folderName: form.folderName.trim(),
         accessToken: form.accessToken || undefined,
@@ -387,7 +409,8 @@
         id: editingRemote?.id || crypto.randomUUID(),
         name: form.name.trim() || form.folderName.trim(),
         type: 'dropbox',
-        appKey: dropboxAppKey,
+        appKey: dropboxAppKey.trim(),
+        redirectUri: dropboxRedirectUri.trim() || undefined,
         folderId: form.folderId,
         folderPath: form.folderName,
         accessToken: form.accessToken,
@@ -429,7 +452,7 @@
         <button class="btn-type" onclick={() => (remoteType = 's3-compatible')}>
           {$t('S3-Compatible')}
         </button>
-        <button class="btn-type" onclick={onConnectGoogleDrive}>
+        <button class="btn-type" onclick={() => (remoteType = 'google-drive')}>
           {$t('Google Drive')}
         </button>
         <button class="btn-type" onclick={() => (remoteType = 'dropbox')}>
@@ -570,6 +593,33 @@
       <h3>{$t('Google Drive')}</h3>
     </div>
 
+    <div class="form-group">
+      <label for="gd-client-id">{$t('OAuth Client ID')}</label>
+      <!-- i18n-ignore -->
+      <input
+        id="gd-client-id"
+        type="text"
+        placeholder="xxxx.apps.googleusercontent.com"
+        bind:value={googleClientId}
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="gd-api-key">{$t('API Key')}</label>
+      <input
+        id="gd-api-key"
+        type="text"
+        placeholder={$t('Google Cloud API key')}
+        bind:value={googleApiKey}
+      />
+      <small class="field-note">
+        {$t(
+          'Use your own Google app: create an OAuth client ID and an API key in the Google Cloud console, enable the Drive and Picker APIs, and add this app’s origin ({origin}) to the OAuth client’s Authorized JavaScript origins.',
+          { origin: appOrigin },
+        )}
+      </small>
+    </div>
+
     {#if pickedFolderName}
       <div class="form-group folder-selected">
         <p><strong>{$t('Folder selected:')}</strong> {pickedFolderName}</p>
@@ -621,6 +671,27 @@
     </div>
 
     {#if !form.accessToken}
+      <div class="form-group">
+        <label for="db-app-key">{$t('App Key')}</label>
+        <!-- i18n-ignore -->
+        <input
+          id="db-app-key"
+          type="text"
+          placeholder="xxxxxxxxxxxxxxx"
+          bind:value={dropboxAppKey}
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="db-redirect-uri">{$t('Redirect URI')}</label>
+        <input id="db-redirect-uri" type="url" bind:value={dropboxRedirectUri} />
+        <small class="field-note">
+          {$t(
+            'Use your own Dropbox app: create one in the Dropbox App Console (scoped access), enable files.content.write and files.metadata.read, and register this exact redirect URI in the app’s settings.',
+          )}
+        </small>
+      </div>
+
       <div class="form-actions">
         <button onclick={() => onConnectDropbox()} class="btn btn-primary">
           {$t('Connect to Dropbox')}
@@ -903,6 +974,13 @@
     display: flex;
     gap: 8px;
     margin-top: 20px;
+  }
+
+  .field-note {
+    display: block;
+    margin-top: 4px;
+    color: var(--color-text-secondary);
+    font-size: 12px;
   }
 
   .folder-browser {

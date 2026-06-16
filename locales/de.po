@@ -372,6 +372,14 @@ msgstr "Für die Erweiterungsverwaltung ist der erweiterte Modus erforderlich"
 msgid "AI Disclaimer"
 msgstr "KI-Hinweis"
 
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "API Key"
+msgstr "API-Schlüssel"
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "App Key"
+msgstr "App-Schlüssel"
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "App Settings"
 msgstr "App-Einstellungen"
@@ -1261,6 +1269,10 @@ msgid "Get Started"
 msgstr "Loslegen"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Google Cloud API key"
+msgstr "Google-Cloud-API-Schlüssel"
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Google Drive"
 msgstr "Google Drive"
 
@@ -1812,6 +1824,10 @@ msgstr "Nicht validiert"
 msgid "Number"
 msgstr "Zahl"
 
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "OAuth Client ID"
+msgstr "OAuth-Client-ID"
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Off"
 msgstr "Aus"
@@ -2097,6 +2113,10 @@ msgstr "Schreibgeschütztes Kapitel"
 #: src/lib/components/outline/OutlineView.svelte
 msgid "Read-only navigation"
 msgstr "Schreibgeschützte Navigation"
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Redirect URI"
+msgstr "Weiterleitungs-URI"
 
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Reflowable"
@@ -2757,6 +2777,14 @@ msgstr "Verwenden Sie die Schaltfläche „Herunterladen“, um auf die Datei zu
 #: src/lib/components/metadata/AdvancedFields.svelte
 msgid "Use the publication’s own fonts (do not re-style)"
 msgstr "Die eigenen Schriften der Publikation verwenden (nicht neu gestalten)"
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Use your own Dropbox app: create one in the Dropbox App Console (scoped access), enable files.content.write and files.metadata.read, and register this exact redirect URI in the app’s settings."
+msgstr "Verwenden Sie Ihre eigene Dropbox-App: Erstellen Sie eine App in der Dropbox App Console (Scoped Access), aktivieren Sie files.content.write und files.metadata.read und registrieren Sie genau diese Weiterleitungs-URI in den App-Einstellungen."
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Use your own Google app: create an OAuth client ID and an API key in the Google Cloud console, enable the Drive and Picker APIs, and add this app’s origin ({origin}) to the OAuth client’s Authorized JavaScript origins."
+msgstr "Verwenden Sie Ihre eigene Google-App: Erstellen Sie eine OAuth-Client-ID und einen API-Schlüssel in der Google Cloud Console, aktivieren Sie die Drive- und Picker-APIs und fügen Sie den Ursprung dieser App ({origin}) zu den autorisierten JavaScript-Quellen der OAuth-Client-ID hinzu."
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "username"

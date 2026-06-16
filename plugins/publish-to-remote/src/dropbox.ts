@@ -36,9 +36,11 @@ export async function authorizeDropbox(
   const codeChallenge = await generateCodeChallenge(codeVerifier);
   const state = generateState();
 
-  // Use provided redirect_uri or construct from current location
+  // Use provided redirect_uri or fall back to this (plugin) page's URL. It must be
+  // the page that handles the OAuth callback (App.svelte's onMount) — i.e. the
+  // plugin page itself (origin + path), not the host app root (origin only).
   const actualRedirectUri =
-    redirectUri || `${window.location.protocol}//${window.location.host}`;
+    redirectUri || `${window.location.origin}${window.location.pathname}`;
 
   sessionStorage.setItem('dropbox_code_verifier', codeVerifier);
   sessionStorage.setItem('dropbox_state', state);

@@ -37,16 +37,6 @@
   import RemoteSelector from './components/RemoteSelector.svelte';
   import ValidationModal from './components/ValidationModal.svelte';
 
-  const GOOGLE_CLIENT_ID =
-    (import.meta.env as Record<string, string>).VITE_GOOGLE_CLIENT_ID || '';
-  const GOOGLE_API_KEY =
-    (import.meta.env as Record<string, string>).VITE_GOOGLE_API_KEY || '';
-  const DROPBOX_APP_KEY = (
-    (import.meta.env as Record<string, string>).VITE_DROPBOX_APP_KEY || ''
-  ).toString();
-  const DROPBOX_REDIRECT_URI =
-    (import.meta.env as Record<string, string>).VITE_DROPBOX_REDIRECT_URI || '';
-
   type ViewState = 'init' | 'loading' | 'ready';
 
   let view: ViewState = $state('init');
@@ -159,12 +149,6 @@
       );
       window.close();
       return;
-    }
-
-    if (GOOGLE_CLIENT_ID) {
-      loadGoogleScripts().catch((err) =>
-        console.warn('Failed to preload Google scripts:', err),
-      );
     }
 
     const saved = await readRemotes();
@@ -702,10 +686,6 @@
               {#if configuring}
                 <ConfigureForm
                   {editingRemote}
-                  googleClientId={GOOGLE_CLIENT_ID}
-                  googleApiKey={GOOGLE_API_KEY}
-                  dropboxAppKey={DROPBOX_APP_KEY}
-                  dropboxRedirectUri={DROPBOX_REDIRECT_URI}
                   canCancel={remotesStore.remotes.length > 0}
                   onSave={onSaveRemote}
                   onCancel={onCancelConfig}
