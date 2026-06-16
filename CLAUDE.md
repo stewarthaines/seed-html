@@ -26,9 +26,26 @@ When the user asks you to document a plan or write a new document describing det
 - When writing api docs only document methods specified. do not invent features that haven't been requested.
 - don't write fallback style code (auto-creating files, or other content) unless explicitly approved by the user
 
-## EDITME - EPUB Editor
+## SEED.html - Simple EPUB Editor
 
 This is a **Svelte 5 application using runes mode** that runs in modern browsers, replacing a previous Vue.js version. It allows users to create and edit EPUB files using plain text sources that are transformed to XHTML.
+
+### Project name (IMPORTANT)
+
+The product is **SEED.html** (short for *Simple EPUB EDitor*). The distributable single
+file is `SEED.html`, the editor-source archive is `SEED.zip`, and the UI name shown to
+users is **"Simple EPUB Editor"**.
+
+- **"EDITME" is a former name.** Do NOT introduce "EDITME" into new UI text, code
+  comments, sample content, or docs — always use **"SEED.html"** / **"Simple EPUB Editor"**.
+- **Do NOT rename existing functional identifiers that contain `editme`** — they are
+  load-bearing and renaming them breaks saved user workspaces and the build. This
+  includes: the `editme_*` localStorage keys (e.g. `editme_app_workspace_id`,
+  `editme_nav_*`), the `__EDITME_I18N_BUNDLE__` window global, the `editme-storage`
+  IndexedDB database, the `editme-content-panes` PaneForge id, the `editmePlugin`
+  package metadata key, and the `editme-svelte` package / git-repo name.
+- Some older docs still say "EDITME" / "EDITME.html". **SEED.html is canonical** — ignore
+  those lingering references; a full docs rebrand is intentionally not done.
 
 ### Svelte 5 & Runes Mode
 
