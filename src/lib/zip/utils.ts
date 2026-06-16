@@ -23,15 +23,24 @@ export function downloadArrayBuffer(arrayBuffer: ArrayBuffer, fileName: string):
 }
 
 /**
- * Triggers download of a Blob as a file
+ * Triggers download of a Blob as a file.
+ *
+ * The anchor is appended to the document and the object URL is revoked on a timer
+ * rather than synchronously: click() only schedules the download and returns, so a
+ * synchronous revoke (and a detached anchor) races the browser's filename resolution
+ * — on standalone file:// builds in Chrome that leaves the file named after the blob
+ * UUID with no extension instead of `fileName`.
  */
 export function downloadBlob(blob: Blob, fileName: string = 'download.x'): void {
   const blobUrl = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = blobUrl;
-  link.setAttribute('download', fileName);
+  link.download = fileName;
+  link.rel = 'noopener';
+  document.body.appendChild(link);
   link.click();
-  window.URL.revokeObjectURL(blobUrl);
+  link.remove();
+  setTimeout(() => window.URL.revokeObjectURL(blobUrl), 10_000);
 }
 
 /**

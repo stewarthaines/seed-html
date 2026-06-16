@@ -47,54 +47,34 @@ describe('ZIP Utils', () => {
     let mockClick: any;
 
     beforeEach(() => {
+      vi.useFakeTimers();
       mockCreateObjectURL = vi.fn(() => 'blob:mock-url');
       mockRevokeObjectURL = vi.fn();
       mockClick = vi.fn();
 
-      // Mock URL methods
       global.URL.createObjectURL = mockCreateObjectURL;
       global.URL.revokeObjectURL = mockRevokeObjectURL;
+      window.URL.createObjectURL = mockCreateObjectURL;
+      window.URL.revokeObjectURL = mockRevokeObjectURL;
 
-      // Mock window object if it doesn't exist
-      if (typeof window === 'undefined') {
-        global.window = {
-          URL: {
-            createObjectURL: mockCreateObjectURL,
-            revokeObjectURL: mockRevokeObjectURL,
-          },
-        } as any;
-      } else {
-        // Override existing window URL methods
-        window.URL.createObjectURL = mockCreateObjectURL;
-        window.URL.revokeObjectURL = mockRevokeObjectURL;
-      }
-
-      // Mock document.createElement
-      const mockElement = {
-        href: '',
-        setAttribute: vi.fn(),
-        click: mockClick,
-      };
-
-      // Create global document mock if it doesn't exist
-      if (typeof document === 'undefined') {
-        global.document = { createElement: vi.fn() } as any;
-      }
+      const mockElement = { href: '', download: '', rel: '', click: mockClick, remove: vi.fn() };
       vi.spyOn(document, 'createElement').mockReturnValue(mockElement as any);
+      vi.spyOn(document.body, 'appendChild').mockImplementation((el: any) => el);
     });
 
     afterEach(() => {
       vi.restoreAllMocks();
+      vi.useRealTimers();
     });
 
     it('should trigger download with correct filename', () => {
       const data = new Uint8Array([1, 2, 3]).buffer;
-      const fileName = 'test.zip';
 
-      downloadArrayBuffer(data, fileName);
+      downloadArrayBuffer(data, 'test.zip');
 
       expect(mockCreateObjectURL).toHaveBeenCalledWith(expect.any(Blob));
       expect(mockClick).toHaveBeenCalled();
+      vi.runAllTimers();
       expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:mock-url');
     });
   });
@@ -103,66 +83,51 @@ describe('ZIP Utils', () => {
     let mockCreateObjectURL: any;
     let mockRevokeObjectURL: any;
     let mockClick: any;
-    let mockSetAttribute: any;
+    let mockRemove: any;
+    let mockElement: any;
 
     beforeEach(() => {
+      vi.useFakeTimers();
       mockCreateObjectURL = vi.fn(() => 'blob:mock-url');
       mockRevokeObjectURL = vi.fn();
       mockClick = vi.fn();
-      mockSetAttribute = vi.fn();
+      mockRemove = vi.fn();
 
       global.URL.createObjectURL = mockCreateObjectURL;
       global.URL.revokeObjectURL = mockRevokeObjectURL;
+      window.URL.createObjectURL = mockCreateObjectURL;
+      window.URL.revokeObjectURL = mockRevokeObjectURL;
 
-      // Mock window object if it doesn't exist
-      if (typeof window === 'undefined') {
-        global.window = {
-          URL: {
-            createObjectURL: mockCreateObjectURL,
-            revokeObjectURL: mockRevokeObjectURL,
-          },
-        } as any;
-      } else {
-        // Override existing window URL methods
-        window.URL.createObjectURL = mockCreateObjectURL;
-        window.URL.revokeObjectURL = mockRevokeObjectURL;
-      }
-
-      const mockElement = {
-        href: '',
-        setAttribute: mockSetAttribute,
-        click: mockClick,
-      };
-
-      // Create global document mock if it doesn't exist
-      if (typeof document === 'undefined') {
-        global.document = { createElement: vi.fn() } as any;
-      }
+      mockElement = { href: '', download: '', rel: '', click: mockClick, remove: mockRemove };
       vi.spyOn(document, 'createElement').mockReturnValue(mockElement as any);
+      vi.spyOn(document.body, 'appendChild').mockImplementation((el: any) => el);
     });
 
     afterEach(() => {
       vi.restoreAllMocks();
+      vi.useRealTimers();
     });
 
-    it('should trigger download with specified filename', () => {
+    it('should append the anchor, set the filename, and defer the revoke', () => {
       const blob = new Blob(['test content']);
-      const fileName = 'custom.txt';
 
-      downloadBlob(blob, fileName);
+      downloadBlob(blob, 'custom.txt');
 
       expect(mockCreateObjectURL).toHaveBeenCalledWith(blob);
-      expect(mockSetAttribute).toHaveBeenCalledWith('download', fileName);
+      expect(mockElement.download).toBe('custom.txt');
+      expect(document.body.appendChild).toHaveBeenCalledWith(mockElement);
       expect(mockClick).toHaveBeenCalled();
+      expect(mockRemove).toHaveBeenCalled();
+      // A synchronous revoke races click() and loses the suggested filename.
+      expect(mockRevokeObjectURL).not.toHaveBeenCalled();
+      vi.runAllTimers();
       expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:mock-url');
     });
 
     it('should use default filename when not provided', () => {
-      const blob = new Blob(['test content']);
+      downloadBlob(new Blob(['test content']));
 
-      downloadBlob(blob);
-
-      expect(mockSetAttribute).toHaveBeenCalledWith('download', 'download.x');
+      expect(mockElement.download).toBe('download.x');
     });
   });
 
