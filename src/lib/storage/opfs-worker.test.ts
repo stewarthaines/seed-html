@@ -44,6 +44,7 @@ describe('OPFS Worker Script', () => {
       expect(script).toContain('async function listWorkspaces');
       expect(script).toContain('async function writeFile');
       expect(script).toContain('async function readFile');
+      expect(script).toContain('async function getFileInfo');
       expect(script).toContain('async function deleteFile');
       expect(script).toContain('async function listFiles');
       expect(script).toContain('async function getQuota');
@@ -59,6 +60,7 @@ describe('OPFS Worker Script', () => {
       expect(script).toContain("case 'listWorkspaces':");
       expect(script).toContain("case 'writeFile':");
       expect(script).toContain("case 'readFile':");
+      expect(script).toContain("case 'getFileInfo':");
       expect(script).toContain("case 'deleteFile':");
       expect(script).toContain("case 'listFiles':");
       expect(script).toContain("case 'getQuota':");
@@ -119,6 +121,32 @@ describe('OPFS Worker Script', () => {
       const result = await simulateWriteFile('test-ws', 'OEBPS/chapter1.xhtml', testContent);
 
       expect(result).toEqual({ success: true });
+    });
+
+    it('should return file info nested under data.fileInfo (the shape FileStorageAPI reads)', async () => {
+      // Mirrors the worker's getFileInfo. The host reads result.data.fileInfo
+      // (storage/index.ts), unlike readFile's top-level content — getting this shape
+      // wrong returns size 0; omitting the handler entirely is "Failed to get file info".
+      const simulateGetFileInfo = async (workspaceId: string, path: string) => {
+        try {
+          const root = await mockNavigator.storage.getDirectory();
+          const workspacesDir = await root.getDirectoryHandle('workspaces', { create: true });
+          const workspaceDir = await workspacesDir.getDirectoryHandle(workspaceId, { create: true });
+          const fileHandle = await workspaceDir.getFileHandle(path, { create: true });
+          const file = await fileHandle.getFile();
+          return {
+            success: true,
+            data: { fileInfo: { size: file.size, lastModified: new Date(file.lastModified) } },
+          };
+        } catch (error: any) {
+          return { success: false, error: error.message };
+        }
+      };
+
+      const result: any = await simulateGetFileInfo('test-ws', 'book.epub');
+      expect(result.success).toBe(true);
+      expect(result.data.fileInfo).toHaveProperty('size');
+      expect(result.data.fileInfo.lastModified).toBeInstanceOf(Date);
     });
 
     it('should simulate quota estimation logic', async () => {

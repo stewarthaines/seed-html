@@ -125,6 +125,21 @@ async function readFile(data) {
   }
 }
 
+// Returns { data: { fileInfo } } — the shape FileStorageAPI.getFileInfo reads
+// (result.data.fileInfo), unlike readFile's top-level content.
+async function getFileInfo(data) {
+  try {
+    const fileHandle = await getFileHandle(data.workspaceId, data.path, false);
+    const file = await fileHandle.getFile();
+    return {
+      success: true,
+      data: { fileInfo: { size: file.size, lastModified: new Date(file.lastModified) } },
+    };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
 async function deleteFile(data) {
   try {
     const workspaceHandle = await ensureWorkspaceDirectory(data.workspaceId);
@@ -220,6 +235,9 @@ self.addEventListener('message', async event => {
         break;
       case 'readFile':
         result = await readFile(data);
+        break;
+      case 'getFileInfo':
+        result = await getFileInfo(data);
         break;
       case 'deleteFile':
         result = await deleteFile(data);
