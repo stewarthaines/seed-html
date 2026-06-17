@@ -328,7 +328,7 @@ function generateText(ctx, options) {
             <div class="gs-item-actions">
               <button
                 type="button"
-                class="gs-edit"
+                class="btn btn-secondary btn-sm"
                 onclick={() => startEdit(g)}
                 disabled={!isAdvancedMode}
               >
@@ -336,7 +336,7 @@ function generateText(ctx, options) {
               </button>
               <button
                 type="button"
-                class="gs-remove"
+                class="btn btn-danger btn-sm"
                 onclick={() => handleRemove(g.manifest.id)}
                 disabled={!isAdvancedMode}
               >
@@ -375,7 +375,7 @@ function generateText(ctx, options) {
       <div class="gs-options">
         <div class="gs-options-head">
           <span class="gs-label">{$t('Options')}</span>
-          <button type="button" class="gs-add" onclick={addOption} disabled={!isAdvancedMode}>
+          <button type="button" class="btn btn-secondary btn-sm" onclick={addOption} disabled={!isAdvancedMode}>
             {$t('Add option')}
           </button>
         </div>
@@ -441,7 +441,7 @@ function generateText(ctx, options) {
             {/if}
             <button
               type="button"
-              class="gs-remove gs-remove-row"
+              class="btn btn-danger btn-sm"
               onclick={() => removeOption(i)}
               aria-label={$t('Remove option')}
               disabled={!isAdvancedMode}
@@ -458,13 +458,13 @@ function generateText(ctx, options) {
 
       <div class="gs-actions">
         {#if editingId}
-          <button type="button" class="gs-cancel" onclick={resetForm} disabled={saving}>
+          <button type="button" class="btn btn-secondary btn-sm" onclick={resetForm} disabled={saving}>
             {$t('Cancel')}
           </button>
         {/if}
         <button
           type="button"
-          class="gs-create-btn"
+          class="btn btn-primary btn-sm"
           onclick={handleSave}
           disabled={!isAdvancedMode || saving}
         >
@@ -607,10 +607,6 @@ function generateText(ctx, options) {
     flex: 1 1 8rem;
   }
 
-  .gs-option-row .gs-remove-row {
-    flex: 0 0 auto;
-  }
-
   .gs-check {
     display: flex;
     align-items: center;
@@ -619,55 +615,10 @@ function generateText(ctx, options) {
     color: var(--color-text-primary);
   }
 
-  .gs-add {
-    padding: var(--space-1) var(--space-3);
-    font-size: var(--text-sm);
-    color: var(--color-text-link);
-    background: none;
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-  }
-
-  .gs-remove {
-    padding: var(--space-1) var(--space-3);
-    font-size: var(--text-sm);
-    color: var(--color-status-error);
-    background: none;
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-  }
-
-  .gs-remove-row {
-    padding: var(--space-1) var(--space-2);
-    line-height: 1;
-  }
-
   .gs-item-actions {
     display: flex;
     gap: var(--space-2);
     flex-shrink: 0;
-  }
-
-  .gs-edit,
-  .gs-cancel {
-    padding: var(--space-1) var(--space-3);
-    font-size: var(--text-sm);
-    color: var(--color-text-link);
-    background: none;
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-  }
-
-  .gs-remove:disabled,
-  .gs-add:disabled,
-  .gs-edit:disabled,
-  .gs-cancel:disabled,
-  .gs-create-btn:disabled {
-    opacity: 0.6;
-    cursor: default;
   }
 
   .gs-error {
@@ -681,21 +632,6 @@ function generateText(ctx, options) {
     justify-content: flex-end;
   }
 
-  .gs-create-btn {
-    padding: var(--space-2) var(--space-4);
-    font-size: var(--text-sm);
-    font-weight: var(--font-semibold);
-    color: white;
-    background-color: var(--color-button-primary-bg);
-    border: 1px solid var(--color-button-primary-bg);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-  }
-
-  .gs-create-btn:hover:not(:disabled) {
-    background-color: var(--color-button-primary-bg-hover);
-  }
-
   .advanced-mode-note {
     margin: 0;
     font-size: var(--text-xs);
@@ -703,9 +639,4 @@ function generateText(ctx, options) {
     font-style: italic;
   }
 
-  :global([data-theme='dark']) .gs-create-btn {
-    background-color: var(--color-surface-elevated);
-    border-color: var(--color-border-accent);
-    color: var(--color-text-link);
-  }
 </style>

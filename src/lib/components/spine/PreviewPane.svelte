@@ -1258,7 +1258,7 @@
        http: (Paged.js needs the origin); opens a window with just this chapter. -->
   {#if selectedDevice === 'print' && onGeneratePdf}
     <div class="pdf-footer">
-      <button type="button" class="pdf-generate-button" onclick={() => onGeneratePdf?.()}>
+      <button type="button" class="btn btn-secondary pdf-generate-button" onclick={() => onGeneratePdf?.()}>
         <FilePdf size={18} aria-hidden="true" />
         <span>{$t('Chapter PDF')}</span>
       </button>
@@ -1354,34 +1354,11 @@
     background: var(--color-button-secondary-bg);
   }
 
+  /* Layout only; .btn .btn-secondary supplies the chrome + hover. */
   .pdf-generate-button {
     flex: 1;
     min-width: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-2);
     min-height: 36px;
-    padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-sm);
-    background-color: transparent;
-    color: var(--color-text-secondary);
-    font-size: var(--text-sm);
-    font-weight: 500;
-    cursor: pointer;
-    transition: all var(--duration-fast) ease;
-  }
-
-  .pdf-generate-button:hover {
-    background-color: var(--color-surface-hover);
-    border-color: var(--color-border-hover);
-    color: var(--color-text-primary);
-  }
-
-  .pdf-generate-button:focus-visible {
-    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
-    outline-offset: var(--focus-ring-offset);
   }
 
   .a11y-panel {

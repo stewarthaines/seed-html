@@ -87,10 +87,20 @@
   <div class="extension-header">
     <span class="extension-name">{extension.name}</span>
     <div class="extension-actions">
-      <button type="button" class="license-button" onclick={toggleLicense} disabled={isLoading}>
+      <button
+        type="button"
+        class="btn btn-secondary btn-sm"
+        onclick={toggleLicense}
+        disabled={isLoading}
+      >
         {$t('License')}
       </button>
-      <button type="button" class="remove-button" onclick={onRemove} disabled={!isAdvancedMode}>
+      <button
+        type="button"
+        class="btn btn-danger btn-sm"
+        onclick={onRemove}
+        disabled={!isAdvancedMode}
+      >
         {$t('Remove')}
       </button>
     </div>
@@ -140,44 +150,6 @@
   .extension-actions {
     display: flex;
     gap: 0.5rem;
-  }
-
-  .license-button {
-    background: var(--color-accent-primary, #007acc);
-    color: white;
-    border: none;
-    padding: 0.25rem 0.75rem;
-    border-radius: 0.25rem;
-    cursor: pointer;
-    font-size: 0.875rem;
-  }
-
-  .license-button:hover:not(:disabled) {
-    background: var(--color-accent-primary-hover, #005a9e);
-  }
-
-  .license-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .remove-button {
-    background: var(--color-button-danger-bg);
-    color: white;
-    border: none;
-    padding: 0.25rem 0.75rem;
-    border-radius: 0.25rem;
-    cursor: pointer;
-    font-size: 0.875rem;
-  }
-
-  .remove-button:hover:not(:disabled) {
-    background: var(--color-button-danger-bg-hover);
-  }
-
-  .remove-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
   }
 
   .license-preview {

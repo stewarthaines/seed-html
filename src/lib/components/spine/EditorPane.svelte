@@ -518,7 +518,7 @@
     <div class="editor-controls">
       <button
         type="button"
-        class="pane-toggle-btn"
+        class="btn btn-icon"
         onclick={togglePaneMode}
         title={editorMode === 'single' ? $t('Add second editor pane') : $t('Switch to single pane')}
       >
@@ -740,31 +740,6 @@
        indicator sits at the far right. */
     flex: 1;
     min-width: 0;
-  }
-
-  .pane-toggle-btn {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-sm);
-    background: var(--color-bg-secondary);
-    color: var(--color-text-primary);
-    cursor: pointer;
-    transition: all var(--duration-fast) ease;
-    font-size: var(--text-sm);
-    font-weight: var(--font-medium);
-  }
-
-  .pane-toggle-btn:hover {
-    background: var(--color-bg-hover);
-    border-color: var(--color-accent-primary);
-  }
-
-  .pane-toggle-btn:focus-visible {
-    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
-    outline-offset: var(--focus-ring-offset);
   }
 
   .toggle-icon {

@@ -157,7 +157,7 @@
     {/if}
 
     <div class="gp-actions">
-      <button type="button" class="gp-run" onclick={generate} disabled={busy}>
+      <button type="button" class="btn btn-primary" onclick={generate} disabled={busy}>
         {busy ? $t('Generating…') : $t('Insert at cursor')}
       </button>
     </div>
@@ -259,30 +259,4 @@
     justify-content: flex-end;
   }
 
-  .gp-run {
-    padding: var(--space-2) var(--space-4);
-    font-size: var(--text-sm);
-    font-weight: var(--font-semibold);
-    color: white;
-    background-color: var(--color-button-primary-bg);
-    border: 1px solid var(--color-button-primary-bg);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: background-color var(--duration-fast) ease;
-  }
-
-  .gp-run:hover:not(:disabled) {
-    background-color: var(--color-button-primary-bg-hover);
-  }
-
-  .gp-run:disabled {
-    opacity: 0.6;
-    cursor: default;
-  }
-
-  :global([data-theme='dark']) .gp-run {
-    background-color: var(--color-surface-elevated);
-    border-color: var(--color-border-accent);
-    color: var(--color-text-link);
-  }
 </style>
