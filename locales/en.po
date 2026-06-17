@@ -2265,10 +2265,6 @@ msgstr ""
 "For richer formatting options there are third party javascript extensions that are not currently present in this project.\n"
 "\n"
 "For real writing projects the best way to start is to choose a sample EPUB that's pre-configured for generating semantic, accessible xhtml from *plain text source*.\n"
-"\n"
-"There are sample EPUBs on the SEED.html site with support for Markdown, Textile, ABC music notation and more.\n"
-"\n"
-"You'll find them on the SEED.html home page: <p class='action'><a href='https://stewarthaines.com/epub' target='_blank'>Open SEED.html online</a></p>\n"
 
 #: src/lib/content/sample-content-generator.ts
 msgid "sample.chapter1.title"

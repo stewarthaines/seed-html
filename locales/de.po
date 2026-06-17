@@ -2265,10 +2265,6 @@ msgstr ""
 "Für umfangreichere Formatierungsoptionen gibt es JavaScript-Erweiterungen von Drittanbietern, die derzeit nicht in diesem Projekt vorhanden sind.\n"
 "\n"
 "Für echte Schreibprojekte beginnen Sie am besten damit, ein Beispiel-EPUB zu wählen, das für die Erzeugung von semantischem, barrierefreiem XHTML aus *reinem Textquelltext* vorkonfiguriert ist.\n"
-"\n"
-"Auf der SEED.html-Website gibt es Beispiel-EPUBs mit Unterstützung für Markdown, Textile, ABC-Notenschrift und mehr.\n"
-"\n"
-"Sie finden sie auf der SEED.html-Startseite: <p class='action'><a href='https://stewarthaines.com/epub' target='_blank'>SEED.html online öffnen</a></p>"
 
 #: src/lib/content/sample-content-generator.ts
 msgid "sample.chapter1.title"
