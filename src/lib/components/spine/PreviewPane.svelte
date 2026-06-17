@@ -26,7 +26,7 @@
   import { snippetAroundClick } from './preview-click.js';
   import { buildPagedDocument, chapterToSection, MARGIN_MM } from '$lib/pdf/pdf-export.js';
   import type { PrintSettings } from '$lib/services/settings/settings.service.js';
-  import { ArrowsClockwise, FilePdf } from 'phosphor-svelte';
+  import { ArrowsClockwise, FilePdf, DeviceRotate } from 'phosphor-svelte';
 
   // Props using Svelte 5 runes syntax
   let {
@@ -235,79 +235,12 @@
 
   // Preview configuration
   const DEVICE_PRESETS = [
-    {
-      id: 'desktop',
-      name: 'Fill',
-      width: '100%',
-      height: '100%',
-      icon: '🖥️',
-      category: 'responsive',
-    },
-    {
-      id: 'galaxy-s23',
-      name: 'Pocket',
-      width: '360px',
-      height: '800px',
-      icon: '📱',
-      category: 'commute',
-    },
-    {
-      id: 'iphone',
-      name: 'Standard',
-      width: '375px',
-      height: '667px',
-      icon: '📱',
-      category: 'commute',
-    },
-    {
-      id: 'pixel-7',
-      name: 'Large',
-      width: '393px',
-      height: '851px',
-      icon: '📱',
-      category: 'commute',
-    },
-    {
-      id: 'iphone-plus',
-      name: 'Plus',
-      width: '414px',
-      height: '736px',
-      icon: '📱',
-      category: 'commute',
-    },
-    { id: 'ipad', name: 'Compact', width: '768px', height: '1024px', icon: '📱', category: 'home' },
-    {
-      id: 'galaxy-tab-s9',
-      name: 'Large',
-      width: '800px',
-      height: '1280px',
-      icon: '📱',
-      category: 'home',
-    },
-    {
-      id: 'ipad-air',
-      name: 'Extra Large',
-      width: '820px',
-      height: '1180px',
-      icon: '📱',
-      category: 'home',
-    },
-    {
-      id: 'kindle',
-      name: 'Standard',
-      width: '600px',
-      height: '800px',
-      icon: '📚',
-      category: 'travel',
-    },
-    {
-      id: 'kobo-clara-2e',
-      name: 'Large',
-      width: '758px',
-      height: '1024px',
-      icon: '📚',
-      category: 'travel',
-    },
+    { id: 'desktop', name: 'Fill', width: '100%', height: '100%', category: 'responsive' },
+    { id: 'iphone', name: 'Standard', width: '375px', height: '667px', category: 'commute' },
+    { id: 'iphone-plus', name: 'Plus', width: '414px', height: '736px', category: 'commute' },
+    { id: 'ipad', name: 'Compact', width: '768px', height: '1024px', category: 'home' },
+    { id: 'ipad-air', name: 'Extra Large', width: '820px', height: '1180px', category: 'home' },
+    { id: 'kindle', name: 'Standard', width: '600px', height: '800px', category: 'travel' },
     {
       // Paginated print preview (Paged.js). Dimensions are placeholders — print
       // fills the pane and Paged.js sizes its own A4 pages (see isFillDevice).
@@ -315,7 +248,6 @@
       name: 'Print',
       width: '794px',
       height: '1123px',
-      icon: '🖨️',
       category: 'print',
     },
   ] as const;
@@ -1183,7 +1115,7 @@
           title={$t('Toggle orientation')}
           aria-label={$t('Toggle device orientation')}
         >
-          {deviceOrientation === 'portrait' ? '▭' : '▯'}
+          <DeviceRotate size={16} aria-hidden="true" />
         </button>
       {/if}
 
@@ -1199,7 +1131,6 @@
           <optgroup label={getCategoryLabel(category)}>
             {#each devices as device}
               <option value={device.id}>
-                {device.icon}
                 {device.id === 'print' ? printDeviceLabel : getDeviceLabel(device)}
               </option>
             {/each}
