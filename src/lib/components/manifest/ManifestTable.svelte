@@ -356,7 +356,7 @@
       {#if filterText}
         <button
           type="button"
-          class="clear-filter-button"
+          class="btn btn-icon clear-filter-button"
           aria-label={$t('Clear filter')}
           onclick={handleClearFilter}
         >
@@ -368,7 +368,7 @@
       {#if !readOnly}
         <button
           type="button"
-          class="action-button primary"
+          class="btn btn-secondary"
           onclick={handleLoadFileClick}
           disabled={loading}
         >
@@ -506,7 +506,7 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    background-color: var(--color-surface);
+    background-color: var(--color-bg-primary);
   }
 
   .filter-input-container {
@@ -521,7 +521,7 @@
     padding-inline-end: 2rem;
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-sm);
-    background-color: var(--color-surface);
+    background-color: var(--color-input-bg);
     color: var(--color-text-primary);
     font-size: 0.875rem;
     transition: border-color 0.2s ease;
@@ -539,62 +539,15 @@
   }
 
   .filter-input::placeholder {
-    color: var(--color-text-placeholder);
+    color: var(--color-input-placeholder);
   }
 
+  /* Overlay the shared .btn .btn-icon inside the input; only positioning here. */
   .clear-filter-button {
     position: absolute;
-    right: 0.5rem;
+    right: 0.25rem;
     top: 50%;
     transform: translateY(-50%);
-    background: none;
-    border: none;
-    font-size: 1.25rem;
-    color: var(--color-text-secondary);
-    cursor: pointer;
-    padding: 0.25rem;
-    line-height: 1;
-    transition: color 0.2s ease;
-  }
-
-  .clear-filter-button:hover {
-    color: var(--color-text-primary);
-  }
-
-  .clear-filter-button:focus {
-    outline: none;
-    color: var(--color-text-primary);
-  }
-
-  .action-button {
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-sm);
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-  }
-
-  .action-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .action-button.primary {
-    background-color: var(--color-primary);
-    color: var(--color-surface);
-    border-color: var(--color-primary);
-  }
-
-  .action-button.primary:hover:not(:disabled) {
-    background-color: var(--color-interactive-primary-hover);
-    border-color: var(--color-interactive-primary-hover);
-  }
-
-  .action-button:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--color-focus-ring);
   }
 
   .table-container {
@@ -778,37 +731,11 @@
 
   .property-tag {
     background-color: var(--color-bg-accent);
-    color: var(--color-primary);
+    color: var(--color-interactive-primary);
     padding: 0.125rem 0.375rem;
     border-radius: var(--radius-xs);
     font-size: 0.75rem;
     font-weight: 500;
-  }
-
-  .action-button {
-    padding: 0.375rem;
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-xs);
-    background-color: var(--color-surface);
-    color: var(--color-text-primary);
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    min-width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .action-button:hover {
-    background-color: var(--color-surface-hover);
-    border-color: var(--color-border-hover);
-  }
-
-  .action-button:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--color-focus-ring);
   }
 
   /* Responsive design */
