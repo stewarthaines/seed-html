@@ -204,6 +204,28 @@
   --color-hover-accent: #0074d9;
   --color-on-accent: var(--color-white);
 
+  /* Compatibility aliases — these legacy token names are referenced across many
+     components. They map to the canonical tokens above, so they resolve
+     correctly in both themes (each points at a mode-aware token). Accent fills
+     use --color-hover-accent so white text on them stays WCAG-AA. */
+  --color-accent-primary: var(--color-hover-accent);
+  --color-accent-primary-hover: var(--color-interactive-primary-hover);
+  --color-accent-secondary: var(--color-interactive-primary-hover);
+  --color-accent-contrast: var(--color-on-accent);
+  --color-bg-hover: var(--color-surface-hover);
+  --color-primary-surface: var(--color-bg-accent);
+  --color-primary-surface-hover: var(--color-bg-accent);
+  --color-primary-hover: var(--color-interactive-primary-hover);
+  --color-error: var(--color-status-error);
+  --color-error-surface: var(--color-error-bg);
+  --color-error-border: var(--color-status-error);
+  --color-warning: var(--color-status-warning);
+  --color-warning-surface: var(--color-warning-bg);
+  --color-warning-hover: var(--color-status-warning);
+  --color-warning-border: var(--color-status-warning);
+  --color-danger: var(--color-button-danger-bg);
+  --color-text-placeholder: var(--color-input-placeholder);
+
   /* High contrast mode support (system colors) */
   --color-forced-bg: Canvas;
   --color-forced-text: CanvasText;
