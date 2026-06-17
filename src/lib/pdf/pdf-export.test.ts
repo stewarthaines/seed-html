@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { coverImageHref } from './pdf-export.js';
+import { coverImageHref, buildPagedDocument } from './pdf-export.js';
 import type { ManifestItem } from '../epub/opf-utils.js';
 import type { PrintSettings } from '../services/settings/settings.service.js';
 
@@ -48,5 +48,17 @@ describe('coverImageHref', () => {
 
   it('defaults to on when print settings are undefined', () => {
     expect(coverImageHref([coverPng], undefined)).toBe('Images/cover.png');
+  });
+});
+
+describe('buildPagedDocument text direction', () => {
+  it('sets dir="rtl" on <html> for a right-to-left book language', () => {
+    const html = buildPagedDocument(['<section class="pdf-chapter">x</section>'], { lang: 'ar' });
+    expect(html).toContain('lang="ar" xml:lang="ar" dir="rtl">');
+  });
+
+  it('omits dir for a left-to-right book language', () => {
+    const html = buildPagedDocument(['<section class="pdf-chapter">x</section>'], { lang: 'en' });
+    expect(html).not.toContain('dir="rtl"');
   });
 });

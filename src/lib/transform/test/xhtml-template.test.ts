@@ -46,4 +46,14 @@ describe('generateXHTMLDocument', () => {
     const xhtml = generateXHTMLDocument('<main><section>c</section></main>', metadata);
     expect(mainCount(xhtml)).toBe(1);
   });
+
+  it('sets dir="rtl" on <html> for a right-to-left language', () => {
+    const xhtml = generateXHTMLDocument('<p>مرحبا</p>', { ...metadata, language: 'ar' });
+    expect(xhtml).toContain('xml:lang="ar" lang="ar" dir="rtl">');
+  });
+
+  it('omits dir for a left-to-right language', () => {
+    const xhtml = generateXHTMLDocument('<p>Hello</p>', metadata);
+    expect(xhtml).not.toContain('dir="rtl"');
+  });
 });

@@ -7,6 +7,8 @@
 
 /// <reference lib="dom" />
 
+import { isRtlLanguage } from './language-direction.js';
+
 /**
  * Generate EPUB-compliant timestamp without decimal seconds
  *
@@ -765,6 +767,10 @@ export class OPFUtils {
       .map(tag => `<dc:language>${escapeXML(tag)}</dc:language>`)
       .join('\n    ');
 
+    // Right-to-left books: mark the package's base direction (affects metadata
+    // display) and default the spine's page progression to rtl below.
+    const bookIsRtl = isRtlLanguage(languageTags[0]);
+
     // A single `<meta refines>` line. The shared shape behind every property
     // refinement we emit (title-type, file-as, role, …).
     const refinementMeta = (id: string, property: string, value: string, scheme?: string) =>
@@ -800,7 +806,7 @@ export class OPFUtils {
     const titleXML = titleLines.join('\n    ');
 
     let xml = `<?xml version="1.0" encoding="utf-8"?>
-<package version="${version}" xmlns="http://www.idpf.org/2007/opf" unique-identifier="${uniqueId}" prefix="rendition: http://www.idpf.org/vocab/rendition/# ibooks: http://vocabulary.itunes.apple.com/rdf/ibooks/vocabulary-extensions-1.0/" xml:lang="en">
+<package version="${version}" xmlns="http://www.idpf.org/2007/opf" unique-identifier="${uniqueId}" prefix="rendition: http://www.idpf.org/vocab/rendition/# ibooks: http://vocabulary.itunes.apple.com/rdf/ibooks/vocabulary-extensions-1.0/" xml:lang="en"${bookIsRtl ? ' dir="rtl"' : ''}>
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:ibooks="http://vocabulary.itunes.apple.com/rdf/ibooks/vocabularies/2012/01/ibooks-specific">
     ${titleXML}
     ${languageXML}
@@ -986,9 +992,16 @@ export class OPFUtils {
 
     xml += `\n  </manifest>`;
 
-    // Add spine with optional page-progression-direction
-    if (metadata.pageProgressionDirection && metadata.pageProgressionDirection !== 'default') {
-      xml += `\n  <spine page-progression-direction="${escapeXML(metadata.pageProgressionDirection)}">`;
+    // Spine page-progression-direction: honour an explicit choice from Metadata;
+    // otherwise default to rtl for right-to-left-language books (and omit it
+    // entirely for ltr/unset, letting the reading system decide).
+    const explicitPpd =
+      metadata.pageProgressionDirection && metadata.pageProgressionDirection !== 'default'
+        ? metadata.pageProgressionDirection
+        : '';
+    const pageProgression = explicitPpd || (bookIsRtl ? 'rtl' : '');
+    if (pageProgression) {
+      xml += `\n  <spine page-progression-direction="${escapeXML(pageProgression)}">`;
     } else {
       xml += `\n  <spine>`;
     }

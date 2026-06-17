@@ -6,6 +6,7 @@
  */
 
 import { convertManifestPathToXHTMLPath } from '../epub/path-utils.js';
+import { isRtlLanguage } from '../epub/language-direction.js';
 
 // ChapterMetadata is defined once in ./types.js (the package's canonical types
 // module, re-exported by the barrel). Re-export it here so existing importers of
@@ -39,9 +40,14 @@ export function generateXHTMLDocument(content: string, metadata: ChapterMetadata
 
   const customHeadContent = metadata.customHead ? `    ${metadata.customHead}` : '';
 
+  // Right-to-left languages need an explicit base direction in markup — a `lang`
+  // declaration alone doesn't set direction, and reading systems don't reliably
+  // honour CSS for it (per the EPUB/HTML specs and DAISY guidance).
+  const dirAttr = isRtlLanguage(metadata.language) ? ' dir="rtl"' : '';
+
   return `<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="${escapeHtml(metadata.language)}" lang="${escapeHtml(metadata.language)}">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="${escapeHtml(metadata.language)}" lang="${escapeHtml(metadata.language)}"${dirAttr}>
   <head>
     <title>${escapedTitle}</title>
 ${viewportTag}${viewportTag ? '\n' : ''}${stylesheetLinks}${stylesheetLinks ? '\n' : ''}${scriptTags}${scriptTags ? '\n' : ''}${customHeadContent}${customHeadContent ? '\n' : ''}  </head>

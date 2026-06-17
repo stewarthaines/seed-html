@@ -161,6 +161,30 @@ describe('generateOPFXML - languages', () => {
     expect(xml).toContain('<dc:language>fr</dc:language>');
     expect(xml).toContain('<dc:language>gsw</dc:language>');
   });
+
+  it('marks an RTL-language book on the package and defaults the spine to rtl', () => {
+    const xml = OPFUtils.generateOPFXML(docWithLang(['ar']));
+    expect(xml).toContain(' dir="rtl"'); // on <package>
+    expect(xml).toContain('<spine page-progression-direction="rtl">');
+  });
+
+  it('leaves an LTR book without dir / spine direction', () => {
+    const xml = OPFUtils.generateOPFXML(docWithLang(['en']));
+    expect(xml).not.toContain('dir="rtl"');
+    expect(xml).toContain('<spine>');
+  });
+
+  it('honours an explicit page-progression-direction over the language default', () => {
+    const base = docWithLang(['ar']);
+    const doc = {
+      ...base,
+      metadata: { ...base.metadata, pageProgressionDirection: 'ltr' },
+    };
+    const xml = OPFUtils.generateOPFXML(doc);
+    expect(xml).toContain('<spine page-progression-direction="ltr">');
+    // The package still reflects the RTL language for metadata display.
+    expect(xml).toContain(' dir="rtl"');
+  });
 });
 
 describe('generateOPFXML - creator roles', () => {

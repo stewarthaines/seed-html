@@ -21,6 +21,7 @@ import type {
 } from '../services/workspace/workspace.service.js';
 import type { PrintSettings } from '../services/settings/settings.service.js';
 import type { ManifestItem } from '../epub/opf-utils.js';
+import { isRtlLanguage } from '../epub/language-direction.js';
 import { translate } from '../i18n/index.js';
 import printCss from '../../assets/universal/print.css?raw';
 
@@ -170,8 +171,11 @@ export function chapterToSection(
   // combined export tags each chapter correctly, overriding the book-default
   // <html lang>. Single-language books just repeat the default (harmless).
   const langAttr = lang ? ` lang="${xmlEscape(lang)}" xml:lang="${xmlEscape(lang)}"` : '';
+  // Carry RTL direction onto the section too, so a multi-language book's RTL
+  // chapters render right-to-left even under an LTR book default.
+  const dirAttr = isRtlLanguage(lang) ? ' dir="rtl"' : '';
   return {
-    section: `<section class="pdf-chapter"${langAttr}>${inner}</section>`,
+    section: `<section class="pdf-chapter"${langAttr}${dirAttr}>${inner}</section>`,
     hrefs,
     lang,
   };
@@ -226,6 +230,9 @@ export function buildPagedDocument(
   const langAttr = lang
     ? ` lang="${xmlEscape(lang)}" xml:lang="${xmlEscape(lang)}"`
     : '';
+  // Right-to-left books need the base direction in markup on <html> (a lang
+  // declaration doesn't imply direction), so the paginated PDF reads correctly.
+  const dirAttr = isRtlLanguage(lang) ? ' dir="rtl"' : '';
   // PagedConfig must be set before the polyfill script runs; auto-paginates on
   // DOM load and pings the parent when done. Paged.js is vendored at the app
   // origin (resolves under any base path).
@@ -264,7 +271,7 @@ export function buildPagedDocument(
     `${afterTail}}};</script>` +
     `<script src="${pagedSrc}"></script>`;
   return `<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"${langAttr}>
+<html xmlns="http://www.w3.org/1999/xhtml"${langAttr}${dirAttr}>
 <head>
 <meta charset="utf-8" />
 <title>${xmlEscape(title)}</title>
