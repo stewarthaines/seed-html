@@ -628,8 +628,19 @@
     position: relative;
   }
 
-  .manifest-row:hover {
-    background-color: var(--color-surface-hover);
+  /* Solid azure hover, unified with the other list rows. Cell text + the
+     property chips flip to white so they stay legible on the fill. */
+  .manifest-row:hover:not(.selected) {
+    background-color: var(--color-hover-accent);
+    color: var(--color-on-accent);
+  }
+
+  .manifest-row:hover:not(.selected) :is(.item-href, .property-tag) {
+    color: var(--color-on-accent);
+  }
+
+  .manifest-row:hover:not(.selected) .property-tag {
+    background-color: rgba(255, 255, 255, 0.22);
   }
 
   .manifest-row:focus:not(.selected) {
