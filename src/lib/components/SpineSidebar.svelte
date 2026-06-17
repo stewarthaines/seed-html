@@ -30,6 +30,12 @@
   let error = $state<string | null>(null);
   let isReordering = false;
 
+  // Drag feedback: the item being dragged (dimmed) and the insertion gap where it
+  // would land (an index in 0..length; the line is drawn before item `dropGap`,
+  // length = after the last item). Both null when no drag is in progress.
+  let draggedIndex = $state<number | null>(null);
+  let dropGap = $state<number | null>(null);
+
   // Reactive state - use prop instead of store
   const sidebarExpanded = $derived(isExpanded);
 
@@ -255,33 +261,52 @@
 
     event.dataTransfer!.effectAllowed = 'move';
     event.dataTransfer!.setData('text/plain', index.toString());
+    draggedIndex = index;
   }
 
-  // Handle drag over
-  function handleDragOver(event: DragEvent & { currentTarget: EventTarget & HTMLDivElement }) {
+  // Handle drag over: allow the drop and track the insertion gap so the drop
+  // indicator follows the cursor (top half → before this item, bottom half → after).
+  function handleDragOver(
+    event: DragEvent & { currentTarget: EventTarget & HTMLDivElement },
+    index: number
+  ) {
     if (!sidebarExpanded) return;
 
     event.preventDefault();
     event.dataTransfer!.dropEffect = 'move';
+
+    if (draggedIndex === null) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const gap = event.clientY < rect.top + rect.height / 2 ? index : index + 1;
+    // Suppress the line over the dragged item's own slot (those gaps are no-ops).
+    dropGap = gap === draggedIndex || gap === draggedIndex + 1 ? null : gap;
   }
 
-  // Handle drop
-  async function handleDrop(
-    event: DragEvent & { currentTarget: EventTarget & HTMLDivElement },
-    dropIndex: number
-  ) {
+  // Clear drag feedback when a drag ends without a drop (cancelled, escaped, or
+  // dropped outside the list).
+  function handleDragEnd() {
+    draggedIndex = null;
+    dropGap = null;
+  }
+
+  // Handle drop: move the dragged item to the gap the indicator showed.
+  async function handleDrop(event: DragEvent & { currentTarget: EventTarget & HTMLDivElement }) {
     if (!sidebarExpanded || isReordering || readOnly) return;
-
     event.preventDefault();
-    const dragIndex = parseInt(event.dataTransfer!.getData('text/plain'), 10);
 
-    if (dragIndex === dropIndex) return;
+    const from = draggedIndex;
+    const gap = dropGap;
+    draggedIndex = null;
+    dropGap = null;
 
-    if (!workspace) return;
+    if (from === null || gap === null || !workspace) return;
+    // Removing `from` first shifts later positions down by one.
+    const to = gap > from ? gap - 1 : gap;
+    if (to === from) return;
 
     isReordering = true;
     try {
-      const result = await spineService.reorderItems(workspace, dragIndex, dropIndex);
+      const result = await spineService.reorderItems(workspace, from, to);
 
       // Update workspace state
       workspace = result.updatedWorkspace;
@@ -292,7 +317,7 @@
       spineItems = result.newOrder;
 
       // Announce move for screen readers
-      announceMove(spineItems[dropIndex].id, dragIndex, dropIndex);
+      announceMove(spineItems[to].id, from, to);
     } catch {
       // Failed to reorder items
       // Reload to restore correct order
@@ -408,10 +433,14 @@
       {#each spineItems as item, index (item.id)}
         <div
           class="spine-item-wrapper"
+          class:dragging={draggedIndex === index}
+          class:drop-before={dropGap === index}
+          class:drop-after={dropGap === spineItems.length && index === spineItems.length - 1}
           draggable={sidebarExpanded && !readOnly}
           ondragstart={e => handleDragStart(e, index)}
-          ondragover={handleDragOver}
-          ondrop={e => handleDrop(e, index)}
+          ondragover={e => handleDragOver(e, index)}
+          ondrop={handleDrop}
+          ondragend={handleDragEnd}
           role="listitem"
         >
           <SpineItem
@@ -497,7 +526,10 @@
   }
 
   .spine-item-wrapper {
-    transition: transform var(--duration-fast) ease;
+    position: relative; /* anchors the drop-indicator pseudo-elements */
+    transition:
+      transform var(--duration-fast) ease,
+      opacity var(--duration-fast) ease;
     border: none;
     outline: none;
   }
@@ -505,6 +537,30 @@
   .spine-item-wrapper[draggable='true']:active {
     opacity: 0.8;
     transform: scale(0.98);
+  }
+
+  /* The item being dragged is dimmed. */
+  .spine-item-wrapper.dragging {
+    opacity: 0.4;
+  }
+
+  /* Insertion line showing where the dragged item will land. */
+  .spine-item-wrapper.drop-before::before,
+  .spine-item-wrapper.drop-after::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    block-size: 2px;
+    background: var(--color-interactive-primary);
+    pointer-events: none;
+  }
+
+  .spine-item-wrapper.drop-before::before {
+    inset-block-start: 0;
+  }
+
+  .spine-item-wrapper.drop-after::after {
+    inset-block-end: 0;
   }
 
   /* Scrollbar styling */
