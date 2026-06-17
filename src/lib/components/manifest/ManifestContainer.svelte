@@ -363,12 +363,12 @@
     align-items: center;
     justify-content: center;
     background-color: rgba(var(--color-primary-rgb), 0.12);
-    border: 3px dashed var(--color-primary);
+    border: 3px dashed var(--color-interactive-primary);
   }
 
   .drop-message {
     padding: 1.5rem 2rem;
-    background-color: var(--color-surface);
+    background-color: var(--color-bg-primary);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-lg, var(--shadow-sm));
     text-align: center;

@@ -390,6 +390,6 @@
 
   .mode-chip.selected {
     background-color: var(--color-primary-surface, var(--color-bg-accent));
-    border-color: var(--color-primary);
+    border-color: var(--color-interactive-primary);
   }
 </style>

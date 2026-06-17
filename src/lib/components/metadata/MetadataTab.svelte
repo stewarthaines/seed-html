@@ -80,8 +80,8 @@
   }
 
   .metadata-tab.active {
-    color: var(--color-primary);
-    border-block-end-color: var(--color-primary);
+    color: var(--color-interactive-primary);
+    border-block-end-color: var(--color-interactive-primary);
     background-color: var(--color-surface-primary);
   }
 
@@ -110,7 +110,7 @@
     height: 1.25rem;
     border-radius: 50%;
     background-color: var(--color-error);
-    color: var(--color-surface);
+    color: var(--color-on-accent);
     font-size: 0.75rem;
     font-weight: 700;
     line-height: 1;

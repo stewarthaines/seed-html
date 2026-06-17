@@ -648,7 +648,7 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    background-color: var(--color-surface);
+    background-color: var(--color-bg-primary);
   }
 
   .no-selection {
@@ -730,7 +730,7 @@
     padding: 0.375rem 0.5rem;
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-sm);
-    background-color: var(--color-surface);
+    background-color: var(--color-bg-primary);
     color: var(--color-text-primary);
     font-size: 0.8125rem;
   }
