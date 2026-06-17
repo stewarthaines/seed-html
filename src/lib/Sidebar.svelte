@@ -488,12 +488,14 @@
     position: relative;
   }
 
-  .sidebar-section:hover {
-    text-decoration: underline; /* Craigslist style hover */
+  /* Solid azure hover, unified with the buttons and the other list rows. */
+  .sidebar-section:hover:not(.active) {
+    background: var(--color-hover-accent);
+    color: var(--color-on-accent);
   }
 
-  .sidebar-section:hover:not(.active) {
-    background: var(--color-bg-tertiary); /* Light grey hover */
+  .sidebar-section:hover:not(.active) .section-label-sub {
+    color: var(--color-on-accent);
   }
 
   .sidebar-section:focus-visible {

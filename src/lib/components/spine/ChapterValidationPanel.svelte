@@ -312,8 +312,11 @@
     text-align: left;
   }
 
+  /* Solid azure hover, unified with the buttons and the other list rows. The
+     err/warn count badges keep their own colour (distinct on azure). */
   .vpanel-jump:hover {
-    background: var(--color-bg-tertiary);
+    background: var(--color-hover-accent);
+    color: var(--color-on-accent);
   }
 
   .vpanel-jump-id {

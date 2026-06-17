@@ -234,8 +234,14 @@
     background: transparent; /* Default transparent background */
   }
 
+  /* Solid azure hover, unified with the buttons and the other list rows. */
   .spine-item:hover:not(.selected) {
-    background: var(--color-bg-tertiary);
+    background: var(--color-hover-accent);
+  }
+
+  .spine-item:hover:not(.selected) .chapter-id,
+  .spine-item:hover:not(.selected) .drag-handle {
+    color: var(--color-on-accent);
   }
 
   /* Selection is a real button so the row isn't an interactive control wrapping the

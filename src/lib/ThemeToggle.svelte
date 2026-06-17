@@ -64,8 +64,8 @@
   }
 
   .theme-toggle:hover {
-    background-color: var(--color-bg-tertiary);
-    color: var(--color-text-primary);
+    background-color: var(--color-hover-accent);
+    color: var(--color-on-accent);
   }
 
   .theme-toggle:focus-visible {
