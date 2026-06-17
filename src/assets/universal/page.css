@@ -1,115 +1,33 @@
-/* Universal CSS for all locales with EPUB reading system compatibility */
+/*
+  page.css — a starting point for styling your book.
 
-code-sample {
-  font-family: monospace;
-  font-weight: 700;
-  font-size: 0.7rem;
-}
+  Deliberately minimal, not exhaustive. An EPUB reading system supplies the page
+  size and margins and lets the reader choose their own font, size, and theme, so
+  this sheet only sets a few gentle defaults for the content and otherwise stays
+  out of the way. Edit it freely to make the book your own.
 
-.action {
-  text-align: center;
-  margin: 3em 0 4em;
-}
-
-.action a {
-  text-decoration: none;
-  background-color: #00e;
-  color: white;
-  padding: 0.6em 1em 0.5em;
-  border-radius: 0.5em;
-  font-family: sans-serif;
-  font-weight: 600;
-}
+  It uses logical properties (margin-block, padding-inline-start, …), so spacing
+  follows the text direction — left-to-right or right-to-left — without needing
+  any per-language rules.
+*/
 
 body {
-  /* System fonts with enhanced stack for global language support */
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    'Noto Sans',
-    'Liberation Sans',
-    sans-serif;
-
-  /* Enhanced typography for reading contexts */
-  font-size: 1.125rem; /* Slightly larger base for better readability */
   line-height: 1.6;
-
-  /* Progressive enhancement: physical properties first, then logical */
-  margin-left: auto;
-  margin-right: auto;
-  padding: 1em;
-  max-width: 65ch;
-
-  /* Modern logical properties with feature query protection */
-}
-
-@supports (margin-inline: auto) {
-  body {
-    margin-left: unset;
-    margin-right: unset;
-    max-width: unset;
-    margin-inline: auto;
-    max-inline-size: 65ch;
-  }
-}
-
-/* Additional language-specific adjustments */
-:lang(ja),
-:lang(ko),
-:lang(zh) {
-  line-height: 1.8; /* Better spacing for CJK characters */
-}
-
-:lang(ar),
-:lang(he) {
-  line-height: 1.7; /* Improved RTL script readability */
-}
-
-/* Enhanced text flow and hyphenation */
-body {
   hyphens: auto;
-  -webkit-hyphens: auto;
-  -ms-hyphens: auto;
 }
 
-/* Headings with progressive enhancement for logical spacing */
 h1,
 h2,
 h3,
 h4,
 h5,
 h6 {
-  /* Physical properties first for compatibility */
-  margin-top: 1.5em;
-  margin-bottom: 0.5em;
-  margin-left: 0;
-  margin-right: 0;
-  font-weight: 600;
   line-height: 1.2;
-}
-
-@supports (margin-block-start: 1.5em) {
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    margin-top: unset;
-    margin-bottom: unset;
-    margin-left: unset;
-    margin-right: unset;
-    margin-block-start: 1.5em;
-    margin-block-end: 0.5em;
-    margin-inline: 0;
-  }
+  margin-block: 1.5em 0.5em;
 }
 
 h1 {
   font-size: 2em;
-  padding-bottom: 0.25em;
 }
 
 h2 {
@@ -120,77 +38,40 @@ h3 {
   font-size: 1.25em;
 }
 
-/* Paragraphs with progressive enhancement */
 p {
-  /* Physical properties first */
-  margin-bottom: 1em;
-  text-align: left; /* Will be overridden for RTL */
+  margin-block: 0 1em;
 }
 
-/* RTL-specific physical fallback */
-[data-dir='rtl'] p {
-  text-align: right;
-}
-
-/* Lists with progressive enhancement */
 ul,
 ol {
-  /* Physical properties first */
-  margin-top: 1em;
-  margin-bottom: 1em;
-  padding-left: 2em;
+  margin-block: 1em;
+  padding-inline-start: 2em;
 }
 
 li {
-  margin-bottom: 0.5em;
+  margin-block-end: 0.5em;
 }
 
-/* Blockquotes with progressive enhancement */
 blockquote {
-  /* Physical properties first */
-  margin-top: 1.5em;
-  margin-bottom: 1.5em;
-  margin-left: 2em;
-  margin-right: 0;
-  padding-left: 1em;
+  margin-block: 1.5em;
+  margin-inline-start: 2em;
+  padding-inline-start: 1em;
   font-style: italic;
 }
 
-/* Code blocks with progressive enhancement */
 pre,
 code {
-  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
-  font-size: 0.875em;
+  font-family: monospace;
+  font-size: 0.9em;
 }
 
 pre {
   padding: 1em;
-  border-radius: 4px;
   overflow-x: auto;
-  margin-top: 1em;
-  margin-bottom: 1em;
 }
 
-code {
-  padding-left: 0.25em;
-  padding-right: 0.25em;
-  border-radius: 2px;
-}
-
-/* Images with progressive enhancement */
+/* Keep images within the text column on reflowable pages. */
 img {
   max-width: 100%;
   height: auto;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* Strong and emphasis with universal styling */
-strong {
-  font-weight: 600;
-}
-
-em {
-  font-style: italic;
 }
