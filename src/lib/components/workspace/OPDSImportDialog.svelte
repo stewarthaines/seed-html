@@ -66,7 +66,10 @@
     hasFetched = false;
 
     try {
-      const response = await fetch(target);
+      // Bypass the HTTP cache so the dialog always reflects the live catalog — a
+      // freshly-published EPUB should show up the moment the feed is opened, not a
+      // stale copy the browser cached from a previous fetch.
+      const response = await fetch(target, { cache: 'no-store' });
       if (!response.ok) {
         throw new Error(`${response.status} ${response.statusText}`);
       }
@@ -120,6 +123,14 @@
     if (event.key === 'Escape') {
       onClose();
     }
+  }
+
+  // Format an OPDS atom:updated / dc:issued timestamp as a short local date.
+  // Returns null for missing/unparseable values so the field is simply omitted.
+  function formatDate(value?: string): string | null {
+    if (!value) return null;
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d.toLocaleDateString();
   }
 </script>
 
@@ -193,28 +204,32 @@
     {/if}
 
     {#if books.length > 0}
-      <ul class="opds-list">
+      <ul class="opds-grid">
         {#each books as book (book.href)}
           <li>
             <button
               type="button"
-              class="opds-book"
+              class="opds-card"
               onclick={() => selectBook(book)}
               disabled={importing}
             >
-              {#if book.thumbnailHref}
-                <img
-                  src={book.thumbnailHref}
-                  alt=""
-                  class="opds-book-cover"
-                  aria-hidden="true"
-                  onerror={e => ((e.currentTarget as HTMLImageElement).style.display = 'none')}
-                />
-              {/if}
-              <span class="opds-book-text">
-                <span class="opds-book-title">{book.title}</span>
+              <span class="opds-card-cover" aria-hidden="true">
+                {#if book.thumbnailHref}
+                  <img
+                    src={book.thumbnailHref}
+                    alt=""
+                    loading="lazy"
+                    onerror={e => ((e.currentTarget as HTMLImageElement).style.display = 'none')}
+                  />
+                {/if}
+              </span>
+              <span class="opds-card-body">
+                <span class="opds-card-title">{book.title}</span>
                 {#if book.author}
-                  <span class="opds-book-meta">{book.author}</span>
+                  <span class="opds-card-author">{book.author}</span>
+                {/if}
+                {#if formatDate(book.updated)}
+                  <span class="opds-card-date">{formatDate(book.updated)}</span>
                 {/if}
               </span>
             </button>
@@ -245,9 +260,10 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
-    inline-size: min(34rem, 100%);
+    inline-size: min(46rem, 100%);
     max-block-size: 80vh;
-    overflow: hidden auto;
+    /* The header and feed controls stay put; only the results grid scrolls. */
+    overflow: hidden;
     padding: var(--space-5);
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-lg);
@@ -370,19 +386,28 @@
     font-size: var(--text-sm);
   }
 
-  .opds-list {
+  /* Results grid: ~3 cards per row in the dialog's width, reflowing as it narrows.
+     It's the scroll container (min-block-size: 0 lets it shrink within the flex
+     column so it scrolls instead of growing the dialog past its max height). */
+  .opds-grid {
     list-style: none;
     margin: 0;
-    padding: 0;
+    padding: var(--space-1);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+    gap: var(--space-3);
+    overflow-y: auto;
+    min-block-size: 0;
+  }
+
+  .opds-grid li {
+    display: flex;
+  }
+
+  .opds-card {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
-  }
-
-  .opds-book {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
     inline-size: 100%;
     text-align: left;
     padding: var(--space-3);
@@ -395,38 +420,50 @@
     transition: all var(--duration-fast) ease;
   }
 
-  /* Cover thumbnail, matching the projects-list style. */
-  .opds-book-cover {
-    flex-shrink: 0;
-    inline-size: 2rem;
-    block-size: 3rem;
-    object-fit: cover;
-    border-radius: var(--radius-xs);
+  .opds-card:not(:disabled):hover {
+    border-color: var(--color-border-hover);
+    background-color: var(--color-surface-hover);
   }
 
-  .opds-book-text {
+  .opds-card:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* Fixed-ratio cover area: a muted box (shown when no/broken image) that any
+     thumbnail fills, so every card is the same height. */
+  .opds-card-cover {
+    position: relative;
+    display: block;
+    inline-size: 100%;
+    aspect-ratio: 2 / 3;
+    background-color: var(--color-surface-secondary);
+    border-radius: var(--radius-xs);
+    overflow: hidden;
+  }
+
+  .opds-card-cover img {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  .opds-card-body {
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
     min-inline-size: 0;
   }
 
-  .opds-book:not(:disabled):hover {
-    border-color: var(--color-border-hover);
-    background-color: var(--color-surface-hover);
-  }
-
-  .opds-book:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .opds-book-title {
+  .opds-card-title {
     font-weight: 600;
     font-size: var(--text-sm);
   }
 
-  .opds-book-meta {
+  .opds-card-author,
+  .opds-card-date {
     color: var(--color-text-secondary);
     font-size: var(--text-xs);
   }
