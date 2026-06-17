@@ -322,7 +322,7 @@
     margin-block-end: 1rem;
     background-color: var(--color-bg-tertiary);
     border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-sm);
+    border-radius: 0.5rem;
     padding: var(--space-3);
   }
 
@@ -331,8 +331,8 @@
   }
 
   .group-title {
-    font-size: 1.125rem;
-    font-weight: 600;
+    font-size: 1.05rem;
+    font-weight: 500;
     color: var(--color-text-primary);
   }
 

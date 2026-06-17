@@ -550,9 +550,12 @@
     transform: translateY(-50%);
   }
 
+  /* Inset the table to match the settings/metadata pane bodies (the PaneHeader
+     above stays flush, as it does in those views). */
   .table-container {
     flex: 1;
     overflow: auto;
+    padding: 1rem;
   }
 
   .empty-state {
