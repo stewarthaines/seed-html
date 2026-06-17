@@ -67,6 +67,9 @@ button {
   --color-text-tertiary: #999999;
   --color-accent: #0074d9;
   --color-accent-hover: #0051a0;
+  /* Unified button-hover fill + white foreground (mirrors core; AA-safe). */
+  --color-hover-accent: #0074d9;
+  --color-on-accent: #ffffff;
 
   /* Status: info / success / warning / error (bg + border + text) */
   --color-info-bg: #e8f1ff;
@@ -117,6 +120,9 @@ button {
   --color-text-tertiary: #cccccc;
   --color-accent: #4aa3ff;
   --color-accent-hover: #7ab8ff;
+  /* Darker than --color-accent so white text passes AA on the hover fill. */
+  --color-hover-accent: #0a6cc2;
+  --color-on-accent: #ffffff;
 
   /* Status (dark): dark tints with AA-tuned text mirrored from core dark.css */
   --color-info-bg: #13283d;
@@ -155,7 +161,9 @@ button {
 }
 
 .btn:hover:not(:disabled) {
-  background-color: var(--color-button-primary-bg-hover);
+  color: var(--color-on-accent);
+  background-color: var(--color-hover-accent);
+  border-color: var(--color-hover-accent);
 }
 
 .btn:focus-visible {
@@ -174,7 +182,9 @@ button {
   border-color: var(--color-button-primary-border);
 }
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--color-button-primary-bg-hover);
+  color: var(--color-on-accent);
+  background-color: var(--color-hover-accent);
+  border-color: var(--color-hover-accent);
 }
 
 .btn-secondary {
@@ -183,7 +193,9 @@ button {
   border-color: var(--color-button-secondary-border);
 }
 .btn-secondary:hover:not(:disabled) {
-  background-color: var(--color-button-secondary-bg-hover);
+  color: var(--color-on-accent);
+  background-color: var(--color-hover-accent);
+  border-color: var(--color-hover-accent);
 }
 
 .btn-danger {
@@ -215,8 +227,8 @@ button {
   line-height: 1;
 }
 .btn-icon:hover:not(:disabled) {
-  color: var(--color-button-icon-text-hover);
-  background-color: var(--color-button-icon-bg-hover);
+  color: var(--color-on-accent);
+  background-color: var(--color-hover-accent);
 }
 
 .btn-sm {
@@ -244,8 +256,9 @@ button {
 }
 
 .btn-type:hover {
-  border-color: var(--color-accent);
-  background: var(--color-info-bg);
+  color: var(--color-on-accent);
+  border-color: var(--color-hover-accent);
+  background: var(--color-hover-accent);
 }
 
 .empty-message {
