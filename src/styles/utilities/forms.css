@@ -250,11 +250,17 @@
   user-select: none;
 }
 
+/* Unified hover: solid azure fill with white text/icon (azure tuned to pass
+   WCAG AA with white in both themes). Danger keeps red and link stays text-only
+   — see those rules below. */
 .btn:hover {
-  background-color: var(--color-button-primary-bg-hover);
+  color: var(--color-on-accent);
+  background-color: var(--color-hover-accent);
+  border-color: var(--color-hover-accent);
 }
 
-.btn:focus {
+.btn:focus,
+.btn:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--color-focus-ring);
 }
@@ -272,7 +278,9 @@
 }
 
 .btn-primary:hover {
-  background-color: var(--color-neutral-200);
+  color: var(--color-on-accent);
+  background-color: var(--color-hover-accent);
+  border-color: var(--color-hover-accent);
 }
 
 .btn-secondary {
@@ -282,7 +290,9 @@
 }
 
 .btn-secondary:hover {
-  background-color: var(--color-button-secondary-bg-hover);
+  color: var(--color-on-accent);
+  background-color: var(--color-hover-accent);
+  border-color: var(--color-hover-accent);
 }
 
 .btn-danger {
@@ -309,8 +319,11 @@
   background-color: transparent;
 }
 
-/* Icon-only button (✕, small actions) — square, transparent, subtle hover. */
+/* Icon-only button (✕, small actions) — transparent, azure fill on hover. */
 .btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: var(--space-1);
   color: var(--color-text-secondary);
   background-color: transparent;
@@ -319,8 +332,22 @@
 }
 
 .btn-icon:hover {
-  color: var(--color-text-primary);
-  background-color: var(--color-bg-tertiary);
+  color: var(--color-on-accent);
+  background-color: var(--color-hover-accent);
+  border-color: var(--color-hover-accent);
+}
+
+/* Fixed-size icon buttons: -sm (compact row controls) and -lg (touch target). */
+.btn-icon-sm {
+  inline-size: 28px;
+  block-size: 28px;
+  padding: 0;
+}
+
+.btn-icon-lg {
+  inline-size: var(--touch-target-min);
+  block-size: var(--touch-target-min);
+  padding: 0;
 }
 
 /* Button sizes */
