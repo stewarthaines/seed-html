@@ -28,6 +28,7 @@
   import { isRtlLanguage } from '$lib/epub/language-direction.js';
   import { primaryLanguage } from '$lib/epub/opf-utils.js';
   import { t } from '$lib/i18n';
+  import { Columns, Square } from 'phosphor-svelte';
 
   // Props using Svelte 5 runes syntax
   let {
@@ -522,7 +523,11 @@
         title={editorMode === 'single' ? $t('Add second editor pane') : $t('Switch to single pane')}
       >
         <span class="toggle-icon" aria-hidden="true">
-          {editorMode === 'single' ? '⊞' : '⊟'}
+          {#if editorMode === 'single'}
+            <Columns size={16} />
+          {:else}
+            <Square size={16} />
+          {/if}
         </span>
       </button>
 
@@ -763,8 +768,8 @@
   }
 
   .toggle-icon {
-    font-size: var(--text-base);
-    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
   }
 
   .editor-content {

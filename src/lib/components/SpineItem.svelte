@@ -1,6 +1,14 @@
 <script lang="ts">
   import type { SpineItemWithSource } from '../spine/types';
   import { t } from '$lib/i18n';
+  import {
+    DotsSixVertical,
+    PencilSimple,
+    Trash,
+    ArrowUp,
+    ArrowDown,
+    Warning,
+  } from 'phosphor-svelte';
 
   interface Props {
     item: SpineItemWithSource;
@@ -123,9 +131,7 @@
 <div class="spine-item" class:compact class:selected={isSelected} class:has-error={hasWarning}>
   {#if !compact && isExpanded}
     <div class="drag-handle" {...dragHandleProps} tabindex="-1" aria-hidden="true">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-        <path d="M2 5h12v1H2zm0 5h12v1H2z" />
-      </svg>
+      <DotsSixVertical size={16} aria-hidden="true" />
     </div>
   {/if}
 
@@ -150,7 +156,7 @@
         aria-label={$t('Rename {item}', { item: item.id })}
         title={$t('Rename {item}', { item: item.id })}
       >
-        ✎
+        <PencilSimple size={14} aria-hidden="true" />
       </button>
       <button
         class="move-button delete-button"
@@ -166,7 +172,7 @@
           ? $t('A book needs at least one chapter')
           : $t('Delete chapter {name}', { name: item.id })}
       >
-        ✕
+        <Trash size={14} aria-hidden="true" />
       </button>
       <button
         class="move-button"
@@ -182,7 +188,7 @@
         aria-label={$t('Move {id} up', { id: item.id })}
         title={$t('Move {id} up', { id: item.id })}
       >
-        ↑
+        <ArrowUp size={14} aria-hidden="true" />
       </button>
       <button
         class="move-button"
@@ -198,13 +204,15 @@
         aria-label={$t('Move {id} down', { id: item.id })}
         title={$t('Move {id} down', { id: item.id })}
       >
-        ↓
+        <ArrowDown size={14} aria-hidden="true" />
       </button>
     </div>
   {/if}
 
   {#if !compact && hasWarning}
-    <span class="error-indicator" aria-label={$t('Validation error')}>⚠️</span>
+    <span class="error-indicator" aria-label={$t('Validation error')}>
+      <Warning size={14} aria-hidden="true" />
+    </span>
   {/if}
 </div>
 
@@ -328,7 +336,8 @@
 
   .error-indicator {
     flex-shrink: 0;
-    font-size: var(--text-sm);
+    display: inline-flex;
+    align-items: center;
     color: var(--color-status-warning);
   }
 
