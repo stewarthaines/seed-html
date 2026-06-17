@@ -12,6 +12,7 @@ import type {
 } from '../services/workspace/workspace.service.js';
 import type { SpineTransformPipeline } from '$lib/transform/spine-transform-pipeline';
 import type { ManifestItem } from '../epub/opf-utils.js';
+import { isRtlLanguage } from '../epub/language-direction.js';
 // import type { TransformEngine } from '$lib/infrastructure/transform-engine';
 // import type { TransformPipeline } from '$lib/transform/transform-pipeline';
 
@@ -79,6 +80,12 @@ export interface ProcessingOptions {
   documentTitle?: string;
 
   /**
+   * The book's primary language (dc:language). The nav document is an XHTML content
+   * document, so it carries xml:lang/lang and `dir="rtl"` for RTL languages.
+   */
+  language?: string;
+
+  /**
    * Brokered file-access context for the transform scripts (the project's base path +
    * manifest), so nav transforms get the same `ctx` access as chapter transforms.
    */
@@ -102,7 +109,8 @@ export class OutlineGenerator {
     spineItems: SpineItemWithSource[],
     workspaceService: WorkspaceService,
     workspaceId: string,
-    pathInfo?: WorkspacePathInfo
+    pathInfo?: WorkspacePathInfo,
+    language?: string
   ): Promise<NavigationDocument> {
     // Default pathInfo if not provided
     // if (!pathInfo) {
@@ -170,7 +178,8 @@ export class OutlineGenerator {
     const xhtmlContent = this.generateNavigationXHTML(
       navItems,
       opts.documentTitle,
-      opts.cssClasses
+      opts.cssClasses,
+      language
     );
 
     // Create navigation metadata
@@ -226,7 +235,7 @@ export class OutlineGenerator {
 
     xhtmlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"${this.htmlLangDirAttrs(opts.language)}>
 <head>
   <title>${this.escapeXML(documentTitle)}</title>
   <meta charset="UTF-8"/>
@@ -366,10 +375,23 @@ export class OutlineGenerator {
   /**
    * Generate EPUB-compliant navigation XHTML
    */
+  /**
+   * The `xml:lang`/`lang` (and `dir="rtl"` for RTL) attributes for the nav `<html>`,
+   * derived from the book's language. The navigation document is an XHTML content
+   * document, so it follows the same language/direction rules as the chapters.
+   */
+  private static htmlLangDirAttrs(language?: string): string {
+    const lang = (language ?? '').trim();
+    if (!lang) return '';
+    const esc = this.escapeXML(lang);
+    return ` xml:lang="${esc}" lang="${esc}"${isRtlLanguage(lang) ? ' dir="rtl"' : ''}`;
+  }
+
   private static generateNavigationXHTML(
     navItems: Array<{ href: string; title: string }>,
     documentTitle: string = 'Table of Contents',
-    cssClasses: Record<string, string> = {}
+    cssClasses: Record<string, string> = {},
+    language?: string
   ): string {
     // Generate list items
     const listItems = navItems
@@ -382,7 +404,7 @@ export class OutlineGenerator {
 
     return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"${this.htmlLangDirAttrs(language)}>
 <head>
   <title>${this.escapeXML(documentTitle)}</title>
   <meta charset="UTF-8"/>

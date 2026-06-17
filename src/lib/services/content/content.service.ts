@@ -274,7 +274,7 @@ export class ContentService {
 
     return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="${locale}"${isRTL ? ' dir="rtl"' : ''}>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="${locale}" lang="${locale}"${isRTL ? ' dir="rtl"' : ''}>
 <head>
   <title>${this.escapeHtml(navTitle)}</title>
 </head>

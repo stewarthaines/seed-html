@@ -11,6 +11,7 @@
   } from '../../services/workspace/workspace.service.js';
   import type { SpineService } from '../../services/spine/spine.service.js';
   import { OutlineGenerator } from '../../outline/outline-generator.js';
+  import { primaryLanguage } from '../../epub/opf-utils.js';
   import { ensureGeneratedNav } from '../../outline/nav-coherence.js';
   import { TransformEngine } from '$lib/infrastructure/transform-engine';
   import { SpineTransformPipeline } from '$lib/transform/spine-transform-pipeline';
@@ -66,6 +67,10 @@
         settingsService
       )
   );
+
+  // The book's primary language — stamped onto the generated nav.xhtml (an XHTML
+  // content document) as xml:lang/lang, plus dir="rtl" for RTL languages.
+  const bookLanguage = $derived(primaryLanguage(workspace?.opf?.metadata));
 
   // Component initialization state
   let isComponentReady = false;
@@ -150,7 +155,7 @@
         content,
         transformPipeline,
         workspace.id,
-        { brokerContext }
+        { brokerContext, language: bookLanguage }
       );
 
       previewUpdate({
@@ -227,14 +232,16 @@
           spineItems,
           workspaceService,
           workspace.id,
-          workspace.pathInfo
+          workspace.pathInfo,
+          bookLanguage
         );
       } else if (transformPipeline) {
         // User content mode (only if transformPipeline is available)
         navigationDoc = await OutlineGenerator.processUserContent(
           content,
           transformPipeline,
-          workspace.id
+          workspace.id,
+          { language: bookLanguage }
         );
       } else {
         // Fallback to auto-generation if transformEngine not available
@@ -246,7 +253,8 @@
           spineItems,
           workspaceService,
           workspace.id,
-          workspace.pathInfo
+          workspace.pathInfo,
+          bookLanguage
         );
       }
 

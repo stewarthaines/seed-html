@@ -11,6 +11,7 @@
 import type { WorkspaceService, WorkspaceState } from '../services/workspace/workspace.service.js';
 import type { SpineService } from '../services/spine/spine.service.js';
 import { OutlineGenerator } from './outline-generator.js';
+import { primaryLanguage } from '../epub/opf-utils.js';
 
 const NAV_SOURCE_PATH = 'SOURCE/text/nav.txt';
 const DEFAULT_NAV_HREF = 'nav.xhtml';
@@ -52,7 +53,8 @@ export async function ensureGeneratedNav(
     spineItems,
     workspaceService,
     workspace.id,
-    workspace.pathInfo
+    workspace.pathInfo,
+    primaryLanguage(workspace.opf?.metadata)
   );
 
   // Write nav.xhtml to wherever the manifest already declares it, defaulting to

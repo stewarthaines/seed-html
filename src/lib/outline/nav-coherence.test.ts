@@ -87,6 +87,21 @@ describe('ensureGeneratedNav', () => {
     expect(result.workspace).toBe(ws);
   });
 
+  it('passes the book primary language to the generator (so the nav is tagged + RTL)', async () => {
+    const ws = {
+      ...makeWorkspace([]),
+      opf: { manifest: [], metadata: { language: ['ar'] } },
+    } as unknown as WorkspaceState;
+    await ensureGeneratedNav(ws, makeSpineService(), makeWorkspaceService(null));
+    expect(OutlineGenerator.generateFromSpine).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      'ws-1',
+      expect.anything(),
+      'ar'
+    );
+  });
+
   it('manual mode (non-empty nav.txt): leaves nav.xhtml untouched and returns the workspace unchanged', async () => {
     const ws = makeWorkspace([]);
     const workspaceService = makeWorkspaceService('* Part One\n  * Chapter 1');
