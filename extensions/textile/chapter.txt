@@ -1,20 +1,20 @@
 ###..
-# 2025-08-26 Comment on initial draft
+# 2025-08-26 Comment on initial draft. Comments are good.
 #
 
 h1. Achievement _Unlocked!_
 
-This is a sample project created using the Simple EPUB Editor app - *SEED.html*.
+This is a sample project created using the Simple EPUB Editor app - *@SEED.html@*.
 
 The project includes an extension for writing **textile** formatted content.
 
 h2. Textile Fundamentals
 
-See the "Textile syntax docs":https://textile-lang.com/ for details of what formatting is supported in this EPUB.
+See the "Textile syntax docs":https://textile-lang.com/ for details of formatting which is supported in this EPUB.
 
 Here are the essentials of the **Textile syntax**.
 
-h2. Text Formatting
+h2. Headings
 
 You can make text _italic_ with single underscore or *bold* with asterisks.
 
