@@ -14,14 +14,29 @@ const STORAGE_KEY = 'editme_opds_feeds';
 const SELECTED_KEY = 'editme_opds_selected_feed';
 
 /**
- * A built-in catalog pinned to the top of the feed list. It is not persisted to
- * localStorage and cannot be removed, so the import dialog always offers a
- * starting point even before the user has saved any of their own feeds.
+ * The built-in catalogs pinned to the top of the feed list. They are not
+ * persisted to localStorage and cannot be removed, so the import dialog always
+ * offers a starting point even before the user has saved any of their own feeds.
+ * The first entry is the default selection. Their titles are fixed labels and
+ * deliberately override whatever <title> the feed XML carries.
  */
-export const DEFAULT_CATALOG_FEED: SavedFeed = {
-  url: 'https://sample.readitinabook.com/catalog.xml',
-  title: 'Sample catalog',
-};
+export const DEFAULT_CATALOG_FEEDS: SavedFeed[] = [
+  {
+    url: 'https://sample.readitinabook.com/catalog.xml',
+    title: 'Essential Samples',
+  },
+  {
+    url: 'https://sample.readitinabook.com/extras.xml',
+    title: 'Extra Samples',
+  },
+];
+
+const BUILTIN_FEED_URLS = new Set(DEFAULT_CATALOG_FEEDS.map(f => f.url));
+
+/** Whether a URL is one of the pinned built-in catalogs (never persisted/removable). */
+export function isBuiltinFeed(url: string): boolean {
+  return BUILTIN_FEED_URLS.has(url.trim());
+}
 
 /** Load the saved feeds (most-recent first). Returns [] on any error. */
 export function loadSavedFeeds(): SavedFeed[] {

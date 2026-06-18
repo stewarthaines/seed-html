@@ -8,7 +8,8 @@
     removeSavedFeed,
     loadSelectedFeedUrl,
     saveSelectedFeedUrl,
-    DEFAULT_CATALOG_FEED,
+    DEFAULT_CATALOG_FEEDS,
+    isBuiltinFeed,
     type SavedFeed,
   } from '../../opds/saved-feeds.js';
   import { X } from 'phosphor-svelte';
@@ -31,13 +32,17 @@
 
   let urlInput = $state<HTMLInputElement | null>(null);
 
-  const isSaved = $derived(savedFeeds.some(f => f.url === url.trim()));
+  // A feed can be removed only if it's one of the user's own saved feeds — never
+  // the pinned built-in catalogs, even if an old copy lingers in localStorage.
+  const canRemove = $derived(
+    !isBuiltinFeed(url) && savedFeeds.some(f => f.url === url.trim())
+  );
 
-  // The dropdown always leads with the built-in catalog (pinned, not removable),
+  // The dropdown always leads with the built-in catalogs (pinned, not removable),
   // followed by the user's own saved feeds (most-recent first, deduped).
   const displayFeeds = $derived([
-    DEFAULT_CATALOG_FEED,
-    ...savedFeeds.filter(f => f.url !== DEFAULT_CATALOG_FEED.url),
+    ...DEFAULT_CATALOG_FEEDS,
+    ...savedFeeds.filter(f => !isBuiltinFeed(f.url)),
   ]);
 
   onMount(() => {
@@ -46,11 +51,12 @@
     // still available. Otherwise fall back to the most recent saved feed, then the
     // built-in catalog.
     const remembered = loadSelectedFeedUrl();
-    const available = new Set([DEFAULT_CATALOG_FEED.url, ...savedFeeds.map(f => f.url)]);
-    url =
-      remembered && available.has(remembered)
-        ? remembered
-        : (savedFeeds[0]?.url ?? DEFAULT_CATALOG_FEED.url);
+    const defaultUrl = DEFAULT_CATALOG_FEEDS[0].url;
+    const available = new Set([
+      ...DEFAULT_CATALOG_FEEDS.map(f => f.url),
+      ...savedFeeds.map(f => f.url),
+    ]);
+    url = remembered && available.has(remembered) ? remembered : defaultUrl;
     urlInput?.focus();
     // Auto-fetch the latest feed so the dialog opens already populated.
     if (url.trim()) fetchFeed();
@@ -91,8 +97,9 @@
       saveSelectedFeedUrl(target);
 
       // Auto-remember this feed (most-recent first), labelled by its title.
-      // The built-in catalog is pinned separately, so it's never stored.
-      if (target !== DEFAULT_CATALOG_FEED.url) {
+      // The built-in catalogs are pinned separately, so they're never stored —
+      // which also keeps their fixed labels and disables their Remove button.
+      if (!isBuiltinFeed(target)) {
         savedFeeds = upsertSavedFeed(target, feed.title);
       }
     } catch (e) {
@@ -181,7 +188,7 @@
         type="button"
         class="btn btn-secondary"
         onclick={removeSelected}
-        disabled={!isSaved || loading || importing}
+        disabled={!canRemove || loading || importing}
         aria-label={$t('Remove the selected feed from the list')}
       >
         {$t('Remove')}
