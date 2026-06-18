@@ -14,6 +14,8 @@
     googleAuthRequired,
     onCopyUrl,
     onDelete,
+    onLoadCatalog,
+    loadedCatalogKey = '',
     loading = false,
   }: {
     objects: S3Object[];
@@ -25,6 +27,10 @@
     googleAuthRequired: boolean;
     onCopyUrl: (key: string, fileId?: string) => void;
     onDelete: (key: string) => void;
+    /** Click a remote .xml catalog to load it into the editor. Omit to disable. */
+    onLoadCatalog?: (key: string) => void;
+    /** The catalog currently loaded in the editor — its row gets the active bar. */
+    loadedCatalogKey?: string;
     /** True while the remote's file list is being (re)fetched. */
     loading?: boolean;
   } = $props();
@@ -32,6 +38,9 @@
   let deleteConfirmKey: string | null = $state(null);
 
   const isEpub = (key: string) => key.toLowerCase().endsWith('.epub');
+  const isXml = (key: string) => key.toLowerCase().endsWith('.xml');
+  // A catalog row is loadable when it's an .xml and the remote supports reads.
+  const isLoadable = (key: string) => isXml(key) && !!onLoadCatalog;
 
   // Hide the uploaded cover thumbnails (.png) from the list; they remain on the
   // remote to back the OPDS covers. Books and catalog.xml stay visible.
@@ -40,8 +49,12 @@
   );
 
   // Master checkbox state across all epub rows.
-  const epubKeys = $derived(visibleObjects.filter((o) => isEpub(o.key)).map((o) => o.key));
-  const allSelected = $derived(epubKeys.length > 0 && epubKeys.every((k) => selectedKeys.has(k)));
+  const epubKeys = $derived(
+    visibleObjects.filter((o) => isEpub(o.key)).map((o) => o.key),
+  );
+  const allSelected = $derived(
+    epubKeys.length > 0 && epubKeys.every((k) => selectedKeys.has(k)),
+  );
   const noneSelected = $derived(epubKeys.every((k) => !selectedKeys.has(k)));
 </script>
 
@@ -52,20 +65,14 @@
 {:else if visibleObjects.length === 0}
   <p class="empty-message">{$t('Bucket is empty')}</p>
 {:else}
-  {#if epubKeys.length > 0}
-    <label class="catalog-select-all">
-      <input
-        type="checkbox"
-        checked={allSelected}
-        indeterminate={!allSelected && !noneSelected}
-        onchange={(e) => onToggleAllEpubs(e.currentTarget.checked)}
-      />
-      {$t('Include in catalog')}
-    </label>
-  {/if}
   <div class="remote-list">
     {#each visibleObjects as obj (obj.key)}
-      <div class="remote-item" class:current={activeFilenames.has(obj.key)}>
+      <div
+        class="remote-item"
+        class:current={activeFilenames.has(obj.key) ||
+          obj.key === loadedCatalogKey}
+        class:loadable={isLoadable(obj.key)}
+      >
         {#if isEpub(obj.key)}
           <input
             type="checkbox"
@@ -88,14 +95,30 @@
               ((e.currentTarget as HTMLImageElement).style.display = 'none')}
           />
         {/if}
-        <div class="remote-info">
-          <FileName name={obj.key} />
-          <span class="remote-meta">
-            {formatFileSize(obj.size)} · {new Date(
-              obj.lastModified,
-            ).toLocaleDateString()}
-          </span>
-        </div>
+        {#if isLoadable(obj.key)}
+          <button
+            type="button"
+            class="remote-info remote-info-btn"
+            onclick={() => onLoadCatalog?.(obj.key)}
+            title={$t('Load this catalog into the editor')}
+          >
+            <FileName name={obj.key} />
+            <span class="remote-meta">
+              {formatFileSize(obj.size)} · {new Date(
+                obj.lastModified,
+              ).toLocaleDateString()}
+            </span>
+          </button>
+        {:else}
+          <div class="remote-info">
+            <FileName name={obj.key} />
+            <span class="remote-meta">
+              {formatFileSize(obj.size)} · {new Date(
+                obj.lastModified,
+              ).toLocaleDateString()}
+            </span>
+          </div>
+        {/if}
         <div class="remote-actions">
           <button
             class="btn btn-secondary btn-sm"
@@ -177,10 +200,34 @@
     inline-size: 13px;
   }
 
-  /* The currently-open project. */
+  /* The currently-open project, or the catalog loaded in the editor. */
   .remote-item.current {
     box-shadow: inset 3px 0 0 var(--color-accent);
     background: var(--color-bg-active);
+  }
+
+  /* A clickable .xml catalog row: show it's interactive on hover. */
+  .remote-item.loadable:hover {
+    background: var(--color-bg-active);
+  }
+
+  /* The catalog name acts as the load trigger — reset button chrome but keep
+     the .remote-info flex layout (the class is shared). */
+  .remote-info-btn {
+    appearance: none;
+    border: none;
+    background: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .remote-item.loadable:hover .remote-info-btn :global(.filename),
+  .remote-info-btn:focus-visible :global(.filename) {
+    color: var(--color-accent);
   }
 
   .remote-cover {

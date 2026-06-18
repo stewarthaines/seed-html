@@ -273,8 +273,11 @@ export async function getWebDAVText(
 ): Promise<string | null> {
   const response = await davFetch(creds, resourceUrl(creds, objectKey), 'GET', {
     Authorization: basicAuth(creds.username, creds.password),
+    // Force revalidation so a just-republished catalog reads back fresh.
+    'Cache-Control': 'no-cache',
   });
   if (response.status === 404) return null;
-  if (!response.ok) throw new Error(httpError('Get', response.status, response.statusText));
+  if (!response.ok)
+    throw new Error(httpError('Get', response.status, response.statusText));
   return response.text();
 }

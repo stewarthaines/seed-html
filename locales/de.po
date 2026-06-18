@@ -485,6 +485,10 @@ msgstr "Bucket-Name"
 msgid "Cancel"
 msgstr "Abbrechen"
 
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Catalog file"
+msgstr "Katalogdatei"
+
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Catalog Filename (optional)"
 msgstr "Katalog-Dateiname (optional)"
@@ -694,6 +698,10 @@ msgstr "Kopieren"
 msgid "Copy URL"
 msgstr "URL kopieren"
 
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Could not load catalog: {error}"
+msgstr "Katalog konnte nicht geladen werden: {error}"
+
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 msgid "Could not load the feed: {error}. The server may not allow cross-origin requests."
 msgstr "Der Feed konnte nicht geladen werden: {error}. Der Server erlaubt möglicherweise keine Cross-Origin-Anfragen."
@@ -701,6 +709,10 @@ msgstr "Der Feed konnte nicht geladen werden: {error}. Der Server erlaubt mögli
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 msgid "Could not load the feed."
 msgstr "Der Feed konnte nicht geladen werden."
+
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Could not read that catalog"
+msgstr "Dieser Katalog konnte nicht gelesen werden"
 
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/navigation/views/PublishView.svelte
@@ -734,6 +746,10 @@ msgstr "Ein neues minimales EPUB-Projekt erstellen"
 #: src/lib/navigation/views/AboutView.svelte
 msgid "Create an EPUB Now"
 msgstr "Jetzt ein EPUB erstellen"
+
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Create Catalog"
+msgstr "Katalog erstellen"
 
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Create generator"
@@ -1500,6 +1516,10 @@ msgstr "Datei laden"
 msgid "Load from Selection"
 msgstr "Aus Auswahl laden"
 
+#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
+msgid "Load this catalog into the editor"
+msgstr "Diesen Katalog im Editor laden"
+
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Loading audio..."
 msgstr "Audio wird geladen..."
@@ -1649,6 +1669,7 @@ msgstr "Nach oben"
 msgid "n/a"
 msgstr "k. A."
 
+#: plugins/publish-to-remote/src/App.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Name"
@@ -2618,6 +2639,7 @@ msgstr "Dieses EPUB wurde nicht im Simple EPUB Editor erstellt, daher können se
 msgid "This file is empty."
 msgstr "Diese Datei ist leer."
 
+#: plugins/publish-to-remote/src/App.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/metadata/TitleEditor.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
@@ -2735,6 +2757,10 @@ msgstr "Upload-Fehler: {error}"
 #: plugins/publish-to-remote/src/App.svelte
 msgid "Upload failed"
 msgstr "Upload fehlgeschlagen"
+
+#: plugins/publish-to-remote/src/App.svelte
+msgid "URI"
+msgstr "URI"
 
 #: plugins/publish-to-remote/src/App.svelte
 msgid "URL copied to clipboard"

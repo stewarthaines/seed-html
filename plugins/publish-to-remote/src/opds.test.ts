@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { generateOpdsFeed } from './opds.js';
+import {
+  generateOpdsFeed,
+  parseOpdsFeed,
+  DEFAULT_CATALOG_AUTHOR_NAME,
+  DEFAULT_CATALOG_AUTHOR_URI,
+} from './opds.js';
 import type {
   S3RemoteConfig,
   GoogleDriveRemoteConfig,
@@ -122,6 +127,155 @@ describe('generateOpdsFeed', () => {
     it('uses folderPath for Dropbox', () => {
       const doc = parse(generateOpdsFeed(dropboxConfig, [], FEED_URL));
       expect(text(doc, 'title')).toBe('/books');
+    });
+
+    it('uses an explicit per-catalog title over the derived default', () => {
+      const doc = parse(
+        generateOpdsFeed(s3Config, [], FEED_URL, new Map(), undefined, {
+          title: 'Sci-Fi Shelf',
+        }),
+      );
+      expect(text(doc, 'title')).toBe('Sci-Fi Shelf');
+    });
+
+    it('falls back to the derived title for a blank explicit title', () => {
+      const doc = parse(
+        generateOpdsFeed(s3Config, [], FEED_URL, new Map(), undefined, {
+          title: '   ',
+        }),
+      );
+      expect(text(doc, 'title')).toBe('my-bucket');
+    });
+  });
+
+  describe('feed author', () => {
+    function feedAuthor(xml: string) {
+      const feed = parse(xml).documentElement;
+      const author = Array.from(feed.children).find(
+        (c) => c.localName === 'author',
+      );
+      const childText = (name: string) =>
+        Array.from(author?.children ?? []).find((c) => c.localName === name)
+          ?.textContent ?? '';
+      return { name: childText('name'), uri: childText('uri') };
+    }
+
+    it('defaults to the known publisher when no catalog identity is given', () => {
+      const { name, uri } = feedAuthor(
+        generateOpdsFeed(s3Config, [], FEED_URL),
+      );
+      expect(name).toBe(DEFAULT_CATALOG_AUTHOR_NAME);
+      expect(uri).toBe(DEFAULT_CATALOG_AUTHOR_URI);
+    });
+
+    it('uses the provided per-catalog name and uri', () => {
+      const xml = generateOpdsFeed(
+        s3Config,
+        [],
+        FEED_URL,
+        new Map(),
+        undefined,
+        {
+          authorName: 'Sci-Fi Shelf',
+          authorUri: 'https://example.org/scifi',
+        },
+      );
+      const { name, uri } = feedAuthor(xml);
+      expect(name).toBe('Sci-Fi Shelf');
+      expect(uri).toBe('https://example.org/scifi');
+    });
+
+    it('falls back to defaults for blank/whitespace identity fields', () => {
+      const xml = generateOpdsFeed(
+        s3Config,
+        [],
+        FEED_URL,
+        new Map(),
+        undefined,
+        {
+          authorName: '   ',
+          authorUri: '',
+        },
+      );
+      const { name, uri } = feedAuthor(xml);
+      expect(name).toBe(DEFAULT_CATALOG_AUTHOR_NAME);
+      expect(uri).toBe(DEFAULT_CATALOG_AUTHOR_URI);
+    });
+  });
+
+  describe('parseOpdsFeed (round-trip)', () => {
+    it('reads the feed title and author back from a generated feed', () => {
+      const xml = generateOpdsFeed(
+        s3Config,
+        [],
+        FEED_URL,
+        new Map(),
+        undefined,
+        {
+          title: 'Sci-Fi Shelf',
+          authorName: 'My Library',
+          authorUri: 'https://lib.example',
+        },
+      );
+      const parsed = parseOpdsFeed(xml);
+      expect(parsed.title).toBe('Sci-Fi Shelf');
+      expect(parsed.authorName).toBe('My Library');
+      expect(parsed.authorUri).toBe('https://lib.example');
+    });
+
+    it('reads the feed-level author back, not entry authors', () => {
+      const meta = new Map([
+        ['book1.epub', { title: 'Book One', authors: ['Ada Lovelace'] }],
+      ]);
+      const xml = generateOpdsFeed(
+        s3Config,
+        twoEpubs,
+        FEED_URL,
+        meta,
+        undefined,
+        {
+          authorName: 'My Library',
+          authorUri: 'https://lib.example',
+        },
+      );
+      const parsed = parseOpdsFeed(xml);
+      expect(parsed.authorName).toBe('My Library');
+      expect(parsed.authorUri).toBe('https://lib.example');
+    });
+
+    it('extracts the epub acquisition hrefs', () => {
+      const xml = generateOpdsFeed(s3Config, twoEpubs, FEED_URL);
+      const parsed = parseOpdsFeed(xml);
+      expect(parsed.epubHrefs).toEqual(
+        new Set([
+          'https://s3.example.com/my-bucket/book1.epub',
+          'https://s3.example.com/my-bucket/book2.epub',
+        ]),
+      );
+    });
+
+    it('only includes selected epubs, matching the generated selection', () => {
+      const selected = new Set(['book2.epub']);
+      const xml = generateOpdsFeed(
+        s3Config,
+        twoEpubs,
+        FEED_URL,
+        new Map(),
+        selected,
+      );
+      const parsed = parseOpdsFeed(xml);
+      expect(parsed.epubHrefs).toEqual(
+        new Set(['https://s3.example.com/my-bucket/book2.epub']),
+      );
+    });
+
+    it('leaves author undefined when the feed has none', () => {
+      const parsed = parseOpdsFeed(
+        '<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><title>x</title></feed>',
+      );
+      expect(parsed.authorName).toBeUndefined();
+      expect(parsed.authorUri).toBeUndefined();
+      expect(parsed.epubHrefs.size).toBe(0);
     });
   });
 

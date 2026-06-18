@@ -5,7 +5,12 @@
   import { t, translate } from './i18n.js';
   import { X } from 'phosphor-svelte';
   import { dirHandle, activeIdentifier } from './store.js';
-  import { readRemotes, writeRemotes, readSidecars, pngDataUri } from './opfs.js';
+  import {
+    readRemotes,
+    writeRemotes,
+    readSidecars,
+    pngDataUri,
+  } from './opfs.js';
   import {
     uploadFile,
     listFiles,
@@ -15,7 +20,14 @@
     downloadTextFile,
   } from './remote-ops.js';
   import { loadGoogleScripts, authorizeGoogleDrive } from './google-drive.js';
-  import { generateOpdsFeed, acquisitionUrl } from './opds.js';
+  import {
+    generateOpdsFeed,
+    parseOpdsFeed,
+    acquisitionUrl,
+    defaultCatalogTitle,
+    DEFAULT_CATALOG_AUTHOR_NAME,
+    DEFAULT_CATALOG_AUTHOR_URI,
+  } from './opds.js';
   import {
     validateEpub,
     saveValidationReport,
@@ -61,13 +73,80 @@
   // remote (from the existing catalog, or all epubs as a fallback).
   let selectedKeys = $state<Set<string>>(new Set());
   let selectionInitedFor: string | null = $state(null);
+
+  // The catalog currently being edited in the right pane. `catalogFile` is the
+  // remote object key it reads from / writes to (multiple catalogs can live on
+  // one remote); name/uri drive the feed-level <author>. The bucket itself is
+  // the source of truth — clicking a remote .xml loads it into these.
+  const DEFAULT_CATALOG_FILE = 'catalog.xml';
+  let catalogFile = $state(DEFAULT_CATALOG_FILE);
+  let catalogTitle = $state('');
+  let catalogName = $state(DEFAULT_CATALOG_AUTHOR_NAME);
+  let catalogUri = $state(DEFAULT_CATALOG_AUTHOR_URI);
+  // Snapshot of the last loaded/published catalog, for change detection. Null
+  // until a remote loads, or when the typed filename isn't on the remote yet.
+  let catalogSnapshot = $state<{
+    file: string;
+    title: string;
+    name: string;
+    uri: string;
+    keys: string[];
+  } | null>(null);
+
+  const currentCatalog = $derived({
+    file: catalogFile.trim(),
+    title: catalogTitle.trim(),
+    name: catalogName.trim(),
+    uri: catalogUri.trim(),
+    keys: [...selectedKeys].sort(),
+  });
+  // The editor is "dirty" (Update/Create enabled) when the filename, title,
+  // name, uri, or epub selection differs from the loaded snapshot. No snapshot
+  // (a brand-new or never-loaded catalog) counts as dirty so the first publish
+  // is allowed.
+  const catalogDirty = $derived.by(() => {
+    const snap = catalogSnapshot;
+    if (!snap) return true;
+    const cur = currentCatalog;
+    return (
+      snap.file !== cur.file ||
+      snap.title !== cur.title ||
+      snap.name !== cur.name ||
+      snap.uri !== cur.uri ||
+      snap.keys.length !== cur.keys.length ||
+      snap.keys.some((k, i) => k !== cur.keys[i])
+    );
+  });
+  // Whether the typed filename already exists on the remote (→ "Update" vs "Create").
+  const catalogExistsRemotely = $derived(
+    remoteObjects.some((o) => o.key === catalogFile.trim()),
+  );
+  // Only S3 + WebDAV can read a catalog back, so only they support click-to-load.
+  const catalogReadable = $derived(
+    activeRemote?.type === 's3-compatible' || activeRemote?.type === 'webdav',
+  );
+
+  function captureCatalogSnapshot() {
+    catalogSnapshot = {
+      file: catalogFile.trim(),
+      title: catalogTitle.trim(),
+      name: catalogName.trim(),
+      uri: catalogUri.trim(),
+      keys: [...selectedKeys].sort(),
+    };
+  }
   let localEpubs: File[] = $state([]);
   // Per-local-epub sidecar metadata (title/author + inlined thumbnail + the
   // publication identifier), keyed by `<base>.epub`. Rebuilt on each reload.
   let localMeta = $state<
     Map<
       string,
-      { title?: string; authors?: string[]; thumbnailUrl?: string; identifier?: string }
+      {
+        title?: string;
+        authors?: string[];
+        thumbnailUrl?: string;
+        identifier?: string;
+      }
     >
   >(new Map());
 
@@ -188,13 +267,20 @@
       const sidecars = await readSidecars($dirHandle);
       const meta = new Map<
         string,
-        { title?: string; authors?: string[]; thumbnailUrl?: string; identifier?: string }
+        {
+          title?: string;
+          authors?: string[];
+          thumbnailUrl?: string;
+          identifier?: string;
+        }
       >();
       for (const [key, m] of sidecars) {
         meta.set(key, {
           title: m.title,
           authors: m.authors,
-          thumbnailUrl: m.thumbnailBytes ? pngDataUri(m.thumbnailBytes) : undefined,
+          thumbnailUrl: m.thumbnailBytes
+            ? pngDataUri(m.thumbnailBytes)
+            : undefined,
           identifier: m.identifier,
         });
       }
@@ -253,7 +339,7 @@
       // catalog, or all epubs). Later refreshes preserve the user's choices.
       if (selectionInitedFor !== target.id) {
         selectionInitedFor = target.id;
-        selectedKeys = await computeInitialSelection(target, result.objects);
+        await initCatalogForRemote(target, result.objects);
       }
       await loadLocalEpubs();
       view = 'ready';
@@ -334,7 +420,10 @@
     try {
       // Stamp the validated EPUB's identifier so the host's spine editor only
       // surfaces this report for the matching project.
-      const report = await validateEpub(epub, localMeta.get(epub.name)?.identifier);
+      const report = await validateEpub(
+        epub,
+        localMeta.get(epub.name)?.identifier,
+      );
       await saveValidationReport(report);
       // Mirror to the host so the spine editor's reference panel can read it.
       publishLatestReport(report);
@@ -545,50 +634,103 @@
 
   function onToggleAllEpubs(checked: boolean) {
     selectedKeys = checked
-      ? new Set(remoteObjects.filter((o) => o.key.toLowerCase().endsWith('.epub')).map((o) => o.key))
+      ? new Set(
+          remoteObjects
+            .filter((o) => o.key.toLowerCase().endsWith('.epub'))
+            .map((o) => o.key),
+        )
       : new Set();
   }
 
-  // Initial checkbox state for a remote: the epubs already in its catalog.xml
-  // (best-effort read). No catalog / unsupported remote / error → include all.
-  async function computeInitialSelection(
+  // Match an existing catalog's epub hrefs back to remote object keys.
+  function keysFromHrefs(
     remote: RemoteConfig,
     objects: S3Object[],
-  ): Promise<Set<string>> {
+    hrefs: Set<string>,
+  ): Set<string> {
+    return new Set(
+      objects
+        .filter((o) => o.key.toLowerCase().endsWith('.epub'))
+        .filter((o) => hrefs.has(acquisitionUrl(remote, o)))
+        .map((o) => o.key),
+    );
+  }
+
+  // Initialise the editor for a remote from its default catalog (catalog.xml or
+  // the configured filename): load name/uri + selection if it exists, else start
+  // a new catalog with all epubs selected. Snapshots the clean state.
+  async function initCatalogForRemote(
+    remote: RemoteConfig,
+    objects: S3Object[],
+  ) {
+    const file = catalogFilenameFor(remote);
+    catalogFile = file;
+    catalogTitle = defaultCatalogTitle(remote);
+    catalogName = DEFAULT_CATALOG_AUTHOR_NAME;
+    catalogUri = DEFAULT_CATALOG_AUTHOR_URI;
     const epubs = objects.filter((o) => o.key.toLowerCase().endsWith('.epub'));
     try {
-      const xml = await downloadTextFile(remote, catalogFilenameFor(remote));
+      const xml = await downloadTextFile(remote, file);
       if (xml) {
-        const doc = new DOMParser().parseFromString(xml, 'application/xml');
-        const hrefs = new Set(
-          Array.from(doc.querySelectorAll('entry link[type="application/epub+zip"]'))
-            .map((l) => l.getAttribute('href'))
-            .filter((h): h is string => !!h),
-        );
-        return new Set(
-          epubs.filter((o) => hrefs.has(acquisitionUrl(remote, o))).map((o) => o.key),
-        );
+        const parsed = parseOpdsFeed(xml);
+        if (parsed.title) catalogTitle = parsed.title;
+        if (parsed.authorName) catalogName = parsed.authorName;
+        if (parsed.authorUri) catalogUri = parsed.authorUri;
+        selectedKeys = keysFromHrefs(remote, objects, parsed.epubHrefs);
+        captureCatalogSnapshot();
+        return;
       }
     } catch {
-      // Fall through to all-selected.
+      // Fall through to a new catalog with all epubs selected.
     }
-    return new Set(epubs.map((o) => o.key));
+    selectedKeys = new Set(epubs.map((o) => o.key));
+    catalogSnapshot = null;
+  }
+
+  // Click a remote .xml catalog to load it into the editor: parse its author +
+  // selection, then snapshot so the button reads clean until something changes.
+  async function onLoadCatalog(key: string) {
+    if (!activeRemote) return;
+    try {
+      const xml = await downloadTextFile(activeRemote, key);
+      if (!xml) {
+        showStatus(translate('Could not read that catalog'), 'error');
+        return;
+      }
+      const parsed = parseOpdsFeed(xml);
+      catalogFile = key;
+      catalogTitle = parsed.title || defaultCatalogTitle(activeRemote);
+      catalogName = parsed.authorName || DEFAULT_CATALOG_AUTHOR_NAME;
+      catalogUri = parsed.authorUri || DEFAULT_CATALOG_AUTHOR_URI;
+      selectedKeys = keysFromHrefs(
+        activeRemote,
+        remoteObjects,
+        parsed.epubHrefs,
+      );
+      captureCatalogSnapshot();
+    } catch (error) {
+      showStatus(
+        translate('Could not load catalog: {error}', { error: String(error) }),
+        'error',
+      );
+    }
   }
 
   async function onUpdateCatalog() {
     if (!activeRemote) return;
+    const catalogKey = catalogFile.trim();
+    if (!catalogKey) return;
     generatingFeed = true;
     try {
-      const catalogName = catalogFilenameFor(activeRemote);
       let feedUrl = '';
       if (activeRemote.type === 's3-compatible') {
-        feedUrl = getPublicUrl(activeRemote, catalogName);
+        feedUrl = getPublicUrl(activeRemote, catalogKey);
       } else if (activeRemote.type === 'google-drive') {
-        feedUrl = `https://drive.google.com/${catalogName}`;
+        feedUrl = `https://drive.google.com/${catalogKey}`;
       } else if (activeRemote.type === 'dropbox') {
-        feedUrl = `https://www.dropbox.com/${catalogName}`;
+        feedUrl = `https://www.dropbox.com/${catalogKey}`;
       } else if (activeRemote.type === 'webdav') {
-        feedUrl = getPublicUrl(activeRemote, catalogName);
+        feedUrl = getPublicUrl(activeRemote, catalogKey);
       }
       // Enrich entries with cover + metadata from local sidecars (matched to
       // remote objects by filename). Absent sidecars degrade to filename-only.
@@ -601,13 +743,19 @@
       const existing = new Map(remoteObjects.map((o) => [o.key, o]));
       for (const [epubKey, meta] of metaByKey) {
         // Only host thumbnails for epubs that are selected and on the remote.
-        if (!meta.thumbnailBytes || !existing.has(epubKey) || !selectedKeys.has(epubKey)) continue;
+        if (
+          !meta.thumbnailBytes ||
+          !existing.has(epubKey) ||
+          !selectedKeys.has(epubKey)
+        )
+          continue;
         const thumbKey = `${epubKey.replace(/\.epub$/i, '')}.thumb.png`;
         // Always (re)upload so a regenerated cover replaces the old remote
         // thumbnail (thumbnails are small; correctness over a saved request).
         const blob = new Blob([meta.thumbnailBytes], { type: 'image/png' });
         const res = await uploadFile(activeRemote, thumbKey, blob, 'image/png');
-        if (res.success) meta.thumbnailUrl = res.url || getPublicUrl(activeRemote, thumbKey);
+        if (res.success)
+          meta.thumbnailUrl = res.url || getPublicUrl(activeRemote, thumbKey);
         delete meta.thumbnailBytes;
       }
 
@@ -617,13 +765,20 @@
         feedUrl,
         metaByKey,
         selectedKeys,
+        {
+          title: catalogTitle,
+          authorName: catalogName,
+          authorUri: catalogUri,
+        },
       );
-      const result = await uploadTextFile(activeRemote, catalogName, xml);
+      const result = await uploadTextFile(activeRemote, catalogKey, xml);
       if (result.success) {
         showStatus(
           translate('Catalog updated: {url}', { url: result.url || feedUrl }),
           'success',
         );
+        // The just-pushed state is now the clean baseline.
+        captureCatalogSnapshot();
         await refreshObjectList();
       } else {
         showStatus(result.error || translate('Catalog update failed'), 'error');
@@ -713,21 +868,75 @@
                   {onToggleAllEpubs}
                   {googleAuthRequired}
                   {onCopyUrl}
+                  onLoadCatalog={catalogReadable ? onLoadCatalog : undefined}
+                  loadedCatalogKey={catalogFile.trim()}
                   loading={loadingObjects}
                   onDelete={onDeleteObject}
                 />
 
                 {#if activeRemote?.type !== 'google-drive'}
-                  <div class="footer">
-                    <button
-                      class="btn btn-secondary"
-                      onclick={onUpdateCatalog}
-                      disabled={generatingFeed}
-                    >
-                      {generatingFeed
-                        ? $t('Updating...')
-                        : $t('Update Catalog')}
-                    </button>
+                  <div class="catalog-editor">
+                    <div class="catalog-fields">
+                      <label class="catalog-field catalog-field-file">
+                        <span class="catalog-field-label"
+                          >{$t('Catalog file')}</span
+                        >
+                        <input
+                          type="text"
+                          class="catalog-input"
+                          bind:value={catalogFile}
+                          placeholder={DEFAULT_CATALOG_FILE}
+                          spellcheck="false"
+                          autocomplete="off"
+                        />
+                      </label>
+                      <label class="catalog-field catalog-field-file">
+                        <span class="catalog-field-label">{$t('Title')}</span>
+                        <input
+                          type="text"
+                          class="catalog-input"
+                          bind:value={catalogTitle}
+                          placeholder={activeRemote
+                            ? defaultCatalogTitle(activeRemote)
+                            : ''}
+                        />
+                      </label>
+                      <label class="catalog-field">
+                        <span class="catalog-field-label">{$t('Name')}</span>
+                        <input
+                          type="text"
+                          class="catalog-input"
+                          bind:value={catalogName}
+                          placeholder={DEFAULT_CATALOG_AUTHOR_NAME}
+                        />
+                      </label>
+                      <label class="catalog-field">
+                        <span class="catalog-field-label">{$t('URI')}</span>
+                        <input
+                          type="text"
+                          class="catalog-input"
+                          bind:value={catalogUri}
+                          placeholder={DEFAULT_CATALOG_AUTHOR_URI}
+                          spellcheck="false"
+                          autocomplete="off"
+                        />
+                      </label>
+                    </div>
+                    <div class="footer">
+                      <button
+                        class="btn btn-primary"
+                        onclick={onUpdateCatalog}
+                        disabled={generatingFeed ||
+                          !catalogDirty ||
+                          !catalogFile.trim()}
+                      >
+                        {generatingFeed
+                          ? $t('Updating...')
+                          : catalogExistsRemotely
+                            ? $t('Update Catalog')
+                            : $t('Create Catalog')}
+                      </button>
+                    </div>
                   </div>
                 {/if}
               {/if}
@@ -759,7 +968,8 @@
       <button
         class="status-toast-close"
         aria-label={$t('Dismiss')}
-        onclick={() => (statusMessage = null)}><X size={16} aria-hidden="true" /></button
+        onclick={() => (statusMessage = null)}
+        ><X size={16} aria-hidden="true" /></button
       >
     </div>
   {/if}
@@ -834,6 +1044,56 @@
   :global([data-pane-resizer]:focus-visible) {
     outline: 2px solid var(--color-accent);
     outline-offset: -1px;
+  }
+
+  /* Catalog editor: per-catalog name/uri + filename, above the publish button. */
+  .catalog-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .catalog-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+
+  .catalog-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1 1 140px;
+    min-width: 0;
+  }
+
+  /* The filename takes a line of its own; name + uri share the next row. */
+  .catalog-field-file {
+    flex-basis: 100%;
+  }
+
+  .catalog-field-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+  }
+
+  .catalog-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 8px;
+    font-size: 13px;
+    color: var(--color-text-primary);
+    background: var(--color-bg-primary);
+    border: 1px solid var(--color-border-default);
+    border-radius: 4px;
+  }
+
+  .catalog-input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px var(--color-bg-active);
   }
 
   .footer {

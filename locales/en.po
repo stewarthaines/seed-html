@@ -485,6 +485,10 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Catalog file"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Catalog Filename (optional)"
 msgstr ""
@@ -694,12 +698,20 @@ msgstr ""
 msgid "Copy URL"
 msgstr ""
 
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Could not load catalog: {error}"
+msgstr ""
+
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 msgid "Could not load the feed: {error}. The server may not allow cross-origin requests."
 msgstr ""
 
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 msgid "Could not load the feed."
+msgstr ""
+
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Could not read that catalog"
 msgstr ""
 
 #: src/lib/components/metadata/SimpleMetadataView.svelte
@@ -733,6 +745,10 @@ msgstr ""
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "Create an EPUB Now"
+msgstr ""
+
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Create Catalog"
 msgstr ""
 
 #: src/lib/components/settings/GeneratorSettings.svelte
@@ -1500,6 +1516,10 @@ msgstr ""
 msgid "Load from Selection"
 msgstr ""
 
+#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
+msgid "Load this catalog into the editor"
+msgstr ""
+
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Loading audio..."
 msgstr ""
@@ -1649,6 +1669,7 @@ msgstr ""
 msgid "n/a"
 msgstr ""
 
+#: plugins/publish-to-remote/src/App.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Name"
@@ -2618,6 +2639,7 @@ msgstr ""
 msgid "This file is empty."
 msgstr ""
 
+#: plugins/publish-to-remote/src/App.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/metadata/TitleEditor.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
@@ -2734,6 +2756,10 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/App.svelte
 msgid "Upload failed"
+msgstr ""
+
+#: plugins/publish-to-remote/src/App.svelte
+msgid "URI"
 msgstr ""
 
 #: plugins/publish-to-remote/src/App.svelte

@@ -200,8 +200,14 @@ export async function getObjectText(
   const awsClient = createAwsClient(creds);
   const baseEndpoint = creds.endpoint.replace(/\/$/, '');
   const url = `${baseEndpoint}/${creds.bucket}/${objectKey}`;
-  const response = await awsClient.fetch(url, { method: 'GET' });
+  // Bypass the HTTP cache: a just-republished catalog.xml must read back fresh,
+  // not a stale copy the browser cached from an earlier load.
+  const response = await awsClient.fetch(url, {
+    method: 'GET',
+    cache: 'no-store',
+  });
   if (response.status === 404) return null;
-  if (!response.ok) throw new Error(`Get failed: ${response.status} ${response.statusText}`);
+  if (!response.ok)
+    throw new Error(`Get failed: ${response.status} ${response.statusText}`);
   return response.text();
 }
