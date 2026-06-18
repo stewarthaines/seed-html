@@ -224,7 +224,12 @@
               <tr class:current={!!activeIdentifier && epub.identifier === activeIdentifier}>
                 <td class="cover">
                   {#if coverUrls[epub.filename]}
-                    <img src={coverUrls[epub.filename]} alt="" class="cover-thumb" aria-hidden="true" />
+                    <img
+                      src={coverUrls[epub.filename]}
+                      alt=""
+                      class="cover-thumb"
+                      aria-hidden="true"
+                    />
                   {/if}
                 </td>
                 <td class="name">
@@ -350,11 +355,11 @@
   /* Active project: tint the row and add a left accent (box-shadow avoids the
      table layout shift a border would cause). */
   .epub-table tr.current td {
-    background-color: var(--color-bg-accent);
+    background-color: var(--color-bg-active);
   }
 
   .epub-table tr.current td:first-child {
-    box-shadow: inset 3px 0 0 var(--color-interactive-primary);
+    box-shadow: inset 3px 0 0 var(--color-accent);
   }
 
   .epub-table .cover {

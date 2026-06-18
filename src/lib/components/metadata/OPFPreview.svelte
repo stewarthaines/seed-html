@@ -136,13 +136,7 @@
     {/if}
   </div>
 {:else}
-  <SimpleMetadataView
-    {workspace}
-    {focusedField}
-    {readOnly}
-    {workspaceService}
-    {onGenerateCover}
-  />
+  <SimpleMetadataView {workspace} {focusedField} {readOnly} {workspaceService} {onGenerateCover} />
 {/if}
 
 <style>
@@ -229,8 +223,8 @@
 
   .highlighted-xml :global(.metadata-value-focused) {
     font-weight: var(--font-bold);
-    color: var(--color-interactive-primary);
-    background: var(--color-bg-accent);
+    color: var(--color-accent);
+    background: var(--color-bg-active);
     border-radius: var(--radius-xs);
   }
 
@@ -239,7 +233,7 @@
   }
 
   .highlighted-xml :global(.metadata-tag-focused) {
-    color: var(--color-interactive-primary);
+    color: var(--color-accent);
     font-weight: var(--font-medium);
   }
 
@@ -260,7 +254,7 @@
   }
 
   .highlighted-xml :global(.metadata-tag-focused.metadata-line) {
-    border-inline-start-color: var(--color-interactive-primary);
+    border-inline-start-color: var(--color-accent);
   }
 
   /* Enhanced XML syntax highlighting */

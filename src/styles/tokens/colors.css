@@ -204,6 +204,10 @@
   --color-hover-accent: #0074d9;
   --color-on-accent: var(--color-white);
 
+  /* Light azure tint for the active/selected indicator (left bar + this fill).
+     Derived from --color-accent so it tracks the theme automatically. */
+  --color-bg-active: color-mix(in srgb, var(--color-accent) 16%, transparent);
+
   /* Compatibility aliases — these legacy token names are referenced across many
      components. They map to the canonical tokens above, so they resolve
      correctly in both themes (each points at a mode-aware token). Accent fills
