@@ -654,8 +654,14 @@
     outline-offset: -2px;
   }
 
+  /* Selected row: the shared azure left-bar (on the first cell, since box-shadow
+     on <tr> is unreliable) + tint. */
   .manifest-row.selected {
-    background-color: var(--color-bg-accent);
+    background-color: var(--color-bg-active);
+  }
+
+  .manifest-row.selected td:first-child {
+    box-shadow: inset 3px 0 0 var(--color-accent);
   }
 
   .manifest-row.error {

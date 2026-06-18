@@ -214,14 +214,15 @@
     box-shadow: inset 0 0 0 2px var(--color-focus-ring);
   }
 
+  /* Current project: the shared azure left-bar + tint convention (the card
+     keeps its default border rather than a full blue one). */
   .workspace-item.current {
-    border-color: var(--color-interactive-primary);
-    background-color: var(--color-primary-surface);
+    box-shadow: inset 3px 0 0 var(--color-accent);
+    background-color: var(--color-bg-active);
   }
 
   .workspace-item.current:hover {
-    border-color: var(--color-primary-hover);
-    background-color: var(--color-primary-surface-hover);
+    background-color: var(--color-bg-active);
   }
 
   .workspace-item.error {
@@ -297,7 +298,7 @@
     font-size: var(--text-xs);
     font-weight: 500;
     padding: 2px var(--space-1);
-    background-color: var(--color-interactive-primary);
+    background-color: var(--color-accent);
     color: var(--color-on-accent);
     border-radius: var(--radius-xs);
     flex-shrink: 0;
