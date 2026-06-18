@@ -83,7 +83,7 @@ var codes = document.querySelectorAll('pre.abc2svg, pre:has(code.language-abc2sv
 %%rightmargin 0
 %%topspace 0
 %%musicspace 0
-%%staffwidth 880
+%%staffwidth 820
 %%fullsvg false
 %%scale ${config.scale}
 %%vocalfont serif 16
@@ -94,7 +94,7 @@ var codes = document.querySelectorAll('pre.abc2svg, pre:has(code.language-abc2sv
 %%musicfont Bravura
 X:1
 `
-        abc.tosvg('something', preamble + abcContent + '\n\n')
+        abc.tosvg(idref, preamble + abcContent + '\n\n')
       }
     }
     c.replaceWith(abcContainer)
