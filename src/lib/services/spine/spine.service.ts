@@ -9,6 +9,7 @@
 import type { WorkspaceService, WorkspaceState } from '../workspace/workspace.service.js';
 import type { SpineItem, ManifestItem } from '../../epub/opf-utils.js';
 import type { SpineItemWithSource } from '../../spine/types.js';
+import { translate } from '$lib/i18n/index.js';
 
 // Re-export existing SpineItemWithSource type for compatibility
 export type { SpineItemWithSource } from '../../spine/types.js';
@@ -178,8 +179,7 @@ export class SpineService {
 
       if (options.createSourceFile) {
         sourceFilePath = `SOURCE/text/${chapterId}.txt`;
-        const sourceContent =
-          options.sourceText ?? `# ${options.title}\n\nYour chapter content goes here...`;
+        const sourceContent = options.sourceText ?? translate('Your chapter content goes here...');
         await this.workspaceService.writeFile(workspace.id, sourceFilePath, sourceContent);
         hasSourceFile = true;
       }

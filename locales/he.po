@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: EDITME EPUB Editor\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-17\n"
-"PO-Revision-Date: 2026-06-17\n"
+"POT-Creation-Date: 2026-06-18\n"
+"PO-Revision-Date: 2026-06-18\n"
 "Language: he\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -818,6 +818,7 @@ msgstr ""
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 #: src/lib/components/manifest/ManifestPreview.svelte
+#: src/lib/components/workspace/WorkspaceItem.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Delete"
 msgstr ""
@@ -2867,4 +2868,8 @@ msgstr ""
 
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "Your browser does not support the video element."
+msgstr ""
+
+#: src/lib/services/spine/spine.service.ts
+msgid "Your chapter content goes here..."
 msgstr ""
