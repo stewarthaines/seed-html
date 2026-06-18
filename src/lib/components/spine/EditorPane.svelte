@@ -903,27 +903,28 @@
     width: 100%;
     height: 100%;
     padding: var(--space-3);
-    border: none;
+    border: 1px solid var(--color-border-default);
     background: var(--color-bg-primary);
     color: var(--color-text-primary);
     font-family: var(--font-mono);
     font-size: var(--text-sm);
     line-height: var(--leading-relaxed);
     resize: none;
-    outline: none;
+    outline-offset: -2px;
   }
 
   .content-textarea:focus {
-    box-shadow: 0 0 0 var(--focus-ring-width) var(--color-focus);
+    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-accent);
   }
 
   .content-textarea.has-error {
     border-color: var(--color-error-border);
+    outline-color: var(--color-error-border);
   }
 
   .content-textarea.has-error:focus {
     border-color: var(--color-error-border);
-    box-shadow: 0 0 0 var(--focus-ring-width) var(--color-error-text);
+    outline-color: var(--color-error-border);
   }
 
   .pane-error-overlay {

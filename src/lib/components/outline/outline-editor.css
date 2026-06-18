@@ -10,25 +10,28 @@
 .outline-editor__textarea {
   flex: 1;
   min-height: 200px;
-  padding: var(--spacing-4);
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-base);
-  line-height: var(--line-height-relaxed);
-  border: none;
+  padding: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  border: 1px solid var(--color-border-default);
   background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
   resize: none;
   overflow-y: auto;
+  outline-offset: -2px;
 }
 
 .outline-editor__textarea:focus {
-  outline: none;
-  box-shadow: 0 0 0 var(--focus-ring-width) var(--color-focus-ring);
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-accent);
+  /* Inset, matching the content editor — a global `textarea:focus-visible`
+     rule pushes the offset outward (+2px), which gets clipped by this pane's
+     overflow ancestors; -2px keeps the ring inside the textarea. */
+  outline-offset: -2px;
 }
 
 .outline-editor__textarea::placeholder {
-  color: var(--color-text-subtle);
-  font-style: italic;
+  color: var(--color-text-tertiary);
 }
 
 /* High contrast mode support */
@@ -39,7 +42,8 @@
 
   .outline-editor__textarea:focus {
     border-color: var(--color-text-primary);
-    box-shadow: 0 0 0 calc(var(--focus-ring-width) + 1px) var(--color-focus-ring);
+    outline-width: calc(var(--focus-ring-width) + 1px);
+    outline-color: var(--color-text-primary);
   }
 }
 
