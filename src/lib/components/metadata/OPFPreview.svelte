@@ -37,7 +37,26 @@
 
   // Advanced mode shows the OPF source by default, with a second tab for the
   // metadata summary (so the cover generator stays reachable in advanced mode).
-  let activeTab = $state<'opf' | 'summary'>('opf');
+  // Remember the selected tab (content.opf vs Summary) across reloads.
+  const RIGHT_TAB_KEY = 'editme_metadata_right_tab';
+  const loadActiveTab = (): 'opf' | 'summary' => {
+    try {
+      const stored = localStorage.getItem(RIGHT_TAB_KEY);
+      if (stored === 'opf' || stored === 'summary') return stored;
+    } catch {
+      // Ignore unavailable storage.
+    }
+    return 'opf';
+  };
+  let activeTab = $state<'opf' | 'summary'>(loadActiveTab());
+  const setActiveTab = (tab: 'opf' | 'summary'): void => {
+    activeTab = tab;
+    try {
+      localStorage.setItem(RIGHT_TAB_KEY, tab);
+    } catch {
+      // Ignore unavailable storage.
+    }
+  };
 
   // Generate OPF content from workspace data (derived state)
   let opfContent = $derived(() => {
@@ -88,13 +107,13 @@
           id="opf"
           label="content.opf"
           active={activeTab === 'opf'}
-          onSelect={({ tabId }) => (activeTab = tabId as typeof activeTab)}
+          onSelect={({ tabId }) => setActiveTab(tabId as typeof activeTab)}
         />
         <MetadataTab
           id="summary"
           label={$t('Summary')}
           active={activeTab === 'summary'}
-          onSelect={({ tabId }) => (activeTab = tabId as typeof activeTab)}
+          onSelect={({ tabId }) => setActiveTab(tabId as typeof activeTab)}
         />
       </div>
     </PaneHeader>

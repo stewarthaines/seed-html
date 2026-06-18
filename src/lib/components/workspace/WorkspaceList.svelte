@@ -39,6 +39,40 @@
     })
   );
 
+  // Remember the list scroll position across reloads/navigation. Restored once,
+  // after the rows have rendered (so there's height to scroll to).
+  const SCROLL_KEY = 'editme_projects_scroll';
+  let listEl = $state<HTMLDivElement>();
+  let scrollRestored = false;
+
+  $effect(() => {
+    // Touch the reactive deps so this re-runs once rows are present.
+    const ready = !!listEl && !isLoading && filteredWorkspaces.length > 0;
+    if (!ready || scrollRestored) return;
+    scrollRestored = true;
+    try {
+      const y = Number(localStorage.getItem(SCROLL_KEY));
+      if (y > 0 && listEl) listEl.scrollTop = y;
+    } catch {
+      // Ignore unavailable storage.
+    }
+  });
+
+  // Throttle to one write per frame so scrolling stays smooth.
+  let scrollSaveQueued = false;
+  const saveScroll = () => {
+    if (scrollSaveQueued) return;
+    scrollSaveQueued = true;
+    requestAnimationFrame(() => {
+      scrollSaveQueued = false;
+      try {
+        localStorage.setItem(SCROLL_KEY, String(listEl?.scrollTop ?? 0));
+      } catch {
+        // Ignore unavailable storage.
+      }
+    });
+  };
+
   // Sort workspaces by last modified (most recent first)
   const sortedWorkspaces = $derived(
     [...filteredWorkspaces].sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime())
@@ -78,7 +112,7 @@
     </div>
   </PaneHeader>
 
-  <div class="list-content">
+  <div class="list-content" bind:this={listEl} onscroll={saveScroll}>
     {#if isLoading}
       <div class="loading-state">
         <div class="skeleton-item" aria-hidden="true"></div>

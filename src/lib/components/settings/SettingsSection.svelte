@@ -1,12 +1,44 @@
 <!--
   SettingsSection — a settings group rendered as a native <details> disclosure whose
   header shows a compact summary of the section's current values. Sections sharing a
-  `name` form an exclusive accordion (one open at a time): native on Chrome 120+ /
-  Safari 17.2+ / Firefox 130+ via the <details name> attribute, with a tiny ontoggle
-  fallback to enforce it on older Safari (the app's floor is 16.4).
+  `name` form an exclusive accordion (one open at a time), enforced in JS by the
+  toggle handler.
+
+  We deliberately avoid the native <details name> grouping: browsers track a group's
+  open member per-document keyed by name, and that state goes stale when the pane
+  unmounts and remounts during in-app navigation (the section then fails to restore
+  its remembered open/closed state — yet a full reload, starting a fresh document,
+  works). Grouping via a data-* attribute the JS reads instead is remount-safe and
+  behaves identically across browsers.
 -->
+<script module lang="ts">
+  // Open/closed state for every section, remembered across reloads under one key
+  // (keyed by each section's persist key). try/catch so private-mode/disabled
+  // storage is non-fatal.
+  const SECTION_STATE_KEY = 'editme_section_open';
+
+  function readSectionState(): Record<string, boolean> {
+    try {
+      return JSON.parse(localStorage.getItem(SECTION_STATE_KEY) || '{}') as Record<string, boolean>;
+    } catch {
+      return {};
+    }
+  }
+
+  function persistSectionOpen(key: string, open: boolean): void {
+    try {
+      const state = readSectionState();
+      state[key] = open;
+      localStorage.setItem(SECTION_STATE_KEY, JSON.stringify(state));
+    } catch {
+      // Ignore unavailable storage.
+    }
+  }
+</script>
+
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import { untrack } from 'svelte';
 
   interface Props {
     title: string;
@@ -14,30 +46,41 @@
     summary?: string;
     /** Accordion group name; sections with the same name open one-at-a-time. */
     name: string;
-    /** Start expanded (the first section of a pane). One-time initial, not reactive. */
+    /** Start expanded (the first section of a pane), unless a remembered state
+        overrides it. One-time initial, not reactive. */
     open?: boolean;
+    /** Stable key under which this section's open/closed state is remembered.
+        Defaults to `name`; pass an explicit unique key where sections share a
+        `name` (accordion groups, e.g. the settings panes). */
+    persistKey?: string;
     children: Snippet;
   }
 
-  const { title, summary, name, open = false, children }: Props = $props();
+  const { title, summary, name, open = false, persistKey, children }: Props = $props();
 
-  // Fallback exclusivity for browsers without <details name> grouping (Safari
-  // 16.4–17.1): when this section opens, close any other open section in the same
-  // group. Closing a sibling fires its toggle with open=false, which we ignore, so
-  // there is no recursion. On browsers with native grouping this is a harmless no-op
-  // (they already closed the others before this handler runs).
-  function enforceSingleOpen(event: Event): void {
+  // These props are constant for a section's lifetime; untrack expresses the
+  // intentional one-time capture (the open state is owned by the DOM thereafter).
+  const storeKey = untrack(() => persistKey ?? name);
+  // One-time initial open: the remembered state if present, else the `open` prop.
+  const initialOpen = untrack(() => readSectionState()[storeKey] ?? open);
+
+  // Remember the new state, then enforce single-open exclusivity across the group
+  // (sections sharing a `name`, matched via the remount-safe data-accordion
+  // attribute). Closing a sibling fires its own toggle (open=false), which persists
+  // it closed and then returns — no recursion.
+  function handleToggle(event: Event): void {
     const el = event.currentTarget as HTMLDetailsElement;
+    persistSectionOpen(storeKey, el.open);
     if (!el.open) return;
     for (const other of document.querySelectorAll<HTMLDetailsElement>(
-      `details[name="${CSS.escape(name)}"]`
+      `details[data-accordion="${CSS.escape(name)}"]`
     )) {
       if (other !== el && other.open) other.open = false;
     }
   }
 </script>
 
-<details class="settings-section" {name} {open} ontoggle={enforceSingleOpen}>
+<details class="settings-section" data-accordion={name} open={initialOpen} ontoggle={handleToggle}>
   <summary class="settings-section__summary">
     <h3 class="settings-section__title">{title}</h3>
     {#if summary}

@@ -594,6 +594,7 @@
               title={$t('General')}
               summary={generalSummary}
               name="app-settings"
+              persistKey="settings-app-general"
               open
             >
               <div class="setting-group">
@@ -626,7 +627,12 @@
             </SettingsSection>
 
             {#if availablePlugins.length > 0}
-              <SettingsSection title={$t('Plugins')} summary={pluginsSummary} name="app-settings">
+              <SettingsSection
+                title={$t('Plugins')}
+                summary={pluginsSummary}
+                name="app-settings"
+                persistKey="settings-app-plugins"
+              >
                 <p class="setting-description plugins-intro">
                   {$t('Optional features available when the app is served over HTTP.')}
                 </p>
@@ -651,6 +657,7 @@
                 title={$t('Available Extensions')}
                 summary={availableExtensionsSummary}
                 name="app-settings"
+                persistKey="settings-app-extensions"
               >
                 <p class="setting-description">
                   {$t(
@@ -707,6 +714,7 @@
                   title={$t('PDF')}
                   summary={printSummary}
                   name="project-settings"
+                  persistKey="settings-project-pdf"
                   open={projectFirstOpen === 'print'}
                 >
                   <div class="setting-group">
@@ -798,6 +806,7 @@
                   title={$t('EPUB Settings')}
                   summary={epubSummary}
                   name="project-settings"
+                  persistKey="settings-project-epub"
                 >
                   <div class="setting-group">
                     <label for="filename-template" class="setting-label-text">
@@ -937,6 +946,7 @@
                 title={$t('Extensions')}
                 summary={extensionsSummary}
                 name="project-settings"
+                persistKey="settings-project-extensions"
               >
                 <!-- Import Extension -->
                 <div class="extension-import" class:disabled={!isAdvancedMode}>

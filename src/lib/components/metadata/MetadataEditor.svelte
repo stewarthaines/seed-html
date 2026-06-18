@@ -37,7 +37,19 @@
   let validationErrors = $derived(metadataService.validateMetadata(metadata));
   let loading = $derived(!workspace);
 
-  let activeTab = $state('basic');
+  // Remember the selected tab across reloads (validated against the known ids).
+  const LEFT_TAB_KEY = 'editme_metadata_left_tab';
+  const TAB_IDS = ['basic', 'advanced', 'accessibility'];
+  const loadActiveTab = (): string => {
+    try {
+      const stored = localStorage.getItem(LEFT_TAB_KEY);
+      if (stored && TAB_IDS.includes(stored)) return stored;
+    } catch {
+      // Ignore unavailable storage.
+    }
+    return 'basic';
+  };
+  let activeTab = $state(loadActiveTab());
   let saving = $state(false);
   let error = $state<string | null>(null);
 
@@ -197,6 +209,11 @@
     // Allow tab switching - validation errors will be shown inline
     // No need to block navigation, users should be able to access all tabs
     activeTab = newTabId;
+    try {
+      localStorage.setItem(LEFT_TAB_KEY, newTabId);
+    } catch {
+      // Ignore unavailable storage.
+    }
   };
 
   // Tell the preview which fields the active tab owns, so it can softly
