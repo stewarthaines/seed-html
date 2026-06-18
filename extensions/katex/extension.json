@@ -1,0 +1,14 @@
+{
+  "id": "katex",
+  "name": "KaTeX",
+  "description": "The fastest math typesetting library for the web.",
+  "license": "LICENSE.txt",
+  "scripts": [
+    "katex.min.js"
+  ],
+  "domTransforms": [
+    "transformKaTeX.js"
+  ],
+  "textTransforms": [],
+  "assets": []
+}
