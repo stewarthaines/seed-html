@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: EDITME EPUB Editor\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-18\n"
-"PO-Revision-Date: 2026-06-18\n"
+"POT-Creation-Date: 2026-06-19\n"
+"PO-Revision-Date: 2026-06-19\n"
 "Language: en\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -507,6 +507,10 @@ msgstr ""
 
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 msgid "Catalog URL"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
+msgid "Catalogs"
 msgstr ""
 
 #: src/lib/components/metadata/AccessibilityFields.svelte
@@ -1046,6 +1050,7 @@ msgstr ""
 msgid "Enter title"
 msgstr ""
 
+#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 #: src/App.svelte
 msgid "EPUB"
 msgstr ""
@@ -1889,6 +1894,10 @@ msgstr ""
 
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Orientation:"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
+msgid "Other"
 msgstr ""
 
 #: src/lib/components/spine/ChapterValidationPanel.svelte

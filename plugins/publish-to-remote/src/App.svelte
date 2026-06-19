@@ -632,16 +632,6 @@
     selectedKeys = next;
   }
 
-  function onToggleAllEpubs(checked: boolean) {
-    selectedKeys = checked
-      ? new Set(
-          remoteObjects
-            .filter((o) => o.key.toLowerCase().endsWith('.epub'))
-            .map((o) => o.key),
-        )
-      : new Set();
-  }
-
   // Match an existing catalog's epub hrefs back to remote object keys.
   function keysFromHrefs(
     remote: RemoteConfig,
@@ -865,7 +855,6 @@
                   {activeFilenames}
                   {selectedKeys}
                   {onToggleSelect}
-                  {onToggleAllEpubs}
                   {googleAuthRequired}
                   {onCopyUrl}
                   onLoadCatalog={catalogReadable ? onLoadCatalog : undefined}

@@ -10,7 +10,6 @@
     activeFilenames,
     selectedKeys,
     onToggleSelect,
-    onToggleAllEpubs,
     googleAuthRequired,
     onCopyUrl,
     onDelete,
@@ -23,7 +22,6 @@
     activeFilenames: Set<string>;
     selectedKeys: Set<string>;
     onToggleSelect: (key: string, checked: boolean) => void;
-    onToggleAllEpubs: (checked: boolean) => void;
     googleAuthRequired: boolean;
     onCopyUrl: (key: string, fileId?: string) => void;
     onDelete: (key: string) => void;
@@ -48,15 +46,97 @@
     objects.filter((o) => !o.key.toLowerCase().endsWith('.png')),
   );
 
-  // Master checkbox state across all epub rows.
-  const epubKeys = $derived(
-    visibleObjects.filter((o) => isEpub(o.key)).map((o) => o.key),
+  // Grouped for display, mirroring the manifest table: catalogs (.xml) first,
+  // then EPUBs, then anything else. Each group renders under its own heading.
+  const catalogObjects = $derived(visibleObjects.filter((o) => isXml(o.key)));
+  const epubObjects = $derived(visibleObjects.filter((o) => isEpub(o.key)));
+  const otherObjects = $derived(
+    visibleObjects.filter((o) => !isXml(o.key) && !isEpub(o.key)),
   );
-  const allSelected = $derived(
-    epubKeys.length > 0 && epubKeys.every((k) => selectedKeys.has(k)),
-  );
-  const noneSelected = $derived(epubKeys.every((k) => !selectedKeys.has(k)));
 </script>
+
+{#snippet fileRow(obj: S3Object)}
+  <div
+    class="remote-item"
+    class:current={activeFilenames.has(obj.key) || obj.key === loadedCatalogKey}
+    class:loadable={isLoadable(obj.key)}
+  >
+    {#if isEpub(obj.key)}
+      <input
+        type="checkbox"
+        class="remote-check"
+        checked={selectedKeys.has(obj.key)}
+        onchange={(e) => onToggleSelect(obj.key, e.currentTarget.checked)}
+        title={$t('Include in catalog')}
+        aria-label={$t('Include in catalog')}
+      />
+    {:else}
+      <span class="remote-check-spacer" aria-hidden="true"></span>
+    {/if}
+    {#if thumbnailUrls.get(obj.key)}
+      <img
+        src={thumbnailUrls.get(obj.key)}
+        alt=""
+        class="remote-cover"
+        aria-hidden="true"
+        onerror={(e) =>
+          ((e.currentTarget as HTMLImageElement).style.display = 'none')}
+      />
+    {/if}
+    {#if isLoadable(obj.key)}
+      <button
+        type="button"
+        class="remote-info remote-info-btn"
+        onclick={() => onLoadCatalog?.(obj.key)}
+        title={$t('Load this catalog into the editor')}
+      >
+        <FileName name={obj.key} />
+        <span class="remote-meta">
+          {formatFileSize(obj.size)} · {new Date(
+            obj.lastModified,
+          ).toLocaleDateString()}
+        </span>
+      </button>
+    {:else}
+      <div class="remote-info">
+        <FileName name={obj.key} />
+        <span class="remote-meta">
+          {formatFileSize(obj.size)} · {new Date(
+            obj.lastModified,
+          ).toLocaleDateString()}
+        </span>
+      </div>
+    {/if}
+    <div class="remote-actions">
+      <button
+        class="btn btn-secondary btn-sm"
+        onclick={() => onCopyUrl(obj.key, obj.fileId)}
+        title={$t('Copy URL')}>{$t('Copy')}</button
+      >
+      {#if deleteConfirmKey === obj.key}
+        <div class="delete-confirm">
+          <span>{$t('Confirm delete?')}</span>
+          <button
+            class="btn btn-danger btn-sm"
+            onclick={() => {
+              onDelete(obj.key);
+              deleteConfirmKey = null;
+            }}>{$t('Yes')}</button
+          >
+          <button
+            class="btn btn-secondary btn-sm"
+            onclick={() => (deleteConfirmKey = null)}>{$t('No')}</button
+          >
+        </div>
+      {:else}
+        <button
+          class="btn btn-danger btn-sm"
+          onclick={() => (deleteConfirmKey = obj.key)}>{$t('Delete')}</button
+        >
+      {/if}
+    </div>
+  </div>
+{/snippet}
 
 {#if googleAuthRequired}
   <p class="empty-message">{$t('Connect to Google Drive to view files.')}</p>
@@ -66,90 +146,32 @@
   <p class="empty-message">{$t('Bucket is empty')}</p>
 {:else}
   <div class="remote-list">
-    {#each visibleObjects as obj (obj.key)}
-      <div
-        class="remote-item"
-        class:current={activeFilenames.has(obj.key) ||
-          obj.key === loadedCatalogKey}
-        class:loadable={isLoadable(obj.key)}
-      >
-        {#if isEpub(obj.key)}
-          <input
-            type="checkbox"
-            class="remote-check"
-            checked={selectedKeys.has(obj.key)}
-            onchange={(e) => onToggleSelect(obj.key, e.currentTarget.checked)}
-            title={$t('Include in catalog')}
-            aria-label={$t('Include in catalog')}
-          />
-        {:else}
-          <span class="remote-check-spacer" aria-hidden="true"></span>
-        {/if}
-        {#if thumbnailUrls.get(obj.key)}
-          <img
-            src={thumbnailUrls.get(obj.key)}
-            alt=""
-            class="remote-cover"
-            aria-hidden="true"
-            onerror={(e) =>
-              ((e.currentTarget as HTMLImageElement).style.display = 'none')}
-          />
-        {/if}
-        {#if isLoadable(obj.key)}
-          <button
-            type="button"
-            class="remote-info remote-info-btn"
-            onclick={() => onLoadCatalog?.(obj.key)}
-            title={$t('Load this catalog into the editor')}
-          >
-            <FileName name={obj.key} />
-            <span class="remote-meta">
-              {formatFileSize(obj.size)} · {new Date(
-                obj.lastModified,
-              ).toLocaleDateString()}
-            </span>
-          </button>
-        {:else}
-          <div class="remote-info">
-            <FileName name={obj.key} />
-            <span class="remote-meta">
-              {formatFileSize(obj.size)} · {new Date(
-                obj.lastModified,
-              ).toLocaleDateString()}
-            </span>
-          </div>
-        {/if}
-        <div class="remote-actions">
-          <button
-            class="btn btn-secondary btn-sm"
-            onclick={() => onCopyUrl(obj.key, obj.fileId)}
-            title={$t('Copy URL')}>{$t('Copy')}</button
-          >
-          {#if deleteConfirmKey === obj.key}
-            <div class="delete-confirm">
-              <span>{$t('Confirm delete?')}</span>
-              <button
-                class="btn btn-danger btn-sm"
-                onclick={() => {
-                  onDelete(obj.key);
-                  deleteConfirmKey = null;
-                }}>{$t('Yes')}</button
-              >
-              <button
-                class="btn btn-secondary btn-sm"
-                onclick={() => (deleteConfirmKey = null)}>{$t('No')}</button
-              >
-            </div>
-          {:else}
-            <button
-              class="btn btn-danger btn-sm"
-              onclick={() => (deleteConfirmKey = obj.key)}
-              >{$t('Delete')}</button
-            >
-          {/if}
-        </div>
+    {#if catalogObjects.length > 0}
+      <div class="remote-group-heading">
+        <span class="remote-group-label">{$t('Catalogs')}</span>
       </div>
-    {/each}
+      {#each catalogObjects as obj (obj.key)}
+        {@render fileRow(obj)}
+      {/each}
+    {/if}
+
+    {#if epubObjects.length > 0}
+      <div class="remote-group-heading">
+        <span class="remote-group-label">{$t('EPUB')}</span>
+      </div>
+      {#each epubObjects as obj (obj.key)}
+        {@render fileRow(obj)}
+      {/each}
+    {/if}
+
+    {#if otherObjects.length > 0}
+      <div class="remote-group-heading">
+        <span class="remote-group-label">{$t('Other')}</span>
+      </div>
+      {#each otherObjects as obj (obj.key)}
+        {@render fileRow(obj)}
+      {/each}
+    {/if}
   </div>
 {/if}
 
@@ -177,15 +199,29 @@
     border-bottom: none;
   }
 
-  .catalog-select-all {
+  /* Group heading band, mirroring the manifest table's group separators: a
+     muted bar with a small, letter-spaced label. */
+  .remote-group-heading {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
+    justify-content: space-between;
+    gap: 8px 16px;
+    padding: 8px 12px;
+    background-color: var(--color-surface-secondary);
+    border-top: 1px solid var(--color-border-default);
+    border-bottom: 1px solid var(--color-border-strong);
+  }
+
+  /* No double line where the first heading meets the list's own top border. */
+  .remote-group-heading:first-child {
+    border-top: none;
+  }
+
+  .remote-group-label {
     font-size: 13px;
     font-weight: 600;
+    letter-spacing: 0.05em;
     color: var(--color-text-secondary);
-    cursor: pointer;
   }
 
   .remote-check {
