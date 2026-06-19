@@ -800,6 +800,10 @@ msgstr ""
 msgid "Current Settings:"
 msgstr ""
 
+#: src/lib/navigation/views/WorkspaceView.svelte
+msgid "Currently Active Project"
+msgstr ""
+
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Currently open"
 msgstr ""

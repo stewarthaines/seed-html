@@ -70,7 +70,10 @@
 
     return () => {
       stale = true;
-      if (blobUrl) { URL.revokeObjectURL(blobUrl); currentCoverUrl = null; }
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+        currentCoverUrl = null;
+      }
     };
   });
   let error = $state<string | null>(null);
@@ -386,36 +389,39 @@
               onDuplicateRequested={currentWorkspaceId ? handleDuplicate : undefined}
             />
             {#if currentInfo}
-              <div class="book-detail">
-                {#if currentCoverUrl}
-                  <img src={currentCoverUrl} alt="" class="cover-preview" />
-                {/if}
-
-                <h2 class="book-title">{currentInfo.title || $t('Untitled')}</h2>
-
-                {#if currentInfo.authors && currentInfo.authors.length > 0}
-                  <p class="book-authors">{currentInfo.authors.join(', ')}</p>
-                {/if}
-
-                <dl class="book-facts">
-                  {#if currentInfo.language}
-                    <div class="book-fact">
-                      <dt>{$t('Language')}</dt>
-                      <dd>{languageDisplayName(currentInfo.language, $currentLocale)}</dd>
-                    </div>
+              <section class="active-project">
+                <h2 class="active-project-heading">{$t('Currently Active Project')}</h2>
+                <div class="book-detail">
+                  {#if currentCoverUrl}
+                    <img src={currentCoverUrl} alt="" class="cover-preview" />
                   {/if}
-                  {#if currentInfo.date}
-                    <div class="book-fact">
-                      <dt>{$t('Published')}</dt>
-                      <dd>{currentInfo.date}</dd>
-                    </div>
-                  {/if}
-                </dl>
 
-                {#if currentInfo.description}
-                  <p class="book-description">{currentInfo.description}</p>
-                {/if}
-              </div>
+                  <h2 class="book-title">{currentInfo.title || $t('Untitled')}</h2>
+
+                  {#if currentInfo.authors && currentInfo.authors.length > 0}
+                    <p class="book-authors">{currentInfo.authors.join(', ')}</p>
+                  {/if}
+
+                  <dl class="book-facts">
+                    {#if currentInfo.language}
+                      <div class="book-fact">
+                        <dt>{$t('Language')}</dt>
+                        <dd>{languageDisplayName(currentInfo.language, $currentLocale)}</dd>
+                      </div>
+                    {/if}
+                    {#if currentInfo.date}
+                      <div class="book-fact">
+                        <dt>{$t('Published')}</dt>
+                        <dd>{currentInfo.date}</dd>
+                      </div>
+                    {/if}
+                  </dl>
+
+                  {#if currentInfo.description}
+                    <p class="book-description">{currentInfo.description}</p>
+                  {/if}
+                </div>
+              </section>
             {/if}
           </div>
         </div>
@@ -512,13 +518,30 @@
 
   /* Reading-system-style detail: centred cover, title and author, a small facts
      list, then the description. */
+  /* The active-project preview, separated from the action buttons above by a
+     rule and its own heading. */
+  .active-project {
+    margin-block-start: var(--space-6);
+    padding-block-start: var(--space-6);
+    border-block-start: 1px solid var(--color-border-default);
+  }
+
+  .active-project-heading {
+    margin: 0;
+    text-align: center;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--color-text-secondary);
+  }
+
   .book-detail {
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
     gap: var(--space-2);
-    padding-block-start: var(--space-8);
+    padding-block-start: var(--space-5);
     max-inline-size: 38rem;
     margin-inline: auto;
   }
