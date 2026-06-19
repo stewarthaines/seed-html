@@ -206,9 +206,16 @@
     background: var(--color-bg-active);
   }
 
-  /* A clickable .xml catalog row: show it's interactive on hover. */
-  .remote-item.loadable:hover {
-    background: var(--color-bg-active);
+  /* A clickable .xml catalog row: solid-azure hover (white on azure), matching
+     the app's hover convention. The loaded catalog keeps its tint + left bar
+     rather than flipping to the hover fill. */
+  .remote-item.loadable:not(.current):hover {
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+
+  .remote-item.loadable:not(.current):hover .remote-meta {
+    color: var(--color-on-accent);
   }
 
   /* The catalog name acts as the load trigger — reset button chrome but keep
@@ -225,7 +232,14 @@
     cursor: pointer;
   }
 
-  .remote-item.loadable:hover .remote-info-btn :global(.filename),
+  /* On the azure hover fill the name turns white; on keyboard focus (no fill) it
+     reads azure to mark the load trigger. */
+  .remote-item.loadable:not(.current):hover
+    .remote-info-btn
+    :global(.filename) {
+    color: var(--color-on-accent);
+  }
+
   .remote-info-btn:focus-visible :global(.filename) {
     color: var(--color-accent);
   }
