@@ -9,6 +9,7 @@
   let {
     hasWorkspace = false,
     readOnly = false,
+    hasPackagedEpubs = false,
     enabledPluginIds = [],
     currentWorkspace = null,
     workspaceTitle = undefined,
@@ -25,6 +26,7 @@
   }: {
     hasWorkspace?: boolean;
     readOnly?: boolean;
+    hasPackagedEpubs?: boolean;
     enabledPluginIds?: string[];
     currentWorkspace?: any;
     workspaceTitle?: string | undefined;
@@ -60,6 +62,7 @@
     activeSection={sidebar.activeSection}
     {hasWorkspace}
     {readOnly}
+    {hasPackagedEpubs}
     {enabledPluginIds}
     {currentWorkspace}
     {workspaceTitle}

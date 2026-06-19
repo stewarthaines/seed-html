@@ -93,6 +93,18 @@
   // BlobURLManager will be created after FileStorageAPI is initialized
   let blobURLManager = $state<BlobURLManager>();
 
+  // Whether any packaged EPUBs exist — drives the Publish tab's visibility (it's
+  // hidden until there's something to publish). Refreshed on mount and whenever
+  // an EPUB is packaged (the `epub-packaged` event).
+  let hasPackagedEpubs = $state(false);
+  async function refreshPackagedEpubs() {
+    try {
+      hasPackagedEpubs = (await publishService.listPublishedEpubs()).length > 0;
+    } catch {
+      hasPackagedEpubs = false;
+    }
+  }
+
   // Transform engine initialization state
   let transformEngine: TransformEngine | null = null;
   let transformEngineReady = $state(false);
@@ -121,7 +133,7 @@
   let viewTitle = $derived(
     (
       {
-        about: $t('About'),
+        about: $t('About SEED.html'),
         workspace: $t('Projects'),
         metadata: $t('Metadata'),
         manifest: $t('Manifest'),
@@ -866,6 +878,9 @@
         enabledPluginIds = appState.getSettingsService().getEnabledPlugins();
         availableExtensions = await loadExtensionCatalog();
 
+        // Seed the Publish tab's visibility from any already-packaged EPUBs.
+        await refreshPackagedEpubs();
+
         // Check hash after appState is fully ready
         if (window.location.hash) {
           handleHashChange();
@@ -912,11 +927,13 @@
     window.addEventListener('select-spine-item', handleSelectSpineItem);
     window.addEventListener('clear-spine-selection', handleClearSpineSelection);
     window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener('epub-packaged', refreshPackagedEpubs);
 
     return () => {
       window.removeEventListener('select-spine-item', handleSelectSpineItem);
       window.removeEventListener('clear-spine-selection', handleClearSpineSelection);
       window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('epub-packaged', refreshPackagedEpubs);
       appState?.cleanup();
       transformEngine?.cleanup();
     };
@@ -947,6 +964,7 @@
   <LayoutManager
     hasWorkspace={!!currentWorkspaceId}
     readOnly={isReadOnly}
+    {hasPackagedEpubs}
     {enabledPluginIds}
     currentWorkspace={currentWorkspaceState}
     {workspaceTitle}
@@ -1019,7 +1037,7 @@
       {/if}
       <!-- Main content area - switches based on current view -->
       {#if currentView === 'about'}
-        <AboutView onCreateEpub={openCreateDialog} />
+        <AboutView />
       {:else if currentView === 'workspace' && initialized}
         <WorkspaceView
           onListWorkspaces={() => appState?.listWorkspaces() ?? Promise.resolve([])}
@@ -1301,6 +1319,14 @@
   .placeholder-content {
     padding: 1rem;
     color: var(--color-text-primary);
+  }
+
+  /* Collapsed sidebar is icon-only (48px) — its text placeholders ("No project
+     selected", "Loading project…") would wrap one character per line, so hide
+     them. Main-content placeholders aren't descendants of .sidebar, so they
+     stay. Mirrors the .package-label collapsed rule below. */
+  :global(.sidebar.collapsed) .placeholder-content {
+    display: none;
   }
 
   .placeholder-content h3 {

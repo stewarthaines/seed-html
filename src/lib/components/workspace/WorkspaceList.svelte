@@ -121,7 +121,17 @@
         <p class="loading-text">{$t('Loading projects…')}</p>
       </div>
     {:else if workspaces.length === 0}
-      <!-- No projects yet — the "Get Started" panel alongside is the first-run guide. -->
+      <!-- No projects yet — point first-run users at the "Get Started" panel
+           alongside, where Import from Catalog opens sample books. -->
+      <div class="empty-projects">
+        <p class="empty-projects-title">{$t('No projects yet')}</p>
+        <p class="empty-projects-hint">
+          {$t(
+            'New here? Open Import from Catalog to browse sample books and see what SEED.html can make.'
+          )}
+          <span class="empty-projects-arrow" aria-hidden="true">→</span>
+        </p>
+      </div>
     {:else if filteredWorkspaces.length === 0}
       <div class="no-results">
         <div class="no-results-icon" aria-hidden="true">🔍</div>
@@ -249,6 +259,31 @@
     text-align: center;
     padding: var(--space-8) var(--space-4);
     color: var(--color-text-secondary);
+  }
+
+  /* First-run guidance, shown in place of the (empty) project list. */
+  .empty-projects {
+    padding: var(--space-6) var(--space-4);
+    color: var(--color-text-secondary);
+  }
+
+  .empty-projects-title {
+    margin: 0 0 var(--space-2) 0;
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  .empty-projects-hint {
+    margin: 0;
+    font-size: var(--text-base);
+    line-height: 1.6;
+  }
+
+  .empty-projects-arrow {
+    color: var(--color-accent);
+    font-weight: 700;
+    white-space: nowrap;
   }
 
   .no-results-icon {

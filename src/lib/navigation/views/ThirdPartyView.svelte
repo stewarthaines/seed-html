@@ -115,7 +115,10 @@
       <p class="license-meta">
         {$t('about.attribution.content')} · {$t('about.version')}: {VERSION}
       </p>
-      <pre class="license-text">{LICENSE_TEXT}</pre>
+      <details class="disclosure">
+        <summary class="disclosure-summary">{$t('Show the full license text')}</summary>
+        <pre class="license-text">{LICENSE_TEXT}</pre>
+      </details>
     </section>
 
     {#snippet libraryItem(library: Library)}
@@ -134,30 +137,35 @@
       </div>
     {/snippet}
 
-    <!-- Third-party libraries folded in below the main license. -->
+    <!-- Third-party libraries, collapsed by default so the licence data doesn't
+         dominate the first impression. -->
     <section class="thirdparty-section">
-      <h2>{$t('about.thirdparty.title')}</h2>
-      <p class="thirdparty-intro">{$t('about.thirdparty.intro')}</p>
+      <details class="disclosure">
+        <summary class="disclosure-summary">
+          {$t('about.thirdparty.title')}
+        </summary>
+        <p class="thirdparty-intro">{$t('about.thirdparty.intro')}</p>
 
-      <div class="library-list">
-        {#each BUNDLED_LIBRARIES as library (library.name)}
-          {@render libraryItem(library)}
-        {/each}
-      </div>
-
-      {#if isHttp}
-        <h3 class="thirdparty-subheading">{$t('Available when running online')}</h3>
-        <p class="thirdparty-intro">
-          {$t(
-            'Additional libraries used when the editor runs online — the publish plugin and online-only features.'
-          )}
-        </p>
         <div class="library-list">
-          {#each HTTP_LIBRARIES as library (library.name)}
+          {#each BUNDLED_LIBRARIES as library (library.name)}
             {@render libraryItem(library)}
           {/each}
         </div>
-      {/if}
+
+        {#if isHttp}
+          <h3 class="thirdparty-subheading">{$t('Available when running online')}</h3>
+          <p class="thirdparty-intro">
+            {$t(
+              'Additional libraries used when the editor runs online — the publish plugin and online-only features.'
+            )}
+          </p>
+          <div class="library-list">
+            {#each HTTP_LIBRARIES as library (library.name)}
+              {@render libraryItem(library)}
+            {/each}
+          </div>
+        {/if}
+      </details>
     </section>
   </div>
 </div>
@@ -224,11 +232,56 @@
     border-top: 1px solid var(--color-border-default);
   }
 
-  .thirdparty-section h2 {
-    font-size: var(--text-lg);
+  /* Collapsible disclosures keep the verbose licence text out of the first
+     impression while leaving it one click away. */
+  .disclosure {
+    margin-top: var(--space-2);
+  }
+
+  /* Both summaries share one treatment: a clickable pill that fills azure with
+     white text on hover/focus (the app's interactive convention). The caret uses
+     currentColor, so it turns white along with the label. */
+  .disclosure-summary {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    list-style: none;
+    padding: var(--space-1) var(--space-2);
+    margin-inline-start: calc(-1 * var(--space-2));
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
     font-weight: var(--font-semibold);
-    color: var(--color-text-primary);
-    margin: 0 0 var(--space-2) 0;
+    color: var(--color-text-link);
+    transition:
+      background-color var(--duration-fast) ease,
+      color var(--duration-fast) ease;
+  }
+
+  .disclosure-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .disclosure-summary:hover,
+  .disclosure-summary:focus-visible {
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    outline: none;
+  }
+
+  /* Hand-drawn caret: points right when collapsed, down when open. */
+  .disclosure-summary::before {
+    content: '';
+    inline-size: 0.45rem;
+    block-size: 0.45rem;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform 0.15s ease;
+  }
+
+  .disclosure[open] > .disclosure-summary::before {
+    transform: rotate(45deg);
   }
 
   .thirdparty-intro {

@@ -2,8 +2,6 @@
   import { t } from '../../i18n';
   import PaneHeader from '$lib/components/layout/PaneHeader.svelte';
 
-  // Opens the app-owned new-project dialog (same as the Projects pane's "Create New").
-  let { onCreateEpub }: { onCreateEpub: () => void } = $props();
 </script>
 
 <div class="about-pane">
@@ -157,12 +155,6 @@
 
       <p>{$t('about.seed.p2')}</p>
     </section>
-
-    <div class="about-cta">
-      <button type="button" class="cta-button" onclick={onCreateEpub}>
-        {$t('Create an EPUB Now')}
-      </button>
-    </div>
   </div>
 </div>
 
@@ -285,46 +277,4 @@
     margin: 0 0 var(--space-3) 0;
   }
 
-  .about-cta {
-    margin: var(--space-6) 0 var(--space-3);
-    text-align: center;
-  }
-
-  /* Primary action, matching the "Package EPUB" button's token treatment. */
-  .cta-button {
-    display: inline-block;
-    padding: var(--space-3) var(--space-6);
-    font-size: var(--text-lg);
-    font-weight: var(--font-semibold);
-    color: white;
-    background-color: var(--color-button-primary-bg);
-    border: 1px solid var(--color-button-primary-bg);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition:
-      background-color var(--duration-fast) ease,
-      border-color var(--duration-fast) ease;
-  }
-
-  .cta-button:hover {
-    background-color: var(--color-button-primary-bg-hover);
-    border-color: var(--color-button-primary-bg-hover);
-  }
-
-  .cta-button:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--color-focus-ring);
-  }
-
-  /* Dark: a softer tonal fill, as the Package EPUB button does. */
-  :global([data-theme='dark']) .cta-button {
-    background-color: var(--color-surface-elevated);
-    border-color: var(--color-border-accent);
-    color: var(--color-text-link);
-  }
-
-  :global([data-theme='dark']) .cta-button:hover {
-    background-color: var(--color-surface-hover);
-    border-color: var(--color-border-focus);
-  }
 </style>

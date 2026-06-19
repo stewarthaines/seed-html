@@ -626,7 +626,7 @@
               </div>
             </SettingsSection>
 
-            {#if availablePlugins.length > 0}
+            {#if isAdvancedMode && availablePlugins.length > 0}
               <SettingsSection
                 title={$t('Plugins')}
                 summary={pluginsSummary}
@@ -652,7 +652,7 @@
               </SettingsSection>
             {/if}
 
-            {#if availableExtensions.length > 0}
+            {#if isAdvancedMode && availableExtensions.length > 0}
               <SettingsSection
                 title={$t('Available Extensions')}
                 summary={availableExtensionsSummary}

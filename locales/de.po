@@ -139,8 +139,8 @@ msgstr "Ein Name ist erforderlich."
 
 #: src/App.svelte
 #: src/lib/Sidebar.svelte
-msgid "About"
-msgstr "Über"
+msgid "About SEED.html"
+msgstr "Über SEED.html"
 
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "about.attribution.content"
@@ -746,10 +746,6 @@ msgstr "Erstellen"
 #: src/lib/components/workspace/WorkspaceActionBar.svelte
 msgid "Create a new minimal EPUB project"
 msgstr "Ein neues minimales EPUB-Projekt erstellen"
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "Create an EPUB Now"
-msgstr "Jetzt ein EPUB erstellen"
 
 #: plugins/publish-to-remote/src/App.svelte
 msgid "Create Catalog"
@@ -1717,6 +1713,10 @@ msgstr "Navigations-Editor"
 msgid "Navigation Preview"
 msgstr "Navigationsvorschau"
 
+#: src/lib/components/workspace/WorkspaceList.svelte
+msgid "New here? Open Import from Catalog to browse sample books and see what SEED.html can make."
+msgstr "Neu hier? Öffnen Sie „Aus Katalog importieren“, um Beispielbücher zu durchsuchen und zu sehen, was SEED.html kann."
+
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "New Project"
 msgstr "Neues Projekt"
@@ -1794,6 +1794,10 @@ msgstr "Keine Projekte gefunden"
 #: src/lib/components/workspace/WorkspaceList.svelte
 msgid "No projects match your search for \"{query}\""
 msgstr "Keine Projekte entsprechen Ihrer Suche nach \"{query}\""
+
+#: src/lib/components/workspace/WorkspaceList.svelte
+msgid "No projects yet"
+msgstr "Noch keine Projekte"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "No proxy was detected on this host, so this only works once the app is deployed with the WebDAV proxy."
@@ -2461,6 +2465,10 @@ msgstr "Projektbereiche anzeigen"
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Show rendered preview"
 msgstr "Gerenderte Vorschau anzeigen"
+
+#: src/lib/navigation/views/ThirdPartyView.svelte
+msgid "Show the full license text"
+msgstr "Vollständigen Lizenztext anzeigen"
 
 #: src/lib/components/workspace/WorkspaceList.svelte
 msgid "Showing {filtered} of {total} workspaces"

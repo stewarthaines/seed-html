@@ -139,7 +139,7 @@ msgstr ""
 
 #: src/App.svelte
 #: src/lib/Sidebar.svelte
-msgid "About"
+msgid "About SEED.html"
 msgstr ""
 
 #: src/lib/navigation/views/ThirdPartyView.svelte
@@ -745,10 +745,6 @@ msgstr ""
 
 #: src/lib/components/workspace/WorkspaceActionBar.svelte
 msgid "Create a new minimal EPUB project"
-msgstr ""
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "Create an EPUB Now"
 msgstr ""
 
 #: plugins/publish-to-remote/src/App.svelte
@@ -1717,6 +1713,10 @@ msgstr ""
 msgid "Navigation Preview"
 msgstr ""
 
+#: src/lib/components/workspace/WorkspaceList.svelte
+msgid "New here? Open Import from Catalog to browse sample books and see what SEED.html can make."
+msgstr ""
+
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "New Project"
 msgstr ""
@@ -1793,6 +1793,10 @@ msgstr ""
 
 #: src/lib/components/workspace/WorkspaceList.svelte
 msgid "No projects match your search for \"{query}\""
+msgstr ""
+
+#: src/lib/components/workspace/WorkspaceList.svelte
+msgid "No projects yet"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
@@ -2441,6 +2445,10 @@ msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Show rendered preview"
+msgstr ""
+
+#: src/lib/navigation/views/ThirdPartyView.svelte
+msgid "Show the full license text"
 msgstr ""
 
 #: src/lib/components/workspace/WorkspaceList.svelte

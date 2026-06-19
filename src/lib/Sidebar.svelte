@@ -25,6 +25,9 @@
     hasWorkspace?: boolean;
     /** Read-only EPUB: hide the add/import-chapter actions. */
     readOnly?: boolean;
+    /** Whether any packaged EPUBs exist — the Publish tab hides when there are
+        none (and no publish plugin is enabled), to declutter the first run. */
+    hasPackagedEpubs?: boolean;
     enabledPluginIds?: string[];
     currentWorkspace?: any;
     workspaceTitle?: string;
@@ -45,6 +48,7 @@
     activeSection = 'workspace',
     hasWorkspace = false,
     readOnly = false,
+    hasPackagedEpubs = false,
     enabledPluginIds = [],
     currentWorkspace = null,
     workspaceTitle = undefined,
@@ -90,7 +94,7 @@
     label: string;
     requiresWorkspace?: boolean;
   }> = [
-    { id: 'about', icon: Info, label: $t('About') },
+    { id: 'about', icon: Info, label: $t('About SEED.html') },
     { id: 'workspace', icon: House, label: $t('Projects') },
     { id: 'publish', icon: Export, label: $t('Publish') },
     { id: 'settings', icon: Gear, label: $t('Settings') },
@@ -120,6 +124,13 @@
     section.id === 'publish' && enabledPluginIds.includes(PUBLISH_PLUGIN_ID)
       ? PUBLISH_PLUGIN_ID
       : '';
+
+  // The Publish tab is only useful once there's something to publish — a packaged
+  // EPUB, or the publish-to-remote plugin enabled. Otherwise it's an empty page,
+  // so hide it (notably on first run, before any EPUB has been packaged).
+  const publishVisible = $derived(
+    hasPackagedEpubs || enabledPluginIds.includes(PUBLISH_PLUGIN_ID)
+  );
 
   // The book title hosts a disclosure that collapses the project nav group.
   const PROJECT_NAV_IDS: SidebarSection[] = ['settings', 'metadata', 'manifest', 'navigation'];
@@ -268,7 +279,7 @@
           {/if}
         {/if}
 
-        {#if !isProjectNav(section.id) || !hideProjectNav}
+        {#if (!isProjectNav(section.id) || !hideProjectNav) && (section.id !== 'publish' || publishVisible)}
           {@const subLabel = sectionSubLabel(section)}
           <button
             class="sidebar-section"
