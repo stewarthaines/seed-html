@@ -148,7 +148,7 @@ msgstr "Entwickelt von Stewart Haines."
 
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "about.disclaimer.summary"
-msgstr "Diese Software wird unter intensivem Einsatz von Coding-Agenten entwickelt, insbesondere des Produkts Claude Code von Anthropic."
+msgstr "Ein Großteil dieser Software wurde mit KI-Coding-Agenten geschrieben, vor allem mit Claude Code von Anthropic."
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "about.epub.editor"
@@ -2534,6 +2534,10 @@ msgstr "Nach Größe sortieren"
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Source"
 msgstr "Quelle"
+
+#: src/lib/navigation/views/ThirdPartyView.svelte
+msgid "Source on GitHub"
+msgstr "Quellcode auf GitHub"
 
 #: src/App.svelte
 msgid "Spine"

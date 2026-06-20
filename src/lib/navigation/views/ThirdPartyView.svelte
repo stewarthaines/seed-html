@@ -113,7 +113,15 @@
       <h2>{$t('about.license.title')}</h2>
       <p class="license-summary">{$t('about.license.summary')}</p>
       <p class="license-meta">
-        {$t('about.attribution.content')} · {$t('about.version')}: {VERSION}
+        {$t('about.attribution.content')} · {$t('about.version')}: {VERSION} ·
+        <a
+          href="https://github.com/stewarthaines/editme-svelte"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="external-link"
+        >
+          {$t('Source on GitHub')}
+        </a>
       </p>
       <details class="disclosure">
         <summary class="disclosure-summary">{$t('Show the full license text')}</summary>
