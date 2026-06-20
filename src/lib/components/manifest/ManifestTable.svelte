@@ -2,6 +2,7 @@
   import { t } from '../../i18n';
   import PaneHeader from '../layout/PaneHeader.svelte';
   import { SOURCE_ARCHIVE_NAME } from '../../source/index.js';
+  import { SEED_HTML_NAME } from '../../epub/seed-html.js';
   import type { ManifestItem, SourceItem, ValidationResult } from '../../manifest/types';
   import { X, CaretRight } from 'phosphor-svelte';
 
@@ -10,6 +11,7 @@
   let {
     manifestItems = [],
     sourceItems = [],
+    seedHtmlPresent = false,
     advancedMode = true,
     readOnly = false,
     validationErrors = [],
@@ -22,6 +24,9 @@
   }: {
     manifestItems?: ManifestItem[];
     sourceItems?: SourceItem[];
+    /** Whether the embedded editor (SEED.html) is present — shown as a
+        non-deletable payload row next to SEED.zip. */
+    seedHtmlPresent?: boolean;
     advancedMode?: boolean;
     /** Read-only EPUB: no Load File button, no per-row delete. */
     readOnly?: boolean;
@@ -65,6 +70,19 @@
             path: SOURCE_ARCHIVE_NAME,
             size: undefined,
             _type: 'source-zip' as const,
+            isPlaceholder: true,
+          },
+        ]
+      : []),
+    // The embedded editor build (SEED.html) — a non-manifest payload, shown in
+    // both modes next to SEED.zip. Informational and non-deletable.
+    ...(seedHtmlPresent
+      ? [
+          {
+            name: SEED_HTML_NAME,
+            path: SEED_HTML_NAME,
+            size: undefined,
+            _type: 'seed-html' as const,
             isPlaceholder: true,
           },
         ]
@@ -147,7 +165,9 @@
   // without a heading.
   const groups = $derived.by((): RowGroup[] => {
     const manifest = filteredItems.filter(i => i._type === 'manifest');
-    const source = filteredItems.filter(i => i._type === 'source' || i._type === 'source-zip');
+    const source = filteredItems.filter(
+      i => i._type === 'source' || i._type === 'source-zip' || i._type === 'seed-html'
+    );
     const opf = filteredItems.filter(i => i._type === 'opf');
 
     const root: typeof filteredItems = [];
@@ -244,8 +264,10 @@
 
   const handleRowClick = (
     item: ManifestItem | SourceItem | any,
-    type: 'manifest' | 'source' | 'opf' | 'source-zip'
+    type: 'manifest' | 'source' | 'opf' | 'source-zip' | 'seed-html'
   ) => {
+    // SEED.html is an informational, non-selectable payload row.
+    if (type === 'seed-html') return;
     // Treat source-zip as 'source' for compatibility with parent component
     const dispatchType = type === 'source-zip' ? 'source' : type;
     onItemSelect?.({ item, type: dispatchType });
@@ -254,7 +276,7 @@
   const handleRowKeyDown = (
     event: KeyboardEvent,
     item: ManifestItem | SourceItem | any,
-    type: 'manifest' | 'source' | 'opf' | 'source-zip'
+    type: 'manifest' | 'source' | 'opf' | 'source-zip' | 'seed-html'
   ) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
@@ -269,9 +291,11 @@
 
   const isItemSelected = (
     item: ManifestItem | SourceItem | any,
-    type: 'manifest' | 'source' | 'opf' | 'source-zip'
+    type: 'manifest' | 'source' | 'opf' | 'source-zip' | 'seed-html'
   ) => {
     if (!selectedItem) return false;
+    // SEED.html is never selectable.
+    if (type === 'seed-html') return false;
 
     // Treat source-zip as 'source' for selection comparison
     const compareType = type === 'source-zip' ? 'source' : type;
@@ -462,6 +486,7 @@
                   class:error={hasError}
                   class:source-item={itemType === 'source'}
                   class:source-zip-item={itemType === 'source-zip'}
+                  class:seed-html-item={itemType === 'seed-html'}
                   class:opf-item={itemType === 'opf'}
                   tabindex="0"
                   aria-selected={isSelected}
@@ -670,13 +695,20 @@
     background-color: var(--color-bg-error);
   }
 
-  .manifest-row.source-zip-item {
+  .manifest-row.source-zip-item,
+  .manifest-row.seed-html-item {
     font-style: italic;
     background-color: var(--color-bg-muted, rgba(0, 0, 0, 0.05));
   }
 
-  .manifest-row.source-zip-item .item-href {
+  .manifest-row.source-zip-item .item-href,
+  .manifest-row.seed-html-item .item-href {
     color: var(--color-text-secondary);
+  }
+
+  /* The SEED.html payload row is informational, not clickable. */
+  .manifest-row.seed-html-item {
+    cursor: default;
   }
 
   .group-heading {

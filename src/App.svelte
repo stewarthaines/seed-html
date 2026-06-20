@@ -820,8 +820,12 @@
         appState.workspace = navWorkspace;
       }
 
-      // Then package the EPUB.
-      const result = await epubPackager.packageEPUB(workspaceId);
+      // Then package the EPUB, embedding the editor (SEED.html) when the project
+      // opted in (Project Settings → "Add SEED.html to package").
+      const epubSettings = await appState?.getSettingsService().loadEPUBSettings(workspaceId);
+      const result = await epubPackager.packageEPUB(workspaceId, {
+        includeSeedHtml: epubSettings?.include_seed_html_in_package ?? false,
+      });
 
       if (result.success && result.blob && result.filename) {
         // Write a publish sidecar (metadata JSON + cover thumbnail) next to the

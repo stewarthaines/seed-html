@@ -15,6 +15,7 @@ import {
 } from './opf-utils.js';
 import { getMimeType } from '../utils/mime-types.js';
 import { SourceManager, SOURCE_ARCHIVE_NAME } from '../source/index.js';
+import { SEED_HTML_NAME } from './seed-html.js';
 import { PUBLISH_WORKSPACE_ID } from '../workspace/types.js';
 
 export { type EPUBMetadata } from './opf-utils.js';
@@ -43,6 +44,8 @@ export interface PackageProgress {
 export interface PackageOptions {
   compressionLevel?: 'fast' | 'balanced' | 'maximum';
   includeEditmeFiles?: boolean;
+  /** Embed the editor build (SEED.html) at the EPUB root as a non-manifest payload. */
+  includeSeedHtml?: boolean;
   validateStructure?: boolean;
   progressCallback?: (progress: PackageProgress) => void;
 }
@@ -74,7 +77,7 @@ export class EPUBPackager {
       // Storage should already be initialized via singleton pattern
 
       // 1. Read all workspace files using File Storage API
-      const files = await this.readWorkspaceFiles(workspaceId);
+      const files = await this.readWorkspaceFiles(workspaceId, options);
 
       if (files.length === 0) {
         return { success: false, error: 'Workspace is empty' };
@@ -154,12 +157,17 @@ export class EPUBPackager {
     }
   }
 
-  async readWorkspaceFiles(workspaceId: string): Promise<WorkspaceFile[]> {
+  async readWorkspaceFiles(
+    workspaceId: string,
+    options: PackageOptions = {}
+  ): Promise<WorkspaceFile[]> {
     const allFilePaths = await this.fileStorage.listFiles(workspaceId);
 
-    // Separate SOURCE/ files from EPUB files
+    // Separate SOURCE/ files from EPUB files. The editor build (SEED.html) lives
+    // at the workspace root but is a non-manifest payload added conditionally
+    // below (mirroring SEED.zip), so it's excluded from the generic sweep.
     const sourceFiles = allFilePaths.filter(f => f.startsWith('SOURCE/'));
-    const epubFiles = allFilePaths.filter(f => !f.startsWith('SOURCE/'));
+    const epubFiles = allFilePaths.filter(f => !f.startsWith('SOURCE/') && f !== SEED_HTML_NAME);
 
     const files: WorkspaceFile[] = [];
 
@@ -197,6 +205,26 @@ export class EPUBPackager {
       } catch (error) {
         // eslint-disable-next-line no-console
         console.warn(`Failed to create ${SOURCE_ARCHIVE_NAME}:`, error);
+      }
+    }
+
+    // Embed the editor build (SEED.html) at the EPUB root when enabled and present,
+    // making the EPUB self-editing. Not added to the OPF manifest — a data payload
+    // alongside SEED.zip.
+    if (options.includeSeedHtml) {
+      try {
+        if (await this.fileStorage.fileExists(workspaceId, SEED_HTML_NAME)) {
+          const seedHtml = await this.fileStorage.readFile(workspaceId, SEED_HTML_NAME);
+          files.push({
+            path: SEED_HTML_NAME,
+            content: seedHtml,
+            size: seedHtml.byteLength,
+            mimeType: 'text/html',
+          });
+        }
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.warn(`Failed to embed ${SEED_HTML_NAME}:`, error);
       }
     }
 

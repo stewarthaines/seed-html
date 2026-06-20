@@ -242,6 +242,7 @@ describe('SettingsService Contract Tests', () => {
         spine_basename: 'section',
         audio_clip_template: ':clip[<label>]{src=<href> begin=<begin> end=<end>}',
         filename_template: '<title> - <date>',
+        include_seed_html_in_package: false,
         cover: {
           template: 'modern',
           background_color: '#ffffff',
@@ -274,6 +275,7 @@ describe('SettingsService Contract Tests', () => {
         spine_basename: 'chapter',
         audio_clip_template: ':clip[<label>]{src=<href> begin=<begin> end=<end>}',
         filename_template: '<title> - <author> - <date>',
+        include_seed_html_in_package: false,
       });
     });
 

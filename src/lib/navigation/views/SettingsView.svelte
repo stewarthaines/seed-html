@@ -28,6 +28,14 @@
   import { LOCALE_CONFIGS, isLocaleEnabled } from '../../i18n/locale-config.js';
   import { themeStore } from '../../stores/theme.js';
   import { advancedMode } from '../../stores/advanced-mode.js';
+  import { FileStorageAPI } from '../../storage/index.js';
+  import {
+    canFetchSelfHtml,
+    fetchSelfHtml,
+    hasSeedHtml,
+    storeSeedHtml,
+    removeSeedHtml,
+  } from '../../epub/seed-html.js';
   import type { PluginManifestEntry } from '../../plugins/contract';
   import type { ExtensionCatalogEntry } from '../../extensions/extension-catalog';
 
@@ -260,6 +268,98 @@
     } catch (err) {
       error = err instanceof Error ? err.message : $t('Failed to save EPUB settings');
       epubSettings = { ...epubSettings, print: previous };
+    }
+  }
+
+  // ── Embedding the editor (SEED.html) into the package ──────────────────────
+  const fileStorage = FileStorageAPI.getInstance();
+  let seedHtmlPresent = $state(false);
+  let seedHtmlBusy = $state(false);
+  let seedHtmlInput = $state<HTMLInputElement | null>(null);
+
+  // Track whether the editor build is already stored in this workspace.
+  $effect(() => {
+    if (!workspaceId) {
+      seedHtmlPresent = false;
+      return;
+    }
+    const id = workspaceId;
+    hasSeedHtml(fileStorage, id)
+      .then(present => {
+        if (workspaceId === id) seedHtmlPresent = present;
+      })
+      .catch(() => {});
+  });
+
+  // Persist the include flag (optimistic save + revert), mirroring updatePrint.
+  async function setSeedHtmlIncluded(value: boolean): Promise<void> {
+    if (!workspaceId || !epubSettings) return;
+    const previous = epubSettings.include_seed_html_in_package;
+    const updatedSettings: EPUBSettings = {
+      ...epubSettings,
+      include_seed_html_in_package: value,
+    };
+    epubSettings = updatedSettings;
+    try {
+      await settingsService.saveEPUBSettings(workspaceId, updatedSettings);
+      onSettingsChanged?.();
+    } catch (err) {
+      error = err instanceof Error ? err.message : $t('Failed to save EPUB settings');
+      epubSettings = { ...epubSettings, include_seed_html_in_package: previous };
+    }
+  }
+
+  // Toggle: on http(s), capture the running page automatically; offline (file://),
+  // fetch is blocked, so leave the flag on and let the user load the file. Off
+  // removes the stored copy.
+  async function toggleSeedHtml(checked: boolean): Promise<void> {
+    if (!workspaceId || seedHtmlBusy) return;
+    seedHtmlBusy = true;
+    try {
+      if (checked) {
+        await setSeedHtmlIncluded(true);
+        if (!seedHtmlPresent && canFetchSelfHtml()) {
+          try {
+            await storeSeedHtml(fileStorage, workspaceId, await fetchSelfHtml());
+            seedHtmlPresent = true;
+          } catch (err) {
+            // Leave the flag on; the user can still load the file manually.
+            error = err instanceof Error ? err.message : $t('Could not capture the editor');
+          }
+        }
+      } else {
+        await setSeedHtmlIncluded(false);
+        try {
+          await removeSeedHtml(fileStorage, workspaceId);
+        } catch {
+          // best-effort
+        }
+        seedHtmlPresent = false;
+      }
+    } finally {
+      seedHtmlBusy = false;
+    }
+  }
+
+  // Manual fallback: store a user-picked SEED.html (used offline, where the page
+  // can't fetch its own bytes).
+  async function onSeedHtmlFile(event: Event): Promise<void> {
+    if (!workspaceId) return;
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    seedHtmlBusy = true;
+    try {
+      await storeSeedHtml(fileStorage, workspaceId, await file.arrayBuffer());
+      seedHtmlPresent = true;
+      if (!(epubSettings?.include_seed_html_in_package ?? false)) {
+        await setSeedHtmlIncluded(true);
+      }
+    } catch (err) {
+      error = err instanceof Error ? err.message : $t('Failed to save EPUB settings');
+    } finally {
+      seedHtmlBusy = false;
     }
   }
 
@@ -806,6 +906,46 @@
                   persistKey="settings-project-epub"
                 >
                   <div class="setting-group">
+                    <label class="setting-label">
+                      <input
+                        type="checkbox"
+                        checked={epubSettings?.include_seed_html_in_package ?? false}
+                        onchange={e =>
+                          toggleSeedHtml((e.currentTarget as HTMLInputElement).checked)}
+                        disabled={epubLoading || seedHtmlBusy}
+                      />
+                      <span class="setting-text">{$t('Add SEED.html to package')}</span>
+                    </label>
+                    <p class="setting-description">
+                      {$t(
+                        'Embed the editor itself in the EPUB so the book can be reopened and edited. Added as a non-manifest file alongside SEED.zip.'
+                      )}
+                    </p>
+                    {#if (epubSettings?.include_seed_html_in_package ?? false) && !seedHtmlPresent}
+                      <div class="seed-html-load">
+                        <button
+                          type="button"
+                          class="btn btn-secondary btn-sm"
+                          onclick={() => seedHtmlInput?.click()}
+                          disabled={seedHtmlBusy}
+                        >
+                          {seedHtmlBusy ? $t('Loading…') : $t('Load SEED.html…')}
+                        </button>
+                        <span class="setting-description">
+                          {$t('Choose the SEED.html file to embed.')}
+                        </span>
+                        <input
+                          bind:this={seedHtmlInput}
+                          type="file"
+                          accept=".html,text/html"
+                          style="display: none"
+                          onchange={onSeedHtmlFile}
+                        />
+                      </div>
+                    {/if}
+                  </div>
+
+                  <div class="setting-group">
                     <label for="filename-template" class="setting-label-text">
                       {$t('Packaged Filename')}
                     </label>
@@ -1123,6 +1263,19 @@
   /* Lead-in copy that sits above its control (not indented under a checkbox). */
   .setting-description--lead {
     margin: 0 0 0.5rem 0;
+  }
+
+  /* Manual "Load SEED.html…" fallback row (offline, where fetch is blocked). */
+  .seed-html-load {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: var(--space-2) 0 0 1.75rem;
+  }
+
+  .seed-html-load .setting-description {
+    margin: 0;
   }
 
   .setting-label-text {

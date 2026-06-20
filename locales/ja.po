@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: EDITME EPUB Editor\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-19\n"
-"PO-Revision-Date: 2026-06-19\n"
+"POT-Creation-Date: 2026-06-20\n"
+"PO-Revision-Date: 2026-06-20\n"
 "Language: ja\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -324,6 +324,10 @@ msgid "Add second editor pane"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
+msgid "Add SEED.html to package"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Add to project"
 msgstr ""
 
@@ -580,6 +584,10 @@ msgstr ""
 msgid "Choose a generator"
 msgstr ""
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Choose the SEED.html file to embed."
+msgstr ""
+
 #: src/lib/components/manifest/ManifestTable.svelte
 msgid "Clear filter"
 msgstr ""
@@ -707,6 +715,10 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 msgid "Copy URL"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Could not capture the editor"
 msgstr ""
 
 #: plugins/publish-to-remote/src/App.svelte
@@ -1003,6 +1015,10 @@ msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "element"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Embed the editor itself in the EPUB so the book can be reopened and edited. Added as a non-manifest file alongside SEED.zip."
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
@@ -1527,6 +1543,10 @@ msgstr ""
 msgid "Load from Selection"
 msgstr ""
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Load SEED.html…"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 msgid "Load this catalog into the editor"
 msgstr ""
@@ -1583,6 +1603,7 @@ msgstr ""
 #: src/lib/components/settings/GeneratorSettings.svelte
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 #: src/lib/navigation/views/PublishView.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Loading…"
 msgstr ""
 

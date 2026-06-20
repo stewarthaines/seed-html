@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: EDITME EPUB Editor\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-19\n"
-"PO-Revision-Date: 2026-06-19\n"
+"POT-Creation-Date: 2026-06-20\n"
+"PO-Revision-Date: 2026-06-20\n"
 "Language: de\n"
 "Language-Team: \n"
 "Last-Translator: Claude (machine first pass)\n"
@@ -324,6 +324,10 @@ msgid "Add second editor pane"
 msgstr "Zweiten Editor-Bereich hinzufügen"
 
 #: src/lib/navigation/views/SettingsView.svelte
+msgid "Add SEED.html to package"
+msgstr "SEED.html zum Paket hinzufügen"
+
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Add to project"
 msgstr "Zum Projekt hinzufügen"
 
@@ -580,6 +584,10 @@ msgstr "Auswahlmöglichkeiten"
 msgid "Choose a generator"
 msgstr "Generator auswählen"
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Choose the SEED.html file to embed."
+msgstr "Wählen Sie die einzubettende SEED.html-Datei."
+
 #: src/lib/components/manifest/ManifestTable.svelte
 msgid "Clear filter"
 msgstr "Filter löschen"
@@ -708,6 +716,10 @@ msgstr "Kopieren"
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 msgid "Copy URL"
 msgstr "URL kopieren"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Could not capture the editor"
+msgstr "Editor konnte nicht erfasst werden"
 
 #: plugins/publish-to-remote/src/App.svelte
 msgid "Could not load catalog: {error}"
@@ -1004,6 +1016,10 @@ msgstr "Ausgabe"
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "element"
 msgstr "Element"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Embed the editor itself in the EPUB so the book can be reopened and edited. Added as a non-manifest file alongside SEED.zip."
+msgstr "Den Editor selbst in das EPUB einbetten, damit das Buch erneut geöffnet und bearbeitet werden kann. Wird als Datei außerhalb des Manifests neben SEED.zip hinzugefügt."
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Endpoint URL"
@@ -1527,6 +1543,10 @@ msgstr "Datei laden"
 msgid "Load from Selection"
 msgstr "Aus Auswahl laden"
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Load SEED.html…"
+msgstr "SEED.html laden…"
+
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 msgid "Load this catalog into the editor"
 msgstr "Diesen Katalog im Editor laden"
@@ -1583,6 +1603,7 @@ msgstr "Wird geladen..."
 #: src/lib/components/settings/GeneratorSettings.svelte
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 #: src/lib/navigation/views/PublishView.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Loading…"
 msgstr "Wird geladen…"
 

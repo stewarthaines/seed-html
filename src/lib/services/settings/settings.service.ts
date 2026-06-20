@@ -46,6 +46,9 @@ export interface EPUBSettings {
   audio_clip_template?: string;
   /** Template for the packaged .epub filename. Placeholders: <title>, <author>, <date>. */
   filename_template?: string;
+  /** Embed the editor (SEED.html) into the packaged EPUB as a non-manifest payload,
+      making it self-editing. */
+  include_seed_html_in_package?: boolean;
   cover?: {
     template: string;
     background_color: string;
@@ -336,6 +339,8 @@ export class SettingsService {
         spine_basename: settings.spine_basename ?? defaults.spine_basename,
         audio_clip_template: settings.audio_clip_template ?? defaults.audio_clip_template,
         filename_template: settings.filename_template ?? defaults.filename_template,
+        include_seed_html_in_package:
+          settings.include_seed_html_in_package ?? defaults.include_seed_html_in_package,
         cover: settings.cover
           ? {
               template: settings.cover.template ?? 'default',
@@ -387,6 +392,7 @@ export class SettingsService {
       spine_basename: 'chapter',
       audio_clip_template: ':clip[<label>]{src=<href> begin=<begin> end=<end>}',
       filename_template: DEFAULT_FILENAME_TEMPLATE,
+      include_seed_html_in_package: false,
     };
   }
 

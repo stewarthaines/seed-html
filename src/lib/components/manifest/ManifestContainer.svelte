@@ -4,6 +4,8 @@
   import ManifestTable from './ManifestTable.svelte';
   import { ManifestUtils } from '../../manifest/utils.js';
   import { generateEPUBPath, ensureUniqueHref } from '../../epub/opf-utils.js';
+  import { FileStorageAPI } from '../../storage/index.js';
+  import { hasSeedHtml } from '../../epub/seed-html.js';
   import type { ManifestItem, SourceItem, ValidationResult } from '../../manifest/types';
   import type {
     WorkspaceService,
@@ -37,6 +39,8 @@
   // Component state using runes
   let manifestItems = $state<ManifestItem[]>([]);
   let sourceItems = $state<SourceItem[]>([]);
+  // Whether the editor build (SEED.html) is embedded — shown as a non-deletable row.
+  let seedHtmlPresent = $state(false);
   let selectedItem = $state<ManifestItem | SourceItem | any | null>(null);
   let selectedItemType = $state<'manifest' | 'source' | 'opf' | null>(null);
   let validationErrors = $state<ValidationResult[]>([]);
@@ -89,6 +93,10 @@
       } else {
         sourceItems = [];
       }
+
+      seedHtmlPresent = await hasSeedHtml(FileStorageAPI.getInstance(), workspace.id).catch(
+        () => false
+      );
 
       // Skip validation for now - not essential for basic functionality
       validationErrors = [];
@@ -332,6 +340,7 @@
   <ManifestTable
     {manifestItems}
     {sourceItems}
+    {seedHtmlPresent}
     {advancedMode}
     {readOnly}
     {validationErrors}

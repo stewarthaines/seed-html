@@ -1,36 +1,41 @@
 # EPUB Embedding Guide
 
-This guide explains how to create Active EPUBs by embedding EDITME.html within EPUB files, enabling self-editing capabilities.
+This guide explains how to create SEED EPUBs by embedding SEED.html within EPUB files, enabling self-editing capabilities.
 
 ## Table of Contents
 
-1. [Active EPUB Format](#active-epub-format)
+1. [SEED EPUB Format](#seed-epub-format)
 2. [Extraction Instructions](#extraction-instructions)
 
-## Active EPUB Format
+## SEED EPUB Format
 
 ### Overview
 
-An Active EPUB is a standard EPUB that includes EDITME.html, allowing readers to extract and use the editor to modify the book. This creates a self-contained, editable publication.
+A SEED EPUB is a standard EPUB that includes SEED.html, allowing readers to extract and use the editor to modify the book. This creates a self-contained, editable publication.
 
 ### Structure
 
+Both editor payloads — SEED.html (the app) and SEED.zip (the source) — sit at the
+**EPUB root**, alongside `mimetype` and `META-INF/`, and are intentionally **not**
+listed in the OPF manifest:
+
 ```
-ActiveEPUB/
+SEED-EPUB/
 ├── mimetype
 ├── META-INF/
 │   └── container.xml
-└── OEBPS/
-    ├── content.opf          # EPUB manifest
-    ├── nav.xhtml            # Navigation
-    ├── EDITME.html          # The editor application
-    ├── SEED.zip           # Editor source files
-    └── [book content files]
+├── OEBPS/
+│   ├── content.opf          # EPUB manifest (publication resources only)
+│   ├── nav.xhtml            # Navigation
+│   └── [book content files]
+├── SEED.zip                # Editor source files (non-manifest payload)
+└── SEED.html               # The editor application (non-manifest payload)
 ```
 
 ### Key Components
 
-1. **EDITME.html** - The complete editor application
+1. **SEED.html** - The complete single-file editor application. Embedding it is
+   opt-in per project (Project Settings → "Add SEED.html to package").
 2. **SEED.zip** (the editor-source archive; formerly `SOURCE.zip`, which imports
    still accept) - Contains:
    - Plain text source files
@@ -58,28 +63,28 @@ SOURCE/
 
 #### Manifest treatment
 
-SEED.zip is a **non-publication data file** and is intentionally **not** listed in the
-OPF manifest — do not add it. Per [EPUB 3.3](https://www.w3.org/TR/epub-33/#sec-manifest-elem),
+SEED.html and SEED.zip are **non-publication data files** and are intentionally **not**
+listed in the OPF manifest — do not add them. Per [EPUB 3.3](https://www.w3.org/TR/epub-33/#sec-manifest-elem),
 the manifest lists _only_ publication resources (those that contribute to rendering), and
 the container _may_ carry data files "to allow data files to travel with an EPUB
-publication" — which is exactly SEED.zip's role. Declaring it would be non-conformant (a
+publication" — which is exactly their role. Declaring them would be non-conformant (a
 non-publication resource in the manifest) and could invite other validator flags.
 
 Validation is unaffected: reading systems ignore undeclared container files, the bundled
-checker (`@likecoin/epubcheck-ts`) emits nothing for it, and full Java EPUBCheck reports at
+checker (`@likecoin/epubcheck-ts`) emits nothing for them, and full Java EPUBCheck reports at
 most a non-blocking `OPF-003` _warning_ — expected, not a bug. Note the contrast with an
 _orphaned_ content file (e.g. a stray `OEBPS/Images/*` that triggers `PKG-010`): that's an
-accident to clean up, whereas SEED.zip is a deliberate payload.
+accident to clean up, whereas SEED.html / SEED.zip are deliberate payloads.
 
-### 3: Create Extraction Instructions
+## Extraction Instructions
 
-Create a new Spine Item with instructions like this;
+Create a new Spine Item with instructions like this:
 
 ```text
-EXTRACTING THE EDITME EDITOR
-============================
+EXTRACTING THE SEED.html EDITOR
+===============================
 
-This EPUB contains EDITME.html, a browser-based editor that can modify this book.
+This EPUB contains SEED.html, a browser-based editor that can modify this book.
 
 To extract and use the editor:
 
@@ -88,12 +93,12 @@ METHOD 1 - Manual Extraction
 1. Make a copy of this EPUB file
 2. Change the file extension from .epub to .zip
 3. Extract the ZIP file to a folder
-4. Navigate to OEBPS/EDITME.html
-5. Copy EDITME.html to your preferred location
+4. Find SEED.html at the root of the extracted folder
+5. Copy SEED.html to your preferred location
 
 USING THE EDITOR
 ----------------
-1. Open EDITME.html in a modern web browser
+1. Open SEED.html in a modern web browser
 2. The editor works completely offline
 3. Import this EPUB to begin editing
 4. Export your changes as a new EPUB
