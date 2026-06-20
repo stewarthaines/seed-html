@@ -13,7 +13,11 @@
  */
 
 import type { FileStorageAPI } from '../storage/index.js';
-import { generateXHTMLDocument, serializeInnerXHTML } from './xhtml-template.js';
+import {
+  generateXHTMLDocument,
+  serializeInnerXHTML,
+  serializeElementAttributes,
+} from './xhtml-template.js';
 import { primaryLanguage } from '../epub/opf-utils.js';
 import { DEFAULT_FXL_VIEWPORT } from '../epub/fixed-layout.js';
 import { readChapterMeta } from '../spine/chapter-metadata.js';
@@ -243,10 +247,11 @@ export class SpinePreviewManager {
 
       // Step 3: Auto-generate metadata and create final XHTML document.
       // The transform engine returns a full <body> element; extract its inner
-      // HTML so the shared template generator can wrap it consistently.
+      // HTML (so the shared template wraps it consistently) AND its attributes
+      // (so a class/data-* a DOM transform set on <body> survives).
       const metadata = await this.generateChapterMetadata();
-      const bodyContent = this.extractBodyContent(transformResult.html || '');
-      const xhtml = generateXHTMLDocument(bodyContent, metadata);
+      const { content, bodyAttributes } = this.extractBody(transformResult.html || '');
+      const xhtml = generateXHTMLDocument(content, metadata, bodyAttributes);
 
       // Step 4: Save XHTML as spine item content to manifest
       if (this.config.persistToManifest) {
@@ -467,16 +472,21 @@ export class SpinePreviewManager {
   }
 
   /**
-   * Extract the inner HTML of the transform engine's <body> output so it can be
-   * wrapped by the shared generateXHTMLDocument template. Uses DOMParser rather
-   * than string surgery (per codebase parsing preferences).
+   * Split the transform engine's <body> output into the inner content (to wrap in
+   * the shared template) and the body's own attributes (so a class/data-* a DOM
+   * transform set on <body> survives into the output). Uses DOMParser rather than
+   * string surgery (per codebase parsing preferences).
    */
-  private extractBodyContent(html: string): string {
+  private extractBody(html: string): { content: string; bodyAttributes: string } {
     const doc = new DOMParser().parseFromString(html, 'text/html');
+    if (!doc.body) return { content: html, bodyAttributes: '' };
     // Serialize as XHTML so void elements (<br/>, <hr/>, <img/>) stay
     // self-closed; reading innerHTML would emit HTML-style <br>, which breaks
     // the application/xhtml+xml document the shared template produces.
-    return doc.body ? serializeInnerXHTML(doc.body) : html;
+    return {
+      content: serializeInnerXHTML(doc.body),
+      bodyAttributes: serializeElementAttributes(doc.body),
+    };
   }
 
   /**

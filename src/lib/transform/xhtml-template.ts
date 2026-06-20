@@ -17,7 +17,11 @@ export type { ChapterMetadata } from './types.js';
 /**
  * Generates XHTML documents with proper metadata and structure
  */
-export function generateXHTMLDocument(content: string, metadata: ChapterMetadata): string {
+export function generateXHTMLDocument(
+  content: string,
+  metadata: ChapterMetadata,
+  bodyAttributes = ''
+): string {
   const escapedTitle = escapeHtml(metadata.title);
 
   const stylesheetLinks = metadata.stylesheets
@@ -45,16 +49,39 @@ export function generateXHTMLDocument(content: string, metadata: ChapterMetadata
   // honour CSS for it (per the EPUB/HTML specs and DAISY guidance).
   const dirAttr = isRtlLanguage(metadata.language) ? ' dir="rtl"' : '';
 
+  // Declare the EPUB Structural Semantics namespace so content (or a DOM transform)
+  // can use `epub:type` — e.g. `<body epub:type="cover">` — without the
+  // application/xhtml+xml parser rejecting an undeclared `epub:` prefix.
   return `<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="${escapeHtml(metadata.language)}" lang="${escapeHtml(metadata.language)}"${dirAttr}>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="${escapeHtml(metadata.language)}" lang="${escapeHtml(metadata.language)}"${dirAttr}>
   <head>
     <title>${escapedTitle}</title>
 ${viewportTag}${viewportTag ? '\n' : ''}${stylesheetLinks}${stylesheetLinks ? '\n' : ''}${scriptTags}${scriptTags ? '\n' : ''}${customHeadContent}${customHeadContent ? '\n' : ''}  </head>
-  <body>
+  <body${bodyAttributes}>
     ${ensureMainLandmark(content)}
   </body>
 </html>`;
+}
+
+/**
+ * Serialize an element's attributes as an XHTML attribute string (` name="value"…`),
+ * with values escaped so the result is safe to splice into the
+ * `application/xhtml+xml` document. Returns `''` when there are no attributes.
+ *
+ * Used to carry a chapter `<body>`'s attributes — e.g. a `class` a DOM transform
+ * added via `htmlDocument.body.classList.add(...)` — through into the final output,
+ * since the template otherwise emits a fresh, attribute-less `<body>`.
+ *
+ * Namespace declarations (`xmlns` / `xmlns:*`) are dropped: the engine's
+ * XMLSerializer adds a redundant `xmlns` when serializing a lone `<body>`, and the
+ * final document already declares the namespace on `<html xmlns>`.
+ */
+export function serializeElementAttributes(element: Element): string {
+  return Array.from(element.attributes)
+    .filter(attr => attr.name !== 'xmlns' && !attr.name.startsWith('xmlns:'))
+    .map(attr => ` ${attr.name}="${escapeHtml(attr.value)}"`)
+    .join('');
 }
 
 /**
