@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { t } from '../i18n';
   import SpineItem from './SpineItem.svelte';
+  import EditSpineItemDialog from './EditSpineItemDialog.svelte';
   import type { SpineService } from '../services/spine/spine.service.js';
   import type { SpineItemWithSource } from '../spine/types.js';
   import type { WorkspaceState } from '../services/workspace/workspace.service.js';
@@ -29,6 +30,9 @@
   let isLoading = $state(true);
   let error = $state<string | null>(null);
   let isReordering = false;
+
+  // The spine item currently open in the edit dialog (null = closed).
+  let editingItem = $state<SpineItemWithSource | null>(null);
 
   // Drag feedback: the item being dragged (dimmed) and the insertion gap where it
   // would land (an index in 0..length; the line is drawn before item `dropGap`,
@@ -380,39 +384,31 @@
     }
   }
 
-  // Handle rename ID request
-  async function handleRenameId(itemId: string) {
+  // Save edits from the dialog: rename the id and/or toggle the linear flag.
+  // Errors propagate to the dialog (it stays open and shows the message).
+  async function handleSaveEdit(item: SpineItemWithSource, newId: string, linear: boolean) {
     if (!workspace || readOnly) return;
 
-    const newId = window.prompt($t('Enter new ID for {item}:', { item: itemId }), itemId);
+    let effectiveId = item.id;
 
-    if (!newId || newId === itemId) return;
-
-    try {
-      isLoading = true;
-      const result = await spineService.renameChapterId(workspace, itemId, newId);
-
-      // Update workspace state
+    if (newId !== item.id) {
+      const result = await spineService.renameChapterId(workspace, item.id, newId);
       workspace = result.updatedWorkspace;
-      if (onWorkspaceUpdate) {
-        onWorkspaceUpdate(workspace);
-      }
-
-      // Reload spine items with updated workspace
-      await loadSpineItems();
-
-      // Update selection to new ID
-      handleSelectItem(newId);
-    } catch (err) {
-      console.error('Failed to rename chapter ID:', err);
-      alert(
-        $t('Failed to rename chapter ID: {error}', {
-          error: err instanceof Error ? err.message : 'Unknown error',
-        })
-      );
-    } finally {
-      isLoading = false;
+      effectiveId = newId;
     }
+
+    if (linear !== item.linear) {
+      const result = await spineService.setChapterLinear(workspace, effectiveId, linear);
+      workspace = result.updatedWorkspace;
+    }
+
+    if (onWorkspaceUpdate) {
+      onWorkspaceUpdate(workspace);
+    }
+
+    await loadSpineItems();
+    handleSelectItem(effectiveId);
+    editingItem = null;
   }
 </script>
 
@@ -456,7 +452,7 @@
             onSelect={() => handleSelectItem(item.id)}
             onMoveUp={async () => await handleMoveUp(index)}
             onMoveDown={async () => await handleMoveDown(index)}
-            onRenameId={async () => await handleRenameId(item.id)}
+            onEdit={() => (editingItem = item)}
             onDelete={async () => await handleDeleteItem(item.id)}
             dragHandleProps={{
               draggable: true,
@@ -479,6 +475,16 @@
     </div>
   {/if}
 </div>
+
+{#if editingItem}
+  {@const item = editingItem}
+  <EditSpineItemDialog
+    currentId={item.id}
+    linear={item.linear}
+    onSave={({ newId, linear }) => handleSaveEdit(item, newId, linear)}
+    onClose={() => (editingItem = null)}
+  />
+{/if}
 
 <style>
   .spine-sidebar {

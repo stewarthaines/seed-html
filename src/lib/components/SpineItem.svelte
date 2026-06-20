@@ -8,6 +8,7 @@
     ArrowUp,
     ArrowDown,
     Warning,
+    EyeSlash,
   } from 'phosphor-svelte';
 
   interface Props {
@@ -26,7 +27,7 @@
     onSelect: () => void;
     onMoveUp: () => Promise<void>;
     onMoveDown: () => Promise<void>;
-    onRenameId: () => Promise<void>;
+    onEdit: () => void;
     onDelete: () => Promise<void>;
   }
 
@@ -44,7 +45,7 @@
     onSelect,
     onMoveUp,
     onMoveDown,
-    onRenameId,
+    onEdit,
     onDelete,
   }: Props = $props();
 
@@ -94,8 +95,14 @@
   const showMoveButtons = $derived(isSelected && !compact && !readOnly);
 
   // A missing source file is a real problem in an editable project, but expected
-  // in a read-only EPUB — so don't flag it there.
-  const hasWarning = $derived(!readOnly && (item.hasSourceFile === false || !item.linear));
+  // in a read-only EPUB — so don't flag it there. A non-linear item is an
+  // intentional choice (set via the edit dialog), not a warning — see
+  // .nonlinear-indicator below.
+  const hasWarning = $derived(!readOnly && item.hasSourceFile === false);
+
+  // `linear="no"`: in the book but outside the default reading order. Shown as a
+  // subtle, muted badge (not an error) in the expanded list.
+  const isNonLinear = $derived(!item.linear);
 
   // Generate compact label for collapsed sidebar
   function generateCompactLabel(itemId: string): string {
@@ -151,10 +158,10 @@
         class="btn btn-icon btn-icon-sm"
         onclick={e => {
           e.stopPropagation();
-          onRenameId();
+          onEdit();
         }}
-        aria-label={$t('Rename {item}', { item: item.id })}
-        title={$t('Rename {item}', { item: item.id })}
+        aria-label={$t('Edit {item}', { item: item.id })}
+        title={$t('Edit {item}', { item: item.id })}
       >
         <PencilSimple size={14} aria-hidden="true" />
       </button>
@@ -207,6 +214,16 @@
         <ArrowDown size={14} aria-hidden="true" />
       </button>
     </div>
+  {/if}
+
+  {#if !compact && isNonLinear}
+    <span
+      class="nonlinear-indicator"
+      aria-label={$t('Not in the linear reading order')}
+      title={$t('Not in the linear reading order')}
+    >
+      <EyeSlash size={14} aria-hidden="true" />
+    </span>
   {/if}
 
   {#if !compact && hasWarning}
@@ -336,6 +353,15 @@
     display: inline-flex;
     align-items: center;
     color: var(--color-status-warning);
+  }
+
+  /* Non-linear is a deliberate setting, not a problem — muted, never the warning
+     colour. */
+  .nonlinear-indicator {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    color: var(--color-text-tertiary);
   }
 
   .move-buttons {

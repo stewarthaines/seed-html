@@ -652,8 +652,11 @@ export class WorkspaceService {
       );
     }
 
-    // Create spine items
-    const spine: SpineItem[] = itemIds.map(idref => ({ idref }));
+    // Create spine items, preserving each item's existing attributes (linear,
+    // properties) by idref — reordering must not silently drop a `linear="no"`
+    // flag or spine properties. Ids new to the spine fall back to a bare item.
+    const existingByIdref = new Map(workspace.opf.spine.map(item => [item.idref, item]));
+    const spine: SpineItem[] = itemIds.map(idref => existingByIdref.get(idref) ?? { idref });
 
     // Create updated workspace
     const updatedWorkspace: WorkspaceState = {
@@ -725,6 +728,38 @@ export class WorkspaceService {
       opf: {
         ...workspace.opf,
         spine: workspace.opf.spine.filter(item => item.idref !== idref),
+        metadata: {
+          ...workspace.opf.metadata,
+          modifiedDate: generateEPUBTimestamp(),
+        },
+      },
+    };
+
+    return await this.saveWorkspace(updatedWorkspace);
+  }
+
+  /**
+   * Update a spine item's attributes in place (e.g. the `linear` reading-order
+   * flag or spine `properties`), preserving its position and other fields.
+   */
+  async updateSpineItem(
+    workspace: WorkspaceState,
+    idref: string,
+    patch: { linear?: boolean; properties?: string[] }
+  ): Promise<WorkspaceState> {
+    const index = workspace.opf.spine.findIndex(item => item.idref === idref);
+    if (index === -1) {
+      throw new ValidationError(`Spine item with idref '${idref}' not found`);
+    }
+
+    const updatedSpine = [...workspace.opf.spine];
+    updatedSpine[index] = { ...updatedSpine[index], ...patch };
+
+    const updatedWorkspace: WorkspaceState = {
+      ...workspace,
+      opf: {
+        ...workspace.opf,
+        spine: updatedSpine,
         metadata: {
           ...workspace.opf.metadata,
           modifiedDate: generateEPUBTimestamp(),

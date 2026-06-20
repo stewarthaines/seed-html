@@ -490,6 +490,7 @@ msgid "Bucket Name"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+#: src/lib/components/EditSpineItemDialog.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 #: src/lib/components/workspace/DuplicateProjectDialog.svelte
@@ -605,6 +606,7 @@ msgid "Clip label"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
+#: src/lib/components/EditSpineItemDialog.svelte
 #: src/lib/components/spine/ChapterValidationPanel.svelte
 #: src/lib/components/spine/PreviewPane.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
@@ -1005,6 +1007,14 @@ msgstr ""
 msgid "Edit"
 msgstr ""
 
+#: src/lib/components/SpineItem.svelte
+msgid "Edit {item}"
+msgstr ""
+
+#: src/lib/components/EditSpineItemDialog.svelte
+msgid "Edit chapter"
+msgstr ""
+
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Edit generator"
 msgstr ""
@@ -1047,10 +1057,6 @@ msgstr ""
 
 #: src/lib/components/outline/OutlineEditor.svelte
 msgid "Enter navigation content in plain text. Leave empty to auto-generate from chapter titles. Press Ctrl+Enter (Cmd+Enter on Mac) to save navigation content."
-msgstr ""
-
-#: src/lib/components/SpineSidebar.svelte
-msgid "Enter new ID for {item}:"
 msgstr ""
 
 #: src/lib/components/metadata/AdvancedFields.svelte
@@ -1188,10 +1194,6 @@ msgstr ""
 msgid "Failed to remove metadata item"
 msgstr ""
 
-#: src/lib/components/SpineSidebar.svelte
-msgid "Failed to rename chapter ID: {error}"
-msgstr ""
-
 #: plugins/publish-to-remote/src/App.svelte
 msgid "Failed to save config: {error}"
 msgstr ""
@@ -1202,6 +1204,10 @@ msgstr ""
 
 #: src/lib/components/metadata/MetadataEditor.svelte
 msgid "Failed to save metadata field"
+msgstr ""
+
+#: src/lib/components/EditSpineItemDialog.svelte
+msgid "Failed to update chapter."
 msgstr ""
 
 #: src/lib/components/manifest/ManifestPreview.svelte
@@ -1342,6 +1348,7 @@ msgstr ""
 msgid "Human-readable summary of the accessibility of this publication"
 msgstr ""
 
+#: src/lib/components/EditSpineItemDialog.svelte
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "ID"
 msgstr ""
@@ -1390,6 +1397,10 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 msgid "Include in catalog"
+msgstr ""
+
+#: src/lib/components/EditSpineItemDialog.svelte
+msgid "Include in the linear reading order"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -1859,6 +1870,10 @@ msgstr ""
 msgid "Not created in the Simple EPUB Editor — viewable but not editable."
 msgstr ""
 
+#: src/lib/components/SpineItem.svelte
+msgid "Not in the linear reading order"
+msgstr ""
+
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 msgid "Not specified"
 msgstr ""
@@ -2227,10 +2242,6 @@ msgstr ""
 msgid "Removed {name}"
 msgstr ""
 
-#: src/lib/components/SpineItem.svelte
-msgid "Rename {item}"
-msgstr ""
-
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Rendition Properties"
 msgstr ""
@@ -2324,6 +2335,10 @@ msgstr ""
 msgid "Sans-serif"
 msgstr ""
 
+#: src/lib/components/EditSpineItemDialog.svelte
+msgid "Save"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Save & Connect"
 msgstr ""
@@ -2344,6 +2359,7 @@ msgstr ""
 msgid "Saved feeds…"
 msgstr ""
 
+#: src/lib/components/EditSpineItemDialog.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Saving…"
 msgstr ""
@@ -2739,6 +2755,10 @@ msgstr ""
 #: src/lib/components/metadata/CollectionsEditor.svelte
 #: src/lib/components/metadata/TitleEditor.svelte
 msgid "Type"
+msgstr ""
+
+#: src/lib/components/EditSpineItemDialog.svelte
+msgid "Uncheck to keep the item in the book but outside the default reading order."
 msgstr ""
 
 #: src/App.svelte

@@ -327,6 +327,54 @@ describe('WorkspaceService Contract Tests', () => {
     });
   });
 
+  describe('Spine item attributes (linear / properties)', () => {
+    test('updateSpineOrder preserves linear and properties on reorder', async () => {
+      const workspace = await service.createWorkspace({
+        title: 'Spine Test',
+        language: 'en',
+        identifier: 'spine-test',
+      });
+
+      workspace.opf.manifest.push(
+        { id: 'cover', href: 'Text/cover.xhtml', mediaType: 'application/xhtml+xml' },
+        { id: 'chapter1', href: 'Text/chapter1.xhtml', mediaType: 'application/xhtml+xml' }
+      );
+      // A non-linear cover with spine properties, then a normal chapter.
+      workspace.opf.spine = [
+        { idref: 'cover', linear: false, properties: ['svg'] },
+        { idref: 'chapter1' },
+      ];
+
+      // Reorder so chapter1 comes first.
+      const updated = await service.updateSpineOrder(workspace, ['chapter1', 'cover']);
+
+      // CONTRACT: reordering MUST NOT drop linear/properties.
+      expect(updated.opf.spine).toEqual([
+        { idref: 'chapter1' },
+        { idref: 'cover', linear: false, properties: ['svg'] },
+      ]);
+    });
+
+    test('updateSpineItem toggles the linear flag in place', async () => {
+      const workspace = await service.createWorkspace({
+        title: 'Spine Test 2',
+        language: 'en',
+        identifier: 'spine-test-2',
+      });
+
+      workspace.opf.manifest.push({
+        id: 'chapter1',
+        href: 'Text/chapter1.xhtml',
+        mediaType: 'application/xhtml+xml',
+      });
+      workspace.opf.spine = [{ idref: 'chapter1', linear: true }];
+
+      const updated = await service.updateSpineItem(workspace, 'chapter1', { linear: false });
+
+      expect(updated.opf.spine).toEqual([{ idref: 'chapter1', linear: false }]);
+    });
+  });
+
   describe('Contract: Workspace Deletion', () => {
     test('deleteWorkspace removes workspace completely', async () => {
       // SETUP: Create workspace

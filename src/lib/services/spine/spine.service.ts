@@ -562,4 +562,27 @@ ${body}
       );
     }
   }
+
+  /**
+   * Set a chapter's `linear` reading-order flag. `linear="no"` keeps the item in
+   * the book but outside the default reading order (covers, pop-up notes, etc.).
+   */
+  async setChapterLinear(
+    workspace: WorkspaceState,
+    idref: string,
+    linear: boolean
+  ): Promise<{ updatedWorkspace: WorkspaceState }> {
+    try {
+      const updatedWorkspace = await this.workspaceService.updateSpineItem(workspace, idref, {
+        linear,
+      });
+      return { updatedWorkspace };
+    } catch (error) {
+      throw new SpineServiceError(
+        `Failed to update linear flag: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'UPDATE_LINEAR_ERROR',
+        workspace.id
+      );
+    }
+  }
 }
