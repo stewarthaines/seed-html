@@ -404,6 +404,10 @@ msgstr ""
 msgid "Approximate start position"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Approximates a reading system (theming and text size). Preview only — it never changes the exported EPUB."
+msgstr ""
+
 #: src/lib/components/SpineSidebar.svelte
 msgid "Are you sure you want to delete chapter '{name}'? This will permanently delete the chapter and its source file."
 msgstr ""
@@ -627,6 +631,10 @@ msgstr ""
 msgid "Close accessibility panel"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Close reading preview panel"
+msgstr ""
+
 #: src/lib/components/spine/ChapterValidationPanel.svelte
 msgid "Close validation panel"
 msgstr ""
@@ -842,12 +850,17 @@ msgid "dark"
 msgstr ""
 
 #: src/lib/ThemeToggle.svelte
+#: src/lib/components/spine/PreviewPane.svelte
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Dark"
 msgstr ""
 
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 msgid "Dark text on a light cover"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Decrease text size"
 msgstr ""
 
 #: src/lib/components/metadata/BasicInfoFields.svelte
@@ -1275,6 +1288,10 @@ msgstr ""
 msgid "Font:"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Force reading-system colours"
+msgstr ""
+
 #: src/lib/components/metadata/AdvancedFields.svelte
 msgid "Format"
 msgstr ""
@@ -1423,6 +1440,10 @@ msgstr ""
 msgid "Include preview head"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Increase text size"
+msgstr ""
+
 #: src/App.svelte
 msgid "Initializing application..."
 msgstr ""
@@ -1554,6 +1575,7 @@ msgid "light"
 msgstr ""
 
 #: src/lib/ThemeToggle.svelte
+#: src/lib/components/spine/PreviewPane.svelte
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Light"
 msgstr ""
@@ -2200,6 +2222,22 @@ msgstr ""
 msgid "Read-only navigation"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Reader"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Reading preview"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Reading preview (theme and text size)"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Reading preview settings"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Redirect URI"
 msgstr ""
@@ -2462,6 +2500,10 @@ msgstr ""
 msgid "Selected folder: {name}"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Sepia"
+msgstr ""
+
 #: src/lib/components/metadata/CollectionsEditor.svelte
 msgid "Series"
 msgstr ""
@@ -2673,6 +2715,10 @@ msgstr ""
 msgid "Text formats"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Text size"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Text Transform"
 msgstr ""
@@ -2681,6 +2727,7 @@ msgstr ""
 msgid "The single plain-text → XHTML step. Pick a project script or one supplied by an extension."
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Theme"
 msgstr ""

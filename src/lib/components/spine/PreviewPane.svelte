@@ -26,8 +26,11 @@
   import { snippetAroundClick } from './preview-click.js';
   import { buildPagedDocument, chapterToSection, MARGIN_MM } from '$lib/pdf/pdf-export.js';
   import type { PrintSettings, PreviewSettings } from '$lib/services/settings/settings.service.js';
-  import { DEFAULT_PREVIEW, previewTypeForDevice } from '$lib/services/settings/settings.service.js';
-  import { ArrowsClockwise, FilePdf, DeviceRotate, X } from 'phosphor-svelte';
+  import {
+    DEFAULT_PREVIEW,
+    previewTypeForDevice,
+  } from '$lib/services/settings/settings.service.js';
+  import { ArrowsClockwise, FilePdf, DeviceRotate, X, CircleHalf } from 'phosphor-svelte';
 
   // Props using Svelte 5 runes syntax
   let {
@@ -45,6 +48,7 @@
     previewHead = '',
     previewAutoUpdate = DEFAULT_PREVIEW.autoUpdate,
     previewIncludeHead = DEFAULT_PREVIEW.includeHead,
+    isFixedLayout = false,
   }: {
     xhtmlContent?: string;
     isTransforming?: boolean;
@@ -73,6 +77,9 @@
     previewAutoUpdate?: PreviewSettings['autoUpdate'];
     /** Per preview type, whether to inject `previewHead` into the preview <head>. */
     previewIncludeHead?: PreviewSettings['includeHead'];
+    /** Fixed-layout (pre-paginated) chapter: reader theme/font controls don't apply,
+     *  so they're hidden (readers disable user font sizing for fixed layout). */
+    isFixedLayout?: boolean;
   } = $props();
 
   /** Format the transform's execution time for the status indicator. */
@@ -134,15 +141,17 @@
   let a11yRunning = $state(false);
   let a11yIssueCount = $state<number | null>(null);
   let a11yViolations = $state<AxeViolation[]>([]);
-  let a11yPanelOpen = $state(false);
   let a11yAutoTimer: ReturnType<typeof setTimeout> | undefined;
+
+  // The header's panel toggles (Accessibility / EpubCheck / Reader) are mutually
+  // exclusive — at most one panel open at a time in the band below the header.
+  let activePanel = $state<'a11y' | 'epubcheck' | 'reader' | null>(null);
 
   // --- Validation report -------------------------------------------------------
   // The latest epubcheck report is dropped into localStorage by the publish plugin.
   // We own the report + open state here (mirroring the a11y panel), so the panel
   // opens from a toolbar button and its open/closed state survives chapter hops.
   let validationReport = $state(readValidationReport());
-  let validationPanelOpen = $state(false);
   // Only surface a report that was produced for THIS project. The report is a
   // single global localStorage entry shared across projects, so without this an
   // unrelated project's report (and its colliding chapter ids) would leak in.
@@ -236,22 +245,23 @@
     }
   }
 
-  // The button toggles the panel; opening runs a check, closing clears the outlines.
-  function toggleA11yPanel(): void {
-    if (a11yPanelOpen) {
-      a11yPanelOpen = false;
+  // Toggle one of the mutually-exclusive header panels (opening one closes any
+  // other). Opening Accessibility runs a check; leaving it clears the in-iframe
+  // highlight outlines.
+  function togglePanel(panel: 'a11y' | 'epubcheck' | 'reader'): void {
+    const next = activePanel === panel ? null : panel;
+    if (activePanel === 'a11y' && next !== 'a11y') {
       const doc = previewIframe?.contentDocument;
       if (doc) clearHighlights(doc);
-    } else {
-      a11yPanelOpen = true;
-      void runA11yCheck();
     }
+    activePanel = next;
+    if (next === 'a11y') void runA11yCheck();
   }
 
   // The preview re-render invalidates the last report; while the panel is open,
   // re-run the check (debounced) so the author sees fresh results as they edit.
   function scheduleAutoA11yCheck(): void {
-    if (!a11yPanelOpen) return;
+    if (activePanel !== 'a11y') return;
     clearTimeout(a11yAutoTimer);
     a11yAutoTimer = setTimeout(() => void runA11yCheck(), 500);
   }
@@ -274,6 +284,28 @@
       category: 'print',
     },
   ] as const;
+
+  // --- Reader-mode simulation (theme + font size) ------------------------------
+  // Per-device base font size (px). Phones get a smaller base than tablets, so the
+  // same relative step lands at a smaller px on a phone than on a large tablet.
+  const DEVICE_BASE_FONT: Record<string, number> = {
+    desktop: 18,
+    iphone: 16,
+    'iphone-plus': 16,
+    ipad: 18,
+    'ipad-air': 19,
+    kindle: 17,
+    print: 16,
+  };
+  // Five relative steps; the middle (index 2) is the device's base size.
+  const FONT_STEPS = [0.85, 0.92, 1.0, 1.15, 1.3] as const;
+  // Injected reading-system themes (background + text colour), à la Readium CSS.
+  const THEME_PALETTES = {
+    light: { bg: '#ffffff', fg: '#1a1a1a', scheme: 'light' },
+    sepia: { bg: '#f4ecd8', fg: '#5b4636', scheme: 'light' },
+    dark: { bg: '#14161a', fg: '#c9c9c9', scheme: 'dark' },
+  } as const;
+  type PreviewTheme = keyof typeof THEME_PALETTES;
 
   // Category labels for dropdown groups
   const getCategoryLabel = (category: string) => {
@@ -383,6 +415,109 @@
     } catch {
       /* localStorage unavailable — non-fatal */
     }
+  });
+
+  // Reader-mode preview state (theme + font size + force-colours). View-only — never
+  // written to the generated/exported XHTML; persisted app-wide like the device.
+  const PREVIEW_THEME_KEY = 'editme_preview_theme';
+  const PREVIEW_FONT_STEP_KEY = 'editme_preview_font_step';
+  const PREVIEW_FORCE_COLORS_KEY = 'editme_preview_force_colors';
+  const readStored = (key: string): string | null => {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  };
+  const storedTheme = readStored(PREVIEW_THEME_KEY);
+  let previewTheme = $state<PreviewTheme>(
+    storedTheme && storedTheme in THEME_PALETTES ? (storedTheme as PreviewTheme) : 'light'
+  );
+  const storedStepRaw = readStored(PREVIEW_FONT_STEP_KEY);
+  const storedStep = storedStepRaw === null ? NaN : Number(storedStepRaw);
+  let fontStep = $state(
+    Number.isInteger(storedStep) && storedStep >= 0 && storedStep < FONT_STEPS.length
+      ? storedStep
+      : 2
+  );
+  let forceColors = $state(readStored(PREVIEW_FORCE_COLORS_KEY) === 'true');
+
+  // Persist the reader-mode controls whenever they change.
+  $effect(() => {
+    try {
+      localStorage.setItem(PREVIEW_THEME_KEY, previewTheme);
+      localStorage.setItem(PREVIEW_FONT_STEP_KEY, String(fontStep));
+      localStorage.setItem(PREVIEW_FORCE_COLORS_KEY, String(forceColors));
+    } catch {
+      /* localStorage unavailable — non-fatal */
+    }
+  });
+
+  // Whether the reader-mode controls apply: reflowable previews only (not the print
+  // preset, not fixed-layout chapters — readers disable user theming/sizing there).
+  const readerModeActive = $derived(selectedDevice !== 'print' && !isFixedLayout);
+
+  function decreaseFont(): void {
+    if (fontStep > 0) fontStep -= 1;
+  }
+  function increaseFont(): void {
+    if (fontStep < FONT_STEPS.length - 1) fontStep += 1;
+  }
+
+  /**
+   * Apply the reader-mode theme + font size to the LIVE preview iframe, without
+   * re-running the transform. Called after every content write (from
+   * handleIframeLoad) and reactively when the controls change, so toggling is
+   * instant. View-only — nothing here touches the generated/exported XHTML.
+   *
+   * Theme colours are injected as a style element at the START of the document head
+   * so the book's own stylesheets (and preview/head.xml, which come later) win on equal
+   * specificity — faithfully reproducing how reader "night mode" lets an author's
+   * explicit colours through (and how dark-text-on-dark-bg happens). The
+   * force-colours toggle re-applies them with `!important` to simulate the
+   * aggressive readers that override author colours.
+   */
+  function applyPreviewAppearance(): void {
+    const iframeDoc = previewIframe?.contentDocument;
+    if (!iframeDoc?.documentElement || !iframeDoc.head) return;
+    if (!readerModeActive) return;
+
+    const root = iframeDoc.documentElement;
+    const palette = THEME_PALETTES[previewTheme];
+
+    // Font size: inline on the root so em/rem/% cascade and win over stylesheet
+    // rules; fixed-px text deliberately stays put (a useful "not responsive" tell).
+    const basePx = DEVICE_BASE_FONT[selectedDevice] ?? 18;
+    root.style.fontSize = `${Math.round(basePx * FONT_STEPS[fontStep])}px`;
+    // Match UA-rendered chrome (scrollbars, form controls, default canvas).
+    root.style.colorScheme = palette.scheme;
+
+    const rules = forceColors
+      ? `html { background: ${palette.bg} !important; }
+         body { background: ${palette.bg} !important; }
+         body, body * { color: ${palette.fg} !important; }`
+      : `html { background: ${palette.bg}; }
+         body { color: ${palette.fg}; }`;
+
+    let style = iframeDoc.querySelector<HTMLStyleElement>('style[data-preview-theme]');
+    if (!style) {
+      style = iframeDoc.createElement('style');
+      style.setAttribute('data-preview-theme', '');
+      // First child of <head> → author CSS (later in document order) overrides.
+      iframeDoc.head.insertBefore(style, iframeDoc.head.firstChild);
+    }
+    style.textContent = rules;
+  }
+
+  // Re-apply theme/font instantly when a control changes (no content rewrite).
+  $effect(() => {
+    // Track the controls so this re-runs on change.
+    void previewTheme;
+    void fontStep;
+    void forceColors;
+    void selectedDevice;
+    void readerModeActive;
+    applyPreviewAppearance();
   });
 
   // Page-size CSS token → short dropdown label.
@@ -606,6 +741,13 @@
       iframeDoc.open();
       iframeDoc.write(content);
       iframeDoc.close();
+
+      // Re-apply the reader-mode theme + font synchronously: the fresh document
+      // dropped them, and relying on the iframe `load` event alone races with a
+      // device switch (the appearance effect runs against the old document, then
+      // this rewrite replaces it). Doing it here guarantees the new device's base
+      // font and the current theme are on the freshly written document.
+      applyPreviewAppearance();
 
       lastUpdateTime.set(Date.now());
 
@@ -995,6 +1137,9 @@
       // Set up interactivity first
       setupIframeInteractivity(iframeDoc);
 
+      // Re-apply the reader-mode theme + font size (the fresh document dropped them).
+      applyPreviewAppearance();
+
       if (onNavigate && previewIframe.contentDocument) {
         previewIframe.contentDocument.addEventListener('click', e => {
           const target = e.target as HTMLAnchorElement;
@@ -1075,60 +1220,93 @@
 <div class="preview-pane-container">
   <!-- Header with controls -->
   <div class="preview-header">
-    <div class="preview-title">
-      <!-- Source/Preview toggle -->
-      <button
-        class="view-toggle"
-        class:active={showSource}
-        onclick={toggleSourceView}
-        title={showSource ? $t('Show rendered preview') : $t('Show generated source')}
-      >
-        {showSource ? $t('Preview') : $t('Source')}
-      </button>
-      {#if xhtmlContent}
-        <span class="content-size">{Math.round(xhtmlContent.length / 1024)}KB</span>
-      {/if}
-
-      <!-- Transform status (moved here from the editor pane header). -->
-      {#if isTransforming}
-        <div class="status-indicator transforming" title={$t('Transform in progress')}>
-          <div class="status-spinner"></div>
-          <span>{$t('Transforming...')}</span>
-        </div>
-      {:else if transformError}
-        <div class="status-indicator error" title={$t('Transform error')}>
-          <span class="status-icon">⚠️</span>
-          <span>{$t('Error')}</span>
-        </div>
-      {:else if transformWarnings.length > 0}
-        <div
-          class="status-indicator warning"
-          title={$t('{n} warnings', { n: transformWarnings.length })}
+    <!-- Source + device stay together (space-between) and grow to fill their row,
+         so when the header wraps only the panel toggles below drop to a second row,
+         leaving the device dropdown floated to the right edge of the first row. -->
+    <div class="header-main">
+      <div class="preview-title">
+        <!-- Source/Preview toggle -->
+        <button
+          class="view-toggle"
+          class:active={showSource}
+          onclick={toggleSourceView}
+          title={showSource ? $t('Show rendered preview') : $t('Show generated source')}
         >
-          <span class="status-icon">⚠️</span>
-          <span>{transformWarnings.length} {$t('warnings')}</span>
-        </div>
-      {:else if xhtmlContent}
-        <div class="status-indicator success" title={$t('Transform successful')}>
-          <span>{formatExecutionTime(executionTime)}</span>
-        </div>
-      {/if}
+          {showSource ? $t('Preview') : $t('Source')}
+        </button>
 
-      <!-- On-demand refresh: shown when the current preview type has auto-update off
+        <!-- Transform status: failures stay persistently visible in the header. The
+           success (timing) + content-size move to the hover/focus overlay below. -->
+        {#if isTransforming}
+          <div class="status-indicator transforming" title={$t('Transform in progress')}>
+            <div class="status-spinner"></div>
+            <span>{$t('Transforming...')}</span>
+          </div>
+        {:else if transformError}
+          <div class="status-indicator error" title={$t('Transform error')}>
+            <span class="status-icon">⚠️</span>
+            <span>{$t('Error')}</span>
+          </div>
+        {:else if transformWarnings.length > 0}
+          <div
+            class="status-indicator warning"
+            title={$t('{n} warnings', { n: transformWarnings.length })}
+          >
+            <span class="status-icon">⚠️</span>
+            <span>{transformWarnings.length} {$t('warnings')}</span>
+          </div>
+        {/if}
+
+        <!-- On-demand refresh: shown when the current preview type has auto-update off
            and the chapter (or injected head) changed since it was last rendered.
            Placed after the transform status (rather than among the device controls)
            so the control order stays stable as it appears/disappears. -->
-      {#if previewStale}
-        <button
-          type="button"
-          class="print-refresh"
-          onclick={() => renderNow()}
-          title={$t('Preview out of date')}
-          aria-label={$t('Refresh')}
+        {#if previewStale}
+          <button
+            type="button"
+            class="print-refresh"
+            onclick={() => renderNow()}
+            title={$t('Preview out of date')}
+            aria-label={$t('Refresh')}
+          >
+            <ArrowsClockwise size={16} aria-hidden="true" />
+          </button>
+        {/if}
+      </div>
+
+      <div class="preview-device">
+        <!-- Orientation toggle (only show for scaled device frames, not fill/print) -->
+        {#if !isFillDevice(selectedDevice)}
+          <button
+            type="button"
+            class="orientation-toggle"
+            onclick={toggleOrientation}
+            title={$t('Toggle orientation')}
+            aria-label={$t('Toggle device orientation')}
+          >
+            <DeviceRotate size={16} aria-hidden="true" />
+          </button>
+        {/if}
+
+        <!-- Device selector -->
+        <!-- i18n: Accessibility label for device size dropdown menu -->
+        <select
+          class="device-selector"
+          bind:value={selectedDevice}
+          onchange={e => handleDeviceChange((e.target as HTMLSelectElement).value)}
+          aria-label={$t('Select device preset')}
         >
-          <ArrowsClockwise size={16} aria-hidden="true" />
-        </button>
-      {/if}
+          {#each Object.entries(groupedDevices) as [category, devices]}
+            <optgroup label={getCategoryLabel(category)}>
+              {#each devices as device}
+                <option value={device.id}>
+                  {device.id === 'print' ? printDeviceLabel : getDeviceLabel(device)}
+                </option>
+              {/each}
+            </optgroup>
+          {/each}
+        </select>
+      </div>
     </div>
 
     <div class="preview-controls">
@@ -1137,14 +1315,14 @@
         <button
           type="button"
           class="a11y-check"
-          class:active={a11yPanelOpen}
-          onclick={toggleA11yPanel}
+          class:active={activePanel === 'a11y'}
+          onclick={() => togglePanel('a11y')}
           disabled={!xhtmlContent}
-          aria-pressed={a11yPanelOpen}
+          aria-pressed={activePanel === 'a11y'}
           title={$t('Accessibility check (axe-core) — re-runs as you edit while open')}
         >
           {a11yRunning ? $t('Checking…') : $t('Accessibility')}
-          {#if !a11yRunning && a11yPanelOpen && a11yIssueCount !== null}
+          {#if !a11yRunning && activePanel === 'a11y' && a11yIssueCount !== null}
             <span class="a11y-count" class:clean={a11yIssueCount === 0}>{a11yIssueCount}</span>
           {/if}
         </button>
@@ -1156,9 +1334,9 @@
         <button
           type="button"
           class="a11y-check"
-          class:active={validationPanelOpen}
-          onclick={() => (validationPanelOpen = !validationPanelOpen)}
-          aria-pressed={validationPanelOpen}
+          class:active={activePanel === 'epubcheck'}
+          onclick={() => togglePanel('epubcheck')}
+          aria-pressed={activePanel === 'epubcheck'}
           title={$t('Validation report (epubcheck) for this chapter')}
         >
           EpubCheck
@@ -1168,42 +1346,26 @@
         </button>
       {/if}
 
-      <!-- Orientation toggle (only show for scaled device frames, not fill/print) -->
-      {#if !isFillDevice(selectedDevice)}
+      <!-- Reader-mode panel toggle (theme + text size). Reflowable previews only —
+           hidden for the print preset and fixed-layout chapters. The controls live
+           in a closable panel below the header (like the other checks). -->
+      {#if readerModeActive}
         <button
           type="button"
-          class="orientation-toggle"
-          onclick={toggleOrientation}
-          title={$t('Toggle orientation')}
-          aria-label={$t('Toggle device orientation')}
+          class="a11y-check"
+          class:active={activePanel === 'reader'}
+          onclick={() => togglePanel('reader')}
+          aria-pressed={activePanel === 'reader'}
+          title={$t('Reading preview (theme and text size)')}
         >
-          <DeviceRotate size={16} aria-hidden="true" />
+          {$t('Reader')}
         </button>
       {/if}
-
-      <!-- Device selector -->
-      <!-- i18n: Accessibility label for device size dropdown menu -->
-      <select
-        class="device-selector"
-        bind:value={selectedDevice}
-        onchange={e => handleDeviceChange((e.target as HTMLSelectElement).value)}
-        aria-label={$t('Select device preset')}
-      >
-        {#each Object.entries(groupedDevices) as [category, devices]}
-          <optgroup label={getCategoryLabel(category)}>
-            {#each devices as device}
-              <option value={device.id}>
-                {device.id === 'print' ? printDeviceLabel : getDeviceLabel(device)}
-              </option>
-            {/each}
-          </optgroup>
-        {/each}
-      </select>
     </div>
   </div>
 
   <!-- Accessibility results panel (spike): plain-text violations, sorted by impact -->
-  {#if a11yPanelOpen}
+  {#if activePanel === 'a11y'}
     <div class="a11y-panel" role="region" aria-label={$t('Accessibility issues')}>
       <div class="a11y-panel-header">
         <strong>
@@ -1214,7 +1376,7 @@
         <button
           type="button"
           class="btn btn-icon"
-          onclick={() => (a11yPanelOpen = false)}
+          onclick={() => togglePanel('a11y')}
           aria-label={$t('Close accessibility panel')}
           title={$t('Close')}
         >
@@ -1246,12 +1408,112 @@
   {/if}
 
   <!-- Validation report reference (shares this band with the a11y panel) -->
-  {#if validationPanelOpen && validationReport && validationReportMatches}
+  {#if activePanel === 'epubcheck' && validationReport && validationReportMatches}
     <ChapterValidationPanel
       report={validationReport}
       {chapterId}
-      onClose={() => (validationPanelOpen = false)}
+      onClose={() => (activePanel = null)}
     />
+  {/if}
+
+  <!-- Reader-mode panel: theme + text size + force-colours, in the same band as the
+       other checks. Reflowable previews only. -->
+  {#if activePanel === 'reader' && readerModeActive}
+    <div class="a11y-panel reader-panel" role="region" aria-label={$t('Reading preview settings')}>
+      <div class="a11y-panel-header">
+        <strong>{$t('Reading preview')}</strong>
+        <button
+          type="button"
+          class="btn btn-icon"
+          onclick={() => togglePanel('reader')}
+          aria-label={$t('Close reading preview panel')}
+          title={$t('Close')}
+        >
+          <X size={16} aria-hidden="true" />
+        </button>
+      </div>
+
+      <div class="reader-panel-body">
+        <!-- Theme -->
+        <div class="reader-field">
+          <span class="reader-label" id="reader-theme-label">{$t('Theme')}</span>
+          <div class="theme-options" role="radiogroup" aria-labelledby="reader-theme-label">
+            <button
+              type="button"
+              class="theme-option"
+              class:selected={previewTheme === 'light'}
+              role="radio"
+              aria-checked={previewTheme === 'light'}
+              onclick={() => (previewTheme = 'light')}
+            >
+              {$t('Light')}
+            </button>
+            <button
+              type="button"
+              class="theme-option"
+              class:selected={previewTheme === 'sepia'}
+              role="radio"
+              aria-checked={previewTheme === 'sepia'}
+              onclick={() => (previewTheme = 'sepia')}
+            >
+              {$t('Sepia')}
+            </button>
+            <button
+              type="button"
+              class="theme-option"
+              class:selected={previewTheme === 'dark'}
+              role="radio"
+              aria-checked={previewTheme === 'dark'}
+              onclick={() => (previewTheme = 'dark')}
+            >
+              {$t('Dark')}
+            </button>
+          </div>
+        </div>
+
+        <!-- Text size -->
+        <div class="reader-field">
+          <span class="reader-label">{$t('Text size')}</span>
+          <div class="font-size-control">
+            <button
+              type="button"
+              class="font-step"
+              onclick={decreaseFont}
+              disabled={fontStep === 0}
+              aria-label={$t('Decrease text size')}
+              title={$t('Decrease text size')}
+            >
+              A<span class="font-step-sign">−</span>
+            </button>
+            <span class="font-step-readout" aria-live="polite"
+              >{fontStep + 1}/{FONT_STEPS.length}</span
+            >
+            <button
+              type="button"
+              class="font-step"
+              onclick={increaseFont}
+              disabled={fontStep === FONT_STEPS.length - 1}
+              aria-label={$t('Increase text size')}
+              title={$t('Increase text size')}
+            >
+              A<span class="font-step-sign">+</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Force reading-system colours -->
+        <label class="reader-toggle">
+          <input type="checkbox" bind:checked={forceColors} />
+          <CircleHalf size={16} aria-hidden="true" />
+          <span>{$t('Force reading-system colours')}</span>
+        </label>
+        <p class="reader-note">
+          {$t(
+            'Approximates a reading system (theming and text size). Preview only — it never changes the exported EPUB.'
+          )}
+        </p>
+      </div>
+    </div>
   {/if}
 
   <!-- Preview content -->
@@ -1265,6 +1527,19 @@
     {:else}
       <!-- Live preview -->
       <div class="preview-viewport">
+        <!-- Content-size + success/timing, revealed on hover or keyboard focus (so
+             the header stays uncluttered). aria-live keeps it perceivable to AT;
+             transform errors/warnings remain in the header, always visible. -->
+        {#if xhtmlContent}
+          <div class="preview-stats" aria-live="polite">
+            <span class="content-size">{Math.round(xhtmlContent.length / 1024)}KB</span>
+            {#if !isTransforming && !transformError && transformWarnings.length === 0}
+              <span class="stat-timing" title={$t('Transform successful')}>
+                {formatExecutionTime(executionTime)}
+              </span>
+            {/if}
+          </div>
+        {/if}
         {#if printPaginating && selectedDevice === 'print'}
           <div class="print-paginating" role="status">
             <div class="status-spinner"></div>
@@ -1342,18 +1617,33 @@
 
   .preview-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    /* Wrap the title/controls groups onto new rows when the pane is narrow,
-       matching the editor pane header (.editor-controls). */
+    /* Single row when it fits; when it doesn't, only the panel toggles
+       (.preview-controls) wrap to a second row — .header-main keeps Source + the
+       device dropdown together on the first row (see .header-main). */
     flex-wrap: wrap;
     gap: var(--space-2);
     /* Match the sidebar header height + grey (see PaneHeader) so all top bars align. */
     min-height: var(--touch-target-min);
-    padding: 0 var(--space-3);
+    padding: var(--space-1) var(--space-3);
     border-bottom: 1px solid var(--color-border-default);
     background: var(--color-bg-tertiary);
     box-sizing: border-box;
+  }
+
+  /* Source (left) + device controls (right). Basis `auto` so line-breaking uses its
+     real content width (not a reserved 360px, which wrapped the toggles far too
+     early and left the first row mostly empty). It still grows to fill its row, so
+     on a single row the device dropdown sits at the right of the cluster, and when
+     the header is genuinely too narrow only the toggle group below wraps — the
+     dropdown stays on the first row. */
+  .header-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
   }
 
   .preview-title {
@@ -1365,6 +1655,13 @@
     color: var(--color-text-primary);
   }
 
+  .preview-device {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  /* The mutually-exclusive panel toggles (Accessibility / EpubCheck / Reader). */
   .preview-controls {
     display: flex;
     align-items: center;
@@ -1520,7 +1817,6 @@
     color: var(--color-text-primary);
     font-size: var(--text-sm);
     cursor: pointer;
-    margin-right: var(--space-2);
     min-width: 32px;
     display: inline-flex;
     align-items: center;
@@ -1577,6 +1873,165 @@
     outline-offset: var(--focus-ring-offset);
   }
 
+  /* Reader-mode panel (theme + text size + force colours) */
+  .reader-panel-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-3);
+  }
+
+  .reader-field {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .reader-label {
+    min-width: 72px;
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-text-secondary);
+  }
+
+  .theme-options {
+    display: inline-flex;
+  }
+
+  .theme-option {
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--color-border-default);
+    border-left: none;
+    background: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
+    cursor: pointer;
+  }
+
+  .theme-option:first-child {
+    border-left: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  }
+
+  .theme-option:last-child {
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  }
+
+  .theme-option:hover:not(.selected) {
+    background: var(--color-hover-accent);
+    color: var(--color-on-accent);
+  }
+
+  .theme-option.selected {
+    background: var(--color-accent-primary);
+    color: var(--color-accent-contrast);
+    border-color: var(--color-accent-primary);
+  }
+
+  .theme-option:focus-visible {
+    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
+    outline-offset: var(--focus-ring-offset);
+    z-index: 1;
+  }
+
+  .font-size-control {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .font-step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    padding: var(--space-1) var(--space-2);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
+    cursor: pointer;
+  }
+
+  .font-step:hover:not(:disabled) {
+    color: var(--color-on-accent);
+    background: var(--color-hover-accent);
+  }
+
+  .font-step:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .font-step:focus-visible {
+    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  .font-step-sign {
+    margin-left: 1px;
+  }
+
+  .font-step-readout {
+    min-width: 2.5em;
+    text-align: center;
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+  }
+
+  /* Force-colours checkbox: a labelled toggle with an explicit on/off box. */
+  .reader-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-primary);
+    cursor: pointer;
+  }
+
+  .reader-toggle input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+
+  .reader-note {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+  }
+
+  /* Content-size + timing overlay: top-centre of the viewport, hidden until the
+     author hovers or focuses into the preview (keeps the header uncluttered).
+     aria-live keeps it perceivable to assistive tech even while visually hidden. */
+  .preview-stats {
+    position: absolute;
+    top: var(--space-2);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    display: flex;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--color-bg-secondary) 90%, transparent);
+    color: var(--color-text-secondary);
+    font-size: var(--text-xs);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 120ms ease;
+  }
+
+  .preview-viewport:hover .preview-stats,
+  .preview-viewport:focus-within .preview-stats {
+    opacity: 1;
+  }
+
+  .stat-timing {
+    color: var(--color-success-text, var(--color-text-secondary));
+  }
+
   .view-toggle {
     padding: var(--space-1) var(--space-3);
     border: 1px solid var(--color-border-default);
@@ -1628,11 +2083,6 @@
   .status-indicator.warning {
     background: var(--color-warning-bg);
     color: var(--color-warning-text);
-  }
-
-  .status-indicator.success {
-    background: var(--color-success-bg);
-    color: var(--color-success-text);
   }
 
   .status-spinner {
@@ -1792,6 +2242,10 @@
     }
 
     .view-toggle {
+      transition: none;
+    }
+
+    .preview-stats {
       transition: none;
     }
   }

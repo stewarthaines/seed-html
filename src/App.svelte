@@ -1252,6 +1252,8 @@
             previewHead={spinePreviewData.previewHead}
             previewAutoUpdate={appState?.epubSettings?.preview?.autoUpdate}
             previewIncludeHead={appState?.epubSettings?.preview?.includeHead}
+            isFixedLayout={currentWorkspaceState?.opf?.metadata?.renditionLayout ===
+              'pre-paginated'}
           />
         {:else}
           <div class="placeholder-content">
