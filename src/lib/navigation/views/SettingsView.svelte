@@ -546,7 +546,7 @@
 
   // Derived states. Advanced mode is a single app-level preference (the global
   // store), no longer per-workspace.
-  const isAdvancedMode = $derived($advancedMode);
+  const isAdvancedMode = $derived(advancedMode.current);
   // Extension ids already imported into the current project (dir name === id).
   const installedExtensionIds = $derived(new Set(extensions.map(e => e.name)));
 
@@ -774,9 +774,9 @@
                   <label class="setting-label">
                     <input
                       type="checkbox"
-                      checked={$advancedMode}
+                      checked={advancedMode.current}
                       onchange={e =>
-                        advancedMode.set((e.currentTarget as HTMLInputElement).checked)}
+                        (advancedMode.current = (e.currentTarget as HTMLInputElement).checked)}
                     />
                     <span class="setting-text">{$t('Advanced mode')}</span>
                   </label>

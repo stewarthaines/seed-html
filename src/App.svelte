@@ -1077,7 +1077,7 @@
             Promise.resolve({ fileCount: 0, readOnly: false })}
           onEpubImportRequested={handleEpubImport}
           {currentWorkspaceId}
-          advancedMode={$advancedMode}
+          advancedMode={advancedMode.current}
           onWorkspaceOpened={() => {
             // Workspace opened
           }}
@@ -1090,7 +1090,7 @@
           <MetadataEditor
             bind:workspace={appState.workspace}
             {metadataService}
-            advancedMode={$advancedMode}
+            advancedMode={advancedMode.current}
             readOnly={isReadOnly}
             onMetadataChanged={handleMetadataChanged}
             onFieldFocus={handleMetadataFieldFocus}
@@ -1104,7 +1104,7 @@
           <ManifestContainer
             workspace={currentWorkspaceState}
             {workspaceService}
-            advancedMode={$advancedMode}
+            advancedMode={advancedMode.current}
             readOnly={isReadOnly}
             refreshToken={manifestRefreshToken}
             onItemSelect={handleManifestItemSelect}
@@ -1143,7 +1143,7 @@
             contentService={appState.getContentService()}
             audioClipService={appState.getAudioClipService()}
             readOnly={isReadOnly}
-            advancedMode={$advancedMode}
+            advancedMode={advancedMode.current}
             onPreviewUpdate={handleSpinePreviewUpdate}
           />
         {:else}
@@ -1199,7 +1199,7 @@
           workspace={currentWorkspaceState}
           focusedField={focusedMetadataField}
           tabFields={activeMetadataTabFields}
-          isAdvancedMode={$advancedMode}
+          isAdvancedMode={advancedMode.current}
           readOnly={isReadOnly}
           {workspaceService}
           onGenerateCover={handleGenerateCover}
