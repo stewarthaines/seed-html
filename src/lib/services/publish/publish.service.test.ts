@@ -38,6 +38,9 @@ describe('PublishService', () => {
             : { size: 77000, lastModified: modifiedB }
         )
       );
+      // No sidecar .json / .thumb.png alongside these epubs — the enrichment reads
+      // reject (as a missing file would), so title/authors/cover stay undefined.
+      storage.readFile.mockRejectedValue(new Error('not found'));
 
       const result = await service.listPublishedEpubs();
 

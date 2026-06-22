@@ -117,7 +117,7 @@ describe('SampleContentGenerator', () => {
         expect(result.chapters).toHaveLength(1);
 
         // Verify chapters are in correct order
-        expect(result.chapters[0].id).toBe('chapter1');
+        expect(result.chapters[0].id).toBe('chapter01');
 
         // Verify linear property
         expect(result.chapters[0].linear).toBe(true); // appendix is non-linear
@@ -282,7 +282,7 @@ describe('SampleContentGenerator', () => {
 
         // Verify first chapter structure
         expect(result[0]).toEqual({
-          id: 'chapter1',
+          id: 'chapter01',
           title: 'Getting Started',
           content: expect.stringContaining('# This is a Heading 1'),
           linear: true,
@@ -315,7 +315,7 @@ describe('SampleContentGenerator', () => {
       it('should preserve chapter order', async () => {
         const result = await generator.generateLocalizedChapters('en');
 
-        const expectedOrder = ['chapter1'];
+        const expectedOrder = ['chapter01'];
         const actualOrder = result.map((chapter: DemoChapter) => chapter.id);
 
         expect(actualOrder).toEqual(expectedOrder);

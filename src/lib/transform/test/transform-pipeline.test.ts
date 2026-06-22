@@ -70,7 +70,7 @@ describe('TransformPipeline', () => {
       expect(xhtml).toMatchInlineSnapshot(`
         "<?xml version="1.0" encoding="utf-8"?>
         <!DOCTYPE html>
-        <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+        <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="en" lang="en">
           <head>
             <title>chapter1</title>
             <meta name="viewport" content="width=1200, height=1600, initial-scale=1.0" />

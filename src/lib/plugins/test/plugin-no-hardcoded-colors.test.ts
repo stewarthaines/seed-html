@@ -34,6 +34,9 @@ describe('publish plugin uses design tokens, not hardcoded colours', () => {
   for (const rel of styledFiles()) {
     it(`${rel} has no hardcoded colours (use a var(--token) from styles.css)`, () => {
       const offenders = readFileSync(join(PLUGIN_SRC, rel), 'utf8')
+        // Blank CSS block comments (preserving newlines for line numbers) so a hex
+        // mentioned in an explanatory comment isn't flagged as a hardcoded value.
+        .replace(/\/\*[\s\S]*?\*\//g, m => m.replace(/[^\n]/g, ' '))
         .split('\n')
         .map((line, i) => ({ line, n: i + 1 }))
         .filter(({ line }) => COLOR.test(line) && !/rgba?\(/.test(line))
