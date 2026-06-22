@@ -516,9 +516,9 @@ describe('OPFUtils', () => {
           version: '3.0',
           metadata: {
             title: 'كتاب عربي', // Arabic title
-            creator: ['作者名前', 'שם המחבר'], // Japanese and Hebrew
+            creator: [{ name: '作者名前', roles: [] }, { name: 'שם המחבר', roles: [] }], // Japanese and Hebrew
             description: 'Book with <em>HTML</em> & "quotes" content',
-            language: 'en',
+            language: ['en'],
             identifier: 'test-unicode-123',
           },
           manifest: [
@@ -546,7 +546,7 @@ describe('OPFUtils', () => {
           version: '3.0',
           metadata: {
             title: 'Book & Title <Test>',
-            language: 'en',
+            language: ['en'],
             identifier: 'test-escape-123',
           },
           manifest: [],
@@ -586,7 +586,7 @@ describe('OPFUtils', () => {
           version: '3.0',
           metadata: {
             title: 'Multi-Chapter Book',
-            language: 'en',
+            language: ['en'],
             identifier: 'test-multi-123',
           },
           manifest: [
@@ -619,7 +619,7 @@ describe('OPFUtils', () => {
           version: '3.0',
           metadata: {
             title: 'Special ID Book',
-            language: 'en',
+            language: ['en'],
             identifier: 'test-special-123',
           },
           manifest: [{ id: 'chapter-1&2', href: 'ch12.xhtml', mediaType: 'application/xhtml+xml' }],
@@ -640,7 +640,7 @@ describe('OPFUtils', () => {
           version: '3.0',
           metadata: {
             title: 'Debug Test Book',
-            language: 'en',
+            language: ['en'],
             identifier: 'debug-123',
           },
           manifest: [
@@ -675,7 +675,7 @@ describe('OPFUtils', () => {
           version: '3.0',
           metadata: {
             title: 'Untitled Book Project',
-            language: 'en',
+            language: ['en'],
             identifier: 'test-workspace-id',
           },
           manifest: [

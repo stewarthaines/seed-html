@@ -106,7 +106,7 @@ describe('WorkspaceService Contract Tests', () => {
       // RED: This test must fail initially
       const metadata: EPUBMetadata = {
         title: 'Test Book',
-        language: 'en',
+        language: ['en'],
         identifier: 'urn:uuid:test-123',
       };
 
@@ -118,7 +118,7 @@ describe('WorkspaceService Contract Tests', () => {
         opf: expect.objectContaining({
           metadata: expect.objectContaining({
             title: 'Test Book',
-            language: 'en',
+            language: ['en'],
             identifier: 'urn:uuid:test-123',
             modifiedDate: expect.any(String), // MUST auto-generate
           }),
@@ -135,7 +135,7 @@ describe('WorkspaceService Contract Tests', () => {
     });
 
     test('createWorkspace generates unique IDs', async () => {
-      const metadata: EPUBMetadata = { title: 'Test', language: 'en', identifier: 'test' };
+      const metadata: EPUBMetadata = { title: 'Test', language: ['en'], identifier: 'test' };
 
       const workspace1 = await service.createWorkspace(metadata);
       const workspace2 = await service.createWorkspace(metadata);
@@ -148,7 +148,7 @@ describe('WorkspaceService Contract Tests', () => {
     test('createWorkspace persists to storage', async () => {
       const metadata: EPUBMetadata = {
         title: 'Persistent Test',
-        language: 'en',
+        language: ['en'],
         identifier: 'persist',
       };
 
@@ -175,7 +175,7 @@ describe('WorkspaceService Contract Tests', () => {
       // Note: Test workspace creation structure instead of load due to Happy-DOM limitations
       const metadata: EPUBMetadata = {
         title: 'Load Test',
-        language: 'en',
+        language: ['en'],
         identifier: 'load-test',
       };
       const created = await service.createWorkspace(metadata);
@@ -186,7 +186,7 @@ describe('WorkspaceService Contract Tests', () => {
         opf: {
           metadata: expect.objectContaining({
             title: 'Load Test',
-            language: 'en',
+            language: ['en'],
             identifier: 'load-test',
           }),
           manifest: expect.any(Array),
@@ -214,7 +214,7 @@ describe('WorkspaceService Contract Tests', () => {
       // SETUP: Create workspace then corrupt its OPF
       const created = await service.createWorkspace({
         title: 'Corrupt Test',
-        language: 'en',
+        language: ['en'],
         identifier: 'corrupt',
       });
 
@@ -245,7 +245,7 @@ describe('WorkspaceService Contract Tests', () => {
       // SETUP: Create workspace with content
       const workspace = await service.createWorkspace({
         title: 'Original Title',
-        language: 'en',
+        language: ['en'],
         identifier: 'update-test',
       });
 
@@ -277,7 +277,7 @@ describe('WorkspaceService Contract Tests', () => {
       expect(updated.opf.metadata.description).toBe('New description');
 
       // CONTRACT: MUST preserve unchanged metadata
-      expect(updated.opf.metadata.language).toBe('en');
+      expect(updated.opf.metadata.language).toEqual(['en']);
       expect(updated.opf.metadata.identifier).toBe('update-test');
 
       // CONTRACT: modifiedDate is preserved on metadata edits — by design it is
@@ -289,7 +289,7 @@ describe('WorkspaceService Contract Tests', () => {
     test('updateMetadata persists changes to storage', async () => {
       const workspace = await service.createWorkspace({
         title: 'Persist Test',
-        language: 'en',
+        language: ['en'],
         identifier: 'persist',
       });
 
@@ -308,7 +308,7 @@ describe('WorkspaceService Contract Tests', () => {
     test('updateMetadata validates metadata fields', async () => {
       const workspace = await service.createWorkspace({
         title: 'Validation Test',
-        language: 'en',
+        language: ['en'],
         identifier: 'validate',
       });
 
@@ -331,7 +331,7 @@ describe('WorkspaceService Contract Tests', () => {
     test('updateSpineOrder preserves linear and properties on reorder', async () => {
       const workspace = await service.createWorkspace({
         title: 'Spine Test',
-        language: 'en',
+        language: ['en'],
         identifier: 'spine-test',
       });
 
@@ -358,7 +358,7 @@ describe('WorkspaceService Contract Tests', () => {
     test('updateSpineItem toggles the linear flag in place', async () => {
       const workspace = await service.createWorkspace({
         title: 'Spine Test 2',
-        language: 'en',
+        language: ['en'],
         identifier: 'spine-test-2',
       });
 
@@ -380,7 +380,7 @@ describe('WorkspaceService Contract Tests', () => {
       // SETUP: Create workspace
       const workspace = await service.createWorkspace({
         title: 'Delete Test',
-        language: 'en',
+        language: ['en'],
         identifier: 'delete-test',
       });
 
@@ -406,7 +406,7 @@ describe('WorkspaceService Contract Tests', () => {
     test('deleteWorkspace cleans up associated files', async () => {
       const workspace = await service.createWorkspace({
         title: 'Cleanup Test',
-        language: 'en',
+        language: ['en'],
         identifier: 'cleanup',
       });
 
@@ -429,7 +429,7 @@ describe('WorkspaceService Contract Tests', () => {
     test('delegates file operations to FileStorageAPI', async () => {
       await service.createWorkspace({
         title: 'Integration Test',
-        language: 'en',
+        language: ['en'],
         identifier: 'int',
       });
 
@@ -443,7 +443,7 @@ describe('WorkspaceService Contract Tests', () => {
     });
 
     test('generates valid OPF content using OPFUtils', async () => {
-      const metadata: EPUBMetadata = { title: 'EPUB Test', language: 'en', identifier: 'epub' };
+      const metadata: EPUBMetadata = { title: 'EPUB Test', language: ['en'], identifier: 'epub' };
       const workspace = await service.createWorkspace(metadata);
 
       // CONTRACT: MUST generate valid OPF structure
@@ -474,7 +474,7 @@ describe('WorkspaceService Contract Tests', () => {
       // Create workspace with chapter
       const workspace = await service.createWorkspace({
         title: 'Test',
-        language: 'en',
+        language: ['en'],
         identifier: 'test',
       });
 
@@ -505,7 +505,7 @@ describe('WorkspaceService Contract Tests', () => {
       // Create workspace and add chapter + JavaScript
       const workspace = await service.createWorkspace({
         title: 'Test',
-        language: 'en',
+        language: ['en'],
         identifier: 'test',
       });
       const workspaceWithChapter = await service.addManifestItem(workspace, {
@@ -535,7 +535,7 @@ describe('WorkspaceService Contract Tests', () => {
       // Create workspace with nav item (has nav property)
       const workspace = await service.createWorkspace({
         title: 'Test',
-        language: 'en',
+        language: ['en'],
         identifier: 'test',
       });
       const workspaceWithNav = await service.addManifestItem(workspace, {
@@ -562,7 +562,7 @@ describe('WorkspaceService Contract Tests', () => {
       // Create workspace with nav item
       const workspace = await service.createWorkspace({
         title: 'Test',
-        language: 'en',
+        language: ['en'],
         identifier: 'test',
       });
       const workspaceWithNav = await service.addManifestItem(workspace, {
@@ -589,7 +589,7 @@ describe('WorkspaceService Contract Tests', () => {
       // Create workspace and add chapter + two JavaScript files
       const workspace = await service.createWorkspace({
         title: 'Test',
-        language: 'en',
+        language: ['en'],
         identifier: 'test',
       });
       const workspaceWithChapter = await service.addManifestItem(workspace, {
@@ -620,7 +620,7 @@ describe('WorkspaceService Contract Tests', () => {
       // Create workspace with chapter and CSS file
       const workspace = await service.createWorkspace({
         title: 'Test',
-        language: 'en',
+        language: ['en'],
         identifier: 'test',
       });
       const workspaceWithChapter = await service.addManifestItem(workspace, {
@@ -652,7 +652,7 @@ describe('WorkspaceService Contract Tests', () => {
       // Create workspace and add JavaScript file
       const workspace = await service.createWorkspace({
         title: 'Test',
-        language: 'en',
+        language: ['en'],
         identifier: 'test',
       });
       const workspaceWithJS = await service.addManifestItem(workspace, {
@@ -676,7 +676,7 @@ describe('WorkspaceService Contract Tests', () => {
       // workspace returned by addManifestItem, the asset must persist.
       const workspace = await service.createWorkspace({
         title: 'Test',
-        language: 'en',
+        language: ['en'],
         identifier: 'test',
       });
 
@@ -699,7 +699,7 @@ describe('WorkspaceService Contract Tests', () => {
       // never leave content.opf listing an item whose file is already gone.
       const workspace = await service.createWorkspace({
         title: 'Test',
-        language: 'en',
+        language: ['en'],
         identifier: 'test',
       });
       const withAsset = await service.addManifestItem(workspace, {
@@ -722,7 +722,7 @@ describe('WorkspaceService Contract Tests', () => {
     test('sanitizes a renamed href to an EPUB-safe path', async () => {
       const workspace = await service.createWorkspace({
         title: 'Test',
-        language: 'en',
+        language: ['en'],
         identifier: 'test',
       });
       const withImage = await service.addManifestItem(workspace, {
@@ -742,7 +742,7 @@ describe('WorkspaceService Contract Tests', () => {
     test('rejects a rename that collides with another item (case-insensitive)', async () => {
       const workspace = await service.createWorkspace({
         title: 'Test',
-        language: 'en',
+        language: ['en'],
         identifier: 'test',
       });
       let ws = await service.addManifestItem(workspace, {

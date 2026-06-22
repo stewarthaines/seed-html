@@ -49,6 +49,7 @@ describe('Theme Store', () => {
       current: 'light',
       systemPreference: 'light',
       isInitialized: false,
+      isSystem: true,
     });
   });
 

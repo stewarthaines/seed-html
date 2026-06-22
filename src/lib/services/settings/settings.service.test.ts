@@ -135,6 +135,7 @@ describe('SettingsService Contract Tests', () => {
         theme: 'light' as const,
         locale: 'de',
         editor_font_size: 18,
+        enabled_plugins: [],
       };
 
       service.saveGlobalSettings(settings);
@@ -149,6 +150,7 @@ describe('SettingsService Contract Tests', () => {
         theme: 'dark',
         locale: 'en',
         editor_font_size: 14,
+        enabled_plugins: [],
       });
 
       // CONTRACT: MUST update theme store
@@ -160,6 +162,7 @@ describe('SettingsService Contract Tests', () => {
         theme: 'system',
         locale: 'fr',
         editor_font_size: 14,
+        enabled_plugins: [],
       });
 
       // CONTRACT: MUST update i18n store

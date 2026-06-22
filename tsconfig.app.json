@@ -26,8 +26,6 @@
   "exclude": [
     "node_modules",
     "dist",
-    "**/*.spec.ts",
-    "**/*.test.ts",
     "src/assets/**/*.js",
     "src/lib/storage/opfs-worker.js",
     "src/stories/**/*",

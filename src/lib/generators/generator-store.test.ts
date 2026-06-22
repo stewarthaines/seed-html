@@ -55,7 +55,13 @@ describe('generator-store', () => {
   it('writes a manifest + script (+ license), then discovers it', async () => {
     const { api, files } = makeFileStorage();
 
-    await writeGenerator(api, 'ws', figures, enc.encode('SCRIPT').buffer, enc.encode('LIC').buffer);
+    await writeGenerator(
+      api,
+      'ws',
+      figures,
+      enc.encode('SCRIPT').buffer as ArrayBuffer,
+      enc.encode('LIC').buffer as ArrayBuffer
+    );
 
     expect(dec.decode(files.get('SOURCE/generators/figures/listFigures.js')!)).toBe('SCRIPT');
     expect(dec.decode(files.get('SOURCE/generators/figures/LICENSE.txt')!)).toBe('LIC');
@@ -74,7 +80,7 @@ describe('generator-store', () => {
   it('skips a generator with no license content when none declared', async () => {
     const { api, files } = makeFileStorage();
     const noLicense: GeneratorManifest = { ...figures, license: undefined };
-    await writeGenerator(api, 'ws', noLicense, enc.encode('S').buffer);
+    await writeGenerator(api, 'ws', noLicense, enc.encode('S').buffer as ArrayBuffer);
     expect(files.has('SOURCE/generators/figures/LICENSE.txt')).toBe(false);
     expect(files.has('SOURCE/generators/figures/generator.json')).toBe(true);
   });
@@ -105,7 +111,13 @@ describe('generator-store', () => {
 
   it('deletes every file under a generator dir', async () => {
     const { api, files } = makeFileStorage();
-    await writeGenerator(api, 'ws', figures, enc.encode('S').buffer, enc.encode('L').buffer);
+    await writeGenerator(
+      api,
+      'ws',
+      figures,
+      enc.encode('S').buffer as ArrayBuffer,
+      enc.encode('L').buffer as ArrayBuffer
+    );
     await deleteGenerator(api, 'ws', 'figures');
     expect([...files.keys()].some(k => k.startsWith('SOURCE/generators/figures/'))).toBe(false);
     expect(await listGenerators(api, 'ws')).toEqual([]);

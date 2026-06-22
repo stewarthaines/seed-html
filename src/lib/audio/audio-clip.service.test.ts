@@ -26,7 +26,7 @@ function createMockWorkspaceService(): jest.Mocked<WorkspaceService> {
   const mockWorkspace: WorkspaceState = {
     id: 'test-workspace',
     opf: {
-      metadata: { title: 'Test', language: 'en', identifier: 'test', modifiedDate: '2023-01-01' },
+      metadata: { title: 'Test', language: ['en'], identifier: 'test', modifiedDate: '2023-01-01' },
       manifest: [
         { id: 'audio1', href: 'Audio/chapter1.mp3', mediaType: 'audio/mpeg' },
         { id: 'audio2', href: 'Audio/chapter2.ogg', mediaType: 'audio/ogg' },
@@ -104,7 +104,7 @@ describe('AudioClipService API Contract Tests', () => {
         opf: {
           metadata: {
             title: 'Empty',
-            language: 'en',
+            language: ['en'],
             identifier: 'empty',
             modifiedDate: '2023-01-01',
           },
@@ -571,7 +571,7 @@ describe('AudioClipService API Contract Tests', () => {
         opf: {
           metadata: {
             title: 'No Audio',
-            language: 'en',
+            language: ['en'],
             identifier: 'no-audio',
             modifiedDate: '2023-01-01',
           },
@@ -603,7 +603,7 @@ describe('AudioClipService API Contract Tests', () => {
         opf: {
           metadata: {
             title: 'Malformed',
-            language: 'en',
+            language: ['en'],
             identifier: 'malformed',
             modifiedDate: '2023-01-01',
           },

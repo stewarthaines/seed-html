@@ -221,8 +221,8 @@ describe('EPUBPackager', () => {
     it('should generate filename with title, author, and date', () => {
       const metadata: EPUBMetadata = {
         title: 'Test Book',
-        creator: ['Test Author'],
-        language: 'en',
+        creator: [{ name: 'Test Author', roles: [] }],
+        language: ['en'],
         identifier: 'test-123',
       };
 
@@ -233,7 +233,7 @@ describe('EPUBPackager', () => {
     it('should generate filename without author', () => {
       const metadata: EPUBMetadata = {
         title: 'Test Book',
-        language: 'en',
+        language: ['en'],
         identifier: 'test-123',
       };
 
@@ -244,8 +244,8 @@ describe('EPUBPackager', () => {
     it('should sanitize invalid characters', () => {
       const metadata: EPUBMetadata = {
         title: 'Test<>Book:|?*',
-        creator: ['Test/\\Author'],
-        language: 'en',
+        creator: [{ name: 'Test/\\Author', roles: [] }],
+        language: ['en'],
         identifier: 'test-123',
       };
 
@@ -256,8 +256,8 @@ describe('EPUBPackager', () => {
     it('should use the publication date (dc:date) when present', () => {
       const metadata: EPUBMetadata = {
         title: 'Test Book',
-        creator: ['Test Author'],
-        language: 'en',
+        creator: [{ name: 'Test Author', roles: [] }],
+        language: ['en'],
         identifier: 'test-123',
         date: '1999-12-31',
       };
@@ -269,7 +269,7 @@ describe('EPUBPackager', () => {
     it('should take the date portion of a full dc:date timestamp', () => {
       const metadata: EPUBMetadata = {
         title: 'Test Book',
-        language: 'en',
+        language: ['en'],
         identifier: 'test-123',
         date: '2010-06-15T09:30:00Z',
       };
@@ -281,8 +281,8 @@ describe('EPUBPackager', () => {
     it('should apply a custom filename template', () => {
       const metadata: EPUBMetadata = {
         title: 'Test Book',
-        creator: ['Test Author'],
-        language: 'en',
+        creator: [{ name: 'Test Author', roles: [] }],
+        language: ['en'],
         identifier: 'test-123',
         date: '1999-12-31',
       };
@@ -294,7 +294,7 @@ describe('EPUBPackager', () => {
     it('should collapse separators left by an empty token in a custom template', () => {
       const metadata: EPUBMetadata = {
         title: 'Test Book',
-        language: 'en',
+        language: ['en'],
         identifier: 'test-123',
         date: '1999-12-31',
       };
@@ -308,7 +308,7 @@ describe('EPUBPackager', () => {
     it('should trim a trailing separator when the final token is empty', () => {
       const metadata: EPUBMetadata = {
         title: 'Test Book',
-        language: 'en',
+        language: ['en'],
         identifier: 'test-123',
         date: '1999-12-31',
       };

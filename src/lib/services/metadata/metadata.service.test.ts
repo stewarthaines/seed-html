@@ -26,7 +26,7 @@ describe('MetadataService creators', () => {
     const service = makeService();
     const ws = makeWorkspace({
       title: 'T',
-      language: 'en',
+      language: ['en'],
       identifier: 'id',
       creator: [{ name: 'Alice', roles: ['aut'] }],
     });
@@ -41,7 +41,7 @@ describe('MetadataService creators', () => {
 
   it('addArrayItem appends a string default for subjects', async () => {
     const service = makeService();
-    const ws = makeWorkspace({ title: 'T', language: 'en', identifier: 'id', subject: [] });
+    const ws = makeWorkspace({ title: 'T', language: ['en'], identifier: 'id', subject: [] });
 
     const updated = await service.addArrayItem(ws, 'subject');
 
