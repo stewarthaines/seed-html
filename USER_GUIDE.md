@@ -1,6 +1,6 @@
-# EDITME.html User Guide
+# SEED.html User Guide
 
-Welcome to EDITME.html, the browser-based EPUB editor that transforms your plain text into professionally formatted ebooks.
+Welcome to SEED.html, the browser-based EPUB editor that transforms your plain text into professionally formatted ebooks.
 
 ## Table of Contents
 
@@ -14,11 +14,11 @@ Welcome to EDITME.html, the browser-based EPUB editor that transforms your plain
 
 ## Getting Started
 
-EDITME.html works in modern web browsers without any installation. Choose your preferred method:
+SEED.html works in modern web browsers without any installation. Choose your preferred method:
 
-- **Quick Start**: Visit [web address coming soon] to begin editing immediately
-- **Offline Use**: Download EDITME.html to work without internet
-- **From EPUB**: Extract the editor from an Active EPUB file
+- **Quick Start**: Visit [readitinabook.com](https://readitinabook.com) to begin editing immediately
+- **Offline Use**: Download SEED.html to work without internet
+- **From EPUB**: Extract the editor from a SEED EPUB file
 
 ### Browser Requirements
 
@@ -30,7 +30,7 @@ EDITME.html works in modern web browsers without any installation. Choose your p
 
 ### First Visit
 
-1. Navigate to [web address coming soon]
+1. Navigate to [readitinabook.com](https://readitinabook.com)
 2. The editor will load and initialize local storage
 3. You can immediately:
    - Create a new EPUB project
@@ -51,10 +51,10 @@ EDITME.html works in modern web browsers without any installation. Choose your p
 
 ## Working Offline
 
-### Downloading EDITME.html
+### Downloading SEED.html
 
 1. From the web version, select **File → Save As...** in your browser
-2. Move `EDITME.html` to your desired location
+2. Move `SEED.html` to your desired location
 3. Double-click the file to open in your browser
 
 ### Offline Capabilities
@@ -62,7 +62,7 @@ EDITME.html works in modern web browsers without any installation. Choose your p
 When using the downloaded version:
 
 - Full editing functionality
-- All features work identically to web version
+- Core editing features work identically to web version
 - Data persists between sessions
 - No internet connection required
 
@@ -70,30 +70,26 @@ When using the downloaded version:
 
 For the best offline experience:
 
-1. Save EDITME.html in your documents folder
+1. Save SEED.html in your documents folder
 2. Packaged EPUB files will be saved to your Downloads folder
 
-## Extracting from EPUBs
+## Extracting from SEED EPUBs
 
-Some EPUBs include EDITME.html for editing. To extract:
+Some EPUBs include SEED.html for editing. To extract:
 
 ### Manual Extraction
 
 1. Rename the `.epub` file to `.zip`
 2. Extract the ZIP file
-3. Locate `OEBPS/EDITME.html`
+3. Locate `SEED.html`
 4. Copy to your desired location
-
-### Embedded Instructions
-
-Active EPUBs should include a `editme_about.xhtml` or similar chapter with specific extraction instructions for that publication.
 
 ## Basic Workflow
 
 ### Creating a New EPUB
 
 1. **Start a New Project**
-   - Click "New EPUB"
+   - Click "Create New"
    - Enter basic metadata (title, author, language)
 
 2. **Write Your Content**
@@ -107,12 +103,12 @@ Active EPUBs should include a `editme_about.xhtml` or similar chapter with speci
    - Check formatting in real-time
 
 4. **Export Your EPUB**
-   - Click "Package"
+   - Click "Package EPUB"
    - Review the `.epub` file from the Downloads folder
 
 ### Importing Existing EPUBs
 
-1. Click "Import" or drag-and-drop an EPUB file
+1. Click "Import from File" and select an .epub file
 2. The editor extracts and displays contents
 3. Edit text sources if available
 
@@ -135,7 +131,7 @@ Default transformations include:
 ### Custom Transformations
 
 1. **Access Transform Settings**
-   - Go to Settings → Transforms
+   - Go to Settings → Extensions
    - View available transform scripts
 
 2. **Modify Transforms**
@@ -152,7 +148,7 @@ Default transformations include:
 
 1. **Change Interface Language**
    - Settings → Language
-   - Choose from 7 languages
+   - Choose from available languages
    - Interface updates immediately
 
 2. **RTL Support**
@@ -230,7 +226,7 @@ Your work is saved in browser storage that is not easily findable.
 To backup:
 
 1. Package all EPUBs regularly
-2. Use workspace export feature
+2. Use epub package download feature
 3. Keep copies of custom transforms
 
 ## Tips and Best Practices
@@ -243,8 +239,7 @@ To backup:
 
 ### Performance
 
-- Close unused projects
-- Regular cleanup of workspace
+- Remove unused projects
 - Modern browsers perform best
 
 ### Backup Strategy
@@ -256,6 +251,5 @@ To backup:
 
 ## Getting Help
 
-- **User Forum**: [coming soon]
 - **Documentation**: Check other guides in project
-- **Bug Reports**: [contact coming soon]
+- **Bug Reports**: [Project on Github](https://github.com/stewarthaines/editme-svelte)

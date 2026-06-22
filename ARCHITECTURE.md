@@ -1,6 +1,6 @@
-# EDITME.html - System Architecture
+# SEED.html - System Architecture
 
-This document provides a comprehensive overview of the EDITME.html EPUB editor's architecture, component relationships, and key design patterns.
+This document provides a comprehensive overview of the SEED.html EPUB editor's architecture, component relationships, and key design patterns.
 
 ## Table of Contents
 
@@ -8,16 +8,16 @@ This document provides a comprehensive overview of the EDITME.html EPUB editor's
 - [Architectural Layers](#architectural-layers)
 - [Service Architecture](#service-architecture)
 - [Storage Architecture](#storage-architecture)
-- [EPUB Processing Pipeline](#epub-processing-pipeline)
 - [State Management](#state-management)
 - [Data Flow](#data-flow)
+- [EPUB Processing Pipeline](#epub-processing-pipeline)
 - [Error Handling](#error-handling)
 - [Browser Integration](#browser-integration)
 - [Development Guidelines](#development-guidelines)
 
 ## Overview
 
-EDITME.html is a browser-based EPUB editor built with Svelte 5 and TypeScript. It transforms plain text into formatted EPUB files using a sophisticated transformation pipeline and modern browser APIs.
+SEED.html is a browser-based EPUB editor built with Svelte 5 and TypeScript. It transforms plain text into formatted EPUB files using a sophisticated transformation pipeline and modern browser APIs.
 
 > This document is the whole-system overview. For the deep-dive on the spine-item
 > editor + persistent-iframe transform/preview subsystem, see
@@ -26,7 +26,7 @@ EDITME.html is a browser-based EPUB editor built with Svelte 5 and TypeScript. I
 ### Distribution Model
 
 - **Web Application**: Hosted version accessible via browser
-- **Standalone HTML**: Single ~2-3MB file for offline use
+- **Standalone HTML**: Single ~1MB file for offline use
 - **Active EPUB**: Self-editing EPUB files with embedded editor
 
 ### Key Design Principles
@@ -485,7 +485,7 @@ graph TB
         Cache[Cache API]
     end
 
-    App[EDITME Application] --> OPFS
+    App[SEED Application] --> OPFS
     App --> CS
     App --> WW
     App --> IDB
@@ -576,4 +576,4 @@ This architecture represents a complete migration from the previous manager-base
 
 ---
 
-This architecture provides a solid foundation for understanding how EDITME.html components interact and how to extend the system. For specific implementation details, refer to the individual service API documentation in each module.
+This architecture provides a solid foundation for understanding how SEED.html components interact and how to extend the system. For specific implementation details, refer to the individual service API documentation in each module.

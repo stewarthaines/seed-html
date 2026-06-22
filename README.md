@@ -13,14 +13,14 @@ SEED.html is a sophisticated EPUB editing application that runs entirely in your
 - **Multi-Device Preview** - See how your book looks on different devices
 - **Extensible Transform System** - Customize text processing with JavaScript
 - **Accessibility-First Design** - Full keyboard navigation and screen reader support
-- **Internationalization** - Available in 7 languages with RTL support
+- **Internationalization** - Available in multiple languages with RTL support
 - **Modern Storage** - Uses OPFS and IndexedDB for persistent local storage
 
 ## Distribution
 
 SEED.html is distributed under the terms of the MIT license. It is free to use, modify and distribute. In addition to the source repository it may be available in these ways;
 
-1. **Web Application** - Access at [stewarthaines.com](https://stewarthaines.com/epub) for immediate use
+1. **Web Application** - Access at [readitinabook.com](https://readitinabook.com) for immediate use
 2. **Downloadable HTML** - Save locally from the above site for offline authoring
 3. **Embedded in EPUBs** - The SEED.html app can be added to an EPUB as a non-manifest item, so it travels with the book for the life of that artifact
 
@@ -41,8 +41,8 @@ This section is for developers maintaining or extending SEED.html.
 
 ### Prerequisites
 
-- Node.js 18+ (LTS recommended)
-- npm 9+
+- Node.js 20+ (LTS recommended)
+- npm 10+
 - Modern browser (Chrome/Edge 119+, Firefox 119+, Safari 17+)
 
 ### Setup

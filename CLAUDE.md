@@ -28,11 +28,11 @@ When the user asks you to document a plan or write a new document describing det
 
 ## SEED.html - Simple EPUB Editor
 
-This is a **Svelte 5 application using runes mode** that runs in modern browsers, replacing a previous Vue.js version. It allows users to create and edit EPUB files using plain text sources that are transformed to XHTML.
+This is a **Svelte 5 application using runes mode** that runs in modern browsers. It allows users to create and edit EPUB files using plain text sources that are transformed to XHTML.
 
 ### Project name (IMPORTANT)
 
-The product is **SEED.html** (short for *Simple EPUB EDitor*). The distributable single
+The product is **SEED.html** (short for _Simple EPUB EDitor_). The distributable single
 file is `SEED.html`, the editor-source archive is `SEED.zip`, and the UI name shown to
 users is **"Simple EPUB Editor"**.
 
@@ -74,9 +74,9 @@ style.
 
 1. **Web Application** - Hosted version accessible via browser
 2. **Standalone HTML** - Single file download for offline use
-3. **Active EPUB** - Embedded within EPUB files for self-editing capability
+3. **SEED EPUB** - Embedded within EPUB files for self-editing capability
 
-The build process creates a single `index.html` file (~2-3MB) with all assets inlined, suitable for all distribution methods. See [DEPLOYMENT.md](./DEPLOYMENT.md) for deployment details.
+The build process creates a single `index.html` file (~1MB) with all assets inlined, suitable for all distribution methods. See [DEPLOYMENT.md](./DEPLOYMENT.md) for deployment details.
 
 ## Technical Architecture
 
@@ -84,7 +84,7 @@ The build process creates a single `index.html` file (~2-3MB) with all assets in
 
 - EPUB unpacking/packaging using Compression Streams API
 - Real-time plain text to XHTML transformation
-- Multi-device preview (iPhone, iPad, Pixel phone variants)
+- Multi-device preview (iPhone, iPad, e-reader variants)
 - Extensible transform scripts loaded from EPUB manifest
 - Accessibility-focused design
 - Reactive internationalization system with RTL support (English + German shipped; 5 more scaffolded but not enabled — see `ENABLED_LOCALES`)
@@ -133,13 +133,13 @@ Extension to standard EPUB structure:
 mimetype
 META-INF/content.opf
 OEBPS/ (standard EPUB content)
-├── SEED.zip (editor source files - extracted to SOURCE/ during editing)
-└── SEED.html (editor app - to be extracted by the user to edit the EPUB file)
+SEED.zip (editor source files - extracted to SOURCE/ during editing)
+SEED.html (editor app - to be extracted by the user to edit the EPUB file)
 ```
 
 **Note**: The `SEED.zip` file (formerly `SOURCE.zip`; imports still accept the old name) contains all editor-specific files (settings, plain text sources, transform scripts, extensions) and is extracted to a `SOURCE/` directory in the workspace during editing. The archive filename is `SEED.zip`; the extracted working directory remains `SOURCE/`.
 
-**Important**: When creating Active EPUBs, always include extraction instructions for end users. See [EPUB_EMBEDDING.md](./EPUB_EMBEDDING.md) for detailed embedding guidelines.
+**Important**: When creating SEED EPUBs, always include extraction instructions for end users. See [EPUB_EMBEDDING.md](./EPUB_EMBEDDING.md) for detailed embedding guidelines.
 
 ## Key Systems
 

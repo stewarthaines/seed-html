@@ -1,6 +1,6 @@
-# EDITME.html Deployment Guide
+# SEED.html Deployment Guide
 
-This guide covers building and deploying EDITME.html for various distribution methods.
+This guide covers building and deploying SEED.html for various distribution methods.
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@ This guide covers building and deploying EDITME.html for various distribution me
 
 ### Prerequisites
 
-- Node.js 18+ installed
+- Node.js 20+ installed
 - All dependencies installed (`npm install`)
 - All tests passing (`npm test`)
 
@@ -29,7 +29,7 @@ npm run check && npm run lint && npm test
 npm run build
 ```
 
-This creates a single `EDITME.html` file in the `dist/` directory with:
+This creates a single `index.html` file in the `dist/` directory with:
 
 - All JavaScript and CSS inlined
 - Assets encoded as data URLs
@@ -49,7 +49,7 @@ npm run preview
 
 The build produces:
 
-- `dist/EDITME.html` - Single file application (~2-3MB)
+- `dist/index.html` - Single file application (~1MB)
 - All external dependencies bundled
 - No additional files required
 
@@ -77,7 +77,7 @@ server {
     root /var/www/editme;
 
     location / {
-        try_files $uri /EDITME.html;
+        try_files $uri /index.html;
     }
 
     # Ensure proper MIME type
@@ -108,8 +108,8 @@ server {
     SSLCertificateFile /path/to/cert.pem
     SSLCertificateKeyFile /path/to/key.pem
 
-    # Serve EDITME.html as default
-    DirectoryIndex EDITME.html
+    # Serve index.html as default
+    DirectoryIndex index.html
 
     # Security headers
     Header set X-Frame-Options "SAMEORIGIN"
@@ -127,7 +127,7 @@ server {
 
 For global distribution:
 
-1. Upload `EDITME.html` to CDN origin
+1. Upload `dist/index.html` to CDN origin
 2. Configure caching headers:
    ```
    Cache-Control: public, max-age=3600
@@ -145,11 +145,11 @@ npm run build
 
 # Copy to docs folder (GitHub Pages default)
 mkdir -p docs
-cp dist/EDITME.html docs/index.html
+cp dist/index.html docs/index.html
 
 # Commit and push
 git add docs/index.html
-git commit -m "Deploy EDITME.html"
+git commit -m "Deploy SEED.html"
 git push
 ```
 
@@ -214,11 +214,11 @@ npx wrangler pages deploy dist
 2. **Create Download Package**
    ```bash
    # Create a ZIP with documentation
-   mkdir editme-download
-   cp dist/EDITME.html editme-download/
-   cp USER_GUIDE.md editme-download/README.txt
-   cp LICENSE.txt editme-download/
-   zip -r editme-standalone.zip editme-download/
+   mkdir SEED-download
+   cp dist/index.html SEED-download/SEED.html
+   cp USER_GUIDE.md SEED-download/README.txt
+   cp LICENSE.txt SEED-download/
+   zip -r SEED-standalone.zip SEED-download/
    ```
 
 ### Download Instructions Template
@@ -226,10 +226,10 @@ npx wrangler pages deploy dist
 Create a `DOWNLOAD_README.txt`:
 
 ```text
-EDITME.html - Standalone EPUB Editor
+SEED.html - Standalone EPUB Editor
 
 To use:
-1. Save EDITME.html to your computer
+1. Save SEED.html to your computer
 2. Double-click to open in your web browser
 3. Bookmark for easy access
 
@@ -249,7 +249,7 @@ The application includes a self-download feature:
 
 ### Creating Active EPUBs
 
-To embed EDITME.html in an EPUB:
+To embed SEED.html in an EPUB:
 
 1. **Prepare the EPUB Structure**
 
@@ -259,35 +259,27 @@ To embed EDITME.html in an EPUB:
    ├── META-INF/
    │   └── container.xml
    └── OEBPS/
-       ├── content.opf
-       ├── EDITME.html
-       └── SEED.zip
+   │   ├── content.opf
+   |   └── [...]
+   ├── SEED.html
+   └── SEED.zip
    ```
 
-2. **Add to Manifest** (in content.opf)
-
-   ```xml
-   <item id="editme"
-         href="EDITME.html"
-         media-type="text/html"
-         properties="scripted"/>
-   ```
-
-3. **Include Extraction Instructions**
+2. **Include Extraction Instructions**
 
    Create `OEBPS/EXTRACT_EDITOR.txt`:
 
    ```text
-   To extract the EDITME.html editor:
+   To extract the SEED.html editor:
 
    1. Rename this .epub file to .zip
    2. Extract the ZIP file
-   3. Find OEBPS/EDITME.html
+   3. Find SEED.html
    4. Copy to your desired location
    5. Open in a web browser to edit EPUBs
    ```
 
-4. **Package the EPUB**
+3. **Package the EPUB**
    ```bash
    cd EPUB/
    zip -0 -X ../book-with-editor.epub mimetype
@@ -425,7 +417,7 @@ Before deploying:
 - [ ] Review security headers
 - [ ] Test in target browsers
 - [ ] Verify offline functionality
-- [ ] Check file size (~2-3MB expected)
+- [ ] Check file size (~1MB expected)
 - [ ] Update documentation
 - [ ] Prepare download packages
 
