@@ -158,6 +158,8 @@ export default [
       'storybook-static/',
       'coverage/',
       '.claude/',
+      // Local Python virtualenv (untracked) — not app code.
+      '.venv/',
       // Workspace plugins are separate packages with their own lint/format/test
       // toolchain (and newer dep majors); the core gate does not govern them.
       'plugins/',
@@ -172,6 +174,8 @@ export default [
       // transform scripts is covered by the transform test suite instead.
       'src/assets/**',
       '**/*.min.js',
+      // Vendored Paged.js polyfill, served as-is (not named *.min.js).
+      'public/paged.polyfill.js',
       // Ignore specific generated files
       '**/lcov-report/',
       '**/coverage-report/',
