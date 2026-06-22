@@ -1532,12 +1532,20 @@
                 </div>
               </div>
             {:else if xhtmlContent}
-              <iframe
-                bind:this={previewIframe}
-                class="preview-iframe"
-                title={$t('XHTML Preview')}
-                onload={handleIframeLoad}
-              ></iframe>
+              <!-- Re-key the iframe on the device so a device switch destroys and
+                   recreates it (the render effect repopulates it) rather than reusing
+                   it via updatePreviewContent's open/write/close. The reuse path leaves
+                   document.body transiently null mid-rewrite, which an embedded chapter
+                   script's pending window handler can fire into; a fresh iframe gives
+                   each render its own clean document lifecycle. -->
+              {#key selectedDevice.current}
+                <iframe
+                  bind:this={previewIframe}
+                  class="preview-iframe"
+                  title={$t('XHTML Preview')}
+                  onload={handleIframeLoad}
+                ></iframe>
+              {/key}
             {:else}
               <div class="preview-empty">
                 <div class="empty-content">
