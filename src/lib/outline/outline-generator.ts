@@ -134,6 +134,13 @@ export class OutlineGenerator {
     let chapterNumber = 1;
 
     for (const spineItem of spineItems) {
+      // Skip non-linear items (spine linear="no") — auxiliary content such as covers
+      // or pop-up footnotes that sits outside the reading order, so it doesn't belong
+      // in the generated table of contents.
+      if (spineItem.linear === false) {
+        continue;
+      }
+
       // Skip items with empty hrefs
       if (!spineItem.href) {
         continue;
