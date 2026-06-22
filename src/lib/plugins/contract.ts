@@ -3,7 +3,7 @@
  *
  * The core app loads plugins as self-contained .html files inside an iframe and
  * talks to them through a deliberately tiny postMessage protocol (see
- * plans/api/plugins.md). This module is the single source of truth for that
+ * ./API.md). This module is the single source of truth for that
  * protocol: the message shapes plus runtime guards used by the host and the
  * contract tests. Plugin packages mirror these types in their own source.
  *
@@ -21,7 +21,7 @@
  *     plugins only; the publish `view` plugin does not use it).
  *
  * This mirrors the wire shapes implemented by plugins/publish-to-remote/src
- * (its src/types.ts + src/index.ts). The plans/api/plugins.md spec predates the
+ * (its src/types.ts + src/index.ts). The ./API.md spec predates the
  * plugin and omits `plugin-ready`/`projectId`; this module is the source of truth.
  */
 
@@ -30,7 +30,7 @@ export type PluginPresentation = 'panel' | 'view';
 
 /**
  * One entry in the build-generated `plugins/manifest.json`. Mirrors the schema
- * documented in plans/api/plugins.md.
+ * documented in ./API.md.
  */
 export interface PluginManifestEntry {
   /** Unique identifier (e.g. 'publish'). */

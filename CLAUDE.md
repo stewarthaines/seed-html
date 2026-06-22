@@ -92,7 +92,7 @@ The build process creates a single `index.html` file (~2-3MB) with all assets in
 ### Code Style Preferences
 
 - **XML/HTML Parsing**: Use `DOMParser` and `querySelector` instead of regular expressions for robust parsing
-- **CSS & Styling**: Use the comprehensive design system in `src/styles/` - see `plans/features/css_design_system.md` for full documentation
+- **CSS & Styling**: Use the comprehensive design system in `src/styles/` - see `src/styles/DESIGN_SYSTEM.md` for full documentation
 - **Editor-source archive (`SEED.zip`)**: Use existing ZIP library (`src/lib/zip/`) for the editor-source archive's creation/extraction. The archive name constant lives in `src/lib/source/source-utils.ts` (`SOURCE_ARCHIVE_NAME`); imports also accept the legacy `SOURCE.zip`.
 - **Import Paths**: Use absolute paths (`$lib/`) for new code
 - Browser-native APIs preferred over regex for structured data handling
@@ -145,7 +145,7 @@ OEBPS/ (standard EPUB content)
 
 ### CSS Design System
 
-Complete design token system with utilities and themes. **Location**: All CSS files are in `src/styles/` with organized token/utility/theme structure. See `plans/features/css_design_system.md` for complete documentation.
+Complete design token system with utilities and themes. **Location**: All CSS files are in `src/styles/` with organized token/utility/theme structure. See `src/styles/DESIGN_SYSTEM.md` for complete documentation.
 
 ### ZIP Library
 

@@ -1,7 +1,7 @@
 /**
  * Host-side plugin discovery.
  *
- * Plugins are an HTTP-only enrichment layer (see plans/api/plugins.md). The core
+ * Plugins are an HTTP-only enrichment layer (see ./API.md). The core
  * fetches a build-generated `plugins/manifest.json` to learn which plugins are
  * *available*; whether one is *used* additionally depends on the user enabling it
  * (resolved against the settings service by the caller — kept out of here so this
