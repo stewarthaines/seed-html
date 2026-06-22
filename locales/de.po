@@ -406,7 +406,7 @@ msgstr "Ungefähre Startposition"
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Approximates a reading system (theming and text size). Preview only — it never changes the exported EPUB."
-msgstr ""
+msgstr "Annäherung an ein Lesesystem (Design und Schriftgröße). Nur Vorschau – das exportierte EPUB wird nie verändert."
 
 #: src/lib/components/SpineSidebar.svelte
 msgid "Are you sure you want to delete chapter '{name}'? This will permanently delete the chapter and its source file."
@@ -633,7 +633,7 @@ msgstr "Barrierefreiheitsbereich schließen"
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Close reading preview panel"
-msgstr ""
+msgstr "Lesevorschau schließen"
 
 #: src/lib/components/spine/ChapterValidationPanel.svelte
 msgid "Close validation panel"
@@ -861,7 +861,7 @@ msgstr "Dunkler Text auf hellem Cover"
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Decrease text size"
-msgstr ""
+msgstr "Schrift verkleinern"
 
 #: src/lib/components/metadata/BasicInfoFields.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
@@ -1290,7 +1290,7 @@ msgstr "Schrift:"
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Force reading-system colours"
-msgstr ""
+msgstr "Farben des Lesesystems erzwingen"
 
 #: src/lib/components/metadata/AdvancedFields.svelte
 msgid "Format"
@@ -1442,7 +1442,7 @@ msgstr "Vorschau-Head einbinden"
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Increase text size"
-msgstr ""
+msgstr "Schrift vergrößern"
 
 #: src/App.svelte
 msgid "Initializing application..."
@@ -2224,19 +2224,19 @@ msgstr "Schreibgeschützte Navigation"
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Reader"
-msgstr ""
+msgstr "Lesemodus"
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Reading preview"
-msgstr ""
+msgstr "Lesevorschau"
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Reading preview (theme and text size)"
-msgstr ""
+msgstr "Lesevorschau (Design und Schriftgröße)"
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Reading preview settings"
-msgstr ""
+msgstr "Einstellungen für die Lesevorschau"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Redirect URI"
@@ -2521,7 +2521,7 @@ msgstr "Ausgewählter Ordner: {name}"
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Sepia"
-msgstr ""
+msgstr "Sepia"
 
 #: src/lib/components/metadata/CollectionsEditor.svelte
 msgid "Series"
@@ -2736,7 +2736,7 @@ msgstr "Textformate"
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Text size"
-msgstr ""
+msgstr "Schriftgröße"
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Text Transform"
