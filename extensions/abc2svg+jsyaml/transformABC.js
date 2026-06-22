@@ -83,14 +83,14 @@ var codes = document.querySelectorAll('pre.abc2svg, pre:has(code.language-abc2sv
 %%rightmargin 0
 %%topspace 0
 %%musicspace 0
-%%staffwidth 820
+%%staffwidth 790
 %%fullsvg false
 %%scale ${config.scale}
 %%vocalfont serif 16
 %%measurenb 4
 %%unsizedsvg 1
 :%%musicfont ft1
-:%%stretchlast 0.5
+%%stretchlast 0.7
 %%musicfont Bravura
 X:1
 `
