@@ -8,7 +8,7 @@
 -->
 <script lang="ts">
   import { t } from '$lib/i18n';
-  import type { GeneratorRunner, InstalledGenerator } from '$lib/generators/generator-store.js';
+  import type { GeneratorRunner } from '$lib/generators/generator-store.js';
   import type { GeneratorOption } from '$lib/extensions/extension-catalog.js';
 
   let {
