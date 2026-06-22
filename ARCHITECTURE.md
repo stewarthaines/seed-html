@@ -19,6 +19,10 @@ This document provides a comprehensive overview of the EDITME.html EPUB editor's
 
 EDITME.html is a browser-based EPUB editor built with Svelte 5 and TypeScript. It transforms plain text into formatted EPUB files using a sophisticated transformation pipeline and modern browser APIs.
 
+> This document is the whole-system overview. For the deep-dive on the spine-item
+> editor + persistent-iframe transform/preview subsystem, see
+> [PERSISTENT_IFRAME_ARCHITECTURE.md](./PERSISTENT_IFRAME_ARCHITECTURE.md).
+
 ### Distribution Model
 
 - **Web Application**: Hosted version accessible via browser

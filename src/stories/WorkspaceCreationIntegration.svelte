@@ -30,7 +30,7 @@
   // Backend managers
   let storageManager: StorageManager;
 
-  // Real backend initialization (STORYBOOK_ADVANCED.md pattern)
+  // Real backend initialization (STORYBOOK.md pattern)
   async function initializeBackends() {
     try {
       addLog('info', 'Initializing storage backend...');
@@ -253,7 +253,7 @@ p {
     }
   }
 
-  // Reset functionality (STORYBOOK_ADVANCED.md pattern)
+  // Reset functionality (STORYBOOK.md pattern)
   async function resetDemo() {
     logs = [];
     testResults = [];
@@ -298,12 +298,12 @@ p {
     return 'Unknown';
   }
 
-  // Initialize on mount (STORYBOOK_ADVANCED.md pattern)
+  // Initialize on mount (STORYBOOK.md pattern)
   onMount(() => {
     initializeBackends();
   });
 
-  // Expose reset for play functions (STORYBOOK_ADVANCED.md pattern)
+  // Expose reset for play functions (STORYBOOK.md pattern)
   if (typeof window !== 'undefined') {
     (window as any).resetWorkspaceIntegrationDemo = resetDemo;
     (window as any).runWorkspaceIntegrationTest = runCompleteWorkspaceCreation;
@@ -388,7 +388,7 @@ p {
       </div>
     {/if}
 
-    <!-- Console Log (STORYBOOK_ADVANCED.md pattern) -->
+    <!-- Console Log (STORYBOOK.md pattern) -->
     <div class="console-log">
       <div class="console-header">
         <h3>Integration Test Log</h3>

@@ -4,6 +4,10 @@
 
 This document describes a comprehensive CSS architecture designed to maximize style reuse while minimizing CSS bundle size. The system is optimized for Svelte's component model and provides a scalable foundation for the EPUB editor interface.
 
+> **Related design docs (same folder):** [design-language.md](./design-language.md) (visual
+> identity & principles) and [button-design-system.md](./button-design-system.md) (the
+> `.btn-*` utility classes).
+
 ## Design Philosophy
 
 ### Core Principles

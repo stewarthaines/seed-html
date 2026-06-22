@@ -1146,3 +1146,63 @@ private async validateSpineConsistency(workspaceId: string): Promise<SpineValida
   };
 }
 ```
+
+## Usage Examples
+
+### Basic Chapter Management
+
+```typescript
+import { SpineItemManager } from '$lib/spine';
+import { WorkspaceManager } from '$lib/workspace';
+
+const workspaceManager = new WorkspaceManager();
+await workspaceManager.init();
+const spineManager = new SpineItemManager(workspaceManager);
+
+// Load chapters
+const chapters = await spineManager.loadSpineItems('workspace-123');
+
+// Add new chapter
+const newChapter = await spineManager.addChapter('workspace-123', {
+  title: 'Chapter 1: The Beginning',
+  linear: true,
+});
+
+// Reorder chapters
+await spineManager.reorderItems('workspace-123', 0, 2);
+
+// Update chapter
+await spineManager.updateChapter('workspace-123', 'chapter1', {
+  linear: false,
+  properties: ['page-spread-left'],
+});
+
+// Delete chapter
+await spineManager.deleteChapter('workspace-123', 'chapter1');
+```
+
+### Source File Management
+
+```typescript
+// Create source file for existing chapter (automatically associated by naming convention)
+const sourcePath = await spineManager.createSourceFile('workspace-123', 'chapter1');
+// Creates: SOURCE/text/chapter1.txt (automatically linked to chapter1)
+
+// Source files are automatically detected and associated based on naming convention:
+// Chapter ID 'chapter1' → Source file 'SOURCE/text/chapter1.txt'
+```
+
+### Validation
+
+```typescript
+// Validate spine consistency
+const validation = await spineManager.validateSpineOrder('workspace-123');
+
+if (!validation.isValid) {
+  console.error('Spine validation errors:', validation.errors);
+}
+
+if (validation.warnings.length > 0) {
+  console.warn('Spine validation warnings:', validation.warnings);
+}
+```
