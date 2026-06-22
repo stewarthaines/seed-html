@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <link rel="icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAAAAABoBQAAF/QA6OjoAKysrABwcH" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- PWA: installable web app. Manifest + icons are served as separate files
+         (viteSingleFile inlines scripts/styles/favicon but leaves these alone). -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#0074d9" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <title>SEED.html</title>
     <!--
       Compatibility message styling. Plain, Safari-12-safe CSS only (no custom

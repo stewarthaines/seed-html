@@ -88,6 +88,26 @@ export default defineConfig({
       }
     },
     viteSingleFile(),
+    // Build only: emit dist/sw.js (the offline-PWA service worker) from
+    // src/pwa/sw-template.js, stamping a per-build cache version so each deploy
+    // supersedes the previous offline cache. The SW is registered only in prod
+    // over http(s) (see src/main.ts), so dev needs no serve middleware.
+    {
+      name: 'emit-service-worker',
+      apply: 'build',
+      async generateBundle() {
+        const template = await fs.readFile(
+          path.join(dirname, 'src', 'pwa', 'sw-template.js'),
+          'utf8'
+        );
+        const version = `${packageJson.version}-${Date.now()}`;
+        this.emitFile({
+          type: 'asset',
+          fileName: 'sw.js',
+          source: template.replaceAll('__SW_VERSION__', version),
+        });
+      },
+    },
     // Dev only: synthesize plugins/manifest.json by scanning workspace plugins, so
     // the host can discover them against the live dev server (the built manifest is
     // generated into dist/, which the dev server doesn't serve). The plugin source
