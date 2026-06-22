@@ -278,11 +278,25 @@
   // Authoring-time preview behaviour (preview pane only; never the packaged EPUB):
   // per-type live auto-update, and per-type injection of the project's
   // preview/head.xml fragment (edited via the spine editor's file dropdown).
-  const PREVIEW_TYPES: ReadonlyArray<{ key: 'responsive' | 'device' | 'pdf'; label: string }> = [
-    { key: 'responsive', label: 'Responsive' },
-    { key: 'device', label: 'Device' },
-    { key: 'pdf', label: 'PDF' },
+  const PREVIEW_TYPES: ReadonlyArray<{ key: PreviewType }> = [
+    { key: 'responsive' },
+    { key: 'device' },
+    { key: 'pdf' },
   ];
+
+  // Translated label for a preview type. Uses literal $t(...) per branch so the
+  // i18n extractor can see the strings — a dynamic $t(variable) wouldn't be picked
+  // up (and 'Device' has no other literal usage to fall back on).
+  function previewTypeLabel(key: PreviewType): string {
+    switch (key) {
+      case 'responsive':
+        return $t('Responsive');
+      case 'device':
+        return $t('Device');
+      case 'pdf':
+        return $t('PDF');
+    }
+  }
 
   // Toggle one per-type preview flag (optimistic save + revert), resolving defaults
   // so a change always writes a fully-populated preview object.
@@ -1152,7 +1166,7 @@
                             )}
                           disabled={epubLoading}
                         />
-                        <span class="setting-text">{$t(pt.label)}</span>
+                        <span class="setting-text">{previewTypeLabel(pt.key)}</span>
                       </label>
                     {/each}
                   </div>
@@ -1178,7 +1192,7 @@
                             )}
                           disabled={epubLoading}
                         />
-                        <span class="setting-text">{$t(pt.label)}</span>
+                        <span class="setting-text">{previewTypeLabel(pt.key)}</span>
                       </label>
                     {/each}
                   </div>

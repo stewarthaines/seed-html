@@ -914,6 +914,10 @@ msgstr ""
 msgid "Description"
 msgstr ""
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Device"
+msgstr ""
+
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Device:"
 msgstr ""
@@ -2297,6 +2301,7 @@ msgid "Reset Demo"
 msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 #: src/stories/preview/ContentPreviewDemo.svelte
 #. Device category for responsive preview that fills available space
 msgid "Responsive"

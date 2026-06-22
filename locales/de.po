@@ -99,7 +99,7 @@ msgstr "{n} Warnungen"
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "{n}/3 auto-update"
-msgstr ""
+msgstr "{n}/3 automatisch aktualisiert"
 
 #: plugins/publish-to-remote/src/App.svelte
 msgid "{name} deleted"
@@ -439,7 +439,7 @@ msgstr "Automatisch"
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Auto Update"
-msgstr ""
+msgstr "Automatische Aktualisierung"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Auto-filled from bucket name"
@@ -913,6 +913,10 @@ msgstr "Demo-Steuerung"
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Description"
 msgstr "Beschreibung"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Device"
+msgstr "Gerät"
 
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Device:"
@@ -1417,7 +1421,7 @@ msgstr "Inklusive Seitenzahlen"
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Include preview head"
-msgstr ""
+msgstr "Vorschau-Head einbinden"
 
 #: src/App.svelte
 msgid "Initializing application..."
@@ -2126,7 +2130,7 @@ msgstr "Vorschaubereich"
 
 #: src/lib/navigation/views/SpineView.svelte
 msgid "Preview: head.xml"
-msgstr ""
+msgstr "Vorschau: head.xml"
 
 #: src/lib/components/spine/PreviewPane.svelte
 #. The paginated print-page preview option
@@ -2297,6 +2301,7 @@ msgid "Reset Demo"
 msgstr "Demo zurücksetzen"
 
 #: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 #: src/stories/preview/ContentPreviewDemo.svelte
 #. Device category for responsive preview that fills available space
 msgid "Responsive"
