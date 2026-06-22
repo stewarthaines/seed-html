@@ -8,21 +8,16 @@
  *   writeSourceText(path, text). A transform that uses these must be async.
  */
 function transformDOM(htmlDocument, idref, ctx) {
-  try {
-    htmlDocument.querySelectorAll('code.katex, code.language-katex').forEach(code => {
-      const div = document.createElement('div');
-      katex.render(code.textContent, div, {
-        output: 'mathml',
-        macros: {
-          "\\f": "#1f(#2)"
-        },
-        displayMode: true,
-        throwOnError: false
-      });
-      code.parentNode.replaceWith(div);
+  htmlDocument.querySelectorAll('code.katex, code.language-katex').forEach(code => {
+    const div = document.createElement('div');
+    katex.render(code.textContent, div, {
+      output: 'mathml',
+      macros: {
+        "\\f": "#1f(#2)"
+      },
+      displayMode: true,
+      throwOnError: false
+    });
+    code.parentNode.replaceWith(div);
   });
-
-  } catch (error) {
-    console.error('DOM transform error:', error);
-  }
 }

@@ -53,6 +53,12 @@
           "name": "include_scales",
           "label": "Include multiple scale classes",
           "default": false
+        },
+        {
+          "type": "boolean",
+          "name": "multiple_voices",
+          "label": "Include three voices",
+          "default": false
         }
       ]
     }

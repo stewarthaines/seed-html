@@ -24,12 +24,32 @@ function generateText(ctx, options) {
   const opts = options || {};
   const format = opts.format === 'textile' ? 'textile' : 'markdown';
   const includeScales = Boolean(opts.include_scales);
+  const multipleVoices = Boolean(opts.multiple_voices)
 
   // The ABC tune both wrappers share.
-  const tune = ['M:C', 'L:1/4', 'K:C', 'CDEF|GABc|'];
+  const single_voice = [ 'M:C', 'L:1/4', 'K:C', 'CDEF|GABc|' ];
+
+  const three_voices = [ 'M:4/4',
+    '%%measurenb 0',
+    'L:1/4',
+    'Q:1/4=60',
+    'V:T clef=treble name=I',
+    'V:M clef=treble name=II',
+    'V:B clef=bass octave=-2 name=III',
+    '%%score (T M) B',
+    'K:Gmaj',
+    'V:T',
+    'cdef|gabc\'|]',
+    'V:M',
+    'CDEF|GABc|]',
+    'V:B',
+    'CDEF|GABc|]',
+    'w:sa-q’va-rlis sa-plavs ve-dze-bdi ver vna-khe! da-k’a-rgul-iq’-o!' ];
+
+    const tune = multipleVoices ? three_voices : single_voice;
 
   // Optional YAML frontmatter: render the tune at several named scales.
-  const frontmatter = ['---', 'scales:', '  narrow: 1.9', '  wide: 1.15', '  full: 0.69', '---'];
+  const frontmatter = [ '---', 'scales:', '  narrow: 1.9', '  wide: 1.15', '  full: 0.69', '---' ];
 
   // Frontmatter (when requested) precedes the tune inside the block.
   const block = includeScales ? frontmatter.concat(tune) : tune.slice();

@@ -14,7 +14,6 @@ function setup() {
   // create a unstyled paragraph element because it has base font size
   var p = document.createElement('p')
   document.body.append(p)
-  if (!p) return
 
   const fontSize = parseFloat(window.getComputedStyle(p).getPropertyValue('font-size'))
   const widthEms = p.offsetWidth / fontSize

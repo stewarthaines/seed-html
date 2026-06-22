@@ -6,12 +6,7 @@
  * @param {Document} htmlDocument - HTML document to transform
  */
 function transformDOM(htmlDocument, idref) {
-  try {
-    htmlDocument.querySelectorAll('pre code').forEach(el => {
-      hljs.highlightElement(el);
-    });
-  } catch (error) {
-    htmlDocument.body.append(error);
-    console.error('DOM transform error:', error);
-  }
+  htmlDocument.querySelectorAll('pre code').forEach(el => {
+    hljs.highlightElement(el);
+  });
 }
