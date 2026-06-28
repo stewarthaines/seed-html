@@ -20,6 +20,8 @@
     isAdvancedMode?: boolean;
     readOnly?: boolean;
     workspaceService?: WorkspaceService;
+    /** Persisted cover hue/mode, seeding the cover controls in the summary view. */
+    coverSettings?: { hue?: number; mode?: CoverMode };
     onGenerateCover?: (hue?: number, mode?: CoverMode) => Promise<void>;
   }
 
@@ -30,6 +32,7 @@
     isAdvancedMode = false,
     readOnly = false,
     workspaceService,
+    coverSettings,
     onGenerateCover,
   }: Props = $props();
 
@@ -112,6 +115,7 @@
           {focusedField}
           {readOnly}
           {workspaceService}
+          {coverSettings}
           {onGenerateCover}
           showHeader={false}
         />
@@ -142,7 +146,14 @@
     {/if}
   </div>
 {:else}
-  <SimpleMetadataView {workspace} {focusedField} {readOnly} {workspaceService} {onGenerateCover} />
+  <SimpleMetadataView
+    {workspace}
+    {focusedField}
+    {readOnly}
+    {workspaceService}
+    {coverSettings}
+    {onGenerateCover}
+  />
 {/if}
 
 <style>

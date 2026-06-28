@@ -95,10 +95,15 @@ export interface EPUBSettings {
       making it self-editing. */
   include_seed_html_in_package?: boolean;
   cover?: {
-    template: string;
-    background_color: string;
-    text_color: string;
-    font_family: string;
+    template?: string;
+    background_color?: string;
+    text_color?: string;
+    font_family?: string;
+    /** Persisted hue (0–359) for the generated cover — the slider value. Once set,
+        the cover colour sticks to this rather than being re-derived from the title. */
+    hue?: number;
+    /** Persisted light/dark choice for the generated cover. */
+    mode?: 'dark' | 'light';
   };
   print?: PrintSettings;
   /** Authoring-time preview settings (preview pane only; never in the packaged EPUB). */
@@ -393,14 +398,9 @@ export class SettingsService {
         include_seed_html_in_package:
           settings.include_seed_html_in_package ?? defaults.include_seed_html_in_package,
         track_changes: settings.track_changes ?? defaults.track_changes,
-        cover: settings.cover
-          ? {
-              template: settings.cover.template ?? 'default',
-              background_color: settings.cover.background_color ?? '#ffffff',
-              text_color: settings.cover.text_color ?? '#000000',
-              font_family: settings.cover.font_family ?? 'serif',
-            }
-          : undefined,
+        // Pass the cover block through as-is (carrying hue/mode and any legacy
+        // fields) — we no longer fabricate vestigial template/colour defaults.
+        cover: settings.cover ? { ...settings.cover } : undefined,
         print: settings.print
           ? {
               page_size: settings.print.page_size ?? 'A4',
@@ -714,7 +714,7 @@ export class SettingsService {
 
     // Validate cover settings
     if (settings.cover) {
-      const { background_color, text_color } = settings.cover;
+      const { background_color, text_color, hue, mode } = settings.cover;
 
       if (background_color && !this.isValidColor(background_color)) {
         errors.push('Invalid background color format');
@@ -722,6 +722,14 @@ export class SettingsService {
 
       if (text_color && !this.isValidColor(text_color)) {
         errors.push('Invalid text color format');
+      }
+
+      if (hue !== undefined && (typeof hue !== 'number' || !Number.isFinite(hue) || hue < 0 || hue > 359)) {
+        errors.push('Cover hue must be a number between 0 and 359');
+      }
+
+      if (mode !== undefined && mode !== 'dark' && mode !== 'light') {
+        errors.push("Cover mode must be 'dark' or 'light'");
       }
     }
 

@@ -8,6 +8,8 @@
     type CoverMode,
   } from '../../epub/cover-generator';
   import HueSelector from '../HueSelector.svelte';
+  import CoverUpdateDialog from './CoverUpdateDialog.svelte';
+  import { showToast } from '../../stores/toast.svelte.js';
   import type {
     WorkspaceState,
     WorkspaceService,
@@ -19,6 +21,9 @@
     focusedField?: keyof EPUBMetadata | null;
     readOnly?: boolean;
     workspaceService?: WorkspaceService;
+    /** Persisted cover hue/mode — seeds the controls so the base colour sticks to
+        the user's choice rather than tracking the title. */
+    coverSettings?: { hue?: number; mode?: CoverMode };
     onGenerateCover?: (hue?: number, mode?: CoverMode) => Promise<void>;
     // When embedded under an external tab strip (advanced mode), hide the built-in
     // "Metadata Summary" header so it isn't doubled up.
@@ -30,36 +35,61 @@
     focusedField = null,
     readOnly = false,
     workspaceService,
+    coverSettings,
     onGenerateCover,
     showHeader = true,
   }: Props = $props();
 
   let metadata = $derived(workspace?.opf?.metadata);
   let generating = $state(false);
-  // null = follow the title-derived hue; a number = explicit user choice.
-  let coverHue = $state<number | null>(null);
-  const effectiveHue = $derived(coverHue ?? titleHue(metadata?.title ?? ''));
-  // 'dark' = white text on a deep background; 'light' = near-black on a pale tint.
-  let coverMode = $state<CoverMode>('dark');
+  let showCompare = $state(false);
+
+  // The persisted cover choice (source of truth once a cover has been committed).
+  // Null hue → no choice stored yet, so we fall back to the title-derived hue.
+  const storedHue = $derived(coverSettings?.hue ?? null);
+  const storedMode: CoverMode = $derived(coverSettings?.mode ?? 'dark');
+
+  // Unsaved in-editor tweaks. Null = "use the stored value". Cleared on commit
+  // (and via Reset), so the controls can diverge from settings until committed.
+  let draftHue = $state<number | null>(null);
+  let draftMode = $state<CoverMode | null>(null);
+
+  // The hue/mode the controls and preview currently reflect. Once a hue is stored,
+  // the title no longer feeds the colour — fixing the "jumps with the title" issue.
+  const titleSeedHue = $derived(titleHue(metadata?.title ?? ''));
+  const effectiveHue = $derived(draftHue ?? storedHue ?? titleSeedHue);
+  const effectiveMode: CoverMode = $derived(draftMode ?? storedMode);
+
+  // Dirty when the in-editor choice differs from what's persisted (or, with nothing
+  // persisted, from the title seed) — drives the Reset button's visibility.
+  const isDirty = $derived(
+    effectiveHue !== (storedHue ?? titleSeedHue) || effectiveMode !== storedMode
+  );
 
   // Whether the project already has a cover-image — drives "Update" vs "Generate".
   const hasCover = $derived(
     !!workspace?.opf?.manifest?.some(m => m.properties?.includes('cover-image'))
   );
 
-  // Live preview: once the user touches the hue or the light/dark toggle, render
-  // the prospective cover SVG (vector, instant) in place of the stored cover, so
-  // they see it before committing. Null (show stored cover) until either changes.
-  const previewUrl = $derived.by(() => {
-    if (coverHue === null && coverMode === 'dark') return null;
+  // The prospective cover SVG (vector, instant) for the current hue/mode — used both
+  // for the inline live preview and as the "Incoming" image in the compare dialog.
+  const prospectiveUrl = $derived.by(() => {
     const svg = generateCoverSvg(
       metadata?.title ?? '',
       metadata?.creator?.[0]?.name ?? '',
       effectiveHue,
-      coverMode
+      effectiveMode
     );
     return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
   });
+
+  // Show the prospective cover in place of the stored one only while dirty.
+  const previewUrl = $derived(isDirty ? prospectiveUrl : null);
+
+  function resetCover() {
+    draftHue = null;
+    draftMode = null;
+  }
 
   // The current cover-image, loaded from storage as a blob URL. Re-runs whenever
   // the workspace changes (e.g. after Generate replaces appState.workspace).
@@ -94,13 +124,32 @@
     };
   });
 
-  async function handleGenerate() {
+  // First-time generation writes directly; replacing an existing cover opens the
+  // side-by-side confirmation so the user can compare current vs incoming first.
+  function handleGenerate() {
     if (generating || !onGenerateCover) return;
+    if (hasCover && coverUrl) {
+      showCompare = true;
+      return;
+    }
+    void commitCover();
+  }
+
+  async function commitCover() {
+    if (!onGenerateCover) return;
+    const wasUpdate = hasCover;
     generating = true;
     try {
-      await onGenerateCover(coverHue ?? undefined, coverMode);
+      await onGenerateCover(effectiveHue, effectiveMode);
+      // The choice is now persisted — settle the controls on the stored values.
+      resetCover();
+      showToast(
+        wasUpdate ? $t('Cover image updated') : $t('Cover image generated'),
+        'success'
+      );
     } finally {
       generating = false;
+      showCompare = false;
     }
   }
 </script>
@@ -153,7 +202,11 @@
       {#if previewUrl || coverUrl}
         <div class="cover-current">
           <div class="field-label">{$t('Cover')}</div>
-          <img src={previewUrl ?? coverUrl} alt={$t('Current cover image')} class="cover-image" />
+          <img
+            src={previewUrl ?? coverUrl}
+            alt={$t('Current cover image')}
+            class="cover-image"
+          />
         </div>
       {/if}
 
@@ -164,15 +217,15 @@
               <button
                 type="button"
                 class="cover-theme-option"
-                class:active={coverMode === m}
+                class:active={effectiveMode === m}
                 style="background: {coverBackgroundColor(effectiveHue, m)}; color: {coverTextColor(
                   m
                 )}"
-                aria-pressed={coverMode === m}
+                aria-pressed={effectiveMode === m}
                 title={m === 'dark'
                   ? $t('Light text on a dark cover')
                   : $t('Dark text on a light cover')}
-                onclick={() => (coverMode = m)}
+                onclick={() => (draftMode = m)}
                 disabled={generating}
               >
                 Aa
@@ -183,25 +236,37 @@
             value={effectiveHue}
             disabled={generating}
             showSwatch={false}
-            mode={coverMode}
-            onInput={h => (coverHue = h)}
+            mode={effectiveMode}
+            onInput={h => (draftHue = h)}
           />
-          <button
-            type="button"
-            class="btn btn-secondary"
-            disabled={generating}
-            onclick={handleGenerate}
-          >
-            {#if generating}
-              {hasCover ? $t('Updating…') : $t('Generating…')}
-            {:else}
-              {hasCover ? $t('Update cover image') : $t('Generate cover image')}
+          <div class="cover-buttons">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              disabled={generating}
+              onclick={handleGenerate}
+            >
+              {#if generating}
+                {hasCover ? $t('Updating…') : $t('Generating…')}
+              {:else}
+                {hasCover ? $t('Update cover image') : $t('Generate cover image')}
+              {/if}
+            </button>
+            {#if isDirty}
+              <button
+                type="button"
+                class="btn btn-link"
+                disabled={generating}
+                onclick={resetCover}
+              >
+                {$t('Reset')}
+              </button>
             {/if}
-          </button>
+          </div>
           <p class="cover-hint">
             {hasCover
-              ? $t('Updates the cover from the current title and author.')
-              : $t('Creates a new cover from the current title and author.')}
+              ? $t('Updates the cover with the colour and theme above.')
+              : $t('Creates a cover with the colour and theme above.')}
           </p>
         </div>
       {/if}
@@ -212,6 +277,15 @@
     </div>
   {/if}
 </div>
+
+{#if showCompare && coverUrl}
+  <CoverUpdateDialog
+    currentUrl={coverUrl}
+    incomingUrl={prospectiveUrl}
+    onConfirm={commitCover}
+    onCancel={() => (showCompare = false)}
+  />
+{/if}
 
 <style>
   .simple-metadata-view {
@@ -324,6 +398,12 @@
     margin-block-start: var(--space-5);
     padding-block-start: var(--space-4);
     border-block-start: 1px solid var(--color-border-default);
+  }
+
+  .cover-buttons {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
   }
 
   /* Light/dark toggle: two "Aa" chips previewing each theme at the current hue. */

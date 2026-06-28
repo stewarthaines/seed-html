@@ -58,6 +58,7 @@
   import {
     generateCoverSvg,
     generateCoverPng,
+    titleHue,
     type CoverMode,
   } from './lib/epub/cover-generator.js';
   import { exportPdf, exportChapterPdf } from './lib/pdf/pdf-export.js';
@@ -628,6 +629,13 @@
         mediaType: 'image/png',
         properties: ['cover-image'],
       });
+      // Persist the chosen hue/mode so the metadata view's cover controls restore
+      // it (and the base colour stops tracking the title). Ensure settings are
+      // loaded first — the workspace was only just created.
+      await appState.loadEPUBSettings(workspaceId);
+      await appState.updateEPUBSettings({
+        cover: { ...appState.epubSettings?.cover, hue: data.hue ?? titleHue(data.title), mode: 'dark' },
+      });
     }
 
     if (data.extension) {
@@ -678,6 +686,13 @@
     const svg = generateCoverSvg(title, author, hue, mode);
     const pngBuffer = await generateCoverPng(svg);
 
+    // The hue/mode actually rendered — persisted so the choice sticks and the base
+    // colour no longer tracks the title once the user has committed a cover.
+    const persistCoverChoice = () =>
+      appState!.updateEPUBSettings({
+        cover: { ...appState!.epubSettings?.cover, hue: hue ?? titleHue(title), mode: mode ?? 'dark' },
+      });
+
     // If a PNG cover-image already exists (one we generated), UPDATE it in place
     // — overwrite the same files and keep the manifest items, so repeated tweaks
     // don't accumulate cover-1/cover-2 entries. Otherwise CREATE a fresh pair.
@@ -697,6 +712,7 @@
       appState.workspace = await workspaceService.updateMetadata(ws0, {
         modifiedDate: generateEPUBTimestamp(),
       });
+      await persistCoverChoice();
       return;
     }
 
@@ -733,6 +749,7 @@
       properties: ['cover-image'],
     });
     appState.workspace = ws;
+    await persistCoverChoice();
   };
 
   // Install a catalog extension into a project (the orchestration mirrored from
@@ -1246,6 +1263,7 @@
           isAdvancedMode={advancedMode.current}
           readOnly={structureLocked}
           {workspaceService}
+          coverSettings={appState?.epubSettings?.cover}
           onGenerateCover={handleGenerateCover}
         />
       {:else if currentView === 'manifest' && initialized && currentWorkspaceState}
