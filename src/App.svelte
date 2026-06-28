@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { Package } from 'phosphor-svelte';
   import LayoutManager from './lib/LayoutManager.svelte';
+  import Toast from './lib/components/Toast.svelte';
   import { navigationStore } from './lib/navigation';
   import AboutView from './lib/navigation/views/AboutView.svelte';
   import ThirdPartyView from './lib/navigation/views/ThirdPartyView.svelte';
@@ -1325,6 +1326,9 @@
     />
   {/if}
 {/if}
+
+<!-- App-wide toast host for fleeting notifications (see Toast.svelte). -->
+<Toast />
 
 <style>
   .loading-state,

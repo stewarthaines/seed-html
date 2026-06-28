@@ -1011,6 +1011,7 @@ msgid "Device:"
 msgstr "Gerät:"
 
 #: plugins/publish-to-remote/src/App.svelte
+#: src/lib/components/Toast.svelte
 msgid "Dismiss"
 msgstr "Verwerfen"
 
@@ -2062,6 +2063,15 @@ msgstr "Nicht angegeben"
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 msgid "Not validated"
 msgstr "Nicht validiert"
+
+#: src/lib/components/SpineSidebar.svelte
+#: src/lib/components/manifest/ManifestContainer.svelte
+msgid "Nothing to import — the file(s) already match the existing content."
+msgstr "Nichts zu importieren – die Datei(en) stimmen bereits mit dem vorhandenen Inhalt überein."
+
+#: src/lib/components/Toast.svelte
+msgid "Notifications"
+msgstr "Benachrichtigungen"
 
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Number"

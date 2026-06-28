@@ -474,6 +474,21 @@ The theme system uses CSS custom properties and data attributes for switching:
 
 ## Component CSS Patterns
 
+### Toast notifications (fleeting messages)
+
+For brief, non-blocking feedback ("Saved", "Nothing to import", "Copied") prefer a **toast**
+over an inline banner — it doesn't reflow layout and disappears on its own. This is the core
+style for fleeting information notices (originally prototyped by the publish-to-remote plugin).
+
+- Show one with `showToast(text, type?, durationMs?)` from `$lib/stores/toast.svelte.ts`
+  (`type` = `'info' | 'success' | 'error'`; auto-dismisses, default 4s).
+- `<Toast />` is mounted once near the app root (`App.svelte`); don't add per-view copies.
+- Style: fixed, bottom-centred, `z-index: var(--z-toast)`, a coloured `border-inline-start`
+  accent + `--color-{success,error}-*` (info uses neutral surface tokens), `--shadow-lg`.
+
+Use inline banners/messages only for persistent state that must stay visible (e.g. the
+read-only EPUB banner), not for transient confirmations.
+
 ### Accessible & International Component Patterns
 
 #### Accessibility-First Button Component

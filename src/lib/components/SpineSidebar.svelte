@@ -5,6 +5,7 @@
   import EditSpineItemDialog from './EditSpineItemDialog.svelte';
   import ImportReviewDialog from './import/ImportReviewDialog.svelte';
   import { FileStorageAPI } from '../storage/index.js';
+  import { showToast } from '../stores/toast.svelte.js';
   import { sanitizeChapterId } from '../import/collision.js';
   import {
     stageFiles,
@@ -178,7 +179,7 @@
     }
 
     const existingIds = new Set(workspace.opf.manifest.map(item => item.id));
-    const colliding = files.filter(file => existingIds.has(sanitizeChapterId(file.name)));
+    const collidingAll = files.filter(file => existingIds.has(sanitizeChapterId(file.name)));
     const clean = files.filter(file => !existingIds.has(sanitizeChapterId(file.name)));
 
     try {
@@ -186,13 +187,33 @@
 
       const firstId = await importChaptersDirectly(clean);
 
+      // A name collision is only a real conflict when the content actually differs.
+      // Identical files are no-ops — skip them rather than prompting to overwrite.
+      const storage = FileStorageAPI.getInstance();
+      const colliding: File[] = [];
+      let identicalCount = 0;
+      for (const file of collidingAll) {
+        const id = sanitizeChapterId(file.name);
+        const incoming = await file.text();
+        let current = '';
+        try {
+          current = await storage.readTextFile(workspace.id, `SOURCE/text/${id}.txt`);
+        } catch {
+          // No existing source (read-only EPUB chapter) — any incoming text is a change.
+        }
+        if (incoming === current) identicalCount += 1;
+        else colliding.push(file);
+      }
+
       if (colliding.length === 0) {
         if (firstId) handleSelectItem(firstId);
+        else if (identicalCount > 0)
+          showToast($t('Nothing to import — the file(s) already match the existing content.'));
         return;
       }
 
-      // Stage the colliding files and open the review dialog. Staging is cleared
-      // once the user confirms or cancels.
+      // Stage the changed colliding files and open the review dialog. Staging is
+      // cleared once the user confirms or cancels.
       const staged = await stageFiles(colliding);
       reviewItems = await buildChapterReviewItems(staged);
       pendingImport = staged.map((s, i) => ({

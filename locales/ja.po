@@ -1011,6 +1011,7 @@ msgid "Device:"
 msgstr ""
 
 #: plugins/publish-to-remote/src/App.svelte
+#: src/lib/components/Toast.svelte
 msgid "Dismiss"
 msgstr ""
 
@@ -2061,6 +2062,15 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 msgid "Not validated"
+msgstr ""
+
+#: src/lib/components/SpineSidebar.svelte
+#: src/lib/components/manifest/ManifestContainer.svelte
+msgid "Nothing to import — the file(s) already match the existing content."
+msgstr ""
+
+#: src/lib/components/Toast.svelte
+msgid "Notifications"
 msgstr ""
 
 #: src/lib/components/settings/GeneratorSettings.svelte

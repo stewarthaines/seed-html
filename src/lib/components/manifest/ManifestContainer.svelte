@@ -8,6 +8,7 @@
   import { FileStorageAPI } from '../../storage/index.js';
   import { hasSeedHtml } from '../../epub/seed-html.js';
   import { manifestCollision } from '../../import/collision.js';
+  import { showToast } from '../../stores/toast.svelte.js';
   import {
     stageFiles,
     readStagedBytes,
@@ -177,6 +178,12 @@
   const resolvePath = (href: string): string =>
     workspace!.pathInfo.basePath ? `${workspace!.pathInfo.basePath}/${href}` : href;
 
+  const bytesEqual = (a: Uint8Array, b: Uint8Array): boolean => {
+    if (a.byteLength !== b.byteLength) return false;
+    for (let i = 0; i < a.byteLength; i++) if (a[i] !== b[i]) return false;
+    return true;
+  };
+
   const writeBytes = async (filePath: string, mediaType: string, bytes: Uint8Array): Promise<void> => {
     if (isTextLike(mediaType)) {
       await workspaceService.writeFile(workspace!.id, filePath, new TextDecoder('utf-8').decode(bytes));
@@ -267,25 +274,45 @@
       console.warn(`Failed to upload ${failedFiles.length} files:`, failedFiles);
     }
 
-    // Route colliding files through the review dialog.
-    if (colliding.length > 0) {
+    // A name collision is only a real conflict when the bytes differ; an identical
+    // upload is a no-op, so skip it rather than prompting to overwrite.
+    const changedColliding: typeof colliding = [];
+    let identicalCount = 0;
+    for (const e of colliding) {
+      const incoming = new Uint8Array(await e.file.arrayBuffer());
+      let existing: Uint8Array | null = null;
       try {
-        const staged = await stageFiles(colliding.map(e => e.file));
+        existing = new Uint8Array(
+          await workspaceService.readFile(workspace.id, resolvePath(e.existingHref!))
+        );
+      } catch {
+        existing = null;
+      }
+      if (existing && bytesEqual(existing, incoming)) identicalCount += 1;
+      else changedColliding.push(e);
+    }
+
+    // Route the genuinely-changed collisions through the review dialog.
+    if (changedColliding.length > 0) {
+      try {
+        const staged = await stageFiles(changedColliding.map(e => e.file));
         reviewItems = await buildManifestReviewItems(
           staged,
-          colliding.map(e => ({ mediaType: e.mediaType, existingHref: e.existingHref! }))
+          changedColliding.map(e => ({ mediaType: e.mediaType, existingHref: e.existingHref! }))
         );
         pendingManifestImport = staged.map((s, i) => ({
           stagedPath: s.stagedPath,
           originalName: s.originalName,
-          mediaType: colliding[i].mediaType,
-          existingHref: colliding[i].existingHref!,
+          mediaType: changedColliding[i].mediaType,
+          existingHref: changedColliding[i].existingHref!,
         }));
       } catch (stageError) {
         console.warn('Failed to stage colliding files:', stageError);
         error = $t('Failed to import files');
         await clearImportStaging();
       }
+    } else if (identicalCount > 0 && successfulFiles.length === 0) {
+      showToast($t('Nothing to import — the file(s) already match the existing content.'));
     }
   };
 
