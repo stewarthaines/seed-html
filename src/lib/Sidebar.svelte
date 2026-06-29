@@ -3,6 +3,7 @@
   import { layoutStore, type SidebarSection } from './stores/layout';
   import { t } from '../lib/i18n';
   import ThemeToggle from './ThemeToggle.svelte';
+  import ReaditInaBookMark from './components/icons/ReaditInaBookMark.svelte';
   import {
     House,
     Export,
@@ -10,7 +11,6 @@
     Article,
     ListBullets,
     BookOpen,
-    Info,
     Plus,
     FileArrowUp,
     CaretLeft,
@@ -93,6 +93,13 @@
     }
   });
 
+  // Show the platform brand name only when served from the readitinabook.com domain
+  // (or a subdomain). Everywhere else — localhost, *.pages.dev, standalone HTML, inside
+  // an EPUB (file://) — keep the descriptive "Simple EPUB Editor" heading.
+  const isBrandHost =
+    typeof window !== 'undefined' &&
+    /(^|\.)readitinabook\.com$/i.test(window.location.hostname);
+
   // Main navigation sections (clickable)
   const MAIN_SECTIONS: Array<{
     id: Exclude<SidebarSection, 'spine'>;
@@ -100,7 +107,7 @@
     label: string;
     requiresWorkspace?: boolean;
   }> = [
-    { id: 'about', icon: Info, label: $t('About SEED.html') },
+    { id: 'about', icon: ReaditInaBookMark, label: $t('About SEED.html') },
     { id: 'workspace', icon: House, label: $t('Projects') },
     { id: 'publish', icon: Export, label: $t('Publish') },
     { id: 'settings', icon: Gear, label: $t('Settings') },
@@ -222,7 +229,7 @@
     </button>
 
     {#if isExpanded}
-      <h2 class="sidebar-title">{$t('Simple EPUB Editor')}</h2>
+      <h2 class="sidebar-title">{isBrandHost ? 'ReaditInaBook.com' : $t('Simple EPUB Editor')}</h2>
       <div class="header-actions">
         <ThemeToggle size="small" showLabel={false} />
       </div>
