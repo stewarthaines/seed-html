@@ -104,6 +104,10 @@ export interface EPUBSettings {
     hue?: number;
     /** Persisted light/dark choice for the generated cover. */
     mode?: 'dark' | 'light';
+    /** Title/author the cover was last generated with — a snapshot used to detect when
+        the metadata has drifted from the saved cover (drives the live before/after). */
+    title?: string;
+    author?: string;
   };
   print?: PrintSettings;
   /** Authoring-time preview settings (preview pane only; never in the packaged EPUB). */

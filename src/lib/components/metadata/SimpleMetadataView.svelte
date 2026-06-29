@@ -8,7 +8,6 @@
     type CoverMode,
   } from '../../epub/cover-generator';
   import HueSelector from '../HueSelector.svelte';
-  import CoverUpdateDialog from './CoverUpdateDialog.svelte';
   import { showToast } from '../../stores/toast.svelte.js';
   import type {
     WorkspaceState,
@@ -21,9 +20,9 @@
     focusedField?: keyof EPUBMetadata | null;
     readOnly?: boolean;
     workspaceService?: WorkspaceService;
-    /** Persisted cover hue/mode — seeds the controls so the base colour sticks to
-        the user's choice rather than tracking the title. */
-    coverSettings?: { hue?: number; mode?: CoverMode };
+    /** Persisted cover hue/mode + the title/author the cover was last generated with —
+        seeds the controls and drives the live before/after preview. */
+    coverSettings?: { hue?: number; mode?: CoverMode; title?: string; author?: string };
     onGenerateCover?: (hue?: number, mode?: CoverMode) => Promise<void>;
     // When embedded under an external tab strip (advanced mode), hide the built-in
     // "Metadata Summary" header so it isn't doubled up.
@@ -42,12 +41,17 @@
 
   let metadata = $derived(workspace?.opf?.metadata);
   let generating = $state(false);
-  let showCompare = $state(false);
+
+  const currentTitle = $derived(metadata?.title ?? '');
+  const currentAuthor = $derived(metadata?.creator?.[0]?.name ?? '');
 
   // The persisted cover choice (source of truth once a cover has been committed).
   // Null hue → no choice stored yet, so we fall back to the title-derived hue.
   const storedHue = $derived(coverSettings?.hue ?? null);
   const storedMode: CoverMode = $derived(coverSettings?.mode ?? 'dark');
+  // Title/author the saved cover was rendered with (null = unknown / legacy cover).
+  const storedTitle = $derived(coverSettings?.title ?? null);
+  const storedAuthor = $derived(coverSettings?.author ?? null);
 
   // Unsaved in-editor tweaks. Null = "use the stored value". Cleared on commit
   // (and via Reset), so the controls can diverge from settings until committed.
@@ -56,45 +60,48 @@
 
   // The hue/mode the controls and preview currently reflect. Once a hue is stored,
   // the title no longer feeds the colour — fixing the "jumps with the title" issue.
-  const titleSeedHue = $derived(titleHue(metadata?.title ?? ''));
+  const titleSeedHue = $derived(titleHue(currentTitle));
   const effectiveHue = $derived(draftHue ?? storedHue ?? titleSeedHue);
   const effectiveMode: CoverMode = $derived(draftMode ?? storedMode);
 
-  // Dirty when the in-editor choice differs from what's persisted (or, with nothing
-  // persisted, from the title seed) — drives the Reset button's visibility.
-  const isDirty = $derived(
+  // An unsaved hue/mode tweak — drives the Reset button (Reset can't undo a title edit).
+  const hasDraft = $derived(
     effectiveHue !== (storedHue ?? titleSeedHue) || effectiveMode !== storedMode
   );
+  // The title/author have drifted from the saved cover (only knowable once persisted).
+  const textDrift = $derived(
+    (storedTitle !== null && currentTitle !== storedTitle) ||
+      (storedAuthor !== null && currentAuthor !== storedAuthor)
+  );
+  // Anything that makes the proposed cover differ from the stored one — drives the
+  // live before/after in the preview.
+  const isDirty = $derived(hasDraft || textDrift);
 
   // Whether the project already has a cover-image — drives "Update" vs "Generate".
   const hasCover = $derived(
     !!workspace?.opf?.manifest?.some(m => m.properties?.includes('cover-image'))
   );
 
-  // The prospective cover SVG (vector, instant) for the current hue/mode — used both
-  // for the inline live preview and as the "Incoming" image in the compare dialog.
+  // The prospective cover SVG (vector, instant) for the current title/author/hue/mode —
+  // shown as the "New" image in the before/after preview.
   const prospectiveUrl = $derived.by(() => {
-    const svg = generateCoverSvg(
-      metadata?.title ?? '',
-      metadata?.creator?.[0]?.name ?? '',
-      effectiveHue,
-      effectiveMode
-    );
+    const svg = generateCoverSvg(currentTitle, currentAuthor, effectiveHue, effectiveMode);
     return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
   });
-
-  // Show the prospective cover in place of the stored one only while dirty.
-  const previewUrl = $derived(isDirty ? prospectiveUrl : null);
 
   function resetCover() {
     draftHue = null;
     draftMode = null;
   }
 
-  // The current cover-image, loaded from storage as a blob URL. Re-runs whenever
-  // the workspace changes (e.g. after Generate replaces appState.workspace).
+  // The current cover-image, loaded from storage as a blob URL. Re-runs whenever the
+  // workspace changes (e.g. after Generate replaces appState.workspace) and whenever
+  // coverVersion is bumped — needed when Update overwrites the cover in place (same
+  // path/manifest item), where the file bytes change but nothing else might.
   let coverUrl = $state<string | null>(null);
+  let coverVersion = $state(0);
   $effect(() => {
+    void coverVersion; // re-read after an in-place cover overwrite
     const ws = workspace;
     const svc = workspaceService;
     const item = ws?.opf?.manifest?.find(m => m.properties?.includes('cover-image'));
@@ -124,32 +131,24 @@
     };
   });
 
-  // First-time generation writes directly; replacing an existing cover opens the
-  // side-by-side confirmation so the user can compare current vs incoming first.
-  function handleGenerate() {
+  // Save immediately — the before/after lives in the preview, so there's no confirm
+  // step. The proposed rendering the user sees is exactly what gets written.
+  async function handleGenerate() {
     if (generating || !onGenerateCover) return;
-    if (hasCover && coverUrl) {
-      showCompare = true;
-      return;
-    }
-    void commitCover();
-  }
-
-  async function commitCover() {
-    if (!onGenerateCover) return;
     const wasUpdate = hasCover;
     generating = true;
     try {
       await onGenerateCover(effectiveHue, effectiveMode);
-      // The choice is now persisted — settle the controls on the stored values.
+      // The choice is now persisted — settle the controls on the stored values and
+      // force the stored-cover blob to reload (the file was overwritten in place).
       resetCover();
+      coverVersion++;
       showToast(
         wasUpdate ? $t('Cover image updated') : $t('Cover image generated'),
         'success'
       );
     } finally {
       generating = false;
-      showCompare = false;
     }
   }
 </script>
@@ -199,11 +198,26 @@
         </div>
       </div>
 
-      {#if previewUrl || coverUrl}
+      {#if hasCover && isDirty && coverUrl}
+        <!-- Before/after: the stored cover vs the proposed rendering, live. -->
+        <div class="cover-current">
+          <div class="field-label">{$t('Cover')}</div>
+          <div class="cover-compare">
+            <figure>
+              <figcaption>{$t('Current')}</figcaption>
+              <img src={coverUrl} alt={$t('Current')} class="cover-image" />
+            </figure>
+            <figure>
+              <figcaption>{$t('New')}</figcaption>
+              <img src={prospectiveUrl} alt={$t('New')} class="cover-image" />
+            </figure>
+          </div>
+        </div>
+      {:else if hasCover ? coverUrl : prospectiveUrl}
         <div class="cover-current">
           <div class="field-label">{$t('Cover')}</div>
           <img
-            src={previewUrl ?? coverUrl}
+            src={hasCover ? coverUrl : prospectiveUrl}
             alt={$t('Current cover image')}
             class="cover-image"
           />
@@ -252,7 +266,7 @@
                 {hasCover ? $t('Update cover image') : $t('Generate cover image')}
               {/if}
             </button>
-            {#if isDirty}
+            {#if hasDraft}
               <button
                 type="button"
                 class="btn btn-link"
@@ -277,15 +291,6 @@
     </div>
   {/if}
 </div>
-
-{#if showCompare && coverUrl}
-  <CoverUpdateDialog
-    currentUrl={coverUrl}
-    incomingUrl={prospectiveUrl}
-    onConfirm={commitCover}
-    onCancel={() => (showCompare = false)}
-  />
-{/if}
 
 <style>
   .simple-metadata-view {
@@ -389,6 +394,35 @@
     max-width: 50%;
     border-radius: var(--radius-sm);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Before/after: the stored cover beside the proposed rendering. */
+  .cover-compare {
+    align-self: stretch;
+    display: flex;
+    gap: var(--space-4);
+  }
+
+  .cover-compare figure {
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+
+  .cover-compare figcaption {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+  }
+
+  .cover-compare .cover-image {
+    max-width: 100%;
+    max-height: 32vh;
   }
 
   .cover-action {

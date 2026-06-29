@@ -634,7 +634,13 @@
       // loaded first — the workspace was only just created.
       await appState.loadEPUBSettings(workspaceId);
       await appState.updateEPUBSettings({
-        cover: { ...appState.epubSettings?.cover, hue: data.hue ?? titleHue(data.title), mode: 'dark' },
+        cover: {
+          ...appState.epubSettings?.cover,
+          hue: data.hue ?? titleHue(data.title),
+          mode: 'dark',
+          title: data.title,
+          author: data.author ?? '',
+        },
       });
     }
 
@@ -690,7 +696,13 @@
     // colour no longer tracks the title once the user has committed a cover.
     const persistCoverChoice = () =>
       appState!.updateEPUBSettings({
-        cover: { ...appState!.epubSettings?.cover, hue: hue ?? titleHue(title), mode: mode ?? 'dark' },
+        cover: {
+          ...appState!.epubSettings?.cover,
+          hue: hue ?? titleHue(title),
+          mode: mode ?? 'dark',
+          title,
+          author,
+        },
       });
 
     // If a PNG cover-image already exists (one we generated), UPDATE it in place
