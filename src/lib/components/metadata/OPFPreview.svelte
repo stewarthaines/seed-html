@@ -20,8 +20,8 @@
     isAdvancedMode?: boolean;
     readOnly?: boolean;
     workspaceService?: WorkspaceService;
-    /** Persisted cover hue/mode, seeding the cover controls in the summary view. */
-    coverSettings?: { hue?: number; mode?: CoverMode };
+    /** Persisted cover hue/mode/title/author, seeding the cover controls in the summary view. */
+    coverSettings?: { hue?: number; mode?: CoverMode; title?: string; author?: string };
     onGenerateCover?: (hue?: number, mode?: CoverMode) => Promise<void>;
   }
 
