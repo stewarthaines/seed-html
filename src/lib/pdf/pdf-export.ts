@@ -411,16 +411,23 @@ export async function exportPdf(
     }
     if (sections.length === 0) throw new Error('No readable chapter content.');
 
+    const meta = workspace.opf.metadata;
+
     // Prepend the project's cover image as a full-bleed first page (Print setting,
     // default on). The cover's relative href is resolved to a blob URL by the asset
     // pass below alongside the chapter images.
     const coverHref = coverImageHref(workspace.opf.manifest, print);
     if (coverHref) {
-      sections.unshift(`<section class="pdf-cover"><img src="${xmlEscape(coverHref)}" alt="" /></section>`);
+      // The cover's text alternative is the book title (its own language, so no i18n) —
+      // a cover isn't decorative: it carries the book's identity, and a generated cover
+      // renders the title as image text that's otherwise invisible to assistive tech.
+      const coverAlt = meta.title?.trim() || 'Cover';
+      sections.unshift(
+        `<section class="pdf-cover"><img src="${xmlEscape(coverHref)}" alt="${xmlEscape(coverAlt)}" /></section>`
+      );
     }
 
     // The print dialog suggests "<document title>.pdf", so name it after the book.
-    const meta = workspace.opf.metadata;
     const author = meta.creator?.[0]?.name;
     const docTitle = [meta.title?.trim() || 'Book', author?.trim()].filter(Boolean).join(' - ');
 
