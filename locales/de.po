@@ -509,9 +509,17 @@ msgstr "Verfügbar im Online-Betrieb"
 msgid "Back"
 msgstr "Zurück"
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Basic"
+msgstr "Einfach"
+
 #: src/lib/components/metadata/MetadataEditor.svelte
 msgid "Basic Info"
 msgstr "Generelle Informationen"
+
+#: src/lib/Sidebar.svelte
+msgid "Basic mode"
+msgstr "Einfacher Modus"
 
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "Binary file - preview not available"
@@ -1837,6 +1845,10 @@ msgstr "Erweitert"
 #: src/lib/components/metadata/MetadataTabBar.svelte
 msgid "metadata.tab.basic"
 msgstr "Grundlegend"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Mode"
+msgstr "Modus"
 
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Modified"

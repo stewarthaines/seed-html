@@ -670,7 +670,7 @@
   const generalSummary = $derived(
     `${$t('Theme')}: ${themeSummaryLabel} · ${$t('Language')}: ${
       LOCALE_CONFIGS[$currentLocale]?.name ?? $currentLocale
-    }`
+    } · ${$t('Mode')}: ${isAdvancedMode ? $t('Advanced') : $t('Basic')}`
   );
   const pluginsSummary = $derived.by(() => {
     const names = availablePlugins.filter(p => enabledPluginIds.includes(p.id)).map(p => p.name);

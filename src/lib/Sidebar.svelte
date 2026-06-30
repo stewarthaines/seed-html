@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { layoutStore, type SidebarSection } from './stores/layout';
+  import { advancedMode } from './stores/advanced-mode.js';
   import { t } from '../lib/i18n';
   import ThemeToggle from './ThemeToggle.svelte';
   import ReaditInaBookMark from './components/icons/ReaditInaBookMark.svelte';
@@ -133,10 +134,14 @@
   // The plugin driving an item is shown as a small second line below the label
   // (like the project's text-format subtitle), not appended in parens — otherwise
   // it wraps awkwardly in longer locales (e.g. de "Veröffentlichen (publish-to-remote)").
+  // Basic mode is surfaced here (advanced mode is the normal, guided state, so it
+  // shows nothing extra). Like the publish subtitle, it only renders when expanded.
   const sectionSubLabel = (section: { id: SidebarSection }) =>
     section.id === 'publish' && enabledPluginIds.includes(PUBLISH_PLUGIN_ID)
       ? PUBLISH_PLUGIN_ID
-      : '';
+      : section.id === 'settings' && !advancedMode.current
+        ? $t('Basic mode')
+        : '';
 
   // The Publish tab is only useful once there's something to publish — a packaged
   // EPUB, or the publish-to-remote plugin enabled. Otherwise it's an empty page,
