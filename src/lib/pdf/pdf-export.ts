@@ -63,9 +63,20 @@ function printPageCss(print: PrintSettings | undefined): string {
     color: #555;
   }`
     : '';
+  // Running header: the chapter title, captured into the `chapter-title` named
+  // string by print.css (string-set on the injected .pdf-chapter-title element).
+  const topCenter = print?.running_header
+    ? `
+  @top-center {
+    content: string(chapter-title);
+    font-family: system-ui, sans-serif;
+    font-size: 9pt;
+    color: #555;
+  }`
+    : '';
   return `@page {
   size: ${size};
-  margin: ${mm}mm;${bottomCenter}
+  margin: ${mm}mm;${topCenter}${bottomCenter}
 }`;
 }
 
@@ -146,7 +157,8 @@ const PRINT_TOOLBAR_CSS = `
  * the print preview so both build identical Paged.js input.
  */
 export function chapterToSection(
-  xhtml: string
+  xhtml: string,
+  idref?: string
 ): { section: string; hrefs: string[]; lang: string | null } | null {
   const parser = new DOMParser();
   const serializer = new XMLSerializer();
@@ -167,6 +179,21 @@ export function chapterToSection(
   const inner = Array.from(body.childNodes)
     .map(node => serializer.serializeToString(node))
     .join('');
+  // A guaranteed per-chapter title element for the optional running header. The
+  // pipeline fills <title> with the chapter's metadata title or, absent one, the
+  // idref — so a <title> that equals the idref is a fallback, not an authored title.
+  // Priority: an explicit (non-idref) <title> wins; otherwise the first in-content
+  // heading; otherwise the idref fallback. Always emitted (visually hidden via
+  // print.css), even when empty, so a heading-less chapter resets the named string
+  // rather than inheriting the previous chapter's title.
+  const titleText = doc.querySelector('title')?.textContent?.trim() || '';
+  const heading =
+    ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']
+      .map(tag => doc.querySelector(tag)?.textContent?.trim())
+      .find(Boolean) || '';
+  const explicitTitle = !!titleText && titleText !== idref;
+  const title = explicitTitle ? titleText : heading || titleText;
+  const titleEl = `<span class="pdf-chapter-title" aria-hidden="true">${xmlEscape(title)}</span>`;
   // Carry the chapter's own language onto its section so a multi-language book's
   // combined export tags each chapter correctly, overriding the book-default
   // <html lang>. Single-language books just repeat the default (harmless).
@@ -175,7 +202,7 @@ export function chapterToSection(
   // chapters render right-to-left even under an LTR book default.
   const dirAttr = isRtlLanguage(lang) ? ' dir="rtl"' : '';
   return {
-    section: `<section class="pdf-chapter"${langAttr}${dirAttr}>${inner}</section>`,
+    section: `<section class="pdf-chapter"${langAttr}${dirAttr}>${titleEl}${inner}</section>`,
     hrefs,
     lang,
   };
@@ -377,7 +404,7 @@ export async function exportPdf(
     const stylesheetHrefs = new Set<string>();
     const sections: string[] = [];
     for (const chapter of chapters) {
-      const wrapped = chapterToSection(chapter.xhtmlContent);
+      const wrapped = chapterToSection(chapter.xhtmlContent, chapter.id);
       if (!wrapped) continue; // skip a malformed chapter / one with no <body>
       wrapped.hrefs.forEach(href => stylesheetHrefs.add(href));
       sections.push(wrapped.section);
@@ -437,7 +464,7 @@ export async function exportChapterPdf(
   try {
     const [chapter] = await workspaceService.loadChapterContents(workspace, [chapterId]);
     if (!chapter) throw new Error('Chapter not found.');
-    const wrapped = chapterToSection(chapter.xhtmlContent);
+    const wrapped = chapterToSection(chapter.xhtmlContent, chapter.id);
     if (!wrapped) throw new Error('No readable chapter content.');
 
     // Suggested PDF filename: book title + chapter id (no cover for a single chapter).
