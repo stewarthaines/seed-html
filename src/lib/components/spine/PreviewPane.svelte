@@ -753,7 +753,7 @@
    */
   function writePagedDoc(content: string): void {
     if (!previewIframe || !content) return;
-    const wrapped = chapterToSection(content);
+    const wrapped = chapterToSection(content, chapterId ?? undefined);
     if (!wrapped) {
       // Malformed / no <body>: fall back to the plain render rather than a blank
       // paginated frame.

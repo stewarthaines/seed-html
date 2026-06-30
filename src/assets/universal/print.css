@@ -20,6 +20,11 @@
   @bottom-center {
     content: none;
   }
+
+  /* No running header on the cover. */
+  @top-center {
+    content: none;
+  }
 }
 section.pdf-cover {
   page: cover;
@@ -30,6 +35,27 @@ section.pdf-cover img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/*
+  Per-chapter title for the optional running header (printPageCss emits the
+  `@top-center { content: string(chapter-title) }` box only when enabled). The
+  element is injected at the start of every chapter (chapterToSection); it must stay
+  rendered — not display:none — for Paged.js to capture the named string, so hide it
+  with the visually-hidden pattern.
+*/
+.pdf-chapter-title {
+  string-set: chapter-title content(text);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 /* Each chapter starts on a fresh page (the first one doesn't force a blank). */

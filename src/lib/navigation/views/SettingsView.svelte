@@ -252,6 +252,7 @@
     page_size: 'A4',
     margin: 'normal',
     page_numbers: true,
+    running_header: false,
     cover_page: true,
   };
   // Human-readable label → CSS `@page size` token. Limited to sizes that are also
@@ -946,6 +947,24 @@
                     </label>
                     <p class="setting-description">
                       {$t('Show a page number at the bottom of each page.')}
+                    </p>
+                  </div>
+
+                  <div class="setting-group">
+                    <label class="setting-label">
+                      <input
+                        type="checkbox"
+                        checked={epubSettings?.print?.running_header ?? DEFAULT_PRINT.running_header}
+                        onchange={e =>
+                          updatePrint({
+                            running_header: (e.currentTarget as HTMLInputElement).checked,
+                          })}
+                        disabled={epubLoading}
+                      />
+                      <span class="setting-text">{$t('Running header')}</span>
+                    </label>
+                    <p class="setting-description">
+                      {$t('Show the chapter title at the top of each page.')}
                     </p>
                   </div>
 
