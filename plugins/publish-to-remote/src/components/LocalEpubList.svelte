@@ -46,6 +46,9 @@
     onDelete: (epub: File) => void;
   } = $props();
 
+  // Most recently packaged first (File.lastModified is the OPFS write time).
+  const sortedEpubs = $derived([...epubs].sort((a, b) => b.lastModified - a.lastModified));
+
   let confirmOverwrite: { [key: string]: boolean } = $state({});
   let deleteConfirm: string | null = $state(null);
 
@@ -58,7 +61,7 @@
   <p class="empty-message">{$t('No EPUB files found in this directory')}</p>
 {:else}
   <div class="epub-list">
-    {#each epubs as epub (epub.name)}
+    {#each sortedEpubs as epub (epub.name)}
       {@const overwrite = wouldOverwrite(epub)}
       {@const status = epubValidationStatus.get(epub.name)}
       {@const summary = status?.report ? summarizeReport(status.report) : null}

@@ -46,12 +46,20 @@
     objects.filter((o) => !o.key.toLowerCase().endsWith('.png')),
   );
 
+  // Most recently modified first, within each group. The provider lastModified is a
+  // string (ISO); guard against missing/invalid dates so they sort oldest.
+  const ts = (o: S3Object) => {
+    const t = new Date(o.lastModified).getTime();
+    return Number.isNaN(t) ? 0 : t;
+  };
+  const byNewest = (a: S3Object, b: S3Object) => ts(b) - ts(a);
+
   // Grouped for display, mirroring the manifest table: catalogs (.xml) first,
   // then EPUBs, then anything else. Each group renders under its own heading.
-  const catalogObjects = $derived(visibleObjects.filter((o) => isXml(o.key)));
-  const epubObjects = $derived(visibleObjects.filter((o) => isEpub(o.key)));
+  const catalogObjects = $derived(visibleObjects.filter((o) => isXml(o.key)).sort(byNewest));
+  const epubObjects = $derived(visibleObjects.filter((o) => isEpub(o.key)).sort(byNewest));
   const otherObjects = $derived(
-    visibleObjects.filter((o) => !isXml(o.key) && !isEpub(o.key)),
+    visibleObjects.filter((o) => !isXml(o.key) && !isEpub(o.key)).sort(byNewest),
   );
 </script>
 

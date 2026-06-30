@@ -72,6 +72,8 @@ export class PublishService {
         coverImageData,
       });
     }
+    // Most recently packaged first (lastModified is the file's write time).
+    epubs.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime());
     return epubs;
   }
 
