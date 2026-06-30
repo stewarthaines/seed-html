@@ -1,0 +1,10 @@
+{
+  "id": "impressum",
+  "name": "Impressum",
+  "description": "Replaces a []{.autology} marker with a self-describing summary of the EPUB's extensions (name, description, link, license) and embedded fonts — compiled automatically at render time.",
+  "url": "https://codeberg.org/stewarthaines/editme-svelte",
+  "license": "LICENSE.txt",
+  "scripts": [],
+  "domTransforms": ["transformImpressum.js"],
+  "textTransforms": []
+}
