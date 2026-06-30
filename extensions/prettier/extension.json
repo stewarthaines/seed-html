@@ -1,0 +1,9 @@
+{
+  "id": "prettier",
+  "name": "Prettier",
+  "description": "Reformat JavaScript code blocks at narrow/wide/full widths with Prettier.",
+  "url": "https://prettier.io/",
+  "scripts": ["prettier.js", "babel.js", "estree.js"],
+  "domTransforms": ["transformPrettier.js"],
+  "textTransforms": []
+}
