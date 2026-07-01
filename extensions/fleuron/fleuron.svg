@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="24" viewBox="0 0 120 24" fill="currentColor">
+  <!-- Placeholder fleuron ornament. Replace with your own art; the transform reads this
+       file, drives fill/stroke to currentColor, and inlines it via <defs>/<use>. Keep a
+       sensible viewBox and avoid hard-coded colours so it inherits the text colour. -->
+  <path d="M60 4 L67 12 L60 20 L53 12 Z"/>
+  <path d="M53 12 C41 12 37 6 25 8 C33 10 33 14 25 16 C37 18 41 12 53 12 Z"/>
+  <path d="M67 12 C79 12 83 6 95 8 C87 10 87 14 95 16 C83 18 79 12 67 12 Z"/>
+  <circle cx="18" cy="12" r="2"/>
+  <circle cx="102" cy="12" r="2"/>
+</svg>

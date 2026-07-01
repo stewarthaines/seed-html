@@ -1,0 +1,18 @@
+.fleuron {
+  display: block;
+  width: auto;
+  text-align: center;
+  clear: both;
+  break-before: avoid;
+  page-break-before: avoid;   /* legacy alias — broader EPUB-reader support */
+}
+
+p:has(+ .fleuron) {
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+.fleuron svg {
+  width: 6em;
+  margin: 1em auto 1em;
+}
