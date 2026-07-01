@@ -83,7 +83,8 @@
     "vite": "^6.3.5",
     "vite-plugin-checker": "^0.10.3",
     "vite-plugin-singlefile": "^2.2.0",
-    "vitest": "^3.2.2"
+    "vitest": "^3.2.2",
+    "wrangler": "^4.86.0"
   },
   "dependencies": {
     "diff": "^9.0.0",
