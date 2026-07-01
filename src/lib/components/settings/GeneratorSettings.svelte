@@ -60,6 +60,8 @@
   let saving = $state(false);
   // Non-null while editing an existing generator (its id); null = creating a new one.
   let editingId = $state<string | null>(null);
+  // Id of the generator whose inline "Confirm delete?" prompt is open (one at a time).
+  let confirmingId = $state<string | null>(null);
 
   const optionTypeLabels: { value: GeneratorOption['type']; label: string }[] = [
     { value: 'string', label: $t('Text') },
@@ -334,14 +336,37 @@ function generateText(ctx, options) {
               >
                 {$t('Edit')}
               </button>
-              <button
-                type="button"
-                class="btn btn-danger btn-sm"
-                onclick={() => handleRemove(g.manifest.id)}
-                disabled={!isAdvancedMode}
-              >
-                {$t('Remove')}
-              </button>
+              {#if confirmingId === g.manifest.id}
+                <span class="delete-confirm">
+                  <span class="delete-confirm-label">{$t('Confirm delete?')}</span>
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-sm"
+                    onclick={() => {
+                      confirmingId = null;
+                      handleRemove(g.manifest.id);
+                    }}
+                  >
+                    {$t('Yes')}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    onclick={() => (confirmingId = null)}
+                  >
+                    {$t('No')}
+                  </button>
+                </span>
+              {:else}
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm"
+                  onclick={() => (confirmingId = g.manifest.id)}
+                  disabled={!isAdvancedMode}
+                >
+                  {$t('Remove')}
+                </button>
+              {/if}
             </div>
           </li>
         {/each}
@@ -619,6 +644,13 @@ function generateText(ctx, options) {
     display: flex;
     gap: var(--space-2);
     flex-shrink: 0;
+  }
+
+  .delete-confirm {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
   }
 
   .gs-error {

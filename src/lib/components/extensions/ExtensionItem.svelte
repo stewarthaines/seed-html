@@ -17,6 +17,8 @@
   let showLicense = $state(false);
   let licenseText = $state('');
   let isLoading = $state(false);
+  // Inline delete-confirm: Remove swaps to a "Confirm delete?" + Yes/No prompt.
+  let confirming = $state(false);
 
   // Derived state for license preview (first line)
   const licensePreview = $derived.by(() => {
@@ -95,14 +97,37 @@
       >
         {$t('License')}
       </button>
-      <button
-        type="button"
-        class="btn btn-danger btn-sm"
-        onclick={onRemove}
-        disabled={!isAdvancedMode}
-      >
-        {$t('Remove')}
-      </button>
+      {#if confirming}
+        <span class="delete-confirm">
+          <span class="delete-confirm-label">{$t('Confirm delete?')}</span>
+          <button
+            type="button"
+            class="btn btn-danger btn-sm"
+            onclick={() => {
+              onRemove();
+              confirming = false;
+            }}
+          >
+            {$t('Yes')}
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            onclick={() => (confirming = false)}
+          >
+            {$t('No')}
+          </button>
+        </span>
+      {:else}
+        <button
+          type="button"
+          class="btn btn-danger btn-sm"
+          onclick={() => (confirming = true)}
+          disabled={!isAdvancedMode}
+        >
+          {$t('Remove')}
+        </button>
+      {/if}
     </div>
   </div>
 
@@ -150,6 +175,13 @@
   .extension-actions {
     display: flex;
     gap: 0.5rem;
+  }
+
+  .delete-confirm {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
   }
 
   .license-preview {
