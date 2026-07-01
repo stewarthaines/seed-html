@@ -2,9 +2,9 @@
  * Replace each <hr> (the thematic break emitted by markdown, djot, textile, … — so this
  * works under any text transform) with a centred fleuron ornament.
  *
- * The placeholder art ships as the EPUB asset Images/icon-package-fleuron.svg and is read
- * back through the transform context (ctx.readManifestText). Its fill/stroke are driven to
- * currentColor so the ornament inherits the surrounding text colour. The glyph is defined
+ * The placeholder art ships as the EPUB asset Images/fleuron.svg and is read back through
+ * the transform context (ctx.readManifestText). Its fill is driven to currentColor so the
+ * ornament inherits the surrounding text colour. The glyph is defined
  * once per chapter inside the first ornament's <defs>; every ornament (including the first)
  * renders it through <use href="#…">, so repeating the fleuron costs one <use> rather than
  * a fresh copy of the art.
@@ -50,12 +50,15 @@ async function transformDOM(htmlDocument, idref, ctx) {
     src.getAttribute('viewBox') ||
     `0 0 ${src.getAttribute('width') || 100} ${src.getAttribute('height') || 20}`;
 
-  // currentColor lets the ornament inherit the text colour; aria-hidden + focusable=false
-  // keep the decorative art out of the accessibility tree (the wrapper's role conveys it).
+  // fill=currentColor lets the ornament inherit the text colour. We deliberately do NOT
+  // force a stroke: fill-based glyphs (Phosphor icons, most typographic ornaments) would
+  // otherwise get their filled paths outlined AND their transparent bounding rect stroked
+  // into a visible box. A stroke-based/outline glyph should carry its own
+  // stroke="currentColor" in the source. aria-hidden + focusable=false keep the decorative
+  // art out of the accessibility tree (the wrapper's role conveys it).
   const decorate = svg => {
     svg.setAttribute('viewBox', viewBox);
     svg.setAttribute('fill', 'currentColor');
-    svg.setAttribute('stroke', 'currentColor');
     svg.setAttribute('aria-hidden', 'true');
     svg.setAttribute('focusable', 'false');
   };
@@ -67,6 +70,21 @@ async function transformDOM(htmlDocument, idref, ctx) {
     return use;
   };
 
+  // Skip export noise / non-rendering nodes so a Phosphor-style source — which ships an
+  // empty <defs>, comment nodes, and a transparent full-canvas <rect fill="none"/> — yields
+  // a clean glyph. A rect with no fill and no stroke of its own renders nothing anyway.
+  const isImportNoise = node => {
+    if (node.nodeType === 8) return true; // comment
+    if (node.nodeType === 3) return !node.textContent.trim(); // whitespace-only text
+    if (node.nodeType !== 1) return false; // keep other node types
+    const tag = node.localName;
+    if (tag === 'defs' && !node.childNodes.length) return true;
+    if (tag === 'rect' && node.getAttribute('fill') === 'none' && !node.hasAttribute('stroke')) {
+      return true;
+    }
+    return false;
+  };
+
   // First ornament carries the reusable glyph definition; the rest only reference it.
   const makeSvg = defining => {
     const svg = htmlDocument.createElementNS(SVGNS, 'svg');
@@ -76,6 +94,7 @@ async function transformDOM(htmlDocument, idref, ctx) {
       const glyph = htmlDocument.createElementNS(SVGNS, 'g');
       glyph.setAttribute('id', GLYPH_ID);
       for (const child of [...src.childNodes]) {
+        if (isImportNoise(child)) continue;
         glyph.appendChild(htmlDocument.importNode(child, true));
       }
       defs.appendChild(glyph);
