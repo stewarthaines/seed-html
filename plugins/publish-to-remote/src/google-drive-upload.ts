@@ -238,6 +238,16 @@ export async function deleteGoogleDriveFile(
   }
 }
 
+/**
+ * A viewable image URL for a public Drive file, for `<img>` display. Unlike the
+ * download URL (which Drive serves as an attachment/octet-stream that won't render
+ * in an image tag), the thumbnail endpoint returns a real image. `sz=w<width>` sizes
+ * it. Only resolves for files shared publicly (see makeGoogleDriveFilePublic).
+ */
+export function getGoogleDriveThumbnailUrl(fileId: string, width = 400): string {
+  return `https://drive.google.com/thumbnail?id=${fileId}&sz=w${width}`;
+}
+
 export function getGoogleDrivePublicUrl(
   _config: GoogleDriveRemoteConfig,
   fileId: string,

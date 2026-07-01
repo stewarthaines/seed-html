@@ -4,6 +4,7 @@ import {
   listFiles,
   deleteFile,
   getPublicUrl,
+  getThumbnailUrl,
   uploadTextFile,
 } from './remote-ops.js';
 import type {
@@ -28,6 +29,9 @@ vi.mock('./google-drive-upload.js', () => ({
   getGoogleDrivePublicUrl: vi
     .fn()
     .mockReturnValue('https://drive.google.com/uc?id=x&export=download'),
+  getGoogleDriveThumbnailUrl: vi
+    .fn()
+    .mockReturnValue('https://drive.google.com/thumbnail?id=x&sz=w400'),
   uploadTextToGoogleDrive: vi.fn().mockResolvedValue({ success: true }),
 }));
 
@@ -63,6 +67,7 @@ import {
   listGoogleDriveFiles,
   deleteGoogleDriveFile,
   getGoogleDrivePublicUrl,
+  getGoogleDriveThumbnailUrl,
   uploadTextToGoogleDrive,
 } from './google-drive-upload.js';
 import {
@@ -284,6 +289,23 @@ describe('getPublicUrl', () => {
   it('returns empty string for dropbox without fileId', () => {
     const url = getPublicUrl(dropboxConfig, 'book.epub');
     expect(url).toBe('');
+  });
+});
+
+describe('getThumbnailUrl', () => {
+  it('uses the Drive image-thumbnail endpoint for google-drive', () => {
+    const url = getThumbnailUrl(googleConfig, 'book.thumb.png', 'thumb-1');
+    expect(vi.mocked(getGoogleDriveThumbnailUrl)).toHaveBeenCalledWith('thumb-1');
+    expect(url).toBe('https://drive.google.com/thumbnail?id=x&sz=w400');
+  });
+
+  it('falls back to the public URL (S3) for other remotes', () => {
+    const url = getThumbnailUrl(s3Config, 'book.thumb.png');
+    expect(vi.mocked(getS3PublicUrl)).toHaveBeenCalledWith(
+      s3Config,
+      'book.thumb.png',
+    );
+    expect(url).toBe('https://s3.example.com/bucket/key');
   });
 });
 

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   getGoogleDrivePublicUrl,
+  getGoogleDriveThumbnailUrl,
   listGoogleDriveFiles,
   uploadToGoogleDrive,
   deleteGoogleDriveFile,
@@ -31,6 +32,17 @@ describe('getGoogleDrivePublicUrl', () => {
   it('constructs download URL from fileId', () => {
     expect(getGoogleDrivePublicUrl(config, 'file-abc')).toBe(
       'https://drive.usercontent.google.com/download?id=file-abc&export=download',
+    );
+  });
+});
+
+describe('getGoogleDriveThumbnailUrl', () => {
+  it('constructs a viewable image-thumbnail URL from fileId', () => {
+    expect(getGoogleDriveThumbnailUrl('file-abc')).toBe(
+      'https://drive.google.com/thumbnail?id=file-abc&sz=w400',
+    );
+    expect(getGoogleDriveThumbnailUrl('file-abc', 200)).toBe(
+      'https://drive.google.com/thumbnail?id=file-abc&sz=w200',
     );
   });
 });

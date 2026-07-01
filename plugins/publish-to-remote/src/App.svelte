@@ -16,6 +16,7 @@
     listFiles,
     deleteFile,
     getPublicUrl,
+    getThumbnailUrl,
     uploadTextFile,
     downloadTextFile,
   } from './remote-ops.js';
@@ -174,7 +175,9 @@
       if (thumb) {
         // Cache-bust by the file's modified time so an updated cover shows
         // immediately instead of the browser's cached image (same URL).
-        const url = getPublicUrl(activeRemote, thumbKey, thumb.fileId);
+        // Google Drive needs its image-thumbnail endpoint (the download URL won't
+        // render in an <img>); getThumbnailUrl handles that per remote type.
+        const url = getThumbnailUrl(activeRemote, thumbKey, thumb.fileId);
         const v = encodeURIComponent(thumb.lastModified);
         m.set(o.key, url + (url.includes('?') ? '&' : '?') + 'v=' + v);
       }

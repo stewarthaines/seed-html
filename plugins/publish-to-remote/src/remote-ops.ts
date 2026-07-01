@@ -12,6 +12,7 @@ import {
   listGoogleDriveFiles,
   deleteGoogleDriveFile,
   getGoogleDrivePublicUrl,
+  getGoogleDriveThumbnailUrl,
   uploadTextToGoogleDrive,
 } from './google-drive-upload.js';
 import {
@@ -101,6 +102,23 @@ export function getPublicUrl(
     return getWebDAVPublicUrl(remote, objectKey);
   }
   return '';
+}
+
+/**
+ * A viewable image URL for a cover thumbnail, for `<img>` display in the file list.
+ * Same as getPublicUrl for S3/WebDAV (direct image URLs), but Google Drive needs its
+ * dedicated thumbnail endpoint — the plain download URL serves an attachment that
+ * won't render in an image tag.
+ */
+export function getThumbnailUrl(
+  remote: RemoteConfig,
+  objectKey: string,
+  fileId?: string,
+): string {
+  if (remote.type === 'google-drive' && fileId) {
+    return getGoogleDriveThumbnailUrl(fileId);
+  }
+  return getPublicUrl(remote, objectKey, fileId);
 }
 
 /**
