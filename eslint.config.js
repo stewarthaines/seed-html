@@ -124,7 +124,7 @@ export default [
     },
   },
   {
-    files: ['scripts/**/*.{js,mjs,cjs}', 'build-scripts/**/*.{js,cjs}', 'opds-server/**/*.{js,mjs,cjs}'],
+    files: ['scripts/**/*.{js,mjs,cjs}', 'build-scripts/**/*.{js,cjs}'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
