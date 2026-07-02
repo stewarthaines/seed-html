@@ -159,7 +159,8 @@
 
   // The header's panel toggles (Accessibility / EpubCheck / Reader) are mutually
   // exclusive — at most one panel open at a time in the band below the header.
-  let activePanel = $state<'a11y' | 'epubcheck' | 'reader' | null>(null);
+  type PanelId = 'a11y' | 'epubcheck' | 'reader';
+  let activePanel = $state<PanelId | null>(null);
 
   // --- Validation report -------------------------------------------------------
   // The latest epubcheck report is dropped into localStorage by the publish plugin.
@@ -259,17 +260,50 @@
     }
   }
 
-  // Toggle one of the mutually-exclusive header panels (opening one closes any
-  // other). Opening Accessibility runs a check; leaving it clears the in-iframe
+  // Open a specific header panel, or close all with null. The panels are mutually
+  // exclusive. Opening Accessibility runs a check; leaving it clears the in-iframe
   // highlight outlines.
-  function togglePanel(panel: 'a11y' | 'epubcheck' | 'reader'): void {
-    const next = activePanel === panel ? null : panel;
+  function setPanel(next: PanelId | null): void {
     if (activePanel === 'a11y' && next !== 'a11y') {
       const doc = previewIframe?.contentDocument;
       if (doc) clearHighlights(doc);
     }
     activePanel = next;
     if (next === 'a11y') void runA11yCheck();
+  }
+
+  // Toggle a panel (button behaviour): re-selecting the open one closes it.
+  function togglePanel(panel: PanelId): void {
+    setPanel(activePanel === panel ? null : panel);
+  }
+
+  // The header panels currently offerable, in display order. Availability varies:
+  // Accessibility needs http(s) (axe is fetched from the origin), EpubCheck needs a
+  // matching validation report, Reader needs a reflowable non-fixed-layout preview.
+  // When more than one is available they collapse into a single dropdown.
+  const availablePanels = $derived.by(() => {
+    const list: { id: PanelId; label: string; disabled: boolean }[] = [];
+    if (canCheckA11y) {
+      list.push({ id: 'a11y', label: $t('Accessibility'), disabled: !xhtmlContent });
+    }
+    if (validationReport && validationReportMatches) {
+      list.push({ id: 'epubcheck', label: 'EpubCheck', disabled: false });
+    }
+    if (readerModeActive) {
+      list.push({ id: 'reader', label: $t('Reader'), disabled: false });
+    }
+    return list;
+  });
+
+  // Option text for the collapsed panel dropdown, appending a count where known.
+  function panelOptionLabel(p: { id: PanelId; label: string }): string {
+    if (p.id === 'epubcheck' && validationChapterCount > 0) {
+      return `${p.label} (${validationChapterCount})`;
+    }
+    if (p.id === 'a11y' && activePanel === 'a11y' && a11yIssueCount !== null) {
+      return `${p.label} (${a11yIssueCount})`;
+    }
+    return p.label;
   }
 
   // The preview re-render invalidates the last report; while the panel is open,
@@ -1307,8 +1341,24 @@
     </div>
 
     <div class="preview-controls">
-      <!-- Accessibility check (spike): inject axe-core into the preview + run it -->
-      {#if canCheckA11y}
+      {#if availablePanels.length >= 2}
+        <!-- More than one panel available: collapse into a single dropdown, with a
+             "Panels" entry as the none-open state. -->
+        <select
+          class="device-selector panel-selector"
+          value={activePanel ?? ''}
+          onchange={e =>
+            setPanel(((e.currentTarget as HTMLSelectElement).value || null) as PanelId | null)}
+          aria-label={$t('Show panel')}
+        >
+          <option value="">{$t('Panels')}</option>
+          {#each availablePanels as panel}
+            <option value={panel.id} disabled={panel.disabled}>{panelOptionLabel(panel)}</option>
+          {/each}
+        </select>
+      {:else}
+        <!-- Accessibility check (spike): inject axe-core into the preview + run it -->
+        {#if canCheckA11y}
         <button
           type="button"
           class="a11y-check"
@@ -1357,6 +1407,7 @@
         >
           {$t('Reader')}
         </button>
+        {/if}
       {/if}
     </div>
   </div>
@@ -1877,7 +1928,8 @@
   }
 
   /* Match the left pane's .file-selector dropdown sizing + focus treatment. */
-  .device-selector {
+  .device-selector,
+  .panel-selector {
     padding: var(--space-2);
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-sm);
@@ -1887,7 +1939,8 @@
     cursor: pointer;
   }
 
-  .device-selector:focus {
+  .device-selector:focus,
+  .panel-selector:focus {
     outline: none;
     border-color: var(--color-accent-primary);
     box-shadow: 0 0 0 var(--focus-ring-width) var(--color-focus);
