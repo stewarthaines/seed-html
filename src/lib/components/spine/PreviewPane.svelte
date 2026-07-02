@@ -1343,7 +1343,7 @@
     <div class="preview-controls">
       {#if availablePanels.length >= 2}
         <!-- More than one panel available: collapse into a single dropdown, with a
-             "Panels" entry as the none-open state. -->
+             "Checks" entry as the none-open state. -->
         <select
           class="device-selector panel-selector"
           value={activePanel ?? ''}
@@ -1351,7 +1351,7 @@
             setPanel(((e.currentTarget as HTMLSelectElement).value || null) as PanelId | null)}
           aria-label={$t('Show panel')}
         >
-          <option value="">{$t('Panels')}</option>
+          <option value="">{$t('Checks')}</option>
           {#each availablePanels as panel}
             <option value={panel.id} disabled={panel.disabled}>{panelOptionLabel(panel)}</option>
           {/each}
