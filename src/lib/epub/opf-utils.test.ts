@@ -13,6 +13,9 @@ import {
 } from './opf-utils.js';
 import type { OPFDocument } from './opf-utils.js';
 
+// Injected by the vitest define (mirrors the vite build); see vitest.config.unit.ts.
+declare const __VERSION__: string;
+
 // Minimal Element-like stub for parseCreatorList (avoids happy-dom namespace issues).
 function el(textContent: string, id?: string): Element {
   return {
@@ -250,6 +253,12 @@ describe('generateOPFXML - creator roles', () => {
       docWith({ creator: [{ name: 'Tom & Jerry', roles: ['aut'] }] })
     );
     expect(xml).toContain('<dc:creator id="creator1">Tom &amp; Jerry</dc:creator>');
+  });
+
+  it('always emits a machine-readable generator meta with the app version', () => {
+    // __VERSION__ is injected by the vitest define (mirrors the vite build).
+    const xml = OPFUtils.generateOPFXML(docWith({}));
+    expect(xml).toContain(`<meta name="generator" content="SEED.html ${__VERSION__}"/>`);
   });
 });
 

@@ -9,6 +9,9 @@
 
 import { isRtlLanguage } from './language-direction.js';
 
+// Injected at build time from package.json (vite define); see vite.config.ts.
+declare const __VERSION__: string;
+
 /**
  * Generate EPUB-compliant timestamp without decimal seconds
  *
@@ -914,6 +917,12 @@ export class OPFUtils {
     if (metadata.modifiedDate) {
       xml += `\n    <meta property="dcterms:modified">${escapeXML(metadata.modifiedDate)}</meta>`;
     }
+
+    // Machine-readable record of the software that last wrote this file. Regenerated
+    // on every serialize, so it always reflects the SEED version that last modified
+    // the book (pairs with dcterms:modified). Distinct from the human-editable
+    // "book producer" dc:contributor, which records the creating version.
+    xml += `\n    <meta name="generator" content="${escapeXML(`SEED.html ${__VERSION__}`)}"/>`;
 
     // Add rendition properties only when they differ from defaults
     if (metadata.renditionLayout && metadata.renditionLayout !== 'reflowable') {
