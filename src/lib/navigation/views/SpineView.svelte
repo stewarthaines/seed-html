@@ -197,7 +197,7 @@
     label: string;
     path: string;
     href: string;
-    type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head';
+    type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head' | 'generator';
   }> = [];
 
   // Pane-specific available files (filtered to prevent conflicts)
@@ -207,7 +207,7 @@
       label: string;
       path: string;
       href: string;
-      type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head';
+      type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head' | 'generator';
     }>
   >([]);
   let availableFiles2 = $state<
@@ -216,7 +216,7 @@
       label: string;
       path: string;
       href: string;
-      type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head';
+      type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head' | 'generator';
     }>
   >([]);
 
@@ -406,11 +406,12 @@
         label: string;
         path: string;
         href: string;
-        type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head';
+        type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head' | 'generator';
       }> = [
         {
           value: 'text',
-          label: translate('Text Content'),
+          // Show the actual chapter plain-text filename; it's the primary edit target.
+          label: `${selectedItemId}.txt`,
           path: `SOURCE/text/${selectedItemId}.txt`,
           href: `SOURCE/text/${selectedItemId}.txt`, // text files don't have manifest hrefs
           type: 'text',
@@ -427,14 +428,13 @@
 
       for (const item of workspace.opf.manifest) {
         if (item.mediaType === 'text/css') {
-          const fileName =
-            item.href
-              .split('/')
-              .pop()
-              ?.replace(/\.css$/, '') || item.href;
+          const baseName = item.href.split('/').pop() || item.href;
+          const fileName = baseName.replace(/\.css$/, '');
           files.push({
             value: `css-${fileName}`,
-            label: `CSS: ${fileName}`,
+            // Full filename (with extension) — the "Reading System" group header
+            // supplies the category, and the extension keeps CSS/JS distinct.
+            label: baseName,
             path: resolveManifestHref(item.href),
             href: item.href,
             type: 'css',
@@ -443,10 +443,11 @@
           item.mediaType === 'text/javascript' ||
           item.mediaType === 'application/javascript'
         ) {
-          const fileName = item.href.split('/').pop()?.replace(/\.js$/, '') || item.href;
+          const baseName = item.href.split('/').pop() || item.href;
+          const fileName = baseName.replace(/\.js$/, '');
           files.push({
             value: `js-${fileName}`,
-            label: `JS: ${fileName}`,
+            label: baseName,
             path: resolveManifestHref(item.href),
             href: item.href,
             type: 'javascript',
@@ -465,9 +466,11 @@
           seen.add(transformPath);
           const ext = extensionOf(transformPath);
           const name = basename(transformPath).replace(/\.js$/, '');
+          const file = basename(transformPath);
           files.push({
             value: `transform-${ext ? `${name}-${ext}` : name}`,
-            label: ext ? `JS: ${name} (${ext})` : `JS: ${name}`,
+            // Filename with extension; extension-owned transforms note their owner.
+            label: ext ? `${file} (${ext})` : file,
             path: transformPath,
             href: transformPath, // transform files don't have manifest hrefs
             type: 'transform',
@@ -481,7 +484,7 @@
         await loadPreviewHead(headPath);
         files.push({
           value: 'preview-head',
-          label: translate('Preview: head.xml'),
+          label: basename(previewHeadPath),
           path: previewHeadPath,
           href: previewHeadPath, // not a manifest item
           type: 'preview-head',
@@ -492,16 +495,17 @@
 
       // Generator scripts — editable here alongside transforms. They run on demand
       // from the Generators panel (not the render pipeline); listing them lets you
-      // view/edit the source. Reuse the 'javascript' file type (JS syntax + save).
+      // view/edit the source. Their own 'generator' type (JS syntax; grouped apart
+      // from reading-system JS) — also keeps them Advanced-mode-only.
       try {
         const installed = await listGenerators(fileStorage, workspace.id);
         for (const gen of installed) {
           files.push({
             value: `generator-${gen.manifest.id}`,
-            label: `Generator: ${gen.manifest.name}`,
+            label: gen.manifest.name,
             path: gen.scriptPath, // SOURCE/generators/<id>/<script>
             href: gen.scriptPath,
-            type: 'javascript',
+            type: 'generator',
           });
         }
       } catch {
@@ -518,7 +522,8 @@
       availableFiles = [
         {
           value: 'text',
-          label: translate('Text Content'),
+          // Show the actual chapter plain-text filename; it's the primary edit target.
+          label: `${selectedItemId}.txt`,
           path: `SOURCE/text/${selectedItemId}.txt`,
           href: `SOURCE/text/${selectedItemId}.txt`, // text files don't have manifest hrefs
           type: 'text',
@@ -541,7 +546,7 @@
       label: string;
       path: string;
       href: string;
-      type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head';
+      type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head' | 'generator';
     },
     workspaceId: string,
     workspaceService: WorkspaceService
@@ -604,7 +609,7 @@
       label: string;
       path: string;
       href: string;
-      type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head';
+      type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head' | 'generator';
     },
     workspaceId: string,
     workspaceService: WorkspaceService

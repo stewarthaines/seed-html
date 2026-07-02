@@ -70,13 +70,13 @@
       value: string;
       label: string;
       path: string;
-      type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head';
+      type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head' | 'generator';
     }>;
     availableFiles2?: Array<{
       value: string;
       label: string;
       path: string;
-      type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head';
+      type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head' | 'generator';
     }>;
     /** Basic mode hides JavaScript/transform entries from the file dropdowns —
         JS isn't exposed as editable there. */
@@ -109,16 +109,61 @@
     generatorRunner?: GeneratorRunner | null;
   } = $props();
 
-  // Basic mode hides JavaScript, transform-script and preview-head entries, so
-  // power-user surfaces aren't offered as editable; text and CSS stay.
+  // Basic mode hides JavaScript, transform-script, generator and preview-head
+  // entries, so power-user surfaces aren't offered as editable; text and CSS stay.
   const isEditableInBasicMode = (type: string) =>
-    type !== 'javascript' && type !== 'transform' && type !== 'preview-head';
+    type === 'text' || type === 'css';
   const visibleFiles1 = $derived(
     advancedMode ? availableFiles1 : availableFiles1.filter(f => isEditableInBasicMode(f.type))
   );
   const visibleFiles2 = $derived(
     advancedMode ? availableFiles2 : availableFiles2.filter(f => isEditableInBasicMode(f.type))
   );
+
+  // Group the file-picker entries under <optgroup> headers (mirrors the preview
+  // pane's device dropdown). The chapter plain text is shown as a bare leading
+  // option; everything else buckets by kind. Only non-empty groups render.
+  type FileEntry = { value: string; label: string; path: string; type: string };
+  const FILE_GROUP_ORDER = ['reading-system', 'build', 'generator', 'preview'] as const;
+  const fileGroupOf = (type: string): (typeof FILE_GROUP_ORDER)[number] | null => {
+    switch (type) {
+      case 'css':
+      case 'javascript':
+        return 'reading-system';
+      case 'transform':
+        return 'build';
+      case 'generator':
+        return 'generator';
+      case 'preview-head':
+        return 'preview';
+      default:
+        return null; // 'text' — rendered as a bare option, not grouped
+    }
+  };
+  const fileGroupLabel = (key: string): string => {
+    switch (key) {
+      case 'reading-system':
+        // i18n: Dropdown group for CSS/JS files loaded by the e-reader
+        return $t('Reading System');
+      case 'build':
+        // i18n: Dropdown group for build-time transform scripts (not shipped)
+        return $t('Build scripts');
+      case 'generator':
+        // i18n: Dropdown group for on-demand content generator scripts
+        return $t('Generators');
+      case 'preview':
+        // i18n: Dropdown group for the preview-only head fragment
+        return $t('Preview');
+      default:
+        return key;
+    }
+  };
+  const textFilesOf = (files: FileEntry[]) => files.filter(f => f.type === 'text');
+  const fileGroupsOf = (files: FileEntry[]) =>
+    FILE_GROUP_ORDER.map(key => ({
+      key,
+      files: files.filter(f => fileGroupOf(f.type) === key),
+    })).filter(g => g.files.length > 0);
 
   /**
    * Toggle between single and dual pane mode
@@ -284,7 +329,7 @@
     if (fileType.includes('css')) {
       return '/* Stylesheet content */\n\nbody {\n  /* Your styles here */\n}';
     }
-    if (fileType.includes('javascript') || fileType.includes('js')) {
+    if (fileType.includes('javascript') || fileType.includes('js') || fileType === 'generator') {
       return '// JavaScript content\n\n(function() {\n  // Your code here\n})();';
     }
     if (fileType.includes('transform')) {
@@ -591,6 +636,21 @@
   export { findAndSelectText };
 </script>
 
+<!-- Grouped <option>s for a file picker: the chapter plain text as a bare
+     leading option, then one <optgroup> per non-empty kind. -->
+{#snippet fileOptions(files: FileEntry[])}
+  {#each textFilesOf(files) as file}
+    <option value={file.value}>{file.label}</option>
+  {/each}
+  {#each fileGroupsOf(files) as group}
+    <optgroup label={fileGroupLabel(group.key)}>
+      {#each group.files as file}
+        <option value={file.value}>{file.label}</option>
+      {/each}
+    </optgroup>
+  {/each}
+{/snippet}
+
 <!-- Pane 1's file picker. Lives in the header row in single-pane mode; moves
      into pane 1's own header in dual mode (next to its editor). -->
 {#snippet pane1FileSelector()}
@@ -600,10 +660,7 @@
     onchange={e => handleFileSelect(1, e)}
     aria-label={$t('Select file for pane 1')}
   >
-    <option value="" disabled>{$t('Select file...')}</option>
-    {#each visibleFiles1 as file}
-      <option value={file.value}>{file.label}</option>
-    {/each}
+    {@render fileOptions(visibleFiles1)}
   </select>
 {/snippet}
 
@@ -777,10 +834,7 @@
                 onchange={e => handleFileSelect(2, e)}
                 aria-label={$t('Select file for pane 2')}
               >
-                <option value="" disabled>{$t('Select file...')}</option>
-                {#each visibleFiles2 as file}
-                  <option value={file.value}>{file.label}</option>
-                {/each}
+                {@render fileOptions(visibleFiles2)}
               </select>
               {@render changesToggle(2)}
             </div>
