@@ -83,6 +83,11 @@
     isFixedLayout?: boolean;
   } = $props();
 
+  // The generated content-document filename for the current chapter (e.g.
+  // chapter01.xhtml), surfaced next to the Source toggle so authors see the real
+  // rendered file. Spine items render to `<id>.xhtml`.
+  const renderedFilename = $derived(chapterId ? `${chapterId}.xhtml` : '');
+
   /** Format the transform's execution time for the status indicator. */
   function formatExecutionTime(ms: number): string {
     return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
@@ -409,7 +414,11 @@
     'light',
     asEnum(['light', 'sepia', 'dark'])
   );
-  const fontStep = persisted('editme_preview_font_step', 2, asInt({ min: 0, max: FONT_STEPS.length - 1 }));
+  const fontStep = persisted(
+    'editme_preview_font_step',
+    2,
+    asInt({ min: 0, max: FONT_STEPS.length - 1 })
+  );
   const forceColors = persisted('editme_preview_force_colors', false, asBoolean);
 
   // Whether the reader-mode controls apply: reflowable previews only (not the print
@@ -1191,6 +1200,13 @@
          leaving the device dropdown floated to the right edge of the first row. -->
     <div class="header-main">
       <div class="preview-title">
+        <!-- Rendered content-document filename for the current chapter. -->
+        {#if renderedFilename}
+          <span class="rendered-filename" title={$t('Rendered chapter file')}>
+            {renderedFilename}
+          </span>
+        {/if}
+
         <!-- Source/Preview toggle -->
         <button
           class="view-toggle"
@@ -1238,21 +1254,6 @@
             <ArrowsClockwise size={16} aria-hidden="true" />
           </button>
         {/if}
-      </div>
-
-      <div class="preview-device">
-        <!-- Orientation toggle (only show for scaled device frames, not fill/print) -->
-        {#if !isFillDevice(selectedDevice.current)}
-          <button
-            type="button"
-            class="orientation-toggle"
-            onclick={toggleOrientation}
-            title={$t('Toggle orientation')}
-            aria-label={$t('Toggle device orientation')}
-          >
-            <DeviceRotate size={16} aria-hidden="true" />
-          </button>
-        {/if}
 
         <!-- Device selector -->
         <!-- i18n: Accessibility label for device size dropdown menu -->
@@ -1272,6 +1273,21 @@
             </optgroup>
           {/each}
         </select>
+
+        <div class="preview-device">
+          <!-- Orientation toggle (only show for scaled device frames, not fill/print) -->
+          {#if !isFillDevice(selectedDevice.current)}
+            <button
+              type="button"
+              class="orientation-toggle"
+              onclick={toggleOrientation}
+              title={$t('Toggle orientation')}
+              aria-label={$t('Toggle device orientation')}
+            >
+              <DeviceRotate size={16} aria-hidden="true" />
+            </button>
+          {/if}
+        </div>
       </div>
     </div>
 
@@ -1631,6 +1647,15 @@
     color: var(--color-text-primary);
   }
 
+  /* The rendered chapter filename, sitting left of the Source toggle. */
+  .rendered-filename {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--font-normal);
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+  }
+
   .preview-device {
     display: flex;
     align-items: center;
@@ -1840,7 +1865,6 @@
     border-radius: var(--radius-sm);
     background: var(--color-bg-primary);
     color: var(--color-text-primary);
-    font-size: var(--text-xs);
     cursor: pointer;
   }
 
