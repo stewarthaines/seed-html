@@ -4,7 +4,24 @@
  * Provides realistic, varied content for testing different scenarios
  */
 
-import type { DemoChapter, DemoMetadata } from './workspace-story-utils';
+export interface DemoMetadata {
+  title: string;
+  language: string;
+  identifier: string;
+  creator: string[];
+  publisher?: string;
+  description?: string;
+  subject?: string[];
+  date?: string;
+}
+
+export interface DemoChapter {
+  id: string;
+  title: string;
+  content: string;
+  linear?: boolean;
+  mediaType?: string;
+}
 
 // Content templates for generating varied chapters
 const CHAPTER_TEMPLATES = {
