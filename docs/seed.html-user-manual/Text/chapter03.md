@@ -24,21 +24,21 @@ It's how your book tells readers — and the catalogs that look for it — that 
 
 ## Cover image
 
-SEED.html makes a simple cover for you automatically — your title and author set on a coloured background. It's a **placeholder, not a cover designer**, and the controls are deliberately minimal. In the _Metadata_{.ui .icon-article} view, drag **Cover background hue** to change the colour, use the **Aa** toggle for a light or dark treatment, and click _Update cover image_{.ui} to redraw it after you change the title or author.
+SEED.html makes a simple cover for you automatically — your title and author set on a coloured background. It's a **placeholder, not a cover designer**. In the _Metadata_{.ui .icon-article} view, drag **Cover background hue** to change the colour, use the **Aa** toggle for a light or dark treatment, and click _Update cover image_{.ui} to redraw it after you change the title or author.
 
-That's all the styling SEED.html offers, by design — it gives your book a tidy, recognisable face without trying to be a design tool. For a cover of your own, start from the version it saves: the cover is stored both as `cover.png` (flagged as the book's cover image) and as an editable `cover.svg`. Download the SVG, design your cover in a vector editor like Inkscape, and bring it back in as the book's cover (see _The file list_, later in this chapter).
+For a cover of your own, start from the version it saves: the cover is stored both as `cover.png` (flagged as the book's cover image) and as an editable `cover.svg`. Download the SVG, design your cover in a vector editor like Inkscape, and bring it back in as the book's cover (see _The file list_, later in this chapter).
 
-## Table of contents (the navigation document)
+## Table of contents
 
-Every EPUB carries a table of contents — the chapter list a reading app shows so readers can jump straight to any part of the book. In EPUB it lives in a file called the **navigation document**.
+Every ebook carries a table of contents — the chapter list a reading app shows so readers can jump straight to any part of the book.
 
 You don't have to build it. Open the _Navigation_{.ui .icon-book-open} view, and as long as you leave the editor empty, SEED.html generates the contents from headings in your chapters, in reading order. For most books that's all you need, at least to begin with.
 
 If you want more than that — custom wording, or a nested structure — write your own in the editor in the same plain text as your chapter source. A preview beside it shows how the contents will look. Empty the editor again at any time to return to the automatic list.
 
-## The file list (the manifest)
+## The file list
 
-Everything in your book — chapters, styles, images, the cover — is a file, and the _Manifest_{.ui .icon-list-bullets} view lists them all. (In EPUB, that list of files is called the **manifest**.) Each row shows a file's path and size, and any special role it plays: you'll see the cover marked `cover-image` and the table of contents marked `nav`.
+Everything in your book — chapters, styles, images, the cover — is a file, and the _Manifest_{.ui .icon-list-bullets} view lists them all. Each row shows a file's path and size, and any special role it plays: you'll see the cover marked `cover-image` and the table of contents marked `nav`.
 
 You mostly won't need this view — SEED.html keeps the list in order as you write. It's here for when you want to handle the files directly. Click a row for its details, where you can **Download** or **Delete** the file, and use _Load File_{.ui} to bring one in from your device.
 

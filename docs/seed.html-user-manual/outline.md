@@ -39,8 +39,8 @@ TODO (images): replace `screen-device-comparison.png` with a shot of the same co
   - Advanced fields
   - Accessibility
 - Cover image
-- Table of contents (the navigation document)
-- The file list (the manifest)
+- Table of contents
+- The file list (the Manifest view)
 
 ## Check your book
 
