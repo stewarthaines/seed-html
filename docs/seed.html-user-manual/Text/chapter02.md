@@ -8,23 +8,20 @@ Open the _Projects_{.ui .icon-house} panel and click _Create New_{.ui} to open t
 
 ![The New Project window, with fields for the title, author, cover, language, and text format.](../Images/screen-new-project.png){.figure .screenshot}
 
-Give your book a **Title** and an **Author** — you can change both later.
-
-Leave **Generate cover image** ticked and SEED.html makes a simple coloured cover; drag the slider to choose its colour. You can swap in your own later.
-
-Set the **Language** to the book's main language.
-
-Under **Text format**, choose how you'll write — the way you mark bold, headings, and the like. Keep the default if you're unsure.
-
-Click _Create_{.ui}. SEED.html sets up the book and opens it with one starter chapter.
+1. Give your book a **Title** and an **Author** — you can change both later.
+2. Leave **Generate cover image** ticked and SEED.html makes a simple coloured cover; drag the slider to choose its colour. You can swap in your own later.
+3. Set the **Language** to the book's main language.
+4. Under **Text format**, choose how you'll write — the way you mark bold, headings, and the like. Keep the default if you're unsure.
+5. Click _Create_{.ui}. SEED.html sets up the book and opens it with one starter chapter.
 
 ### Import from a catalog
 
-A catalog is an online list of books you can bring into SEED.html. Open the _Projects_{.ui .icon-house} panel, click _Import from Catalog_{.ui}, and you'll see sample books, each with its cover. Each opens as a ready-made project for the kind of material it shows — a good starting point for a book of your own.
+A catalog is an online list of books you can bring into SEED.html. The one built in offers sample books, each a ready-made project for the kind of material it shows — a good starting point for a book of your own.
 
 ![The Import from Catalog window, showing sample books with their covers.](../Images/screen-import-catalog.png){.figure .screenshot}
 
-Click a book to bring it in; it opens as a project you can edit, like one you started yourself.
+1. Open the _Projects_{.ui .icon-house} panel and click _Import from Catalog_{.ui}. The sample books appear, each with its cover.
+2. Click a book to bring it in; it opens as a project you can edit, like one you started yourself.
 
 The samples show what SEED.html can make — a magazine, sheet music, a novel, a technical manual. Open one to see how it's built, then make it your own: duplicate it (next) or just start changing it.
 
@@ -32,13 +29,17 @@ The samples show what SEED.html can make — a magazine, sheet music, a novel, a
 
 Duplicating copies the project you have open — a good way to reuse a book as a starting point, whether it's a sample you imported or one of your own, without touching the original.
 
-Open the _Projects_{.ui .icon-house} panel and click _Duplicate_{.ui}. A box appears with the copy's **Title**, prefilled as the original name plus "(copy)"; change it if you like, then click _Duplicate_{.ui} to confirm.
+1. Open the _Projects_{.ui .icon-house} panel and click _Duplicate_{.ui}. A box appears with the copy's **Title**, prefilled as the original name plus "(copy)".
+2. Change the title if you like, then click _Duplicate_{.ui} to confirm.
 
 The copy is its own project, separate from the original — changes to one leave the other untouched.
 
 ### Import from a file
 
-You can also open a book saved on your device. In the _Projects_{.ui .icon-house} panel, click _Import from File_{.ui} and choose the `.epub`. If it was made in SEED.html, it opens as a project, ready to edit.
+You can also open a book saved on your device.
+
+1. Open the _Projects_{.ui .icon-house} panel and click _Import from File_{.ui}.
+2. Choose the `.epub`. If it was made in SEED.html, it opens as a project, ready to edit.
 
 An EPUB made in another program opens too, but only to read — it wasn't made in SEED.html, so it can't be edited.
 

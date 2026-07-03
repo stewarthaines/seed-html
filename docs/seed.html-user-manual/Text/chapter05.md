@@ -12,6 +12,12 @@ From there, click _Download_{.ui} to save the `.epub` to your device. That file 
 
 You can also save your book as a PDF — a fixed, printable copy, handy for proof-reading on paper or giving to someone who just wants to print it. A PDF isn't a substitute for the EPUB: it doesn't reflow or adapt to the reader, and it can't be reopened in SEED.html to edit. Packaging an EPUB, above, is how you produce the book proper.
 
-Open _Settings_{.ui .icon-gear} and find its **PDF** section. Set the **Page size** and **Margin**, choose whether to **Include page numbers** and a cover page, then click _Generate PDF_{.ui} to produce a PDF of the whole book.
+1. Open _Settings_{.ui .icon-gear} and find its **PDF** section.
+2. Set the **Page size** and **Margin**, and choose whether to **Include page numbers** and a cover page.
+3. Click _Generate PDF_{.ui} to produce a PDF of the whole book.
 
-To save just one chapter — for a handout or a quick sample — open it, choose the _PDF_{.ui} preset in the preview header (the print preview from _Preview your book_), and click the _Chapter PDF_{.ui} button that appears.
+To save just one chapter — for a handout or a quick sample:
+
+1. Open the chapter.
+2. Choose the _PDF_{.ui} preset in the preview header (the print preview from _Preview your book_).
+3. Click the _Chapter PDF_{.ui} button that appears.
