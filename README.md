@@ -32,7 +32,7 @@ Why another EPUB tool? SEED.html is built for one job — authoring accessible E
 
 |                                                 | SEED.html | InDesign | Sigil | Calibre | Pandoc | Quarto | Vellum |
 | ----------------------------------------------- | :-------: | :------: | :---: | :-----: | :----: | :----: | :----: |
-| Runs in a browser — no installation             |    ✅     |          |       |         |        |        |        |
+| Runs in a browser (including iOS and Android)   |    ✅     |          |       |         |        |        |        |
 | Free & open source                              |    ✅     |          |  ✅   |   ✅    |   ✅   |   ✅   |        |
 | Plain-text, version-controlled chapter source   |    ✅     |          |       |         |   ✅   |   ✅   |        |
 | Choose your markup (Markdown / Djot / Textile)  |    ✅     |          |       |         |   ✅   |        |        |
