@@ -26,6 +26,22 @@ SEED.html is distributed under the terms of the MIT license. It is free to use, 
 
 See [USER_GUIDE.md](./USER_GUIDE.md) for detailed usage instructions.
 
+## Alternatives
+
+Why another EPUB tool? SEED.html is built for one job — authoring accessible EPUB 3 books in the browser from plain-text sources — rather than converting between many formats or laying out for print. Here is a quick comparison with other tools you might reach for. A ✅ marks a first-class strength; a blank means it is not a goal of that tool. For the detailed, caveated version see [COMPARISON.md](./COMPARISON.md).
+
+|                                                | SEED.html | InDesign | Sigil | Calibre | Pandoc | Quarto | Vellum |
+| ---------------------------------------------- | :-------: | :------: | :---: | :-----: | :----: | :----: | :----: |
+| Runs in a browser — no install                 |    ✅     |          |       |         |        |        |        |
+| Free & open source                             |     ✅     |          |   ✅   |    ✅    |   ✅    |   ✅    |        |
+| Plain-text, version-controlled sources         |     ✅     |          |       |         |   ✅    |   ✅    |        |
+| Choose your markup (Markdown / Djot / Textile) |     ✅     |          |       |         |   ✅    |        |        |
+| Purpose-built for EPUB (not a converter)       |     ✅     |          |   ✅   |         |        |        |        |
+| Live device & reflow preview                   |     ✅     |          |   ✅   |    ✅    |        |        |   ✅    |
+| Edits existing third-party EPUBs               |           |          |   ✅   |    ✅    |        |        |        |
+| Self-editing EPUBs                             |     ✅     |          |       |         |        |        |        |
+| Strong print / fixed-layout PDF                |           |    ✅     |       |         |        |   ✅    |   ✅    |
+
 ## Technology Stack
 
 - **Frontend Framework**: Svelte 5 with TypeScript
@@ -77,6 +93,7 @@ See [DEVELOPMENT.md](./DEVELOPMENT.md) for comprehensive development guidelines.
 - **[TESTING.md](./TESTING.md)** - Testing strategy and patterns
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Build and deployment instructions
 - **[LOCALIZATION.md](./LOCALIZATION.md)** - Adding new languages and translations
+- **[COMPARISON.md](./COMPARISON.md)** - How SEED.html compares to other EPUB tools
 
 ### Project Structure
 
