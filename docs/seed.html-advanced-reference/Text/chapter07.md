@@ -164,6 +164,8 @@ function generateText(ctx, options) {
 
 ## Recipes
 
+The recipes up to the last one are build-time transforms — they run in the sandbox while you edit. The final one is a reading-system script: it ships in the manifest and runs in the reading app.
+
 ### Inline an SVG so the chapter is self-contained
 
 ```js
@@ -234,4 +236,34 @@ async function transformDOM(doc, idref, ctx) {
   // e.g. append a "Chapter X of N" footer, or audit images for missing alt text
   return doc;
 }
+```
+
+### Responsive-width fallback (reading-system script)
+
+The worked example of _Reading System JavaScript_: where a reader runs JavaScript but doesn't understand `@container`, measure the text's width in `em` and label the body so CSS has something to key on. The `CSS.supports` guard keeps it a fallback — it does nothing where container queries work.
+
+```js
+function classifyWidth() {
+  const p = document.querySelector('p');
+  if (!p) return;
+  const ems = p.clientWidth / parseFloat(getComputedStyle(p).fontSize);
+  const band = ems < 30 ? 'narrow' : ems < 50 ? 'wide' : 'full';
+  document.body.classList.remove('narrow', 'wide', 'full');
+  document.body.classList.add(band);
+}
+
+if (!CSS.supports('container-type: inline-size')) {
+  addEventListener('DOMContentLoaded', classifyWidth);
+  addEventListener('resize', classifyWidth);
+}
+```
+
+The container-query rule and its fallback twin, side by side:
+
+```css
+@container (width >= 50em) {
+  figure { float: inline-end; inline-size: 40%; }
+}
+
+body.full figure { float: inline-end; inline-size: 40%; }
 ```

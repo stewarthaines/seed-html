@@ -61,7 +61,7 @@ The plugin layer isn't user-extensible, so this is not a general "plugins" chapt
 
 - Code that ships in the EPUB and runs in the reading app (manifest JS; no special slot); SEED auto-marks chapters `scripted`
 - The angle: support hugely varied / speculative / browser-preview ≠ reading system; decide target readers and test in them — but the 2026 platform-WebKit trend is narrowing the gap. Enhancement only; degrade gracefully
-- Worked example: responsive width — `@container` em breakpoints, with a JS fallback (measure a paragraph's em-width → body class) guarded by `CSS.supports`
+- Worked example: responsive width — `@container` em breakpoints, with a JS fallback (measure a paragraph's em-width → body class) guarded by `CSS.supports`; the chapter carries the CSS and describes the fallback in prose — the working script lives in Reference
 
 ## Hardware-in-the-loop testing
 
@@ -81,7 +81,7 @@ The lookup half of the book — the narrative chapters point here. Absorbed the 
 - Transform entry points (`transformText` / `transformDOM` / `generateText`; the async rule)
 - The transform context: scoping, data fields, `ManifestItem`, methods with return types, performance notes
 - Generator declarations and the `GeneratorOption` schema (types, defaults, the select pitfall)
-- Recipes (inline SVG, data URLs, shared glossary, persisted data, manifest walks)
+- Recipes (inline SVG, data URLs, shared glossary, persisted data, manifest walks; the responsive-width reading-system fallback from the RSJS chapter)
 
 ## Coming later
 

@@ -28,15 +28,9 @@ function transformText(text, idref) {
 }
 ```
 
-That's the whole contract: text in, HTML out. The same function can be `async`, returning a `Promise` the engine awaits:
+That's the whole contract: text in, HTML out.
 
-```js
-async function transformText(text, idref) {
-  return text.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-}
-```
-
-It changes nothing here — there's nothing to await — but it's the form you need once a transform reads or writes project files through `ctx` (a later chapter), where every call is asynchronous.
+Once a transform reads or writes project files through `ctx` (a later chapter), where every call is asynchronous, this becomes an `async` function.
 
 Swap the text transform and you've changed the syntax authors write in — that's all an authoring format is here. Real formats (Markdown, Djot, Textile) do the same job with a proper parser rather than a regex, and arrive as extensions (the next chapter).
 
@@ -61,17 +55,7 @@ function transformDOM(htmlDocument, idref) {
 }
 ```
 
-And, like the text transform, it can be `async` when it needs to `await` something:
-
-```js
-async function transformDOM(htmlDocument, idref) {
-  htmlDocument.querySelectorAll('h1').forEach(h1 => {
-    if (h1.id) return;
-    h1.id = (h1.textContent || '').trim().toLowerCase().replace(/\s+/g, '-');
-  });
-  return htmlDocument;
-}
-```
+And, like the text transform, it can be `async` when it needs to `await` something.
 
 ## How a chapter flows through
 
