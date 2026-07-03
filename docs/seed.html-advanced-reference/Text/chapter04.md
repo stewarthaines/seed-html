@@ -35,7 +35,7 @@ The access is scoped on purpose: reads reach only declared manifest items and th
 
 ## Generators
 
-A generator is a script that defines `generateText`. Where a transform reshapes one chapter as it renders, a generator returns **source text** inserted at the editor caret — text you can then edit like anything you'd typed. What can it return?
+A generator is a script that defines `generateText`. Where a transform reshapes one chapter as it renders, a generator returns **source text** inserted at the editor caret — text you can then edit like anything you'd typed. It can return:
 - static text
 - static text shaped by the Generator's declared options
 - text derived from manifest items, or data stored by other transform scripts
@@ -64,7 +64,7 @@ function generateText(ctx, options) {
 
 Run it, and that Markdown lands at the caret, ready to edit. Nothing has read the book yet — it's a snippet on demand.
 
-Note that the generated text, when it hits the chapter, will be processed by the text pipeline that your project has configured. In this case the generated text implies markdown or markdown-like handling of heading and paragraph content. This might not always be the case. What if the project is configured with a `textile` transform?
+Generated text is processed by whatever text pipeline the project has configured. This snippet assumes Markdown-style headings and paragraphs; a project configured with a `textile` transform would need Textile source instead — which is what declared options are for.
 
 ### Shaped by an option
 
@@ -83,7 +83,7 @@ function generateText(ctx, options) {
 
 When you run it, SEED.html shows the dropdown first; your choice arrives as `options.format`, and the sample code block comes out in that syntax.
 
-In the screenshot you can see both `textile` and `markdown` style code blocks have been inserted. The preview makes it clear that the text pipeline has a `markdown` text transform.
+In the screenshot both syntaxes have been inserted; only the Markdown block renders as code, because this project's text transform is Markdown.
 
 ### Derived from stored data
 
@@ -124,8 +124,6 @@ async function generateText(ctx, options) {
 Because the data is written during preview, a chapter contributes only once it's been rendered at least once — open each chapter, then run the generator.
 
 ![The Figure List generator: its generateText script, the generated Markdown list of thumbnails and captions, and the preview assembling every figure across the book into one chapter.](../Images/screenshot-generator-figure-list.png){.figure}
-
-The screenshot shows the Generator script, the generated markdown and the preview which pulls the full set of book images into a single chapter.
 
 ## A live alternative
 

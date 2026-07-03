@@ -2,11 +2,11 @@
 
 This manual is for extending a SEED.html book with code. It assumes you're comfortable with JavaScript and EPUB. The SEED.html User Manual covers writing, describing, and producing a book; this one describes how the app supports complex content workflows and advanced Reading System features via the use of JavaScript.
 
-Most of the scripting hooks for extending the app's features run in the authoring phase rather than in the Reading System. If you know about the `scripted` property of an EPUB manifest item that's discussed in the chapter on Reading System JavaScript.
+Most of the scripting hooks here run in the authoring phase rather than in the reading system; code that ships in the book itself — the `scripted` manifest property — is covered in the Reading System JavaScript chapter.
 
-The fact that an EPUB is simply an archive of web page resources means that the natural place to write it and preview it is a web browser. The SEED.html app exploits this affordance to provide a local-first, offline-capable progressive web app that keeps you project files private on your own device.
+An EPUB is an archive of web-page resources, so the natural place to write and preview one is a web browser. SEED.html exploits this to provide a local-first, offline-capable progressive web app that keeps your project files private on your own device.
 
-## One switch reveals it all
+## Advanced Mode
 
 All of it lives behind **Advanced Mode**. In Basic Mode SEED.html stays focused on writing; Advanced Mode surfaces the scripts, settings, and source files this manual describes. Turn it on in _Settings_{.ui .icon-gear} under **App Settings → General** (the user manual's _Go further_ chapter covers the same switch); everything here assumes it's on.
 

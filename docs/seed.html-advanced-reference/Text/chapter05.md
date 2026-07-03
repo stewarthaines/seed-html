@@ -16,13 +16,13 @@ Many issues belong to a particular chapter. Where one does, the report links str
 
 ![The chapter's preview header with an EpubCheck tab (badge: 1) listing that chapter's single error above the live preview.](../Images/screenshot-validation-chapter-report.png){.figure}
 
-EPUBCheck is the surest way to know an EPUB is well-formed before you hand it on — the validation the earlier chapters pointed forward to: package the book, validate it, and fix anything it flags.
+This is the validation the earlier chapters pointed forward to: package the book, validate it, and fix anything it flags before you hand it on.
 
 ## Remotes
 
 The plugin uploads a packaged EPUB straight to a remote you've configured — an S3 or R2 bucket, WebDAV, Google Drive, or Dropbox. Credentials are entered at runtime and kept per-remote in the browser's private storage; nothing is baked into the build, and you bring your own.
 
-Of the four, the one worth setting up is an **S3-compatible bucket** — and it can cost nothing. Cloudflare's **R2** has a free tier with no egress fees (several other S3-compatible providers offer free tiers too); create a bucket, give it a public URL, and you have a real, durable home to publish to — a stable address per book rather than a file you re-send each time. It's a small bit of setup that pays for itself the moment you publish more than once.
+Of the four, the one worth setting up is an **S3-compatible bucket**. Cloudflare's **R2** has a free tier with no egress fees, as do several other S3-compatible providers; create a bucket, give it a public URL, and each book gets a stable address rather than a file you re-send each time.
 
 The other three are weaker. With **Google Drive** or **Dropbox** it's usually simpler to download the EPUB and drop it into a synced folder yourself; **WebDAV** works only where the server is configured to allow cross-origin (CORS) uploads. If you're going to configure a remote at all, make it an S3 or R2 bucket.
 

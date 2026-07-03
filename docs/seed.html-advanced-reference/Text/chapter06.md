@@ -6,7 +6,7 @@ There's no special slot for it. A reading-system script is a plain `.js` file ad
 
 ## What actually runs
 
-Here the ground gets unstable. Scripting support across reading systems is hugely varied, and there's no guarantee that an effect you want will run in more than one or two of them. This is speculative, bleeding-edge territory: before leaning on a script, decide which reading systems the book genuinely has to work in, and test it in each — and test it *there*, because what runs in a modern browser's preview pane says almost nothing about what a given reading system will do with it.
+Scripting support across reading systems is hugely varied; an effect you want may run in only one or two of them. Before leaning on a script, decide which reading systems the book genuinely has to work in, and test it in each — and test it *there*, because what runs in a modern browser's preview pane says almost nothing about what a given reading system will do with it.
 
 The trend, though, is encouraging. Through 2026, EPUB 3 reading systems are increasingly leaning on the WebKit already present on their platform — iOS, Android, desktop — rather than a bespoke engine. So a reader increasingly tracks the browser on the same device, and the gap between "works in a browser" and "works in a reader" is narrowing — slowly, and unevenly. Treat any script as enhancement: write the book to work without it, and let it add where it can.
 
@@ -46,4 +46,4 @@ The feature test matters: the script only takes over where container queries are
 body.full figure { float: inline-end; inline-size: 40%; }
 ```
 
-The layers cover a lot of ground between them — container queries for readers that have them, the script for readers that don't, and, where neither runs, the plain single-column default the book was built on. That last layer is the point: reading-system scripting is worth reaching for, but only as the top of a stack that still stands when it's kicked away.
+Three layers: container queries for readers that have them, the script for readers that don't, and, where neither runs, the plain single-column default the book was built on. That last layer is the point: reading-system scripting is worth reaching for, but only as the top of a stack that still stands when it's kicked away.
