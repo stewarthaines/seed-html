@@ -11,7 +11,7 @@ function transformText(text, idref, ctx) {
   // ...
 }
 
-function transformDom(htmlDocument, idref, ctx) {
+function transformDOM(htmlDocument, idref, ctx) {
   // ...
 }
 ```

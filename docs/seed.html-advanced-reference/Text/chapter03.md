@@ -56,5 +56,3 @@ Behind the one click is a small manifest the app reads — an `extension.json` t
 Read top to bottom, that's the by-hand recipe: load `highlight.min.js` as a global, run `transformHighlight.js` over the DOM, and copy a theme into the book's styles — plus the licence to carry along. Installing the extension simply does what the manifest declares.
 
 These manifests are part of the app, not something you write — the by-hand route is your equivalent. But an extension can declare one more thing: **generators**, scripts that build content from the whole book, like the shipped List of Figures. That's the next chapter.
-
-TODO: include screenshot of app settings listing current extensions

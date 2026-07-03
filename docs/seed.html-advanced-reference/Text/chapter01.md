@@ -37,8 +37,5 @@ The chapters are organised by where each extension point sits in a book's workfl
 - **The text pipeline** — the two functions that turn source into XHTML, and the contract the rest builds on
 - **Extensions** — packaging those functions, their libraries, and a sample syntax so a project can pick them up
 - **Generators** — building content from the whole book rather than one chapter
-- **Plugins** — app-level features added to the editor
+- **The publish-to-remote plugin** — an app-level plugin adding remote storage, OPDS catalogs, and EPUBCheck validation
 - **Reading System JavaScript** — code that ships in the book and runs in the reading app
-- **Testing on real devices** — checking a build on real readers, not just the preview
-- **`head.xml`** — a preview-only hook for surfacing otherwise-invisible XHTML
-- **The publish-to-remote plugin** — remote storage, OPDS catalogs, and EPUBCheck validation
