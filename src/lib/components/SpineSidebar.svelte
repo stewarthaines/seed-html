@@ -26,6 +26,7 @@
     isExpanded = true,
     onWorkspaceUpdate = null,
     readOnly = false,
+    advancedMode = false,
   }: {
     workspace?: WorkspaceState | null;
     spineService: SpineService;
@@ -34,6 +35,8 @@
     onWorkspaceUpdate?: ((workspace: WorkspaceState) => void) | null;
     /** Read-only EPUB: list is view-only (no append/move/drag/delete). */
     readOnly?: boolean;
+    /** Advanced mode: forwarded to the edit-chapter dialog to gate the linear toggle. */
+    advancedMode?: boolean;
   } = $props();
 
   // State
@@ -617,6 +620,7 @@
   <EditSpineItemDialog
     currentId={item.id}
     linear={item.linear}
+    {advancedMode}
     onSave={({ newId, linear }) => handleSaveEdit(item, newId, linear)}
     onClose={() => (editingItem = null)}
   />

@@ -778,7 +778,9 @@
       {#if editorMode === 'single'}
         {@render pane1FileSelector()}
       {/if}
-      {@render chapterTitleInput()}
+      {#if advancedMode}
+        {@render chapterTitleInput()}
+      {/if}
 
       {#if ((pane1SelectedFile === 'text' && editorMode === 'single') || (editorMode === 'dual' && (pane1SelectedFile === 'text' || pane2SelectedFile === 'text'))) && hasAudioFiles && audioClipService && workspace}
         <button

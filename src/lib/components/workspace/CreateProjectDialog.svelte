@@ -23,17 +23,22 @@
   let {
     textFormats,
     defaultLanguage,
+    advancedMode = false,
     onCreate,
     onClose,
   }: {
     /** Catalog entries that provide a text transform (markup languages). */
     textFormats: ExtensionCatalogEntry[];
     defaultLanguage: string;
+    /** Advanced mode: the text-format picker is hidden in basic mode, which
+     *  always creates a Djot project. */
+    advancedMode?: boolean;
     onCreate: (data: CreateProjectData) => Promise<void>;
     onClose: () => void;
   } = $props();
 
   const PLAIN = 'plain';
+  const DJOT = 'djot';
   const DEFAULT_TITLE = 'Untitled Book Project';
 
   // Remembered across sessions: repeat authors don't re-type, and the cover toggle
@@ -45,9 +50,17 @@
   // initial values once; untrack makes that intent explicit (no reactive capture).
   let title = $state(DEFAULT_TITLE);
   let language = $state(untrack(() => defaultLanguage));
-  // Pre-select the first available text format to nudge toward a transform
-  // library; falls back to plain text when none are available.
-  let selectedId = $state(untrack(() => textFormats[0]?.id ?? PLAIN));
+  // Advanced mode: pre-select the first available text format to nudge toward a
+  // transform library, falling back to plain text when none are available.
+  // Basic mode: the picker is hidden, so force a Djot project (falling back to
+  // the first available format, then plain, if Djot isn't installed).
+  let selectedId = $state(
+    untrack(() =>
+      advancedMode
+        ? (textFormats[0]?.id ?? PLAIN)
+        : (textFormats.find(e => e.id === DJOT)?.id ?? textFormats[0]?.id ?? PLAIN)
+    )
+  );
   // null = follow the title-derived hue; a number = explicit user choice.
   let coverHue = $state<number | null>(null);
   const effectiveHue = $derived(coverHue ?? titleHue(title.trim() || DEFAULT_TITLE));
@@ -171,7 +184,7 @@
         {/if}
       </div>
 
-      {#if textFormats.length > 0}
+      {#if advancedMode && textFormats.length > 0}
         <fieldset class="create-formats" disabled={creating}>
           <legend class="create-label">{$t('Text format')}</legend>
           <label class="create-radio">

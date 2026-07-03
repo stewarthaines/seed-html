@@ -6,6 +6,7 @@
   let {
     currentId,
     linear: initialLinear,
+    advancedMode = false,
     onSave,
     onClose,
   }: {
@@ -13,6 +14,8 @@
     currentId: string;
     /** Current linear reading-order flag (checked = in the reading order). */
     linear: boolean;
+    /** Advanced mode: the linear reading-order toggle is hidden in basic mode. */
+    advancedMode?: boolean;
     onSave: (next: { newId: string; linear: boolean }) => Promise<void>;
     onClose: () => void;
   } = $props();
@@ -86,21 +89,23 @@
       />
     </div>
 
-    <div class="edit-check">
-      <input
-        bind:checked={linear}
-        id="edit-spine-linear"
-        type="checkbox"
-        class="edit-checkbox"
-        disabled={saving}
-      />
-      <label class="edit-check-label" for="edit-spine-linear">
-        <span>{$t('Include in the linear reading order')}</span>
-        <span class="edit-check-hint">
-          {$t('Uncheck to keep the item in the book but outside the default reading order.')}
-        </span>
-      </label>
-    </div>
+    {#if advancedMode}
+      <div class="edit-check">
+        <input
+          bind:checked={linear}
+          id="edit-spine-linear"
+          type="checkbox"
+          class="edit-checkbox"
+          disabled={saving}
+        />
+        <label class="edit-check-label" for="edit-spine-linear">
+          <span>{$t('Include in the linear reading order')}</span>
+          <span class="edit-check-hint">
+            {$t('Uncheck to keep the item in the book but outside the default reading order.')}
+          </span>
+        </label>
+      </div>
+    {/if}
 
     {#if error}
       <p class="edit-error" role="alert">{error}</p>

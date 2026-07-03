@@ -1130,6 +1130,7 @@
           selectedItemId={selectedSpineItemId}
           {isExpanded}
           readOnly={structureLocked}
+          advancedMode={advancedMode.current}
           onWorkspaceUpdate={updatedWorkspace => {
             if (appState) appState.workspace = updatedWorkspace;
           }}
@@ -1376,6 +1377,7 @@
             previewIncludeHead={appState?.epubSettings?.preview?.includeHead}
             isFixedLayout={currentWorkspaceState?.opf?.metadata?.renditionLayout ===
               'pre-paginated'}
+            advancedMode={advancedMode.current}
           />
         {:else}
           <div class="placeholder-content">
@@ -1396,6 +1398,7 @@
     <CreateProjectDialog
       {textFormats}
       defaultLanguage={$currentLocale}
+      advancedMode={advancedMode.current}
       onCreate={async data => {
         await handleCreateProject(data);
         showCreateDialog = false;

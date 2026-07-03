@@ -186,15 +186,17 @@
           <option value={feed.url}>{feed.title ?? feed.url}</option>
         {/each}
       </select>
-      <button
-        type="button"
-        class="btn btn-secondary"
-        onclick={removeSelected}
-        disabled={!canRemove || loading || importing}
-        aria-label={$t('Remove the selected feed from the list')}
-      >
-        {$t('Remove')}
-      </button>
+      {#if canRemove}
+        <button
+          type="button"
+          class="btn btn-secondary"
+          onclick={removeSelected}
+          disabled={loading || importing}
+          aria-label={$t('Remove the selected feed from the list')}
+        >
+          {$t('Remove')}
+        </button>
+      {/if}
     </div>
 
     <!-- Advanced mode only: fetch an arbitrary catalog URL. Basic mode sticks to

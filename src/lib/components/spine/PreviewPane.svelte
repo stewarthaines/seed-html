@@ -56,6 +56,7 @@
     previewAutoUpdate = DEFAULT_PREVIEW.autoUpdate,
     previewIncludeHead = DEFAULT_PREVIEW.includeHead,
     isFixedLayout = false,
+    advancedMode = false,
   }: {
     xhtmlContent?: string;
     isTransforming?: boolean;
@@ -87,6 +88,8 @@
     /** Fixed-layout (pre-paginated) chapter: reader theme/font controls don't apply,
      *  so they're hidden (readers disable user font sizing for fixed layout). */
     isFixedLayout?: boolean;
+    /** Advanced mode: the generated-Source view is hidden from the dropdown in basic mode. */
+    advancedMode?: boolean;
   } = $props();
 
   // The generated content-document filename for the current chapter (e.g.
@@ -987,7 +990,9 @@
   // chosen device's dimensions/scaling.
   function handleViewSelect(value: string): void {
     if (value === 'source') {
-      showSource = true;
+      // The Source view is advanced-only; ignore the selection in basic mode
+      // (the option is also hidden from the dropdown there).
+      if (advancedMode) showSource = true;
       return;
     }
     const wasSource = showSource;
@@ -1308,7 +1313,9 @@
           onchange={e => handleViewSelect((e.target as HTMLSelectElement).value)}
           aria-label={$t('Select view')}
         >
-          <option value="source">{$t('Source')}</option>
+          {#if advancedMode}
+            <option value="source">{$t('Source')}</option>
+          {/if}
           {#each responsiveDevices as device}
             <option value={device.id}>{$t('Responsive')}</option>
           {/each}
