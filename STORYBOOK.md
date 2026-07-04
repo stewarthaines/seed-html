@@ -69,9 +69,10 @@ src/stories/FeatureNameDemo.svelte
 
 ### 2. **Choose Your Pattern**
 
-- **Simple components**: Use args pattern with controls
-- **Complex features**: Use direct instantiation with play functions
-- **Backend features**: Use backend demo pattern with real APIs
+- **Simple components**: Use args with controls
+- **Complex features**: Use a demo component plus a play function
+- **Backend features**: Use the backend demo pattern with real APIs
+- **Author workflows**: Seed a project and mount the full app (see Workflow stories, below)
 
 ### 3. **Test and Capture**
 
@@ -79,80 +80,38 @@ src/stories/FeatureNameDemo.svelte
 npm run screenshots  # Capture component screenshots
 ```
 
-## Quick Reference: Story Pattern Selection
+## Quick Reference: the current story idiom
 
-### When to Use Args Pattern
+All stories are `.stories.svelte` files using **Svelte CSF v5** — `defineMeta` from `@storybook/addon-svelte-csf` plus `<Story>` elements. Interaction helpers come from the unified **`storybook/test`** package. Do not use the legacy CSF-TS idioms (`Meta`/`StoryObj` from `@storybook/svelte`, `new Component({ target })` render functions, `@storybook/test`) — the Svelte-4 constructor form does not run under Svelte 5 at all.
 
-- Simple components with clear props
-- Need interactive controls in Storybook
-- Component state can be controlled via props
+```svelte
+<script module>
+  import { defineMeta } from '@storybook/addon-svelte-csf';
+  import ComponentDemo from './ComponentDemo.svelte';
 
-```typescript
-export const Default: Story = {
-  args: {
-    title: 'Sample Title',
-    disabled: false,
-  },
-};
+  const { Story } = defineMeta({
+    title: 'Components/Category/ComponentName',
+    component: ComponentDemo,
+    parameters: { layout: 'centered' },
+  });
+</script>
+
+<Story name="Default" args={{ title: 'Hello World' }} />
+
+<Story
+  name="Driven"
+  play={async ({ canvas, userEvent }) => {
+    const button = await canvas.findByRole('button', { name: 'Save' });
+    await userEvent.click(button);
+  }}
+>
+  <ComponentDemo />
+</Story>
 ```
 
-### When to Use Direct Instantiation
-
-- Complex state management
-- Need custom initialization logic
-- Backend API integration
-
-```typescript
-export const WithBackend: Story = {
-  render: () => new ComponentDemo({ target: document.body }),
-};
-```
-
-## Story Syntax Guidelines
-
-### ✅ **Correct Story Patterns**
-
-**Args Pattern for Simple Components:**
-
-```typescript
-import type { Meta, StoryObj } from '@storybook/svelte';
-import ComponentDemo from './ComponentDemo.svelte';
-
-const meta: Meta<ComponentDemo> = {
-  title: 'Components/Category/ComponentName',
-  component: ComponentDemo,
-  parameters: { layout: 'centered' },
-};
-
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {
-  args: { title: 'Hello World' },
-};
-```
-
-**Direct Instantiation for Complex Features:**
-
-```typescript
-export const BackendIntegration: Story = {
-  render: () => new FeatureDemo({ target: document.body }),
-  parameters: { layout: 'fullscreen' },
-};
-```
-
-### ❌ **Problematic Patterns**
-
-**Don't use constructor calls in args:**
-
-```typescript
-// ❌ This will cause parsing errors
-export const Bad: Story = {
-  args: {
-    manager: new WorkspaceManager(), // Constructor in args
-  },
-};
-```
+- Use `args` for simple prop-controlled components; give the `<Story>` element children when the demo needs markup or composition.
+- Use `play` for interaction demos; `canvas`/`userEvent` arrive in the play context.
+- Complex backend demos wrap the feature in a demo component (see Component Separation, below) and render it as the story component — never via a constructor call.
 
 ## Component Separation Pattern
 
@@ -184,19 +143,20 @@ export const Bad: Story = {
 {#if message}<p>{message}</p>{/if}
 ```
 
-**3. Story (MyComponent.stories.ts)**
+**3. Story (MyComponent.stories.svelte)**
 
-```typescript
-import MyComponentDemo from './MyComponentDemo.svelte';
+```svelte
+<script module>
+  import { defineMeta } from '@storybook/addon-svelte-csf';
+  import MyComponentDemo from './MyComponentDemo.svelte';
 
-export default {
-  title: 'Components/UI/MyComponent',
-  component: MyComponentDemo,
-};
+  const { Story } = defineMeta({
+    title: 'Components/UI/MyComponent',
+    component: MyComponentDemo,
+  });
+</script>
 
-export const Interactive = {
-  render: () => new MyComponentDemo({ target: document.body }),
-};
+<Story name="Interactive" />
 ```
 
 ### ❌ DON'T: Common Anti-Patterns
@@ -300,506 +260,78 @@ npm run test:stories  # Run Storybook tests with Vitest
 
 ## Reference Examples
 
-- **Simple Component**: `src/stories/Components/UI/Button.stories.ts`
-- **Backend Feature**: `src/stories/Backend/FileStorage.stories.ts`
-- **Application Layout**: `src/stories/Application/Layout.stories.ts`
-- **Feature Development**: `src/stories/Features/WorkspaceManagement.stories.ts`
+- **Backend feature demo**: `src/stories/StorageDemo.stories.svelte` (+ `StorageDemo.svelte`)
+- **Transform pipeline demo**: `src/stories/TransformPipelineDemo.stories.svelte`
+- **Full-app visual story**: `src/stories/App.visual.stories.svelte`
+- **Seeded workflow story**: `src/stories/workflows/EditAndPackage.stories.svelte`
+- **Demo-component template**: `src/stories/_templates/BackendFeatureDemo.template.svelte`
 
-For advanced patterns, backend integration, and troubleshooting, see the [Advanced patterns](#advanced-patterns) section below.
+## Workflow stories: seeding real projects, screenshots, and videos
+
+Workflow stories exist to capture screenshots and videos of real author workflows. They seed a **real project in the real storage backend**, mount the **full `App`**, and drive it with `play()`.
+
+The key: `App.svelte` has no injection seam, but it restores persisted state on boot. `src/stories/utils/seed-project.ts` builds the same service graph App wires itself (`FileStorageAPI` → `WorkspaceService` → `SpineService`), creates a project with chapters, and sets the persisted `editme_app_workspace_id` — so when the story mounts `App`, it opens on the seeded book exactly as a reload would.
+
+```svelte
+<script module>
+  import { defineMeta } from '@storybook/addon-svelte-csf';
+  import App from '../../App.svelte';
+  import { seedProject } from '../utils/seed-project';
+
+  const { Story } = defineMeta({
+    title: 'Workflows/My Workflow',
+    component: App,
+    parameters: { layout: 'fullscreen' },
+    tags: ['capture'],
+  });
+</script>
+
+<Story
+  name="Do the thing"
+  loaders={[
+    async () => ({ seeded: await seedProject({ title: 'My Seeded Book', view: 'spine' }) }),
+  ]}
+  play={async ({ canvas, userEvent }) => {
+    await canvas.findByText('My Seeded Book', {}, { timeout: 15000 });
+    // …drive the workflow with userEvent…
+  }}
+>
+  <App />
+</Story>
+```
+
+Notes:
+
+- `seedProject` deletes earlier seeds with the same title first, so reruns are idempotent; its returned `cleanup()` removes the workspace and keys if a story wants a tidy teardown.
+- Sidebar chapter entries display **chapter ids** (`chapter01`), not titles — target those in `play()`.
+- Real storage is asynchronous — use `findBy*` queries with generous timeouts, not `getBy*`.
+- Tag workflow stories `capture`: `npm run screenshots` and `npm run videos` discover stories from the running Storybook's `index.json` and capture everything with that tag (`--all` or `--tag <name>` to override). Screenshots land in `__screenshots__/`, videos in `__videos__/` (both gitignored).
 
 ## Advanced patterns
 
-This section covers advanced Storybook patterns including backend integration, complex state management, accessibility development, and performance optimization. For basic patterns, see the sections above.
+The earlier revision of this section taught Svelte-4-era idioms (`new Component({ target })` render functions, `on:click`, `export let`) that no longer run in this project. The guidance below is the current-form distillation; for working code, read the reference examples listed above.
 
-### Backend Feature Demonstration Patterns
+### Backend feature demos
 
-#### When to Use Backend Demo Patterns
+Backend features with no dedicated UI (storage, packaging, transforms) get a **demo component** that exercises the real implementation and renders its state — buttons to trigger operations, a log pane for results. The story renders the demo component like any other; `play()` can drive it for the docs page. Prefer the real backend over mocks (the Storybook browser has working IndexedDB/OPFS); reach for `src/stories/utils/mock-storage-factory.ts` only when a story needs deterministic in-memory behaviour.
 
-Use backend demo patterns for:
+### Component separation
 
-- **Non-UI Features**: File storage, data processing, API integrations
-- **System Testing**: Testing real implementations vs mocks
-- **Development Aid**: Interactive testing of backend features
-- **Documentation**: Live demonstration of API capabilities
+Keep three layers per demo: the **product component** (runes, in `src/lib/`), a **demo wrapper** (in `src/stories/`, owns demo state and fixtures), and the **story file** (metadata, args, play). Never put demo-only state in the product component, and never import fixtures from `src/lib`.
 
-#### Real Backend Integration Approach
+### Accessibility
 
-Replace mocks with real implementations for more accurate testing:
+The a11y addon runs on every story (report-only, `test: 'todo'`). Treat its panel as a development aid; the enforced scan is `npm run test:a11y`, which drives the real dev app. Stories should still be keyboard-walkable — if `play()` can't reach a control with `userEvent.keyboard`, neither can a keyboard user.
 
-```svelte
-<!-- BackendFeatureDemo.svelte -->
-<script lang="ts">
-  import { onMount } from 'svelte';
-  import { FileStorageAPI } from '../lib/storage';
+### Performance
 
-  let storage = new FileStorageAPI();
-  let logs: string[] = [];
-  let isReady = false;
-
-  const log = (message: string) => {
-    logs = [...logs, `${new Date().toISOString()}: ${message}`];
-  };
-
-  onMount(async () => {
-    try {
-      await storage.init();
-      log('✅ Storage initialized successfully');
-      isReady = true;
-    } catch (error) {
-      log(`❌ Initialization failed: ${error.message}`);
-    }
-  });
-
-  const testOperation = async () => {
-    try {
-      const result = await storage.createWorkspace('test-workspace');
-      log(`✅ Created workspace: ${result.id}`);
-    } catch (error) {
-      log(`❌ Operation failed: ${error.message}`);
-    }
-  };
-</script>
-
-<div class="demo-container">
-  <div class="controls">
-    <button disabled={!isReady} on:click={testOperation}> Test Create Workspace </button>
-    <button on:click={() => (logs = [])}>Clear Logs</button>
-  </div>
-
-  <div class="console">
-    {#each logs as logEntry}
-      <div class="log-entry">{logEntry}</div>
-    {/each}
-  </div>
-</div>
-
-<style>
-  .demo-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem;
-  }
-
-  .controls {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  .console {
-    background: #1e1e1e;
-    color: #fff;
-    padding: 1rem;
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-    font-size: 0.875rem;
-    max-height: 400px;
-    overflow-y: auto;
-  }
-
-  .log-entry {
-    margin-bottom: 0.25rem;
-  }
-</style>
-```
-
-#### Story Definition with Play Functions
-
-```typescript
-// BackendFeature.stories.ts
-import type { Meta, StoryObj } from '@storybook/svelte';
-import BackendFeatureDemo from './BackendFeatureDemo.svelte';
-import { expect, within } from '@storybook/test';
-
-const meta: Meta<BackendFeatureDemo> = {
-  title: 'Backend/FileStorage',
-  component: BackendFeatureDemo,
-  parameters: {
-    layout: 'fullscreen',
-    docs: {
-      description: {
-        story: 'Interactive demonstration of the File Storage API with real backend integration.',
-      },
-    },
-  },
-};
-
-export default meta;
-type Story = StoryObj<typeof meta>;
-
-export const Interactive: Story = {
-  render: () => new BackendFeatureDemo({ target: document.body }),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    // Wait for initialization
-    await expect(canvas.getByText(/Storage initialized/)).toBeInTheDocument();
-
-    // Test workspace creation
-    const createButton = canvas.getByText('Test Create Workspace');
-    await createButton.click();
-
-    // Verify success
-    await expect(canvas.getByText(/Created workspace/)).toBeInTheDocument();
-  },
-};
-```
-
-### Advanced Component Development Patterns
-
-#### Promise-Based Accessibility Patterns
-
-For components requiring coordination between focus management and async operations:
-
-```svelte
-<!-- AdvancedComponent.svelte -->
-<script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-
-  const dispatch = createEventDispatcher<{ ready: Promise<void> }>();
-
-  let dialogRef: HTMLDialogElement;
-  let isLoading = true;
-
-  export const open = async (): Promise<void> => {
-    isLoading = true;
-    dialogRef.showModal();
-
-    // Simulate async initialization
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    isLoading = false;
-
-    // Focus management after loading
-    const firstInput = dialogRef.querySelector('input');
-    firstInput?.focus();
-
-    // Dispatch promise for parent coordination
-    const readyPromise = Promise.resolve();
-    dispatch('ready', readyPromise);
-    return readyPromise;
-  };
-</script>
-
-<dialog bind:this={dialogRef}>
-  {#if isLoading}
-    <div class="loading">Loading...</div>
-  {:else}
-    <form>
-      <input type="text" placeholder="Enter value" />
-      <button type="submit">Submit</button>
-    </form>
-  {/if}
-</dialog>
-```
-
-#### Parent Component Promise Integration
-
-```svelte
-<!-- ParentComponent.svelte -->
-<script lang="ts">
-  import AdvancedComponent from './AdvancedComponent.svelte';
-
-  let componentRef: AdvancedComponent;
-  let isComponentReady = false;
-
-  const handleOpen = async () => {
-    try {
-      await componentRef.open();
-      isComponentReady = true;
-      // Component is now ready and focused
-    } catch (error) {
-      console.error('Failed to open component:', error);
-    }
-  };
-
-  const handleComponentReady = (event: CustomEvent<Promise<void>>) => {
-    event.detail.then(() => {
-      console.log('Component fully initialized');
-    });
-  };
-</script>
-
-<button on:click={handleOpen}>Open Advanced Component</button>
-<AdvancedComponent bind:this={componentRef} on:ready={handleComponentReady} />
-```
-
-### Layout and Application Story Patterns
-
-#### Fullscreen Layout Stories
-
-For testing complete application layouts:
-
-```typescript
-// LayoutDemo.stories.ts
-export const FullApplication: Story = {
-  render: () => new AppLayoutDemo({ target: document.body }),
-  parameters: {
-    layout: 'fullscreen',
-    viewport: {
-      defaultViewport: 'desktop',
-    },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    // Test sidebar toggle
-    const sidebarToggle = canvas.getByLabelText('Toggle Sidebar');
-    await sidebarToggle.click();
-
-    // Verify layout changes
-    const sidebar = canvas.getByRole('complementary');
-    expect(sidebar).toHaveClass('collapsed');
-
-    // Test responsive behavior
-    await expect(canvas.getByRole('main')).toHaveClass('expanded');
-  },
-};
-```
-
-#### Interactive Layout Demonstrations
-
-**Sidebar Toggle Pattern:**
-
-```svelte
-<!-- LayoutDemo.svelte -->
-<script lang="ts">
-  import { layoutStore } from '../stores/layout';
-
-  let sidebarExpanded = true;
-
-  const toggleSidebar = () => {
-    sidebarExpanded = !sidebarExpanded;
-    layoutStore.setSidebarExpanded(sidebarExpanded);
-  };
-</script>
-
-<div class="app-layout" class:sidebar-collapsed={!sidebarExpanded}>
-  <header class="app-header">
-    <button on:click={toggleSidebar} aria-label="Toggle Sidebar"> ☰ </button>
-    <h1>Application Layout Demo</h1>
-  </header>
-
-  <aside class="app-sidebar" class:collapsed={!sidebarExpanded}>
-    <nav>Navigation content</nav>
-  </aside>
-
-  <main class="app-main">
-    <p>Main content area</p>
-  </main>
-</div>
-```
-
-### Feature Development Patterns
-
-#### Real-Time Loading States
-
-```svelte
-<!-- FeatureDemo.svelte -->
-<script lang="ts">
-  import { onMount } from 'svelte';
-
-  let loadingState: 'idle' | 'loading' | 'success' | 'error' = 'idle';
-  let progress = 0;
-
-  const simulateAsyncOperation = async () => {
-    loadingState = 'loading';
-    progress = 0;
-
-    try {
-      for (let i = 0; i <= 100; i += 10) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        progress = i;
-      }
-      loadingState = 'success';
-    } catch (error) {
-      loadingState = 'error';
-    }
-  };
-</script>
-
-<div class="feature-demo">
-  <button on:click={simulateAsyncOperation} disabled={loadingState === 'loading'}>
-    Start Operation
-  </button>
-
-  {#if loadingState === 'loading'}
-    <div class="progress">
-      <div class="progress-bar" style="width: {progress}%"></div>
-      <span>{progress}%</span>
-    </div>
-  {:else if loadingState === 'success'}
-    <div class="success">✅ Operation completed successfully</div>
-  {:else if loadingState === 'error'}
-    <div class="error">❌ Operation failed</div>
-  {/if}
-</div>
-```
-
-#### Error Scenario Testing
-
-```svelte
-<!-- ErrorDemo.svelte -->
-<script lang="ts">
-  let errorType: 'none' | 'network' | 'validation' | 'permission' = 'none';
-
-  const triggerError = (type: typeof errorType) => {
-    errorType = type;
-    setTimeout(() => {
-      errorType = 'none';
-    }, 3000);
-  };
-</script>
-
-<div class="error-demo">
-  <div class="controls">
-    <button on:click={() => triggerError('network')}>Network Error</button>
-    <button on:click={() => triggerError('validation')}>Validation Error</button>
-    <button on:click={() => triggerError('permission')}>Permission Error</button>
-  </div>
-
-  {#if errorType !== 'none'}
-    <div class="error-display" role="alert">
-      {#if errorType === 'network'}
-        Network connection failed. Please check your connection.
-      {:else if errorType === 'validation'}
-        Invalid input provided. Please correct and try again.
-      {:else if errorType === 'permission'}
-        Access denied. You don't have permission for this action.
-      {/if}
-    </div>
-  {/if}
-</div>
-```
-
-### Performance Best Practices
-
-#### Efficient Play Functions
-
-```typescript
-export const PerformanceOptimized: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    // Use efficient selectors
-    const button = canvas.getByRole('button', { name: 'Submit' });
-
-    // Batch DOM operations
-    await Promise.all([button.click(), expect(canvas.getByText('Loading')).toBeInTheDocument()]);
-
-    // Wait for specific state changes instead of arbitrary timeouts
-    await canvas.findByText('Success', {}, { timeout: 5000 });
-  },
-};
-```
-
-#### Memory Management
-
-```svelte
-<!-- MemoryEfficientDemo.svelte -->
-<script lang="ts">
-  import { onDestroy } from 'svelte';
-
-  let intervals: number[] = [];
-  let listeners: (() => void)[] = [];
-
-  onDestroy(() => {
-    // Clear all intervals
-    intervals.forEach(clearInterval);
-
-    // Remove all event listeners
-    listeners.forEach(cleanup => cleanup());
-  });
-
-  const addInterval = (callback: () => void, delay: number) => {
-    const id = setInterval(callback, delay);
-    intervals.push(id);
-    return id;
-  };
-
-  const addEventListener = (element: Element, event: string, handler: EventListener) => {
-    element.addEventListener(event, handler);
-    const cleanup = () => element.removeEventListener(event, handler);
-    listeners.push(cleanup);
-    return cleanup;
-  };
-</script>
-```
-
-### Component Development Workflow
-
-#### Phase 1: Design & Planning
-
-1. **Create Design Specification**
-   - Define component purpose and requirements
-   - List props, events, and slots
-   - Identify accessibility requirements
-   - Plan responsive behavior
-
-2. **Analyze Existing Patterns**
-   - Review similar components in the project
-   - Identify reusable patterns and utilities
-   - Check design system integration points
-
-#### Phase 2: Implementation
-
-3. **Implement Component Hierarchy**
-   - Create main component with TypeScript interfaces
-   - Implement demo component for Storybook
-   - Add comprehensive JSDoc documentation
-
-4. **Component Implementation Guidelines**
-   - Use semantic HTML elements
-   - Implement ARIA attributes for accessibility
-   - Follow project's CSS design system
-   - Add proper event handling and cleanup
-
-#### Phase 3: Story Development
-
-5. **Create Demo Component**
-   - Separate demo logic from main component
-   - Include state management for complex scenarios
-   - Add realistic mock data and interactions
-
-6. **Create Story File**
-   - Choose appropriate story pattern (args vs direct instantiation)
-   - Add comprehensive story variants
-   - Include play functions for complex interactions
-
-#### Phase 4: Testing & Documentation
-
-7. **Browser Testing**
-   - Test across different browsers and devices
-   - Verify accessibility with screen readers
-   - Test with different viewport sizes
-
-8. **Performance Verification**
-   - Check component render performance
-   - Verify memory cleanup in onDestroy
-   - Test with large datasets if applicable
+- Keep loaders fast: seed the smallest project the workflow needs.
+- Real-storage stories should await `findBy*` conditions, never fixed sleeps longer than the debounce they wait out.
+- One workflow per story; long multi-stage tours make slow, brittle captures.
 
 ### Troubleshooting
 
-#### Common Issues
-
-**Play function timeouts**: Increase timeout for slow operations, use `findBy` queries instead of arbitrary delays.
-
-**Memory leaks in stories**: Ensure proper cleanup in component onDestroy hooks, clear intervals and event listeners.
-
-**Accessibility failures**: Use semantic HTML, add proper ARIA labels, test with keyboard navigation.
-
-**Performance issues**: Use efficient selectors in play functions, avoid unnecessary re-renders, implement proper memoization.
-
-#### Debugging Tips
-
-1. Use browser dev tools to inspect component state
-2. Add console logging to track component lifecycle
-3. Use Storybook's controls to test edge cases
-4. Test with different locales using the i18n switcher
-
-### Advanced Reference Examples
-
-- **Complex Backend Integration**: `src/stories/Backend/WorkspaceManager.stories.ts`
-- **Accessibility Development**: `src/stories/Features/AccessibleForm.stories.ts`
-- **Performance Testing**: `src/stories/Performance/LargeDataSet.stories.ts`
-- **Layout System**: `src/stories/Application/ResponsiveLayout.stories.ts`
+- **Story renders nothing and the app never mounts**: a crash inside an addon or story `$effect` aborts Svelte 5's whole effect flush. Check the browser console for the first thrown error, not the last.
+- **"Failed to fetch dynamically imported module"**: usually a stale Vite optimize cache after dependency changes — restart Storybook.
+- **Play can't find seeded content**: the sidebar lists chapter ids, and real storage is async; use `findBy*` with timeouts.
+- **Cross-story contamination**: the storage backend persists across stories in one browser session. Seed under unique titles and rely on `seedProject`'s reseed-cleanup.
