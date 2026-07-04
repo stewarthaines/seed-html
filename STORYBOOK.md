@@ -260,11 +260,15 @@ npm run test:stories  # Run Storybook tests with Vitest
 
 ## Reference Examples
 
-- **Backend feature demo**: `src/stories/StorageDemo.stories.svelte` (+ `StorageDemo.svelte`)
-- **Transform pipeline demo**: `src/stories/TransformPipelineDemo.stories.svelte`
-- **Full-app visual story**: `src/stories/App.visual.stories.svelte`
 - **Seeded workflow story**: `src/stories/workflows/EditAndPackage.stories.svelte`
+- **Seeded app tour**: `src/stories/NavigationRouter.stories.svelte`
+- **Full-app visual states**: `src/stories/App.visual.stories.svelte` (first-run + seeded project)
+- **Real-component states**: `src/stories/preview/ContentPreview.stories.svelte` (device/responsive matrix)
 - **Demo-component template**: `src/stories/_templates/BackendFeatureDemo.template.svelte`
+
+## Division of labour (settled 2026-07)
+
+Unit tests in `src/lib/**/*.test.ts` are the coverage of record for backend behavior. Storybook is for what unit tests can't show: **visual states of real components**, **seeded end-to-end workflows** (the `seedProject` harness + full App), and **capture** (screenshots/videos of `capture`-tagged stories). The nine mock-driven backend demos were retired on these grounds — they passed their tests but duplicated unit-tested behavior against mocks that drift. Don't reintroduce mock-backed backend demos; write a unit test, or a seeded story that drives the real thing.
 
 ## Workflow stories: seeding real projects, screenshots, and videos
 
