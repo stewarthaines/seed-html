@@ -1,0 +1,3 @@
+# Sample Tech Manual
+
+This is a placeholder chapter. The drafted content lives in the author's working browser and will replace this file.
