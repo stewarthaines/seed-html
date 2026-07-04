@@ -132,7 +132,7 @@ play: async ({ canvasElement }) => {
 
 ## Example Usage
 
-See `../StorageDemo.svelte` and `../StorageDemo.stories.svelte` for a complete implementation of this pattern for the File Storage API.
+See `../workflows/EditAndPackage.stories.svelte` for the seeded-workflow pattern (real storage, real App), and `../AudioClipEditorDemo.svelte` for a demo component wrapping real services. The mock-driven backend demos this template originally accompanied were retired once `src/lib` unit tests became the coverage of record for backend behavior.
 
 ## Integration
 

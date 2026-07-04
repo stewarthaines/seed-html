@@ -240,7 +240,7 @@ if (!validation.isValid) {
 ### Integration with Workspace Creation
 
 ```typescript
-// Used in WorkspaceCreationIntegration.createLocalizedEPUBWorkspace()
+// e.g. in the app's create-project flow (EnhancedAppState.createWorkspace)
 const locale = this.i18nSystem.getCurrentLocale();
 const sampleContent = await this.contentGenerator.generateLocalizedContent(locale);
 
@@ -330,7 +330,7 @@ Each locale includes culturally appropriate content with proper formatting for t
 
 The generator integrates with the existing i18n infrastructure for translation lookup and locale detection.
 
-### With WorkspaceCreationIntegration
+### With workspace creation
 
 Used to generate localized sample content during workspace creation, providing both EPUB metadata and chapter content.
 
