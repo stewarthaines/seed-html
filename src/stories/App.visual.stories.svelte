@@ -1,6 +1,5 @@
 <script module>
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { within, userEvent } from 'storybook/test';
   import App from '../App.svelte';
 
   const { Story } = defineMeta({
@@ -11,7 +10,7 @@
       docs: {
         description: {
           component:
-            'Visual demonstration of the EDITME EPUB editor application. These stories showcase the application UI and navigation without pre-loaded content.',
+            'Visual demonstration of the SEED.html EPUB editor application. These stories showcase the application UI and navigation without pre-loaded content.',
         },
       },
     },
