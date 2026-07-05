@@ -552,10 +552,11 @@
   // The Print option shows the current page size + margin (e.g. "A4 18mm") rather
   // than a redundant "Print" under the "Print" group heading.
   const printDeviceLabel = $derived.by(() => {
-    const size = printSettings?.page_size ?? 'A4';
+    const size = printSettings?.custom_size?.trim() || printSettings?.page_size || 'A4';
     const sizeLabel = PAGE_SIZE_LABELS[size] ?? size;
     const mm = MARGIN_MM[printSettings?.margin ?? 'normal'] ?? MARGIN_MM.normal;
-    return `${sizeLabel} ${mm}mm`;
+    const margin = printSettings?.custom_margin?.trim() || `${mm}mm`;
+    return `${sizeLabel} ${margin}`;
   });
 
   // Drive the preview when the XHTML, the selected device, or the preview-head

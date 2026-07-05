@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: EDITME EPUB Editor\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-04\n"
-"PO-Revision-Date: 2026-07-04\n"
+"POT-Creation-Date: 2026-07-05\n"
+"PO-Revision-Date: 2026-07-05\n"
 "Language: he\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -944,6 +944,14 @@ msgstr ""
 msgid "Credential of the certifier"
 msgstr ""
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "CSS @page size passed to Paged.js, e.g. \"140mm 216mm\" or \"A4 landscape\". Clear to return to the preset."
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "CSS margin passed to Paged.js, e.g. \"20mm 15mm 25mm 15mm\". Clear to return to the preset."
+msgstr ""
+
 #: src/lib/components/import/ImportReviewDialog.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
@@ -966,6 +974,18 @@ msgstr ""
 msgid "Currently open"
 msgstr ""
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Custom margin"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Custom page size"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Custom…"
+msgstr ""
+
 #: src/lib/ThemeToggle.svelte
 msgid "dark"
 msgstr ""
@@ -986,7 +1006,6 @@ msgstr ""
 
 #: src/lib/components/metadata/BasicInfoFields.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
-#: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Default"
 msgstr ""
 
@@ -1414,10 +1433,6 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Folder selected:"
-msgstr ""
-
-#: src/stories/preview/ContentPreviewDemo.svelte
-msgid "Font Family:"
 msgstr ""
 
 #: src/stories/preview/ContentPreviewDemo.svelte
@@ -1896,10 +1911,6 @@ msgstr ""
 
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Modified"
-msgstr ""
-
-#: src/stories/preview/ContentPreviewDemo.svelte
-msgid "Monospace"
 msgstr ""
 
 #: src/lib/components/SpineItem.svelte
@@ -2684,10 +2695,6 @@ msgstr ""
 msgid "sample.publisher.name"
 msgstr ""
 
-#: src/stories/preview/ContentPreviewDemo.svelte
-msgid "Sans-serif"
-msgstr ""
-
 #: src/lib/components/EditSpineItemDialog.svelte
 msgid "Save"
 msgstr ""
@@ -2787,10 +2794,6 @@ msgstr ""
 
 #: src/lib/components/metadata/CollectionsEditor.svelte
 msgid "Series"
-msgstr ""
-
-#: src/stories/preview/ContentPreviewDemo.svelte
-msgid "Serif"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte

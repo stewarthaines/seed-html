@@ -51,6 +51,32 @@ describe('coverImageHref', () => {
   });
 });
 
+describe('buildPagedDocument @page rule', () => {
+  const sections = ['<section class="pdf-chapter">x</section>'];
+
+  it('uses the presets when no custom values are set', () => {
+    const html = buildPagedDocument(sections, { print: onPrint });
+    expect(html).toContain('size: A4;');
+    expect(html).toContain('margin: 18mm;');
+  });
+
+  it('passes custom size and margin strings through verbatim', () => {
+    const html = buildPagedDocument(sections, {
+      print: { ...onPrint, custom_size: '140mm 216mm', custom_margin: '20mm 15mm 25mm 15mm' },
+    });
+    expect(html).toContain('size: 140mm 216mm;');
+    expect(html).toContain('margin: 20mm 15mm 25mm 15mm;');
+  });
+
+  it('falls back to the presets when custom values are blank', () => {
+    const html = buildPagedDocument(sections, {
+      print: { ...onPrint, custom_size: '  ', custom_margin: '' },
+    });
+    expect(html).toContain('size: A4;');
+    expect(html).toContain('margin: 18mm;');
+  });
+});
+
 describe('buildPagedDocument text direction', () => {
   it('sets dir="rtl" on <html> for a right-to-left book language', () => {
     const html = buildPagedDocument(['<section class="pdf-chapter">x</section>'], { lang: 'ar' });

@@ -36,6 +36,7 @@
   import { LOCALE_CONFIGS, isLocaleEnabled } from '../../i18n/locale-config.js';
   import { themeStore } from '../../stores/theme.js';
   import { advancedMode } from '../../stores/advanced-mode.js';
+  import { MARGIN_MM } from '../../pdf/pdf-export.js';
   import { FileStorageAPI } from '../../storage/index.js';
   import {
     canFetchSelfHtml,
@@ -259,6 +260,37 @@
     { value: 'letter', label: 'US Letter' },
     { value: 'legal', label: 'US Legal' },
   ];
+
+  // Advanced mode: free-form `size` / `margin` strings passed through verbatim to
+  // Paged.js. Stored beside the presets (never replacing them) so switching back to
+  // a preset round-trips; a non-empty custom value flips its select to "Custom".
+  const customSizeActive = $derived(!!epubSettings?.print?.custom_size);
+  const customMarginActive = $derived(!!epubSettings?.print?.custom_margin);
+
+  // Picking "Custom…" seeds the field with the current preset's equivalent CSS
+  // value, so the export is unchanged until the author edits it. Picking a preset
+  // (or clearing the field) drops the custom value.
+  function handlePageSizeChange(value: string): void {
+    if (value === 'custom') {
+      void updatePrint({
+        custom_size: epubSettings?.print?.page_size ?? DEFAULT_PRINT.page_size,
+      });
+    } else {
+      void updatePrint({ page_size: value, custom_size: undefined });
+    }
+  }
+
+  function handleMarginChange(value: string): void {
+    if (value === 'custom') {
+      const preset = epubSettings?.print?.margin ?? DEFAULT_PRINT.margin;
+      void updatePrint({ custom_margin: `${MARGIN_MM[preset] ?? MARGIN_MM.normal}mm` });
+    } else {
+      void updatePrint({
+        margin: value as PrintSettings['margin'],
+        custom_margin: undefined,
+      });
+    }
+  }
 
   // Persist a print-settings change (optimistic save + revert). Resolves defaults
   // so a partial change always writes a fully-populated print object.
@@ -711,9 +743,12 @@
   );
   const printSummary = $derived.by(() => {
     const p = epubSettings?.print ?? DEFAULT_PRINT;
-    const size = PAGE_SIZE_OPTIONS.find(o => o.value === p.page_size)?.label ?? p.page_size;
+    const size =
+      p.custom_size ||
+      (PAGE_SIZE_OPTIONS.find(o => o.value === p.page_size)?.label ?? p.page_size);
     const margin =
-      p.margin === 'narrow' ? $t('Narrow') : p.margin === 'wide' ? $t('Wide') : $t('Normal');
+      p.custom_margin ||
+      (p.margin === 'narrow' ? $t('Narrow') : p.margin === 'wide' ? $t('Wide') : $t('Normal'));
     return `${size} · ${margin}`;
   });
   const epubSummary = $derived.by(() => {
@@ -944,18 +979,46 @@
                     <select
                       id="print-page-size"
                       class="setting-select"
-                      value={epubSettings?.print?.page_size ?? DEFAULT_PRINT.page_size}
+                      value={customSizeActive
+                        ? 'custom'
+                        : (epubSettings?.print?.page_size ?? DEFAULT_PRINT.page_size)}
                       onchange={e =>
-                        updatePrint({ page_size: (e.currentTarget as HTMLSelectElement).value })}
+                        handlePageSizeChange((e.currentTarget as HTMLSelectElement).value)}
                       disabled={epubLoading}
                     >
                       {#each PAGE_SIZE_OPTIONS as opt (opt.value)}
                         <option value={opt.value}>{opt.label}</option>
                       {/each}
+                      {#if isAdvancedMode || customSizeActive}
+                        <option value="custom">{$t('Custom…')}</option>
+                      {/if}
                     </select>
-                    <p class="setting-description">
-                      {$t('Paper size for the exported PDF. Your stylesheet can override this.')}
-                    </p>
+                    {#if customSizeActive}
+                      <!-- i18n-ignore: literal CSS value, not prose -->
+                      <input
+                        id="print-page-size-custom"
+                        type="text"
+                        class="template-input"
+                        aria-label={$t('Custom page size')}
+                        value={epubSettings?.print?.custom_size ?? ''}
+                        placeholder="140mm 216mm"
+                        onchange={e =>
+                          updatePrint({
+                            custom_size:
+                              (e.currentTarget as HTMLInputElement).value.trim() || undefined,
+                          })}
+                        disabled={epubLoading}
+                      />
+                      <p class="setting-description">
+                        {$t(
+                          'CSS @page size passed to Paged.js, e.g. "140mm 216mm" or "A4 landscape". Clear to return to the preset.'
+                        )}
+                      </p>
+                    {:else}
+                      <p class="setting-description">
+                        {$t('Paper size for the exported PDF. Your stylesheet can override this.')}
+                      </p>
+                    {/if}
                   </div>
 
                   <div class="setting-group">
@@ -965,21 +1028,46 @@
                     <select
                       id="print-margin"
                       class="setting-select"
-                      value={epubSettings?.print?.margin ?? DEFAULT_PRINT.margin}
+                      value={customMarginActive
+                        ? 'custom'
+                        : (epubSettings?.print?.margin ?? DEFAULT_PRINT.margin)}
                       onchange={e =>
-                        updatePrint({
-                          margin: (e.currentTarget as HTMLSelectElement)
-                            .value as PrintSettings['margin'],
-                        })}
+                        handleMarginChange((e.currentTarget as HTMLSelectElement).value)}
                       disabled={epubLoading}
                     >
                       <option value="narrow">{$t('Narrow')}</option>
                       <option value="normal">{$t('Normal')}</option>
                       <option value="wide">{$t('Wide')}</option>
+                      {#if isAdvancedMode || customMarginActive}
+                        <option value="custom">{$t('Custom…')}</option>
+                      {/if}
                     </select>
-                    <p class="setting-description">
-                      {$t('Page margins for the exported PDF.')}
-                    </p>
+                    {#if customMarginActive}
+                      <!-- i18n-ignore: literal CSS value, not prose -->
+                      <input
+                        id="print-margin-custom"
+                        type="text"
+                        class="template-input"
+                        aria-label={$t('Custom margin')}
+                        value={epubSettings?.print?.custom_margin ?? ''}
+                        placeholder="20mm 15mm 25mm 15mm"
+                        onchange={e =>
+                          updatePrint({
+                            custom_margin:
+                              (e.currentTarget as HTMLInputElement).value.trim() || undefined,
+                          })}
+                        disabled={epubLoading}
+                      />
+                      <p class="setting-description">
+                        {$t(
+                          'CSS margin passed to Paged.js, e.g. "20mm 15mm 25mm 15mm". Clear to return to the preset.'
+                        )}
+                      </p>
+                    {:else}
+                      <p class="setting-description">
+                        {$t('Page margins for the exported PDF.')}
+                      </p>
+                    {/if}
                   </div>
 
                   <div class="setting-group">

@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: EDITME EPUB Editor\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-04\n"
-"PO-Revision-Date: 2026-07-04\n"
+"POT-Creation-Date: 2026-07-05\n"
+"PO-Revision-Date: 2026-07-05\n"
 "Language: de\n"
 "Language-Team: \n"
 "Last-Translator: Claude (machine first pass)\n"
@@ -944,6 +944,14 @@ msgstr "Urheber"
 msgid "Credential of the certifier"
 msgstr "Qualifikation des Zertifizierers"
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "CSS @page size passed to Paged.js, e.g. \"140mm 216mm\" or \"A4 landscape\". Clear to return to the preset."
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "CSS margin passed to Paged.js, e.g. \"20mm 15mm 25mm 15mm\". Clear to return to the preset."
+msgstr ""
+
 #: src/lib/components/import/ImportReviewDialog.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
@@ -966,6 +974,18 @@ msgstr "Derzeit aktives Projekt"
 msgid "Currently open"
 msgstr "Derzeit geöffnet"
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Custom margin"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Custom page size"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Custom…"
+msgstr ""
+
 #: src/lib/ThemeToggle.svelte
 msgid "dark"
 msgstr "dunkel"
@@ -986,7 +1006,6 @@ msgstr "Schrift verkleinern"
 
 #: src/lib/components/metadata/BasicInfoFields.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
-#: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Default"
 msgstr "Standard"
 
@@ -1415,10 +1434,6 @@ msgstr "Seitenfluss"
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Folder selected:"
 msgstr "Ausgewählter Ordner:"
-
-#: src/stories/preview/ContentPreviewDemo.svelte
-msgid "Font Family:"
-msgstr "Schriftfamilie:"
 
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Font Size:"
@@ -1897,10 +1912,6 @@ msgstr "Modus"
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Modified"
 msgstr "Geändert"
-
-#: src/stories/preview/ContentPreviewDemo.svelte
-msgid "Monospace"
-msgstr "Dicktengleich"
 
 #: src/lib/components/SpineItem.svelte
 msgid "Move {id} down"
@@ -2703,10 +2714,6 @@ msgstr "Kapitel 1: Erste Schritte"
 msgid "sample.publisher.name"
 msgstr "Beispielverlag"
 
-#: src/stories/preview/ContentPreviewDemo.svelte
-msgid "Sans-serif"
-msgstr "Serifenlos"
-
 #: src/lib/components/EditSpineItemDialog.svelte
 msgid "Save"
 msgstr "Speichern"
@@ -2807,10 +2814,6 @@ msgstr "Sepia"
 #: src/lib/components/metadata/CollectionsEditor.svelte
 msgid "Series"
 msgstr "Reihe"
-
-#: src/stories/preview/ContentPreviewDemo.svelte
-msgid "Serif"
-msgstr "Serif"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Session expired — please reconnect"

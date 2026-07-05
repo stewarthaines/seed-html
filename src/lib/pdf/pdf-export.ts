@@ -49,10 +49,13 @@ export const MARGIN_MM: Record<PrintSettings['margin'], number> = {
  * left the screen at the chosen size while Chrome printed onto its default paper.
  * It stays overridable by the book's own CSS (linked after this). Undefined
  * settings resolve to the previous defaults (A4 / 18mm / page numbers on).
+ * Advanced-mode `custom_size` / `custom_margin` strings pass through verbatim
+ * and take precedence over the presets.
  */
 function printPageCss(print: PrintSettings | undefined): string {
-  const size = print?.page_size || 'A4';
+  const size = print?.custom_size?.trim() || print?.page_size || 'A4';
   const mm = MARGIN_MM[print?.margin ?? 'normal'] ?? MARGIN_MM.normal;
+  const margin = print?.custom_margin?.trim() || `${mm}mm`;
   const pageNumbers = print ? print.page_numbers !== false : true;
   const bottomCenter = pageNumbers
     ? `
@@ -76,7 +79,7 @@ function printPageCss(print: PrintSettings | undefined): string {
     : '';
   return `@page {
   size: ${size};
-  margin: ${mm}mm;${topCenter}${bottomCenter}
+  margin: ${margin};${topCenter}${bottomCenter}
 }`;
 }
 

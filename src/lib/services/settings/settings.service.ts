@@ -34,6 +34,18 @@ export interface WorkspaceSettings {
 export interface PrintSettings {
   page_size: string;
   margin: 'narrow' | 'normal' | 'wide';
+  /**
+   * Advanced mode: free-form CSS `@page size` value (e.g. '140mm 216mm') passed
+   * through verbatim to Paged.js. When set (non-empty) it overrides `page_size`,
+   * which is preserved so switching back to a preset round-trips.
+   */
+  custom_size?: string;
+  /**
+   * Advanced mode: free-form CSS `margin` value (e.g. '20mm 15mm 25mm 15mm')
+   * passed through verbatim to Paged.js. When set (non-empty) it overrides the
+   * `margin` preset, which is preserved for round-tripping.
+   */
+  custom_margin?: string;
   page_numbers: boolean;
   /** Print the chapter title as a running header at the top of each page. */
   running_header?: boolean;
@@ -411,6 +423,8 @@ export class SettingsService {
           ? {
               page_size: settings.print.page_size ?? 'A4',
               margin: settings.print.margin ?? 'normal',
+              custom_size: settings.print.custom_size || undefined,
+              custom_margin: settings.print.custom_margin || undefined,
               page_numbers: settings.print.page_numbers ?? true,
               running_header: settings.print.running_header ?? false,
               cover_page: settings.print.cover_page ?? true,
