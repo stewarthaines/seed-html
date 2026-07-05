@@ -151,7 +151,7 @@
   function formatDate(value?: string): string | null {
     if (!value) return null;
     const d = new Date(value);
-    return Number.isNaN(d.getTime()) ? null : d.toLocaleDateString();
+    return Number.isNaN(d.getTime()) ? null : d.toISOString().split('T')[0];
   }
 </script>
 

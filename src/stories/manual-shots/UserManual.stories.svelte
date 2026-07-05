@@ -70,6 +70,7 @@
     await userEvent.clear(title);
     await userEvent.type(title, 'The Tortoise and the Hare');
     const author = await canvas.findByLabelText(/Author/, {}, { timeout: 20000 });
+    await userEvent.clear(author);
     await userEvent.type(author, 'Aesop');
   }}
 >
