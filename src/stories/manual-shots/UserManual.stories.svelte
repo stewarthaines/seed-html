@@ -2,6 +2,7 @@
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import { waitFor } from 'storybook/test';
   import App from '../../App.svelte';
+  import { advancedMode } from '../../lib/stores/advanced-mode';
 
   // Screenshot recipes for the user manual (docs/seed.html-user-manual/).
   // Each story drives the real app to the exact state a manual illustration
@@ -30,8 +31,10 @@
   loaders={[
     async () => {
       // The shot documents Basic Mode: no Text-format picker (the project is
-      // created with Djot). Force the mode rather than inherit ambient state.
-      localStorage.setItem('editme_advanced_mode', 'false');
+      // created with Djot). Set through the store (not raw localStorage) so it
+      // reliably overrides an advanced-mode story that ran earlier in the same
+      // browser.
+      advancedMode.current = false;
       return {};
     },
   ]}
@@ -78,7 +81,7 @@
   tags={['!test']}
   loaders={[
     async () => {
-      localStorage.setItem('editme_advanced_mode', 'false');
+      advancedMode.current = false;
       return {};
     },
   ]}

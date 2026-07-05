@@ -293,13 +293,20 @@ The manuals' app screenshots are regenerated from stories. `scripts/manual-shots
 
 Recipes run in `test:stories` too, so a locally-producible screenshot that breaks fails loudly instead of going stale — **except** shots that depend on the network (e.g. Import from Catalog fetches the live `sample.readitinabook.com` feed). The isolated `test:stories` browser can't reach external hosts, so those stories are tagged `tags={['!test']}` to opt out of the suite; they're still captured by `npm run manual-shots` (which runs a real browser) and fail loudly there if the feed is unreachable.
 
-Shots that **can't** be automated, and stay hand-made: native `<select>` popups (open dropdowns render outside the page, invisible to CDP), external apps (Thorium/Cantook), and real-hardware comparisons. Shots needing a project with specific **extensions installed** (Djot/markdown/prism — e.g. the EPUB Settings and generator illustrations, and any live preview showing a figure) await a `seedProject` option to install extensions; the default seed's minimal transform renders headings/bold/emphasis only.
+Shots that **can't** be automated, and stay hand-made: native `<select>` popups (open dropdowns render outside the page, invisible to CDP), external apps (Thorium/Cantook), and real-hardware comparisons.
+
+Two gotchas the recipes have to respect:
+
+- **App mode**: set it in the loader through the store — `advancedMode.current = true/false` — not raw `localStorage`. The persisted store reads its value at module load (before loaders run), so a raw write can't flip the already-initialised value. Basic-mode recipes must set `false` explicitly, or an advanced recipe that ran earlier in the same browser leaves the mode wrong.
+- **Extensions need the dev-served catalog**: `seedProject({ extensions: ['markdown-it', 'prism'] })` fetches `/extensions/` (same origin), which the dev Storybook serves but the isolated `test:stories` Storybook does not. So extension-seeded shots (like EPUB Settings) are tagged `!test` and validated at capture time.
 
 ## Workflow stories: seeding real projects, screenshots, and videos
 
 Workflow stories exist to capture screenshots and videos of real author workflows. They seed a **real project in the real storage backend**, mount the **full `App`**, and drive it with `play()`.
 
 The key: `App.svelte` has no injection seam, but it restores persisted state on boot. `src/stories/utils/seed-project.ts` builds the same service graph App wires itself (`FileStorageAPI` → `WorkspaceService` → `SpineService`), creates a project with chapters, and sets the persisted `editme_app_workspace_id` — so when the story mounts `App`, it opens on the seeded book exactly as a reload would.
+
+`seedProject` also takes `extensions: string[]` (e.g. `['markdown-it', 'prism']`) to install catalog extensions — it fetches them from the same-origin `/extensions/` the app uses, writes the project's default transform scripts plus a `settings.json` wiring the pipeline (text transform from the first format extension, DOM transforms appended), mirroring `App.installCatalogExtension`. Extension EPUB assets (e.g. a Prism theme CSS) aren't registered into the manifest yet — enough for the settings form and structural transforms, not asset-dependent styling.
 
 ```svelte
 <script module>

@@ -31,16 +31,19 @@ async function captureManualShots() {
   }
 
   const browser = await chromium.launch();
-  const context = await browser.newContext({
-    viewport: { width: 1280, height: 800 },
-    deviceScaleFactor: 2,
-  });
-  const page = await context.newPage();
 
   console.log(`📸 Regenerating ${entries.length} manual shot(s) from ${SB_URL}...`);
   let failures = 0;
 
   for (const [out, shot] of entries) {
+    // A fresh context per shot: clean localStorage keeps each recipe's app-mode
+    // loader deterministic (no leakage from a prior shot), and avoids the
+    // slowdown of an accumulated context tipping heavy recipes over the wait.
+    const context = await browser.newContext({
+      viewport: { width: 1280, height: 800 },
+      deviceScaleFactor: 2,
+    });
+    const page = await context.newPage();
     try {
       console.log(`Capturing ${out} (${shot.mode} mode)...`);
       await page.goto(`${SB_URL}/iframe.html?id=${shot.story}&viewMode=story`);
@@ -48,7 +51,7 @@ async function captureManualShots() {
       // The story's play() drives to the end state; wait for the clip target
       // and give the final render a beat to settle (fonts, focus rings).
       const target = page.locator(shot.clip).first();
-      await target.waitFor({ state: 'visible', timeout: 60000 });
+      await target.waitFor({ state: 'visible', timeout: 90000 });
       await page.waitForTimeout(1000);
 
       fs.mkdirSync(path.dirname(out), { recursive: true });
@@ -57,6 +60,8 @@ async function captureManualShots() {
     } catch (error) {
       failures += 1;
       console.error(`❌ Failed ${out}:`, error.message);
+    } finally {
+      await context.close();
     }
   }
 

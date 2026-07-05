@@ -10,6 +10,11 @@
       "story": "manual-shots-user-manual--import-from-catalog",
       "clip": ".opds-dialog",
       "mode": "basic"
+    },
+    "docs/seed.html-advanced-reference/Images/screenshot-epub-settings.png": {
+      "story": "manual-shots-advanced-reference--epub-settings-transform-pipeline",
+      "clip": ".transform-pipeline-settings",
+      "mode": "advanced"
     }
   }
 }
