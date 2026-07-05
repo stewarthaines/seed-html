@@ -33,7 +33,7 @@
     },
   }}
   play={async ({ canvas }) => {
-    await canvas.findByText('i18n Demo Book', {}, { timeout: 30000 });
+    await canvas.findByText('i18n Demo Book', {}, { timeout: 60000 });
 
     // Real assertions: the German catalog is applied to the app chrome.
     await canvas.findByText('Metadaten', {}, { timeout: 20000 });

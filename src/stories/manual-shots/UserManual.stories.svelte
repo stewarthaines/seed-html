@@ -44,15 +44,13 @@
     },
   }}
   play={async ({ canvas, userEvent }) => {
-    // Boot, open the Projects view, open the New Project dialog.
-    const projects = await canvas.findByRole('button', { name: 'Projects' }, { timeout: 30000 });
+    // Navigation steps target data-testid hooks — locale- and copy-stable,
+    // unlike the localized labels used for assertions (see STORYBOOK.md).
+    // 'nav-workspace' is the Projects section (its section id is `workspace`).
+    const projects = await canvas.findByTestId('nav-workspace', {}, { timeout: 30000 });
     await userEvent.click(projects);
 
-    const createNew = await canvas.findByRole(
-      'button',
-      { name: /Create a new minimal EPUB project/ },
-      { timeout: 20000 }
-    );
+    const createNew = await canvas.findByTestId('create-project', {}, { timeout: 20000 });
     // Create New is disabled while the project list loads. With no projects
     // (a fresh capture context) that's instant, but a browser holding the
     // seeded stories' projects loads slower — wait for enabled, or the click

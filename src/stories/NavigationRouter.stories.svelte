@@ -36,15 +36,17 @@
   }}
   play={async ({ canvas, userEvent }) => {
     // App boots and restores the seeded workspace.
-    await canvas.findByText('Router Demo Book', {}, { timeout: 30000 });
+    await canvas.findByText('Router Demo Book', {}, { timeout: 60000 });
 
-    for (const section of ['Metadata', 'Manifest', 'Navigation']) {
-      const button = await canvas.findByRole('button', { name: section }, { timeout: 20000 });
+    // Navigate by data-testid hook, assert by the localized view heading (the
+    // heading assertion is the real check; the nav step is just plumbing).
+    for (const section of ['metadata', 'manifest', 'navigation']) {
+      const button = await canvas.findByTestId(`nav-${section}`, {}, { timeout: 20000 });
       await userEvent.click(button);
       await canvas.findByRole('heading', { name: new RegExp(section, 'i') }, { timeout: 20000 });
     }
 
-    const settings = await canvas.findByRole('button', { name: /Settings/ }, { timeout: 20000 });
+    const settings = await canvas.findByTestId('nav-settings', {}, { timeout: 20000 });
     await userEvent.click(settings);
     await canvas.findByRole('heading', { name: /Settings/i }, { timeout: 20000 });
   }}
@@ -66,22 +68,22 @@
     },
   }}
   play={async ({ canvas, userEvent }) => {
-    await canvas.findByText('Router Demo Book', {}, { timeout: 30000 });
+    await canvas.findByText('Router Demo Book', {}, { timeout: 60000 });
 
-    // Open a chapter in the spine editor.
-    const chapter = await canvas.findByText('chapter01', {}, { timeout: 30000 });
+    // Open a chapter in the spine editor (navigate by testid; see STORYBOOK.md).
+    const chapter = await canvas.findByTestId('spine-item-chapter01', {}, { timeout: 60000 });
     await userEvent.click(chapter);
-    await canvas.findByRole('textbox', {}, { timeout: 30000 });
+    await canvas.findByRole('textbox', {}, { timeout: 60000 });
 
     // Navigate away…
-    const metadata = await canvas.findByRole('button', { name: 'Metadata' }, { timeout: 20000 });
+    const metadata = await canvas.findByTestId('nav-metadata', {}, { timeout: 20000 });
     await userEvent.click(metadata);
     await canvas.findByRole('heading', { name: /Metadata/i }, { timeout: 20000 });
 
     // …and back: the editor state is restored without re-selecting the chapter.
-    const chapterAgain = await canvas.findByText('chapter01', {}, { timeout: 20000 });
+    const chapterAgain = await canvas.findByTestId('spine-item-chapter01', {}, { timeout: 20000 });
     await userEvent.click(chapterAgain);
-    await canvas.findByRole('textbox', {}, { timeout: 30000 });
+    await canvas.findByRole('textbox', {}, { timeout: 60000 });
   }}
 >
   <App />

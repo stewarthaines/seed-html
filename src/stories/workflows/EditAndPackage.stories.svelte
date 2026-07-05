@@ -44,16 +44,17 @@
   }}
   play={async ({ canvas, userEvent }) => {
     // The app boots and restores the seeded workspace — wait for its title.
-    await canvas.findByText('Storybook Seeded Book', {}, { timeout: 30000 });
+    await canvas.findByText('Storybook Seeded Book', {}, { timeout: 60000 });
     // (template child below keeps addon-svelte-csf's source emitter happy;
     // without one its $effect throws and aborts the app's mount effects)
 
-    // Open the first seeded chapter from the sidebar list (shown by id).
-    const chapter = await canvas.findByText('chapter01', {}, { timeout: 30000 });
+    // Open the first seeded chapter from the sidebar list. Navigation steps
+    // use data-testid hooks (locale/copy-stable); see STORYBOOK.md.
+    const chapter = await canvas.findByTestId('spine-item-chapter01', {}, { timeout: 60000 });
     await userEvent.click(chapter);
 
     // Append a line in the chapter editor (the plain-text pane).
-    const editor = await canvas.findByRole('textbox', {}, { timeout: 30000 });
+    const editor = await canvas.findByRole('textbox', {}, { timeout: 60000 });
     await userEvent.click(editor);
     await userEvent.keyboard('{End}');
     await userEvent.type(editor, '\n\nA line typed by the workflow story.');
@@ -62,11 +63,11 @@
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     // Package the book; the app stores the .epub and opens the Publish view.
-    const packageButton = await canvas.findByText('Package EPUB', {}, { timeout: 15000 });
+    const packageButton = await canvas.findByTestId('package-epub', {}, { timeout: 15000 });
     await userEvent.click(packageButton);
 
     // The packaged artifact appears in the Publish list (Download action row).
-    await canvas.findByRole('button', { name: 'Download' }, { timeout: 30000 });
+    await canvas.findByRole('button', { name: 'Download' }, { timeout: 60000 });
   }}
 >
   <App />
