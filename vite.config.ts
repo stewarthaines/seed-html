@@ -227,12 +227,14 @@ export default defineConfig({
               const chapter = typeof m.chapter === 'string' ? m.chapter : undefined;
               // Editorial sub-group key for the settings catalog (presentational only).
               const category = typeof m.category === 'string' ? m.category : undefined;
-              // An extension must bring at least one of: a lib, a transform, or a generator.
+              // An extension must bring at least one of: a lib, a transform, a
+              // generator, or an EPUB asset (mirrors generate-extensions-manifest.js).
               const isEmpty =
                 scripts.length === 0 &&
                 domTransforms.length === 0 &&
                 textTransforms.length === 0 &&
-                generators.length === 0;
+                generators.length === 0 &&
+                assets.length === 0;
               if (m.id && m.name && !isEmpty) {
                 manifest.push({
                   id: m.id,

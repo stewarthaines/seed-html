@@ -85,15 +85,18 @@ for (const dirent of dirents) {
   ];
   // Optional sample chapter (plain-text source) used to seed a new project.
   const chapter = typeof meta.chapter === 'string' ? meta.chapter : undefined;
-  // An extension must bring at least one of: a 3rd-party lib, a transform, or a generator.
+  // An extension must bring at least one of: a 3rd-party lib, a transform, a
+  // generator, or an EPUB asset (e.g. audio-clips ships only a reading-system
+  // script + CSS as assets).
   const isEmpty =
     scripts.length === 0 &&
     domTransforms.length === 0 &&
     textTransforms.length === 0 &&
-    generators.length === 0;
+    generators.length === 0 &&
+    assets.length === 0;
   if (!id || !name || isEmpty) {
     console.warn(
-      `⚠️  ${dirent.name}: incomplete extension.json (need id, name, and at least one of scripts/transforms/generators) — skipped`
+      `⚠️  ${dirent.name}: incomplete extension.json (need id, name, and at least one of scripts/transforms/generators/assets) — skipped`
     );
     continue;
   }

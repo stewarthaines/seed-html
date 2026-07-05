@@ -1,0 +1,22 @@
+/* Playable audio clips: span.clip markup produced from the :clip directive.
+   Scripts/clip-player.js drives playback and adds role="button" on load, so the
+   play affordance only appears where the script actually runs — in a script-less
+   reading system the clip renders as plain dotted-underlined text. */
+
+.clip {
+  text-decoration: underline dotted;
+  text-underline-offset: 0.15em;
+}
+
+.clip[role='button'] {
+  cursor: pointer;
+}
+
+.clip[role='button']::before {
+  content: '\25B6\00A0'; /* ▶ + no-break space */
+  font-size: 0.8em;
+}
+
+.clip[role='button'].clip-playing::before {
+  content: '\25A0\00A0'; /* ■ (stop) + no-break space */
+}

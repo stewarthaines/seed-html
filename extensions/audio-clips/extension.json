@@ -1,0 +1,21 @@
+{
+  "id": "audio-clips",
+  "name": "AudioClips",
+  "description": "Tap-to-play audio clips in the packaged EPUB: a reading-system script and styles for the span.clip markup that the Djot and MarkdownIt transforms produce from the :clip directive.",
+  "category": "chapter-content",
+  "scripts": [],
+  "domTransforms": [],
+  "textTransforms": [],
+  "assets": [
+    {
+      "file": "clip-player.js",
+      "target": "Scripts/clip-player.js",
+      "media": "application/javascript"
+    },
+    {
+      "file": "clip.css",
+      "target": "Styles/clip.css",
+      "media": "text/css"
+    }
+  ]
+}
