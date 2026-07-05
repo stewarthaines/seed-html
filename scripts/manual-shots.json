@@ -1,0 +1,10 @@
+{
+  "$comment": "Manual screenshot manifest: output image path -> the Storybook story that produces the state, the element to clip to, and the app mode the shot documents. Regenerate with `npm run manual-shots` (Storybook must be running). Stories live in src/stories/manual-shots/.",
+  "shots": {
+    "docs/seed.html-user-manual/Images/screen-new-project.png": {
+      "story": "manual-shots-user-manual--new-project-dialog-basic-mode",
+      "clip": ".create-dialog",
+      "mode": "basic"
+    }
+  }
+}

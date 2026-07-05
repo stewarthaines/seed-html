@@ -269,6 +269,10 @@ npm run test:stories  # Run Storybook tests with Vitest
 
 Unit tests in `src/lib/**/*.test.ts` are the coverage of record for backend behavior. Storybook is for what unit tests can't show: **visual states of real components**, **seeded end-to-end workflows** (the `seedProject` harness + full App), and **capture** (screenshots/videos of `capture`-tagged stories). The nine mock-driven backend demos were retired on these grounds — they passed their tests but duplicated unit-tested behavior against mocks that drift. Don't reintroduce mock-backed backend demos; write a unit test, or a seeded story that drives the real thing.
 
+## Manual screenshots (docs illustrations)
+
+The manuals' app screenshots are regenerated from stories. `scripts/manual-shots.json` maps each image path under `docs/*/Images/` to a story in `src/stories/manual-shots/` (the state recipe: seed, navigate, open the dialog/pane), the element to clip to, and the app **mode** the shot documents — every recipe forces Basic or Advanced Mode explicitly, since the manual illustrates both. `npm run manual-shots` (with Storybook running) rewrites the images in place at a fixed viewport and 2× scale; review the docs diff like any other change. Recipes run in `test:stories` too, so a screenshot that can no longer be produced fails loudly instead of going stale.
+
 ## Workflow stories: seeding real projects, screenshots, and videos
 
 Workflow stories exist to capture screenshots and videos of real author workflows. They seed a **real project in the real storage backend**, mount the **full `App`**, and drive it with `play()`.

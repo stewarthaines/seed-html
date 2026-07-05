@@ -6,13 +6,12 @@
 
 Open the _Projects_{.ui .icon-house} panel and click _Create New_{.ui} to open the New Project window.
 
-![The New Project window, with fields for the title, author, cover, language, and text format.](../Images/screen-new-project.png){.figure .screenshot}
+![The New Project window, with fields for the title, author, cover, and language.](../Images/screen-new-project.png){.figure .screenshot}
 
 1. Give your book a **Title** and an **Author** — you can change both later.
 2. Leave **Generate cover image** ticked and SEED.html makes a simple coloured cover; drag the slider to choose its colour. You can swap in your own later.
 3. Set the **Language** to the book's main language.
-4. Under **Text format**, choose how you'll write — the way you mark bold, headings, and the like. Keep the default if you're unsure.
-5. Click _Create_{.ui}. SEED.html sets up the book and opens it with one starter chapter.
+4. Click _Create_{.ui}. SEED.html sets up the book and opens it with one starter chapter.
 
 ### Import from a catalog
 
@@ -60,7 +59,7 @@ Click a chapter in the sidebar to open it. The editor fills the main area in two
 
 The left pane has a file dropdown at the top. It starts on _Text Content_{.ui} — your chapter's plain text — and also lists the book's stylesheet. Beside it, the **Chapter title** field names the chapter.
 
-Write your chapter in the text area, in whichever format you chose for the book — marking headings, bold, and links as you go. You don't write XHTML yourself; SEED.html transforms your text into it. Your work is kept as you write, with no Save button.
+Write your chapter in the text area, in the book's text format — marking headings, bold, and links as you go. You don't write XHTML yourself; SEED.html transforms your text into it. Your work is kept as you write, with no Save button.
 
 To style the chapter, pick the CSS file from the dropdown; the pane switches to its styles, which change how the book looks rather than what it says. To see text and styles at once, click _Add second editor pane_{.ui} — a second pane opens below the first, and you pick a different file in each.
 

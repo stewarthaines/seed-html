@@ -25,6 +25,7 @@
     "test:plugins": "vitest run --config vitest.config.plugins.ts",
     "screenshots": "node scripts/capture-screenshots.js",
     "videos": "node scripts/capture-video.js",
+    "manual-shots": "node scripts/capture-manual-shots.js",
     "test:a11y": "node scripts/a11y-scan.mjs",
     "worktree": "bash scripts/new-worktree.sh",
     "lint": "eslint . --ext .js,.ts,.svelte --max-warnings 312",
