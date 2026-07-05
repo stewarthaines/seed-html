@@ -237,6 +237,36 @@
     }
   }
 
+  // Persist the audio clip directive template (validated: must keep the <href>,
+  // <begin>, <end> placeholders; cleared → the built-in default applies).
+  async function handleAudioClipTemplateChange(event: Event): Promise<void> {
+    if (!workspaceId || !epubSettings) return;
+
+    const target = event.target as HTMLInputElement;
+    const newTemplate = target.value.trim();
+
+    const validation = settingsService.validateEPUBSettings({ audio_clip_template: newTemplate });
+    if (!validation.isValid) {
+      error = validation.errors[0] || $t('Invalid audio clip template');
+      return;
+    }
+
+    const previous = epubSettings.audio_clip_template;
+    const updatedSettings: EPUBSettings = {
+      ...epubSettings,
+      audio_clip_template: newTemplate,
+    };
+    epubSettings = updatedSettings;
+
+    try {
+      await settingsService.saveEPUBSettings(workspaceId, updatedSettings);
+      onSettingsChanged?.();
+    } catch (err) {
+      error = err instanceof Error ? err.message : $t('Failed to save EPUB settings');
+      epubSettings = { ...epubSettings, audio_clip_template: previous };
+    }
+  }
+
   // --- Print settings ----------------------------------------------------------
   // Minimal page geometry exposed to novices (drives the PDF export + print
   // preview; still overridable by the book's own @page CSS). HTTP-only, like the
@@ -1191,6 +1221,27 @@
                     <p class="setting-description">
                       {$t(
                         'Template for the exported .epub filename. Use placeholders: <title>, <author>, <date>. Empty placeholders (e.g. no author) collapse cleanly.'
+                      )}
+                    </p>
+                  </div>
+
+                  <div class="setting-group">
+                    <label for="audio-clip-template" class="setting-label-text">
+                      {$t('Audio Clip Directive')}
+                    </label>
+                    <!-- i18n-ignore: literal directive template, not prose -->
+                    <input
+                      id="audio-clip-template"
+                      type="text"
+                      class="template-input"
+                      value={epubSettings?.audio_clip_template || ''}
+                      placeholder=":clip[&lt;label&gt;]{'{'}src=&lt;href&gt; begin=&lt;begin&gt; end=&lt;end&gt;{'}'}"
+                      onblur={handleAudioClipTemplateChange}
+                      disabled={epubLoading}
+                    />
+                    <p class="setting-description">
+                      {$t(
+                        'Template for inserted audio clip directives. Required placeholders: <href>, <begin>, <end>; <label> and <rate> are optional. Djot needs the values quoted, e.g. src="<href>". Clear to restore the default.'
                       )}
                     </p>
                   </div>

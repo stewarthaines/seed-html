@@ -463,6 +463,10 @@ msgstr ""
 msgid "Are you sure you want to delete this item?"
 msgstr ""
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Audio Clip Directive"
+msgstr ""
+
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Audio Clip Editor"
 msgstr ""
@@ -1668,6 +1672,10 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 msgid "Invalid"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Invalid audio clip template"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
@@ -3017,6 +3025,10 @@ msgstr ""
 
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "Technical Info"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Template for inserted audio clip directives. Required placeholders: <href>, <begin>, <end>; <label> and <rate> are optional. Djot needs the values quoted, e.g. src=\"<href>\". Clear to restore the default."
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte

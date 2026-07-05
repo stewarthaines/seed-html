@@ -463,6 +463,10 @@ msgstr "Möchten Sie das Kapitel '{name}' wirklich löschen? Dadurch werden das 
 msgid "Are you sure you want to delete this item?"
 msgstr "Möchten Sie dieses Element wirklich löschen?"
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Audio Clip Directive"
+msgstr ""
+
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Audio Clip Editor"
 msgstr "Audioclip-Editor"
@@ -1669,6 +1673,10 @@ msgstr ""
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 msgid "Invalid"
 msgstr "Ungültig"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Invalid audio clip template"
+msgstr ""
 
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 msgid "Invalid EPUB"
@@ -3018,6 +3026,10 @@ msgstr "System"
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "Technical Info"
 msgstr "Technische Informationen"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Template for inserted audio clip directives. Required placeholders: <href>, <begin>, <end>; <label> and <rate> are optional. Djot needs the values quoted, e.g. src=\"<href>\". Clear to restore the default."
+msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Template for the exported .epub filename. Use placeholders: <title>, <author>, <date>. Empty placeholders (e.g. no author) collapse cleanly."
