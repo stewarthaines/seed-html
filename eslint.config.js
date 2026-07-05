@@ -176,6 +176,8 @@ export default [
       '**/*.min.js',
       // Vendored Paged.js polyfill, served as-is (not named *.min.js).
       'public/paged.polyfill.js',
+      // Vendored bene reader build (third-party, minified) — see public/bene/VENDORED.md.
+      'public/bene/**',
       // Ignore specific generated files
       '**/lcov-report/',
       '**/coverage-report/',
