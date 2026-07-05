@@ -707,6 +707,11 @@ msgstr "Suche löschen"
 msgid "Click on any row in the table to see details"
 msgstr "Klicken Sie auf eine beliebige Zeile in der Tabelle, um Details anzuzeigen"
 
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "Clip"
+msgstr ""
+
+#: plugins/audio-clip-editor/src/App.svelte
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Clip label"
 msgstr "Clip-Bezeichnung"
@@ -1029,6 +1034,7 @@ msgstr "Standardmäßig aktiviert"
 msgid "Default value"
 msgstr "Standardwert"
 
+#: plugins/audio-clip-editor/src/App.svelte
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 #: src/lib/components/manifest/ManifestPreview.svelte
@@ -1070,6 +1076,10 @@ msgstr "Projekt löschen"
 msgid "Delete project: {title}"
 msgstr "Projekt löschen: {title}"
 
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "Delete the selected clip from the library"
+msgstr ""
+
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Demo Controls"
 msgstr "Demo-Steuerung"
@@ -1106,6 +1116,10 @@ msgstr "Herunterladen"
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 msgid "Download EPUB to disk"
 msgstr "EPUB auf die Festplatte herunterladen"
+
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "Drag on the waveform to define a clip."
+msgstr ""
 
 #: src/lib/components/manifest/ManifestContainer.svelte
 msgid "Drop to add to the manifest"
@@ -1654,6 +1668,10 @@ msgstr "Wird initialisiert..."
 msgid "Inject the project’s preview/head.xml (edit it via the spine editor’s file menu in Advanced mode) into the preview head, per preview type. Authoring-time only — it is never added to the packaged EPUB."
 msgstr "Fügt die preview/head.xml des Projekts (im erweiterten Modus über das Dateimenü des Kapitel-Editors bearbeitbar) je Vorschautyp in den Vorschau-Head ein. Nur zur Bearbeitungszeit – wird nie in das gepackte EPUB aufgenommen."
 
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "Insert"
+msgstr ""
+
 #: src/lib/components/spine/GeneratorPanel.svelte
 msgid "Insert at cursor"
 msgstr "An Cursor einfügen"
@@ -1667,7 +1685,7 @@ msgid "Insert clip directive at cursor position"
 msgstr "Clip-Direktive an der Cursorposition einfügen"
 
 #: plugins/audio-clip-editor/src/App.svelte
-msgid "Insert test clip"
+msgid "Insert the clip directive at the editor cursor"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
@@ -1882,6 +1900,10 @@ msgstr "Paketstruktur sperren und Inhaltsänderungen verfolgen"
 #: src/lib/Sidebar.svelte
 msgid "Locked while track changes is on"
 msgstr "Gesperrt, solange die Änderungsverfolgung aktiv ist"
+
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "Loop"
+msgstr ""
 
 #: src/lib/Sidebar.svelte
 msgid "Main navigation"
@@ -2357,6 +2379,10 @@ msgstr "PDF"
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "Plain text"
 msgstr "Einfacher Text"
+
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "Play"
+msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Please copy license text into the License field below to comply with open source requirements."
@@ -2981,6 +3007,10 @@ msgstr "Beginnen Sie im Editor zu tippen, um hier Ihre XHTML-Vorschau zu sehen."
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 msgid "Status:"
 msgstr "Status:"
+
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "Stop"
+msgstr ""
 
 #: src/lib/components/metadata/SubjectEditor.svelte
 msgid "Subject authority"

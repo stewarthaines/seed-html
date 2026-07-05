@@ -28,5 +28,8 @@
     "opfs",
     "plugin"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "wavesurfer.js": "^7.12.8"
+  }
 }

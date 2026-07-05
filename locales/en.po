@@ -707,6 +707,11 @@ msgstr ""
 msgid "Click on any row in the table to see details"
 msgstr ""
 
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "Clip"
+msgstr ""
+
+#: plugins/audio-clip-editor/src/App.svelte
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Clip label"
 msgstr ""
@@ -1029,6 +1034,7 @@ msgstr ""
 msgid "Default value"
 msgstr ""
 
+#: plugins/audio-clip-editor/src/App.svelte
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 #: src/lib/components/manifest/ManifestPreview.svelte
@@ -1070,6 +1076,10 @@ msgstr ""
 msgid "Delete project: {title}"
 msgstr ""
 
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "Delete the selected clip from the library"
+msgstr ""
+
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Demo Controls"
 msgstr ""
@@ -1105,6 +1115,10 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 msgid "Download EPUB to disk"
+msgstr ""
+
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "Drag on the waveform to define a clip."
 msgstr ""
 
 #: src/lib/components/manifest/ManifestContainer.svelte
@@ -1654,6 +1668,10 @@ msgstr ""
 msgid "Inject the project’s preview/head.xml (edit it via the spine editor’s file menu in Advanced mode) into the preview head, per preview type. Authoring-time only — it is never added to the packaged EPUB."
 msgstr ""
 
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "Insert"
+msgstr ""
+
 #: src/lib/components/spine/GeneratorPanel.svelte
 msgid "Insert at cursor"
 msgstr ""
@@ -1667,7 +1685,7 @@ msgid "Insert clip directive at cursor position"
 msgstr ""
 
 #: plugins/audio-clip-editor/src/App.svelte
-msgid "Insert test clip"
+msgid "Insert the clip directive at the editor cursor"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
@@ -1881,6 +1899,10 @@ msgstr ""
 
 #: src/lib/Sidebar.svelte
 msgid "Locked while track changes is on"
+msgstr ""
+
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "Loop"
 msgstr ""
 
 #: src/lib/Sidebar.svelte
@@ -2356,6 +2378,10 @@ msgstr ""
 
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "Plain text"
+msgstr ""
+
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "Play"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -2980,6 +3006,10 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 msgid "Status:"
+msgstr ""
+
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "Stop"
 msgstr ""
 
 #: src/lib/components/metadata/SubjectEditor.svelte

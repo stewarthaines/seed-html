@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The spine editor's preview header shows the rendered chapter's filename (e.g. `chapter01.xhtml`) beside the Source toggle.
 - Advanced mode: the PDF settings' Page size and Margin gain a "Custom…" option accepting free-form CSS values (e.g. `140mm 216mm`, `20mm 15mm 25mm 15mm`) passed straight through to the PDF layout engine.
 - Audio clips now play in the packaged EPUB: the Djot and MarkdownIt transforms turn the `:clip` directive into tappable text, and the new AudioClips extension supplies the reading-system player script and styles (Djot projects: quote the template's attribute values).
+- New Audio Clip Editor plugin (enable under Advanced mode): a waveform replaces the built-in audio clip editor in the spine editor — drag to define clips, fine-tune edges with wheel zoom and a minimap, play/loop, label, and insert; each audio file's clips persist with the project.
+- The audio clip directive template is now editable in EPUB Settings (it previously required hand-editing `settings.json`).
 
 ### Changed
 
