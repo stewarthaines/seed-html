@@ -136,12 +136,19 @@
   // user's enabled set (global setting). The publish `view` surface uses its plugin
   // only when both available and enabled; otherwise the core Publish feature shows.
   const PUBLISH_PLUGIN_ID = 'publish-to-remote';
+  // The audio clip `panel` plugin: supersedes the built-in audio clip editor in
+  // the spine item editor when available + enabled (built-in stays as fallback).
+  const AUDIO_PLUGIN_ID = 'audio-clip-editor';
   let availablePlugins = $state<PluginManifestEntry[]>([]);
   let enabledPluginIds = $state<string[]>([]);
   // HTTP-delivered extensions catalog (extensions/manifest.json), importable per project.
   let availableExtensions = $state<ExtensionCatalogEntry[]>([]);
   let publishPluginUrl = $derived.by(() => {
     const entry = findActivePlugin(availablePlugins, enabledPluginIds, PUBLISH_PLUGIN_ID);
+    return entry ? resolvePluginEntryUrl(entry) : null;
+  });
+  let audioPluginUrl = $derived.by(() => {
+    const entry = findActivePlugin(availablePlugins, enabledPluginIds, AUDIO_PLUGIN_ID);
     return entry ? resolvePluginEntryUrl(entry) : null;
   });
 
@@ -1265,6 +1272,7 @@
             audioClipService={appState.getAudioClipService()}
             readOnly={isReadOnly}
             advancedMode={advancedMode.current}
+            {audioPluginUrl}
             onPreviewUpdate={handleSpinePreviewUpdate}
             onWorkspaceUpdate={updatedWorkspace => {
               if (appState) appState.workspace = updatedWorkspace;

@@ -467,6 +467,10 @@ msgstr ""
 msgid "Audio Clip Editor"
 msgstr ""
 
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "Audio file"
+msgstr ""
+
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "Author"
 msgstr ""
@@ -864,6 +868,10 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/App.svelte
 msgid "Could not read that catalog"
+msgstr ""
+
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "Could not read the project: {error}"
 msgstr ""
 
 #: src/lib/components/metadata/SimpleMetadataView.svelte
@@ -1654,6 +1662,10 @@ msgstr ""
 msgid "Insert clip directive at cursor position"
 msgstr ""
 
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "Insert test clip"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 msgid "Invalid"
 msgstr ""
@@ -1784,6 +1796,10 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 msgid "Load this catalog into the editor"
+msgstr ""
+
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "Loading audio files…"
 msgstr ""
 
 #: src/lib/components/audio/AudioClipEditor.svelte
@@ -2013,6 +2029,10 @@ msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "No accessibility issues found"
+msgstr ""
+
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "No audio files in this project."
 msgstr ""
 
 #: src/lib/components/settings/TrackChangesPanel.svelte
@@ -2627,6 +2647,7 @@ msgstr ""
 msgid "Retry"
 msgstr ""
 
+#: src/lib/components/plugins/PluginPanel.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Retry plugin"
 msgstr ""
@@ -3028,6 +3049,10 @@ msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Text Transform"
+msgstr ""
+
+#: src/lib/components/plugins/PluginPanel.svelte
+msgid "The plugin could not be loaded — you may be offline."
 msgstr ""
 
 #: src/lib/navigation/views/PublishView.svelte

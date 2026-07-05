@@ -1,0 +1,32 @@
+{
+  "name": "audio-clip-editor",
+  "version": "0.1.0",
+  "description": "Waveform-based audio clip editor panel plugin for the spine item editor",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 8001",
+    "build": "tsc && vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5.0.3",
+    "svelte": "^5.55.9",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5",
+    "vite-plugin-singlefile": "^2.3.3"
+  },
+  "editmePlugin": {
+    "id": "audio-clip-editor",
+    "name": "Audio Clip Editor",
+    "presentation": "panel",
+    "buildEntry": "dist/plugin.html"
+  },
+  "keywords": [
+    "epub",
+    "audio",
+    "wavesurfer",
+    "opfs",
+    "plugin"
+  ],
+  "license": "MIT"
+}

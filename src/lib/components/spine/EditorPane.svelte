@@ -23,6 +23,7 @@
   } from '$lib/services/workspace/workspace.service.js';
   import type { SettingsService } from '$lib/services/settings/settings.service.js';
   import AudioClipEditor from '$lib/components/audio/AudioClipEditor.svelte';
+  import PluginPanel from '$lib/components/plugins/PluginPanel.svelte';
   import GeneratorPanel from '$lib/components/spine/GeneratorPanel.svelte';
   import LineNumberGutter from '$lib/components/spine/LineNumberGutter.svelte';
   import type { GeneratorRunner } from '$lib/generators/generator-store.js';
@@ -63,6 +64,7 @@
     chapterTitlePlaceholder = '',
     onChapterTitleChange,
     generatorRunner = null,
+    audioPluginUrl = null,
   }: {
     transformError?: TransformError | null;
     transformWarnings?: string[];
@@ -107,6 +109,9 @@
     onChapterTitleChange?: (title: string) => void;
     /** Available generators + how to run them; null/empty hides the Generators control. */
     generatorRunner?: GeneratorRunner | null;
+    /** Resolved iframe src for the audio clip panel plugin; when set it supersedes
+        the built-in AudioClipEditor (which stays as the load-failure fallback). */
+    audioPluginUrl?: string | null;
   } = $props();
 
   // Basic mode hides JavaScript, transform-script, generator and preview-head
@@ -201,6 +206,16 @@
     } else {
       textareaSelection = null;
     }
+  }
+
+  /**
+   * The active workspace's root directory handle, handed to the audio panel
+   * plugin in its `init` message (null on the IndexedDB storage fallback, which
+   * makes the PluginPanel fail over to the built-in editor).
+   */
+  async function getWorkspaceDirHandle(): Promise<FileSystemDirectoryHandle | null> {
+    if (!workspace) return null;
+    return FileStorageAPI.getInstance().getWorkspaceDirectoryHandle(workspace.id);
   }
 
   /**
@@ -739,18 +754,41 @@
   />
 {/snippet}
 
-{#snippet pane1Audio()}
-  {#if pane1SelectedFile === 'text' && audioEditorVisible && hasAudioFiles && audioClipService && workspace && settingsService && workspaceService}
+{#snippet builtinAudioEditor()}
+  {#if audioClipService && workspace && settingsService && workspaceService}
+    <AudioClipEditor
+      {workspace}
+      {audioClipService}
+      {workspaceService}
+      {settingsService}
+      {textContent}
+      {textareaSelection}
+      onInsertClip={insertClipDirective}
+    />
+  {/if}
+{/snippet}
+
+<!-- The audio panel for a text pane: the audio-clip-editor plugin when enabled
+     (built-in editor as its load-failure fallback), the built-in editor
+     otherwise. -->
+{#snippet audioPanel(paneSelectedFile: string)}
+  {#if paneSelectedFile === 'text' && audioEditorVisible && hasAudioFiles && workspace}
     <div class="audio-editor-panel">
-      <AudioClipEditor
-        {workspace}
-        {audioClipService}
-        {workspaceService}
-        {settingsService}
-        {textContent}
-        {textareaSelection}
-        onInsertClip={insertClipDirective}
-      />
+      {#if audioPluginUrl}
+        <PluginPanel
+          pluginUrl={audioPluginUrl}
+          projectId={workspace.id}
+          getDirHandle={getWorkspaceDirHandle}
+          onInsert={insertClipDirective}
+          title={$t('Audio Clip Editor')}
+        >
+          {#snippet fallback()}
+            {@render builtinAudioEditor()}
+          {/snippet}
+        </PluginPanel>
+      {:else}
+        {@render builtinAudioEditor()}
+      {/if}
     </div>
   {/if}
 {/snippet}
@@ -841,19 +879,7 @@
               {@render changesToggle(2)}
             </div>
 
-            {#if pane2SelectedFile === 'text' && audioEditorVisible && hasAudioFiles && audioClipService && workspace && settingsService && workspaceService}
-              <div class="audio-editor-panel">
-                <AudioClipEditor
-                  {workspace}
-                  {audioClipService}
-                  {workspaceService}
-                  {settingsService}
-                  {textContent}
-                  {textareaSelection}
-                  onInsertClip={insertClipDirective}
-                />
-              </div>
-            {/if}
+            {@render audioPanel(pane2SelectedFile)}
           </div>
 
           <div class="textarea-container" style="--gutter-digits: {String(pane2LineCount).length}">
@@ -901,10 +927,10 @@
               {@render pane1FileSelector()}
               {@render changesToggle(1)}
             </div>
-            {@render pane1Audio()}
+            {@render audioPanel(pane1SelectedFile)}
           </div>
         {:else}
-          {@render pane1Audio()}
+          {@render audioPanel(pane1SelectedFile)}
         {/if}
 
         <div class="textarea-container" style="--gutter-digits: {String(pane1LineCount).length}">

@@ -54,15 +54,15 @@ A plugin is used only when it is both available and enabled; otherwise the relev
 ```json
 [
   {
-    "id": "audio-clip",
+    "id": "audio-clip-editor",
     "name": "Audio Clip Editor",
-    "entry": "audio-clip.html",
+    "entry": "audio-clip-editor/plugin.html",
     "presentation": "panel"
   },
   {
-    "id": "publish",
-    "name": "Publish",
-    "entry": "publish.html",
+    "id": "publish-to-remote",
+    "name": "Publish to Remote",
+    "entry": "publish-to-remote/plugin.html",
     "presentation": "view"
   }
 ]
@@ -77,7 +77,7 @@ A plugin is used only when it is both available and enabled; otherwise the relev
 | `entry`        | string | Filename of the plugin's HTML entry point |
 | `presentation` | enum   | `panel` or `view` — see below             |
 
-The core currently has hardcoded knowledge of which surface each known plugin id binds to (`publish` → the Publish view, `audio-clip` → the editor panel). A generalized extension-point registry is deferred until more than one `view` plugin exists.
+The core currently has hardcoded knowledge of which surface each known plugin id binds to (`publish-to-remote` → the Publish view, `audio-clip-editor` → the editor panel). A generalized extension-point registry is deferred until more than one `view` plugin exists.
 
 ---
 
@@ -139,9 +139,10 @@ OPFS is the storage substrate, but the core does **not** impose a path layout on
 
 ### Handed-over handle (the contract)
 
-The core passes a `FileSystemDirectoryHandle` to the shared output directory in the `init` message. This handle _is_ the access contract. Plugins read and write within it and never hardcode core paths such as `/projects/{id}/`. This decouples plugins entirely from the main app's internal OPFS layout — the core can reorganise its storage without breaking plugins.
+The core passes a `FileSystemDirectoryHandle` in the `init` message. This handle _is_ the access contract: plugins operate within it rather than resolving core paths like `/workspaces/{id}/` themselves, so the core can reorganise its storage without breaking plugins. **What the handle points at depends on the surface:**
 
-The shared output directory holds the packaged epub files the main app produces. The publish plugin lists and uploads these; the core's own Publish feature lists and downloads them.
+- **`view` (publish)** — the shared output directory holding the packaged epub files the main app produces. The publish plugin lists and uploads these; the core's own Publish feature lists and downloads them.
+- **`panel` (audio clip editor)** — the **active project's workspace root**. A plugin is a trusted extension of the core app, not a security boundary: the panel plugin navigates the EPUB-standard container structure itself (`META-INF/container.xml` → OPF → manifest) to find the files it works on, and keeps its project-resident data under `SOURCE/plugins/{id}/` inside that workspace (see process/AUDIO_CLIP_PLUGIN_DESIGN.md). Within the workspace it follows EPUB structure, not core-internal conventions.
 
 ### Plugin-private storage
 
@@ -156,9 +157,9 @@ Credentials stored in OPFS are volatile: not backed up, not synced, and lost if 
 ### `panel` plugins
 
 1. User toggles the panel from the editor toolbar.
-2. Main app mounts the iframe with the plugin entry point.
-3. On iframe load, main app sends `init`.
-4. Plugin renders its UI; accesses its own OPFS storage as needed.
+2. Main app mounts the iframe with the plugin entry point (host component: `src/lib/components/plugins/PluginPanel.svelte`).
+3. Plugin posts `plugin-ready`; main app answers with `init` (workspace-root handle) and `context`. If the handshake never completes (offline, 404, crash) — or there is no OPFS backend to hand over — the panel falls back to the built-in core feature with a retry affordance.
+4. Plugin renders its UI, reading the workspace through the handed handle.
 5. Plugin sends `insert` to place content at the cursor.
 6. User toggles the panel closed (main app unmounts the iframe).
 

@@ -62,6 +62,7 @@
     transformEngine = null as any,
     readOnly = false,
     advancedMode = false,
+    audioPluginUrl = null,
     onPreviewUpdate,
     onWorkspaceUpdate,
   }: {
@@ -76,6 +77,9 @@
     readOnly?: boolean;
     /** Basic mode hides JavaScript/transform entries from the file dropdown. */
     advancedMode?: boolean;
+    /** Resolved iframe src for the audio clip panel plugin (supersedes the
+        built-in audio clip editor when set). */
+    audioPluginUrl?: string | null;
     onPreviewUpdate?: (detail: {
       xhtmlContent: string;
       isTransforming: boolean;
@@ -1543,6 +1547,7 @@
       {workspaceService}
       {settingsService}
       {generatorRunner}
+      {audioPluginUrl}
     />
   </div>
 {:else}
