@@ -1153,6 +1153,7 @@
             title={isReadOnly
               ? $t("This EPUB wasn't created in the Simple EPUB Editor, so it can't be repackaged.")
               : $t('Package EPUB')}
+            data-testid="package-epub"
           >
             <Package size={18} aria-hidden="true" />
             <span class="package-label">{$t('Package EPUB')}</span>

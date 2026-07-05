@@ -48,6 +48,7 @@
       onclick={handleCreateNew}
       disabled={isLoading}
       aria-label={$t('Create a new minimal EPUB project')}
+      data-testid="create-project"
     >
       {$t('Create New')}
     </button>

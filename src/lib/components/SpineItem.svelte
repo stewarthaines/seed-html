@@ -148,6 +148,7 @@
     onclick={onSelect}
     aria-pressed={isSelected}
     aria-label={`${displayLabel}${hasWarning ? ', has validation error' : ''}`}
+    data-testid={`spine-item-${item.id}`}
   >
     <span class="chapter-id">{displayLabel}</span>
   </button>

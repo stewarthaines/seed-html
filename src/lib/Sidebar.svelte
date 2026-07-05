@@ -321,6 +321,7 @@
             onclick={() => setSidebarSection(section.id)}
             aria-current={activeSection === section.id ? 'page' : undefined}
             title={subLabel ? `${sectionLabel(section)} (${subLabel})` : sectionLabel(section)}
+            data-testid={`nav-${section.id}`}
           >
             <span class="section-icon">
               <Icon
@@ -354,6 +355,7 @@
             onclick={() => setSidebarSection(section.id)}
             aria-current={activeSection === section.id ? 'page' : undefined}
             title={$t(section.label)}
+            data-testid={`nav-${section.id}`}
           >
             <span class="section-icon">
               <Icon
