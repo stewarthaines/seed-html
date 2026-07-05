@@ -195,17 +195,12 @@
   }
 
   /**
-   * Toggle audio clip editor visibility
+   * Toggle an insert panel (audio clip editor / images / generators). One panel
+   * at a time — selecting another closes the current, mirroring the preview's
+   * Checks dropdown semantics.
    */
-  function toggleAudioEditor(): void {
-    audioEditorVisible = !audioEditorVisible;
-  }
-
-  /**
-   * Toggle the generators panel visibility
-   */
-  function toggleGeneratorPanel(): void {
-    generatorPanelVisible = !generatorPanelVisible;
+  function toggleInsertPanel(id: InsertPanelId | null): void {
+    activeInsertPanel = activeInsertPanel === id ? null : id;
   }
 
   /**
@@ -671,12 +666,17 @@
     return () => window.removeEventListener('seed:base-captured', handler);
   });
 
-  // Audio clip editor state
-  let audioEditorVisible = $state<boolean>(false);
+  // Insert panels (audio clip editor / images / generators): one active at a
+  // time. The per-panel `…Visible` names survive as deriveds so the render
+  // blocks read as before.
+  type InsertPanelId = 'audio' | 'images' | 'generators';
+  let activeInsertPanel = $state<InsertPanelId | null>(null);
+  const audioEditorVisible = $derived(activeInsertPanel === 'audio');
+  const mediaBrowserVisible = $derived(activeInsertPanel === 'images');
+  const generatorPanelVisible = $derived(activeInsertPanel === 'generators');
+
   let textareaSelection = $state<{ start: number; end: number } | null>(null);
 
-  // Generators panel state
-  let generatorPanelVisible = $state<boolean>(false);
   let hasGenerators = $derived(!!generatorRunner && generatorRunner.generators.length > 0);
   // A text source pane is active (so inserting at the caret makes sense).
   let textPaneActive = $derived(
@@ -695,10 +695,34 @@
   );
 
   // Media browser: thumbnails of the manifest's images, click to insert.
-  let mediaBrowserVisible = $state<boolean>(false);
   let hasImageFiles = $derived(
     !!workspace?.opf?.manifest?.some(item => item.mediaType?.startsWith('image/'))
   );
+
+  // The insert panels currently offerable, in display order. When more than one
+  // is available they collapse into a single "Insert" dropdown (same pattern as
+  // the preview's Checks dropdown).
+  const availableInsertPanels = $derived.by(() => {
+    const list: { id: InsertPanelId; label: string }[] = [];
+    if (textPaneActive && hasAudioFiles && audioClipService && workspace) {
+      list.push({ id: 'audio', label: $t('Audio Clip Editor') });
+    }
+    if (textPaneActive && hasImageFiles && workspace && workspaceService) {
+      list.push({ id: 'images', label: $t('Images') });
+    }
+    if (textPaneActive && hasGenerators) {
+      list.push({ id: 'generators', label: $t('Generators') });
+    }
+    return list;
+  });
+
+  // Close a panel whose prerequisites vanished (file switched away from text,
+  // media removed, …) so a stale panel doesn't linger.
+  $effect(() => {
+    if (activeInsertPanel && !availableInsertPanels.some(p => p.id === activeInsertPanel)) {
+      activeInsertPanel = null;
+    }
+  });
 
   // Determine which pane has text content
   let textContentPane = $derived(
@@ -1033,44 +1057,36 @@
         {@render chapterTitleInput()}
       {/if}
 
-      {#if ((pane1SelectedFile === 'text' && editorMode === 'single') || (editorMode === 'dual' && (pane1SelectedFile === 'text' || pane2SelectedFile === 'text'))) && hasAudioFiles && audioClipService && workspace}
+      {#if availableInsertPanels.length >= 2}
+        <!-- More than one insert panel available: collapse into a single
+             dropdown, with an "Insert" entry as the none-open state (same
+             pattern as the preview's Checks dropdown). -->
+        <select
+          class="insert-selector"
+          value={activeInsertPanel ?? ''}
+          onchange={e =>
+            (activeInsertPanel = ((e.currentTarget as HTMLSelectElement).value ||
+              null) as InsertPanelId | null)}
+          aria-label={$t('Insert panel')}
+        >
+          <option value="">{$t('Insert')}</option>
+          {#each availableInsertPanels as panel (panel.id)}
+            <option value={panel.id}>{panel.label}</option>
+          {/each}
+        </select>
+      {:else if availableInsertPanels.length === 1}
+        {@const panel = availableInsertPanels[0]}
         <button
           type="button"
-          class="audio-toggle-btn"
-          class:active={audioEditorVisible}
-          onclick={toggleAudioEditor}
-          title={audioEditorVisible ? $t('Hide Audio Clip Editor') : $t('Show Audio Clip Editor')}
-          aria-label={audioEditorVisible
-            ? $t('Hide Audio Clip Editor')
-            : $t('Show Audio Clip Editor')}
+          class={panel.id === 'audio' ? 'audio-toggle-btn' : 'generator-toggle-btn'}
+          class:active={activeInsertPanel === panel.id}
+          onclick={() => toggleInsertPanel(panel.id)}
+          aria-pressed={activeInsertPanel === panel.id}
+          title={activeInsertPanel === panel.id
+            ? $t('Hide {name}', { name: panel.label })
+            : $t('Show {name}', { name: panel.label })}
         >
-          {$t('Audio Clip Editor')}
-        </button>
-      {/if}
-
-      {#if textPaneActive && hasImageFiles && workspace && workspaceService}
-        <button
-          type="button"
-          class="generator-toggle-btn"
-          class:active={mediaBrowserVisible}
-          onclick={() => (mediaBrowserVisible = !mediaBrowserVisible)}
-          title={mediaBrowserVisible ? $t('Hide Images') : $t('Show Images')}
-          aria-label={mediaBrowserVisible ? $t('Hide Images') : $t('Show Images')}
-        >
-          {$t('Images')}
-        </button>
-      {/if}
-
-      {#if textPaneActive && hasGenerators}
-        <button
-          type="button"
-          class="generator-toggle-btn"
-          class:active={generatorPanelVisible}
-          onclick={toggleGeneratorPanel}
-          title={generatorPanelVisible ? $t('Hide Generators') : $t('Show Generators')}
-          aria-label={generatorPanelVisible ? $t('Hide Generators') : $t('Show Generators')}
-        >
-          {$t('Generators')}
+          {panel.label}
         </button>
       {/if}
 
@@ -1526,6 +1542,24 @@
     flex: 1;
     overflow: hidden;
     position: relative; /* For absolute positioning of error overlay */
+  }
+
+  /* Collapsed insert-panel dropdown — mirrors the preview's Checks dropdown
+     (.panel-selector in PreviewPane.svelte). */
+  .insert-selector {
+    padding: var(--space-2);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
+    cursor: pointer;
+  }
+
+  .insert-selector:focus {
+    outline: none;
+    border-color: var(--color-accent-primary);
+    box-shadow: 0 0 0 var(--focus-ring-width) var(--color-focus);
   }
 
   /* Media-file drag hover: about to import + insert at the caret. */

@@ -1569,15 +1569,7 @@ msgid "Hazards"
 msgstr "Gefahren"
 
 #: src/lib/components/spine/EditorPane.svelte
-msgid "Hide Audio Clip Editor"
-msgstr "Audioclip-Editor ausblenden"
-
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Hide Generators"
-msgstr "Generatoren ausblenden"
-
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Hide Images"
+msgid "Hide {name}"
 msgstr ""
 
 #: src/lib/Sidebar.svelte
@@ -1706,6 +1698,7 @@ msgid "Inject the project’s preview/head.xml (edit it via the spine editor’s
 msgstr "Fügt die preview/head.xml des Projekts (im erweiterten Modus über das Dateimenü des Kapitel-Editors bearbeitbar) je Vorschautyp in den Vorschau-Head ein. Nur zur Bearbeitungszeit – wird nie in das gepackte EPUB aufgenommen."
 
 #: plugins/audio-clip-editor/src/App.svelte
+#: src/lib/components/spine/EditorPane.svelte
 msgid "Insert"
 msgstr ""
 
@@ -1724,6 +1717,10 @@ msgstr "Clip-Direktive einfügen"
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Insert clip directive at cursor position"
 msgstr "Clip-Direktive an der Cursorposition einfügen"
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Insert panel"
+msgstr ""
 
 #: plugins/audio-clip-editor/src/App.svelte
 msgid "Insert the clip directive at the editor cursor"
@@ -2957,21 +2954,13 @@ msgstr "Einstellungen"
 msgid "Short"
 msgstr "Kurz"
 
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Show {name}"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Show a page number at the bottom of each page."
 msgstr "Eine Seitenzahl am unteren Rand jeder Seite anzeigen."
-
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Show Audio Clip Editor"
-msgstr "Audioclip-Editor anzeigen"
-
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Show Generators"
-msgstr "Generatoren anzeigen"
-
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Show Images"
-msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Show panel"
