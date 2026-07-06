@@ -20,6 +20,8 @@ const config: StorybookConfig = {
     config.resolve.alias = {
       ...config.resolve.alias,
       $lib: path.resolve(__dirname, '../src/lib'),
+      // Mirror vite.config.ts's icon-subset alias (see scripts/generate-icons.js).
+      'phosphor-svelte': path.resolve(__dirname, '../src/lib/icons/generated/index.ts'),
     };
 
     // Enable JSON imports for translation files

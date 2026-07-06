@@ -2,6 +2,7 @@ import { chromium } from 'playwright';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as http from 'http';
+import * as zlib from 'zlib';
 import { pathToFileURL } from 'url';
 
 /**
@@ -21,6 +22,11 @@ const distDir = path.resolve(process.cwd(), 'dist');
 const indexPath = path.join(distDir, 'index.html');
 const PORT = 4178;
 const MOUNT_TIMEOUT_MS = 20000;
+
+// Size budget for the embeddable single file (process/ICON_CSS_SIZE_REDUCTION.md).
+// Current build is ~979KB; the headroom is for organic feature growth. Raise this
+// DELIBERATELY (with a changelog-worthy reason), never to silence the failure.
+const SIZE_BUDGET_KB = 1010;
 
 // Console errors that are noise, not boot failures.
 const IGNORED_CONSOLE = [/favicon\.ico/i, /Failed to load resource.*favicon/i];
@@ -71,6 +77,19 @@ function startServer() {
 function artifactChecks() {
   const problems = [];
   const html = fs.readFileSync(indexPath, 'utf8');
+
+  // Size budget: the single file is embedded in every published EPUB, so growth
+  // is a product cost — make it visible in every smoke run.
+  const sizeKB = Buffer.byteLength(html) / 1024;
+  const gzipKB = zlib.gzipSync(html).length / 1024;
+  console.log(
+    `• [artifact] dist/index.html ${sizeKB.toFixed(1)}KB (gzip ${gzipKB.toFixed(1)}KB), budget ${SIZE_BUDGET_KB}KB`
+  );
+  if (sizeKB > SIZE_BUDGET_KB) {
+    problems.push(
+      `[artifact] dist/index.html is ${sizeKB.toFixed(1)}KB — over the ${SIZE_BUDGET_KB}KB budget (raise SIZE_BUDGET_KB deliberately if this growth is intended)`
+    );
+  }
 
   // The i18n anchor must survive the single-file inlining: it is the injection
   // target for localized SEED.html embedding (see vite.config.ts i18n-inline-anchor).

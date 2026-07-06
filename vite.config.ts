@@ -4,7 +4,6 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { viteSingleFile } from "vite-plugin-singlefile";
-import { sveltePhosphorOptimize } from "phosphor-svelte/vite";
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import { visualizer } from "rollup-plugin-visualizer";
 import analyzer from "rollup-plugin-analyzer";
@@ -20,7 +19,13 @@ const dirname =
 export default defineConfig({
   resolve: {
     alias: {
-      '$lib': path.resolve(dirname, 'src/lib')
+      '$lib': path.resolve(dirname, 'src/lib'),
+      // Icon subset: 'phosphor-svelte' resolves to the generated single-weight
+      // components (scripts/generate-icons.js) so the build ships only the
+      // icons/weights the app uses. Mirrored in vitest.config.unit.ts,
+      // tsconfig.app.json paths, and .storybook/main.ts. Delete this line to
+      // fall back to the stock package.
+      'phosphor-svelte': path.resolve(dirname, 'src/lib/icons/generated/index.ts')
     }
   },
   build: {
@@ -62,10 +67,6 @@ export default defineConfig({
       },
     }),
     svelte(),
-    // Rewrite barrel `import { Foo } from 'phosphor-svelte'` → per-icon subpath
-    // imports so Vite's dev pre-bundle doesn't expand the whole icon set. Runs
-    // after svelte() so it sees the compiled JS that still carries the import.
-    sveltePhosphorOptimize(),
     // Inject the i18n bundle anchor. The base build carries NO catalog bytes —
     // English resolves from msgids, other locales arrive over http (locales/
     // sidecar) or are spliced into this exact assignment when the app embeds a

@@ -12,26 +12,13 @@
      ============================================ */
 
   /* Base shadows */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
-  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.25);
-  --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.06);
-  --shadow-none: none;
 
   /* Colored shadows */
-  --shadow-primary: 0 4px 14px rgba(59, 130, 246, 0.25);
-  --shadow-success: 0 4px 14px rgba(34, 197, 94, 0.25);
-  --shadow-warning: 0 4px 14px rgba(245, 158, 11, 0.25);
-  --shadow-error: 0 4px 14px rgba(239, 68, 68, 0.25);
 
   /* Focus shadows */
   --shadow-focus-primary: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  --shadow-focus-success: 0 0 0 3px rgba(34, 197, 94, 0.1);
-  --shadow-focus-warning: 0 0 0 3px rgba(245, 158, 11, 0.1);
-  --shadow-focus-error: 0 0 0 3px rgba(239, 68, 68, 0.1);
 
   /* ============================================
      Z-INDEX LAYERS
@@ -39,23 +26,12 @@
      ============================================ */
 
   /* Base layers */
-  --z-base: 0;
-  --z-raised: 10;
-  --z-overlay: 20;
-  --z-sticky: 30;
-  --z-fixed: 40;
 
   /* Interactive layers */
-  --z-dropdown: 1000;
-  --z-tooltip: 1100;
-  --z-modal-backdrop: 1200;
   --z-modal: 1300;
-  --z-popover: 1400;
   --z-toast: 1500;
-  --z-loading: 1600;
 
   /* Maximum layer */
-  --z-maximum: 9999;
 
   /* ============================================
      SEMANTIC ELEVATION LEVELS
@@ -63,42 +39,21 @@
      ============================================ */
 
   /* Card elevations */
-  --elevation-card-flat: var(--shadow-none);
   --elevation-card-raised: var(--shadow-sm);
-  --elevation-card-floating: var(--shadow-md);
-  --elevation-card-elevated: var(--shadow-lg);
 
   /* Panel elevations */
-  --elevation-panel-flat: var(--shadow-none);
-  --elevation-panel-inset: var(--shadow-inner);
-  --elevation-panel-raised: var(--shadow-sm);
-  --elevation-panel-floating: var(--shadow-lg);
 
   /* Button elevations */
-  --elevation-button-flat: var(--shadow-none);
-  --elevation-button-raised: var(--shadow-sm);
-  --elevation-button-hover: var(--shadow-md);
-  --elevation-button-active: var(--shadow-xs);
 
   /* Input elevations */
-  --elevation-input-flat: var(--shadow-none);
-  --elevation-input-inset: var(--shadow-inner);
-  --elevation-input-focus: var(--shadow-focus-primary);
 
   /* Navigation elevations */
-  --elevation-nav-flat: var(--shadow-none);
-  --elevation-nav-floating: var(--shadow-md);
-  --elevation-nav-sticky: var(--shadow-sm);
 
   /* Modal elevations */
-  --elevation-modal-backdrop: var(--shadow-none);
-  --elevation-modal: var(--shadow-2xl);
 
   /* Tooltip elevations */
-  --elevation-tooltip: var(--shadow-lg);
 
   /* Dropdown elevations */
-  --elevation-dropdown: var(--shadow-lg);
 
   /* ============================================
      LAYOUT-SPECIFIC ELEVATIONS
@@ -106,20 +61,12 @@
      ============================================ */
 
   /* Sidebar elevation */
-  --elevation-sidebar: var(--shadow-sm);
-  --elevation-sidebar-floating: var(--shadow-md);
 
   /* Header elevation */
-  --elevation-header: var(--shadow-sm);
-  --elevation-header-floating: var(--shadow-md);
 
   /* Content panels */
-  --elevation-content-primary: var(--shadow-none);
-  --elevation-content-secondary: var(--shadow-sm);
 
   /* Resize handle elevation */
-  --elevation-resize-handle: var(--shadow-none);
-  --elevation-resize-handle-hover: var(--shadow-sm);
 
   /* ============================================
      BORDER STYLES
@@ -127,49 +74,16 @@
      ============================================ */
 
   /* Border widths */
-  --border-width-0: 0;
   --border-width-1: 1px;
-  --border-width-2: 2px;
-  --border-width-4: 4px;
-  --border-width-8: 8px;
 
   /* Border styles */
-  --border-style-solid: solid;
-  --border-style-dashed: dashed;
-  --border-style-dotted: dotted;
-  --border-style-none: none;
 
   /* Component border combinations */
-  --border-default: var(--border-width-1) var(--border-style-solid) var(--color-border-default);
-  --border-strong: var(--border-width-1) var(--border-style-solid) var(--color-border-strong);
-  --border-accent: var(--border-width-1) var(--border-style-solid) var(--color-border-accent);
-  --border-focus: var(--border-width-2) var(--border-style-solid) var(--color-border-focus);
 
   /* ============================================
      OPACITY LEVELS
      For overlays and disabled states
      ============================================ */
 
-  --opacity-0: 0;
-  --opacity-5: 0.05;
-  --opacity-10: 0.1;
-  --opacity-20: 0.2;
-  --opacity-25: 0.25;
-  --opacity-30: 0.3;
-  --opacity-40: 0.4;
-  --opacity-50: 0.5;
-  --opacity-60: 0.6;
-  --opacity-70: 0.7;
-  --opacity-75: 0.75;
-  --opacity-80: 0.8;
-  --opacity-90: 0.9;
-  --opacity-95: 0.95;
-  --opacity-100: 1;
-
   /* Semantic opacity levels */
-  --opacity-disabled: var(--opacity-50);
-  --opacity-hover: var(--opacity-80);
-  --opacity-loading: var(--opacity-60);
-  --opacity-overlay: var(--opacity-50);
-  --opacity-backdrop: var(--opacity-75);
 }

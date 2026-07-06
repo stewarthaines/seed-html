@@ -37,3 +37,6 @@ vitest.config.ts
 .DS_Store
 *.tmp
 *.log
+
+# Generated icon subset (scripts/generate-icons.js) — byte-stable output, not formatted
+src/lib/icons/generated/

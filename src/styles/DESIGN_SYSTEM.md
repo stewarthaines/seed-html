@@ -1,12 +1,14 @@
-# CSS Design System for EDITME.html EPUB Editor
+# CSS Design System for SEED.html EPUB Editor
 
 ## Overview
 
 This document describes a comprehensive CSS architecture designed to maximize style reuse while minimizing CSS bundle size. The system is optimized for Svelte's component model and provides a scalable foundation for the EPUB editor interface.
 
-> **Related design docs (same folder):** [design-language.md](./design-language.md) (visual
-> identity & principles) and [button-design-system.md](./button-design-system.md) (the
-> `.btn-*` utility classes).
+> **Related design docs (same folder):** [design-language.md](./design-language.md) (visual identity & principles) and [button-design-system.md](./button-design-system.md) (the `.btn-*` utility classes).
+
+> **Lean by design:** the token and utility inventory is intentionally small — entries that nothing references are pruned at the source level (see [process/ICON_CSS_SIZE_REDUCTION.md](../../process/ICON_CSS_SIZE_REDUCTION.md)).
+> Before referencing a token in new code, check it actually exists in `src/styles/` (grep for its declaration); if you need something that was pruned, re-add it deliberately rather than assuming a whole family exists.
+> A real bug once shipped from referencing primary-scale color steps that were never defined — for accents, the safe tokens are `--color-interactive-primary` and `--color-bg-accent`.
 
 ## Design Philosophy
 
@@ -16,7 +18,7 @@ This document describes a comprehensive CSS architecture designed to maximize st
 2. **Component Scoped by Default** - Leverage Svelte's built-in CSS scoping for component styles
 3. **Utilities for Common Patterns** - Atomic utility classes for frequent layout and styling needs
 4. **Theme-Aware Everything** - Light/dark mode and extensible theming built into the foundation
-5. **Performance Optimized** - Minimal CSS through strategic organization and tooling
+5. **Performance Optimized** - Minimal CSS through strategic organization and source-level pruning
 
 ### Svelte-Specific Optimizations
 
@@ -31,31 +33,22 @@ This document describes a comprehensive CSS architecture designed to maximize st
 src/styles/
 ├── tokens/                 # Design tokens (CSS custom properties)
 │   ├── colors.css         # Color palette and semantic colors
-│   ├── spacing.css        # Spacing scale and layout tokens
+│   ├── spacing.css        # Spacing scale, radii, focus/touch-target measurements
 │   ├── typography.css     # Font families, sizes, weights, line heights
 │   ├── elevation.css      # Shadows and z-index layers
-│   ├── motion.css         # Animation durations and easings
-│   └── index.css          # Exports all tokens
+│   ├── motion.css         # Animation durations, easings, transitions
+│   └── index.css          # Imports all tokens
 ├── themes/                # Theme implementations
+│   ├── theme-base.css     # Theme switching mechanism and global theme behaviors
 │   ├── light.css          # Light theme variable overrides
 │   ├── dark.css           # Dark theme variable overrides
-│   ├── theme-base.css     # Theme switching mechanism
-│   └── index.css          # Theme system exports
+│   └── index.css          # Theme system imports
 ├── utilities/             # Atomic utility classes
-│   ├── layout.css         # Display, position, flexbox, grid
-│   ├── spacing.css        # Margin, padding utilities
-│   ├── typography.css     # Text styling utilities
-│   ├── colors.css         # Color and background utilities
-│   ├── borders.css        # Border and border-radius utilities
-│   ├── interactive.css    # Focus, hover, disabled states
-│   └── index.css          # All utilities export
-├── components/            # Shared component patterns
-│   ├── buttons.css        # Button style patterns
-│   ├── forms.css          # Form element patterns
-│   ├── panels.css         # Panel and card patterns
-│   ├── navigation.css     # Navigation component patterns
-│   └── index.css          # Component pattern exports
-└── index.css              # Main stylesheet (imports all systems)
+│   ├── layout.css         # Display, position, container, accessibility utilities
+│   └── forms.css          # Form element styles and the .btn-* button classes
+├── global.css             # Base element resets and global styles
+├── app.css                # App shell styles (#app container, viewport)
+└── index.css              # Main stylesheet (imports all of the above, in order)
 ```
 
 ## Design Token System
@@ -65,70 +58,87 @@ src/styles/
 #### 1. Color Tokens
 
 ```css
-/* Primitive colors - neutral palette */
---color-neutral-50: #fafafa;
---color-neutral-100: #f5f5f5;
-/* ... full neutral scale ... */
---color-neutral-950: #0a0a0a;
+/* Primitive colors - neutral palette (Craigslist-inspired) */
+--color-neutral-50: #ffffff;
+--color-neutral-100: #f8f8f8;
+/* ... full neutral scale through ... */
+--color-neutral-900: #222222;
 
-/* Brand colors */
---color-primary-50: #eff6ff;
-/* ... primary scale ... */
---color-primary-950: #1e3a8a;
+/* Brand primary (Craigslist link blue) - partial scale */
+--color-primary-600: #0000ee;
+--color-primary-700: #0000cc;
 
 /* Semantic colors - derived from primitives */
---color-bg-primary: var(--color-neutral-50);
---color-bg-secondary: var(--color-neutral-100);
+--color-bg-primary: var(--color-white);
+--color-bg-secondary: var(--color-craigslist-bg);
 --color-text-primary: var(--color-neutral-900);
 --color-text-secondary: var(--color-neutral-600);
---color-border-default: var(--color-neutral-200);
---color-accent: var(--color-primary-600);
+--color-border-default: var(--color-craigslist-border);
+--color-interactive-primary: var(--color-primary-600);
+
+/* Brand accent - azure highlight for interactive affordances */
+--color-accent: #0074d9;
+--color-hover-accent: #0074d9; /* button-hover fill; AA with white text in both themes */
+--color-on-accent: var(--color-white);
 ```
+
+The primitive scales (`neutral`, `primary`, `success`, `warning`, `error`) are **partial** — only the steps something actually references exist, so never assume a step is defined without checking `tokens/colors.css`.
+Always prefer semantic tokens over primitives: the surviving families cover backgrounds, text, borders, interactive states and surfaces (e.g. `--color-bg-primary`, `--color-text-secondary`, `--color-border-default`, `--color-interactive-primary`, `--color-surface-elevated` and their siblings), plus component tokens for buttons, inputs and the sidebar (e.g. `--color-button-primary-bg`, `--color-input-border`, `--color-sidebar-bg`), status colors (`--color-status-warning`, `--color-status-error`) and WCAG-AA validation colors (`--color-error-text`/`--color-error-bg`, `--color-success-text`/`--color-success-bg`, `--color-warning-text`/`--color-warning-bg`).
+A block of compatibility aliases in `tokens/colors.css` (e.g. `--color-accent-primary`, `--color-bg-hover`, `--color-error`, `--color-warning`) maps legacy names onto the canonical tokens — don't extend it, use the canonical names in new code.
 
 #### 2. Spacing Tokens
 
 ```css
-/* Spacing scale (0.25rem base unit) */
+/* Spacing scale (0.25rem base unit) - the scale stops at --space-8 */
+--space-0-5: 0.125rem; /* 2px */
 --space-1: 0.25rem; /* 4px */
+--space-1-5: 0.375rem; /* 6px */
 --space-2: 0.5rem; /* 8px */
 --space-3: 0.75rem; /* 12px */
 --space-4: 1rem; /* 16px */
 --space-5: 1.25rem; /* 20px */
 --space-6: 1.5rem; /* 24px */
 --space-8: 2rem; /* 32px */
---space-10: 2.5rem; /* 40px */
---space-12: 3rem; /* 48px */
---space-16: 4rem; /* 64px */
---space-20: 5rem; /* 80px */
---space-24: 6rem; /* 96px */
 
-/* Layout-specific spacing */
---layout-sidebar-width: 250px;
---layout-sidebar-collapsed: 40px;
---layout-content-padding: var(--space-6);
---layout-panel-gap: var(--space-4);
+/* Border radius */
+--radius-xs: 0.0625rem; /* 1px */
+--radius-sm: 0.125rem; /* 2px */
+--radius-md: 0.1875rem; /* 3px */
+--radius-lg: 0.25rem; /* 4px */
+--radius-full: 9999px;
+--radius-button: var(--radius-sm);
+--radius-input: var(--radius-xs);
+
+/* Component spacing */
+--button-padding-inline: var(--space-2);
+--button-padding-block: var(--space-1);
+--button-gap: var(--space-1);
+--form-field-spacing: var(--space-2);
 ```
+
+There are no layout-dimension tokens (the old sidebar/panel width tokens are gone) — layout components size themselves in their own scoped styles.
 
 #### 3. Typography Tokens
 
 ```css
 /* Font families */
---font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
---font-mono: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+--font-sans: Helvetica, Arial, sans-serif;
+--font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
 
-/* Font sizes (modular scale) */
---text-xs: 0.75rem; /* 12px */
---text-sm: 0.875rem; /* 14px */
---text-base: 1rem; /* 16px */
---text-lg: 1.125rem; /* 18px */
---text-xl: 1.25rem; /* 20px */
---text-2xl: 1.5rem; /* 24px */
---text-3xl: 1.875rem; /* 30px */
+/* Font sizes (14px base) */
+--text-xs: 0.6875rem; /* 11px */
+--text-sm: 0.8125rem; /* 13px */
+--text-base: 0.875rem; /* 14px - base size */
+--text-lg: 1rem; /* 16px */
+--text-xl: 1.125rem; /* 18px */
+--text-2xl: 1.25rem; /* 20px */
+--text-3xl: 1.5rem; /* 24px */
+--text-4xl: 1.875rem; /* 30px */
 
 /* Line heights */
---leading-tight: 1.25;
---leading-normal: 1.5;
---leading-relaxed: 1.75;
+--leading-tight: 1.2;
+--leading-normal: 1.4;
+--leading-relaxed: 1.5;
 
 /* Font weights */
 --font-normal: 400;
@@ -137,22 +147,27 @@ src/styles/
 --font-bold: 700;
 ```
 
+Semantic combinations map onto the size scale: `--text-heading-2xl` … `--text-heading-xs` (used by `global.css` for `h1`–`h6`), `--text-body-md`, and `--text-label-md`.
+Component typography tokens: `--button-text-md`, `--button-text-sm`, `--button-font-weight`, `--input-text-size`, `--input-font-weight`, `--input-placeholder-weight`, and `--code-text-size`.
+Link styling tokens: `--link-text-decoration`, `--link-text-decoration-hover`, `--link-underline-offset`; letter spacing has a single token, `--tracking-wide`.
+
 #### 4. Elevation Tokens
 
 ```css
-/* Shadow levels */
---shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
---shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
---shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
---shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+/* Shadow levels - sm and lg only */
+--shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+--shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+--shadow-focus-primary: 0 0 0 3px rgba(59, 130, 246, 0.1);
 
 /* Z-index layers */
---z-base: 0;
---z-raised: 10;
---z-dropdown: 1000;
---z-modal: 1100;
---z-tooltip: 1200;
---z-toast: 1300;
+--z-modal: 1300;
+--z-toast: 1500;
+
+/* Semantic elevation */
+--elevation-card-raised: var(--shadow-sm);
+
+/* Border width */
+--border-width-1: 1px;
 ```
 
 #### 5. Accessibility Tokens
@@ -165,72 +180,48 @@ src/styles/
 --focus-ring-offset: 2px;
 --focus-ring-style: solid;
 
-/* High contrast mode support */
+/* High contrast mode support (system colors) */
 --color-forced-bg: Canvas;
 --color-forced-text: CanvasText;
 --color-forced-border: ButtonBorder;
 --color-forced-link: LinkText;
+--color-forced-active: ActiveText;
 
-/* Motion preferences */
---duration-instant: 0ms;
---duration-fast: 150ms;
---duration-normal: 300ms;
---duration-slow: 500ms;
-
-/* Reduced motion overrides */
-@media (prefers-reduced-motion: reduce) {
-  :root {
-    --duration-fast: 0ms;
-    --duration-normal: 0ms;
-    --duration-slow: 0ms;
-  }
-}
-
-/* Screen reader utilities */
---sr-only: {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-};
+/* Touch targets and screen readers */
+--touch-target-min: 44px; /* WCAG AA minimum */
+--sr-only-clip: rect(0, 0, 0, 0);
 ```
 
-#### 6. Internationalization Tokens
+#### 6. Motion Tokens
 
 ```css
-/* Direction-aware layout */
---layout-direction: ltr; /* Default, overridden by [dir="rtl"] */
+/* Durations */
+--duration-fast: 150ms;
+--duration-normal: 250ms;
+--duration-button-hover: var(--duration-fast);
+--duration-theme-switch: var(--duration-normal);
 
-/* RTL-aware spacing (automatically flipped in RTL) */
---space-inline-start: var(--space-4);
---space-inline-end: var(--space-2);
+/* Easing */
+--ease-out: cubic-bezier(0, 0, 0.2, 1);
+--ease-ui-out: var(--ease-out); /* for elements entering */
+```
 
-/* Typography for international scripts */
---font-arabic: 'Noto Sans Arabic', 'Arabic UI Text', sans-serif;
---font-hebrew: 'Noto Sans Hebrew', 'Hebrew UI Text', sans-serif;
---font-cjk: 'Noto Sans CJK', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+Pre-defined transition combinations: `--transition-colors`, `--transition-shadow`, `--transition-button`, and `--transition-theme` (see `tokens/motion.css` for the full values).
+Under `prefers-reduced-motion: reduce` the durations shorten and `global.css`/`theme-base.css` disable transitions and animations outright.
 
-/* Line height adjustments for different scripts */
---leading-arabic: 1.75; /* Accommodates diacritics */
---leading-cjk: 1.6; /* Optimal for CJK characters */
---leading-latin: 1.5; /* Standard for Latin scripts */
+#### 7. RTL Support
 
-/* Text direction utilities */
---text-align-start: left; /* Overridden in RTL */
---text-align-end: right; /* Overridden in RTL */
+There are no dedicated i18n tokens.
+RTL support comes from using CSS logical properties throughout (`padding-inline`, `margin-block-end`, `border-inline-start`, …) plus a `data-dir` attribute on the root element:
 
-/* RTL layout overrides */
-[dir='rtl'] {
-  --layout-direction: rtl;
-  --text-align-start: right;
-  --text-align-end: left;
+```css
+/* global.css */
+:root[data-dir='rtl'] {
+  direction: rtl;
 }
 ```
+
+Direction-specific details override under `[data-dir='rtl']` — for example the `.select` dropdown arrow position in `utilities/forms.css`.
 
 ## Theme System
 
@@ -241,7 +232,7 @@ The theme system uses CSS custom properties and data attributes for switching:
 ```css
 /* Base theme variables in :root */
 :root {
-  --color-bg-primary: var(--color-neutral-50);
+  --color-bg-primary: var(--color-white);
   --color-text-primary: var(--color-neutral-900);
 }
 
@@ -269,134 +260,32 @@ The theme system uses CSS custom properties and data attributes for switching:
 
 ### Utility Philosophy
 
-- **Atomic Classes** - Single responsibility utilities (`.text-sm`, `.p-4`)
-- **Responsive Variants** - Breakpoint-specific utilities (`.md:text-lg`)
-- **State Variants** - Hover, focus, disabled states (`.hover:bg-primary`)
-- **Minimal Set** - Only include utilities that are frequently used
+- **Atomic Classes** - Single responsibility utilities (`.flex`, `.hidden`)
+- **Minimal Set** - Only utilities that components actually reference exist; unreferenced classes are pruned
+- **No variant system** - There are no responsive (`md:`) or state (`hover:`) utility variants; put those styles in component `<style>` blocks
 
-### Common Utility Patterns
+### Utility Inventory
 
-#### Logical Properties for RTL Support
+Everything below is defined in `src/styles/utilities/` — this is the complete set.
 
-```css
-/* Spacing utilities - RTL-aware using logical properties */
-.p-4 {
-  padding: var(--space-4);
-}
+`layout.css`:
 
-/* Inline (horizontal) spacing - automatically flips in RTL */
-.px-4 {
-  padding-inline: var(--space-4);
-}
-.ps-4 {
-  padding-inline-start: var(--space-4);
-}
-.pe-4 {
-  padding-inline-end: var(--space-4);
-}
+- **Display**: `.block`, `.inline-block`, `.inline`, `.flex`, `.inline-flex`, `.grid`, `.table`, `.hidden`
+- **Position**: `.static`, `.fixed`, `.absolute`, `.relative`, `.sticky`
+- **Flexbox**: `.flex-wrap`, `.flex-shrink`
+- **Container**: `.container` (centered, responsive max-widths from 640px to 1536px)
+- **Stacking**: `.isolate`
+- **Accessibility**: `.sr-only`, `.focus-visible`, `.touch-target`
 
-/* Block (vertical) spacing - consistent in all directions */
-.py-4 {
-  padding-block: var(--space-4);
-}
-.pt-4 {
-  padding-block-start: var(--space-4);
-}
-.pb-4 {
-  padding-block-end: var(--space-4);
-}
+`forms.css`:
 
-/* Margin utilities with logical properties */
-.mx-auto {
-  margin-inline: auto;
-}
-.ms-4 {
-  margin-inline-start: var(--space-4);
-}
-.me-4 {
-  margin-inline-end: var(--space-4);
-}
+- **Form controls**: `.input`, `.textarea`, `.select`, `.checkbox`, `.radio`, `.label`, `.form-group`, `.field-error`, `.form-inline` (plus element styles for `fieldset`/`legend`)
+- **Buttons**: `.btn` and its variants (`.btn-primary`, `.btn-secondary`, `.btn-danger`, `.btn-link`, `.btn-icon`, `.btn-icon-sm`, `.btn-icon-lg`, `.btn-sm`) — see [button-design-system.md](./button-design-system.md)
 
-/* Legacy physical properties for backward compatibility */
-.px-4-legacy {
-  padding-left: var(--space-4);
-  padding-right: var(--space-4);
-}
-```
-
-#### Layout Utilities
+### Accessibility Utilities
 
 ```css
-/* Flexbox utilities */
-.flex {
-  display: flex;
-}
-.flex-col {
-  flex-direction: column;
-}
-.items-center {
-  align-items: center;
-}
-.justify-between {
-  justify-content: space-between;
-}
-
-/* Direction-aware positioning */
-.inset-inline-0 {
-  inset-inline: 0;
-}
-.start-0 {
-  inset-inline-start: 0;
-}
-.end-0 {
-  inset-inline-end: 0;
-}
-
-/* Text alignment using logical properties */
-.text-start {
-  text-align: start;
-}
-.text-end {
-  text-align: end;
-}
-.text-center {
-  text-align: center;
-}
-```
-
-#### Typography Utilities
-
-```css
-/* Font size utilities */
-.text-sm {
-  font-size: var(--text-sm);
-}
-.font-medium {
-  font-weight: var(--font-medium);
-}
-.leading-normal {
-  line-height: var(--leading-normal);
-}
-
-/* International typography */
-.font-arabic {
-  font-family: var(--font-arabic);
-  line-height: var(--leading-arabic);
-}
-.font-hebrew {
-  font-family: var(--font-hebrew);
-  line-height: var(--leading-arabic);
-}
-.font-cjk {
-  font-family: var(--font-cjk);
-  line-height: var(--leading-cjk);
-}
-```
-
-#### Accessibility Utilities
-
-```css
-/* Screen reader utilities */
+/* Screen reader only content */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -404,71 +293,21 @@ The theme system uses CSS custom properties and data attributes for switching:
   padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  clip: var(--sr-only-clip);
   white-space: nowrap;
   border: 0;
 }
 
-.sr-only-focusable:focus,
-.sr-only-focusable:active {
-  position: static;
-  width: auto;
-  height: auto;
-  padding: inherit;
-  margin: inherit;
-  overflow: visible;
-  clip: auto;
-  white-space: inherit;
-}
-
-/* Focus utilities */
+/* Focus management */
 .focus-visible {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
   outline-offset: var(--focus-ring-offset);
 }
 
-/* High contrast mode utilities */
-@media (prefers-contrast: high) {
-  .high-contrast-border {
-    border: 2px solid;
-  }
-  .high-contrast-text {
-    color: var(--color-forced-text);
-    background-color: var(--color-forced-bg);
-  }
-}
-
-/* Motion utilities */
-.motion-reduce {
-  animation: none !important;
-  transition: none !important;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .motion-safe {
-    animation: none !important;
-    transition: none !important;
-  }
-}
-```
-
-#### Color Utilities
-
-```css
-/* Color utilities */
-.text-primary {
-  color: var(--color-text-primary);
-}
-.bg-secondary {
-  background-color: var(--color-bg-secondary);
-}
-
-/* Focus-aware color utilities */
-.focus\:text-primary:focus-visible {
-  color: var(--color-text-primary);
-}
-.focus\:bg-primary:focus-visible {
-  background-color: var(--color-bg-primary);
+/* Touch target sizing (WCAG AA compliance) */
+.touch-target {
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
 }
 ```
 
@@ -476,18 +315,13 @@ The theme system uses CSS custom properties and data attributes for switching:
 
 ### Toast notifications (fleeting messages)
 
-For brief, non-blocking feedback ("Saved", "Nothing to import", "Copied") prefer a **toast**
-over an inline banner — it doesn't reflow layout and disappears on its own. This is the core
-style for fleeting information notices (originally prototyped by the publish-to-remote plugin).
+For brief, non-blocking feedback ("Saved", "Nothing to import", "Copied") prefer a **toast** over an inline banner — it doesn't reflow layout and disappears on its own. This is the core style for fleeting information notices (originally prototyped by the publish-to-remote plugin).
 
-- Show one with `showToast(text, type?, durationMs?)` from `$lib/stores/toast.svelte.ts`
-  (`type` = `'info' | 'success' | 'error'`; auto-dismisses, default 4s).
+- Show one with `showToast(text, type?, durationMs?)` from `$lib/stores/toast.svelte.ts` (`type` = `'info' | 'success' | 'error'`; auto-dismisses, default 4s).
 - `<Toast />` is mounted once near the app root (`App.svelte`); don't add per-view copies.
-- Style: fixed, bottom-centred, `z-index: var(--z-toast)`, a coloured `border-inline-start`
-  accent + `--color-{success,error}-*` (info uses neutral surface tokens), `--shadow-lg`.
+- Style: fixed, bottom-centred, `z-index: var(--z-toast)`, a coloured `border-inline-start` accent using `--color-success-text`/`--color-success-bg` and `--color-error-text`/`--color-error-bg` (info uses `--color-interactive-primary` on `--color-surface-primary`), `--shadow-lg`.
 
-Use inline banners/messages only for persistent state that must stay visible (e.g. the
-read-only EPUB banner), not for transient confirmations.
+Use inline banners/messages only for persistent state that must stay visible (e.g. the read-only EPUB banner), not for transient confirmations.
 
 ### Accessible & International Component Patterns
 
@@ -496,24 +330,41 @@ read-only EPUB banner), not for transient confirmations.
 ```svelte
 <!-- AccessibleButton.svelte -->
 <script lang="ts">
-  export let variant: 'primary' | 'secondary' | 'danger' = 'primary';
-  export let size: 'sm' | 'md' | 'lg' = 'md';
-  export let disabled = false;
-  export let ariaLabel: string | undefined = undefined;
-  export let ariaDescribedBy: string | undefined = undefined;
-  export let type: 'button' | 'submit' | 'reset' = 'button';
+  import type { Snippet } from 'svelte';
+
+  interface Props {
+    variant?: 'primary' | 'secondary' | 'danger';
+    size?: 'sm' | 'md' | 'lg';
+    disabled?: boolean;
+    ariaLabel?: string;
+    ariaDescribedBy?: string;
+    type?: 'button' | 'submit' | 'reset';
+    onclick?: (event: MouseEvent) => void;
+    children?: Snippet;
+  }
+
+  let {
+    variant = 'primary',
+    size = 'md',
+    disabled = false,
+    ariaLabel,
+    ariaDescribedBy,
+    type = 'button',
+    onclick,
+    children,
+  }: Props = $props();
 </script>
 
 <button
   {type}
   {disabled}
+  {onclick}
   class="btn btn--{variant} btn--{size}"
   class:btn--disabled={disabled}
   aria-label={ariaLabel}
   aria-describedby={ariaDescribedBy}
-  on:click
 >
-  <slot />
+  {@render children?.()}
 </button>
 
 <style>
@@ -560,18 +411,18 @@ read-only EPUB banner), not for transient confirmations.
 
   /* Variants with WCAG contrast compliance */
   .btn--primary {
-    background-color: var(--color-accent);
-    color: var(--color-text-inverse);
+    background-color: var(--color-button-primary-bg);
+    color: var(--color-button-primary-text);
 
     &:hover:not(.btn--disabled) {
-      background-color: var(--color-primary-700);
+      background-color: var(--color-button-primary-bg-hover);
     }
   }
 
   .btn--secondary {
-    background-color: var(--color-bg-secondary);
-    color: var(--color-text-primary);
-    border: 1px solid var(--color-border-default);
+    background-color: var(--color-button-secondary-bg);
+    color: var(--color-button-secondary-text);
+    border: 1px solid var(--color-button-secondary-border);
 
     &:hover:not(.btn--disabled) {
       background-color: var(--color-bg-tertiary);
@@ -579,11 +430,11 @@ read-only EPUB banner), not for transient confirmations.
   }
 
   .btn--danger {
-    background-color: var(--color-danger-600);
-    color: var(--color-text-inverse);
+    background-color: var(--color-button-danger-bg);
+    color: var(--color-button-danger-text);
 
     &:hover:not(.btn--disabled) {
-      background-color: var(--color-danger-700);
+      background-color: var(--color-button-danger-bg-hover);
     }
   }
 
@@ -603,7 +454,7 @@ read-only EPUB banner), not for transient confirmations.
   /* States */
   .btn:hover:not(.btn--disabled) {
     transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-sm);
   }
 
   .btn--disabled {
@@ -618,10 +469,22 @@ read-only EPUB banner), not for transient confirmations.
 ```svelte
 <!-- RTLAwarePanel.svelte -->
 <script lang="ts">
-  export let direction: 'ltr' | 'rtl' | 'auto' = 'auto';
-  export let title: string;
-  export let collapsible = false;
-  export let collapsed = false;
+  import type { Snippet } from 'svelte';
+
+  interface Props {
+    direction?: 'ltr' | 'rtl' | 'auto';
+    title: string;
+    collapsible?: boolean;
+    collapsed?: boolean;
+    children?: Snippet;
+  }
+
+  let {
+    direction = 'auto',
+    title,
+    collapsible = false,
+    collapsed = false,
+  }: Props = $props();
 </script>
 
 <div class="panel" dir={direction} class:panel--rtl={direction === 'rtl'}>
@@ -641,7 +504,7 @@ read-only EPUB banner), not for transient confirmations.
   </header>
 
   <div id="panel-content" class="panel__content" class:panel__content--collapsed={collapsed}>
-    <slot />
+    {@render children?.()}
   </div>
 </div>
 
@@ -748,50 +611,6 @@ read-only EPUB banner), not for transient confirmations.
 </style>
 ```
 
-## Integration with Layout System
-
-### Layout Component CSS
-
-The Layout System (Feature 06) will use this design system:
-
-```svelte
-<!-- LayoutManager.svelte -->
-<style>
-  .app-layout {
-    display: grid;
-    grid-template-columns: var(--layout-sidebar-width) 1fr;
-    height: 100vh;
-    background-color: var(--color-bg-primary);
-  }
-
-  .sidebar {
-    background-color: var(--color-bg-secondary);
-    border-right: 1px solid var(--color-border-default);
-    transition: width var(--duration-normal) ease;
-  }
-
-  .sidebar--collapsed {
-    width: var(--layout-sidebar-collapsed);
-  }
-
-  .main-content {
-    display: flex;
-    min-width: 0;
-  }
-
-  .resize-handle {
-    width: 4px;
-    background-color: var(--color-border-default);
-    cursor: col-resize;
-    transition: background-color var(--duration-fast) ease;
-  }
-
-  .resize-handle:hover {
-    background-color: var(--color-accent);
-  }
-</style>
-```
-
 ## Development Workflow
 
 ### 1. Adding New Components (Accessibility & i18n First)
@@ -799,14 +618,17 @@ The Layout System (Feature 06) will use this design system:
 1. **Create component** in appropriate directory under `src/lib/components/`
 2. **Include accessibility props** following standard conventions:
    ```typescript
-   export let ariaLabel: string | undefined = undefined;
-   export let ariaDescribedBy: string | undefined = undefined;
-   export let role: string | undefined = undefined;
+   interface Props {
+     ariaLabel?: string;
+     ariaDescribedBy?: string;
+     role?: string;
+   }
+   let { ariaLabel, ariaDescribedBy, role }: Props = $props();
    ```
 3. **Use logical properties** in Svelte `<style>` blocks with design tokens
 4. **Add focus management** using accessibility design tokens
 5. **Test with screen readers** and keyboard navigation
-6. **Validate RTL layout** by temporarily setting `dir="rtl"`
+6. **Validate RTL layout** by temporarily setting `data-dir="rtl"` on the root element
 7. **Document component API** and accessibility features
 
 #### Component Accessibility Checklist
@@ -819,7 +641,7 @@ The Layout System (Feature 06) will use this design system:
 - [ ] **Color contrast** - Ensure 4.5:1 ratio (3:1 for large text)
 - [ ] **Motion preferences** - Respect `prefers-reduced-motion`
 - [ ] **High contrast** - Test in high contrast mode
-- [ ] **RTL layout** - Use logical properties, test with `dir="rtl"`
+- [ ] **RTL layout** - Use logical properties, test with `data-dir="rtl"`
 
 ### 2. Adding New Utilities (Logical Properties First)
 
@@ -828,9 +650,12 @@ The Layout System (Feature 06) will use this design system:
 3. **Add atomic utility classes** to appropriate file in `src/styles/utilities/`
 4. **Follow naming conventions** (prefer Tailwind-style naming with logical property awareness)
 5. **Include accessibility variants** (focus states, high contrast support)
-6. **Update utility exports** in `src/styles/utilities/index.css`
+6. **Register new utility files** in the `@import` list in `src/styles/index.css`
+7. **Make sure the utility is actually referenced** — unreferenced utilities get pruned in the next cleanup pass
 
 #### Utility Development Guidelines
+
+The classes below are illustrative patterns for utilities you might add — they are not part of the current inventory.
 
 ```css
 /* ✅ Good: RTL-aware utility */
@@ -870,7 +695,7 @@ The Layout System (Feature 06) will use this design system:
 ### 4. Internationalization Integration
 
 1. **Use logical properties** for all directional CSS
-2. **Test with RTL languages** by setting `dir="rtl"` on root element
+2. **Test with RTL languages** by setting `data-dir="rtl"` on the root element
 3. **Include appropriate font families** for target languages
 4. **Adjust line heights** for different scripts (Arabic, CJK, etc.)
 5. **Validate icon positioning** in RTL layouts
@@ -878,7 +703,7 @@ The Layout System (Feature 06) will use this design system:
 
 #### i18n Testing Checklist
 
-- [ ] **RTL Layout** - Test with `dir="rtl"` attribute
+- [ ] **RTL Layout** - Test with `data-dir="rtl"` attribute
 - [ ] **Text Expansion** - Test with 150% longer text strings
 - [ ] **Font Rendering** - Verify international fonts load correctly
 - [ ] **Icon Mirroring** - Directional icons flip appropriately
@@ -886,29 +711,16 @@ The Layout System (Feature 06) will use this design system:
 
 ## File Import Strategy
 
-### Main App CSS (`src/app.css`)
+### Application Entry Point (`src/main.ts`)
 
-```css
-/* Import design system */
-@import './styles/index.css';
+The design system is imported exactly once, in `src/main.ts`:
 
-/* Global styles */
-body {
-  margin: 0;
-  padding: 0;
-  font-family: var(--font-sans);
-  color: var(--color-text-primary);
-  background-color: var(--color-bg-primary);
-  line-height: var(--leading-normal);
-}
-
-/* Ensure all elements use border-box */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
+```typescript
+import './styles/index.css';
 ```
+
+`src/styles/index.css` imports the layers in order: tokens → themes → utilities → `global.css` (element resets, base typography, links, tables, code) → `app.css` (app shell).
+Global element defaults (`body` font, `box-sizing`, headings, etc.) live in `src/styles/global.css` — there is no separate `src/app.css`.
 
 ### Component CSS Imports
 
@@ -928,10 +740,9 @@ body {
 
 ### CSS Bundle Optimization
 
-1. **Tree Shaking** - Only import utilities that are actually used
-2. **Critical CSS** - Inline critical styles, load non-critical asynchronously
-3. **PostCSS Pipeline** - Minimize and optimize CSS during build
-4. **Scoped Styles** - Svelte automatically scopes component CSS
+1. **Source-Level Pruning** - Unreferenced utilities and tokens are deleted from the source, not stripped at build time (see [process/ICON_CSS_SIZE_REDUCTION.md](../../process/ICON_CSS_SIZE_REDUCTION.md))
+2. **Scoped Styles** - Svelte automatically scopes component CSS and prunes unused scoped selectors at compile time
+3. **Single-File Build** - All CSS is inlined into `dist/index.html`; Vite minifies it during build
 
 ### Runtime Performance
 
@@ -939,38 +750,6 @@ body {
 2. **Hardware Acceleration** - Use `transform` and `opacity` for animations
 3. **Minimal Repaints** - Structure CSS to minimize layout thrashing
 4. **Efficient Selectors** - Avoid deep nesting and complex selectors
-
-## Tool Integration
-
-### PostCSS Configuration
-
-```javascript
-// postcss.config.js
-export default {
-  plugins: {
-    'postcss-import': {},
-    'postcss-custom-properties': {},
-    autoprefixer: {},
-    cssnano: process.env.NODE_ENV === 'production' ? {} : false,
-  },
-};
-```
-
-### Vite CSS Processing
-
-```javascript
-// vite.config.ts CSS configuration
-export default defineConfig({
-  css: {
-    postcss: './postcss.config.js',
-    preprocessorOptions: {
-      scss: {
-        additionalData: `@import './src/styles/tokens/index.css';`,
-      },
-    },
-  },
-});
-```
 
 ## Testing Strategy
 
@@ -992,7 +771,7 @@ export default defineConfig({
 
 ### Internationalization Testing
 
-- **RTL Layout Testing**: Visual regression testing for RTL layouts using `dir="rtl"`
+- **RTL Layout Testing**: Visual regression testing for RTL layouts using `data-dir="rtl"`
 - **Text Expansion Testing**: UI handles 150% text expansion without breaking
 - **Font Rendering**: International fonts (Arabic, Hebrew, CJK) render correctly
 - **Icon Direction**: Directional icons and layouts flip appropriately in RTL
@@ -1003,22 +782,6 @@ export default defineConfig({
 - CSS bundle size monitoring
 - Runtime CSS performance profiling
 - Memory usage testing for large component trees
-
-## Migration Strategy
-
-### From Current CSS
-
-1. **Audit Current Styles** - Identify patterns and duplications
-2. **Extract Tokens** - Convert hardcoded values to design tokens
-3. **Create Utilities** - Replace common patterns with utility classes
-4. **Refactor Components** - Move to new CSS architecture gradually
-5. **Theme Integration** - Add theme support to existing components
-
-### Backwards Compatibility
-
-- Keep existing CSS files during migration
-- Gradually replace old patterns with new system
-- Ensure no visual regressions during transition
 
 ## Future Considerations
 
@@ -1052,4 +815,4 @@ export default defineConfig({
 - Typography scale and usage recommendations
 - Spacing system documentation
 
-This CSS design system provides a solid foundation for building consistent, maintainable, and performant styles in the EDITME.html EPUB editor while leveraging Svelte's strengths and supporting the application's theming and layout requirements.
+This CSS design system provides a solid foundation for building consistent, maintainable, and performant styles in the SEED.html EPUB editor while leveraging Svelte's strengths and supporting the application's theming and layout requirements.

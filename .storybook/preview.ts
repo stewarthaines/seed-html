@@ -3,6 +3,23 @@ import { withThemeByDataAttribute } from '@storybook/addon-themes';
 import { loadStorybookTranslations, getStorybookLocaleItems } from './i18n-loader';
 import { setLocale, i18nState } from '../src/lib/i18n/index.js';
 import { isRTL, LOCALE_CONFIGS, DEFAULT_LOCALE } from '../src/lib/i18n/locale-config.js';
+import type { AvailableLocale, TranslationCatalog } from '../src/lib/i18n/types.js';
+
+// Mirror the runtime's availability semantics: every catalog Storybook seeds is
+// in memory, so it is switchable ('loaded'). Without this, setLocale refuses
+// every locale (availability is the runtime gate since the multi-source i18n
+// delivery change).
+function availableFromCatalogs(
+  catalogs: Record<string, TranslationCatalog>
+): Record<string, AvailableLocale> {
+  const available: Record<string, AvailableLocale> = {
+    [DEFAULT_LOCALE]: { ...LOCALE_CONFIGS[DEFAULT_LOCALE], availability: 'loaded' },
+  };
+  for (const code of Object.keys(catalogs)) {
+    if (LOCALE_CONFIGS[code]) available[code] = { ...LOCALE_CONFIGS[code], availability: 'loaded' };
+  }
+  return available;
+}
 
 // Import the design system CSS
 import '../src/styles/index.css';
@@ -20,6 +37,7 @@ const preview: Preview = {
           currentLocale: DEFAULT_LOCALE,
           locales: LOCALE_CONFIGS,
           catalogs: translations,
+          availableLocales: availableFromCatalogs(translations),
           initialized: true,
           loading: false,
         });
@@ -40,6 +58,7 @@ const preview: Preview = {
           currentLocale: DEFAULT_LOCALE,
           locales: LOCALE_CONFIGS,
           catalogs: { en: { locale: 'en', messages: {}, headers: {} } },
+          availableLocales: availableFromCatalogs({}),
           initialized: true,
           loading: false,
         });
