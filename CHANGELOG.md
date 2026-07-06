@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - When more than one insert panel is available (Audio Clip Editor, Images, Generators) the editor header collapses them into a single Insert dropdown, like the preview's Checks dropdown; one panel shows at a time.
 - Four new text formats in the extensions catalog: AsciiDoc (Asciidoctor.js), Org (org-js), Fountain screenplays (Fountain.js, with screenplay styling) and LaTeX (LaTeX.js, with base styling). Each ships a sample chapter and a syntax-example generator.
 - The Markdown, Djot and Textile extensions gain the same syntax-example generators as the new formats.
+- "Add SEED.html to package" now embeds a localized editor: the languages you have loaded travel inside the EPUB, so its built-in editor speaks your language when opened offline from the book.
 
 ### Changed
 
@@ -34,6 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Grouped the spine editor's file picker into labelled sections (chapter text, Reading System, Build scripts, Generators, Preview) instead of one flat list, and show real filenames.
 - Collapsed the preview's Accessibility / EpubCheck / Reader panel toggles into a single dropdown when more than one is available.
 - Folded the Source/Preview view toggle into the device dropdown as a "Source" entry (with "Responsive" alongside it), removing the separate button.
+- Translations are no longer baked into the app file (which shrank by ~35KB): the hosted app fetches your language the moment you pick it and keeps a copy for offline use, so adding future languages won't grow the editor everyone downloads. The Language picker now lists exactly the languages the app can actually supply.
+
+### Fixed
+
+- Your language choice is restored when the app reloads (it was saved but never read back).
+- Languages left behind by earlier app versions no longer linger in the Language picker; the stale entries are cleaned up automatically.
 
 ## [0.6.0] - 2026-07-01
 
