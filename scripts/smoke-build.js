@@ -34,7 +34,10 @@ if (!fs.existsSync(indexPath)) {
   fail(`no build found at ${indexPath}. Run \`npm run build\` first.`);
 }
 
-/** Serve the single-file app: every non-favicon path returns index.html. */
+/**
+ * Serve the built app: real dist/ files when they exist (sw.js, locales/,
+ * extensions/ — so the sidecars behave as deployed), index.html for app routes.
+ */
 function startServer() {
   const html = fs.readFileSync(indexPath);
   const server = http.createServer((req, res) => {
@@ -43,10 +46,62 @@ function startServer() {
       res.end();
       return;
     }
+    const rel = (req.url || '/').split('?')[0].replace(/^\//, '');
+    const target = path.join(distDir, rel);
+    if (rel && target.startsWith(distDir + path.sep) && fs.existsSync(target)) {
+      const stat = fs.statSync(target);
+      if (stat.isFile()) {
+        const type = /\.json$/.test(target)
+          ? 'application/json'
+          : /\.js$/.test(target)
+            ? 'application/javascript'
+            : 'text/html; charset=utf-8';
+        res.writeHead(200, { 'Content-Type': type });
+        res.end(fs.readFileSync(target));
+        return;
+      }
+    }
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     res.end(html);
   });
   return new Promise(resolve => server.listen(PORT, () => resolve(server)));
+}
+
+/** Static assertions on the build artifacts themselves (no browser needed). */
+function artifactChecks() {
+  const problems = [];
+  const html = fs.readFileSync(indexPath, 'utf8');
+
+  // The i18n anchor must survive the single-file inlining: it is the injection
+  // target for localized SEED.html embedding (see vite.config.ts i18n-inline-anchor).
+  if (!/window\.__EDITME_I18N_BUNDLE__\s*=\s*(?:null|'data:application\/zip;base64,)/.test(html)) {
+    problems.push('[artifact] dist/index.html is missing the __EDITME_I18N_BUNDLE__ anchor');
+  }
+
+  // The locales sidecar is only present after `npm run build:locales` (part of
+  // build:plugins); when present it must be well-formed.
+  const manifestPath = path.join(distDir, 'locales', 'manifest.json');
+  if (fs.existsSync(manifestPath)) {
+    try {
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      if (!Array.isArray(manifest.locales)) {
+        problems.push('[artifact] dist/locales/manifest.json has no locales array');
+      }
+      for (const entry of manifest.locales || []) {
+        if (!fs.existsSync(path.join(distDir, 'locales', entry.file))) {
+          problems.push(`[artifact] manifest lists locales/${entry.file} but the file is missing`);
+        }
+      }
+      console.log(`✓ [artifact] locales sidecar: ${manifest.locales.length} locale(s)`);
+    } catch (e) {
+      problems.push(`[artifact] dist/locales/manifest.json unreadable: ${e.message}`);
+    }
+  } else {
+    console.log('• [artifact] no locales sidecar (run `npm run build:locales` to include it)');
+  }
+
+  if (problems.length === 0) console.log('✓ [artifact] i18n anchor present');
+  return problems;
 }
 
 /**
@@ -101,6 +156,8 @@ async function launchBrowser() {
 const server = await startServer();
 const browser = await launchBrowser();
 const problems = [];
+
+problems.push(...artifactChecks());
 
 try {
   problems.push(...(await bootCheck(browser, `http://localhost:${PORT}/`, 'http')));

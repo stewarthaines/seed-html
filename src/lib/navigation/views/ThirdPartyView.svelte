@@ -115,14 +115,22 @@
   <div class="license-pane-body">
     <section class="disclaimer-section">
       <h2>{$t('AI Disclaimer')}</h2>
-      <p class="disclaimer-summary">{$t('about.disclaimer.summary')}</p>
+      <p class="disclaimer-summary">
+        {$t(
+          "Much of this software was written with AI coding agents, primarily Anthropic's Claude Code."
+        )}
+      </p>
     </section>
     <!-- The app's own license — primary. -->
     <section class="license-section">
-      <h2>{$t('about.license.title')}</h2>
-      <p class="license-summary">{$t('about.license.summary')}</p>
+      <h2>{$t('License')}</h2>
+      <p class="license-summary">
+        {$t(
+          "Simple EPUB Editor (distributed as SEED.html) is free and open-source software, released under the MIT License. You're welcome to use it, modify it, and redistribute it — including embedding it inside the EPUBs you create."
+        )}
+      </p>
       <p class="license-meta">
-        {$t('about.attribution.content')} · {$t('about.version')}: {VERSION} ·
+        {$t('Developed by Stewart Haines.')} · {$t('Version')}: {VERSION} ·
         <a
           href="https://github.com/stewarthaines/editme-svelte"
           target="_blank"
@@ -159,9 +167,11 @@
     <section class="thirdparty-section">
       <details class="disclosure">
         <summary class="disclosure-summary">
-          {$t('about.thirdparty.title')}
+          {$t('Third-Party Libraries')}
         </summary>
-        <p class="thirdparty-intro">{$t('about.thirdparty.intro')}</p>
+        <p class="thirdparty-intro">
+          {$t('This application is built with the following open source libraries:')}
+        </p>
 
         <div class="library-list">
           {#each BUNDLED_LIBRARIES as library (library.name)}

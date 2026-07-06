@@ -15,22 +15,19 @@ import type {
   SampleContentKey,
 } from './types.js';
 import {
+  SAMPLE_MSGIDS,
   TranslationMissingError as TranslationMissingErrorClass,
   UnsupportedLocaleError as UnsupportedLocaleErrorClass,
   InvalidContentError as InvalidContentErrorClass,
 } from './types.js';
 
+/** The source language: msgids ARE the English content, so 'en' is always complete */
+const SOURCE_LOCALE = 'en';
+
 /**
  * Required sample content translation keys
  */
-const REQUIRED_SAMPLE_KEYS: SampleContentKey[] = [
-  'sample.book.title',
-  'sample.book.description',
-  'sample.author.name',
-  'sample.publisher.name',
-  'sample.chapter1.title',
-  'sample.chapter1.content',
-];
+const REQUIRED_SAMPLE_KEYS: SampleContentKey[] = Object.values(SAMPLE_MSGIDS);
 
 /**
  * Sample Content Generator for creating localized EPUB content
@@ -62,9 +59,12 @@ export class SampleContentGenerator {
   }
 
   /**
-   * Check if a translation key exists for a locale
+   * Check if a translation key exists for a locale. The source locale is complete
+   * by definition — the msgid is the English content.
    */
   private hasTranslation(locale: string, key: string): boolean {
+    if (locale === SOURCE_LOCALE) return this.isLocaleSupported(locale);
+
     const catalog = this.catalogs[locale];
     if (!catalog) return false;
 
@@ -86,10 +86,10 @@ export class SampleContentGenerator {
 
     // Generate metadata
     const metadata = {
-      title: this.translate(locale, 'sample.book.title'),
-      description: this.translate(locale, 'sample.book.description'),
-      author: this.translate(locale, 'sample.author.name'),
-      publisher: this.translate(locale, 'sample.publisher.name'),
+      title: this.translate(locale, SAMPLE_MSGIDS.bookTitle),
+      description: this.translate(locale, SAMPLE_MSGIDS.bookDescription),
+      author: this.translate(locale, SAMPLE_MSGIDS.authorName),
+      publisher: this.translate(locale, SAMPLE_MSGIDS.publisherName),
     };
 
     // Generate chapters
@@ -119,10 +119,10 @@ export class SampleContentGenerator {
 
     // Check for missing metadata translations
     const metadataKeys: SampleContentKey[] = [
-      'sample.book.title',
-      'sample.book.description',
-      'sample.author.name',
-      'sample.publisher.name',
+      SAMPLE_MSGIDS.bookTitle,
+      SAMPLE_MSGIDS.bookDescription,
+      SAMPLE_MSGIDS.authorName,
+      SAMPLE_MSGIDS.publisherName,
     ];
 
     const missingKeys: string[] = [];
@@ -147,12 +147,12 @@ export class SampleContentGenerator {
     const pageProgressionDirection = isRTL ? 'rtl' : 'ltr';
 
     return {
-      title: this.translate(locale, 'sample.book.title'),
+      title: this.translate(locale, SAMPLE_MSGIDS.bookTitle),
       language: [locale],
       identifier,
-      creator: [{ name: this.translate(locale, 'sample.author.name'), roles: [] }],
-      publisher: this.translate(locale, 'sample.publisher.name'),
-      description: this.translate(locale, 'sample.book.description'),
+      creator: [{ name: this.translate(locale, SAMPLE_MSGIDS.authorName), roles: [] }],
+      publisher: this.translate(locale, SAMPLE_MSGIDS.publisherName),
+      description: this.translate(locale, SAMPLE_MSGIDS.bookDescription),
       pageProgressionDirection,
     };
   }
@@ -167,7 +167,10 @@ export class SampleContentGenerator {
     }
 
     // Check for missing chapter translations
-    const chapterKeys: SampleContentKey[] = ['sample.chapter1.title', 'sample.chapter1.content'];
+    const chapterKeys: SampleContentKey[] = [
+      SAMPLE_MSGIDS.chapter1Title,
+      SAMPLE_MSGIDS.chapter1Content,
+    ];
 
     const missingKeys: string[] = [];
     for (const key of chapterKeys) {
@@ -185,8 +188,8 @@ export class SampleContentGenerator {
         // Zero-padded two digits to match auto-numbered chapters added later
         // (generateUniqueChapterId → chapterNN), so the first chapter is chapter01.
         id: 'chapter01',
-        title: this.translate(locale, 'sample.chapter1.title'),
-        content: this.translate(locale, 'sample.chapter1.content'),
+        title: this.translate(locale, SAMPLE_MSGIDS.chapter1Title),
+        content: this.translate(locale, SAMPLE_MSGIDS.chapter1Content),
         linear: true,
         mediaType: 'application/xhtml+xml',
       },
@@ -225,6 +228,11 @@ export class SampleContentGenerator {
     const emptyKeys: string[] = [];
     const catalog = this.catalogs[locale];
 
+    // Source locale: msgids are the content, so empty msgstrs are expected and valid.
+    if (locale === SOURCE_LOCALE) {
+      return { isValid: true, missingKeys, emptyKeys, locale };
+    }
+
     for (const key of REQUIRED_SAMPLE_KEYS) {
       if (!catalog || !(key in catalog.messages)) {
         // Key doesn't exist in catalog
@@ -258,6 +266,11 @@ export class SampleContentGenerator {
     const catalog = this.catalogs[locale];
     if (!catalog) {
       throw new UnsupportedLocaleErrorClass(locale);
+    }
+
+    // Source locale: msgids are the content, so empty msgstrs are expected and valid.
+    if (locale === SOURCE_LOCALE) {
+      return;
     }
 
     // First pass: check for empty translations (higher priority)

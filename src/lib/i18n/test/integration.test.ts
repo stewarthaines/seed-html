@@ -121,22 +121,17 @@ describe.skip('i18n integration workflow', () => {
     expect(get(t)('Save')).toBe('Save');
   });
 
-  it('should handle version-based cache invalidation', async () => {
-    // Simulate existing installation with old version
-    mockLocalStorage.setItem('editme-i18n-version', '0.9.0');
-
-    // Mock existing files that should be updated
+  it('should list cached locales from the workspace', async () => {
     mockFileStorage.listFiles.mockResolvedValue([
       { name: 'en.json', size: 100 },
       { name: 'de.json', size: 100 },
     ]);
 
-    // Should trigger re-extraction due to version mismatch
     const { createI18nLoader } = await import('../loader.js');
     const loader = createI18nLoader();
 
-    const needsUpdate = await loader.needsUpdate();
-    expect(needsUpdate).toBe(true);
+    const cached = await loader.listCachedLocales();
+    expect(cached.sort()).toEqual(['de', 'en']);
   });
 
   it('should complete locale switching workflow', async () => {
@@ -205,19 +200,19 @@ describe.skip('i18n integration workflow', () => {
     const { createI18nLoader } = await import('../loader.js');
     const loader = createI18nLoader();
 
-    // Should fall back to requiring update
-    const needsUpdate = await loader.needsUpdate();
-    expect(needsUpdate).toBe(true);
+    // A broken workspace reads as "nothing cached", never an exception
+    const cached = await loader.listCachedLocales();
+    expect(cached).toEqual([]);
   });
 
-  it('should handle missing translation data URL', async () => {
-    // No embedded data URL
+  it('should treat a missing embedded bundle as an empty source', async () => {
+    // No embedded data URL — builds without inlined catalogs are valid
     delete (globalThis as any).__EDITME_I18N_BUNDLE__;
 
     const { createI18nLoader } = await import('../loader.js');
     const loader = createI18nLoader();
 
-    await expect(loader.extractTranslations()).rejects.toThrow('Translation data URL not found');
+    await expect(loader.extractEmbeddedBundle()).resolves.toEqual([]);
   });
 
   it('should use fallback English when all else fails', async () => {
@@ -259,9 +254,8 @@ describe.skip('i18n integration workflow', () => {
 
     await initI18n();
 
-    // Should have restored German preference, but browser detection overrides
-    // Note: In real implementation, you might want to check stored preference first
-    expect(get(currentLocale)).toBe('en'); // Browser preference wins
+    // The persisted preference wins over browser detection when available
+    expect(get(currentLocale)).toBe('de');
   });
 
   it('should handle partial translation catalogs', async () => {

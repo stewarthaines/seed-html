@@ -1,6 +1,6 @@
 import path from "node:path";
 import { promises as fs } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { viteSingleFile } from "vite-plugin-singlefile";
@@ -66,26 +66,19 @@ export default defineConfig({
     // imports so Vite's dev pre-bundle doesn't expand the whole icon set. Runs
     // after svelte() so it sees the compiled JS that still carries the import.
     sveltePhosphorOptimize(),
-    // Embed translation data URL into HTML for single-file deployment
+    // Inject the i18n bundle anchor. The base build carries NO catalog bytes —
+    // English resolves from msgids, other locales arrive over http (locales/
+    // sidecar) or are spliced into this exact assignment when the app embeds a
+    // localized SEED.html into an EPUB at package time (see src/lib/epub/
+    // seed-html.ts). Keep the marker text stable: it is the injection target.
     {
-      name: 'embed-translations',
-      async transformIndexHtml(html) {
-        try {
-          const translationsPath = path.join(dirname, 'static', 'i18n-bundle.zip');
-          const translationsZip = await fs.readFile(translationsPath);
-          const dataUrl = `data:application/zip;base64,${translationsZip.toString('base64')}`;
-
-          console.log(`📦 Embedded ${Math.round(translationsZip.length / 1024)}KB translation data`);
-
-          return html.replace(
-            '</head>',
-            `<script>window.__EDITME_I18N_BUNDLE__ = '${dataUrl}';</script></head>`
-          );
-        } catch {
-          console.warn('⚠️ Translation file not found, app will use English fallback only');
-          return html;
-        }
-      }
+      name: 'i18n-inline-anchor',
+      transformIndexHtml(html) {
+        return html.replace(
+          '</head>',
+          `<script id="editme-i18n-bundle">window.__EDITME_I18N_BUNDLE__=null;</script></head>`
+        );
+      },
     },
     viteSingleFile(),
     // Build only: emit dist/sw.js (the offline-PWA service worker) from
@@ -282,6 +275,63 @@ export default defineConfig({
                   ? 'application/json'
                   : 'text/plain; charset=utf-8';
             res.setHeader('Content-Type', type);
+            res.end(data);
+          } catch {
+            next();
+          }
+        });
+      },
+    },
+    // Dev only: serve the locales sidecar (mirrors serve-extensions-dev). The
+    // manifest is synthesized from the compiled catalogs in src/lib/i18n/locales/
+    // (run `npm run i18n:convert` once) + locale-meta.js, so dev exercises the
+    // exact http on-demand path the hosted build uses. Production equivalents are
+    // generated into dist/locales/ by scripts/generate-locales-dist.js.
+    {
+      name: 'serve-locales-dev',
+      apply: 'serve',
+      configureServer(server) {
+        const localesDir = path.join(dirname, 'src', 'lib', 'i18n', 'locales');
+        const metaUrl = pathToFileURL(path.join(dirname, 'src', 'lib', 'i18n', 'locale-meta.js'))
+          .href;
+
+        server.middlewares.use('/locales/manifest.json', async (_req, res) => {
+          const { ENABLED_LOCALES, LOCALE_CONFIGS } = await import(metaUrl);
+          const locales: Array<Record<string, unknown>> = [];
+          for (const code of ENABLED_LOCALES as string[]) {
+            if (code === 'en') continue; // English needs no catalog (msgid fallback)
+            try {
+              const data = await fs.readFile(path.join(localesDir, `${code}.json`));
+              const config = LOCALE_CONFIGS[code] ?? {};
+              locales.push({
+                code,
+                name: config.name ?? code,
+                englishName: config.englishName ?? code,
+                direction: config.direction ?? 'ltr',
+                file: `${code}.json`,
+                bytes: data.length,
+                // Dev needs no content addressing — the mtime stands in for a hash.
+                hash: `dev-${(await fs.stat(path.join(localesDir, `${code}.json`))).mtimeMs}`,
+              });
+            } catch {
+              // catalog not compiled — run `npm run i18n:convert`
+            }
+          }
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ version: packageJson.version, locales }));
+        });
+
+        server.middlewares.use('/locales/', async (req, res, next) => {
+          const rel = (req.url || '').split('?')[0].replace(/^\//, '');
+          const target = path.join(localesDir, rel);
+          // Block path traversal; only serve catalog JSON files.
+          if (!target.startsWith(localesDir + path.sep) || !target.endsWith('.json')) {
+            next();
+            return;
+          }
+          try {
+            const data = await fs.readFile(target);
+            res.setHeader('Content-Type', 'application/json');
             res.end(data);
           } catch {
             next();

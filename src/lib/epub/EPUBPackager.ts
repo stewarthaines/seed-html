@@ -15,7 +15,7 @@ import {
 } from './opf-utils.js';
 import { getMimeType } from '../utils/mime-types.js';
 import { SourceManager, SOURCE_ARCHIVE_NAME } from '../source/index.js';
-import { SEED_HTML_NAME } from './seed-html.js';
+import { SEED_HTML_NAME, buildLocaleBundleDataUrl, injectI18nBundle } from './seed-html.js';
 import { PUBLISH_WORKSPACE_ID } from '../workspace/types.js';
 
 export { type EPUBMetadata } from './opf-utils.js';
@@ -224,7 +224,23 @@ export class EPUBPackager {
     if (options.includeSeedHtml) {
       try {
         if (await this.fileStorage.fileExists(workspaceId, SEED_HTML_NAME)) {
-          const seedHtml = await this.fileStorage.readFile(workspaceId, SEED_HTML_NAME);
+          let seedHtml = await this.fileStorage.readFile(workspaceId, SEED_HTML_NAME);
+
+          // Localize the embedded editor: splice the user's cached locale catalogs
+          // into the build's i18n anchor, so the EPUB's SEED.html speaks their
+          // language on file://. The stored bytes stay pristine — injection is
+          // per-package, so later locale changes are honored on re-export — and a
+          // failure falls back to the pristine bytes rather than blocking.
+          try {
+            const localeBundle = await buildLocaleBundleDataUrl(this.fileStorage);
+            if (localeBundle) {
+              seedHtml = injectI18nBundle(seedHtml, localeBundle);
+            }
+          } catch (error) {
+            // eslint-disable-next-line no-console
+            console.warn(`Embedding ${SEED_HTML_NAME} without locale catalogs:`, error);
+          }
+
           files.push({
             path: SEED_HTML_NAME,
             content: seedHtml,

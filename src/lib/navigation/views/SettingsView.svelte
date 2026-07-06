@@ -32,8 +32,8 @@
   } from '../../settings/dom-transforms.js';
   import { CaretUp, CaretDown, CaretRight, X } from 'phosphor-svelte';
   import { PaneGroup, Pane, PaneResizer } from 'paneforge';
-  import { t, currentLocale, setLocale } from '../../i18n';
-  import { LOCALE_CONFIGS, isLocaleEnabled } from '../../i18n/locale-config.js';
+  import { t, currentLocale, setLocale, availableLocales } from '../../i18n';
+  import { LOCALE_CONFIGS } from '../../i18n/locale-config.js';
   import { themeStore } from '../../stores/theme.js';
   import { advancedMode } from '../../stores/advanced-mode.js';
   import { MARGIN_MM } from '../../pdf/pdf-export.js';
@@ -759,9 +759,10 @@
   // App settings: theme (light/dark/system) and locale, backed by the global stores
   // the app already uses (the sidebar quick-toggle shares the theme store).
   const themeChoice = $derived($themeStore.isSystem ? 'system' : $themeStore.current);
-  // Only shipped locales appear in the picker; the rest are scaffolded but not yet
-  // genuinely translated (see ENABLED_LOCALES in locale-config).
-  const locales = Object.values(LOCALE_CONFIGS).filter(l => isLocaleEnabled(l.code));
+  // The picker offers what the catalog sources can actually supply (embedded
+  // bundle, storage cache, http manifest) — reactive, since remote availability
+  // can land after init.
+  const locales = $derived($availableLocales);
 
   function handleThemeChange(value: string): void {
     if (value === 'system') {
@@ -793,17 +794,12 @@
     const names = availablePlugins.filter(p => enabledPluginIds.includes(p.id)).map(p => p.name);
     return names.length ? names.join(', ') : $t('None');
   });
-  const textFormatsSummary = $derived(
-    $t('{n} available', { n: textFormatExtensions.length })
-  );
-  const contentTransformsSummary = $derived(
-    $t('{n} available', { n: contentTransforms.length })
-  );
+  const textFormatsSummary = $derived($t('{n} available', { n: textFormatExtensions.length }));
+  const contentTransformsSummary = $derived($t('{n} available', { n: contentTransforms.length }));
   const printSummary = $derived.by(() => {
     const p = epubSettings?.print ?? DEFAULT_PRINT;
     const size =
-      p.custom_size ||
-      (PAGE_SIZE_OPTIONS.find(o => o.value === p.page_size)?.label ?? p.page_size);
+      p.custom_size || (PAGE_SIZE_OPTIONS.find(o => o.value === p.page_size)?.label ?? p.page_size);
     const margin =
       p.custom_margin ||
       (p.margin === 'narrow' ? $t('Narrow') : p.margin === 'wide' ? $t('Wide') : $t('Normal'));
@@ -965,7 +961,9 @@
                 persistKey="settings-app-text-formats"
               >
                 <p class="setting-description">
-                  {$t('A markup language for authoring chapters. Adopt one for the current project.')}
+                  {$t(
+                    'A markup language for authoring chapters. Adopt one for the current project.'
+                  )}
                 </p>
                 {#each textFormatExtensions as ext (ext.id)}
                   {@render catalogItem(ext)}
@@ -1150,7 +1148,8 @@
                     <label class="setting-label">
                       <input
                         type="checkbox"
-                        checked={epubSettings?.print?.running_header ?? DEFAULT_PRINT.running_header}
+                        checked={epubSettings?.print?.running_header ??
+                          DEFAULT_PRINT.running_header}
                         onchange={e =>
                           updatePrint({
                             running_header: (e.currentTarget as HTMLInputElement).checked,
@@ -1319,106 +1318,19 @@
                   <!-- The transform pipeline (text + DOM). Wrapped as one unit;
                        also the clip target for the manual's EPUB-settings shot. -->
                   <div class="transform-pipeline-settings">
-                  <div class="setting-group">
-                    <label for="text-transform" class="setting-label-text">
-                      {$t('Text Transform')}
-                    </label>
-                    <select
-                      id="text-transform"
-                      class="setting-select"
-                      value={epubSettings?.text_transform ?? ''}
-                      onchange={e =>
-                        persistTextTransform((e.currentTarget as HTMLSelectElement).value)}
-                      disabled={epubLoading}
-                    >
-                      {#each textTransformGroups as grp (grp.group)}
-                        <optgroup label={grp.group}>
-                          {#each grp.options as opt (opt.path)}
-                            <option value={opt.path}>{opt.fileName}</option>
-                          {/each}
-                        </optgroup>
-                      {/each}
-                    </select>
-                    <p class="setting-description">
-                      {$t(
-                        'The single plain-text → XHTML step. Pick a project script or one supplied by an extension.'
-                      )}
-                    </p>
-                  </div>
-
-                  <div class="setting-group">
-                    <span class="setting-label-text">{$t('DOM Transforms')}</span>
-                    <p class="setting-description">
-                      {$t(
-                        'Scripts run top-to-bottom over the generated DOM, each applied to the previous one’s output.'
-                      )}
-                    </p>
-
-                    {#if (epubSettings?.dom_transforms?.length ?? 0) === 0}
-                      <p class="setting-description">{$t('No DOM transforms configured.')}</p>
-                    {:else}
-                      <ul class="dom-transform-list">
-                        {#each epubSettings?.dom_transforms ?? [] as path, i (path)}
-                          {@const label = transformLabel(path)}
-                          <li class="dom-transform-row">
-                            <span class="dom-transform-name" title={path}>
-                              {label.name}
-                              {#if label.group}
-                                <span class="dom-transform-group">({label.group})</span>
-                              {/if}
-                            </span>
-                            <div class="dom-transform-actions">
-                              <button
-                                type="button"
-                                class="btn btn-icon"
-                                onclick={() => moveDomTransform(i, -1)}
-                                disabled={i === 0 || epubLoading}
-                                aria-label={$t('Move up')}
-                                title={$t('Move up')}
-                              >
-                                <CaretUp size={14} aria-hidden="true" />
-                              </button>
-                              <button
-                                type="button"
-                                class="btn btn-icon"
-                                onclick={() => moveDomTransform(i, 1)}
-                                disabled={i === (epubSettings?.dom_transforms.length ?? 0) - 1 ||
-                                  epubLoading}
-                                aria-label={$t('Move down')}
-                                title={$t('Move down')}
-                              >
-                                <CaretDown size={14} aria-hidden="true" />
-                              </button>
-                              <button
-                                type="button"
-                                class="btn btn-icon"
-                                onclick={() => removeDomTransform(i)}
-                                disabled={epubLoading}
-                                aria-label={$t('Remove')}
-                                title={$t('Remove')}
-                              >
-                                <X size={14} aria-hidden="true" />
-                              </button>
-                            </div>
-                          </li>
-                        {/each}
-                      </ul>
-                    {/if}
-
-                    {#if addableTransformGroups.length > 0}
+                    <div class="setting-group">
+                      <label for="text-transform" class="setting-label-text">
+                        {$t('Text Transform')}
+                      </label>
                       <select
+                        id="text-transform"
                         class="setting-select"
-                        aria-label={$t('Add a DOM transform')}
+                        value={epubSettings?.text_transform ?? ''}
+                        onchange={e =>
+                          persistTextTransform((e.currentTarget as HTMLSelectElement).value)}
                         disabled={epubLoading}
-                        onchange={e => {
-                          const sel = e.currentTarget as HTMLSelectElement;
-                          const value = sel.value;
-                          sel.value = '';
-                          if (value) addDomTransform(value);
-                        }}
                       >
-                        <option value="" disabled selected>{$t('Add a DOM transform…')}</option>
-                        {#each addableTransformGroups as grp (grp.group)}
+                        {#each textTransformGroups as grp (grp.group)}
                           <optgroup label={grp.group}>
                             {#each grp.options as opt (opt.path)}
                               <option value={opt.path}>{opt.fileName}</option>
@@ -1426,8 +1338,95 @@
                           </optgroup>
                         {/each}
                       </select>
-                    {/if}
-                  </div>
+                      <p class="setting-description">
+                        {$t(
+                          'The single plain-text → XHTML step. Pick a project script or one supplied by an extension.'
+                        )}
+                      </p>
+                    </div>
+
+                    <div class="setting-group">
+                      <span class="setting-label-text">{$t('DOM Transforms')}</span>
+                      <p class="setting-description">
+                        {$t(
+                          'Scripts run top-to-bottom over the generated DOM, each applied to the previous one’s output.'
+                        )}
+                      </p>
+
+                      {#if (epubSettings?.dom_transforms?.length ?? 0) === 0}
+                        <p class="setting-description">{$t('No DOM transforms configured.')}</p>
+                      {:else}
+                        <ul class="dom-transform-list">
+                          {#each epubSettings?.dom_transforms ?? [] as path, i (path)}
+                            {@const label = transformLabel(path)}
+                            <li class="dom-transform-row">
+                              <span class="dom-transform-name" title={path}>
+                                {label.name}
+                                {#if label.group}
+                                  <span class="dom-transform-group">({label.group})</span>
+                                {/if}
+                              </span>
+                              <div class="dom-transform-actions">
+                                <button
+                                  type="button"
+                                  class="btn btn-icon"
+                                  onclick={() => moveDomTransform(i, -1)}
+                                  disabled={i === 0 || epubLoading}
+                                  aria-label={$t('Move up')}
+                                  title={$t('Move up')}
+                                >
+                                  <CaretUp size={14} aria-hidden="true" />
+                                </button>
+                                <button
+                                  type="button"
+                                  class="btn btn-icon"
+                                  onclick={() => moveDomTransform(i, 1)}
+                                  disabled={i === (epubSettings?.dom_transforms.length ?? 0) - 1 ||
+                                    epubLoading}
+                                  aria-label={$t('Move down')}
+                                  title={$t('Move down')}
+                                >
+                                  <CaretDown size={14} aria-hidden="true" />
+                                </button>
+                                <button
+                                  type="button"
+                                  class="btn btn-icon"
+                                  onclick={() => removeDomTransform(i)}
+                                  disabled={epubLoading}
+                                  aria-label={$t('Remove')}
+                                  title={$t('Remove')}
+                                >
+                                  <X size={14} aria-hidden="true" />
+                                </button>
+                              </div>
+                            </li>
+                          {/each}
+                        </ul>
+                      {/if}
+
+                      {#if addableTransformGroups.length > 0}
+                        <select
+                          class="setting-select"
+                          aria-label={$t('Add a DOM transform')}
+                          disabled={epubLoading}
+                          onchange={e => {
+                            const sel = e.currentTarget as HTMLSelectElement;
+                            const value = sel.value;
+                            sel.value = '';
+                            if (value) addDomTransform(value);
+                          }}
+                        >
+                          <option value="" disabled selected>{$t('Add a DOM transform…')}</option>
+                          {#each addableTransformGroups as grp (grp.group)}
+                            <optgroup label={grp.group}>
+                              {#each grp.options as opt (opt.path)}
+                                <option value={opt.path}>{opt.fileName}</option>
+                              {/each}
+                            </optgroup>
+                          {/each}
+                        </select>
+                      {/if}
+                    </div>
                   </div>
                 </SettingsSection>
               {/if}

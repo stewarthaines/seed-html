@@ -7,6 +7,7 @@
 
 import type { TranslationCatalog } from '../../i18n/types.js';
 import type { ValidationResult, SampleContentKey } from '../types.js';
+import { SAMPLE_MSGIDS } from '../types.js';
 
 /**
  * Mock translation catalogs with sample content keys
@@ -16,15 +17,15 @@ export const mockSampleContentCatalogs = {
     locale: 'en',
     messages: {
       // Book metadata
-      'sample.book.title': 'Introduction to EPUB',
-      'sample.book.description':
+      [SAMPLE_MSGIDS.bookTitle]: 'Introduction to EPUB',
+      [SAMPLE_MSGIDS.bookDescription]:
         'A comprehensive guide to creating and editing EPUB files with Active EPUB technology.',
-      'sample.author.name': 'EDITME Editorial Team',
-      'sample.publisher.name': 'EDITME Publishing',
+      [SAMPLE_MSGIDS.authorName]: 'EDITME Editorial Team',
+      [SAMPLE_MSGIDS.publisherName]: 'EDITME Publishing',
 
       // Chapter content
-      'sample.chapter1.title': 'Getting Started',
-      'sample.chapter1.content': `# This is a Heading 1
+      [SAMPLE_MSGIDS.chapter1Title]: 'Getting Started',
+      [SAMPLE_MSGIDS.chapter1Content]: `# This is a Heading 1
 
 A heading 1 (H1) is the main title of a document, created with a single hash mark.
 
@@ -46,15 +47,15 @@ A heading 2 (H2) is a section heading, created with two hash marks.
     locale: 'de',
     messages: {
       // Book metadata
-      'sample.book.title': 'Einführung in EPUB',
-      'sample.book.description':
+      [SAMPLE_MSGIDS.bookTitle]: 'Einführung in EPUB',
+      [SAMPLE_MSGIDS.bookDescription]:
         'Ein umfassender Leitfaden zur Erstellung und Bearbeitung von EPUB-Dateien mit Active EPUB-Technologie.',
-      'sample.author.name': 'EDITME Redaktionsteam',
-      'sample.publisher.name': 'EDITME Verlag',
+      [SAMPLE_MSGIDS.authorName]: 'EDITME Redaktionsteam',
+      [SAMPLE_MSGIDS.publisherName]: 'EDITME Verlag',
 
       // Chapter content
-      'sample.chapter1.title': 'Erste Schritte',
-      'sample.chapter1.content': `# Das ist eine Überschrift 1
+      [SAMPLE_MSGIDS.chapter1Title]: 'Erste Schritte',
+      [SAMPLE_MSGIDS.chapter1Content]: `# Das ist eine Überschrift 1
 
 Eine Überschrift 1 (H1) ist der Haupttitel eines Dokuments, erstellt mit einem einzigen Rautezeichen.
 
@@ -76,14 +77,15 @@ Eine Überschrift 2 (H2) ist eine Abschnittsüberschrift, erstellt mit zwei Raut
     locale: 'ar',
     messages: {
       // Book metadata
-      'sample.book.title': 'مقدمة إلى EPUB',
-      'sample.book.description': 'دليل شامل لإنشاء وتحرير ملفات EPUB باستخدام تقنية Active EPUB.',
-      'sample.author.name': 'فريق تحرير EDITME',
-      'sample.publisher.name': 'دار نشر EDITME',
+      [SAMPLE_MSGIDS.bookTitle]: 'مقدمة إلى EPUB',
+      [SAMPLE_MSGIDS.bookDescription]:
+        'دليل شامل لإنشاء وتحرير ملفات EPUB باستخدام تقنية Active EPUB.',
+      [SAMPLE_MSGIDS.authorName]: 'فريق تحرير EDITME',
+      [SAMPLE_MSGIDS.publisherName]: 'دار نشر EDITME',
 
       // Chapter content
-      'sample.chapter1.title': 'البداية',
-      'sample.chapter1.content': `# هذا عنوان 1
+      [SAMPLE_MSGIDS.chapter1Title]: 'البداية',
+      [SAMPLE_MSGIDS.chapter1Content]: `# هذا عنوان 1
 
 العنوان 1 (H1) هو العنوان الرئيسي للوثيقة، يُنشأ بعلامة مربع واحدة.
 
@@ -184,7 +186,7 @@ export const validationTestCases = {
   missing: {
     incompleteFrench: {
       isValid: false,
-      missingKeys: ['sample.chapter1.title', 'sample.chapter1.content'],
+      missingKeys: [SAMPLE_MSGIDS.chapter1Title, SAMPLE_MSGIDS.chapter1Content],
       emptyKeys: [],
       locale: 'fr',
     } satisfies ValidationResult,
@@ -194,7 +196,7 @@ export const validationTestCases = {
     emptyContent: {
       isValid: false,
       missingKeys: [],
-      emptyKeys: ['sample.book.title'],
+      emptyKeys: [SAMPLE_MSGIDS.bookTitle],
       locale: 'es',
     } satisfies ValidationResult,
   },
@@ -212,18 +214,17 @@ export const errorScenarios = {
 
   missingTranslations: {
     locale: 'fr',
-    missingKeys: ['sample.chapter1.title', 'sample.chapter1.content'],
+    missingKeys: [SAMPLE_MSGIDS.chapter1Title, SAMPLE_MSGIDS.chapter1Content],
     expectedError: 'TranslationMissingError',
-    expectedMessage:
-      'Missing translation keys for locale fr: sample.chapter1.title, sample.chapter1.content',
+    expectedMessage: `Missing translation keys for locale fr: ${SAMPLE_MSGIDS.chapter1Title}, ${SAMPLE_MSGIDS.chapter1Content}`,
   },
 
   invalidContent: {
     locale: 'es',
-    key: 'sample.book.title',
+    key: SAMPLE_MSGIDS.bookTitle,
     reason: 'Translation is empty',
     expectedError: 'InvalidContentError',
-    expectedMessage: 'Invalid content for es.sample.book.title: Translation is empty',
+    expectedMessage: `Invalid content for es.${SAMPLE_MSGIDS.bookTitle}: Translation is empty`,
   },
 };
 
@@ -235,10 +236,10 @@ export const incompleteCatalogs = {
     locale: 'fr',
     messages: {
       // Only partial content
-      'sample.book.title': 'Introduction à EPUB',
-      'sample.book.description': 'Un guide complet pour créer et éditer des fichiers EPUB.',
-      'sample.author.name': 'Équipe éditoriale EDITME',
-      'sample.publisher.name': 'Éditions EDITME',
+      [SAMPLE_MSGIDS.bookTitle]: 'Introduction à EPUB',
+      [SAMPLE_MSGIDS.bookDescription]: 'Un guide complet pour créer et éditer des fichiers EPUB.',
+      [SAMPLE_MSGIDS.authorName]: 'Équipe éditoriale EDITME',
+      [SAMPLE_MSGIDS.publisherName]: 'Éditions EDITME',
       // Missing: chapter1 content
     },
     headers: {
@@ -250,12 +251,12 @@ export const incompleteCatalogs = {
   es: {
     locale: 'es',
     messages: {
-      'sample.book.title': '', // Empty content
-      'sample.book.description': 'Una guía completa para crear y editar archivos EPUB.',
-      'sample.author.name': 'Equipo Editorial EDITME',
-      'sample.publisher.name': 'Editorial EDITME',
-      'sample.chapter1.title': 'Comenzando',
-      'sample.chapter1.content': 'Este capítulo te guiará a través de los conceptos básicos.',
+      [SAMPLE_MSGIDS.bookTitle]: '', // Empty content
+      [SAMPLE_MSGIDS.bookDescription]: 'Una guía completa para crear y editar archivos EPUB.',
+      [SAMPLE_MSGIDS.authorName]: 'Equipo Editorial EDITME',
+      [SAMPLE_MSGIDS.publisherName]: 'Editorial EDITME',
+      [SAMPLE_MSGIDS.chapter1Title]: 'Comenzando',
+      [SAMPLE_MSGIDS.chapter1Content]: 'Este capítulo te guiará a través de los conceptos básicos.',
     },
     headers: {
       Language: 'es',
@@ -268,12 +269,12 @@ export const incompleteCatalogs = {
  * List of all required sample content keys
  */
 export const requiredSampleContentKeys: SampleContentKey[] = [
-  'sample.book.title',
-  'sample.book.description',
-  'sample.author.name',
-  'sample.publisher.name',
-  'sample.chapter1.title',
-  'sample.chapter1.content',
+  SAMPLE_MSGIDS.bookTitle,
+  SAMPLE_MSGIDS.bookDescription,
+  SAMPLE_MSGIDS.authorName,
+  SAMPLE_MSGIDS.publisherName,
+  SAMPLE_MSGIDS.chapter1Title,
+  SAMPLE_MSGIDS.chapter1Content,
 ];
 
 /**

@@ -8,6 +8,7 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import type { TransformExecutor, TransformContext } from '../../transform/transform-executor.js';
 import type { TranslationFunction } from '../../i18n/types.js';
+import { SAMPLE_MSGIDS } from '../../content/types.js';
 import { ContentService } from './content.service.js';
 
 // Test utilities and mocks
@@ -33,16 +34,16 @@ function createMockTransformExecutor(): jest.Mocked<TransformExecutor> {
 }
 
 // Minimal sample-content catalogs consumed by SampleContentGenerator (via
-// getCatalogs). Each locale must carry the required sample.* keys; chapter
+// getCatalogs). Each locale must carry the required SAMPLE_MSGIDS keys; chapter
 // content is markdown (starts with "# ").
 function sampleMessages(label: string): Record<string, string> {
   return {
-    'sample.book.title': `${label} Sample Book`,
-    'sample.book.description': `${label} description`,
-    'sample.author.name': `${label} Author`,
-    'sample.publisher.name': `${label} Publisher`,
-    'sample.chapter1.title': `${label} Chapter 1`,
-    'sample.chapter1.content': `# ${label} Chapter 1\n\nSample content.`,
+    [SAMPLE_MSGIDS.bookTitle]: `${label} Sample Book`,
+    [SAMPLE_MSGIDS.bookDescription]: `${label} description`,
+    [SAMPLE_MSGIDS.authorName]: `${label} Author`,
+    [SAMPLE_MSGIDS.publisherName]: `${label} Publisher`,
+    [SAMPLE_MSGIDS.chapter1Title]: `${label} Chapter 1`,
+    [SAMPLE_MSGIDS.chapter1Content]: `# ${label} Chapter 1\n\nSample content.`,
   };
 }
 

@@ -1,11 +1,5 @@
 /**
- * Locales that are actually shipped to users — the only catalogs compiled into
- * src/lib/i18n/locales/ and bundled into static/i18n-bundle.zip.
- *
- * The other locales in locales/*.po are scaffolded but not genuinely translated, so
- * they are deliberately excluded from the bundle (a not-shipped catalog can never be
- * loaded at runtime, so a placeholder can never surface).
- *
- * Runtime mirror: ENABLED_LOCALES in src/lib/i18n/locale-config.ts — keep in sync.
+ * Re-export of the shared locale metadata so build scripts have a stable local
+ * import point. The single source of truth is src/lib/i18n/locale-meta.js.
  */
-export const ENABLED_LOCALES = ['en', 'de'];
+export { ENABLED_LOCALES, LOCALE_CONFIGS } from '../src/lib/i18n/locale-meta.js';

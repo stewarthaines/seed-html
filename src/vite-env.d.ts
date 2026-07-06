@@ -12,9 +12,11 @@ declare module '*.ts?raw' {
   export default content;
 }
 
-// Global types for internationalization
+// Global types for internationalization. The build injects the assignment as a
+// stable anchor: null in the base build (no embedded catalogs), or a
+// data:application/zip;base64 URL when catalogs are embedded/injected.
 declare global {
   interface Window {
-    __EDITME_I18N_BUNDLE__?: string;
+    __EDITME_I18N_BUNDLE__?: string | null;
   }
 }
