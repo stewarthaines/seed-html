@@ -32,6 +32,10 @@ msgstr "{count} Barrierefreiheitsprobleme"
 msgid "{count} days ago"
 msgstr "vor {count} Tagen"
 
+#: src/lib/components/metadata/MetadataTab.svelte
+msgid "{count} errors"
+msgstr "{count} Fehler"
+
 #: src/lib/components/spine/EditorPane.svelte
 msgid "{count} Warnings"
 msgstr "{count} Warnungen"
@@ -149,6 +153,48 @@ msgstr "{path} (Zeile {line})"
 msgid "{sel}/{total}"
 msgstr "{sel}/{total}"
 
+#: src/lib/content/types.ts
+msgid ""
+"# Achievement *Unlocked!*\n"
+"\n"
+"This is a minimal sample EPUB created in the Simple EPUB Editor app - **SEED.html**.\n"
+"\n"
+"This sample project provides only a subset of markdown format options (headings, bold and italic).\n"
+"\n"
+"## Markdown Subset\n"
+"\n"
+"**This is strong**  and is created by wrapping text in double asterisks.\n"
+"\n"
+"*This is emphasized* and is created by wrapping text in single asterisks.\n"
+"\n"
+"You can write also xhtml directly in <em><strong>this</strong> EPUB</em> but doing this is kind of missing the point of the SEED.html app.\n"
+"\n"
+"## A Better Way\n"
+"\n"
+"For richer formatting options there are third party javascript extensions that are not currently present in this project.\n"
+"\n"
+"For real writing projects the best way to start is to choose a sample EPUB that's pre-configured for generating semantic, accessible xhtml from *plain text source*.\n"
+msgstr ""
+"# Erfolg *freigeschaltet!*\n"
+"\n"
+"Dies ist ein minimales Beispiel-EPUB, das in der Simple-EPUB-Editor-App — **SEED.html** — erstellt wurde.\n"
+"\n"
+"Dieses Beispielprojekt bietet nur einen Teil der Markdown-Formatoptionen (Überschriften, Fett und Kursiv).\n"
+"\n"
+"## Markdown-Teilmenge\n"
+"\n"
+"**Das ist fett** und wird erstellt, indem Text in doppelte Sternchen eingeschlossen wird.\n"
+"\n"
+"*Das ist hervorgehoben* und wird erstellt, indem Text in einzelne Sternchen eingeschlossen wird.\n"
+"\n"
+"Sie können auch XHTML direkt in <em><strong>dieses</strong> EPUB</em> schreiben, aber das verfehlt gewissermaßen den Sinn der SEED.html-App.\n"
+"\n"
+"## Ein besserer Weg\n"
+"\n"
+"Für umfangreichere Formatierungsoptionen gibt es JavaScript-Erweiterungen von Drittanbietern, die derzeit nicht in diesem Projekt vorhanden sind.\n"
+"\n"
+"Für echte Schreibprojekte beginnen Sie am besten damit, ein Beispiel-EPUB zu wählen, das für die Erzeugung von semantischem, barrierefreiem XHTML aus *reinem Textquelltext* vorkonfiguriert ist.\n"
+
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "1 day ago"
 msgstr "vor 1 Tag"
@@ -181,78 +227,6 @@ msgstr "Ein Name ist erforderlich."
 #: src/lib/Sidebar.svelte
 msgid "About SEED.html"
 msgstr "Über SEED.html"
-
-#: src/lib/navigation/views/ThirdPartyView.svelte
-msgid "about.attribution.content"
-msgstr "Entwickelt von Stewart Haines."
-
-#: src/lib/navigation/views/ThirdPartyView.svelte
-msgid "about.disclaimer.summary"
-msgstr "Ein Großteil dieser Software wurde mit KI-Coding-Agenten geschrieben, vor allem mit Claude Code von Anthropic."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.epub.editor"
-msgstr "Dieser Editor verwandelt reinen Text in ein gültiges EPUB — ohne Server, Konten oder Installation. Sie schreiben in einfacher, lesbarer Source; sie wird zu einem standardkonformen Buch gepackt, das Sie in jedem Lesesystem öffnen können."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.epub.format"
-msgstr "EPUB ist der offene Standard für digitale Bücher: eine einzelne, eigenständige Datei aus Text, Stilen und Bildern, die jede kompatible App öffnen kann. Die Apps und Geräte, die sie anzeigen — Apple Books, Google Play Books, Kobo, Thorium Reader und viele mehr — werden Lesesysteme genannt. Da das Format offen ist, kann ein einmal erstelltes Buch fast überall gelesen werden, indem es sich an jeden Bildschirm anpasst und auf die von jedem Leser gewählte Größe, Schrift und Kontrast eingeht."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.epub.title"
-msgstr "Was ist ein EPUB?"
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.graphic.alt"
-msgstr "Ein mit dem Editor erstelltes EPUB, das sich auf Smartphones, Tablets und E-Readern öffnet."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.graphic.caption"
-msgstr "Einmal erstellen — überall lesen: Smartphones, Tablets, E-Reader und Apps."
-
-#: src/lib/navigation/views/ThirdPartyView.svelte
-msgid "about.license.summary"
-msgstr "Simple EPUB Editor (vertrieben als SEED.html) ist freie und quelloffene Software, veröffentlicht unter der MIT-Lizenz. Sie dürfen sie verwenden, verändern und weiterverbreiten — einschließlich der Einbettung in die EPUBs, die Sie erstellen."
-
-#: src/lib/navigation/views/ThirdPartyView.svelte
-msgid "about.license.title"
-msgstr "Lizenz"
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.seed.graphic.alt"
-msgstr "SEED.html erzeugt zwei Ausgaben: ein EPUB, das seine eigene SEED.zip-Source einbettet, und ein PDF. Das PDF ist ein einseitiges Zielformat; nur das EPUB hat einen Rückkehrpfeil zur App und kann erneut importiert, bearbeitet und neu veröffentlicht werden."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.seed.graphic.caption"
-msgstr "SEED.html exportiert ein EPUB, das seine eigene SEED.zip-Source einbettet, oder ein PDF – und nur dieses EPUB lässt sich erneut öffnen, bearbeiten und veröffentlichen."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.seed.p1"
-msgstr "Die meisten Werkzeuge behandeln EPUB als Zielformat – eine fertige Datei, die man exportiert und dann hinter sich lässt. SEED kehrt das um: Das Buch, das Sie hier erstellen, ist ein gültiges, eigenständiges EPUB, das zugleich seinen eigenen bearbeitbaren Quelltext (gebündelt als SEED.zip) enthält."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.seed.p2"
-msgstr "Dadurch wird das EPUB zu einem lebendigen Dokument statt zu einer Sackgasse – jede Person kann es wieder öffnen, um es zu lesen, zu überarbeiten oder die Arbeit fortzusetzen, ohne Server, Konten oder eine neu zusammenzusetzende Toolchain. Das eignet sich gut für Verteilung, Mitwirkung und langfristige Bewahrung."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.seed.title"
-msgstr "Was unterscheidet ein SEED-EPUB?"
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "about.tagline"
-msgstr "Erstellen Sie E-Books, die jeder lesen kann — direkt in Ihrem Browser."
-
-#: src/lib/navigation/views/ThirdPartyView.svelte
-msgid "about.thirdparty.intro"
-msgstr "Diese Anwendung wird mit den folgenden Open-Source-Bibliotheken erstellt:"
-
-#: src/lib/navigation/views/ThirdPartyView.svelte
-msgid "about.thirdparty.title"
-msgstr "Bibliotheken von Drittanbietern"
-
-#: src/lib/navigation/views/ThirdPartyView.svelte
-msgid "about.version"
-msgstr "Version"
 
 #: src/lib/components/track-changes/PatchsetReviewDialog.svelte
 msgid "Accept all changes in {name}"
@@ -654,6 +628,10 @@ msgstr "Geänderte Dateien"
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Changes"
 msgstr "Änderungen"
+
+#: src/lib/content/types.ts
+msgid "Chapter 1: Getting Started"
+msgstr "Kapitel 1: Erste Schritte"
 
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Chapter Content"
@@ -1112,6 +1090,10 @@ msgstr "Demo-Steuerung"
 msgid "Description"
 msgstr "Beschreibung"
 
+#: src/lib/navigation/views/ThirdPartyView.svelte
+msgid "Developed by Stewart Haines."
+msgstr "Entwickelt von Stewart Haines."
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Device"
 msgstr "Gerät"
@@ -1297,6 +1279,10 @@ msgstr "Titel eingeben"
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 msgid "EPUB"
 msgstr "EPUB"
+
+#: src/lib/navigation/views/AboutView.svelte
+msgid "EPUB is the open standard for digital books: a single, self-contained file of text, styles, and images that any compliant app can open. The apps and devices that display them — Apple Books, Google Play Books, Kobo, Thorium Reader, and many more — are called Reading Systems. Because the format is open, a book you make once can be read almost anywhere, reflowing to fit any screen and adapting to each reader's chosen size, font, and contrast."
+msgstr "EPUB ist der offene Standard für digitale Bücher: eine einzelne, eigenständige Datei aus Text, Stilen und Bildern, die jede kompatible App öffnen kann. Die Apps und Geräte, die sie anzeigen — Apple Books, Google Play Books, Kobo, Thorium Reader und viele mehr — werden Lesesysteme genannt. Da das Format offen ist, kann ein einmal erstelltes Buch fast überall gelesen werden, indem es sich an jeden Bildschirm anpasst und auf die von jedem Leser gewählte Größe, Schrift und Kontrast eingeht."
 
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "EPUB Properties"
@@ -1964,6 +1950,14 @@ msgstr ""
 msgid "Main navigation"
 msgstr "Hauptnavigation"
 
+#: src/lib/navigation/views/AboutView.svelte
+msgid "Make ebooks anyone can read — right now in your browser."
+msgstr "Erstellen Sie E-Books, die jeder lesen kann — direkt in Ihrem Browser."
+
+#: src/lib/navigation/views/AboutView.svelte
+msgid "Make it once — read it anywhere: phones, tablets, e-readers, and apps."
+msgstr "Einmal erstellen — überall lesen: Smartphones, Tablets, E-Reader und Apps."
+
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Malformed XHTML"
 msgstr "Fehlerhaftes XHTML"
@@ -2014,6 +2008,10 @@ msgstr "Modus"
 msgid "Modified"
 msgstr "Geändert"
 
+#: src/lib/navigation/views/AboutView.svelte
+msgid "Most publishing workflows treat EPUB as a destination format — a finished file you export and leave behind. SEED subverts that: the book you build here is a valid, self-contained EPUB that also carries its own editable source (bundled as SEED.zip) inside it."
+msgstr "Die meisten Werkzeuge behandeln EPUB als Zielformat – eine fertige Datei, die man exportiert und dann hinter sich lässt. SEED kehrt das um: Das Buch, das Sie hier erstellen, ist ein gültiges, eigenständiges EPUB, das zugleich seinen eigenen bearbeitbaren Quelltext (gebündelt als SEED.zip) enthält."
+
 #: src/lib/components/SpineItem.svelte
 msgid "Move {id} down"
 msgstr "{id} nach unten verschieben"
@@ -2045,6 +2043,10 @@ msgstr "Startzeit um 1 Sekunde vorstellen"
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Move up"
 msgstr "Nach oben"
+
+#: src/lib/navigation/views/ThirdPartyView.svelte
+msgid "Much of this software was written with AI coding agents, primarily Anthropic's Claude Code."
+msgstr "Ein Großteil dieser Software wurde mit KI-Coding-Agenten geschrieben, vor allem mit Claude Code von Anthropic."
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "n/a"
@@ -2270,6 +2272,10 @@ msgstr "Aus"
 #: src/lib/components/settings/TrackChangesPanel.svelte
 msgid "On — review mode"
 msgstr "An – Überprüfungsmodus"
+
+#: src/lib/navigation/views/AboutView.svelte
+msgid "One EPUB made with the editor, opening on phones, tablets, and e-readers."
+msgstr "Ein mit dem Editor erstelltes EPUB, das sich auf Smartphones, Tablets und E-Readern öffnet."
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Open a project to add extensions"
@@ -2794,47 +2800,16 @@ msgstr "S3-kompatibel"
 msgid "S3-Compatible Storage"
 msgstr "S3-kompatibler Speicher"
 
-#: src/lib/content/sample-content-generator.ts
-msgid "sample.author.name"
+#: src/lib/content/types.ts
+msgid "Sample Author"
 msgstr "Beispielautor"
 
-#: src/lib/content/sample-content-generator.ts
-msgid "sample.book.description"
-msgstr "Dies ist ein Beispiel-EPUB-Buch, das zu Demonstrationszwecken erstellt wurde. Es zeigt die grundlegende Struktur und den Inhalt einer EPUB-Publikation."
-
-#: src/lib/content/sample-content-generator.ts
-msgid "sample.book.title"
+#: src/lib/content/types.ts
+msgid "Sample EPUB Book"
 msgstr "Beispiel-EPUB-Buch"
 
-#: src/lib/content/sample-content-generator.ts
-msgid "sample.chapter1.content"
-msgstr ""
-"# Erfolg *freigeschaltet!*\n"
-"\n"
-"Dies ist ein minimales Beispiel-EPUB, das in der Simple-EPUB-Editor-App — **SEED.html** — erstellt wurde.\n"
-"\n"
-"Dieses Beispielprojekt bietet nur einen Teil der Markdown-Formatoptionen (Überschriften, Fett und Kursiv).\n"
-"\n"
-"## Markdown-Teilmenge\n"
-"\n"
-"**Das ist fett** und wird erstellt, indem Text in doppelte Sternchen eingeschlossen wird.\n"
-"\n"
-"*Das ist hervorgehoben* und wird erstellt, indem Text in einzelne Sternchen eingeschlossen wird.\n"
-"\n"
-"Sie können auch XHTML direkt in <em><strong>dieses</strong> EPUB</em> schreiben, aber das verfehlt gewissermaßen den Sinn der SEED.html-App.\n"
-"\n"
-"## Ein besserer Weg\n"
-"\n"
-"Für umfangreichere Formatierungsoptionen gibt es JavaScript-Erweiterungen von Drittanbietern, die derzeit nicht in diesem Projekt vorhanden sind.\n"
-"\n"
-"Für echte Schreibprojekte beginnen Sie am besten damit, ein Beispiel-EPUB zu wählen, das für die Erzeugung von semantischem, barrierefreiem XHTML aus *reinem Textquelltext* vorkonfiguriert ist.\n"
-
-#: src/lib/content/sample-content-generator.ts
-msgid "sample.chapter1.title"
-msgstr "Kapitel 1: Erste Schritte"
-
-#: src/lib/content/sample-content-generator.ts
-msgid "sample.publisher.name"
+#: src/lib/content/types.ts
+msgid "Sample Publisher"
 msgstr "Beispielverlag"
 
 #: src/lib/components/EditSpineItemDialog.svelte
@@ -2893,6 +2868,14 @@ msgstr "Secret Access Key"
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Secret Key"
 msgstr "Secret Key"
+
+#: src/lib/navigation/views/AboutView.svelte
+msgid "SEED.html exports an EPUB that embeds its own SEED.zip source, or a PDF — and only that EPUB can be reopened, edited, and republished."
+msgstr "SEED.html exportiert ein EPUB, das seine eigene SEED.zip-Source einbettet, oder ein PDF – und nur dieses EPUB lässt sich erneut öffnen, bearbeiten und veröffentlichen."
+
+#: src/lib/navigation/views/AboutView.svelte
+msgid "SEED.html publishes two outputs: an EPUB that embeds its own SEED.zip source, and a PDF. The PDF is a one-way destination; only the EPUB has a return arrow back to the app, showing it can be re-imported, edited, and republished."
+msgstr "SEED.html erzeugt zwei Ausgaben: ein EPUB, das seine eigene SEED.zip-Source einbettet, und ein PDF. Das PDF ist ein einseitiges Zielformat; nur das EPUB hat einen Rückkehrpfeil zur App und kann erneut importiert, bearbeitet und neu veröffentlicht werden."
 
 #: src/App.svelte
 msgid "Select a spine item to see the preview here"
@@ -2998,6 +2981,10 @@ msgstr "Fehler beim Abmelden: {error}"
 #: src/lib/Sidebar.svelte
 msgid "Simple EPUB Editor"
 msgstr "Simple EPUB Editor"
+
+#: src/lib/navigation/views/ThirdPartyView.svelte
+msgid "Simple EPUB Editor (distributed as SEED.html) is free and open-source software, released under the MIT License. You're welcome to use it, modify it, and redistribute it — including embedding it inside the EPUBs you create."
+msgstr "Simple EPUB Editor (vertrieben als SEED.html) ist freie und quelloffene Software, veröffentlicht unter der MIT-Lizenz. Sie dürfen sie verwenden, verändern und weiterverbreiten — einschließlich der Einbettung in die EPUBs, die Sie erstellen."
 
 #: src/lib/components/manifest/ManifestTable.svelte
 #: src/lib/navigation/views/PublishView.svelte
@@ -3161,6 +3148,10 @@ msgstr "Schriftgröße"
 msgid "Text Transform"
 msgstr "Text-Transformation"
 
+#: src/lib/navigation/views/AboutView.svelte
+msgid "That turns the EPUB into a living document rather than a dead end — anyone can reopen it to read, revise, or continue the work, with no servers, accounts, or toolchain to reassemble. It suits distribution, contribution, and long-term preservation."
+msgstr "Dadurch wird das EPUB zu einem lebendigen Dokument statt zu einer Sackgasse – jede Person kann es wieder öffnen, um es zu lesen, zu überarbeiten oder die Arbeit fortzusetzen, ohne Server, Konten oder eine neu zusammenzusetzende Toolchain. Das eignet sich gut für Verteilung, Mitwirkung und langfristige Bewahrung."
+
 #: src/lib/components/plugins/PluginPanel.svelte
 msgid "The plugin could not be loaded — you may be offline."
 msgstr ""
@@ -3186,9 +3177,21 @@ msgstr "Diese Dateien stimmen mit vorhandenen Kapiteln überein. Wählen Sie fü
 msgid "These files match existing manifest items. Choose what to do with each."
 msgstr "Diese Dateien stimmen mit vorhandenen Manifest-Elementen überein. Wählen Sie für jede aus, was geschehen soll."
 
+#: src/lib/navigation/views/ThirdPartyView.svelte
+msgid "Third-Party Libraries"
+msgstr "Bibliotheken von Drittanbietern"
+
+#: src/lib/navigation/views/ThirdPartyView.svelte
+msgid "This application is built with the following open source libraries:"
+msgstr "Diese Anwendung wird mit den folgenden Open-Source-Bibliotheken erstellt:"
+
 #: src/lib/components/spine/ChapterValidationPanel.svelte
 msgid "This chapter"
 msgstr "Dieses Kapitel"
+
+#: src/lib/navigation/views/AboutView.svelte
+msgid "This editor turns plain text into a valid EPUB with no servers, accounts, or installation. You write in simple, readable source; it's packaged into a standards-compliant book you can open in any Reading System."
+msgstr "Dieser Editor verwandelt reinen Text in ein gültiges EPUB — ohne Server, Konten oder Installation. Sie schreiben in einfacher, lesbarer Source; sie wird zu einem standardkonformen Buch gepackt, das Sie in jedem Lesesystem öffnen können."
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "This EPUB is read-only, so extensions can't be added."
@@ -3210,6 +3213,10 @@ msgstr "Dieses EPUB wurde nicht im Simple EPUB Editor erstellt, daher können se
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "This file is empty."
 msgstr "Diese Datei ist leer."
+
+#: src/lib/content/types.ts
+msgid "This is a sample EPUB book created for demonstration purposes. It showcases the basic structure and content of an EPUB publication."
+msgstr "Dies ist ein Beispiel-EPUB-Buch, das zu Demonstrationszwecken erstellt wurde. Es zeigt die grundlegende Struktur und den Inhalt einer EPUB-Publikation."
 
 #: src/lib/components/track-changes/PatchsetReviewDialog.svelte
 msgid "This patchset has no changes."
@@ -3435,13 +3442,13 @@ msgstr "Validierungsbericht (epubcheck) für dieses Kapitel"
 msgid "Validation Report: {filename}"
 msgstr "Validierungsbericht: {filename}"
 
-#: src/lib/components/metadata/MetadataTab.svelte
-msgid "validation.errorsCount"
-msgstr "{count} Fehler"
-
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "value:Label, value:Label"
 msgstr "Wert:Beschriftung, Wert:Beschriftung"
+
+#: src/lib/navigation/views/ThirdPartyView.svelte
+msgid "Version"
+msgstr "Version"
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Video Insertion"
@@ -3490,6 +3497,14 @@ msgstr "WebDAV-URL"
 #: src/lib/navigation/views/AboutView.svelte
 msgid "Welcome"
 msgstr "Willkommen"
+
+#: src/lib/navigation/views/AboutView.svelte
+msgid "What is an EPUB?"
+msgstr "Was ist ein EPUB?"
+
+#: src/lib/navigation/views/AboutView.svelte
+msgid "What is different about a SEED EPUB?"
+msgstr "Was unterscheidet ein SEED-EPUB?"
 
 #: src/lib/components/settings/TrackChangesPanel.svelte
 msgid "While locked, you can edit the text of existing chapters, styles and scripts. Adding, removing or reordering chapters, changing the manifest, and editing metadata are disabled. Your original content is saved so your edits can be captured as a patchset."

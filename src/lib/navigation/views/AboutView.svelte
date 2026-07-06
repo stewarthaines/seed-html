@@ -1,7 +1,6 @@
 <script lang="ts">
   import { t } from '../../i18n';
   import PaneHeader from '$lib/components/layout/PaneHeader.svelte';
-
 </script>
 
 <div class="about-pane">
@@ -9,7 +8,7 @@
     <span class="pane-title">{$t('Welcome')}</span>
   </PaneHeader>
   <div class="about-pane-body">
-    <p class="about-tagline">{$t('about.tagline')}</p>
+    <p class="about-tagline">{$t('Make ebooks anyone can read — right now in your browser.')}</p>
 
     <!-- One EPUB, made here, opening across many Reading Systems. Decorative
          line-art; the caption below carries the meaning for screen readers. -->
@@ -18,7 +17,7 @@
         class="reach-graphic"
         viewBox="0 0 460 210"
         role="img"
-        aria-label={$t('about.graphic.alt')}
+        aria-label={$t('One EPUB made with the editor, opening on phones, tablets, and e-readers.')}
       >
         <defs>
           <marker
@@ -62,18 +61,32 @@
           <path d="M326 201 L414 201" />
         </g>
       </svg>
-      <figcaption class="reach-caption">{$t('about.graphic.caption')}</figcaption>
+      <figcaption class="reach-caption">
+        {$t('Make it once — read it anywhere: phones, tablets, e-readers, and apps.')}
+      </figcaption>
     </figure>
 
     <section class="about-section">
-      <h2>{$t('about.epub.title')}</h2>
-      <p>{$t('about.epub.format')}</p>
-      <p>{$t('about.epub.editor')}</p>
+      <h2>{$t('What is an EPUB?')}</h2>
+      <p>
+        {$t(
+          "EPUB is the open standard for digital books: a single, self-contained file of text, styles, and images that any compliant app can open. The apps and devices that display them — Apple Books, Google Play Books, Kobo, Thorium Reader, and many more — are called Reading Systems. Because the format is open, a book you make once can be read almost anywhere, reflowing to fit any screen and adapting to each reader's chosen size, font, and contrast."
+        )}
+      </p>
+      <p>
+        {$t(
+          "This editor turns plain text into a valid EPUB with no servers, accounts, or installation. You write in simple, readable source; it's packaged into a standards-compliant book you can open in any Reading System."
+        )}
+      </p>
     </section>
 
     <section class="about-section">
-      <h2>{$t('about.seed.title')}</h2>
-      <p>{$t('about.seed.p1')}</p>
+      <h2>{$t('What is different about a SEED EPUB?')}</h2>
+      <p>
+        {$t(
+          'Most publishing workflows treat EPUB as a destination format — a finished file you export and leave behind. SEED subverts that: the book you build here is a valid, self-contained EPUB that also carries its own editable source (bundled as SEED.zip) inside it.'
+        )}
+      </p>
 
       <!-- SEED.html publishes three outputs: PDF and a plain EPUB are one-way
            destinations; the EPUB that embeds SEED.zip has a dashed return arrow —
@@ -84,7 +97,9 @@
           class="reach-graphic seed-graphic"
           viewBox="0 0 420 220"
           role="img"
-          aria-label={$t('about.seed.graphic.alt')}
+          aria-label={$t(
+            'SEED.html publishes two outputs: an EPUB that embeds its own SEED.zip source, and a PDF. The PDF is a one-way destination; only the EPUB has a return arrow back to the app, showing it can be re-imported, edited, and republished.'
+          )}
         >
           <defs>
             <marker
@@ -150,10 +165,18 @@
             <text x="356" y="181" class="lbl">PDF</text>
           </g>
         </svg>
-        <figcaption class="reach-caption">{$t('about.seed.graphic.caption')}</figcaption>
+        <figcaption class="reach-caption">
+          {$t(
+            'SEED.html exports an EPUB that embeds its own SEED.zip source, or a PDF — and only that EPUB can be reopened, edited, and republished.'
+          )}
+        </figcaption>
       </figure>
 
-      <p>{$t('about.seed.p2')}</p>
+      <p>
+        {$t(
+          'That turns the EPUB into a living document rather than a dead end — anyone can reopen it to read, revise, or continue the work, with no servers, accounts, or toolchain to reassemble. It suits distribution, contribution, and long-term preservation.'
+        )}
+      </p>
     </section>
   </div>
 </div>
@@ -276,5 +299,4 @@
     color: var(--color-text-secondary);
     margin: 0 0 var(--space-3) 0;
   }
-
 </style>

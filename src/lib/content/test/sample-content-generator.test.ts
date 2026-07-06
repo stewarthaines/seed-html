@@ -11,6 +11,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { SampleContentGenerator } from '../sample-content-generator.js';
 import type { TranslationCatalog } from '../../i18n/types.js';
 import {
+  SAMPLE_MSGIDS,
   TranslationMissingError,
   UnsupportedLocaleError,
   InvalidContentError,
@@ -34,12 +35,12 @@ describe('SampleContentGenerator', () => {
       en: {
         locale: 'en',
         messages: {
-          'sample.book.title': 'Introduction to EPUB',
-          'sample.book.description': 'A comprehensive guide to EPUB creation',
-          'sample.author.name': 'EDITME Editorial Team',
-          'sample.publisher.name': 'EDITME Publishing',
-          'sample.chapter1.title': 'Getting Started',
-          'sample.chapter1.content':
+          [SAMPLE_MSGIDS.bookTitle]: 'Introduction to EPUB',
+          [SAMPLE_MSGIDS.bookDescription]: 'A comprehensive guide to EPUB creation',
+          [SAMPLE_MSGIDS.authorName]: 'EDITME Editorial Team',
+          [SAMPLE_MSGIDS.publisherName]: 'EDITME Publishing',
+          [SAMPLE_MSGIDS.chapter1Title]: 'Getting Started',
+          [SAMPLE_MSGIDS.chapter1Content]:
             '# This is a Heading 1\n\nA heading 1 (H1) is the main title of a document, created with a single hash mark.\n\n## This is a Heading 2\n\nA heading 2 (H2) is a section heading, created with two hash marks.\n\n**This text is bold** - Bold text adds strong emphasis and is created by wrapping text in double asterisks.\n\n*This text is emphasized* - Emphasized text (usually italic) adds mild emphasis and is created by wrapping text in single asterisks.',
         },
         headers: {},
@@ -47,12 +48,12 @@ describe('SampleContentGenerator', () => {
       fr: {
         locale: 'fr',
         messages: {
-          'sample.book.title': 'Introduction à EPUB',
-          'sample.book.description': 'Un guide complet pour la création EPUB',
-          'sample.author.name': 'Équipe éditoriale EDITME',
-          'sample.publisher.name': 'Éditions EDITME',
-          'sample.chapter1.title': 'Premiers pas',
-          'sample.chapter1.content':
+          [SAMPLE_MSGIDS.bookTitle]: 'Introduction à EPUB',
+          [SAMPLE_MSGIDS.bookDescription]: 'Un guide complet pour la création EPUB',
+          [SAMPLE_MSGIDS.authorName]: 'Équipe éditoriale EDITME',
+          [SAMPLE_MSGIDS.publisherName]: 'Éditions EDITME',
+          [SAMPLE_MSGIDS.chapter1Title]: 'Premiers pas',
+          [SAMPLE_MSGIDS.chapter1Content]:
             "# Ceci est un titre 1\n\nUn titre 1 (H1) est le titre principal d'un document, créé avec un seul dièse.\n\n## Ceci est un titre 2\n\nUn titre 2 (H2) est un titre de section, créé avec deux dièses.\n\n**Ce texte est en gras** - Le texte en gras ajoute une forte emphase et est créé en encadrant le texte de doubles astérisques.\n\n*Ce texte est mis en emphase* - Le texte mis en emphase (généralement italique) ajoute une emphase légère et est créé en encadrant le texte d'astérisques simples.",
         },
         headers: {},
@@ -60,12 +61,12 @@ describe('SampleContentGenerator', () => {
       de: {
         locale: 'de',
         messages: {
-          'sample.book.title': 'Einführung in EPUB',
-          'sample.book.description': 'Ein umfassender Leitfaden zur EPUB-Erstellung',
-          'sample.author.name': 'EDITME Redaktionsteam',
-          'sample.publisher.name': 'EDITME Publikationen',
-          'sample.chapter1.title': 'Erste Schritte',
-          'sample.chapter1.content':
+          [SAMPLE_MSGIDS.bookTitle]: 'Einführung in EPUB',
+          [SAMPLE_MSGIDS.bookDescription]: 'Ein umfassender Leitfaden zur EPUB-Erstellung',
+          [SAMPLE_MSGIDS.authorName]: 'EDITME Redaktionsteam',
+          [SAMPLE_MSGIDS.publisherName]: 'EDITME Publikationen',
+          [SAMPLE_MSGIDS.chapter1Title]: 'Erste Schritte',
+          [SAMPLE_MSGIDS.chapter1Content]:
             '# Das ist eine Überschrift 1\n\nEine Überschrift 1 (H1) ist der Haupttitel eines Dokuments, erstellt mit einem einzigen Rautezeichen.\n\n## Das ist eine Überschrift 2\n\nEine Überschrift 2 (H2) ist eine Abschnittsüberschrift, erstellt mit zwei Rautezeichen.\n\n**Dieser Text ist fett** - Fetter Text fügt starke Betonung hinzu und wird erstellt, indem Text in doppelte Sternchen eingeschlossen wird.\n\n*Dieser Text ist hervorgehoben* - Hervorgehobener Text (normalerweise kursiv) fügt leichte Betonung hinzu und wird erstellt, indem Text in einfache Sternchen eingeschlossen wird.',
         },
         headers: {},
@@ -73,12 +74,12 @@ describe('SampleContentGenerator', () => {
       ar: {
         locale: 'ar',
         messages: {
-          'sample.book.title': 'مقدمة إلى EPUB',
-          'sample.book.description': 'دليل شامل لإنشاء EPUB',
-          'sample.author.name': 'فريق تحرير EDITME',
-          'sample.publisher.name': 'منشورات EDITME',
-          'sample.chapter1.title': 'البداية',
-          'sample.chapter1.content':
+          [SAMPLE_MSGIDS.bookTitle]: 'مقدمة إلى EPUB',
+          [SAMPLE_MSGIDS.bookDescription]: 'دليل شامل لإنشاء EPUB',
+          [SAMPLE_MSGIDS.authorName]: 'فريق تحرير EDITME',
+          [SAMPLE_MSGIDS.publisherName]: 'منشورات EDITME',
+          [SAMPLE_MSGIDS.chapter1Title]: 'البداية',
+          [SAMPLE_MSGIDS.chapter1Content]:
             '# هذا عنوان 1\n\nالعنوان 1 (H1) هو العنوان الرئيسي للوثيقة، يُنشأ بعلامة مربع واحدة.\n\n## هذا عنوان 2\n\nالعنوان 2 (H2) هو عنوان قسم، يُنشأ بعلامتي مربع.\n\n**هذا النص غامق** - النص الغامق يضيف تأكيداً قوياً ويُنشأ بوضع النص بين نجمتين مزدوجتين.\n\n*هذا النص مؤكد* - النص المؤكد (عادة مائل) يضيف تأكيداً خفيفاً ويُنشأ بوضع النص بين نجمتين مفردتين.',
         },
         headers: {},
@@ -163,7 +164,7 @@ describe('SampleContentGenerator', () => {
           incomplete: {
             locale: 'incomplete',
             messages: {
-              'sample.book.title': 'Test Title',
+              [SAMPLE_MSGIDS.bookTitle]: 'Test Title',
               // Missing other required keys
             },
             headers: {},
@@ -182,12 +183,12 @@ describe('SampleContentGenerator', () => {
           empty: {
             locale: 'empty',
             messages: {
-              'sample.book.title': '', // Empty translation
-              'sample.book.description': 'Valid description',
-              'sample.author.name': 'Valid author',
-              'sample.publisher.name': 'Valid publisher',
-              'sample.chapter1.title': 'Valid title',
-              'sample.chapter1.content': 'Valid content',
+              [SAMPLE_MSGIDS.bookTitle]: '', // Empty translation
+              [SAMPLE_MSGIDS.bookDescription]: 'Valid description',
+              [SAMPLE_MSGIDS.authorName]: 'Valid author',
+              [SAMPLE_MSGIDS.publisherName]: 'Valid publisher',
+              [SAMPLE_MSGIDS.chapter1Title]: 'Valid title',
+              [SAMPLE_MSGIDS.chapter1Content]: 'Valid content',
             },
             headers: {},
           },
@@ -199,7 +200,7 @@ describe('SampleContentGenerator', () => {
         );
 
         await expect(emptyGenerator.generateLocalizedContent('empty')).rejects.toThrow(
-          'Invalid content for empty.sample.book.title: Translation is empty'
+          `Invalid content for empty.${SAMPLE_MSGIDS.bookTitle}: Translation is empty`
         );
       });
     });
@@ -335,10 +336,10 @@ describe('SampleContentGenerator', () => {
           incomplete: {
             locale: 'incomplete',
             messages: {
-              'sample.book.title': 'Test Title',
-              'sample.book.description': 'Test Description',
-              'sample.author.name': 'Test Author',
-              'sample.publisher.name': 'Test Publisher',
+              [SAMPLE_MSGIDS.bookTitle]: 'Test Title',
+              [SAMPLE_MSGIDS.bookDescription]: 'Test Description',
+              [SAMPLE_MSGIDS.authorName]: 'Test Author',
+              [SAMPLE_MSGIDS.publisherName]: 'Test Publisher',
               // Missing chapter keys
             },
             headers: {},
@@ -369,7 +370,7 @@ describe('SampleContentGenerator', () => {
         incomplete: {
           locale: 'incomplete',
           messages: {
-            'sample.book.title': 'Test Title',
+            [SAMPLE_MSGIDS.bookTitle]: 'Test Title',
             // Missing other required keys
           },
           headers: {},
@@ -394,7 +395,7 @@ describe('SampleContentGenerator', () => {
         incomplete: {
           locale: 'incomplete',
           messages: {
-            'sample.book.title': 'Test Title',
+            [SAMPLE_MSGIDS.bookTitle]: 'Test Title',
             // Missing other required keys
           },
           headers: {},
@@ -436,10 +437,10 @@ describe('SampleContentGenerator', () => {
           incomplete: {
             locale: 'incomplete',
             messages: {
-              'sample.book.title': 'Test Title',
-              'sample.book.description': 'Test Description',
-              'sample.author.name': 'Test Author',
-              'sample.publisher.name': 'Test Publisher',
+              [SAMPLE_MSGIDS.bookTitle]: 'Test Title',
+              [SAMPLE_MSGIDS.bookDescription]: 'Test Description',
+              [SAMPLE_MSGIDS.authorName]: 'Test Author',
+              [SAMPLE_MSGIDS.publisherName]: 'Test Publisher',
               // Missing chapter1 keys
             },
             headers: {},
@@ -453,7 +454,7 @@ describe('SampleContentGenerator', () => {
           result,
           'incomplete',
           false,
-          ['sample.chapter1.title', 'sample.chapter1.content'],
+          [SAMPLE_MSGIDS.chapter1Title, SAMPLE_MSGIDS.chapter1Content],
           []
         );
       });
@@ -464,12 +465,12 @@ describe('SampleContentGenerator', () => {
           empty: {
             locale: 'empty',
             messages: {
-              'sample.book.title': '', // Empty
-              'sample.book.description': 'Test Description',
-              'sample.author.name': 'Test Author',
-              'sample.publisher.name': 'Test Publisher',
-              'sample.chapter1.title': 'Test Chapter 1',
-              'sample.chapter1.content': 'Test Content',
+              [SAMPLE_MSGIDS.bookTitle]: '', // Empty
+              [SAMPLE_MSGIDS.bookDescription]: 'Test Description',
+              [SAMPLE_MSGIDS.authorName]: 'Test Author',
+              [SAMPLE_MSGIDS.publisherName]: 'Test Publisher',
+              [SAMPLE_MSGIDS.chapter1Title]: 'Test Chapter 1',
+              [SAMPLE_MSGIDS.chapter1Content]: 'Test Content',
             },
             headers: {},
           },
@@ -478,7 +479,7 @@ describe('SampleContentGenerator', () => {
 
         const result = await emptyGenerator.validateLocaleCompleteness('empty');
 
-        expectValidationResult(result, 'empty', false, [], ['sample.book.title']);
+        expectValidationResult(result, 'empty', false, [], [SAMPLE_MSGIDS.bookTitle]);
       });
 
       it('should handle both missing and empty keys', async () => {
@@ -487,10 +488,10 @@ describe('SampleContentGenerator', () => {
           problematic: {
             locale: 'problematic',
             messages: {
-              'sample.book.title': '', // Empty
-              'sample.book.description': 'Test Description',
-              'sample.author.name': 'Test Author',
-              'sample.publisher.name': 'Test Publisher',
+              [SAMPLE_MSGIDS.bookTitle]: '', // Empty
+              [SAMPLE_MSGIDS.bookDescription]: 'Test Description',
+              [SAMPLE_MSGIDS.authorName]: 'Test Author',
+              [SAMPLE_MSGIDS.publisherName]: 'Test Publisher',
               // Missing chapter1 keys
             },
             headers: {},
@@ -502,9 +503,9 @@ describe('SampleContentGenerator', () => {
         expect(result.isValid).toBe(false);
         expect(result.locale).toBe('problematic');
         expect(result.missingKeys.length + result.emptyKeys.length).toBeGreaterThan(0);
-        expect(result.emptyKeys).toContain('sample.book.title');
+        expect(result.emptyKeys).toContain(SAMPLE_MSGIDS.bookTitle);
         expect(result.missingKeys).toEqual(
-          expect.arrayContaining(['sample.chapter1.title', 'sample.chapter1.content'])
+          expect.arrayContaining([SAMPLE_MSGIDS.chapter1Title, SAMPLE_MSGIDS.chapter1Content])
         );
       });
     });
@@ -607,7 +608,7 @@ describe('SampleContentGenerator', () => {
         incomplete: {
           locale: 'incomplete',
           messages: {
-            'sample.book.title': 'Test Title',
+            [SAMPLE_MSGIDS.bookTitle]: 'Test Title',
             // Missing other required keys
           },
           headers: {},
@@ -646,12 +647,12 @@ describe('SampleContentGenerator', () => {
         empty: {
           locale: 'empty',
           messages: {
-            'sample.book.title': '', // Empty translation
-            'sample.book.description': 'Valid description',
-            'sample.author.name': 'Valid author',
-            'sample.publisher.name': 'Valid publisher',
-            'sample.chapter1.title': 'Valid title',
-            'sample.chapter1.content': 'Valid content',
+            [SAMPLE_MSGIDS.bookTitle]: '', // Empty translation
+            [SAMPLE_MSGIDS.bookDescription]: 'Valid description',
+            [SAMPLE_MSGIDS.authorName]: 'Valid author',
+            [SAMPLE_MSGIDS.publisherName]: 'Valid publisher',
+            [SAMPLE_MSGIDS.chapter1Title]: 'Valid title',
+            [SAMPLE_MSGIDS.chapter1Content]: 'Valid content',
           },
           headers: {},
         },
@@ -666,7 +667,7 @@ describe('SampleContentGenerator', () => {
         const typedError = error as InvalidContentError;
         expect(typedError.name).toBe('InvalidContentError');
         expect(typedError.locale).toBe('empty');
-        expect(typedError.key).toBe('sample.book.title');
+        expect(typedError.key).toBe(SAMPLE_MSGIDS.bookTitle);
         expect(typedError.reason).toBe('Translation is empty');
       }
     });

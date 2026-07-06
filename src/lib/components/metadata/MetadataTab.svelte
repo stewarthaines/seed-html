@@ -45,7 +45,7 @@
   <span class="tab-label">{label}</span>
 
   {#if errorCount > 0}
-    <span class="error-indicator" aria-label={$t('validation.errorsCount', { count: errorCount })}>
+    <span class="error-indicator" aria-label={$t('{count} errors', { count: errorCount })}>
       !
     </span>
   {/if}
