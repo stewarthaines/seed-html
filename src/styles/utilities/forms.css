@@ -34,17 +34,6 @@
   font-weight: var(--input-placeholder-weight);
 }
 
-/* Input sizes */
-.input-sm {
-  padding: var(--space-0-5) var(--space-1);
-  font-size: var(--text-xs);
-}
-
-.input-lg {
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--text-lg);
-}
-
 /* ============================================
    TEXTAREA STYLES
    ============================================ */
@@ -184,11 +173,6 @@
   color: var(--color-text-primary);
 }
 
-.label-required::after {
-  content: ' *';
-  color: var(--color-error-600);
-}
-
 /* ============================================
    FORM GROUP STYLES
    ============================================ */
@@ -197,27 +181,9 @@
   margin-block-end: var(--form-field-spacing);
 }
 
-.form-section {
-  margin-block-end: var(--form-section-spacing);
-  padding-block-end: var(--form-section-spacing);
-  border-block-end: 1px solid var(--color-border-default);
-}
-
-.form-section:last-child {
-  margin-block-end: 0;
-  padding-block-end: 0;
-  border-block-end: none;
-}
-
 /* ============================================
    FIELD HELP TEXT
    ============================================ */
-
-.field-help {
-  margin-block-start: var(--space-1);
-  font-size: var(--text-xs);
-  color: var(--color-text-secondary);
-}
 
 .field-error {
   margin-block-start: var(--space-1);
@@ -358,11 +324,6 @@
   font-size: var(--button-text-sm);
 }
 
-.btn-lg {
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--button-text-lg);
-}
-
 /* ============================================
    FIELDSET STYLES
    ============================================ */
@@ -385,13 +346,6 @@ legend {
    INLINE FORM STYLES
    ============================================ */
 
-.form-inline {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-}
-
 .form-inline .form-group {
   margin-block-end: 0;
   flex: 1 1 auto;
@@ -400,42 +354,4 @@ legend {
 .form-inline .input,
 .form-inline .select {
   width: auto;
-}
-
-/* ============================================
-   CRAIGSLIST-SPECIFIC STYLES
-   ============================================ */
-
-/* Green focus state for inputs (Craigslist style) */
-.input-craigslist:focus,
-.textarea-craigslist:focus,
-.select-craigslist:focus {
-  border-color: var(--color-success-600);
-}
-
-/* Deprecated: prefer .btn-secondary. Kept until remaining call sites migrate. */
-.btn-minimal {
-  padding: var(--space-1) var(--space-2);
-  color: var(--color-text-primary);
-  background-color: var(--color-neutral-100);
-  border: 1px solid var(--color-neutral-400);
-  border-radius: var(--radius-sm);
-}
-
-.btn-minimal:hover {
-  background-color: var(--color-neutral-200);
-}
-
-/* Deprecated: prefer .btn-link. Kept until remaining call sites migrate. */
-.btn-text {
-  padding: 0;
-  color: var(--color-text-link);
-  background: none;
-  border: none;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.btn-text:hover {
-  color: var(--color-text-link-hover);
 }

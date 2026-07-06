@@ -18,7 +18,6 @@
     'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
 
   /* Serif font family - minimal serif stack */
-  --font-serif: Georgia, 'Times New Roman', Times, serif;
 
   /* ============================================
      FONT SIZES
@@ -33,63 +32,32 @@
   --text-2xl: 1.25rem; /* 20px */
   --text-3xl: 1.5rem; /* 24px */
   --text-4xl: 1.875rem; /* 30px */
-  --text-5xl: 2.25rem; /* 36px */
-  --text-6xl: 3rem; /* 48px */
-  --text-7xl: 3.75rem; /* 60px */
-  --text-8xl: 4.5rem; /* 72px */
-  --text-9xl: 6rem; /* 96px */
 
   /* ============================================
      FONT WEIGHTS
      ============================================ */
 
-  --font-thin: 100;
-  --font-extralight: 200;
-  --font-light: 300;
   --font-normal: 400;
   --font-medium: 500;
   --font-semibold: 600;
   --font-bold: 700;
-  --font-extrabold: 800;
-  --font-black: 900;
 
   /* ============================================
      LINE HEIGHTS
      Relative line heights for different content types
      ============================================ */
 
-  --leading-none: 1;
   --leading-tight: 1.2;
-  --leading-snug: 1.3;
   --leading-normal: 1.4;
   --leading-relaxed: 1.5;
-  --leading-loose: 1.6;
 
   /* Specific line heights for different text sizes */
-  --leading-xs: 1rem; /* 16px */
-  --leading-sm: 1.25rem; /* 20px */
-  --leading-base: 1.5rem; /* 24px */
-  --leading-lg: 1.75rem; /* 28px */
-  --leading-xl: 1.75rem; /* 28px */
-  --leading-2xl: 2rem; /* 32px */
-  --leading-3xl: 2.25rem; /* 36px */
-  --leading-4xl: 2.5rem; /* 40px */
-  --leading-5xl: 1;
-  --leading-6xl: 1;
-  --leading-7xl: 1;
-  --leading-8xl: 1;
-  --leading-9xl: 1;
 
   /* ============================================
      LETTER SPACING
      ============================================ */
 
-  --tracking-tighter: -0.05em;
-  --tracking-tight: -0.025em;
-  --tracking-normal: 0em;
   --tracking-wide: 0.025em;
-  --tracking-wider: 0.05em;
-  --tracking-widest: 0.1em;
 
   /* ============================================
      SEMANTIC TYPOGRAPHY COMBINATIONS
@@ -97,11 +65,6 @@
      ============================================ */
 
   /* Display text - for large headings and hero text */
-  --text-display-2xl: var(--text-5xl);
-  --text-display-xl: var(--text-4xl);
-  --text-display-lg: var(--text-3xl);
-  --text-display-md: var(--text-2xl);
-  --text-display-sm: var(--text-xl);
 
   /* Heading text */
   --text-heading-2xl: var(--text-4xl);
@@ -112,65 +75,37 @@
   --text-heading-xs: var(--text-base);
 
   /* Body text */
-  --text-body-xl: var(--text-xl);
-  --text-body-lg: var(--text-lg);
   --text-body-md: var(--text-base);
-  --text-body-sm: var(--text-sm);
-  --text-body-xs: var(--text-xs);
 
   /* Label text */
-  --text-label-lg: var(--text-sm);
   --text-label-md: var(--text-xs);
-  --text-label-sm: var(--text-xs);
 
   /* ============================================
      COMPONENT-SPECIFIC TYPOGRAPHY
      ============================================ */
 
   /* Button typography */
-  --button-text-lg: var(--text-base);
   --button-text-md: var(--text-sm);
   --button-text-sm: var(--text-xs);
   --button-font-weight: var(--font-normal);
-  --button-letter-spacing: var(--tracking-normal);
 
   /* Input typography */
   --input-text-size: var(--text-base);
   --input-font-weight: var(--font-normal);
-  --input-letter-spacing: var(--tracking-normal);
   --input-placeholder-weight: var(--font-normal);
 
   /* Navigation typography */
-  --nav-text-size: var(--text-base);
-  --nav-font-weight: var(--font-normal);
-  --nav-letter-spacing: var(--tracking-normal);
 
   /* Sidebar typography */
-  --sidebar-text-size: var(--text-sm);
-  --sidebar-font-weight: var(--font-normal);
-  --sidebar-heading-weight: var(--font-semibold);
-  --sidebar-letter-spacing: var(--tracking-normal);
 
   /* Code typography */
   --code-text-size: var(--text-sm);
-  --code-font-family: var(--font-mono);
-  --code-font-weight: var(--font-normal);
-  --code-letter-spacing: var(--tracking-normal);
-  --code-line-height: var(--leading-relaxed);
 
   /* Caption typography */
-  --caption-text-size: var(--text-xs);
-  --caption-font-weight: var(--font-normal);
-  --caption-letter-spacing: var(--tracking-normal);
-  --caption-line-height: var(--leading-normal);
 
   /* ============================================
      TEXT DECORATION
      ============================================ */
-
-  --text-decoration-none: none;
-  --text-decoration-underline: underline;
-  --text-decoration-line-through: line-through;
 
   /* Link styling */
   --link-text-decoration: underline;
@@ -181,32 +116,14 @@
      TEXT TRANSFORM
      ============================================ */
 
-  --text-transform-none: none;
-  --text-transform-uppercase: uppercase;
-  --text-transform-lowercase: lowercase;
-  --text-transform-capitalize: capitalize;
-
   /* ============================================
      READING OPTIMIZATIONS
      For content-heavy areas like text editor
      ============================================ */
 
   /* Editor text */
-  --editor-font-family: var(--font-serif);
-  --editor-text-size: var(--text-base);
-  --editor-line-height: var(--leading-relaxed);
-  --editor-letter-spacing: var(--tracking-normal);
-  --editor-font-weight: var(--font-normal);
 
   /* Preview text */
-  --preview-font-family: var(--font-serif);
-  --preview-text-size: var(--text-base);
-  --preview-line-height: var(--leading-relaxed);
-  --preview-letter-spacing: var(--tracking-normal);
 
   /* Metadata text */
-  --metadata-font-family: var(--font-sans);
-  --metadata-text-size: var(--text-sm);
-  --metadata-line-height: var(--leading-normal);
-  --metadata-label-weight: var(--font-medium);
 }

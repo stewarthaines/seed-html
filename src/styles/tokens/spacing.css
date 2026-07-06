@@ -11,41 +11,15 @@
      Base unit: 4px (0.25rem) - all spacing is multiple of this
      ============================================ */
 
-  --space-0: 0;
-  --space-px: 1px;
   --space-0-5: 0.125rem; /* 2px */
   --space-1: 0.25rem; /* 4px */
   --space-1-5: 0.375rem; /* 6px */
   --space-2: 0.5rem; /* 8px */
-  --space-2-5: 0.625rem; /* 10px */
   --space-3: 0.75rem; /* 12px */
-  --space-3-5: 0.875rem; /* 14px */
   --space-4: 1rem; /* 16px */
   --space-5: 1.25rem; /* 20px */
   --space-6: 1.5rem; /* 24px */
-  --space-7: 1.75rem; /* 28px */
   --space-8: 2rem; /* 32px */
-  --space-9: 2.25rem; /* 36px */
-  --space-10: 2.5rem; /* 40px */
-  --space-11: 2.75rem; /* 44px */
-  --space-12: 3rem; /* 48px */
-  --space-14: 3.5rem; /* 56px */
-  --space-16: 4rem; /* 64px */
-  --space-20: 5rem; /* 80px */
-  --space-24: 6rem; /* 96px */
-  --space-28: 7rem; /* 112px */
-  --space-32: 8rem; /* 128px */
-  --space-36: 9rem; /* 144px */
-  --space-40: 10rem; /* 160px */
-  --space-44: 11rem; /* 176px */
-  --space-48: 12rem; /* 192px */
-  --space-52: 13rem; /* 208px */
-  --space-56: 14rem; /* 224px */
-  --space-60: 15rem; /* 240px */
-  --space-64: 16rem; /* 256px */
-  --space-72: 18rem; /* 288px */
-  --space-80: 20rem; /* 320px */
-  --space-96: 24rem; /* 384px */
 
   /* ============================================
      SEMANTIC SPACING
@@ -53,25 +27,10 @@
      ============================================ */
 
   /* Component internal spacing - Craigslist-style tight spacing */
-  --spacing-component-xs: var(--space-0-5); /* 2px - minimal internal spacing */
-  --spacing-component-sm: var(--space-1); /* 4px - tight internal spacing */
-  --spacing-component-md: var(--space-2); /* 8px - medium internal spacing */
-  --spacing-component-lg: var(--space-3); /* 12px - comfortable internal spacing */
-  --spacing-component-xl: var(--space-4); /* 16px - spacious internal spacing */
 
   /* Layout spacing - Craigslist-style compact layout */
-  --spacing-layout-xs: var(--space-1); /* 4px - minimal layout spacing */
-  --spacing-layout-sm: var(--space-2); /* 8px - tight layout spacing */
-  --spacing-layout-md: var(--space-3); /* 12px - standard layout spacing */
-  --spacing-layout-lg: var(--space-4); /* 16px - comfortable layout spacing */
-  --spacing-layout-xl: var(--space-6); /* 24px - spacious layout spacing */
 
   /* Content spacing - Craigslist-style minimal content spacing */
-  --spacing-content-xs: var(--space-2); /* 8px - minimal content spacing */
-  --spacing-content-sm: var(--space-3); /* 12px - tight content spacing */
-  --spacing-content-md: var(--space-4); /* 16px - standard content spacing */
-  --spacing-content-lg: var(--space-5); /* 20px - comfortable content spacing */
-  --spacing-content-xl: var(--space-6); /* 24px - spacious content spacing */
 
   /* ============================================
      LAYOUT-SPECIFIC MEASUREMENTS
@@ -79,45 +38,21 @@
      ============================================ */
 
   /* Sidebar dimensions */
-  --layout-sidebar-width-expanded: 250px;
-  --layout-sidebar-width-collapsed: 40px;
 
   /* Header dimensions */
-  --layout-header-height: 60px;
-  --layout-header-padding: var(--space-4);
 
   /* Content area */
-  --layout-content-padding: var(--space-3);
-  --layout-content-max-width: 960px;
-  --layout-content-gap: var(--space-2);
 
   /* Panel spacing - using logical properties */
-  --layout-panel-padding-block: var(--space-3);
-  --layout-panel-padding-inline: var(--space-3);
-  --layout-panel-gap: var(--space-2);
-  --layout-panel-border-radius: var(--radius-none);
 
   /* Resize handle */
-  --layout-resize-handle-width: 4px;
-  --layout-resize-handle-hover-width: 6px;
 
   /* Form spacing - using logical properties */
   --form-field-spacing: var(--space-2);
-  --form-group-spacing: var(--space-3);
-  --form-section-spacing: var(--space-4);
 
   /* List spacing - using logical properties */
-  --list-item-padding-block: var(--space-1);
-  --list-item-padding-inline: var(--space-1);
-  --list-item-gap: var(--space-1);
-  --list-section-gap: var(--space-3);
 
   /* Card spacing - using logical properties */
-  --card-padding-block: var(--space-3);
-  --card-padding-inline: var(--space-3);
-  --card-gap: var(--space-2);
-  --card-header-padding-block: var(--space-2);
-  --card-header-padding-inline: var(--space-2);
 
   /* Button spacing - using logical properties */
   --button-padding-inline: var(--space-2);
@@ -130,11 +65,8 @@
      ============================================ */
 
   /* Direction-aware spacing */
-  --layout-direction: ltr; /* Default, overridden by [data-dir="rtl"] */
 
   /* RTL-aware content alignment */
-  --content-align-start: left; /* Overridden in RTL */
-  --content-align-end: right; /* Overridden in RTL */
 
   /* Focus and accessibility spacing */
   --focus-ring-width: 2px;
@@ -143,7 +75,6 @@
 
   /* Touch target minimum sizes (WCAG AA) */
   --touch-target-min: 44px;
-  --touch-target-spacing: var(--space-2);
 
   /* Screen reader spacing */
   --sr-only-clip: rect(0, 0, 0, 0);
@@ -153,46 +84,25 @@
      Consistent rounding for components
      ============================================ */
 
-  --radius-none: 0;
   --radius-xs: 0.0625rem; /* 1px */
   --radius-sm: 0.125rem; /* 2px */
   --radius-md: 0.1875rem; /* 3px */
   --radius-lg: 0.25rem; /* 4px */
-  --radius-xl: 0.375rem; /* 6px */
-  --radius-2xl: 0.5rem; /* 8px */
-  --radius-3xl: 0.75rem; /* 12px */
   --radius-full: 9999px; /* Full rounding */
 
   /* Semantic radius values */
   --radius-button: var(--radius-sm);
   --radius-input: var(--radius-xs);
-  --radius-card: var(--radius-none);
-  --radius-panel: var(--radius-none);
-  --radius-modal: var(--radius-sm);
-  --radius-tooltip: var(--radius-none);
 
   /* ============================================
      BREAKPOINTS
      Responsive design breakpoints
      ============================================ */
 
-  --breakpoint-sm: 640px;
-  --breakpoint-md: 768px;
-  --breakpoint-lg: 1024px;
-  --breakpoint-xl: 1280px;
-  --breakpoint-2xl: 1536px;
-
   /* ============================================
      CONTAINER SIZES
      Maximum widths for content containers
      ============================================ */
-
-  --container-sm: 640px;
-  --container-md: 768px;
-  --container-lg: 1024px;
-  --container-xl: 1280px;
-  --container-2xl: 1536px;
-  --container-full: 100%;
 }
 
 /* ============================================
@@ -201,7 +111,4 @@
    ============================================ */
 
 [data-dir='rtl'] {
-  --layout-direction: rtl;
-  --content-align-start: right;
-  --content-align-end: left;
 }

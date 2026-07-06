@@ -12,23 +12,12 @@
      ============================================ */
 
   /* Base durations */
-  --duration-instant: 0ms;
   --duration-fast: 150ms;
   --duration-normal: 250ms;
-  --duration-slow: 350ms;
-  --duration-slower: 500ms;
-  --duration-slowest: 750ms;
 
   /* Specific use case durations */
-  --duration-tooltip: var(--duration-fast);
   --duration-button-hover: var(--duration-fast);
-  --duration-input-focus: var(--duration-fast);
-  --duration-dropdown: var(--duration-normal);
-  --duration-modal: var(--duration-normal);
-  --duration-sidebar-toggle: var(--duration-normal);
   --duration-theme-switch: var(--duration-normal);
-  --duration-page-transition: var(--duration-slow);
-  --duration-loading: var(--duration-slower);
 
   /* ============================================
      EASING FUNCTIONS
@@ -36,22 +25,12 @@
      ============================================ */
 
   /* Standard easing curves */
-  --ease-linear: linear;
-  --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
-  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Custom easing curves */
-  --ease-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  --ease-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  --ease-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);
-  --ease-sharp: cubic-bezier(0.4, 0, 0.6, 1);
 
   /* Semantic easing - use these in components */
   --ease-ui-out: var(--ease-out); /* For elements entering */
-  --ease-ui-in: var(--ease-in); /* For elements exiting */
-  --ease-ui-in-out: var(--ease-in-out); /* For state changes */
-  --ease-ui-smooth: var(--ease-smooth); /* For smooth interactions */
 
   /* ============================================
      COMMON TRANSITIONS
@@ -64,38 +43,12 @@
     background-color var(--duration-fast) var(--ease-ui-out),
     border-color var(--duration-fast) var(--ease-ui-out);
 
-  --transition-opacity: opacity var(--duration-fast) var(--ease-ui-out);
-
-  --transition-transform: transform var(--duration-fast) var(--ease-ui-out);
-
   --transition-shadow: box-shadow var(--duration-fast) var(--ease-ui-out);
-
-  --transition-size:
-    width var(--duration-normal) var(--ease-ui-out),
-    height var(--duration-normal) var(--ease-ui-out);
 
   /* Component-specific transitions */
   --transition-button:
     var(--transition-colors), var(--transition-shadow),
     transform var(--duration-button-hover) var(--ease-ui-out);
-
-  --transition-input:
-    var(--transition-colors), border-color var(--duration-input-focus) var(--ease-ui-out),
-    box-shadow var(--duration-input-focus) var(--ease-ui-out);
-
-  --transition-panel: var(--transition-colors), var(--transition-shadow);
-
-  --transition-modal:
-    opacity var(--duration-modal) var(--ease-ui-out),
-    transform var(--duration-modal) var(--ease-ui-out);
-
-  --transition-dropdown:
-    opacity var(--duration-dropdown) var(--ease-ui-out),
-    transform var(--duration-dropdown) var(--ease-ui-out);
-
-  --transition-sidebar: width var(--duration-sidebar-toggle) var(--ease-ui-out);
-
-  --transition-resize: all var(--duration-fast) var(--ease-ui-out);
 
   /* ============================================
      THEME TRANSITIONS
@@ -114,26 +67,10 @@
      ============================================ */
 
   /* Loading animations */
-  --animation-spin: spin 1s linear infinite;
-  --animation-ping: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
-  --animation-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  --animation-bounce: bounce 1s infinite;
 
   /* Entrance animations */
-  --animation-fade-in: fadeIn var(--duration-normal) var(--ease-ui-out);
-  --animation-slide-in-up: slideInUp var(--duration-normal) var(--ease-ui-out);
-  --animation-slide-in-down: slideInDown var(--duration-normal) var(--ease-ui-out);
-  --animation-slide-in-left: slideInLeft var(--duration-normal) var(--ease-ui-out);
-  --animation-slide-in-right: slideInRight var(--duration-normal) var(--ease-ui-out);
-  --animation-scale-in: scaleIn var(--duration-normal) var(--ease-ui-out);
 
   /* Exit animations */
-  --animation-fade-out: fadeOut var(--duration-normal) var(--ease-ui-in);
-  --animation-slide-out-up: slideOutUp var(--duration-normal) var(--ease-ui-in);
-  --animation-slide-out-down: slideOutDown var(--duration-normal) var(--ease-ui-in);
-  --animation-slide-out-left: slideOutLeft var(--duration-normal) var(--ease-ui-in);
-  --animation-slide-out-right: slideOutRight var(--duration-normal) var(--ease-ui-in);
-  --animation-scale-out: scaleOut var(--duration-normal) var(--ease-ui-in);
 
   /* ============================================
      REDUCED MOTION
@@ -146,21 +83,11 @@
       /* Reduce all durations */
       --duration-fast: 50ms;
       --duration-normal: 100ms;
-      --duration-slow: 150ms;
-      --duration-slower: 200ms;
-      --duration-slowest: 250ms;
 
       /* Simplify easing */
       --ease-ui-out: ease;
-      --ease-ui-in: ease;
-      --ease-ui-in-out: ease;
-      --ease-ui-smooth: ease;
 
       /* Disable complex animations */
-      --animation-spin: none;
-      --animation-ping: none;
-      --animation-pulse: none;
-      --animation-bounce: none;
     }
   }
 
@@ -169,19 +96,10 @@
      ============================================ */
 
   /* Layout motion */
-  --layout-transition-duration: var(--duration-normal);
-  --layout-transition-easing: var(--ease-ui-out);
 
   /* Navigation motion */
-  --nav-transition-duration: var(--duration-fast);
-  --nav-transition-easing: var(--ease-ui-out);
 
   /* Content motion */
-  --content-transition-duration: var(--duration-normal);
-  --content-transition-easing: var(--ease-ui-out);
 
   /* Interactive motion */
-  --interactive-hover-duration: var(--duration-fast);
-  --interactive-focus-duration: var(--duration-fast);
-  --interactive-active-duration: var(--duration-instant);
 }

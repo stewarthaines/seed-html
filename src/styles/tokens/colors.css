@@ -22,64 +22,41 @@
   --color-neutral-700: #444444;
   --color-neutral-800: #333333;
   --color-neutral-900: #222222;
-  --color-neutral-950: #000000;
 
   /* Primary brand color (blue) - Craigslist link blue */
   --color-primary-50: #f0f0ff;
-  --color-primary-100: #e6e6ff;
   --color-primary-200: #ccccff;
   --color-primary-300: #9999ff;
   --color-primary-400: #6666ff;
   --color-primary-500: #3333ff;
   --color-primary-600: #0000ee;
   --color-primary-700: #0000cc;
-  --color-primary-800: #0000aa;
   --color-primary-900: #000088;
   --color-primary-950: #000066;
 
   /* Success (green) - Craigslist action green */
-  --color-success-50: #f0fdf4;
-  --color-success-100: #e6f5e6;
-  --color-success-200: #cceecc;
-  --color-success-300: #99dd99;
-  --color-success-400: #66cc66;
   --color-success-500: #33bb33;
   --color-success-600: #22aa22;
-  --color-success-700: #118811;
-  --color-success-800: #006600;
-  --color-success-900: #005500;
   --color-success-950: #004400;
 
   /* Warning (amber) */
-  --color-warning-50: #fffbeb;
-  --color-warning-100: #fef3c7;
-  --color-warning-200: #fde68a;
-  --color-warning-300: #fcd34d;
   --color-warning-400: #fbbf24;
   --color-warning-500: #f59e0b;
   --color-warning-600: #d97706;
-  --color-warning-700: #b45309;
-  --color-warning-800: #92400e;
-  --color-warning-900: #78350f;
   --color-warning-950: #451a03;
 
   /* Error (red) */
   --color-error-50: #fef2f2;
-  --color-error-100: #fee2e2;
-  --color-error-200: #fecaca;
   --color-error-300: #fca5a5;
   --color-error-400: #f87171;
   --color-error-500: #ef4444;
   --color-error-600: #dc2626;
   --color-error-700: #b91c1c;
-  --color-error-800: #991b1b;
-  --color-error-900: #7f1d1d;
   --color-error-950: #450a0a;
 
   /* Pure colors */
   --color-white: #ffffff;
   --color-black: #000000;
-  --color-transparent: transparent;
 
   /* Craigslist specific */
   --color-link-visited: #551a8b;
@@ -95,23 +72,14 @@
   --color-bg-primary: var(--color-white);
   --color-bg-secondary: var(--color-craigslist-bg);
   --color-bg-tertiary: var(--color-neutral-100);
-  --color-bg-quaternary: var(--color-neutral-200);
-  --color-bg-inverse: var(--color-neutral-900);
   --color-bg-accent: var(--color-primary-50);
-  --color-bg-success: var(--color-success-50);
-  --color-bg-warning: var(--color-warning-50);
   --color-bg-error: var(--color-error-50);
 
   /* Text colors */
   --color-text-primary: var(--color-neutral-900);
   --color-text-secondary: var(--color-neutral-600);
   --color-text-tertiary: var(--color-neutral-500);
-  --color-text-quaternary: var(--color-neutral-400);
   --color-text-inverse: var(--color-white);
-  --color-text-accent: var(--color-primary-600);
-  --color-text-success: var(--color-success-700);
-  --color-text-warning: var(--color-warning-700);
-  --color-text-error: var(--color-error-700);
   --color-text-link: var(--color-primary-600);
   --color-text-link-hover: var(--color-primary-700);
   --color-text-link-visited: var(--color-link-visited);
@@ -120,28 +88,19 @@
   --color-border-default: var(--color-craigslist-border);
   --color-border-strong: var(--color-neutral-400);
   --color-border-subtle: var(--color-neutral-300);
-  --color-border-inverse: var(--color-neutral-700);
   --color-border-accent: var(--color-primary-300);
-  --color-border-success: var(--color-success-600);
-  --color-border-warning: var(--color-warning-300);
   --color-border-error: var(--color-error-300);
   --color-border-focus: var(--color-success-600);
 
   /* Interactive colors */
   --color-interactive-primary: var(--color-primary-600);
   --color-interactive-primary-hover: var(--color-primary-700);
-  --color-interactive-primary-active: var(--color-primary-800);
   --color-interactive-secondary: var(--color-neutral-100);
-  --color-interactive-secondary-hover: var(--color-neutral-200);
-  --color-interactive-secondary-active: var(--color-neutral-300);
-  --color-interactive-disabled: var(--color-neutral-300);
-  --color-interactive-disabled-text: var(--color-neutral-500);
 
   /* Surface colors (for panels, cards, modals) */
   --color-surface-primary: var(--color-white);
   --color-surface-secondary: var(--color-neutral-50);
   --color-surface-tertiary: var(--color-neutral-100);
-  --color-surface-overlay: rgba(0, 0, 0, 0.5);
   --color-surface-elevated: var(--color-white);
 
   /* ============================================
@@ -151,11 +110,6 @@
 
   /* Sidebar colors */
   --color-sidebar-bg: var(--color-bg-primary);
-  --color-sidebar-border: var(--color-border-default);
-  --color-sidebar-item-hover: var(--color-neutral-100);
-  --color-sidebar-item-active: var(--color-neutral-200);
-  --color-sidebar-text: var(--color-text-primary);
-  --color-sidebar-text-secondary: var(--color-text-secondary);
 
   /* Button colors */
   --color-button-primary-bg: var(--color-neutral-100);
@@ -163,7 +117,6 @@
   --color-button-primary-text: var(--color-text-primary);
   --color-button-primary-border: var(--color-neutral-400);
   --color-button-secondary-bg: var(--color-white);
-  --color-button-secondary-bg-hover: var(--color-neutral-100);
   --color-button-secondary-text: var(--color-text-primary);
   --color-button-secondary-border: var(--color-border-default);
   --color-button-danger-bg: var(--color-error-600);
@@ -177,13 +130,10 @@
   --color-input-border-focus: var(--color-success-600);
   --color-input-text: var(--color-text-primary);
   --color-input-placeholder: var(--color-text-tertiary);
-  --color-input-border-active: var(--color-success-600);
 
   /* Status colors */
-  --color-status-success: var(--color-success-600);
   --color-status-warning: var(--color-warning-600);
   --color-status-error: var(--color-error-600);
-  --color-status-info: var(--color-primary-600);
 
   /* ============================================
      ACCESSIBILITY COLORS
@@ -213,12 +163,10 @@
      correctly in both themes (each points at a mode-aware token). Accent fills
      use --color-hover-accent so white text on them stays WCAG-AA. */
   --color-accent-primary: var(--color-hover-accent);
-  --color-accent-primary-hover: var(--color-interactive-primary-hover);
   --color-accent-secondary: var(--color-interactive-primary-hover);
   --color-accent-contrast: var(--color-on-accent);
   --color-bg-hover: var(--color-surface-hover);
   --color-primary-surface: var(--color-bg-accent);
-  --color-primary-surface-hover: var(--color-bg-accent);
   --color-primary-hover: var(--color-interactive-primary-hover);
   --color-error: var(--color-status-error);
   --color-error-surface: var(--color-error-bg);
@@ -227,18 +175,13 @@
   --color-warning-surface: var(--color-warning-bg);
   --color-warning-hover: var(--color-status-warning);
   --color-warning-border: var(--color-status-warning);
-  --color-danger: var(--color-button-danger-bg);
-  --color-text-placeholder: var(--color-input-placeholder);
 
   /* High contrast mode support (system colors) */
   --color-forced-bg: Canvas;
   --color-forced-text: CanvasText;
   --color-forced-border: ButtonBorder;
   --color-forced-link: LinkText;
-  --color-forced-visited: VisitedText;
   --color-forced-active: ActiveText;
-  --color-forced-button-face: ButtonFace;
-  --color-forced-button-text: ButtonText;
 
   /* Error and validation colors (WCAG AA compliant) */
   --color-error-text: #dc2626; /* 4.5:1 contrast on white */
