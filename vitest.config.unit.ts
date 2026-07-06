@@ -11,7 +11,11 @@ export default defineConfig({
   // Mirror vite.config.ts's `$lib` alias so source that imports via `$lib/…`
   // (the project convention) resolves under vitest too.
   resolve: {
-    alias: { $lib: path.resolve(dirname, 'src/lib') },
+    alias: {
+      $lib: path.resolve(dirname, 'src/lib'),
+      // Mirror vite.config.ts's icon-subset alias (see scripts/generate-icons.js).
+      'phosphor-svelte': path.resolve(dirname, 'src/lib/icons/generated/index.ts'),
+    },
   },
   // Mirror vite.config.ts's define so __VERSION__ resolves in unit tests too.
   define: {

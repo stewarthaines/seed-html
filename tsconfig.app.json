@@ -9,6 +9,7 @@
     "lib": ["ESNext", "DOM", "DOM.Iterable", "DOM.AsyncIterable"],
     "paths": {
       "$lib/*": ["./src/lib/*"],
+      "phosphor-svelte": ["./src/lib/icons/generated/index.ts"],
       "*": ["./src/*"]
     },
     /**
