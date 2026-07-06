@@ -3,21 +3,24 @@
  */
 
 import { writable, derived, get } from 'svelte/store';
-import type { I18nState, TranslationFunction, TranslationCatalog } from './types.js';
-import {
-  LOCALE_CONFIGS,
-  DEFAULT_LOCALE,
-  getEnabledBrowserLocale,
-  isLocaleEnabled,
-  isRTL,
-} from './locale-config.js';
+import type {
+  I18nState,
+  TranslationFunction,
+  TranslationCatalog,
+  AvailableLocale,
+} from './types.js';
+import { LOCALE_CONFIGS, DEFAULT_LOCALE, getEnabledBrowserLocale, isRTL } from './locale-config.js';
 import { createI18nLoader } from './loader.js';
+
+/** localStorage key for the persisted locale preference (load-bearing — do not rename) */
+const LOCALE_STORAGE_KEY = 'editme-locale';
 
 // Internal state store
 const i18nState = writable<I18nState>({
   currentLocale: DEFAULT_LOCALE,
   locales: LOCALE_CONFIGS,
   catalogs: {},
+  availableLocales: {},
   initialized: false,
   loading: false,
 });
@@ -28,6 +31,10 @@ export const isLoading = derived(i18nState, $state => $state.loading);
 export const isInitialized = derived(i18nState, $state => $state.initialized);
 export const documentDirection = derived(currentLocale, $locale =>
   isRTL($locale) ? 'rtl' : 'ltr'
+);
+/** Locales the picker can offer — the union of what all catalog sources can supply */
+export const availableLocales = derived(i18nState, $state =>
+  Object.values($state.availableLocales)
 );
 
 // English fallback catalog (bundled for immediate availability)
@@ -128,6 +135,40 @@ function applyDocumentLocale(locale: string): void {
 }
 
 /**
+ * Compute the availability union: English is always available (msgids are the
+ * English content), plus every locale a source supplied a catalog for. A catalog
+ * whose code has no LOCALE_CONFIGS entry is skipped — we don't invent display
+ * metadata for unknown codes.
+ */
+function computeAvailableLocales(
+  catalogs: Record<string, TranslationCatalog>
+): Record<string, AvailableLocale> {
+  const available: Record<string, AvailableLocale> = {
+    [DEFAULT_LOCALE]: { ...LOCALE_CONFIGS[DEFAULT_LOCALE], availability: 'loaded' },
+  };
+
+  for (const locale of Object.keys(catalogs)) {
+    const config = LOCALE_CONFIGS[locale];
+    if (config && !available[locale]) {
+      available[locale] = { ...config, availability: 'loaded' };
+    }
+  }
+
+  return available;
+}
+
+/**
+ * Read the persisted locale preference, or null when absent/unreadable
+ */
+function getPersistedLocale(): string | null {
+  try {
+    return typeof localStorage !== 'undefined' ? localStorage.getItem(LOCALE_STORAGE_KEY) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Initialize the i18n system
  */
 export async function initI18n(): Promise<void> {
@@ -142,10 +183,9 @@ export async function initI18n(): Promise<void> {
   try {
     const loader = createI18nLoader();
 
-    // Always extract translations from ZIP bundle
-    await loader.extractTranslations();
-
-    // Load translation catalogs
+    // Extract embedded catalogs (if this build carries any) into the workspace,
+    // then load everything the workspace holds — whatever source put it there.
+    await loader.extractEmbeddedBundle();
     const catalogs = await loader.loadTranslations();
 
     // Ensure English fallback is available
@@ -153,11 +193,14 @@ export async function initI18n(): Promise<void> {
       catalogs.en = englishFallback;
     }
 
-    // Determine initial locale. getEnabledBrowserLocale() only returns a shipped
-    // locale, so a Japanese/Arabic/… browser stays on English rather than loading a
-    // placeholder; the catalog check is a second guard (those catalogs aren't bundled).
-    const preferredLocale = getEnabledBrowserLocale();
-    const initialLocale = catalogs[preferredLocale] ? preferredLocale : DEFAULT_LOCALE;
+    const available = computeAvailableLocales(catalogs);
+
+    // Initial locale: the persisted preference wins when a source can supply it,
+    // then the browser preference (already restricted to shipped locales), then
+    // English. Availability is the gate — never start on a locale we can't render.
+    const persisted = getPersistedLocale();
+    const preferred = persisted && available[persisted] ? persisted : getEnabledBrowserLocale();
+    const initialLocale = available[preferred] ? preferred : DEFAULT_LOCALE;
 
     // Reflect the resolved locale on <html> (real lang/dir + data-* hooks).
     applyDocumentLocale(initialLocale);
@@ -166,6 +209,7 @@ export async function initI18n(): Promise<void> {
       ...s,
       currentLocale: initialLocale,
       catalogs,
+      availableLocales: available,
       initialized: true,
       loading: false,
     }));
@@ -178,6 +222,7 @@ export async function initI18n(): Promise<void> {
       ...s,
       currentLocale: DEFAULT_LOCALE,
       catalogs: { en: englishFallback },
+      availableLocales: computeAvailableLocales({}),
       initialized: true,
       loading: false,
     }));
@@ -198,37 +243,53 @@ export async function setLocale(locale: string): Promise<void> {
     throw new Error(`Unsupported locale: ${locale}`);
   }
 
-  // Known but not shipped (no genuine translation yet): refuse to switch so a stale
-  // preference or a programmatic call can't surface placeholder/English-stub UI.
-  if (!isLocaleEnabled(locale)) {
-    console.warn(`Locale ${locale} is not enabled; ignoring switch.`);
+  // No source can supply this locale's catalog (scaffolded-only, or not delivered
+  // to this deployment): refuse to switch so a stale preference or a programmatic
+  // call can't surface placeholder/English-stub UI.
+  const availability = state.availableLocales[locale]?.availability;
+  if (!availability) {
+    console.warn(`Locale ${locale} is not available; ignoring switch.`);
     return;
   }
 
-  if (!state.catalogs[locale]) {
-    console.warn(`Translation catalog for ${locale} not loaded, falling back to English`);
+  // Catalog cached in storage but not in memory yet: load it before switching.
+  if (availability === 'cached' && !state.catalogs[locale]) {
+    const catalog = await createI18nLoader().loadCatalog(locale);
+    if (!catalog) {
+      console.warn(`Translation catalog for ${locale} could not be loaded; ignoring switch.`);
+      return;
+    }
+    i18nState.update(s => ({
+      ...s,
+      catalogs: { ...s.catalogs, [locale]: catalog },
+      availableLocales: {
+        ...s.availableLocales,
+        [locale]: { ...s.availableLocales[locale], availability: 'loaded' },
+      },
+    }));
   }
 
   // Reflect the new locale on <html> (real lang/dir + data-* hooks).
   applyDocumentLocale(locale);
 
-  // Store preference
-  if (typeof localStorage !== 'undefined') {
-    localStorage.setItem('editme-locale', locale);
+  // Store preference — only after a successful switch
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+    }
+  } catch {
+    // Persistence is best-effort; the in-session switch still applies.
   }
 
   i18nState.update(s => ({ ...s, currentLocale: locale }));
 }
 
 /**
- * Get available locales
+ * Get available locales — the union of what all catalog sources can supply
  */
 export function getAvailableLocales() {
   const state = get(i18nState);
-  // Only shipped locales — scaffolded-but-untranslated ones stay out of the picker.
-  return Object.keys(state.locales)
-    .filter(code => isLocaleEnabled(code))
-    .map(code => state.locales[code]);
+  return Object.values(state.availableLocales);
 }
 
 /**
@@ -248,6 +309,7 @@ export function _resetI18nForTesting() {
     currentLocale: DEFAULT_LOCALE,
     locales: LOCALE_CONFIGS,
     catalogs: {},
+    availableLocales: {},
     initialized: false,
     loading: false,
   });

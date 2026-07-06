@@ -20,8 +20,9 @@ import { MockLocalStorage, mockTranslationCatalogs } from './fixtures/mock-trans
 
 // Mock the loader
 const mockLoader = {
-  needsUpdate: vi.fn(),
-  extractTranslations: vi.fn(),
+  extractEmbeddedBundle: vi.fn(),
+  listCachedLocales: vi.fn(),
+  loadCatalog: vi.fn(),
   loadTranslations: vi.fn(),
 };
 
@@ -81,9 +82,13 @@ describe('i18n runtime system', () => {
     _resetI18nForTesting();
 
     // Reset loader mocks
-    mockLoader.needsUpdate.mockReset();
-    mockLoader.extractTranslations.mockReset();
+    mockLoader.extractEmbeddedBundle.mockReset();
+    mockLoader.listCachedLocales.mockReset();
+    mockLoader.loadCatalog.mockReset();
     mockLoader.loadTranslations.mockReset();
+    mockLoader.extractEmbeddedBundle.mockResolvedValue([]);
+    mockLoader.listCachedLocales.mockResolvedValue([]);
+    mockLoader.loadCatalog.mockResolvedValue(null);
   });
 
   afterEach(() => {
@@ -107,7 +112,6 @@ describe('i18n runtime system', () => {
     beforeEach(async () => {
       // Setup with mock catalogs
       _resetI18nForTesting();
-      mockLoader.needsUpdate.mockResolvedValue(false);
       mockLoader.loadTranslations.mockResolvedValue(mockTranslationCatalogs);
       await initI18n();
     });
@@ -150,10 +154,19 @@ describe('i18n runtime system', () => {
       expect(get(t)('Nonexistent key')).toBe('Nonexistent key');
     });
 
-    it('should ignore a switch to a non-enabled locale (Arabic) and stay on English', async () => {
-      // Arabic is scaffolded but not enabled (no genuine translation shipped), so
-      // setLocale must refuse it rather than surface a placeholder/English-stub UI.
+    it('should translate to Arabic when its catalog is available', async () => {
+      // Availability is delivery-gated: a catalog a source supplied (here the mock
+      // storage) is switchable even if not in the build's ENABLED_LOCALES.
       await setLocale('ar');
+
+      expect(get(currentLocale)).toBe('ar');
+      expect(get(t)('Save')).toBe('حفظ');
+    });
+
+    it('should ignore a switch to a locale no source can supply and stay on English', async () => {
+      // Japanese is scaffolded but no catalog was delivered, so setLocale must
+      // refuse it rather than surface a placeholder/English-stub UI.
+      await setLocale('ja');
 
       expect(get(currentLocale)).toBe('en');
       expect(get(t)('Save')).toBe('Save');
@@ -165,7 +178,6 @@ describe('i18n runtime system', () => {
       expect(get(isInitialized)).toBe(false);
       expect(get(isLoading)).toBe(false);
 
-      mockLoader.needsUpdate.mockResolvedValue(false);
       mockLoader.loadTranslations.mockResolvedValue(mockTranslationCatalogs);
 
       await initI18n();
@@ -175,19 +187,17 @@ describe('i18n runtime system', () => {
       expect(get(currentLocale)).toBe('en');
     });
 
-    it('should extract translations when update needed', async () => {
-      mockLoader.needsUpdate.mockResolvedValue(true);
-      mockLoader.extractTranslations.mockResolvedValue(undefined);
+    it('should extract the embedded bundle before loading catalogs', async () => {
+      mockLoader.extractEmbeddedBundle.mockResolvedValue(['en', 'de']);
       mockLoader.loadTranslations.mockResolvedValue(mockTranslationCatalogs);
 
       await initI18n();
 
-      expect(mockLoader.extractTranslations).toHaveBeenCalled();
+      expect(mockLoader.extractEmbeddedBundle).toHaveBeenCalled();
       expect(get(isInitialized)).toBe(true);
     });
 
     it('should not initialize twice', async () => {
-      mockLoader.needsUpdate.mockResolvedValue(false);
       mockLoader.loadTranslations.mockResolvedValue(mockTranslationCatalogs);
 
       await initI18n();
@@ -197,7 +207,7 @@ describe('i18n runtime system', () => {
     });
 
     it('should fall back to English on error', async () => {
-      mockLoader.needsUpdate.mockRejectedValue(new Error('Load failed'));
+      mockLoader.extractEmbeddedBundle.mockRejectedValue(new Error('Load failed'));
 
       await initI18n();
 
@@ -206,10 +216,41 @@ describe('i18n runtime system', () => {
       expect(get(t)('Save')).toBe('Save'); // Fallback English
     });
 
+    it('should restore the persisted locale preference', async () => {
+      mockLocalStorage.setItem('editme-locale', 'de');
+      mockLoader.loadTranslations.mockResolvedValue(mockTranslationCatalogs);
+
+      await initI18n();
+
+      expect(get(currentLocale)).toBe('de');
+      expect(get(t)('Save')).toBe('Speichern');
+    });
+
+    it('should restore a persisted non-enabled locale when its catalog is available', async () => {
+      // Explicit user choice: ar was picked before (its catalog was delivered),
+      // so the preference is honored even though ar is not in ENABLED_LOCALES.
+      mockLocalStorage.setItem('editme-locale', 'ar');
+      mockLoader.loadTranslations.mockResolvedValue(mockTranslationCatalogs);
+
+      await initI18n();
+
+      expect(get(currentLocale)).toBe('ar');
+      expect(get(documentDirection)).toBe('rtl');
+    });
+
+    it('should ignore a persisted locale no source can supply', async () => {
+      mockLocalStorage.setItem('editme-locale', 'ja');
+      mockLoader.loadTranslations.mockResolvedValue(mockTranslationCatalogs);
+
+      await initI18n();
+
+      expect(get(currentLocale)).toBe('en');
+    });
+
     it('should ignore a non-enabled browser locale (Arabic) and use English/LTR', async () => {
-      // An Arabic browser must not auto-select the not-yet-translated ar catalog.
+      // Auto-detection stays restricted to shipped-quality locales even when the
+      // catalog happens to be available — only an explicit user choice enables it.
       mockNavigator.languages = ['ar-SA', 'ar'];
-      mockLoader.needsUpdate.mockResolvedValue(false);
       mockLoader.loadTranslations.mockResolvedValue(mockTranslationCatalogs);
 
       await initI18n();
@@ -228,7 +269,6 @@ describe('i18n runtime system', () => {
 
     it('should set document direction for LTR locale', async () => {
       mockNavigator.languages = ['de-DE', 'de'];
-      mockLoader.needsUpdate.mockResolvedValue(false);
       mockLoader.loadTranslations.mockResolvedValue(mockTranslationCatalogs);
 
       await initI18n();
@@ -247,7 +287,6 @@ describe('i18n runtime system', () => {
   describe('setLocale()', () => {
     beforeEach(async () => {
       _resetI18nForTesting();
-      mockLoader.needsUpdate.mockResolvedValue(false);
       mockLoader.loadTranslations.mockResolvedValue(mockTranslationCatalogs);
       await initI18n();
     });
@@ -264,8 +303,16 @@ describe('i18n runtime system', () => {
       expect(globalThis.document?.documentElement.dir).toBe('ltr');
     });
 
-    it('should refuse to switch to a non-enabled locale and stay LTR', async () => {
-      await setLocale('ar'); // not enabled
+    it('should switch to an available RTL locale and flip direction', async () => {
+      await setLocale('ar'); // catalog available in the mock storage
+
+      expect(get(currentLocale)).toBe('ar');
+      expect(get(documentDirection)).toBe('rtl');
+      expect(globalThis.document?.documentElement.dir).toBe('rtl');
+    });
+
+    it('should refuse to switch to an unavailable locale and stay LTR', async () => {
+      await setLocale('he'); // RTL but no catalog delivered
 
       expect(get(currentLocale)).toBe('en');
       expect(get(documentDirection)).toBe('ltr');
@@ -284,30 +331,38 @@ describe('i18n runtime system', () => {
     it('should throw error when not initialized', async () => {
       // Reset to uninitialized state
       _resetI18nForTesting();
-      mockLoader.needsUpdate.mockResolvedValue(false);
       mockLoader.loadTranslations.mockResolvedValue({});
 
       await expect(setLocale('de')).rejects.toThrow('i18n system not initialized');
     });
 
-    it('should warn and no-op when switching to a non-enabled locale', async () => {
+    it('should warn and no-op when switching to an unavailable locale', async () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
         /* silence */
       });
 
-      await setLocale('ja'); // known but not enabled
+      await setLocale('ja'); // known but no source supplies a catalog
 
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('is not enabled'));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('is not available'));
       expect(get(currentLocale)).toBe('en');
 
       consoleSpy.mockRestore();
+    });
+
+    it('should not persist the preference when the switch is refused', async () => {
+      await setLocale('de');
+      expect(mockLocalStorage.getItem('editme-locale')).toBe('de');
+
+      await setLocale('ja'); // refused — unavailable
+
+      expect(mockLocalStorage.getItem('editme-locale')).toBe('de');
+      expect(get(currentLocale)).toBe('de');
     });
   });
 
   describe('reactive stores', () => {
     beforeEach(async () => {
       _resetI18nForTesting();
-      mockLoader.needsUpdate.mockResolvedValue(false);
       mockLoader.loadTranslations.mockResolvedValue(mockTranslationCatalogs);
       await initI18n();
     });
@@ -320,10 +375,10 @@ describe('i18n runtime system', () => {
       expect(get(currentLocale)).toBe('de');
     });
 
-    it('should keep documentDirection LTR when a non-enabled RTL locale is attempted', async () => {
+    it('should keep documentDirection LTR when an unavailable RTL locale is attempted', async () => {
       expect(get(documentDirection)).toBe('ltr');
 
-      await setLocale('ar'); // not enabled — refused
+      await setLocale('he'); // RTL but no catalog delivered — refused
 
       expect(get(documentDirection)).toBe('ltr');
     });
@@ -338,19 +393,19 @@ describe('i18n runtime system', () => {
   describe('utility functions', () => {
     beforeEach(async () => {
       _resetI18nForTesting();
-      mockLoader.needsUpdate.mockResolvedValue(false);
       mockLoader.loadTranslations.mockResolvedValue(mockTranslationCatalogs);
       await initI18n();
     });
 
-    it('should return only the enabled locales (English, German)', () => {
+    it('should return the union of locales the sources can supply', () => {
       const locales = getAvailableLocales();
       const codes = locales.map(l => l.code).sort();
 
-      expect(codes).toEqual(['de', 'en']);
-      // Scaffolded-but-not-enabled locales must not appear in the picker.
-      expect(codes).not.toContain('ar');
+      // en always, plus every delivered catalog (the mock storage holds de and ar).
+      expect(codes).toEqual(['ar', 'de', 'en']);
+      // Scaffolded locales with no delivered catalog must not appear in the picker.
       expect(codes).not.toContain('ja');
+      expect(codes).not.toContain('he');
     });
 
     it('should return current locale config', () => {
@@ -381,7 +436,6 @@ describe('i18n runtime system', () => {
   describe('browser locale detection', () => {
     it('should detect exact locale match', async () => {
       mockNavigator.languages = ['de-DE', 'en-US'];
-      mockLoader.needsUpdate.mockResolvedValue(false);
       mockLoader.loadTranslations.mockResolvedValue(mockTranslationCatalogs);
 
       await initI18n();
@@ -391,7 +445,6 @@ describe('i18n runtime system', () => {
 
     it('should detect language code match', async () => {
       mockNavigator.languages = ['de-AT', 'en-US']; // Austrian German
-      mockLoader.needsUpdate.mockResolvedValue(false);
       mockLoader.loadTranslations.mockResolvedValue(mockTranslationCatalogs);
 
       await initI18n();
@@ -401,7 +454,6 @@ describe('i18n runtime system', () => {
 
     it('should fall back to English for unsupported language', async () => {
       mockNavigator.languages = ['fr-FR', 'es-ES']; // Unsupported languages
-      mockLoader.needsUpdate.mockResolvedValue(false);
       mockLoader.loadTranslations.mockResolvedValue(mockTranslationCatalogs);
 
       await initI18n();
@@ -412,7 +464,6 @@ describe('i18n runtime system', () => {
     it('should fall back to English for a non-enabled browser locale (zh-TW)', async () => {
       // zh-Hant is scaffolded but not enabled, so a Taiwan browser stays on English.
       mockNavigator.languages = ['zh-TW'];
-      mockLoader.needsUpdate.mockResolvedValue(false);
       mockLoader.loadTranslations.mockResolvedValue(mockTranslationCatalogs);
 
       await initI18n();
@@ -422,7 +473,6 @@ describe('i18n runtime system', () => {
 
     it('should fall back to English for a non-enabled browser locale (Japanese)', async () => {
       mockNavigator.languages = ['ja-JP', 'ja'];
-      mockLoader.needsUpdate.mockResolvedValue(false);
       mockLoader.loadTranslations.mockResolvedValue(mockTranslationCatalogs);
 
       await initI18n();
