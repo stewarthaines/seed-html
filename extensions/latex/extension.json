@@ -1,0 +1,26 @@
+{
+  "id": "latex",
+  "name": "LaTeX",
+  "description": "Write chapters in LaTeX, rendered in the browser by LaTeX.js (text formatting, environments and math). Styled by Styles/latex.css.",
+  "url": "https://latex.js.org/",
+  "license": "LICENSE.txt",
+  "chapter": "chapter.txt",
+  "scripts": ["latex.min.js"],
+  "domTransforms": [],
+  "textTransforms": ["transformLatex.js"],
+  "assets": [
+    {
+      "file": "latex.css",
+      "target": "Styles/latex.css",
+      "media": "text/css"
+    }
+  ],
+  "generators": [
+    {
+      "id": "latex-example",
+      "name": "LaTeX syntax example",
+      "description": "Insert a concise example of LaTeX syntax: sectioning, emphasis, lists, a quotation and inline math.",
+      "script": "generateLatexExample.js"
+    }
+  ]
+}

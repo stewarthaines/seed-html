@@ -1,0 +1,26 @@
+{
+  "id": "fountain",
+  "name": "Fountain",
+  "description": "Fountain is a plain-text markup for screenplays — scene headings, dialogue and transitions read naturally as text. Rendered by Fountain.js, styled by Styles/fountain.css.",
+  "url": "https://fountain.io/",
+  "license": "LICENSE.txt",
+  "chapter": "chapter.txt",
+  "scripts": ["fountain.js"],
+  "domTransforms": [],
+  "textTransforms": ["transformFountain.js"],
+  "assets": [
+    {
+      "file": "fountain.css",
+      "target": "Styles/fountain.css",
+      "media": "text/css"
+    }
+  ],
+  "generators": [
+    {
+      "id": "fountain-example",
+      "name": "Fountain syntax example",
+      "description": "Insert a concise screenplay example: scene heading, action, dialogue with parenthetical, centred text and a transition.",
+      "script": "generateFountainExample.js"
+    }
+  ]
+}

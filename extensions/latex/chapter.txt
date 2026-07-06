@@ -1,0 +1,5 @@
+\section{LaTeX}
+
+This chapter is written in \LaTeX{}, rendered by LaTeX.js.
+
+Use the \textit{LaTeX syntax example} generator (Insert menu above the editor) to insert a working sample, or visit \texttt{latex.js.org} to learn what the renderer supports.

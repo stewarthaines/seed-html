@@ -1,0 +1,5 @@
+* Org
+
+This chapter is written in *Org* syntax.
+
+Use the /Org syntax example/ generator (Insert menu above the editor) to insert a working sample, or visit [[https://orgmode.org/][orgmode.org]] to learn the format.

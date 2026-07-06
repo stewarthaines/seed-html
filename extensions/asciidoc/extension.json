@@ -1,0 +1,19 @@
+{
+  "id": "asciidoc",
+  "name": "AsciiDoc",
+  "description": "AsciiDoc is a plain-text writing format for authoring notes, articles, documentation and books. Rendered by Asciidoctor.js.",
+  "url": "https://asciidoc.org/",
+  "license": "LICENSE.txt",
+  "chapter": "chapter.txt",
+  "scripts": ["asciidoctor.min.js"],
+  "domTransforms": [],
+  "textTransforms": ["transformAsciidoc.js"],
+  "generators": [
+    {
+      "id": "asciidoc-example",
+      "name": "AsciiDoc syntax example",
+      "description": "Insert a concise example of AsciiDoc syntax: headings, emphasis, lists, links, quotes and an admonition.",
+      "script": "generateAsciidocExample.js"
+    }
+  ]
+}

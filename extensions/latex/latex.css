@@ -1,0 +1,40 @@
+/* Minimal styling for LaTeX.js output (markup from transformLatex.js). The
+   library expresses font commands as classed spans; these rules realise the
+   defining ones without pulling in LaTeX.js's full stylesheet + font set. */
+
+.bf {
+  font-weight: bold;
+}
+
+.it {
+  font-style: italic;
+}
+
+.tt {
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.sc {
+  font-variant: small-caps;
+}
+
+.underline {
+  text-decoration: underline;
+}
+
+/* \begin{center} / \centering */
+.centering,
+.center {
+  text-align: center;
+}
+
+/* quote / quotation environments */
+.quote,
+.quotation {
+  margin: 1em 2em;
+}
+
+/* LaTeX.js hides paragraph-break sources with this marker class. */
+.catcode {
+  display: none;
+}

@@ -1,0 +1,19 @@
+{
+  "id": "org",
+  "name": "Org",
+  "description": "Org (org-mode) is Emacs's plain-text format for notes, outlines and documents. Rendered by org-js.",
+  "url": "https://orgmode.org/",
+  "license": "LICENSE.txt",
+  "chapter": "chapter.txt",
+  "scripts": ["org.js"],
+  "domTransforms": [],
+  "textTransforms": ["transformOrg.js"],
+  "generators": [
+    {
+      "id": "org-example",
+      "name": "Org syntax example",
+      "description": "Insert a concise example of Org syntax: headlines, emphasis, lists, links, a table and a source block.",
+      "script": "generateOrgExample.js"
+    }
+  ]
+}

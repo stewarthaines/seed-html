@@ -1,0 +1,5 @@
+== AsciiDoc
+
+This chapter is written in *AsciiDoc*.
+
+Use the _AsciiDoc syntax example_ generator (Insert menu above the editor) to insert a working sample, or visit https://asciidoc.org/[asciidoc.org] to learn the format.

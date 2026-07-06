@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Drop a media file straight onto a chapter: it's imported into the manifest and a text reference is inserted at the cursor — images and video via new editable templates in EPUB Settings, audio as a whole-file clip directive ready for the clip editor. Other file types import to the manifest only. Dropping a file that already exists asks before overwriting; an identical file just inserts the reference.
 - An Images panel in the editor shows thumbnails of the book's images — click one to insert it at the cursor.
 - When more than one insert panel is available (Audio Clip Editor, Images, Generators) the editor header collapses them into a single Insert dropdown, like the preview's Checks dropdown; one panel shows at a time.
+- Four new text formats in the extensions catalog: AsciiDoc (Asciidoctor.js), Org (org-js), Fountain screenplays (Fountain.js, with screenplay styling) and LaTeX (LaTeX.js, with base styling). Each ships a sample chapter and a syntax-example generator.
 
 ### Changed
 

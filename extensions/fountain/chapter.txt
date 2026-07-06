@@ -1,0 +1,5 @@
+INT. EDITOR - DAY
+
+This chapter is written in Fountain, the plain-text screenplay format.
+
+Use the Fountain syntax example generator (Insert menu above the editor) to insert a working sample, or visit fountain.io to learn the format.

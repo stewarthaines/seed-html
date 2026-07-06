@@ -1,0 +1,61 @@
+/* Screenplay layout for Fountain chapters (markup from Fountain.js via
+   transformFountain.js). Courier and the classic indents are the format's
+   defining look; measurements approximate standard screenplay layout scaled
+   to a book page. */
+
+.screenplay,
+.title-page {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.95em;
+  line-height: 1.4;
+}
+
+.title-page {
+  text-align: center;
+  margin-bottom: 3em;
+}
+
+/* Scene headings (INT./EXT.) — bold, upright, spaced from what precedes. */
+.screenplay h3 {
+  font-size: 1em;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin: 1.6em 0 0.8em;
+}
+
+/* Transitions (CUT TO:) — right-aligned. */
+.screenplay h2 {
+  font-size: 1em;
+  font-weight: normal;
+  text-align: right;
+  text-transform: uppercase;
+  margin: 1.2em 0;
+}
+
+/* Dialogue block: centred column, character name above. */
+.screenplay .dialogue {
+  margin: 0.8em auto;
+  max-width: 24em;
+}
+
+.screenplay .dialogue h4 {
+  font-size: 1em;
+  font-weight: normal;
+  text-transform: uppercase;
+  text-align: center;
+  margin: 0 0 0.1em;
+}
+
+.screenplay .dialogue p {
+  margin: 0;
+}
+
+.screenplay .dialogue .parenthetical {
+  text-align: center;
+  font-style: normal;
+}
+
+/* Centred text (> like this <). */
+.screenplay .centered {
+  text-align: center;
+}
