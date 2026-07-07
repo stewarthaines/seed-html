@@ -953,7 +953,10 @@
     if (!currentWorkspaceState || plainEpubExporting) return;
     plainEpubExporting = true;
     try {
-      await handlePackageRequest(currentWorkspaceState.id, { includeSource: false, download: true });
+      await handlePackageRequest(currentWorkspaceState.id, {
+        includeSource: false,
+        download: true,
+      });
     } catch (error) {
       console.error('Plain EPUB export failed:', error);
       if (appState) {
@@ -1159,7 +1162,7 @@
             onclick={() => handlePackageRequest(currentWorkspaceState.id)}
             disabled={isReadOnly}
             title={isReadOnly
-              ? $t("This EPUB wasn't created in the Simple EPUB Editor, so it can't be repackaged.")
+              ? $t("This EPUB wasn't created in the Simple EPUB Editor, so it can't be edited.")
               : $t('Package EPUB')}
             data-testid="package-epub"
           >
@@ -1174,9 +1177,7 @@
       <h1 class="sr-only">{viewTitle}</h1>
       {#if isReadOnly && currentView !== 'workspace' && currentView !== 'about'}
         <div class="readonly-banner" role="status">
-          {$t(
-            "Read-only — this EPUB wasn't created in the Simple EPUB Editor, so it can't be edited."
-          )}
+          {$t("This EPUB wasn't created in the Simple EPUB Editor, so it can't be edited.")}
         </div>
       {/if}
       <!-- Main content area - switches based on current view -->
@@ -1202,7 +1203,7 @@
           onEpubImportRequested={handleEpubImport}
           {currentWorkspaceId}
           advancedMode={advancedMode.current}
-          isReadOnly={isReadOnly}
+          {isReadOnly}
           onGeneratePdf={canGeneratePdf ? handleGeneratePdf : undefined}
           {pdfGenerating}
           onPackageWithoutSeed={handleExportPlainEpub}

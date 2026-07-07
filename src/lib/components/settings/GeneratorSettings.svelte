@@ -307,9 +307,7 @@ function generateText(ctx, options) {
 <SettingsSection title={$t('Generators')} summary={genSummary} name={group} {open}>
   <div class="generator-settings">
     <p class="gs-intro">
-      {$t(
-        'A generator is a script (exporting generateText(ctx, options)) that produces source text to insert at the editor caret.'
-      )}
+      {$t('A generator is a script that produces source text to insert at the editor caret.')}
     </p>
 
     <!-- Existing generators -->
@@ -378,9 +376,7 @@ function generateText(ctx, options) {
       <h4>{editingId ? $t('Edit generator') : $t('Add a generator')}</h4>
       {#if !editingId}
         <p class="gs-help">
-          {$t(
-            'Create scaffolds a starter generateText script (with your options documented) that you can edit from the chapter editor’s file menu.'
-          )}
+          {$t("Create scaffolds a starter script, editable from the chapter editor's file menu.")}
         </p>
       {/if}
       {#if !isAdvancedMode}
@@ -400,7 +396,12 @@ function generateText(ctx, options) {
       <div class="gs-options">
         <div class="gs-options-head">
           <span class="gs-label">{$t('Options')}</span>
-          <button type="button" class="btn btn-secondary btn-sm" onclick={addOption} disabled={!isAdvancedMode}>
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            onclick={addOption}
+            disabled={!isAdvancedMode}
+          >
             {$t('Add option')}
           </button>
         </div>
@@ -483,7 +484,12 @@ function generateText(ctx, options) {
 
       <div class="gs-actions">
         {#if editingId}
-          <button type="button" class="btn btn-secondary btn-sm" onclick={resetForm} disabled={saving}>
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            onclick={resetForm}
+            disabled={saving}
+          >
             {$t('Cancel')}
           </button>
         {/if}
@@ -670,5 +676,4 @@ function generateText(ctx, options) {
     color: var(--color-text-tertiary);
     font-style: italic;
   }
-
 </style>

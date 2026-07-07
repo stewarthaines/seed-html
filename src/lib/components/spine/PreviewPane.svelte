@@ -30,13 +30,7 @@
     DEFAULT_PREVIEW,
     previewTypeForDevice,
   } from '$lib/services/settings/settings.service.js';
-  import {
-    ArrowsClockwise,
-    FilePdf,
-    DeviceRotate,
-    X,
-    CircleHalf,
-  } from 'phosphor-svelte';
+  import { ArrowsClockwise, FilePdf, DeviceRotate, X, CircleHalf } from 'phosphor-svelte';
   import { persisted, asBoolean, asInt, asEnum } from '../../state/persisted.svelte.js';
 
   // Props using Svelte 5 runes syntax
@@ -1396,54 +1390,54 @@
       {:else}
         <!-- Accessibility check (spike): inject axe-core into the preview + run it -->
         {#if canCheckA11y}
-        <button
-          type="button"
-          class="a11y-check"
-          class:active={activePanel === 'a11y'}
-          onclick={() => togglePanel('a11y')}
-          disabled={!xhtmlContent}
-          aria-pressed={activePanel === 'a11y'}
-          title={$t('Accessibility check (axe-core) — re-runs as you edit while open')}
-        >
-          {a11yRunning ? $t('Checking…') : $t('Accessibility')}
-          {#if !a11yRunning && activePanel === 'a11y' && a11yIssueCount !== null}
-            <span class="a11y-count" class:clean={a11yIssueCount === 0}>{a11yIssueCount}</span>
-          {/if}
-        </button>
-      {/if}
+          <button
+            type="button"
+            class="a11y-check"
+            class:active={activePanel === 'a11y'}
+            onclick={() => togglePanel('a11y')}
+            disabled={!xhtmlContent}
+            aria-pressed={activePanel === 'a11y'}
+            title={$t('Accessibility check (axe-core) — re-runs as you edit while open')}
+          >
+            {a11yRunning ? $t('Checking…') : $t('Accessibility')}
+            {#if !a11yRunning && activePanel === 'a11y' && a11yIssueCount !== null}
+              <span class="a11y-count" class:clean={a11yIssueCount === 0}>{a11yIssueCount}</span>
+            {/if}
+          </button>
+        {/if}
 
-      <!-- Validation report (epubcheck), opened like the accessibility panel.
+        <!-- Validation report (epubcheck), opened like the accessibility panel.
            Only shown when the report belongs to the current project. -->
-      {#if validationReport && validationReportMatches}
-        <button
-          type="button"
-          class="a11y-check"
-          class:active={activePanel === 'epubcheck'}
-          onclick={() => togglePanel('epubcheck')}
-          aria-pressed={activePanel === 'epubcheck'}
-          title={$t('Validation report (epubcheck) for this chapter')}
-        >
-          EpubCheck
-          {#if validationChapterCount > 0}
-            <span class="a11y-count">{validationChapterCount}</span>
-          {/if}
-        </button>
-      {/if}
+        {#if validationReport && validationReportMatches}
+          <button
+            type="button"
+            class="a11y-check"
+            class:active={activePanel === 'epubcheck'}
+            onclick={() => togglePanel('epubcheck')}
+            aria-pressed={activePanel === 'epubcheck'}
+            title={$t('Validation report (epubcheck) for this chapter')}
+          >
+            EpubCheck
+            {#if validationChapterCount > 0}
+              <span class="a11y-count">{validationChapterCount}</span>
+            {/if}
+          </button>
+        {/if}
 
-      <!-- Reader-mode panel toggle (theme + text size). Reflowable previews only —
+        <!-- Reader-mode panel toggle (theme + text size). Reflowable previews only —
            hidden for the print preset and fixed-layout chapters. The controls live
            in a closable panel below the header (like the other checks). -->
-      {#if readerModeActive}
-        <button
-          type="button"
-          class="a11y-check"
-          class:active={activePanel === 'reader'}
-          onclick={() => togglePanel('reader')}
-          aria-pressed={activePanel === 'reader'}
-          title={$t('Reading preview (theme and text size)')}
-        >
-          {$t('Reader')}
-        </button>
+        {#if readerModeActive}
+          <button
+            type="button"
+            class="a11y-check"
+            class:active={activePanel === 'reader'}
+            onclick={() => togglePanel('reader')}
+            aria-pressed={activePanel === 'reader'}
+            title={$t('Reading preview (theme and text size)')}
+          >
+            {$t('Reader')}
+          </button>
         {/if}
       {/if}
     </div>
@@ -1593,9 +1587,7 @@
           <span>{$t('Force reading-system colours')}</span>
         </label>
         <p class="reader-note">
-          {$t(
-            'Approximates a reading system (theming and text size). Preview only — it never changes the exported EPUB.'
-          )}
+          {$t('Approximates a reading system. Preview only.')}
         </p>
       </div>
     </div>

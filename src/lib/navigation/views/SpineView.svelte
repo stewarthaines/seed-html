@@ -1511,9 +1511,7 @@
     <div class="readonly-icon" aria-hidden="true"><Lock size={40} aria-hidden="true" /></div>
     <h3>{$t('Read-only chapter')}</h3>
     <p>
-      {$t(
-        "This EPUB wasn't created in the Simple EPUB Editor, so its chapters can be viewed but not edited."
-      )}
+      {$t("This EPUB wasn't created in the Simple EPUB Editor, so it can't be edited.")}
     </p>
   </div>
 {:else if selectedItem && servicesInitialized && previewManager && settingsService}

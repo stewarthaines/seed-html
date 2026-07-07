@@ -19,6 +19,8 @@ You can also save your book as a PDF — a fixed, printable copy, handy for proo
 2. Set the **Page size** and **Margin**, and choose whether to **Include page numbers** and a cover page.
 3. Click _Generate PDF_{.ui} to produce a PDF of the whole book.
 
+**Include cover page** starts the PDF with the project's cover image, full page; **Running header** repeats the chapter title at the top of each page. Your book's stylesheet can override the page size. In Advanced Mode, **Page size** and **Margin** each gain a **Custom…** entry accepting CSS values (e.g. `140mm 216mm`, `20mm 15mm 25mm 15mm`); clear the field to return to the preset.
+
 To save just one chapter — for a handout or a quick sample:
 
 1. Open the chapter.

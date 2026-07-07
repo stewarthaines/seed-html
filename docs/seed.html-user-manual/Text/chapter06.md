@@ -14,6 +14,12 @@ With Advanced Mode on, App Settings also lists the **Available Extensions** you 
 
 Project Settings apply to the book you have open. In Basic Mode that's just **PDF**, the page setup for _Save as PDF_ (see _Produce your book_). Advanced Mode adds a few more: **EPUB Settings** for the transform scripts that turn your text into XHTML (covered next); **Preview** for how the live preview updates; **Extensions**, the libraries and formats added to this book, each with a licence field so their attribution travels with it; and **Generators**, scripts that build parts of the book, such as a list of figures. The pipeline is worth knowing; the rest just manage what you've added.
 
+**EPUB Settings** also holds a few templates. **Packaged Filename** shapes the exported `.epub` name from `<title>`, `<author>` and `<date>` placeholders — empty ones collapse cleanly. **Image Insertion** and **Video Insertion** are the snippets inserted when you drop media into a chapter (placeholders `<href>` and, for images, `<alt>`); **Audio Clip Directive** is the snippet for audio clips (`<href>`, `<begin>`, `<end>` required; `<label>`, `<rate>` optional). Djot projects need the directive's attribute values quoted, e.g. `src="<href>"`. Clearing any template restores its default.
+
+**Add SEED.html to package** embeds the editor itself in the EPUB, as a non-manifest file alongside SEED.zip, so the book can be reopened and edited anywhere — even offline, in your own language.
+
+A generator, if you write your own, is a script exporting `generateText(ctx, options)`; the **Create** button scaffolds a starter script with your options documented, ready to edit from the chapter editor's file menu.
+
 ## Metadata, revisited
 
 In Basic Mode the Metadata view gives you forms. Advanced Mode adds a **content.opf** tab, showing the package document itself — the file inside the EPUB that records all this metadata. The forms write to it; the tab shows what they produce, for when you want to see the EPUB's package structure directly.

@@ -5,7 +5,11 @@
   import { FileStorageAPI } from '../../storage/index.js';
   import { setReviewMode, deleteBase } from '../../track-changes/base-snapshot.js';
   import { generatePatchset } from '../../track-changes/patchset-generate.js';
-  import { listPatchsets, savePatchset, deletePatchset } from '../../track-changes/changes-store.js';
+  import {
+    listPatchsets,
+    savePatchset,
+    deletePatchset,
+  } from '../../track-changes/changes-store.js';
   import PatchsetReviewDialog from '../track-changes/PatchsetReviewDialog.svelte';
   import type { Patchset, ResolvedChange } from '../../track-changes/types.js';
   import type { SettingsService } from '../../services/settings/settings.service.js';
@@ -149,7 +153,7 @@
     </label>
     <p class="setting-description">
       {$t(
-        'While locked, you can edit the text of existing chapters, styles and scripts. Adding, removing or reordering chapters, changing the manifest, and editing metadata are disabled. Your original content is saved so your edits can be captured as a patchset.'
+        'While locked, you can edit existing chapters, styles and scripts; structural changes are disabled.'
       )}
     </p>
 
@@ -186,9 +190,7 @@
     <div class="setting-group">
       <span class="setting-label-text">{$t('Generate patchset')}</span>
       <p class="setting-description">
-        {$t(
-          'Capture your changes (vs the saved base) as a patchset that can be reviewed and applied to the matching project.'
-        )}
+        {$t('Capture your changes as a patchset to review and apply to the matching project.')}
       </p>
       <button
         type="button"
