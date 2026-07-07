@@ -126,9 +126,7 @@
       <div class="empty-projects">
         <p class="empty-projects-title">{$t('No projects yet')}</p>
         <p class="empty-projects-hint">
-          {$t(
-            'New here? Open Import from Catalog to browse sample books and see what SEED.html can make.'
-          )}
+          {$t('New here? Import from Catalog to browse sample books.')}
           <span class="empty-projects-arrow" aria-hidden="true">→</span>
         </p>
       </div>

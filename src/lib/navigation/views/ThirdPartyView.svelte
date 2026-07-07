@@ -182,9 +182,7 @@
         {#if isHttp}
           <h3 class="thirdparty-subheading">{$t('Available when running online')}</h3>
           <p class="thirdparty-intro">
-            {$t(
-              'Additional libraries used when the editor runs online — the publish plugin and online-only features.'
-            )}
+            {$t('Additional libraries used when the editor runs online.')}
           </p>
           <div class="library-list">
             {#each HTTP_LIBRARIES as library (library.name)}

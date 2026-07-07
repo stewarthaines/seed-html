@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: EDITME EPUB Editor\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-06\n"
-"PO-Revision-Date: 2026-07-06\n"
+"POT-Creation-Date: 2026-07-07\n"
+"PO-Revision-Date: 2026-07-07\n"
 "Language: he\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -189,19 +189,19 @@ msgid "A book needs at least one chapter"
 msgstr ""
 
 #: src/lib/components/settings/GeneratorSettings.svelte
-msgid "A generator is a script (exporting generateText(ctx, options)) that produces source text to insert at the editor caret."
+msgid "A generator is a script that produces source text to insert at the editor caret."
 msgstr ""
 
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "A generator with that name already exists."
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "A markup language for authoring chapters. Adopt one for the current project."
-msgstr ""
-
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "A name is required."
+msgstr ""
+
+#: src/lib/navigation/views/AboutView.svelte
+msgid "A SEED EPUB is a living document rather than a publishing dead-end, suited to distribution, contribution and long-term preservation."
 msgstr ""
 
 #: src/App.svelte
@@ -279,10 +279,6 @@ msgstr ""
 msgid "Add a sufficient set"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Add a transform and its library to the current project; then enable it under Project Settings."
-msgstr ""
-
 #: src/lib/components/metadata/AdvancedFields.svelte
 msgid "Add Another Contributor"
 msgstr ""
@@ -336,6 +332,10 @@ msgid "Add to project"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
+msgid "Add to the current project, then enable under Project Settings."
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Added"
 msgstr ""
 
@@ -352,11 +352,15 @@ msgid "Additional Information"
 msgstr ""
 
 #: src/lib/navigation/views/ThirdPartyView.svelte
-msgid "Additional libraries used when the editor runs online — the publish plugin and online-only features."
+msgid "Additional libraries used when the editor runs online."
 msgstr ""
 
 #: src/lib/components/metadata/TitleEditor.svelte
 msgid "Additional title"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Adopt a markup language for the current project."
 msgstr ""
 
 #: src/lib/components/metadata/MetadataEditor.svelte
@@ -371,10 +375,6 @@ msgstr ""
 #: src/lib/components/settings/GeneratorSettings.svelte
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Advanced Mode required for extension management"
-msgstr ""
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Advanced mode reveals power-user features across the app: extra metadata fields, individual source files, plugins and extensions, editable scripts, and custom catalog imports."
 msgstr ""
 
 #: src/lib/navigation/views/ThirdPartyView.svelte
@@ -418,7 +418,7 @@ msgid "Approximate start position"
 msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
-msgid "Approximates a reading system (theming and text size). Preview only — it never changes the exported EPUB."
+msgid "Approximates a reading system. Preview only."
 msgstr ""
 
 #: src/lib/components/SpineSidebar.svelte
@@ -543,7 +543,7 @@ msgid "Cancel"
 msgstr ""
 
 #: src/lib/components/settings/TrackChangesPanel.svelte
-msgid "Capture your changes (vs the saved base) as a patchset that can be reviewed and applied to the matching project."
+msgid "Capture your changes as a patchset to review and apply to the matching project."
 msgstr ""
 
 #: src/lib/components/settings/TrackChangesPanel.svelte
@@ -836,6 +836,10 @@ msgstr ""
 msgid "Copy"
 msgstr ""
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Copy the library's license text into the License field below."
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 msgid "Copy URL"
 msgstr ""
@@ -914,7 +918,7 @@ msgid "Create New"
 msgstr ""
 
 #: src/lib/components/settings/GeneratorSettings.svelte
-msgid "Create scaffolds a starter generateText script (with your options documented) that you can edit from the chapter editor’s file menu."
+msgid "Create scaffolds a starter script, editable from the chapter editor's file menu."
 msgstr ""
 
 #: src/lib/components/manifest/ManifestTable.svelte
@@ -943,11 +947,11 @@ msgid "Credential of the certifier"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid "CSS @page size passed to Paged.js, e.g. \"140mm 216mm\" or \"A4 landscape\". Clear to return to the preset."
+msgid "CSS @page size, e.g. \"140mm 216mm\" or \"A4 landscape\"."
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid "CSS margin passed to Paged.js, e.g. \"20mm 15mm 25mm 15mm\". Clear to return to the preset."
+msgid "CSS margin, e.g. \"20mm 15mm 25mm 15mm\"."
 msgstr ""
 
 #: src/lib/components/import/ImportReviewDialog.svelte
@@ -1206,7 +1210,7 @@ msgid "element"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid "Embed the editor itself in the EPUB so the book can be reopened and edited. Added as a non-manifest file alongside SEED.zip."
+msgid "Embed the editor in the EPUB so the book can be reopened and edited."
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
@@ -1231,10 +1235,6 @@ msgstr ""
 
 #: src/lib/components/metadata/AdvancedFields.svelte
 msgid "Enter format information"
-msgstr ""
-
-#: src/lib/components/outline/OutlineEditor.svelte
-msgid "Enter navigation content in plain text. Leave empty to auto-generate from chapter titles. Press Ctrl+Enter (Cmd+Enter on Mac) to save navigation content."
 msgstr ""
 
 #: src/lib/components/metadata/AdvancedFields.svelte
@@ -1262,7 +1262,7 @@ msgid "EPUB"
 msgstr ""
 
 #: src/lib/navigation/views/AboutView.svelte
-msgid "EPUB is the open standard for digital books: a single, self-contained file of text, styles, and images that any compliant app can open. The apps and devices that display them — Apple Books, Google Play Books, Kobo, Thorium Reader, and many more — are called Reading Systems. Because the format is open, a book you make once can be read almost anywhere, reflowing to fit any screen and adapting to each reader's chosen size, font, and contrast."
+msgid "EPUB is the open standard for digital books: a self-contained file of text, styles, and images that any Reading System app can open. Because the format is open, your book can be read anywhere. It reflows to fit any screen and adapts to each reader's chosen size, font, and contrast."
 msgstr ""
 
 #: src/lib/components/manifest/ManifestPreview.svelte
@@ -1666,7 +1666,7 @@ msgid "Initializing..."
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid "Inject the project’s preview/head.xml (edit it via the spine editor’s file menu in Advanced mode) into the preview head, per preview type. Authoring-time only — it is never added to the packaged EPUB."
+msgid "Inject preview/head.xml into the preview, per preview type. Never exported."
 msgstr ""
 
 #: plugins/audio-clip-editor/src/App.svelte
@@ -1696,14 +1696,6 @@ msgstr ""
 
 #: plugins/audio-clip-editor/src/App.svelte
 msgid "Insert the clip directive at the editor cursor"
-msgstr ""
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Inserted when a video is dropped into a chapter. Placeholder: <href>. Clear to restore the default."
-msgstr ""
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Inserted when an image is dropped into a chapter. Placeholders: <href>, <alt>. Clear to restore the default."
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
@@ -1989,10 +1981,6 @@ msgstr ""
 msgid "Modified"
 msgstr ""
 
-#: src/lib/navigation/views/AboutView.svelte
-msgid "Most publishing workflows treat EPUB as a destination format — a finished file you export and leave behind. SEED subverts that: the book you build here is a valid, self-contained EPUB that also carries its own editable source (bundled as SEED.zip) inside it."
-msgstr ""
-
 #: src/lib/components/SpineItem.svelte
 msgid "Move {id} down"
 msgstr ""
@@ -2081,7 +2069,7 @@ msgid "New"
 msgstr ""
 
 #: src/lib/components/workspace/WorkspaceList.svelte
-msgid "New here? Open Import from Catalog to browse sample books and see what SEED.html can make."
+msgid "New here? Import from Catalog to browse sample books."
 msgstr ""
 
 #: src/lib/components/workspace/CreateProjectDialog.svelte
@@ -2258,6 +2246,10 @@ msgstr ""
 msgid "One EPUB made with the editor, opening on phones, tablets, and e-readers."
 msgstr ""
 
+#: src/lib/navigation/views/AboutView.svelte
+msgid "Only the EPUB — with SEED.zip inside — can be reopened, edited, and republished."
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Open a project to add extensions"
 msgstr ""
@@ -2297,10 +2289,6 @@ msgstr ""
 
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Option type"
-msgstr ""
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Optional features available when the app is served over HTTP."
 msgstr ""
 
 #: src/lib/components/audio/AudioClipEditor.svelte
@@ -2360,10 +2348,6 @@ msgstr ""
 msgid "Packaging…"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Page margins for the exported PDF."
-msgstr ""
-
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Page Progression"
 msgstr ""
@@ -2392,10 +2376,6 @@ msgstr ""
 msgid "Pane 2 content"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Paper size for the exported PDF. Your stylesheet can override this."
-msgstr ""
-
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Password"
 msgstr ""
@@ -2422,8 +2402,28 @@ msgstr ""
 msgid "PDF"
 msgstr ""
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Placeholder: <href>."
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Placeholders: <href>, <alt>."
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Placeholders: <href>, <begin>, <end> required; <label>, <rate> optional."
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Placeholders: <title>, <author>, <date>."
+msgstr ""
+
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "Plain text"
+msgstr ""
+
+#: src/lib/components/outline/OutlineEditor.svelte
+msgid "Plain text navigation; leave empty to auto-generate from chapter titles. Press Ctrl+Enter (Cmd+Enter on Mac) to save."
 msgstr ""
 
 #: plugins/audio-clip-editor/src/App.svelte
@@ -2432,10 +2432,6 @@ msgstr ""
 
 #: plugins/audio-clip-editor/src/App.svelte
 msgid "Playback rate — 1 is normal speed (no rate in the directive)"
-msgstr ""
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Please copy license text into the License field below to comply with open source requirements."
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
@@ -2564,7 +2560,7 @@ msgid "Rate"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid "Re-render the preview live as you edit. When off, the preview shows a Refresh button to update on demand."
+msgid "Re-render the preview live as you edit."
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
@@ -2575,10 +2571,6 @@ msgstr ""
 
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Read-only"
-msgstr ""
-
-#: src/App.svelte
-msgid "Read-only — this EPUB wasn't created in the Simple EPUB Editor, so it can't be edited."
 msgstr ""
 
 #: src/lib/navigation/views/SpineView.svelte
@@ -2770,6 +2762,10 @@ msgid "Route uploads through the app proxy (for servers without CORS)"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
+msgid "Run top-to-bottom over the generated DOM."
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Running header"
 msgstr ""
 
@@ -2822,10 +2818,6 @@ msgstr ""
 msgid "Saving…"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Scripts run top-to-bottom over the generated DOM, each applied to the previous one’s output."
-msgstr ""
-
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Scrolled (continuous)"
 msgstr ""
@@ -2851,11 +2843,7 @@ msgid "Secret Key"
 msgstr ""
 
 #: src/lib/navigation/views/AboutView.svelte
-msgid "SEED.html exports an EPUB that embeds its own SEED.zip source, or a PDF — and only that EPUB can be reopened, edited, and republished."
-msgstr ""
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "SEED.html publishes two outputs: an EPUB that embeds its own SEED.zip source, and a PDF. The PDF is a one-way destination; only the EPUB has a return arrow back to the app, showing it can be re-imported, edited, and republished."
+msgid "SEED.html exports an EPUB that embeds its own SEED.zip source, and a PDF; only the EPUB can return to the app for further editing."
 msgstr ""
 
 #: src/App.svelte
@@ -2927,20 +2915,12 @@ msgstr ""
 msgid "Show {name}"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Show a page number at the bottom of each page."
-msgstr ""
-
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Show panel"
 msgstr ""
 
 #: src/lib/Sidebar.svelte
 msgid "Show project sections"
-msgstr ""
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Show the chapter title at the top of each page."
 msgstr ""
 
 #: src/lib/navigation/views/ThirdPartyView.svelte
@@ -3028,10 +3008,6 @@ msgstr ""
 msgid "Standard"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Start the PDF with the project's cover image as a full-page cover."
-msgstr ""
-
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Start time"
 msgstr ""
@@ -3093,14 +3069,6 @@ msgstr ""
 msgid "Technical Info"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Template for inserted audio clip directives. Required placeholders: <href>, <begin>, <end>; <label> and <rate> are optional. Djot needs the values quoted, e.g. src=\"<href>\". Clear to restore the default."
-msgstr ""
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Template for the exported .epub filename. Use placeholders: <title>, <author>, <date>. Empty placeholders (e.g. no author) collapse cleanly."
-msgstr ""
-
 #: src/lib/components/metadata/SubjectEditor.svelte
 msgid "Term (e.g. FIC028000)"
 msgstr ""
@@ -3130,7 +3098,15 @@ msgid "Text Transform"
 msgstr ""
 
 #: src/lib/navigation/views/AboutView.svelte
-msgid "That turns the EPUB into a living document rather than a dead end — anyone can reopen it to read, revise, or continue the work, with no servers, accounts, or toolchain to reassemble. It suits distribution, contribution, and long-term preservation."
+msgid "The book you build here is a valid, self-contained EPUB that also carries its own editable source (bundled as SEED.zip) inside it."
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "The chapter title at the top of each page."
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "The plain text → XHTML step."
 msgstr ""
 
 #: src/lib/components/plugins/PluginPanel.svelte
@@ -3139,10 +3115,6 @@ msgstr ""
 
 #: src/lib/navigation/views/PublishView.svelte
 msgid "The publishing plugin could not be loaded — you may be offline. Showing local publishing instead."
-msgstr ""
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "The single plain-text → XHTML step. Pick a project script or one supplied by an extension."
 msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
@@ -3171,24 +3143,21 @@ msgid "This chapter"
 msgstr ""
 
 #: src/lib/navigation/views/AboutView.svelte
-msgid "This editor turns plain text into a valid EPUB with no servers, accounts, or installation. You write in simple, readable source; it's packaged into a standards-compliant book you can open in any Reading System."
+msgid "This editor turns plain text into a valid EPUB. You write in simple, readable source; it's packaged into a standards-compliant book."
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "This EPUB is read-only, so extensions can't be added."
 msgstr ""
 
+#: src/App.svelte
 #: src/lib/components/outline/OutlineView.svelte
-msgid "This EPUB wasn't created in the Simple EPUB Editor — its navigation is shown for viewing only."
+#: src/lib/navigation/views/SpineView.svelte
+msgid "This EPUB wasn't created in the Simple EPUB Editor, so it can't be edited."
 msgstr ""
 
-#: src/App.svelte
 #: src/lib/navigation/views/WorkspaceView.svelte
 msgid "This EPUB wasn't created in the Simple EPUB Editor, so it can't be repackaged."
-msgstr ""
-
-#: src/lib/navigation/views/SpineView.svelte
-msgid "This EPUB wasn't created in the Simple EPUB Editor, so its chapters can be viewed but not edited."
 msgstr ""
 
 #: src/lib/components/manifest/ManifestPreview.svelte
@@ -3488,7 +3457,7 @@ msgid "What is different about a SEED EPUB?"
 msgstr ""
 
 #: src/lib/components/settings/TrackChangesPanel.svelte
-msgid "While locked, you can edit the text of existing chapters, styles and scripts. Adding, removing or reordering chapters, changing the manifest, and editing metadata are disabled. Your original content is saved so your edits can be captured as a patchset."
+msgid "While locked, you can edit existing chapters, styles and scripts; structural changes are disabled."
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte

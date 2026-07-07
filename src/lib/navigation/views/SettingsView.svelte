@@ -909,11 +909,6 @@
                    project exists (create a project first, then opt in). -->
               {#if hasProjects}
                 <div class="setting-group">
-                  <p class="setting-description setting-description--lead">
-                    {$t(
-                      'Advanced mode reveals power-user features across the app: extra metadata fields, individual source files, plugins and extensions, editable scripts, and custom catalog imports.'
-                    )}
-                  </p>
                   <label class="setting-label">
                     <input
                       type="checkbox"
@@ -934,9 +929,6 @@
                 name="app-settings"
                 persistKey="settings-app-plugins"
               >
-                <p class="setting-description plugins-intro">
-                  {$t('Optional features available when the app is served over HTTP.')}
-                </p>
                 {#each availablePlugins as plugin (plugin.id)}
                   <div class="setting-group">
                     <label class="setting-label">
@@ -961,9 +953,7 @@
                 persistKey="settings-app-text-formats"
               >
                 <p class="setting-description">
-                  {$t(
-                    'A markup language for authoring chapters. Adopt one for the current project.'
-                  )}
+                  {$t('Adopt a markup language for the current project.')}
                 </p>
                 {#each textFormatExtensions as ext (ext.id)}
                   {@render catalogItem(ext)}
@@ -979,9 +969,7 @@
                 persistKey="settings-app-content-transforms"
               >
                 <p class="setting-description">
-                  {$t(
-                    'Add a transform and its library to the current project; then enable it under Project Settings.'
-                  )}
+                  {$t('Add to the current project, then enable under Project Settings.')}
                 </p>
 
                 {#each contentCategoryGroups as group (group.key)}
@@ -1066,13 +1054,8 @@
                         disabled={epubLoading}
                       />
                       <p class="setting-description">
-                        {$t(
-                          'CSS @page size passed to Paged.js, e.g. "140mm 216mm" or "A4 landscape". Clear to return to the preset.'
-                        )}
-                      </p>
-                    {:else}
-                      <p class="setting-description">
-                        {$t('Paper size for the exported PDF. Your stylesheet can override this.')}
+                        <!-- i18n-ignore: literal CSS examples, not prose -->
+                        {$t('CSS @page size, e.g. "140mm 216mm" or "A4 landscape".')}
                       </p>
                     {/if}
                   </div>
@@ -1115,13 +1098,8 @@
                         disabled={epubLoading}
                       />
                       <p class="setting-description">
-                        {$t(
-                          'CSS margin passed to Paged.js, e.g. "20mm 15mm 25mm 15mm". Clear to return to the preset.'
-                        )}
-                      </p>
-                    {:else}
-                      <p class="setting-description">
-                        {$t('Page margins for the exported PDF.')}
+                        <!-- i18n-ignore: literal CSS example, not prose -->
+                        {$t('CSS margin, e.g. "20mm 15mm 25mm 15mm".')}
                       </p>
                     {/if}
                   </div>
@@ -1139,9 +1117,6 @@
                       />
                       <span class="setting-text">{$t('Include page numbers')}</span>
                     </label>
-                    <p class="setting-description">
-                      {$t('Show a page number at the bottom of each page.')}
-                    </p>
                   </div>
 
                   <div class="setting-group">
@@ -1159,7 +1134,7 @@
                       <span class="setting-text">{$t('Running header')}</span>
                     </label>
                     <p class="setting-description">
-                      {$t('Show the chapter title at the top of each page.')}
+                      {$t('The chapter title at the top of each page.')}
                     </p>
                   </div>
 
@@ -1176,9 +1151,6 @@
                       />
                       <span class="setting-text">{$t('Include cover page')}</span>
                     </label>
-                    <p class="setting-description">
-                      {$t("Start the PDF with the project's cover image as a full-page cover.")}
-                    </p>
                   </div>
                 </SettingsSection>
               {/if}
@@ -1203,9 +1175,7 @@
                       <span class="setting-text">{$t('Add SEED.html to package')}</span>
                     </label>
                     <p class="setting-description">
-                      {$t(
-                        'Embed the editor itself in the EPUB so the book can be reopened and edited. Added as a non-manifest file alongside SEED.zip.'
-                      )}
+                      {$t('Embed the editor in the EPUB so the book can be reopened and edited.')}
                     </p>
                     {#if (epubSettings?.include_seed_html_in_package ?? false) && !seedHtmlPresent}
                       <div class="seed-html-load">
@@ -1246,9 +1216,7 @@
                       disabled={epubLoading}
                     />
                     <p class="setting-description">
-                      {$t(
-                        'Template for the exported .epub filename. Use placeholders: <title>, <author>, <date>. Empty placeholders (e.g. no author) collapse cleanly.'
-                      )}
+                      {$t('Placeholders: <title>, <author>, <date>.')}
                     </p>
                   </div>
 
@@ -1268,7 +1236,7 @@
                     />
                     <p class="setting-description">
                       {$t(
-                        'Template for inserted audio clip directives. Required placeholders: <href>, <begin>, <end>; <label> and <rate> are optional. Djot needs the values quoted, e.g. src="<href>". Clear to restore the default.'
+                        'Placeholders: <href>, <begin>, <end> required; <label>, <rate> optional.'
                       )}
                     </p>
                   </div>
@@ -1288,9 +1256,7 @@
                       disabled={epubLoading}
                     />
                     <p class="setting-description">
-                      {$t(
-                        'Inserted when an image is dropped into a chapter. Placeholders: <href>, <alt>. Clear to restore the default.'
-                      )}
+                      {$t('Placeholders: <href>, <alt>.')}
                     </p>
                   </div>
 
@@ -1309,9 +1275,7 @@
                       disabled={epubLoading}
                     />
                     <p class="setting-description">
-                      {$t(
-                        'Inserted when a video is dropped into a chapter. Placeholder: <href>. Clear to restore the default.'
-                      )}
+                      {$t('Placeholder: <href>.')}
                     </p>
                   </div>
 
@@ -1339,18 +1303,14 @@
                         {/each}
                       </select>
                       <p class="setting-description">
-                        {$t(
-                          'The single plain-text → XHTML step. Pick a project script or one supplied by an extension.'
-                        )}
+                        {$t('The plain text → XHTML step.')}
                       </p>
                     </div>
 
                     <div class="setting-group">
                       <span class="setting-label-text">{$t('DOM Transforms')}</span>
                       <p class="setting-description">
-                        {$t(
-                          'Scripts run top-to-bottom over the generated DOM, each applied to the previous one’s output.'
-                        )}
+                        {$t('Run top-to-bottom over the generated DOM.')}
                       </p>
 
                       {#if (epubSettings?.dom_transforms?.length ?? 0) === 0}
@@ -1442,9 +1402,7 @@
                   <div class="setting-group">
                     <span class="setting-label-text">{$t('Auto Update')}</span>
                     <p class="setting-description">
-                      {$t(
-                        'Re-render the preview live as you edit. When off, the preview shows a Refresh button to update on demand.'
-                      )}
+                      {$t('Re-render the preview live as you edit.')}
                     </p>
                     {#each PREVIEW_TYPES as pt (pt.key)}
                       <label class="setting-label">
@@ -1469,7 +1427,7 @@
                     <span class="setting-label-text">{$t('Include preview head')}</span>
                     <p class="setting-description">
                       {$t(
-                        'Inject the project’s preview/head.xml (edit it via the spine editor’s file menu in Advanced mode) into the preview head, per preview type. Authoring-time only — it is never added to the packaged EPUB.'
+                        'Inject preview/head.xml into the preview, per preview type. Never exported.'
                       )}
                     </p>
                     {#each PREVIEW_TYPES as pt (pt.key)}
@@ -1517,7 +1475,7 @@
                   <div class="extension-import" class:disabled={!isAdvancedMode}>
                     <label for="extension-file">
                       {$t('Import JavaScript Extension')}: {$t(
-                        'Please copy license text into the License field below to comply with open source requirements.'
+                        "Copy the library's license text into the License field below."
                       )}
                     </label>
                     <input
@@ -1655,11 +1613,6 @@
     color: var(--color-text-secondary);
     font-size: 0.875rem;
     line-height: 1.4;
-  }
-
-  /* Lead-in copy that sits above its control (not indented under a checkbox). */
-  .setting-description--lead {
-    margin: 0 0 0.5rem 0;
   }
 
   /* Manual "Load SEED.html…" fallback row (offline, where fetch is blocked). */

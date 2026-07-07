@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Shorter, clearer interface text throughout — the About page, settings descriptions, and notices say less, and the instructional detail they carried now lives in the user manual.
+
 ## [0.7.0] - 2026-07-07
 
 ### Added

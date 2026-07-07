@@ -471,9 +471,7 @@
         <div class="readonly-icon" aria-hidden="true"><Lock size={40} aria-hidden="true" /></div>
         <h3>{$t('Read-only navigation')}</h3>
         <p>
-          {$t(
-            "This EPUB wasn't created in the Simple EPUB Editor — its navigation is shown for viewing only."
-          )}
+          {$t("This EPUB wasn't created in the Simple EPUB Editor, so it can't be edited.")}
         </p>
       </div>
     {:else}

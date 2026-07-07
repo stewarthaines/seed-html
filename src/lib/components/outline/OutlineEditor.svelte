@@ -61,7 +61,7 @@
   <!-- Hidden help text for screen readers -->
   <div id="editor-help" class="sr-only">
     {$t(
-      'Enter navigation content in plain text. Leave empty to auto-generate from chapter titles. Press Ctrl+Enter (Cmd+Enter on Mac) to save navigation content.'
+      'Plain text navigation; leave empty to auto-generate from chapter titles. Press Ctrl+Enter (Cmd+Enter on Mac) to save.'
     )}
   </div>
 </div>
