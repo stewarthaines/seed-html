@@ -2335,6 +2335,10 @@ msgstr "Sonstige"
 msgid "Other chapters with issues"
 msgstr "Andere Kapitel mit Problemen"
 
+#: src/lib/components/workspace/CreateProjectDialog.svelte
+msgid "Other formats"
+msgstr "Weitere Formate"
+
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "Overwrite"
 msgstr "Überschreiben"
@@ -2621,6 +2625,10 @@ msgstr "Einstellungen für die Lesevorschau"
 #. Dropdown group for CSS/JS files loaded by the e-reader
 msgid "Reading System"
 msgstr "Lesesystem"
+
+#: src/lib/components/workspace/CreateProjectDialog.svelte
+msgid "Recommended"
+msgstr "Empfohlen"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Redirect URI"

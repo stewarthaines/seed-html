@@ -2316,6 +2316,10 @@ msgstr ""
 msgid "Other chapters with issues"
 msgstr ""
 
+#: src/lib/components/workspace/CreateProjectDialog.svelte
+msgid "Other formats"
+msgstr ""
+
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "Overwrite"
 msgstr ""
@@ -2601,6 +2605,10 @@ msgstr ""
 #: src/lib/components/spine/EditorPane.svelte
 #. Dropdown group for CSS/JS files loaded by the e-reader
 msgid "Reading System"
+msgstr ""
+
+#: src/lib/components/workspace/CreateProjectDialog.svelte
+msgid "Recommended"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte

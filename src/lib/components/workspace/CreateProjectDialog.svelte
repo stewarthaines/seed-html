@@ -50,17 +50,20 @@
   // initial values once; untrack makes that intent explicit (no reactive capture).
   let title = $state(DEFAULT_TITLE);
   let language = $state(untrack(() => defaultLanguage));
-  // Advanced mode: pre-select the first available text format to nudge toward a
-  // transform library, falling back to plain text when none are available.
-  // Basic mode: the picker is hidden, so force a Djot project (falling back to
-  // the first available format, then plain, if Djot isn't installed).
+  // Djot is the default in both modes — it's the right choice unless the author
+  // specifically wants another format. Basic mode hides the picker entirely;
+  // advanced mode shows Djot as the recommended pick with the rest in a
+  // disclosure. Fall back to the first available format, then plain text.
   let selectedId = $state(
-    untrack(() =>
-      advancedMode
-        ? (textFormats[0]?.id ?? PLAIN)
-        : (textFormats.find(e => e.id === DJOT)?.id ?? textFormats[0]?.id ?? PLAIN)
-    )
+    untrack(() => textFormats.find(e => e.id === DJOT)?.id ?? textFormats[0]?.id ?? PLAIN)
   );
+  // The recommended row (Djot) and the disclosed rest. When Djot isn't in the
+  // catalog there is nothing to recommend — the flat list renders instead.
+  const recommended = $derived(textFormats.find(e => e.id === DJOT) ?? null);
+  const otherFormats = $derived(textFormats.filter(e => e.id !== DJOT));
+  // Open the disclosure from the start only when the preselected format lives
+  // inside it (i.e. Djot is absent); afterwards it keeps the user's state.
+  const othersInitiallyOpen = untrack(() => !textFormats.some(e => e.id === DJOT));
   // null = follow the title-derived hue; a number = explicit user choice.
   let coverHue = $state<number | null>(null);
   const effectiveHue = $derived(coverHue ?? titleHue(title.trim() || DEFAULT_TITLE));
@@ -187,24 +190,50 @@
       {#if advancedMode && textFormats.length > 0}
         <fieldset class="create-formats" disabled={creating}>
           <legend class="create-label">{$t('Text format')}</legend>
-          <label class="create-radio">
-            <input type="radio" name="text-format" value={PLAIN} bind:group={selectedId} />
-            <span class="create-radio-text"
-              >{$t('Plain text')}
-              <span class="create-radio-desc">{$t('Bold, emphasis and heading styles only.')}</span>
-            </span>
-          </label>
-          {#each textFormats as ext (ext.id)}
+          {#if recommended}
             <label class="create-radio">
-              <input type="radio" name="text-format" value={ext.id} bind:group={selectedId} />
+              <input
+                type="radio"
+                name="text-format"
+                value={recommended.id}
+                bind:group={selectedId}
+              />
               <span class="create-radio-text">
-                <span class="create-radio-name">{ext.name}</span>
-                {#if ext.description}
-                  <span class="create-radio-desc">{ext.description}</span>
+                <span class="create-radio-name">
+                  {recommended.name}
+                  <span class="create-radio-badge">{$t('Recommended')}</span>
+                </span>
+                {#if recommended.description}
+                  <span class="create-radio-desc">{recommended.description}</span>
                 {/if}
               </span>
             </label>
-          {/each}
+          {/if}
+          <details class="create-formats-other" open={othersInitiallyOpen}>
+            <summary class="create-formats-summary">{$t('Other formats')}</summary>
+            <div class="create-formats-list">
+              {#each otherFormats as ext (ext.id)}
+                <label class="create-radio">
+                  <input type="radio" name="text-format" value={ext.id} bind:group={selectedId} />
+                  <span class="create-radio-text">
+                    <span class="create-radio-name">{ext.name}</span>
+                    {#if ext.description}
+                      <span class="create-radio-desc">{ext.description}</span>
+                    {/if}
+                  </span>
+                </label>
+              {/each}
+              <label class="create-radio">
+                <input type="radio" name="text-format" value={PLAIN} bind:group={selectedId} />
+                <span class="create-radio-text"
+                  >{$t('Plain text')}
+                  <span class="create-radio-desc"
+                    >{$t('Bold, emphasis and heading styles only.')}</span
+                  >
+                </span>
+              </label>
+            </div>
+          </details>
         </fieldset>
       {/if}
 
@@ -346,6 +375,33 @@
   .create-radio-desc {
     font-size: var(--text-xs);
     color: var(--color-text-secondary);
+  }
+
+  .create-radio-badge {
+    margin-inline-start: var(--space-1);
+    padding: 1px var(--space-1-5);
+    border-radius: var(--radius-full);
+    background-color: var(--color-bg-accent);
+    color: var(--color-text-primary);
+    font-size: var(--text-xs);
+  }
+
+  .create-formats-other {
+    margin: 0;
+  }
+
+  .create-formats-summary {
+    cursor: pointer;
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+  }
+
+  .create-formats-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-block-start: var(--space-2);
+    padding-inline-start: var(--space-4);
   }
 
   .cover-option {
