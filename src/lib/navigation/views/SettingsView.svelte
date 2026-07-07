@@ -1761,6 +1761,12 @@
     border-top: 1px solid var(--color-border-default);
   }
 
+  /* "Add to project" stays on one line beside the flexing description. */
+  .catalog-item > button {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
   .catalog-item-info {
     display: flex;
     flex-direction: column;
