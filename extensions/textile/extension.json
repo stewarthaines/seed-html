@@ -1,7 +1,7 @@
 {
   "id": "textile",
   "name": "Textile",
-  "description": "Textile is a markup language for formatting text in a blog or a content management system.",
+  "description": "Textile is a concise wiki-style markup from the blogging and CMS world. Rendered by textile.js.",
   "url": "https://textile-lang.com/",
   "license": "LICENSE.txt",
   "chapter": "chapter.txt",

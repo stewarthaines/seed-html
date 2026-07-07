@@ -1,7 +1,7 @@
 {
   "id": "djot",
   "name": "Djot",
-  "description": "Tool for parsing and rendering the light markup format djot.",
+  "description": "Djot is a clean, Markdown-like markup with a consistent syntax, suited to most books. Rendered by djot.js.",
   "url": "https://github.com/jgm/djot.js",
   "license": "LICENSE.txt",
   "scripts": ["djot.js"],

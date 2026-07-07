@@ -6,7 +6,7 @@
   import HueSelector from '../HueSelector.svelte';
   import type { ExtensionCatalogEntry } from '../../extensions/extension-catalog';
   import { persisted, asString, asBoolean } from '../../state/persisted.svelte.js';
-  import { X } from 'phosphor-svelte';
+  import { X, ArrowSquareOut } from 'phosphor-svelte';
 
   // The data the create flow needs; `extension` is the chosen text-format
   // extension, or null for plain text.
@@ -187,41 +187,49 @@
         {/if}
       </div>
 
+      {#snippet formatRadio(ext: ExtensionCatalogEntry, isRecommended: boolean)}
+        <div class="create-radio-row">
+          <label class="create-radio">
+            <input type="radio" name="text-format" value={ext.id} bind:group={selectedId} />
+            <span class="create-radio-text">
+              <span class="create-radio-name">
+                {ext.name}
+                {#if isRecommended}
+                  <span class="create-radio-badge">{$t('Recommended')}</span>
+                {/if}
+              </span>
+              {#if ext.description}
+                <span class="create-radio-desc">{ext.description}</span>
+              {/if}
+            </span>
+          </label>
+          {#if ext.url}
+            <!-- Outside the label so following the link never toggles the radio. -->
+            <a
+              class="btn btn-icon btn-icon-sm create-radio-link"
+              href={ext.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={$t('{name} website', { name: ext.name })}
+              title={$t('{name} website', { name: ext.name })}
+            >
+              <ArrowSquareOut size={14} aria-hidden="true" />
+            </a>
+          {/if}
+        </div>
+      {/snippet}
+
       {#if advancedMode && textFormats.length > 0}
         <fieldset class="create-formats" disabled={creating}>
           <legend class="create-label">{$t('Text format')}</legend>
           {#if recommended}
-            <label class="create-radio">
-              <input
-                type="radio"
-                name="text-format"
-                value={recommended.id}
-                bind:group={selectedId}
-              />
-              <span class="create-radio-text">
-                <span class="create-radio-name">
-                  {recommended.name}
-                  <span class="create-radio-badge">{$t('Recommended')}</span>
-                </span>
-                {#if recommended.description}
-                  <span class="create-radio-desc">{recommended.description}</span>
-                {/if}
-              </span>
-            </label>
+            {@render formatRadio(recommended, true)}
           {/if}
           <details class="create-formats-other" open={othersInitiallyOpen}>
             <summary class="create-formats-summary">{$t('Other formats')}</summary>
             <div class="create-formats-list">
               {#each otherFormats as ext (ext.id)}
-                <label class="create-radio">
-                  <input type="radio" name="text-format" value={ext.id} bind:group={selectedId} />
-                  <span class="create-radio-text">
-                    <span class="create-radio-name">{ext.name}</span>
-                    {#if ext.description}
-                      <span class="create-radio-desc">{ext.description}</span>
-                    {/if}
-                  </span>
-                </label>
+                {@render formatRadio(ext, false)}
               {/each}
               <label class="create-radio">
                 <input type="radio" name="text-format" value={PLAIN} bind:group={selectedId} />
@@ -354,11 +362,23 @@
     border: none;
   }
 
-  .create-radio {
+  .create-radio-row {
     display: flex;
     align-items: flex-start;
     gap: var(--space-2);
+  }
+
+  .create-radio {
+    display: flex;
+    flex: 1;
+    align-items: flex-start;
+    gap: var(--space-2);
     cursor: pointer;
+  }
+
+  .create-radio-link {
+    flex-shrink: 0;
+    color: var(--color-text-secondary);
   }
 
   .create-radio-text {

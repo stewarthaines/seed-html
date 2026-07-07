@@ -1,7 +1,7 @@
 {
   "id": "fountain",
   "name": "Fountain",
-  "description": "Fountain is a plain-text markup for screenplays — scene headings, dialogue and transitions read naturally as text. Rendered by Fountain.js, styled by Styles/fountain.css.",
+  "description": "Fountain is the plain-text format for screenplays — scene headings, dialogue and transitions. Rendered by Fountain.js.",
   "url": "https://fountain.io/",
   "license": "LICENSE.txt",
   "chapter": "chapter.txt",

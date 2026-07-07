@@ -137,6 +137,10 @@ msgstr "{name} gelöscht"
 msgid "{name} uploaded successfully"
 msgstr "{name} erfolgreich hochgeladen"
 
+#: src/lib/components/workspace/CreateProjectDialog.svelte
+msgid "{name} website"
+msgstr "{name}-Website"
+
 #: plugins/publish-to-remote/src/App.svelte
 msgid "{name}: {errors} errors, {warnings} warnings"
 msgstr "{name}: {errors} Fehler, {warnings} Warnungen"

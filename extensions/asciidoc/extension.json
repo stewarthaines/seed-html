@@ -1,7 +1,7 @@
 {
   "id": "asciidoc",
   "name": "AsciiDoc",
-  "description": "AsciiDoc is a plain-text writing format for authoring notes, articles, documentation and books. Rendered by Asciidoctor.js.",
+  "description": "AsciiDoc is a plain-text format for technical writing — documentation, articles and books. Rendered by Asciidoctor.js.",
   "url": "https://asciidoc.org/",
   "license": "LICENSE.txt",
   "chapter": "chapter.txt",

@@ -1,7 +1,7 @@
 {
   "id": "markdown-it",
   "name": "MarkdownIt",
-  "description": "Markdown parser done right. With markdown-it-attrs.",
+  "description": "Markdown is the widely used plain-text markup for general writing — articles, notes and books. Rendered by markdown-it with markdown-it-attrs.",
   "url": "https://markdown-it.github.io/markdown-it/",
   "license": "LICENSE.txt",
   "scripts": ["markdown-it-attrs.browser.min.js", "markdown-it.min.js"],

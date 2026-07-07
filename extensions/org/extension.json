@@ -1,7 +1,7 @@
 {
   "id": "org",
   "name": "Org",
-  "description": "Org (org-mode) is Emacs's plain-text format for notes, outlines and documents. Rendered by org-js.",
+  "description": "Org is Emacs's plain-text format for notes, outlines and documents. Rendered by org-js.",
   "url": "https://orgmode.org/",
   "license": "LICENSE.txt",
   "chapter": "chapter.txt",
