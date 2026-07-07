@@ -328,6 +328,9 @@
   inline-size: var(--touch-target-min);
   block-size: var(--touch-target-min);
   padding: 0;
+  /* Match the sidebar reference buttons (.append-button-nav / theme toggle):
+     a flat square that fills its slot, hover fill running edge to edge. */
+  border-radius: var(--radius-xs);
 }
 
 /* Button sizes */

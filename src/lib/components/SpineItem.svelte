@@ -367,10 +367,21 @@
 
   .move-buttons {
     display: flex;
-    gap: var(--space-1);
+    gap: 0;
     margin-inline-start: auto;
+    /* Fill the row: cancel the item's block and trailing padding so the buttons
+       run edge to edge, like the sidebar header buttons. */
+    align-self: stretch;
+    margin-block: calc(-1 * var(--space-2));
+    margin-inline-end: calc(-1 * var(--space-2));
     position: relative; /* sit above the select button's full-row overlay */
     z-index: 1;
+  }
+
+  .move-buttons button {
+    block-size: auto;
+    align-self: stretch;
+    border-radius: var(--radius-xs);
   }
 
   /* Destructive delete keeps a red hover instead of the shared azure

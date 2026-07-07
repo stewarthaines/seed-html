@@ -133,8 +133,7 @@
 
   // Basic mode hides JavaScript, transform-script, generator and preview-head
   // entries, so power-user surfaces aren't offered as editable; text and CSS stay.
-  const isEditableInBasicMode = (type: string) =>
-    type === 'text' || type === 'css';
+  const isEditableInBasicMode = (type: string) => type === 'text' || type === 'css';
   const visibleFiles1 = $derived(
     advancedMode ? availableFiles1 : availableFiles1.filter(f => isEditableInBasicMode(f.type))
   );
@@ -1052,7 +1051,7 @@
     <div class="editor-controls">
       <button
         type="button"
-        class="btn btn-icon"
+        class="btn btn-icon btn-icon-lg"
         onclick={togglePaneMode}
         title={editorMode === 'single' ? $t('Add second editor pane') : $t('Switch to single pane')}
       >
