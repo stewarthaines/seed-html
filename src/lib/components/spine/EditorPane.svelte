@@ -1677,7 +1677,11 @@
     flex-shrink: 0;
   }
 
+  /* Full header height (the hover fill runs edge to edge like the other header
+     buttons) but narrower than the 44px square — three of those crowd the row
+     and push the insert controls onto a second line. */
   .font-size-btn {
+    inline-size: 2rem;
     font-size: var(--text-sm);
     font-weight: var(--font-semibold);
     color: var(--color-text-secondary);
