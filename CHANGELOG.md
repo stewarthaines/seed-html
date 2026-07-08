@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The abc2svg extension's scale variants now switch with the same pure-CSS container-query approach as the new abcjs extension — the reading-system `responsive.js` script is gone, and scores no longer need JavaScript enabled in the reader.
 - Shorter, clearer interface text throughout — the About page, settings descriptions, and notices say less, and the instructional detail they carried now lives in the user manual.
 - Basic mode now shows only the Basic Info metadata tab; the Advanced and Accessibility tabs appear with Advanced mode (previously individual groups within them were hidden piecemeal).
 

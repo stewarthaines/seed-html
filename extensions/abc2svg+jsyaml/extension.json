@@ -1,16 +1,11 @@
 {
   "id": "abc2svg+jsyaml",
   "name": "abc2svg+jsyaml",
-  "description": "abc2svg is a set of ECMAscript files that handle the ABC music notation. JS-YAML is an implementation of YAML, a human-friendly data serialization language.",
+  "description": "Render ABC music notation code blocks as SVG scores with abc2svg, engraved with the Bravura font; js-yaml reads each block's frontmatter options. Pre-rendered scale variants switch to fit the reading column.",
   "category": "code-blocks",
   "url": "https://chiselapp.com/user/moinejf/repository/abc2svg/doc/trunk/README.md",
   "license": "LICENSE.txt",
   "assets": [
-    {
-      "file": "themes/responsive.js",
-      "target": "Scripts/responsive.js",
-      "media": "application/javascript"
-    },
     {
       "file": "themes/Bravura.woff2",
       "target": "Fonts/Bravura.woff2",
@@ -19,6 +14,11 @@
     {
       "file": "themes/font.css",
       "target": "Styles/abc-font.css",
+      "media": "text/css"
+    },
+    {
+      "file": "abc2svg.css",
+      "target": "Styles/abc2svg.css",
       "media": "text/css"
     }
   ],

@@ -1,0 +1,107 @@
+/*
+  abc2svg score variants — which pre-rendered scale displays, in three layers
+  of progressively narrower support (same ladder as the abcjs and Responsive
+  layout extensions; no reading-system JavaScript):
+
+  1. base                   — the narrow-column variant (.is-default); works everywhere
+  2. @supports not + @media — approximate viewport buckets where container
+                              queries are unavailable
+  3. @supports + @container — precise buckets against the reading column
+
+  The transform stamps the classes this sheet keys on: .is-default (largest
+  scale = narrow-column variant), .is-widest (smallest scale), and .no-wide /
+  .no-full on the container when a block doesn't define those conventional
+  variants. Switch points are a fixed convention (30em / 45em); the
+  frontmatter scales control the engraving size, not when a variant displays.
+*/
+
+.abc2svg-container {
+  padding: 0;
+}
+
+/* %%unsizedsvg output carries only a viewBox — size it to the column. */
+.abc2svg-container svg {
+  inline-size: 100%;
+  block-size: auto;
+  padding: 0;
+}
+
+/* ---- Layer 1: narrow-column variant only (works everywhere) ---- */
+
+.abc2svg-variant {
+  display: none;
+}
+
+.abc2svg-container .abc2svg-variant.is-default {
+  display: block;
+}
+
+/* ---- Layer 2: approximate viewport buckets (no container-query support) ---- */
+
+@supports not (container-type: inline-size) {
+  @media (min-width: 30em) {
+    .abc2svg-container .abc2svg-variant.is-default {
+      display: none;
+    }
+    .abc2svg-container .abc2svg-variant.wide {
+      display: block;
+    }
+    /* This block defines no wide variant: keep the narrow-column one. */
+    .abc2svg-container.no-wide .abc2svg-variant.is-default {
+      display: block;
+    }
+  }
+
+  @media (min-width: 45em) {
+    .abc2svg-container .abc2svg-variant.is-default,
+    .abc2svg-container .abc2svg-variant.wide {
+      display: none;
+    }
+    .abc2svg-container.no-wide .abc2svg-variant.is-default {
+      display: none;
+    }
+    .abc2svg-container .abc2svg-variant.full {
+      display: block;
+    }
+    /* No full variant: show the widest-column variant this block defines. */
+    .abc2svg-container.no-full .abc2svg-variant.is-widest {
+      display: block;
+    }
+  }
+}
+
+/* ---- Layer 3: precise container buckets (progressive enhancement) ---- */
+
+@supports (container-type: inline-size) {
+  .abc2svg-container {
+    container-type: inline-size;
+  }
+
+  @container (min-width: 30em) {
+    .abc2svg-container .abc2svg-variant.is-default {
+      display: none;
+    }
+    .abc2svg-container .abc2svg-variant.wide {
+      display: block;
+    }
+    .abc2svg-container.no-wide .abc2svg-variant.is-default {
+      display: block;
+    }
+  }
+
+  @container (min-width: 45em) {
+    .abc2svg-container .abc2svg-variant.is-default,
+    .abc2svg-container .abc2svg-variant.wide {
+      display: none;
+    }
+    .abc2svg-container.no-wide .abc2svg-variant.is-default {
+      display: none;
+    }
+    .abc2svg-container .abc2svg-variant.full {
+      display: block;
+    }
+    .abc2svg-container.no-full .abc2svg-variant.is-widest {
+      display: block;
+    }
+  }
+}

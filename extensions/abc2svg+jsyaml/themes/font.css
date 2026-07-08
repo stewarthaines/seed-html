@@ -2,18 +2,3 @@
   font-family: 'Bravura';
   src: url('../Fonts/Bravura.woff2') format('woff2');
 }
-
-body.narrow .narrow,
-body.wide .wide,
-body.full .full {
-  display: block;
-}
-
-body.narrow .wide,
-body.narrow .full,
-body.wide .narrow,
-body.wide .full,
-body.full .narrow,
-body.full .wide {
-  display: none;
-}

@@ -8,9 +8,10 @@
  * Both selectors are recognised by transformABC.js.
  *
  * With `include_scales` on, a YAML frontmatter block naming several scales is
- * placed inside the code block. transformABC.js parses it (via js-yaml) and renders
- * the tune once per scale, wrapping each SVG in <div class="<name>"> so a stylesheet
- * can show/size them independently.
+ * placed inside the code block. transformABC.js parses it (via js-yaml) and
+ * renders the tune once per scale as div.abc2svg-variant.<name> inside one
+ * div.abc2svg-container; Styles/abc2svg.css shows the variant that fits the
+ * reading column (container query, with fallbacks).
  *
  * Options:
  *   format (select)          — "markdown" | "textile" block wrapper
