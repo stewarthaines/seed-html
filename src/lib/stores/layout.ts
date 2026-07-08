@@ -11,6 +11,9 @@ export interface SidebarState {
 
 export interface LayoutState {
   sidebar: SidebarState;
+  /** Spine view only: the preview (right) pane is collapsed to a slim rail.
+   *  Persisted so a writing session survives chapter switches and reloads. */
+  spinePreviewCollapsed: boolean;
   isInitialized: boolean;
 }
 
@@ -19,6 +22,7 @@ export interface LayoutStore extends Writable<LayoutState> {
   toggleSidebar(): void;
   setSidebarSection(section: SidebarSection): void;
   toggleProjectNav(): void;
+  toggleSpinePreview(): void;
 }
 
 export type SidebarSection =
@@ -36,6 +40,7 @@ const STORAGE_KEYS = {
   SIDEBAR_EXPANDED: 'editme_sidebar_expanded',
   SIDEBAR_SECTION: 'editme_sidebar_section',
   SIDEBAR_PROJECT_EXPANDED: 'editme_sidebar_project_expanded',
+  SPINE_PREVIEW_COLLAPSED: 'editme_spine_preview_collapsed',
 } as const;
 
 // Default layout state
@@ -45,6 +50,7 @@ const DEFAULT_STATE: LayoutState = {
     activeSection: 'about',
     projectNavExpanded: true,
   },
+  spinePreviewCollapsed: false,
   isInitialized: false,
 };
 
@@ -96,6 +102,18 @@ function createLayoutStore(): LayoutStore {
         console.warn('Failed to load sidebar section:', error);
       }
 
+      let savedPreviewCollapsed: boolean = DEFAULT_STATE.spinePreviewCollapsed;
+      try {
+        const collapsedValue = localStorage.getItem(STORAGE_KEYS.SPINE_PREVIEW_COLLAPSED);
+        if (collapsedValue) {
+          savedPreviewCollapsed = JSON.parse(collapsedValue) as boolean;
+        }
+      } catch (error) {
+        // Ignore localStorage errors and use default
+        // eslint-disable-next-line no-console
+        console.warn('Failed to load spine preview state:', error);
+      }
+
       update(state => ({
         ...state,
         sidebar: {
@@ -103,6 +121,7 @@ function createLayoutStore(): LayoutStore {
           activeSection: savedSection,
           projectNavExpanded: savedProjectExpanded,
         },
+        spinePreviewCollapsed: savedPreviewCollapsed,
         isInitialized: true,
       }));
     },
@@ -147,6 +166,25 @@ function createLayoutStore(): LayoutStore {
             ...state.sidebar,
             isExpanded: newExpanded,
           },
+        };
+      });
+    },
+
+    // Toggle the spine view's preview pane collapsed/expanded
+    toggleSpinePreview(): void {
+      update(state => {
+        const newCollapsed = !state.spinePreviewCollapsed;
+
+        try {
+          localStorage.setItem(STORAGE_KEYS.SPINE_PREVIEW_COLLAPSED, JSON.stringify(newCollapsed));
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.warn('Failed to save spine preview state:', error);
+        }
+
+        return {
+          ...state,
+          spinePreviewCollapsed: newCollapsed,
         };
       });
     },

@@ -30,7 +30,15 @@
     DEFAULT_PREVIEW,
     previewTypeForDevice,
   } from '$lib/services/settings/settings.service.js';
-  import { ArrowsClockwise, FilePdf, DeviceRotate, X, CircleHalf } from 'phosphor-svelte';
+  import {
+    ArrowsClockwise,
+    CaretRight,
+    FilePdf,
+    DeviceRotate,
+    X,
+    CircleHalf,
+  } from 'phosphor-svelte';
+  import { layoutStore } from '../../stores/layout';
   import { persisted, asBoolean, asInt, asEnum } from '../../state/persisted.svelte.js';
 
   // Props using Svelte 5 runes syntax
@@ -1369,6 +1377,20 @@
           {/if}
         </div>
       </div>
+
+      <!-- Collapse the preview pane (spine view only) — mirrors the sidebar's
+           toggle, right edge instead of left. Reopened from the rail that
+           replaces the pane (LayoutManager). -->
+      <button
+        type="button"
+        class="btn btn-icon btn-icon-lg preview-collapse"
+        onclick={() => layoutStore.toggleSpinePreview()}
+        aria-expanded="true"
+        aria-label={$t('Hide preview')}
+        title={$t('Hide preview')}
+      >
+        <CaretRight size={16} aria-hidden="true" />
+      </button>
     </div>
 
     <div class="preview-controls">

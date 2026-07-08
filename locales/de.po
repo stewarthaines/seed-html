@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: EDITME EPUB Editor\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-07\n"
-"PO-Revision-Date: 2026-07-07\n"
+"POT-Creation-Date: 2026-07-08\n"
+"PO-Revision-Date: 2026-07-08\n"
 "Language: de\n"
 "Language-Team: \n"
 "Last-Translator: Claude (machine first pass)\n"
@@ -1573,6 +1573,10 @@ msgstr "Gefahren"
 msgid "Hide {name}"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Hide preview"
+msgstr "Vorschau ausblenden"
+
 #: src/lib/Sidebar.svelte
 msgid "Hide project sections"
 msgstr "Projektbereiche ausblenden"
@@ -2963,6 +2967,10 @@ msgstr ""
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Show panel"
 msgstr "Bereich anzeigen"
+
+#: src/lib/LayoutManager.svelte
+msgid "Show preview"
+msgstr "Vorschau einblenden"
 
 #: src/lib/Sidebar.svelte
 msgid "Show project sections"

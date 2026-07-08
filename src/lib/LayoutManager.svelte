@@ -3,7 +3,8 @@
   import type { Snippet } from 'svelte';
   import Sidebar from './Sidebar.svelte';
   import { layoutStore } from './stores/layout';
-  import { t as _t } from './i18n';
+  import { t } from './i18n';
+  import { CaretLeft } from 'phosphor-svelte';
 
   // Props
   let {
@@ -56,6 +57,12 @@
       sidebar.activeSection !== 'settings' &&
       sidebar.activeSection !== 'publish'
   );
+
+  // Spine view only: the preview pane collapses to a slim rail (writing mode).
+  // Other views always keep their right pane.
+  const previewCollapsed = $derived(
+    $layoutStore.spinePreviewCollapsed && sidebar.activeSection === 'spine'
+  );
 </script>
 
 <div class="app-layout" style="grid-template-columns: {sidebarWidth} 1fr">
@@ -80,7 +87,26 @@
   />
 
   <main class="main-content">
-    {#if showPreviewPane}
+    {#if showPreviewPane && previewCollapsed}
+      <!-- Writing mode: editor full width, preview folded into a rail that
+           mirrors the collapsed sidebar (toggle at the top edge). -->
+      <div class="preview-collapsed-layout">
+        <div class="pane-content">
+          {@render leftContent?.()}
+        </div>
+        <div class="preview-rail">
+          <button
+            class="btn btn-icon btn-icon-lg"
+            onclick={() => layoutStore.toggleSpinePreview()}
+            aria-expanded="false"
+            aria-label={$t('Show preview')}
+            title={$t('Show preview')}
+          >
+            <CaretLeft size={16} aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    {:else if showPreviewPane}
       <PaneGroup direction="horizontal" autoSaveId="editme-content-panes">
         <Pane defaultSize={50} minSize={25}>
           <div class="pane-content">
@@ -131,6 +157,31 @@
     height: 100%;
     overflow: auto;
     background: var(--color-bg-primary);
+  }
+
+  /* Writing mode: editor + a slim rail where the preview pane was. The rail
+     mirrors the collapsed sidebar — 48px wide, toggle in a header-height strip. */
+  .preview-collapsed-layout {
+    display: flex;
+    height: 100%;
+    min-inline-size: 0;
+  }
+
+  .preview-rail {
+    flex-shrink: 0;
+    inline-size: 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--color-sidebar-bg);
+    border-inline-start: 1px solid var(--color-border-strong);
+  }
+
+  .preview-rail .btn {
+    background: var(--color-bg-tertiary);
+    inline-size: 100%;
+    min-block-size: var(--touch-target-min);
+    border-radius: 0;
   }
 
   /* PaneForge resizer styling - using logical properties.
