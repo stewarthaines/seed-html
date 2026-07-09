@@ -9,10 +9,10 @@ Retire the last of the former name. Today `grep -ri editme` hits **94 files**; t
 | `editme_*` localStorage keys              | `seedhtml_*`               | ~15 distinct keys         |
 | `editme-locale` localStorage key          | `seedhtml-locale`          | i18n locale choice        |
 | `editme-storage` IndexedDB name           | `seedhtml-storage`         | storage fallback backend  |
-| `__EDITME_I18N_BUNDLE__` window global    | `__SEEDHTML_I18N_BUNDLE__` | i18n bundle anchor        |
-| `editme-i18n-bundle` script id            | `seedhtml-i18n-bundle`     | vite injected head        |
+| `__SEEDHTML_I18N_BUNDLE__` window global  | `__SEEDHTML_I18N_BUNDLE__` | i18n bundle anchor        |
+| `seedhtml-i18n-bundle` script id          | `seedhtml-i18n-bundle`     | vite injected head        |
 | `editme-content-panes` PaneForge id       | `seedhtml-content-panes`   | pane split sizes          |
-| `editmePlugin` package.json key           | `seedhtmlPlugin`           | plugin manifests          |
+| `seedhtmlPlugin` package.json key         | `seedhtmlPlugin`           | plugin manifests          |
 | `editme-svelte` package/repo              | `seed-html`                | package.json, Codeberg    |
 | `editme.example.com` etc. in docs/samples | `seedhtml.example.com`     | publish-to-remote samples |
 
@@ -35,12 +35,12 @@ OPFS is origin-scoped and name-free — no risk there.
 
 ## Stage 3 — packaged-EPUB coupling (rename as one atomic commit)
 
-`__EDITME_I18N_BUNDLE__` appears in four places that MUST change together (self-consistent per build): `vite.config.ts` head injection, `src/lib/i18n/loader.ts` runtime read, `src/lib/epub/seed-html.ts` `BUNDLE_ASSIGNMENT_PATTERN` + injector, `scripts/smoke-build.js` artifact check (+ `seed-html.test.ts`).
+`__SEEDHTML_I18N_BUNDLE__` appears in four places that MUST change together (self-consistent per build): `vite.config.ts` head injection, `src/lib/i18n/loader.ts` runtime read, `src/lib/epub/seed-html.ts` `BUNDLE_ASSIGNMENT_PATTERN` + injector, `scripts/smoke-build.js` artifact check (+ `seed-html.test.ts`).
 
 - Already-published EPUBs are self-contained — unaffected.
 - Re-editing an old EPUB in the new app is safe: packaging embeds the _new_ SEED.html, whose anchor matches the new injector.
 
-Also in this stage: `editmePlugin` key in both plugin `package.json`s + `scripts/generate-plugin-manifest.js` (and check the dev-middleware side — the two-builders rule).
+Also in this stage: `seedhtmlPlugin` key in both plugin `package.json`s + `scripts/generate-plugin-manifest.js` (and check the dev-middleware side — the two-builders rule).
 
 ## Stage 4 — package and repo rename
 

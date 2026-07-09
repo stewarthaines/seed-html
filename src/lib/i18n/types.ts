@@ -90,7 +90,7 @@ export interface I18nLoader {
   /** Load all storage-cached translation catalogs */
   loadTranslations(): Promise<Record<string, TranslationCatalog>>;
   /**
-   * Extract the embedded ZIP bundle (window.__EDITME_I18N_BUNDLE__) into storage,
+   * Extract the embedded ZIP bundle (window.__SEEDHTML_I18N_BUNDLE__) into storage,
    * returning the locale codes it contained. A null/absent bundle is not an error —
    * builds without embedded catalogs return [].
    */

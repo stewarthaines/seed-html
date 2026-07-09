@@ -93,8 +93,10 @@ function artifactChecks() {
 
   // The i18n anchor must survive the single-file inlining: it is the injection
   // target for localized SEED.html embedding (see vite.config.ts i18n-inline-anchor).
-  if (!/window\.__EDITME_I18N_BUNDLE__\s*=\s*(?:null|'data:application\/zip;base64,)/.test(html)) {
-    problems.push('[artifact] dist/index.html is missing the __EDITME_I18N_BUNDLE__ anchor');
+  if (
+    !/window\.__SEEDHTML_I18N_BUNDLE__\s*=\s*(?:null|'data:application\/zip;base64,)/.test(html)
+  ) {
+    problems.push('[artifact] dist/index.html is missing the __SEEDHTML_I18N_BUNDLE__ anchor');
   }
 
   // The locales sidecar is only present after `npm run build:locales` (part of

@@ -89,7 +89,7 @@ describe.skip('i18n integration workflow', () => {
     // 6. Initialize with detected locale
 
     const mockDataUrl = createMockDataUrl();
-    (globalThis as any).__EDITME_I18N_BUNDLE__ = mockDataUrl;
+    (globalThis as any).__SEEDHTML_I18N_BUNDLE__ = mockDataUrl;
 
     // Mock storage responses for first run
     mockFileStorage.listFiles.mockResolvedValue([]); // No files initially
@@ -207,7 +207,7 @@ describe.skip('i18n integration workflow', () => {
 
   it('should treat a missing embedded bundle as an empty source', async () => {
     // No embedded data URL — builds without inlined catalogs are valid
-    delete (globalThis as any).__EDITME_I18N_BUNDLE__;
+    delete (globalThis as any).__SEEDHTML_I18N_BUNDLE__;
 
     const { createI18nLoader } = await import('../loader.js');
     const loader = createI18nLoader();
@@ -217,7 +217,7 @@ describe.skip('i18n integration workflow', () => {
 
   it('should use fallback English when all else fails', async () => {
     // Simulate total failure: no storage, no data URL
-    delete (globalThis as any).__EDITME_I18N_BUNDLE__;
+    delete (globalThis as any).__SEEDHTML_I18N_BUNDLE__;
     mockFileStorage.listFiles.mockRejectedValue(new Error('No storage'));
 
     // Should initialize with English fallback

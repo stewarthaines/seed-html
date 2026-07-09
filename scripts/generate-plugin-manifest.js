@@ -4,16 +4,16 @@ import * as path from 'path';
 /**
  * Assemble the served plugins/ directory from built workspace plugins.
  *
- * Scans plugins/<name>/package.json for an `editmePlugin` block, copies each
+ * Scans plugins/<name>/package.json for an `seedhtmlPlugin` block, copies each
  * plugin's built single-file artifact into dist/plugins/<id>/, and writes
  * dist/plugins/manifest.json — the build-generated manifest the core fetches at
  * runtime (see plans/api/plugins.md and src/lib/plugins/plugin-registry.ts).
  *
  * Adding a plugin needs no manual manifest editing: drop it under plugins/, give
- * it an `editmePlugin` block, and rebuild. Run the plugin builds first
+ * it an `seedhtmlPlugin` block, and rebuild. Run the plugin builds first
  * (`npm run build --workspaces --if-present`); this script only assembles.
  *
- * editmePlugin metadata:
+ * seedhtmlPlugin metadata:
  *   { id, name, presentation: 'panel'|'view', buildEntry: '<path to built .html>' }
  */
 
@@ -44,12 +44,12 @@ for (const dirent of dirents) {
     continue; // not a package
   }
 
-  const meta = pkg.editmePlugin;
+  const meta = pkg.seedhtmlPlugin;
   if (!meta) continue;
 
   const { id, name, presentation, buildEntry } = meta;
   if (!id || !name || !VALID_PRESENTATIONS.includes(presentation) || !buildEntry) {
-    console.warn(`⚠️  ${dirent.name}: incomplete editmePlugin metadata — skipped`);
+    console.warn(`⚠️  ${dirent.name}: incomplete seedhtmlPlugin metadata — skipped`);
     continue;
   }
 

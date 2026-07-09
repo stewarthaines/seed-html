@@ -77,7 +77,7 @@ export default defineConfig({
       transformIndexHtml(html) {
         return html.replace(
           '</head>',
-          `<script id="editme-i18n-bundle">window.__EDITME_I18N_BUNDLE__=null;</script></head>`
+          `<script id="seedhtml-i18n-bundle">window.__SEEDHTML_I18N_BUNDLE__=null;</script></head>`
         );
       },
     },
@@ -130,7 +130,7 @@ export default defineConfig({
               const pkg = JSON.parse(
                 await fs.readFile(path.join(pluginsRoot, name, 'package.json'), 'utf8')
               );
-              const m = pkg.editmePlugin;
+              const m = pkg.seedhtmlPlugin;
               if (
                 m &&
                 m.id &&

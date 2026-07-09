@@ -43,7 +43,7 @@ Plugin → main insertion uses the existing `insert` message (`{ type: 'insert',
 
 ## Plugin package
 
-- `plugins/audio-clip-editor/` — own Vite + Svelte workspace mirroring `plugins/publish-to-remote/` (single-file build via `vite-plugin-singlefile`, `editmePlugin` block in `package.json` with `presentation: "panel"`, `buildEntry: "dist/plugin.html"`).
+- `plugins/audio-clip-editor/` — own Vite + Svelte workspace mirroring `plugins/publish-to-remote/` (single-file build via `vite-plugin-singlefile`, `seedhtmlPlugin` block in `package.json` with `presentation: "panel"`, `buildEntry: "dist/plugin.html"`).
 - Picked up automatically by `scripts/generate-plugin-manifest.js` and the dev middleware in `vite.config.ts` — no catalog changes needed.
 - i18n via the shared-catalog pattern: the `context` message carries the active locale's message dictionary; the extractor already scans `plugins/*/src`.
 - Manifest reading: locates the OPF via `META-INF/container.xml`, filters manifest items with `media-type` starting `audio/` (`DOMParser`, per project code style), and presents its own audio file picker.

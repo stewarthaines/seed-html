@@ -42,8 +42,8 @@ users is **"Simple EPUB Editor"**.
 - **Do NOT rename existing functional identifiers that contain `editme`** — they are
   load-bearing and renaming them breaks saved user workspaces and the build. This
   includes: the `seedhtml_*` localStorage keys (e.g. `seedhtml_app_workspace_id`,
-  `seedhtml_nav_*`), the `__EDITME_I18N_BUNDLE__` window global, the `editme-storage`
-  IndexedDB database, the `seedhtml-content-panes` PaneForge id, the `editmePlugin`
+  `seedhtml_nav_*`), the `__SEEDHTML_I18N_BUNDLE__` window global, the `editme-storage`
+  IndexedDB database, the `seedhtml-content-panes` PaneForge id, the `seedhtmlPlugin`
   package metadata key, and the `editme-svelte` package / git-repo name.
 - Some older docs still say "EDITME" / "EDITME.html". **SEED.html is canonical** — ignore
   those lingering references; a full docs rebrand is intentionally not done.

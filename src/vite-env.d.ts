@@ -17,6 +17,6 @@ declare module '*.ts?raw' {
 // data:application/zip;base64 URL when catalogs are embedded/injected.
 declare global {
   interface Window {
-    __EDITME_I18N_BUNDLE__?: string | null;
+    __SEEDHTML_I18N_BUNDLE__?: string | null;
   }
 }

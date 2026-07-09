@@ -34,13 +34,13 @@ const decode = (bytes: ArrayBuffer): string => new TextDecoder().decode(bytes);
 /** A minimal single-file build carrying the current null anchor. */
 const MARKER_HTML =
   '<!doctype html><html><head><title>SEED</title>' +
-  '<script id="editme-i18n-bundle">window.__EDITME_I18N_BUNDLE__=null;</script>' +
+  '<script id="seedhtml-i18n-bundle">window.__SEEDHTML_I18N_BUNDLE__=null;</script>' +
   '</head><body><div id="app"></div></body></html>';
 
 /** A pre-anchor build with a populated (legacy, spaced) assignment. */
 const LEGACY_HTML =
   '<!doctype html><html><head>' +
-  "<script>window.__EDITME_I18N_BUNDLE__ = 'data:application/zip;base64,UEsDBA==';</script>" +
+  "<script>window.__SEEDHTML_I18N_BUNDLE__ = 'data:application/zip;base64,UEsDBA==';</script>" +
   '</head><body></body></html>';
 
 /** An ancient build with no bundle assignment at all. */
@@ -54,7 +54,7 @@ const NO_ANCHOR_HTML = '<!doctype html><html><head></head><body></body></html>';
 const TRAP_HTML =
   '<!doctype html><html><head>' +
   '<script>const tpl = "</head><body>oops";</script>' +
-  '<script id="editme-i18n-bundle">window.__EDITME_I18N_BUNDLE__=null;</script>' +
+  '<script id="seedhtml-i18n-bundle">window.__SEEDHTML_I18N_BUNDLE__=null;</script>' +
   '</head><body></body></html>';
 
 const DATA_URL = 'data:application/zip;base64,AAAA';
@@ -72,8 +72,8 @@ describe('injectI18nBundle', () => {
   it('replaces the null anchor', () => {
     const result = decode(injectI18nBundle(encode(MARKER_HTML), DATA_URL));
 
-    expect(result).toContain(`window.__EDITME_I18N_BUNDLE__='${DATA_URL}';`);
-    expect(result).not.toContain('window.__EDITME_I18N_BUNDLE__=null;');
+    expect(result).toContain(`window.__SEEDHTML_I18N_BUNDLE__='${DATA_URL}';`);
+    expect(result).not.toContain('window.__SEEDHTML_I18N_BUNDLE__=null;');
     // Surrounding document intact
     expect(result).toContain('<div id="app">');
     expect(result).toContain('<title>SEED</title>');
@@ -82,7 +82,7 @@ describe('injectI18nBundle', () => {
   it('replaces a legacy populated assignment', () => {
     const result = decode(injectI18nBundle(encode(LEGACY_HTML), DATA_URL));
 
-    expect(result).toContain(`window.__EDITME_I18N_BUNDLE__='${DATA_URL}';`);
+    expect(result).toContain(`window.__SEEDHTML_I18N_BUNDLE__='${DATA_URL}';`);
     expect(result).not.toContain('UEsDBA==');
   });
 
@@ -90,16 +90,18 @@ describe('injectI18nBundle', () => {
     const once = injectI18nBundle(encode(MARKER_HTML), 'data:application/zip;base64,FIRST');
     const twice = decode(injectI18nBundle(once, 'data:application/zip;base64,SECOND'));
 
-    expect(twice).toContain("window.__EDITME_I18N_BUNDLE__='data:application/zip;base64,SECOND';");
+    expect(twice).toContain(
+      "window.__SEEDHTML_I18N_BUNDLE__='data:application/zip;base64,SECOND';"
+    );
     expect(twice).not.toContain('FIRST');
     // Exactly one assignment remains
-    expect(twice.match(/__EDITME_I18N_BUNDLE__/g)).toHaveLength(1);
+    expect(twice.match(/__SEEDHTML_I18N_BUNDLE__/g)).toHaveLength(1);
   });
 
   it('targets the assignment, not a </head> inside a script string literal', () => {
     const result = decode(injectI18nBundle(encode(TRAP_HTML), DATA_URL));
 
-    expect(result).toContain(`window.__EDITME_I18N_BUNDLE__='${DATA_URL}';`);
+    expect(result).toContain(`window.__SEEDHTML_I18N_BUNDLE__='${DATA_URL}';`);
     // The trap literal is untouched
     expect(result).toContain('const tpl = "</head><body>oops";');
   });
@@ -184,7 +186,7 @@ describe('buildLocaleBundleDataUrl', () => {
 
     // Extract the data URL back out of the injected HTML, exactly as the loader
     // would read the global at runtime.
-    const match = /window\.__EDITME_I18N_BUNDLE__='([^']+)';/.exec(injected);
+    const match = /window\.__SEEDHTML_I18N_BUNDLE__='([^']+)';/.exec(injected);
     expect(match).not.toBeNull();
     expect(match![1]).toBe(dataUrl);
   });

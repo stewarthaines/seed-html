@@ -30,7 +30,7 @@ class TranslationLoader implements I18nLoader {
    * Builds without embedded catalogs (global null/absent) return [] untouched.
    */
   async extractEmbeddedBundle(): Promise<string[]> {
-    const translationsDataUrl = (globalThis as any).__EDITME_I18N_BUNDLE__;
+    const translationsDataUrl = (globalThis as any).__SEEDHTML_I18N_BUNDLE__;
     if (typeof translationsDataUrl !== 'string' || translationsDataUrl === '') {
       return [];
     }
@@ -57,7 +57,7 @@ class TranslationLoader implements I18nLoader {
       );
     } finally {
       // Clean up memory after processing the data URL
-      delete (globalThis as any).__EDITME_I18N_BUNDLE__;
+      delete (globalThis as any).__SEEDHTML_I18N_BUNDLE__;
     }
 
     // Parse ZIP using our ZIP library

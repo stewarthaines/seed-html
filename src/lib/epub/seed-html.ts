@@ -25,7 +25,7 @@ const LOCALES_WORKSPACE_ID = 'locales';
  * re-injection idempotent), and tolerates the legacy spaced form.
  */
 const BUNDLE_ASSIGNMENT_PATTERN =
-  /window\.__EDITME_I18N_BUNDLE__\s*=\s*(?:null|'data:application\/zip;base64,[A-Za-z0-9+/=]*');/;
+  /window\.__SEEDHTML_I18N_BUNDLE__\s*=\s*(?:null|'data:application\/zip;base64,[A-Za-z0-9+/=]*');/;
 
 /**
  * Base64-encode in chunks — String.fromCharCode.apply on a whole catalog bundle
@@ -94,7 +94,7 @@ export async function buildLocaleBundleDataUrl(
  */
 export function injectI18nBundle(seedHtmlBytes: ArrayBuffer, dataUrl: string): ArrayBuffer {
   const html = new TextDecoder().decode(seedHtmlBytes);
-  const replacement = `window.__EDITME_I18N_BUNDLE__='${dataUrl}';`;
+  const replacement = `window.__SEEDHTML_I18N_BUNDLE__='${dataUrl}';`;
 
   const match = BUNDLE_ASSIGNMENT_PATTERN.exec(html);
   if (!match) {
