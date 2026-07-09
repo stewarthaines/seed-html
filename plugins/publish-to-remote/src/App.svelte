@@ -438,6 +438,17 @@
     }
   }
 
+  $effect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (activeRemote?.type === 'device' && view === 'ready') {
+        void refreshObjectList();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  });
+
   async function onReconnectDevice() {
     if (!activeRemote || activeRemote.type !== 'device') return;
     const conn = await connectDevice(activeRemote, { interactive: true });
@@ -601,6 +612,18 @@
           'success',
         );
         await refreshObjectList();
+      } else if (result.error === DEVICE_NOT_CONNECTED) {
+        remoteObjects = [];
+        showStatus(
+          translate(
+            '"{name}" is not connected — plug in the device and refresh',
+            { name: activeRemote.name },
+          ),
+          'info',
+        );
+      } else if (result.error === DEVICE_RECONNECT_REQUIRED) {
+        remoteObjects = [];
+        deviceReconnectRequired = true;
       } else {
         showStatus(result.error || translate('Upload failed'), 'error');
       }
@@ -941,8 +964,12 @@
                   selectable={activeRemote?.type !== 'google-drive' &&
                     activeRemote?.type !== 'device'}
                   {googleAuthRequired}
-                  {onCopyUrl}
-                  onRead={onReadRemote}
+                  onCopyUrl={activeRemote?.type === 'device'
+                    ? undefined
+                    : onCopyUrl}
+                  onRead={activeRemote?.type === 'device'
+                    ? undefined
+                    : onReadRemote}
                   onLoadCatalog={catalogReadable ? onLoadCatalog : undefined}
                   loadedCatalogKey={catalogFile.trim()}
                   loading={loadingObjects}

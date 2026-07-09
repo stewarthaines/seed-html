@@ -28,9 +28,9 @@
      * without catalog support (e.g. Google Drive), where selection is moot. */
     selectable?: boolean;
     googleAuthRequired: boolean;
-    onCopyUrl: (key: string, fileId?: string) => void;
+    onCopyUrl?: (key: string, fileId?: string) => void;
     /** Open the EPUB in the host's reader tab via its public URL. */
-    onRead: (key: string, fileId?: string) => void;
+    onRead?: (key: string, fileId?: string) => void;
     onDelete: (key: string) => void;
     /** Click a remote .xml catalog to load it into the editor. Omit to disable. */
     onLoadCatalog?: (key: string) => void;
@@ -131,18 +131,20 @@
       </div>
     {/if}
     <div class="remote-actions">
-      {#if isEpub(obj.key)}
+      {#if onRead && isEpub(obj.key)}
         <button
           class="btn btn-secondary btn-sm"
           onclick={() => onRead(obj.key, obj.fileId)}
           title={$t('Open in the reader')}>{$t('Read')}</button
         >
       {/if}
-      <button
-        class="btn btn-secondary btn-sm"
-        onclick={() => onCopyUrl(obj.key, obj.fileId)}
-        title={$t('Copy URL')}>{$t('Copy')}</button
-      >
+      {#if onCopyUrl}
+        <button
+          class="btn btn-secondary btn-sm"
+          onclick={() => onCopyUrl(obj.key, obj.fileId)}
+          title={$t('Copy URL')}>{$t('Copy')}</button
+        >
+      {/if}
       {#if deleteConfirmKey === obj.key}
         <div class="delete-confirm">
           <span>{$t('Confirm delete?')}</span>
