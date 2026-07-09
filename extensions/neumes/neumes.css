@@ -1,0 +1,53 @@
+/*
+  Neumes notation sizing.
+
+  Every source line is one 1.2em line-unit — a pair SVG (arrows + syllables)
+  is two units, an unpaired line or blank-line spacer is one. The SVGs carry
+  only a block-size; width follows each viewBox's aspect ratio, so the whole
+  drawing (arrows and text together) scales with the reader's font-size
+  setting like ordinary page text.
+
+  Heights are deliberately fixed: neume blocks are parallel parts of one song
+  shown side by side, and corresponding rows must stay level across blocks.
+  Long lines therefore never shrink to fit — the container scrolls instead.
+
+  Everything draws with currentColor: tint a part with e.g.
+    .neumes.top { color: goldenrod; }
+*/
+
+.neumes {
+  overflow-x: auto;
+  line-height: 0; /* the SVGs stack on the line-unit grid, no leading */
+  margin-block: 1em;
+}
+
+.neumes-line {
+  display: block;
+  block-size: 2.4em;
+  inline-size: auto;
+}
+
+.neumes-line.single {
+  block-size: 1.2em;
+}
+
+.neumes-spacer {
+  block-size: 1.2em;
+}
+
+/* Shared glyph definitions: rendered (so <use> resolves reliably) but
+   occupying no space. */
+.neumes-defs {
+  position: absolute;
+  inline-size: 0;
+  block-size: 0;
+  overflow: hidden;
+}
+
+/* Syllables inherit the chapter's body face; restyle here per project —
+   e.g. letter-spacing to open or tighten the syllables, or a different
+   family for the notation. */
+.neumes text {
+  font-family: inherit;
+  letter-spacing: normal;
+}
