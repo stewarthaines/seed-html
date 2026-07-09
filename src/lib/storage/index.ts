@@ -8,6 +8,7 @@
 import type { StorageBackend, BackendType, StorageQuota } from './types.js';
 import { OPFSWorkerManager } from './worker-manager.js';
 import { FeatureDetector } from './feature-detector.js';
+import { migrateLegacyDatabase } from './legacy-migration.js';
 
 // Export types for public API
 export type {
@@ -416,7 +417,7 @@ export class OPFSSyncBackend implements StorageBackend {
 
 export class IndexedDBBackend implements StorageBackend {
   private db: IDBDatabase | null = null;
-  private readonly dbName = 'editme-storage';
+  private readonly dbName = 'seedhtml-storage';
   private readonly version = 1;
 
   async init(): Promise<void> {
@@ -434,7 +435,10 @@ export class IndexedDBBackend implements StorageBackend {
 
       request.onsuccess = () => {
         this.db = request.result;
-        resolve();
+        // The database was renamed with the app: adopt the previous
+        // database's contents on first launch (no-op ever after; never
+        // blocks startup — see legacy-migration.ts).
+        void migrateLegacyDatabase(this.db).then(() => resolve());
       };
 
       request.onupgradeneeded = event => {
