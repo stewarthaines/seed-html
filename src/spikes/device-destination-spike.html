@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Device destination spike — File System Access on a USB e-reader</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 44rem;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        line-height: 1.5;
+      }
+      button {
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+        margin: 0.25rem 0.5rem 0.25rem 0;
+      }
+      #log {
+        white-space: pre-wrap;
+        background: #f4f4f4;
+        border: 1px solid #ccc;
+        padding: 0.75rem;
+        min-height: 12rem;
+        font-family: ui-monospace, monospace;
+        font-size: 0.85rem;
+      }
+      .unsupported {
+        color: #b00;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Device destination spike</h1>
+    <p>
+      Validates the File System Access approach from
+      <code>process/DEVICE_DESTINATIONS.md</code> against real hardware. Plug in an e-reader (Kobo
+      etc.), then: <strong>Pick device</strong> → <strong>Write test book</strong> → reload the page
+      → <strong>Reconnect</strong> → unplug/replug → <strong>Reconnect</strong>
+      again. Watch the log.
+    </p>
+    <p id="support"></p>
+    <div>
+      <button id="pick">1. Pick device…</button>
+      <button id="write">2. Write test book</button>
+      <button id="reconnect">3. Reconnect persisted device</button>
+      <button id="forget">Forget device</button>
+    </div>
+    <div id="log"></div>
+
+    <script>
+      const logEl = document.getElementById('log');
+      const log = (...parts) => {
+        logEl.textContent += parts.join(' ') + '\n';
+        logEl.scrollTop = logEl.scrollHeight;
+      };
+
+      if (!('showDirectoryPicker' in window)) {
+        document.getElementById('support').innerHTML =
+          '<span class="unsupported">This browser has no showDirectoryPicker — use desktop Chrome/Edge.</span>';
+      } else {
+        document.getElementById('support').textContent =
+          'File System Access API available. (Persistent permissions need Chrome 122+; pick "Allow on every visit" if offered.)';
+      }
+
+      let handle = null;
+
+      // ---- IndexedDB persistence for the directory handle -----------------
+      const DB = 'device-spike';
+      function idb() {
+        return new Promise((resolve, reject) => {
+          const req = indexedDB.open(DB, 1);
+          req.onupgradeneeded = () => req.result.createObjectStore('handles');
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      }
+      async function saveHandle(h) {
+        const db = await idb();
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction('handles', 'readwrite');
+          tx.objectStore('handles').put(h, 'device');
+          tx.oncomplete = resolve;
+          tx.onerror = () => reject(tx.error);
+        });
+        db.close();
+      }
+      async function loadHandle() {
+        const db = await idb();
+        const h = await new Promise((resolve, reject) => {
+          const req = db.transaction('handles').objectStore('handles').get('device');
+          req.onsuccess = () => resolve(req.result ?? null);
+          req.onerror = () => reject(req.error);
+        });
+        db.close();
+        return h;
+      }
+      async function clearHandle() {
+        const db = await idb();
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction('handles', 'readwrite');
+          tx.objectStore('handles').delete('device');
+          tx.oncomplete = resolve;
+          tx.onerror = () => reject(tx.error);
+        });
+        db.close();
+      }
+
+      // ---- device sniffing -------------------------------------------------
+      async function sniff(dir) {
+        try {
+          const kobo = await dir.getDirectoryHandle('.kobo');
+          let detail = '';
+          try {
+            const file = await (await kobo.getFileHandle('version')).getFile();
+            detail = (await file.text()).trim();
+          } catch {
+            detail = '(no .kobo/version file)';
+          }
+          log(`✔ Kobo detected — .kobo/version: ${detail}`);
+          return 'kobo';
+        } catch {
+          log('· No .kobo directory — treating as generic volume.');
+          return 'generic';
+        }
+      }
+
+      async function listRoot(dir) {
+        const names = [];
+        for await (const [name] of dir.entries()) names.push(name);
+        log(
+          `Root entries (${names.length}): ${names.slice(0, 12).join(', ')}${names.length > 12 ? ', …' : ''}`
+        );
+      }
+
+      // ---- a minimal but valid EPUB, zipped with CompressionStream --------
+      // (stored entries via raw deflate would need a zip writer; for a spike a
+      // plain STORED zip is hand-assembled — no compression, no dependencies)
+      function storedZip(entries) {
+        const enc = new TextEncoder();
+        const chunks = [];
+        const central = [];
+        let offset = 0;
+        const crcTable = Array.from({ length: 256 }, (_, n) => {
+          let c = n;
+          for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+          return c >>> 0;
+        });
+        const crc32 = bytes => {
+          let c = 0xffffffff;
+          for (const b of bytes) c = crcTable[(c ^ b) & 0xff] ^ (c >>> 8);
+          return (c ^ 0xffffffff) >>> 0;
+        };
+        const u16 = n => new Uint8Array([n & 255, (n >> 8) & 255]);
+        const u32 = n =>
+          new Uint8Array([n & 255, (n >> 8) & 255, (n >> 16) & 255, (n >>> 24) & 255]);
+        for (const [name, text] of entries) {
+          const nameB = enc.encode(name);
+          const data = enc.encode(text);
+          const crc = crc32(data);
+          const local = [
+            u32(0x04034b50),
+            u16(20),
+            u16(0),
+            u16(0),
+            u16(0),
+            u16(0),
+            u32(crc),
+            u32(data.length),
+            u32(data.length),
+            u16(nameB.length),
+            u16(0),
+            nameB,
+            data,
+          ];
+          central.push({ nameB, crc, size: data.length, offset });
+          for (const part of local) {
+            chunks.push(part);
+            offset += part.length;
+          }
+        }
+        const cdStart = offset;
+        for (const e of central) {
+          const rec = [
+            u32(0x02014b50),
+            u16(20),
+            u16(20),
+            u16(0),
+            u16(0),
+            u16(0),
+            u16(0),
+            u32(e.crc),
+            u32(e.size),
+            u32(e.size),
+            u16(e.nameB.length),
+            u16(0),
+            u16(0),
+            u16(0),
+            u16(0),
+            u32(0),
+            u32(e.offset),
+            e.nameB,
+          ];
+          for (const part of rec) {
+            chunks.push(part);
+            offset += part.length;
+          }
+        }
+        chunks.push(
+          u32(0x06054b50),
+          u16(0),
+          u16(0),
+          u16(central.length),
+          u16(central.length),
+          u32(offset - cdStart),
+          u32(cdStart),
+          u16(0)
+        );
+        return new Blob(chunks, { type: 'application/epub+zip' });
+      }
+
+      function testEpub() {
+        const chapter = `<?xml version="1.0" encoding="utf-8"?>\n<html xmlns="http://www.w3.org/1999/xhtml"><head><title>Spike</title></head><body><h1>Device destination spike</h1><p>Written ${new Date().toISOString()} by the SEED.html spike.</p></body></html>`;
+        return storedZip([
+          ['mimetype', 'application/epub+zip'],
+          [
+            'META-INF/container.xml',
+            '<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>',
+          ],
+          [
+            'content.opf',
+            '<?xml version="1.0" encoding="utf-8"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="id">urn:uuid:spike-0001</dc:identifier><dc:title>SEED.html device spike</dc:title><dc:language>en</dc:language><meta property="dcterms:modified">2026-01-01T00:00:00Z</meta></metadata><manifest><item id="c" href="chapter.xhtml" media-type="application/xhtml+xml"/><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/></manifest><spine><itemref idref="c"/></spine></package>',
+          ],
+          [
+            'nav.xhtml',
+            '<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>nav</title></head><body><nav epub:type="toc"><ol><li><a href="chapter.xhtml">Spike</a></li></ol></nav></body></html>',
+          ],
+          ['chapter.xhtml', chapter],
+        ]);
+      }
+
+      // ---- buttons ----------------------------------------------------------
+      document.getElementById('pick').onclick = async () => {
+        try {
+          handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+          log(`\nPicked: "${handle.name}"`);
+          await sniff(handle);
+          await listRoot(handle);
+          await saveHandle(handle);
+          log('Handle persisted to IndexedDB.');
+        } catch (e) {
+          log('Pick failed/cancelled:', e.message);
+        }
+      };
+
+      document.getElementById('write').onclick = async () => {
+        if (!handle) return log('No device — pick or reconnect first.');
+        try {
+          const blob = testEpub();
+          const t0 = performance.now();
+          const fh = await handle.getFileHandle('seed-spike-test.epub', { create: true });
+          const w = await fh.createWritable();
+          await w.write(blob);
+          await w.close();
+          const ms = Math.round(performance.now() - t0);
+          log(`✔ Wrote seed-spike-test.epub (${blob.size} bytes) in ${ms}ms.`);
+          const check = await (
+            await (await handle.getFileHandle('seed-spike-test.epub')).getFile()
+          ).size;
+          log(`✔ Re-read size: ${check} bytes. Eject the device to let it index the book.`);
+        } catch (e) {
+          log('✖ Write failed:', e.name, e.message, '(unplugged? permission lost?)');
+        }
+      };
+
+      document.getElementById('reconnect').onclick = async () => {
+        try {
+          const saved = await loadHandle();
+          if (!saved) return log('No persisted handle.');
+          const state = await saved.queryPermission({ mode: 'readwrite' });
+          log(`\nPersisted handle "${saved.name}" — queryPermission: ${state}`);
+          if (state !== 'granted') {
+            const after = await saved.requestPermission({ mode: 'readwrite' });
+            log(`requestPermission → ${after}`);
+            if (after !== 'granted') return;
+          }
+          handle = saved;
+          await sniff(handle);
+          await listRoot(handle);
+          log('✔ Reconnected.');
+        } catch (e) {
+          log('✖ Reconnect failed:', e.name, e.message, '(is the device plugged in and mounted?)');
+        }
+      };
+
+      document.getElementById('forget').onclick = async () => {
+        await clearHandle();
+        handle = null;
+        log('Handle cleared.');
+      };
+    </script>
+  </body>
+</html>
