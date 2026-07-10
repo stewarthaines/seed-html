@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   createCustomMetaCatalog,
+  catalogEntryLabel,
   BUILTIN_CATALOG_ENTRIES,
   entryId,
   inferValueType,
@@ -11,12 +12,55 @@ const KEY = 'test_custom_meta_catalog';
 describe('customMetaCatalog', () => {
   beforeEach(() => localStorage.clear());
 
-  it('starts with exactly the built-in entries, enabled', () => {
+  it('starts with exactly the built-in entries; only the flagship two enabled', () => {
     const catalog = createCustomMetaCatalog(KEY);
     expect(catalog.entries).toHaveLength(BUILTIN_CATALOG_ENTRIES.length);
-    expect(catalog.entries.every(e => e.source === 'builtin' && e.enabled)).toBe(true);
+    expect(catalog.entries.every(e => e.source === 'builtin')).toBe(true);
+    expect(catalog.entries.filter(e => e.enabled).map(e => e.key)).toEqual([
+      'ibooks:specified-fonts',
+      'cover',
+    ]);
     expect(catalog.find('ibooks:specified-fonts', 'property')?.valueType).toBe('boolean');
     expect(catalog.find('cover', 'name')?.valueType).toBe('text');
+  });
+
+  it('starter pack entries ship disabled, carry groups, and enable persistently', () => {
+    const catalog = createCustomMetaCatalog(KEY);
+    const writingMode = catalog.find('primary-writing-mode', 'name');
+    expect(writingMode).toMatchObject({ enabled: false, valueType: 'enum', group: 'Kindle' });
+    expect(writingMode?.options).toEqual([
+      'horizontal-lr',
+      'horizontal-rl',
+      'vertical-lr',
+      'vertical-rl',
+    ]);
+
+    catalog.setEnabled('primary-writing-mode', 'name', true);
+    expect(catalog.find('primary-writing-mode', 'name')?.enabled).toBe(true);
+    expect(createCustomMetaCatalog(KEY).find('primary-writing-mode', 'name')?.enabled).toBe(true);
+    // Non-removable like every builtin.
+    catalog.remove('primary-writing-mode', 'name');
+    expect(catalog.find('primary-writing-mode', 'name')).toBeDefined();
+  });
+
+  it('property-syntax pack entries carry the prefix URI needed to write them', () => {
+    const catalog = createCustomMetaCatalog(KEY);
+    expect(catalog.find('ebpaj:guide-version', 'property')?.prefixUri).toBe('http://www.ebpaj.jp/');
+    expect(catalog.find('ibooks:scroll-axis', 'property')?.prefixUri).toContain(
+      'vocabulary.itunes.apple.com'
+    );
+  });
+
+  it('catalogEntryLabel translates builtin msgids and passes user labels through', () => {
+    const catalog = createCustomMetaCatalog(KEY);
+    const translate = (msgid: string) => `»${msgid}«`;
+    const builtin = catalog.find('cover', 'name')!;
+    expect(catalogEntryLabel(builtin, translate)).toBe('»EPUB 2 cover image (Google Play Books)«');
+
+    catalog.adopt({ key: 'vendor:x', syntax: 'property', label: 'My Field' });
+    expect(catalogEntryLabel(catalog.find('vendor:x', 'property')!, translate)).toBe('My Field');
+    catalog.adopt({ key: 'vendor:y', syntax: 'property' });
+    expect(catalogEntryLabel(catalog.find('vendor:y', 'property')!, translate)).toBe('vendor:y');
   });
 
   it('adopt adds a user entry with an inferred value type and persists it', () => {

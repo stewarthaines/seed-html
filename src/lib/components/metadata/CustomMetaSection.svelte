@@ -2,7 +2,11 @@
   import { t } from '../../i18n';
   import SettingsSection from '../settings/SettingsSection.svelte';
   import TextMetadataField from './fields/TextMetadataField.svelte';
-  import { customMetaCatalog } from '../../metadata/custom-meta-catalog.svelte.js';
+  import SelectMetadataField from './fields/SelectMetadataField.svelte';
+  import {
+    customMetaCatalog,
+    catalogEntryLabel,
+  } from '../../metadata/custom-meta-catalog.svelte.js';
   import { getCustomMetaValue, setCustomMetaValue } from '../../epub/opf-utils';
   import type { EPUBMetadata, CustomMetaEntry, CustomMetaSyntax } from '../../epub/opf-utils';
   import type { CatalogEntry } from '../../metadata/custom-meta-catalog.svelte.js';
@@ -55,17 +59,16 @@
   const setValue = (entry: CatalogEntry, value: string) =>
     save(setCustomMetaValue(metadata.customMeta, entry.key, entry.syntax, value));
 
-  const label = (entry: CatalogEntry): string => {
-    if (entry.source === 'user') return entry.label || entry.key;
-    if (entry.key === 'ibooks:specified-fonts') {
-      return $t('Apple Books: use the publication’s own fonts (do not re-style)');
-    }
-    if (entry.key === 'cover') return $t('EPUB 2 cover image (Google Play Books)');
-    return entry.key;
-  };
+  const label = (entry: CatalogEntry): string => catalogEntryLabel(entry, $t);
 
   const syntaxLabel = (syntax: CustomMetaSyntax) =>
     syntax === 'property' ? $t('EPUB 3 property') : $t('EPUB 2 name');
+
+  // Enum entries render as a select; the empty option removes the meta.
+  const enumOptions = (entry: CatalogEntry) => [
+    { value: '', label: $t('Not set') },
+    ...(entry.options ?? []).map(option => ({ value: option, label: option })),
+  ];
 
   // Colons are legal in ids but hostile to selectors; keep field ids plain.
   const fieldId = (entry: CatalogEntry) =>
@@ -103,6 +106,16 @@
         />
         <span>{label(entry)}</span>
       </label>
+    {:else if entry.valueType === 'enum'}
+      <SelectMetadataField
+        id={fieldId(entry)}
+        label={label(entry)}
+        value={valueOf(entry)}
+        options={enumOptions(entry)}
+        disabled={saving || readOnly}
+        onblur={e => setValue(entry, e.value)}
+        onfocus={focus}
+      />
     {:else}
       <TextMetadataField
         id={fieldId(entry)}

@@ -415,8 +415,35 @@ msgstr ""
 msgid "Append Item"
 msgstr ""
 
-#: src/lib/components/metadata/CustomMetaSection.svelte
-#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Apple Books"
+msgstr ""
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Apple Books: book version"
+msgstr ""
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Apple Books: iPad orientation lock"
+msgstr ""
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Apple Books: iPhone orientation lock"
+msgstr ""
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Apple Books: respect image size for CSS class"
+msgstr ""
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Apple Books: scroll axis"
+msgstr ""
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Apple Books: show binding between spread pages"
+msgstr ""
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
 msgid "Apple Books: use the publication’s own fonts (do not re-style)"
 msgstr ""
 
@@ -1237,6 +1264,10 @@ msgstr ""
 msgid "Each row is one combination of modes that is enough on its own to read the whole publication."
 msgstr ""
 
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "EBPAJ production guide version"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/RemoteSelector.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Edit"
@@ -1318,8 +1349,7 @@ msgstr ""
 msgid "EPUB"
 msgstr ""
 
-#: src/lib/components/metadata/CustomMetaSection.svelte
-#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
 msgid "EPUB 2 cover image (Google Play Books)"
 msgstr ""
 
@@ -1822,6 +1852,10 @@ msgstr ""
 msgid "Item controls"
 msgstr ""
 
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Japanese publishing"
+msgstr ""
+
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Just now"
 msgstr ""
@@ -1836,6 +1870,42 @@ msgstr ""
 
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Key"
+msgstr ""
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Kindle"
+msgstr ""
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Kindle comics: no gutter"
+msgstr ""
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Kindle comics: no margin"
+msgstr ""
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Kindle comics: publisher panel regions"
+msgstr ""
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Kindle: book type"
+msgstr ""
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Kindle: fixed layout"
+msgstr ""
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Kindle: orientation lock"
+msgstr ""
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Kindle: original resolution (e.g. 1024x600)"
+msgstr ""
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Kindle: primary writing mode"
 msgstr ""
 
 #: src/lib/components/settings/GeneratorSettings.svelte
@@ -2304,6 +2374,10 @@ msgstr ""
 
 #: src/lib/components/SpineItem.svelte
 msgid "Not in the linear reading order"
+msgstr ""
+
+#: src/lib/components/metadata/CustomMetaSection.svelte
+msgid "Not set"
 msgstr ""
 
 #: src/lib/components/metadata/SimpleMetadataView.svelte

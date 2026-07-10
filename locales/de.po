@@ -434,8 +434,35 @@ msgstr "App-Einstellungen"
 msgid "Append Item"
 msgstr "Element anhängen"
 
-#: src/lib/components/metadata/CustomMetaSection.svelte
-#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Apple Books"
+msgstr "Apple Books"
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Apple Books: book version"
+msgstr "Apple Books: Buchversion"
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Apple Books: iPad orientation lock"
+msgstr "Apple Books: iPad-Ausrichtungssperre"
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Apple Books: iPhone orientation lock"
+msgstr "Apple Books: iPhone-Ausrichtungssperre"
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Apple Books: respect image size for CSS class"
+msgstr "Apple Books: Bildgröße für CSS-Klasse beibehalten"
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Apple Books: scroll axis"
+msgstr "Apple Books: Scrollrichtung"
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Apple Books: show binding between spread pages"
+msgstr "Apple Books: Bindung zwischen Doppelseiten anzeigen"
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
 msgid "Apple Books: use the publication’s own fonts (do not re-style)"
 msgstr "Apple Books: die eigenen Schriften der Publikation verwenden (nicht neu gestalten)"
 
@@ -1256,6 +1283,10 @@ msgstr "z. B. urn:isbn:9780000000001"
 msgid "Each row is one combination of modes that is enough on its own to read the whole publication."
 msgstr "Jede Zeile ist eine Kombination von Modi, die für sich genommen ausreicht, um die gesamte Publikation zu lesen."
 
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "EBPAJ production guide version"
+msgstr "Version des EBPAJ-Produktionsleitfadens"
+
 #: plugins/publish-to-remote/src/components/RemoteSelector.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Edit"
@@ -1337,8 +1368,7 @@ msgstr "Titel eingeben"
 msgid "EPUB"
 msgstr "EPUB"
 
-#: src/lib/components/metadata/CustomMetaSection.svelte
-#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
 msgid "EPUB 2 cover image (Google Play Books)"
 msgstr "EPUB-2-Coverbild (Google Play Books)"
 
@@ -1841,6 +1871,10 @@ msgstr "iPhone SE (375×667)"
 msgid "Item controls"
 msgstr "Element-Steuerung"
 
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Japanese publishing"
+msgstr "Japanisches Verlagswesen"
+
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Just now"
 msgstr "Gerade eben"
@@ -1856,6 +1890,42 @@ msgstr "Beide behalten (als neues Element importieren)"
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Key"
 msgstr "Schlüssel"
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Kindle"
+msgstr "Kindle"
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Kindle comics: no gutter"
+msgstr "Kindle-Comics: kein Bundsteg"
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Kindle comics: no margin"
+msgstr "Kindle-Comics: kein Seitenrand"
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Kindle comics: publisher panel regions"
+msgstr "Kindle-Comics: Panelbereiche des Verlags"
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Kindle: book type"
+msgstr "Kindle: Buchtyp"
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Kindle: fixed layout"
+msgstr "Kindle: festes Layout"
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Kindle: orientation lock"
+msgstr "Kindle: Ausrichtungssperre"
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Kindle: original resolution (e.g. 1024x600)"
+msgstr "Kindle: Originalauflösung (z. B. 1024x600)"
+
+#: src/lib/metadata/custom-meta-catalog.svelte.ts
+msgid "Kindle: primary writing mode"
+msgstr "Kindle: primäre Schreibrichtung"
 
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Label"
@@ -2324,6 +2394,10 @@ msgstr "Nicht im Simple EPUB Editor erstellt — anzeigbar, aber nicht bearbeitb
 #: src/lib/components/SpineItem.svelte
 msgid "Not in the linear reading order"
 msgstr "Nicht in der linearen Lesereihenfolge"
+
+#: src/lib/components/metadata/CustomMetaSection.svelte
+msgid "Not set"
+msgstr "Nicht gesetzt"
 
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 msgid "Not specified"

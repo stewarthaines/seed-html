@@ -15,20 +15,40 @@
 import { persisted } from '../state/persisted.svelte.js';
 import type { Codec } from '../state/persisted.svelte.js';
 import type { CustomMetaSyntax } from '../epub/opf-utils.js';
+import { _ } from '../i18n/msgid.js';
 
 export interface CatalogEntry {
   key: string; // e.g. "ibooks:specified-fonts", "cover", "calibre:series"
   syntax: CustomMetaSyntax;
-  valueType: 'boolean' | 'text';
-  // Display label for user entries; built-in labels are resolved via $t at
-  // render time so they follow the active locale.
+  // 'boolean' = presence flag (checkbox; off removes the meta), 'enum' = one of
+  // a closed vocabulary (select; covers keys where an explicit "false" differs
+  // from absent), 'text' = free text. User-adopted entries are boolean|text.
+  valueType: 'boolean' | 'text' | 'enum';
+  /** Closed vocabulary for 'enum' entries — verbatim attribute/element values. */
+  options?: string[];
+  // Display label: built-in labels/groups are msgids (wrapped in _() for
+  // extraction) resolved via $t at render time; user labels are plain text.
   label?: string;
+  /** Grouping sub-heading msgid for the Settings catalog list. */
+  group?: string;
   // prefix → URI declaration needed to WRITE a property-syntax key into a book
   // that never contained it. Harvested from the source book at adoption time;
   // absent when the source book itself never declared the prefix.
   prefixUri?: string;
   source: 'builtin' | 'user';
   enabled: boolean;
+}
+
+/**
+ * Display label for a catalog entry. Built-in labels are msgids — pass the
+ * current translate function (the `$t` store value) so they follow the locale.
+ */
+export function catalogEntryLabel(
+  entry: CatalogEntry,
+  translate: (msgid: string) => string
+): string {
+  if (entry.source === 'user') return entry.label || entry.key;
+  return entry.label ? translate(entry.label) : entry.key;
 }
 
 type UserEntry = Omit<CatalogEntry, 'source'>;
@@ -40,12 +60,28 @@ interface StoredCatalog {
   builtin: Record<string, { enabled: boolean }>;
 }
 
+const IBOOKS_PREFIX_URI =
+  'http://vocabulary.itunes.apple.com/rdf/ibooks/vocabulary-extensions-1.0/';
+const GROUP_KINDLE = _('Kindle');
+const GROUP_APPLE = _('Apple Books');
+const GROUP_JAPANESE = _('Japanese publishing');
+
+/**
+ * Built-in entries. The first two are enabled everywhere; the "starter pack"
+ * below ships disabled — enabled entries are offered on every book, so authors
+ * opt in per need from the Settings catalog (e.g. manga for Kindle). Keys and
+ * option values are verbatim from the vendor documentation (see
+ * process notes / Kindle Publishing Guidelines, Apple Books Asset Guide,
+ * EBPAJ production guide).
+ */
 export const BUILTIN_CATALOG_ENTRIES: readonly CatalogEntry[] = [
   {
     key: 'ibooks:specified-fonts',
     syntax: 'property',
     valueType: 'boolean',
-    prefixUri: 'http://vocabulary.itunes.apple.com/rdf/ibooks/vocabulary-extensions-1.0/',
+    label: _('Apple Books: use the publication’s own fonts (do not re-style)'),
+    group: GROUP_APPLE,
+    prefixUri: IBOOKS_PREFIX_URI,
     source: 'builtin',
     enabled: true,
   },
@@ -53,8 +89,170 @@ export const BUILTIN_CATALOG_ENTRIES: readonly CatalogEntry[] = [
     key: 'cover',
     syntax: 'name',
     valueType: 'text',
+    label: _('EPUB 2 cover image (Google Play Books)'),
     source: 'builtin',
     enabled: true,
+  },
+
+  // --- Starter pack: Kindle fixed layout & comics (EPUB 2 name syntax) ------
+  {
+    key: 'fixed-layout',
+    syntax: 'name',
+    valueType: 'boolean',
+    label: _('Kindle: fixed layout'),
+    group: GROUP_KINDLE,
+    source: 'builtin',
+    enabled: false,
+  },
+  {
+    key: 'original-resolution',
+    syntax: 'name',
+    valueType: 'text',
+    label: _('Kindle: original resolution (e.g. 1024x600)'),
+    group: GROUP_KINDLE,
+    source: 'builtin',
+    enabled: false,
+  },
+  {
+    key: 'book-type',
+    syntax: 'name',
+    valueType: 'enum',
+    options: ['comic', 'children'],
+    label: _('Kindle: book type'),
+    group: GROUP_KINDLE,
+    source: 'builtin',
+    enabled: false,
+  },
+  {
+    key: 'orientation-lock',
+    syntax: 'name',
+    valueType: 'enum',
+    options: ['portrait', 'landscape', 'none'],
+    label: _('Kindle: orientation lock'),
+    group: GROUP_KINDLE,
+    source: 'builtin',
+    enabled: false,
+  },
+  {
+    key: 'primary-writing-mode',
+    syntax: 'name',
+    valueType: 'enum',
+    options: ['horizontal-lr', 'horizontal-rl', 'vertical-lr', 'vertical-rl'],
+    label: _('Kindle: primary writing mode'),
+    group: GROUP_KINDLE,
+    source: 'builtin',
+    enabled: false,
+  },
+  {
+    key: 'zero-gutter',
+    syntax: 'name',
+    valueType: 'boolean',
+    label: _('Kindle comics: no gutter'),
+    group: GROUP_KINDLE,
+    source: 'builtin',
+    enabled: false,
+  },
+  {
+    key: 'zero-margin',
+    syntax: 'name',
+    valueType: 'boolean',
+    label: _('Kindle comics: no margin'),
+    group: GROUP_KINDLE,
+    source: 'builtin',
+    enabled: false,
+  },
+  {
+    // Verbatim casing from the Kindle Publishing Guidelines. An enum (not a
+    // boolean) because explicit "false" differs from absent: false disables
+    // Kindle's automatic Virtual Panel view.
+    key: 'RegionMagnification',
+    syntax: 'name',
+    valueType: 'enum',
+    options: ['true', 'false'],
+    label: _('Kindle comics: publisher panel regions'),
+    group: GROUP_KINDLE,
+    source: 'builtin',
+    enabled: false,
+  },
+
+  // --- Starter pack: Apple Books (EPUB 3 property syntax) -------------------
+  {
+    key: 'ibooks:version',
+    syntax: 'property',
+    valueType: 'text',
+    label: _('Apple Books: book version'),
+    group: GROUP_APPLE,
+    prefixUri: IBOOKS_PREFIX_URI,
+    source: 'builtin',
+    enabled: false,
+  },
+  {
+    // Enum, not boolean: the default is true, so only an explicit "false"
+    // (no spine fold between spread pages) is worth writing.
+    key: 'ibooks:binding',
+    syntax: 'property',
+    valueType: 'enum',
+    options: ['true', 'false'],
+    label: _('Apple Books: show binding between spread pages'),
+    group: GROUP_APPLE,
+    prefixUri: IBOOKS_PREFIX_URI,
+    source: 'builtin',
+    enabled: false,
+  },
+  {
+    key: 'ibooks:scroll-axis',
+    syntax: 'property',
+    valueType: 'enum',
+    options: ['default', 'vertical', 'horizontal'],
+    label: _('Apple Books: scroll axis'),
+    group: GROUP_APPLE,
+    prefixUri: IBOOKS_PREFIX_URI,
+    source: 'builtin',
+    enabled: false,
+  },
+  {
+    key: 'ibooks:ipad-orientation-lock',
+    syntax: 'property',
+    valueType: 'enum',
+    options: ['portrait-only', 'landscape-only', 'none'],
+    label: _('Apple Books: iPad orientation lock'),
+    group: GROUP_APPLE,
+    prefixUri: IBOOKS_PREFIX_URI,
+    source: 'builtin',
+    enabled: false,
+  },
+  {
+    key: 'ibooks:iphone-orientation-lock',
+    syntax: 'property',
+    valueType: 'enum',
+    options: ['portrait-only', 'landscape-only', 'none'],
+    label: _('Apple Books: iPhone orientation lock'),
+    group: GROUP_APPLE,
+    prefixUri: IBOOKS_PREFIX_URI,
+    source: 'builtin',
+    enabled: false,
+  },
+  {
+    key: 'ibooks:respect-image-size-class',
+    syntax: 'property',
+    valueType: 'text',
+    label: _('Apple Books: respect image size for CSS class'),
+    group: GROUP_APPLE,
+    prefixUri: IBOOKS_PREFIX_URI,
+    source: 'builtin',
+    enabled: false,
+  },
+
+  // --- Starter pack: Japanese publishing ------------------------------------
+  {
+    key: 'ebpaj:guide-version',
+    syntax: 'property',
+    valueType: 'text',
+    label: _('EBPAJ production guide version'),
+    group: GROUP_JAPANESE,
+    prefixUri: 'http://www.ebpaj.jp/',
+    source: 'builtin',
+    enabled: false,
   },
 ];
 
