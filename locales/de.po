@@ -435,6 +435,7 @@ msgid "Append Item"
 msgstr "Element anhängen"
 
 #: src/lib/components/metadata/CustomMetaSection.svelte
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 msgid "Apple Books: use the publication’s own fonts (do not re-style)"
 msgstr "Apple Books: die eigenen Schriften der Publikation verwenden (nicht neu gestalten)"
 
@@ -572,6 +573,10 @@ msgstr "Bucket-Name"
 msgid "Build scripts"
 msgstr "Build-Skripte"
 
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
+msgid "Built-in"
+msgstr "Integriert"
+
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 #: src/lib/components/EditSpineItemDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
@@ -679,6 +684,7 @@ msgstr "Kapiteltitel – wird im <title> des Inhaltsdokuments verwendet; Standar
 msgid "Chapters"
 msgstr "Kapitel"
 
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Checkbox"
 msgstr "Kontrollkästchen"
@@ -1034,6 +1040,10 @@ msgid "Custom metadata"
 msgstr "Benutzerdefinierte Metadaten"
 
 #: src/lib/navigation/views/SettingsView.svelte
+msgid "Custom metadata catalog"
+msgstr "Katalog benutzerdefinierter Metadaten"
+
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Custom page size"
 msgstr ""
 
@@ -1328,14 +1338,17 @@ msgid "EPUB"
 msgstr "EPUB"
 
 #: src/lib/components/metadata/CustomMetaSection.svelte
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 msgid "EPUB 2 cover image (Google Play Books)"
 msgstr "EPUB-2-Coverbild (Google Play Books)"
 
 #: src/lib/components/metadata/CustomMetaSection.svelte
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 msgid "EPUB 2 name"
 msgstr "EPUB-2-Name"
 
 #: src/lib/components/metadata/CustomMetaSection.svelte
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 msgid "EPUB 3 property"
 msgstr "EPUB-3-Eigenschaft"
 
@@ -2592,6 +2605,10 @@ msgstr "Position"
 msgid "Pre-paginated"
 msgstr "Vorpaginiert"
 
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
+msgid "Prefix URI"
+msgstr "Präfix-URI"
+
 #: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Preparing…"
 msgstr "Wird vorbereitet…"
@@ -2718,6 +2735,10 @@ msgstr "Einstellungen für die Lesevorschau"
 msgid "Reading System"
 msgstr "Lesesystem"
 
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
+msgid "Recognized fields are offered on every book you edit. The catalog is stored in this browser and does not travel with your EPUBs."
+msgstr "Erkannte Felder werden in jedem Buch angeboten, das Sie bearbeiten. Der Katalog wird in diesem Browser gespeichert und reist nicht mit Ihren EPUBs mit."
+
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "Recommended"
 msgstr "Empfohlen"
@@ -2775,6 +2796,7 @@ msgstr "Remote:"
 #: src/lib/components/metadata/CreatorRoleEditor.svelte
 #: src/lib/components/metadata/IdentifierEditor.svelte
 #: src/lib/components/metadata/TitleEditor.svelte
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 #: src/lib/navigation/views/SettingsView.svelte
@@ -3216,6 +3238,7 @@ msgstr "Technische Informationen"
 msgid "Term (e.g. FIC028000)"
 msgstr "Begriff (z. B. FIC028000)"
 
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Text"
 msgstr "Text"
@@ -3542,6 +3565,10 @@ msgstr "Validierungsbericht (epubcheck) für dieses Kapitel"
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 msgid "Validation Report: {filename}"
 msgstr "Validierungsbericht: {filename}"
+
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
+msgid "Value type"
+msgstr "Werttyp"
 
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "value:Label, value:Label"

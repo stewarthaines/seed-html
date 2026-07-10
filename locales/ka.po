@@ -416,6 +416,7 @@ msgid "Append Item"
 msgstr ""
 
 #: src/lib/components/metadata/CustomMetaSection.svelte
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 msgid "Apple Books: use the publication’s own fonts (do not re-style)"
 msgstr ""
 
@@ -553,6 +554,10 @@ msgstr ""
 msgid "Build scripts"
 msgstr ""
 
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
+msgid "Built-in"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 #: src/lib/components/EditSpineItemDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
@@ -660,6 +665,7 @@ msgstr ""
 msgid "Chapters"
 msgstr ""
 
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Checkbox"
 msgstr ""
@@ -1015,6 +1021,10 @@ msgid "Custom metadata"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
+msgid "Custom metadata catalog"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Custom page size"
 msgstr ""
 
@@ -1309,14 +1319,17 @@ msgid "EPUB"
 msgstr ""
 
 #: src/lib/components/metadata/CustomMetaSection.svelte
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 msgid "EPUB 2 cover image (Google Play Books)"
 msgstr ""
 
 #: src/lib/components/metadata/CustomMetaSection.svelte
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 msgid "EPUB 2 name"
 msgstr ""
 
 #: src/lib/components/metadata/CustomMetaSection.svelte
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 msgid "EPUB 3 property"
 msgstr ""
 
@@ -2573,6 +2586,10 @@ msgstr ""
 msgid "Pre-paginated"
 msgstr ""
 
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
+msgid "Prefix URI"
+msgstr ""
+
 #: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Preparing…"
 msgstr ""
@@ -2699,6 +2716,10 @@ msgstr ""
 msgid "Reading System"
 msgstr ""
 
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
+msgid "Recognized fields are offered on every book you edit. The catalog is stored in this browser and does not travel with your EPUBs."
+msgstr ""
+
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "Recommended"
 msgstr ""
@@ -2756,6 +2777,7 @@ msgstr ""
 #: src/lib/components/metadata/CreatorRoleEditor.svelte
 #: src/lib/components/metadata/IdentifierEditor.svelte
 #: src/lib/components/metadata/TitleEditor.svelte
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 #: src/lib/navigation/views/SettingsView.svelte
@@ -3197,6 +3219,7 @@ msgstr ""
 msgid "Term (e.g. FIC028000)"
 msgstr ""
 
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Text"
 msgstr ""
@@ -3522,6 +3545,10 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 msgid "Validation Report: {filename}"
+msgstr ""
+
+#: src/lib/components/settings/CustomMetaCatalogSettings.svelte
+msgid "Value type"
 msgstr ""
 
 #: src/lib/components/settings/GeneratorSettings.svelte

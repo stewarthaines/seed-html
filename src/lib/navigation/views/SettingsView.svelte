@@ -18,6 +18,7 @@
   import ExtensionItem from '../../components/extensions/ExtensionItem.svelte';
   import GeneratorSettings from '../../components/settings/GeneratorSettings.svelte';
   import TrackChangesPanel from '../../components/settings/TrackChangesPanel.svelte';
+  import CustomMetaCatalogSettings from '../../components/settings/CustomMetaCatalogSettings.svelte';
   import SettingsSection from '../../components/settings/SettingsSection.svelte';
   import PaneHeader from '../../components/layout/PaneHeader.svelte';
   import {
@@ -1023,6 +1024,16 @@
                     {/each}
                   {/if}
                 {/each}
+              </SettingsSection>
+            {/if}
+
+            {#if isAdvancedMode}
+              <SettingsSection
+                title={$t('Custom metadata catalog')}
+                name="app-settings"
+                persistKey="settings-app-custom-meta"
+              >
+                <CustomMetaCatalogSettings />
               </SettingsSection>
             {/if}
           </div>
