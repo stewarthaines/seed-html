@@ -1,12 +1,62 @@
+// Minimal structural types for the pieces of the dynamically-loaded Google
+// Identity Services / Picker globals this plugin actually touches (Google
+// ships no TypeScript types for these script-tag APIs).
+interface GoogleTokenResponse {
+  access_token?: string;
+}
+
+interface GoogleTokenClient {
+  requestAccessToken(options: { prompt: string }): void;
+}
+
+interface GooglePickerDoc {
+  id: string;
+  name: string;
+}
+
+interface GooglePickerView {
+  setIncludeFolders(include: boolean): void;
+  setSelectFolderEnabled(enabled: boolean): void;
+  setMimeTypes(mimeTypes: string): void;
+}
+
+interface GooglePickerBuilder {
+  addView(view: GooglePickerView): GooglePickerBuilder;
+  enableFeature(feature: string): GooglePickerBuilder;
+  setOAuthToken(token: string): GooglePickerBuilder;
+  setAppId(appId: string): GooglePickerBuilder;
+  setCallback(
+    callback: (data: Record<string, unknown>) => void,
+  ): GooglePickerBuilder;
+  build(): { setVisible(visible: boolean): void };
+}
+
+interface GoogleGlobal {
+  accounts: {
+    oauth2: {
+      initTokenClient(config: {
+        client_id: string;
+        scope: string;
+        callback: (response: GoogleTokenResponse) => void;
+      }): GoogleTokenClient;
+    };
+  };
+  picker: {
+    DocsView: new () => GooglePickerView;
+    PickerBuilder: new () => GooglePickerBuilder;
+    Feature: { NAV_HIDDEN: string };
+    Response: { ACTION: string; DOCUMENTS: string };
+    Action: { PICKED: string; CANCEL: string };
+  };
+}
+
 declare global {
   interface Window {
     onGoogleLibraryLoad?: () => void;
-    google?: any;
-    gapi?: any;
+    google?: GoogleGlobal;
+    gapi?: { load?: (library: string, callback: () => void) => void };
   }
 }
-
-declare const google: any;
 
 let scriptsLoaded = false;
 
@@ -37,10 +87,15 @@ export async function loadGoogleScripts(): Promise<void> {
 
 export function authorizeGoogleDrive(clientId: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    const client = window.google.accounts.oauth2.initTokenClient({
+    const google = window.google;
+    if (!google) {
+      reject(new Error('Google Identity Services not loaded'));
+      return;
+    }
+    const client = google.accounts.oauth2.initTokenClient({
       client_id: clientId,
       scope: 'https://www.googleapis.com/auth/drive.file',
-      callback: (response: any) => {
+      callback: (response) => {
         if (response.access_token) {
           resolve(response.access_token);
         } else {
@@ -60,24 +115,31 @@ export async function pickGoogleDriveFolder(
   await loadGoogleScripts();
 
   return new Promise((resolve, reject) => {
-    const folderView = new window.google.picker.DocsView();
+    const google = window.google;
+    if (!google) {
+      reject(new Error('Google Picker API not loaded'));
+      return;
+    }
+    const folderView = new google.picker.DocsView();
     folderView.setIncludeFolders(true);
     folderView.setSelectFolderEnabled(true);
     folderView.setMimeTypes('application/vnd.google-apps.folder');
 
-    const picker = new window.google.picker.PickerBuilder()
+    const picker = new google.picker.PickerBuilder()
       .addView(folderView)
       .enableFeature(google.picker.Feature.NAV_HIDDEN)
       .setOAuthToken(accessToken)
       .setAppId(apiKey)
-      .setCallback((data: any) => {
+      .setCallback((data) => {
         if (
           data[google.picker.Response.ACTION] === google.picker.Action.PICKED
         ) {
-          const doc = data[google.picker.Response.DOCUMENTS][0];
+          const docs = data[
+            google.picker.Response.DOCUMENTS
+          ] as GooglePickerDoc[];
           resolve({
-            folderId: doc.id,
-            folderName: doc.name,
+            folderId: docs[0].id,
+            folderName: docs[0].name,
           });
         } else if (
           data[google.picker.Response.ACTION] === google.picker.Action.CANCEL
@@ -105,10 +167,15 @@ function waitForGoogle(): Promise<void> {
 export async function refreshGoogleToken(clientId: string): Promise<string> {
   await waitForGoogle();
   return new Promise((resolve, reject) => {
-    const client = window.google.accounts.oauth2.initTokenClient({
+    const google = window.google;
+    if (!google) {
+      reject(new Error('Google Identity Services not loaded'));
+      return;
+    }
+    const client = google.accounts.oauth2.initTokenClient({
       client_id: clientId,
       scope: 'https://www.googleapis.com/auth/drive.file',
-      callback: (response: any) => {
+      callback: (response) => {
         if (response.access_token) {
           resolve(response.access_token);
         } else {

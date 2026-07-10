@@ -164,9 +164,11 @@ export default [
       '.claude/',
       // Local Python virtualenv (untracked) — not app code.
       '.venv/',
-      // Workspace plugins are separate packages with their own lint/format/test
-      // toolchain (and newer dep majors); the core gate does not govern them.
-      'plugins/',
+      // Workspace plugin sources are linted by this config; only their build
+      // output and per-package deps are excluded.
+      'plugins/*/dist/',
+      'plugins/*/node_modules/',
+      'plugins/*/vite.config.ts',
       // Extensions catalog: vendored 3rd-party libs + example transform scripts,
       // served as-is (mirrors src/assets and plugins/); not linted as app modules.
       'extensions/',

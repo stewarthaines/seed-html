@@ -156,8 +156,10 @@ export async function listGoogleDriveFiles(
       };
     }
 
-    const data = await response.json();
-    const objects: S3Object[] = (data.files || []).map((file: any) => ({
+    const data = (await response.json()) as {
+      files?: { id: string; name: string; size?: string; modifiedTime: string }[];
+    };
+    const objects: S3Object[] = (data.files || []).map((file) => ({
       key: file.name,
       size: parseInt(file.size || '0', 10),
       lastModified: file.modifiedTime,
