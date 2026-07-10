@@ -1,6 +1,7 @@
 <script lang="ts">
   import { t } from '../../i18n';
   import MetadataTab from './MetadataTab.svelte';
+  import { getTabFields } from './metadata-tabs.js';
   import type { ValidationResult } from '../../metadata/MetadataValidator';
 
   let {
@@ -22,45 +23,6 @@
   const getTabErrorCount = (tabId: string) => {
     const tabFields = getTabFields(tabId);
     return validationErrors.filter(error => tabFields.includes(error.field)).length;
-  };
-
-  const getTabFields = (tabId: any) => {
-    switch (tabId) {
-      case 'basic':
-        return ['title', 'language', 'identifier', 'creator'];
-      case 'advanced':
-        return [
-          'publisher',
-          'date',
-          'description',
-          'subject',
-          'rights',
-          'source',
-          'relation',
-          'coverage',
-          'type',
-          'format',
-          'contributor',
-          'collections',
-          'ibooksSpecifiedFonts',
-        ];
-      case 'accessibility':
-        return [
-          'accessMode',
-          'accessModeSufficient',
-          'accessibilityFeature',
-          'accessibilityHazard',
-          'accessibilityControl',
-          'accessibilityAPI',
-          'accessibilitySummary',
-          'accessibilityConformance',
-          'accessibilityCertifiedBy',
-          'accessibilityCertifierCredential',
-          'accessibilityCertifierReport',
-        ];
-      default:
-        return [];
-    }
   };
 
   const handleTabClick = (detail: { tabId: string }) => {

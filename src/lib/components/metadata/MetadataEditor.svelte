@@ -1,6 +1,7 @@
 <script lang="ts">
   import { t } from '../../i18n';
   import { persisted, asEnum } from '../../state/persisted.svelte.js';
+  import { getTabFields } from './metadata-tabs.js';
   import MetadataTabBar from './MetadataTabBar.svelte';
   import PaneHeader from '../layout/PaneHeader.svelte';
   import BasicInfoFields from './BasicInfoFields.svelte';
@@ -63,45 +64,6 @@
       activeTab.current = 'basic';
     }
   });
-
-  const getTabFields = (tabId: string) => {
-    switch (tabId) {
-      case 'basic':
-        return ['title', 'language', 'identifier', 'creator'];
-      case 'advanced':
-        return [
-          'publisher',
-          'date',
-          'description',
-          'subject',
-          'rights',
-          'source',
-          'relation',
-          'coverage',
-          'type',
-          'format',
-          'contributor',
-          'collections',
-          'ibooksSpecifiedFonts',
-        ];
-      case 'accessibility':
-        return [
-          'accessMode',
-          'accessModeSufficient',
-          'accessibilityFeature',
-          'accessibilityHazard',
-          'accessibilityControl',
-          'accessibilityAPI',
-          'accessibilitySummary',
-          'accessibilityConformance',
-          'accessibilityCertifiedBy',
-          'accessibilityCertifierCredential',
-          'accessibilityCertifierReport',
-        ];
-      default:
-        return [];
-    }
-  };
 
   const handleFieldChange = (_event: { detail: any }) => {
     // Field changes are handled by the input component's internal state
