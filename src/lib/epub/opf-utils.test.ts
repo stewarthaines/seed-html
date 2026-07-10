@@ -10,8 +10,13 @@ import {
   toEpubSafeFilename,
   toEpubSafeHref,
   ensureUniqueHref,
+  extractCustomMeta,
+  parsePrefixAttribute,
+  formatPrefixAttribute,
+  getCustomMetaValue,
+  setCustomMetaValue,
 } from './opf-utils.js';
-import type { OPFDocument } from './opf-utils.js';
+import type { OPFDocument, CustomMetaEntry } from './opf-utils.js';
 
 // Injected by the vitest define (mirrors the vite build); see vitest.config.unit.ts.
 declare const __VERSION__: string;
@@ -1069,6 +1074,131 @@ describe('OPFUtils', () => {
 
       expect(xml).not.toContain('<meta name="cover"');
     });
+
+    it('lets an explicit customMeta cover entry override the derived value', () => {
+      const testDoc = createTestOPFDocument();
+      testDoc.manifest.push({
+        id: 'cover-img',
+        href: 'Images/cover.png',
+        mediaType: 'image/png',
+        properties: ['cover-image'],
+      });
+      testDoc.metadata.customMeta = [{ syntax: 'name', key: 'cover', value: 'my-cover' }];
+
+      const xml = OPFUtils.generateOPFXML(testDoc);
+      expectValidXML(xml, 'OPF with explicit cover meta');
+
+      expect(xml).toContain('<meta name="cover" content="my-cover"/>');
+      expect(xml).not.toContain('content="cover-img"');
+      expect(xml.match(/<meta name="cover"/g)).toHaveLength(1);
+    });
+
+    it('emits an explicit customMeta cover entry even without a cover-image item', () => {
+      const testDoc = createTestOPFDocument();
+      testDoc.metadata.customMeta = [{ syntax: 'name', key: 'cover', value: 'my-cover' }];
+
+      const xml = OPFUtils.generateOPFXML(testDoc);
+
+      expect(xml).toContain('<meta name="cover" content="my-cover"/>');
+    });
+  });
+
+  describe('Custom metadata preservation', () => {
+    it('emits property-syntax and name-syntax entries in order', () => {
+      const testDoc = createTestOPFDocument();
+      testDoc.metadata.customMeta = [
+        { syntax: 'property', key: 'calibre:series', value: 'The Chronicles' },
+        { syntax: 'name', key: 'calibre:series_index', value: '2' },
+      ];
+
+      const xml = OPFUtils.generateOPFXML(testDoc);
+      expectValidXML(xml, 'OPF with custom metadata');
+
+      expect(xml).toContain('<meta property="calibre:series">The Chronicles</meta>');
+      expect(xml).toContain('<meta name="calibre:series_index" content="2"/>');
+      expect(xml.indexOf('<meta property="calibre:series">')).toBeLessThan(
+        xml.indexOf('<meta name="calibre:series_index"')
+      );
+    });
+
+    it('appends captured prefix declarations to the fixed package prefix attribute', () => {
+      const testDoc = createTestOPFDocument();
+      testDoc.metadata.customMeta = [
+        { syntax: 'property', key: 'example:flag', value: 'yes' },
+      ];
+      testDoc.metadata.customMetaPrefixes = { example: 'https://example.org/vocab#' };
+
+      const xml = OPFUtils.generateOPFXML(testDoc);
+      expectValidXML(xml, 'OPF with custom prefix');
+
+      expect(xml).toContain(
+        'prefix="rendition: http://www.idpf.org/vocab/rendition/# ibooks: http://vocabulary.itunes.apple.com/rdf/ibooks/vocabulary-extensions-1.0/ example: https://example.org/vocab#"'
+      );
+    });
+
+    it('keeps the package prefix attribute byte-identical when there are no custom prefixes', () => {
+      const xml = OPFUtils.generateOPFXML(createTestOPFDocument());
+
+      expect(xml).toContain(
+        'prefix="rendition: http://www.idpf.org/vocab/rendition/# ibooks: http://vocabulary.itunes.apple.com/rdf/ibooks/vocabulary-extensions-1.0/"'
+      );
+    });
+
+    it('never re-declares reserved prefixes', () => {
+      const testDoc = createTestOPFDocument();
+      testDoc.metadata.customMetaPrefixes = { schema: 'http://schema.org/' };
+
+      const xml = OPFUtils.generateOPFXML(testDoc);
+
+      expect(xml).not.toContain('schema: http://schema.org/');
+    });
+
+    it('skips keys the generator already writes itself (no double emission)', () => {
+      const testDoc = createTestOPFDocument();
+      testDoc.metadata.modifiedDate = '2026-01-01T00:00:00Z';
+      testDoc.metadata.customMeta = [
+        { syntax: 'property', key: 'dcterms:modified', value: 'STALE' },
+        { syntax: 'name', key: 'generator', value: 'other-tool' },
+      ];
+
+      const xml = OPFUtils.generateOPFXML(testDoc);
+
+      expect(xml).not.toContain('STALE');
+      expect(xml).not.toContain('other-tool');
+      expect(xml.match(/<meta name="generator"/g)).toHaveLength(1);
+      expect(xml.match(/property="dcterms:modified"/g)).toHaveLength(1);
+    });
+
+    it('skips entries with empty keys or values', () => {
+      const testDoc = createTestOPFDocument();
+      testDoc.metadata.customMeta = [
+        { syntax: 'property', key: 'example:blank', value: '   ' },
+        { syntax: 'name', key: '  ', value: 'orphan' },
+      ];
+
+      const xml = OPFUtils.generateOPFXML(testDoc);
+
+      expect(xml).not.toContain('example:blank');
+      expect(xml).not.toContain('orphan');
+    });
+
+    it('round-trips customMeta and prefixes through generate → parse', () => {
+      const testDoc = createTestOPFDocument();
+      const entries: CustomMetaEntry[] = [
+        { syntax: 'property', key: 'example:flag', value: 'yes' },
+        { syntax: 'property', key: 'ibooks:version', value: '1.2.0' },
+        { syntax: 'name', key: 'calibre:series', value: 'The Chronicles' },
+      ];
+      testDoc.metadata.customMeta = entries;
+      testDoc.metadata.customMetaPrefixes = { example: 'https://example.org/vocab#' };
+
+      const xml = OPFUtils.generateOPFXML(testDoc);
+      const doc = expectValidXML(xml, 'round-trip OPF');
+      const recaptured = extractCustomMeta(doc);
+
+      expect(recaptured.customMeta).toEqual(entries);
+      expect(recaptured.customMetaPrefixes).toEqual({ example: 'https://example.org/vocab#' });
+    });
   });
 
   describe('Rendition Properties', () => {
@@ -1178,5 +1308,142 @@ describe('ensureUniqueHref', () => {
     expect(ensureUniqueHref('Images/cover.png', ['Images/cover.png', 'Images/cover-1.png'])).toBe(
       'Images/cover-2.png'
     );
+  });
+});
+
+describe('prefix attribute helpers', () => {
+  it('parsePrefixAttribute parses whitespace-separated pairs', () => {
+    expect(
+      parsePrefixAttribute(
+        'foo: http://example.org/foo# bar: https://example.org/bar/vocab#'
+      )
+    ).toEqual({
+      foo: 'http://example.org/foo#',
+      bar: 'https://example.org/bar/vocab#',
+    });
+  });
+
+  it('parsePrefixAttribute returns an empty map for null or empty input', () => {
+    expect(parsePrefixAttribute(null)).toEqual({});
+    expect(parsePrefixAttribute('')).toEqual({});
+  });
+
+  it('parsePrefixAttribute skips malformed pairs (no whitespace after the colon)', () => {
+    expect(parsePrefixAttribute('foo:http://example.org/foo#')).toEqual({});
+  });
+
+  it('formatPrefixAttribute round-trips through parsePrefixAttribute', () => {
+    const prefixes = { foo: 'http://example.org/foo#', bar: 'https://example.org/bar#' };
+    expect(parsePrefixAttribute(formatPrefixAttribute(prefixes))).toEqual(prefixes);
+  });
+});
+
+describe('customMeta value helpers', () => {
+  const list: CustomMetaEntry[] = [
+    { syntax: 'property', key: 'example:flag', value: 'yes' },
+    { syntax: 'name', key: 'calibre:series', value: 'The Chronicles' },
+    { syntax: 'name', key: 'calibre:series', value: 'duplicate' },
+  ];
+
+  it('getCustomMetaValue finds the first entry matching key AND syntax', () => {
+    expect(getCustomMetaValue(list, 'example:flag', 'property')).toBe('yes');
+    expect(getCustomMetaValue(list, 'calibre:series', 'name')).toBe('The Chronicles');
+    expect(getCustomMetaValue(list, 'example:flag', 'name')).toBeUndefined();
+    expect(getCustomMetaValue(undefined, 'example:flag', 'property')).toBeUndefined();
+  });
+
+  it('setCustomMetaValue appends a new entry without mutating the input', () => {
+    const next = setCustomMetaValue(list, 'new:key', 'property', 'v');
+    expect(next).toHaveLength(4);
+    expect(next[3]).toEqual({ syntax: 'property', key: 'new:key', value: 'v' });
+    expect(list).toHaveLength(3);
+  });
+
+  it('setCustomMetaValue updates only the first matching entry (duplicates untouched)', () => {
+    const next = setCustomMetaValue(list, 'calibre:series', 'name', 'Updated');
+    expect(next[1].value).toBe('Updated');
+    expect(next[2].value).toBe('duplicate');
+  });
+
+  it('setCustomMetaValue removes the first matching entry on an empty value', () => {
+    const next = setCustomMetaValue(list, 'calibre:series', 'name', '  ');
+    expect(next).toHaveLength(2);
+    expect(getCustomMetaValue(next, 'calibre:series', 'name')).toBe('duplicate');
+  });
+
+  it('setCustomMetaValue on undefined list creates a fresh one', () => {
+    expect(setCustomMetaValue(undefined, 'k', 'name', 'v')).toEqual([
+      { syntax: 'name', key: 'k', value: 'v' },
+    ]);
+  });
+});
+
+describe('extractCustomMeta', () => {
+  function parseFixture(metadataInner: string, packageAttrs = ''): Document {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<package version="3.0" xmlns="http://www.idpf.org/2007/opf" unique-identifier="uuid"${packageAttrs}>
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    ${metadataInner}
+  </metadata>
+</package>`;
+    const doc = new DOMParser().parseFromString(xml, 'application/xml');
+    expect(doc.querySelector('parsererror')).toBeNull();
+    return doc;
+  }
+
+  it('captures unknown property and name metas in document order', () => {
+    const doc = parseFixture(`
+    <meta property="calibre:series">The Chronicles</meta>
+    <meta name="calibre:series_index" content="2"/>`);
+
+    expect(extractCustomMeta(doc).customMeta).toEqual([
+      { syntax: 'property', key: 'calibre:series', value: 'The Chronicles' },
+      { syntax: 'name', key: 'calibre:series_index', value: '2' },
+    ]);
+  });
+
+  it('skips known properties, known names, refines metas, and empty values', () => {
+    const doc = parseFixture(`
+    <meta property="dcterms:modified">2026-01-01T00:00:00Z</meta>
+    <meta property="rendition:layout">pre-paginated</meta>
+    <meta name="generator" content="SEED.html 1.0"/>
+    <meta refines="#t1" property="vendor:thing">refined</meta>
+    <meta property="vendor:empty">   </meta>
+    <meta property="vendor:kept">v</meta>`);
+
+    expect(extractCustomMeta(doc).customMeta).toEqual([
+      { syntax: 'property', key: 'vendor:kept', value: 'v' },
+    ]);
+  });
+
+  it('captures the EPUB 2 cover meta (it is editable, not generator-owned)', () => {
+    const doc = parseFixture(`<meta name="cover" content="cover-img"/>`);
+
+    expect(extractCustomMeta(doc).customMeta).toEqual([
+      { syntax: 'name', key: 'cover', value: 'cover-img' },
+    ]);
+  });
+
+  it('keeps declared prefixes referenced by captured keys; drops reserved and undeclared ones', () => {
+    const doc = parseFixture(
+      `
+    <meta property="example:flag">yes</meta>
+    <meta property="ibooks:version">1.2.0</meta>
+    <meta property="undeclared:thing">v</meta>`,
+      ' prefix="example: https://example.org/vocab# unused: https://example.org/unused#"'
+    );
+
+    const result = extractCustomMeta(doc);
+    expect(result.customMeta).toHaveLength(3);
+    expect(result.customMetaPrefixes).toEqual({ example: 'https://example.org/vocab#' });
+  });
+
+  it('returns undefined fields when nothing is captured', () => {
+    const doc = parseFixture(`<meta property="dcterms:modified">2026-01-01T00:00:00Z</meta>`);
+
+    expect(extractCustomMeta(doc)).toEqual({
+      customMeta: undefined,
+      customMetaPrefixes: undefined,
+    });
   });
 });

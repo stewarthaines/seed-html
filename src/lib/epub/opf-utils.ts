@@ -160,6 +160,17 @@ export function parseCreatorList(
     .filter(c => c.name.length > 0);
 }
 
+// The two OPF <meta> syntaxes a custom entry can use: EPUB 3
+// `<meta property="k">v</meta>` or EPUB 2 `<meta name="k" content="v"/>`.
+export type CustomMetaSyntax = 'property' | 'name';
+
+/** One standalone <metadata> meta element the app has no first-class field for. */
+export interface CustomMetaEntry {
+  syntax: CustomMetaSyntax;
+  key: string; // e.g. "calibre:series", "ibooks:specified-fonts", "cover"
+  value: string;
+}
+
 export interface EPUBMetadata {
   // Required Dublin Core elements
   title: string; // primary (main) title
@@ -223,6 +234,13 @@ export interface EPUBMetadata {
   accessibilityCertifiedBy?: string;
   accessibilityCertifierCredential?: string;
   accessibilityCertifierReport?: string; // URL; emitted as <link rel>
+
+  // Standalone <meta> elements with no first-class field above, preserved in
+  // document order across saves (the serializer rebuilds <metadata> from this
+  // model, so anything not captured here would be silently dropped).
+  customMeta?: CustomMetaEntry[];
+  // prefix → URI declarations (from package@prefix) that customMeta keys need.
+  customMetaPrefixes?: Record<string, string>;
 }
 
 // Type mapping for strict field access
@@ -325,6 +343,153 @@ export interface GuideItem {
   type: string;
   title?: string;
   href: string;
+}
+
+// Meta properties the parser maps to first-class EPUBMetadata fields (and the
+// generator re-emits itself). Anything else is captured into customMeta.
+export const KNOWN_META_PROPERTIES: ReadonlySet<string> = new Set([
+  'dcterms:modified',
+  'rendition:layout',
+  'rendition:orientation',
+  'rendition:spread',
+  'rendition:viewport',
+  'rendition:flow',
+  'belongs-to-collection',
+  'ibooks:specified-fonts',
+  'schema:accessMode',
+  'schema:accessModeSufficient',
+  'schema:accessibilityFeature',
+  'schema:accessibilityHazard',
+  'schema:accessibilityControl',
+  'schema:accessibilityAPI',
+  'schema:accessibilitySummary',
+  'dcterms:conformsTo',
+  'a11y:certifiedBy',
+  'a11y:certifierCredential',
+]);
+
+// EPUB 2 meta names the generator owns (derived values, regenerated on every
+// serialize). Anything else is captured into customMeta.
+export const KNOWN_META_NAMES: ReadonlySet<string> = new Set(['generator']);
+
+// Prefixes usable in package metadata without a declaration (EPUB 3.3 reserved
+// set, plus the legacy msv/prism entries epubcheck still accepts). ibooks and
+// rendition are included because the generated package always declares them.
+export const RESERVED_PREFIXES: ReadonlySet<string> = new Set([
+  'a11y',
+  'dcterms',
+  'ibooks',
+  'marc',
+  'media',
+  'msv',
+  'onix',
+  'prism',
+  'rendition',
+  'schema',
+]);
+
+/**
+ * Parse a package `prefix` attribute ("foo: http://x# bar: http://y#") into a
+ * prefix → URI map. Malformed pairs (no whitespace after the colon) are skipped.
+ */
+export function parsePrefixAttribute(attr: string | null): Record<string, string> {
+  const result: Record<string, string> = {};
+  if (!attr) return result;
+  const pair = /(\S+):\s+(\S+)/g;
+  let match: RegExpExecArray | null;
+  while ((match = pair.exec(attr)) !== null) {
+    result[match[1]] = match[2];
+  }
+  return result;
+}
+
+/** Format a prefix → URI map back into package `prefix` attribute syntax. */
+export function formatPrefixAttribute(prefixes: Record<string, string>): string {
+  return Object.entries(prefixes)
+    .map(([prefix, uri]) => `${prefix}: ${uri}`)
+    .join(' ');
+}
+
+/** The value of the first customMeta entry matching key + syntax, if any. */
+export function getCustomMetaValue(
+  list: CustomMetaEntry[] | undefined,
+  key: string,
+  syntax: CustomMetaSyntax
+): string | undefined {
+  return list?.find(e => e.syntax === syntax && e.key === key)?.value;
+}
+
+/**
+ * Set (or, with an empty value, remove) the first customMeta entry matching
+ * key + syntax, returning a new list. Duplicate keys beyond the first are
+ * preserved untouched — the app edits one value, never collapses duplicates.
+ */
+export function setCustomMetaValue(
+  list: CustomMetaEntry[] | undefined,
+  key: string,
+  syntax: CustomMetaSyntax,
+  value: string
+): CustomMetaEntry[] {
+  const entries = list ? [...list] : [];
+  const index = entries.findIndex(e => e.syntax === syntax && e.key === key);
+  const trimmed = value.trim();
+  if (!trimmed) {
+    if (index !== -1) entries.splice(index, 1);
+    return entries;
+  }
+  if (index === -1) {
+    entries.push({ syntax, key, value: trimmed });
+  } else {
+    entries[index] = { ...entries[index], value: trimmed };
+  }
+  return entries;
+}
+
+/**
+ * Capture every standalone (non-refining) <meta> that has no first-class
+ * EPUBMetadata field — in document order — plus the package@prefix
+ * declarations its property keys need (reserved prefixes are never stored).
+ * parseOPFMetadata folds the result into its return value; exported separately
+ * so the capture logic is unit-testable without namespaced dc:* fixtures
+ * (which happy-dom cannot parse).
+ */
+export function extractCustomMeta(doc: Document): {
+  customMeta?: CustomMetaEntry[];
+  customMetaPrefixes?: Record<string, string>;
+} {
+  const customMeta: CustomMetaEntry[] = [];
+  doc.querySelectorAll('metadata > meta').forEach(meta => {
+    if (meta.getAttribute('refines')) return;
+    const property = meta.getAttribute('property');
+    if (property) {
+      if (KNOWN_META_PROPERTIES.has(property)) return;
+      const value = meta.textContent?.trim();
+      if (value) customMeta.push({ syntax: 'property', key: property, value });
+      return;
+    }
+    const name = meta.getAttribute('name');
+    if (name && !KNOWN_META_NAMES.has(name)) {
+      const content = meta.getAttribute('content')?.trim();
+      if (content) customMeta.push({ syntax: 'name', key: name, value: content });
+    }
+  });
+
+  const declaredPrefixes = parsePrefixAttribute(
+    doc.querySelector('package')?.getAttribute('prefix') ?? null
+  );
+  const customMetaPrefixes: Record<string, string> = {};
+  for (const entry of customMeta) {
+    if (entry.syntax !== 'property' || !entry.key.includes(':')) continue;
+    const prefix = entry.key.split(':')[0];
+    if (RESERVED_PREFIXES.has(prefix) || !declaredPrefixes[prefix]) continue;
+    customMetaPrefixes[prefix] = declaredPrefixes[prefix];
+  }
+
+  return {
+    customMeta: customMeta.length > 0 ? customMeta : undefined,
+    customMetaPrefixes:
+      Object.keys(customMetaPrefixes).length > 0 ? customMetaPrefixes : undefined,
+  };
 }
 
 /**
@@ -585,6 +750,9 @@ export class OPFUtils {
       })
       .filter(c => c.name);
 
+    // Standalone metas with no first-class field, preserved for round-trip.
+    const custom = extractCustomMeta(doc);
+
     return {
       title: primaryTitle.value || titleElements[0].textContent!.trim(),
       titleFileAs: primaryTitle.fileAs || undefined,
@@ -632,6 +800,8 @@ export class OPFUtils {
       accessibilityCertifiedBy: a11yValue('a11y:certifiedBy'),
       accessibilityCertifierCredential: a11yValue('a11y:certifierCredential'),
       accessibilityCertifierReport: certifierReport,
+      customMeta: custom.customMeta,
+      customMetaPrefixes: custom.customMetaPrefixes,
     };
   }
 
@@ -808,8 +978,21 @@ export class OPFUtils {
       });
     const titleXML = titleLines.join('\n    ');
 
+    // Base prefix declarations are fixed; declarations captured for customMeta
+    // keys are appended (reserved prefixes never need declaring).
+    let prefixAttr =
+      'rendition: http://www.idpf.org/vocab/rendition/# ibooks: http://vocabulary.itunes.apple.com/rdf/ibooks/vocabulary-extensions-1.0/';
+    const extraPrefixes = Object.fromEntries(
+      Object.entries(metadata.customMetaPrefixes ?? {}).filter(
+        ([prefix]) => !RESERVED_PREFIXES.has(prefix)
+      )
+    );
+    if (Object.keys(extraPrefixes).length > 0) {
+      prefixAttr += ` ${escapeXML(formatPrefixAttribute(extraPrefixes))}`;
+    }
+
     let xml = `<?xml version="1.0" encoding="utf-8"?>
-<package version="${version}" xmlns="http://www.idpf.org/2007/opf" unique-identifier="${uniqueId}" prefix="rendition: http://www.idpf.org/vocab/rendition/# ibooks: http://vocabulary.itunes.apple.com/rdf/ibooks/vocabulary-extensions-1.0/" xml:lang="en"${bookIsRtl ? ' dir="rtl"' : ''}>
+<package version="${version}" xmlns="http://www.idpf.org/2007/opf" unique-identifier="${uniqueId}" prefix="${prefixAttr}" xml:lang="en"${bookIsRtl ? ' dir="rtl"' : ''}>
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:ibooks="http://vocabulary.itunes.apple.com/rdf/ibooks/vocabularies/2012/01/ibooks-specific">
     ${titleXML}
     ${languageXML}
@@ -927,9 +1110,11 @@ export class OPFUtils {
     // EPUB 2 legacy cover marker, alongside the manifest item's cover-image
     // property. Google Play Books (and older Kindle/library tooling) key on
     // this meta rather than the EPUB 3 property; legal optional metadata in
-    // EPUB 3 and epubcheck-clean.
+    // EPUB 3 and epubcheck-clean. An explicit customMeta value wins; the
+    // derived value is only the default (emitted by the customMeta loop below
+    // when explicit).
     const coverItem = manifest.find(item => item.properties?.includes('cover-image'));
-    if (coverItem) {
+    if (coverItem && !getCustomMetaValue(metadata.customMeta, 'cover', 'name')) {
       xml += `\n    <meta name="cover" content="${escapeXML(coverItem.id)}"/>`;
     }
 
@@ -991,6 +1176,22 @@ export class OPFUtils {
     }
     if (metadata.accessibilityCertifierReport?.trim()) {
       xml += `\n    <link rel="a11y:certifierReport" href="${escapeXML(metadata.accessibilityCertifierReport.trim())}"/>`;
+    }
+
+    // Custom metadata (captured at parse time or catalog-edited), re-emitted so
+    // vendor metadata survives this from-scratch rebuild. Keys the generator
+    // already writes itself are skipped to prevent double emission.
+    for (const entry of metadata.customMeta ?? []) {
+      const key = entry.key.trim();
+      const value = entry.value.trim();
+      if (!key || !value) continue;
+      if (entry.syntax === 'property') {
+        if (KNOWN_META_PROPERTIES.has(key)) continue;
+        xml += `\n    <meta property="${escapeXML(key)}">${escapeXML(value)}</meta>`;
+      } else {
+        if (KNOWN_META_NAMES.has(key)) continue;
+        xml += `\n    <meta name="${escapeXML(key)}" content="${escapeXML(value)}"/>`;
+      }
     }
 
     xml += `\n  </metadata>
