@@ -24,11 +24,11 @@ SEED.html is distributed under the terms of the MIT license. It is free to use, 
 2. **Downloadable HTML** - Save locally from the above site for offline authoring by opening the SEED.html file from your device
 3. **Embedded in EPUBs** - The core SEED.html app can be added to an EPUB as a non-manifest item, so it travels with the book for the life of that artifact
 
-See [USER_GUIDE.md](./USER_GUIDE.md) for detailed usage instructions.
+See [USER_GUIDE.md](./docs/user/USER_GUIDE.md) for detailed usage instructions.
 
 ## Alternatives
 
-Why another EPUB tool? SEED.html is built for one job — authoring accessible EPUB 3 books in the browser from plain-text sources — rather than converting between many formats or laying out for print. Here is a quick comparison with other tools you might reach for. A ✅ marks a first-class strength, ⚠️ a capability that comes with caveats (see the note under the table), ❌ something deliberately out of scope, and a blank means it is simply not a goal of that tool. For the detailed, caveated version see [COMPARISON.md](./COMPARISON.md).
+Why another EPUB tool? SEED.html is built for one job — authoring accessible EPUB 3 books in the browser from plain-text sources — rather than converting between many formats or laying out for print. Here is a quick comparison with other tools you might reach for. A ✅ marks a first-class strength, ⚠️ a capability that comes with caveats (see the note under the table), ❌ something deliberately out of scope, and a blank means it is simply not a goal of that tool. For the detailed, caveated version see [COMPARISON.md](./docs/COMPARISON.md).
 
 |                                                 | SEED.html | InDesign | Sigil | Calibre | Pandoc | Quarto | Vellum |
 | ----------------------------------------------- | :-------: | :------: | :---: | :-----: | :----: | :----: | :----: |
@@ -87,16 +87,16 @@ This project maintains **zero TypeScript errors** at all times. Before committin
 npm run check && npm run lint && npm test
 ```
 
-See [DEVELOPMENT.md](./DEVELOPMENT.md) for comprehensive development guidelines.
+See [DEVELOPMENT.md](./docs/DEVELOPMENT.md) for comprehensive development guidelines.
 
 ### Key Documentation
 
 - **[CLAUDE.md](./CLAUDE.md)** - AI coding agent instructions
-- **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Development workflows and standards
-- **[TESTING.md](./TESTING.md)** - Testing strategy and patterns
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Build and deployment instructions
-- **[LOCALIZATION.md](./LOCALIZATION.md)** - Adding new languages and translations
-- **[COMPARISON.md](./COMPARISON.md)** - How SEED.html compares to other EPUB tools
+- **[DEVELOPMENT.md](./docs/DEVELOPMENT.md)** - Development workflows and standards
+- **[TESTING.md](./docs/TESTING.md)** - Testing strategy and patterns
+- **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Build and deployment instructions
+- **[LOCALIZATION.md](./docs/LOCALIZATION.md)** - Adding new languages and translations
+- **[COMPARISON.md](./docs/COMPARISON.md)** - How SEED.html compares to other EPUB tools
 
 ### Project Structure
 

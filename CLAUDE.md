@@ -8,13 +8,13 @@ When the user asks you to document a plan or write a new document describing det
 
 ### 🚨 Quality Standards for Claude
 
-**See [QUALITY.md](./QUALITY.md) for complete quality validation requirements, TypeScript standards, and AI coding agent behavior.**
+**See [QUALITY.md](./docs/QUALITY.md) for complete quality validation requirements, TypeScript standards, and AI coding agent behavior.**
 
 ### Interaction Style
 
 - **Quality First**: Always prioritize TypeScript compliance and test validity
 - **Error Resolution**: Fix type errors immediately, never defer or ignore
-- **Lint ratchet**: Never raise the `--max-warnings` cap; don't add warnings, and lower the cap when you remove them (see QUALITY.md)
+- **Lint ratchet**: Never raise the `--max-warnings` cap; don't add warnings, and lower the cap when you remove them (see docs/QUALITY.md)
 - **Documentation**: When planning under-specified work, ask the user for clarification
 - **IMPORTANT:** Ask the user one question at a time, not a list of questions
 
@@ -77,7 +77,7 @@ style.
 2. **Standalone HTML** - Single file download for offline use
 3. **SEED EPUB** - Embedded within EPUB files for self-editing capability
 
-The build process creates a single `index.html` file (~1MB) with all assets inlined, suitable for all distribution methods. See [DEPLOYMENT.md](./DEPLOYMENT.md) for deployment details.
+The build process creates a single `index.html` file (~1MB) with all assets inlined, suitable for all distribution methods. See [DEPLOYMENT.md](./docs/DEPLOYMENT.md) for deployment details.
 
 ## Technical Architecture
 
@@ -140,7 +140,7 @@ SEED.html (editor app - to be extracted by the user to edit the EPUB file)
 
 **Note**: The `SEED.zip` file (formerly `SOURCE.zip`; imports still accept the old name) contains all editor-specific files (settings, plain text sources, transform scripts, extensions) and is extracted to a `SOURCE/` directory in the workspace during editing. The archive filename is `SEED.zip`; the extracted working directory remains `SOURCE/`.
 
-**Important**: When creating SEED EPUBs, always include extraction instructions for end users. See [EPUB_EMBEDDING.md](./EPUB_EMBEDDING.md) for detailed embedding guidelines.
+**Important**: When creating SEED EPUBs, always include extraction instructions for end users. See [EPUB_EMBEDDING.md](./docs/EPUB_EMBEDDING.md) for detailed embedding guidelines.
 
 ## Key Systems
 
@@ -168,13 +168,13 @@ Reactive internationalization system with instant locale switching. The framewor
 
 ## Development References
 
-- **Quality Standards**: [QUALITY.md](./QUALITY.md) - Complete validation requirements and TypeScript standards
-- **Development Workflow**: [DEVELOPMENT.md](./DEVELOPMENT.md) - Feature development process and API documentation standards
-- **Testing Strategy**: [TESTING.md](./TESTING.md) - Comprehensive testing patterns and browser API testing
-- **Linting Configuration**: [LINTING.md](./LINTING.md) - ESLint configuration and environment-specific rules
-- **Storybook Guidelines**: [STORYBOOK.md](./STORYBOOK.md) - Component story development and backend integration patterns
-- **Deployment**: [DEPLOYMENT.md](./DEPLOYMENT.md) - Build process and distribution methods
-- **EPUB Embedding**: [EPUB_EMBEDDING.md](./EPUB_EMBEDDING.md) - Active EPUB creation guidelines
+- **Quality Standards**: [QUALITY.md](./docs/QUALITY.md) - Complete validation requirements and TypeScript standards
+- **Development Workflow**: [DEVELOPMENT.md](./docs/DEVELOPMENT.md) - Feature development process and API documentation standards
+- **Testing Strategy**: [TESTING.md](./docs/TESTING.md) - Comprehensive testing patterns and browser API testing
+- **Linting Configuration**: [LINTING.md](./docs/LINTING.md) - ESLint configuration and environment-specific rules
+- **Storybook Guidelines**: [STORYBOOK.md](./docs/STORYBOOK.md) - Component story development and backend integration patterns
+- **Deployment**: [DEPLOYMENT.md](./docs/DEPLOYMENT.md) - Build process and distribution methods
+- **EPUB Embedding**: [EPUB_EMBEDDING.md](./docs/EPUB_EMBEDDING.md) - Active EPUB creation guidelines
 
 # important-instruction-reminders
 

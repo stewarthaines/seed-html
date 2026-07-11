@@ -5,7 +5,7 @@
   import { advancedMode } from '../../lib/stores/advanced-mode';
 
   // Screenshot recipes for the advanced reference
-  // (docs/seed.html-advanced-reference/). These document Advanced Mode, so the
+  // (docs/user/seed.html-advanced-reference/). These document Advanced Mode, so the
   // loaders force it on and seed projects with the extensions the illustration
   // shows. Same pattern as the user-manual shots; see STORYBOOK.md.
   const { Story } = defineMeta({
@@ -48,7 +48,7 @@
     docs: {
       description: {
         story:
-          'Produces docs/seed.html-advanced-reference/Images/screenshot-epub-settings.png — the Text Transform + DOM Transforms pipeline (Advanced Mode → Settings → EPUB Settings) on a markdown-it + prism project. Tagged `!test`: installing extensions needs the dev-served `/extensions/` catalog, which the test:stories Storybook instance does not provide, so this shot is validated at capture time.',
+          'Produces docs/user/seed.html-advanced-reference/Images/screenshot-epub-settings.png — the Text Transform + DOM Transforms pipeline (Advanced Mode → Settings → EPUB Settings) on a markdown-it + prism project. Tagged `!test`: installing extensions needs the dev-served `/extensions/` catalog, which the test:stories Storybook instance does not provide, so this shot is validated at capture time.',
       },
     },
   }}

@@ -1,17 +1,17 @@
 {
   "$comment": "Manual screenshot manifest: output image path -> the Storybook story that produces the state, the element to clip to, and the app mode the shot documents. Regenerate with `npm run manual-shots` (Storybook must be running). Stories live in src/stories/manual-shots/.",
   "shots": {
-    "docs/seed.html-user-manual/Images/screen-new-project.png": {
+    "docs/user/seed.html-user-manual/Images/screen-new-project.png": {
       "story": "manual-shots-user-manual--new-project-dialog-basic-mode",
       "clip": ".create-dialog",
       "mode": "basic"
     },
-    "docs/seed.html-user-manual/Images/screen-import-catalog.png": {
+    "docs/user/seed.html-user-manual/Images/screen-import-catalog.png": {
       "story": "manual-shots-user-manual--import-from-catalog",
       "clip": ".opds-dialog",
       "mode": "basic"
     },
-    "docs/seed.html-advanced-reference/Images/screenshot-epub-settings.png": {
+    "docs/user/seed.html-advanced-reference/Images/screenshot-epub-settings.png": {
       "story": "manual-shots-advanced-reference--epub-settings-transform-pipeline",
       "clip": ".transform-pipeline-settings",
       "mode": "advanced"

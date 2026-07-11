@@ -4,7 +4,7 @@
   import App from '../../App.svelte';
   import { advancedMode } from '../../lib/stores/advanced-mode';
 
-  // Screenshot recipes for the user manual (docs/seed.html-user-manual/).
+  // Screenshot recipes for the user manual (docs/user/seed.html-user-manual/).
   // Each story drives the real app to the exact state a manual illustration
   // shows and ends there; scripts/capture-manual-shots.js photographs the
   // element named in scripts/manual-shots.json and writes it straight into
@@ -42,7 +42,7 @@
     docs: {
       description: {
         story:
-          'Produces docs/seed.html-user-manual/Images/screen-new-project.png — the New Project window as a first-time (Basic Mode) user sees it: Title, Author, cover, and Language.',
+          'Produces docs/user/seed.html-user-manual/Images/screen-new-project.png — the New Project window as a first-time (Basic Mode) user sees it: Title, Author, cover, and Language.',
       },
     },
   }}
@@ -93,7 +93,7 @@
     docs: {
       description: {
         story:
-          "Produces docs/seed.html-user-manual/Images/screen-import-catalog.png — the Import from Catalog window listing the built-in sample books. Fetches the live published catalog (sample.readitinabook.com), so it's tagged `!test` (excluded from test:stories, whose isolated browser can't reach external hosts) and validated at capture time by `npm run manual-shots` instead.",
+          "Produces docs/user/seed.html-user-manual/Images/screen-import-catalog.png — the Import from Catalog window listing the built-in sample books. Fetches the live published catalog (sample.readitinabook.com), so it's tagged `!test` (excluded from test:stories, whose isolated browser can't reach external hosts) and validated at capture time by `npm run manual-shots` instead.",
       },
     },
   }}
