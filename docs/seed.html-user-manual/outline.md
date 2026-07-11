@@ -25,6 +25,7 @@ Conventions: no hard-wrapping — one line per paragraph (list items stay one li
     - (JavaScript / per-chapter scripts is Advanced Mode only — see "Go further")
   - Reading order (the spine)
   - Add, import, reorder, rename and delete chapters
+  - Write in your own editor (link a folder — Chrome/Edge)
 - Preview your book
   - Live preview
   - Preview on different devices

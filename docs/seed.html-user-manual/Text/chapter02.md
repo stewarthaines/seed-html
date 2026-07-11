@@ -73,13 +73,21 @@ EPUB calls this order the **spine**. It's just your chapter list in order, but i
 
 ### Add, import, reorder, rename and delete chapters
 
-You manage chapters from the _Chapters_{.ui} list in the sidebar. Its header has two buttons: _Append Item_{.ui .icon-plus} adds a new, empty chapter at the end of the list, and _Import text files_{.ui .icon-file-arrow-up} brings in text files from your device — each file you choose becomes a chapter, ready to edit.
+You manage chapters from the _Chapters_{.ui} list in the sidebar. Its header has three buttons: _Append Item_{.ui .icon-plus} adds a new, empty chapter at the end of the list, _Import text files_{.ui .icon-file-arrow-up} brings in text files from your device — each file you choose becomes a chapter, ready to edit — and _Link folder_{.ui .icon-folder-simple-plus} connects a folder on your computer to your chapters.
 
 To reorder a chapter, drag it up or down the list, or use the up and down arrows that appear when you point at it. Because the list order is the book's reading order, moving a chapter here changes where a reader meets it.
 
 To rename a chapter, open it and edit the **Chapter title** field at the top of the editor; some reading apps show this title. The pencil button opens a small _Edit chapter_{.ui} box for two less-common settings: the chapter's **ID** — its internal name in the EPUB, worth changing to something clearer than `chapter05` — and whether it's part of the reading order.
 
 To remove a chapter, click its delete button — it's taken out of the book entirely.
+
+### Write in your own editor (link a folder)
+
+_Link folder_{.ui .icon-folder-simple-plus} connects a folder on your computer to your chapters, so you can write in any editor you like and bring the changes in with one click. Pick the folder once; from then on the button is _Sync folder_{.ui .icon-arrows-clockwise}.
+
+Each sync shows what changed before anything is written: edited files, new files, and chapters whose file has gone from the folder. You choose what to apply — a chapter is never removed unless you say so. New files join the end of the chapter list; syncing never reorders the chapters you've arranged.
+
+The link lives in this browser on this computer — it isn't part of the book, and folder access currently needs Chrome or Edge. Change or unlink the folder from the sync window itself.
 
 ## Preview your book
 
