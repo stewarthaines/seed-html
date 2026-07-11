@@ -17,6 +17,19 @@
   import type { SpineService } from '../services/spine/spine.service.js';
   import type { SpineItemWithSource } from '../spine/types.js';
   import type { WorkspaceState } from '../services/workspace/workspace.service.js';
+  import type { SettingsService } from '../services/settings/settings.service.js';
+  import FolderSyncReviewDialog from './folder-sync/FolderSyncReviewDialog.svelte';
+  import type { FolderSyncDecision } from './folder-sync/FolderSyncReviewDialog.svelte';
+  import { pickSyncFolder } from '../folder-sync/capability.js';
+  import {
+    connectSyncFolder,
+    saveFolderHandle,
+    deleteFolderHandle,
+    FOLDER_NOT_LINKED,
+    FOLDER_UNAVAILABLE,
+  } from '../folder-sync/handle-store.js';
+  import { scanSyncFolder, folderSyncRowKey } from '../folder-sync/scan.js';
+  import type { FolderSyncPlan } from '../folder-sync/scan.js';
 
   // Props
   let {
@@ -27,6 +40,7 @@
     onWorkspaceUpdate = null,
     readOnly = false,
     advancedMode = false,
+    settingsService = null,
   }: {
     workspace?: WorkspaceState | null;
     spineService: SpineService;
@@ -37,6 +51,9 @@
     readOnly?: boolean;
     /** Advanced mode: forwarded to the edit-chapter dialog to gate the linear toggle. */
     advancedMode?: boolean;
+    /** For folder-sync link metadata (folder name, last synced); optional so the
+        sidebar still works standalone (Storybook) without settings plumbing. */
+    settingsService?: SettingsService | null;
   } = $props();
 
   // State
@@ -52,6 +69,12 @@
   // staged colliding files awaiting a commit decision.
   let reviewItems = $state<ReviewItem[] | null>(null);
   let pendingImport = $state<{ stagedPath: string; originalName: string; targetId: string }[]>([]);
+
+  // Folder sync review (see process/FOLDER_SYNC.md): the scanned plan (null =
+  // closed) and the linked folder's display metadata.
+  let syncPlan = $state<FolderSyncPlan | null>(null);
+  let syncFolderName = $state('');
+  let syncLastSyncedAt = $state<string | undefined>(undefined);
 
   // Drag feedback: the item being dragged (dimmed) and the insertion gap where it
   // would land (an index in 0..length; the line is drawn before item `dropGap`,
@@ -79,10 +102,18 @@
     };
     window.addEventListener('import-text-chapters', handleImportEvent);
 
+    // Folder-sync button in the Chapters header (Sidebar) — link, reconnect,
+    // or open the sync review, depending on the stored handle's state.
+    const handleFolderSyncEvent = () => {
+      void handleFolderSyncOpen();
+    };
+    window.addEventListener('folder-sync-open', handleFolderSyncEvent);
+
     // Cleanup
     return () => {
       window.removeEventListener('append-spine-item', handleAppendEvent);
       window.removeEventListener('import-text-chapters', handleImportEvent);
+      window.removeEventListener('folder-sync-open', handleFolderSyncEvent);
     };
   });
 
@@ -327,6 +358,178 @@
     reviewItems = null;
     pendingImport = [];
     await clearImportStaging();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Folder sync (process/FOLDER_SYNC.md)
+
+  const notifyFolderSyncChanged = () =>
+    window.dispatchEvent(new CustomEvent('seed:folder-sync-changed'));
+
+  // Link / reconnect / open review, depending on the stored handle's state.
+  // Runs inside the button click task, so the picker and permission prompt
+  // still have the user gesture they require.
+  async function handleFolderSyncOpen() {
+    if (!workspace || readOnly) return;
+    try {
+      const conn = await connectSyncFolder(workspace.id, { interactive: true });
+      if (conn.handle) {
+        await openSyncReview(conn.handle);
+        return;
+      }
+      if (conn.error === FOLDER_NOT_LINKED) {
+        await linkNewFolder();
+        return;
+      }
+      if (conn.error === FOLDER_UNAVAILABLE) {
+        showToast(
+          $t("The linked folder isn't available — reconnect the drive or relink the folder.")
+        );
+        return;
+      }
+      // Reconnect-required after an interactive attempt = the prompt was denied.
+      showToast($t('Folder access was not granted.'));
+      notifyFolderSyncChanged();
+    } catch (err) {
+      error = err instanceof Error ? err.message : 'Folder sync failed';
+    }
+  }
+
+  async function linkNewFolder() {
+    if (!workspace) return;
+    let handle: FileSystemDirectoryHandle;
+    try {
+      handle = await pickSyncFolder();
+    } catch {
+      return; // picker cancelled
+    }
+    await saveFolderHandle(workspace.id, handle);
+    await saveFolderSyncMeta({ folder_name: handle.name });
+    notifyFolderSyncChanged();
+    await openSyncReview(handle);
+  }
+
+  async function openSyncReview(handle: FileSystemDirectoryHandle) {
+    if (!workspace) return;
+    const storage = FileStorageAPI.getInstance();
+    const workspaceId = workspace.id;
+    const plan = await scanSyncFolder({
+      dir: handle,
+      spineIds: workspace.opf.spine.map(item => item.idref),
+      manifestIds: workspace.opf.manifest.map(item => item.id),
+      readSource: async id => {
+        try {
+          return await storage.readTextFile(workspaceId, `SOURCE/text/${id}.txt`);
+        } catch {
+          return null;
+        }
+      },
+    });
+    syncFolderName = handle.name;
+    syncLastSyncedAt = settingsService
+      ? (await settingsService.loadWorkspaceSettings(workspaceId)).folder_sync?.last_synced_at
+      : undefined;
+    syncPlan = plan;
+  }
+
+  /** Write (or with null, clear) the link's display metadata. Best-effort —
+      the handle store is the source of truth for whether a link exists. */
+  async function saveFolderSyncMeta(meta: { folder_name: string; last_synced_at?: string } | null) {
+    if (!workspace || !settingsService) return;
+    try {
+      const settings = await settingsService.loadWorkspaceSettings(workspace.id);
+      if (meta) settings.folder_sync = { ...settings.folder_sync, ...meta };
+      else delete settings.folder_sync;
+      await settingsService.saveWorkspaceSettings(workspace.id, settings);
+    } catch {
+      // metadata is cosmetic; never block linking/syncing on it
+    }
+  }
+
+  // Dialog footer action: pick a different folder and rescan in place.
+  async function changeSyncFolder() {
+    if (!workspace) return;
+    let handle: FileSystemDirectoryHandle;
+    try {
+      handle = await pickSyncFolder();
+    } catch {
+      return; // picker cancelled — keep the current plan open
+    }
+    await saveFolderHandle(workspace.id, handle);
+    await saveFolderSyncMeta({ folder_name: handle.name });
+    notifyFolderSyncChanged();
+    await openSyncReview(handle);
+  }
+
+  // Dialog footer action: drop the link. Chapters are untouched.
+  async function unlinkSyncFolder() {
+    if (!workspace) return;
+    await deleteFolderHandle(workspace.id);
+    await saveFolderSyncMeta(null);
+    syncPlan = null;
+    notifyFolderSyncChanged();
+    showToast($t('Folder unlinked. Chapters were not changed.'));
+  }
+
+  async function commitFolderSync(decisions: FolderSyncDecision[]) {
+    if (!workspace || !syncPlan) return;
+    const byKey = new Map(decisions.map(d => [d.key, d.resolution]));
+    const overwrittenPaths: string[] = [];
+    let added = 0;
+    let updated = 0;
+    let removed = 0;
+
+    for (const row of syncPlan.rows) {
+      if (row.kind === 'skipped') continue;
+      const resolution = byKey.get(folderSyncRowKey(row)) ?? 'skip';
+      if (resolution === 'skip') continue;
+
+      if (row.kind === 'update' && resolution === 'apply') {
+        await spineService.overwriteChapter(workspace, row.targetId, {
+          title: row.name,
+          sourceText: row.incoming,
+        });
+        overwrittenPaths.push(`SOURCE/text/${row.targetId}.txt`);
+        updated += 1;
+      } else if (row.kind === 'remove') {
+        const result = await spineService.deleteChapter(workspace, row.targetId);
+        workspace = result.updatedWorkspace;
+        removed += 1;
+      } else {
+        // add rows, and updates resolved as keep-both — addChapter uniquifies
+        // the id, which is also how colliding adds land under a new id.
+        const result = await spineService.addChapter(workspace, {
+          title: row.name,
+          baseName: row.name,
+          sourceText: row.incoming,
+          createSourceFile: true,
+          linear: true,
+        });
+        workspace = result.updatedWorkspace;
+        added += 1;
+      }
+    }
+
+    onWorkspaceUpdate?.(workspace);
+    await loadSpineItems();
+    if (overwrittenPaths.length > 0) {
+      window.dispatchEvent(
+        new CustomEvent('seed:source-files-changed', { detail: { paths: overwrittenPaths } })
+      );
+    }
+    await saveFolderSyncMeta({
+      folder_name: syncFolderName,
+      last_synced_at: new Date().toISOString(),
+    });
+    notifyFolderSyncChanged();
+    showToast(
+      $t('Folder sync: {added} added, {updated} updated, {removed} removed.', {
+        added,
+        updated,
+        removed,
+      })
+    );
+    syncPlan = null;
   }
 
   // Handle move up
@@ -633,6 +836,18 @@
     kind="chapter"
     onConfirm={commitChapterImport}
     onCancel={closeImportReview}
+  />
+{/if}
+
+{#if syncPlan}
+  <FolderSyncReviewDialog
+    plan={syncPlan}
+    folderName={syncFolderName}
+    lastSyncedAt={syncLastSyncedAt}
+    onConfirm={commitFolderSync}
+    onCancel={() => (syncPlan = null)}
+    onChangeFolder={changeSyncFolder}
+    onUnlink={unlinkSyncFolder}
   />
 {/if}
 

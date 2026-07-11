@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-10\n"
-"PO-Revision-Date: 2026-07-10\n"
+"POT-Creation-Date: 2026-07-11\n"
+"PO-Revision-Date: 2026-07-11\n"
 "Language: de\n"
 "Language-Team: \n"
 "Last-Translator: Claude (machine first pass)\n"
@@ -91,6 +91,10 @@ msgstr "{n} Fehler"
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 msgid "{n} errors"
 msgstr "{n} Fehler"
+
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "{n} file(s) unchanged"
+msgstr "{n} Datei(en) unverändert"
 
 #: src/lib/components/spine/EditorPane.svelte
 msgid "{n} files added to the manifest"
@@ -292,6 +296,10 @@ msgstr "Aktionen"
 msgid "Active Remote:"
 msgstr "Aktives Remote:"
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Add"
+msgstr "Hinzufügen"
+
 #: src/lib/components/metadata/CollectionsEditor.svelte
 msgid "Add a collection"
 msgstr "Sammlung hinzufügen"
@@ -331,6 +339,10 @@ msgstr "Weiteres Thema hinzufügen"
 #: src/lib/components/metadata/TitleEditor.svelte
 msgid "Add another title"
 msgstr "Weiteren Titel hinzufügen"
+
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Add as a new chapter"
+msgstr "Als neues Kapitel hinzufügen"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Add Destination"
@@ -470,10 +482,15 @@ msgstr "Apple Books: die eigenen Schriften der Publikation verwenden (nicht neu 
 msgid "Applied {n} change(s)."
 msgstr "{n} Änderung(en) angewendet."
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Apply"
+msgstr "Anwenden"
+
 #: src/lib/components/track-changes/PatchsetReviewDialog.svelte
 msgid "Apply accepted"
 msgstr "Übernommene anwenden"
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/track-changes/PatchsetReviewDialog.svelte
 msgid "Applying…"
 msgstr "Wird angewendet…"
@@ -606,6 +623,7 @@ msgstr "Integriert"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 #: src/lib/components/EditSpineItemDialog.svelte
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
@@ -675,10 +693,15 @@ msgstr "Bericht des Zertifizierers (URL)"
 msgid "Change Folder"
 msgstr "Ordner ändern"
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Change folder…"
+msgstr "Ordner wechseln…"
+
 #: src/lib/components/track-changes/PatchsetReviewDialog.svelte
 msgid "Changed files"
 msgstr "Geänderte Dateien"
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Changes"
 msgstr "Änderungen"
@@ -771,6 +794,7 @@ msgstr "Clip-Bezeichnung"
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 #: src/lib/components/EditSpineItemDialog.svelte
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
 #: src/lib/components/spine/ChapterValidationPanel.svelte
 #: src/lib/components/spine/EditorPane.svelte
@@ -845,6 +869,7 @@ msgstr "Löschen bestätigen?"
 msgid "Conflicting files"
 msgstr "Konflikt-Dateien"
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "Conflicts with {label}"
 msgstr "Konflikt mit {label}"
@@ -1408,6 +1433,10 @@ msgstr "Fehler:"
 msgid "Essential Information"
 msgstr "Obligatorische Informationen"
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Everything up to date."
+msgstr "Alles auf dem neuesten Stand."
+
 #: src/lib/components/metadata/TitleEditor.svelte
 msgid "Expanded"
 msgstr "Erweitert"
@@ -1530,6 +1559,10 @@ msgstr "EPUB-Einstellungen konnten nicht gespeichert werden"
 msgid "Failed to save metadata field"
 msgstr "Metadatenfeld konnte nicht gespeichert werden"
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Failed to sync the folder"
+msgstr "Ordner-Synchronisierung fehlgeschlagen"
+
 #: src/lib/components/EditSpineItemDialog.svelte
 msgid "Failed to update chapter."
 msgstr "Kapitel konnte nicht aktualisiert werden."
@@ -1575,6 +1608,14 @@ msgstr "Nach ID, Pfad oder Medientyp filtern..."
 msgid "Flow"
 msgstr "Seitenfluss"
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "folder"
+msgstr "Ordner"
+
+#: src/lib/components/SpineSidebar.svelte
+msgid "Folder access was not granted."
+msgstr "Ordnerzugriff wurde nicht gewährt."
+
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Folder on device"
 msgstr "Ordner auf dem Gerät"
@@ -1582,6 +1623,14 @@ msgstr "Ordner auf dem Gerät"
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Folder selected:"
 msgstr "Ausgewählter Ordner:"
+
+#: src/lib/components/SpineSidebar.svelte
+msgid "Folder sync: {added} added, {updated} updated, {removed} removed."
+msgstr "Ordner-Synchronisierung: {added} hinzugefügt, {updated} aktualisiert, {removed} entfernt."
+
+#: src/lib/components/SpineSidebar.svelte
+msgid "Folder unlinked. Chapters were not changed."
+msgstr "Ordnerverknüpfung aufgehoben. Kapitel wurden nicht geändert."
 
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Font Size:"
@@ -1665,6 +1714,10 @@ msgstr "Google-Drive-Einrichtung fehlgeschlagen: {error}"
 msgid "Hazards"
 msgstr "Gefahren"
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "hidden file"
+msgstr "versteckte Datei"
+
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Hide {name}"
 msgstr ""
@@ -1703,6 +1756,10 @@ msgstr "Kennungstyp"
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "Ignore"
 msgstr "Ignorieren"
+
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Ignore changes"
+msgstr "Änderungen ignorieren"
 
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "Ignore changes (don't import)"
@@ -1879,13 +1936,22 @@ msgstr "Japanisches Verlagswesen"
 msgid "Just now"
 msgstr "Gerade eben"
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "Keep both"
 msgstr "Beide behalten"
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Keep both (add as a new chapter)"
+msgstr "Beide behalten (als neues Kapitel hinzufügen)"
+
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "Keep both (import as a new item)"
 msgstr "Beide behalten (als neues Element importieren)"
+
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Keep the chapter"
+msgstr "Kapitel behalten"
 
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Key"
@@ -1960,6 +2026,10 @@ msgstr "Groß"
 msgid "Larger editor text"
 msgstr "Editor-Text vergrößern"
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Last synced: {time}"
+msgstr "Zuletzt synchronisiert: {time}"
+
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Layout"
 msgstr "Layout"
@@ -1994,6 +2064,14 @@ msgstr "Hell"
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 msgid "Light text on a dark cover"
 msgstr "Heller Text auf dunklem Cover"
+
+#: src/lib/Sidebar.svelte
+msgid "Link folder…"
+msgstr "Ordner verknüpfen…"
+
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Linked folder: {name}"
+msgstr "Verknüpfter Ordner: {name}"
 
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Load clip data from selected text"
@@ -2095,6 +2173,10 @@ msgstr "Gesperrt, solange die Änderungsverfolgung aktiv ist"
 #: plugins/audio-clip-editor/src/App.svelte
 msgid "Loop"
 msgstr ""
+
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "macOS sidecar file"
+msgstr "macOS-Begleitdatei"
 
 #: src/lib/Sidebar.svelte
 msgid "Main navigation"
@@ -2246,6 +2328,10 @@ msgstr "Navigationsvorschau"
 msgid "New"
 msgstr "Neu"
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "New chapter"
+msgstr "Neues Kapitel"
+
 #: src/lib/components/workspace/WorkspaceList.svelte
 msgid "New here? Import from Catalog to browse sample books."
 msgstr "Neu hier? Öffnen Sie „Aus Katalog importieren“, um Beispielbücher zu durchsuchen."
@@ -2329,6 +2415,10 @@ msgstr "Keine Elemente entsprechen Ihrem Filter"
 msgid "No manifest items found"
 msgstr "Keine Manifest-Elemente gefunden"
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "No matching file in the folder"
+msgstr "Keine passende Datei im Ordner"
+
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 msgid "No metadata available"
 msgstr "Keine Metadaten verfügbar"
@@ -2383,9 +2473,17 @@ msgstr "Keine"
 msgid "Normal"
 msgstr "Normal"
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "not a text file"
+msgstr "keine Textdatei"
+
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Not available in this browser — connecting a USB device needs the File System Access API (Chrome, Edge)"
 msgstr "In diesem Browser nicht verfügbar — zum Verbinden eines USB-Geräts wird die File System Access API benötigt (Chrome, Edge)"
+
+#: src/lib/Sidebar.svelte
+msgid "Not available in this browser — linking a folder needs the File System Access API (Chrome, Edge)"
+msgstr "In diesem Browser nicht verfügbar — zum Verknüpfen eines Ordners wird die File System Access API benötigt (Chrome, Edge)"
 
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Not created in the Simple EPUB Editor — viewable but not editable."
@@ -2514,9 +2612,14 @@ msgstr "Andere Kapitel mit Problemen"
 msgid "Other formats"
 msgstr "Weitere Formate"
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "Overwrite"
 msgstr "Überschreiben"
+
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Overwrite the chapter"
+msgstr "Kapitel überschreiben"
 
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "Overwrite the existing item"
@@ -2825,6 +2928,10 @@ msgstr "Neu verbinden"
 msgid "Reconnect device"
 msgstr "Gerät neu verbinden"
 
+#: src/lib/Sidebar.svelte
+msgid "Reconnect folder"
+msgstr "Ordner erneut verbinden"
+
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Redirect URI"
 msgstr "Weiterleitungs-URI"
@@ -2865,6 +2972,7 @@ msgstr "Remote:"
 
 #: plugins/publish-to-remote/src/components/RemoteSelector.svelte
 #: src/lib/components/extensions/ExtensionItem.svelte
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/metadata/AccessibilityFields.svelte
 #: src/lib/components/metadata/CollectionsEditor.svelte
 #: src/lib/components/metadata/CreatorRoleEditor.svelte
@@ -2892,6 +3000,10 @@ msgstr "Rolle entfernen"
 #: src/lib/components/metadata/SubjectEditor.svelte
 msgid "Remove subject"
 msgstr "Thema entfernen"
+
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Remove the chapter"
+msgstr "Kapitel entfernen"
 
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 msgid "Remove the selected feed from the list"
@@ -3187,6 +3299,14 @@ msgstr "Simple EPUB Editor (vertrieben als SEED.html) ist freie und quelloffene 
 msgid "Size"
 msgstr "Größe"
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Skip"
+msgstr "Überspringen"
+
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Skipped files"
+msgstr "Übersprungene Dateien"
+
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Smaller editor text"
 msgstr "Editor-Text verkleinern"
@@ -3300,6 +3420,11 @@ msgstr "Design auf {mode} umstellen"
 msgid "Switch to single pane"
 msgstr "Zu Einzelbereich wechseln"
 
+#: src/lib/Sidebar.svelte
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Sync folder"
+msgstr "Ordner synchronisieren"
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "System"
 msgstr "System"
@@ -3341,9 +3466,17 @@ msgstr "Text-Transformation"
 msgid "The book you build here is a valid, self-contained EPUB that also carries its own editable source (bundled as SEED.zip) inside it."
 msgstr "Das Buch, das Sie hier bauen, ist ein gültiges, eigenständiges EPUB, das auch seine eigene bearbeitbare Source (gebündelt als SEED.zip) in sich trägt."
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "The chapter id collides with {label}; it will be added under a new id."
+msgstr "Die Kapitel-ID kollidiert mit {label}; es wird unter einer neuen ID hinzugefügt."
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "The chapter title at the top of each page."
 msgstr "Der Kapiteltitel oben auf jeder Seite."
+
+#: src/lib/components/SpineSidebar.svelte
+msgid "The linked folder isn't available — reconnect the drive or relink the folder."
+msgstr "Der verknüpfte Ordner ist nicht verfügbar — Laufwerk anschließen oder Ordner neu verknüpfen."
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "The plain text → XHTML step."
@@ -3513,6 +3646,10 @@ msgstr "Schriftsatz"
 #: src/App.svelte
 msgid "Unknown View"
 msgstr "Unbekannte Ansicht"
+
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Unlink folder"
+msgstr "Ordnerverknüpfung aufheben"
 
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte

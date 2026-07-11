@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-10\n"
-"PO-Revision-Date: 2026-07-10\n"
+"POT-Creation-Date: 2026-07-11\n"
+"PO-Revision-Date: 2026-07-11\n"
 "Language: en\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -90,6 +90,10 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 msgid "{n} errors"
+msgstr ""
+
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "{n} file(s) unchanged"
 msgstr ""
 
 #: src/lib/components/spine/EditorPane.svelte
@@ -273,6 +277,10 @@ msgstr ""
 msgid "Active Remote:"
 msgstr ""
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Add"
+msgstr ""
+
 #: src/lib/components/metadata/CollectionsEditor.svelte
 msgid "Add a collection"
 msgstr ""
@@ -311,6 +319,10 @@ msgstr ""
 
 #: src/lib/components/metadata/TitleEditor.svelte
 msgid "Add another title"
+msgstr ""
+
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Add as a new chapter"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
@@ -451,10 +463,15 @@ msgstr ""
 msgid "Applied {n} change(s)."
 msgstr ""
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Apply"
+msgstr ""
+
 #: src/lib/components/track-changes/PatchsetReviewDialog.svelte
 msgid "Apply accepted"
 msgstr ""
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/track-changes/PatchsetReviewDialog.svelte
 msgid "Applying…"
 msgstr ""
@@ -587,6 +604,7 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 #: src/lib/components/EditSpineItemDialog.svelte
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
@@ -656,10 +674,15 @@ msgstr ""
 msgid "Change Folder"
 msgstr ""
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Change folder…"
+msgstr ""
+
 #: src/lib/components/track-changes/PatchsetReviewDialog.svelte
 msgid "Changed files"
 msgstr ""
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Changes"
 msgstr ""
@@ -752,6 +775,7 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 #: src/lib/components/EditSpineItemDialog.svelte
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
 #: src/lib/components/spine/ChapterValidationPanel.svelte
 #: src/lib/components/spine/EditorPane.svelte
@@ -826,6 +850,7 @@ msgstr ""
 msgid "Conflicting files"
 msgstr ""
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "Conflicts with {label}"
 msgstr ""
@@ -1389,6 +1414,10 @@ msgstr ""
 msgid "Essential Information"
 msgstr ""
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Everything up to date."
+msgstr ""
+
 #: src/lib/components/metadata/TitleEditor.svelte
 msgid "Expanded"
 msgstr ""
@@ -1511,6 +1540,10 @@ msgstr ""
 msgid "Failed to save metadata field"
 msgstr ""
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Failed to sync the folder"
+msgstr ""
+
 #: src/lib/components/EditSpineItemDialog.svelte
 msgid "Failed to update chapter."
 msgstr ""
@@ -1556,12 +1589,28 @@ msgstr ""
 msgid "Flow"
 msgstr ""
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "folder"
+msgstr ""
+
+#: src/lib/components/SpineSidebar.svelte
+msgid "Folder access was not granted."
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Folder on device"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Folder selected:"
+msgstr ""
+
+#: src/lib/components/SpineSidebar.svelte
+msgid "Folder sync: {added} added, {updated} updated, {removed} removed."
+msgstr ""
+
+#: src/lib/components/SpineSidebar.svelte
+msgid "Folder unlinked. Chapters were not changed."
 msgstr ""
 
 #: src/stories/preview/ContentPreviewDemo.svelte
@@ -1646,6 +1695,10 @@ msgstr ""
 msgid "Hazards"
 msgstr ""
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "hidden file"
+msgstr ""
+
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Hide {name}"
 msgstr ""
@@ -1683,6 +1736,10 @@ msgstr ""
 
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "Ignore"
+msgstr ""
+
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Ignore changes"
 msgstr ""
 
 #: src/lib/components/import/ImportReviewDialog.svelte
@@ -1860,12 +1917,21 @@ msgstr ""
 msgid "Just now"
 msgstr ""
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "Keep both"
 msgstr ""
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Keep both (add as a new chapter)"
+msgstr ""
+
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "Keep both (import as a new item)"
+msgstr ""
+
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Keep the chapter"
 msgstr ""
 
 #: src/lib/components/settings/GeneratorSettings.svelte
@@ -1941,6 +2007,10 @@ msgstr ""
 msgid "Larger editor text"
 msgstr ""
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Last synced: {time}"
+msgstr ""
+
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Layout"
 msgstr ""
@@ -1974,6 +2044,14 @@ msgstr ""
 
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 msgid "Light text on a dark cover"
+msgstr ""
+
+#: src/lib/Sidebar.svelte
+msgid "Link folder…"
+msgstr ""
+
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Linked folder: {name}"
 msgstr ""
 
 #: src/lib/components/audio/AudioClipEditor.svelte
@@ -2075,6 +2153,10 @@ msgstr ""
 
 #: plugins/audio-clip-editor/src/App.svelte
 msgid "Loop"
+msgstr ""
+
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "macOS sidecar file"
 msgstr ""
 
 #: src/lib/Sidebar.svelte
@@ -2227,6 +2309,10 @@ msgstr ""
 msgid "New"
 msgstr ""
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "New chapter"
+msgstr ""
+
 #: src/lib/components/workspace/WorkspaceList.svelte
 msgid "New here? Import from Catalog to browse sample books."
 msgstr ""
@@ -2310,6 +2396,10 @@ msgstr ""
 msgid "No manifest items found"
 msgstr ""
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "No matching file in the folder"
+msgstr ""
+
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 msgid "No metadata available"
 msgstr ""
@@ -2364,8 +2454,16 @@ msgstr ""
 msgid "Normal"
 msgstr ""
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "not a text file"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Not available in this browser — connecting a USB device needs the File System Access API (Chrome, Edge)"
+msgstr ""
+
+#: src/lib/Sidebar.svelte
+msgid "Not available in this browser — linking a folder needs the File System Access API (Chrome, Edge)"
 msgstr ""
 
 #: src/lib/components/workspace/WorkspaceItem.svelte
@@ -2495,8 +2593,13 @@ msgstr ""
 msgid "Other formats"
 msgstr ""
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "Overwrite"
+msgstr ""
+
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Overwrite the chapter"
 msgstr ""
 
 #: src/lib/components/import/ImportReviewDialog.svelte
@@ -2806,6 +2909,10 @@ msgstr ""
 msgid "Reconnect device"
 msgstr ""
 
+#: src/lib/Sidebar.svelte
+msgid "Reconnect folder"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Redirect URI"
 msgstr ""
@@ -2846,6 +2953,7 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/RemoteSelector.svelte
 #: src/lib/components/extensions/ExtensionItem.svelte
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/metadata/AccessibilityFields.svelte
 #: src/lib/components/metadata/CollectionsEditor.svelte
 #: src/lib/components/metadata/CreatorRoleEditor.svelte
@@ -2872,6 +2980,10 @@ msgstr ""
 
 #: src/lib/components/metadata/SubjectEditor.svelte
 msgid "Remove subject"
+msgstr ""
+
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Remove the chapter"
 msgstr ""
 
 #: src/lib/components/workspace/OPDSImportDialog.svelte
@@ -3168,6 +3280,14 @@ msgstr ""
 msgid "Size"
 msgstr ""
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Skip"
+msgstr ""
+
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Skipped files"
+msgstr ""
+
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Smaller editor text"
 msgstr ""
@@ -3281,6 +3401,11 @@ msgstr ""
 msgid "Switch to single pane"
 msgstr ""
 
+#: src/lib/Sidebar.svelte
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Sync folder"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "System"
 msgstr ""
@@ -3322,8 +3447,16 @@ msgstr ""
 msgid "The book you build here is a valid, self-contained EPUB that also carries its own editable source (bundled as SEED.zip) inside it."
 msgstr ""
 
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "The chapter id collides with {label}; it will be added under a new id."
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "The chapter title at the top of each page."
+msgstr ""
+
+#: src/lib/components/SpineSidebar.svelte
+msgid "The linked folder isn't available — reconnect the drive or relink the folder."
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -3493,6 +3626,10 @@ msgstr ""
 
 #: src/App.svelte
 msgid "Unknown View"
+msgstr ""
+
+#: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+msgid "Unlink folder"
 msgstr ""
 
 #: src/lib/components/metadata/SimpleMetadataView.svelte

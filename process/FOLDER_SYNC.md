@@ -1,6 +1,15 @@
 # Folder sync: link a local folder to chapter content
 
-Design for a Chromium-only feature that links a project to a local directory via `showDirectoryPicker()` and pulls its text files into chapters through the existing import review flow. Status: design for review, not yet implemented.
+Design for a Chromium-only feature that links a project to a local directory via `showDirectoryPicker()` and pulls its text files into chapters through the existing import review flow. Status: **implemented** (branch `folder-sync`, 2026-07-11); see "As built" below for where the implementation deviates from the sections that follow.
+
+## As built (deviations from the design below)
+
+- **Matching is by `sanitizeChapterId(filename)` → manifest id**, not exact source filename — that is what the import flow actually does, so "collisions as for import" made it the consistent choice ("Chapter 1.md" updates an existing `chapter-1`). A side effect inherited from import: numbered-prefix filenames get ids like `item--second` (leading digit replaced) — deterministic, so re-syncs match.
+- **No staging workspace.** The scan reads file text directly into the plan rows (`scan.ts` is pure and takes pre-read inputs); the dialog previews from the plan, and the commit writes from it. The import staging area exists to bridge a File-object hand-off that folder sync doesn't have.
+- **`FolderSyncReviewDialog` is a sibling composing the import pieces** (`InlineTextDiff`, list + preview + per-row radios), not an extension of `ImportReviewDialog` — remove rows, footer link-management actions, and the up-to-date state made extension invasive.
+- **A fourth connection state, `unavailable`** (permission granted but the directory unreadable — unplugged media, deleted folder), distinguished from `reconnect-required` so the message can name the actual problem.
+- **`SettingsService` needed changes in both directions**: `loadWorkspaceSettings` and `saveWorkspaceSettings` pick fields explicitly, so `folder_sync` had to be added to each (found by live verification — the type extension alone silently dropped it).
+- Extension filter defaults to the import button's accept list (`.txt/.md/.markdown`), parameterized for per-project formats later.
 
 ## Motivation
 
@@ -42,11 +51,11 @@ Top-level files whose extension matches the project's adopted source format(s) (
 
 ### Matching
 
-A folder file matches an existing chapter by exact source filename (the SOURCE file name). Matched + identical content → no-op (not shown, or shown as unchanged count). Matched + different content → an update row with the inline text diff, default resolution `overwrite`. Unmatched → a new-chapter row; if the *generated* name would collide with an unrelated existing item, the standard import collision resolutions apply (`overwrite` / `keep-both` / `skip`). Matching by filename is what makes re-sync update the same chapter instead of minting `-1` suffixes.
+A folder file matches an existing chapter by exact source filename (the SOURCE file name). Matched + identical content → no-op (not shown, or shown as unchanged count). Matched + different content → an update row with the inline text diff, default resolution `overwrite`. Unmatched → a new-chapter row; if the _generated_ name would collide with an unrelated existing item, the standard import collision resolutions apply (`overwrite` / `keep-both` / `skip`). Matching by filename is what makes re-sync update the same chapter instead of minting `-1` suffixes.
 
 ### Ordering
 
-Spine order is authoritative: the folder owns chapter *content*, the app owns *structure*. Sync never reorders existing chapters — renaming a file in the folder changes nothing about its spine position, and the app's reordering controls remain the one way to arrange the book. New files are appended to the end of the spine, ordered among themselves by numeric-aware natural sort (`localeCompare(..., undefined, { numeric: true, sensitivity: 'base' })`) so `2-title.md` precedes `10-epilogue.md`; a first sync into an empty project therefore lands in folder order. (Considered and rejected: folder-authoritative ordering via filename prefixes — it clobbers the app's authoring controls; and sort-position insertion for new files — less predictable than appending, and the author will position new chapters deliberately anyway.)
+Spine order is authoritative: the folder owns chapter _content_, the app owns _structure_. Sync never reorders existing chapters — renaming a file in the folder changes nothing about its spine position, and the app's reordering controls remain the one way to arrange the book. New files are appended to the end of the spine, ordered among themselves by numeric-aware natural sort (`localeCompare(..., undefined, { numeric: true, sensitivity: 'base' })`) so `2-title.md` precedes `10-epilogue.md`; a first sync into an empty project therefore lands in folder order. (Considered and rejected: folder-authoritative ordering via filename prefixes — it clobbers the app's authoring controls; and sort-position insertion for new files — less predictable than appending, and the author will position new chapters deliberately anyway.)
 
 ### Deletions
 

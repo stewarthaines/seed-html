@@ -1138,6 +1138,7 @@
           {isExpanded}
           readOnly={structureLocked}
           advancedMode={advancedMode.current}
+          settingsService={appState ? appState.getSettingsService() : null}
           onWorkspaceUpdate={updatedWorkspace => {
             if (appState) appState.workspace = updatedWorkspace;
           }}

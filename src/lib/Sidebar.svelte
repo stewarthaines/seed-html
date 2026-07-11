@@ -14,12 +14,16 @@
     BookOpen,
     Plus,
     FileArrowUp,
+    FolderSimplePlus,
+    ArrowsClockwise,
     CaretLeft,
     CaretRight,
     CaretDown,
     Lock,
     ToggleRight,
   } from 'phosphor-svelte';
+  import { isFolderSyncSupported } from './folder-sync/capability.js';
+  import { getFolderSyncStatus, type FolderSyncStatus } from './folder-sync/handle-store.js';
 
   // Props
   interface Props {
@@ -197,6 +201,44 @@
       );
       input.value = '';
     }
+  }
+
+  // Folder sync (process/FOLDER_SYNC.md): the button is always rendered,
+  // enabled only where showDirectoryPicker exists; its label follows the
+  // stored handle's state. SpineSidebar orchestrates the actual flow.
+  const folderSyncSupported = isFolderSyncSupported();
+  let folderSyncStatus = $state<FolderSyncStatus>('not-linked');
+  $effect(() => {
+    const workspaceId = currentWorkspace?.id as string | undefined;
+    if (!folderSyncSupported || !workspaceId) return;
+    const refresh = () => {
+      void getFolderSyncStatus(workspaceId).then(status => (folderSyncStatus = status));
+    };
+    refresh();
+    window.addEventListener('seed:folder-sync-changed', refresh);
+    return () => window.removeEventListener('seed:folder-sync-changed', refresh);
+  });
+
+  const folderSyncLabel = $derived(
+    !folderSyncSupported
+      ? $t('Link folder…')
+      : folderSyncStatus === 'not-linked'
+        ? $t('Link folder…')
+        : folderSyncStatus === 'connected'
+          ? $t('Sync folder')
+          : $t('Reconnect folder')
+  );
+  const folderSyncTitle = $derived(
+    folderSyncSupported
+      ? folderSyncLabel
+      : $t(
+          'Not available in this browser — linking a folder needs the File System Access API (Chrome, Edge)'
+        )
+  );
+
+  function handleFolderSyncClick() {
+    if (!folderSyncSupported) return;
+    window.dispatchEvent(new CustomEvent('folder-sync-open'));
   }
 </script>
 
@@ -388,6 +430,23 @@
             <span class="section-label">{spineSectionLabel}&nbsp;&nbsp;[ {chapterCount} ]</span>
             {#if !readOnly}
               <div class="spine-header-actions">
+                <!-- aria-disabled (not disabled) keeps the button hoverable and
+                     focusable so the tooltip explaining WHY is reachable in the
+                     very browsers that lack the API. -->
+                <button
+                  class="append-button-nav"
+                  aria-disabled={!folderSyncSupported}
+                  class:unavailable={!folderSyncSupported}
+                  onclick={handleFolderSyncClick}
+                  aria-label={folderSyncLabel}
+                  title={folderSyncTitle}
+                >
+                  {#if folderSyncSupported && folderSyncStatus !== 'not-linked'}
+                    <ArrowsClockwise size={16} aria-hidden="true" />
+                  {:else}
+                    <FolderSimplePlus size={16} aria-hidden="true" />
+                  {/if}
+                </button>
                 <button
                   class="append-button-nav"
                   onclick={handleImportTextClick}
@@ -651,6 +710,17 @@
     outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
     outline-offset: var(--focus-ring-offset);
     z-index: 1;
+  }
+
+  /* Folder sync off-Chromium: dimmed but hoverable so the tooltip explains why. */
+  .append-button-nav.unavailable {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .append-button-nav.unavailable:hover {
+    background: transparent;
+    color: var(--color-text-secondary);
   }
 
   .section-icon {
