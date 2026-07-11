@@ -225,6 +225,10 @@ msgstr ""
 msgid "A book needs at least one chapter"
 msgstr "Ein Buch braucht mindestens ein Kapitel"
 
+#: src/lib/navigation/views/ThirdPartyView.svelte
+msgid "A copy opened from your computer edits and packages books as usual. Features that need a web host are unavailable: publishing plugins, PDF export, the built-in reader, and installing new extensions."
+msgstr "Eine von Ihrem Computer geöffnete Kopie bearbeitet und paketiert Bücher wie gewohnt. Funktionen, die einen Webhost benötigen, sind nicht verfügbar: Veröffentlichungs-Plugins, PDF-Export, der eingebaute Reader und das Installieren neuer Erweiterungen."
+
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "A generator is a script that produces source text to insert at the editor caret."
 msgstr "Ein Generator ist ein Skript, das Quelltext erzeugt, der an der Cursorposition eingefügt wird."
@@ -1229,6 +1233,14 @@ msgstr "Herunterladen"
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 msgid "Download EPUB to disk"
 msgstr "EPUB auf die Festplatte herunterladen"
+
+#: src/lib/navigation/views/ThirdPartyView.svelte
+msgid "Download SEED.html"
+msgstr "SEED.html herunterladen"
+
+#: src/lib/navigation/views/ThirdPartyView.svelte
+msgid "Download the app"
+msgstr "Die App herunterladen"
 
 #: plugins/audio-clip-editor/src/App.svelte
 msgid "Drag on the waveform to define a clip."
@@ -3188,6 +3200,10 @@ msgstr "Secret Key"
 #: src/lib/navigation/views/AboutView.svelte
 msgid "SEED.html exports an EPUB that embeds its own SEED.zip source, and a PDF; only the EPUB can return to the app for further editing."
 msgstr "SEED.html exportiert ein EPUB, das seine eigene SEED.zip-Source einbettet, und ein PDF; nur das EPUB kann zur weiteren Bearbeitung in die App zurückkehren."
+
+#: src/lib/navigation/views/ThirdPartyView.svelte
+msgid "SEED.html is a single file, and this page is the whole app. Keep your own copy and it will keep working even if this website goes away — a fully offline editor."
+msgstr "SEED.html ist eine einzige Datei, und diese Seite ist die ganze App. Bewahren Sie Ihre eigene Kopie auf, und sie funktioniert weiter, selbst wenn diese Website verschwindet — ein vollständig offline nutzbarer Editor."
 
 #: src/App.svelte
 msgid "Select a spine item to see the preview here"

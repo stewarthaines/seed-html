@@ -6,6 +6,7 @@
 <script lang="ts">
   import { t } from '../../i18n';
   import PaneHeader from '$lib/components/layout/PaneHeader.svelte';
+  import { canFetchSelfHtml } from '$lib/epub/seed-html.js';
   import LICENSE_TEXT from '../../../../LICENSE.txt?raw';
 
   const VERSION = __VERSION__;
@@ -145,6 +146,30 @@
         <pre class="license-text">{LICENSE_TEXT}</pre>
       </details>
     </section>
+
+    <!-- Download the standalone single file. Hosted-only: a file:// copy can't
+         serve itself, and its user already has the file. -->
+    {#if canFetchSelfHtml()}
+      <section class="license-section">
+        <h2>{$t('Download the app')}</h2>
+        <p class="license-summary">
+          {$t(
+            'SEED.html is a single file, and this page is the whole app. Keep your own copy and it will keep working even if this website goes away — a fully offline editor.'
+          )}
+        </p>
+        <p class="license-summary">
+          {$t(
+            'A copy opened from your computer edits and packages books as usual. Features that need a web host are unavailable: publishing plugins, PDF export, the built-in reader, and installing new extensions.'
+          )}
+        </p>
+        <p class="license-meta">
+          <a href="SEED.html" download="SEED.html" class="external-link">
+            {$t('Download SEED.html')}
+          </a>
+          · {$t('Version')}: {VERSION}
+        </p>
+      </section>
+    {/if}
 
     {#snippet libraryItem(library: Library)}
       <div class="library-item">

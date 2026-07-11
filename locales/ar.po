@@ -206,6 +206,10 @@ msgstr ""
 msgid "A book needs at least one chapter"
 msgstr ""
 
+#: src/lib/navigation/views/ThirdPartyView.svelte
+msgid "A copy opened from your computer edits and packages books as usual. Features that need a web host are unavailable: publishing plugins, PDF export, the built-in reader, and installing new extensions."
+msgstr ""
+
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "A generator is a script that produces source text to insert at the editor caret."
 msgstr ""
@@ -1209,6 +1213,14 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 msgid "Download EPUB to disk"
+msgstr ""
+
+#: src/lib/navigation/views/ThirdPartyView.svelte
+msgid "Download SEED.html"
+msgstr ""
+
+#: src/lib/navigation/views/ThirdPartyView.svelte
+msgid "Download the app"
 msgstr ""
 
 #: plugins/audio-clip-editor/src/App.svelte
@@ -3168,6 +3180,10 @@ msgstr ""
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "SEED.html exports an EPUB that embeds its own SEED.zip source, and a PDF; only the EPUB can return to the app for further editing."
+msgstr ""
+
+#: src/lib/navigation/views/ThirdPartyView.svelte
+msgid "SEED.html is a single file, and this page is the whole app. Keep your own copy and it will keep working even if this website goes away — a fully offline editor."
 msgstr ""
 
 #: src/App.svelte
