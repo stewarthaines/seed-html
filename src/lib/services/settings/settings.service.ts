@@ -24,6 +24,16 @@ export interface WorkspaceSettings {
   editor?: {
     preview_delay_ms: number; // 100-2000ms
   };
+  /**
+   * Linked sync folder display metadata (see process/FOLDER_SYNC.md). The
+   * directory handle itself lives in IndexedDB (src/lib/folder-sync/); this
+   * tier is workspace-local on purpose — a machine-local filesystem link must
+   * not travel with the packaged EPUB, and .workspace-metadata.json doesn't.
+   */
+  folder_sync?: {
+    folder_name: string;
+    last_synced_at?: string; // ISO 8601
+  };
 }
 
 /**
