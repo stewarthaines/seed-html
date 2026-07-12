@@ -223,10 +223,14 @@ export function generateCoverSvg(
   const zoneCenter = (TITLE_ZONE_TOP + TITLE_ZONE_BOTTOM) / 2;
   const firstBaselineY = Math.round(zoneCenter - span / 2 + 0.25 * fontSize);
 
+  // sodipodi:role="line" marks each tspan as a real line for Inkscape's text
+  // tool — without it a font change re-lays the tspans out as inline runs and
+  // the title shatters. Browsers and e-readers ignore the attribute (the
+  // namespace is declared on the root, like the layer attributes).
   const tspans = lines
     .map(
       (line, i) =>
-        `      <tspan x="300" dy="${i === 0 ? 0 : lineHeight}">${xmlEscape(line)}</tspan>`
+        `      <tspan sodipodi:role="line" x="300" dy="${i === 0 ? 0 : lineHeight}">${xmlEscape(line)}</tspan>`
     )
     .join('\n');
 
