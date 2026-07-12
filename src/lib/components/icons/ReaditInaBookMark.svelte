@@ -1,11 +1,13 @@
 <script lang="ts">
   import type { IconComponentProps } from 'phosphor-svelte';
 
-  // Read-it-in-a-book open-book mark (icon only — no wordmark). A drop-in for the
-  // Phosphor icons used in the sidebar nav: it takes the same IconComponentProps, so it
-  // renders through the shared `<Icon size weight aria-hidden />` path. `weight`/`mirrored`
-  // don't apply to this fixed-stroke brand mark. The shapes mirror COVER_MARK in
-  // src/lib/epub/cover-generator.ts (outer cover, side seams, two eyes, open page).
+  // The [⦂⎬] brand mark — a reader behind an open book, eyes peeking over the
+  // top edge. A drop-in for the Phosphor icons used in the sidebar nav: it takes
+  // the same IconComponentProps, so it renders through the shared
+  // `<Icon size weight aria-hidden />` path. `weight`/`mirrored` don't apply to
+  // this fixed brand mark. Paths are taken verbatim from the design source at
+  // src/lib/icons/readitinabook-mark.svg (Inkscape; glyph outlines of [ ⦂ ⎬ ]),
+  // with the hard-coded black swapped for the themable `color` prop.
   let {
     size = 18,
     color = 'currentColor',
@@ -18,23 +20,35 @@
 <svg
   width={size}
   height={size}
-  viewBox="0 0 320 320"
-  fill="none"
+  viewBox="0 0 500 500"
+  fill={color}
   stroke={color}
-  stroke-width="14"
   stroke-linecap="round"
   stroke-linejoin="round"
   {...rest}
 >
-  <path d="M 37,289 L 37,61 Q 37,39 59,39 L 261,39 Q 283,39 283,61 L 283,289 Z" />
-  <line x1="62" y1="46" x2="62" y2="171" stroke-width="13" />
-  <line x1="258" y1="46" x2="258" y2="155" stroke-width="13" />
-  <circle cx="124" cy="103" r="20" stroke-width="13" />
-  <circle cx="196" cy="103" r="20" stroke-width="13" />
-  <g transform="translate(-15 5)">
-    <path
-      d="m 54,170 c 47.50365,-3.59124 95.66667,5.24574 121,11.91241 39.93066,-21.67518 68.91728,-30.41606 123,-34.49635"
-      stroke-width="13"
-    />
-  </g>
+  <!-- ⎬ the open page -->
+  <path
+    d="m 232.3507,121.83831 v 82.76662 c 0,35.24662 6.60874,54.44345 22.97324,66.40212 5.97934,4.09113 7.23815,4.72053 19.51153,8.18225 -13.84689,3.77643 -22.02914,8.49696 -28.32318,16.36451 -9.12636,10.69987 -14.16159,32.0996 -14.16159,59.47867 v 81.50782 h 24.54675 v -86.22835 c 0,-21.08503 2.51762,-39.65245 6.60875,-48.7788 4.72053,-10.38517 15.7351,-18.56742 27.06437,-19.51153 v -5.66463 c -14.16159,-1.25881 -28.00848,-15.1057 -31.1555,-32.09961 -1.57351,-7.55285 -2.51762,-23.60265 -2.51762,-35.56132 v -86.85775 z"
+    stroke-width="16.3905"
+    transform="matrix(0.9619487,-0.14466454,0.18085993,1.0123575,0,0)"
+  />
+  <!-- [ the left cover edge -->
+  <path
+    d="M 123.62743,398.78164 H 49.904142 V 80.198494 H 123.62743 V 106.16274 H 79.469264 v 267.0337 h 44.158166 z"
+    stroke-width="20.2153"
+    transform="scale(0.97478542,1.0258668)"
+  />
+  <!-- ⦂ the eyes -->
+  <path
+    d="m 183.2887,226.20438 q -15.35112,0 -26.15376,-10.80264 -10.61313,-10.80264 -10.61313,-25.5852 0,-15.35112 10.80265,-25.96424 10.99216,-10.80264 25.96424,-10.80264 14.78256,0 25.5852,10.80264 10.80264,10.61312 10.80264,25.96424 0,14.78256 -10.61312,25.5852 -10.61312,10.80264 -25.77472,10.80264 z m 0,-12.50832 q 10.04456,0 16.86728,-7.20176 7.01224,-7.39128 7.01224,-16.67776 0,-9.85504 -7.20176,-17.0568 -7.01224,-7.20176 -16.67776,-7.20176 -10.04456,0 -17.24632,7.20176 -7.01224,7.20176 -7.01224,17.0568 0,9.28648 7.01224,16.67776 7.01224,7.20176 17.24632,7.20176 z m 0,116.74433 q -15.35112,0 -26.15376,-10.80264 -10.61313,-10.80264 -10.61313,-25.5852 0,-15.35112 10.80265,-25.96424 10.99216,-10.80264 25.96424,-10.80264 14.78256,0 25.5852,10.80264 10.80264,10.61312 10.80264,25.96424 0,14.78256 -10.61312,25.5852 -10.61312,10.80264 -25.77472,10.80264 z m 0,-12.50832 q 10.04456,0 16.86728,-7.20176 7.01224,-7.39128 7.01224,-16.67776 0,-9.85504 -7.20176,-17.0568 -7.01224,-7.20176 -16.67776,-7.20176 -10.04456,0 -17.24632,7.20176 -7.01224,7.20176 -7.01224,17.0568 0,9.28648 7.01224,16.67776 7.01224,7.20176 17.24632,7.20176 z"
+    stroke-width="20.2153"
+    transform="scale(0.97478542,1.0258668)"
+  />
+  <!-- ] the right cover edge -->
+  <path
+    d="m 458.3295,397.71494 h -75.61849 v -25.58521 h 46.05337 V 105.47507 H 382.71101 V 79.889869 h 75.61849 z"
+    stroke-width="20.2153"
+    transform="scale(0.97478542,1.0258668)"
+  />
 </svg>
