@@ -1,11 +1,11 @@
 {
   "id": "audio-clips",
   "name": "AudioClips",
-  "description": "Tap-to-play audio clips in the packaged EPUB: a reading-system script and styles for the span.clip markup that the Djot and MarkdownIt transforms produce from the :clip directive.",
+  "description": "Tap-to-play audio clips in the packaged EPUB: a reading-system script and styles for the span.clip markup that the Djot and MarkdownIt transforms produce from the :clip directive, plus animated progress indicators (ring, bar, or waveform — pick per clip with data-progress).",
   "licenseName": "MIT",
   "category": "chapter-content",
   "scripts": [],
-  "domTransforms": [],
+  "domTransforms": ["transformClipProgress.js"],
   "textTransforms": [],
   "assets": [
     {

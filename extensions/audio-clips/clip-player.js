@@ -40,6 +40,7 @@
     if (!active) return;
     active.audio.pause();
     active.span.classList.remove('clip-playing');
+    active.span.style.removeProperty('--clip-duration');
     active = null;
   }
 
@@ -55,9 +56,20 @@
       audio.addEventListener('ended', stop);
       players[src] = audio;
     }
-    audio.currentTime = toSeconds(span.getAttribute('data-begin'));
-    audio.playbackRate = parseFloat(span.getAttribute('data-rate')) || 1;
-    active = { span: span, audio: audio, end: toSeconds(span.getAttribute('data-end')) };
+    var begin = toSeconds(span.getAttribute('data-begin'));
+    var end = toSeconds(span.getAttribute('data-end'));
+    var rate = parseFloat(span.getAttribute('data-rate')) || 1;
+    audio.currentTime = begin;
+    audio.playbackRate = rate;
+    // Publish the clip's wall-clock duration for the progress indicators
+    // (transformClipProgress.js / clip.css) — the player itself has no idea
+    // how progress is drawn; CSS animations keyed on .clip-playing pick the
+    // duration up from this custom property.
+    var duration = (end - begin) / rate;
+    if (isFinite(duration) && duration > 0) {
+      span.style.setProperty('--clip-duration', duration + 's');
+    }
+    active = { span: span, audio: audio, end: end };
     span.classList.add('clip-playing');
     var playing = audio.play();
     if (playing && playing.catch) playing.catch(stop);

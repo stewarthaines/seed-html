@@ -20,3 +20,80 @@
 .clip[role='button'].clip-playing::before {
   content: '\25A0\00A0'; /* ■ (stop) + no-break space */
 }
+
+/* --- Clip progress indicators (injected by transformClipProgress.js) --------
+   The player publishes the clip's duration as --clip-duration on the span and
+   toggles .clip-playing; everything below is presentation. At rest each
+   indicator shows its empty/track state; while playing, a linear animation
+   runs exactly the clip's length. Stopping removes the class, which resets
+   the animation — matching the player's stop-means-restart model. */
+
+.clip-progress {
+  margin-inline-start: 0.35em;
+  vertical-align: -0.15em;
+}
+
+.clip-progress--ring {
+  width: 1em;
+  height: 1em;
+}
+
+.clip-progress--bar {
+  width: 5em;
+  height: 0.5em;
+}
+
+.clip-progress--wave {
+  width: 5em;
+  height: 1em;
+  vertical-align: -0.2em;
+}
+
+/* ring: sweep the stroke from empty to full, starting at 12 o'clock */
+@keyframes clip-progress-ring {
+  from {
+    stroke-dashoffset: 50.27;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.clip-playing .clip-progress--ring .clip-progress-value {
+  animation: clip-progress-ring var(--clip-duration, 2s) linear forwards;
+}
+
+/* bar: full at the start, contracting right-to-left as time runs out. The bar
+   is a round-capped stroke and the contraction is a dash retreating along it
+   (same technique as the ring) — scaling the rect instead would squash the
+   rounded ends flat. 92 = the line's length (x1=4 → x2=96). */
+@keyframes clip-progress-contract {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: 92;
+  }
+}
+
+.clip-playing .clip-progress--bar .clip-progress-value {
+  animation: clip-progress-contract var(--clip-duration, 2s) linear forwards;
+}
+
+/* wave: the coloured waveform is revealed left-to-right over the grey track */
+.clip-progress--wave .clip-progress-value {
+  clip-path: inset(0 100% 0 0);
+}
+
+@keyframes clip-progress-reveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.clip-playing .clip-progress--wave .clip-progress-value {
+  animation: clip-progress-reveal var(--clip-duration, 2s) linear forwards;
+}
