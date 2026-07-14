@@ -318,8 +318,7 @@ ${chapterLinks}
         transformTextJS,
         'transformText.js',
         sourceText,
-        contextWithIdref,
-        { timeoutMs: 5000 }
+        contextWithIdref
       );
 
       const transformTime = Date.now() - startTime;

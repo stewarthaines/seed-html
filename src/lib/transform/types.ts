@@ -50,11 +50,10 @@ export interface ScriptValidationResult {
 }
 
 export interface TransformContext {
-  manifestItems?: Record<string, any>;
+  idref?: string;
 }
 
 export interface ExecutionOptions {
-  timeoutMs?: number;
   globals?: Record<string, any>;
 }
 

@@ -319,8 +319,7 @@ Chapter 2 - Text/chapter2.xhtml
         expect.any(String), // script content
         expect.any(String), // script name
         sourceText,
-        context,
-        expect.any(Object) // options
+        context
       );
     });
 
