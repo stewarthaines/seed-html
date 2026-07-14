@@ -156,69 +156,9 @@ export class SpineTransformPipeline {
   }
 
   /**
-   * Set debug mode in transform engine
-   */
-  async setDebugMode(enabled: boolean): Promise<void> {
-    try {
-      await this.transformEngine.setDebugMode(enabled);
-    } catch (error) {
-      console.warn('Failed to set debug mode:', error);
-    }
-  }
-
-  /**
-   * Ping the transform engine to test connectivity
-   */
-  async ping(data: any = {}): Promise<any> {
-    return await this.transformEngine.ping({ data });
-  }
-
-  /**
    * Clean up resources (no iframe to clean up)
    */
   cleanup(): void {
     // No iframe to clean up - engine is managed at app level
   }
-}
-
-/**
- * Factory function to create spine transform pipeline
- */
-export function createSpineTransformPipeline(
-  workspaceId: string,
-  fileStorage: FileStorageAPI,
-  extensionManager: ExtensionManager,
-  blobURLManager: BlobURLManager,
-  transformEngine: TransformEngine,
-  settingsService?: SettingsService
-): SpineTransformPipeline {
-  return new SpineTransformPipeline(
-    workspaceId,
-    fileStorage,
-    extensionManager,
-    blobURLManager,
-    transformEngine,
-    settingsService
-  );
-}
-
-/**
- * Enhanced transform result with additional spine-specific data
- */
-export interface SpineTransformResult extends TransformResult {
-  spineItemId?: string;
-  generatedXHTML?: string;
-  assetReferences?: string[];
-  blobUrls?: string[];
-}
-
-/**
- * Transform pipeline with spine-specific enhancements
- */
-export interface ISpineTransformPipeline {
-  executeTransform(plainText: string, timeout?: number): Promise<TransformResult>;
-  loadTransformScripts(): Promise<TransformScripts>;
-  setDebugMode(enabled: boolean): Promise<void>;
-  ping(data?: any): Promise<any>;
-  cleanup(): void;
 }

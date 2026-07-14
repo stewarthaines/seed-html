@@ -537,19 +537,6 @@ export class SpinePreviewManager {
   }
 
   /**
-   * Get transform pipeline statistics
-   */
-  getStats() {
-    return {
-      isTransforming: this.isTransforming,
-      lastTransformTime: this.lastTransformTime,
-      contentLength: {
-        text: this.currentContent.text.length,
-      },
-    };
-  }
-
-  /**
    * Force immediate preview update (bypasses debounce)
    */
   async forcePreviewUpdate(): Promise<void> {
@@ -559,30 +546,6 @@ export class SpinePreviewManager {
     }
 
     await this.renderPreview();
-  }
-
-  /**
-   * Set debug mode for transform pipeline
-   */
-  async setDebugMode(enabled: boolean): Promise<void> {
-    try {
-      await this.transformPipeline.setDebugMode(enabled);
-    } catch (error) {
-      console.warn('Failed to set debug mode:', error);
-    }
-  }
-
-  /**
-   * Test transform pipeline connectivity
-   */
-  async pingTransformPipeline(): Promise<boolean> {
-    try {
-      await this.transformPipeline.ping({ timestamp: Date.now() });
-      return true;
-    } catch (error) {
-      console.warn('Transform pipeline ping failed:', error);
-      return false;
-    }
   }
 
   /**

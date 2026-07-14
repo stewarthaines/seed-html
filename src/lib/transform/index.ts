@@ -6,7 +6,6 @@
  */
 
 // Main classes
-export { TransformPipeline } from './transform-pipeline.js';
 export { TransformManager } from './transform-manager.js';
 export { TransformExecutor } from './transform-executor.js';
 export { TransformError } from './transform-error.js';
@@ -26,7 +25,6 @@ export type {
   TransformContext,
   ExecutionOptions,
   TransformResult,
-  PipelineResult,
   ChapterMetadata,
   BlobUrlManager,
 } from './types.js';

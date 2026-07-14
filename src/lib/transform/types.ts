@@ -67,14 +67,6 @@ export interface TransformResult {
   executionTime?: number;
 }
 
-export interface PipelineResult {
-  success: boolean;
-  xhtmlDocument?: Document;
-  warnings?: string[];
-  error?: import('./transform-error.js').TransformError;
-  executionTime?: number;
-}
-
 export interface ChapterMetadata {
   title: string;
   language: string;

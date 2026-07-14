@@ -69,60 +69,6 @@ export class TransformExecutor {
   }
 
   /**
-   * Execute DOM transform function
-   */
-  async executeDOMTransform(
-    scriptContent: string,
-    scriptName: string,
-    document: Document,
-    context: TransformContext,
-    options: ExecutionOptions = {}
-  ): Promise<Document> {
-    const timeoutMs = options.timeoutMs || TransformExecutor.DEFAULT_TIMEOUT_MS;
-
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(
-          new TransformError({
-            stage: 'dom',
-            message: `Transform execution timed out after ${timeoutMs}ms`,
-            scriptName,
-          })
-        );
-      }, timeoutMs);
-
-      try {
-        // Clone document to avoid modifying original
-        const clonedDoc = document.cloneNode(true) as Document;
-
-        // Create sandboxed execution environment
-        const sandboxedGlobals = this.createSandboxedGlobals(options.globals);
-
-        // Execute script in sandboxed context
-        const result = this.executeFunctionInSandbox(
-          scriptContent,
-          'transformDOM',
-          [clonedDoc, context.idref],
-          sandboxedGlobals,
-          scriptName
-        );
-
-        clearTimeout(timeout);
-
-        // Ensure result is a Document
-        if (result instanceof Document) {
-          resolve(result);
-        } else {
-          resolve(clonedDoc); // Return cloned document if transform doesn't return one
-        }
-      } catch (error) {
-        clearTimeout(timeout);
-        reject(this.createTransformError(error, 'dom', scriptName));
-      }
-    });
-  }
-
-  /**
    * Create sandboxed globals with dangerous functions removed
    */
   private createSandboxedGlobals(extensionGlobals: Record<string, any> = {}): Record<string, any> {

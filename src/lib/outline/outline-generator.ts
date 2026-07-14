@@ -14,7 +14,6 @@ import type { SpineTransformPipeline } from '$lib/transform/spine-transform-pipe
 import type { ManifestItem } from '../epub/opf-utils.js';
 import { isRtlLanguage } from '../epub/language-direction.js';
 // import type { TransformEngine } from '$lib/infrastructure/transform-engine';
-// import type { TransformPipeline } from '$lib/transform/transform-pipeline';
 
 // Type definitions for public API
 

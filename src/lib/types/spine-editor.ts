@@ -271,24 +271,6 @@ export interface PreviewErrorEvent {
 }
 
 /**
- * Transform pipeline interface for dependency injection
- */
-export interface ITransformPipeline {
-  executeTransform(plainText: string): Promise<TransformResult>;
-  loadTransformScripts(): Promise<TransformScripts>;
-  cleanup(): void;
-}
-
-/**
- * Preview manager interface for dependency injection
- */
-export interface IPreviewManager {
-  updateContent(type: ContentType, content: string): void;
-  setMetadata(metadata: ChapterMetadata): void;
-  cleanup(): void;
-}
-
-/**
  * Spine item editor component props
  */
 export interface SpineItemEditorProps {
