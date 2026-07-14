@@ -1446,6 +1446,13 @@
   onDestroy(() => {
     window.removeEventListener('seed:source-files-changed', handleSourceFilesChanged);
 
+    // Cancel the preview manager's pending debounce and invalidate any
+    // in-flight render, so nothing persists or calls back into this destroyed
+    // component. Safe now that cleanup() no longer revokes the shared
+    // app-level BlobURLManager.
+    previewManager?.cleanup();
+    previewManager = null;
+
     // Clean up file content stores
     for (const store of fileContentStores.values()) {
       store.destroy(); // Remove from text-editor-store registry
@@ -1483,6 +1490,7 @@
           // Clear previous workspace data
           selectedItem = null;
           error = null;
+          previewManager?.cleanup();
           previewManager = null;
         }
       }

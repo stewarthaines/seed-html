@@ -540,8 +540,8 @@
     if (spine.length === 0) return;
 
     const settingsService = appState!.getSettingsService();
-    // A throwaway blob manager so the regeneration pass never revokes the
-    // app-level manager's live preview URLs on cleanup.
+    // A throwaway blob manager so this pass's blob URLs are separable from the
+    // app-level manager's live preview URLs; revoked in the finally below.
     const scratchBlobs = new BlobURLManager({
       fileStorage,
       basePath: 'OEBPS',
@@ -581,6 +581,9 @@
       }
     } finally {
       manager.cleanup();
+      // The manager no longer revokes injected blob managers (it doesn't own
+      // them); this pass owns its scratch manager, so revoke it here.
+      scratchBlobs.cleanup();
     }
 
     // The regeneration pass persisted content-derived manifest properties (svg,

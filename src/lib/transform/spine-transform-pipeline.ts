@@ -41,11 +41,23 @@ export class SpineTransformPipeline {
     idref?: string,
     brokerContext?: Omit<TransformBrokerContext, 'workspaceId'>
   ): Promise<TransformResult> {
+    // Script loading is storage work, not engine communication — label its
+    // failures accordingly so debugging points at settings/SOURCE, not the
+    // iframe engine.
     try {
-      // Load and set transform scripts in engine
       const scripts = await this.loadTransformScripts();
       await this.transformEngine.setTransformScripts(scripts);
+    } catch (error) {
+      return {
+        success: false,
+        error: {
+          stage: 'scripts',
+          message: String((error as any)?.message || error),
+        },
+      };
+    }
 
+    try {
       // Execute the transform using the engine, supplying the workspace-scoped
       // file-access context (if the caller provided manifest/basePath).
       const context: TransformBrokerContext | undefined = brokerContext
@@ -73,14 +85,16 @@ export class SpineTransformPipeline {
   async executeGenerator(
     script: string,
     options: Record<string, unknown>,
-    idref?: string,
-    brokerContext?: Omit<TransformBrokerContext, 'workspaceId'>,
+    idref: string | undefined,
+    brokerContext: Omit<TransformBrokerContext, 'workspaceId'>,
     timeout = 5000
   ): Promise<string> {
+    // The context is required: substituting an empty basePath/manifest here
+    // used to run generators against a fabricated empty project and insert
+    // their (wrong) output at the caret with no error.
     const context: TransformBrokerContext = {
       workspaceId: this.workspaceId,
-      basePath: brokerContext?.basePath ?? '',
-      manifest: brokerContext?.manifest ?? [],
+      ...brokerContext,
     };
     const result = await this.transformEngine.executeGenerator(
       script,

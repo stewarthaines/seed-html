@@ -91,6 +91,19 @@ export class SpinePreviewManager {
   private currentContent: CurrentContent;
   private isTransforming = false;
   private lastTransformTime = 0;
+  // The in-flight render, so spine switches and forced updates can wait it out
+  // instead of racing it (an unawaited render persists under this.spineItemId,
+  // which a concurrent switch would have swapped to the NEW chapter).
+  private renderInFlight: Promise<void> | null = null;
+  // Bumped by cleanup(); a render that outlives its epoch must not persist or
+  // fire callbacks into a torn-down owner.
+  private renderEpoch = 0;
+  // Set when the chapter's source could not be read (missing or storage error).
+  // Until the user actually edits, a render must not persist: an empty render
+  // over hand-authored or previously saved XHTML is data loss. The batch pass
+  // in App.svelte guards this with its own hasText check; this is the
+  // interactive editor's equivalent.
+  private suppressPersist = false;
 
   // Workspace-scoped properties (immutable)
   private readonly workspaceId: string;
@@ -176,6 +189,9 @@ export class SpinePreviewManager {
    */
   updateContent(type: ContentType, content: string): void {
     this.currentContent[type] = content;
+    // A user edit is intentional content — persistence is allowed again even
+    // when the initial source read failed.
+    this.suppressPersist = false;
     this.debounceRender();
   }
 
@@ -183,24 +199,30 @@ export class SpinePreviewManager {
    * Load initial content from workspace files
    */
   async loadInitialContent(): Promise<void> {
+    // Load text content only - CSS/JS are handled by SpineView auto-save
+    const path = `SOURCE/text/${this.spineItemId}.txt`;
     try {
-      // Load text content only - CSS/JS are handled by SpineView auto-save
-      try {
-        this.currentContent.text = await this.fileStorage.readTextFile(
-          this.workspaceId,
-          `SOURCE/text/${this.spineItemId}.txt`
-        );
-      } catch {
-        // File doesn't exist yet, start with empty content
+      if (await this.fileStorage.fileExists(this.workspaceId, path)) {
+        this.currentContent.text = await this.fileStorage.readTextFile(this.workspaceId, path);
+        this.suppressPersist = false;
+      } else {
+        // No source yet (new chapter, or hand-authored XHTML with no text
+        // source): preview empty, but never persist an empty render over the
+        // chapter's stored XHTML until the user actually writes something.
         this.currentContent.text = '';
+        this.suppressPersist = true;
       }
-
-      // Remove showManifestContent() fallback - force proper text store content flow
-      // Trigger transform pipeline directly to expose text store integration issues
-      this.debounceRender();
     } catch (error) {
+      // A read/exists failure is NOT "file doesn't exist yet" — it may be a
+      // transient storage error while the real source is intact. Render from
+      // empty, block persistence, and tell the owner.
+      this.currentContent.text = '';
+      this.suppressPersist = true;
       this.handleError('initialization', error);
     }
+
+    // Trigger transform pipeline directly to expose text store integration issues
+    this.debounceRender();
   }
 
   /**
@@ -216,22 +238,14 @@ export class SpinePreviewManager {
    * (workspace manifest + base path), scoped to the active chapter via spineItemId.
    */
   async runGenerator(script: string, options: Record<string, unknown>): Promise<string> {
-    let brokerContext: { basePath: string; manifest: ManifestItem[] } | undefined;
-    try {
-      const workspace = await this.workspaceService.loadWorkspace(this.workspaceId);
-      brokerContext = {
-        basePath: workspace.pathInfo.basePath,
-        manifest: workspace.opf.manifest,
-      };
-    } catch {
-      brokerContext = undefined;
-    }
-    return this.transformPipeline.executeGenerator(
-      script,
-      options,
-      this.spineItemId,
-      brokerContext
-    );
+    // A generator without its workspace context would run against a fabricated
+    // empty manifest and insert wrong output at the caret — let the load
+    // failure propagate to the Generators panel instead.
+    const workspace = await this.workspaceService.loadWorkspace(this.workspaceId);
+    return this.transformPipeline.executeGenerator(script, options, this.spineItemId, {
+      basePath: workspace.pathInfo.basePath,
+      manifest: workspace.opf.manifest,
+    });
   }
 
   /**
@@ -257,19 +271,40 @@ export class SpinePreviewManager {
       return;
     }
 
+    this.renderInFlight = this.doRender();
+    try {
+      await this.renderInFlight;
+    } finally {
+      this.renderInFlight = null;
+    }
+  }
+
+  private async doRender(): Promise<void> {
     this.isTransforming = true;
     const startTime = performance.now();
+    // A cleanup() during one of the awaits below invalidates this render: it
+    // must neither persist nor call back into its (torn-down) owner.
+    const epoch = this.renderEpoch;
 
     try {
-      // Step 1: Auto-save modified content to storage before preview
+      // Step 1: Auto-save modified content to storage before preview. A failed
+      // save must be surfaced — the preview would otherwise keep rendering from
+      // memory while exports ship stale content, with no user-visible signal.
       if (this.config.autoSave) {
-        await this.autoSaveChangedContent();
+        const saved = await this.autoSaveChangedContent();
+        if (!saved.success) {
+          this.handleError(
+            'auto-save',
+            new Error(saved.errors.map(e => `${e.file}: ${e.error}`).join('; '))
+          );
+        }
       }
 
       // Step 2: Execute transform pipeline. Supply the workspace's manifest +
       // base path so transform scripts get the brokered file-access ctx (read
-      // manifest items, read/write SOURCE/data/). loadWorkspace is cached, so this
-      // doesn't add a real fetch to the per-keystroke render path.
+      // manifest items, read/write SOURCE/data/). NB loadWorkspace re-reads and
+      // re-parses the OPF on every call (only pathInfo is cached) — this runs
+      // per debounced render, not per keystroke, which keeps it tolerable.
       let brokerContext: { basePath: string; manifest: ManifestItem[] } | undefined;
       try {
         const workspace = await this.workspaceService.loadWorkspace(this.workspaceId);
@@ -288,6 +323,7 @@ export class SpinePreviewManager {
         this.spineItemId,
         brokerContext
       );
+      if (epoch !== this.renderEpoch) return;
 
       if (!transformResult.success) {
         this.handleError('transform', transformResult.error);
@@ -301,14 +337,18 @@ export class SpinePreviewManager {
       const metadata = await this.generateChapterMetadata();
       const { content, bodyAttributes } = this.extractBody(transformResult.html || '');
       const xhtml = generateXHTMLDocument(content, metadata, bodyAttributes);
+      if (epoch !== this.renderEpoch) return;
 
-      // Step 4: Save XHTML as spine item content to manifest
-      if (this.config.persistToManifest) {
+      // Step 4: Save XHTML as spine item content to manifest (unless the
+      // chapter's source was unreadable and the user hasn't edited yet — see
+      // suppressPersist).
+      if (this.config.persistToManifest && !this.suppressPersist) {
         await this.saveXHTMLToManifest(xhtml);
       }
 
       // Step 5: Process XHTML for blob URL substitution (preview only)
       const processedXHTML = await this.blobURLManager.processXHTMLForPreview(xhtml);
+      if (epoch !== this.renderEpoch) return;
 
       const executionTime = performance.now() - startTime;
       this.lastTransformTime = executionTime;
@@ -321,7 +361,9 @@ export class SpinePreviewManager {
         timestamp: Date.now(),
       });
     } catch (error) {
-      this.handleError('preview', error);
+      if (epoch === this.renderEpoch) {
+        this.handleError('preview', error);
+      }
     } finally {
       this.isTransforming = false;
     }
@@ -389,8 +431,10 @@ export class SpinePreviewManager {
       // Analyze XHTML for content-derived manifest properties (svg, mathml)
       await this.updateContentProperties(xhtml, workspace, manifestItem);
     } catch (error) {
-      // Log manifest save errors but don't block preview
-      console.warn('Failed to save XHTML to manifest:', error);
+      // Don't block the preview, but DO tell the owner: a swallowed write
+      // failure here means the on-screen preview and the packaged EPUB
+      // silently diverge.
+      this.handleError('persistence', error);
     }
   }
 
@@ -537,7 +581,10 @@ export class SpinePreviewManager {
   }
 
   /**
-   * Force immediate preview update (bypasses debounce)
+   * Force immediate preview update (bypasses debounce). Waits out an in-flight
+   * render first, so callers can rely on "resolved means a render with the
+   * current content completed" — previously a busy manager just re-queued a
+   * debounce and this resolved without rendering.
    */
   async forcePreviewUpdate(): Promise<void> {
     if (this.debounceTimer) {
@@ -545,6 +592,9 @@ export class SpinePreviewManager {
       this.debounceTimer = undefined;
     }
 
+    while (this.renderInFlight) {
+      await this.renderInFlight.catch(() => {});
+    }
     await this.renderPreview();
   }
 
@@ -559,8 +609,15 @@ export class SpinePreviewManager {
       this.debounceTimer = undefined;
     }
 
-    // Reset transform state
-    this.isTransforming = false;
+    // Wait out an in-flight render BEFORE swapping the spine context. The
+    // render reads this.spineItemId again when it persists; swapping mid-flight
+    // wrote the old chapter's output into the new chapter's file. (Previously
+    // this also force-reset isTransforming, letting a third render start while
+    // the parked one still held the pipeline.)
+    while (this.renderInFlight) {
+      await this.renderInFlight.catch(() => {});
+    }
+
     this.lastTransformTime = 0;
 
     // Update spine-scoped context
@@ -572,17 +629,18 @@ export class SpinePreviewManager {
       text: '',
     };
 
-    // Load initial content for new spine item
-    try {
-      await this.loadInitialContent();
-    } catch (error) {
-      console.warn('Failed to load initial content for spine item switch:', error);
-      // Continue - this is not critical, content will load on first edit
-    }
+    // Load initial content for new spine item (read failures are handled and
+    // surfaced inside loadInitialContent; content loads on first edit)
+    await this.loadInitialContent();
   }
 
   /**
-   * Cleanup resources when editor is closed
+   * Cleanup when the editor is closed: cancels the pending debounce and
+   * invalidates any in-flight render (it finishes its awaits but no longer
+   * persists or calls back). Does NOT revoke the injected BlobURLManager —
+   * the manager doesn't own it; the owner revokes it (SpineView shares the
+   * app-level manager whose preview URLs must stay live, App's batch pass
+   * revokes its own scratch manager).
    */
   cleanup(): void {
     // Clear debounce timer
@@ -591,11 +649,11 @@ export class SpinePreviewManager {
       this.debounceTimer = undefined;
     }
 
+    // Invalidate any in-flight render
+    this.renderEpoch++;
+
     // Cleanup transform pipeline
     this.transformPipeline.cleanup();
-
-    // Cleanup blob URL manager
-    this.blobURLManager.cleanup();
 
     // Reset state
     this.isTransforming = false;
