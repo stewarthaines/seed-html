@@ -7,10 +7,30 @@
  *
  * Click — or Enter/Space, once the script has promoted the span to a button —
  * toggles playback of the clip's [begin, end) range; starting one clip stops any
- * other. One shared <audio> per source file. data-src is the OPF-relative href
- * and chapters live one level below the OPF (Text/), so it resolves via '../' —
- * except when it's already absolute: the authoring preview rewrites data-src to
- * a blob: URL, which passes through untouched.
+ * other.
+ *
+ * Design (profiled on real reading systems with audio support):
+ *
+ * - ONE audio element for the whole page, however many clips it defines.
+ *   Reading systems multiply media pipelines and preload buffers per <audio>
+ *   element; a single shared element keeps the page cheap. Clips from another
+ *   source file swap the element's src (costing a re-buffer on alternation —
+ *   the right trade against element multiplication). The element lives hidden
+ *   in the DOM, not detached, so document-level pause sweeps can reach it.
+ *
+ * - Playback is sequenced by the media element's OWN events, never timers:
+ *   set src → 'loadedmetadata' → seek to begin → 'seeked' → play(), and the
+ *   clip end is enforced on 'timeupdate'. Each step waits for the pipeline to
+ *   actually be ready, which is what makes seeking dependable on slow readers.
+ *
+ * - Encode clip audio at a CONSTANT bit rate (CBR). VBR mp3 seeking is
+ *   unreliable in the iOS Books app; CBR mp3 (e.g. via Audacity) keeps files
+ *   small and seeks accurately. Books reports only 'maybe' support for
+ *   audio/mpeg and audio/mp4 — mp3 and m4a — and both behave with CBR.
+ *
+ * data-src is the OPF-relative href and chapters live one level below the OPF
+ * (Text/), so it resolves via '../' — except when it already carries a scheme:
+ * the authoring preview rewrites data-src to a blob: URL, which passes through.
  *
  * Progressive enhancement: without JavaScript the span is plain styled text
  * (clip.css keys its play affordance on the role attribute this script adds).
@@ -33,43 +53,70 @@
     return /^[a-z][a-z0-9+.-]*:/i.test(src) ? src : '../' + src;
   }
 
-  var players = {}; // data-src → shared HTMLAudioElement
-  var active = null; // { span, audio, end } for the clip now playing
+  var audio = null; // THE page's one shared audio element, created on demand
+  var active = null; // { span, begin, end } for the clip now playing
+  var seekPlayPending = false; // play() is owed once the begin-seek completes
+
+  function ensureAudio() {
+    if (audio) return audio;
+    audio = document.createElement('audio');
+    audio.preload = 'auto';
+    audio.hidden = true;
+    audio.setAttribute('aria-hidden', 'true');
+
+    // New source ready → position at the active clip's begin ('seeked' follows).
+    audio.addEventListener('loadedmetadata', function () {
+      if (active) audio.currentTime = active.begin;
+    });
+
+    // Seek complete → the pipeline is positioned; NOW play.
+    audio.addEventListener('seeked', function () {
+      if (active && seekPlayPending && audio.paused) {
+        seekPlayPending = false;
+        var playing = audio.play();
+        if (playing && playing.catch) playing.catch(stop);
+      }
+    });
+
+    // The clip end is a position on the media timeline, not a wall-clock timer.
+    audio.addEventListener('timeupdate', function () {
+      if (active && audio.currentTime >= active.end) stop();
+    });
+    audio.addEventListener('ended', stop);
+    audio.addEventListener('error', stop);
+
+    // Courtesy to any other audio the page carries (e.g. authored <audio>
+    // elements): starting a clip silences them so only one thing plays.
+    audio.addEventListener('play', function () {
+      var others = document.querySelectorAll('audio');
+      for (var i = 0; i < others.length; i++) {
+        if (others[i] !== audio) others[i].pause();
+      }
+    });
+
+    (document.body || document.documentElement).appendChild(audio);
+    return audio;
+  }
 
   function stop() {
+    seekPlayPending = false;
+    if (audio) audio.pause();
     if (!active) return;
-    active.audio.pause();
     active.span.classList.remove('clip-playing');
     active.span.style.removeProperty('--clip-duration');
     active = null;
   }
 
   function play(span) {
-    var src = span.getAttribute('data-src');
-    var audio = players[src];
-    if (!audio) {
-      // A real (hidden) DOM element, not `new Audio(...)`: a detached playing
-      // Audio object outlives any "pause everything in the document" sweep —
-      // in the authoring preview a re-render replaced the clip's control while
-      // the sound played on. In the DOM it renders nothing (no controls) but
-      // stays reachable.
-      audio = document.createElement('audio');
-      audio.src = resolveSrc(src);
-      audio.preload = 'auto';
-      audio.hidden = true;
-      audio.setAttribute('aria-hidden', 'true');
-      audio.addEventListener('timeupdate', function () {
-        if (active && active.audio === audio && audio.currentTime >= active.end) stop();
-      });
-      audio.addEventListener('ended', stop);
-      (document.body || document.documentElement).appendChild(audio);
-      players[src] = audio;
-    }
+    var el = ensureAudio();
+    var src = resolveSrc(span.getAttribute('data-src'));
     var begin = toSeconds(span.getAttribute('data-begin'));
     var end = toSeconds(span.getAttribute('data-end'));
     var rate = parseFloat(span.getAttribute('data-rate')) || 1;
-    audio.currentTime = begin;
-    audio.playbackRate = rate;
+
+    active = { span: span, begin: begin, end: end };
+    el.playbackRate = rate;
+
     // Publish the clip's wall-clock duration for the progress indicators
     // (transformClipProgress.js / clip.css) — the player itself has no idea
     // how progress is drawn; CSS animations keyed on .clip-playing pick the
@@ -78,10 +125,24 @@
     if (isFinite(duration) && duration > 0) {
       span.style.setProperty('--clip-duration', duration + 's');
     }
-    active = { span: span, audio: audio, end: end };
     span.classList.add('clip-playing');
-    var playing = audio.play();
-    if (playing && playing.catch) playing.catch(stop);
+
+    // The event chain takes it from here: src change → loadedmetadata → seek;
+    // seek (either path) → seeked → play.
+    seekPlayPending = true;
+    if (el.getAttribute('src') !== src) {
+      el.setAttribute('src', src);
+    } else if (el.readyState >= 1 /* HAVE_METADATA */) {
+      el.currentTime = begin;
+      // Some engines skip the seek (and its 'seeked') when already positioned
+      // at begin — don't leave the play() owed forever.
+      if (!el.seeking) {
+        seekPlayPending = false;
+        var playing = el.play();
+        if (playing && playing.catch) playing.catch(stop);
+      }
+    }
+    // else: src already set but metadata still loading — loadedmetadata seeks.
   }
 
   function toggle(span) {
