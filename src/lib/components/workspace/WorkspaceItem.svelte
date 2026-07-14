@@ -233,6 +233,14 @@
     flex-shrink: 0;
   }
 
+  /* Full-height cover: the fixed-size thumbnail bleeds through the row's
+     vertical padding to sit flush with the card's top/bottom edges (it sets
+     the row height), inset half a step from the left so the current-project
+     bar stays visible. */
+  .workspace-icon-container:has(.workspace-cover) {
+    margin: calc(-1 * var(--space-4)) 0 calc(-1 * var(--space-4)) calc(-1 * var(--space-2));
+  }
+
   .workspace-icon {
     font-size: 1.5rem;
     display: block;
@@ -240,10 +248,11 @@
 
   .workspace-cover {
     display: block;
-    width: 2rem;
-    height: 3rem;
+    width: 4rem;
+    aspect-ratio: 2 / 3;
+    /* Thumbnails keep their source proportions (image-thumbnail.ts) — crop
+       non-2:3 covers to fill the tile instead of distorting them. */
     object-fit: cover;
-    border-radius: var(--radius-xs);
   }
 
   .workspace-icon.error {

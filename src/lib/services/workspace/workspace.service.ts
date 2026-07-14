@@ -244,7 +244,7 @@ export class WorkspaceService {
     const existing = readEntry(id);
     const base = existing && entryFreshFor(existing, slot.opfMtime) ? existing : undefined;
     writeEntry(id, {
-      v: 1,
+      v: 2,
       opfMtime: slot.opfMtime,
       info: slot.info
         ? {

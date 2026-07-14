@@ -175,7 +175,7 @@ describe('WorkspaceService.listWorkspaces (parallel, metadata-only)', () => {
     await service.getWorkspaceRowDetails('ws-a');
     localStorage.setItem(
       'seedhtml_projcache_ws-gone',
-      JSON.stringify({ v: 1, opfMtime: 1, rowMeta: { fileCount: 1, readOnly: false } })
+      JSON.stringify({ v: 2, opfMtime: 1, rowMeta: { fileCount: 1, readOnly: false } })
     );
 
     await service.listWorkspaces();

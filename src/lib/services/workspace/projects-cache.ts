@@ -12,7 +12,9 @@
 
 const PROJECTS_CACHE_PREFIX = 'seedhtml_projcache_';
 
-const ENTRY_VERSION = 1;
+// v2: cover thumbnails rendered at 256px / JPEG for the full-height project card
+// (v1 thumbs were 128px PNG — too soft at the new display size).
+const ENTRY_VERSION = 2;
 
 /** Thumbnails above this many characters (~48KB of base64) are not persisted. */
 export const MAX_THUMB_CHARS = 64_000;
@@ -21,7 +23,7 @@ export const MAX_THUMB_CHARS = 64_000;
 export const TOTAL_BUDGET_CHARS = 3_000_000;
 
 export interface ProjectsCacheEntry {
-  v: 1;
+  v: 2;
   opfMtime: number;
   /** Serializable WorkspaceInfo subset (lastModified as epoch ms). */
   info?: {

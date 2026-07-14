@@ -12,7 +12,7 @@ import {
 } from './projects-cache.js';
 
 const entry = (overrides: Partial<ProjectsCacheEntry> = {}): ProjectsCacheEntry => ({
-  v: 1,
+  v: 2,
   opfMtime: 1000,
   rowMeta: { fileCount: 12, extensionIds: ['abc2svg'], readOnly: false },
   ...overrides,
