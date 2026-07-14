@@ -1,314 +1,370 @@
-import { describe, it, beforeEach, afterEach, vi } from 'vitest';
+/**
+ * Unit tests for the navigation store — the reference implementation of the
+ * state-persistence pattern (localStorage keys, restore-on-init, self-healing
+ * on corrupt state).
+ *
+ * The store is a module-level singleton that initializes on import, so every
+ * test gets a fresh instance via vi.resetModules() + dynamic import, seeding
+ * localStorage BEFORE the import when testing restoration.
+ */
 
-// Mock layout store before any imports
-vi.mock('../stores/layout', () => ({
-  layoutStore: {
-    setSidebarSection: vi.fn(),
-    subscribe: vi.fn(() => vi.fn()), // Return unsubscribe function
-  },
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { get } from 'svelte/store';
+import type { NavigationStore, ViewType } from './types';
+
+const layoutMock = vi.hoisted(() => ({
+  setSidebarSection: vi.fn(),
+  subscribe: vi.fn(() => vi.fn()),
 }));
 
-// Mock localStorage
-const mockLocalStorage = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-};
+vi.mock('../stores/layout', () => ({ layoutStore: layoutMock }));
 
-describe('Navigation Store', () => {
-  beforeEach(() => {
-    // Reset all mocks
-    vi.clearAllMocks();
+const KEYS = {
+  CURRENT_VIEW: 'seedhtml_nav_current_view',
+  VIEW_HISTORY: 'seedhtml_nav_view_history',
+  VIEW_DATA: 'seedhtml_nav_view_data',
+} as const;
 
-    // Mock localStorage
-    Object.defineProperty(window, 'localStorage', {
-      value: mockLocalStorage,
-      writable: true,
-    });
+/** Fresh singleton; initialize() runs on import and reads localStorage. */
+async function freshStore(): Promise<NavigationStore> {
+  vi.resetModules();
+  const mod = await import('./navigation-store');
+  return mod.navigationStore;
+}
 
-    // Default localStorage behavior
-    mockLocalStorage.getItem.mockReturnValue(null);
-    mockLocalStorage.setItem.mockImplementation(() => undefined);
-    mockLocalStorage.removeItem.mockImplementation(() => undefined);
+beforeEach(() => {
+  localStorage.clear();
+  vi.clearAllMocks();
+});
+
+describe('initialize', () => {
+  it('defaults to the about view with empty storage', async () => {
+    const store = await freshStore();
+    const state = get(store);
+
+    expect(state.currentView).toBe('about');
+    expect(state.viewHistory).toEqual(['about']);
+    expect(state.previousView).toBeNull();
+    expect(state.canNavigateBack).toBe(false);
+    expect(state.canNavigateForward).toBe(false);
+    expect(state.isTransitioning).toBe(false);
   });
 
-  afterEach(() => {
-    vi.clearAllMocks();
+  it('restores view, history, and view data from localStorage', async () => {
+    localStorage.setItem(KEYS.CURRENT_VIEW, 'metadata');
+    localStorage.setItem(KEYS.VIEW_HISTORY, JSON.stringify(['about', 'metadata']));
+    localStorage.setItem(KEYS.VIEW_DATA, JSON.stringify({ metadata: { tab: 'advanced' } }));
+
+    const store = await freshStore();
+    const state = get(store);
+
+    expect(state.currentView).toBe('metadata');
+    expect(state.viewHistory).toEqual(['about', 'metadata']);
+    expect(state.previousView).toBe('about');
+    expect(state.canNavigateBack).toBe(true);
+    expect(store.getViewData('metadata')).toEqual({ tab: 'advanced' });
   });
 
-  describe('State Management', () => {
-    it('should have correct initial state', () => {
-      // Test will verify default state matches API specification
-      const _expectedInitialState = {
-        currentView: 'workspace',
-        previousView: null,
-        viewHistory: ['workspace'],
-        viewData: {},
-        isTransitioning: false,
-        canNavigateBack: false,
-        canNavigateForward: false,
-      };
-      // Implementation will be tested against this structure
-    });
+  it('falls back to defaults when the saved view is not a valid view type', async () => {
+    localStorage.setItem(KEYS.CURRENT_VIEW, 'not-a-view');
 
-    it('should navigate to valid views', async () => {
-      // Test basic navigation functionality
-      // Verify currentView updates correctly
-      // Verify history is maintained
-      // Verify previousView is set
-    });
+    const store = await freshStore();
 
-    it('should update view history correctly', async () => {
-      // Test history push vs replace operations
-      // Navigate: workspace -> metadata -> manifest
-      // Verify history array contains all views
-      // Test replaceHistory option
-    });
-
-    it('should handle rapid navigation calls', async () => {
-      // Test concurrent navigation attempts
-      // Only the last navigation should succeed
-      // Prevent race conditions in state updates
-    });
-
-    it('should restore state from localStorage on initialization', () => {
-      // Mock stored navigation state
-      const storedState = {
-        currentView: 'metadata',
-        viewHistory: ['workspace', 'metadata'],
-      };
-      mockLocalStorage.getItem.mockReturnValue(JSON.stringify(storedState));
-
-      // Test that store initializes with stored state
-      // Verify state restoration works correctly
-    });
-
-    it('should handle navigation direction flags', async () => {
-      // Navigate forward: workspace -> metadata -> manifest
-      // Test canNavigateBack becomes true
-      // Navigate back: manifest -> metadata
-      // Test canNavigateForward becomes true
-      // Test edge cases (beginning/end of history)
-    });
-
-    it('should handle invalid view types gracefully', async () => {
-      // Test navigation to non-existent view
-      // Should reject or fallback to default view
-      // Should not corrupt store state
-    });
+    expect(get(store).currentView).toBe('about');
   });
 
-  describe('Navigation Guards', () => {
-    it('should register and remove guards correctly', () => {
-      // Test addNavigationGuard returns unique ID
-      // Test removeNavigationGuard with valid/invalid IDs
-      // Verify guard cleanup
-    });
+  it('rejects a saved history containing invalid view types', async () => {
+    localStorage.setItem(KEYS.VIEW_HISTORY, JSON.stringify(['about', 'bogus']));
 
-    it('should execute guards before navigation', async () => {
-      // Register guard that returns true
-      // Verify guard is called with correct from/to views
-      // Verify navigation proceeds when guard allows
-    });
+    const store = await freshStore();
 
-    it('should block navigation when guard returns false', async () => {
-      // Register guard that returns false
-      // Verify navigation is blocked
-      // Verify store state remains unchanged
-      // Verify navigateTo returns false
-    });
-
-    it('should handle async guards correctly', async () => {
-      // Register async guard with delay
-      // Verify isTransitioning flag during guard execution
-      // Verify navigation waits for guard resolution
-    });
-
-    it('should execute multiple guards in registration order', async () => {
-      // Register multiple guards
-      // Verify execution order
-      // Test early termination when guard fails
-    });
-
-    it('should handle guard execution errors', async () => {
-      // Register guard that throws error
-      // Verify error is caught and logged
-      // Verify navigation is blocked on guard error
-      // Verify store state remains stable
-    });
-
-    it('should bypass guards with force option', async () => {
-      // Register guard that returns false
-      // Navigate with { force: true }
-      // Verify navigation succeeds despite guard
-    });
+    expect(get(store).viewHistory).toEqual(['about']);
   });
 
-  describe('View Data Management', () => {
-    it('should store and retrieve view data', () => {
-      // Test setViewData with various data types
-      // Test getViewData returns correct data
-      // Test data isolation between views
-    });
+  it('survives corrupt JSON in storage and uses defaults', async () => {
+    localStorage.setItem(KEYS.VIEW_HISTORY, '{not json');
+    localStorage.setItem(KEYS.VIEW_DATA, '{not json');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-    it('should handle view data for all view types', () => {
-      // Test data storage for each ViewType
-      // Verify data doesn't interfere between views
-      // Test data persistence across navigation
-    });
+    const store = await freshStore();
+    const state = get(store);
 
-    it('should clear view data correctly', () => {
-      // Set data for multiple views
-      // Clear specific view data
-      // Verify only target view data is cleared
-    });
-
-    it('should handle invalid view types in data operations', () => {
-      // Test setViewData with invalid view
-      // Test getViewData with invalid view
-      // Should not crash or corrupt state
-    });
+    expect(state.viewHistory).toEqual(['about']);
+    expect(state.viewData).toEqual({});
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 
-  describe('History Navigation', () => {
-    it('should navigate back through history', async () => {
-      // Navigate: workspace -> metadata -> manifest
-      // Call goBack()
-      // Verify currentView is metadata
-      // Verify history position is correct
-    });
+  it('syncs the restored view to the layout store', async () => {
+    localStorage.setItem(KEYS.CURRENT_VIEW, 'spine');
 
-    it('should navigate forward through history', async () => {
-      // Navigate back, then forward
-      // Verify forward navigation works
-      // Test canNavigateForward flag
-    });
+    await freshStore();
 
-    it('should handle back/forward at history boundaries', async () => {
-      // Test goBack() at beginning of history
-      // Test goForward() at end of history
-      // Should return false and not change state
-    });
-
-    it('should respect guards during history navigation', async () => {
-      // Register guard that blocks navigation
-      // Test that goBack() is also blocked
-      // Verify history navigation follows guard rules
-    });
-  });
-
-  describe('Error Handling', () => {
-    it('should handle localStorage failures gracefully', () => {
-      // Mock localStorage.setItem to throw error
-      // Verify store continues to function
-      // Verify fallback to in-memory storage
-    });
-
-    it('should recover from corrupted stored state', () => {
-      // Mock invalid JSON in localStorage
-      // Verify store initializes with default state
-      // Should not throw errors
-    });
-
-    it('should handle guard removal during navigation', async () => {
-      // Register guard, start navigation, remove guard mid-process
-      // Verify graceful handling of missing guards
-      // Should not affect navigation outcome
-    });
-
-    it('should maintain state consistency during errors', async () => {
-      // Simulate various error conditions
-      // Verify store state remains valid
-      // Test state recovery mechanisms
-    });
-  });
-
-  describe('Layout Store Synchronization', () => {
-    it('should sync navigation changes to layout store', async () => {
-      // Navigate to different view
-      // Verify layoutStore.setSidebarSection was called
-      // Verify correct view parameter passed
-    });
-
-    it('should handle layout store subscription', () => {
-      // Test that navigation store subscribes to layout changes
-      // Simulate layout store activeSection change
-      // Verify navigation store responds appropriately
-    });
-
-    it('should prevent infinite sync loops', () => {
-      // Test bidirectional sync doesn't create loops
-      // Navigation change -> layout change -> navigation change
-      // Should stabilize after first sync
-    });
-  });
-
-  describe('Store Interface', () => {
-    it('should implement Svelte store interface', () => {
-      // Verify subscribe, set, update methods exist
-      // Test store reactivity
-      // Verify proper TypeScript typing
-    });
-
-    it('should provide all required navigation methods', () => {
-      // Verify all API methods are available
-      // Test method signatures match API documentation
-    });
-
-    it('should handle store subscription and unsubscription', () => {
-      // Test multiple subscribers
-      // Test subscriber notification on state changes
-      // Test subscription cleanup
-    });
-  });
-
-  describe('Performance Considerations', () => {
-    it('should limit view history size', async () => {
-      // Navigate through many views (>20)
-      // Verify history is trimmed to reasonable size
-      // Verify oldest entries are removed
-    });
-
-    it('should handle large view data efficiently', () => {
-      // Store large objects in view data
-      // Verify memory usage doesn't grow unbounded
-      // Test data cleanup on navigation
-    });
-
-    it('should debounce rapid navigation attempts', async () => {
-      // Trigger multiple navigation calls rapidly
-      // Verify only final navigation takes effect
-      // Test performance under load
-    });
+    expect(layoutMock.setSidebarSection).toHaveBeenCalledWith('spine');
   });
 });
 
-// Integration test helpers (for when implementation is added)
-describe('Navigation Store Integration Helpers', () => {
-  it('should provide test utilities for component integration', () => {
-    // Test helper functions for mocking navigation store
-    // Utilities for testing view components
-    // Mock factories for common test scenarios
+describe('navigateTo', () => {
+  it('updates the view, pushes history, and persists both keys', async () => {
+    const store = await freshStore();
+
+    const ok = await store.navigateTo('workspace');
+    const state = get(store);
+
+    expect(ok).toBe(true);
+    expect(state.currentView).toBe('workspace');
+    expect(state.previousView).toBe('about');
+    expect(state.viewHistory).toEqual(['about', 'workspace']);
+    expect(state.canNavigateBack).toBe(true);
+    expect(state.isTransitioning).toBe(false);
+    expect(localStorage.getItem(KEYS.CURRENT_VIEW)).toBe('workspace');
+    expect(JSON.parse(localStorage.getItem(KEYS.VIEW_HISTORY)!)).toEqual(['about', 'workspace']);
+  });
+
+  it('rejects an invalid view type without touching state', async () => {
+    const store = await freshStore();
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const ok = await store.navigateTo('nonsense' as ViewType);
+
+    expect(ok).toBe(false);
+    expect(get(store).currentView).toBe('about');
+    error.mockRestore();
+  });
+
+  it('is a no-op returning true when already on the target view', async () => {
+    const store = await freshStore();
+
+    const ok = await store.navigateTo('about');
+
+    expect(ok).toBe(true);
+    expect(get(store).viewHistory).toEqual(['about']);
+  });
+
+  it('replaces the last history entry with replaceHistory', async () => {
+    const store = await freshStore();
+    await store.navigateTo('workspace');
+
+    await store.navigateTo('settings', { replaceHistory: true });
+
+    expect(get(store).viewHistory).toEqual(['about', 'settings']);
+  });
+
+  it('stores viewData passed with the navigation', async () => {
+    const store = await freshStore();
+
+    await store.navigateTo('manifest', { viewData: { filter: 'images' } });
+
+    expect(store.getViewData('manifest')).toEqual({ filter: 'images' });
+  });
+
+  it('caps history at 20 entries', async () => {
+    const store = await freshStore();
+    const views: ViewType[] = ['workspace', 'metadata'];
+    for (let i = 0; i < 25; i++) {
+      await store.navigateTo(views[i % 2]);
+    }
+
+    const state = get(store);
+    expect(state.viewHistory.length).toBeLessThanOrEqual(20);
+    expect(state.currentView).toBe(views[24 % 2]);
+  });
+
+  it('syncs the new view to the layout store', async () => {
+    const store = await freshStore();
+    layoutMock.setSidebarSection.mockClear();
+
+    await store.navigateTo('publish');
+
+    expect(layoutMock.setSidebarSection).toHaveBeenCalledWith('publish');
+  });
+
+  it('dispatches clear-spine-selection when leaving the spine view', async () => {
+    const store = await freshStore();
+    await store.navigateTo('spine');
+    const listener = vi.fn();
+    window.addEventListener('clear-spine-selection', listener);
+
+    await store.navigateTo('about');
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    window.removeEventListener('clear-spine-selection', listener);
+  });
+
+  it('still navigates when localStorage writes fail', async () => {
+    const store = await freshStore();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const setItem = vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+      throw new Error('quota exceeded');
+    });
+
+    const ok = await store.navigateTo('workspace');
+
+    expect(ok).toBe(true);
+    expect(get(store).currentView).toBe('workspace');
+    expect(warn).toHaveBeenCalled();
+    setItem.mockRestore();
+    warn.mockRestore();
   });
 });
 
-// Tests that will be skipped in favor of Storybook coverage
-describe('Visual Integration (Tested in Storybook)', () => {
-  it.skip('should integrate with view components visually', () => {
-    // Visual testing handled by Storybook
-    // Component lifecycle integration
-    // Theme system integration
+describe('history navigation', () => {
+  it('goBack returns to the previous view and enables goForward', async () => {
+    const store = await freshStore();
+    await store.navigateTo('workspace');
+    await store.navigateTo('metadata');
+
+    const ok = await store.goBack();
+    const state = get(store);
+
+    expect(ok).toBe(true);
+    expect(state.currentView).toBe('workspace');
+    expect(state.canNavigateForward).toBe(true);
+    expect(state.canNavigateBack).toBe(true);
   });
 
-  it.skip('should handle view transitions smoothly', () => {
-    // Animation testing in Storybook
-    // Visual feedback testing
-    // Real browser behavior testing
+  it('goForward re-enters the view left by goBack', async () => {
+    const store = await freshStore();
+    await store.navigateTo('workspace');
+    await store.goBack();
+
+    const ok = await store.goForward();
+
+    expect(ok).toBe(true);
+    expect(get(store).currentView).toBe('workspace');
+    expect(get(store).canNavigateForward).toBe(false);
   });
 
-  it.skip('should work with real localStorage', () => {
-    // Real browser storage testing in Storybook
-    // Cross-session persistence testing
+  it('goBack at the start of history returns false', async () => {
+    const store = await freshStore();
+
+    expect(await store.goBack()).toBe(false);
+    expect(get(store).currentView).toBe('about');
+  });
+
+  it('goForward with no forward history returns false', async () => {
+    const store = await freshStore();
+    await store.navigateTo('workspace');
+
+    expect(await store.goForward()).toBe(false);
+  });
+
+  it('navigating after goBack truncates the forward history', async () => {
+    const store = await freshStore();
+    await store.navigateTo('workspace');
+    await store.navigateTo('metadata');
+    await store.goBack();
+
+    await store.navigateTo('settings');
+    const state = get(store);
+
+    expect(state.viewHistory).toEqual(['about', 'workspace', 'settings']);
+    expect(state.canNavigateForward).toBe(false);
+  });
+});
+
+describe('navigation guards', () => {
+  it('runs guards with from/to and navigates when they allow', async () => {
+    const store = await freshStore();
+    const guard = vi.fn().mockResolvedValue(true);
+    store.addNavigationGuard(guard);
+
+    const ok = await store.navigateTo('workspace');
+
+    expect(ok).toBe(true);
+    expect(guard).toHaveBeenCalledWith('about', 'workspace');
+  });
+
+  it('blocks navigation when a guard returns false', async () => {
+    const store = await freshStore();
+    store.addNavigationGuard(() => false);
+
+    const ok = await store.navigateTo('workspace');
+    const state = get(store);
+
+    expect(ok).toBe(false);
+    expect(state.currentView).toBe('about');
+    expect(state.isTransitioning).toBe(false);
+  });
+
+  it('blocks navigation when a guard throws', async () => {
+    const store = await freshStore();
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    store.addNavigationGuard(() => {
+      throw new Error('guard exploded');
+    });
+
+    expect(await store.navigateTo('workspace')).toBe(false);
+    expect(get(store).currentView).toBe('about');
+    error.mockRestore();
+  });
+
+  it('force bypasses guards', async () => {
+    const store = await freshStore();
+    const guard = vi.fn().mockResolvedValue(false);
+    store.addNavigationGuard(guard);
+
+    const ok = await store.navigateTo('workspace', { force: true });
+
+    expect(ok).toBe(true);
+    expect(guard).not.toHaveBeenCalled();
+    expect(get(store).currentView).toBe('workspace');
+  });
+
+  it('removed guards no longer run', async () => {
+    const store = await freshStore();
+    const guard = vi.fn().mockReturnValue(false);
+    const id = store.addNavigationGuard(guard);
+
+    expect(store.removeNavigationGuard(id)).toBe(true);
+    expect(await store.navigateTo('workspace')).toBe(true);
+    expect(guard).not.toHaveBeenCalled();
+    expect(store.removeNavigationGuard('guard_nope')).toBe(false);
+  });
+
+  it('canNavigate consults guards without navigating', async () => {
+    const store = await freshStore();
+    store.addNavigationGuard((_from, to) => to !== 'publish');
+
+    expect(await store.canNavigate('workspace')).toBe(true);
+    expect(await store.canNavigate('publish')).toBe(false);
+    expect(get(store).currentView).toBe('about');
+  });
+});
+
+describe('view data', () => {
+  it('round-trips view data and persists it', async () => {
+    const store = await freshStore();
+
+    store.setViewData('spine', { itemId: 'chapter-2' });
+
+    expect(store.getViewData('spine')).toEqual({ itemId: 'chapter-2' });
+    expect(JSON.parse(localStorage.getItem(KEYS.VIEW_DATA)!)).toEqual({
+      spine: { itemId: 'chapter-2' },
+    });
+  });
+
+  it('clearViewData removes the entry and updates storage', async () => {
+    const store = await freshStore();
+    store.setViewData('spine', { itemId: 'chapter-2' });
+    store.setViewData('metadata', { tab: 'basic' });
+
+    store.clearViewData('spine');
+
+    expect(store.getViewData('spine')).toBeNull();
+    expect(JSON.parse(localStorage.getItem(KEYS.VIEW_DATA)!)).toEqual({
+      metadata: { tab: 'basic' },
+    });
+  });
+
+  it('rejects invalid view types', async () => {
+    const store = await freshStore();
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    store.setViewData('bogus' as ViewType, { x: 1 });
+
+    expect(store.getViewData('bogus' as ViewType)).toBeNull();
+    expect(localStorage.getItem(KEYS.VIEW_DATA)).toBeNull();
+    error.mockRestore();
   });
 });
