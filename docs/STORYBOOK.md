@@ -26,10 +26,12 @@ The Storybook toolbar includes a 🌍 globe icon for testing internationalizatio
 
 ```
 src/stories/
-├── Application/          # Complete app demonstrations
-├── Backend/             # Backend feature demos (non-UI)
-├── Components/          # Individual UI components
-└── Features/           # Feature development stories
+├── *.stories.svelte      # App-level demos and component demos (root)
+├── manifest/             # Component-demo stories (manifest preview)
+├── preview/              # Component-demo stories (content preview matrix)
+├── manual-shots/         # Screenshot state recipes for the manuals
+├── workflows/            # Seeded end-to-end author workflows
+└── utils/                # seed-project harness, mock factories
 ```
 
 ## Story Categories & Patterns
@@ -279,13 +281,26 @@ npm run test:stories  # Run Storybook tests with Vitest
 ## Reference Examples
 
 - **Seeded workflow story**: `src/stories/workflows/EditAndPackage.stories.svelte`
+- **Regression-guard workflow story** (storage-handle assertions, settings + live-edit invalidation): `src/stories/workflows/TransformPipeline.stories.svelte`
 - **Seeded app tour**: `src/stories/NavigationRouter.stories.svelte`
 - **Full-app visual states**: `src/stories/App.visual.stories.svelte` (first-run + seeded project)
 - **Real-component states**: `src/stories/preview/ContentPreview.stories.svelte` (device/responsive matrix)
 
-## Division of labour (settled 2026-07)
+## Story coverage policy: workflow-first (settled 2026-07)
 
-Unit tests in `src/lib/**/*.test.ts` are the coverage of record for backend behavior. Storybook is for what unit tests can't show: **visual states of real components**, **seeded end-to-end workflows** (the `seedProject` harness + full App), and **capture** (screenshots/videos of `capture`-tagged stories). The nine mock-driven backend demos were retired on these grounds — they passed their tests but duplicated unit-tested behavior against mocks that drift. Don't reintroduce mock-backed backend demos; write a unit test, or a seeded story that drives the real thing.
+Storybook in this project is a **workflow harness and a docs tool, not a component catalog**. This is a deliberate decision, made after the 2026-07 quality campaign, between two philosophies:
+
+1. **Component catalog** — a story per component, states enumerated in isolation. Rejected: most of this app's ~100 components are deeply service-coupled (storage, workspace, transform engine), so isolating them means building and maintaining dozens of demo wrappers whose mocks drift from real usage — the same hollow-coverage failure mode that got the mock-driven backend demos retired.
+2. **Workflow-first** — stories seed a real project, mount the full `App`, drive a real author workflow with `play()`, and assert outcomes through the storage handle. Adopted: zero mocking, real integration coverage, and regressions in wiring (not just units) fail loudly. The `Workflows/Transform Pipeline` stories are the model — written to guard a caching rework *before* it landed, and verified to fail when the invalidation they guard is broken.
+
+What this means in practice:
+
+- **New user-facing behavior gets a workflow story** when it has an assertable outcome. The pattern: seed via `seedProject` (title unique to the story), drive by testid/role, assert by polling the persisted file through the seeded storage handle — the same output the preview shows and the packaged EPUB ships.
+- **Isolated component stories are reserved for genuinely presentational, reusable pieces** where isolation costs nothing — think `Toast`, `HueSelector`, icons, simple dialogs. On the order of a dozen components, not a hundred. If a component needs a hand-built service mock to render, that's the signal to cover it through a workflow story instead.
+- **Widen before you multiply**: when a workflow story already traverses the state you care about, add an assertion to it rather than starting a new story. Conditional visual states no workflow reaches (error banners, empty states, RTL layouts) are the legitimate reason to add a presentational story.
+- **Component line coverage is explicitly out of scope for coverage ratchets.** The unit suite (happy-dom) will always under-report `.svelte` files, and `test:stories` has no coverage instrumentation wired up. Chasing a component-coverage number would push toward wrapper-mock stories — the wrong incentive. Coverage goals apply to `src/lib/**/*.ts`; components are covered by the story suite's behavior assertions, not by line counts.
+
+Unit tests in `src/lib/**/*.test.ts` remain the coverage of record for backend behavior. Storybook is for what unit tests can't show: **visual states of real components**, **seeded end-to-end workflows**, and **capture** (screenshots/videos of `capture`-tagged stories). Don't reintroduce mock-backed backend demos; write a unit test, or a seeded story that drives the real thing.
 
 ## Manual screenshots (docs illustrations)
 
