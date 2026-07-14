@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- In narrow panes, the preview header packs its two dropdowns onto a shared row instead of stacking filename, view, and panel selectors three rows deep; very long chapter filenames now shorten with an ellipsis instead of forcing the stack.
 - Audio playing in the chapter preview stops when the preview re-renders — previously the sound kept playing with its stop control gone until the clip ran out.
 
 ## [0.9.0] - 2026-07-14

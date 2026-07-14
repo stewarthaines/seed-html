@@ -1371,9 +1371,10 @@
 <div class="preview-pane-container">
   <!-- Header with controls -->
   <div class="preview-header">
-    <!-- Source + device stay together (space-between) and grow to fill their row,
-         so when the header wraps only the panel toggles below drop to a second row,
-         leaving the device dropdown floated to the right edge of the first row. -->
+    <!-- These wrappers are display:contents (structure/branching only): every
+         control is a direct flex item of .preview-header, so narrow panes pack
+         the device + panel dropdowns onto one shared wrap row. The device
+         dropdown right-floats via margin-inline-start:auto. -->
     <div class="header-main">
       <div class="preview-title">
         <!-- Rendered content-document filename for the current chapter. -->
@@ -1853,9 +1854,9 @@
   .preview-header {
     display: flex;
     align-items: center;
-    /* Single row when it fits; when it doesn't, only the panel toggles
-       (.preview-controls) wrap to a second row — .header-main keeps Source + the
-       device dropdown together on the first row (see .header-main). */
+    /* Single row when it fits; when it doesn't, items wrap as ONE flat set
+       (the group wrappers are display:contents — see .header-main), so a
+       narrow pane packs the two dropdowns onto a shared second row. */
     flex-wrap: wrap;
     gap: var(--space-2);
     /* Match the sidebar header height + grey (see PaneHeader) so all top bars align. */
@@ -1879,37 +1880,47 @@
     border-radius: 0;
   }
 
-  /* Source (left) + device controls (right). Basis `auto` so line-breaking uses its
-     real content width (not a reserved 360px, which wrapped the toggles far too
-     early and left the first row mostly empty). It still grows to fill its row, so
-     on a single row the device dropdown sits at the right of the cluster, and when
-     the header is genuinely too narrow only the toggle group below wraps — the
-     dropdown stays on the first row. */
+  /* The grouping wrappers render as display:contents, so the filename, status
+     badges, and BOTH dropdowns are siblings in the header's single wrapping
+     flex container. Flex wrapping cannot interleave lines across nested
+     containers — with the old nested groups, a pane too narrow for
+     filename + device dropdown produced THREE rows (filename / device /
+     panel) because the panel selector lived in a sibling box and couldn't
+     join the device dropdown's wrap line. Flat, the rows pack naturally:
+     wide = one row, narrow = filename row + a shared dropdowns row. The
+     wrappers stay in the markup for structure/branching only; inherited
+     text styles still apply through display:contents. */
   .header-main {
-    flex: 1 1 auto;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-2);
+    display: contents;
   }
 
   .preview-title {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--space-2);
+    display: contents;
     font-weight: var(--font-medium);
     color: var(--color-text-primary);
   }
 
-  /* The rendered chapter filename, sitting left of the Source toggle. */
+  /* The rendered chapter filename, sitting left of the Source toggle. As a
+     flex item it may shrink and ellipsize rather than force the header wider
+     than the pane. */
   .rendered-filename {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
     font-weight: var(--font-normal);
     color: var(--color-text-secondary);
     white-space: nowrap;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Right-float the device dropdown (replaces the old space-between of the
+     .header-main group); the panel selector packs beside it, not floated. */
+  select.device-selector {
+    margin-inline-start: auto;
+  }
+  select.panel-selector {
+    margin-inline-start: 0;
   }
 
   .preview-device {
@@ -1918,12 +1929,10 @@
     gap: var(--space-2);
   }
 
-  /* The mutually-exclusive panel toggles (Accessibility / EpubCheck / Reader). */
+  /* The mutually-exclusive panel toggles (Accessibility / EpubCheck / Reader).
+     display:contents like the other header groups (see .header-main). */
   .preview-controls {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--space-2);
+    display: contents;
   }
 
   /* Accessibility check button (spike) */
