@@ -54,19 +54,6 @@ interface IManifestManager {
 }
 ```
 
-### ManifestValidator
-
-```typescript
-class ManifestValidator {
-  static validateManifestItem(item: Partial<ManifestItem>): ValidationResult[];
-  static validateItemId(id: string, existingIds: string[]): ValidationResult | null;
-  static validateHref(href: string, existingHrefs: string[]): ValidationResult | null;
-  static validateMediaType(mediaType: string): ValidationResult | null;
-  static validateProperties(properties: string[]): ValidationResult[];
-  static validateManifestStructure(items: ManifestItem[]): ValidationResult[];
-}
-```
-
 ### ManifestUtils
 
 ```typescript
@@ -532,86 +519,6 @@ detectMediaType(fileName: string, content?: ArrayBuffer): string
 const mediaType = manifestManager.detectMediaType('image.jpg');
 // Returns: "image/jpeg"
 ```
-
-## Validation Specifications
-
-### ManifestValidator.validateManifestItem()
-
-```typescript
-static validateManifestItem(item: Partial<ManifestItem>): ValidationResult[]
-```
-
-**Input:**
-
-- `item: Partial<ManifestItem>` - Manifest item to validate
-
-**Output:** `ValidationResult[]` - Array of validation errors and warnings
-
-**Validation Logic:**
-
-- **Required fields**: id, href, mediaType must be present and non-empty
-- **ID format**: Must be valid XML ID (alphanumeric, underscore, hyphen)
-- **HREF format**: Must be valid relative path, no absolute URLs
-- **Media type**: Must be valid MIME type format
-- **Properties**: Must be valid EPUB properties if provided
-
-### ManifestValidator.validateItemId()
-
-```typescript
-static validateItemId(id: string, existingIds: string[]): ValidationResult | null
-```
-
-**Input:**
-
-- `id: string` - Item ID to validate
-- `existingIds: string[]` - Array of existing IDs in manifest
-
-**Output:** `ValidationResult | null` - Error if validation fails, null if valid
-
-**Validation Logic:**
-
-- Returns error if ID is empty or null
-- Returns error if ID already exists in manifest
-- Returns error if ID doesn't match XML ID format: `^[a-zA-Z_][a-zA-Z0-9_.-]*$`
-
-### ManifestValidator.validateHref()
-
-```typescript
-static validateHref(href: string, existingHrefs: string[]): ValidationResult | null
-```
-
-**Input:**
-
-- `href: string` - File path to validate
-- `existingHrefs: string[]` - Array of existing hrefs in manifest
-
-**Output:** `ValidationResult | null` - Error if validation fails, null if valid
-
-**Validation Logic:**
-
-- Returns error if href is empty or null
-- Returns error if href already exists in manifest
-- Returns error if href is absolute path or contains invalid characters
-- Returns warning if href doesn't start with 'OEBPS/' (convention)
-
-### ManifestValidator.validateManifestStructure()
-
-```typescript
-static validateManifestStructure(items: ManifestItem[]): ValidationResult[]
-```
-
-**Input:**
-
-- `items: ManifestItem[]` - Complete manifest items array
-
-**Output:** `ValidationResult[]` - Array of structural validation errors
-
-**Validation Logic:**
-
-- Ensures at least one item exists
-- Validates that required EPUB files are present (e.g., nav document)
-- Checks for orphaned spine references
-- Validates media type distribution (warnings for missing core types)
 
 ## Content Type Handling
 

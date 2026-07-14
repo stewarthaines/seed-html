@@ -6,9 +6,6 @@
 
 // Note: ManifestManagerImpl removed - use WorkspaceService for manifest operations
 
-// Validation utilities
-export { ManifestValidator } from './validation.js';
-
 // Utility functions
 export { ManifestUtils } from './utils.js';
 

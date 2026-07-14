@@ -6,7 +6,6 @@
  */
 
 // Main classes
-export { ReactiveWorkspaceCache } from './workspace-cache.js';
 export { ManifestDependencyTracker } from './dependency-tracker.js';
 
 // Type definitions from workspace types

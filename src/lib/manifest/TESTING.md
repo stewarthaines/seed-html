@@ -374,69 +374,6 @@ describe('createFileItem', () => {
 });
 ```
 
-### Validation
-
-#### ManifestValidator.validateManifestItem()
-
-**Test Cases:**
-
-- ✅ Required fields validation (id, href, mediaType)
-- ✅ ID format validation (XML ID rules)
-- ✅ HREF path validation (relative paths only)
-- ✅ Media type format validation
-- ✅ Properties array validation
-- ❌ Empty/null values return errors
-- ❌ Invalid formats return specific errors
-
-**Test Implementation:**
-
-```typescript
-describe('ManifestValidator.validateManifestItem', () => {
-  it('should validate required fields', () => {
-    const invalidItem = { href: 'test.html' }; // missing id and mediaType
-
-    const results = ManifestValidator.validateManifestItem(invalidItem);
-
-    expect(results).toHaveLength(2);
-    expect(results.find(r => r.field === 'id')).toBeDefined();
-    expect(results.find(r => r.field === 'mediaType')).toBeDefined();
-  });
-
-  it('should validate ID format', () => {
-    const invalidItem = {
-      id: '123-invalid-start', // starts with number
-      href: 'test.html',
-      mediaType: 'text/html',
-    };
-
-    const results = ManifestValidator.validateManifestItem(invalidItem);
-
-    const idError = results.find(r => r.field === 'id');
-    expect(idError?.severity).toBe('error');
-    expect(idError?.message).toContain('XML ID format');
-  });
-});
-```
-
-#### ManifestValidator.validateItemId()
-
-**Test Cases:**
-
-- ✅ Valid XML ID formats pass
-- ❌ Empty ID returns error
-- ❌ Duplicate ID returns error
-- ❌ Invalid characters return error
-- ✅ Edge cases (underscore, hyphen, numbers)
-
-#### ManifestValidator.validateManifestStructure()
-
-**Test Cases:**
-
-- ✅ Empty manifest returns error
-- ✅ Missing nav document returns warning
-- ✅ Orphaned spine references return errors
-- ✅ Media type distribution analysis
-
 ### Utility Functions
 
 #### generateItemId()
