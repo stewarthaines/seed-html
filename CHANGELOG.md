@@ -19,9 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Audio clips now play in real reading systems (Apple Books): chapters with clips carry one static audio element (Books refuses script-created ones), and tapping a clip seeks and starts playback within the tap itself (Books ignores a play requested later). Encode clip audio at a constant bit rate — VBR files seek unreliably in Books.
-- In narrow panes, the preview header packs its two dropdowns onto a shared row instead of stacking filename, view, and panel selectors three rows deep; very long chapter filenames now shorten with an ellipsis instead of forcing the stack.
-- Audio playing in the chapter preview stops when the preview re-renders — previously the sound kept playing with its stop control gone until the clip ran out.
+- Audio clips now play and seek reliably in Apple Books. Encode clip audio at a constant bit rate (CBR) — VBR files seek unreliably in reading systems.
+- The preview header no longer stacks its controls three rows deep in narrow panes; long chapter filenames shorten with an ellipsis.
+- Audio playing in the chapter preview stops when the preview re-renders, instead of playing on with no way to stop it.
 
 ## [0.9.0] - 2026-07-14
 
