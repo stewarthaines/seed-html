@@ -25,10 +25,18 @@
  *   inline their own <audio controls> and keep its visible controls. If the
  *   document carries no audio element, clips stay inert (plain styled text).
  *
- * - Playback is sequenced by the media element's OWN events, never timers:
- *   set src → 'loadedmetadata' → seek to begin → 'seeked' → play(), and the
- *   clip end is enforced on 'timeupdate'. Each step waits for the pipeline to
- *   actually be ready, which is what makes seeking dependable on slow readers.
+ * - play() is called SYNCHRONOUSLY inside the tap handler, with the seek
+ *   (currentTime = begin) issued immediately before it. Reading systems
+ *   consume the user-gesture token within the gesture's own call stack —
+ *   a play() deferred to a later media event ('seeked', 'loadedmetadata')
+ *   is not gesture-blessed and Books rejects it, which presents as "seeking
+ *   doesn't work". Setting currentTime before metadata is safe: the spec
+ *   makes it the default playback start position.
+ *
+ * - Recovery stays event-driven, never timers: when the tap had to swap the
+ *   element's src, 'loadedmetadata' seeks to begin and 'seeked' resumes a
+ *   paused element; the clip end is enforced on 'timeupdate' — a position on
+ *   the media timeline, not a wall-clock timer.
  *
  * - Encode clip audio at a CONSTANT bit rate (CBR). VBR mp3 seeking is
  *   unreliable in the iOS Books app; CBR mp3 (e.g. via Audacity) keeps files
@@ -136,22 +144,22 @@
     }
     span.classList.add('clip-playing');
 
-    // The event chain takes it from here: src change → loadedmetadata → seek;
-    // seek (either path) → seeked → play.
-    seekPlayPending = true;
     if (el.getAttribute('src') !== src) {
+      // Different file: swap src inside the gesture; loadedmetadata seeks to
+      // begin and 'seeked' plays (the recovery net). Kept as the one deferred
+      // path — playing immediately would blip audio from position 0.
+      seekPlayPending = true;
       el.setAttribute('src', src);
-    } else if (el.readyState >= 1 /* HAVE_METADATA */) {
+    } else {
+      // Same file (the common case — the static element already carries it):
+      // seek AND play synchronously in the tap, the field-proven pattern for
+      // reading systems. Before metadata, currentTime sets the default
+      // playback start position, so this is safe on a cold element too.
+      seekPlayPending = false;
       el.currentTime = begin;
-      // Some engines skip the seek (and its 'seeked') when already positioned
-      // at begin — don't leave the play() owed forever.
-      if (!el.seeking) {
-        seekPlayPending = false;
-        var playing = el.play();
-        if (playing && playing.catch) playing.catch(stop);
-      }
+      var playing = el.play();
+      if (playing && playing.catch) playing.catch(stop);
     }
-    // else: src already set but metadata still loading — loadedmetadata seeks.
   }
 
   function toggle(span) {
