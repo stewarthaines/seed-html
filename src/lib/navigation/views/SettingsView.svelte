@@ -1265,7 +1265,7 @@
                       type="text"
                       class="template-input"
                       value={epubSettings?.filename_template || ''}
-                      placeholder="&lt;title&gt; - &lt;author&gt; - &lt;date&gt;"
+                      placeholder="&lt;title&gt;-&lt;author&gt;-&lt;date&gt;"
                       onblur={handleFilenameTemplateChange}
                       disabled={epubLoading}
                     />

@@ -291,7 +291,7 @@ describe('SettingsService Contract Tests', () => {
         audio_clip_template: ':clip[<label>]{src=<href> begin=<begin> end=<end>}',
         image_template: '![<alt>](<href>)',
         video_template: '<video src="<href>" controls="controls"></video>',
-        filename_template: '<title> - <author> - <date>',
+        filename_template: '<title>-<author>-<date>',
         include_seed_html_in_package: false,
         track_changes: false,
         preview: {

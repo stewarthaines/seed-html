@@ -40,7 +40,7 @@ vi.mock('./opf-utils.js', () => ({
     parseRootfilePath: vi.fn(() => 'OEBPS/content.opf'),
   },
   creatorName: (c: any) => (typeof c === 'string' ? c : (c?.name ?? '')),
-  DEFAULT_FILENAME_TEMPLATE: '<title> - <author> - <date>',
+  DEFAULT_FILENAME_TEMPLATE: '<title>-<author>-<date>',
 }));
 
 describe('EPUBPackager', () => {
@@ -112,7 +112,7 @@ describe('EPUBPackager', () => {
 
       expect(result.success).toBe(true);
       expect(result.blob).toBeInstanceOf(Blob);
-      expect(result.filename).toMatch(/^Test Book - \d{4}-\d{2}-\d{2}\.epub$/);
+      expect(result.filename).toMatch(/^Test-Book-\d{4}-\d{2}-\d{2}\.epub$/);
       expect(result.fileCount).toBe(3);
       expect(result.totalSize).toBe(708);
       expect(result.processingTime).toBeGreaterThan(0);
@@ -277,7 +277,7 @@ describe('EPUBPackager', () => {
       };
 
       const filename = packager.generateFilename(metadata);
-      expect(filename).toMatch(/^Test Book - Test Author - \d{4}-\d{2}-\d{2}\.epub$/);
+      expect(filename).toMatch(/^Test-Book-Test-Author-\d{4}-\d{2}-\d{2}\.epub$/);
     });
 
     it('should generate filename without author', () => {
@@ -288,7 +288,7 @@ describe('EPUBPackager', () => {
       };
 
       const filename = packager.generateFilename(metadata);
-      expect(filename).toMatch(/^Test Book - \d{4}-\d{2}-\d{2}\.epub$/);
+      expect(filename).toMatch(/^Test-Book-\d{4}-\d{2}-\d{2}\.epub$/);
     });
 
     it('should sanitize invalid characters', () => {
@@ -300,7 +300,33 @@ describe('EPUBPackager', () => {
       };
 
       const filename = packager.generateFilename(metadata);
-      expect(filename).toMatch(/^TestBook - TestAuthor - \d{4}-\d{2}-\d{2}\.epub$/);
+      expect(filename).toMatch(/^Test-Book-Test-Author-\d{4}-\d{2}-\d{2}\.epub$/);
+    });
+
+    it('should slug URL-hostile characters while keeping letters in any script', () => {
+      const metadata: EPUBMetadata = {
+        title: '100% Pure — Café & Кофе ქართული',
+        creator: [{ name: "Seán O'Brien", roles: [] }],
+        language: ['en'],
+        identifier: 'test-123',
+        date: '1999-12-31',
+      };
+
+      const filename = packager.generateFilename(metadata);
+      expect(filename).toBe('100-Pure-Café-Кофе-ქართული-Seán-OBrien-1999-12-31.epub');
+    });
+
+    it('should keep mid-token dots (SEED.html-style titles) and stay space-free', () => {
+      const metadata: EPUBMetadata = {
+        title: 'SEED.html User Manual',
+        creator: [{ name: 'Stewart Haines', roles: [] }],
+        language: ['en'],
+        identifier: 'test-123',
+        date: '2026-06-20',
+      };
+
+      const filename = packager.generateFilename(metadata);
+      expect(filename).toBe('SEED.html-User-Manual-Stewart-Haines-2026-06-20.epub');
     });
 
     it('should use the publication date (dc:date) when present', () => {
@@ -313,7 +339,7 @@ describe('EPUBPackager', () => {
       };
 
       const filename = packager.generateFilename(metadata);
-      expect(filename).toBe('Test Book - Test Author - 1999-12-31.epub');
+      expect(filename).toBe('Test-Book-Test-Author-1999-12-31.epub');
     });
 
     it('should take the date portion of a full dc:date timestamp', () => {
@@ -325,7 +351,7 @@ describe('EPUBPackager', () => {
       };
 
       const filename = packager.generateFilename(metadata);
-      expect(filename).toBe('Test Book - 2010-06-15.epub');
+      expect(filename).toBe('Test-Book-2010-06-15.epub');
     });
 
     it('should apply a custom filename template', () => {
@@ -338,7 +364,7 @@ describe('EPUBPackager', () => {
       };
 
       const filename = packager.generateFilename(metadata, '<author>_<title>_<date>');
-      expect(filename).toBe('Test Author_Test Book_1999-12-31.epub');
+      expect(filename).toBe('Test-Author_Test-Book_1999-12-31.epub');
     });
 
     it('should collapse separators left by an empty token in a custom template', () => {
@@ -349,10 +375,12 @@ describe('EPUBPackager', () => {
         date: '1999-12-31',
       };
 
-      // No author → the orphaned " - " around <author> collapses, and the
-      // hyphens inside the date are preserved.
-      const filename = packager.generateFilename(metadata, '<title> - <author> - <date>');
-      expect(filename).toBe('Test Book - 1999-12-31.epub');
+      // No author → the orphaned separators around <author> collapse, and the
+      // hyphens inside the date are preserved — in both template styles.
+      const spaced = packager.generateFilename(metadata, '<title> - <author> - <date>');
+      expect(spaced).toBe('Test-Book - 1999-12-31.epub');
+      const hyphenated = packager.generateFilename(metadata, '<title>-<author>-<date>');
+      expect(hyphenated).toBe('Test-Book-1999-12-31.epub');
     });
 
     it('should trim a trailing separator when the final token is empty', () => {
@@ -364,7 +392,7 @@ describe('EPUBPackager', () => {
       };
 
       const filename = packager.generateFilename(metadata, '<title> - <date> - <author>');
-      expect(filename).toBe('Test Book - 1999-12-31.epub');
+      expect(filename).toBe('Test-Book - 1999-12-31.epub');
     });
   });
 

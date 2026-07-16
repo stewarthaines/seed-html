@@ -331,10 +331,12 @@ export class EPUBPackager {
       .join(author)
       .split('<date>')
       .join(date)
-      // Tidy separators orphaned by an empty token (e.g. no author): collapse a
-      // run of " - " into one and trim any leading/trailing separator.
+      // Tidy separators orphaned by an empty token (e.g. no author): collapse
+      // hyphen runs from a hyphen-joined template, then " - " runs from a
+      // spaced one, and trim any leading/trailing separator.
       .replace(/\s+/g, ' ')
-      .replace(/(?:-\s*){2,}/g, '- ')
+      .replace(/-{2,}/g, '-')
+      .replace(/(?:-\s+){2,}/g, '- ')
       .replace(/^[\s-]+|[\s-]+$/g, '')
       // Strip any filesystem-invalid characters the template itself introduced.
       .replace(/[<>:"/\\|?*]/g, '')
@@ -343,12 +345,23 @@ export class EPUBPackager {
     return `${base || 'Untitled'}.epub`;
   }
 
+  /**
+   * Slug a template token (title / author) so the packaged filename is safe as
+   * a filesystem name AND as a URL path segment — published files become OPDS
+   * acquisition URLs, where spaces and URL delimiters (%, #, ?, &, +, …) cause
+   * encoding bugs in reading-system clients. Letters and digits in any script
+   * are kept (non-English titles stay intact; NFC keeps composed/decomposed
+   * variants identical), apostrophes vanish (O'Brien → OBrien), and every
+   * other character becomes a hyphen.
+   */
   private sanitizeFilename(name: string): string {
     return name
-      .replace(/[<>:"/\\|?*]/g, '') // Remove invalid characters
-      .replace(/\s+/g, ' ') // Normalize whitespace
-      .trim()
-      .substring(0, 50); // Limit length
+      .normalize('NFC')
+      .replace(/['’`]/g, '')
+      .replace(/[^\p{L}\p{N}._-]+/gu, '-')
+      .replace(/-{2,}/g, '-')
+      .substring(0, 50)
+      .replace(/^[-.]+|[-.]+$/g, '');
   }
 
   downloadEPUB(blob: Blob, filename: string): void {

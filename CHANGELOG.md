@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Book covers in the Projects list are now full-height tiles — every row the same height, covers sharper on high-resolution displays, and covers that aren't book-shaped are cropped instead of stretched. (Thumbnails regenerate once on first load.)
+- Packaged EPUB filenames use hyphens instead of spaces (`Title-Author-Date.epub`), so published download links work reliably in reading apps. Set your own pattern per project in EPUB Settings → Packaged Filename.
 
 ### Fixed
 

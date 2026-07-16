@@ -26,8 +26,13 @@ export function generateEPUBTimestamp(): string {
  * Default template for the packaged .epub filename. Supports the placeholders
  * `<title>`, `<author>` (first creator) and `<date>` (dc:date → YYYY-MM-DD,
  * falling back to the packaging date). Stored per-EPUB in SOURCE/settings.json.
+ *
+ * Hyphen-joined with no spaces: the packaged file's name becomes a URL path
+ * segment when published to a remote, and space-free names survive OPDS
+ * clients that mis-handle percent-encoding (token values are slugged the same
+ * way — see EPUBPackager.sanitizeFilename).
  */
-export const DEFAULT_FILENAME_TEMPLATE = '<title> - <author> - <date>';
+export const DEFAULT_FILENAME_TEMPLATE = '<title>-<author>-<date>';
 
 /**
  * A creator or contributor with optional MARC relator roles.
