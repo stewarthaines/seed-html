@@ -1,7 +1,7 @@
 # Vendored: READ.html (EPUB reader)
 
 - **Upstream**: the `read-html` repo (Codeberg origin, public GitHub mirror) — the standalone in-browser EPUB reader, foliate-js + Svelte 5
-- **Source of this snapshot**: `dist-single/READ.html` built from read-html commit `df9f9ed` (2026-07-17), `readhtml-version` 0.1.0 — the first numbered release (versioning restarted below 1.0): payload-slot contract (see the read-html repo's `docs/PAYLOAD_SLOT.md`), srcdoc section delivery (books open from disk in Chrome), TOC/dialog polish
+- **Source of this snapshot**: `dist-single/READ.html` built 2026-07-17 18:30 from read-html `df9f9ed` (`readhtml-version` 0.1.0) **plus the then-uncommitted download-option work** — ⚠ re-pin this line to the real commit/version once the read-html repo lands it. Base release: payload-slot contract (`docs/PAYLOAD_SLOT.md`), srcdoc section delivery (books open from disk in Chrome), TOC/dialog polish, book download option
 - **License**: MIT
 
 ## What it is here for
