@@ -24,9 +24,11 @@ const PORT = 4178;
 const MOUNT_TIMEOUT_MS = 20000;
 
 // Size budget for the embeddable single file (process/ICON_CSS_SIZE_REDUCTION.md).
-// Current build is ~979KB; the headroom is for organic feature growth. Raise this
-// DELIBERATELY (with a changelog-worthy reason), never to silence the failure.
-const SIZE_BUDGET_KB = 1010;
+// Raise this DELIBERATELY (with a changelog-worthy reason), never to silence the
+// failure. Raised 1010→1040 on 2026-07-17: the READ.html reader swap, the Package
+// as READ.html / SEED.html exports, and the About outputs diagram grew the build
+// to ~1027KB (the breach accumulated while smoke wasn't being run per-commit).
+const SIZE_BUDGET_KB = 1040;
 
 // Console errors that are noise, not boot failures.
 const IGNORED_CONSOLE = [/favicon\.ico/i, /Failed to load resource.*favicon/i];
@@ -97,6 +99,16 @@ function artifactChecks() {
     !/window\.__SEEDHTML_I18N_BUNDLE__\s*=\s*(?:null|'data:application\/zip;base64,)/.test(html)
   ) {
     problems.push('[artifact] dist/index.html is missing the __SEEDHTML_I18N_BUNDLE__ anchor');
+  }
+
+  // The Package-as-SEED.html payload slot must survive the build exactly once
+  // (see process/SEED_HTML_PACKAGE.md — the export string-splits on this marker).
+  const slot = '<script type="application/epub+zip;base64" id="seedhtml-payload"></' + 'script>';
+  const slotCount = html.split(slot).length - 1;
+  if (slotCount !== 1) {
+    problems.push(
+      `[artifact] dist/index.html contains ${slotCount} seedhtml-payload slots (expected exactly 1)`
+    );
   }
 
   // The locales sidecar is only present after `npm run build:locales` (part of

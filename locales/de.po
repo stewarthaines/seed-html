@@ -28,6 +28,10 @@ msgstr "· validiert {ago}"
 msgid "\"{name}\" is not connected — plug in the device and refresh"
 msgstr "\"{name}\" ist nicht verbunden — Gerät anschließen und aktualisieren"
 
+#: src/App.svelte
+msgid "“{title}” is already a project in this browser. OK opens it; Cancel imports a fresh copy."
+msgstr "„{title}“ ist in diesem Browser bereits ein Projekt. OK öffnet es; Abbrechen importiert eine neue Kopie."
+
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "{count} accessibility issues"
 msgstr "{count} Barrierefreiheitsprobleme"
@@ -2694,8 +2698,11 @@ msgstr "Packen Sie ein Projekt, um es hier zu sehen."
 msgid "Package as READ.html"
 msgstr "Als READ.html verpacken"
 
+#: src/lib/navigation/views/WorkspaceView.svelte
+msgid "Package as SEED.html"
+msgstr "Als SEED.html verpacken"
+
 #: src/App.svelte
-#: src/lib/navigation/views/AboutView.svelte
 msgid "Package EPUB"
 msgstr "EPUB packen"
 
@@ -2904,6 +2911,10 @@ msgstr "Drucken"
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Project has errors"
 msgstr "Projekt enthält Fehler"
+
+#: src/App.svelte
+msgid "Project imported — your edits live in this browser. Use the package buttons to save your work as files."
+msgstr "Projekt importiert — Ihre Änderungen leben in diesem Browser. Nutzen Sie die Verpacken-Schaltflächen, um Ihre Arbeit als Dateien zu sichern."
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Project Settings"
@@ -3629,6 +3640,10 @@ msgstr "Dieses EPUB wurde nicht im Simple EPUB Editor erstellt und kann daher ni
 msgid "This EPUB wasn't created in the Simple EPUB Editor, so it can't be repackaged."
 msgstr "Dieses EPUB wurde nicht im Simple EPUB Editor erstellt und kann daher nicht neu gepackt werden."
 
+#: src/App.svelte
+msgid "This file carries a book, but the book could not be read."
+msgstr "Diese Datei enthält ein Buch, aber das Buch konnte nicht gelesen werden."
+
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "This file is empty."
 msgstr "Diese Datei ist leer."
@@ -3743,6 +3758,7 @@ msgstr "Unbekannte Ansicht"
 msgid "Unlink folder"
 msgstr "Ordnerverknüpfung aufheben"
 
+#: src/App.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
 #: src/lib/navigation/views/WorkspaceView.svelte

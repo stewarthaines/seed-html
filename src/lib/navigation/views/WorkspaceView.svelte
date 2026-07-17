@@ -39,6 +39,8 @@
     packaging = false,
     onPackageAsReadHtml,
     readHtmlPackaging = false,
+    onPackageAsSeedHtml,
+    seedHtmlPackaging = false,
   }: {
     onListWorkspaces: () => Promise<WorkspaceInfo[]>;
     /** Open the (app-owned) new-project dialog. */
@@ -69,6 +71,10 @@
         one double-clickable file. Omitted when unavailable (offline file:// build). */
     onPackageAsReadHtml?: () => void;
     readHtmlPackaging?: boolean;
+    /** Export the active project as an Active EPUB wrapped in the app's own
+        document — the self-editing book. Omitted when unavailable (file://). */
+    onPackageAsSeedHtml?: () => void;
+    seedHtmlPackaging?: boolean;
   } = $props();
 
   // Component state using $state()
@@ -447,7 +453,7 @@
                     <p class="book-description">{currentInfo.description}</p>
                   {/if}
 
-                  {#if onGeneratePdf || onPackageWithoutSeed || onPackageAsReadHtml}
+                  {#if onGeneratePdf || onPackageWithoutSeed || onPackageAsReadHtml || onPackageAsSeedHtml}
                     <div class="book-actions">
                       {#if onGeneratePdf}
                         <button
@@ -487,6 +493,21 @@
                             : undefined}
                         >
                           {readHtmlPackaging ? $t('Packaging…') : $t('Package as READ.html')}
+                        </button>
+                      {/if}
+                      {#if onPackageAsSeedHtml}
+                        <button
+                          type="button"
+                          class="export-button"
+                          onclick={onPackageAsSeedHtml}
+                          disabled={seedHtmlPackaging || isReadOnly}
+                          title={isReadOnly
+                            ? $t(
+                                "This EPUB wasn't created in the Simple EPUB Editor, so it can't be repackaged."
+                              )
+                            : undefined}
+                        >
+                          {seedHtmlPackaging ? $t('Packaging…') : $t('Package as SEED.html')}
                         </button>
                       {/if}
                     </div>

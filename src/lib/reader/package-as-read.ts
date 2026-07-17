@@ -20,42 +20,21 @@
  * served over HTTP, so gate callers on isHttpContext().
  */
 
+import { payloadSlot, injectPayload, bytesToBase64 } from '../epub/html-payload.js';
+
+export { bytesToBase64 };
+
 /** The empty payload slot exactly as the reader's build guarantees ship it. */
-export const PAYLOAD_SLOT =
-  '<script type="application/epub+zip;base64" id="readhtml-payload"></' + 'script>';
-
-const SLOT_CLOSE = '</' + 'script>';
-const SLOT_OPEN = PAYLOAD_SLOT.slice(0, PAYLOAD_SLOT.length - SLOT_CLOSE.length);
-
-/**
- * Base64-encode bytes chunk-wise: btoa needs a binary string, and building one
- * with a single fromCharCode call overflows the argument stack for book-sized
- * payloads.
- */
-export function bytesToBase64(bytes: Uint8Array): string {
-  const CHUNK = 0x8000;
-  let binary = '';
-  for (let i = 0; i < bytes.length; i += CHUNK) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
-  }
-  return btoa(binary);
-}
+export const PAYLOAD_SLOT = payloadSlot('readhtml-payload');
 
 /**
  * Insert the EPUB payload into the reader shell. Throws unless the empty slot
  * appears exactly once — anything else means the vendored reader and this code
  * have drifted, and the fix is re-reading the payload-slot contract, not
- * loosening the match.
+ * loosening the match. (Shared mechanics: src/lib/epub/html-payload.ts.)
  */
 export function injectEpubPayload(shellHtml: string, epubBytes: Uint8Array): string {
-  const parts = shellHtml.split(PAYLOAD_SLOT);
-  if (parts.length < 2) {
-    throw new Error('READ.html payload slot not found — vendored reader out of sync');
-  }
-  if (parts.length > 2) {
-    throw new Error('READ.html payload slot is not unique — vendored reader out of sync');
-  }
-  return parts[0] + SLOT_OPEN + bytesToBase64(epubBytes) + SLOT_CLOSE + parts[1];
+  return injectPayload(shellHtml, PAYLOAD_SLOT, epubBytes);
 }
 
 /** The packaged EPUB's filename with its extension swapped: same slug, .html. */

@@ -93,6 +93,15 @@
     <div id="app"></div>
 
     <!--
+      Embedded-payload slot for "Package as SEED.html" (process/SEED_HTML_PACKAGE.md):
+      the export inserts one Active EPUB, base64, as this element's text content; at
+      boot a non-empty slot routes through the EPUB-import flow (dc:identifier dedupe).
+      Non-JS script type — Vite and the single-file inliner leave it untouched. Must
+      appear exactly once in the built document (unit test + smoke-build assert this).
+    -->
+    <script type="application/epub+zip;base64" id="seedhtml-payload"></script>
+
+    <!--
       Compatibility gate. CLASSIC script, ES5 only (var/function/typeof — no
       let/const, arrow fns, optional chaining or template literals) so it parses on
       Safari 12 (WebKit ~606). Classic scripts run synchronously during parse, while

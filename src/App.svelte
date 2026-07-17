@@ -64,6 +64,12 @@
   import { exportPdf, exportChapterPdf } from './lib/pdf/pdf-export.js';
   import { isHttpContext, readerOverlayUrl } from './lib/reader/open-in-reader.js';
   import { packageEpubAsReadHtml } from './lib/reader/package-as-read.js';
+  import { packageEpubAsSeedHtml } from './lib/epub/package-as-seed.js';
+  import {
+    readEmbeddedPayload,
+    readEpubIdentity,
+    findWorkspaceByIdentifier,
+  } from './lib/import/boot-payload.js';
   import { downloadBlob } from './lib/zip/index.js';
   import { showToast } from './lib/stores/toast.svelte.js';
   import ReaderOverlay from './lib/components/reader/ReaderOverlay.svelte';
@@ -891,9 +897,30 @@
     }
   };
 
+  // Download a book-carrying HTML artifact with the shared size-honest toast
+  // (base64 costs +33%; above mail-attachment size, nudge toward links).
+  const downloadWrappedHtml = (wrapped: { blob: Blob; filename: string }) => {
+    downloadBlob(wrapped.blob, wrapped.filename);
+    const mb = wrapped.blob.size / (1024 * 1024);
+    const size = mb >= 10 ? Math.round(mb).toString() : mb.toFixed(1);
+    showToast(
+      mb > 25
+        ? $t('Packaged {filename} ({size} MB). Large for email — share it by link instead.', {
+            filename: wrapped.filename,
+            size,
+          })
+        : $t('Packaged {filename} ({size} MB)', { filename: wrapped.filename, size }),
+      'success'
+    );
+  };
+
   const handlePackageRequest = async (
     workspaceId: string,
-    opts?: { includeSource?: boolean; download?: boolean; format?: 'epub' | 'read-html' }
+    opts?: {
+      includeSource?: boolean;
+      download?: boolean;
+      format?: 'epub' | 'read-html' | 'seed-html';
+    }
   ) => {
     if (!currentWorkspaceState || isReadOnly) return;
 
@@ -927,7 +954,11 @@
       // forces both editor payloads off.
       const epubSettings = await appState?.getSettingsService().loadEPUBSettings(workspaceId);
       const result = await epubPackager.packageEPUB(workspaceId, {
-        includeSeedHtml: plain ? false : (epubSettings?.include_seed_html_in_package ?? false),
+        // The SEED.html wrapper IS the editor — never nest a second copy in its payload.
+        includeSeedHtml:
+          plain || opts?.format === 'seed-html'
+            ? false
+            : (epubSettings?.include_seed_html_in_package ?? false),
         includeSource: opts?.includeSource,
         persistToPublish: download ? false : undefined,
       });
@@ -937,19 +968,10 @@
           // Destination-format export: hand the file straight to the browser.
           if (opts?.format === 'read-html') {
             // Wrap the plain EPUB in the vendored reader — one double-clickable file.
-            const wrapped = await packageEpubAsReadHtml(result.blob, result.filename);
-            downloadBlob(wrapped.blob, wrapped.filename);
-            const mb = wrapped.blob.size / (1024 * 1024);
-            const size = mb >= 10 ? Math.round(mb).toString() : mb.toFixed(1);
-            showToast(
-              mb > 25
-                ? $t(
-                    'Packaged {filename} ({size} MB). Large for email — share it by link instead.',
-                    { filename: wrapped.filename, size }
-                  )
-                : $t('Packaged {filename} ({size} MB)', { filename: wrapped.filename, size }),
-              'success'
-            );
+            downloadWrappedHtml(await packageEpubAsReadHtml(result.blob, result.filename));
+          } else if (opts?.format === 'seed-html') {
+            // Wrap the Active EPUB in the app's own document — the self-editing book.
+            downloadWrappedHtml(await packageEpubAsSeedHtml(result.blob, result.filename));
           } else {
             epubPackager.downloadEPUB(result.blob, result.filename);
           }
@@ -1024,6 +1046,93 @@
     }
   };
 
+  // SEED.html destination format: the Active EPUB (SEED.zip inside, no nested
+  // editor) wrapped in the app's own document — the double-clickable
+  // self-editing book (process/SEED_HTML_PACKAGE.md). HTTP-only, like PDF.
+  let seedHtmlExporting = $state(false);
+  const handleExportSeedHtml = async () => {
+    if (!currentWorkspaceState || seedHtmlExporting) return;
+    seedHtmlExporting = true;
+    try {
+      await handlePackageRequest(currentWorkspaceState.id, {
+        download: true,
+        format: 'seed-html',
+      });
+    } catch (error) {
+      console.error('SEED.html export failed:', error);
+      if (appState) {
+        appState.errorMessage = `SEED.html export failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      }
+    } finally {
+      seedHtmlExporting = false;
+    }
+  };
+
+  // Package-as-SEED.html boot path: a non-empty payload slot means this document
+  // is a book-carrying artifact (process/SEED_HTML_PACKAGE.md §2). The slot is
+  // static markup and runs on every load of such a file, so the dc:identifier
+  // dedupe is what prevents silent duplicate projects. Returns true when a
+  // payload was handled (the artifact's own state wins over any URL hash).
+  const handleEmbeddedPayloadBoot = async (): Promise<boolean> => {
+    let payload: Uint8Array | null = null;
+    try {
+      payload = readEmbeddedPayload();
+    } catch (error) {
+      console.error('Embedded payload unreadable:', error);
+      alert($t('This file carries a book, but the book could not be read.'));
+      return true;
+    }
+    if (!payload || !appState) return false;
+
+    try {
+      const identity = await readEpubIdentity(payload);
+      if (identity.identifier) {
+        const existing = await findWorkspaceByIdentifier(
+          fileStorage,
+          await workspaceService.listWorkspaces(),
+          identity.identifier
+        );
+        if (existing) {
+          const openExisting = confirm(
+            $t(
+              '“{title}” is already a project in this browser. OK opens it; Cancel imports a fresh copy.',
+              {
+                title: identity.title || $t('Untitled'),
+              }
+            )
+          );
+          if (openExisting) {
+            await appState.loadWorkspace(existing);
+            const firstSpineItem = appState.workspace?.opf?.spine?.[0];
+            if (firstSpineItem) {
+              appState.selectChapter(firstSpineItem.idref);
+              navigationStore.navigateTo('spine');
+            } else {
+              navigationStore.navigateTo('metadata');
+            }
+            return true;
+          }
+        }
+      }
+
+      const file = new File([payload as BlobPart], 'embedded.epub', {
+        type: 'application/epub+zip',
+      });
+      await handleEpubImport(file);
+      showToast(
+        $t(
+          'Project imported — your edits live in this browser. Use the package buttons to save your work as files.'
+        ),
+        'info',
+        10000
+      );
+    } catch (error) {
+      console.error('Embedded payload import failed:', error);
+      alert($t('This file carries a book, but the book could not be read.'));
+    }
+    return true;
+  };
+
   // Initialize app state
   onMount(() => {
     // Async initialization - transform engine first, then app state
@@ -1091,8 +1200,10 @@
         await refreshPackagedEpubs();
         await refreshHasProjects();
 
-        // Check hash after appState is fully ready
-        if (window.location.hash) {
+        // A book-carrying artifact imports (or reopens) its payload; otherwise
+        // check the hash after appState is fully ready.
+        const payloadHandled = await handleEmbeddedPayloadBoot();
+        if (!payloadHandled && window.location.hash) {
           handleHashChange();
         }
       } catch (error) {
@@ -1268,6 +1379,8 @@
           packaging={plainEpubExporting}
           onPackageAsReadHtml={canPackageReadHtml ? handleExportReadHtml : undefined}
           readHtmlPackaging={readHtmlExporting}
+          onPackageAsSeedHtml={canPackageReadHtml ? handleExportSeedHtml : undefined}
+          seedHtmlPackaging={seedHtmlExporting}
           onWorkspaceOpened={() => {
             // Workspace opened
           }}

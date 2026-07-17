@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Package your book as a single web page (Projects → Package as READ.html): one double-clickable file containing the book and its reader, for people who don't have — or know about — an EPUB app. Interactive features work without any confirmation prompt.
+- Publish your project as its own editor (Projects → Package as SEED.html): one double-clickable file that opens as SEED.html with the book ready to import and continue editing — no install, no account. Edits live in the browser; use the package buttons to save work as files.
 
 ### Changed
 

@@ -28,6 +28,10 @@ msgstr ""
 msgid "\"{name}\" is not connected — plug in the device and refresh"
 msgstr ""
 
+#: src/App.svelte
+msgid "“{title}” is already a project in this browser. OK opens it; Cancel imports a fresh copy."
+msgstr ""
+
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "{count} accessibility issues"
 msgstr ""
@@ -2675,8 +2679,11 @@ msgstr ""
 msgid "Package as READ.html"
 msgstr ""
 
+#: src/lib/navigation/views/WorkspaceView.svelte
+msgid "Package as SEED.html"
+msgstr ""
+
 #: src/App.svelte
-#: src/lib/navigation/views/AboutView.svelte
 msgid "Package EPUB"
 msgstr ""
 
@@ -2884,6 +2891,10 @@ msgstr ""
 
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Project has errors"
+msgstr ""
+
+#: src/App.svelte
+msgid "Project imported — your edits live in this browser. Use the package buttons to save your work as files."
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -3610,6 +3621,10 @@ msgstr ""
 msgid "This EPUB wasn't created in the Simple EPUB Editor, so it can't be repackaged."
 msgstr ""
 
+#: src/App.svelte
+msgid "This file carries a book, but the book could not be read."
+msgstr ""
+
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "This file is empty."
 msgstr ""
@@ -3724,6 +3739,7 @@ msgstr ""
 msgid "Unlink folder"
 msgstr ""
 
+#: src/App.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
 #: src/lib/navigation/views/WorkspaceView.svelte
