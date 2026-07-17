@@ -1,7 +1,7 @@
 # Vendored: READ.html (EPUB reader)
 
 - **Upstream**: the `read-html` repo (Codeberg origin, public GitHub mirror) — the standalone in-browser EPUB reader, foliate-js + Svelte 5
-- **Source of this snapshot**: `dist-single/READ.html` built from read-html commit `7766181` (M7, 2026-07-17); pre-payload-slot — no `readhtml-version` meta yet, so the commit hash is the pin
+- **Source of this snapshot**: `dist-single/READ.html` built from read-html commit `afe2a2f` (2026-07-17), `readhtml-version` 1.0.0 — the first payload-slot release (see the read-html repo's `docs/PAYLOAD_SLOT.md`)
 - **License**: MIT
 
 ## What it is here for
@@ -12,4 +12,4 @@ HTTP-only: like PDF export and plugins, this directory is not reachable from the
 
 ## Upgrading
 
-Copy a newer `dist-single/READ.html` over this file, update the commit/version line above, and re-verify: Read from Publish opens the book in a tab; a scripted book plays clips after consent; the standalone-PWA overlay still renders it. Once the payload-slot release lands upstream (see `process/READ_HTML_INTEGRATION.md` §3), record the `readhtml-version` meta value here — the "Package as READ.html" export depends on that release.
+Copy a newer `dist-single/READ.html` over this file, update the commit/version line above, and re-verify: Read from Publish opens the book in a tab; a scripted book plays clips after consent; the standalone-PWA overlay still renders it; and `npm run test` stays green — the package-as-read unit tests assert the payload slot appears exactly once in this file, so a drifted slot marker fails loudly rather than shipping a broken "Package as READ.html".

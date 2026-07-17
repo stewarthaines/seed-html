@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Package your book as a single web page (Projects → Package as READ.html): one double-clickable file containing the book and its reader, for people who don't have — or know about — an EPUB app. Interactive features work without any confirmation prompt.
+
 ### Changed
 
 - The Read button opens books in READ.html, a new reader built alongside SEED.html. Interactive features — audio clips, for example — actually play there, after a one-time per-book confirmation.

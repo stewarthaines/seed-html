@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-14\n"
-"PO-Revision-Date: 2026-07-14\n"
+"POT-Creation-Date: 2026-07-17\n"
+"PO-Revision-Date: 2026-07-17\n"
 "Language: de\n"
 "Language-Team: \n"
 "Last-Translator: Claude (machine first pass)\n"
@@ -2688,6 +2688,10 @@ msgstr "Überschreiben?"
 msgid "Package a project to see it here."
 msgstr "Packen Sie ein Projekt, um es hier zu sehen."
 
+#: src/lib/navigation/views/WorkspaceView.svelte
+msgid "Package as READ.html"
+msgstr "Als READ.html verpacken"
+
 #: src/App.svelte
 msgid "Package EPUB"
 msgstr "EPUB packen"
@@ -2695,6 +2699,14 @@ msgstr "EPUB packen"
 #: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Package EPUB without SEED"
 msgstr "EPUB ohne SEED verpacken"
+
+#: src/App.svelte
+msgid "Packaged {filename} ({size} MB)"
+msgstr "{filename} verpackt ({size} MB)"
+
+#: src/App.svelte
+msgid "Packaged {filename} ({size} MB). Large for email — share it by link instead."
+msgstr "{filename} verpackt ({size} MB). Zu groß für E-Mail — teilen Sie die Datei besser über einen Link."
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Packaged Filename"
@@ -3254,8 +3266,8 @@ msgid "Secret Key"
 msgstr "Secret Key"
 
 #: src/lib/navigation/views/AboutView.svelte
-msgid "SEED.html exports an EPUB that embeds its own SEED.zip source, and a PDF; only the EPUB can return to the app for further editing."
-msgstr "SEED.html exportiert ein EPUB, das seine eigene SEED.zip-Source einbettet, und ein PDF; nur das EPUB kann zur weiteren Bearbeitung in die App zurückkehren."
+msgid "SEED.html exports an EPUB that embeds its own SEED.zip source, a PDF, and a READ.html web book; only the EPUB can return to the app for further editing."
+msgstr "SEED.html exportiert ein EPUB, das seine eigene SEED.zip-Source einbettet, ein PDF und ein READ.html-Webbuch; nur das EPUB kann zur weiteren Bearbeitung in die App zurückkehren."
 
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "SEED.html is a single file, and this page is the whole app. Keep your own copy and it will keep working even if this website goes away — a fully offline editor."

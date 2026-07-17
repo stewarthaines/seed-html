@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-14\n"
-"PO-Revision-Date: 2026-07-14\n"
+"POT-Creation-Date: 2026-07-17\n"
+"PO-Revision-Date: 2026-07-17\n"
 "Language: ka\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -2707,6 +2707,10 @@ msgstr "გადავაწეროთ თავზე?"
 msgid "Package a project to see it here."
 msgstr "შეფუთეთ პროექტი, რომ აქ გამოჩნდეს."
 
+#: src/lib/navigation/views/WorkspaceView.svelte
+msgid "Package as READ.html"
+msgstr ""
+
 #: src/App.svelte
 msgid "Package EPUB"
 msgstr "EPUB-ის შეფუთვა"
@@ -2714,6 +2718,14 @@ msgstr "EPUB-ის შეფუთვა"
 #: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Package EPUB without SEED"
 msgstr "EPUB-ის შეფუთვა SEED-ის გარეშე"
+
+#: src/App.svelte
+msgid "Packaged {filename} ({size} MB)"
+msgstr ""
+
+#: src/App.svelte
+msgid "Packaged {filename} ({size} MB). Large for email — share it by link instead."
+msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Packaged Filename"
@@ -3273,8 +3285,8 @@ msgid "Secret Key"
 msgstr "საიდუმლო გასაღები"
 
 #: src/lib/navigation/views/AboutView.svelte
-msgid "SEED.html exports an EPUB that embeds its own SEED.zip source, and a PDF; only the EPUB can return to the app for further editing."
-msgstr "SEED.html-ის ექსპორტი იძლევა EPUB-ს, რომელშიც ჩაშენებულია საკუთარი SEED.zip წყარო, და PDF-ს; აპლიკაციაში შემდგომი ჩასწორებისთვის მხოლოდ EPUB-ის დაბრუნებაა შესაძლებელი."
+msgid "SEED.html exports an EPUB that embeds its own SEED.zip source, a PDF, and a READ.html web book; only the EPUB can return to the app for further editing."
+msgstr ""
 
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "SEED.html is a single file, and this page is the whole app. Keep your own copy and it will keep working even if this website goes away — a fully offline editor."

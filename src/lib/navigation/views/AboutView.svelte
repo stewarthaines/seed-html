@@ -88,17 +88,18 @@
         )}
       </p>
 
-      <!-- SEED.html publishes three outputs: PDF and a plain EPUB are one-way
-           destinations; the EPUB that embeds SEED.zip has a dashed return arrow —
-           only it can be re-imported, edited and republished. Decorative; the
-           aria-label and caption carry the meaning for screen readers. -->
+      <!-- SEED.html publishes four outputs: PDF, a plain EPUB, and a READ.html web
+           book are one-way destinations; the EPUB that embeds SEED.zip has a dashed
+           return arrow — only it can be re-imported, edited and republished.
+           Decorative; the aria-label and caption carry the meaning for screen
+           readers. -->
       <figure class="reach-figure">
         <svg
           class="reach-graphic seed-graphic"
-          viewBox="0 0 420 220"
+          viewBox="0 0 420 280"
           role="img"
           aria-label={$t(
-            'SEED.html exports an EPUB that embeds its own SEED.zip source, and a PDF; only the EPUB can return to the app for further editing.'
+            'SEED.html exports an EPUB that embeds its own SEED.zip source, a PDF, and a READ.html web book; only the EPUB can return to the app for further editing.'
           )}
         >
           <defs>
@@ -138,16 +139,21 @@
           <!-- EPUB round-trip: publish out (solid, horizontal), return to edit (dashed, flat parabola) -->
           <g class="g-arrows">
             <path d="M136 72 L288 72" marker-end="url(#seed-arrowhead)" />
-            <path d="M288 92 C 237 108, 187 108, 136 92" marker-end="url(#seed-arrowhead)" />
+            <path
+              class="return"
+              d="M288 92 C 237 108, 187 108, 136 92"
+              marker-end="url(#seed-arrowhead)"
+            />
           </g>
 
           <!-- PDF: one-way destination, set a little further from the app -->
           <g class="g-arrows">
-            <path
-              class="return"
-              d="M136 112 C 214 112, 250 178, 302 178"
-              marker-end="url(#seed-arrowhead)"
-            />
+            <path d="M136 112 C 214 112, 250 178, 302 178" marker-end="url(#seed-arrowhead)" />
+          </g>
+
+          <!-- READ.html web book: one-way destination below the PDF -->
+          <g class="g-arrows">
+            <path d="M136 126 C 214 126, 240 240, 296 240" marker-end="url(#seed-arrowhead)" />
           </g>
 
           <!-- Output 1: an EPUB that embeds its own SEED.zip source (the round-trip output) -->
@@ -163,6 +169,16 @@
             <path d="M304 148 L334 148 L346 160 L346 206 L304 206 Z" />
             <path d="M334 148 L334 160 L346 160" />
             <text x="356" y="181" class="lbl">PDF</text>
+          </g>
+
+          <!-- Output 3: READ.html — a browser window carrying the book, one-way -->
+          <g class="g-dest">
+            <rect x="304" y="222" width="52" height="38" rx="4" />
+            <line x1="304" y1="232" x2="356" y2="232" />
+            <line x1="309" y1="227" x2="313" y2="227" />
+            <line x1="314" y1="242" x2="346" y2="242" />
+            <line x1="314" y1="250" x2="340" y2="250" />
+            <text x="364" y="245" class="lbl small">READ.html</text>
           </g>
         </svg>
         <figcaption class="reach-caption">

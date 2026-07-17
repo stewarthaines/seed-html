@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-14\n"
-"PO-Revision-Date: 2026-07-14\n"
+"POT-Creation-Date: 2026-07-17\n"
+"PO-Revision-Date: 2026-07-17\n"
 "Language: en\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -2669,12 +2669,24 @@ msgstr ""
 msgid "Package a project to see it here."
 msgstr ""
 
+#: src/lib/navigation/views/WorkspaceView.svelte
+msgid "Package as READ.html"
+msgstr ""
+
 #: src/App.svelte
 msgid "Package EPUB"
 msgstr ""
 
 #: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Package EPUB without SEED"
+msgstr ""
+
+#: src/App.svelte
+msgid "Packaged {filename} ({size} MB)"
+msgstr ""
+
+#: src/App.svelte
+msgid "Packaged {filename} ({size} MB). Large for email — share it by link instead."
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -3235,7 +3247,7 @@ msgid "Secret Key"
 msgstr ""
 
 #: src/lib/navigation/views/AboutView.svelte
-msgid "SEED.html exports an EPUB that embeds its own SEED.zip source, and a PDF; only the EPUB can return to the app for further editing."
+msgid "SEED.html exports an EPUB that embeds its own SEED.zip source, a PDF, and a READ.html web book; only the EPUB can return to the app for further editing."
 msgstr ""
 
 #: src/lib/navigation/views/ThirdPartyView.svelte

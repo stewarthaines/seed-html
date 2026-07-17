@@ -37,6 +37,8 @@
     pdfGenerating = false,
     onPackageWithoutSeed,
     packaging = false,
+    onPackageAsReadHtml,
+    readHtmlPackaging = false,
   }: {
     onListWorkspaces: () => Promise<WorkspaceInfo[]>;
     /** Open the (app-owned) new-project dialog. */
@@ -63,6 +65,10 @@
     /** Export the active project as a plain EPUB (no SEED.zip/SEED.html). */
     onPackageWithoutSeed?: () => void;
     packaging?: boolean;
+    /** Export the active project as a plain EPUB wrapped in the READ.html reader —
+        one double-clickable file. Omitted when unavailable (offline file:// build). */
+    onPackageAsReadHtml?: () => void;
+    readHtmlPackaging?: boolean;
   } = $props();
 
   // Component state using $state()
@@ -441,7 +447,7 @@
                     <p class="book-description">{currentInfo.description}</p>
                   {/if}
 
-                  {#if onGeneratePdf || onPackageWithoutSeed}
+                  {#if onGeneratePdf || onPackageWithoutSeed || onPackageAsReadHtml}
                     <div class="book-actions">
                       {#if onGeneratePdf}
                         <button
@@ -466,6 +472,21 @@
                             : undefined}
                         >
                           {packaging ? $t('Packaging…') : $t('Package EPUB without SEED')}
+                        </button>
+                      {/if}
+                      {#if onPackageAsReadHtml}
+                        <button
+                          type="button"
+                          class="export-button"
+                          onclick={onPackageAsReadHtml}
+                          disabled={readHtmlPackaging || isReadOnly}
+                          title={isReadOnly
+                            ? $t(
+                                "This EPUB wasn't created in the Simple EPUB Editor, so it can't be repackaged."
+                              )
+                            : undefined}
+                        >
+                          {readHtmlPackaging ? $t('Packaging…') : $t('Package as READ.html')}
                         </button>
                       {/if}
                     </div>

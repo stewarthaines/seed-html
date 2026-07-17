@@ -63,6 +63,9 @@
   } from './lib/epub/cover-generator.js';
   import { exportPdf, exportChapterPdf } from './lib/pdf/pdf-export.js';
   import { isHttpContext, readerOverlayUrl } from './lib/reader/open-in-reader.js';
+  import { packageEpubAsReadHtml } from './lib/reader/package-as-read.js';
+  import { downloadBlob } from './lib/zip/index.js';
+  import { showToast } from './lib/stores/toast.svelte.js';
   import ReaderOverlay from './lib/components/reader/ReaderOverlay.svelte';
   import { writePublishSidecar } from './lib/services/publish/publish-sidecar.js';
 
@@ -825,6 +828,9 @@
   // PDF export is an HTTP-only feature (the vendored Paged.js polyfill is fetched
   // from the app origin; file:// can't load it), mirroring the axe-core a11y check.
   const canGeneratePdf = isHttpContext();
+  // Same gate for "Package as READ.html": the vendored reader shell is fetched
+  // from the app origin, unreachable from the file:// single-file build.
+  const canPackageReadHtml = isHttpContext();
   let pdfGenerating = $state(false);
 
   // Build a paginated PDF from the chapters and open the browser's Save-as-PDF
@@ -887,7 +893,7 @@
 
   const handlePackageRequest = async (
     workspaceId: string,
-    opts?: { includeSource?: boolean; download?: boolean }
+    opts?: { includeSource?: boolean; download?: boolean; format?: 'epub' | 'read-html' }
   ) => {
     if (!currentWorkspaceState || isReadOnly) return;
 
@@ -929,7 +935,24 @@
       if (result.success && result.blob && result.filename) {
         if (download) {
           // Destination-format export: hand the file straight to the browser.
-          epubPackager.downloadEPUB(result.blob, result.filename);
+          if (opts?.format === 'read-html') {
+            // Wrap the plain EPUB in the vendored reader — one double-clickable file.
+            const wrapped = await packageEpubAsReadHtml(result.blob, result.filename);
+            downloadBlob(wrapped.blob, wrapped.filename);
+            const mb = wrapped.blob.size / (1024 * 1024);
+            const size = mb >= 10 ? Math.round(mb).toString() : mb.toFixed(1);
+            showToast(
+              mb > 25
+                ? $t(
+                    'Packaged {filename} ({size} MB). Large for email — share it by link instead.',
+                    { filename: wrapped.filename, size }
+                  )
+                : $t('Packaged {filename} ({size} MB)', { filename: wrapped.filename, size }),
+              'success'
+            );
+          } else {
+            epubPackager.downloadEPUB(result.blob, result.filename);
+          }
           return;
         }
 
@@ -976,6 +999,28 @@
       }
     } finally {
       plainEpubExporting = false;
+    }
+  };
+
+  // READ.html destination format: the plain EPUB wrapped in the vendored reader,
+  // one double-clickable file. HTTP-only (the shell fetch), like Read and PDF.
+  let readHtmlExporting = $state(false);
+  const handleExportReadHtml = async () => {
+    if (!currentWorkspaceState || readHtmlExporting) return;
+    readHtmlExporting = true;
+    try {
+      await handlePackageRequest(currentWorkspaceState.id, {
+        includeSource: false,
+        download: true,
+        format: 'read-html',
+      });
+    } catch (error) {
+      console.error('READ.html export failed:', error);
+      if (appState) {
+        appState.errorMessage = `READ.html export failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      }
+    } finally {
+      readHtmlExporting = false;
     }
   };
 
@@ -1221,6 +1266,8 @@
           {pdfGenerating}
           onPackageWithoutSeed={handleExportPlainEpub}
           packaging={plainEpubExporting}
+          onPackageAsReadHtml={canPackageReadHtml ? handleExportReadHtml : undefined}
+          readHtmlPackaging={readHtmlExporting}
           onWorkspaceOpened={() => {
             // Workspace opened
           }}
