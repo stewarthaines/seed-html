@@ -18,6 +18,8 @@
  */
 
 import { payloadSlot, SEED_PAYLOAD_ID, injectPayload } from './html-payload.js';
+import { fetchSelfHtml, localizedSeedHtml } from './seed-html.js';
+import type { FileStorageAPI } from '../storage/index.js';
 
 /** The empty slot exactly as index.html ships it (asserted by smoke-build). */
 export const SEED_PAYLOAD_SLOT = payloadSlot(SEED_PAYLOAD_ID);
@@ -33,18 +35,18 @@ export function seedHtmlFilename(epubFilename: string): string {
 }
 
 /**
- * Fetch the app's own document and produce the book-carrying file for
+ * Fetch the app's own document, splice in the user's cached locale catalogs
+ * (same machinery as embedding SEED.html into an EPUB — the artifact speaks
+ * the recipient's language offline), and produce the book-carrying file for
  * download.
  */
 export async function packageEpubAsSeedHtml(
+  fileStorage: FileStorageAPI,
   epub: Blob,
   epubFilename: string
 ): Promise<{ blob: Blob; filename: string }> {
-  const response = await fetch(new URL('/', document.baseURI));
-  if (!response.ok) {
-    throw new Error(`Could not load the SEED.html app document (HTTP ${response.status})`);
-  }
-  const shell = await response.text();
+  const shellBytes = await localizedSeedHtml(await fetchSelfHtml(), fileStorage);
+  const shell = new TextDecoder().decode(shellBytes);
   const bytes = new Uint8Array(await epub.arrayBuffer());
   const html = injectPayload(shell, SEED_PAYLOAD_SLOT, bytes);
   return {

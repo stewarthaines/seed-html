@@ -971,7 +971,9 @@
             downloadWrappedHtml(await packageEpubAsReadHtml(result.blob, result.filename));
           } else if (opts?.format === 'seed-html') {
             // Wrap the Active EPUB in the app's own document — the self-editing book.
-            downloadWrappedHtml(await packageEpubAsSeedHtml(result.blob, result.filename));
+            downloadWrappedHtml(
+              await packageEpubAsSeedHtml(fileStorage, result.blob, result.filename)
+            );
           } else {
             epubPackager.downloadEPUB(result.blob, result.filename);
           }
