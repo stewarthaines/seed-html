@@ -1,3 +1,5 @@
+import { randomUUID } from '../utils/uuid.js';
+
 /**
  * MetadataUtils - Utility functions for EPUB metadata
  *
@@ -21,7 +23,7 @@ export class MetadataUtils {
    * Generate a unique identifier in URN UUID format
    */
   static generateIdentifier(): string {
-    const uuid = crypto.randomUUID();
+    const uuid = randomUUID();
     return `urn:uuid:${uuid}`;
   }
 

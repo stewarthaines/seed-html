@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { randomUUID } from './lib/utils/uuid.js';
   import { Package } from 'phosphor-svelte';
   import LayoutManager from './lib/LayoutManager.svelte';
   import Toast from './lib/components/Toast.svelte';
@@ -440,7 +441,7 @@
       }
 
       // Generate unique workspace ID
-      const workspaceId = 'workspace-' + crypto.randomUUID();
+      const workspaceId = 'workspace-' + randomUUID();
 
       // Unpack EPUB to workspace
       const result = await epubUnpacker.unpackEPUB(epubFile, workspaceId);

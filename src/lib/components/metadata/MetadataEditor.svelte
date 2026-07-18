@@ -1,5 +1,6 @@
 <script lang="ts">
   import { t } from '../../i18n';
+  import { randomUUID } from '../../utils/uuid.js';
   import { persisted, asEnum } from '../../state/persisted.svelte.js';
   import { getTabFields } from './metadata-tabs.js';
   import MetadataTabBar from './MetadataTabBar.svelte';
@@ -192,7 +193,7 @@
 
   const handleGenerateIdentifier = async () => {
     // Generate a new UUID for the identifier
-    const newIdentifier = `urn:uuid:${crypto.randomUUID()}`;
+    const newIdentifier = `urn:uuid:${randomUUID()}`;
     handleFieldChange({ detail: { field: 'identifier', value: newIdentifier } });
     await handleFieldSave({ detail: { field: 'identifier', value: newIdentifier } });
   };

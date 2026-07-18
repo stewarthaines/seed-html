@@ -8,6 +8,7 @@
 // Svelte 5 runes are globally available in .svelte.ts files
 // No explicit import needed for $state, $effect, $derived
 import type { FileStorageAPI } from './storage/index.js';
+import { randomUUID } from './utils/uuid.js';
 import { WorkspaceService } from './services/workspace/workspace.service.js';
 import { ContentService } from './services/content/content.service.js';
 import { SettingsService } from './services/settings/settings.service.js';
@@ -355,7 +356,7 @@ export class EnhancedAppState {
       const workspace = await this.workspaceService.createWorkspace({
         title,
         language: [language],
-        identifier: `urn:uuid:${crypto.randomUUID()}`,
+        identifier: `urn:uuid:${randomUUID()}`,
         // Stamp the producing app as a "Book producer" (MARC relator bkp) — the EPUB
         // convention for identifying the generating tool. Seeded only here, at user
         // creation, so it's editable/removable in the Metadata pane and is never added

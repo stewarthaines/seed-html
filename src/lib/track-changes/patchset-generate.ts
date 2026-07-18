@@ -5,6 +5,7 @@
  */
 
 import { FileStorageAPI } from '../storage/index.js';
+import { randomUUID } from '../utils/uuid.js';
 import { resolveManifestPath } from '../blob-url/utils.js';
 import type { WorkspaceState } from '../services/workspace/workspace.service.js';
 import { BASE_PREFIX } from './base-snapshot.js';
@@ -74,7 +75,7 @@ export async function generatePatchset(
   }
 
   return {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     projectIdentifier: workspace.opf.metadata.identifier ?? '',
     projectTitle: workspace.opf.metadata.title ?? '',
     createdAt: Date.now(),

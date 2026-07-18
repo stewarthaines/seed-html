@@ -6,6 +6,7 @@
  */
 
 import type { FileStorageAPI } from '../../storage/index.js';
+import { randomUUID } from '../../utils/uuid.js';
 import type { EPUBMetadata, OPFDocument, ManifestItem, SpineItem } from '../../epub/opf-utils.js';
 import {
   generateEPUBTimestamp,
@@ -344,7 +345,7 @@ export class WorkspaceService {
     const copy = await this.loadWorkspace(newId);
     return await this.updateMetadata(copy, {
       title: title?.trim() || `${copy.opf.metadata.title} (copy)`,
-      identifier: `urn:uuid:${crypto.randomUUID()}`,
+      identifier: `urn:uuid:${randomUUID()}`,
     });
   }
 
@@ -1060,7 +1061,7 @@ export class WorkspaceService {
   // Private helper methods
 
   private generateWorkspaceId(): string {
-    return 'workspace-' + crypto.randomUUID();
+    return 'workspace-' + randomUUID();
   }
 
   private async createEPUBStructure(id: string, opf: OPFDocument): Promise<void> {
