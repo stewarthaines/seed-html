@@ -254,6 +254,7 @@ export class SpinePreviewManager {
     return this.transformPipeline.executeGenerator(script, options, this.spineItemId, {
       basePath: workspace.pathInfo.basePath,
       manifest: workspace.opf.manifest,
+      language: primaryLanguage(workspace.opf.metadata),
     });
   }
 
@@ -326,11 +327,15 @@ export class SpinePreviewManager {
       }
 
       // The brokered file-access ctx for transform scripts (read manifest
-      // items, read/write SOURCE/data/).
-      const brokerContext: { basePath: string; manifest: ManifestItem[] } | undefined = workspace
+      // items, read/write SOURCE/data/), plus the book's language for
+      // locale-aware output.
+      const brokerContext:
+        | { basePath: string; manifest: ManifestItem[]; language: string }
+        | undefined = workspace
         ? {
             basePath: workspace.pathInfo.basePath,
             manifest: workspace.opf.manifest,
+            language: primaryLanguage(workspace.opf.metadata),
           }
         : undefined;
 

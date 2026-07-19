@@ -88,7 +88,7 @@ export interface ProcessingOptions {
    * Brokered file-access context for the transform scripts (the project's base path +
    * manifest), so nav transforms get the same `ctx` access as chapter transforms.
    */
-  brokerContext?: { basePath: string; manifest: ManifestItem[] };
+  brokerContext?: { basePath: string; manifest: ManifestItem[]; language?: string };
 }
 
 /**

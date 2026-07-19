@@ -31,6 +31,8 @@ export interface TransformBrokerContext {
   workspaceId: string;
   basePath: string;
   manifest: ManifestItem[];
+  /** The book's primary dc:language tag (empty/absent when the OPF has none). */
+  language?: string;
 }
 
 /** Content equality for transform-script bundles (drives the send dedup). */
@@ -137,8 +139,13 @@ export class TransformEngine {
     // The script-facing half of ctx (data only; the iframe attaches the async
     // capability methods). Sending the manifest lets scripts enumerate items.
     const transformCtx = brokerContext
-      ? { idref, basePath: brokerContext.basePath, manifest: brokerContext.manifest }
-      : { idref, basePath: '', manifest: [] as ManifestItem[] };
+      ? {
+          idref,
+          basePath: brokerContext.basePath,
+          manifest: brokerContext.manifest,
+          language: brokerContext.language ?? '',
+        }
+      : { idref, basePath: '', manifest: [] as ManifestItem[], language: '' };
 
     // The transform may now await brokered file I/O, so the message round-trip can
     // outlast the default 5s — give it the transform timeout plus headroom.
@@ -178,6 +185,7 @@ export class TransformEngine {
       idref,
       basePath: brokerContext.basePath,
       manifest: brokerContext.manifest,
+      language: brokerContext.language ?? '',
     };
 
     // Options often arrive as a Svelte $state proxy, which postMessage can't

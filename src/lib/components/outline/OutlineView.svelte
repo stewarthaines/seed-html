@@ -148,7 +148,11 @@
       let brokerContext;
       try {
         const ws = await workspaceService.loadWorkspace(workspace.id);
-        brokerContext = { basePath: ws.pathInfo.basePath, manifest: ws.opf.manifest };
+        brokerContext = {
+          basePath: ws.pathInfo.basePath,
+          manifest: ws.opf.manifest,
+          language: bookLanguage,
+        };
       } catch {
         brokerContext = undefined;
       }

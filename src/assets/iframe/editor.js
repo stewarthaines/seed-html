@@ -287,8 +287,8 @@ class TransformExecutionEngine {
 
   /**
    * Build the `ctx` object passed as the third argument to transform functions.
-   * Data fields (idref, basePath, manifest) come from the parent; the methods are
-   * async capabilities brokered through the parent (see callBroker).
+   * Data fields (idref, basePath, manifest, language) come from the parent; the
+   * methods are async capabilities brokered through the parent (see callBroker).
    */
   createTransformContext(transformCtx) {
     const data = transformCtx || {};
@@ -296,6 +296,8 @@ class TransformExecutionEngine {
       idref: data.idref,
       basePath: data.basePath || '',
       manifest: Array.isArray(data.manifest) ? data.manifest : [],
+      // The book's primary dc:language tag ('' when the project has none).
+      language: data.language || '',
       // Read a manifest item (declared in the OPF) as decoded UTF-8 text.
       readManifestText: href => this.callBroker('readManifestText', { href }),
       // Read a manifest item as a data: URL (for binary assets like images).

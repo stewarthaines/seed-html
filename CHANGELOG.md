@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > pins) are intentionally omitted — this log describes what changed for someone who
 > _uses_ the editor, not the commit history.
 
+## [Unreleased]
+
+### Added
+
+- Transform and generator scripts can read the book's language (`ctx.language`) to produce locale-aware output, like dates written out in the book's own language.
+
 ## [0.11.0] - 2026-07-18
 
 ### Added

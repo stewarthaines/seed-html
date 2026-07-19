@@ -90,7 +90,7 @@ describe('SpinePreviewManager pipeline', () => {
           { id: 'ch2', href: 'text/ch2.xhtml', mediaType: 'application/xhtml+xml' },
         ],
         spine: [],
-        metadata: {},
+        metadata: { language: ['ka'] },
       },
     };
 
@@ -297,7 +297,7 @@ describe('SpinePreviewManager pipeline', () => {
       'content',
       expect.anything(),
       'ch1',
-      expect.objectContaining({ basePath: 'OEBPS' })
+      expect.objectContaining({ basePath: 'OEBPS', language: 'ka' })
     );
     expect(h.workspaceService.writeFile).toHaveBeenCalledWith(
       'ws-1',
