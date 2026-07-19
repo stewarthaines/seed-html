@@ -31,6 +31,7 @@ A script can't read an arbitrary path by guessing at it, and can't overwrite set
 | `ctx.idref` | `string \| undefined` | The id of the chapter currently being transformed. Same value as the second argument. |
 | `ctx.basePath` | `string` | The EPUB content base path (e.g. `"OEBPS"`). Manifest `href`s are relative to it. |
 | `ctx.manifest` | `ManifestItem[]` | The parsed manifest — every file declared in the book. |
+| `ctx.language` | `string` | The book's primary language tag from the metadata (e.g. `"en"`, `"ka"`). Empty when the project has no language set. Use it for locale-aware output, such as `Intl` date formatting. |
 
 A `ManifestItem`:
 

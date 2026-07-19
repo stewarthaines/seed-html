@@ -20,6 +20,7 @@ function transformDOM(htmlDocument, idref, ctx) {
 ctx.manifest   // the book's files: [{ id, href, mediaType, properties }]
 ctx.basePath   // the content base path (e.g. "OEBPS")
 ctx.idref      // the current chapter id (also passed positionally)
+ctx.language   // the book's primary language tag (e.g. "en", "ka")
 ```
 
 — alongside async file methods:
