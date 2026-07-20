@@ -113,6 +113,14 @@
       copyright: 'Copyright (c) 2015-2024 Deque Systems, Inc.',
     },
     {
+      name: '@guidepup/virtual-screen-reader',
+      version: '0.32.1',
+      license: 'MIT',
+      url: 'https://github.com/guidepup/virtual-screen-reader',
+      description: 'Screen reader announcement preview in the EPUB preview',
+      copyright: 'Copyright (c) 2023 Craig Morten',
+    },
+    {
       name: 'Paged.js',
       version: '0.4.3',
       license: 'MIT',
