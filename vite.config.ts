@@ -305,6 +305,24 @@ export default defineConfig({
         });
       },
     },
+    // Dev only: serve the vendored reader at its branded root URL. In production
+    // functions/READ.html.ts (a Pages Function) owns /READ.html; Vite doesn't run
+    // Pages Functions, so without this the request falls through to the SPA HTML
+    // fallback and the editor answers — whose ?book= handler then captures reader
+    // links. The underlying asset stays served by Vite at /read/READ.html.
+    {
+      name: 'serve-read-html-dev',
+      apply: 'serve',
+      configureServer(server) {
+        server.middlewares.use('/READ.html', async (_req, res) => {
+          const html = await fs.readFile(path.join(dirname, 'public', 'read', 'READ.html'));
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          // Match the production Function's Save As filename.
+          res.setHeader('Content-Disposition', 'inline; filename="READ.html"');
+          res.end(html);
+        });
+      },
+    },
     // Dev only: serve the locales sidecar (mirrors serve-extensions-dev). The
     // manifest is synthesized from the compiled catalogs in src/lib/i18n/locales/
     // (run `npm run i18n:convert` once) + locale-meta.js, so dev exercises the
