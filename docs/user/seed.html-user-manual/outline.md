@@ -50,6 +50,7 @@ TODO (images): cropped screenshots for this chapter — the Basic Info metadata 
 Catch accessibility problems while you write — the check runs inline against the chapter you're editing, so your book stays accessible from the start instead of being fixed at the end.
 
 - Accessibility check (axe-core)
+- Screen reader preview (announcements as captions over the preview, optionally spoken)
 
 TODO (images): cropped screenshot of the Accessibility panel showing a finding and the count beside the button.
 

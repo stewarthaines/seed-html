@@ -2113,11 +2113,6 @@
               </button>
             {/if}
           </div>
-
-          <!-- i18n: fidelity note under the screen reader preview options -->
-          <p class="reader-note">
-            {$t('Approximate announcements — real screen readers word things differently.')}
-          </p>
         {/if}
       </div>
     </div>

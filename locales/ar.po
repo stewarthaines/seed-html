@@ -497,11 +497,6 @@ msgstr ""
 msgid "Applying…"
 msgstr ""
 
-#: src/lib/components/spine/PreviewPane.svelte
-#. fidelity note under the screen reader preview options
-msgid "Approximate announcements — real screen readers word things differently."
-msgstr ""
-
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Approximate start position"
 msgstr ""
