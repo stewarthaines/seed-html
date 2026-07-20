@@ -2069,13 +2069,6 @@
         {#if srLoadError}
           <p class="reader-note">{$t('Could not load the screen reader preview.')}</p>
         {:else}
-          <!-- i18n: instruction shown in the screen reader preview panel -->
-          <p class="reader-note sr-hint">
-            {$t(
-              'Hover a block in the preview and press Announce to see what a screen reader would say.'
-            )}
-          </p>
-
           <label class="reader-toggle">
             <input type="checkbox" bind:checked={srSpeak.current} />
             <span>{$t('Speak announcements aloud')}</span>

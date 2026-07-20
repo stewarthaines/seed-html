@@ -1787,11 +1787,6 @@ msgstr ""
 msgid "Home (tablet)"
 msgstr ""
 
-#: src/lib/components/spine/PreviewPane.svelte
-#. instruction shown in the screen reader preview panel
-msgid "Hover a block in the preview and press Announce to see what a screen reader would say."
-msgstr ""
-
 #: src/lib/components/metadata/AccessibilityFields.svelte
 msgid "Human-readable summary of the accessibility of this publication"
 msgstr ""

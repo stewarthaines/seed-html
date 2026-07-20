@@ -1825,11 +1825,6 @@ msgstr "პროექტის სექციების დამალვ�
 msgid "Home (tablet)"
 msgstr "სახლი (პლანშეტი)"
 
-#: src/lib/components/spine/PreviewPane.svelte
-#. instruction shown in the screen reader preview panel
-msgid "Hover a block in the preview and press Announce to see what a screen reader would say."
-msgstr ""
-
 #: src/lib/components/metadata/AccessibilityFields.svelte
 msgid "Human-readable summary of the accessibility of this publication"
 msgstr "ამ პუბლიკაციის წვდომადობის ადამიანისთვის გასაგები შეჯამება"
