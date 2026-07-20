@@ -458,9 +458,11 @@
       button[data-seed-sr-announce] {
         position: absolute;
         display: none;
-        /* Anchored to the block's bottom-right corner, inside the block —
-           covering content is fine, the affordance is strictly transient. */
-        transform: translate(-100%, -100%);
+        /* Anchored inside the block's top-right corner: inside so it reads as
+           part of the outlined block (covering content is fine — transient
+           hover chrome), top so reaching it never crosses the block's nested
+           children, which would re-target the hover en route. */
+        transform: translateX(-100%);
         z-index: 2147483647;
         font: 600 12px/1 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         white-space: nowrap;
@@ -545,9 +547,9 @@
     const scrollX = win?.scrollX ?? 0;
     const scrollY = win?.scrollY ?? 0;
     button.style.display = 'block';
-    // Bottom-right corner, inside the block (the translate right/bottom-aligns).
+    // Top-right corner, inside the block (the translate right-aligns).
     button.style.left = `${rect.right + scrollX - 3}px`;
-    button.style.top = `${rect.bottom + scrollY - 3}px`;
+    button.style.top = `${rect.top + scrollY + 3}px`;
   }
 
   /** Abort the running walk and silence queued speech. Caption content stands. */
