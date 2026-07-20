@@ -341,6 +341,7 @@
 
   interface VsrWindow extends Window {
     __seedVsr?: VsrLike;
+    __seedVsrError?: string;
   }
 
   let srLoadError = $state(false);
@@ -369,36 +370,43 @@
   /**
    * Load the vendored virtual screen reader into the preview iframe (once per
    * iframe Window — the module global survives document.open() rewrites, same
-   * as win.axe). The inline script uses dynamic import so both resolution and
-   * failure surface as events the host can await.
+   * as win.axe). The inline script publishes success/failure as Window globals.
    */
   function loadVsr(doc: Document, win: VsrWindow): Promise<void> {
     if (win.__seedVsr) return Promise.resolve();
-    return new Promise<void>((resolve, reject) => {
-      const cleanup = () => {
-        clearTimeout(timer);
-        win.removeEventListener('seed-vsr-ready', onReady);
-        win.removeEventListener('seed-vsr-error', onError);
-      };
-      const onReady = () => {
-        cleanup();
-        resolve();
-      };
-      const onError = () => {
-        cleanup();
-        reject(new Error('Failed to load the virtual screen reader'));
-      };
-      const timer = setTimeout(onError, 10000);
-      win.addEventListener('seed-vsr-ready', onReady);
-      win.addEventListener('seed-vsr-error', onError);
+    if (!doc.querySelector('[data-seed-sr-loader]')) {
       const script = doc.createElement('script');
       script.setAttribute('data-seed-sr-loader', '');
       const url = new URL('sr-preview/virtual-screen-reader.js', document.baseURI).href;
       script.textContent =
         `import(${JSON.stringify(url)})` +
-        `.then(m => { window.__seedVsr = m.virtual; window.dispatchEvent(new Event('seed-vsr-ready')); })` +
-        `.catch(() => window.dispatchEvent(new Event('seed-vsr-error')));`;
+        `.then(m => { window.__seedVsr = m.virtual; })` +
+        `.catch(e => { window.__seedVsrError = String((e && e.message) || e); });`;
       doc.head.appendChild(script);
+    }
+    // Poll for the global rather than listening for an event: opening the panel
+    // resizes the pane, which re-renders the preview, and document.open() strips
+    // every listener from the iframe's Window mid-load. The in-flight import
+    // itself survives the rewrite (it belongs to the Window realm), so the
+    // global appearing is the reliable completion signal.
+    return new Promise<void>((resolve, reject) => {
+      const started = Date.now();
+      const tick = () => {
+        if (previewIframe?.contentWindow !== win) {
+          // Device re-key replaced the Window; the new iframe's load hook
+          // starts its own load — this one is moot.
+          reject(new Error('preview window replaced'));
+        } else if (win.__seedVsr) {
+          resolve();
+        } else if (win.__seedVsrError) {
+          reject(new Error(win.__seedVsrError));
+        } else if (Date.now() - started > 10000) {
+          reject(new Error('Timed out loading the virtual screen reader'));
+        } else {
+          setTimeout(tick, 100);
+        }
+      };
+      tick();
     });
   }
 
@@ -411,25 +419,35 @@
   async function ensureSrReady(): Promise<void> {
     const doc = previewIframe?.contentDocument;
     const win = previewIframe?.contentWindow as VsrWindow | null;
-    if (!doc || !win || !doc.body) return;
+    if (!doc || !win) return;
     srLoadError = false;
     try {
       await loadVsr(doc, win);
     } catch (error) {
-      console.error('Screen reader preview failed to load:', error);
-      srLoadError = true;
+      // The load may have raced a preview rewrite or device re-key; it only
+      // failed for real if the current Window still lacks the library (a
+      // replaced Window gets its own load from the iframe's load hook).
+      const currentWin = previewIframe?.contentWindow as VsrWindow | null;
+      if (currentWin === win && !currentWin?.__seedVsr) {
+        console.error('Screen reader preview failed to load:', error);
+        srLoadError = true;
+      }
       return;
     }
+    // Instrument the document that is CURRENT after the await — the one
+    // captured above may have been rewritten away while the library loaded.
+    const currentDoc = previewIframe?.contentDocument;
+    if (activePanel !== 'sr' || !currentDoc?.body) return;
     srDocLang =
-      doc.documentElement.getAttribute('lang') ??
-      doc.documentElement.getAttribute('xml:lang') ??
+      currentDoc.documentElement.getAttribute('lang') ??
+      currentDoc.documentElement.getAttribute('xml:lang') ??
       '';
-    setupSrInstrumentation(doc);
+    setupSrInstrumentation(currentDoc);
   }
 
   /** Inject the announce button + styles into the preview document (idempotent). */
   function setupSrInstrumentation(doc: Document): void {
-    if (doc.querySelector('[data-seed-sr-style]')) return;
+    if (!doc.body || doc.querySelector('[data-seed-sr-style]')) return;
     const style = doc.createElement('style');
     style.setAttribute('data-seed-sr-style', '');
     style.textContent = `
@@ -489,9 +507,12 @@
 
   function handleSrMouseOver(event: MouseEvent): void {
     if (srWalking) return;
-    const target = event.target;
-    if (!(target instanceof Element)) return;
+    // Realm-safe element check: the target belongs to the iframe's realm, so
+    // the host's `instanceof Element` is always false for it.
+    const target = event.target as Element | null;
+    if (!target || target.nodeType !== Node.ELEMENT_NODE) return;
     const doc = target.ownerDocument;
+    if (!doc) return;
     const button = doc.querySelector<HTMLButtonElement>('button[data-seed-sr-announce]');
     if (!button || target === button || button.contains(target)) return;
     const block = resolveAnnounceTarget(target);
