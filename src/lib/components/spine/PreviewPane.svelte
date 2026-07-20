@@ -458,9 +458,13 @@
       button[data-seed-sr-announce] {
         position: absolute;
         display: none;
-        transform: translateX(-100%);
+        /* Anchored to the block's bottom-right corner, inside the block —
+           covering content is fine, the affordance is strictly transient. */
+        transform: translate(-100%, -100%);
         z-index: 2147483647;
         font: 600 12px/1 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        white-space: nowrap;
+        hyphens: none;
         color: #fff;
         background: #7c3aed;
         border: 0;
@@ -541,9 +545,9 @@
     const scrollX = win?.scrollX ?? 0;
     const scrollY = win?.scrollY ?? 0;
     button.style.display = 'block';
-    // Top-right of the block, kept inside the document (translateX right-aligns).
-    button.style.left = `${Math.max(rect.right + scrollX, 60)}px`;
-    button.style.top = `${Math.max(rect.top + scrollY - 26, scrollY + 2)}px`;
+    // Bottom-right corner, inside the block (the translate right/bottom-aligns).
+    button.style.left = `${rect.right + scrollX - 3}px`;
+    button.style.top = `${rect.bottom + scrollY - 3}px`;
   }
 
   /** Abort the running walk and silence queued speech. Caption content stands. */
