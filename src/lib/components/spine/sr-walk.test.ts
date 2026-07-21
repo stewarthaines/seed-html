@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
+  contentPhrase,
   resolveAnnounceTarget,
   isStructuralPhrase,
   isTerminalPhrase,
@@ -113,6 +114,30 @@ describe('isStructuralPhrase', () => {
     expect(isStructuralPhrase('Recorded in the village of Kotelia.')).toBe(false);
     expect(isStructuralPhrase('hello, world')).toBe(false);
     expect(isStructuralPhrase('მრავალხმიანობა')).toBe(false);
+  });
+});
+
+describe('contentPhrase', () => {
+  it('keeps content that only exists inside structural phrases', () => {
+    expect(contentPhrase('heading, The Last Soinari Player, level 2')).toBe(
+      'The Last Soinari Player'
+    );
+    expect(contentPhrase('cell, 6 December')).toBe('6 December');
+    expect(contentPhrase('image, Three singers, sketched')).toBe('Three singers, sketched');
+    expect(contentPhrase('table, December broadcasts')).toBe('December broadcasts');
+  });
+
+  it('drops structure that carries no content', () => {
+    expect(contentPhrase('listitem, level 2, position 3, set size 12')).toBeNull();
+    expect(contentPhrase('list')).toBeNull();
+    expect(contentPhrase('paragraph')).toBeNull();
+    expect(contentPhrase('end of list item')).toBeNull();
+    expect(contentPhrase('end of doc-footnote')).toBeNull();
+  });
+
+  it('passes content text through untouched, commas and numbers included', () => {
+    expect(contentPhrase('Recorded in Kotelia, in 1932.')).toBe('Recorded in Kotelia, in 1932.');
+    expect(contentPhrase('Over 1,000 tickets sold.')).toBe('Over 1,000 tickets sold.');
   });
 });
 

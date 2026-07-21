@@ -483,6 +483,10 @@ msgid "Announce"
 msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
+msgid "Announcement style"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
 msgid "Announcing…"
 msgstr ""
 
@@ -3593,6 +3597,10 @@ msgstr "ჩასწორების დროს გადახედვა 
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Read"
 msgstr "კითხვა"
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Read aloud"
+msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Read whole chapter"

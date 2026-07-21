@@ -176,7 +176,6 @@ msgid "{sel}/{total}"
 msgstr "{sel}/{total}"
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "{x} of {y}"
 msgstr "{x} von {y}"
 
@@ -461,12 +460,15 @@ msgid "Already in the catalog"
 msgstr "Bereits im Katalog"
 
 #: src/lib/components/spine/PreviewPane.svelte
-# proposed seed — needs native review
 msgid "Announce"
 msgstr "Ansagen"
 
 #: src/lib/components/spine/PreviewPane.svelte
 # proposed seed — needs native review
+msgid "Announcement style"
+msgstr "Ansagestil"
+
+#: src/lib/components/spine/PreviewPane.svelte
 msgid "Announcing…"
 msgstr "Ansage läuft …"
 
@@ -487,7 +489,6 @@ msgid "Append Item"
 msgstr "Element anhängen"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "appendix"
 msgstr "Anhang"
 
@@ -558,7 +559,6 @@ msgid "Are you sure you want to delete this item?"
 msgstr "Möchten Sie dieses Element wirklich löschen?"
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "article"
 msgstr "Artikel"
 
@@ -627,7 +627,6 @@ msgid "back link"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "banner"
 msgstr "Banner"
 
@@ -644,7 +643,6 @@ msgid "Basic mode"
 msgstr "Einfacher Modus"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "bibliography"
 msgstr "Literaturverzeichnis"
 
@@ -661,7 +659,6 @@ msgid "Binary file - preview not available"
 msgstr "Binärdatei – keine Vorschau verfügbar"
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "block quote"
 msgstr "Zitatblock"
 
@@ -711,7 +708,6 @@ msgid "Cancel"
 msgstr "Abbrechen"
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "caption"
 msgstr "Beschriftung"
 
@@ -756,7 +752,6 @@ msgid "Catalogs"
 msgstr "Kataloge"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "cell"
 msgstr "Zelle"
 
@@ -794,7 +789,6 @@ msgid "Changes"
 msgstr "Änderungen"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "chapter"
 msgstr "Kapitel"
 
@@ -912,7 +906,6 @@ msgid "Close accessibility panel"
 msgstr "Barrierefreiheitsbereich schließen"
 
 #: src/lib/components/spine/PreviewPane.svelte
-# proposed seed — needs native review
 msgid "Close announcements"
 msgstr "Ansagen schließen"
 
@@ -925,7 +918,6 @@ msgid "Close reading preview panel"
 msgstr "Lesevorschau schließen"
 
 #: src/lib/components/spine/PreviewPane.svelte
-# proposed seed — needs native review
 msgid "Close screen reader panel"
 msgstr "Screenreader-Bereich schließen"
 
@@ -959,7 +951,6 @@ msgid "colophon"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "column header"
 msgstr "Spaltenüberschrift"
 
@@ -974,7 +965,6 @@ msgid "Compact"
 msgstr "Kompakt"
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "complementary"
 msgstr "Ergänzung"
 
@@ -983,7 +973,6 @@ msgid "Complex Interactive"
 msgstr "Komplex interaktiv"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "conclusion"
 msgstr "Schluss"
 
@@ -1105,7 +1094,6 @@ msgid "Could not load the feed."
 msgstr "Der Feed konnte nicht geladen werden."
 
 #: src/lib/components/spine/PreviewPane.svelte
-# proposed seed — needs native review
 msgid "Could not load the screen reader preview."
 msgstr "Die Screenreader-Vorschau konnte nicht geladen werden."
 
@@ -1122,7 +1110,6 @@ msgid "Could not read the project: {error}"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "cover"
 msgstr "Cover"
 
@@ -1285,7 +1272,6 @@ msgid "Decrease text size"
 msgstr "Schrift verkleinern"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "dedication"
 msgstr "Widmung"
 
@@ -1303,12 +1289,10 @@ msgid "Default value"
 msgstr "Standardwert"
 
 #: src/lib/components/spine/PreviewPane.svelte
-# proposed seed — needs native review
 msgid "Default voice"
 msgstr "Standardstimme"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "definition"
 msgstr "Definition"
 
@@ -1399,7 +1383,6 @@ msgid "Dismiss"
 msgstr "Verwerfen"
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "document"
 msgstr "Dokument"
 
@@ -1589,12 +1572,10 @@ msgid "end of bibliography reference"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "end of block quote"
 msgstr "Ende des Zitatblocks"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "end of caption"
 msgstr "Ende der Beschriftung"
 
@@ -1655,7 +1636,6 @@ msgid "end of deletion"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "end of document"
 msgstr "Dokumentende"
 
@@ -1688,12 +1668,10 @@ msgid "end of example"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "end of figure"
 msgstr "Ende der Abbildung"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "end of footnote"
 msgstr "Ende der Fußnote"
 
@@ -1726,7 +1704,6 @@ msgid "end of graphic symbol"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "end of heading"
 msgstr "Ende der Überschrift"
 
@@ -1747,37 +1724,30 @@ msgid "end of introduction"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "end of link"
 msgstr "Ende des Links"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "end of list"
 msgstr "Listenende"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "end of list item"
 msgstr "Ende des Listeneintrags"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "end of main"
 msgstr "Ende des Hauptbereichs"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "end of navigation"
 msgstr "Ende der Navigation"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "end of note"
 msgstr "Ende der Anmerkung"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "end of note reference"
 msgstr "Ende des Anmerkungsverweises"
 
@@ -1794,7 +1764,6 @@ msgid "end of page list"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "end of paragraph"
 msgstr "Absatzende"
 
@@ -1819,17 +1788,14 @@ msgid "end of questions and answers"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "end of region"
 msgstr "Ende der Region"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "end of row"
 msgstr "Zeilenende"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "end of row group"
 msgstr "Ende der Zeilengruppe"
 
@@ -1862,7 +1828,6 @@ msgid "end of superscript"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "end of table"
 msgstr "Tabellenende"
 
@@ -1883,12 +1848,10 @@ msgid "end of tip"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "endnote"
 msgstr "Endnote"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "endnotes"
 msgstr "Endnoten"
 
@@ -1941,7 +1904,6 @@ msgid "epigraph"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "epilogue"
 msgstr "Epilog"
 
@@ -1998,7 +1960,6 @@ msgid "Everything up to date."
 msgstr "Alles auf dem neuesten Stand."
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "example"
 msgstr "Beispiel"
 
@@ -2149,7 +2110,6 @@ msgid "Fetch"
 msgstr "Abrufen"
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "figure"
 msgstr "Abbildung"
 
@@ -2211,7 +2171,6 @@ msgid "Font:"
 msgstr "Schrift:"
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "footnote"
 msgstr "Fußnote"
 
@@ -2220,7 +2179,6 @@ msgid "Force reading-system colours"
 msgstr "Farben des Lesesystems erzwingen"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "foreword"
 msgstr "Geleitwort"
 
@@ -2276,7 +2234,6 @@ msgid "Get Started"
 msgstr "Loslegen"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "glossary"
 msgstr "Glossar"
 
@@ -2305,7 +2262,6 @@ msgid "Google Drive setup failed: {error}"
 msgstr "Google-Drive-Einrichtung fehlgeschlagen: {error}"
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "graphic"
 msgstr "Grafik"
 
@@ -2322,7 +2278,6 @@ msgid "Hazards"
 msgstr "Gefahren"
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "heading"
 msgstr "Überschrift"
 
@@ -2378,7 +2333,6 @@ msgid "Ignore changes (don't import)"
 msgstr "Änderungen ignorieren (nicht importieren)"
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "image"
 msgstr "Grafik"
 
@@ -2453,7 +2407,6 @@ msgid "Increase text size"
 msgstr "Schrift vergrößern"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "index"
 msgstr "Index"
 
@@ -2511,7 +2464,6 @@ msgid "insertion"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "introduction"
 msgstr "Einleitung"
 
@@ -2684,7 +2636,6 @@ msgid "Left to Right"
 msgstr "Links nach rechts"
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "level {n}"
 msgstr "Ebene {n}"
 
@@ -2708,7 +2659,6 @@ msgid "Light text on a dark cover"
 msgstr "Heller Text auf dunklem Cover"
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "link"
 msgstr "Link"
 
@@ -2721,12 +2671,10 @@ msgid "Linked folder: {name}"
 msgstr "Verknüpfter Ordner: {name}"
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "list"
 msgstr "Liste"
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "list item"
 msgstr "Listeneintrag"
 
@@ -2836,7 +2784,6 @@ msgid "macOS sidecar file"
 msgstr "macOS-Begleitdatei"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "main"
 msgstr "Hauptbereich"
 
@@ -2958,7 +2905,6 @@ msgid "Narrow"
 msgstr "Schmal"
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "navigation"
 msgstr "Navigation"
 
@@ -3181,12 +3127,10 @@ msgid "Not validated"
 msgstr "Nicht validiert"
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "note"
 msgstr "Anmerkung"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "note reference"
 msgstr "Anmerkungsverweis"
 
@@ -3196,7 +3140,6 @@ msgid "Nothing to import — the file(s) already match the existing content."
 msgstr "Nichts zu importieren – die Datei(en) stimmen bereits mit dem vorhandenen Inhalt überein."
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "notice"
 msgstr "Hinweis"
 
@@ -3359,12 +3302,10 @@ msgid "Packaging…"
 msgstr "Wird verpackt…"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "page break"
 msgstr "Seitenumbruch"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "page list"
 msgstr "Seitenliste"
 
@@ -3397,12 +3338,10 @@ msgid "Pane 2 content"
 msgstr "Inhalt von Bereich 2"
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "paragraph"
 msgstr "Absatz"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "part"
 msgstr "Teil"
 
@@ -3520,7 +3459,6 @@ msgid "Pre-paginated"
 msgstr "Vorpaginiert"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "preface"
 msgstr "Vorwort"
 
@@ -3582,7 +3520,6 @@ msgid "Projects"
 msgstr "Projekte"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "prologue"
 msgstr "Prolog"
 
@@ -3626,7 +3563,6 @@ msgstr ""
 
 #: plugins/audio-clip-editor/src/App.svelte
 #: src/lib/components/spine/PreviewPane.svelte
-# proposed seed — needs native review
 msgid "Rate"
 msgstr "Geschwindigkeit"
 
@@ -3646,6 +3582,10 @@ msgstr "Lesen"
 
 #: src/lib/components/spine/PreviewPane.svelte
 # proposed seed — needs native review
+msgid "Read aloud"
+msgstr "Vorlesen"
+
+#: src/lib/components/spine/PreviewPane.svelte
 msgid "Read whole chapter"
 msgstr "Ganzes Kapitel vorlesen"
 
@@ -3718,7 +3658,6 @@ msgid "Refresh"
 msgstr "Aktualisieren"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "region"
 msgstr "Region"
 
@@ -3881,17 +3820,14 @@ msgid "Route uploads through the app proxy (for servers without CORS)"
 msgstr "Uploads über den App-Proxy leiten (für Server ohne CORS)"
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "row"
 msgstr "Zeile"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "row group"
 msgstr "Zeilengruppe"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "row header"
 msgstr "Zeilenüberschrift"
 
@@ -3954,17 +3890,14 @@ msgstr "Wird gespeichert…"
 
 #: src/lib/components/spine/PreviewPane.svelte
 #. preview Checks dropdown entry — announcement preview
-# proposed seed — needs native review
 msgid "Screen reader"
 msgstr "Screenreader"
 
 #: src/lib/components/spine/PreviewPane.svelte
-# proposed seed — needs native review
 msgid "Screen reader announcements"
 msgstr "Screenreader-Ansagen"
 
 #: src/lib/components/spine/PreviewPane.svelte
-# proposed seed — needs native review
 msgid "Screen reader preview"
 msgstr "Screenreader-Vorschau"
 
@@ -4161,7 +4094,6 @@ msgid "Source on GitHub"
 msgstr "Quellcode auf GitHub"
 
 #: src/lib/components/spine/PreviewPane.svelte
-# proposed seed — needs native review
 msgid "Speak announcements aloud"
 msgstr "Ansagen laut vorlesen"
 
@@ -4233,7 +4165,6 @@ msgid "subscript"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "subtitle"
 msgstr "Untertitel"
 
@@ -4276,12 +4207,10 @@ msgid "System"
 msgstr "System"
 
 #: src/lib/components/spine/sr-walk.ts
-# seeded from NVDA-de role vocabulary (nvaccess/nvda de.po) — needs native review
 msgid "table"
 msgstr "Tabelle"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "table of contents"
 msgstr "Inhaltsverzeichnis"
 
@@ -4290,7 +4219,6 @@ msgid "Technical Info"
 msgstr "Technische Informationen"
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "term"
 msgstr "Begriff"
 
@@ -4419,7 +4347,6 @@ msgid "time"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
-# proposed seed (standard AT terminology) — needs native review
 msgid "tip"
 msgstr "Tipp"
 
@@ -4693,7 +4620,6 @@ msgid "Viewport width in pixels"
 msgstr "Viewport-Breite in Pixeln"
 
 #: src/lib/components/spine/PreviewPane.svelte
-# proposed seed — needs native review
 msgid "Voice"
 msgstr "Stimme"
 
@@ -4738,7 +4664,6 @@ msgid "While locked, you can edit existing chapters, styles and scripts; structu
 msgstr "Solange gesperrt, können Sie bestehende Kapitel, Stile und Skripte bearbeiten; strukturelle Änderungen sind deaktiviert."
 
 #: src/lib/components/spine/PreviewPane.svelte
-# proposed seed — needs native review
 msgid "Whole chapter"
 msgstr "Ganzes Kapitel"
 

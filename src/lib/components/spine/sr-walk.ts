@@ -183,6 +183,27 @@ export function speakablePhrase(phrase: string, spoken: SpokenLookup = passthrou
   return lead + rest;
 }
 
+/**
+ * The read-aloud projection of a phrase: what a reading app's built-in
+ * narration (Thorium read-aloud, Apple Books) would voice — content only, no
+ * structure. Returns null for phrases that carry no content (bare roles,
+ * levels and positions, every "end of"). Content that only exists inside a
+ * structural phrase survives: a heading's text, a cell's text, an image's
+ * accessible name (read-aloud engines do read alt text).
+ */
+export function contentPhrase(phrase: string): string | null {
+  if (phrase.startsWith('end of ')) return null;
+  const match = phrase.match(/^([a-z][a-z-]*)(?:,|$)/);
+  if (!match || !(match[1] in ROLES || match[1].startsWith('doc-'))) return phrase;
+  const remainder = phrase
+    .slice(match[1].length)
+    .replace(/, level \d+/, '')
+    .replace(/, position \d+, set size \d+/, '')
+    .replace(/^, /, '')
+    .trim();
+  return remainder || null;
+}
+
 /** The subset of the virtual screen reader the walk driver needs. */
 export interface VsrLike {
   start(options: { container: Element; displayCursor?: boolean }): Promise<void>;

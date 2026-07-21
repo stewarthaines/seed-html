@@ -25,6 +25,7 @@
   } from '$lib/plugins/validation-report';
   import { snippetAroundClick } from './preview-click.js';
   import {
+    contentPhrase,
     isStructuralPhrase,
     resolveAnnounceTarget,
     speakablePhrase,
@@ -368,6 +369,13 @@
   // Rate is stored ×10 (5–20 → 0.5×–2.0×) to keep the integer codec.
   const srRate = persisted('seedhtml_sr_rate', 10, asInt({ min: 5, max: 20 }));
   const srVoice = persisted('seedhtml_sr_voice', '', asString);
+  // Audience mode, not a verbosity dial: screen readers announce structure;
+  // reading apps' built-in narration (read aloud) voices content only.
+  const srMode = persisted<'screenreader' | 'readaloud'>(
+    'seedhtml_sr_mode',
+    'screenreader',
+    asEnum(['screenreader', 'readaloud'])
+  );
 
   // Voices for the picker: the book's language first, then the app locale's —
   // the picked voice reads only the book's text, so voices in other languages
@@ -378,7 +386,12 @@
     const book = srDocLang ? speech.voicesForLang(srVoices, srDocLang) : [];
     const app = speech.voicesForLang(srVoices, $currentLocale).filter(v => !book.includes(v));
     const relevant = [...book, ...app];
-    return relevant.length > 0 ? relevant : srVoices;
+    // engines can register the same voice twice (identical voiceURI) — the
+    // picker keys options by voiceURI, so keep the first of each
+    const seen = new Set<string>();
+    return (relevant.length > 0 ? relevant : srVoices).filter(
+      v => !seen.has(v.voiceURI) && !!seen.add(v.voiceURI)
+    );
   });
 
   /**
@@ -602,6 +615,24 @@
         signal: controller.signal,
         target: el === body ? undefined : el,
         onPhrase: phrase => {
+          if (srMode.current === 'readaloud') {
+            // Read-aloud audience: content only, the way reading apps'
+            // built-in narration voices a chapter. Everything speaks with
+            // the book-language voice.
+            const content = contentPhrase(phrase);
+            if (content === null) return;
+            // a table's name repeats via its caption element — drop the echo
+            if (srPhrases.at(-1)?.caption === content) return;
+            srPhrases = [...srPhrases, { caption: content, verbatim: phrase }];
+            if (srSpeak.current) {
+              speech.speak(
+                content,
+                { rate: srRate.current / 10, voiceURI: srVoice.current || null, lang },
+                srVoices
+              );
+            }
+            return;
+          }
           // Structure follows the listener, content follows the book — the
           // convention real screen readers use. Structural phrases render and
           // speak in the app locale's vocabulary and default voice; content is
@@ -2094,6 +2125,32 @@
         {#if srLoadError}
           <p class="reader-note">{$t('Could not load the screen reader preview.')}</p>
         {:else}
+          <div class="reader-field">
+            <span class="reader-label" id="sr-mode-label">{$t('Announcement style')}</span>
+            <div class="theme-options" role="radiogroup" aria-labelledby="sr-mode-label">
+              <button
+                type="button"
+                class="theme-option"
+                class:selected={srMode.current === 'screenreader'}
+                role="radio"
+                aria-checked={srMode.current === 'screenreader'}
+                onclick={() => (srMode.current = 'screenreader')}
+              >
+                {$t('Screen reader')}
+              </button>
+              <button
+                type="button"
+                class="theme-option"
+                class:selected={srMode.current === 'readaloud'}
+                role="radio"
+                aria-checked={srMode.current === 'readaloud'}
+                onclick={() => (srMode.current = 'readaloud')}
+              >
+                {$t('Read aloud')}
+              </button>
+            </div>
+          </div>
+
           <label class="reader-toggle">
             <input type="checkbox" bind:checked={srSpeak.current} />
             <span>{$t('Speak announcements aloud')}</span>

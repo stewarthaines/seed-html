@@ -19,6 +19,8 @@ Choose _Screen reader_{.ui} from the _Checks_{.ui} dropdown in the preview heade
 
 Point at a block in the preview — a heading, a paragraph, a list item — and click _Announce_{.ui}. The announcements appear as captions over the preview: the text, along with what a screen reader says about its structure, like "heading, level 2" or "listitem, position 3, set size 12". Markup problems are audible here — a line styled to look like a heading announces as plain text.
 
+The announcement style matches an audience: _Screen reader_{.ui} announces structure the way screen readers do, and _Read aloud_{.ui} voices only the text, the way reading apps' built-in narration does.
+
 Tick _Speak announcements aloud_{.ui} to hear them, with a choice of speed and a choice of voice for the book's text. _Read whole chapter_{.ui} announces the chapter from the top, which is also how you check its reading order.
 
 Announcements about structure are spoken in the app's language; the book's own text is read in the book's language — the same split real screen readers use. Set the app to your readers' language to hear what they will hear.

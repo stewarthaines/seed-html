@@ -445,6 +445,10 @@ msgid "Announce"
 msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
+msgid "Announcement style"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
 msgid "Announcing…"
 msgstr ""
 
@@ -3554,6 +3558,10 @@ msgstr ""
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Read"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Read aloud"
 msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
