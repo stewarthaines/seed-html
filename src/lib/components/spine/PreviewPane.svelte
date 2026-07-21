@@ -1024,13 +1024,13 @@
         return { element: null, id: null, offset: scrollTop };
       }
 
-      // Try to find an element with an ID (most reliable anchor)
+      // Try to find an element with an ID (most reliable anchor). The offset
+      // is the anchor's viewport-relative top (may be negative for an element
+      // straddling the viewport edge) — restore reproduces it exactly.
       let current: Element | null = elementAtScroll;
       while (current && current !== iframeDoc.body) {
         if (current.id) {
-          const elementRect = current.getBoundingClientRect();
-          const offset = scrollTop - (elementRect.top + scrollTop - checkY);
-          return { element: current, id: current.id, offset };
+          return { element: current, id: current.id, offset: current.getBoundingClientRect().top };
         }
         current = current.parentElement;
       }
@@ -1041,9 +1041,11 @@
       const index = siblings.indexOf(elementAtScroll);
 
       if (index >= 0) {
-        const elementRect = elementAtScroll.getBoundingClientRect();
-        const offset = scrollTop - (elementRect.top + scrollTop - checkY);
-        return { element: elementAtScroll, id: `${tagName}[${index}]`, offset };
+        return {
+          element: elementAtScroll,
+          id: `${tagName}[${index}]`,
+          offset: elementAtScroll.getBoundingClientRect().top,
+        };
       }
 
       return { element: null, id: null, offset: scrollTop };
@@ -1088,18 +1090,15 @@
       }
 
       if (targetElement) {
-        // Scroll to element with offset
-        targetElement.scrollIntoView({ behavior: 'instant', block: 'start' });
-
-        // Apply additional offset if needed
-        if (anchor.offset !== 0) {
-          const currentScroll =
-            iframeDoc.documentElement.scrollTop || iframeDoc.body?.scrollTop || 0;
-          const newScroll = Math.max(0, currentScroll + anchor.offset);
-          iframeDoc.documentElement.scrollTop = newScroll;
-          if (iframeDoc.body) {
-            iframeDoc.body.scrollTop = newScroll;
-          }
+        // Put the anchor back at its saved viewport-relative top: the
+        // element's document position minus where its top sat in the viewport.
+        // Direct assignment — no scrollIntoView hop, no drift.
+        const rect = targetElement.getBoundingClientRect();
+        const currentScroll = iframeDoc.documentElement.scrollTop || iframeDoc.body?.scrollTop || 0;
+        const newScroll = Math.max(0, rect.top + currentScroll - anchor.offset);
+        iframeDoc.documentElement.scrollTop = newScroll;
+        if (iframeDoc.body) {
+          iframeDoc.body.scrollTop = newScroll;
         }
       } else {
         // Fallback to pixel position
