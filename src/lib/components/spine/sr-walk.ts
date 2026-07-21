@@ -189,6 +189,8 @@ export interface VsrLike {
   next(): Promise<void>;
   stop(): Promise<void>;
   lastSpokenPhrase(): Promise<string>;
+  /** The node under the cursor — the walk's authoritative "still inside the target?" signal. */
+  readonly activeNode?: Node | null;
 }
 
 export interface WalkOptions {
@@ -254,6 +256,10 @@ export async function walkAnnouncements(
       if (stepDelayMs > 0) await delay(stepDelayMs);
       if (signal.aborted) break;
       await vsr.next();
+      // The cursor leaving the target ends the walk — the authoritative stop
+      // for elements that never announce an end phrase (a heading flattens
+      // into one phrase; there is no "end of heading" to wait for).
+      if (target && vsr.activeNode && !target.contains(vsr.activeNode)) break;
       const phrase = await vsr.lastSpokenPhrase();
       if (phrase === prev || phrase === first) break;
       onPhrase(phrase);

@@ -239,6 +239,40 @@ describe('walkAnnouncements', () => {
     expect(stop).toHaveBeenCalled();
   });
 
+  it('stops when the cursor leaves a target that never announces an end phrase', async () => {
+    // headings flatten into a single phrase — no "end of heading" ever comes,
+    // so the walk must stop on the cursor structurally leaving the target
+    const timeline = ['document', 'heading, Title, level 2', 'paragraph', 'Text after.'];
+    let index = 0;
+    const container = document.createElement('div');
+    const target = document.createElement('h2');
+    const outside = document.createElement('p');
+    container.append(target, outside);
+    const nodes = [container, target, outside, outside];
+    const vsr: VsrLike = {
+      start: async () => {},
+      next: async () => {
+        if (index < timeline.length - 1) index++;
+      },
+      stop: async () => {},
+      lastSpokenPhrase: async () => timeline[index],
+      get activeNode() {
+        return nodes[index];
+      },
+    };
+    (target as HTMLElement).focus = () => {
+      index = 1;
+    };
+    const heard: string[] = [];
+    await walkAnnouncements(vsr, container, {
+      signal: new AbortController().signal,
+      stepDelayMs: 0,
+      target,
+      onPhrase: phrase => heard.push(phrase),
+    });
+    expect(heard).toEqual(['heading, Title, level 2']);
+  });
+
   it('always stops the reader when the walk throws, and swallows stop() failures', async () => {
     const stop = vi.fn(async () => {
       throw new Error('document rewritten');
