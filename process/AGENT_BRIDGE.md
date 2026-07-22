@@ -4,7 +4,7 @@ Design of record for the live-session agent bridge — an author working in SEED
 
 ## Decision summary
 
-- **Core app owns the socket, not a plugin.** The consent gesture ("allow agent assistance") is an app-level act, and tool execution belongs next to the app services that make writes correct (state propagation, track-changes copy-on-write). Dev-gated behind `import.meta.env.DEV`: zero production bytes.
+- **Core app owns the socket, not a plugin.** The consent gesture ("allow agent assistance") is an app-level act, and tool execution belongs next to the app services that make writes correct (state propagation, track-changes copy-on-write). Dev-only, at zero production cost: the module is a dev-middleware-served asset; core carries only the button (build-time folded) and a loader stub.
 - **Chat stays in the terminal; the app contributes pointing and consent.** The agent's conversation loop, context, and approvals live in Claude Code (or any MCP client). The app's unique contributions are deixis — "what is the author pointing at" as a tool over the existing click-to-source pipeline — and the visible record of agent actions.
 - **Topology (three parts, two legs):**
 
@@ -18,15 +18,16 @@ The agent registers the bridge once: `claude mcp add seed-bridge -- node scripts
 
 ### The gesture: "Allow agent assistance"
 
-- Button in the sidebar footer (`src/lib/Sidebar.svelte`, `.sidebar-footer`, line ~503), left of Package EPUB. Icon: `Robot` from the phosphor-svelte set. Rendered only when `import.meta.env.DEV`.
-- Click connects the WebSocket; the button shows a pressed/active state while allowed. Click again disconnects and tears down the overlay.
+- Button in the sidebar footer (`src/lib/Sidebar.svelte`, `.sidebar-footer`, line ~503), left of Package EPUB. Icon: `Robot` from the phosphor-svelte set. The button itself renders only when `import.meta.env.DEV` (build-time folded from production; if the bridge ever ships to production, that one-line gate change is the only rebuild the feature needs — the module is already a published asset).
+- Click fetches the module (first time) and connects the WebSocket; the button shows a pressed/active state while allowed. Click again disconnects and tears down the overlay.
 - Consent is **per-session, never persisted** — each session's first connection is a deliberate human act. This is the foundation the write-approval model builds on.
-- Bridge not running → transient failure state on the button naming the command (`node scripts/agent-bridge.mjs`). No auto-retry loop while unconnected; retry is another click. (Once connected, a dropped socket may auto-reconnect for the rest of the session — the consent was given.)
-- Dev-only strings stay untranslated (tree-shaken from production; no catalog cost). Open question for review: whether `npm run lint:i18n` needs a suppression pattern for `import.meta.env.DEV`-guarded markup, or tolerates it as-is.
+- Bridge not running → transient failure state on the button naming the command (`node scripts/agent-bridge.mjs`).
+- **No auto-reconnect, ever** (decided): the gesture means "this app session may be assisted", but any dropped socket — bridge exited, agent restarted — parks the overlay at disconnected, and reattaching is a fresh click. One click, no ceremony, since session consent stands; write grants (phase 2) are per-connection and reset on every new connection regardless.
+- Dev-only strings stay untranslated (no catalog cost): the module's strings live in the served asset outside the lint scan; the button's label/tooltip carry the linter's inline `<!-- i18n-ignore -->` with a brief why-comment.
 
 ### The connection surface: agent activity overlay
 
-- New component (proposed `src/lib/components/agent/AgentActivityOverlay.svelte`), mounted at app root beside the Toast host, rendered only while assistance is allowed.
+- **Module-owned** (decided): core provides only a mount element at the app root (beside the toast host); the fetched module paints and updates the pill/feed itself — hand-rolled DOM in the spike's style, themed via the context object's theme field. No overlay component exists in core (a core Svelte component would ship as dead code in every production bundle, since the asset gate is a runtime fact).
 - Position: bottom edge, above navigation (toast z-token family). Styling: the sr-caption family — dark translucent, rounded, monospace lines — not toast styling; it is a persistent surface, not a notification.
 - **Collapsed (default): a pill** — state dot (connected / agent active / disconnected) + the most recent action line ("read `OEBPS/Styles/page.css`"), brief pulse on activity.
 - **Expanded (click): the action feed** — one line per tool call, scrolling, newest last; disconnect button. Every tool invocation appears here; the feed is the trust surface ("literally everything the agent has done"), and later the write-approval prompts render inline in the feed rather than as modals.
@@ -39,7 +40,7 @@ The agent registers the bridge once: `claude mcp add seed-bridge -- node scripts
 The module ships as a **lazily fetched static asset**, not core-bundle code — the pattern already proven three times (axe-core, Paged.js, the virtual screen reader), applied to app-realm code instead of iframe-injected code:
 
 - Core carries only the sidebar button plus a loader stub (~0.5KB): clicking "Allow agent assistance" runs `import(new URL('agent-bridge/module.js', document.baseURI))` and hands the module a context object with the stores/services its tools need.
-- The asset is served by the **dev middleware only** (same mechanism as the plugins/extensions dev catalogs), so the feature is dev-only without `import.meta.env` reasoning, and `file:` exclusion falls out of the same http-only gating as axe. Shipping it in production someday is a publishing decision (put the asset in `public/`), not a rebuild.
+- The asset is served by the **dev middleware only** (same mechanism as the plugins/extensions dev catalogs), and `file:` exclusion falls out of the same http-only gating as axe. Shipping it in production someday means publishing the asset to `public/` plus the one-line button-gate change (see UX) — a trivial rebuild, deferred rather than baked in.
 - Cost accounting: production/single-file bundle ≈ 0 bytes beyond the folded button guard (string-absence check added to `scripts/smoke-build.js` alongside the size budget); the module's real weight (~6–8KB source) is fetched only when the author clicks.
 - The module runs in the app realm with full service access — everything that motivated Option B over the plugin framing — while matching a plugin's distribution economics.
 
