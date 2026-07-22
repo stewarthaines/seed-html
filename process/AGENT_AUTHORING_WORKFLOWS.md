@@ -73,7 +73,7 @@ Two load-bearing details:
 
 Security: the bridge binds to localhost with a pairing token displayed in-app; the plugin shows a persistent "agent connected" indicator; the user installs both halves deliberately — consistent with the plugins-are-trusted stance.
 
-Status: **read-only spike shipped** — `plugins/agent-bridge/` (devOnly: dev manifest only, never production) + `scripts/agent-bridge.mjs` (MCP over stdio + the localhost WebSocket relay; zero new dependencies). Register with `claude mcp add seed-bridge -- node scripts/agent-bridge.mjs`, then either open the plugin's panel or — until panel plugins get a generic host surface, which the spike surfaced as a gap (the audio plugin's hosting is bespoke) — open `plugins/agent-bridge/plugin.html` directly as a tab (same origin: it self-resolves the active workspace from `seedhtml_app_workspace_id` + OPFS). Tools: `seed_project_info`, `seed_list_files`, `seed_read_file` (text files; binary/oversized report size only; traversal rejected). Verified end-to-end against a real project over MCP stdio. Write tools, capture tiers, and the pairing token remain future work.
+Status: **read-only spike shipped** (`plugins/agent-bridge/` + `scripts/agent-bridge.mjs`, verified end-to-end over MCP stdio against a real project), and the spike's lessons promoted the design out of the plugin framing entirely: the settled direction is a dev-gated **core-app** module behind an "Allow agent assistance" gesture — see **`process/AGENT_BRIDGE.md`** for the design of record (UX, module architecture, tool inventory incl. the deixis tool, write/consent phasing, and the plugin spike's retirement).
 
 ## The design insight
 
