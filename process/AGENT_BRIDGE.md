@@ -1,6 +1,6 @@
 # Agent bridge: core-app design (Option B)
 
-Design of record for the live-session agent bridge — an author working in SEED.html grants a terminal coding agent read (later write) access to the open project. Supersedes the plugin-framed spike and the dock-plugin sketch; the workflow analysis that led here is `process/AGENT_AUTHORING_WORKFLOWS.md` (W6). Status: proposed, for review — nothing below is built except where marked.
+Design of record for the live-session agent bridge — an author working in SEED.html grants a terminal coding agent read (later write) access to the open project. **Canonical**: supersedes the plugin-framed spike, the dock-plugin sketch, and the retired workflow survey (`process/AGENT_AUTHORING_WORKFLOWS.md`, deleted; its durable non-bridge material is in the appendix here, and its full text is in git history). Status: proposed, for review — nothing below is built except where marked.
 
 ## Decision summary
 
@@ -30,13 +30,22 @@ The agent registers the bridge once: `claude mcp add seed-bridge -- node scripts
 - Position: bottom edge, above navigation (toast z-token family). Styling: the sr-caption family — dark translucent, rounded, monospace lines — not toast styling; it is a persistent surface, not a notification.
 - **Collapsed (default): a pill** — state dot (connected / agent active / disconnected) + the most recent action line ("read `OEBPS/Styles/page.css`"), brief pulse on activity.
 - **Expanded (click): the action feed** — one line per tool call, scrolling, newest last; disconnect button. Every tool invocation appears here; the feed is the trust surface ("literally everything the agent has done"), and later the write-approval prompts render inline in the feed rather than as modals.
-- Coexistence at the bottom edge: proposal — agent overlay owns bottom-left; toasts keep bottom-center; the sr-caption lives inside the preview viewport and doesn't collide. Review point.
+- **The bottom edge belongs to the agent overlay.** Companion change (decided): toasts move to the top of the screen and all auto-dismiss on a timer — notifications are transient and glanceable; the bottom is for persistent surfaces. The sr-caption stays inside the preview viewport and doesn't collide.
 
 ## Technical detail
 
-### App module (new: `src/lib/agent-bridge/`)
+### Packaging: lazy-loaded app-realm module (the axe model)
 
-- `agent-bridge.svelte.ts` — the module: connection state (`$state`), the socket, the action log, tool dispatch. Instantiated once from `App.svelte` behind `if (import.meta.env.DEV)`; Vite eliminates the import in production builds (verify in the build smoke: no `agent-bridge` bytes in `dist/index.html`).
+The module ships as a **lazily fetched static asset**, not core-bundle code — the pattern already proven three times (axe-core, Paged.js, the virtual screen reader), applied to app-realm code instead of iframe-injected code:
+
+- Core carries only the sidebar button plus a loader stub (~0.5KB): clicking "Allow agent assistance" runs `import(new URL('agent-bridge/module.js', document.baseURI))` and hands the module a context object with the stores/services its tools need.
+- The asset is served by the **dev middleware only** (same mechanism as the plugins/extensions dev catalogs), so the feature is dev-only without `import.meta.env` reasoning, and `file:` exclusion falls out of the same http-only gating as axe. Shipping it in production someday is a publishing decision (put the asset in `public/`), not a rebuild.
+- Cost accounting: production/single-file bundle ≈ 0 bytes beyond the folded button guard (string-absence check added to `scripts/smoke-build.js` alongside the size budget); the module's real weight (~6–8KB source) is fetched only when the author clicks.
+- The module runs in the app realm with full service access — everything that motivated Option B over the plugin framing — while matching a plugin's distribution economics.
+
+### App module (asset: served at `agent-bridge/module.js`; source under `src/assets/` or a dev-middleware-mapped location — decide at build time)
+
+- The module: connection state (`$state` via the handed-in context), the socket, the action log, tool dispatch.
 - Wire protocol to the bridge (unchanged from the spike): app → `{ hello: 'seed-agent-bridge', projectId }` on connect; bridge → `{ id, tool, params }`; app → `{ id, ok: true, result }` | `{ id, ok: false, error }`. The bridge process needs no changes for phase 1.
 - Tool execution goes through app state and services, not raw OPFS where avoidable. Active workspace comes from app state directly — no init-re-send or workspace-switch protocol (a problem the plugin framing had; dissolved here). Every dispatch appends to the action log the overlay renders.
 
@@ -68,8 +77,18 @@ Phase 3 (capture): geometry (element rects from the preview document — the app
 
 ## Open questions for review
 
-1. Overlay placement: bottom-left vs sharing bottom-center with toasts.
+1. ~~Overlay placement~~ — resolved: toasts move to the top of the screen and all auto-dismiss on a timer; the agent overlay owns the bottom edge.
 2. Auto-reconnect semantics after a dropped socket mid-session (proposed: yes, consent already given; visible in the pill either way).
-3. `lint:i18n` treatment of untranslated dev-only strings.
+3. `lint:i18n` treatment of untranslated dev-only strings (mostly moot under asset packaging — the module's strings never enter the bundle; the button label remains).
 4. Whether `seed_get_selection` should also capture preview _text selections_ (ranges), or clicks only for v1.
 5. Bridge port collision handling (8747 taken → error naming the holder, or scan a small range).
+6. Overlay ownership under asset packaging: the lazily loaded module mounts its own overlay into a host-provided element (keeps core at the stub), or a core component renders module state — lean module-owned.
+
+## Appendix: other agent pathways (from the retired workflow survey)
+
+Durable material from `process/AGENT_AUTHORING_WORKFLOWS.md` (deleted; full analysis in git history):
+
+- **Context pack / "Copy context for AI"**: one-click assembly of the authoring contract (inlined), a sample chapter source + its generated XHTML, active styles/transforms, settings, manifest media listing, and book language — the clipboard workflow for any chat agent on any device, offline app included. Every transport (clipboard, archive, this bridge) consumes the same capability surface and the same contract; build the pack and the contract once.
+- **Project archive in Claude Code**: export `SEED.zip` → agent edits and headlessly tests transforms (harness pattern: `src/lib/transform/test/event-dates-sample.test.ts`) → re-import. Where a generated `AGENTS.md` inside SOURCE/ belongs.
+- **Distribution follow-ups**: `/llms.txt` + hosted markdown authoring contract on readitinabook.com; `AGENTS.md` generated into SOURCE/; a seed-authoring Agent Skill. Prerequisite for all of them (and for the context pack): resolve the `settings.json` schema discrepancy (`src/lib/source/types.ts` vs `src/lib/settings/API.md`).
+- **Embedded-frame variants** (recorded, unbuilt): a same-origin harness page wrapping the app; a cross-origin embed via postMessage bridge (storage partitioning means the project travels through the bridge) — the "embeddable EPUB engine" shape.
