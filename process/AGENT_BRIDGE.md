@@ -14,6 +14,8 @@ terminal agent ── MCP over stdio ── scripts/agent-bridge.mjs ── WebS
 
 The agent registers the bridge once: `claude mcp add seed-bridge -- node scripts/agent-bridge.mjs`. The agent never sees the WebSocket; the app never speaks MCP.
 
+**Bridge lifetime = agent-session lifetime.** Stdio MCP servers are spawned by the session that uses them and killed when it ends — the bridge is not a daemon. Practical consequence: start the interactive agent session first and leave it running, then click "Allow agent assistance"; when the session exits, the pill parking at "disconnected — bridge closed the connection" is expected behavior. (A `claude mcp list` health check spawns the bridge for only a couple of seconds — connecting inside that window drops immediately.) A shared long-lived bridge process would need an HTTP/SSE MCP transport instead; noted as an option if the session-bound lifetime proves annoying in practice.
+
 ## UX
 
 ### The gesture: "Allow agent assistance"
