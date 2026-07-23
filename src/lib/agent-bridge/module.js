@@ -172,6 +172,29 @@ async function handleTool(ctx, session, ui, tool, params) {
       const click = ctx.getLastClick();
       return click ?? { kind: 'none' };
     }
+    case 'project_setup': {
+      const dir = await ctx.getWorkspaceDir();
+      if (!dir) throw new Error('no project open');
+      let settings = null;
+      let settingsError = null;
+      try {
+        const file = await (await resolveFile(dir, 'SOURCE/settings.json')).getFile();
+        settings = JSON.parse(await file.text());
+      } catch (error) {
+        settingsError = String(error?.message ?? error);
+      }
+      const transforms = settings
+        ? [settings.text_transform, ...(settings.dom_transforms ?? [])].filter(Boolean)
+        : [];
+      return {
+        ...ctx.getProjectInfo(),
+        settings,
+        ...(settingsError ? { settingsError } : {}),
+        // the scripts that produce chapter XHTML — read them before editing
+        transformScripts: transforms,
+        hint: 'chapter XHTML is generated: source text → text_transform → dom_transforms in order; read the scripts and one source/rendered pair before proposing markup',
+      };
+    }
     case 'write_file':
       return writeFile(ctx, session, ui, params);
     default:

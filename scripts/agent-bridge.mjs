@@ -14,8 +14,26 @@
  */
 import { WebSocketServer } from 'ws';
 import { createInterface } from 'node:readline';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 
 const PORT = 8747;
+
+// The authoring guide is knowledge, not project state: served straight from
+// the repo by the bridge process itself, so it works before a tab connects.
+const GUIDE_PATH = join(
+  dirname(fileURLToPath(import.meta.url)),
+  '..',
+  'docs',
+  'AGENT_AUTHORING.md'
+);
+let guideText;
+try {
+  guideText = readFileSync(GUIDE_PATH, 'utf8');
+} catch {
+  guideText = 'authoring guide missing at ' + GUIDE_PATH;
+}
 
 // --- tab side -----------------------------------------------------------------
 
@@ -92,6 +110,18 @@ function callTab(tool, params) {
 
 const TOOLS = [
   {
+    name: 'seed_get_authoring_guide',
+    description:
+      'READ THIS FIRST when asked to work on EPUB content, styles, or scripts: the authoring contract for SEED.html projects — EPUB CSS fallback rules, progressive-enhancement scripting, the Paged.js PDF quirks, accessibility/epubcheck constraints, and the project-setup steps to take before editing. Available even before the app tab connects.',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'seed_get_project_setup',
+    description:
+      "The open project's configuration: settings.json (configured transform scripts, media insertion templates, preview setup) plus project identity. Call before editing — chapter markup is produced by the configured transforms, and templates are per-project.",
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
     name: 'seed_project_info',
     description:
       "The open SEED.html project's identity (workspace id) and bridge connection state.",
@@ -152,6 +182,10 @@ const respondError = (id, code, message) =>
 
 async function handleToolCall(name, args) {
   switch (name) {
+    case 'seed_get_authoring_guide':
+      return { guide: guideText };
+    case 'seed_get_project_setup':
+      return callTab('project_setup', {});
     case 'seed_project_info': {
       if (bindError) return { connected: false, error: bindError };
       const connected = !!tab && tab.readyState === 1;

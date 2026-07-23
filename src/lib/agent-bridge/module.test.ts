@@ -50,6 +50,7 @@ const fakeFile = (bytes: Uint8Array | string) => {
     getFile: async () => ({
       size: data.length,
       arrayBuffer: async () => data.buffer.slice(data.byteOffset, data.byteOffset + data.length),
+      text: async () => new TextDecoder().decode(data),
     }),
   };
 };
@@ -90,7 +91,15 @@ function makeContext(overrides: Record<string, unknown> = {}) {
       Styles: fakeDir({ 'page.css': cssFile }),
       'audio.mp3': fakeFile(new Uint8Array([0, 1, 2, 0])),
     }),
-    SOURCE: fakeDir({ 'settings.json': fakeFile('{}') }),
+    SOURCE: fakeDir({
+      'settings.json': fakeFile(
+        JSON.stringify({
+          text_transform: 'SOURCE/scripts/transformText.js',
+          dom_transforms: ['SOURCE/scripts/transformDom.js'],
+          image_template: '![<alt>](<href>)',
+        })
+      ),
+    }),
   });
   const statuses: Array<[string, string | undefined]> = [];
   const ctx = {
@@ -241,6 +250,30 @@ describe('agent bridge module', () => {
     expect(items).toEqual(['listed project files', 'read SOURCE/settings.json']);
     handle.stop();
     expect(ctx.mountEl.children.length).toBe(0);
+  });
+
+  it('serves project setup: settings, transform list, and the read-first hint', async () => {
+    const { ctx } = makeContext();
+    start(ctx);
+    const socket = FakeWebSocket.last!;
+    socket.open();
+    const response = (await socket.receive({ id: 1, tool: 'project_setup' })) as {
+      ok: boolean;
+      result: {
+        workspaceId: string;
+        settings: { image_template: string };
+        transformScripts: string[];
+        hint: string;
+      };
+    };
+    expect(response.ok).toBe(true);
+    expect(response.result.workspaceId).toBe('ws-1');
+    expect(response.result.settings.image_template).toBe('![<alt>](<href>)');
+    expect(response.result.transformScripts).toEqual([
+      'SOURCE/scripts/transformText.js',
+      'SOURCE/scripts/transformDom.js',
+    ]);
+    expect(response.result.hint).toContain('generated');
   });
 
   it('write policy: pipeline inputs and standalone assets only', () => {
