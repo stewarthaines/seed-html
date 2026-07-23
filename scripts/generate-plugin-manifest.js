@@ -47,13 +47,6 @@ for (const dirent of dirents) {
   const meta = pkg.seedhtmlPlugin;
   if (!meta) continue;
 
-  // Dev-only plugins (e.g. the agent bridge spike) exist for the dev server's
-  // manifest middleware; they never enter the production manifest.
-  if (meta.devOnly) {
-    console.log(`ℹ️  ${meta.id ?? dirent.name}: devOnly — excluded from production manifest`);
-    continue;
-  }
-
   const { id, name, presentation, buildEntry } = meta;
   if (!id || !name || !VALID_PRESENTATIONS.includes(presentation) || !buildEntry) {
     console.warn(`⚠️  ${dirent.name}: incomplete seedhtmlPlugin metadata — skipped`);
