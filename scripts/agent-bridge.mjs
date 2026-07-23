@@ -76,11 +76,13 @@ function callTab(tool, params) {
     );
   }
   const id = nextRequestId++;
+  // Generous timeout: a write waits on the author's in-app consent prompt,
+  // which auto-denies at 90s — this must outlast it.
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       pending.delete(id);
-      reject(new Error('tab did not answer within 15s'));
-    }, 15000);
+      reject(new Error('tab did not answer within 120s'));
+    }, 120000);
     pending.set(id, { resolve, reject, timer });
     tab.send(JSON.stringify({ id, tool, params }));
   });
@@ -123,6 +125,24 @@ const TOOLS = [
       'What the author last pointed at in the preview: the clicked element type, a text snippet, its position, and the chapter. { kind: "none" } when nothing has been clicked.',
     inputSchema: { type: 'object', properties: {} },
   },
+  {
+    name: 'seed_write_file',
+    description:
+      'Overwrite an EXISTING non-generated project file (sources, transform scripts, styles, media). Requires expected_hash from a prior seed_read_file of the same path — rejected if the file changed since. Cannot create files, and cannot touch generated XHTML, the nav, the OPF, or settings. The author approves the first write in the app (per write, or once for the whole session) and sees every write in the activity feed; a prompt they ignore times out as a denial.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'workspace-relative path of an existing file' },
+        text: { type: 'string', description: 'new UTF-8 content (for text files)' },
+        base64: { type: 'string', description: 'new binary content, base64 (for media)' },
+        expected_hash: {
+          type: 'string',
+          description: 'the hash returned by seed_read_file for this path',
+        },
+      },
+      required: ['path', 'expected_hash'],
+    },
+  },
 ];
 
 const respond = (id, result) =>
@@ -146,6 +166,13 @@ async function handleToolCall(name, args) {
       return callTab('get_rendered_xhtml', {});
     case 'seed_get_selection':
       return callTab('get_selection', {});
+    case 'seed_write_file':
+      return callTab('write_file', {
+        path: args?.path,
+        text: args?.text,
+        base64: args?.base64,
+        expectedHash: args?.expected_hash,
+      });
     default:
       throw new Error('unknown tool: ' + name);
   }

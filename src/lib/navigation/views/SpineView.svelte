@@ -1420,22 +1420,61 @@
   // Debug functions removed
 
   // Re-read a SOURCE file that was rewritten externally (e.g. an import
-  // overwrite) into its cached editor store, so an open textarea bound to that
-  // store updates in place instead of showing stale content until the user
-  // switches chapters and back.
+  // overwrite, or an agent-bridge write) into its cached editor store, so an
+  // open textarea bound to that store updates in place instead of showing
+  // stale content until the user switches chapters and back. Files with an
+  // open store refresh the preview via the store's save subscription; files
+  // WITHOUT one (not open in a pane) are handled directly below, so an
+  // externally rewritten stylesheet or script still repaints the preview.
   const handleSourceFilesChanged = (event: Event) => {
     const paths = (event as CustomEvent<{ paths?: string[] }>).detail?.paths ?? [];
     if (!workspace || !workspaceService) return;
+    let needsForcedUpdate = false;
     for (const path of paths) {
       const store = fileContentStores.get(path);
-      if (!store) continue;
-      void workspaceService
-        .readFile(workspace.id, path)
-        .then(buffer => store.updateContent(new TextDecoder().decode(buffer)))
-        .catch(() => {
-          // Best-effort refresh; leave the cached content untouched on failure.
-        });
+      if (store) {
+        void workspaceService
+          .readFile(workspace.id, path)
+          .then(buffer => store.updateContent(new TextDecoder().decode(buffer)))
+          .catch(() => {
+            // Best-effort refresh; leave the cached content untouched on failure.
+          });
+        continue;
+      }
+      // No open store: refresh the preview's view of the file directly.
+      if (/\.(css|js)$/i.test(path)) {
+        if (path.startsWith('OEBPS/') && blobURLManager) {
+          blobURLManager.revokeFileBlob(path.slice('OEBPS/'.length));
+        }
+        if (path.startsWith('SOURCE/scripts/')) {
+          previewManager?.invalidateTransformScripts();
+        }
+        needsForcedUpdate = true;
+      } else if (selectedItemId && path === `SOURCE/text/${selectedItemId}.txt`) {
+        void workspaceService
+          .readFile(workspace.id, path)
+          .then(buffer => previewManager?.updateContent('text', new TextDecoder().decode(buffer)))
+          .catch(() => {
+            // Best-effort; the preview keeps its current render.
+          });
+      }
     }
+    if (needsForcedUpdate) previewManager?.forcePreviewUpdate();
+  };
+
+  // Answer "is this file open in a pane, and with what content?" for the
+  // agent bridge's dirty-write refusal (process/AGENT_BRIDGE.md phase 2).
+  // Listeners run synchronously, so the reply callback fires before the
+  // dispatching code continues — a query, not a message exchange.
+  const handleAgentFileStateQuery = (event: Event) => {
+    const detail = (
+      event as CustomEvent<{
+        path?: string;
+        reply?: (state: { open: boolean; content: string | null }) => void;
+      }>
+    ).detail;
+    const store = detail?.path ? fileContentStores.get(detail.path) : undefined;
+    detail?.reply?.({ open: !!store, content: store ? store.getContent() : null });
   };
 
   // Component lifecycle
@@ -1444,6 +1483,7 @@
     guardId = navigationStore.addNavigationGuard(canLeave);
 
     window.addEventListener('seed:source-files-changed', handleSourceFilesChanged);
+    window.addEventListener('seed:agent-file-state', handleAgentFileStateQuery);
 
     // Call onViewEnter
     onViewEnter();
@@ -1451,6 +1491,7 @@
 
   onDestroy(() => {
     window.removeEventListener('seed:source-files-changed', handleSourceFilesChanged);
+    window.removeEventListener('seed:agent-file-state', handleAgentFileStateQuery);
 
     // Cancel the preview manager's pending debounce and invalidate any
     // in-flight render, so nothing persists or calls back into this destroyed

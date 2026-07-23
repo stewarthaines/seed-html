@@ -378,6 +378,45 @@
             ? { chapterId: spinePreviewData.spineItemId, xhtml: spinePreviewData.xhtmlContent }
             : null,
         getLastClick: () => lastPreviewClick,
+        // Writes route through workspaceService (the editor's own save path),
+        // so copy-on-write snapshots and cache hygiene hold; the event tells
+        // SpineView to reload open stores and repaint the preview.
+        writeTextFile: async (path, text, workspaceId) => {
+          if (currentWorkspaceState?.id !== workspaceId) {
+            throw new Error('the open project changed — write refused');
+          }
+          await workspaceService.writeFile(workspaceId, path, text);
+          window.dispatchEvent(
+            new CustomEvent('seed:source-files-changed', { detail: { paths: [path] } })
+          );
+        },
+        writeBinaryFile: async (path, bytes, workspaceId) => {
+          if (currentWorkspaceState?.id !== workspaceId) {
+            throw new Error('the open project changed — write refused');
+          }
+          // copy into a fresh ArrayBuffer (the service type excludes SharedArrayBuffer)
+          const buffer = new ArrayBuffer(bytes.byteLength);
+          new Uint8Array(buffer).set(bytes);
+          await workspaceService.writeBinaryFile(workspaceId, path, buffer);
+          window.dispatchEvent(
+            new CustomEvent('seed:source-files-changed', { detail: { paths: [path] } })
+          );
+        },
+        isFileDirty: (path, diskText) => {
+          if (diskText === null) return false;
+          let dirty = false;
+          window.dispatchEvent(
+            new CustomEvent('seed:agent-file-state', {
+              detail: {
+                path,
+                reply: (state: { open: boolean; content: string | null }) => {
+                  dirty = state.open && state.content !== null && state.content !== diskText;
+                },
+              },
+            })
+          );
+          return dirty;
+        },
       }));
     }
     await agentBridge.toggle();

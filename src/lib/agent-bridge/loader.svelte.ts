@@ -21,6 +21,23 @@ export interface AgentBridgeModuleContext {
   getWorkspaceDir: () => Promise<FileSystemDirectoryHandle | null>;
   getRenderedXhtml: () => { chapterId: string | null; xhtml: string } | null;
   getLastClick: () => Record<string, unknown> | null;
+  /**
+   * Phase 2 writes — service-routed so state propagation and track-changes
+   * copy-on-write hold (raw OPFS writes get clobbered or never render).
+   * Text and binary are distinct because only the text path is trackable.
+   * `workspaceId` is the project pinned at request time: the write is refused
+   * if the open project has changed since (the consent prompt can sit open
+   * across a project switch).
+   */
+  writeTextFile: (path: string, text: string, workspaceId: string) => Promise<void>;
+  writeBinaryFile: (path: string, bytes: Uint8Array, workspaceId: string) => Promise<void>;
+  /**
+   * Whether an open editor pane holds unsaved edits for `path` — its in-memory
+   * content differs from `diskText` (the bytes just read for the hash check).
+   * Agent writes are refused while dirty, or the author's in-flight typing
+   * would be clobbered by the post-write store reload.
+   */
+  isFileDirty: (path: string, diskText: string | null) => boolean;
 }
 
 interface AgentBridgeModule {

@@ -28,6 +28,9 @@ const buildContext = () => ({
   getWorkspaceDir: async () => null,
   getRenderedXhtml: () => null,
   getLastClick: () => null,
+  writeTextFile: async () => {},
+  writeBinaryFile: async () => {},
+  isFileDirty: () => false,
 });
 
 describe('agent bridge loader', () => {
