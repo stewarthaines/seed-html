@@ -23,10 +23,12 @@
 {/if}
 
 <style>
-  /* Fixed, bottom-centred overlay — never reflows page content. */
+  /* Fixed, top-centred overlay — never reflows page content. Toasts live at
+     the top and always auto-dismiss; the bottom edge belongs to persistent
+     surfaces (process/AGENT_BRIDGE.md). */
   .toast-host {
     position: fixed;
-    inset-block-end: 16px;
+    inset-block-start: 16px;
     inset-inline-start: 50%;
     transform: translateX(-50%);
     z-index: var(--z-toast, 1500);

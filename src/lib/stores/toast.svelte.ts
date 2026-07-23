@@ -1,8 +1,10 @@
 /**
- * Toast notifications — fleeting, auto-dismissing messages shown at the bottom of
+ * Toast notifications — fleeting, auto-dismissing messages shown at the top of
  * the screen. The core style for transient, non-blocking information (originally
  * prototyped by the publish-to-remote plugin). Prefer this over inline banners for
- * brief "it happened / nothing to do" feedback.
+ * brief "it happened / nothing to do" feedback. Every toast auto-dismisses —
+ * persistent surfaces (like the agent activity overlay, which owns the bottom
+ * edge) are not toasts.
  *
  * Usage: `import { showToast } from '$lib/stores/toast.svelte.js'` then
  * `showToast($t('Saved'))` / `showToast(msg, 'error')`. Render <Toast /> once near
@@ -28,14 +30,16 @@ export function dismissToast(id: number): void {
 }
 
 /**
- * Show a toast that auto-dismisses after `durationMs` (0 keeps it until dismissed).
- * Returns the toast id so callers can dismiss it early if needed.
+ * Show a toast that auto-dismisses after `durationMs`. Every toast dismisses on
+ * a timer — a non-positive duration falls back to the default rather than
+ * sticking. Returns the toast id so callers can dismiss it early if needed.
  */
 export function showToast(text: string, type: ToastType = 'info', durationMs = 4000): number {
   const id = nextId++;
   toasts.push({ id, text, type });
-  if (durationMs > 0 && typeof setTimeout !== 'undefined') {
-    setTimeout(() => dismissToast(id), durationMs);
+  const ms = durationMs > 0 ? durationMs : 4000;
+  if (typeof setTimeout !== 'undefined') {
+    setTimeout(() => dismissToast(id), ms);
   }
   return id;
 }
