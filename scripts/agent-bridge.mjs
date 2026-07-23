@@ -158,7 +158,7 @@ const TOOLS = [
   {
     name: 'seed_write_file',
     description:
-      'Overwrite an EXISTING non-generated project file (sources, transform scripts, styles, media). Requires expected_hash from a prior seed_read_file of the same path — rejected if the file changed since. Cannot create files, and cannot touch generated XHTML, the nav, the OPF, or settings. The author approves the first write in the app (per write, or once for the whole session) and sees every write in the activity feed; a prompt they ignore times out as a denial.',
+      'Overwrite an EXISTING non-generated project file (sources, transform scripts, styles, media). Requires seed_get_authoring_guide to have been called this session, and expected_hash from a prior seed_read_file of the same path — rejected if the file changed since. Cannot create files, and cannot touch generated XHTML, the nav, the OPF, or settings. The author approves the first write in the app (per write, or once for the whole session) and sees every write in the activity feed; a prompt they ignore times out as a denial.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -180,9 +180,15 @@ const respond = (id, result) =>
 const respondError = (id, code, message) =>
   process.stdout.write(JSON.stringify({ jsonrpc: '2.0', id, error: { code, message } }) + '\n');
 
+// Writes are gated on the guide having been served THIS session: the bridge
+// lives exactly one agent session, so this is "the current agent has the
+// authoring contract in context" — enforcement, not a nudge. Reads stay open.
+let guideServed = false;
+
 async function handleToolCall(name, args) {
   switch (name) {
     case 'seed_get_authoring_guide':
+      guideServed = true;
       return { guide: guideText };
     case 'seed_get_project_setup':
       return callTab('project_setup', {});
@@ -201,6 +207,11 @@ async function handleToolCall(name, args) {
     case 'seed_get_selection':
       return callTab('get_selection', {});
     case 'seed_write_file':
+      if (!guideServed) {
+        throw new Error(
+          'call seed_get_authoring_guide first — writes require the authoring contract in context (EPUB CSS fallbacks, generated-file boundaries, per-project transforms)'
+        );
+      }
       return callTab('write_file', {
         path: args?.path,
         text: args?.text,
