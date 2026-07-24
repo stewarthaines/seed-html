@@ -50,6 +50,8 @@ export interface FoliateViewLike {
     /** Public jump seam: a numeric anchor is a section fraction; the paginator
      *  maps it to a content page (`Math.round(fraction * (textPages - 1)) + 1`). */
     scrollToAnchor?: (anchor: number, select?: boolean) => Promise<void>;
+    /** Reader-injected section CSS (theme, font size) — replaces prior styles. */
+    setStyles?: (css: string) => void;
   };
   /** Page-direction-aware turns (goLeft = next in RTL books). */
   goLeft?: () => Promise<void>;
@@ -75,6 +77,43 @@ export interface ReadDocumentOptions {
    * (the paginator pads one turn page at each end).
    */
   relocateMessage: string;
+  /**
+   * Reader-simulation CSS applied via `renderer.setStyles()` between `open()`
+   * and `init()` (flash-free, READ.html's own pattern). Later control changes
+   * re-apply through the live view global.
+   */
+  styles?: string;
+}
+
+/** Inputs for the reader-simulation CSS (theme + text size + force colors). */
+export interface ReaderSimOptions {
+  /** Effective root font size in px (device base × step). */
+  basePx: number;
+  bg: string;
+  fg: string;
+  /** CSS color-scheme for UA-rendered chrome. */
+  scheme: string;
+  /** Override author colors outright (the "force colors" control). */
+  force: boolean;
+}
+
+/**
+ * The reader-simulation CSS injected into foliate sections. Mirrors the raw
+ * preview's head-injected theme (`applyPreviewAppearance`): root font-size in
+ * px so em/rem text scales while fixed-px text deliberately stays put, palette
+ * background/color with an `!important` force variant.
+ */
+export function readerSimCss(o: ReaderSimOptions): string {
+  const font = `:root { font-size: ${o.basePx}px; color-scheme: ${o.scheme}; }`;
+  if (o.force) {
+    return `${font}
+html { background: ${o.bg} !important; }
+body { background: ${o.bg} !important; }
+body, body * { color: ${o.fg} !important; }`;
+  }
+  return `${font}
+html { background: ${o.bg}; }
+body { color: ${o.fg}; }`;
 }
 
 /**
@@ -82,8 +121,16 @@ export interface ReadDocumentOptions {
  * written into the preview iframe via document.open()/write()/close().
  */
 export function buildReadDocument(opts: ReadDocumentOptions): string {
-  const { sectionUrl, sectionSize, flow, maxColumnCount, lang, doneMessage, relocateMessage } =
-    opts;
+  const {
+    sectionUrl,
+    sectionSize,
+    flow,
+    maxColumnCount,
+    lang,
+    doneMessage,
+    relocateMessage,
+    styles,
+  } = opts;
   // Resolves under any base path the app is served from (same pattern as the
   // Paged.js polyfill src in pdf-export).
   const moduleSrc = new URL('foliate/view.js', document.baseURI).href;
@@ -172,6 +219,7 @@ try {
   view.renderer.setAttribute('max-column-count', ${JSON.stringify(maxColumnCount)});
   view.renderer.setAttribute('gap', '6%');
   view.renderer.setAttribute('margin', '24px');
+  ${styles ? `view.renderer.setStyles?.(${JSON.stringify(styles)});` : ''}
   await view.init({});
 } catch (err) {
   // Report and fall through: the parent's spinner must clear either way.

@@ -36,6 +36,7 @@
   import { isHttpContext } from '$lib/reader/open-in-reader.js';
   import {
     buildReadDocument,
+    readerSimCss,
     FOLIATE_CLOSE_HOOK,
     FOLIATE_VIEW_GLOBAL,
     type FoliateViewLike,
@@ -185,6 +186,23 @@
     asEnum(['1', '2'])
   );
 
+  /**
+   * Whether a device id renders through the foliate engine: the READ.html
+   * entry AND the device presets (Commute/Home/Travel), on http, reflowable
+   * chapters only (process/FOLIATE_UNIFIED_PREVIEW.md). Everything else —
+   * Responsive (deliberately raw), file://, fixed layout — uses the built-in
+   * preview; Print stays Paged.js.
+   */
+  const usesFoliate = (id: string): boolean => {
+    if (!canReadPreview || isFixedLayout) return false;
+    const type = typeOfDevice(id);
+    return type === 'read' || type === 'device';
+  };
+
+  /** The engine a device id renders with, for re-render bookkeeping. */
+  const engineOfDevice = (id: string): 'paged' | 'foliate' | 'raw' =>
+    id === 'print' ? 'paged' : usesFoliate(id) ? 'foliate' : 'raw';
+
   let printPaginating = $state(false);
   // The preview is out of date because auto-update is off for the current type and
   // the chapter (or the injected head) changed since the last render. Drives the
@@ -201,6 +219,11 @@
   // when that type's auto-update is off (otherwise a stale frame of the old type
   // would linger).
   let renderedType: ReturnType<typeof previewTypeForDevice> | undefined = undefined;
+  // The engine and device that content was rendered with: an engine change
+  // (http/file, FXL flip) always re-renders, and the read-position restore only
+  // applies when the device matches (page N on a phone ≠ page N on a tablet).
+  let renderedEngine: 'paged' | 'foliate' | 'raw' | undefined = undefined;
+  let renderedDevice: string | undefined = undefined;
   // The head fragment actually injected last render (''=none), so toggling
   // include/editing head.xml marks the preview stale when auto-update is off.
   let renderedHead = '';
@@ -354,9 +377,10 @@
   // When more than one is available they collapse into a single dropdown.
   const availablePanels = $derived.by(() => {
     const list: { id: PanelId; label: string; disabled: boolean }[] = [];
-    // Not on READ.html: axe would audit the foliate wrapper document (and its
-    // nested section iframes), not the chapter markup.
-    if (canCheckA11y && selectedDevice.current !== 'read') {
+    // Not on foliate-rendered views: axe would audit the wrapper document (and
+    // its nested section iframes), not the chapter markup. Phase B of
+    // FOLIATE_UNIFIED_PREVIEW.md retargets it at the section document.
+    if (canCheckA11y && !usesFoliate(selectedDevice.current)) {
       list.push({ id: 'a11y', label: $t('Accessibility'), disabled: !xhtmlContent });
     }
     if (validationReport && validationReportMatches) {
@@ -365,8 +389,12 @@
     if (readerModeActive) {
       list.push({ id: 'reader', label: $t('Reader'), disabled: false });
     }
-    // Not on Print/READ.html: the walk targets the plain preview document.
-    if (canSrPreview && selectedDevice.current !== 'print' && selectedDevice.current !== 'read') {
+    // Not on Print or foliate views: the walk targets the plain preview document.
+    if (
+      canSrPreview &&
+      selectedDevice.current !== 'print' &&
+      !usesFoliate(selectedDevice.current)
+    ) {
       // <!-- i18n: preview Checks dropdown entry — announcement preview -->
       list.push({ id: 'sr', label: $t('Screen reader'), disabled: !xhtmlContent });
     }
@@ -936,11 +964,22 @@
 
   // Whether the reader-mode controls apply: reflowable previews only (not the print
   // preset, not fixed-layout chapters — readers disable user theming/sizing there).
-  // (READ.html is also excluded: foliate owns its own theming/sizing there —
-  // wiring the reader-mode controls through renderer.setStyles is a later phase.)
-  const readerModeActive = $derived(
-    selectedDevice.current !== 'print' && selectedDevice.current !== 'read' && !isFixedLayout
-  );
+  // Foliate-rendered views (READ.html + device presets) are included: their sim
+  // goes through renderer.setStyles() instead of head injection.
+  const readerModeActive = $derived(selectedDevice.current !== 'print' && !isFixedLayout);
+
+  /** The reader-simulation CSS for the current controls + device (foliate path). */
+  function currentReaderSimCss(): string {
+    const palette = THEME_PALETTES[previewTheme.current];
+    const basePx = DEVICE_BASE_FONT[selectedDevice.current] ?? 18;
+    return readerSimCss({
+      basePx: Math.round(basePx * FONT_STEPS[fontStep.current]),
+      bg: palette.bg,
+      fg: palette.fg,
+      scheme: palette.scheme,
+      force: forceColors.current,
+    });
+  }
 
   function decreaseFont(): void {
     if (fontStep.current > 0) fontStep.current -= 1;
@@ -963,6 +1002,16 @@
    * aggressive readers that override author colours.
    */
   function applyPreviewAppearance(): void {
+    if (!readerModeActive) return;
+
+    // Foliate-rendered views: hand the sim to the engine. The initial render
+    // gets the same CSS via the builder's `styles` option (flash-free); this
+    // path covers live control changes. No live view yet → nothing to do.
+    if (usesFoliate(selectedDevice.current)) {
+      liveFoliateView()?.renderer?.setStyles?.(currentReaderSimCss());
+      return;
+    }
+
     const iframeDoc = previewIframe?.contentDocument;
     // Bail while the document is head-only (no body element yet). A parser-blocking
     // external script (script src) in the chapter head stalls open/write/close
@@ -970,7 +1019,6 @@
     // can leave it permanently body-less in some browsers. The iframe `load` event
     // re-applies appearance once the body has parsed.
     if (!iframeDoc?.documentElement || !iframeDoc.head || !iframeDoc.body) return;
-    if (!readerModeActive) return;
 
     const root = iframeDoc.documentElement;
     const palette = THEME_PALETTES[previewTheme.current];
@@ -1042,13 +1090,17 @@
     // Track the head config so toggling include / editing head.xml re-runs this.
     const wantHead = previewIncludeHead[type] && previewHead ? previewHead : '';
 
+    // The engine this render will use (reads isFixedLayout, so an FXL flip
+    // re-runs this effect and re-renders through the right engine).
+    const engine = engineOfDevice(device);
+
     if (device !== 'print') {
       // Not on print: clear any leftover print pagination state.
       printPaginating = false;
       clearTimeout(printSafetyTimer);
     }
-    if (device !== 'read') {
-      // Not on READ.html: clear any leftover reader-render state.
+    if (engine !== 'foliate') {
+      // Not on foliate: clear any leftover reader-render state.
       readRendering = false;
       clearTimeout(readSafetyTimer);
     }
@@ -1058,7 +1110,10 @@
     // never lingers); otherwise honour auto-update. Empty `renderedContent` counts as
     // "not yet rendered" so the first real content shows even when auto-update is off.
     const firstOrSwitch =
-      !renderedContent || chapter !== renderedChapterId || type !== renderedType;
+      !renderedContent ||
+      chapter !== renderedChapterId ||
+      type !== renderedType ||
+      engine !== renderedEngine;
     if (firstOrSwitch || auto) {
       // untrack: renderNow reads state this effect must NOT depend on — the
       // read preview's page indicator ($state updated by every relocate
@@ -1339,14 +1394,17 @@
   function renderNow(): void {
     const content = xhtmlContent;
     fxlContentSize = null; // stale overflow badge must not survive a rewrite
+    // Route on engine: Print → Paged.js; READ.html entry + device presets →
+    // foliate (http, reflowable — usesFoliate); everything else (Responsive,
+    // file://, fixed layout) → the built-in preview.
     if (selectedDevice.current === 'print') writePagedDoc(content);
-    // READ.html: foliate is reflowable-only here; a fixed-layout chapter falls
-    // back to the plain render (the device is also hidden from the dropdown then).
-    else if (selectedDevice.current === 'read' && !isFixedLayout) writeReadDoc(content);
+    else if (usesFoliate(selectedDevice.current)) writeFoliateDoc(content);
     else updatePreviewContent(withPreviewHead(content));
     renderedContent = content;
     renderedChapterId = chapterId;
     renderedType = typeOfDevice(selectedDevice.current);
+    renderedEngine = engineOfDevice(selectedDevice.current);
+    renderedDevice = selectedDevice.current;
     renderedHead = currentWantHead();
     previewStale = false;
   }
@@ -1451,7 +1509,11 @@
       return;
     }
     renderer.setAttribute('flow', readFlow.current);
-    renderer.setAttribute('max-column-count', readColumns.current);
+    // Device presets are always Auto — the device width decides columns.
+    renderer.setAttribute(
+      'max-column-count',
+      selectedDevice.current === 'read' ? readColumns.current : '2'
+    );
     renderer.render?.();
   }
 
@@ -1487,12 +1549,14 @@
   }
 
   /**
-   * Render the current chapter with the foliate renderer: wrap it in the read
-   * document (built by read-preview.ts), which imports the vendored modules
-   * from the app origin and opens a one-section book around a blob URL of the
-   * chapter. The READ_DONE ping (message effect) clears the spinner.
+   * Render the current chapter with the foliate renderer — the READ.html entry
+   * and (on http, reflowable) the device presets. The wrapper (read-preview.ts)
+   * imports the vendored modules from the app origin and opens a one-section
+   * book around a blob URL of the chapter; the frame machinery already sizes
+   * the iframe to the device, so the engine paginates at true device pixels.
+   * The READ_DONE ping (message effect) clears the spinner.
    */
-  function writeReadDoc(content: string): void {
+  function writeFoliateDoc(content: string): void {
     if (!previewIframe || !content) return;
     const iframeDoc = previewIframe.contentDocument;
     if (!iframeDoc) return;
@@ -1520,19 +1584,28 @@
       sectionUrl: readSectionUrl,
       sectionSize: sectionContent.length,
       flow: readFlow.current,
-      maxColumnCount: readColumns.current,
+      // Device presets: Auto — the device width decides column count honestly.
+      // The Single override only exists on the fill-size READ.html entry.
+      maxColumnCount: selectedDevice.current === 'read' ? readColumns.current : '2',
       lang,
       doneMessage: READ_DONE,
       relocateMessage: READ_RELOCATE,
+      // Reader simulation from the first paint (theme, device base font).
+      styles: currentReaderSimCss(),
     });
 
     readRendering = true;
-    // Keep the reader's place across re-renders of the SAME chapter (the print
-    // preview's pendingPrintPage contract): remember the content page in
-    // paginated flow, the scroll fraction in scrolled. A chapter switch (or
-    // arriving from another device type) starts at the beginning.
+    // Keep the reader's place across re-renders of the SAME chapter on the
+    // SAME device (the print preview's pendingPrintPage contract): remember
+    // the content page in paginated flow, the scroll fraction in scrolled.
+    // A chapter or device switch starts at the beginning — page N on a phone
+    // is not page N on a tablet.
     pendingReadRestore = null;
-    if (renderedType === 'read' && renderedChapterId === chapterId) {
+    if (
+      renderedEngine === 'foliate' &&
+      renderedChapterId === chapterId &&
+      renderedDevice === selectedDevice.current
+    ) {
       if (readFlow.current === 'scrolled') {
         if (readScrollFraction > 0) pendingReadRestore = { fraction: readScrollFraction };
       } else if (readPage > 1) {
@@ -1646,10 +1719,11 @@
     selectedDevice.current = deviceId as (typeof DEVICE_PRESETS)[number]['id'];
     const device = DEVICE_PRESETS.find(d => d.id === deviceId);
 
-    // Panels that inspect the plain preview DOM don't apply to the READ.html
-    // device (axe/walk would hit the foliate wrapper; reader theming is
-    // foliate-owned) — close them rather than leaving the dropdown orphaned.
-    if (deviceId === 'read' && activePanel && activePanel !== 'epubcheck') setPanel(null);
+    // Panels that inspect the plain preview DOM don't apply to foliate-rendered
+    // views (axe/walk would hit the wrapper, not the chapter) — close them
+    // rather than leaving the dropdown orphaned. Reader + EpubCheck stay: the
+    // reader sim works through setStyles, and EpubCheck is report-based.
+    if (usesFoliate(deviceId) && (activePanel === 'a11y' || activePanel === 'sr')) setPanel(null);
 
     if (device && previewContainer) {
       const wrapper = previewContainer.parentElement;
@@ -1937,8 +2011,11 @@
     if (previewIframe?.contentDocument) {
       const iframeDoc = previewIframe.contentDocument;
 
-      // Set up interactivity first
-      setupIframeInteractivity(iframeDoc);
+      // Set up interactivity first. Not on foliate-rendered views: the click
+      // deixis and hover outlines belong to the chapter document, and here the
+      // iframe holds the wrapper (the chapter lives in foliate's nested
+      // section iframe — phase B of FOLIATE_UNIFIED_PREVIEW.md migrates them).
+      if (!usesFoliate(selectedDevice.current)) setupIframeInteractivity(iframeDoc);
 
       // Device re-key rebuilt the iframe (fresh Window): reload + re-instrument
       // the screen reader preview when its panel is open.
@@ -2139,10 +2216,11 @@
         </select>
 
         <div class="preview-device">
-          <!-- READ.html reading-mode controls: flow, and the column cap while
-               paginated (foliate ignores it when scrolled). Applied live to the
-               running renderer — no re-render. -->
-          {#if selectedDevice.current === 'read'}
+          <!-- Foliate reading-mode controls (READ.html entry + device presets):
+               flow, and — on the fill-size READ.html entry only — the column
+               cap while paginated (device widths decide columns honestly).
+               Applied live to the running renderer — no re-render. -->
+          {#if usesFoliate(selectedDevice.current)}
             <select
               class="device-selector read-control"
               value={readFlow.current}
@@ -2155,17 +2233,19 @@
               <option value="scrolled">{$t('Scroll')}</option>
             </select>
             {#if readFlow.current === 'paginated'}
-              <select
-                class="device-selector read-control"
-                value={readColumns.current}
-                onchange={e => setReadColumns((e.currentTarget as HTMLSelectElement).value)}
-                aria-label={$t('Columns')}
-              >
-                <!-- i18n: Column setting — up to two columns where they fit -->
-                <option value="2">{$t('Auto columns')}</option>
-                <!-- i18n: Column setting — always a single column -->
-                <option value="1">{$t('Single column')}</option>
-              </select>
+              {#if selectedDevice.current === 'read'}
+                <select
+                  class="device-selector read-control"
+                  value={readColumns.current}
+                  onchange={e => setReadColumns((e.currentTarget as HTMLSelectElement).value)}
+                  aria-label={$t('Columns')}
+                >
+                  <!-- i18n: Column setting — up to two columns where they fit -->
+                  <option value="2">{$t('Auto columns')}</option>
+                  <!-- i18n: Column setting — always a single column -->
+                  <option value="1">{$t('Single column')}</option>
+                </select>
+              {/if}
               {#if readPages > 1}
                 <!-- Page navigation: turn buttons (reading-direction-aware) and a
                      direct page picker. Arrow keys work too while the preview is
@@ -2239,8 +2319,8 @@
         </select>
       {:else}
         <!-- Accessibility check (spike): inject axe-core into the preview + run it.
-             Not on READ.html — axe would audit the foliate wrapper, not the chapter. -->
-        {#if canCheckA11y && selectedDevice.current !== 'read'}
+             Not on foliate views — axe would audit the wrapper, not the chapter. -->
+        {#if canCheckA11y && !usesFoliate(selectedDevice.current)}
           <button
             type="button"
             class="a11y-check"
