@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-21\n"
-"PO-Revision-Date: 2026-07-21\n"
+"POT-Creation-Date: 2026-07-24\n"
+"PO-Revision-Date: 2026-07-24\n"
 "Language: ka\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -612,6 +612,11 @@ msgstr "ავტორიზაცია ვერ მოხერხდა: {e
 msgid "Auto"
 msgstr "ავტომატური"
 
+#: src/lib/components/spine/PreviewPane.svelte
+#. Column setting — up to two columns where they fit
+msgid "Auto columns"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Auto Update"
 msgstr "ავტომატური განახლება"
@@ -970,6 +975,10 @@ msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "column header"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Columns"
 msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
@@ -2971,6 +2980,10 @@ msgstr "პირველად ხართ? სანიმუშო წი�
 msgid "New Project"
 msgstr "ახალი პროექტი"
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Next page"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 #: src/lib/components/extensions/ExtensionItem.svelte
@@ -3319,6 +3332,10 @@ msgstr "შეფუთული ფაილის სახელი"
 msgid "Packaging…"
 msgstr "იფუთება…"
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Page"
+msgstr ""
+
 #: src/lib/components/spine/sr-walk.ts
 msgid "page break"
 msgstr ""
@@ -3336,6 +3353,8 @@ msgid "Page size"
 msgstr "გვერდის ზომა"
 
 #: src/lib/Sidebar.svelte
+#: src/lib/components/spine/PreviewPane.svelte
+#. Reading flow option — paginated pages
 msgid "Pages"
 msgstr "გვერდები"
 
@@ -3516,6 +3535,10 @@ msgid "Preview Pane"
 msgstr "გადახედვის პანელი"
 
 #: src/lib/components/spine/PreviewPane.svelte
+msgid "Previous page"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
 #. The paginated print-page preview option
 msgid "Print"
 msgstr "ბეჭდვა"
@@ -3622,6 +3645,10 @@ msgstr "მხოლოდ წასაკითხი ნავიგაცი�
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Reader"
 msgstr "წამკითხველი"
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Reading flow"
+msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Reading preview"
@@ -3918,6 +3945,11 @@ msgstr ""
 msgid "Screen reader preview"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+#. Reading flow option — continuous vertical scroll
+msgid "Scroll"
+msgstr ""
+
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Scrolled (continuous)"
 msgstr "გადახვევადი (უწყვეტი)"
@@ -4062,6 +4094,11 @@ msgstr "Simple EPUB Editor"
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "Simple EPUB Editor (distributed as SEED.html) is free and open-source software, released under the MIT License. You're welcome to use it, modify it, and redistribute it — including embedding it inside the EPUBs you create."
 msgstr "Simple EPUB Editor (ვრცელდება როგორც SEED.html) არის უფასო და ღია კოდის პროგრამა, გამოშვებული MIT ლიცენზიით. შეგიძლიათ გამოიყენოთ, შეცვალოთ და გაავრცელოთ — მათ შორის ჩააშენოთ თქვენ მიერ შექმნილ EPUB-ებში."
+
+#: src/lib/components/spine/PreviewPane.svelte
+#. Column setting — always a single column
+msgid "Single column"
+msgstr ""
 
 #: src/lib/components/manifest/ManifestTable.svelte
 #: src/lib/navigation/views/PublishView.svelte

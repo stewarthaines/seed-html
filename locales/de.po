@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-21\n"
-"PO-Revision-Date: 2026-07-21\n"
+"POT-Creation-Date: 2026-07-24\n"
+"PO-Revision-Date: 2026-07-24\n"
 "Language: de\n"
 "Language-Team: \n"
 "Last-Translator: Claude (machine first pass)\n"
@@ -464,7 +464,6 @@ msgid "Announce"
 msgstr "Ansagen"
 
 #: src/lib/components/spine/PreviewPane.svelte
-# proposed seed — needs native review
 msgid "Announcement style"
 msgstr "Ansagestil"
 
@@ -593,6 +592,11 @@ msgstr "Autorisierung fehlgeschlagen: {error}"
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Auto"
 msgstr "Automatisch"
+
+#: src/lib/components/spine/PreviewPane.svelte
+#. Column setting — up to two columns where they fit
+msgid "Auto columns"
+msgstr "Automatische Spalten"
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Auto Update"
@@ -953,6 +957,10 @@ msgstr ""
 #: src/lib/components/spine/sr-walk.ts
 msgid "column header"
 msgstr "Spaltenüberschrift"
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Columns"
+msgstr "Spalten"
 
 #: src/lib/components/spine/PreviewPane.svelte
 #. Device category for mobile phone reading while traveling or commuting
@@ -2953,6 +2961,10 @@ msgstr "Neu hier? Öffnen Sie „Aus Katalog importieren“, um Beispielbücher 
 msgid "New Project"
 msgstr "Neues Projekt"
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Next page"
+msgstr "Nächste Seite"
+
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 #: src/lib/components/extensions/ExtensionItem.svelte
@@ -3301,6 +3313,10 @@ msgstr "Dateiname des gepackten EPUBs"
 msgid "Packaging…"
 msgstr "Wird verpackt…"
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Page"
+msgstr "Seite"
+
 #: src/lib/components/spine/sr-walk.ts
 msgid "page break"
 msgstr "Seitenumbruch"
@@ -3318,6 +3334,8 @@ msgid "Page size"
 msgstr "Seitengröße"
 
 #: src/lib/Sidebar.svelte
+#: src/lib/components/spine/PreviewPane.svelte
+#. Reading flow option — paginated pages
 msgid "Pages"
 msgstr "Seiten"
 
@@ -3498,6 +3516,10 @@ msgid "Preview Pane"
 msgstr "Vorschaubereich"
 
 #: src/lib/components/spine/PreviewPane.svelte
+msgid "Previous page"
+msgstr "Vorherige Seite"
+
+#: src/lib/components/spine/PreviewPane.svelte
 #. The paginated print-page preview option
 msgid "Print"
 msgstr "Drucken"
@@ -3581,7 +3603,6 @@ msgid "Read"
 msgstr "Lesen"
 
 #: src/lib/components/spine/PreviewPane.svelte
-# proposed seed — needs native review
 msgid "Read aloud"
 msgstr "Vorlesen"
 
@@ -3605,6 +3626,10 @@ msgstr "Schreibgeschützte Navigation"
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Reader"
 msgstr "Lesemodus"
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Reading flow"
+msgstr "Lesefluss"
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Reading preview"
@@ -3901,6 +3926,11 @@ msgstr "Screenreader-Ansagen"
 msgid "Screen reader preview"
 msgstr "Screenreader-Vorschau"
 
+#: src/lib/components/spine/PreviewPane.svelte
+#. Reading flow option — continuous vertical scroll
+msgid "Scroll"
+msgstr "Scrollen"
+
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Scrolled (continuous)"
 msgstr "Gescrollt (durchgehend)"
@@ -4045,6 +4075,11 @@ msgstr "Simple EPUB Editor"
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "Simple EPUB Editor (distributed as SEED.html) is free and open-source software, released under the MIT License. You're welcome to use it, modify it, and redistribute it — including embedding it inside the EPUBs you create."
 msgstr "Simple EPUB Editor (vertrieben als SEED.html) ist freie und quelloffene Software, veröffentlicht unter der MIT-Lizenz. Sie dürfen sie verwenden, verändern und weiterverbreiten — einschließlich der Einbettung in die EPUBs, die Sie erstellen."
+
+#: src/lib/components/spine/PreviewPane.svelte
+#. Column setting — always a single column
+msgid "Single column"
+msgstr "Eine Spalte"
 
 #: src/lib/components/manifest/ManifestTable.svelte
 #: src/lib/navigation/views/PublishView.svelte

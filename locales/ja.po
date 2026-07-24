@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-21\n"
-"PO-Revision-Date: 2026-07-21\n"
+"POT-Creation-Date: 2026-07-24\n"
+"PO-Revision-Date: 2026-07-24\n"
 "Language: ja\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -574,6 +574,11 @@ msgstr ""
 msgid "Auto"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+#. Column setting — up to two columns where they fit
+msgid "Auto columns"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Auto Update"
 msgstr ""
@@ -932,6 +937,10 @@ msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "column header"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Columns"
 msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
@@ -2933,6 +2942,10 @@ msgstr ""
 msgid "New Project"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Next page"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 #: src/lib/components/extensions/ExtensionItem.svelte
@@ -3281,6 +3294,10 @@ msgstr ""
 msgid "Packaging…"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Page"
+msgstr ""
+
 #: src/lib/components/spine/sr-walk.ts
 msgid "page break"
 msgstr ""
@@ -3298,6 +3315,8 @@ msgid "Page size"
 msgstr ""
 
 #: src/lib/Sidebar.svelte
+#: src/lib/components/spine/PreviewPane.svelte
+#. Reading flow option — paginated pages
 msgid "Pages"
 msgstr ""
 
@@ -3478,6 +3497,10 @@ msgid "Preview Pane"
 msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
+msgid "Previous page"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
 #. The paginated print-page preview option
 msgid "Print"
 msgstr ""
@@ -3583,6 +3606,10 @@ msgstr ""
 #: src/lib/components/reader/ReaderOverlay.svelte
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Reader"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Reading flow"
 msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
@@ -3880,6 +3907,11 @@ msgstr ""
 msgid "Screen reader preview"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+#. Reading flow option — continuous vertical scroll
+msgid "Scroll"
+msgstr ""
+
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Scrolled (continuous)"
 msgstr ""
@@ -4023,6 +4055,11 @@ msgstr ""
 
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "Simple EPUB Editor (distributed as SEED.html) is free and open-source software, released under the MIT License. You're welcome to use it, modify it, and redistribute it — including embedding it inside the EPUBs you create."
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+#. Column setting — always a single column
+msgid "Single column"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestTable.svelte
