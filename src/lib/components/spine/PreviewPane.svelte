@@ -13,7 +13,7 @@
 -->
 
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import { writable } from 'svelte/store';
   import type { TransformError } from '$lib/types/spine-editor.js';
   import { t, translate, currentLocale } from '$lib/i18n';
@@ -34,6 +34,14 @@
   } from './sr-walk.js';
   import { SpeechService } from '$lib/speech/speech.service.js';
   import { isHttpContext } from '$lib/reader/open-in-reader.js';
+  import {
+    buildReadDocument,
+    FOLIATE_CLOSE_HOOK,
+    FOLIATE_VIEW_GLOBAL,
+    type FoliateViewLike,
+    type ReadColumns,
+    type ReadFlow,
+  } from '$lib/reader/read-preview.js';
   import { buildPagedDocument, chapterToSection, MARGIN_MM } from '$lib/pdf/pdf-export.js';
   import type { PrintSettings, PreviewSettings } from '$lib/services/settings/settings.service.js';
   import {
@@ -42,6 +50,7 @@
   } from '$lib/services/settings/settings.service.js';
   import {
     ArrowsClockwise,
+    CaretLeft,
     CaretRight,
     FilePdf,
     DeviceRotate,
@@ -133,9 +142,48 @@
   // polyfill is fetched from the app origin, so the option is hidden on file://.
   const canPaginate = typeof location !== 'undefined' && location.protocol !== 'file:';
   /** Devices that fill the pane rather than rendering a scaled device frame. */
-  const isFillDevice = (id: string) => id === 'desktop' || id === 'print';
+  const isFillDevice = (id: string) => id === 'desktop' || id === 'print' || id === 'read';
   /** postMessage token Paged.js pings the parent with when pagination completes. */
   const PAGED_DONE = 'preview-paged';
+
+  // --- READ.html reader preview (foliate) --------------------------------------
+  // The "READ.html" device renders the chapter with the vendored foliate-js
+  // renderer (public/foliate/ — the same patched engine inside the vendored
+  // reader), paginated or scrolled, so the preview matches what Publish → Read
+  // shows. HTTP-only like Print and axe: the modules are fetched from the app
+  // origin, so the option is hidden on file://. See process/READ_DEVICE_PREVIEW.md.
+  const canReadPreview = typeof location !== 'undefined' && location.protocol !== 'file:';
+  /** postMessage token the read wrapper pings the parent with after first render. */
+  const READ_DONE = 'preview-read';
+  /** postMessage type the read wrapper sends on every relocation (page turns). */
+  const READ_RELOCATE = 'preview-read-relocate';
+  let readRendering = $state(false);
+  // Page indicator state, fed by READ_RELOCATE messages. Content pages run
+  // 1..pages-2 (the paginator pads one turn page at each end); readPages is the
+  // content-page total, 0 while unknown or in scrolled flow (nav hidden).
+  let readPage = $state(0);
+  let readPages = $state(0);
+  // Scrolled-flow position (start/viewSize), tracked from relocates for the
+  // position restore below. Not reactive — nothing renders it.
+  let readScrollFraction = 0;
+  // Reading position to restore after a same-chapter re-render (edits must not
+  // reset the view to page one); consumed by the READ_DONE handler. Paginated
+  // flow remembers the content page (clamped — the edit may have shortened the
+  // chapter), scrolled flow the scroll fraction. A chapter switch starts fresh.
+  let pendingReadRestore: { page: number } | { fraction: number } | null = null;
+  let readSafetyTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Blob URL of the chapter section handed to foliate; revoked on replacement. */
+  let readSectionUrl: string | null = null;
+  const readFlow = persisted<ReadFlow>(
+    'seedhtml_preview_read_flow',
+    'paginated',
+    asEnum(['paginated', 'scrolled'])
+  );
+  const readColumns = persisted<ReadColumns>(
+    'seedhtml_preview_read_columns',
+    '2',
+    asEnum(['1', '2'])
+  );
 
   let printPaginating = $state(false);
   // The preview is out of date because auto-update is off for the current type and
@@ -306,7 +354,9 @@
   // When more than one is available they collapse into a single dropdown.
   const availablePanels = $derived.by(() => {
     const list: { id: PanelId; label: string; disabled: boolean }[] = [];
-    if (canCheckA11y) {
+    // Not on READ.html: axe would audit the foliate wrapper document (and its
+    // nested section iframes), not the chapter markup.
+    if (canCheckA11y && selectedDevice.current !== 'read') {
       list.push({ id: 'a11y', label: $t('Accessibility'), disabled: !xhtmlContent });
     }
     if (validationReport && validationReportMatches) {
@@ -315,7 +365,8 @@
     if (readerModeActive) {
       list.push({ id: 'reader', label: $t('Reader'), disabled: false });
     }
-    if (canSrPreview && selectedDevice.current !== 'print') {
+    // Not on Print/READ.html: the walk targets the plain preview document.
+    if (canSrPreview && selectedDevice.current !== 'print' && selectedDevice.current !== 'read') {
       // <!-- i18n: preview Checks dropdown entry — announcement preview -->
       list.push({ id: 'sr', label: $t('Screen reader'), disabled: !xhtmlContent });
     }
@@ -691,6 +742,8 @@
   // Preview configuration
   const DEVICE_PRESETS = [
     { id: 'desktop', name: 'Fill', width: '100%', height: '100%', category: 'responsive' },
+    // Foliate reader preview — fills the pane; the renderer paginates itself.
+    { id: 'read', name: 'READ.html', width: '100%', height: '100%', category: 'read' },
     { id: 'iphone', name: 'Standard', width: '375px', height: '667px', category: 'commute' },
     { id: 'iphone-plus', name: 'Plus', width: '414px', height: '736px', category: 'commute' },
     { id: 'ipad', name: 'Compact', width: '768px', height: '1024px', category: 'home' },
@@ -712,6 +765,7 @@
   // same relative step lands at a smaller px on a phone than on a large tablet.
   const DEVICE_BASE_FONT: Record<string, number> = {
     desktop: 18,
+    read: 18,
     iphone: 16,
     'iphone-plus': 16,
     ipad: 18,
@@ -858,6 +912,14 @@
   // dropdown alongside Source rather than under a category header.
   const responsiveDevices = $derived(DEVICE_PRESETS.filter(d => d.category === 'responsive'));
 
+  // The READ.html reader preset, ungrouped right after Responsive (a one-item
+  // optgroup would just repeat its own label). HTTP-only; hidden for
+  // fixed-layout chapters (foliate's pre-paginated renderer is out of scope —
+  // renderNow falls back to the plain render if the device is still selected).
+  const readDevices = $derived(
+    canReadPreview && !isFixedLayout ? DEVICE_PRESETS.filter(d => d.category === 'read') : []
+  );
+
   // Reader-mode preview state (theme + font size + force-colours). View-only — never
   // written to the generated/exported XHTML; persisted app-wide like the device.
   const previewTheme = persisted<'light' | 'sepia' | 'dark'>(
@@ -874,7 +936,11 @@
 
   // Whether the reader-mode controls apply: reflowable previews only (not the print
   // preset, not fixed-layout chapters — readers disable user theming/sizing there).
-  const readerModeActive = $derived(selectedDevice.current !== 'print' && !isFixedLayout);
+  // (READ.html is also excluded: foliate owns its own theming/sizing there —
+  // wiring the reader-mode controls through renderer.setStyles is a later phase.)
+  const readerModeActive = $derived(
+    selectedDevice.current !== 'print' && selectedDevice.current !== 'read' && !isFixedLayout
+  );
 
   function decreaseFont(): void {
     if (fontStep.current > 0) fontStep.current -= 1;
@@ -981,6 +1047,11 @@
       printPaginating = false;
       clearTimeout(printSafetyTimer);
     }
+    if (device !== 'read') {
+      // Not on READ.html: clear any leftover reader-render state.
+      readRendering = false;
+      clearTimeout(readSafetyTimer);
+    }
 
     // Always render on first show (nothing rendered yet, or only empty content), a
     // chapter change, or a device-type switch (so a stale frame of the previous type
@@ -989,7 +1060,12 @@
     const firstOrSwitch =
       !renderedContent || chapter !== renderedChapterId || type !== renderedType;
     if (firstOrSwitch || auto) {
-      renderNow();
+      // untrack: renderNow reads state this effect must NOT depend on — the
+      // read preview's page indicator ($state updated by every relocate
+      // message) and the flow/columns settings. Tracked, each page turn would
+      // re-trigger this effect and re-render in a loop. The effect's real
+      // dependencies are all read explicitly above.
+      untrack(() => renderNow());
     } else if (content !== renderedContent || wantHead !== renderedHead) {
       previewStale = true;
     }
@@ -999,7 +1075,42 @@
   // the rendered pages to the pane width, and restore the pre-render page.
   $effect(() => {
     const onMessage = (event: MessageEvent) => {
-      if (event.source !== previewIframe?.contentWindow || event.data !== PAGED_DONE) return;
+      if (event.source !== previewIframe?.contentWindow) return;
+      if (event.data === READ_DONE) {
+        // Foliate finished its first render (success or reported failure).
+        clearTimeout(readSafetyTimer);
+        readRendering = false;
+        // Restore the pre-render reading position. The first relocate (fired
+        // during init, so already handled — same-source messages keep order)
+        // has refreshed readPages with the new totals; clamp to them.
+        if (pendingReadRestore) {
+          const restore = pendingReadRestore;
+          pendingReadRestore = null;
+          const renderer = liveFoliateView()?.renderer;
+          if (renderer?.scrollToAnchor) {
+            if ('fraction' in restore) {
+              void renderer.scrollToAnchor(restore.fraction);
+            } else if (readPages > 0) {
+              const target = Math.min(restore.page, readPages);
+              void renderer.scrollToAnchor(readPages > 1 ? (target - 1) / (readPages - 1) : 0);
+            }
+          }
+        }
+        return;
+      }
+      if ((event.data as { type?: string } | null)?.type === READ_RELOCATE) {
+        const { page, pages, scrolled, fraction } = event.data as {
+          page: number;
+          pages: number;
+          scrolled: boolean;
+          fraction: number;
+        };
+        readPages = scrolled ? 0 : Math.max(0, pages - 2);
+        readPage = Math.min(Math.max(1, page), Math.max(1, readPages));
+        readScrollFraction = scrolled ? fraction : 0;
+        return;
+      }
+      if (event.data !== PAGED_DONE) return;
       clearTimeout(printSafetyTimer);
       printPaginating = false;
       fitPrintToWidth();
@@ -1188,6 +1299,7 @@
       pendingScrollRestore = { anchor: scrollAnchor, fallbackScrollTop: scrollTop };
 
       // Update content (preserves XHTML and blob URLs)
+      closeFoliateView(); // leaving the READ.html device: mandatory teardown
       pausePreviewMedia(iframeDoc);
       // A screen-reader walk must not keep stepping through the dying document,
       // and its queued speech would outlive the rewrite.
@@ -1228,6 +1340,9 @@
     const content = xhtmlContent;
     fxlContentSize = null; // stale overflow badge must not survive a rewrite
     if (selectedDevice.current === 'print') writePagedDoc(content);
+    // READ.html: foliate is reflowable-only here; a fixed-layout chapter falls
+    // back to the plain render (the device is also hidden from the dropdown then).
+    else if (selectedDevice.current === 'read' && !isFixedLayout) writeReadDoc(content);
     else updatePreviewContent(withPreviewHead(content));
     renderedContent = content;
     renderedChapterId = chapterId;
@@ -1287,6 +1402,7 @@
       }
     }
 
+    closeFoliateView(); // leaving the READ.html device: mandatory teardown
     pausePreviewMedia(iframeDoc);
     iframeDoc.open();
     iframeDoc.write(doc);
@@ -1296,6 +1412,144 @@
     clearTimeout(printSafetyTimer);
     printSafetyTimer = setTimeout(() => {
       printPaginating = false;
+    }, 10000);
+  }
+
+  // --- READ.html reader preview ------------------------------------------------
+
+  /**
+   * Close a live foliate view before a document.open() rewrite. Mandatory
+   * teardown (see read-preview.ts): close() disconnects the paginator's
+   * ResizeObserver — without it, stale observer callbacks fire on the dead view
+   * and throw uncaught TypeErrors. A no-op when no read preview is up.
+   */
+  function closeFoliateView(): void {
+    const win = previewIframe?.contentWindow as (Window & Record<string, unknown>) | null;
+    const close = win?.[FOLIATE_CLOSE_HOOK];
+    if (typeof close === 'function') close();
+  }
+
+  /** The live foliate view, when the READ.html preview is currently rendered. */
+  function liveFoliateView(): FoliateViewLike | undefined {
+    const win = previewIframe?.contentWindow as (Window & Record<string, unknown>) | null;
+    const view = win?.[FOLIATE_VIEW_GLOBAL];
+    return view && typeof view === 'object' ? (view as FoliateViewLike) : undefined;
+  }
+
+  /**
+   * Apply the flow/columns settings to the live renderer without a re-render;
+   * falls back to a full render when no view is up (stale preview, first show).
+   * `flow` is an observed attribute; `max-column-count` only changes a CSS
+   * custom property, so the explicit render() call is what repaginates
+   * (read-html hit this; render() is idempotent where the attribute change
+   * already triggered one).
+   */
+  function applyReadSettings(): void {
+    const renderer = liveFoliateView()?.renderer;
+    if (!renderer) {
+      renderNow();
+      return;
+    }
+    renderer.setAttribute('flow', readFlow.current);
+    renderer.setAttribute('max-column-count', readColumns.current);
+    renderer.render?.();
+  }
+
+  function setReadFlow(value: string): void {
+    readFlow.current = value as ReadFlow;
+    applyReadSettings();
+  }
+
+  function setReadColumns(value: string): void {
+    readColumns.current = value as ReadColumns;
+    applyReadSettings();
+  }
+
+  /** Turn a page in the reading direction of the button (RTL-aware via goLeft/goRight). */
+  function readPageLeft(): void {
+    void liveFoliateView()?.goLeft?.();
+  }
+
+  function readPageRight(): void {
+    void liveFoliateView()?.goRight?.();
+  }
+
+  /**
+   * Jump to a content page (1-based). The paginator's public seam is a section
+   * fraction: it maps `fraction * (textPages - 1)` back to exactly this page.
+   */
+  function goToReadPage(value: string): void {
+    const renderer = liveFoliateView()?.renderer;
+    const target = parseInt(value, 10);
+    if (!renderer?.scrollToAnchor || !Number.isFinite(target) || readPages < 1) return;
+    const fraction = readPages > 1 ? (target - 1) / (readPages - 1) : 0;
+    void renderer.scrollToAnchor(fraction);
+  }
+
+  /**
+   * Render the current chapter with the foliate renderer: wrap it in the read
+   * document (built by read-preview.ts), which imports the vendored modules
+   * from the app origin and opens a one-section book around a blob URL of the
+   * chapter. The READ_DONE ping (message effect) clears the spinner.
+   */
+  function writeReadDoc(content: string): void {
+    if (!previewIframe || !content) return;
+    const iframeDoc = previewIframe.contentDocument;
+    if (!iframeDoc) return;
+
+    // The chapter document itself is the section; the preview-head fragment
+    // (when the READ.html includeHead toggle is on) rides inside it.
+    const sectionContent = withPreviewHead(content);
+    // Language for foliate's metadata + page-progression direction.
+    const lang = chapterToSection(content, chapterId ?? undefined)?.lang ?? undefined;
+
+    closeFoliateView();
+    pausePreviewMedia(iframeDoc);
+    // A screen-reader walk must not keep stepping through the dying document.
+    cancelSrActivity();
+    srHoverTarget = null;
+    // Foliate's DOM is unrelated to the plain preview; no scroll carry-over.
+    pendingScrollRestore = null;
+
+    if (readSectionUrl) URL.revokeObjectURL(readSectionUrl);
+    readSectionUrl = URL.createObjectURL(
+      new Blob([sectionContent], { type: 'application/xhtml+xml' })
+    );
+
+    const doc = buildReadDocument({
+      sectionUrl: readSectionUrl,
+      sectionSize: sectionContent.length,
+      flow: readFlow.current,
+      maxColumnCount: readColumns.current,
+      lang,
+      doneMessage: READ_DONE,
+      relocateMessage: READ_RELOCATE,
+    });
+
+    readRendering = true;
+    // Keep the reader's place across re-renders of the SAME chapter (the print
+    // preview's pendingPrintPage contract): remember the content page in
+    // paginated flow, the scroll fraction in scrolled. A chapter switch (or
+    // arriving from another device type) starts at the beginning.
+    pendingReadRestore = null;
+    if (renderedType === 'read' && renderedChapterId === chapterId) {
+      if (readFlow.current === 'scrolled') {
+        if (readScrollFraction > 0) pendingReadRestore = { fraction: readScrollFraction };
+      } else if (readPage > 1) {
+        pendingReadRestore = { page: readPage };
+      }
+    }
+    // Fresh render: hide the page nav until the first relocate reports counts.
+    readPage = 0;
+    readPages = 0;
+    iframeDoc.open();
+    iframeDoc.write(doc);
+    iframeDoc.close();
+
+    // Safety: if the wrapper never pings (e.g. module fetch fails), drop the spinner.
+    clearTimeout(readSafetyTimer);
+    readSafetyTimer = setTimeout(() => {
+      readRendering = false;
     }, 10000);
   }
 
@@ -1391,6 +1645,11 @@
   function handleDeviceChange(deviceId: string): void {
     selectedDevice.current = deviceId as (typeof DEVICE_PRESETS)[number]['id'];
     const device = DEVICE_PRESETS.find(d => d.id === deviceId);
+
+    // Panels that inspect the plain preview DOM don't apply to the READ.html
+    // device (axe/walk would hit the foliate wrapper; reader theming is
+    // foliate-owned) — close them rather than leaving the dropdown orphaned.
+    if (deviceId === 'read' && activePanel && activePanel !== 'epubcheck') setPanel(null);
 
     if (device && previewContainer) {
       const wrapper = previewContainer.parentElement;
@@ -1729,8 +1988,9 @@
   let resizeObserver: ResizeObserver | null = null;
 
   onMount(() => {
-    // Print preview is HTTP-only; never start on it under file://.
+    // Print and READ.html previews are HTTP-only; never start on them under file://.
     if (selectedDevice.current === 'print' && !canPaginate) selectedDevice.current = 'desktop';
+    if (selectedDevice.current === 'read' && !canReadPreview) selectedDevice.current = 'desktop';
 
     // Initialize with default device
     handleDeviceChange(selectedDevice.current);
@@ -1764,6 +2024,7 @@
     return () => {
       resizeObserver?.disconnect();
       window.removeEventListener('resize', handleResize);
+      if (readSectionUrl) URL.revokeObjectURL(readSectionUrl);
     };
   });
 </script>
@@ -1860,8 +2121,12 @@
           {#each responsiveDevices as device}
             <option value={device.id}>{$t('Responsive')}</option>
           {/each}
+          {#each readDevices as device}
+            <!-- i18n-ignore: product name, not translated -->
+            <option value={device.id}>READ.html</option>
+          {/each}
           {#each Object.entries(groupedDevices) as [category, devices]}
-            {#if category !== 'responsive'}
+            {#if category !== 'responsive' && category !== 'read'}
               <optgroup label={getCategoryLabel(category)}>
                 {#each devices as device}
                   <option value={device.id}>
@@ -1874,6 +2139,72 @@
         </select>
 
         <div class="preview-device">
+          <!-- READ.html reading-mode controls: flow, and the column cap while
+               paginated (foliate ignores it when scrolled). Applied live to the
+               running renderer — no re-render. -->
+          {#if selectedDevice.current === 'read'}
+            <select
+              class="device-selector read-control"
+              value={readFlow.current}
+              onchange={e => setReadFlow((e.currentTarget as HTMLSelectElement).value)}
+              aria-label={$t('Reading flow')}
+            >
+              <!-- i18n: Reading flow option — paginated pages -->
+              <option value="paginated">{$t('Pages')}</option>
+              <!-- i18n: Reading flow option — continuous vertical scroll -->
+              <option value="scrolled">{$t('Scroll')}</option>
+            </select>
+            {#if readFlow.current === 'paginated'}
+              <select
+                class="device-selector read-control"
+                value={readColumns.current}
+                onchange={e => setReadColumns((e.currentTarget as HTMLSelectElement).value)}
+                aria-label={$t('Columns')}
+              >
+                <!-- i18n: Column setting — up to two columns where they fit -->
+                <option value="2">{$t('Auto columns')}</option>
+                <!-- i18n: Column setting — always a single column -->
+                <option value="1">{$t('Single column')}</option>
+              </select>
+              {#if readPages > 1}
+                <!-- Page navigation: turn buttons (reading-direction-aware) and a
+                     direct page picker. Arrow keys work too while the preview is
+                     focused (wired inside the wrapper document). One small flex
+                     unit — the pager wraps as a whole, never splitting across
+                     header rows. -->
+                <span class="read-pager">
+                  <button
+                    type="button"
+                    class="orientation-toggle"
+                    onclick={readPageLeft}
+                    aria-label={$t('Previous page')}
+                    title={$t('Previous page')}
+                  >
+                    <CaretLeft size={16} aria-hidden="true" />
+                  </button>
+                  <select
+                    class="device-selector read-control"
+                    value={String(readPage)}
+                    onchange={e => goToReadPage((e.currentTarget as HTMLSelectElement).value)}
+                    aria-label={$t('Page')}
+                  >
+                    {#each Array.from({ length: readPages }, (_, i) => i + 1) as n}
+                      <option value={String(n)}>{n} / {readPages}</option>
+                    {/each}
+                  </select>
+                  <button
+                    type="button"
+                    class="orientation-toggle"
+                    onclick={readPageRight}
+                    aria-label={$t('Next page')}
+                    title={$t('Next page')}
+                  >
+                    <CaretRight size={16} aria-hidden="true" />
+                  </button>
+                </span>
+              {/if}
+            {/if}
+          {/if}
           <!-- Orientation toggle (only show for scaled device frames, not fill/print) -->
           {#if !isFillDevice(selectedDevice.current)}
             <button
@@ -1907,8 +2238,9 @@
           {/each}
         </select>
       {:else}
-        <!-- Accessibility check (spike): inject axe-core into the preview + run it -->
-        {#if canCheckA11y}
+        <!-- Accessibility check (spike): inject axe-core into the preview + run it.
+             Not on READ.html — axe would audit the foliate wrapper, not the chapter. -->
+        {#if canCheckA11y && selectedDevice.current !== 'read'}
           <button
             type="button"
             class="a11y-check"
@@ -2255,6 +2587,12 @@
             <span>{$t('Paginating…')}</span>
           </div>
         {/if}
+        {#if readRendering && selectedDevice.current === 'read'}
+          <div class="print-paginating" role="status">
+            <div class="status-spinner"></div>
+            <span>{$t('Paginating…')}</span>
+          </div>
+        {/if}
         <!-- Screen reader caption: the announced block's phrases, streamed over the
              bottom of the preview (VoiceOver-caption style). One block at a time. -->
         {#if activePanel === 'sr' && srCaptionOpen}
@@ -2452,10 +2790,25 @@
     margin-inline-start: 0;
   }
 
+  /* display:contents like the other header groups (see .header-main), so the
+     read controls and the orientation toggle wrap as individual header items
+     rather than one unbreakable box. */
   .preview-device {
-    display: flex;
+    display: contents;
+  }
+
+  /* The read controls pack beside the view dropdown, not right-floated (they
+     carry .device-selector for its visual style, which floats by default). */
+  select.read-control {
+    margin-inline-start: 0;
+  }
+
+  /* The prev / page-picker / next trio is one control: a real (small) flex box,
+     deliberately NOT display:contents, so it wraps as a unit. */
+  .read-pager {
+    display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--space-1);
   }
 
   /* The mutually-exclusive panel toggles (Accessibility / EpubCheck / Reader).

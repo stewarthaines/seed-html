@@ -31,7 +31,10 @@ const MOUNT_TIMEOUT_MS = 20000;
 // Raised 1040→1060 on 2026-07-23: v0.13's screen reader announcement preview
 // (panel, caption overlay, spoken vocabulary) shipped at ~1050KB — another
 // breach that accumulated unnoticed; the agent-bridge button adds ~0.5KB more.
-const SIZE_BUDGET_KB = 1060;
+// Raised 1060→1075 on 2026-07-24: the READ.html device preview (toolbar
+// controls, pager, wrapper builder, page-restore) lands at ~1062KB. The
+// foliate renderer itself is dist/foliate/ assets, not inlined.
+const SIZE_BUDGET_KB = 1075;
 
 // Console errors that are noise, not boot failures.
 const IGNORED_CONSOLE = [/favicon\.ico/i, /Failed to load resource.*favicon/i];
