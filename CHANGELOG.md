@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - The device previews (Commute, Home, Travel) now render with the READ.html reader engine when the editor runs over http: real page turns at each device's size — an e-reader preview that pages like an e-reader — with the pager, arrow keys, and your-place-survives-edits behavior from the READ.html preview, and honest per-device page counts. The reading theme and text size controls apply there too, and changing text size repaginates like a real device. Pages is the default flow; the Scroll option remains. Over file:// the devices show the same scrolling preview as before.
+- Click a passage in a reader-engine preview to jump to its place in the source, the same as the other previews.
 - The Accessibility check and Announce preview are available on the Responsive view (and the raw file:// previews) — on reader-engine views they step aside for now rather than reporting on the wrong document.
 
 ## [0.14.0] - 2026-07-24

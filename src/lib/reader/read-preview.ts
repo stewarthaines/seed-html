@@ -43,6 +43,18 @@ export const FOLIATE_CLOSE_HOOK = '__seedFoliateClose';
  */
 export const FOLIATE_VIEW_GLOBAL = '__seedFoliateView';
 
+/** A loaded foliate section: `doc` is the chapter document, reachable
+ *  same-origin thanks to read-html's open-shadow-root + srcdoc patches. The
+ *  seam the DOM tools (deixis, axe, Announce) operate through under foliate. */
+export interface FoliateContent {
+  doc: Document;
+}
+
+/** Detail of the foliate-view `load` event — fired as each section loads. */
+export interface FoliateLoadEvent {
+  detail: { doc: Document };
+}
+
 /** Minimal surface of the live foliate view the preview pane touches. */
 export interface FoliateViewLike {
   renderer?: HTMLElement & {
@@ -52,11 +64,17 @@ export interface FoliateViewLike {
     scrollToAnchor?: (anchor: number, select?: boolean) => Promise<void>;
     /** Reader-injected section CSS (theme, font size) — replaces prior styles. */
     setStyles?: (css: string) => void;
+    /** Loaded section documents; `getContents()[0].doc` is the chapter document
+     *  the DOM tools target under foliate. */
+    getContents?: () => FoliateContent[];
   };
   /** Page-direction-aware turns (goLeft = next in RTL books). */
   goLeft?: () => Promise<void>;
   goRight?: () => Promise<void>;
   close?: () => void;
+  /** foliate-view is a custom element (a DOM event target). The parent listens
+   *  for `load` to (re-)attach the DOM tools as sections load/reload. */
+  addEventListener?: (type: 'load', listener: (event: FoliateLoadEvent) => void) => void;
 }
 
 export interface ReadDocumentOptions {

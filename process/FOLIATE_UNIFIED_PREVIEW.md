@@ -44,23 +44,25 @@ Today's device presets render the chapter as one long scroll inside a device-sha
 
 ## Feature matrix (today → phase A → phase B)
 
-| Feature                          | Devices today | Devices phase A          | Devices phase B |
-| -------------------------------- | ------------- | ------------------------ | --------------- |
-| Pagination + pager + arrow keys  | —             | ✓                        | ✓               |
-| Scroll flow                      | ✓ (only mode) | ✓ (toggle)               | ✓               |
-| Reader theme / text size / force | ✓             | ✓ (via setStyles)        | ✓               |
-| Position kept across edits       | ✓ (anchors)   | ✓ (page/fraction)        | ✓               |
-| Click-to-source deixis           | ✓             | Responsive only          | ✓ (section doc) |
-| axe                              | ✓             | Responsive only          | ✓ (section doc) |
-| Announce (SR preview)            | ✓             | Responsive only          | ✓ (section doc) |
-| FXL simulation                   | ✓             | ✓ (built-in path, as is) | ✓               |
-| file:// behavior                 | ✓             | ✓ (unchanged fallback)   | ✓               |
+| Feature                          | Devices today | Devices phase A          | Devices phase B        |
+| -------------------------------- | ------------- | ------------------------ | ---------------------- |
+| Pagination + pager + arrow keys  | —             | ✓                        | ✓                      |
+| Scroll flow                      | ✓ (only mode) | ✓ (toggle)               | ✓                      |
+| Reader theme / text size / force | ✓             | ✓ (via setStyles)        | ✓                      |
+| Position kept across edits       | ✓ (anchors)   | ✓ (page/fraction)        | ✓                      |
+| Click-to-source deixis           | ✓             | Responsive only          | ✓ (section doc — done) |
+| axe                              | ✓             | Responsive only          | ✓ (section doc)        |
+| Announce (SR preview)            | ✓             | Responsive only          | ✓ (section doc)        |
+| FXL simulation                   | ✓             | ✓ (built-in path, as is) | ✓                      |
+| file:// behavior                 | ✓             | ✓ (unchanged fallback)   | ✓                      |
 
 ## Phases
 
 **Phase A — done 2026-07-24 (same day as the plan; see notes below).** Builder `styles` option + `writeFoliateDoc(content, { deviceId })`; engine routing with `renderedEngine`/`renderedDevice`; reader sim through setStyles (device base font × steps, palettes, force colors, color-scheme) with live control changes via the view global; flow toggle on device presets (Pages default), columns select scoped to the fill entry; pager/keys/restore inherited; tool buttons hidden on foliate presets; FXL and file:// untouched by construction. Unit tests: the styles CSS generator (pure function), routing decisions, restore keying. Live verification against the bulletin on all presets, orientation flips, theme/font changes mid-page. Kill criterion: device-frame scaling and foliate's own sizing fight irreconcilably (not expected — the spike ran inside a scaled container's fill iframe), or Pages-by-default feels wrong on phones in practice (fallback: per-category flow defaults).
 
 **Phase B — migrate the DOM tools to the section document (2–3 days, independent items).** Deixis first (highest value, smallest surface), then axe, then Announce. Each item: retarget to `getContents()[0].doc`, re-attach on the view's `load` event, verify against the realm rules one level deeper. Ships per-item — no big bang.
+
+_Deixis done (see notes below); axe and Announce remain._
 
 **Phase C — options, only if wanted.** foliate-fxl for fixed-layout presets; e-ink flavor for Travel (grayscale filter, no animation); per-device page-count badges in the dropdown ("Travel · 38 pp"); folding the READ.html entry into a redesigned dropdown once devices paginate (it becomes "the fill-size device").
 
@@ -90,3 +92,14 @@ Landed as planned, with the architecture surviving contact intact — the frame 
 3. **Pages is the device default.**
 4. **Phase A's tool regression window is accepted** — deixis/axe/Announce redirect to Responsive until phase B.
 5. **READ.html entry's long-term fate** — deferred to phase C (no action now).
+
+## Phase B notes — deixis (2026-07-25)
+
+Click-to-source deixis now works on every foliate view (the READ.html entry and the device presets), retargeted at the section document. The migration was smaller than the plan reserved because deixis has no toolbar button — it is ambient click behavior — so nothing in the header needed re-enabling; the whole change is wiring one listener at the right document. Specifics:
+
+- **`wireFoliateDeixis()`** (PreviewPane) attaches `handlePreviewClick` to `liveFoliateView().renderer.getContents()[0].doc` and re-attaches on the view's `load` event (the same event the wrapper's arrow keys use). Called from the `READ_DONE` handler, so init is complete and the first section is loaded; the initial `load` has already fired, hence the explicit `getContents()` attach for it plus the `load` listener for later reloads (flow/column `render()`). Listeners die with the section document when the view is torn down (`document.open` paves the wrapper) — no manual cleanup; re-adding the same handler dedupes.
+- **`estimateDocumentPosition` fix (load-bearing):** it walked `previewIframe.contentDocument.body` — the wrapper — which contains no chapter text under foliate, so a section click estimated position 0. Now walks `element.ownerDocument.body` (the section document under foliate, the preview iframe otherwise — identical there). `handlePreviewClick`/`caretFromPoint` were already document-relative via `target.ownerDocument`; this was the one wrapper-bound assumption.
+- **Coordinates need no translation:** the click event and `caretRangeFromPoint` both live in the section realm, so the paginator's column translation is already baked into the section document's own hit-testing. `Node.TEXT_NODE` is a numeric constant, cross-realm-safe.
+- **No hover-outline affordance on foliate (deliberate):** the raw view's `setupIframeInteractivity` paints `:hover` outlines on every block as a discoverability hint; that undercuts the "reads like a real device" realism the presets exist for, so foliate deixis is click-only. Authors who use deixis know the gesture; the outline stays on Responsive. Revisit only if discoverability complaints surface.
+- Interface: `FoliateViewLike` gained `renderer.getContents()` and `addEventListener('load')`; `FoliateContent`/`FoliateLoadEvent` types added in read-preview.ts. Type-only — no new unit surface (deixis lives in the component; `snippetAroundClick` coverage unchanged). Validate green (1748), svelte-check 0/0.
+- **Not migrated here:** intra-book `.xhtml` link navigation (`onNavigate`) still binds the wrapper document, so chapter-to-chapter links are inert under foliate — out of scope for deixis, noted for a later pass. axe and Announce are the remaining phase B items.

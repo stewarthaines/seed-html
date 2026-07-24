@@ -1135,6 +1135,9 @@
         // Foliate finished its first render (success or reported failure).
         clearTimeout(readSafetyTimer);
         readRendering = false;
+        // Click-to-source deixis works on foliate views too, retargeted at the
+        // section document (the wrapper holds only reader chrome).
+        wireFoliateDeixis();
         // Restore the pre-render reading position. The first relocate (fired
         // during init, so already handled — same-source messages keep order)
         // has refreshed readPages with the new totals; clamp to them.
@@ -1495,6 +1498,31 @@
   }
 
   /**
+   * Wire click-to-source deixis onto the foliate section document (phase B of
+   * FOLIATE_UNIFIED_PREVIEW.md). Under foliate the chapter lives in a nested
+   * section iframe, not the preview wrapper; it is reachable same-origin via
+   * read-html's open-shadow-root patch as `renderer.getContents()[0].doc`.
+   * Attach `handlePreviewClick` to the section already loaded (this runs after
+   * READ_DONE, so init is complete and the first `load` has fired), and
+   * re-attach on every subsequent `load` so a repagination/reload keeps deixis
+   * live. `handlePreviewClick` reads the caret from the event's own document
+   * and `estimateDocumentPosition` walks the element's own document — both
+   * engine-agnostic. Listeners die with the section document when the view is
+   * torn down (document.open paves the wrapper); no manual cleanup. Adding the
+   * same handler twice is a no-op (identical type + reference dedupe).
+   */
+  function wireFoliateDeixis(): void {
+    if (!onPreviewClick) return;
+    const view = liveFoliateView();
+    if (!view) return;
+    const attach = (doc: Document | undefined): void => {
+      doc?.addEventListener('click', handlePreviewClick);
+    };
+    view.renderer?.getContents?.().forEach(c => attach(c.doc));
+    view.addEventListener?.('load', event => attach(event.detail?.doc));
+  }
+
+  /**
    * Apply the flow/columns settings to the live renderer without a re-render;
    * falls back to a full render when no view is up (stale preview, first show).
    * `flow` is an observed attribute; `max-column-count` only changes a CSS
@@ -1799,8 +1827,12 @@
    * Estimate the position of an element within the source document
    */
   function estimateDocumentPosition(element: Element): number {
-    const iframeDoc = previewIframe?.contentDocument;
-    if (!iframeDoc) return 0;
+    // Walk the element's OWN document: the foliate section document when the
+    // click landed inside the reader's nested section iframe, the preview
+    // iframe otherwise (identical there). Walking the preview wrapper would
+    // miss a foliate section element entirely and return 0.
+    const iframeDoc = element.ownerDocument;
+    if (!iframeDoc?.body) return 0;
 
     try {
       // Create a tree walker to traverse all text nodes before the target element
