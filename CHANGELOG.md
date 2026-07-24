@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > pins) are intentionally omitted — this log describes what changed for someone who
 > _uses_ the editor, not the commit history.
 
+## [Unreleased]
+
+### Added
+
+- A new "READ.html" preview in the device dropdown (after Responsive) renders the chapter with the same engine as the READ.html reader — real page spreads or continuous scroll, with Pages/Scroll and column controls in the preview toolbar. Available when the editor runs over http (like the PDF preview).
+- Page navigation in the READ.html preview: previous/next buttons, a page picker showing your place (e.g. 3 / 11), and arrow-key page turns when the preview is focused.
+- The READ.html preview keeps your place while you edit: the page you're reading (or your scroll position) survives the re-render instead of resetting to the beginning.
+
 ## [0.13.0] - 2026-07-21
 
 ### Added
