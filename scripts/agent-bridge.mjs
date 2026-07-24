@@ -118,7 +118,7 @@ const TOOLS = [
   {
     name: 'seed_get_project_setup',
     description:
-      "The open project's configuration: settings.json (configured transform scripts, media insertion templates, preview setup) plus project identity. Call before editing — chapter markup is produced by the configured transforms, and templates are per-project.",
+      "The open project's configuration: settings.json (configured transform scripts, media insertion templates, preview setup), the syntax reference when the project has one, plus project identity. Call before editing — chapter markup is produced by the configured transforms, and templates are per-project. ENFORCED: writes to chapter sources are refused until this has been called and every listed transform script has been read with seed_read_file.",
     inputSchema: { type: 'object', properties: {} },
   },
   {
@@ -158,7 +158,7 @@ const TOOLS = [
   {
     name: 'seed_write_file',
     description:
-      'Overwrite an EXISTING non-generated project file (sources, transform scripts, styles, media). Requires seed_get_authoring_guide to have been called this session, and expected_hash from a prior seed_read_file of the same path — rejected if the file changed since. Cannot create files, and cannot touch generated XHTML, the nav, the OPF, or settings. The author approves the first write in the app (per write, or once for the whole session) and sees every write in the activity feed; a prompt they ignore times out as a denial.',
+      'Overwrite an EXISTING non-generated project file (sources, transform scripts, styles, media). Requires seed_get_authoring_guide this session, and expected_hash from a prior seed_read_file of the same path — rejected if the file changed since. Writes to chapter sources (SOURCE/text/) additionally require seed_get_project_setup and a seed_read_file of every transform script it lists — chapter markup is the transforms’ output. Cannot create files, and cannot touch generated XHTML, the nav, the OPF, or settings. The author approves the first write in the app (per write, or once for the whole session) and sees every write in the activity feed; a prompt they ignore times out as a denial.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -182,16 +182,27 @@ const respondError = (id, code, message) =>
 
 // Writes are gated on the guide having been served THIS session: the bridge
 // lives exactly one agent session, so this is "the current agent has the
-// authoring contract in context" — enforcement, not a nudge. Reads stay open.
+// authoring contract in context" — enforcement, not a nudge. Reads stay open
+// always (they are how an agent learns); only mutation is gated.
 let guideServed = false;
+
+// Chapter-source writes are additionally gated on the pipeline being in
+// context: setup called, and every configured transform script read this
+// session — chapter markup is the transforms' output, so editing sources
+// without them is authoring blind. Refusals enumerate exactly what to read.
+let setupTransforms = null; // transformScripts from the last project_setup
+const readPaths = new Set();
 
 async function handleToolCall(name, args) {
   switch (name) {
     case 'seed_get_authoring_guide':
       guideServed = true;
       return { guide: guideText };
-    case 'seed_get_project_setup':
-      return callTab('project_setup', {});
+    case 'seed_get_project_setup': {
+      const setup = await callTab('project_setup', {});
+      if (Array.isArray(setup?.transformScripts)) setupTransforms = setup.transformScripts;
+      return setup;
+    }
     case 'seed_project_info': {
       if (bindError) return { connected: false, error: bindError };
       const connected = !!tab && tab.readyState === 1;
@@ -200,8 +211,11 @@ async function handleToolCall(name, args) {
     }
     case 'seed_list_files':
       return callTab('list_files', {});
-    case 'seed_read_file':
-      return callTab('read_file', { path: args?.path });
+    case 'seed_read_file': {
+      const read = await callTab('read_file', { path: args?.path });
+      if (typeof args?.path === 'string') readPaths.add(args.path);
+      return read;
+    }
     case 'seed_get_rendered_xhtml':
       return callTab('get_rendered_xhtml', {});
     case 'seed_get_selection':
@@ -211,6 +225,21 @@ async function handleToolCall(name, args) {
         throw new Error(
           'call seed_get_authoring_guide first — writes require the authoring contract in context (EPUB CSS fallbacks, generated-file boundaries, per-project transforms)'
         );
+      }
+      if (typeof args?.path === 'string' && args.path.startsWith('SOURCE/text/')) {
+        // Chapter markup is the transforms' output; editing sources without
+        // the pipeline in context is how agents apply the wrong syntax.
+        if (!setupTransforms) {
+          throw new Error(
+            'editing chapter sources requires the project pipeline in context — call seed_get_project_setup, then seed_read_file each transform script it lists, then retry'
+          );
+        }
+        const unread = setupTransforms.filter(path => !readPaths.has(path));
+        if (unread.length > 0) {
+          throw new Error(
+            `read the configured transform scripts before editing chapter sources — chapter markup is their output. Still unread: ${unread.join(', ')}`
+          );
+        }
       }
       return callTab('write_file', {
         path: args?.path,
