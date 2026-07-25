@@ -10,6 +10,7 @@ import type { WorkspaceService, WorkspaceState } from '../workspace/workspace.se
 import type { SpineItem, ManifestItem } from '../../epub/opf-utils.js';
 import type { SpineItemWithSource } from '../../spine/types.js';
 import { sanitizeChapterId } from '../../import/collision.js';
+import { previewDataChapterDir } from '../../preview/preview-data.js';
 import { translate } from '$lib/i18n/index.js';
 
 // Re-export existing SpineItemWithSource type for compatibility
@@ -521,6 +522,23 @@ ${body}
         console.warn('Failed to delete chapter source files:', error);
       }
 
+      // Drop the chapter's preview scratch data (any SOURCE/data/preview/<id>/<slot>.json
+      // a preview head.xml wrote via window.seed.saveData). Best-effort and any-slot —
+      // the app owns this path scheme, so it can GC it; it must never fail the delete.
+      try {
+        const dir = previewDataChapterDir(chapterId);
+        if (dir) {
+          const items = await this.workspaceService.listSourceFiles(updatedWorkspace);
+          for (const item of items) {
+            if (item.path.startsWith(dir)) {
+              await this.workspaceService.deleteSourceFile(updatedWorkspace, item.path);
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to delete chapter preview data:', error);
+      }
+
       return { updatedWorkspace };
     } catch (error) {
       if (error instanceof SpineServiceError) {
@@ -589,6 +607,28 @@ ${body}
       const newMetaPath = `SOURCE/text/${newId}.json`;
       if (await this.workspaceService.fileExists(workspace.id, oldMetaPath)) {
         await this.workspaceService.renameFile(workspace.id, oldMetaPath, newMetaPath);
+      }
+
+      // Move the chapter's preview scratch data to the new id, so page-index
+      // and other window.seed.saveData output follows the rename. Best-effort —
+      // stale scratch under the old id is harmless if this fails.
+      try {
+        const oldDir = previewDataChapterDir(oldId);
+        const newDir = previewDataChapterDir(newId);
+        if (oldDir && newDir) {
+          const items = await this.workspaceService.listSourceFiles(workspace);
+          for (const item of items) {
+            if (item.path.startsWith(oldDir)) {
+              await this.workspaceService.renameFile(
+                workspace.id,
+                item.path,
+                newDir + item.path.slice(oldDir.length)
+              );
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to move chapter preview data:', error);
       }
 
       return { updatedWorkspace };

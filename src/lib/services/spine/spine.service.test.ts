@@ -69,3 +69,75 @@ describe('SpineService.loadSpineItems titles (read-only EPUB)', () => {
     expect(readFile).not.toHaveBeenCalled();
   });
 });
+
+describe('SpineService preview-data GC', () => {
+  // listSourceFiles returns every SOURCE/ file; GC filters by the chapter's dir.
+  const allSource = (paths: string[]) => paths.map(path => ({ path }));
+
+  it('deleteChapter removes the chapter’s SOURCE/data/preview/<id>/ files (any slot)', async () => {
+    const deleteSourceFile = vi.fn(async (_ws: unknown, _path: string) => {});
+    const ws = {
+      saveWorkspace: vi.fn(async () => {}),
+      fileExists: vi.fn(async () => false),
+      fileStorage: { deleteFile: vi.fn(async () => {}) },
+      listSourceFiles: vi.fn(async () =>
+        allSource([
+          'SOURCE/text/chap01.txt',
+          'SOURCE/data/preview/chap01/pagemap.json',
+          'SOURCE/data/preview/chap01/notes.json',
+          'SOURCE/data/preview/chap02/pagemap.json', // another chapter — must be kept
+        ])
+      ),
+      deleteSourceFile,
+    } as unknown as WorkspaceService;
+
+    await new SpineService(ws).deleteChapter(makeWorkspace(), 'chap01');
+
+    expect(deleteSourceFile).toHaveBeenCalledTimes(2);
+    const deleted = deleteSourceFile.mock.calls.map(c => c[1]);
+    expect(deleted).toContain('SOURCE/data/preview/chap01/pagemap.json');
+    expect(deleted).toContain('SOURCE/data/preview/chap01/notes.json');
+    expect(deleted).not.toContain('SOURCE/data/preview/chap02/pagemap.json');
+  });
+
+  it('renameChapterId moves preview data from the old id to the new id', async () => {
+    const renameFile = vi.fn(async () => {});
+    const wsState = makeWorkspace();
+    const ws = {
+      updateManifestItem: vi.fn(async () => wsState),
+      fileExists: vi.fn(async () => false), // no source/meta files to rename
+      renameFile,
+      listSourceFiles: vi.fn(async () =>
+        allSource([
+          'SOURCE/data/preview/chap01/pagemap.json',
+          'SOURCE/data/preview/chap02/pagemap.json',
+        ])
+      ),
+    } as unknown as WorkspaceService;
+
+    await new SpineService(ws).renameChapterId(wsState, 'chap01', 'prologue');
+
+    expect(renameFile).toHaveBeenCalledTimes(1);
+    expect(renameFile).toHaveBeenCalledWith(
+      'ws',
+      'SOURCE/data/preview/chap01/pagemap.json',
+      'SOURCE/data/preview/prologue/pagemap.json'
+    );
+  });
+
+  it('deleteChapter tolerates a chapter with no preview data (no deletes, no throw)', async () => {
+    const deleteSourceFile = vi.fn(async () => {});
+    const ws = {
+      saveWorkspace: vi.fn(async () => {}),
+      fileExists: vi.fn(async () => false),
+      fileStorage: { deleteFile: vi.fn(async () => {}) },
+      listSourceFiles: vi.fn(async () => allSource(['SOURCE/text/chap01.txt'])),
+      deleteSourceFile,
+    } as unknown as WorkspaceService;
+
+    await expect(
+      new SpineService(ws).deleteChapter(makeWorkspace(), 'chap01')
+    ).resolves.toBeTruthy();
+    expect(deleteSourceFile).not.toHaveBeenCalled();
+  });
+});
