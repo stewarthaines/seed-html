@@ -38,7 +38,7 @@ import type {
   AutoSaveResult,
 } from '../types/spine-editor.js';
 import type { WorkspaceState } from '../services/workspace/workspace.service.js';
-import type { ManifestItem } from '../epub/opf-utils.js';
+import type { ManifestItem, SpineItem } from '../epub/opf-utils.js';
 
 /**
  * Content-derived OPF manifest properties this app reconciles from a rendered
@@ -255,6 +255,7 @@ export class SpinePreviewManager {
       basePath: workspace.pathInfo.basePath,
       manifest: workspace.opf.manifest,
       language: primaryLanguage(workspace.opf.metadata),
+      spine: workspace.opf.spine,
     });
   }
 
@@ -330,12 +331,13 @@ export class SpinePreviewManager {
       // items, read/write SOURCE/data/), plus the book's language for
       // locale-aware output.
       const brokerContext:
-        | { basePath: string; manifest: ManifestItem[]; language: string }
+        | { basePath: string; manifest: ManifestItem[]; language: string; spine: SpineItem[] }
         | undefined = workspace
         ? {
             basePath: workspace.pathInfo.basePath,
             manifest: workspace.opf.manifest,
             language: primaryLanguage(workspace.opf.metadata),
+            spine: workspace.opf.spine,
           }
         : undefined;
 

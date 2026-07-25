@@ -298,6 +298,9 @@ class TransformExecutionEngine {
       manifest: Array.isArray(data.manifest) ? data.manifest : [],
       // The book's primary dc:language tag ('' when the project has none).
       language: data.language || '',
+      // The OPF spine in reading order ({ idref, linear }[]) — walk chapters in
+      // order and combine per-chapter data (e.g. a page index).
+      spine: Array.isArray(data.spine) ? data.spine : [],
       // Read a manifest item (declared in the OPF) as decoded UTF-8 text.
       readManifestText: href => this.callBroker('readManifestText', { href }),
       // Read a manifest item as a data: URL (for binary assets like images).

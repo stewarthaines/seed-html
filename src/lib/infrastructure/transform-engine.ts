@@ -9,7 +9,7 @@
 import type { TransformResult, TransformScripts, TransformError } from '../types/spine-editor.js';
 import type { BlobURLManager } from '../blob-url/blob-url-manager.js';
 import type { ExtensionManager } from '../extensions/extension-manager.js';
-import type { ManifestItem } from '../epub/opf-utils.js';
+import type { ManifestItem, SpineItem } from '../epub/opf-utils.js';
 import { FileStorageAPI } from '../storage/index.js';
 import {
   resolveManifestStoragePath,
@@ -33,6 +33,9 @@ export interface TransformBrokerContext {
   manifest: ManifestItem[];
   /** The book's primary dc:language tag (empty/absent when the OPF has none). */
   language?: string;
+  /** The OPF spine in reading order (idref + linear), so a transform can walk
+   *  chapters in order and combine per-chapter data (e.g. a page index). */
+  spine?: SpineItem[];
 }
 
 /** Content equality for transform-script bundles (drives the send dedup). */
@@ -144,8 +147,15 @@ export class TransformEngine {
           basePath: brokerContext.basePath,
           manifest: brokerContext.manifest,
           language: brokerContext.language ?? '',
+          spine: brokerContext.spine ?? [],
         }
-      : { idref, basePath: '', manifest: [] as ManifestItem[], language: '' };
+      : {
+          idref,
+          basePath: '',
+          manifest: [] as ManifestItem[],
+          language: '',
+          spine: [] as SpineItem[],
+        };
 
     // The transform may now await brokered file I/O, so the message round-trip can
     // outlast the default 5s — give it the transform timeout plus headroom.
@@ -186,6 +196,7 @@ export class TransformEngine {
       basePath: brokerContext.basePath,
       manifest: brokerContext.manifest,
       language: brokerContext.language ?? '',
+      spine: brokerContext.spine ?? [],
     };
 
     // Options often arrive as a Svelte $state proxy, which postMessage can't
