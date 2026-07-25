@@ -186,6 +186,13 @@
     asEnum(['1', '2'])
   );
 
+  // Options-bar enablement (grounded layout: the reader controls hold their
+  // positions and disable in place rather than appear/disappear). Columns
+  // applies only while paginated; the pager needs more than one content page.
+  // Both are read inside the `usesFoliate` branch of the options bar.
+  const readColumnsEnabled = $derived(readFlow.current === 'paginated');
+  const readPagerEnabled = $derived(readFlow.current === 'paginated' && readPages > 1);
+
   /**
    * Whether a device id renders through the foliate engine: the READ.html
    * entry AND the device presets (Commute/Home/Travel), on http, reflowable
@@ -2296,90 +2303,6 @@
             {/if}
           {/each}
         </select>
-
-        <div class="preview-device">
-          <!-- Foliate reading-mode controls (READ.html entry + device presets):
-               flow, and — on the fill-size READ.html entry only — the column
-               cap while paginated (device widths decide columns honestly).
-               Applied live to the running renderer — no re-render. -->
-          {#if usesFoliate(selectedDevice.current)}
-            <select
-              class="device-selector read-control"
-              value={readFlow.current}
-              onchange={e => setReadFlow((e.currentTarget as HTMLSelectElement).value)}
-              aria-label={$t('Reading flow')}
-            >
-              <!-- i18n: Reading flow option — paginated pages -->
-              <option value="paginated">{$t('Pages')}</option>
-              <!-- i18n: Reading flow option — continuous vertical scroll -->
-              <option value="scrolled">{$t('Scroll')}</option>
-            </select>
-            {#if readFlow.current === 'paginated'}
-              {#if selectedDevice.current === 'read'}
-                <select
-                  class="device-selector read-control"
-                  value={readColumns.current}
-                  onchange={e => setReadColumns((e.currentTarget as HTMLSelectElement).value)}
-                  aria-label={$t('Columns')}
-                >
-                  <!-- i18n: Column setting — up to two columns where they fit -->
-                  <option value="2">{$t('Auto columns')}</option>
-                  <!-- i18n: Column setting — always a single column -->
-                  <option value="1">{$t('Single column')}</option>
-                </select>
-              {/if}
-              {#if readPages > 1}
-                <!-- Page navigation: turn buttons (reading-direction-aware) and a
-                     direct page picker. Arrow keys work too while the preview is
-                     focused (wired inside the wrapper document). One small flex
-                     unit — the pager wraps as a whole, never splitting across
-                     header rows. -->
-                <span class="read-pager">
-                  <button
-                    type="button"
-                    class="orientation-toggle"
-                    onclick={readPageLeft}
-                    aria-label={$t('Previous page')}
-                    title={$t('Previous page')}
-                  >
-                    <CaretLeft size={16} aria-hidden="true" />
-                  </button>
-                  <select
-                    class="device-selector read-control"
-                    value={String(readPage)}
-                    onchange={e => goToReadPage((e.currentTarget as HTMLSelectElement).value)}
-                    aria-label={$t('Page')}
-                  >
-                    {#each Array.from({ length: readPages }, (_, i) => i + 1) as n}
-                      <option value={String(n)}>{n} / {readPages}</option>
-                    {/each}
-                  </select>
-                  <button
-                    type="button"
-                    class="orientation-toggle"
-                    onclick={readPageRight}
-                    aria-label={$t('Next page')}
-                    title={$t('Next page')}
-                  >
-                    <CaretRight size={16} aria-hidden="true" />
-                  </button>
-                </span>
-              {/if}
-            {/if}
-          {/if}
-          <!-- Orientation toggle (only show for scaled device frames, not fill/print) -->
-          {#if !isFillDevice(selectedDevice.current)}
-            <button
-              type="button"
-              class="orientation-toggle"
-              onclick={toggleOrientation}
-              title={$t('Toggle orientation')}
-              aria-label={$t('Toggle device orientation')}
-            >
-              <DeviceRotate size={16} aria-hidden="true" />
-            </button>
-          {/if}
-        </div>
       </div>
     </div>
 
@@ -2472,6 +2395,102 @@
       <CaretRight size={16} aria-hidden="true" />
     </button>
   </div>
+
+  <!-- Preview options bar: the inputs specific to the current preview, kept in
+       fixed positions and disabled-in-place (never appearing/disappearing) so
+       the permanent header above stays still. Present only when the current
+       preview has options — the reader controls for foliate views, the
+       orientation toggle for scaled device frames. Sits above the (independently
+       toggled) checks panels. See process/PREVIEW_OPTIONS_BAR.md. -->
+  {#if usesFoliate(selectedDevice.current) || !isFillDevice(selectedDevice.current)}
+    <div class="preview-options">
+      {#if usesFoliate(selectedDevice.current)}
+        <!-- Reading flow — always live. Applied to the running renderer, no re-render. -->
+        <select
+          class="device-selector read-control"
+          value={readFlow.current}
+          onchange={e => setReadFlow((e.currentTarget as HTMLSelectElement).value)}
+          aria-label={$t('Reading flow')}
+        >
+          <!-- i18n: Reading flow option — paginated pages -->
+          <option value="paginated">{$t('Pages')}</option>
+          <!-- i18n: Reading flow option — continuous vertical scroll -->
+          <option value="scrolled">{$t('Scroll')}</option>
+        </select>
+
+        <!-- Column cap — the fill-size READ.html entry only (device widths decide
+             columns honestly). Held in place and disabled under Scroll. -->
+        {#if selectedDevice.current === 'read'}
+          <select
+            class="device-selector read-control"
+            value={readColumns.current}
+            onchange={e => setReadColumns((e.currentTarget as HTMLSelectElement).value)}
+            aria-label={$t('Columns')}
+            disabled={!readColumnsEnabled}
+          >
+            <!-- i18n: Column setting — up to two columns where they fit -->
+            <option value="2">{$t('Auto columns')}</option>
+            <!-- i18n: Column setting — always a single column -->
+            <option value="1">{$t('Single column')}</option>
+          </select>
+        {/if}
+
+        <!-- Page navigation: reading-direction-aware turn buttons + a direct page
+             picker (arrow keys work too while the preview is focused). Held in
+             place and disabled under Scroll or a single-page chapter. -->
+        <span class="read-pager">
+          <button
+            type="button"
+            class="orientation-toggle"
+            onclick={readPageLeft}
+            disabled={!readPagerEnabled}
+            aria-label={$t('Previous page')}
+            title={$t('Previous page')}
+          >
+            <CaretLeft size={16} aria-hidden="true" />
+          </button>
+          <select
+            class="device-selector read-control"
+            value={String(readPagerEnabled ? readPage : 1)}
+            onchange={e => goToReadPage((e.currentTarget as HTMLSelectElement).value)}
+            aria-label={$t('Page')}
+            disabled={!readPagerEnabled}
+          >
+            {#if readPagerEnabled}
+              {#each Array.from({ length: readPages }, (_, i) => i + 1) as n}
+                <option value={String(n)}>{n} / {readPages}</option>
+              {/each}
+            {:else}
+              <option value="1">1 / 1</option>
+            {/if}
+          </select>
+          <button
+            type="button"
+            class="orientation-toggle"
+            onclick={readPageRight}
+            disabled={!readPagerEnabled}
+            aria-label={$t('Next page')}
+            title={$t('Next page')}
+          >
+            <CaretRight size={16} aria-hidden="true" />
+          </button>
+        </span>
+      {/if}
+
+      <!-- Orientation — scaled device frames only (not the fill presets or print). -->
+      {#if !isFillDevice(selectedDevice.current)}
+        <button
+          type="button"
+          class="orientation-toggle"
+          onclick={toggleOrientation}
+          title={$t('Toggle orientation')}
+          aria-label={$t('Toggle device orientation')}
+        >
+          <DeviceRotate size={16} aria-hidden="true" />
+        </button>
+      {/if}
+    </div>
+  {/if}
 
   <!-- Accessibility results panel (spike): plain-text violations, sorted by impact -->
   {#if activePanel === 'a11y'}
@@ -2952,15 +2971,24 @@
     margin-inline-start: 0;
   }
 
-  /* display:contents like the other header groups (see .header-main), so the
-     read controls and the orientation toggle wrap as individual header items
-     rather than one unbreakable box. */
-  .preview-device {
-    display: contents;
+  /* The preview options bar: a second toolbar under the permanent header,
+     holding the current preview's own inputs (reader flow/columns/pager,
+     orientation). One shade lighter than the header so the two bands read as
+     distinct; wraps like the header when narrow. */
+  .preview-options {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    min-height: var(--touch-target-min);
+    padding: var(--space-1) var(--space-3);
+    border-bottom: 1px solid var(--color-border-default);
+    background: var(--color-bg-secondary);
+    box-sizing: border-box;
   }
 
-  /* The read controls pack beside the view dropdown, not right-floated (they
-     carry .device-selector for its visual style, which floats by default). */
+  /* The read controls sit left-aligned in the options bar, not right-floated
+     (they carry .device-selector for its visual style, which floats by default). */
   select.read-control {
     margin-inline-start: 0;
   }
@@ -3135,7 +3163,7 @@
     justify-content: center;
   }
 
-  .orientation-toggle:hover {
+  .orientation-toggle:hover:not(:disabled) {
     color: var(--color-on-accent);
     background: var(--color-hover-accent);
   }
@@ -3143,6 +3171,13 @@
   .orientation-toggle:focus {
     outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
     outline-offset: var(--focus-ring-offset);
+  }
+
+  /* Pager buttons (prev/next) share .orientation-toggle; dim in place when the
+     pager is disabled (Scroll flow or a single-page chapter). */
+  .orientation-toggle:disabled {
+    opacity: 0.45;
+    cursor: default;
   }
 
   /* Icon-only "re-paginate" button, shown after the transform status when the
@@ -3187,6 +3222,13 @@
     outline: none;
     border-color: var(--color-accent-primary);
     box-shadow: 0 0 0 var(--focus-ring-width) var(--color-focus);
+  }
+
+  /* Disabled-in-place options-bar controls: dimmed, non-interactive, but holding
+     their slot so the bar's layout never shifts. */
+  .device-selector:disabled {
+    opacity: 0.45;
+    cursor: default;
   }
 
   /* Reader-mode panel (theme + text size + force colours) */
