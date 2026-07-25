@@ -406,16 +406,20 @@
     if (readerModeActive) {
       list.push({ id: 'reader', label: $t('Reader'), disabled: false });
     }
-    // Not on Print or foliate views: the walk targets the plain preview document.
-    if (
-      canSrPreview &&
-      selectedDevice.current !== 'print' &&
-      !usesFoliate(selectedDevice.current)
-    ) {
+    // On foliate views the walk targets the section document (phase B); still
+    // not on Print (Paged.js wrapper elements are not the chapter).
+    if (canSrPreview && selectedDevice.current !== 'print') {
       // <!-- i18n: preview Checks dropdown entry — announcement preview -->
       list.push({ id: 'sr', label: $t('Screen reader'), disabled: !xhtmlContent });
     }
     return list;
+  });
+
+  // Close a panel the current preview no longer offers (e.g. switching to Print
+  // drops Screen reader and Reader) so it can't linger orphaned over the wrong
+  // document. setPanel runs the panel's own teardown (highlights, sr chrome).
+  $effect(() => {
+    if (activePanel && !availablePanels.some(p => p.id === activePanel)) setPanel(null);
   });
 
   // Option text for the collapsed panel dropdown, appending a count where known.
@@ -494,9 +498,33 @@
   });
 
   /**
-   * Load the vendored virtual screen reader into the preview iframe (once per
-   * iframe Window — the module global survives document.open() rewrites, same
-   * as win.axe). The inline script publishes success/failure as Window globals.
+   * The document + window the screen-reader walk operates on: under a
+   * reader-engine view the foliate section (`renderer.getContents()[0].doc`
+   * and its `defaultView` — the sandboxed section iframe carries `allow-scripts`
+   * so the vsr module runs there), the preview iframe otherwise. Resolved fresh
+   * per use: a reader re-render replaces the section realm, so `__seedVsr` and
+   * the injected instrumentation must be re-established (a flow/column change
+   * reuses the same view, so they survive that — see paginator `render()`).
+   */
+  function srTarget(): { doc: Document; win: VsrWindow } | null {
+    if (usesFoliate(selectedDevice.current)) {
+      const doc = liveFoliateView()?.renderer?.getContents?.()[0]?.doc;
+      const win = doc?.defaultView as VsrWindow | null;
+      return doc && win ? { doc, win } : null;
+    }
+    const doc = previewIframe?.contentDocument;
+    const win = previewIframe?.contentWindow as VsrWindow | null;
+    return doc && win ? { doc, win } : null;
+  }
+
+  /** The window currently hosting the walk (section under foliate) — the signal
+   *  loadVsr polls to notice its target realm was replaced mid-load. */
+  const srWindow = (): VsrWindow | null => srTarget()?.win ?? null;
+
+  /**
+   * Load the vendored virtual screen reader into the walk's document (once per
+   * Window — the module global survives document.open() rewrites, same as
+   * win.axe). The inline script publishes success/failure as Window globals.
    */
   function loadVsr(doc: Document, win: VsrWindow): Promise<void> {
     if (win.__seedVsr) return Promise.resolve();
@@ -518,9 +546,9 @@
     return new Promise<void>((resolve, reject) => {
       const started = Date.now();
       const tick = () => {
-        if (previewIframe?.contentWindow !== win) {
-          // Device re-key replaced the Window; the new iframe's load hook
-          // starts its own load — this one is moot.
+        if (srWindow() !== win) {
+          // The target realm was replaced (device re-key, or a reader re-render
+          // building a fresh section); the new one starts its own load — moot.
           reject(new Error('preview window replaced'));
         } else if (win.__seedVsr) {
           resolve();
@@ -543,9 +571,9 @@
    * injected pieces; the library itself is cached on the Window / by http).
    */
   async function ensureSrReady(): Promise<void> {
-    const doc = previewIframe?.contentDocument;
-    const win = previewIframe?.contentWindow as VsrWindow | null;
-    if (!doc || !win) return;
+    const target = srTarget();
+    if (!target) return;
+    const { doc, win } = target;
     srLoadError = false;
     try {
       await loadVsr(doc, win);
@@ -553,7 +581,7 @@
       // The load may have raced a preview rewrite or device re-key; it only
       // failed for real if the current Window still lacks the library (a
       // replaced Window gets its own load from the iframe's load hook).
-      const currentWin = previewIframe?.contentWindow as VsrWindow | null;
+      const currentWin = srWindow();
       if (currentWin === win && !currentWin?.__seedVsr) {
         console.error('Screen reader preview failed to load:', error);
         srLoadError = true;
@@ -562,7 +590,7 @@
     }
     // Instrument the document that is CURRENT after the await — the one
     // captured above may have been rewritten away while the library loaded.
-    const currentDoc = previewIframe?.contentDocument;
+    const currentDoc = srTarget()?.doc;
     if (activePanel !== 'sr' || !currentDoc?.body) return;
     srDocLang =
       currentDoc.documentElement.getAttribute('lang') ??
@@ -625,7 +653,7 @@
     cancelSrActivity();
     srCaptionOpen = false;
     srHoverTarget = null;
-    const doc = previewIframe?.contentDocument;
+    const doc = srTarget()?.doc;
     if (!doc) return;
     doc.removeEventListener('mouseover', handleSrMouseOver);
     doc.documentElement.removeEventListener('mouseleave', handleSrMouseLeave);
@@ -654,7 +682,7 @@
 
   function handleSrMouseLeave(): void {
     if (srWalking) return;
-    const doc = previewIframe?.contentDocument;
+    const doc = srTarget()?.doc;
     const button = doc?.querySelector<HTMLButtonElement>('button[data-seed-sr-announce]');
     if (doc && button) setSrHover(doc, button, null);
   }
@@ -688,13 +716,13 @@
 
   /** Caption heading for a walk target, e.g. `<li>` — or the whole chapter. */
   function srLabelFor(el: Element): string {
-    const doc = previewIframe?.contentDocument;
+    const doc = srTarget()?.doc;
     return el === doc?.body ? $t('Whole chapter') : `<${el.tagName.toLowerCase()}>`;
   }
 
   /** Walk one element, streaming phrases into the caption (and speech). */
   async function announceElement(el: Element): Promise<void> {
-    const win = previewIframe?.contentWindow as VsrWindow | null;
+    const win = srTarget()?.win;
     const vsr = win?.__seedVsr;
     if (!vsr) return;
     cancelSrActivity();
@@ -708,7 +736,7 @@
     // The session always starts on the body so the target announces with its
     // full document context (list nesting level, position, set size); the
     // cursor then jumps to the target inside walkAnnouncements.
-    const body = previewIframe?.contentDocument?.body;
+    const body = srTarget()?.doc?.body;
     try {
       await walkAnnouncements(vsr, body ?? el, {
         signal: controller.signal,
@@ -761,7 +789,7 @@
   }
 
   function announceChapter(): void {
-    const body = previewIframe?.contentDocument?.body;
+    const body = srTarget()?.doc?.body;
     if (body) void announceElement(body);
   }
 
@@ -1160,6 +1188,9 @@
         // raw path schedules this from updatePreviewContent — foliate renders
         // land here instead, once the section is loaded.
         scheduleAutoA11yCheck();
+        // Same for the screen-reader walk: re-load the vsr library and re-inject
+        // the hover affordance into the fresh section document.
+        if (activePanel === 'sr') void ensureSrReady();
         // Restore the pre-render reading position. The first relocate (fired
         // during init, so already handled — same-source messages keep order)
         // has refreshed readPages with the new totals; clamp to them.
@@ -1771,12 +1802,6 @@
   function handleDeviceChange(deviceId: string): void {
     selectedDevice.current = deviceId as (typeof DEVICE_PRESETS)[number]['id'];
     const device = DEVICE_PRESETS.find(d => d.id === deviceId);
-
-    // The Screen reader walk still targets the plain preview DOM, so it can't
-    // follow onto a foliate-rendered view — close it rather than leaving the
-    // dropdown orphaned (phase B item 3 retargets it). Accessibility follows
-    // now (axe runs against the section document); Reader + EpubCheck stay too.
-    if (usesFoliate(deviceId) && activePanel === 'sr') setPanel(null);
 
     if (device && previewContainer) {
       const wrapper = previewContainer.parentElement;

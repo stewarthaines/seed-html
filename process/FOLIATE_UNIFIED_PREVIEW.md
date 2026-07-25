@@ -52,7 +52,7 @@ Today's device presets render the chapter as one long scroll inside a device-sha
 | Position kept across edits       | ✓ (anchors)   | ✓ (page/fraction)        | ✓                      |
 | Click-to-source deixis           | ✓             | Responsive only          | ✓ (section doc — done) |
 | axe                              | ✓             | Responsive only          | ✓ (section doc — done) |
-| Announce (SR preview)            | ✓             | Responsive only          | ✓ (section doc)        |
+| Announce (SR preview)            | ✓             | Responsive only          | ✓ (section doc — done) |
 | FXL simulation                   | ✓             | ✓ (built-in path, as is) | ✓                      |
 | file:// behavior                 | ✓             | ✓ (unchanged fallback)   | ✓                      |
 
@@ -62,7 +62,7 @@ Today's device presets render the chapter as one long scroll inside a device-sha
 
 **Phase B — migrate the DOM tools to the section document (2–3 days, independent items).** Deixis first (highest value, smallest surface), then axe, then Announce. Each item: retarget to `getContents()[0].doc`, re-attach on the view's `load` event, verify against the realm rules one level deeper. Ships per-item — no big bang.
 
-_Deixis and axe done (see notes below); Announce remains._
+_All three items done (see notes below) — phase B complete._
 
 **Phase C — options, only if wanted.** foliate-fxl for fixed-layout presets; e-ink flavor for Travel (grayscale filter, no animation); per-device page-count badges in the dropdown ("Travel · 38 pp"); folding the READ.html entry into a redesigned dropdown once devices paginate (it becomes "the fill-size device").
 
@@ -113,3 +113,14 @@ The Accessibility check runs against the foliate section document on reader-engi
 - **UI.** The Accessibility entry is offered wherever `canCheckA11y` holds (the `!usesFoliate` gate is gone, both in `availablePanels` and the single-button fallback). `handleDeviceChange` no longer closes the a11y panel when switching onto a foliate view — the render effect re-renders through the engine and the READ_DONE re-check refreshes results on the new view. Only the Screen reader panel still closes on that switch (its walk is the remaining item).
 - **No new i18n or unit surface** — the check is component-wired; the axe report shape is unchanged. Validate green (1748), svelte-check 0/0.
 - **Known minor gap:** highlight outlines live in the section document, so they vanish when the view is torn down (device switch, chapter hop) until the next check runs — the violations list (text) is unaffected, and the auto-recheck restores highlights within the debounce.
+
+## Phase B notes — Announce (2026-07-25)
+
+The screen-reader Announce preview (hover a block → walk it, or "Read whole chapter") runs against the foliate section document on reader-engine views. It loads the vendored virtual screen reader (`public/sr-preview/`) into the section realm — again reachable because the section iframe carries `allow-scripts`. This closes phase B. Specifics:
+
+- **`srTarget()`** mirrors `a11yTarget()` (doc + window; foliate section vs preview iframe) and every `previewIframe.contentDocument/contentWindow` reference in the walk — `ensureSrReady`, `loadVsr`'s realm-replacement poll (`srWindow()`), `teardownSrInstrumentation`, the hover handlers, `srLabelFor`, `announceElement`, `announceChapter` — routes through it. `contentPhrase`/`walkAnnouncements`/the caption are document-agnostic already.
+- **Lifecycle is simpler than the plan reserved.** The paginator's `render()` (flow/column change) reuses the same `#view`/iframe — it only re-columnizes — so the section document, the injected hover chrome, and the `__seedVsr` global all survive a flow/column toggle; no re-instrumentation there. Only a genuine re-render (a fresh `writeFoliateDoc` wrapper) builds a new section realm, and that ends in `READ_DONE`, where `ensureSrReady()` re-loads vsr and re-injects the affordance. No `load`-event wiring was needed for the walk.
+- **Panel availability guard (new).** With Announce (and, from the axe item, Accessibility) valid on foliate, the old "close these panels when switching onto foliate" logic in `handleDeviceChange` is gone entirely. In its place a single `$effect` closes `activePanel` whenever it drops out of `availablePanels` — which cleanly handles the one remaining orphan case (switching to **Print**, where Screen reader and Reader aren't offered) and runs the panel's own teardown. Supersedes the axe note's "Screen reader still closes on that switch."
+- **Coordination with deixis:** the Announce button's click handler already `stopPropagation`s, so it doesn't also fire the section-document click-to-source listener now living on the same document. No change needed.
+- **Verify with care (columnized layout):** the hover affordance positions an absolutely-placed button from `getBoundingClientRect()` + the section window's scroll offset. In paginated flow foliate moves between pages by scrolling the section (`scrollLeft`/`scrollTop`, not a transform — confirmed in `paginator.js`), so the offset math should hold; still the first thing to eyeball. "Read whole chapter" and the caption don't depend on positioning.
+- **No new i18n or unit surface** — component-wired; `sr-walk.ts` untouched (its tests still pass). Validate green (1748), svelte-check 0/0.
