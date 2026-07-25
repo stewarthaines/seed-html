@@ -59,6 +59,7 @@
     CircleHalf,
   } from 'phosphor-svelte';
   import { layoutStore } from '../../stores/layout';
+  import { pagedDevicePreviews } from '../../stores/paged-device-previews.js';
   import { persisted, asBoolean, asInt, asEnum, asString } from '../../state/persisted.svelte.js';
   import { parseFxlViewport } from '$lib/epub/fixed-layout.js';
 
@@ -198,12 +199,16 @@
    * entry AND the device presets (Commute/Home/Travel), on http, reflowable
    * chapters only (process/FOLIATE_UNIFIED_PREVIEW.md). Everything else —
    * Responsive (deliberately raw), file://, fixed layout — uses the built-in
-   * preview; Print stays Paged.js.
+   * preview; Print stays Paged.js. The device presets additionally honour the
+   * app-level "Paged device previews" opt-out (settings) and fall back to the
+   * built-in preview when it is off; READ.html is unaffected (no built-in
+   * equivalent).
    */
   const usesFoliate = (id: string): boolean => {
     if (!canReadPreview || isFixedLayout) return false;
     const type = typeOfDevice(id);
-    return type === 'read' || type === 'device';
+    if (type === 'read') return true;
+    return type === 'device' && pagedDevicePreviews.current;
   };
 
   /** The engine a device id renders with, for re-render bookkeeping. */

@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Click a passage in a reader-engine preview to jump to its place in the source, the same as the other previews.
 - The Accessibility check and the Announce (screen-reader) preview run on the reader-engine previews too, working on the paginated chapter itself. All three preview tools — click-to-source, Accessibility, and Announce — now behave the same across the Responsive and reader-engine views.
 - The preview toolbar is steadier: the chapter name, view, and checks controls now stay put in the header, while the options for the current preview — reading flow, columns, page navigation, orientation — sit in their own row just below and hold their positions (greyed out when they don't apply) instead of shifting around as you switch views or turn pages.
+- A "Paged device previews" switch in the app settings' Interface options turns the reader-engine device previews off, falling the Commute/Home/Travel presets back to the scrolling preview. READ.html is unaffected.
 
 ## [0.14.0] - 2026-07-24
 

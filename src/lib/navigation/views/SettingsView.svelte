@@ -37,6 +37,7 @@
   import { LOCALE_CONFIGS } from '../../i18n/locale-config.js';
   import { themeStore } from '../../stores/theme.js';
   import { advancedMode } from '../../stores/advanced-mode.js';
+  import { pagedDevicePreviews } from '../../stores/paged-device-previews.js';
   import { MARGIN_MM } from '../../pdf/pdf-export.js';
   import { FileStorageAPI } from '../../storage/index.js';
   import {
@@ -824,10 +825,6 @@
       LOCALE_CONFIGS[$currentLocale]?.name ?? $currentLocale
     } · ${$t('Mode')}: ${isAdvancedMode ? $t('Advanced') : $t('Basic')}`
   );
-  const pluginsSummary = $derived.by(() => {
-    const names = availablePlugins.filter(p => enabledPluginIds.includes(p.id)).map(p => p.name);
-    return names.length ? names.join(', ') : $t('None');
-  });
   const textFormatsSummary = $derived($t('{n} available', { n: textFormatExtensions.length }));
   const contentTransformsSummary = $derived($t('{n} available', { n: contentTransforms.length }));
   const printSummary = $derived.by(() => {
@@ -970,10 +967,9 @@
               {/if}
             </SettingsSection>
 
-            {#if isAdvancedMode && availablePlugins.length > 0}
+            {#if isAdvancedMode && (availablePlugins.length > 0 || isHttp)}
               <SettingsSection
-                title={$t('Plugins')}
-                summary={pluginsSummary}
+                title={$t('Interface options')}
                 name="app-settings"
                 persistKey="settings-app-plugins"
               >
@@ -990,6 +986,26 @@
                     </label>
                   </div>
                 {/each}
+
+                <!-- Not a plugin — an app-level preview preference. Off falls the
+                     device presets back to the built-in scrolling preview. Shown
+                     over http only (the reader engine, like plugins, needs the
+                     origin); READ.html is unaffected. -->
+                {#if isHttp}
+                  <div class="setting-group">
+                    <label class="setting-label">
+                      <input
+                        type="checkbox"
+                        checked={pagedDevicePreviews.current}
+                        onchange={e =>
+                          (pagedDevicePreviews.current = (
+                            e.currentTarget as HTMLInputElement
+                          ).checked)}
+                      />
+                      <span class="setting-text">{$t('Paged device previews')}</span>
+                    </label>
+                  </div>
+                {/if}
               </SettingsSection>
             {/if}
 
