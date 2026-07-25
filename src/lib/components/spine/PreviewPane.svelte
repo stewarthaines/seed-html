@@ -82,6 +82,7 @@
     isFixedLayout = false,
     renditionViewport = undefined,
     advancedMode = false,
+    onSavePreviewData = undefined,
   }: {
     xhtmlContent?: string;
     isTransforming?: boolean;
@@ -118,6 +119,10 @@
     renditionViewport?: string;
     /** Advanced mode: the generated-Source view is hidden from the dropdown in basic mode. */
     advancedMode?: boolean;
+    /** Persist per-chapter data a preview head.xml script saved via `window.seed`
+     *  (process/PREVIEW_BRIDGE.md). The app owns the path (built from `idref`);
+     *  the iframe supplies only the slot + text. */
+    onSavePreviewData?: (idref: string, slot: string, text: string) => void;
   } = $props();
 
   // The generated content-document filename for the current chapter (e.g.
@@ -1188,6 +1193,16 @@
   $effect(() => {
     const onMessage = (event: MessageEvent) => {
       if (event.source !== previewIframe?.contentWindow) return;
+      // A preview head.xml script persisting per-chapter data via window.seed.
+      // The app owns the path (from THIS chapter's idref); the iframe supplies
+      // only the slot + text. See process/PREVIEW_BRIDGE.md.
+      const seedMsg = event.data as { type?: string; slot?: string; text?: string } | null;
+      if (seedMsg?.type === 'seed-save-data') {
+        if (chapterId && typeof seedMsg.slot === 'string' && typeof seedMsg.text === 'string') {
+          onSavePreviewData?.(chapterId, seedMsg.slot, seedMsg.text);
+        }
+        return;
+      }
       if (event.data === READ_DONE) {
         // Foliate finished its first render (success or reported failure).
         clearTimeout(readSafetyTimer);
@@ -1503,6 +1518,9 @@
       previewChrome: true,
       // Inject the project's preview-only head fragment (when PDF includeHead is on).
       headExtra: currentWantHead(),
+      // Install the window.seed bridge + fire the `paginated` hook for the
+      // project's head.xml (process/PREVIEW_BRIDGE.md). Keyed to this chapter.
+      previewBridge: chapterId ? { idref: chapterId } : undefined,
     });
 
     const iframeDoc = previewIframe.contentDocument;

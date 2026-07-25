@@ -66,6 +66,7 @@
     type CoverMode,
   } from './lib/epub/cover-generator.js';
   import { exportPdf, exportChapterPdf } from './lib/pdf/pdf-export.js';
+  import { previewDataPath } from './lib/preview/preview-data.js';
   import { isHttpContext, readerOverlayUrl } from './lib/reader/open-in-reader.js';
   import { packageEpubAsReadHtml } from './lib/reader/package-as-read.js';
   import { packageEpubAsSeedHtml } from './lib/epub/package-as-seed.js';
@@ -984,6 +985,32 @@
     }
   };
 
+  // Persist per-chapter data a preview head.xml script saved via window.seed
+  // (process/PREVIEW_BRIDGE.md). The app owns the path — built from the idref, not
+  // anything the iframe supplied — and hard-scopes it under SOURCE/data/preview/.
+  const handleSavePreviewData = async (idref: string, slot: string, text: string) => {
+    const workspaceId = currentWorkspaceState?.id;
+    if (!workspaceId) return;
+    const path = previewDataPath(idref, slot);
+    if (!path) {
+      console.warn('seed.saveData: rejected idref/slot', { idref, slot });
+      return;
+    }
+    // Guard against a runaway head.xml script hammering the writer with huge blobs.
+    if (text.length > 512 * 1024) {
+      console.warn('seed.saveData: payload too large, skipped', path, text.length);
+      return;
+    }
+    try {
+      // Scratch data under SOURCE/data/. Write silently — deliberately NOT
+      // dispatching seed:source-files-changed: that repaints the preview, which
+      // re-fires the paginated hook, which writes again (a render→write loop).
+      await workspaceService.writeFile(workspaceId, path, text);
+    } catch (error) {
+      console.error('seed.saveData failed:', path, error);
+    }
+  };
+
   // Download a book-carrying HTML artifact with the shared size-honest toast
   // (base64 costs +33%; above mail-attachment size, nudge toward links).
   const downloadWrappedHtml = (wrapped: { blob: Blob; filename: string }) => {
@@ -1706,6 +1733,7 @@
             printSettings={appState?.epubSettings?.print}
             projectIdentifier={currentWorkspaceState?.opf?.metadata?.identifier}
             onGeneratePdf={canGeneratePdf ? handleGenerateChapterPdf : undefined}
+            onSavePreviewData={handleSavePreviewData}
             previewHead={spinePreviewData.previewHead}
             previewAutoUpdate={appState?.epubSettings?.preview?.autoUpdate}
             previewIncludeHead={appState?.epubSettings?.preview?.includeHead}

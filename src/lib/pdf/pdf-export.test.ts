@@ -89,6 +89,36 @@ describe('buildPagedDocument text direction', () => {
   });
 });
 
+describe('buildPagedDocument preview bridge', () => {
+  const section = '<section class="pdf-chapter">x</section>';
+
+  it('installs window.seed and fires the paginated hook only when previewBridge is set', () => {
+    const withBridge = buildPagedDocument([section], { previewBridge: { idref: 'chap-03' } });
+    expect(withBridge).toContain('window.seed=');
+    expect(withBridge).toContain("type:'seed-save-data'");
+    expect(withBridge).toContain('window.seed.hooks');
+    expect(withBridge).toContain('.paginated({idref:"chap-03",document:document})');
+
+    const noBridge = buildPagedDocument([section], {});
+    expect(noBridge).not.toContain('window.seed=');
+    expect(noBridge).not.toContain('.paginated(');
+  });
+
+  it('defines the bridge before the injected head fragment so head.xml can use it', () => {
+    const html = buildPagedDocument([section], {
+      previewBridge: { idref: 'c1' },
+      headExtra: '<script data-head-xml="1"></script>',
+    });
+    expect(html.indexOf('window.seed=')).toBeLessThan(html.indexOf('data-head-xml'));
+  });
+
+  it('escapes the idref for the XHTML-reparsed export document', () => {
+    const html = buildPagedDocument([section], { previewBridge: { idref: 'a<b&c' } });
+    expect(html).not.toContain('idref:"a<b&c"');
+    expect(html).toContain('\\u003c'); // < escaped inside the JS string literal
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Coverage-review regressions: XHTML-safe embedding, running-header title
 // selection, blob-URL ownership on a failed window hand-off, and skipped-

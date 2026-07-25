@@ -261,6 +261,14 @@ export function buildPagedDocument(
      *   single user-driven path is consistent across desktop, Android and iOS.
      */
     afterMode?: 'message' | 'print-button';
+    /**
+     * In-app preview only: install the `window.seed` bridge (see
+     * process/PREVIEW_BRIDGE.md) and, in the Paged.js `after` hook, call the
+     * project's `seed.hooks.paginated({ idref, document })` with the paginated
+     * document. Absent for the export (no head.xml there, and the export window
+     * is not the preview pane). Carries the `idref` of the previewed chapter.
+     */
+    previewBridge?: { idref: string };
   } = {}
 ): string {
   const {
@@ -272,6 +280,7 @@ export function buildPagedDocument(
     previewChrome = false,
     headExtra = '',
     afterMode = 'message',
+    previewBridge,
   } = opts;
   // Escape hrefs: getAttribute returns the DECODED value, so a chapter linking
   // "a&b.css" would otherwise embed a raw & and abort the XHTML re-parse.
@@ -325,11 +334,26 @@ export function buildPagedDocument(
         `c.addEventListener('click',function(){window.close();});b.appendChild(c);` +
         `document.body.insertBefore(b,document.body.firstChild);}catch(e){}`
       : `parent.postMessage('${doneMessage}','*');`;
+  // Preview-only: after pagination (page boxes + data-page-number now exist),
+  // hand the paginated document to the project's `paginated` hook if it
+  // registered one via the `seed` bridge below. Wrapped so a throwing project
+  // script never breaks the preview or the done ping.
+  const paginatedCall = previewBridge
+    ? `try{var _h=window.seed&&window.seed.hooks;if(_h&&typeof _h.paginated==='function')` +
+      `_h.paginated({idref:${jsonForXhtml(previewBridge.idref)},document:document});}catch(e){}`
+    : '';
   const inject =
     `<script>window.PagedConfig={auto:true,after:function(){` +
     `try{document.querySelectorAll('.pagedjs_margin').forEach(function(el){el.setAttribute('aria-hidden','true');});}catch(e){}` +
-    `${afterTail}}};</script>` +
+    `${paginatedCall}${afterTail}}};</script>` +
     `<script src="${pagedSrc}"></script>`;
+  // The `window.seed` preview bridge (process/PREVIEW_BRIDGE.md): a scoped writer
+  // to SOURCE/data/ (the app owns the path from the idref) plus a `hooks` bag the
+  // project's head.xml assigns. Injected BEFORE headExtra so head.xml can use it
+  // as soon as it runs. Preview only — omitted from the export.
+  const seedBridge = previewBridge
+    ? `<script>window.seed={saveData:function(slot,text){try{parent.postMessage({type:'seed-save-data',slot:slot,text:text},'*');}catch(e){}},hooks:{}};</script>`
+    : '';
   return `<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"${langAttr}${dirAttr}>
 <head>
@@ -341,6 +365,7 @@ ${printCss}
 ${previewChrome ? PREVIEW_CHROME_CSS : ''}
 </style>
 ${links}
+${seedBridge}
 ${headExtra}
 </head>
 <body>
