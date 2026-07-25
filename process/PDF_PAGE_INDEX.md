@@ -60,20 +60,20 @@ Each entry's page number is wrapped in `.pdf-page-ref`. With `ctx.spine` giving 
 
 ### 3. Style — print-only CSS
 
-`.pdf-page-ref` is `display: none` in the book's own stylesheet (so the reflowable EPUB never shows a meaningless number) and is revealed by the PDF pipeline's `print.css`, which the reading system never loads:
+Both rules live in the **extension's own stylesheet** — the app is not involved. `.pdf-page-ref` is hidden by default and revealed under `@media print`:
 
 ```css
-/* book stylesheet */
 .pdf-page-ref {
   display: none;
-}
-/* print.css (PDF pipeline only) */
-.pdf-page-ref {
-  display: inline;
-}
+} /* hidden while reading the EPUB */
+@media print {
+  .pdf-page-ref {
+    display: inline;
+  }
+} /* shown in the PDF */
 ```
 
-No `@media` needed — presence of `print.css` is the switch. (The app's `print.css` would carry the reveal rule so any project inherits it; the hide rule lives in the extension's stylesheet.)
+A reading system reads on screen, so the numbers stay hidden; the PDF export prints, so they show. The in-app **Print** preview shows them too because Paged.js unwraps `@media print` blocks (see the `paged-preview-rewrites-media-queries` behaviour). This keeps the app entirely out of the page-index business — no change to the app's `print.css`.
 
 ## The relative-vs-absolute crux
 
@@ -83,8 +83,8 @@ For the numbers to be trustworthy the capture `head.xml` must be **layout-neutra
 
 ## Phasing
 
-- **Phase 1 — the bridge + a capture that persists.** Ship `window.seed` (bridge doc); thread `idref` into `buildPagedDocument`; emit `paginated`. Deliver the reference extension's `head.xml` capture and confirm correct, stable `SOURCE/data/pagemap/<idref>.json` on visiting the print preview. No index rendered yet — prove the data.
-- **Phase 2 — the index.** The reference `transformDOM` assembler + `.pdf-page-ref` rendering, relative first, then absolute once the spine-order question is settled. Ship it as an installable "Print Index" extension (head.xml + transformDOM + CSS bundled).
+- **Phase 1 — the bridge + a capture that persists. DONE.** `window.seed` bridge; `idref` threaded into `buildPagedDocument`; `paginated` emitted; the reference `head.xml` writes `SOURCE/data/preview/<idref>/pagemap.json`, verified live (correct per-page heading capture; nothing written when include-head is off).
+- **Phase 2 — the index. DONE (bar packaging).** The reference `transformDOM` assembler reads the maps, uses `ctx.spine` + `pageCount` for absolute pages, and emits `.pdf-page-ref` numbers shown only under `@media print`. Verified live end to end. Zero app code — it is pure author content. Remaining: whether to package it as an installable extension (open question below).
 - **Phase 3 — EPUB 3 page-list.** From the same data, emit `<span epub:type="pagebreak" role="doc-pagebreak">` markers + a `<nav epub:type="page-list">` (greenfield; mirror `outline-generator.ts`), and wire the `printPageNumbers` / `pageNavigation` accessibility-metadata terms the app already offers.
 
 ## Decisions & remaining questions
@@ -94,10 +94,20 @@ For the numbers to be trustworthy the capture `head.xml` must be **layout-neutra
 - **Extend `ctx` with the spine.** The assembler gets reading order + per-chapter `pageCount` from `ctx.spine`, so absolute page numbers fall out directly (no whole-book pass, no ordered-summary file). Exact `ctx.spine` shape (`{ idref, linear }[]`, and whether it also carries hrefs) is a small design detail for the build.
 - **App-owned `saveData` path + lifecycle.** The author never names the file — only a validated slot — and the app files it under `SOURCE/data/preview/<idref>/<slot>.json`, so it GCs per chapter on spine rename/delete. See `process/PREVIEW_BRIDGE.md`.
 
+- **Slot, not a single blob (decided).** `saveData(slot, text)` keeps the author naming only the kind of data, so several per-chapter writers can coexist and the app owns the path.
+
 **Still open:**
 
-1. **Slot vs single blob.** Do you want the author to pass a slot at all (allowing several per-chapter writers to coexist), or a single unnamed blob per chapter (`SOURCE/data/preview/<idref>.json`)? I've assumed a slot; it's cheap insurance for the "runs on any/all previews" future, but it is the one thing author code still names.
-2. **Reference extension packaging.** Ship the page-index as a catalog extension (installable, coordinated head.xml + transformDOM + CSS), or a documented snippet first? A real extension is the truer demonstration of the model.
+1. **Reference extension packaging.** Ship the page-index as a catalog extension (installable, coordinated head.xml + transformDOM + CSS), or a documented snippet first? A real extension is the truer demonstration of the model.
+2. **Spine-change GC (app-side, not yet built).** The path scheme is app-owned so cleanup _can_ be app-managed, but the `deleteSourceFile`/rename-on-spine-change wiring isn't implemented yet — stale `SOURCE/data/preview/<idref>/` survives a chapter delete for now. Follow-up.
+
+## Author gotchas
+
+Real traps hit while building the reference — worth stating for anyone (person or agent) who assumes they know the transform ropes:
+
+- **The `ctx` file methods are async.** `ctx.readSourceText`/`writeSourceText` return Promises — the assembler **must be `async` and `await`** them. Most transform scripts are synchronous DOM manipulation, so this is easy to forget; a missing `await` yields a `Promise`, not the text.
+- **The page numbers are hidden everywhere except print — by design.** `.pdf-page-ref` is `display: none` outside `@media print`, so in the Responsive / normal preview the index looks numberless (and blank if you were watching the numbers). That is correct: check the **Print** preview or the exported PDF. Switching from Source back to Responsive and seeing no numbers is the classic false alarm.
+- **The placeholder must be a real element in the _rendered_ XHTML.** The assembler fills whatever `querySelector('#page-index, [data-page-index]')` finds; if the source syntax doesn't emit that element, nothing happens (silently). In djot this bites twice: inline raw `` `…`{=html} `` is for spans, not a block `<div>` — use a raw HTML _block_ (` ``` =html `) or a native fenced div; and because output is XHTML, attributes need quoted values (`data-page-index=""`, not a bare `data-page-index=`). Verify by opening the index chapter's **Source** view and confirming the element is actually there before blaming the assembler.
 
 ## Risks / notes
 

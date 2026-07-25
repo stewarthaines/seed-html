@@ -1,6 +1,6 @@
 # `window.seed` — the preview bridge (design note)
 
-A small, general capability that lets a project's `preview/head.xml` script — which already runs inside the preview iframe — do two things it currently cannot: **persist data** to the project's scratch area, and **react to preview lifecycle events**. It is the authoring-time counterpart to the build-time transform sandbox: `head.xml` **writes** `SOURCE/data/` while a preview is open; `transformDOM` **reads** it when the book is built. Both are author-owned, both scoped identically.
+A small, general capability that lets a project's `preview/head.xml` script — which already runs inside the preview iframe — do two things it currently cannot: **persist data** to the project's scratch area, and **react to preview lifecycle events**. It is the authoring-time counterpart to the build-time transform sandbox: `head.xml` **writes** `SOURCE/data/` while a preview is open; `transformDOM` **reads** it when the index page is built. Both are author-owned, both scoped identically.
 
 The first consumer is the PDF page-index extension (`process/PDF_PAGE_INDEX.md`), but the bridge is deliberately generic — nothing about it knows what a project stores or why.
 
