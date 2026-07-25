@@ -2417,8 +2417,9 @@
        the permanent header above stays still. Present only when the current
        preview has options — the reader controls for foliate views, the
        orientation toggle for scaled device frames. Sits above the (independently
-       toggled) checks panels. See process/PREVIEW_OPTIONS_BAR.md. -->
-  {#if usesFoliate(selectedDevice.current) || !isFillDevice(selectedDevice.current)}
+       toggled) checks panels. Never in the Source view (it has no preview to
+       drive). See process/PREVIEW_OPTIONS_BAR.md. -->
+  {#if !showSource && (usesFoliate(selectedDevice.current) || !isFillDevice(selectedDevice.current))}
     <div class="preview-options">
       {#if usesFoliate(selectedDevice.current)}
         <!-- Reading flow — always live. Applied to the running renderer, no re-render. -->
