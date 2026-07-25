@@ -2187,9 +2187,20 @@
     };
     window.addEventListener('resize', handleResize);
 
+    // Clicking the host surround (the letterbox around a scaled device frame, or
+    // any preview chrome outside the iframe) refocuses the foliate view so arrow-
+    // key paging resumes after a deixis click moved focus to the editor. In-iframe
+    // text clicks don't bubble here (iframe boundary); the reader's own page
+    // margins are handled inside the wrapper (read-preview.ts).
+    const onSurroundClick = () => {
+      if (usesFoliate(selectedDevice.current)) liveFoliateView()?.focus?.({ preventScroll: true });
+    };
+    previewContentEl?.addEventListener('click', onSurroundClick);
+
     return () => {
       resizeObserver?.disconnect();
       window.removeEventListener('resize', handleResize);
+      previewContentEl?.removeEventListener('click', onSurroundClick);
       if (readSectionUrl) URL.revokeObjectURL(readSectionUrl);
     };
   });

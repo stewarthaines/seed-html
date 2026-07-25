@@ -103,6 +103,13 @@ describe('buildReadDocument', () => {
     expect(call).toBeLessThan(styled.indexOf('await view.init({})'));
   });
 
+  it('refocuses the view on wrapper clicks so arrow keys resume after a deixis click', () => {
+    const doc = buildReadDocument(base);
+    expect(doc).toContain(`view.setAttribute('tabindex', '-1')`);
+    expect(doc).toContain(`document.addEventListener('click', () =>`);
+    expect(doc).toContain('view.focus({ preventScroll: true })');
+  });
+
   it('wires arrow-key page turns on the wrapper window and each section document', () => {
     const doc = buildReadDocument(base);
     expect(doc).toContain(`window.addEventListener('keydown', onKey)`);

@@ -72,6 +72,9 @@ export interface FoliateViewLike {
   goLeft?: () => Promise<void>;
   goRight?: () => Promise<void>;
   close?: () => void;
+  /** Focus the view (tabindex=-1 in the wrapper) so arrow-key paging resumes —
+   *  used when the host-side surround is clicked. */
+  focus?: (options?: FocusOptions) => void;
   /** foliate-view is a custom element (a DOM event target). The parent listens
    *  for `load` to (re-)attach the DOM tools as sections load/reload. */
   addEventListener?: (type: 'load', listener: (event: FoliateLoadEvent) => void) => void;
@@ -214,6 +217,18 @@ const onKey = (event) => {
 window.addEventListener('keydown', onKey);
 view.addEventListener('load', (event) => {
   event.detail.doc.addEventListener('keydown', onKey);
+});
+// Refocus the reader when its margins / surround are clicked, so the arrow keys
+// resume paging after a deixis click moved focus to the editor. Text clicks land
+// inside the section iframe (which keeps its own events); every other click in
+// the wrapper — the paginator's margins, gutters, and background — bubbles here
+// and returns focus to the view. tabindex=-1 makes the custom element
+// programmatically focusable without adding a Tab stop; outline is suppressed so
+// the whole view doesn't ring on each click.
+view.setAttribute('tabindex', '-1');
+view.style.outline = 'none';
+document.addEventListener('click', () => {
+  try { view.focus({ preventScroll: true }); } catch { view.focus(); }
 });
 const book = {
   sections: [{
