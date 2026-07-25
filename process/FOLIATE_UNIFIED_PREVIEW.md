@@ -51,7 +51,7 @@ Today's device presets render the chapter as one long scroll inside a device-sha
 | Reader theme / text size / force | ✓             | ✓ (via setStyles)        | ✓                      |
 | Position kept across edits       | ✓ (anchors)   | ✓ (page/fraction)        | ✓                      |
 | Click-to-source deixis           | ✓             | Responsive only          | ✓ (section doc — done) |
-| axe                              | ✓             | Responsive only          | ✓ (section doc)        |
+| axe                              | ✓             | Responsive only          | ✓ (section doc — done) |
 | Announce (SR preview)            | ✓             | Responsive only          | ✓ (section doc)        |
 | FXL simulation                   | ✓             | ✓ (built-in path, as is) | ✓                      |
 | file:// behavior                 | ✓             | ✓ (unchanged fallback)   | ✓                      |
@@ -62,7 +62,7 @@ Today's device presets render the chapter as one long scroll inside a device-sha
 
 **Phase B — migrate the DOM tools to the section document (2–3 days, independent items).** Deixis first (highest value, smallest surface), then axe, then Announce. Each item: retarget to `getContents()[0].doc`, re-attach on the view's `load` event, verify against the realm rules one level deeper. Ships per-item — no big bang.
 
-_Deixis done (see notes below); axe and Announce remain._
+_Deixis and axe done (see notes below); Announce remains._
 
 **Phase C — options, only if wanted.** foliate-fxl for fixed-layout presets; e-ink flavor for Travel (grayscale filter, no animation); per-device page-count badges in the dropdown ("Travel · 38 pp"); folding the READ.html entry into a redesigned dropdown once devices paginate (it becomes "the fill-size device").
 
@@ -103,3 +103,13 @@ Click-to-source deixis now works on every foliate view (the READ.html entry and 
 - **No hover-outline affordance on foliate (deliberate):** the raw view's `setupIframeInteractivity` paints `:hover` outlines on every block as a discoverability hint; that undercuts the "reads like a real device" realism the presets exist for, so foliate deixis is click-only. Authors who use deixis know the gesture; the outline stays on Responsive. Revisit only if discoverability complaints surface.
 - Interface: `FoliateViewLike` gained `renderer.getContents()` and `addEventListener('load')`; `FoliateContent`/`FoliateLoadEvent` types added in read-preview.ts. Type-only — no new unit surface (deixis lives in the component; `snippetAroundClick` coverage unchanged). Validate green (1748), svelte-check 0/0.
 - **Not migrated here:** intra-book `.xhtml` link navigation (`onNavigate`) still binds the wrapper document, so chapter-to-chapter links are inert under foliate — out of scope for deixis, noted for a later pass. axe and Announce are the remaining phase B items.
+
+## Phase B notes — axe (2026-07-25)
+
+The Accessibility check runs against the foliate section document on reader-engine views (the READ.html entry and the device presets). The section iframe carries `sandbox="allow-same-origin allow-scripts"` (verified in the vendored `paginator.js`), so the injected `axe.min.js` executes there just as it does in the raw preview iframe. Specifics:
+
+- **`a11yTarget()`** resolves the audit doc + window per run: under foliate, `renderer.getContents()[0].doc` and its `defaultView`; otherwise the preview iframe. `runA11yCheck`, the leave-panel highlight clear, and `loadAxe` all go through it. Resolved fresh each run because every foliate re-render replaces the section document.
+- **Re-check lifecycle.** The raw path schedules the debounced re-check from `updatePreviewContent`; foliate renders don't go through there, so `scheduleAutoA11yCheck()` is now also called from the `READ_DONE` handler (after each re-render) and from `applyReadSettings()` (a flow/column `render()` reloads the section without a READ_DONE ping — without this the highlights would point at a destroyed document). The debounce's `activePanel !== 'a11y'` guard makes all three calls no-ops when the panel is closed.
+- **UI.** The Accessibility entry is offered wherever `canCheckA11y` holds (the `!usesFoliate` gate is gone, both in `availablePanels` and the single-button fallback). `handleDeviceChange` no longer closes the a11y panel when switching onto a foliate view — the render effect re-renders through the engine and the READ_DONE re-check refreshes results on the new view. Only the Screen reader panel still closes on that switch (its walk is the remaining item).
+- **No new i18n or unit surface** — the check is component-wired; the axe report shape is unchanged. Validate green (1748), svelte-check 0/0.
+- **Known minor gap:** highlight outlines live in the section document, so they vanish when the view is torn down (device switch, chapter hop) until the next check runs — the violations list (text) is unaffected, and the auto-recheck restores highlights within the debounce.

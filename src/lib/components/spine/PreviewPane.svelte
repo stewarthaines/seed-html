@@ -326,10 +326,28 @@
     }
   }
 
-  async function runA11yCheck(): Promise<void> {
+  /**
+   * The document + window axe should audit: under a reader-engine view the
+   * foliate section document (reachable same-origin as
+   * `renderer.getContents()[0].doc`, whose sandboxed iframe carries
+   * `allow-scripts` so the injected axe bundle runs), otherwise the preview
+   * iframe. Resolved fresh per run — each foliate re-render replaces the doc.
+   */
+  function a11yTarget(): { doc: Document; win: AxeWindow } | null {
+    if (usesFoliate(selectedDevice.current)) {
+      const doc = liveFoliateView()?.renderer?.getContents?.()[0]?.doc;
+      const win = doc?.defaultView as AxeWindow | null;
+      return doc && win ? { doc, win } : null;
+    }
     const doc = previewIframe?.contentDocument;
     const win = previewIframe?.contentWindow as AxeWindow | null;
-    if (!doc || !win) return;
+    return doc && win ? { doc, win } : null;
+  }
+
+  async function runA11yCheck(): Promise<void> {
+    const target = a11yTarget();
+    if (!target) return;
+    const { doc, win } = target;
     a11yRunning = true;
     try {
       await loadAxe(doc, win);
@@ -357,7 +375,7 @@
   // highlight outlines.
   function setPanel(next: PanelId | null): void {
     if (activePanel === 'a11y' && next !== 'a11y') {
-      const doc = previewIframe?.contentDocument;
+      const doc = a11yTarget()?.doc;
       if (doc) clearHighlights(doc);
     }
     if (activePanel === 'sr' && next !== 'sr') teardownSrInstrumentation();
@@ -377,10 +395,9 @@
   // When more than one is available they collapse into a single dropdown.
   const availablePanels = $derived.by(() => {
     const list: { id: PanelId; label: string; disabled: boolean }[] = [];
-    // Not on foliate-rendered views: axe would audit the wrapper document (and
-    // its nested section iframes), not the chapter markup. Phase B of
-    // FOLIATE_UNIFIED_PREVIEW.md retargets it at the section document.
-    if (canCheckA11y && !usesFoliate(selectedDevice.current)) {
+    // On foliate views axe runs against the section document (phase B), so it is
+    // offered everywhere http(s) allows the bundle fetch.
+    if (canCheckA11y) {
       list.push({ id: 'a11y', label: $t('Accessibility'), disabled: !xhtmlContent });
     }
     if (validationReport && validationReportMatches) {
@@ -1138,6 +1155,11 @@
         // Click-to-source deixis works on foliate views too, retargeted at the
         // section document (the wrapper holds only reader chrome).
         wireFoliateDeixis();
+        // A foliate re-render replaced the section document; refresh axe against
+        // the new one while the panel is open (debounced; no-op if closed). The
+        // raw path schedules this from updatePreviewContent — foliate renders
+        // land here instead, once the section is loaded.
+        scheduleAutoA11yCheck();
         // Restore the pre-render reading position. The first relocate (fired
         // during init, so already handled — same-source messages keep order)
         // has refreshed readPages with the new totals; clamp to them.
@@ -1543,6 +1565,9 @@
       selectedDevice.current === 'read' ? readColumns.current : '2'
     );
     renderer.render?.();
+    // render() reloads the section (a fresh document) without a READ_DONE ping;
+    // re-run axe against it while the panel is open so highlights aren't stale.
+    scheduleAutoA11yCheck();
   }
 
   function setReadFlow(value: string): void {
@@ -1747,11 +1772,11 @@
     selectedDevice.current = deviceId as (typeof DEVICE_PRESETS)[number]['id'];
     const device = DEVICE_PRESETS.find(d => d.id === deviceId);
 
-    // Panels that inspect the plain preview DOM don't apply to foliate-rendered
-    // views (axe/walk would hit the wrapper, not the chapter) — close them
-    // rather than leaving the dropdown orphaned. Reader + EpubCheck stay: the
-    // reader sim works through setStyles, and EpubCheck is report-based.
-    if (usesFoliate(deviceId) && (activePanel === 'a11y' || activePanel === 'sr')) setPanel(null);
+    // The Screen reader walk still targets the plain preview DOM, so it can't
+    // follow onto a foliate-rendered view — close it rather than leaving the
+    // dropdown orphaned (phase B item 3 retargets it). Accessibility follows
+    // now (axe runs against the section document); Reader + EpubCheck stay too.
+    if (usesFoliate(deviceId) && activePanel === 'sr') setPanel(null);
 
     if (device && previewContainer) {
       const wrapper = previewContainer.parentElement;
@@ -2350,9 +2375,9 @@
           {/each}
         </select>
       {:else}
-        <!-- Accessibility check (spike): inject axe-core into the preview + run it.
-             Not on foliate views — axe would audit the wrapper, not the chapter. -->
-        {#if canCheckA11y && !usesFoliate(selectedDevice.current)}
+        <!-- Accessibility check: inject axe-core and run it against the preview
+             (the foliate section document on reader-engine views). -->
+        {#if canCheckA11y}
           <button
             type="button"
             class="a11y-check"
