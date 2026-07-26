@@ -145,6 +145,9 @@ export class ExtensionManager {
         ...entry.domTransforms,
         ...entry.textTransforms,
         ...entry.licenses,
+        // Preview-head fragment (authoring-only; injected into previews, never
+        // packaged). Lands in SOURCE/extensions/<id>/ alongside the transforms.
+        ...(entry.previewHead ? [entry.previewHead] : []),
         'extension.json',
       ]),
     ];

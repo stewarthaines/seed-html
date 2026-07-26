@@ -94,6 +94,13 @@ export interface ExtensionCatalogEntry {
   generators: GeneratorManifest[];
   /** EPUB assets copied into OEBPS/ and registered in the manifest (e.g. CSS). */
   assets: ExtensionAsset[];
+  /** Authoring-time preview-head fragment (a filename in the extension dir): markup
+   *  — typically a `<script>` — injected into the previews while this extension is
+   *  installed, never into the packaged EPUB. Runs UNSANDBOXED in the preview realm
+   *  (unlike transforms); reserved for the app-curated catalog. See
+   *  process/PREVIEW_HEAD_EXTENSIONS.md. Fragments should self-guard (e.g.
+   *  `if (window.seed) …`) since capabilities like the seed bridge aren't in every preview. */
+  previewHead?: string;
   /** All license files to bundle into SOURCE/ (extension-wide + per-script + per-asset). */
   licenses: string[];
   /** Sample chapter (plain-text source) used to seed a new project's first chapter. */
@@ -303,6 +310,7 @@ function normalizeCatalogEntry(value: unknown): ExtensionCatalogEntry | null {
     textTransforms: asStringArray(e.textTransforms),
     generators,
     assets,
+    previewHead: asString(e.previewHead),
     licenses: collectLicenses(e.scripts, e.license, assets, generators),
     chapter: asString(e.chapter),
     templates: asTemplates(e.templates),

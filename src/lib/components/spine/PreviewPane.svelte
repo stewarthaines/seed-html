@@ -77,6 +77,7 @@
     projectIdentifier = null,
     onGeneratePdf = undefined,
     previewHead = '',
+    extensionPreviewHead = '',
     previewAutoUpdate = DEFAULT_PREVIEW.autoUpdate,
     previewIncludeHead = DEFAULT_PREVIEW.includeHead,
     isFixedLayout = false,
@@ -107,6 +108,10 @@
      *  injected into the preview head for the preview types whose `includeHead`
      *  is on. Authoring-time only — never reaches the packaged EPUB. */
     previewHead?: string;
+    /** Preview-head fragments from installed extensions (process/PREVIEW_HEAD_EXTENSIONS.md).
+     *  Injected into EVERY preview regardless of `includeHead` (fragments self-guard);
+     *  authoring-time only, never packaged. */
+    extensionPreviewHead?: string;
     /** Per preview type, whether the preview re-renders live on every edit. */
     previewAutoUpdate?: PreviewSettings['autoUpdate'];
     /** Per preview type, whether to inject `previewHead` into the preview <head>. */
@@ -1383,7 +1388,8 @@
     return previewTypeForDevice(category);
   }
 
-  /** The preview-head fragment to inject for the current preview type ('' = none). */
+  /** The author's preview-head fragment for the current preview type ('' = none),
+   *  gated by the per-type `includeHead` setting. */
   function currentWantHead(): string {
     return previewIncludeHead[typeOfDevice(selectedDevice.current)] && previewHead
       ? previewHead
@@ -1391,14 +1397,23 @@
   }
 
   /**
-   * Splice the project's preview-only head fragment into a chapter's head, just
-   * before the closing head tag (after the book's own stylesheets, so author CSS
-   * can override). Preview only — the published/packaged XHTML never goes through
+   * Everything spliced into the preview head: the author's gated fragment plus the
+   * installed extensions' fragments, which inject into EVERY preview regardless of
+   * `includeHead` — they self-guard (A1, process/PREVIEW_HEAD_EXTENSIONS.md).
+   */
+  function headToInject(): string {
+    return [currentWantHead(), extensionPreviewHead].filter(Boolean).join('\n');
+  }
+
+  /**
+   * Splice the preview-only head fragment(s) into a chapter's head, just before
+   * the closing head tag (after the book's own stylesheets, so author CSS can
+   * override). Preview only — the published/packaged XHTML never goes through
    * here. The fragment is inserted after blob-URL processing, so it is for INLINE
-   * style/script markup; external href/src in head.xml won't be blob-resolved.
+   * style/script markup; external href/src won't be blob-resolved.
    */
   function withPreviewHead(content: string): string {
-    const head = currentWantHead();
+    const head = headToInject();
     if (!head) return content;
     return content.replace('</head>', `${head}\n</head>`);
   }
@@ -1516,8 +1531,9 @@
       lang: wrapped.lang ?? undefined,
       print: printSettings,
       previewChrome: true,
-      // Inject the project's preview-only head fragment (when PDF includeHead is on).
-      headExtra: currentWantHead(),
+      // Inject the preview-only head: the author's fragment (when PDF includeHead
+      // is on) plus always-on extension fragments (e.g. the page-index capture).
+      headExtra: headToInject(),
       // Install the window.seed bridge + fire the `paginated` hook for the
       // project's head.xml (process/PREVIEW_BRIDGE.md). Keyed to this chapter.
       previewBridge: chapterId ? { idref: chapterId } : undefined,

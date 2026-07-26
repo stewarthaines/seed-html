@@ -96,6 +96,9 @@ for (const dirent of dirents) {
             .map(k => [k, meta.templates[k]])
         )
       : undefined;
+  // Optional authoring-time preview-head fragment (a filename) injected into the
+  // previews while installed; never packaged. Keep in sync with serve-extensions-dev.
+  const previewHead = typeof meta.previewHead === 'string' ? meta.previewHead : undefined;
   // An extension must bring at least one of: a 3rd-party lib, a transform, a
   // generator, or an EPUB asset (e.g. audio-clips ships only a reading-system
   // script + CSS as assets).
@@ -104,7 +107,8 @@ for (const dirent of dirents) {
     domTransforms.length === 0 &&
     textTransforms.length === 0 &&
     generators.length === 0 &&
-    assets.length === 0;
+    assets.length === 0 &&
+    !previewHead;
   if (!id || !name || isEmpty) {
     console.warn(
       `⚠️  ${dirent.name}: incomplete extension.json (need id, name, and at least one of scripts/transforms/generators/assets) — skipped`
@@ -123,6 +127,7 @@ for (const dirent of dirents) {
     ...generators.map(g => g.script),
     ...licenses,
     ...(chapter ? [chapter] : []),
+    ...(previewHead ? [previewHead] : []),
     'extension.json',
   ];
   const destDir = path.join(outDir, id);
@@ -175,6 +180,7 @@ for (const dirent of dirents) {
     textTransforms,
     generators,
     assets,
+    previewHead,
     licenses,
     chapter,
     templates: templates && Object.keys(templates).length > 0 ? templates : undefined,

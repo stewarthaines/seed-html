@@ -227,6 +227,23 @@ describe('extension-catalog', () => {
     expect(prism.chapter).toBeUndefined();
   });
 
+  it('parses the optional previewHead fragment filename', async () => {
+    const entries = [
+      { id: 'print-index', name: 'Print Index', domTransforms: ['x.js'], previewHead: 'capture.head.xml' },
+      { id: 'prism', name: 'Prism', scripts: ['prism.js'] }, // no previewHead
+    ];
+    const fetchFn = vi.fn(async () => jsonResponse(entries));
+
+    const [printIndex, prism] = await loadExtensionCatalog({
+      protocol: 'https:',
+      baseUrl: BASE,
+      fetch: fetchFn,
+    });
+
+    expect(printIndex.previewHead).toBe('capture.head.xml');
+    expect(prism.previewHead).toBeUndefined();
+  });
+
   it('parses the optional insertion templates (dropping non-string/empty keys)', async () => {
     const entries = [
       {

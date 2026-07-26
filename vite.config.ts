@@ -240,14 +240,19 @@ export default defineConfig({
                       .map(k => [k, rawTemplates[k]])
                   )
                 : undefined;
+              // Optional preview-head fragment filename — keep in sync with
+              // scripts/generate-extensions-manifest.js.
+              const previewHead = typeof m.previewHead === 'string' ? m.previewHead : undefined;
               // An extension must bring at least one of: a lib, a transform, a
-              // generator, or an EPUB asset (mirrors generate-extensions-manifest.js).
+              // generator, an EPUB asset, or a preview-head fragment (mirrors
+              // generate-extensions-manifest.js).
               const isEmpty =
                 scripts.length === 0 &&
                 domTransforms.length === 0 &&
                 textTransforms.length === 0 &&
                 generators.length === 0 &&
-                assets.length === 0;
+                assets.length === 0 &&
+                !previewHead;
               if (m.id && m.name && !isEmpty) {
                 manifest.push({
                   id: m.id,
@@ -262,6 +267,7 @@ export default defineConfig({
                   textTransforms,
                   generators,
                   assets,
+                  previewHead,
                   licenses,
                   chapter,
                   templates:

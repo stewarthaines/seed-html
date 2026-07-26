@@ -89,6 +89,9 @@
       spineItemId: string | null;
       /** Contents of the project's preview/head.xml (preview-only <head> fragment). */
       previewHead?: string;
+      /** Preview-head fragments from installed extensions — injected into every
+       *  preview regardless of includeHead (they self-guard). Never packaged. */
+      extensionPreviewHead?: string;
     }) => void;
     /** Report a manifest change (content-derived properties) back to app state. */
     onWorkspaceUpdate?: (workspace: WorkspaceState) => void;
@@ -162,6 +165,40 @@
     } catch {
       // Not created yet (older projects) — treat as empty, inject nothing.
       previewHeadContent = '';
+    }
+  }
+
+  // Preview-head fragments contributed by installed extensions (extension.json
+  // `previewHead`). Injected into every preview independent of the author's
+  // includeHead toggle (they self-guard) — see process/PREVIEW_HEAD_EXTENSIONS.md.
+  // Never packaged.
+  let extensionPreviewHeadContent = $state('');
+
+  /** Gather every installed extension's `previewHead` fragment into one string. */
+  async function loadExtensionPreviewHeads(): Promise<void> {
+    try {
+      const exts = await extensionManager.listWorkspaceExtensions(workspace.id);
+      const fragments: string[] = [];
+      for (const ext of exts) {
+        try {
+          const metaRaw = await fileStorage.readTextFile(
+            workspace.id,
+            `SOURCE/extensions/${ext.name}/extension.json`
+          );
+          const file = JSON.parse(metaRaw)?.previewHead;
+          if (typeof file !== 'string' || !file) continue;
+          const fragment = await fileStorage.readTextFile(
+            workspace.id,
+            `SOURCE/extensions/${ext.name}/${file}`
+          );
+          if (fragment.trim()) fragments.push(fragment);
+        } catch {
+          // Missing/malformed extension.json or fragment — skip that extension.
+        }
+      }
+      extensionPreviewHeadContent = fragments.join('\n');
+    } catch {
+      extensionPreviewHeadContent = '';
     }
   }
 
@@ -485,6 +522,7 @@
         // XHTML. Gated like JS entries; created on first save for older projects.
         const headPath = epub.preview?.head ?? 'preview/head.xml';
         await loadPreviewHead(headPath);
+        await loadExtensionPreviewHeads();
         files.push({
           value: 'preview-head',
           label: basename(previewHeadPath),
@@ -1143,6 +1181,7 @@
       executionTime: event.executionTime,
       spineItemId: selectedItemId,
       previewHead: previewHeadContent,
+      extensionPreviewHead: extensionPreviewHeadContent,
     });
   }
 
@@ -1160,6 +1199,7 @@
       executionTime: 0,
       spineItemId: selectedItemId,
       previewHead: previewHeadContent,
+      extensionPreviewHead: extensionPreviewHeadContent,
     });
   }
 
@@ -1267,6 +1307,7 @@
         executionTime: 0,
         spineItemId: selectedItemId,
         previewHead: previewHeadContent,
+        extensionPreviewHead: extensionPreviewHeadContent,
       });
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to load chapter';

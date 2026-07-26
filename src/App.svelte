@@ -234,6 +234,7 @@
     executionTime: number;
     spineItemId: string | null;
     previewHead: string;
+    extensionPreviewHead: string;
   }>({
     xhtmlContent: '',
     isTransforming: false,
@@ -242,6 +243,7 @@
     executionTime: 0,
     spineItemId: null,
     previewHead: '',
+    extensionPreviewHead: '',
   });
 
   // Services are private in EnhancedAppState - workspace operations go through app state methods
@@ -311,6 +313,7 @@
     executionTime: number;
     spineItemId: string | null;
     previewHead?: string;
+    extensionPreviewHead?: string;
   }) => {
     spinePreviewData = {
       xhtmlContent: detail.xhtmlContent,
@@ -320,6 +323,7 @@
       executionTime: detail.executionTime,
       spineItemId: detail.spineItemId,
       previewHead: detail.previewHead ?? '',
+      extensionPreviewHead: detail.extensionPreviewHead ?? '',
     };
   };
 
@@ -1735,6 +1739,7 @@
             onGeneratePdf={canGeneratePdf ? handleGenerateChapterPdf : undefined}
             onSavePreviewData={handleSavePreviewData}
             previewHead={spinePreviewData.previewHead}
+            extensionPreviewHead={spinePreviewData.extensionPreviewHead}
             previewAutoUpdate={appState?.epubSettings?.preview?.autoUpdate}
             previewIncludeHead={appState?.epubSettings?.preview?.includeHead}
             isFixedLayout={currentWorkspaceState?.opf?.metadata?.renditionLayout ===
