@@ -1,0 +1,36 @@
+/*
+  Print Index (process/PDF_PAGE_INDEX.md). Styles the generated index and the
+  print-only page numbers. .pdf-page-ref is hidden while reading the EPUB and
+  revealed only in the PDF (@media print, which Paged.js applies to the print
+  preview and the export). The numbers stay LAST in the DOM, so a tagged PDF
+  reads "title … number".
+*/
+
+/* Generated index (fill an #page-index / [data-page-index] element). */
+.page-index {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.page-index-entry {
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+}
+.page-index-entry.level-2 {
+  padding-inline-start: 1.5em;
+}
+.page-index-text a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Print-only page numbers (both modes). */
+.pdf-page-ref {
+  display: none;
+}
+@media print {
+  .pdf-page-ref {
+    display: inline;
+  }
+}

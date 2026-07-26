@@ -1,0 +1,14 @@
+{
+  "id": "print-index",
+  "name": "Print Index",
+  "description": "Page numbers for a PDF contents or index — captured from the print preview, shown only in the PDF, hidden in the EPUB.",
+  "licenseName": "MIT",
+  "category": "typesetting",
+  "scripts": [],
+  "domTransforms": ["buildPageIndex.js"],
+  "textTransforms": [],
+  "previewHead": "capture.head.xml",
+  "assets": [
+    { "file": "page-index.css", "target": "Styles/page-index.css", "media": "text/css" }
+  ]
+}

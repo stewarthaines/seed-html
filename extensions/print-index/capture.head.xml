@@ -1,0 +1,36 @@
+<script>
+//<![CDATA[
+// Print Index — capture (process/PDF_PAGE_INDEX.md). Injected into the previews
+// while this extension is installed. Self-guards on window.seed (the bridge is
+// only present in the paged/print preview), so it is a no-op everywhere else.
+// On each print pagination it records the page each h1/h2 landed on and persists
+// it to SOURCE/data/preview/<idref>/pagemap.json for buildPageIndex.js to read.
+if (window.seed) {
+  seed.hooks.paginated = function (detail) {
+    var doc = detail.document;
+    var seen = new Set();
+    var entries = [];
+    var nodes = doc.querySelectorAll('h1,h2');
+    for (var i = 0; i < nodes.length; i++) {
+      var el = nodes[i];
+      if (seen.has(el)) continue;
+      seen.add(el);
+      var box = el.closest('.pagedjs_page');
+      var page = box ? Number(box.getAttribute('data-page-number')) : 0;
+      if (!page) continue;
+      entries.push({
+        id: el.id || null,
+        text: el.textContent.trim(),
+        level: Number(el.tagName[1]),
+        page: page
+      });
+    }
+    var pageCount = doc.querySelectorAll('.pagedjs_page').length;
+    seed.saveData(
+      'pagemap',
+      JSON.stringify({ idref: detail.idref, pageCount: pageCount, entries: entries })
+    );
+  };
+}
+//]]>
+</script>
