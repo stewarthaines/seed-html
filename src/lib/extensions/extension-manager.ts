@@ -170,11 +170,16 @@ export class ExtensionManager {
       const url = resolveExtensionFileUrl(entry.id, 'SYNTAX.md', { baseUrl: options.baseUrl });
       const response = await fetchImpl(url);
       if (response.ok) {
-        await this.fileStorage.writeFile(
-          workspaceId,
-          `SOURCE/extensions/${entry.id}/SYNTAX.md`,
-          await response.arrayBuffer()
-        );
+        const text = await response.text();
+        // A missing file over the dev server returns the app's index.html (the
+        // SPA fallback, 200 OK) — never write that HTML shell as a syntax reference.
+        if (!/^\s*<!doctype html|^\s*<html[\s>]/i.test(text)) {
+          await this.fileStorage.writeFile(
+            workspaceId,
+            `SOURCE/extensions/${entry.id}/SYNTAX.md`,
+            new TextEncoder().encode(text).buffer as ArrayBuffer
+          );
+        }
       }
     } catch {
       // no syntax reference served — fine

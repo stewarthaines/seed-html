@@ -73,6 +73,64 @@ describe('ExtensionManager.importCatalogExtension', () => {
     expect(written).toEqual([]);
   });
 
+  it('does not write the dev SPA fallback (index.html) as SYNTAX.md', async () => {
+    const { api, files } = makeFileStorage();
+    const entry = {
+      id: 'x',
+      name: 'X',
+      scripts: [],
+      domTransforms: ['t.js'],
+      textTransforms: [],
+      generators: [],
+      assets: [],
+      licenses: [],
+    } as unknown as ExtensionCatalogEntry;
+    const fetchImpl = vi.fn(async (input: RequestInfo | URL) => {
+      const file = String(input).split('/').pop() as string;
+      // Missing SYNTAX.md → the dev server serves the app's HTML shell, 200 OK.
+      const body = file === 'SYNTAX.md' ? '<!doctype html><html><body>app</body></html>' : 'body';
+      return {
+        ok: true,
+        text: async () => body,
+        arrayBuffer: async () => enc.encode(body).buffer,
+      } as unknown as Response;
+    });
+
+    const mgr = new ExtensionManager(api);
+    await mgr.importCatalogExtension('ws', entry, { fetch: fetchImpl, baseUrl: 'https://x/' });
+
+    expect(files.has('SOURCE/extensions/x/SYNTAX.md')).toBe(false);
+    expect(files.has('SOURCE/extensions/x/t.js')).toBe(true);
+  });
+
+  it('writes a genuine (non-HTML) SYNTAX.md', async () => {
+    const { api, files } = makeFileStorage();
+    const entry = {
+      id: 'y',
+      name: 'Y',
+      scripts: [],
+      domTransforms: ['t.js'],
+      textTransforms: [],
+      generators: [],
+      assets: [],
+      licenses: [],
+    } as unknown as ExtensionCatalogEntry;
+    const fetchImpl = vi.fn(async (input: RequestInfo | URL) => {
+      const file = String(input).split('/').pop() as string;
+      const body = file === 'SYNTAX.md' ? '# Syntax\n\nReal reference.' : 'body';
+      return {
+        ok: true,
+        text: async () => body,
+        arrayBuffer: async () => enc.encode(body).buffer,
+      } as unknown as Response;
+    });
+
+    const mgr = new ExtensionManager(api);
+    await mgr.importCatalogExtension('ws', entry, { fetch: fetchImpl, baseUrl: 'https://x/' });
+
+    expect(dec.decode(files.get('SOURCE/extensions/y/SYNTAX.md')!)).toBe('# Syntax\n\nReal reference.');
+  });
+
   it('materializes declared generators into SOURCE/generators/<id>/', async () => {
     const { api, files } = makeFileStorage();
     const entry: ExtensionCatalogEntry = {
