@@ -13,7 +13,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A dedicated Chapters view for reorganizing the book: click the "Chapters" heading in the sidebar, select a run of chapters (shift-click, or arrow keys and Space), pick where they go, check the before/after diagram, and Apply. The same view sets chapters aside (kept in the book but out of the reading order) and deletes in bulk; your selection survives each move, so undoing is just moving back.
+- The Append (+) button now inserts the new chapter after the selected one instead of always at the end.
+- Move files between folders from the Manifest view: shift-click or Cmd-click to select several files, change their Directory in one edit, and review every file move — and every reference that will be rewritten in your text sources and stylesheets — before it happens. Single-file renames get the same safety, with the file path now split into Directory and Filename fields.
+- The Manifest details pane lists where the selected file is used: each referencing chapter is a link that opens it for editing, and "No references found" flags assets nothing points at.
+- A Proofs option in the preview's device dropdown lays the whole chapter out as a grid of small print pages — rhythm, breaks, and figure placement at a glance. Click any page to open it full-size in the Print view.
+- The Print preview shows the book's real page numbers: once earlier chapters have been print-previewed, a chapter's folios continue from where the previous chapter ended instead of restarting at 1.
+- Previous/next chapter arrows in the preview header step through the book in reading order — handy for sweeping chapter by chapter in Proofs.
+
 ### Changed
+
+- Audio clip directives now reference audio files the same way as images (`../Audio/…`). Existing projects keep working in the editor, but clips won't play in packaged books until their directives are updated and the AudioClips extension is reinstalled.
+- Typing-to-preview is much faster in large books — projects with many chapters and images no longer pay a per-keystroke penalty.
+- Clicking a passage in the preview now centers the matching text in the editor instead of leaving it at the bottom edge.
+
+### Fixed
+
+- Fleuron ornaments no longer drag the whole preceding poem or paragraph onto the next page in the print preview and PDF, which left half-empty pages.
 
 - The device previews (Commute, Home, Travel) now render with the READ.html reader engine when the editor runs over http: real page turns at each device's size — an e-reader preview that pages like an e-reader — with the pager, arrow keys, and your-place-survives-edits behavior from the READ.html preview, and honest per-device page counts. The reading theme and text size controls apply there too, and changing text size repaginates like a real device. Pages is the default flow; the Scroll option remains. Over file:// the devices show the same scrolling preview as before.
 - Click a passage in a reader-engine preview to jump to its place in the source, the same as the other previews.
