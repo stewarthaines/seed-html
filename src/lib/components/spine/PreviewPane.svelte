@@ -159,7 +159,8 @@
   // polyfill is fetched from the app origin, so the option is hidden on file://.
   const canPaginate = typeof location !== 'undefined' && location.protocol !== 'file:';
   /** Devices that fill the pane rather than rendering a scaled device frame. */
-  const isFillDevice = (id: string) => id === 'desktop' || id === 'print' || id === 'read';
+  const isFillDevice = (id: string) =>
+    id === 'desktop' || id === 'print' || id === 'proofs' || id === 'read';
   /** postMessage token Paged.js pings the parent with when pagination completes. */
   const PAGED_DONE = 'preview-paged';
 
@@ -228,7 +229,7 @@
 
   /** The engine a device id renders with, for re-render bookkeeping. */
   const engineOfDevice = (id: string): 'paged' | 'foliate' | 'raw' =>
-    id === 'print' ? 'paged' : usesFoliate(id) ? 'foliate' : 'raw';
+    id === 'print' || id === 'proofs' ? 'paged' : usesFoliate(id) ? 'foliate' : 'raw';
 
   let printPaginating = $state(false);
   // The preview is out of date because auto-update is off for the current type and
@@ -258,6 +259,9 @@
   // Page index to restore after Paged.js finishes repaginating (same-chapter
   // re-render only); consumed by the PAGED_DONE handler.
   let pendingPrintPage: number | null = null;
+  // Explicit page request from a Proofs thumbnail click — wins over the
+  // first-visible-page continuity computation on the next paged render.
+  let requestedPrintPage: number | null = null;
 
   interface AxeViolation {
     id: string;
@@ -434,8 +438,8 @@
       list.push({ id: 'reader', label: $t('Reader'), disabled: false });
     }
     // On foliate views the walk targets the section document (phase B); still
-    // not on Print (Paged.js wrapper elements are not the chapter).
-    if (canSrPreview && selectedDevice.current !== 'print') {
+    // not on the paged views (Paged.js wrapper elements are not the chapter).
+    if (canSrPreview && engineOfDevice(selectedDevice.current) !== 'paged') {
       // <!-- i18n: preview Checks dropdown entry — announcement preview -->
       list.push({ id: 'sr', label: $t('Screen reader'), disabled: !xhtmlContent });
     }
@@ -858,6 +862,16 @@
       height: '1123px',
       category: 'print',
     },
+    {
+      // Chapter proofs: the same Paged.js render laid out as a wrapping grid of
+      // page thumbnails — a flatplan for judging rhythm, breaks, and figure
+      // placement across the whole chapter. Dimensions are placeholders too.
+      id: 'proofs',
+      name: 'Proofs',
+      width: '794px',
+      height: '1123px',
+      category: 'print',
+    },
   ] as const;
 
   // --- Reader-mode simulation (theme + font size) ------------------------------
@@ -933,6 +947,9 @@
       case 'Print':
         // i18n: The paginated print-page preview option
         return $t('Print');
+      case 'Proofs':
+        // i18n: The chapter-proofs preview option — a grid of small print pages
+        return $t('Proofs');
       default:
         return name;
     }
@@ -997,8 +1014,9 @@
     const groups: Record<string, (typeof DEVICE_PRESETS)[number][]> = {};
 
     for (const device of DEVICE_PRESETS) {
-      // Print preview is HTTP-only (Paged.js is fetched from the app origin).
-      if (device.id === 'print' && !canPaginate) continue;
+      // Paged previews (Print, Proofs) are HTTP-only (Paged.js is fetched from
+      // the app origin).
+      if (device.category === 'print' && !canPaginate) continue;
       if (!groups[device.category]) {
         groups[device.category] = [];
       }
@@ -1038,7 +1056,9 @@
   // preset, not fixed-layout chapters — readers disable user theming/sizing there).
   // Foliate-rendered views (READ.html + device presets) are included: their sim
   // goes through renderer.setStyles() instead of head injection.
-  const readerModeActive = $derived(selectedDevice.current !== 'print' && !isFixedLayout);
+  const readerModeActive = $derived(
+    engineOfDevice(selectedDevice.current) !== 'paged' && !isFixedLayout
+  );
 
   /** The reader-simulation CSS for the current controls + device (foliate path). */
   function currentReaderSimCss(): string {
@@ -1166,8 +1186,8 @@
     // re-runs this effect and re-renders through the right engine).
     const engine = engineOfDevice(device);
 
-    if (device !== 'print') {
-      // Not on print: clear any leftover print pagination state.
+    if (engine !== 'paged') {
+      // Not on a paged view: clear any leftover print pagination state.
       printPaginating = false;
       clearTimeout(printSafetyTimer);
     }
@@ -1261,7 +1281,8 @@
       if (event.data !== PAGED_DONE) return;
       clearTimeout(printSafetyTimer);
       printPaginating = false;
-      fitPrintToWidth();
+      if (renderedDevice === 'proofs') applyProofsChrome();
+      else fitPrintToWidth();
       if (pendingPrintPage !== null) {
         const pages =
           previewIframe?.contentDocument?.querySelectorAll<HTMLElement>('.pagedjs_page');
@@ -1501,7 +1522,7 @@
     // Route on engine: Print → Paged.js; READ.html entry + device presets →
     // foliate (http, reflowable — usesFoliate); everything else (Responsive,
     // file://, fixed layout) → the built-in preview.
-    if (selectedDevice.current === 'print') writePagedDoc(content);
+    if (engineOfDevice(selectedDevice.current) === 'paged') writePagedDoc(content);
     else if (usesFoliate(selectedDevice.current)) writeFoliateDoc(content);
     else updatePreviewContent(withPreviewHead(content));
     renderedContent = content;
@@ -1586,9 +1607,13 @@
     // Keep the reader's place across re-renders of the SAME chapter: remember
     // the page currently at the top of the viewport, by index — pixel offsets
     // don't survive repagination, page boundaries do. A chapter switch (or
-    // arriving from a non-print render) starts at page one.
+    // arriving from a non-print render) starts at page one. An explicit page
+    // request (a Proofs thumbnail click) wins over the continuity computation.
     pendingPrintPage = null;
-    if (renderedType === 'pdf' && renderedChapterId === chapterId) {
+    if (requestedPrintPage !== null) {
+      pendingPrintPage = requestedPrintPage;
+      requestedPrintPage = null;
+    } else if (renderedType === 'pdf' && renderedChapterId === chapterId) {
       const pages = iframeDoc.querySelectorAll<HTMLElement>('.pagedjs_page');
       for (let i = 0; i < pages.length; i++) {
         if (pages[i].getBoundingClientRect().bottom > 1) {
@@ -1798,6 +1823,70 @@
    * Paged.js page container so the scroll height reflows. Never upscales beyond
    * 1 (real size). Safe to call repeatedly (e.g. on resize) without re-paginating.
    */
+  // Proofs chrome — injected AFTER pagination (like the folio seeding) so the
+  // Paged.js polisher never processes it: `content: counter(page)` captions
+  // evaluate natively in the browser, and pick up the absolute-folio seeding
+  // when the offset is known. Lengths divide by the zoom so gaps and captions
+  // hold their on-screen size while the pages shrink.
+  const PROOFS_TARGET_PX = 150; // thumb width; columns fall out of pane width
+  const PROOFS_CSS = `
+.pagedjs_pages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: calc(14px / var(--seed-proofs-zoom, 0.2));
+  padding: calc(12px / var(--seed-proofs-zoom, 0.2));
+}
+.pagedjs_page {
+  position: relative;
+  margin-bottom: calc(22px / var(--seed-proofs-zoom, 0.2));
+  cursor: pointer;
+}
+.pagedjs_page::after {
+  content: counter(page);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font: calc(12px / var(--seed-proofs-zoom, 0.2)) / 1.5 system-ui, sans-serif;
+  color: #556;
+}`;
+
+  function applyProofsChrome(): void {
+    const iframeDoc = previewIframe?.contentDocument;
+    if (!iframeDoc) return;
+    const pages = iframeDoc.querySelector<HTMLElement>('.pagedjs_pages');
+    const firstPage = iframeDoc.querySelector<HTMLElement>('.pagedjs_page');
+    if (!pages || !firstPage) return;
+
+    pages.style.removeProperty('zoom');
+    const pageWidth = firstPage.offsetWidth;
+    if (!pageWidth) return;
+
+    if (!iframeDoc.querySelector('style[data-seed-proofs]')) {
+      const style = iframeDoc.createElement('style');
+      style.setAttribute('data-seed-proofs', '');
+      style.textContent = PROOFS_CSS;
+      iframeDoc.head.appendChild(style);
+    }
+
+    const zoom = Math.min(1, PROOFS_TARGET_PX / pageWidth);
+    pages.style.setProperty('--seed-proofs-zoom', String(zoom));
+    pages.style.setProperty('zoom', String(zoom));
+
+    // Click a thumbnail → open the Print view landed on that page (the
+    // requested page wins over the continuity computation in writePagedDoc).
+    iframeDoc.querySelectorAll<HTMLElement>('.pagedjs_page').forEach((page, index) => {
+      if (page.dataset.seedProofsClick) return;
+      page.dataset.seedProofsClick = '1';
+      page.addEventListener('click', () => {
+        requestedPrintPage = index;
+        selectedDevice.current = 'print';
+      });
+    });
+  }
+
   function fitPrintToWidth(): void {
     const iframeDoc = previewIframe?.contentDocument;
     if (!iframeDoc) return;
@@ -2230,7 +2319,8 @@
 
   onMount(() => {
     // Print and READ.html previews are HTTP-only; never start on them under file://.
-    if (selectedDevice.current === 'print' && !canPaginate) selectedDevice.current = 'desktop';
+    if (engineOfDevice(selectedDevice.current) === 'paged' && !canPaginate)
+      selectedDevice.current = 'desktop';
     if (selectedDevice.current === 'read' && !canReadPreview) selectedDevice.current = 'desktop';
 
     // Initialize with default device
@@ -2849,7 +2939,7 @@
             {/if}
           </div>
         {/if}
-        {#if printPaginating && selectedDevice.current === 'print'}
+        {#if printPaginating && engineOfDevice(selectedDevice.current) === 'paged'}
           <div class="print-paginating" role="status">
             <div class="status-spinner"></div>
             <span>{$t('Paginating…')}</span>
