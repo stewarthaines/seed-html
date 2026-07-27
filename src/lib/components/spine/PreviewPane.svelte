@@ -1829,29 +1829,40 @@
   // Proofs chrome — injected AFTER pagination (like the folio seeding) so the
   // Paged.js polisher never processes it: `content: counter(page)` captions
   // evaluate natively in the browser, and pick up the absolute-folio seeding
-  // when the offset is known. Lengths divide by the zoom so gaps and captions
-  // hold their on-screen size while the pages shrink.
+  // when the offset is known.
+  //
+  // Scaling is transform-based, NOT `zoom`: each page goes inside an
+  // explicitly-sized wrapper cell (the layout size flex-wrap flows) and is
+  // transform-scaled within it. `zoom` is not interoperable around Paged.js's
+  // absolutely-positioned page internals — WebKit reflows the content and
+  // leaves the margin boxes unscaled instead of miniaturizing uniformly.
   const PROOFS_TARGET_PX = 150; // thumb width; columns fall out of pane width
   const PROOFS_CSS = `
 .pagedjs_pages {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: calc(14px / var(--seed-proofs-zoom, 0.2));
-  padding: calc(12px / var(--seed-proofs-zoom, 0.2));
+  gap: 14px;
+  padding: 12px;
 }
-.pagedjs_page {
+.seed-proofs-cell {
   position: relative;
-  margin-bottom: calc(22px / var(--seed-proofs-zoom, 0.2));
   cursor: pointer;
+  overflow: visible;
 }
-.pagedjs_page::after {
+.seed-proofs-cell .pagedjs_page {
+  position: relative;
+  margin: 0;
+  transform-origin: top left;
+}
+.seed-proofs-cell .pagedjs_page::after {
   content: counter(page);
   position: absolute;
   top: 100%;
   left: 0;
   right: 0;
   text-align: center;
+  /* Counteract the thumb scale so the caption renders at ~12px on screen. */
   font: calc(12px / var(--seed-proofs-zoom, 0.2)) / 1.5 system-ui, sans-serif;
   color: #556;
 }`;
@@ -1863,9 +1874,9 @@
     const firstPage = iframeDoc.querySelector<HTMLElement>('.pagedjs_page');
     if (!pages || !firstPage) return;
 
-    pages.style.removeProperty('zoom');
     const pageWidth = firstPage.offsetWidth;
-    if (!pageWidth) return;
+    const pageHeight = firstPage.offsetHeight;
+    if (!pageWidth || !pageHeight) return;
 
     if (!iframeDoc.querySelector('style[data-seed-proofs]')) {
       const style = iframeDoc.createElement('style');
@@ -1876,17 +1887,24 @@
 
     const zoom = Math.min(1, PROOFS_TARGET_PX / pageWidth);
     pages.style.setProperty('--seed-proofs-zoom', String(zoom));
-    pages.style.setProperty('zoom', String(zoom));
 
-    // Click a thumbnail → open the Print view landed on that page (the
-    // requested page wins over the continuity computation in writePagedDoc).
+    // Wrap each page in a cell sized to the scaled thumb (plus caption room);
+    // the cell is also the click target → Print view landed on that page.
     iframeDoc.querySelectorAll<HTMLElement>('.pagedjs_page').forEach((page, index) => {
-      if (page.dataset.seedProofsClick) return;
-      page.dataset.seedProofsClick = '1';
-      page.addEventListener('click', () => {
-        requestedPrintPage = index;
-        selectedDevice.current = 'print';
-      });
+      let cell = page.parentElement;
+      if (!cell || !cell.classList.contains('seed-proofs-cell')) {
+        cell = iframeDoc.createElement('div');
+        cell.className = 'seed-proofs-cell';
+        page.replaceWith(cell);
+        cell.appendChild(page);
+        cell.addEventListener('click', () => {
+          requestedPrintPage = index;
+          selectedDevice.current = 'print';
+        });
+      }
+      cell.style.width = `${Math.round(pageWidth * zoom)}px`;
+      cell.style.height = `${Math.round(pageHeight * zoom) + 20}px`;
+      page.style.transform = `scale(${zoom})`;
     });
   }
 
