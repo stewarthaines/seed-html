@@ -184,6 +184,15 @@ export class WorkspaceService {
     { opfMtime: number; info?: WorkspaceInfo; rowMeta?: CachedRowMeta; thumb?: string }
   >();
 
+  // Parsed-workspace cache, validated by OPF mtime like summaryCache: any OPF
+  // write — this service's or an out-of-band one — changes the mtime and misses.
+  // The spine editor calls loadWorkspace on every debounced render; on a large
+  // manifest the enumeration + read + XML parse it skips is 10–20ms/keystroke.
+  // Entries are cloned on store AND on hit: callers may mutate the returned
+  // state in place (updateMetadata does), and a shared reference would poison
+  // every later load.
+  private workspaceCache = new Map<string, { opfMtime: number; workspace: WorkspaceState }>();
+
   constructor(private fileStorage: FileStorageAPI) {
     this.extensionManager = new ExtensionManager(fileStorage);
   }
@@ -268,11 +277,13 @@ export class WorkspaceService {
     if (id) {
       this.pathInfoCache.delete(id);
       this.summaryCache.delete(id);
+      this.workspaceCache.delete(id);
       removeEntry(id);
     } else {
       pruneEntries([]); // removes every persistent entry
       this.pathInfoCache.clear();
       this.summaryCache.clear();
+      this.workspaceCache.clear();
     }
   }
 
@@ -392,6 +403,7 @@ export class WorkspaceService {
     // Write updated OPF
     const opfXML = OPFUtils.generateOPFXML(updatedOPF);
     await this.fileStorage.writeTextFile(workspaceId, workspace.pathInfo.rootfilePath, opfXML);
+    this.workspaceCache.delete(workspaceId);
 
     // Return updated workspace state
     return {
@@ -405,6 +417,25 @@ export class WorkspaceService {
    */
   async loadWorkspace(id: string): Promise<WorkspaceState> {
     try {
+      // Serve from the mtime-validated cache first: a hit skips the workspace
+      // enumeration, the OPF read, and the XML parse. getFileInfo succeeding
+      // doubles as the existence check on this path; any failure falls through
+      // to the full load (which raises the proper error).
+      const cachedEntry = this.workspaceCache.get(id);
+      if (cachedEntry) {
+        try {
+          const pathInfo = await this.getWorkspacePathInfo(id);
+          const mtime = (
+            await this.fileStorage.getFileInfo(id, pathInfo.rootfilePath)
+          ).lastModified.getTime();
+          if (mtime !== 0 && mtime === cachedEntry.opfMtime) {
+            return structuredClone(cachedEntry.workspace);
+          }
+        } catch {
+          // Stat failed (workspace or OPF gone?) — take the full load path.
+        }
+      }
+
       // Check if workspace exists
       const workspaces = await this.fileStorage.listWorkspaces();
       if (!workspaces.includes(id)) {
@@ -413,6 +444,18 @@ export class WorkspaceService {
 
       // Get workspace path info
       const pathInfo = await this.getWorkspacePathInfo(id);
+
+      // Stat BEFORE reading: if a write lands between the stat and the read we
+      // cache newer content under the older mtime, and the next load simply
+      // misses — never the reverse (stale content under a fresh mtime).
+      let opfMtime = 0;
+      try {
+        opfMtime = (
+          await this.fileStorage.getFileInfo(id, pathInfo.rootfilePath)
+        ).lastModified.getTime();
+      } catch {
+        // Leave 0 → this load isn't cached.
+      }
 
       // Load and parse OPF
       const opfContent = await this.fileStorage.readTextFile(id, pathInfo.rootfilePath);
@@ -427,11 +470,15 @@ export class WorkspaceService {
         );
       }
 
-      return {
+      const workspace: WorkspaceState = {
         id,
         opf,
         pathInfo,
       };
+      if (opfMtime !== 0) {
+        this.workspaceCache.set(id, { opfMtime, workspace: structuredClone(workspace) });
+      }
+      return workspace;
     } catch (error) {
       if (error instanceof WorkspaceServiceError) {
         throw error;
@@ -454,6 +501,10 @@ export class WorkspaceService {
     // Generate and save OPF
     const opfXML = OPFUtils.generateOPFXML(updatedWorkspace.opf);
     await this.fileStorage.writeTextFile(workspace.id, workspace.pathInfo.rootfilePath, opfXML);
+
+    // The mtime check would miss anyway; dropping the entry also covers
+    // same-millisecond write sequences the mtime can't distinguish.
+    this.workspaceCache.delete(workspace.id);
 
     return updatedWorkspace;
   }
