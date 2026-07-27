@@ -85,6 +85,7 @@
     advancedMode = false,
     onSavePreviewData = undefined,
     getPagedStartPage = undefined,
+    spineNeighbors = undefined,
   }: {
     xhtmlContent?: string;
     isTransforming?: boolean;
@@ -103,6 +104,9 @@
      *  null when unknown (an earlier chapter not yet previewed). Drives the
      *  paged preview's absolute folios; absent → relative 1-based folios. */
     getPagedStartPage?: ((idref: string) => Promise<number | null>) | undefined;
+    /** Spine neighbors of the previewed chapter, for the header's previous/next
+     *  arrows (null at either end). Navigation goes through onNavigate. */
+    spineNeighbors?: { prev: string | null; next: string | null } | undefined;
     /** Generate a PDF of this one chapter. Provided only over http: (Paged.js needs
      *  the origin); when set, the PDF device shows a "Chapter PDF" footer. */
     onGeneratePdf?: (() => void) | undefined;
@@ -138,7 +142,6 @@
   // The generated content-document filename for the current chapter (e.g.
   // chapter01.xhtml), surfaced next to the Source toggle so authors see the real
   // rendered file. Spine items render to `<id>.xhtml`.
-  const renderedFilename = $derived(chapterId ? `${chapterId}.xhtml` : '');
 
   /** Format the transform's execution time for the status indicator. */
   function formatExecutionTime(ms: number): string {
@@ -2380,11 +2383,31 @@
          dropdown right-floats via margin-inline-start:auto. -->
     <div class="header-main">
       <div class="preview-title">
-        <!-- Rendered content-document filename for the current chapter. -->
-        {#if renderedFilename}
-          <span class="rendered-filename" title={$t('Rendered chapter file')}>
-            {renderedFilename}
-          </span>
+        <!-- Previous/next chapter navigation (replaces the filename readout —
+             the chapter's identity is already in the sidebar and editor). -->
+        {#if chapterId}
+          <div class="chapter-nav">
+            <button
+              type="button"
+              class="btn btn-icon chapter-nav-btn"
+              disabled={!spineNeighbors?.prev}
+              onclick={() => spineNeighbors?.prev && onNavigate?.(spineNeighbors.prev)}
+              aria-label={$t('Previous chapter')}
+              title={spineNeighbors?.prev ?? undefined}
+            >
+              <CaretLeft size={16} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              class="btn btn-icon chapter-nav-btn"
+              disabled={!spineNeighbors?.next}
+              onclick={() => spineNeighbors?.next && onNavigate?.(spineNeighbors.next)}
+              aria-label={$t('Next chapter')}
+              title={spineNeighbors?.next ?? undefined}
+            >
+              <CaretRight size={16} aria-hidden="true" />
+            </button>
+          </div>
         {/if}
 
         <!-- Transform status: failures stay persistently visible in the header. The
@@ -3125,18 +3148,17 @@
     color: var(--color-text-primary);
   }
 
-  /* The rendered chapter filename, sitting left of the Source toggle. As a
-     flex item it may shrink and ellipsize rather than force the header wider
-     than the pane. */
-  .rendered-filename {
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    font-weight: var(--font-normal);
-    color: var(--color-text-secondary);
-    white-space: nowrap;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  /* Previous/next chapter arrows, sitting where the filename readout was. */
+  .chapter-nav {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex: none;
+  }
+
+  .chapter-nav-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
   }
 
   /* Right-float the device dropdown (replaces the old space-between of the

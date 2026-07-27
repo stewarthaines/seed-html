@@ -303,6 +303,20 @@
   };
 
   // Handle navigation anchor clicks
+  // Previous/next chapter for the preview header's navigation arrows, in spine
+  // order around the chapter currently previewed. Null at either end.
+  const spineNeighbors = $derived.by(() => {
+    const spine = currentWorkspaceState?.opf?.spine;
+    const id = spinePreviewData.spineItemId;
+    if (!spine || !id) return { prev: null, next: null };
+    const index = spine.findIndex(item => item.idref === id);
+    if (index === -1) return { prev: null, next: null };
+    return {
+      prev: spine[index - 1]?.idref ?? null,
+      next: spine[index + 1]?.idref ?? null,
+    };
+  });
+
   function handleNavigationClick(chapterId: string) {
     // Find manifest item by matching href
     const manifestItem = currentWorkspaceState?.opf?.manifest?.find(item =>
@@ -1800,6 +1814,7 @@
             onGeneratePdf={canGeneratePdf ? handleGenerateChapterPdf : undefined}
             onSavePreviewData={handleSavePreviewData}
             {getPagedStartPage}
+            {spineNeighbors}
             previewHead={spinePreviewData.previewHead}
             extensionPreviewHead={spinePreviewData.extensionPreviewHead}
             previewAutoUpdate={appState?.epubSettings?.preview?.autoUpdate}
