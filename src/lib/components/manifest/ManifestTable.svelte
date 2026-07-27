@@ -5,6 +5,7 @@
   import { SEED_HTML_NAME } from '../../epub/seed-html.js';
   import type { ManifestItem, SourceItem, ValidationResult } from '../../manifest/types';
   import { persisted, type Codec } from '../../state/persisted.svelte.js';
+  import { rangeIds } from '../../spine/chapters-reorder.js';
   import { X, CaretRight } from 'phosphor-svelte';
 
   type SortableFields = 'href' | 'size';
@@ -18,8 +19,10 @@
     validationErrors = [],
     selectedItem = null,
     selectedItemType = null,
+    selectedIds = new Set<string>(),
     loading = false,
     onItemSelect,
+    onMultiSelectChange,
     onItemDelete,
     onFileUpload,
   }: {
@@ -34,11 +37,14 @@
     validationErrors?: ValidationResult[];
     selectedItem?: ManifestItem | SourceItem | null;
     selectedItemType?: 'manifest' | 'source' | 'opf' | null;
+    /** Multi-selected manifest item ids (batch operations). Parent-owned. */
+    selectedIds?: Set<string>;
     loading?: boolean;
     onItemSelect?: (detail: {
       item: ManifestItem | SourceItem;
       type: 'manifest' | 'source' | 'opf';
     }) => void;
+    onMultiSelectChange?: (ids: Set<string>) => void;
     onItemDelete?: (detail: { itemId: string }) => void;
     onFileUpload?: (detail: { files: FileList }) => void;
   } = $props();
@@ -269,7 +275,29 @@
     }
   };
 
+  // --- Multi-select (manifest rows only; XHTML chapters are excluded — their
+  // paths belong to the spine/chapter system, not batch moves) ----------------
+  let anchorId = $state<string | null>(null);
+
+  const canMultiSelect = (
+    item: ManifestItem | SourceItem,
+    type: 'manifest' | 'source' | 'opf' | 'source-zip' | 'seed-html'
+  ): boolean => type === 'manifest' && (item as ManifestItem).mediaType !== 'application/xhtml+xml';
+
+  // Range-eligible ids in on-screen order (collapsed groups excluded, so a
+  // shift-range never silently sweeps up rows the user cannot see).
+  const visibleMultiIds = $derived(
+    groups
+      .filter(group => forceExpand || !collapsedGroups.current.has(group.key))
+      .flatMap(group => group.items)
+      .filter(item => item._type === 'manifest')
+      .map(item => item as ManifestItem & { _type: 'manifest' })
+      .filter(item => item.mediaType !== 'application/xhtml+xml')
+      .map(item => item.id)
+  );
+
   const handleRowClick = (
+    event: MouseEvent | KeyboardEvent,
     item: ManifestItem | SourceItem | any,
     type: 'manifest' | 'source' | 'opf' | 'source-zip' | 'seed-html'
   ) => {
@@ -277,6 +305,37 @@
     if (type === 'seed-html') return;
     // Treat source-zip as 'source' for compatibility with parent component
     const dispatchType = type === 'source-zip' ? 'source' : type;
+
+    if (!canMultiSelect(item, type)) {
+      anchorId = null;
+      onMultiSelectChange?.(new Set());
+      onItemSelect?.({ item, type: dispatchType });
+      return;
+    }
+
+    const id = (item as ManifestItem).id;
+    const toggle = event.metaKey || event.ctrlKey;
+    if (event.shiftKey && anchorId !== null) {
+      const a = visibleMultiIds.indexOf(anchorId);
+      const b = visibleMultiIds.indexOf(id);
+      if (a !== -1 && b !== -1) {
+        onMultiSelectChange?.(new Set(rangeIds(visibleMultiIds, a, b)));
+        onItemSelect?.({ item, type: dispatchType });
+        return;
+      }
+      // The anchor is no longer visible — fall through to a plain select.
+    }
+    if (toggle) {
+      const next = new Set(selectedIds);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      anchorId = id;
+      onMultiSelectChange?.(next);
+      onItemSelect?.({ item, type: dispatchType });
+      return;
+    }
+    anchorId = id;
+    onMultiSelectChange?.(new Set([id]));
     onItemSelect?.({ item, type: dispatchType });
   };
 
@@ -287,7 +346,7 @@
   ) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
-      handleRowClick(item, type);
+      handleRowClick(event, item, type);
     }
   };
 
@@ -300,6 +359,13 @@
     item: ManifestItem | SourceItem | any,
     type: 'manifest' | 'source' | 'opf' | 'source-zip' | 'seed-html'
   ) => {
+    // An active multi-selection is the sole source of truth for manifest-row
+    // highlighting — falling through to the single-selection match would leave
+    // a cmd-click-deselected row lit (it is still the "last clicked" item).
+    if (type === 'manifest' && selectedIds.size > 0) {
+      return selectedIds.has((item as ManifestItem).id);
+    }
+
     if (!selectedItem) return false;
     // SEED.html is never selectable.
     if (type === 'seed-html') return false;
@@ -431,7 +497,7 @@
         {/if}
       </div>
     {:else}
-      <table class="manifest-table">
+      <table class="manifest-table" role="grid" aria-multiselectable="true">
         <thead>
           <tr>
             <th scope="col">
@@ -497,8 +563,13 @@
                   class:opf-item={itemType === 'opf'}
                   tabindex="0"
                   aria-selected={isSelected}
-                  onclick={() => handleRowClick(item, itemType)}
+                  onclick={event => handleRowClick(event, item, itemType)}
                   onkeydown={event => handleRowKeyDown(event, item, itemType)}
+                  onmousedown={event => {
+                    // Shift-click extends the selection; stop it painting a
+                    // text selection across rows at the same time.
+                    if (event.shiftKey) event.preventDefault();
+                  }}
                 >
                   <td class="href-cell">
                     <span class="item-href" dir="ltr">

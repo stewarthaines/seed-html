@@ -47,6 +47,7 @@
   import { SpineService } from './lib/services/spine/spine.service.js';
   import { applyPatchset } from './lib/track-changes/patchset-apply.js';
   import type { ResolvedChange } from './lib/track-changes/types.js';
+  import type { ManifestItem } from './lib/manifest/types';
   import { MetadataService } from './lib/services/metadata/metadata.service.js';
   import { PublishService } from './lib/services/publish/publish.service.js';
   import { BlobURLManager } from './lib/blob-url/blob-url-manager.js';
@@ -220,6 +221,8 @@
   // Manifest item selection state
   let selectedManifestItem = $state<any>(null);
   let selectedManifestItemType = $state<'manifest' | 'source' | 'opf' | null>(null);
+  // Multi-selected manifest items (batch move in the details pane).
+  let selectedManifestItems = $state<ManifestItem[]>([]);
   // Bumped to make the manifest table reload its SOURCE file list after a
   // SOURCE/data/ file is deleted (such deletes don't change content.opf).
   let manifestRefreshToken = $state(0);
@@ -255,6 +258,16 @@
   const handleManifestItemSelect = (event: { item: any; type: 'manifest' | 'source' | 'opf' }) => {
     selectedManifestItem = event.item;
     selectedManifestItemType = event.type;
+  };
+
+  // Batch moves leave stale cached blob URLs behind — the moved files' old
+  // locations, and rewritten stylesheets whose cached blobs still carry the
+  // old url() spellings.
+  const handleManifestFilesMoved = (staleHrefs: string[]) => {
+    if (!blobURLManager) return;
+    for (const href of staleHrefs) {
+      blobURLManager.revokeFileBlob(href);
+    }
   };
 
   // Handle metadata changes - refresh workspace list when author/title changes
@@ -1592,6 +1605,7 @@
             readOnly={structureLocked}
             refreshToken={manifestRefreshToken}
             onItemSelect={handleManifestItemSelect}
+            onMultiSelect={items => (selectedManifestItems = items)}
             onWorkspaceUpdate={updatedWorkspace => {
               if (appState) appState.workspace = updatedWorkspace;
             }}
@@ -1713,11 +1727,13 @@
         <ManifestPreview
           selectedItem={selectedManifestItem}
           selectedItemType={selectedManifestItemType}
+          selectedItems={selectedManifestItems}
           workspace={currentWorkspaceState}
           {workspaceService}
           readOnly={structureLocked}
           onItemDelete={handleManifestItemDelete}
           onSourceDelete={handleSourceFileDelete}
+          onFilesMoved={handleManifestFilesMoved}
           onWorkspaceUpdate={updatedWorkspace => {
             if (appState) appState.workspace = updatedWorkspace;
           }}

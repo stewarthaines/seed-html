@@ -35,6 +35,7 @@
     readOnly = false,
     refreshToken = 0,
     onItemSelect,
+    onMultiSelect,
     onWorkspaceUpdate,
   }: {
     workspace?: WorkspaceState | null;
@@ -48,6 +49,7 @@
       item: ManifestItem | SourceItem | any;
       type: 'manifest' | 'source' | 'opf';
     }) => void;
+    onMultiSelect?: (items: ManifestItem[]) => void;
     onWorkspaceUpdate?: (workspace: WorkspaceState) => void;
   } = $props();
 
@@ -119,6 +121,20 @@
 
       manifestItems = manifestItemsWithSizes;
 
+      // Prune multi-selection of ids that no longer exist (item deleted or
+      // manifest replaced); ids survive moves, so a batch move keeps its
+      // selection.
+      if (multiSelectedIds.size > 0) {
+        const present = new Set(manifestItems.map(item => item.id));
+        const kept = [...multiSelectedIds].filter(id => present.has(id));
+        if (kept.length !== multiSelectedIds.size) {
+          handleMultiSelectChange(new Set(kept));
+        } else {
+          // Same ids, but the items may carry new hrefs — refresh the parent.
+          onMultiSelect?.(manifestItems.filter(item => multiSelectedIds.has(item.id)));
+        }
+      }
+
       // Load SOURCE items if advanced mode is enabled
       if (advancedMode) {
         try {
@@ -156,6 +172,15 @@
       item: detail.item,
       type: detail.type,
     });
+  };
+
+  // Multi-selection (batch moves): ids owned here, resolved to items for the
+  // parent so the details pane can act on them.
+  let multiSelectedIds = $state<Set<string>>(new Set());
+
+  const handleMultiSelectChange = (ids: Set<string>) => {
+    multiSelectedIds = ids;
+    onMultiSelect?.(manifestItems.filter(item => ids.has(item.id)));
   };
 
   const handleItemDelete = async (detail: { itemId: string }) => {
@@ -473,7 +498,9 @@
     {validationErrors}
     {selectedItem}
     {selectedItemType}
+    selectedIds={multiSelectedIds}
     onItemSelect={handleItemSelection}
+    onMultiSelectChange={handleMultiSelectChange}
     onItemDelete={handleItemDelete}
     onFileUpload={handleFileUpload}
   />
