@@ -1030,6 +1030,34 @@
     }
   };
 
+  /**
+   * Book-absolute start page for a chapter, from the app-owned pagemaps
+   * (SOURCE/data/preview/<idref>/pagemap.json). Honest-offset walk: the offset
+   * is only known when EVERY preceding linear chapter has a pagemap — otherwise
+   * null, and the paged preview keeps its relative folios rather than showing a
+   * wrong number. Feeds PreviewPane's post-pagination folio seeding.
+   */
+  const getPagedStartPage = async (idref: string): Promise<number | null> => {
+    const ws = appState?.workspace;
+    if (!ws) return null;
+    let acc = 0;
+    for (const item of ws.opf.spine) {
+      if (item.linear === false) continue;
+      if (item.idref === idref) return acc + 1;
+      const path = previewDataPath(item.idref, 'pagemap');
+      if (!path) return null;
+      try {
+        const map = JSON.parse(await fileStorage.readTextFile(ws.id, path));
+        const count = Number(map?.pageCount);
+        if (!Number.isFinite(count) || count <= 0) return null;
+        acc += count;
+      } catch {
+        return null; // an earlier chapter has no pagemap yet — offset unknown
+      }
+    }
+    return null; // idref not in the spine
+  };
+
   // Download a book-carrying HTML artifact with the shared size-honest toast
   // (base64 costs +33%; above mail-attachment size, nudge toward links).
   const downloadWrappedHtml = (wrapped: { blob: Blob; filename: string }) => {
@@ -1771,6 +1799,7 @@
             projectIdentifier={currentWorkspaceState?.opf?.metadata?.identifier}
             onGeneratePdf={canGeneratePdf ? handleGenerateChapterPdf : undefined}
             onSavePreviewData={handleSavePreviewData}
+            {getPagedStartPage}
             previewHead={spinePreviewData.previewHead}
             extensionPreviewHead={spinePreviewData.extensionPreviewHead}
             previewAutoUpdate={appState?.epubSettings?.preview?.autoUpdate}

@@ -84,6 +84,7 @@
     renditionViewport = undefined,
     advancedMode = false,
     onSavePreviewData = undefined,
+    getPagedStartPage = undefined,
   }: {
     xhtmlContent?: string;
     isTransforming?: boolean;
@@ -98,6 +99,10 @@
     chapterId?: string | null;
     /** Project print settings, applied to the Paged.js print preview's @page. */
     printSettings?: PrintSettings;
+    /** Book-absolute start page for a chapter (from the app-owned pagemaps), or
+     *  null when unknown (an earlier chapter not yet previewed). Drives the
+     *  paged preview's absolute folios; absent → relative 1-based folios. */
+    getPagedStartPage?: ((idref: string) => Promise<number | null>) | undefined;
     /** Generate a PDF of this one chapter. Provided only over http: (Paged.js needs
      *  the origin); when set, the PDF device shows a "Chapter PDF" footer. */
     onGeneratePdf?: (() => void) | undefined;
@@ -1265,6 +1270,7 @@
         target?.scrollIntoView({ behavior: 'instant', block: 'start' });
         pendingPrintPage = null;
       }
+      void injectAbsoluteFolios();
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
@@ -1505,6 +1511,36 @@
     renderedDevice = selectedDevice.current;
     renderedHead = currentWantHead();
     previewStale = false;
+  }
+
+  /**
+   * Absolute folios: after pagination, seed Paged.js's page counter with the
+   * chapter's book-absolute start page (from the app-owned pagemaps, via the
+   * getPagedStartPage prop). Post-pagination injection is the ONLY working
+   * mechanism — Paged.js rewrites author CSS, so counter rules inside the
+   * document are intercepted (verified against the vendored polyfill; see the
+   * paged-preview notes). `data-page-number` stays physical, so the pagemap
+   * capture is unaffected. An unknown offset (an earlier chapter not yet
+   * previewed) keeps the relative 1-based folios — honest, never wrong.
+   */
+  async function injectAbsoluteFolios(): Promise<void> {
+    if (!getPagedStartPage || !chapterId) return;
+    const forChapter = chapterId;
+    try {
+      const start = await getPagedStartPage(forChapter);
+      if (!start || start <= 1) return;
+      // Still the same chapter's paged render? A switch mid-await replaces the
+      // document, and a stale injection would number the wrong chapter.
+      if (renderedChapterId !== forChapter || renderedType !== 'pdf') return;
+      const doc = previewIframe?.contentDocument;
+      if (!doc?.querySelector('.pagedjs_pages')) return;
+      const style = doc.createElement('style');
+      style.setAttribute('data-seed-absolute-folios', '');
+      style.textContent = `.pagedjs_pages { counter-reset: page ${start - 1}; }`;
+      doc.head.appendChild(style);
+    } catch {
+      // Folio seeding is cosmetic — never break the preview over it.
+    }
   }
 
   /**
