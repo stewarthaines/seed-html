@@ -183,10 +183,17 @@
 
     try {
       isLoading = true;
+      // Insert after the selected chapter when there is one; otherwise append.
+      let insertIndex: number | undefined;
+      if (selectedItemId) {
+        const idx = spineItems.findIndex(item => item.id === selectedItemId);
+        if (idx >= 0) insertIndex = idx + 1;
+      }
       const result = await spineService.addChapter(workspace, {
         title: 'New Chapter',
         linear: true,
         createSourceFile: true,
+        insertIndex,
       });
 
       // Update workspace state
