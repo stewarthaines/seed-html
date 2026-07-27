@@ -55,7 +55,8 @@
   const showPreviewPane = $derived(
     sidebar.activeSection !== 'workspace' &&
       sidebar.activeSection !== 'settings' &&
-      sidebar.activeSection !== 'publish'
+      sidebar.activeSection !== 'publish' &&
+      sidebar.activeSection !== 'chapters'
   );
 
   // Spine view only: the preview pane collapses to a slim rail (writing mode).

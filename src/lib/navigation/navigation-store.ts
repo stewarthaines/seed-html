@@ -38,6 +38,7 @@ const VALID_VIEW_TYPES: ViewType[] = [
   'manifest',
   'navigation',
   'spine',
+  'chapters',
   'publish',
   'settings',
 ];

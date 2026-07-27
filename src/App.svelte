@@ -13,6 +13,7 @@
   import WorkspaceView from './lib/navigation/views/WorkspaceView.svelte';
   import MetadataEditor from './lib/components/metadata/MetadataEditor.svelte';
   import SpineView from './lib/navigation/views/SpineView.svelte';
+  import ChaptersView from './lib/navigation/views/ChaptersView.svelte';
   import PublishView from './lib/navigation/views/PublishView.svelte';
   import SettingsView from './lib/navigation/views/SettingsView.svelte';
   import {
@@ -181,6 +182,7 @@
         manifest: $t('Manifest'),
         navigation: $t('Navigation'),
         spine: $t('Spine'),
+        chapters: $t('Chapters'),
         publish: $t('Publish'),
         settings: $t('Settings'),
       } as Record<string, string>
@@ -1628,6 +1630,21 @@
             advancedMode={advancedMode.current}
             {audioPluginUrl}
             onPreviewUpdate={handleSpinePreviewUpdate}
+            onWorkspaceUpdate={updatedWorkspace => {
+              if (appState) appState.workspace = updatedWorkspace;
+            }}
+          />
+        {:else}
+          <div class="view-loading">{$t('Loading project…')}</div>
+        {/if}
+      {:else if currentView === 'chapters'}
+        {#if initialized && currentWorkspaceState && appState}
+          <ChaptersView
+            workspace={currentWorkspaceState}
+            {workspaceService}
+            {spineService}
+            selectedItemId={selectedSpineItemId ?? null}
+            readOnly={structureLocked}
             onWorkspaceUpdate={updatedWorkspace => {
               if (appState) appState.workspace = updatedWorkspace;
             }}

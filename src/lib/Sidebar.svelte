@@ -13,17 +13,12 @@
     ListBullets,
     BookOpen,
     Plus,
-    FileArrowUp,
-    FolderSimplePlus,
-    ArrowsClockwise,
     CaretLeft,
     CaretRight,
     CaretDown,
     Lock,
     ToggleRight,
   } from 'phosphor-svelte';
-  import { isFolderSyncSupported } from './folder-sync/capability.js';
-  import { getFolderSyncStatus, type FolderSyncStatus } from './folder-sync/handle-store.js';
 
   // Props
   interface Props {
@@ -180,65 +175,6 @@
       bubbles: true,
     });
     window.dispatchEvent(event);
-  }
-
-  // Import plain-text files as chapters (one chapter per file). The hidden input
-  // is triggered by the file-arrow-up button; SpineSidebar handles the creation.
-  let textFileInput = $state<HTMLInputElement | null>(null);
-
-  function handleImportTextClick() {
-    textFileInput?.click();
-  }
-
-  function handleTextFilesSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      window.dispatchEvent(
-        new CustomEvent('import-text-chapters', {
-          detail: { files: Array.from(input.files) },
-          bubbles: true,
-        })
-      );
-      input.value = '';
-    }
-  }
-
-  // Folder sync (process/FOLDER_SYNC.md): the button is always rendered,
-  // enabled only where showDirectoryPicker exists; its label follows the
-  // stored handle's state. SpineSidebar orchestrates the actual flow.
-  const folderSyncSupported = isFolderSyncSupported();
-  let folderSyncStatus = $state<FolderSyncStatus>('not-linked');
-  $effect(() => {
-    const workspaceId = currentWorkspace?.id as string | undefined;
-    if (!folderSyncSupported || !workspaceId) return;
-    const refresh = () => {
-      void getFolderSyncStatus(workspaceId).then(status => (folderSyncStatus = status));
-    };
-    refresh();
-    window.addEventListener('seed:folder-sync-changed', refresh);
-    return () => window.removeEventListener('seed:folder-sync-changed', refresh);
-  });
-
-  const folderSyncLabel = $derived(
-    !folderSyncSupported
-      ? $t('Link folder…')
-      : folderSyncStatus === 'not-linked'
-        ? $t('Link folder…')
-        : folderSyncStatus === 'connected'
-          ? $t('Sync folder')
-          : $t('Reconnect folder')
-  );
-  const folderSyncTitle = $derived(
-    folderSyncSupported
-      ? folderSyncLabel
-      : $t(
-          'Not available in this browser — linking a folder needs the File System Access API (Chrome, Edge)'
-        )
-  );
-
-  function handleFolderSyncClick() {
-    if (!folderSyncSupported) return;
-    window.dispatchEvent(new CustomEvent('folder-sync-open'));
   }
 </script>
 
@@ -415,46 +351,21 @@
         {/if}
       {/each}
 
-      <!-- Chapters section header (non-clickable) -->
+      <!-- Chapters section header -->
       {#if hasWorkspace}
-        <input
-          bind:this={textFileInput}
-          type="file"
-          multiple
-          accept=".txt,.md,.markdown,text/plain"
-          class="visually-hidden-input"
-          onchange={handleTextFilesSelected}
-        />
         {#if isExpanded}
           <div class="spine-section-header workspace-title-section">
-            <span class="section-label">{spineSectionLabel}&nbsp;&nbsp;[ {chapterCount} ]</span>
+            <button
+              class="section-label section-label-button"
+              class:active={activeSection === 'chapters'}
+              onclick={() => setSidebarSection('chapters')}
+              aria-current={activeSection === 'chapters' ? 'page' : undefined}
+              title={$t('Manage chapter order')}
+            >
+              {spineSectionLabel}&nbsp;&nbsp;[ {chapterCount} ]
+            </button>
             {#if !readOnly}
               <div class="spine-header-actions">
-                <!-- aria-disabled (not disabled) keeps the button hoverable and
-                     focusable so the tooltip explaining WHY is reachable in the
-                     very browsers that lack the API. -->
-                <button
-                  class="append-button-nav"
-                  aria-disabled={!folderSyncSupported}
-                  class:unavailable={!folderSyncSupported}
-                  onclick={handleFolderSyncClick}
-                  aria-label={folderSyncLabel}
-                  title={folderSyncTitle}
-                >
-                  {#if folderSyncSupported && folderSyncStatus !== 'not-linked'}
-                    <ArrowsClockwise size={16} aria-hidden="true" />
-                  {:else}
-                    <FolderSimplePlus size={16} aria-hidden="true" />
-                  {/if}
-                </button>
-                <button
-                  class="append-button-nav"
-                  onclick={handleImportTextClick}
-                  aria-label={$t('Import text files as chapters')}
-                  title={$t('Import text files as chapters')}
-                >
-                  <FileArrowUp size={16} aria-hidden="true" />
-                </button>
                 <button
                   class="append-button-nav"
                   onclick={handleAppendItem}
@@ -643,15 +554,51 @@
     font-weight: var(--font-normal);
   }
 
+  /* The Chapters heading doubles as the entry to the dedicated ordering view.
+     It's the flex header's first child: it fills the row up to the + button and
+     stretches to the full 44px height so its hover fill reads as a full nav row.
+     Never wraps — the header is min-height 44px with no max, so a wrapped label
+     would grow the row and tip the sidebar into overflow. */
+  .section-label-button {
+    flex: 1;
+    align-self: stretch;
+    display: inline-flex;
+    align-items: center;
+    border: none;
+    background: transparent;
+    padding-inline: var(--space-2);
+    margin-inline-start: calc(-1 * var(--space-2));
+    color: inherit;
+    text-align: start;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    cursor: pointer;
+  }
+  .section-label-button.active {
+    color: var(--color-accent);
+    font-weight: var(--font-medium);
+  }
+  /* Solid azure fill on hover, matching the nav rows. Declared after .active so
+     it wins on the active Chapters section — otherwise azure text on the azure
+     fill would be invisible. */
+  .section-label-button:hover {
+    background: var(--color-hover-accent);
+    color: var(--color-on-accent);
+    font-weight: var(--font-medium);
+  }
+  .section-label-button:focus-visible {
+    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
+    outline-offset: calc(-1 * var(--focus-ring-offset));
+    z-index: 1;
+  }
+
   /* Import + append buttons sit together on the right (stacked when compact). */
   .spine-header-actions {
     display: flex;
     align-items: center;
     gap: var(--space-1);
-  }
-
-  .visually-hidden-input {
-    display: none;
   }
 
   /* Collapsed: a single centred append button, same height as every other row.
@@ -710,17 +657,6 @@
     outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
     outline-offset: var(--focus-ring-offset);
     z-index: 1;
-  }
-
-  /* Folder sync off-Chromium: dimmed but hoverable so the tooltip explains why. */
-  .append-button-nav.unavailable {
-    opacity: 0.45;
-    cursor: not-allowed;
-  }
-
-  .append-button-nav.unavailable:hover {
-    background: transparent;
-    color: var(--color-text-secondary);
   }
 
   .section-icon {

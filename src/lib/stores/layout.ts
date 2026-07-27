@@ -32,6 +32,7 @@ export type SidebarSection =
   | 'manifest'
   | 'navigation'
   | 'spine'
+  | 'chapters'
   | 'publish'
   | 'settings';
 
@@ -216,6 +217,7 @@ function isValidSidebarSection(value: string): value is SidebarSection {
     'manifest',
     'navigation',
     'spine',
+    'chapters',
     'publish',
     'settings',
   ];
