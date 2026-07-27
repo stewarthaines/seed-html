@@ -12,6 +12,22 @@ p:has(+ .fleuron) {
   page-break-after: avoid;
 }
 
+/* Paged.js (print preview / PDF export) resolves break-before:avoid at whole-
+   sibling granularity: when the ornament doesn't fit, it drags the ENTIRE
+   preceding block (a whole poem) onto the next page, leaving a half-empty
+   page. Relax the avoid for the paged context only; real reading-system
+   engines move just the break point, so they keep the cohesion rules. */
+@media print {
+  .fleuron {
+    break-before: auto;
+    page-break-before: auto;
+  }
+  p:has(+ .fleuron) {
+    break-after: auto;
+    page-break-after: auto;
+  }
+}
+
 .fleuron svg {
   width: 6em;
   margin: 1em auto 1em;
