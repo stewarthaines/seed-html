@@ -13,8 +13,8 @@ function transformText(text, idref) {
 /**
  * Djot filter: rewrite the SEED audio-clip directive into a playable span.
  *
- *   :clip[label]{src="Audio/a.mp3" begin="0:00:05.00" end="0:00:15.00"}
- *     → <span class="clip" data-src="Audio/a.mp3" data-begin="…" data-end="…">label</span>
+ *   :clip[label]{src="../Audio/a.mp3" begin="0:00:05.00" end="0:00:15.00"}
+ *     → <span class="clip" data-src="../Audio/a.mp3" data-begin="…" data-end="…">label</span>
  *
  * Djot requires the attribute values QUOTED (its bare values reject ':' '/' '.'),
  * so a djot project sets its audio clip template (Project Settings → EPUB) to:

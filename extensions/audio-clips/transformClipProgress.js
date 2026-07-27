@@ -67,13 +67,12 @@ async function transformDOM(htmlDocument, idref, ctx) {
 
   const clips = htmlDocument.querySelectorAll('span.clip[data-src]');
 
-  // The static playback element (see header). data-src is the OPF-relative
-  // href and chapters live one level below the OPF (Text/), so it resolves
-  // via '../' — unless it already carries a scheme (the authoring preview
-  // rewrites data-src to blob: URLs, which pass through).
+  // The static playback element (see header). data-src is chapter-relative
+  // ('../Audio/…') — the same convention as every other source reference —
+  // so it resolves directly against the chapter document, as do the blob:
+  // URLs the authoring preview rewrites it to.
   if (clips.length > 0 && !htmlDocument.querySelector('audio')) {
-    const src = clips[0].getAttribute('data-src');
-    const resolved = /^[a-z][a-z0-9+.-]*:/i.test(src) ? src : '../' + src;
+    const resolved = clips[0].getAttribute('data-src');
     const audio = htmlDocument.createElement('audio');
     audio.setAttribute('class', 'clip-audio');
     audio.setAttribute('preload', 'auto');

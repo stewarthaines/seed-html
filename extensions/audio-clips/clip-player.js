@@ -2,7 +2,7 @@
  * SEED audio-clips reading-system script.
  *
  * Plays the audio clips marked up as
- *   <span class="clip" data-src="Audio/a.mp3" data-begin="0:00:05.00" data-end="0:00:15.00">label</span>
+ *   <span class="clip" data-src="../Audio/a.mp3" data-begin="0:00:05.00" data-end="0:00:15.00">label</span>
  * (produced from the :clip directive by the Djot / MarkdownIt text transforms).
  *
  * Click — or Enter/Space, once the script has promoted the span to a button —
@@ -43,9 +43,10 @@
  *   small and seeks accurately. Books reports only 'maybe' support for
  *   audio/mpeg and audio/mp4 — mp3 and m4a — and both behave with CBR.
  *
- * data-src is the OPF-relative href and chapters live one level below the OPF
- * (Text/), so it resolves via '../' — except when it already carries a scheme:
- * the authoring preview rewrites data-src to a blob: URL, which passes through.
+ * data-src is chapter-relative ('../Audio/…'), the same convention as every
+ * other resource reference in source markup, so it resolves directly against
+ * the chapter document — as do the blob: URLs the authoring preview rewrites
+ * it to, and any http(s): remote.
  *
  * Progressive enhancement: without JavaScript the span is plain styled text
  * (clip.css keys its play affordance on the role attribute this script adds).
@@ -60,12 +61,6 @@
     return value.split(':').reduce(function (total, part) {
       return total * 60 + (parseFloat(part) || 0);
     }, 0);
-  }
-
-  // OPF-relative href → '../…' (chapters live in Text/); any URL that already
-  // carries a scheme (blob: in the preview, http(s): remote) passes through.
-  function resolveSrc(src) {
-    return /^[a-z][a-z0-9+.-]*:/i.test(src) ? src : '../' + src;
   }
 
   var audio = null; // THE page's one shared audio element (static markup)
@@ -126,7 +121,8 @@
   function play(span) {
     var el = ensureAudio();
     if (!el) return; // no static audio element — clips stay inert
-    var src = resolveSrc(span.getAttribute('data-src'));
+    // Chapter-relative (or blob:/http(s):) — resolves against the document.
+    var src = span.getAttribute('data-src');
     var begin = toSeconds(span.getAttribute('data-begin'));
     var end = toSeconds(span.getAttribute('data-end'));
     var rate = parseFloat(span.getAttribute('data-rate')) || 1;

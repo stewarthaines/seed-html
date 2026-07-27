@@ -383,6 +383,15 @@ describe('AudioClipService API Contract Tests', () => {
         label: 'Test',
       });
     });
+
+    test('parseClipDirective normalizes the chapter-relative quoted form to a manifest href', () => {
+      // The authored form (djot templates quote values; the directive carries
+      // the ../ hop like every other source reference); consumers get the
+      // plain manifest href back.
+      const directive = ':clip[Song]{src="../Audio/song.mp3" begin=0:00:01.00 end=0:00:02.00}';
+      const parsed = service.parseClipDirective(directive);
+      expect(parsed?.href).toBe('Audio/song.mp3');
+    });
   });
 
   describe('Contract: Clip Directive Formatting', () => {
@@ -401,7 +410,7 @@ describe('AudioClipService API Contract Tests', () => {
       );
 
       // CONTRACT: MUST use default template format
-      expect(result).toBe(':clip[]{src=Audio/chapter1.mp3 begin=0:01:23.67 end=0:01:53.67}');
+      expect(result).toBe(':clip[]{src=../Audio/chapter1.mp3 begin=0:01:23.67 end=0:01:53.67}');
     });
 
     test('formatClipDirective includes playback rate when not 1.0', () => {
@@ -419,7 +428,9 @@ describe('AudioClipService API Contract Tests', () => {
       );
 
       // CONTRACT: MUST include rate parameter when playback rate is not 1.0
-      expect(result).toBe(':clip[]{src=Audio/speech.mp3 begin=0:00:10.00 end=0:00:25.00 rate=1.5}');
+      expect(result).toBe(
+        ':clip[]{src=../Audio/speech.mp3 begin=0:00:10.00 end=0:00:25.00 rate=1.5}'
+      );
     });
 
     test('formatClipDirective supports custom templates', () => {
@@ -435,7 +446,7 @@ describe('AudioClipService API Contract Tests', () => {
 
       // CONTRACT: MUST support template placeholder replacement
       expect(result).toBe(
-        '<audio-clip src="Audio/music.mp3" begin="0:01:00.00" end="0:01:30.00"></audio-clip>'
+        '<audio-clip src="../Audio/music.mp3" begin="0:01:00.00" end="0:01:30.00"></audio-clip>'
       );
     });
 
@@ -453,7 +464,7 @@ describe('AudioClipService API Contract Tests', () => {
 
       // CONTRACT: MUST replace rate placeholder in custom templates
       expect(result).toBe(
-        ':audio[]{file=Audio/test.mp3 start=0:00:00.00 end=0:00:10.00 speed=2.0}'
+        ':audio[]{file=../Audio/test.mp3 start=0:00:00.00 end=0:00:10.00 speed=2.0}'
       );
     });
 

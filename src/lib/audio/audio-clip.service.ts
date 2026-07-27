@@ -11,6 +11,10 @@ import type { WorkspaceService } from '../services/workspace/workspace.service.j
 import type { SettingsService } from '../services/settings/settings.service.js';
 import type { FileStorageAPI } from '../storage/index.js';
 import type { ManifestItem } from '../epub/opf-utils.js';
+import {
+  convertManifestPathToXHTMLPath,
+  convertXHTMLPathToManifestPath,
+} from '../epub/path-utils.js';
 
 // Type definitions
 export interface AudioMetadata {
@@ -224,8 +228,14 @@ export class AudioClipService {
       return null;
     }
 
+    // Normalize the src back to the manifest href: strip surrounding quotes
+    // (djot templates quote attribute values) and the chapter-relative '../'
+    // the directive carries in source markup, so consumers always compare
+    // against plain manifest hrefs.
+    const src = attributes.src.replace(/^['"]|['"]$/g, '');
+
     const directive: ClipDirective = {
-      href: attributes.src,
+      href: convertXHTMLPathToManifestPath(src),
       begin: attributes.begin,
       end: attributes.end,
       label: label || '',
@@ -245,8 +255,10 @@ export class AudioClipService {
   formatClipDirective(data: ClipData, template: string): string {
     let result = template;
 
-    // Replace placeholders
-    result = result.replace('<href>', data.href);
+    // Replace placeholders. The directive carries the chapter-relative form
+    // ('../Audio/…') — the same convention as every other resource reference
+    // in source markup; callers pass plain manifest hrefs.
+    result = result.replace('<href>', convertManifestPathToXHTMLPath(data.href));
     result = result.replace('<begin>', this.formatTimeString(data.startTime));
     result = result.replace('<end>', this.formatTimeString(data.endTime));
 

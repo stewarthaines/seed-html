@@ -360,9 +360,9 @@
           workspaceTouched = true;
         }
 
-        // Image/video references resolve from the chapter document (Text/), so
-        // they need the ../ hop; the clip directive instead carries the
-        // OPF-relative href by convention (its player resolves ../ at runtime).
+        // Every media reference in source markup is chapter-relative (the ../
+        // hop from Text/) — images/video via contentHref here, the clip
+        // directive via formatClipDirective's own conversion.
         const contentHref = convertManifestPathToXHTMLPath(href);
         if (mediaType.startsWith('image/')) {
           const alt = filenameStem(file.name);
