@@ -887,7 +887,51 @@
   }
 
   /**
-   * Select text range in textarea and scroll to it
+   * Vertical pixel offset of `index` in the textarea's content, measured with
+   * an offscreen mirror of the text up to that point. Counting hard newlines
+   * against a guessed line-height under-estimates badly once long source lines
+   * soft-wrap, which used to leave preview-click selections pinned to the
+   * bottom edge instead of centered.
+   */
+  function measureOffsetY(textarea: HTMLTextAreaElement, index: number): number {
+    const cs = getComputedStyle(textarea);
+    const probe = document.createElement('div');
+    for (const prop of [
+      'fontFamily',
+      'fontSize',
+      'fontWeight',
+      'fontStyle',
+      'letterSpacing',
+      'lineHeight',
+      'tabSize',
+      'textIndent',
+      'textTransform',
+      'wordSpacing',
+      'paddingLeft',
+      'paddingRight',
+      'paddingTop',
+    ] as const) {
+      probe.style[prop] = cs[prop];
+    }
+    probe.style.position = 'absolute';
+    probe.style.visibility = 'hidden';
+    probe.style.whiteSpace = 'pre-wrap'; // a textarea's soft wrap
+    probe.style.overflowWrap = 'break-word';
+    probe.style.boxSizing = 'border-box';
+    // clientWidth = the textarea's content + padding, minus any scrollbar —
+    // the width its text actually wraps at.
+    probe.style.width = `${textarea.clientWidth}px`;
+    // The prefix's rendered height IS the y of the selection's line; the
+    // zero-width-space sentinel keeps a trailing newline's empty line measurable.
+    probe.textContent = textarea.value.slice(0, index) + '\u200b';
+    document.body.appendChild(probe);
+    const y = probe.offsetHeight;
+    probe.remove();
+    return y;
+  }
+
+  /**
+   * Select text range in textarea and center it vertically
    */
   function selectTextRange(textarea: HTMLTextAreaElement, start: number, end: number): void {
     // Focus the textarea
@@ -896,14 +940,9 @@
     // Set selection
     textarea.setSelectionRange(start, end);
 
-    // Scroll to the selection
-    const lines = textarea.value.substring(0, start).split('\n');
-    const targetLine = lines.length - 1;
-    const lineHeight = parseInt(getComputedStyle(textarea).lineHeight) || 20;
-    const scrollTop = targetLine * lineHeight;
-
-    // Scroll to make the selection visible
-    textarea.scrollTop = Math.max(0, scrollTop - textarea.clientHeight / 2);
+    // Center the selection, overriding the browser's minimal edge-scroll.
+    const y = measureOffsetY(textarea, start);
+    textarea.scrollTop = Math.max(0, y - textarea.clientHeight / 2);
   }
 
   // Export the findAndSelectText function for parent component access
