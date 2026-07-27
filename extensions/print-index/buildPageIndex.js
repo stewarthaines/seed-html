@@ -16,8 +16,27 @@
 async function transformDOM(htmlDocument, idref, ctx) {
   if (!ctx || !Array.isArray(ctx.spine)) return htmlDocument;
 
+  // Bail out BEFORE any file I/O: this transform runs on every render of every
+  // chapter, and each pagemap read is a full broker round-trip. Only the (rare)
+  // chapter carrying an index target pays for reads.
+  const genTarget = htmlDocument.querySelector('#page-index, [data-page-index]');
+  const scope = htmlDocument.querySelector('#data-page-refs, [data-page-refs]');
+  if (!genTarget && !scope) return htmlDocument;
+
   const manifest = Array.isArray(ctx.manifest) ? ctx.manifest : [];
   const hrefFor = ref => (manifest.find(m => m.id === ref) || {}).href || ref + '.xhtml';
+
+  // Fetch every chapter's pagemap CONCURRENTLY — sequential awaits would cost
+  // one broker round-trip per spine item (hundreds of ms on a 40-chapter book).
+  const linearSpine = ctx.spine.filter(x => x.linear !== false);
+  const maps = await Promise.all(
+    linearSpine.map(s =>
+      ctx
+        .readSourceText('data/preview/' + s.idref + '/pagemap.json')
+        .then(text => JSON.parse(text))
+        .catch(() => null) // not previewed yet
+    )
+  );
 
   // One pass over the pagemaps in spine order.
   const offset = {}; // idref -> start page, or null once an earlier chapter is missing
@@ -25,15 +44,10 @@ async function transformDOM(htmlDocument, idref, ctx) {
   const headingPage = {}; // idref -> { headingId: relativePage }
   let acc = 0;
   let reliable = true;
-  for (const s of ctx.spine.filter(x => x.linear !== false)) {
+  linearSpine.forEach((s, i) => {
     offset[s.idref] = reliable ? acc : null;
     headingPage[s.idref] = {};
-    let map = null;
-    try {
-      map = JSON.parse(await ctx.readSourceText('data/preview/' + s.idref + '/pagemap.json'));
-    } catch (e) {
-      map = null; // not previewed yet
-    }
+    const map = maps[i];
     if (map) {
       chapterMap[s.idref] = map;
       for (const e of map.entries || []) if (e.id) headingPage[s.idref][e.id] = e.page;
@@ -41,7 +55,7 @@ async function transformDOM(htmlDocument, idref, ctx) {
     } else {
       reliable = false; // unknown pageCount → every later chapter's offset is unknown
     }
-  }
+  });
 
   const pageRef = page => {
     const num = htmlDocument.createElement('span');
@@ -51,11 +65,10 @@ async function transformDOM(htmlDocument, idref, ctx) {
   };
 
   // Generate mode.
-  const genTarget = htmlDocument.querySelector('#page-index, [data-page-index]');
   if (genTarget) {
     const list = htmlDocument.createElement('ol');
     list.className = 'page-index';
-    for (const s of ctx.spine.filter(x => x.linear !== false)) {
+    for (const s of linearSpine) {
       const off = offset[s.idref];
       const map = chapterMap[s.idref];
       if (off == null || !map) continue;
@@ -82,7 +95,6 @@ async function transformDOM(htmlDocument, idref, ctx) {
   }
 
   // Decorate mode.
-  const scope = htmlDocument.querySelector('#data-page-refs, [data-page-refs]');
   if (scope) {
     const pageForHref = href => {
       if (!href || /^[a-z][a-z0-9+.-]*:/i.test(href)) return null; // external/protocol
