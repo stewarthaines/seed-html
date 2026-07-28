@@ -128,7 +128,7 @@ being paid down opportunistically: when you touch a file, prefer typing its
 ### Testing Standards
 
 - See [TESTING.md](./TESTING.md) for comprehensive testing strategy
-- Test-driven development based on API specifications
+- Tests assert documented contracts, not incidental implementation behavior; when a test fails, adjudicate whether the test or the code diverges from the contract (see [DEVELOPMENT.md](./DEVELOPMENT.md))
 - Unit tests for business logic, Storybook tests for browser APIs
 - Mock external dependencies only, not internal logic
 
@@ -165,9 +165,7 @@ being paid down opportunistically: when you touch a file, prefer typing its
 
 ### With Feature Development
 
-- Quality validation is integrated into the 5-step feature development process
-- API documentation must be created before implementation
-- Unit tests must be written based on API specifications
+- Non-trivial features ship with the required outcomes defined in [DEVELOPMENT.md](./DEVELOPMENT.md): a design decision record, a contract fixed before implementation, contract-level tests, API.md for consumed modules, and workflow-first Storybook coverage
 - Implementation must pass all quality gates
 
 ### With Storybook
