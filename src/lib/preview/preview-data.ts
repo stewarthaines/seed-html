@@ -35,3 +35,39 @@ export function previewDataChapterDir(idref: string): string | null {
   if (!IDREF_RE.test(idref)) return null;
   return `${PREVIEW_DATA_PREFIX}${idref}/`;
 }
+
+/** A validated `seed-save-data` envelope (see process/PREVIEW_BRIDGE.md). */
+export interface PreviewSaveData {
+  idref: string;
+  slot: string;
+  text: string;
+}
+
+/**
+ * Accept or drop a `seed-save-data` message from the preview iframe.
+ *
+ * The bridge stamps the chapter idref into the iframe realm at injection time
+ * and every message echoes it back. The echo must match the chapter the app is
+ * CURRENTLY previewing: the iframe `Window` survives `document.open()` across
+ * a chapter switch, so a late message from the previous chapter's capture
+ * script passes an `event.source` check — matching the stamped identity is
+ * what keeps chapter A's data from being filed under chapter B. A mismatch is
+ * dropped, not remapped: the data regenerates the next time its chapter
+ * renders.
+ *
+ * Returns the validated envelope, or `null` to drop (wrong shape, unsafe
+ * idref/slot, or identity mismatch).
+ */
+export function acceptPreviewSaveData(
+  data: unknown,
+  currentIdref: string | null | undefined
+): PreviewSaveData | null {
+  if (typeof data !== 'object' || data === null) return null;
+  const msg = data as { type?: unknown; idref?: unknown; slot?: unknown; text?: unknown };
+  if (msg.type !== 'seed-save-data') return null;
+  if (typeof msg.idref !== 'string' || typeof msg.slot !== 'string' || typeof msg.text !== 'string')
+    return null;
+  if (!currentIdref || msg.idref !== currentIdref) return null;
+  if (previewDataPath(msg.idref, msg.slot) === null) return null;
+  return { idref: msg.idref, slot: msg.slot, text: msg.text };
+}

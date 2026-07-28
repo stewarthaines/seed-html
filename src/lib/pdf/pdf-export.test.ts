@@ -96,6 +96,10 @@ describe('buildPagedDocument preview bridge', () => {
     const withBridge = buildPagedDocument([section], { previewBridge: { idref: 'chap-03' } });
     expect(withBridge).toContain('window.seed=');
     expect(withBridge).toContain("type:'seed-save-data'");
+    // The realm is stamped with its idref at injection time and every
+    // saveData message echoes it (the handler drops mismatched echoes).
+    expect(withBridge).toContain('var idref="chap-03"');
+    expect(withBridge).toContain('idref:idref');
     expect(withBridge).toContain('window.seed.hooks');
     expect(withBridge).toContain('.paginated({idref:"chap-03",document:document})');
 

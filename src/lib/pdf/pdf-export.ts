@@ -348,11 +348,18 @@ export function buildPagedDocument(
     `${paginatedCall}${afterTail}}};</script>` +
     `<script src="${pagedSrc}"></script>`;
   // The `window.seed` preview bridge (process/PREVIEW_BRIDGE.md): a scoped writer
-  // to SOURCE/data/ (the app owns the path from the idref) plus a `hooks` bag the
-  // project's head.xml assigns. Injected BEFORE headExtra so head.xml can use it
-  // as soon as it runs. Preview only — omitted from the export.
+  // to SOURCE/data/ plus a `hooks` bag the project's head.xml assigns. The
+  // chapter idref is stamped into the realm here, at injection time, and every
+  // saveData message echoes it back — the handler drops messages whose echo
+  // doesn't match the chapter currently previewed, so a late message from a
+  // replaced render can never be filed under the wrong chapter. Injected
+  // BEFORE headExtra so head.xml can use it as soon as it runs. Preview only —
+  // omitted from the export.
   const seedBridge = previewBridge
-    ? `<script>window.seed={saveData:function(slot,text){try{parent.postMessage({type:'seed-save-data',slot:slot,text:text},'*');}catch(e){}},hooks:{}};</script>`
+    ? `<script>(function(){var idref=${jsonForXhtml(previewBridge.idref)};` +
+      `window.seed={idref:idref,saveData:function(slot,text){` +
+      `try{parent.postMessage({type:'seed-save-data',idref:idref,slot:slot,text:text},'*');}catch(e){}},` +
+      `hooks:{}};})();</script>`
     : '';
   return `<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"${langAttr}${dirAttr}>
