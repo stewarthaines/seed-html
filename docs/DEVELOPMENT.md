@@ -142,6 +142,8 @@ content-preview.svelte    # Svelte should be PascalCase
 
 Views and components hold wiring and presentation. Scheduling, persistence, identity, and lifecycle-crossing logic (anything involving `setTimeout`, epochs, or state that must survive a navigation) belongs in a plain-TS module with its own tests — a component that accumulates policy gets that policy extracted, not tested in place. `src/lib/editor/pending-saves.ts` is the reference example, and `process/ARCHITECTURE_HEALTH.md` records why (component coverage is deliberately not ratcheted, so policy living in a component is policy living untested).
 
+When a component legitimately needs a timer (a failure backstop, a UI debounce), **arm it inside an `$effect` and clear it in that effect's teardown** — never bare in a function or `onMount` body with the clear left to memory. Effect teardowns run on both re-arm and unmount, so an effect-armed timer structurally cannot outlive its component. The 2026-07 timer audit (`process/ARCHITECTURE_HEALTH.md`, workstream 2) found every hygiene defect in function-scoped timers and none in effect-armed ones; async completions that carry identity across a possible context switch (saves, messages) are the third, dangerous category — those capture their identity at schedule time and belong in a policy module, per the paragraph above.
+
 ### Accessibility Requirements
 
 Before considering a component complete:
