@@ -46,20 +46,20 @@ msgstr "{count} Fehler"
 
 #: src/lib/components/manifest/MoveReviewDialog.svelte
 msgid "{count} files"
-msgstr ""
+msgstr "{count} Dateien"
 
 #: src/lib/components/manifest/MoveReviewDialog.svelte
 msgid "{count} files cannot move"
-msgstr ""
+msgstr "{count} Dateien können nicht verschoben werden"
 
 #: src/lib/components/manifest/MoveReviewDialog.svelte
 msgid "{count} references updated"
-msgstr ""
+msgstr "{count} Verweise aktualisiert"
 
 #: src/lib/components/manifest/ManifestPreview.svelte
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "{count} selected"
-msgstr ""
+msgstr "{count} ausgewählt"
 
 #: src/lib/components/spine/EditorPane.svelte
 msgid "{count} Warnings"
@@ -1246,11 +1246,11 @@ msgstr "Aktuell"
 
 #: src/lib/components/chapters/SpineDiagram.svelte
 msgid "Current chapter order and the proposed order after the move."
-msgstr ""
+msgstr "Aktuelle Kapitelreihenfolge und die vorgeschlagene Reihenfolge nach dem Verschieben."
 
 #: src/lib/components/chapters/SpineDiagram.svelte
 msgid "Current chapter order."
-msgstr ""
+msgstr "Aktuelle Kapitelreihenfolge."
 
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 msgid "Current cover image"
@@ -1352,7 +1352,7 @@ msgstr "\"{title}\" löschen? Dies kann nicht rückgängig gemacht werden."
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Delete {count} chapters?"
-msgstr ""
+msgstr "{count} Kapitel löschen?"
 
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Delete {filename}? This cannot be undone."
@@ -1376,7 +1376,7 @@ msgstr "Löschen fehlgeschlagen"
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Delete failed: {message}"
-msgstr ""
+msgstr "Löschen fehlgeschlagen: {message}"
 
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Delete project"
@@ -1392,7 +1392,7 @@ msgstr ""
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Deleted {count} chapters"
-msgstr ""
+msgstr "{count} Kapitel gelöscht"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "deletion"
@@ -1427,7 +1427,7 @@ msgstr "Gerät:"
 
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "Directory"
-msgstr ""
+msgstr "Verzeichnis"
 
 #: src/lib/components/metadata/CustomMetaSection.svelte
 msgid "Discovered in this book"
@@ -2120,7 +2120,7 @@ msgstr "Einstellungen konnten nicht geladen werden"
 #: src/lib/components/manifest/ManifestPreview.svelte
 #: src/lib/components/manifest/MoveReviewDialog.svelte
 msgid "Failed to move files"
-msgstr ""
+msgstr "Dateien konnten nicht verschoben werden"
 
 #: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Failed to open workspace: {error}"
@@ -2168,7 +2168,7 @@ msgstr "Es konnten nicht alle Dateien hochgeladen werden"
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Failed: {message}"
-msgstr ""
+msgstr "Fehlgeschlagen: {message}"
 
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 msgid "Fetch"
@@ -2180,7 +2180,7 @@ msgstr "Abbildung"
 
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "Filename"
-msgstr ""
+msgstr "Dateiname"
 
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "files"
@@ -2432,7 +2432,7 @@ msgstr "Aus Datei importieren"
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Import from files"
-msgstr ""
+msgstr "Aus Dateien importieren"
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Import JavaScript Extension"
@@ -2530,7 +2530,7 @@ msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Interface options"
-msgstr ""
+msgstr "Oberflächenoptionen"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "introduction"
@@ -2733,7 +2733,7 @@ msgstr "Link"
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Link a folder"
-msgstr ""
+msgstr "Ordner verknüpfen"
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Link folder…"
@@ -2878,7 +2878,7 @@ msgstr "Fehlerhaftes XHTML"
 
 #: src/lib/Sidebar.svelte
 msgid "Manage chapter order"
-msgstr ""
+msgstr "Kapitelreihenfolge verwalten"
 
 #: src/App.svelte
 #: src/lib/Sidebar.svelte
@@ -2929,15 +2929,15 @@ msgstr "Geändert"
 #: src/lib/components/manifest/ManifestPreview.svelte
 #: src/lib/components/manifest/MoveReviewDialog.svelte
 msgid "Move"
-msgstr ""
+msgstr "Verschieben"
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Move {count} chapters before {name}. Apply to commit."
-msgstr ""
+msgstr "{count} Kapitel vor {name} verschieben. Mit „Anwenden“ übernehmen."
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Move {count} chapters to the end. Apply to commit."
-msgstr ""
+msgstr "{count} Kapitel ans Ende verschieben. Mit „Anwenden“ übernehmen."
 
 #: src/lib/components/SpineItem.svelte
 msgid "Move {id} down"
@@ -2953,11 +2953,11 @@ msgstr "Nach unten"
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Move failed: {message}"
-msgstr ""
+msgstr "Verschieben fehlgeschlagen: {message}"
 
 #: src/lib/components/manifest/MoveReviewDialog.svelte
 msgid "Move files"
-msgstr ""
+msgstr "Dateien verschieben"
 
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Move start time back 0.1 seconds"
@@ -2981,11 +2981,11 @@ msgstr "Nach oben"
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Moved {count} chapters"
-msgstr ""
+msgstr "{count} Kapitel verschoben"
 
 #: src/lib/components/manifest/MoveReviewDialog.svelte
 msgid "Moves"
-msgstr ""
+msgstr "Verschiebungen"
 
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "Much of this software was written with AI coding agents, primarily Anthropic's Claude Code."
@@ -3061,7 +3061,7 @@ msgstr "Neues Projekt"
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Next chapter"
-msgstr ""
+msgstr "Nächstes Kapitel"
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Next page"
@@ -3092,7 +3092,7 @@ msgstr ""
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "No chapters yet"
-msgstr ""
+msgstr "Noch keine Kapitel"
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "No Content"
@@ -3193,7 +3193,7 @@ msgstr ""
 
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "No references found"
-msgstr ""
+msgstr "Keine Verweise gefunden"
 
 #: src/lib/components/SpineSidebar.svelte
 msgid "No spine items yet"
@@ -3444,7 +3444,7 @@ msgstr "Seitengröße"
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Paged device previews"
-msgstr ""
+msgstr "Paginierte Gerätevorschauen"
 
 #: src/lib/Sidebar.svelte
 #: src/lib/components/spine/PreviewPane.svelte
@@ -3528,11 +3528,11 @@ msgstr "Platzhalter: <title>, <author>, <date>."
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Placement cancelled"
-msgstr ""
+msgstr "Platzierung abgebrochen"
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Placing {count} chapters. Arrow keys to choose, Enter to confirm, Escape to cancel."
-msgstr ""
+msgstr "{count} Kapitel platzieren. Pfeiltasten zum Auswählen, Eingabetaste zum Bestätigen, Escape zum Abbrechen."
 
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "Plain text"
@@ -3634,7 +3634,7 @@ msgstr "Vorschaubereich"
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Previous chapter"
-msgstr ""
+msgstr "Vorheriges Kapitel"
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Previous page"
@@ -3669,7 +3669,7 @@ msgstr "Prolog"
 #: src/lib/components/spine/PreviewPane.svelte
 #. The chapter-proofs preview option — a grid of small print pages
 msgid "Proofs"
-msgstr ""
+msgstr "Seitenübersicht"
 
 #: src/lib/components/manifest/ManifestTable.svelte
 msgid "Properties"
@@ -3800,15 +3800,15 @@ msgstr "Weiterleitungs-URI"
 
 #: src/lib/components/manifest/MoveReviewDialog.svelte
 msgid "References in {sheets} stylesheets"
-msgstr ""
+msgstr "Verweise in {sheets} Stylesheets"
 
 #: src/lib/components/manifest/MoveReviewDialog.svelte
 msgid "References in {sources} text sources"
-msgstr ""
+msgstr "Verweise in {sources} Textquellen"
 
 #: src/lib/components/manifest/MoveReviewDialog.svelte
 msgid "References in {sources} text sources and {sheets} stylesheets"
-msgstr ""
+msgstr "Verweise in {sources} Textquellen und {sheets} Stylesheets"
 
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Reflowable"
@@ -3937,11 +3937,11 @@ msgstr "Responsiv"
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Restore"
-msgstr ""
+msgstr "Wiederherstellen"
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Restored {count} chapters"
-msgstr ""
+msgstr "{count} Kapitel wiederhergestellt"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 #: src/lib/components/SpineSidebar.svelte
@@ -4147,7 +4147,7 @@ msgstr "Ausgewählter Ordner: {name}"
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Selection cleared"
-msgstr ""
+msgstr "Auswahl aufgehoben"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "separator"
@@ -4171,11 +4171,11 @@ msgstr "Setzen"
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Set aside"
-msgstr ""
+msgstr "Beiseitelegen"
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Set aside {count} chapters"
-msgstr ""
+msgstr "{count} Kapitel beiseitegelegt"
 
 #: src/lib/components/metadata/fields/DateMetadataField.svelte
 msgid "Set to today"
@@ -4454,7 +4454,7 @@ msgstr "Der Kapiteltitel oben auf jeder Seite."
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "the end"
-msgstr ""
+msgstr "das Ende"
 
 #: src/lib/components/SpineSidebar.svelte
 msgid "The linked folder isn't available — reconnect the drive or relink the folder."
