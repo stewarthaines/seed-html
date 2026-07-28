@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-07-28
+
 ### Added
 
 - A dedicated Chapters view for reorganizing the book: click the "Chapters" heading in the sidebar, select a run of chapters (shift-click, or arrow keys and Space), pick where they go, check the before/after diagram, and Apply. The same view sets chapters aside (kept in the book but out of the reading order) and deletes in bulk; your selection survives each move, so undoing is just moving back.
