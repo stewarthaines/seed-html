@@ -1831,24 +1831,30 @@
   // evaluate natively in the browser, and pick up the absolute-folio seeding
   // when the offset is known.
   //
-  // Scaling is transform-based, NOT `zoom`: each page goes inside an
-  // explicitly-sized wrapper cell (the layout size flex-wrap flows) and is
-  // transform-scaled within it. `zoom` is not interoperable around Paged.js's
-  // absolutely-positioned page internals — WebKit reflows the content and
-  // leaves the margin boxes unscaled instead of miniaturizing uniformly.
-  const PROOFS_TARGET_PX = 150; // thumb width; columns fall out of pane width
+  // Layout is the manifest thumbnail grid's auto-fill pattern: tracks share
+  // the row evenly instead of leaving flex-wrap's ragged remainder, and the
+  // thumb scale follows the width the grid actually resolves (re-applied on
+  // pane resize). Scaling is transform-based, NOT `zoom`: each page goes
+  // inside a wrapper cell (the grid sizes it) and is transform-scaled within.
+  // `zoom` is not interoperable around Paged.js's absolutely-positioned page
+  // internals — WebKit reflows the content and leaves the margin boxes
+  // unscaled instead of miniaturizing uniformly.
+  const PROOFS_TARGET_PX = 150; // minimum thumb width; tracks stretch from here
   const PROOFS_CSS = `
 .pagedjs_pages {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(${PROOFS_TARGET_PX}px, 1fr));
   gap: 14px;
   padding: 12px;
 }
 .seed-proofs-cell {
   position: relative;
   cursor: pointer;
-  overflow: visible;
+  /* Clip the page's pre-transform layout box: Firefox counts it into the
+     scrollable overflow (Chrome/Safari use post-transform bounds), which
+     otherwise makes the grid scroll a huge phantom area. The caption paints
+     at the SCALED page bottom — inside the cell's height — so it survives. */
+  overflow: hidden;
 }
 .seed-proofs-cell .pagedjs_page {
   position: relative;
@@ -1868,6 +1874,13 @@
 }`;
 
   function applyProofsChrome(): void {
+    // Never touch the document mid-pagination: the resize observer can fire
+    // while Paged.js is still appending pages (it also fires on observe), and
+    // wrapping a half-built document leaves the later pages unwrapped and
+    // unscaled — full-size pages loose in the grid, horizontal scrollbars.
+    // The PAGED_DONE handler applies the chrome once pagination settles.
+    if (printPaginating) return;
+    if (renderedDevice !== 'proofs') return;
     const iframeDoc = previewIframe?.contentDocument;
     if (!iframeDoc) return;
     const pages = iframeDoc.querySelector<HTMLElement>('.pagedjs_pages');
@@ -1885,11 +1898,9 @@
       iframeDoc.head.appendChild(style);
     }
 
-    const zoom = Math.min(1, PROOFS_TARGET_PX / pageWidth);
-    pages.style.setProperty('--seed-proofs-zoom', String(zoom));
-
-    // Wrap each page in a cell sized to the scaled thumb (plus caption room);
-    // the cell is also the click target → Print view landed on that page.
+    // Wrap each page in a cell (once); the cell is also the click target →
+    // Print view landed on that page.
+    const cells: HTMLElement[] = [];
     iframeDoc.querySelectorAll<HTMLElement>('.pagedjs_page').forEach((page, index) => {
       let cell = page.parentElement;
       if (!cell || !cell.classList.contains('seed-proofs-cell')) {
@@ -1902,10 +1913,21 @@
           selectedDevice.current = 'print';
         });
       }
-      cell.style.width = `${Math.round(pageWidth * zoom)}px`;
-      cell.style.height = `${Math.round(pageHeight * zoom) + 20}px`;
-      page.style.transform = `scale(${zoom})`;
+      cells.push(cell);
     });
+    if (cells.length === 0) return;
+
+    // Scale to the track width the grid resolved (all tracks are equal 1fr).
+    // Re-running on resize re-measures and re-fits.
+    const cellWidth = cells[0].offsetWidth;
+    if (!cellWidth) return;
+    const zoom = Math.min(1, cellWidth / pageWidth);
+    pages.style.setProperty('--seed-proofs-zoom', String(zoom));
+    for (const cell of cells) {
+      cell.style.height = `${Math.round(pageHeight * zoom) + 20}px`;
+      const page = cell.querySelector<HTMLElement>('.pagedjs_page');
+      if (page) page.style.transform = `scale(${zoom})`;
+    }
   }
 
   function fitPrintToWidth(): void {
@@ -2347,10 +2369,13 @@
     // Initialize with default device
     handleDeviceChange(selectedDevice.current);
 
-    // Re-apply device sizing on resize. For Print, re-fit the pages to the new
-    // width instead — no re-pagination (Paged.js pages stay A4 regardless).
+    // Re-apply device sizing on resize. For the paged views, re-fit the pages
+    // to the new width instead — no re-pagination (Paged.js pages stay A4
+    // regardless): Print re-scales the single column, Proofs re-measures its
+    // grid tracks and re-fits the thumbs.
     const onResize = () => {
       if (selectedDevice.current === 'print') fitPrintToWidth();
+      else if (selectedDevice.current === 'proofs') applyProofsChrome();
       else handleDeviceChange(selectedDevice.current);
     };
 
