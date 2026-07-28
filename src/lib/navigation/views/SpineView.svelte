@@ -45,6 +45,7 @@
     createTextEditorStore,
     clearAllTextEditorStores,
   } from '../../stores/text-editor-store.js';
+  import { createPendingSaves } from '$lib/editor/pending-saves';
   import type { TextEditorStore } from '../../stores/index.js';
   import { Lock } from 'phosphor-svelte';
 
@@ -312,27 +313,14 @@
   // File-backed content stores for any text-based file (text, CSS, JS, transform scripts)
   let fileContentStores = new Map<string, TextEditorStore>();
 
-  // Scheduled-save identity. Both debounced save paths capture the epoch (and
-  // workspace id) when a save is SCHEDULED and compare against it when the
-  // timer FIRES: a save that outlives its workspace must not touch the new
-  // one. Workspace-relative paths collide across projects (two projects with a
-  // chapter named `contents` share `SOURCE/text/contents.txt`), so path checks
-  // alone cannot detect the switch.
-  let workspaceEpoch = 0;
-
-  // Flush callbacks for pending file-backed store saves, keyed by file path.
-  // Registered when a save is scheduled; the workspace-change effect flushes
-  // them to the workspace they were scheduled against before the timers are
-  // orphaned, so the last keystrokes before a project switch aren't lost.
-  const fileStoreSaveFlushes = new Map<string, () => void>();
-
-  // Pending CSS/JS auto-saves (see debounceAutoSave). Each entry carries its
-  // timer and a flush that writes the captured content to the captured
-  // workspace, mirroring fileStoreSaveFlushes for the non-store save path.
-  let autoSaveTimeouts = new Map<
-    string,
-    { timeout: ReturnType<typeof setTimeout>; flush: () => void }
-  >();
+  // All debounced persistence goes through the pending-saves manager
+  // ($lib/editor/API.md): save identity is captured at schedule time, pending
+  // saves flush to their own workspace on a switch, and writes serialize per
+  // file. This component only wires lifecycle (invalidateWorkspace /
+  // flushAll / destroy) and the post-save preview side effects.
+  const pendingSaves = createPendingSaves({
+    write: (wsId, path, content) => workspaceService.writeFile(wsId, path, content),
+  });
 
   // Simple reactive store variables - assigned imperatively in handleFileSelect
   let pane1Store = $state<TextEditorStore | null>(null);
@@ -344,21 +332,10 @@
   // Workspace change detection - cleanup stores when workspace switches
   $effect(() => {
     if (workspace?.id && (previousWorkspaceId === null || workspace.id !== previousWorkspaceId)) {
-      // Invalidate every scheduled save before anything else: a pending
-      // debounce firing after this point must see a changed epoch and bail.
-      workspaceEpoch++;
-
-      // Flush pending saves into the workspace they were scheduled against
-      // (each flush captured its own workspace id), then drop the timers.
-      for (const flush of fileStoreSaveFlushes.values()) {
-        flush();
-      }
-      fileStoreSaveFlushes.clear();
-      for (const pending of autoSaveTimeouts.values()) {
-        clearTimeout(pending.timeout);
-        pending.flush();
-      }
-      autoSaveTimeouts.clear();
+      // Flush pending saves to the workspaces they were scheduled against and
+      // orphan their side effects — BEFORE the stores backing getContent are
+      // destroyed below.
+      pendingSaves.invalidateWorkspace();
 
       // Clean up local stores
       for (const store of fileContentStores.values()) {
@@ -644,47 +621,33 @@
 
     const store = createTextEditorStore(editorId, initialContent);
 
-    // Combined save and preview subscription - ensures sequential operations
-    let debounceTimeout: ReturnType<typeof setTimeout>;
-    store.subscribe(state => {
+    // Save + preview subscription. The manager owns the debounce, the
+    // schedule-time identity (`workspaceId` here is the workspace this store
+    // was created for), the flush on workspace switch, and the guarantee that
+    // onSaved never runs for a save whose workspace has been switched away
+    // from. onSaved therefore only handles CURRENT-workspace side effects.
+    store.subscribe(() => {
       if (!previewManager) return;
 
-      clearTimeout(debounceTimeout);
-      // Capture the epoch at schedule time. `workspaceId` (the closure
-      // parameter) is likewise schedule-time identity: the file write below
-      // always targets the workspace this store was created for.
-      const epoch = workspaceEpoch;
-      debounceTimeout = setTimeout(async () => {
-        fileStoreSaveFlushes.delete(filePath);
-        if (epoch !== workspaceEpoch) return; // workspace switched — flushed there
-        try {
-          // Step 1: Save file first (required for blob URL generation)
-          await workspaceService.writeFile(workspaceId, manifestItem.path, state.content);
-
-          // The workspace can switch during the await. The write above was
-          // safe (explicit workspaceId), but every preview object below now
-          // belongs to the NEW project — feeding it stale content writes this
-          // project's text into the other one (CROSS_PROJECT_CLOBBER incident:
-          // same-named chapters collide on workspace-relative paths).
-          if (epoch !== workspaceEpoch) return;
-
-          // Step 2: Then update preview (reads from saved file)
+      pendingSaves.schedule(workspaceId, filePath, () => store.getContent(), {
+        onSaved: content => {
+          if (!previewManager) return;
           if (manifestItem.type === 'text') {
             // Guard against the chapter-switch race (BRIDGE_WRITE_CLOBBER_INCIDENT):
-            // this debounce can outlive a navigation, and the preview manager
+            // this save can outlive a navigation, and the preview manager
             // saves its text under the CURRENT spine item — pushing a stale
             // store's content into it writes chapter A's text to chapter B's
             // file. Only the store belonging to the selected chapter may feed
-            // the manager (the epoch check above covers the cross-PROJECT
-            // case, where this path equality is a false positive); the file
-            // write above was path-consistent regardless.
+            // the manager (the cross-PROJECT case, where this path equality
+            // is a false positive, never reaches onSaved — the manager's
+            // epoch orphans it); the file write was path-consistent regardless.
             if (manifestItem.path === `SOURCE/text/${selectedItemId}.txt`) {
-              previewManager.updateContent('text', state.content);
+              previewManager.updateContent('text', content);
             }
           } else if (manifestItem.type === 'preview-head') {
             // The preview head isn't part of the rendered XHTML — it's injected by
             // the preview pane. Update our copy and re-emit so the pane re-injects.
-            previewHeadContent = state.content;
+            previewHeadContent = content;
             previewManager.forcePreviewUpdate();
           } else if (['css', 'javascript', 'transform'].includes(manifestItem.type)) {
             if (manifestItem.href && blobURLManager) {
@@ -698,19 +661,7 @@
             }
             previewManager.forcePreviewUpdate();
           }
-        } catch (error) {
-          console.error('Auto-save failed:', error);
-        }
-      }, 300); // Single 300ms debounce for both save and preview
-
-      // Register the pending save as flushable: on a workspace switch the
-      // timer is cancelled and the store's latest content is written to the
-      // workspace it was scheduled against, so nothing is lost or misrouted.
-      fileStoreSaveFlushes.set(filePath, () => {
-        clearTimeout(debounceTimeout);
-        workspaceService.writeFile(workspaceId, manifestItem.path, store.getContent()).catch(() => {
-          // Best-effort flush; the old workspace keeps its last-saved content.
-        });
+        },
       });
     });
 
@@ -1066,45 +1017,16 @@
     updatePaneSpecificFiles();
   }
 
-  // Debounced auto-save functionality (pending timers live in autoSaveTimeouts,
-  // declared with the other scheduled-save state near the top of the script).
+  // Debounced auto-save for pane content events (CSS/JS). Identity and
+  // cross-lifetime safety live in the pending-saves manager; `workspace.id`
+  // is read here at schedule time, per the manager's contract. The longer
+  // settle (vs the store path's default) is deliberate: a CSS/JS save
+  // triggers a blob revoke + full preview refresh, costlier than a text
+  // re-render.
   function debounceAutoSave(filePath: string, fileHref: string, content: string) {
-    // Clear existing timeout for this file
-    const existing = autoSaveTimeouts.get(filePath);
-    if (existing) {
-      clearTimeout(existing.timeout);
-    }
-
-    // Capture save identity at SCHEDULE time. Reading `workspace.id`
-    // reactively when the timer fires routed pending saves into whatever
-    // project was open 500ms later (CROSS_PROJECT_CLOBBER incident) — and
-    // validateAutoSaveStillValid never sees CSS/JS paths, so nothing else
-    // stood in the way.
-    const epoch = workspaceEpoch;
-    const workspaceId = workspace.id;
-
-    // Set new timeout for auto-save
-    const timeout = setTimeout(async () => {
-      try {
-        if (epoch !== workspaceEpoch) {
-          return; // workspace switched — the switch flushed this save already
-        }
-
-        // CRITICAL: Validate that the file path is still valid for current spine item
-        // This prevents race conditions where user switches spine items during debounce
-        const isStillValid = validateAutoSaveStillValid(filePath, content);
-        if (!isStillValid) {
-          return;
-        }
-
-        await fileStorage.writeTextFile(workspaceId, filePath, content);
-
-        // The workspace can switch during the await; the blob cache and
-        // preview manager below belong to the NEW project then — skip them.
-        if (epoch !== workspaceEpoch) {
-          return;
-        }
-
+    pendingSaves.schedule(workspace.id, filePath, () => content, {
+      delay: 500,
+      onSaved: () => {
         // Invalidate blob URL cache using manifest href for CSS/JS files
         if (blobURLManager && (filePath.includes('/Styles/') || filePath.includes('/Scripts/'))) {
           blobURLManager.revokeFileBlob(fileHref);
@@ -1114,48 +1036,8 @@
             previewManager.forcePreviewUpdate();
           }
         }
-      } catch {
-        // Auto-save failed, but continue
-      } finally {
-        autoSaveTimeouts.delete(filePath);
-      }
-    }, 500); // 500ms debounce
-
-    autoSaveTimeouts.set(filePath, {
-      timeout,
-      flush: () => {
-        fileStorage.writeTextFile(workspaceId, filePath, content).catch(() => {
-          // Best-effort flush; the old workspace keeps its last-saved content.
-        });
       },
     });
-  }
-
-  // Validate that auto-save is still appropriate for current state
-  function validateAutoSaveStillValid(filePath: string, content: string): boolean {
-    // For text files, ensure the file path matches the current spine item
-    if (filePath.includes('SOURCE/text/') && selectedItemId) {
-      const expectedTextPath = `SOURCE/text/${selectedItemId}.txt`;
-      if (filePath !== expectedTextPath) {
-        return false;
-      }
-
-      // Additional validation: check if content is appropriate for current spine item
-      if (content.includes('chapter') || content.includes('Chapter')) {
-        const pathChapter = filePath.match(/chapter(\d+)/)?.[1];
-        if (pathChapter) {
-          const contentHasWrongChapter =
-            content.toLowerCase().includes('chapter') &&
-            !content.toLowerCase().includes(`chapter ${pathChapter}`) &&
-            !content.toLowerCase().includes(`chapter${pathChapter}`);
-          if (contentHasWrongChapter) {
-            return false;
-          }
-        }
-      }
-    }
-
-    return true;
   }
 
   // Persist current pane configuration to navigationStore (without content)
@@ -1487,11 +1369,11 @@
 
   // Update only spine-specific content in panes (preserve global file selections)
   async function updateSpineSpecificContent() {
-    // CRITICAL: Cancel all pending auto-saves to prevent race conditions
-    for (const pending of autoSaveTimeouts.values()) {
-      clearTimeout(pending.timeout);
-    }
-    autoSaveTimeouts.clear();
+    // Settle pending edits before the panes are repointed at the new chapter.
+    // Flushing (not cancelling) is deliberate: save identity was captured at
+    // schedule time, so the writes are safe, and cancelling silently dropped
+    // edits made in the last half-second before a chapter switch.
+    pendingSaves.flushAll();
 
     // Update pane 1 if it contains spine-specific content
     if (paneState.pane1.fileType && isSpineSpecificFile(paneState.pane1.fileType)) {
@@ -1628,6 +1510,10 @@
   onDestroy(() => {
     window.removeEventListener('seed:source-files-changed', handleSourceFilesChanged);
     window.removeEventListener('seed:agent-file-state', handleAgentFileStateQuery);
+
+    // Flush pending saves while the stores backing their getContent are still
+    // alive, and reject any stray schedule after this point.
+    pendingSaves.destroy();
 
     // Cancel the preview manager's pending debounce and invalidate any
     // in-flight render, so nothing persists or calls back into this destroyed
