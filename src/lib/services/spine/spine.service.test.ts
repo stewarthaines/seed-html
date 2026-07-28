@@ -80,7 +80,7 @@ describe('SpineService preview-data GC', () => {
     const ws = {
       saveWorkspace: vi.fn(async () => {}),
       fileExists: vi.fn(async () => false),
-      fileStorage: { deleteFile: vi.fn(async () => {}) },
+      deleteFile: vi.fn(async () => {}),
       listSourceFiles: vi.fn(async () =>
         allSource([
           'SOURCE/text/chap01.txt',
@@ -131,7 +131,7 @@ describe('SpineService preview-data GC', () => {
     const ws = {
       saveWorkspace: vi.fn(async () => {}),
       fileExists: vi.fn(async () => false),
-      fileStorage: { deleteFile: vi.fn(async () => {}) },
+      deleteFile: vi.fn(async () => {}),
       listSourceFiles: vi.fn(async () => allSource(['SOURCE/text/chap01.txt'])),
       deleteSourceFile,
     } as unknown as WorkspaceService;
@@ -547,7 +547,7 @@ describe('SpineService.deleteChapter', () => {
     return {
       saveWorkspace: vi.fn(async () => {}),
       fileExists: vi.fn(async () => false),
-      fileStorage: { deleteFile: vi.fn(async () => {}) },
+      deleteFile: vi.fn(async () => {}),
       listSourceFiles: vi.fn(async () => []),
       deleteSourceFile: vi.fn(async () => {}),
       ...overrides,
@@ -564,8 +564,7 @@ describe('SpineService.deleteChapter', () => {
     expect(updatedWorkspace.opf.manifest.map(item => item.id)).toEqual(['chap02']);
     expect(ws.saveWorkspace).toHaveBeenCalledWith(updatedWorkspace);
 
-    const deleteFile = (ws as unknown as { fileStorage: { deleteFile: ReturnType<typeof vi.fn> } })
-      .fileStorage.deleteFile;
+    const deleteFile = (ws as unknown as { deleteFile: ReturnType<typeof vi.fn> }).deleteFile;
     const deleted = deleteFile.mock.calls.map(call => call[1]);
     expect(deleted).toContain('OEBPS/Text/chap01.xhtml');
     expect(deleted).toContain('SOURCE/text/chap01.txt');
@@ -580,8 +579,7 @@ describe('SpineService.deleteChapter', () => {
 
     await new SpineService(ws).deleteChapter(makeWorkspace(), 'chap01');
 
-    const deleteFile = (ws as unknown as { fileStorage: { deleteFile: ReturnType<typeof vi.fn> } })
-      .fileStorage.deleteFile;
+    const deleteFile = (ws as unknown as { deleteFile: ReturnType<typeof vi.fn> }).deleteFile;
     expect(deleteFile.mock.calls.map(call => call[1])).toContain('SOURCE/text/chap01.json');
   });
 
@@ -604,11 +602,9 @@ describe('SpineService.deleteChapter', () => {
   it('still succeeds when file deletion fails (best-effort cleanup)', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const ws = makeDeleteService({
-      fileStorage: {
-        deleteFile: vi.fn(async () => {
-          throw new Error('locked');
-        }),
-      },
+      deleteFile: vi.fn(async () => {
+        throw new Error('locked');
+      }),
     });
 
     await expect(

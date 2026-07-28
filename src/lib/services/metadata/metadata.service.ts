@@ -154,6 +154,7 @@ export class MetadataService {
 
       return await this.workspaceService.updateMetadata(workspace, updates);
     } catch (error) {
+      if (error instanceof MetadataServiceError) throw error;
       throw new MetadataServiceError(
         `Failed to add ${field} item: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'ARRAY_ADD_ERROR',
@@ -288,10 +289,12 @@ export class MetadataService {
           type: 'error',
         });
       } else if (badTag) {
+        // Same severity as validateMetadata: a malformed BCP 47 tag is an
+        // error in the packaged EPUB, so it must not be persistable either.
         results.push({
           field: 'language',
-          message: `Invalid language tag "${badTag}"`,
-          type: 'warning',
+          message: `Invalid language tag "${badTag}" (use a BCP 47 tag, e.g. "en", "en-US", "zh-Hant")`,
+          type: 'error',
         });
       }
     }

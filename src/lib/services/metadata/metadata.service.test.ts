@@ -205,14 +205,20 @@ describe('MetadataService.updateMetadata', () => {
     expect(updateMetadata).not.toHaveBeenCalled();
   });
 
-  it('allows updates that only produce warnings (malformed language tag)', async () => {
+  // Adjudicated 2026-07-28: the previous version of this test pinned a defect
+  // (a malformed tag was a warning on the update path but an error on full
+  // validation, so an invalid language could be persisted). The contract is
+  // one severity — error — on both paths.
+  it('rejects updates with a malformed language tag (same severity as full validation)', async () => {
     const { service, updateMetadata } = makeServiceWithMock();
     const ws = makeWorkspace({ title: 'T', language: ['en'], identifier: 'id' });
 
-    const updated = await service.updateMetadata(ws, { language: ['not a tag!'] });
+    const error = await service
+      .updateMetadata(ws, { language: ['not a tag!'] })
+      .catch((e: unknown) => e);
 
-    expect(updateMetadata).toHaveBeenCalledOnce();
-    expect(updated.opf.metadata.language).toEqual(['not a tag!']);
+    expect(error).toBeInstanceOf(MetadataValidationError);
+    expect(updateMetadata).not.toHaveBeenCalled();
   });
 
   it('wraps workspace service failures as MetadataServiceError with UPDATE_ERROR', async () => {
@@ -387,10 +393,11 @@ describe('MetadataService.validateMetadataUpdates', () => {
     expect(results).toEqual([expect.objectContaining({ field: 'language', type: 'error' })]);
   });
 
-  it('warns (not errors) on a malformed language tag', () => {
+  // Adjudicated 2026-07-28 (see updateMetadata above): error, not warning.
+  it('errors on a malformed language tag, matching validateMetadata', () => {
     const service = makeService();
     const results = service.validateMetadataUpdates({ language: ['english language'] });
 
-    expect(results).toEqual([expect.objectContaining({ field: 'language', type: 'warning' })]);
+    expect(results).toEqual([expect.objectContaining({ field: 'language', type: 'error' })]);
   });
 });
