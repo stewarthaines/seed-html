@@ -2,56 +2,51 @@
 
 ## Overview
 
-This document provides the structured development process for features in the seed-html project. For quality standards and validation requirements, see [QUALITY.md](./QUALITY.md).
+This document owns the feature development process, API documentation standards, file naming, and component guidelines. Quality gates and validation requirements live in [QUALITY.md](./QUALITY.md) — the single source of truth for those — and are not restated here.
 
-## Feature Development Process
+## How process rules are layered
 
-The project follows a structured 5-step development process to ensure high-quality, well-documented features:
+Process rules carry different force, and conflating them is how ritual accumulates. Three layers:
 
-### 1. Feature Planning & Specification
+1. **Invariants** — mandatory always, no judgment involved: the quality gates in [QUALITY.md](./QUALITY.md) (zero TypeScript errors, lint ratchet, tests green, successful build), runes-only components, the naming conventions below, design-system tokens over hardcoded values. These are enforced by tooling wherever possible.
+2. **Required outcomes** — every non-trivial feature must end with the artifacts listed in the next section, produced in whatever order the work makes natural.
+3. **Intent statements** — guidance followed in spirit. When following the letter of an intent statement conflicts with doing the work well, the implementer does the work well and says so, rather than silently complying or silently deviating.
 
-- Capture any non-trivial design in a new markdown doc under `process/` (per the
-  CLAUDE.md convention) before implementing
-- Collaborate on requirements, technical approach, and integration points
-- Define API interfaces, error handling, and performance considerations
-- Clarify implementation details through iterative discussion
+The previous strictly-ordered 5-step process (plan → API doc → tests → implementation → story) is retired as a sequence mandate. Its steps survive as the required outcomes below; the ordering was a proxy for discipline, and the outcomes are the discipline.
 
-### 2. API Documentation
+## Feature development outcomes
 
-- Create comprehensive `src/lib/{feature}/API.md` **before implementation**
-- Document all public methods with Input/Output/Side Effects/Usage examples
-- Include error scenarios, edge cases, and integration patterns
-- Add testing considerations and internal API details for unit test development
+### Design decision record
 
-### 3. Unit Test Development
+Non-trivial design is captured in a markdown doc under `process/` (per the CLAUDE.md convention). Its core duty is not description — it is the **decision record**: judgment calls (behavior changes, trade-offs, things a user would want to rule on) are surfaced explicitly before they are implemented, and the ruling plus its rationale is written back once made ("Outcome: kept two delays, because…"). When implementation diverges from the doc for good reason, the reason goes into the doc in the same change — a design doc that drifts silently is debt, not documentation.
 
-- Write comprehensive unit tests based on the API documentation **before implementation**
-- Cover all methods, error scenarios, edge cases, and integration points
-- Test internal behavior, caching, error handling, and state management
-- Ensure tests validate the API contract defined in documentation
-- Use existing shared mocks where available in `src/lib/test/mocks/`
+### Contract fixed before implementation
 
-### 4. Implementation
+The public contract — API surface plus behavioral guarantees — is settled before implementation begins, in the design doc or the API.md, whichever the work produces first. Implementation then validates that the contract is practical; if it isn't, the contract changes *in the document*, not just in the code.
 
-- Implement the feature following the API specification exactly
-- Code should pass all unit tests without requiring test modifications
-- Focus on meeting the documented API contract and behavior
-- Implementation validates that the API design is practical and complete
+### Contract-level tests
 
-### 5. Storybook Story Creation
+Tests assert the documented contract, not the implementation's incidental behavior. Whether the test code is typed before, alongside, or after the implementation is free; the anchoring to the contract is not.
 
-- Create interactive Storybook stories demonstrating the feature
-- Show integration patterns, error scenarios, and real-world usage
-- Follow patterns in [STORYBOOK.md](./STORYBOOK.md) for component and backend feature demonstrations
-- Stories serve as live documentation and manual testing interface
+**Adjudication rule:** when a test fails, decide explicitly whether the *test* or the *code* diverges from the documented contract, state which (in the commit message or work summary), and fix that one. "Make the test pass" and "make the test match the code" are both wrong moves until that call has been made. Modifying a test is legitimate exactly when the test is the thing that diverges from the contract.
 
-**Process Benefits**: This approach ensures features are well-designed, thoroughly tested, and properly documented before implementation begins. The API documentation serves as a contract that guides both test development and implementation.
+Use existing shared mocks where available in `src/lib/test/mocks/`. See [TESTING.md](./TESTING.md) for testing patterns and environment constraints.
+
+### API documentation
+
+Create `src/lib/{feature}/API.md` for modules that other features (or agents) consume, and update it whenever a documented interface changes. Standards below.
+
+### Storybook coverage
+
+Per [STORYBOOK.md](./STORYBOOK.md), coverage is **workflow-first**: workflow stories demonstrate behavior end-to-end; isolated component stories exist only for the small set of purely presentational components. A headless policy module needs no story of its own — its behavior is covered by unit tests and exercised through existing workflow stories; note that in the feature summary instead of forcing a story into existence.
+
+### Artifact retirement
+
+Design-time artifacts the implementation does not adopt are deleted in the same change, not kept as aspiration. Unadopted contracts read as documentation and mislead every later reader; the unused designed-up-front type surface found in the July 2026 architecture health check (`process/ARCHITECTURE_HEALTH.md`, workstream 4) is the accumulated cost of skipping this.
 
 ## API Documentation Standards
 
 ### Required Sections
-
-When implementing new features, create comprehensive API documentation in `src/lib/{feature}/API.md`:
 
 1. **Overview** - Brief description of main classes and purpose
 2. **Class Documentation** - Each public class with constructor and methods
@@ -87,24 +82,17 @@ console.log('Result:', result);
 
 ### Key Guidelines
 
+- **Document what was specified** — only the requested methods and behavior; do not invent features
 - **Focus on Integration**: Show how the API integrates with other features
 - **Practical Examples**: Include real-world usage patterns, not toy examples
 - **Error Scenarios**: Document common error cases and handling
 - **Browser Compatibility**: Note any browser-specific behavior or limitations
-- **Performance Notes**: Highlight performance characteristics and optimization tips
-
-### When to Create API Docs
-
-- **New feature implementation** - Always create API.md for new `src/lib/{feature}/` modules
-- **Public API changes** - Update existing API.md when interfaces change
-- **Integration points** - Document any APIs that other features will consume
-- **Complex workflows** - Show end-to-end integration patterns
 
 ### Reference Examples
 
 - `src/lib/epub/API.md` - Comprehensive EPUB library documentation
 - `src/lib/storage/API.md` - File Storage API with backend detection details
-- `src/lib/zip/API.md` - Browser-native ZIP implementation documentation
+- `src/lib/editor/API.md` - Pending-saves manager: a contract-plus-invariants document paired with a `process/` design doc
 
 ## File Naming Conventions
 
@@ -119,20 +107,12 @@ Use **PascalCase** for Svelte component filenames following Svelte conventions.
 ```bash
 # ✅ Correct naming conventions
 outline-generator.ts      # TypeScript - kebab-case
-settings-manager.ts       # TypeScript - kebab-case
-workspace-cache.ts        # TypeScript - kebab-case
 ContentPreview.svelte     # Svelte - PascalCase
-ThemeToggle.svelte        # Svelte - PascalCase
-NavigationEditor.svelte   # Svelte - PascalCase
 
 # ❌ Incorrect naming conventions
 OutlineGenerator.ts       # TypeScript should be kebab-case
-settingsManager.ts        # TypeScript should be kebab-case
 content-preview.svelte    # Svelte should be PascalCase
-theme-toggle.svelte       # Svelte should be PascalCase
 ```
-
-**Rationale**: TypeScript files use kebab-case for consistency and readability. Svelte files use PascalCase to follow established Svelte component naming conventions.
 
 **Exceptions**:
 
@@ -143,9 +123,7 @@ theme-toggle.svelte       # Svelte should be PascalCase
 
 ### Svelte 5 Runes (mandatory — no legacy syntax)
 
-**All components use runes mode. Legacy Svelte 4 syntax is not permitted** and
-must be converted whenever you touch a file that still contains it (don't match
-its old style). Conversion reference:
+**All components use runes mode. Legacy Svelte 4 syntax is not permitted** and must be converted whenever you touch a file that still contains it (don't match its old style). Conversion reference:
 
 | Legacy (Svelte 4)                                | Runes (Svelte 5)                                                               |
 | ------------------------------------------------ | ------------------------------------------------------------------------------ |
@@ -158,8 +136,13 @@ its old style). Conversion reference:
 | `<slot name="x" />`                              | `Snippet` prop + `{@render x?.()}` (parent passes `{#snippet x()}…{/snippet}`) |
 | `on:click` / `on:input`                          | `onclick` / `oninput`                                                          |
 
-`svelte-check` (`npm run check`) flags mixed runes/legacy in one component as an
-error, so migrate a file fully in one pass.
+`svelte-check` (`npm run check`) flags mixed runes/legacy in one component as an error, so migrate a file fully in one pass.
+
+### Components must not own policy
+
+Views and components hold wiring and presentation. Scheduling, persistence, identity, and lifecycle-crossing logic (anything involving `setTimeout`, epochs, or state that must survive a navigation) belongs in a plain-TS module with its own tests — a component that accumulates policy gets that policy extracted, not tested in place. `src/lib/editor/pending-saves.ts` is the reference example, and `process/ARCHITECTURE_HEALTH.md` records why (component coverage is deliberately not ratcheted, so policy living in a component is policy living untested).
+
+When a component legitimately needs a timer (a failure backstop, a UI debounce), **arm it inside an `$effect` and clear it in that effect's teardown** — never bare in a function or `onMount` body with the clear left to memory. Effect teardowns run on both re-arm and unmount, so an effect-armed timer structurally cannot outlive its component. The 2026-07 timer audit (`process/ARCHITECTURE_HEALTH.md`, workstream 2) found every hygiene defect in function-scoped timers and none in effect-armed ones; async completions that carry identity across a possible context switch (saves, messages) are the third, dangerous category — those capture their identity at schedule time and belong in a policy module, per the paragraph above.
 
 ### Accessibility Requirements
 
@@ -173,38 +156,7 @@ Before considering a component complete:
 
 ### Development Patterns
 
-- **Import Paths**: Use `$lib` alias for cleaner imports (`import { StorageManager } from '$lib/storage'`) following Svelte conventions. Relative imports (`../`, `../../`) are acceptable for local files within the same feature directory.
-- **CSS & Styling**: Use the comprehensive design system in `src/styles/`
-- **Browser APIs**: Prefer browser-native APIs over regex for structured data handling
-- **Error Handling**: Implement proper TypeScript error types and handling patterns
-- **Svelte 5 Runes**: Runes are mandatory for all components (no legacy syntax) - `$props()`, `$state()`, `$derived()`, `$effect()`, `$bindable()`, callback props, and snippets
-
-### Reference Components
-
-Study these well-implemented components for patterns:
-
-- `src/lib/components/metadata/MetadataEditor.svelte` - Form handling and validation
-- `src/lib/components/manifest/ManifestTable.svelte` - Data display and interaction
-- `src/lib/navigation/views/WorkspaceView.svelte` - Complex state management
-
-## Development Integration
-
-### With Quality Standards
-
-- All development must follow the quality gates defined in [QUALITY.md](./QUALITY.md)
-- TypeScript validation is required before any commit
-- API documentation is validated during implementation
-
-### With Testing Strategy
-
-- Unit tests are written based on API specifications
-- Storybook stories provide integration testing and documentation
-- See [TESTING.md](./TESTING.md) for comprehensive testing patterns
-
-### With Design System
-
-- All components must integrate with the design system in `src/styles/`
-- Use semantic design tokens instead of hardcoded values
-- Follow the established CSS patterns and utility classes
-
-This development workflow ensures consistent, high-quality feature implementation with comprehensive documentation and testing throughout the process.
+- **Import Paths**: Use `$lib` alias for new code (`import { createPendingSaves } from '$lib/editor/pending-saves'`). Relative imports are acceptable for local files within the same feature directory.
+- **CSS & Styling**: Use the design system in `src/styles/` (see `src/styles/DESIGN_SYSTEM.md`)
+- **Browser APIs**: Prefer browser-native APIs (`DOMParser`, `querySelector`) over regex for structured data handling
+- **Reference components**: `src/lib/components/metadata/MetadataEditor.svelte` (forms/validation), `src/lib/components/manifest/ManifestTable.svelte` (data display), `src/lib/navigation/views/WorkspaceView.svelte` (complex state)

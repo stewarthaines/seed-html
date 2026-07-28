@@ -44,6 +44,7 @@
     type ReadFlow,
   } from '$lib/reader/read-preview.js';
   import { buildPagedDocument, chapterToSection, MARGIN_MM } from '$lib/pdf/pdf-export.js';
+  import { acceptPreviewSaveData } from '$lib/preview/preview-data.js';
   import type { PrintSettings, PreviewSettings } from '$lib/services/settings/settings.service.js';
   import {
     DEFAULT_PREVIEW,
@@ -1227,12 +1228,17 @@
     const onMessage = (event: MessageEvent) => {
       if (event.source !== previewIframe?.contentWindow) return;
       // A preview head.xml script persisting per-chapter data via window.seed.
-      // The app owns the path (from THIS chapter's idref); the iframe supplies
-      // only the slot + text. See process/PREVIEW_BRIDGE.md.
-      const seedMsg = event.data as { type?: string; slot?: string; text?: string } | null;
+      // The bridge stamped the idref into the realm at render time and the
+      // message echoes it; acceptPreviewSaveData drops anything whose echo
+      // doesn't match the chapter currently previewed (the iframe Window
+      // survives document.open() across a chapter switch, so event.source
+      // alone can't tell a late message from the previous chapter apart).
+      // See process/PREVIEW_BRIDGE.md.
+      const seedMsg = event.data as { type?: string } | null;
       if (seedMsg?.type === 'seed-save-data') {
-        if (chapterId && typeof seedMsg.slot === 'string' && typeof seedMsg.text === 'string') {
-          onSavePreviewData?.(chapterId, seedMsg.slot, seedMsg.text);
+        const save = acceptPreviewSaveData(seedMsg, chapterId);
+        if (save) {
+          onSavePreviewData?.(save.idref, save.slot, save.text);
         }
         return;
       }
@@ -2379,12 +2385,18 @@
       else handleDeviceChange(selectedDevice.current);
     };
 
+    // A real debounce: one tracked timer, reset per event, so a stream of
+    // resize events (window drag, observer bursts) coalesces into a single
+    // re-fit instead of queueing one delayed call per event.
+    let resizeDebounce: ReturnType<typeof setTimeout> | undefined;
+    const scheduleResize = () => {
+      clearTimeout(resizeDebounce);
+      resizeDebounce = setTimeout(onResize, 400);
+    };
+
     // Set up resize observer for responsive scaling
     if (typeof ResizeObserver !== 'undefined') {
-      resizeObserver = new ResizeObserver(() => {
-        // Debounce resize events
-        setTimeout(onResize, 400);
-      });
+      resizeObserver = new ResizeObserver(scheduleResize);
 
       // Observe the preview content element for size changes
       if (previewContentEl) {
@@ -2393,10 +2405,7 @@
     }
 
     // Fallback: window resize listener
-    const handleResize = () => {
-      setTimeout(onResize, 400);
-    };
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', scheduleResize);
 
     // Clicking the host surround (the letterbox around a scaled device frame, or
     // any preview chrome outside the iframe) refocuses the foliate view so arrow-
@@ -2410,8 +2419,15 @@
 
     return () => {
       resizeObserver?.disconnect();
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', scheduleResize);
       previewContentEl?.removeEventListener('click', onSurroundClick);
+      // Timers this component scheduled must not outlive it — a late fire
+      // would touch destroyed state (2026-07 timer audit, ARCHITECTURE_HEALTH
+      // workstream 2).
+      clearTimeout(resizeDebounce);
+      clearTimeout(a11yAutoTimer);
+      clearTimeout(printSafetyTimer);
+      clearTimeout(readSafetyTimer);
       if (readSectionUrl) URL.revokeObjectURL(readSectionUrl);
     };
   });

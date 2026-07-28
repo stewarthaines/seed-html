@@ -26,10 +26,9 @@ if (window.seed) {
       });
     }
     var pageCount = doc.querySelectorAll('.pagedjs_page').length;
-    seed.saveData(
-      'pagemap',
-      JSON.stringify({ idref: detail.idref, pageCount: pageCount, entries: entries })
-    );
+    // Identity travels in the bridge envelope (seed.saveData stamps the realm's
+    // idref), not in the payload — buildPageIndex.js keys chapters by spine.
+    seed.saveData('pagemap', JSON.stringify({ pageCount: pageCount, entries: entries }));
   };
 }
 //]]>

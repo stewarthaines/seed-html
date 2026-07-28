@@ -6,19 +6,23 @@ The first consumer is the PDF page-index extension (`process/PDF_PAGE_INDEX.md`)
 
 ## The contract
 
-Injected into every preview iframe's `<head>`, **before** the project's `head.xml` fragment, so the script can register hooks and call `saveData` as soon as it runs:
+Injected into every preview iframe's `<head>`, **before** the project's `head.xml` fragment, so the script can register hooks and call `saveData` as soon as it runs. The app stamps the chapter's idref into the realm at injection time; every message echoes it back:
 
 ```js
-window.seed = {
-  // Persist text for the CURRENT chapter under a named slot. The author does NOT
-  // name the file — only the slot (the kind of data). The app builds the path
-  // from the idref it is rendering, so it owns naming and can GC on rename/delete.
-  saveData(slot, text) {
-    parent.postMessage({ type: 'seed-save-data', slot, text }, '*');
-  },
-  // Lifecycle handlers the head.xml script assigns; the app calls them.
-  hooks: {},
-};
+(function () {
+  var idref = '<idref the app is rendering>'; // stamped at injection time
+  window.seed = {
+    idref: idref, // readable by head.xml scripts; identity is app-assigned
+    // Persist text for THIS chapter under a named slot. The author does NOT
+    // name the file — only the slot (the kind of data). The app builds the path
+    // from the echoed idref, so it owns naming and can GC on rename/delete.
+    saveData(slot, text) {
+      parent.postMessage({ type: 'seed-save-data', idref: idref, slot, text }, '*');
+    },
+    // Lifecycle handlers the head.xml script assigns; the app calls them.
+    hooks: {},
+  };
+})();
 ```
 
 A `head.xml` script uses it like:
@@ -37,7 +41,7 @@ The author passes `'pagemap'` (a slot), never a path. The app writes it to `SOUR
 
 ## How it works
 
-**Write path (app-owned).** `saveData` posts `{ type: 'seed-save-data', slot, text }`. `PreviewPane` (which already filters preview-iframe messages by `event.source`) validates the `slot` as a single safe path segment (`^[a-z0-9_-]+$` — no slashes, no traversal), then builds the path itself: `SOURCE/data/preview/<idref>/<slot>.json`, where `<idref>` is `PreviewPane`'s own current chapter, **not** anything the iframe supplied. It writes via `workspaceService.writeFile`, still passing through the transform broker's `resolveSourceWritePath` as a second belt (the app-built path is already inside `SOURCE/data/`). So the trust boundary is unchanged — the same `SOURCE/data/` write scope transforms have — and because the app authored every path segment, it can enumerate and rewrite them by idref.
+**Write path (app-owned).** `saveData` posts `{ type: 'seed-save-data', idref, slot, text }`, where `idref` is the identity the **app** stamped into the realm at injection time — the iframe echoes it, it does not choose it. `PreviewPane` filters messages by `event.source`, then `acceptPreviewSaveData` (`src/lib/preview/preview-data.ts`, unit-tested) validates the envelope: the `slot` must be a single safe path segment (`^[a-z0-9_-]+$` — no slashes, no traversal), the `idref` must be safe **and must match the chapter currently previewed**. A mismatch is dropped, not remapped — the iframe `Window` survives `document.open()` across a chapter switch, so `event.source` alone cannot tell a late message from the previous chapter's capture script apart from a current one; the identity echo is what prevents chapter A's data being filed under chapter B (found in the 2026-07 timer audit, `process/ARCHITECTURE_HEALTH.md` workstream 2). Dropped data regenerates the next time its chapter renders. The app then builds the path itself (`SOURCE/data/preview/<idref>/<slot>.json`) and writes via `workspaceService.writeFile`, still passing through the transform broker's `resolveSourceWritePath` as a second belt. The trust boundary is unchanged — the same `SOURCE/data/` write scope transforms have — and because the app authored every path segment, it can enumerate and rewrite them by idref.
 
 **Lifecycle (app-managed).** Grouping by idref (`.../preview/<idref>/…`) makes per-chapter GC a single directory operation. The app already owns spine mutations (`SpineSidebar`/`SpineView`), so on a chapter **delete** it removes `SOURCE/data/preview/<idref>/` and on **rename** (idref change) it moves the directory to the new idref. The author never has to think about stale files, and never could clean them up anyway (they don't know the paths). The naming scheme is a documented contract so the build-time reader can reconstruct a path from `(idref, slot)`.
 

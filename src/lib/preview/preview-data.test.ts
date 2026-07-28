@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { previewDataPath, previewDataChapterDir, PREVIEW_DATA_PREFIX } from './preview-data.js';
+import {
+  previewDataPath,
+  previewDataChapterDir,
+  acceptPreviewSaveData,
+  PREVIEW_DATA_PREFIX,
+} from './preview-data.js';
 
 describe('previewDataPath', () => {
   it('builds SOURCE/data/preview/<idref>/<slot>.json', () => {
@@ -34,5 +39,53 @@ describe('previewDataChapterDir', () => {
 
   it('rejects an unsafe idref', () => {
     expect(previewDataChapterDir('../x')).toBeNull();
+  });
+});
+
+describe('acceptPreviewSaveData', () => {
+  const msg = { type: 'seed-save-data', idref: 'chap-03', slot: 'pagemap', text: '{}' };
+
+  it('accepts a well-formed envelope whose idref matches the current chapter', () => {
+    expect(acceptPreviewSaveData(msg, 'chap-03')).toEqual({
+      idref: 'chap-03',
+      slot: 'pagemap',
+      text: '{}',
+    });
+  });
+
+  it('drops a late message from a previously rendered chapter (identity mismatch)', () => {
+    // The iframe Window survives document.open() across a chapter switch, so
+    // this is the case event.source cannot catch: chapter A's capture script
+    // posting after the preview moved on to chapter B.
+    expect(acceptPreviewSaveData(msg, 'chap-04')).toBeNull();
+  });
+
+  it('drops messages when no chapter is being previewed', () => {
+    expect(acceptPreviewSaveData(msg, null)).toBeNull();
+    expect(acceptPreviewSaveData(msg, undefined)).toBeNull();
+  });
+
+  it('drops envelopes missing the idref echo', () => {
+    expect(
+      acceptPreviewSaveData({ type: 'seed-save-data', slot: 'pagemap', text: '{}' }, 'chap-03')
+    ).toBeNull();
+  });
+
+  it('drops wrong types, shapes, and non-string fields', () => {
+    expect(acceptPreviewSaveData(null, 'chap-03')).toBeNull();
+    expect(acceptPreviewSaveData('seed-save-data', 'chap-03')).toBeNull();
+    expect(acceptPreviewSaveData({ ...msg, type: 'other' }, 'chap-03')).toBeNull();
+    expect(acceptPreviewSaveData({ ...msg, text: 42 }, 'chap-03')).toBeNull();
+    expect(acceptPreviewSaveData({ ...msg, slot: undefined }, 'chap-03')).toBeNull();
+  });
+
+  it('drops unsafe slots even when the identity matches', () => {
+    expect(acceptPreviewSaveData({ ...msg, slot: '../escape' }, 'chap-03')).toBeNull();
+    expect(acceptPreviewSaveData({ ...msg, slot: 'a/b' }, 'chap-03')).toBeNull();
+  });
+
+  it('drops an unsafe idref even if the preview somehow matches it', () => {
+    const bad = { ...msg, idref: 'a/b' };
+    expect(acceptPreviewSaveData(bad, 'a/b')).toBeNull();
   });
 });
