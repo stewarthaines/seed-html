@@ -83,6 +83,10 @@ SpineView (and later PreviewPane/EditorPane) consume it; the preview-feed guard 
 
 Items 2 and 3 are the same _catch-block inconsistency_ found independently in two services — a candidate for one small sweep (audit every service catch for the `instanceof <ServiceError>` re-throw guard) rather than piecemeal fixes.
 
+**All five defects FIXED 2026-07-28** (commit `369acd9`), including the full sweep: 17 ungarded catch-wrap sites across five services gained the re-throw guard; the language-tag severity aligned to error on both paths; `deleteChapter` got the trailing-slash prefix check and a new public `WorkspaceService.deleteFile` (no more `as any` reach-through); `transform-engine.cleanup()` removes the registered listener reference. Four tests that had pinned defective behavior were adjudicated and updated to the corrected contract.
+
+**Lock decision: DECIDED and implemented** (commit `4e5db5f`) — per-directory statement thresholds in `vitest.config.unit.ts`, enforced by `validate` (which now runs `test:coverage`). Ratchet rule: raise as areas strengthen, never lower. Test-support directories are excluded from coverage so fixture code cannot distort a lock. **Workstream 3 is COMPLETE.**
+
 ## Workstream 4 — type-contract consolidation
 
 **Problem.** Knip reports 178 unused exported types (stable vs. the 175 baseline); the interesting subset is _duplicated contracts_, i.e. stale design docs living in the type system:
