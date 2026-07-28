@@ -211,6 +211,21 @@ describe('pending-saves', () => {
     expect(calls).toHaveLength(2);
   });
 
+  it('flush survives a getContent that throws (store torn down early): logs, no write', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { calls, write } = recordingWriter();
+    manager = createPendingSaves({ write });
+
+    manager.schedule('ws-a', 'chapter.txt', () => {
+      throw new Error('store destroyed');
+    });
+    manager.invalidateWorkspace();
+    await manager.settled();
+
+    expect(calls).toHaveLength(0);
+    expect(error).toHaveBeenCalled();
+  });
+
   it('cancel drops a pending save without writing', async () => {
     const { calls, write } = recordingWriter();
     manager = createPendingSaves({ write });

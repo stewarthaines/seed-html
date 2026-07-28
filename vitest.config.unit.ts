@@ -34,7 +34,8 @@ export default defineConfig({
       // Browser-mode contract tests run separately (npm run test:plugins).
       '**/*.browser.{test,spec}.{js,ts}',
     ],
-    // On-demand diagnostic (npm run test:coverage) — not part of validate.
+    // Runs in validate via npm run test:coverage; the thresholds below are the
+    // coverage ratchet (ARCHITECTURE_HEALTH workstream 3).
     coverage: {
       include: ['src/**', 'functions/**'],
       exclude: [
@@ -46,8 +47,30 @@ export default defineConfig({
         // Build-time service-worker template; never executes in this suite.
         'src/pwa/**',
         '**/*.{test,spec}.*',
+        // Test-support code (fixtures, fixture generators, shared mocks) —
+        // measures nothing about the app and would distort directory locks.
+        'src/**/test/**',
+        'src/lib/test/**',
       ],
       reporter: ['text-summary', 'html'],
+      // Per-directory coverage locks, in the lint-ratchet spirit: set slightly
+      // below current so they catch regressions without being brittle, raise
+      // (never lower) as areas strengthen. Components/views are deliberately
+      // unlocked — workflow-first Storybook covers them; policy extracted from
+      // them lands in locked directories.
+      thresholds: {
+        'src/lib/services/spine/**': { statements: 95 },
+        'src/lib/services/metadata/**': { statements: 95 },
+        'src/lib/infrastructure/**': { statements: 95 },
+        'src/lib/editor/**': { statements: 95 },
+        'src/lib/zip/**': { statements: 95 },
+        'src/lib/metadata/**': { statements: 95 },
+        'src/lib/content/**': { statements: 95 },
+        'src/lib/agent-bridge/**': { statements: 90 },
+        'src/lib/transform/**': { statements: 90 },
+        'src/lib/source/**': { statements: 90 },
+        'src/lib/extensions/**': { statements: 85 },
+      },
     },
   },
 });
