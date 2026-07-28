@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-24\n"
-"PO-Revision-Date: 2026-07-24\n"
+"POT-Creation-Date: 2026-07-28\n"
+"PO-Revision-Date: 2026-07-28\n"
 "Language: ka\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -43,6 +43,23 @@ msgstr "{count} დღის წინ"
 #: src/lib/components/metadata/MetadataTab.svelte
 msgid "{count} errors"
 msgstr "{count} შეცდომა"
+
+#: src/lib/components/manifest/MoveReviewDialog.svelte
+msgid "{count} files"
+msgstr ""
+
+#: src/lib/components/manifest/MoveReviewDialog.svelte
+msgid "{count} files cannot move"
+msgstr ""
+
+#: src/lib/components/manifest/MoveReviewDialog.svelte
+msgid "{count} references updated"
+msgstr ""
+
+#: src/lib/components/manifest/ManifestPreview.svelte
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "{count} selected"
+msgstr ""
 
 #: src/lib/components/spine/EditorPane.svelte
 msgid "{count} Warnings"
@@ -547,6 +564,7 @@ msgid "Applied {n} change(s)."
 msgstr "გადატარდა {n} ცვლილება."
 
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+#: src/lib/navigation/views/ChaptersView.svelte
 msgid "Apply"
 msgstr "გადატარება"
 
@@ -722,11 +740,13 @@ msgstr "ჩაშენებული"
 #: src/lib/components/EditSpineItemDialog.svelte
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
+#: src/lib/components/manifest/MoveReviewDialog.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
 #: src/lib/components/track-changes/PatchsetReviewDialog.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 #: src/lib/components/workspace/DuplicateProjectDialog.svelte
+#: src/lib/navigation/views/ChaptersView.svelte
 msgid "Cancel"
 msgstr "გაუქმება"
 
@@ -843,7 +863,9 @@ msgstr "თავის სათაური"
 msgid "Chapter title — used in the content document <title>; defaults to the spine id"
 msgstr "თავის სათაური — გამოიყენება შინაარსის დოკუმენტის <title> ელემენტში; ნაგულისხმევად spine-ის id-ს იღებს"
 
+#: src/App.svelte
 #: src/lib/Sidebar.svelte
+#: src/lib/navigation/views/ChaptersView.svelte
 msgid "Chapters"
 msgstr "თავები"
 
@@ -909,6 +931,7 @@ msgstr "კლიპის სახელი"
 #: src/lib/components/EditSpineItemDialog.svelte
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
+#: src/lib/components/manifest/MoveReviewDialog.svelte
 #: src/lib/components/spine/ChapterValidationPanel.svelte
 #: src/lib/components/spine/EditorPane.svelte
 #: src/lib/components/spine/PreviewPane.svelte
@@ -1240,6 +1263,14 @@ msgstr "CSS-ის მინდვრები (margin), მაგ. \"20mm 15mm 
 msgid "Current"
 msgstr "მიმდინარე"
 
+#: src/lib/components/chapters/SpineDiagram.svelte
+msgid "Current chapter order and the proposed order after the move."
+msgstr ""
+
+#: src/lib/components/chapters/SpineDiagram.svelte
+msgid "Current chapter order."
+msgstr ""
+
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 msgid "Current cover image"
 msgstr "ამჟამინდელი ყდის გამოსახულება"
@@ -1329,6 +1360,7 @@ msgstr ""
 #: src/lib/components/manifest/ManifestPreview.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
+#: src/lib/navigation/views/ChaptersView.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Delete"
 msgstr "წაშლა"
@@ -1336,6 +1368,10 @@ msgstr "წაშლა"
 #: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Delete \"{title}\"? This cannot be undone."
 msgstr "წაიშალოს \"{title}\"? ამ მოქმედების დაბრუნება შეუძლებელია."
+
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Delete {count} chapters?"
+msgstr ""
 
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Delete {filename}? This cannot be undone."
@@ -1357,6 +1393,10 @@ msgstr "წაშლის შეცდომა: {error}"
 msgid "Delete failed"
 msgstr "წაშლა ვერ მოხერხდა"
 
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Delete failed: {message}"
+msgstr ""
+
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Delete project"
 msgstr "პროექტის წაშლა"
@@ -1368,6 +1408,10 @@ msgstr "პროექტის წაშლა: {title}"
 #: plugins/audio-clip-editor/src/App.svelte
 msgid "Delete the selected clip from the library"
 msgstr "მონიშნული კლიპის წაშლა ბიბლიოთეკიდან"
+
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Deleted {count} chapters"
+msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "deletion"
@@ -1399,6 +1443,10 @@ msgstr "მოწყობილობა"
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Device:"
 msgstr "მოწყობილობა:"
+
+#: src/lib/components/manifest/ManifestPreview.svelte
+msgid "Directory"
+msgstr ""
 
 #: src/lib/components/metadata/CustomMetaSection.svelte
 msgid "Discovered in this book"
@@ -2088,6 +2136,11 @@ msgstr "პროექტების ჩატვირთვა ვერ მ
 msgid "Failed to load settings"
 msgstr "პარამეტრების ჩატვირთვა ვერ მოხერხდა"
 
+#: src/lib/components/manifest/ManifestPreview.svelte
+#: src/lib/components/manifest/MoveReviewDialog.svelte
+msgid "Failed to move files"
+msgstr ""
+
 #: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Failed to open workspace: {error}"
 msgstr "სამუშაო სივრცის გახსნა ვერ მოხერხდა: {error}"
@@ -2132,6 +2185,10 @@ msgstr "პარამეტრების განახლება ვე�
 msgid "Failed to upload all files"
 msgstr "ყველა ფაილის ატვირთვა ვერ მოხერხდა"
 
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Failed: {message}"
+msgstr ""
+
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 msgid "Fetch"
 msgstr "ჩატვირთვა"
@@ -2141,8 +2198,8 @@ msgid "figure"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestPreview.svelte
-msgid "File Path"
-msgstr "ფაილის ბილიკი"
+msgid "Filename"
+msgstr ""
 
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "files"
@@ -2392,13 +2449,13 @@ msgstr "იმპორტი კატალოგიდან"
 msgid "Import from File"
 msgstr "იმპორტი ფაილიდან"
 
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Import from files"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Import JavaScript Extension"
 msgstr "JavaScript გაფართოების იმპორტი"
-
-#: src/lib/Sidebar.svelte
-msgid "Import text files as chapters"
-msgstr "ტექსტური ფაილების იმპორტი თავებად"
 
 #: src/lib/components/import/ImportReviewDialog.svelte
 #: src/lib/components/workspace/OPDSImportDialog.svelte
@@ -2488,6 +2545,10 @@ msgstr "კლიპის დირექტივის ჩასმა რე
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "insertion"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Interface options"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
@@ -2689,7 +2750,11 @@ msgstr "ღია ტექსტი მუქ ყდაზე"
 msgid "link"
 msgstr ""
 
-#: src/lib/Sidebar.svelte
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Link a folder"
+msgstr ""
+
+#: src/lib/navigation/views/ChaptersView.svelte
 msgid "Link folder…"
 msgstr "საქაღალდის მიბმა…"
 
@@ -2830,6 +2895,10 @@ msgstr "შექმენით ერთხელ — წაიკითხე
 msgid "Malformed XHTML"
 msgstr "არასწორად ფორმირებული XHTML"
 
+#: src/lib/Sidebar.svelte
+msgid "Manage chapter order"
+msgstr ""
+
 #: src/App.svelte
 #: src/lib/Sidebar.svelte
 msgid "Manifest"
@@ -2876,6 +2945,19 @@ msgstr "რეჟიმი"
 msgid "Modified"
 msgstr "შეცვლილია"
 
+#: src/lib/components/manifest/ManifestPreview.svelte
+#: src/lib/components/manifest/MoveReviewDialog.svelte
+msgid "Move"
+msgstr ""
+
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Move {count} chapters before {name}. Apply to commit."
+msgstr ""
+
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Move {count} chapters to the end. Apply to commit."
+msgstr ""
+
 #: src/lib/components/SpineItem.svelte
 msgid "Move {id} down"
 msgstr "{id}-ის ქვემოთ გადატანა"
@@ -2887,6 +2969,14 @@ msgstr "{id}-ის ზემოთ გადატანა"
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Move down"
 msgstr "ქვემოთ გადატანა"
+
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Move failed: {message}"
+msgstr ""
+
+#: src/lib/components/manifest/MoveReviewDialog.svelte
+msgid "Move files"
+msgstr ""
 
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Move start time back 0.1 seconds"
@@ -2907,6 +2997,14 @@ msgstr "დაწყების დროის 1 წამით წინ გ
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Move up"
 msgstr "ზემოთ გადატანა"
+
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Moved {count} chapters"
+msgstr ""
+
+#: src/lib/components/manifest/MoveReviewDialog.svelte
+msgid "Moves"
+msgstr ""
 
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "Much of this software was written with AI coding agents, primarily Anthropic's Claude Code."
@@ -2981,6 +3079,10 @@ msgid "New Project"
 msgstr "ახალი პროექტი"
 
 #: src/lib/components/spine/PreviewPane.svelte
+msgid "Next chapter"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
 msgid "Next page"
 msgstr ""
 
@@ -3005,6 +3107,10 @@ msgstr "დასაფიქსირებელი ცვლილებე�
 
 #: src/lib/pdf/pdf-export.ts
 msgid "No chapters to export."
+msgstr ""
+
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "No chapters yet"
 msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
@@ -3104,6 +3210,10 @@ msgstr "ამ ჰოსტზე პროქსი ვერ მოიძე�
 msgid "No readable chapter content."
 msgstr ""
 
+#: src/lib/components/manifest/ManifestPreview.svelte
+msgid "No references found"
+msgstr ""
+
 #: src/lib/components/SpineSidebar.svelte
 msgid "No spine items yet"
 msgstr "თავები ჯერ არ არის"
@@ -3117,7 +3227,6 @@ msgid "No validation issues in this chapter."
 msgstr "ამ თავში ვალიდაციის პრობლემები არ არის."
 
 #: src/lib/components/metadata/BasicInfoFields.svelte
-#: src/lib/navigation/views/SettingsView.svelte
 msgid "None"
 msgstr "არცერთი"
 
@@ -3133,7 +3242,7 @@ msgstr "არ არის ტექსტური ფაილი"
 msgid "Not available in this browser — connecting a USB device needs the File System Access API (Chrome, Edge)"
 msgstr "ამ ბრაუზერში მიუწვდომელია — USB მოწყობილობის დასაკავშირებლად საჭიროა File System Access API (Chrome, Edge)"
 
-#: src/lib/Sidebar.svelte
+#: src/lib/navigation/views/ChaptersView.svelte
 msgid "Not available in this browser — linking a folder needs the File System Access API (Chrome, Edge)"
 msgstr "ამ ბრაუზერში მიუწვდომელია — საქაღალდის მისაბმელად საჭიროა File System Access API (Chrome, Edge)"
 
@@ -3352,6 +3461,10 @@ msgstr "გვერდების მიმდევრობა"
 msgid "Page size"
 msgstr "გვერდის ზომა"
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Paged device previews"
+msgstr ""
+
 #: src/lib/Sidebar.svelte
 #: src/lib/components/spine/PreviewPane.svelte
 #. Reading flow option — paginated pages
@@ -3432,6 +3545,14 @@ msgstr "ადგილმჭერები: <href>, <begin>, <end> სავ�
 msgid "Placeholders: <title>, <author>, <date>."
 msgstr "ადგილმჭერები: <title>, <author>, <date>."
 
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Placement cancelled"
+msgstr ""
+
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Placing {count} chapters. Arrow keys to choose, Enter to confirm, Escape to cancel."
+msgstr ""
+
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "Plain text"
 msgstr "უბრალო ტექსტი"
@@ -3467,10 +3588,6 @@ msgstr "გთხოვთ, ჯერ აირჩიოთ საქაღა�
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Please select a remote type"
 msgstr "გთხოვთ, აირჩიოთ დისტანციური საცავის ტიპი"
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Plugins"
-msgstr "პლაგინები"
 
 #: src/lib/components/spine/PreviewPane.svelte
 #. Device size for extra large mobile phones
@@ -3535,6 +3652,10 @@ msgid "Preview Pane"
 msgstr "გადახედვის პანელი"
 
 #: src/lib/components/spine/PreviewPane.svelte
+msgid "Previous chapter"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
 msgid "Previous page"
 msgstr ""
 
@@ -3562,6 +3683,11 @@ msgstr "პროექტები"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "prologue"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+#. The chapter-proofs preview option — a grid of small print pages
+msgid "Proofs"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestTable.svelte
@@ -3683,13 +3809,25 @@ msgstr "ხელახლა დაკავშირება"
 msgid "Reconnect device"
 msgstr "მოწყობილობის ხელახლა დაკავშირება"
 
-#: src/lib/Sidebar.svelte
+#: src/lib/navigation/views/ChaptersView.svelte
 msgid "Reconnect folder"
 msgstr "საქაღალდის ხელახლა დაკავშირება"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Redirect URI"
 msgstr "გადამისამართების URI"
+
+#: src/lib/components/manifest/MoveReviewDialog.svelte
+msgid "References in {sheets} stylesheets"
+msgstr ""
+
+#: src/lib/components/manifest/MoveReviewDialog.svelte
+msgid "References in {sources} text sources"
+msgstr ""
+
+#: src/lib/components/manifest/MoveReviewDialog.svelte
+msgid "References in {sources} text sources and {sheets} stylesheets"
+msgstr ""
 
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Reflowable"
@@ -3772,10 +3910,6 @@ msgstr "მონიშნული არხის მოცილება ს
 msgid "Removed {name}"
 msgstr "{name} მოცილებულია"
 
-#: src/lib/components/spine/PreviewPane.svelte
-msgid "Rendered chapter file"
-msgstr "თავის დარენდერებული ფაილი"
-
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Rendition Properties"
 msgstr "გამოსახვის თვისებები (rendition)"
@@ -3819,6 +3953,14 @@ msgstr "რედაქტორის ტექსტის ზომის ჩ
 #. Device category for responsive preview that fills available space
 msgid "Responsive"
 msgstr "ადაპტიური"
+
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Restore"
+msgstr ""
+
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Restored {count} chapters"
+msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 #: src/lib/components/SpineSidebar.svelte
@@ -4022,6 +4164,10 @@ msgstr "ხედის არჩევა"
 msgid "Selected folder: {name}"
 msgstr "არჩეული საქაღალდე: {name}"
 
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Selection cleared"
+msgstr ""
+
 #: src/lib/components/spine/sr-walk.ts
 msgid "separator"
 msgstr ""
@@ -4041,6 +4187,14 @@ msgstr "სესიის ვადა ამოიწურა — გთხ�
 #: src/lib/components/metadata/CollectionsEditor.svelte
 msgid "Set"
 msgstr "ნაკრები"
+
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Set aside"
+msgstr ""
+
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Set aside {count} chapters"
+msgstr ""
 
 #: src/lib/components/metadata/fields/DateMetadataField.svelte
 msgid "Set to today"
@@ -4247,8 +4401,8 @@ msgstr "{mode} თემაზე გადართვა"
 msgid "Switch to single pane"
 msgstr "ერთ პანელზე გადართვა"
 
-#: src/lib/Sidebar.svelte
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
+#: src/lib/navigation/views/ChaptersView.svelte
 msgid "Sync folder"
 msgstr "საქაღალდის სინქრონიზაცია"
 
@@ -4316,6 +4470,10 @@ msgstr "თავის id ემთხვევა {label}-ს; ის ახ�
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "The chapter title at the top of each page."
 msgstr "თავის სათაური თითოეული გვერდის ზედა ნაწილში."
+
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "the end"
+msgstr ""
 
 #: src/lib/components/SpineSidebar.svelte
 msgid "The linked folder isn't available — reconnect the drive or relink the folder."
