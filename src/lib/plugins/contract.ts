@@ -137,9 +137,6 @@ export interface ReadEpubMessage {
   url?: string;
 }
 
-export type MainToPlugin = InitMessage | ContextMessage;
-export type PluginToMain = PluginReadyMessage | InsertMessage | NavigateMessage | ReadEpubMessage;
-
 /**
  * The OPFS path of a workspace's directory, as segments from the storage
  * root. This layout (`workspaces/<id>`) is the storage backend's stable

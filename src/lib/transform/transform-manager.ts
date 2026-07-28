@@ -17,7 +17,7 @@ export interface TransformSettings {
   [key: string]: any;
 }
 
-export interface TransformScript {
+interface TransformScript {
   filename: string;
   content: string;
   size: number;

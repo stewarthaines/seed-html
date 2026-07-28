@@ -25,7 +25,7 @@ export const FOLDER_RECONNECT_REQUIRED = 'FOLDER_RECONNECT_REQUIRED';
     unplugged, folder deleted) — reconnect UI with a folder-specific message. */
 export const FOLDER_UNAVAILABLE = 'FOLDER_UNAVAILABLE';
 
-export type FolderConnectionError =
+type FolderConnectionError =
   | typeof FOLDER_NOT_LINKED
   | typeof FOLDER_RECONNECT_REQUIRED
   | typeof FOLDER_UNAVAILABLE;

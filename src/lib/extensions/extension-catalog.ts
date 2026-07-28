@@ -25,7 +25,7 @@ export interface ExtensionDiscoveryEnv {
  * registered in the OPF manifest — e.g. a CSS theme a highlighter needs. This is
  * distinct from scripts/transforms, which live in SOURCE/ and are edit-time only.
  */
-export interface ExtensionAsset {
+interface ExtensionAsset {
   /** File within the extension dir to copy. */
   file: string;
   /** OEBPS-relative destination, also the manifest href (e.g. 'Styles/highlight.css'). */

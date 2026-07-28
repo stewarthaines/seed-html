@@ -46,12 +46,12 @@ export const FOLIATE_VIEW_GLOBAL = '__seedFoliateView';
 /** A loaded foliate section: `doc` is the chapter document, reachable
  *  same-origin thanks to read-html's open-shadow-root + srcdoc patches. The
  *  seam the DOM tools (deixis, axe, Announce) operate through under foliate. */
-export interface FoliateContent {
+interface FoliateContent {
   doc: Document;
 }
 
 /** Detail of the foliate-view `load` event — fired as each section loads. */
-export interface FoliateLoadEvent {
+interface FoliateLoadEvent {
   detail: { doc: Document };
 }
 

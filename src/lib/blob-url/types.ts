@@ -22,28 +22,6 @@ export interface BlobURLRegistry {
   maxCount: number; // Maximum allowed URLs
 }
 
-// Asset element selector configuration
-export interface AssetSelector {
-  tag: string; // Element tag name
-  attr: string; // Attribute name
-}
-
-// XHTML processing result
-export interface XHTMLProcessingResult {
-  processedContent: string; // Modified XHTML content
-  assetsProcessed: number; // Number of assets processed
-  assetsSkipped: number; // Number of assets skipped
-  errors: AssetProcessingError[]; // Processing errors
-}
-
-// Asset processing error details
-export interface AssetProcessingError {
-  href: string; // Original asset href
-  resolvedPath: string; // Resolved workspace path
-  element: string; // Element tag name
-  error: Error; // Original error
-}
-
 // Error classes
 export class BlobURLError extends Error {
   constructor(
@@ -68,11 +46,4 @@ export class XHTMLProcessingError extends BlobURLError {
   ) {
     super(message, 'XHTML_PROCESSING_ERROR');
   }
-}
-
-// Extended File Storage API interface for OPFS optimization
-export interface ExtendedFileStorageAPI extends FileStorageAPI {
-  // OPFS optimization methods
-  supportsDirectBlobURLs(): boolean;
-  getFile(workspaceId: string, filePath: string): Promise<File>;
 }

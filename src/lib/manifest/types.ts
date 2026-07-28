@@ -21,16 +21,6 @@ export interface ManifestItem {
   spineIndex?: number; // Position in spine (if applicable)
 }
 
-// Data structure for creating new text items
-export interface CreateTextItemData {
-  id?: string; // Optional ID (will be generated if not provided)
-  fileName: string; // File name (e.g., 'chapter1.xhtml')
-  content: string; // Text content
-  mediaType?: string; // Optional media type (will be detected if not provided)
-  properties?: string[]; // Optional EPUB properties
-  targetDirectory?: string; // Optional subdirectory (defaults to 'OEBPS/')
-}
-
 // Content preview data for UI display
 export interface ContentPreview {
   itemId: string;
@@ -85,7 +75,7 @@ export interface MediaTypeCategories {
   application: MediaTypeDefinition[];
 }
 
-export interface MediaTypeDefinition {
+interface MediaTypeDefinition {
   mediaType: string;
   extensions: string[];
   description: string;

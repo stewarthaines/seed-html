@@ -16,11 +16,6 @@ import type { ValidationResult } from '../../metadata/MetadataValidator.js';
 // Re-export for component usage
 export type { ValidationResult } from '../../metadata/MetadataValidator.js';
 
-export interface MetadataFieldUpdate {
-  field: keyof EPUBMetadata;
-  value: any;
-}
-
 // Service error types
 export class MetadataServiceError extends Error {
   constructor(

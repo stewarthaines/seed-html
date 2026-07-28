@@ -31,7 +31,7 @@ export interface NavigationDocument {
 /**
  * Navigation metadata for OPF manifest registration
  */
-export interface NavigationMetadata {
+interface NavigationMetadata {
   /** Manifest item ID (typically 'nav') */
   id: string;
 
@@ -46,23 +46,6 @@ export interface NavigationMetadata {
 
   /** Spine inclusion flag (typically false for navigation) */
   linear: boolean;
-}
-
-/**
- * Configuration options for automatic generation from spine items
- */
-export interface GenerationOptions {
-  /** Include spine items without titles */
-  includeUntitled?: boolean;
-
-  /** Custom title generation strategy */
-  titleStrategy?: 'filename' | 'heading' | 'fallback';
-
-  /** Navigation document title */
-  documentTitle?: string;
-
-  /** Additional CSS classes for styling */
-  cssClasses?: Record<string, string>;
 }
 
 /**
