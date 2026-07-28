@@ -285,6 +285,7 @@ export class SettingsService {
       // Update i18n store
       this.i18nStore.setLocale(settings.locale);
     } catch (error) {
+      if (error instanceof SettingsServiceError) throw error;
       throw new SettingsServiceError(
         `Failed to save global settings: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'GLOBAL_SETTINGS_SAVE_ERROR'
@@ -387,6 +388,7 @@ export class SettingsService {
         JSON.stringify(updatedMetadata, null, 2)
       );
     } catch (error) {
+      if (error instanceof SettingsServiceError) throw error;
       throw new SettingsServiceError(
         `Failed to save workspace settings: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'WORKSPACE_SETTINGS_SAVE_ERROR'
@@ -490,6 +492,7 @@ export class SettingsService {
         JSON.stringify(settings, null, 2)
       );
     } catch (error) {
+      if (error instanceof SettingsServiceError) throw error;
       throw new SettingsServiceError(
         `Failed to save EPUB settings: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'EPUB_SETTINGS_SAVE_ERROR'
@@ -574,6 +577,7 @@ export class SettingsService {
     try {
       return await this.extensionManager.getAvailableTransforms(workspaceId);
     } catch (error) {
+      if (error instanceof SettingsServiceError) throw error;
       throw new SettingsServiceError(
         `Failed to get available transforms: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'TRANSFORM_DISCOVERY_ERROR'
@@ -588,6 +592,7 @@ export class SettingsService {
     try {
       return await this.extensionManager.getAvailableTextTransforms(workspaceId);
     } catch (error) {
+      if (error instanceof SettingsServiceError) throw error;
       throw new SettingsServiceError(
         `Failed to get available text transforms: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'TRANSFORM_DISCOVERY_ERROR'
@@ -633,6 +638,7 @@ export class SettingsService {
         domTransforms,
       };
     } catch (error) {
+      if (error instanceof SettingsServiceError) throw error;
       throw new SettingsServiceError(
         `Failed to resolve transform scripts: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'TRANSFORM_RESOLUTION_ERROR'

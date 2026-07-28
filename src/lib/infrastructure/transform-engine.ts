@@ -58,6 +58,7 @@ export interface GeneratorResult {
 
 export class TransformEngine {
   private iframe: HTMLIFrameElement | null = null;
+  private boundHandleMessage: ((event: MessageEvent) => void) | null = null;
   private messageId = 0;
   private pendingMessages = new Map<
     number,
@@ -93,8 +94,11 @@ export class TransformEngine {
     this.iframe = this.createPersistentIframe();
     document.body.appendChild(this.iframe);
 
-    // Setup message handling
-    window.addEventListener('message', this.handleMessage.bind(this));
+    // Setup message handling. The bound function is kept so cleanup() can
+    // remove the SAME reference — a fresh .bind() there would silently remove
+    // nothing and leak the listener.
+    this.boundHandleMessage = this.handleMessage.bind(this);
+    window.addEventListener('message', this.boundHandleMessage);
 
     // Wait for iframe ready signal
     await this.waitForReady();
@@ -342,8 +346,11 @@ export class TransformEngine {
       this.iframe = null;
     }
 
-    // Remove message listener
-    window.removeEventListener('message', this.handleMessage.bind(this));
+    // Remove message listener (the reference registered in initialize)
+    if (this.boundHandleMessage) {
+      window.removeEventListener('message', this.boundHandleMessage);
+      this.boundHandleMessage = null;
+    }
   }
 
   /**

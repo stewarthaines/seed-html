@@ -71,6 +71,22 @@ SpineView (and later PreviewPane/EditorPane) consume it; the preview-feed guard 
 
 **Acceptance.** spine.service and metadata.service above ~70%, transform-engine above ~60%, and a decision recorded on whether to lock them.
 
+**Result (2026-07-28, branch `quality/service-coverage`).** All three targets far exceeded — spine.service 33% → 98.9% (47 tests), metadata.service 33% → 98.7% (31 tests), transform-engine 17% → 99.2% (34 tests). Tests-only changes; each suite documents the lines it deliberately leaves uncovered and why. Lock decision: pending.
+
+**Suspected service defects surfaced by the test work** (recorded per the adjudication rule; tests pin current behavior so a fix will flip them visibly):
+
+1. `metadata.service.ts` — severity inconsistency: `validateMetadataUpdates` classes a malformed BCP 47 language tag as a _warning_ (so updates persist it) while `validateMetadata` classes the same tag as an _error_; a user can save a language the full validator immediately flags.
+2. `metadata.service.ts` `addArrayItem` — catch does not re-throw `MetadataServiceError` unchanged (unlike its sibling methods); currently benign, inconsistent.
+3. `spine.service.ts` `renameChapterId` — catch re-wraps its own typed validation errors (`INVALID_ID_FORMAT`, `DUPLICATE_ID`, `ITEM_NOT_FOUND`) as generic `RENAME_ERROR` with a doubled message; callers cannot branch on the specific code.
+4. `spine.service.ts` `deleteChapter` — `href.startsWith(basePath)` without the trailing `/` (an `OEBPSx/…` href falsely matches); also reaches into `(workspaceService as any).fileStorage` past the public surface.
+5. `transform-engine.ts` `cleanup()` — `removeEventListener('message', this.handleMessage.bind(this))` creates a fresh bound function, so the registered listener is never removed; every cleaned-up engine leaks its listener (low impact — the engine is app-lifetime).
+
+Items 2 and 3 are the same _catch-block inconsistency_ found independently in two services — a candidate for one small sweep (audit every service catch for the `instanceof <ServiceError>` re-throw guard) rather than piecemeal fixes.
+
+**All five defects FIXED 2026-07-28** (commit `369acd9`), including the full sweep: 17 ungarded catch-wrap sites across five services gained the re-throw guard; the language-tag severity aligned to error on both paths; `deleteChapter` got the trailing-slash prefix check and a new public `WorkspaceService.deleteFile` (no more `as any` reach-through); `transform-engine.cleanup()` removes the registered listener reference. Four tests that had pinned defective behavior were adjudicated and updated to the corrected contract.
+
+**Lock decision: DECIDED and implemented** (commit `4e5db5f`) — per-directory statement thresholds in `vitest.config.unit.ts`, enforced by `validate` (which now runs `test:coverage`). Ratchet rule: raise as areas strengthen, never lower. Test-support directories are excluded from coverage so fixture code cannot distort a lock. **Workstream 3 is COMPLETE.**
+
 ## Workstream 4 — type-contract consolidation
 
 **Problem.** Knip reports 178 unused exported types (stable vs. the 175 baseline); the interesting subset is _duplicated contracts_, i.e. stale design docs living in the type system:

@@ -259,6 +259,7 @@ export class ContentService {
         spineUpdates,
       };
     } catch (error) {
+      if (error instanceof ContentServiceError) throw error;
       throw new ContentServiceError(
         `Failed to generate sample content: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'SAMPLE_CONTENT_ERROR'

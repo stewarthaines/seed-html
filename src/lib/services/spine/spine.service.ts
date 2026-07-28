@@ -88,6 +88,7 @@ export class SpineService {
 
       return spineItems;
     } catch (error) {
+      if (error instanceof SpineServiceError) throw error;
       throw new SpineServiceError(
         `Failed to load spine items: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'LOAD_ERROR',
@@ -203,6 +204,7 @@ export class SpineService {
 
       return { updatedWorkspace, newChapter };
     } catch (error) {
+      if (error instanceof SpineServiceError) throw error;
       throw new SpineServiceError(
         `Failed to add chapter: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'ADD_CHAPTER_ERROR',
@@ -498,25 +500,24 @@ ${body}
       // Save updated workspace (this will update the OPF automatically)
       await this.workspaceService.saveWorkspace(updatedWorkspace);
 
-      // Delete associated files using the file storage API directly
+      // Delete associated files (best-effort; the OPF was pruned first)
       try {
-        // Delete XHTML file
-        const xhtmlPath = manifestItem.href.startsWith(workspace.pathInfo.basePath)
+        // Delete XHTML file. The trailing slash matters: a bare startsWith
+        // would falsely match an href under a sibling directory (OEBPSx/…).
+        const xhtmlPath = manifestItem.href.startsWith(`${workspace.pathInfo.basePath}/`)
           ? manifestItem.href
           : `${workspace.pathInfo.basePath}/${manifestItem.href}`;
-        const fileStorage = (this.workspaceService as any).fileStorage;
-        await fileStorage.deleteFile(updatedWorkspace.id, xhtmlPath);
+        await this.workspaceService.deleteFile(updatedWorkspace.id, xhtmlPath);
       } catch (error) {
         console.warn('Failed to delete XHTML file:', error);
       }
 
       try {
         // Delete the source text file and its metadata sidecar (SOURCE/text/{id}.{txt,json})
-        const fileStorage = (this.workspaceService as any).fileStorage;
-        await fileStorage.deleteFile(updatedWorkspace.id, `SOURCE/text/${chapterId}.txt`);
+        await this.workspaceService.deleteFile(updatedWorkspace.id, `SOURCE/text/${chapterId}.txt`);
         const metaPath = `SOURCE/text/${chapterId}.json`;
         if (await this.workspaceService.fileExists(updatedWorkspace.id, metaPath)) {
-          await fileStorage.deleteFile(updatedWorkspace.id, metaPath);
+          await this.workspaceService.deleteFile(updatedWorkspace.id, metaPath);
         }
       } catch (error) {
         console.warn('Failed to delete chapter source files:', error);
@@ -633,6 +634,7 @@ ${body}
 
       return { updatedWorkspace };
     } catch (error) {
+      if (error instanceof SpineServiceError) throw error;
       throw new SpineServiceError(
         `Failed to rename chapter ID: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'RENAME_ERROR',
@@ -656,6 +658,7 @@ ${body}
       });
       return { updatedWorkspace };
     } catch (error) {
+      if (error instanceof SpineServiceError) throw error;
       throw new SpineServiceError(
         `Failed to update linear flag: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'UPDATE_LINEAR_ERROR',

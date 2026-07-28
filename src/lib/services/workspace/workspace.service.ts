@@ -699,6 +699,7 @@ export class WorkspaceService {
         try {
           await this.fileStorage.renameFile(workspace.id, oldFullPath, newFullPath);
         } catch (_error) {
+          if (_error instanceof WorkspaceServiceError) throw _error;
           throw new WorkspaceServiceError(
             `Failed to move file from ${oldItem.href} to ${updates.href}: ${_error instanceof Error ? _error.message : 'Unknown error'}`,
             'FILE_MOVE_ERROR',
@@ -1158,6 +1159,7 @@ export class WorkspaceService {
       this.pathInfoCache.set(workspaceId, pathInfo);
       return pathInfo;
     } catch (error) {
+      if (error instanceof WorkspaceServiceError) throw error;
       throw new WorkspaceServiceError(
         `Failed to parse workspace container.xml: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'INVALID_CONTAINER_STRUCTURE',
@@ -1294,6 +1296,7 @@ export class WorkspaceService {
     try {
       return await this.fileStorage.readFile(workspaceId, filePath);
     } catch (error) {
+      if (error instanceof WorkspaceServiceError) throw error;
       throw new WorkspaceServiceError(
         `Failed to read file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'READ_FILE_ERROR',
@@ -1334,9 +1337,28 @@ export class WorkspaceService {
       await this.fileStorage.writeFile(workspaceId, filePath, contentBuffer);
       this.noteFileWritten(workspaceId, filePath);
     } catch (error) {
+      if (error instanceof WorkspaceServiceError) throw error;
       throw new WorkspaceServiceError(
         `Failed to write file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'WRITE_FILE_ERROR',
+        workspaceId
+      );
+    }
+  }
+
+  /**
+   * Delete a file from the workspace. Storage-only: callers own any manifest
+   * bookkeeping (prune the OPF first, so a failed delete can never leave
+   * content.opf listing a file that is gone).
+   */
+  async deleteFile(workspaceId: string, filePath: string): Promise<void> {
+    try {
+      await this.fileStorage.deleteFile(workspaceId, filePath);
+    } catch (error) {
+      if (error instanceof WorkspaceServiceError) throw error;
+      throw new WorkspaceServiceError(
+        `Failed to delete file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'DELETE_FILE_ERROR',
         workspaceId
       );
     }
@@ -1354,6 +1376,7 @@ export class WorkspaceService {
       await this.fileStorage.writeFile(workspaceId, filePath, content);
       this.noteFileWritten(workspaceId, filePath);
     } catch (error) {
+      if (error instanceof WorkspaceServiceError) throw error;
       throw new WorkspaceServiceError(
         `Failed to write binary file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'WRITE_BINARY_FILE_ERROR',
@@ -1401,6 +1424,7 @@ export class WorkspaceService {
 
       return sourceItems;
     } catch (error) {
+      if (error instanceof WorkspaceServiceError) throw error;
       throw new WorkspaceServiceError(
         `Failed to list SOURCE files: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'LIST_SOURCE_FILES_ERROR',
