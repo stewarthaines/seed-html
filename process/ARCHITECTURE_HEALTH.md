@@ -48,6 +48,19 @@ SpineView (and later PreviewPane/EditorPane) consume it; the preview-feed guard 
 
 **Acceptance.** A short table in this repo (site → verdict → action) and the guards applied. Decomposing PreviewPane itself is a follow-on, not part of the audit — but the audit output is the map for where to cut.
 
+**Audit result (2026-07-28).** Headline: none of PreviewPane's seven timer sites schedules a save — nothing here belonged in the pending-saves manager. The one real finding was a message, not a timer.
+
+| Site                                                 | Verdict      | Action                                                                                                                                                                                                       |
+| ---------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `a11yAutoTimer` debounce                             | safe         | cleared on unmount (hygiene commit)                                                                                                                                                                          |
+| VSR poll loop                                        | safe         | none — captures the target `Window` and re-checks identity per tick; the reference pattern                                                                                                                   |
+| `printSafetyTimer` / `readSafetyTimer`               | safe         | cleared on unmount (hygiene commit)                                                                                                                                                                          |
+| `handleDeviceChange` / `handleViewSelect` 0ms defers | safe         | none — null-checked refs, sub-frame lifetime                                                                                                                                                                 |
+| resize handlers                                      | hygiene      | was one delayed call per event, not a debounce; now a single tracked, reset timer, cleared on unmount                                                                                                        |
+| `seed-save-data` handler (:1235)                     | **real bug** | identity bound at message-arrival time; fixed — bridge stamps the idref into the realm at injection, `acceptPreviewSaveData` (pure, tested) drops mismatched echoes; protocol in `process/PREVIEW_BRIDGE.md` |
+
+Still owed under this workstream: the same checklist over `PublishView.svelte` and `PluginPanel.svelte` (4 timer sites each).
+
 ## Workstream 3 — service-layer coverage: spine, transform-engine, metadata
 
 **Problem.** The weakest tested code that is _already extracted and testable_: `spine.service.ts` (33% of 453 stmts — the domain the whole editor orbits), `transform-engine.ts` (17% of 361), `metadata.service.ts` (33%).
