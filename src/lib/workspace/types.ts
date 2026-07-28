@@ -4,10 +4,10 @@
  * Type definitions for workspace management, OPF operations, and error handling.
  */
 
-import type { EPUBMetadata, ManifestItem, OPFDocument, SpineItem } from '../epub/opf-utils.js';
+import type { EPUBMetadata, ManifestItem } from '../epub/opf-utils.js';
 
 // Re-export types for convenience
-export type { ManifestItem, OPFDocument, SpineItem };
+export type { ManifestItem };
 
 // Shared output directory for packaged epubs, modelled as a reserved workspace.
 // Packaging writes finished .epub files here; the Publish view (and the publish

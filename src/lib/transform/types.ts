@@ -1,70 +1,11 @@
 /**
  * Transform Pipeline Type Definitions
  *
- * TypeScript interfaces and types for the transform pipeline system.
+ * Canonical home of `ChapterMetadata`, the chapter-level contract shared by the
+ * XHTML template and the spine editor. Other transform contracts live next to
+ * their implementations (transform-error.ts, transform-manager.ts,
+ * transform-executor.ts).
  */
-
-export type TransformStage = 'loading' | 'text' | 'dom' | 'template';
-
-export interface TransformErrorDetails {
-  stage: TransformStage;
-  message: string;
-  scriptName?: string;
-  line?: number;
-  column?: number;
-  stack?: string;
-}
-
-export interface TransformErrorInfo extends TransformErrorDetails {
-  userMessage: string;
-}
-
-export interface TransformSettings {
-  transform_pipeline?: {
-    text_transform?: string;
-    dom_transforms?: string[];
-    enabled?: boolean;
-    timeout_ms?: number;
-  };
-  [key: string]: any;
-}
-
-export interface TransformScript {
-  filename: string;
-  content: string;
-  size: number;
-  lastModified: Date;
-}
-
-export interface LoadedTransformScripts {
-  settings: TransformSettings;
-  textTransform?: TransformScript;
-  domTransforms: TransformScript[];
-}
-
-export interface ScriptValidationResult {
-  isValid: boolean;
-  errors: string[];
-  warnings: string[];
-  requiredFunctions: string[];
-}
-
-export interface TransformContext {
-  idref?: string;
-}
-
-export interface ExecutionOptions {
-  globals?: Record<string, any>;
-}
-
-export interface TransformResult {
-  success: boolean;
-  transformedText?: string;
-  xhtmlDocument?: Document;
-  warnings?: string[];
-  error?: import('./transform-error.js').TransformError;
-  executionTime?: number;
-}
 
 export interface ChapterMetadata {
   title: string;
@@ -79,8 +20,4 @@ export interface ChapterMetadata {
    * rendition:viewport; omitted for reflowable content.
    */
   viewport?: string;
-}
-
-export interface BlobUrlManager {
-  getLoadedGlobals(): Record<string, any>;
 }

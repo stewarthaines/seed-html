@@ -11,27 +11,6 @@ import { EPUBPackager } from '../../epub/EPUBPackager.js';
 import { OPFUtils } from '../../epub/opf-utils.js';
 import { Zip } from '../../zip/index.js';
 
-// Re-export types from existing components
-export type { UnpackResult, ValidationResult, ExtractionResult } from '../../epub/EPUBUnpacker.js';
-
-export type {
-  PackageResult,
-  PackageOptions,
-  PackageProgress,
-  CompressionSettings,
-  WorkspaceFile,
-  EPUBMetadata,
-} from '../../epub/EPUBPackager.js';
-
-export type {
-  OPFDocument,
-  ManifestItem,
-  SpineItem,
-  GuideItem,
-  ContainerInfo,
-  XMLValidationResult,
-} from '../../epub/opf-utils.js';
-
 // Service error types
 export class EPUBProcessorError extends Error {
   constructor(

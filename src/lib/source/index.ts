@@ -11,13 +11,3 @@ export { SourceManager } from './source-manager.js';
 
 // Utility functions
 export { SOURCE_ARCHIVE_NAME, SOURCE_ARCHIVE_NAMES } from './source-utils.js';
-
-// Type definitions
-export type {
-  SourceFileInfo,
-  SourceValidation,
-  SourceStats,
-  SettingsValidation,
-  SourceFileType,
-  SourceSettings,
-} from './types.js';

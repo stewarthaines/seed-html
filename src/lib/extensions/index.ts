@@ -6,13 +6,3 @@
 
 // Main classes
 export { ExtensionManager } from './extension-manager.js';
-
-// Type definitions
-export type {
-  ExtensionInfo,
-  ExtensionFile,
-  CachingSummary,
-  CachingError,
-  ValidationResult,
-  ExtensionSignature,
-} from './types.js';
