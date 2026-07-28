@@ -59,7 +59,9 @@ SpineView (and later PreviewPane/EditorPane) consume it; the preview-feed guard 
 | resize handlers                                      | hygiene      | was one delayed call per event, not a debounce; now a single tracked, reset timer, cleared on unmount                                                                                                        |
 | `seed-save-data` handler (:1235)                     | **real bug** | identity bound at message-arrival time; fixed — bridge stamps the idref into the realm at injection, `acceptPreviewSaveData` (pure, tested) drops mismatched echoes; protocol in `process/PREVIEW_BRIDGE.md` |
 
-Still owed under this workstream: the same checklist over `PublishView.svelte` and `PluginPanel.svelte` (4 timer sites each).
+**PublishView + PluginPanel (2026-07-28): clean — no changes required.** Both share the plugin-iframe liveness pattern: a 20s backstop (`capTimer`) armed inside an `$effect` whose teardown clears both timers (running on re-arm and on unmount), and a 2s post-`onload` grace (`readyTimer`) cleared by the same teardown and by the `plugin-ready` handshake. Both fire only to flip component-local failure state, read liveness at fire time by design, capture no cross-context identity, and write nothing. This is the lifecycle-correct counterpart to PreviewPane's `onMount`-scoped timers — timers armed in effects with teardowns are structurally safe.
+
+**Workstream 2 is COMPLETE.** PreviewPane decomposition remains a separate follow-on, with the audit table above as its map.
 
 ## Workstream 3 — service-layer coverage: spine, transform-engine, metadata
 
