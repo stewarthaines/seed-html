@@ -48,7 +48,7 @@ export interface Creator {
 }
 
 /** EPUB title-type vocabulary (refines a dc:title). */
-export type TitleType = 'main' | 'subtitle' | 'short' | 'collection' | 'edition' | 'expanded';
+type TitleType = 'main' | 'subtitle' | 'short' | 'collection' | 'edition' | 'expanded';
 
 /**
  * A dc:title beyond the primary one (subtitle, collection, edition, …). The
@@ -235,7 +235,7 @@ export interface EPUBMetadata {
 }
 
 // Type mapping for strict field access
-export interface MetadataFieldTypes {
+interface MetadataFieldTypes {
   // Creator fields (name + roles)
   creator: Creator[];
   contributor: Creator[];
@@ -279,12 +279,8 @@ export interface MetadataFieldTypes {
 }
 
 // Extract field type categories
-export type ArrayMetadataFields = {
+type ArrayMetadataFields = {
   [K in keyof MetadataFieldTypes]: MetadataFieldTypes[K] extends string[] ? K : never;
-}[keyof MetadataFieldTypes];
-
-export type StringMetadataFields = {
-  [K in keyof MetadataFieldTypes]: MetadataFieldTypes[K] extends string ? K : never;
 }[keyof MetadataFieldTypes];
 
 // Creator/contributor are index-addressable arrays (of Creator) and so are still
@@ -293,10 +289,6 @@ export type CreatorMetadataFields = 'creator' | 'contributor';
 
 // Fields that the add/remove array UI can operate on.
 export type EditableArrayField = ArrayMetadataFields | CreatorMetadataFields;
-
-export type RequiredMetadataFields = 'title' | 'language' | 'identifier';
-
-export type OptionalMetadataFields = Exclude<StringMetadataFields, RequiredMetadataFields>;
 
 export interface ContainerInfo {
   rootfilePath?: string;
@@ -330,7 +322,7 @@ export interface SpineItem {
   properties?: string[];
 }
 
-export interface GuideItem {
+interface GuideItem {
   type: string;
   title?: string;
   href: string;
@@ -1330,7 +1322,7 @@ export class OPFUtils {
  * EPUB Directory Mapping for Media Types
  * Maps MIME types to their appropriate EPUB directory structure
  */
-export interface DirectoryMapping {
+interface DirectoryMapping {
   [mediaType: string]: string;
 }
 

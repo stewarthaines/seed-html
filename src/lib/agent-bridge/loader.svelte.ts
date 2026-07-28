@@ -7,7 +7,7 @@
  * click and tracks the button/overlay status. See process/AGENT_BRIDGE.md.
  */
 
-export type AgentBridgeStatus = 'off' | 'connecting' | 'connected';
+type AgentBridgeStatus = 'off' | 'connecting' | 'connected';
 
 export interface AgentBridgeModuleContext {
   wsUrl: string;

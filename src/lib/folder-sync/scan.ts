@@ -77,7 +77,7 @@ export function skipReasonFor(
   return null;
 }
 
-export interface FolderFileInput {
+interface FolderFileInput {
   name: string;
   text: string;
 }

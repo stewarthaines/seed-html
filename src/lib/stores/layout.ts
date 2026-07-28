@@ -2,14 +2,14 @@ import { writable } from 'svelte/store';
 import type { Writable } from 'svelte/store';
 
 // TypeScript interfaces
-export interface SidebarState {
+interface SidebarState {
   isExpanded: boolean;
   activeSection: SidebarSection;
   /** Whether the project nav group (Settings/Metadata/Manifest/Navigation) is shown. */
   projectNavExpanded: boolean;
 }
 
-export interface LayoutState {
+interface LayoutState {
   sidebar: SidebarState;
   /** Spine view only: the preview (right) pane is collapsed to a slim rail.
    *  Persisted so a writing session survives chapter switches and reloads. */

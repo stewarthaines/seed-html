@@ -2,7 +2,7 @@ import { writable, get } from 'svelte/store';
 import type { Writable } from 'svelte/store';
 
 // TypeScript interfaces
-export interface ThemeState {
+interface ThemeState {
   current: ThemeMode;
   systemPreference: ThemeMode;
   isInitialized: boolean;
@@ -18,7 +18,7 @@ export interface ThemeStore extends Writable<ThemeState> {
   getCurrentTheme(): string;
 }
 
-export type ThemeMode = 'light' | 'dark';
+type ThemeMode = 'light' | 'dark';
 
 // Storage key for persistence
 const STORAGE_KEY = 'seedhtml_theme_preference';

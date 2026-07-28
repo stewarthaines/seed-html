@@ -11,7 +11,7 @@ import { FeatureDetector } from './feature-detector.js';
 import { migrateLegacyDatabase } from './legacy-migration.js';
 
 // Export types for public API
-export type { StorageBackend, BackendType, StorageQuota, StorageCapabilities } from './types.js';
+export type { StorageBackend, BackendType, StorageQuota } from './types.js';
 
 export class StorageBackendFactory {
   private static featureDetector = new FeatureDetector();

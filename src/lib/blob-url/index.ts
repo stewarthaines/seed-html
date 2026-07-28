@@ -7,13 +7,3 @@
 
 // Main classes
 export { BlobURLManager } from './blob-url-manager.js';
-
-// Type definitions
-export type {
-  BlobURLManagerConfig,
-  BlobURLRegistry,
-  AssetSelector,
-  XHTMLProcessingResult,
-  AssetProcessingError,
-  ExtendedFileStorageAPI,
-} from './types.js';

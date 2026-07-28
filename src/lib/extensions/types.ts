@@ -47,7 +47,7 @@ export interface CachingSummary {
 /**
  * Error information for failed caching operations
  */
-export interface CachingError {
+interface CachingError {
   /** Extension that failed to cache */
   extensionName: string;
   /** Type of error that occurred */

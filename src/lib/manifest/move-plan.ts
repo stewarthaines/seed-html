@@ -23,7 +23,7 @@ export interface MoveRequest {
 }
 
 /** A planned (or blocked) move of one manifest item. */
-export interface MoveRow {
+interface MoveRow {
   id: string;
   oldHref: string;
   /** Sanitized target href (meaningless when blocked). */
@@ -33,14 +33,14 @@ export interface MoveRow {
 }
 
 /** A single exact-string rewrite inside one file. */
-export interface Rewrite {
+interface Rewrite {
   from: string;
   to: string;
   count: number;
 }
 
 /** All rewrites for one affected file. */
-export interface FileChange {
+interface FileChange {
   path: string;
   kind: 'source' | 'css';
   rewrites: Rewrite[];

@@ -4,10 +4,10 @@
  * Type definitions for workspace management, OPF operations, and error handling.
  */
 
-import type { EPUBMetadata, ManifestItem, OPFDocument, SpineItem } from '../epub/opf-utils.js';
+import type { ManifestItem } from '../epub/opf-utils.js';
 
 // Re-export types for convenience
-export type { ManifestItem, OPFDocument, SpineItem };
+export type { ManifestItem };
 
 // Shared output directory for packaged epubs, modelled as a reserved workspace.
 // Packaging writes finished .epub files here; the Publish view (and the publish
@@ -32,89 +32,6 @@ export interface WorkspaceInfo {
   epubVersion: string;
   hasError?: boolean; // Set when workspace has validation errors
 }
-
-export interface WorkspacePathInfo {
-  rootfilePath: string; // Full path to OPF file (e.g., "OEBPS/content.opf")
-  basePath: string; // Base directory for EPUB content (e.g., "OEBPS")
-  opfFileName: string; // OPF filename (e.g., "content.opf")
-}
-
-export interface WorkspacePreview {
-  metadata: EPUBMetadata;
-  manifestSummary: {
-    textItems: number; // .xhtml, .html files
-    imageItems: number; // .jpg, .png, .gif, .svg files
-    audioItems: number; // .mp3, .wav, .ogg files
-    videoItems: number; // .mp4, .webm files
-    fontItems: number; // .ttf, .otf, .woff files
-    otherItems: number; // Everything else
-  };
-  spineOrder: string[]; // Ordered list of spine item IDs
-  estimatedEPUBSize: number; // Sum of all file sizes in bytes
-  dependencies: {
-    // File dependency analysis
-    orphanedFiles: string[]; // Files not referenced anywhere
-    missingDependencies: string[]; // Referenced files that don't exist
-    circularReferences: string[][]; // Circular dependency chains
-  };
-}
-
-// Configuration types
-export interface WorkspaceConfig {
-  cache: {
-    ttl: number; // Cache TTL in milliseconds (default: 24 hours)
-    maxEntries: number; // Max memory cache entries (default: 100)
-    enableDiskCache: boolean; // Enable persistent disk cache (default: true)
-  };
-  validation: {
-    strict: boolean; // Strict EPUB compliance (default: false)
-    checkDependencies: boolean; // Validate file dependencies (default: true)
-    allowOrphanedFiles: boolean; // Allow files not in manifest (default: true)
-  };
-  performance: {
-    batchSize: number; // Batch size for bulk operations (default: 50)
-    concurrency: number; // Max concurrent file operations (default: 5)
-    enableProgressCallbacks: boolean; // Enable progress reporting (default: true)
-  };
-}
-
-// Validation types
-export interface ValidationResult {
-  isValid: boolean;
-  errors: ValidationIssue[];
-  warnings: ValidationWarning[];
-  summary: {
-    totalFiles: number;
-    validFiles: number;
-    missingFiles: number;
-    orphanedFiles: number;
-  };
-}
-
-export interface ValidationIssue {
-  code: string;
-  message: string;
-  file?: string;
-  line?: number;
-  severity: 'error' | 'warning';
-}
-
-export interface ValidationWarning {
-  code: string;
-  message: string;
-  file?: string;
-  line?: number;
-  severity: 'warning';
-}
-
-/**
- * Critical interface that defines ALL methods ManifestManager depends on.
- * 
- * ⚠️ BREAKING CHANGE PREVENTION: Any method used by ManifestManager MUST be declared here.
- * This interface serves as a CONTRACT that prevents missing method errors like the saveOPF issue.
- * 
- Note: IWorkspaceManager interface removed - use WorkspaceService from services layer
- */
 
 // Error classes
 export class WorkspaceError extends Error {

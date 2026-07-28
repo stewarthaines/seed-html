@@ -99,9 +99,15 @@ Items 2 and 3 are the same _catch-block inconsistency_ found independently in tw
 
 **Acceptance.** Unused-type count drops substantially and — more important — no contract has two definitions. Cheap, mechanical, good candidate for a tightly-specified delegated session.
 
+**Result (2026-07-28, branch `quality/type-consolidation`): COMPLETE.** Knip unused exported types 179 → 73; net −422 lines; lint cap ratcheted 161 → 148. The investigation inverted the spec's assumption: `transform/types.ts` was itself the stale aggregate — every export except `ChapterMetadata` duplicated a live definition next to its implementation, and `TransformContext` existed in **three** places (transform-executor.ts's is the live one). `spine-editor.ts` trimmed 374 → 113 lines, keeping exactly the ten contracts its six importers use. Barrel type re-exports with zero importers pruned across eight files. Every contract now has exactly one definition.
+
+Noted, out of scope (design questions, not stale copies): the same-name-different-contract collisions `ValidationResult` (epub / extensions / workspace domains) and `TransformError` class vs error-shape interface.
+
+**Pruning pass (same day): 73 → 6.** 35 dead types deleted (a 10-type dead cluster in storage/types.ts, the never-imported navigation view contracts, two shadow duplicates — `WorkspacePathInfo`, `FeatureDetector` — whose live definitions sit beside their implementations), 26 internally-used types un-exported, lint cap 148 → 144. The surviving 6 are all deliberate: i18n `LocaleAvailability` (ka in flight), the generated icon types (script-owned), and pending-saves `ScheduleOptions` — documented public API kept exported ahead of external consumers; **do not re-delete it in a future sweep**.
+
 ## Workstream 5 — housekeeping (fold into other sessions)
 
-- `ws` is an unlisted dependency of `scripts/agent-bridge.mjs` — add to devDependencies or knip ignore.
+- `ws` is an unlisted dependency of `scripts/agent-bridge.mjs` — add to devDependencies or knip ignore. _Done 2026-07-28: declared as an exact devDependency._
 - Track-changes surface (`isReviewMode`, `CHANGES_WORKSPACE_ID`) is unused pending the feature — confirm it is still on the roadmap; otherwise it joins workstream 4.
 - Quota-exceeded handling remains the known open storage item (silent persistence divergence when storage fills, worst on Safari). It is a feature, not a cleanup — schedule it on its own merits.
 

@@ -32,7 +32,7 @@
     "manual-shots": "node scripts/capture-manual-shots.js",
     "test:a11y": "node scripts/a11y-scan.mjs",
     "worktree": "bash scripts/new-worktree.sh",
-    "lint": "eslint . --ext .js,.ts,.svelte --max-warnings 161",
+    "lint": "eslint . --ext .js,.ts,.svelte --max-warnings 144",
     "lint:fix": "eslint . --ext .js,.ts,.svelte --fix",
     "validate": "npm run check && npm run lint && npm run format:check && npm run check:rename && npm run test:coverage",
     "format": "prettier --write .",
@@ -91,7 +91,8 @@
     "vite-plugin-checker": "^0.10.3",
     "vite-plugin-singlefile": "^2.2.0",
     "vitest": "^3.2.2",
-    "wrangler": "^4.86.0"
+    "wrangler": "^4.86.0",
+    "ws": "8.21.0"
   },
   "dependencies": {
     "diff": "^9.0.0",

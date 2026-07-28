@@ -64,7 +64,7 @@ const PRIMARY_MAPPINGS: PrimaryMapping[] = [
   { field: 'accessibilityCertifierReport', linkRel: 'a11y:certifierReport' },
 ];
 
-export interface HighlightingOptions {
+interface HighlightingOptions {
   focusedField?: keyof EPUBMetadata | null;
   /** Fields owned by the active editor tab — softly highlighted as a group. */
   tabFields?: string[];
@@ -73,7 +73,7 @@ export interface HighlightingOptions {
   pageProgressionDirection?: string;
 }
 
-export interface HighlightResult {
+interface HighlightResult {
   highlightedXML: string;
 }
 

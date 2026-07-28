@@ -32,7 +32,7 @@ export interface CompressionSettings {
   reason: string;
 }
 
-export interface PackageProgress {
+interface PackageProgress {
   phase: 'reading' | 'compressing' | 'writing' | 'complete';
   currentFile?: string;
   processedFiles: number;
