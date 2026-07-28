@@ -99,9 +99,13 @@ Items 2 and 3 are the same _catch-block inconsistency_ found independently in tw
 
 **Acceptance.** Unused-type count drops substantially and — more important — no contract has two definitions. Cheap, mechanical, good candidate for a tightly-specified delegated session.
 
+**Result (2026-07-28, branch `quality/type-consolidation`): COMPLETE.** Knip unused exported types 179 → 73; net −422 lines; lint cap ratcheted 161 → 148. The investigation inverted the spec's assumption: `transform/types.ts` was itself the stale aggregate — every export except `ChapterMetadata` duplicated a live definition next to its implementation, and `TransformContext` existed in **three** places (transform-executor.ts's is the live one). `spine-editor.ts` trimmed 374 → 113 lines, keeping exactly the ten contracts its six importers use. Barrel type re-exports with zero importers pruned across eight files. Every contract now has exactly one definition.
+
+Noted, out of scope (design questions, not stale copies): the same-name-different-contract collisions `ValidationResult` (epub / extensions / workspace domains) and `TransformError` class vs error-shape interface. The remaining 73 unused types are single-definition exports (storage/types, spine/types, navigation view-data, opf-utils helpers) — a future pruning pass, no urgency.
+
 ## Workstream 5 — housekeeping (fold into other sessions)
 
-- `ws` is an unlisted dependency of `scripts/agent-bridge.mjs` — add to devDependencies or knip ignore.
+- `ws` is an unlisted dependency of `scripts/agent-bridge.mjs` — add to devDependencies or knip ignore. _Done 2026-07-28: declared as an exact devDependency._
 - Track-changes surface (`isReviewMode`, `CHANGES_WORKSPACE_ID`) is unused pending the feature — confirm it is still on the roadmap; otherwise it joins workstream 4.
 - Quota-exceeded handling remains the known open storage item (silent persistence divergence when storage fills, worst on Safari). It is a feature, not a cleanup — schedule it on its own merits.
 
