@@ -332,7 +332,7 @@ export class ExtensionManager {
       const extensions: ExtensionInfo[] = [];
       for (const extensionName of extensionDirs) {
         try {
-          const info = await this.getWorkspaceExtensionInfo(workspaceId, extensionName);
+          const info = await this.getWorkspaceExtensionInfo(workspaceId, extensionName, files);
           extensions.push(info);
         } catch {
           // Skip corrupted extensions silently
@@ -669,13 +669,16 @@ export class ExtensionManager {
   }
 
   /**
-   * Gets detailed information about a workspace extension
+   * Gets detailed information about a workspace extension. Pass `knownFiles`
+   * (a pre-listed workspace enumeration) to avoid a recursive directory walk
+   * per extension.
    */
   private async getWorkspaceExtensionInfo(
     workspaceId: string,
-    extensionName: string
+    extensionName: string,
+    knownFiles?: string[]
   ): Promise<ExtensionInfo> {
-    const files = await this.fileStorage.listFiles(workspaceId);
+    const files = knownFiles ?? (await this.fileStorage.listFiles(workspaceId));
     const extensionFiles = files.filter(f => f.startsWith(`SOURCE/extensions/${extensionName}/`));
 
     if (extensionFiles.length === 0) {
@@ -687,8 +690,6 @@ export class ExtensionManager {
 
     for (const filePath of extensionFiles) {
       const filename = filePath.split('/').pop()!;
-      const content = await this.fileStorage.readFile(workspaceId, filePath);
-      const fileInfo = { size: content.byteLength };
 
       let fileType: 'javascript' | 'license';
       if (filename.endsWith('.js')) {
@@ -699,13 +700,23 @@ export class ExtensionManager {
         continue; // Skip unknown files
       }
 
+      // Size via stat, not a content read (same pattern as the signature
+      // helper above) — extensions bundle vendored JS this would otherwise
+      // read in full on every listing.
+      let size: number;
+      try {
+        size = (await this.fileStorage.getFileInfo(workspaceId, filePath)).size;
+      } catch {
+        size = (await this.fileStorage.readFile(workspaceId, filePath)).byteLength;
+      }
+
       extensionFileInfos.push({
         filename,
-        size: fileInfo.size,
+        size,
         type: fileType,
       });
 
-      totalSize += fileInfo.size;
+      totalSize += size;
     }
 
     // Homepage URL from the copied manifest, when the extension shipped one

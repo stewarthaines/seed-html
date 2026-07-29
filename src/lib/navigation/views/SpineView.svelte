@@ -9,6 +9,7 @@
   import type { ContentService } from '../../services/content/content.service.js';
   import type { AudioClipService } from '../../audio/audio-clip.service.js';
   import type { SpineItemWithSource } from '../../spine/types';
+  import { buildSwitchContext, type SwitchContext } from '../../spine/chapter-switch.service.js';
   import { readChapterMeta, writeChapterMeta } from '../../spine/chapter-metadata.js';
   import EditorPane from '../../components/spine/EditorPane.svelte';
   import {
@@ -161,53 +162,20 @@
   let previewHeadContent = $state('');
   let previewHeadPath = $state('SOURCE/preview/head.xml');
 
-  /** Read the preview/head.xml fragment for the given settings path (missing → ''). */
-  async function loadPreviewHead(headPath: string): Promise<void> {
-    previewHeadPath = headPath.startsWith('SOURCE/') ? headPath : `SOURCE/${headPath}`;
-    try {
-      previewHeadContent = await fileStorage.readTextFile(workspace.id, previewHeadPath);
-    } catch {
-      // Not created yet (older projects) — treat as empty, inject nothing.
-      previewHeadContent = '';
-    }
-  }
-
   // Preview-head fragments contributed by installed extensions (extension.json
   // `previewHead`). Injected into every preview independent of the author's
   // includeHead toggle (they self-guard) — see process/PREVIEW_HEAD_EXTENSIONS.md.
-  // Never packaged.
+  // Never packaged. Loaded via the per-switch SwitchContext.
   let extensionPreviewHeadContent = $state('');
 
-  /** Gather every installed extension's `previewHead` fragment into one string. */
-  async function loadExtensionPreviewHeads(): Promise<void> {
-    try {
-      const exts = await extensionManager.listWorkspaceExtensions(workspace.id);
-      const fragments: string[] = [];
-      for (const ext of exts) {
-        try {
-          const metaRaw = await fileStorage.readTextFile(
-            workspace.id,
-            `SOURCE/extensions/${ext.name}/extension.json`
-          );
-          const file = JSON.parse(metaRaw)?.previewHead;
-          if (typeof file !== 'string' || !file) continue;
-          const fragment = await fileStorage.readTextFile(
-            workspace.id,
-            `SOURCE/extensions/${ext.name}/${file}`
-          );
-          if (fragment.trim()) fragments.push(fragment);
-        } catch {
-          // Missing/malformed extension.json or fragment — skip that extension.
-        }
-      }
-      extensionPreviewHeadContent = fragments.join('\n');
-    } catch {
-      extensionPreviewHeadContent = '';
+  /** Re-scan the project for generators (after services + workspace are ready).
+   *  During a chapter switch the shared SwitchContext supplies the list (one
+   *  enumeration per switch — process/CHAPTER_SWITCH_SERVICE.md). */
+  async function refreshGenerators(context?: SwitchContext): Promise<void> {
+    if (context) {
+      availableGenerators = context.generators;
+      return;
     }
-  }
-
-  /** Re-scan the project for generators (after services + workspace are ready). */
-  async function refreshGenerators(): Promise<void> {
     if (!fileStorage || !workspace) {
       availableGenerators = [];
       return;
@@ -454,9 +422,15 @@
     }
   }
 
-  // Load available files for editor panes
-  async function loadAvailableFiles() {
+  // Assemble the editor panes' file dropdown from the per-switch context.
+  // All I/O happened once in buildSwitchContext; this only shapes the list
+  // and updates the preview-head state it carries.
+  function loadAvailableFiles(context: SwitchContext) {
     if (!selectedItemId || !servicesInitialized) return;
+
+    previewHeadPath = context.previewHeadPath;
+    previewHeadContent = context.previewHeadContent;
+    extensionPreviewHeadContent = context.extensionPreviewHead;
 
     try {
       // Always include text content for current spine item
@@ -516,9 +490,11 @@
 
       // Transform scripts come from the project's configured pipeline (the text
       // transform + the DOM transforms managed in Settings), so the dropdown
-      // matches what actually runs and reflects edits to that list.
-      try {
-        const epub = await settingsService!.loadEPUBSettings(workspace.id);
+      // matches what actually runs and reflects edits to that list. A null
+      // settings in the context (unavailable) skips the transform and
+      // preview-head entries, as the settings-read failure did before.
+      if (context.settings) {
+        const epub = context.settings;
         const seen = new Set<string>();
         for (const transformPath of [epub.text_transform, ...epub.dom_transforms]) {
           if (!transformPath || seen.has(transformPath)) continue;
@@ -538,9 +514,6 @@
         // Preview-only <head> fragment (Advanced mode). Authoring-time CSS/JS that
         // surfaces hidden markup in the preview without touching the published
         // XHTML. Gated like JS entries; created on first save for older projects.
-        const headPath = epub.preview?.head ?? 'preview/head.xml';
-        await loadPreviewHead(headPath);
-        await loadExtensionPreviewHeads();
         files.push({
           value: 'preview-head',
           label: basename(previewHeadPath),
@@ -548,27 +521,20 @@
           href: previewHeadPath, // not a manifest item
           type: 'preview-head',
         });
-      } catch {
-        // Settings unavailable — no transform/preview-head entries.
       }
 
       // Generator scripts — editable here alongside transforms. They run on demand
       // from the Generators panel (not the render pipeline); listing them lets you
       // view/edit the source. Their own 'generator' type (JS syntax; grouped apart
       // from reading-system JS) — also keeps them Advanced-mode-only.
-      try {
-        const installed = await listGenerators(fileStorage, workspace.id);
-        for (const gen of installed) {
-          files.push({
-            value: `generator-${gen.manifest.id}`,
-            label: gen.manifest.name,
-            path: gen.scriptPath, // SOURCE/generators/<id>/<script>
-            href: gen.scriptPath,
-            type: 'generator',
-          });
-        }
-      } catch {
-        // Discovery failed — no generator entries.
+      for (const gen of context.generators) {
+        files.push({
+          value: `generator-${gen.manifest.id}`,
+          label: gen.manifest.name,
+          path: gen.scriptPath, // SOURCE/generators/<id>/<script>
+          href: gen.scriptPath,
+          type: 'generator',
+        });
       }
 
       availableFiles = files;
@@ -712,13 +678,23 @@
     }
   }
 
-  // Initialize spine editor preview manager
-  async function initializeSpineEditor() {
+  // Initialize spine editor preview manager. Accepts the per-switch context
+  // when the caller (handleSpineItemSwitch) already built one; builds it
+  // otherwise (initial load path). One context — one workspace enumeration —
+  // per switch either way.
+  async function initializeSpineEditor(context?: SwitchContext) {
     if (!selectedItemId || !servicesInitialized) return;
 
     try {
+      context ??= await buildSwitchContext({
+        fileStorage,
+        settingsService: settingsService!,
+        extensionManager,
+        workspaceId: workspace.id,
+      });
+
       // Load available files for editor panes
-      await loadAvailableFiles();
+      loadAvailableFiles(context);
 
       // Validate spine item synchronization before proceeding
       if (!selectedItem || selectedItem.id !== selectedItemId) {
@@ -761,7 +737,7 @@
       }
 
       // Discover the project's generators (for the editor's Generators panel).
-      await refreshGenerators();
+      await refreshGenerators(context);
 
       // Update current content reference
       currentContent = previewManager.getCurrentContent();
@@ -1361,14 +1337,23 @@
   // Handle spine item switching with preserved global file selections
   async function handleSpineItemSwitch() {
     try {
+      // One shared context for the whole switch (one workspace enumeration,
+      // one settings read) — see process/CHAPTER_SWITCH_SERVICE.md.
+      const context = await buildSwitchContext({
+        fileStorage,
+        settingsService: settingsService!,
+        extensionManager,
+        workspaceId: workspace.id,
+      });
+
       // Update available files for new spine item
-      await loadAvailableFiles();
+      loadAvailableFiles(context);
 
       // Update only spine-specific content in panes while preserving global selections
       await updateSpineSpecificContent();
 
       // Use the same initialization logic that handles both creation and reuse
-      await initializeSpineEditor();
+      await initializeSpineEditor(context);
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to switch spine item';
     }
@@ -1677,6 +1662,10 @@
     border-top-color: var(--color-accent-primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
+    /* Own compositor layer from insertion: the switch does synchronous work
+       right after this mounts, and without the layer promotion the animation
+       can't start until the blocked main thread paints it (frozen spinner). */
+    will-change: transform;
     margin-bottom: var(--space-4);
   }
 
