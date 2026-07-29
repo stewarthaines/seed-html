@@ -595,7 +595,17 @@
     // was created for), the flush on workspace switch, and the guarantee that
     // onSaved never runs for a save whose workspace has been switched away
     // from. onSaved therefore only handles CURRENT-workspace side effects.
+    //
+    // The subscribe fires synchronously with the just-read initial value —
+    // skip that emission: scheduling it wrote the unedited content straight
+    // back and its onSaved echoed a second full render on every first visit
+    // (process/CHAPTER_SWITCH_SERVICE.md). Saves start with the first edit.
+    let seeded = false;
     store.subscribe(() => {
+      if (!seeded) {
+        seeded = true;
+        return;
+      }
       if (!previewManager) return;
 
       pendingSaves.schedule(workspaceId, filePath, () => store.getContent(), {

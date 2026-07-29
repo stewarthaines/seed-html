@@ -195,10 +195,13 @@ describe('SpinePreviewManager pipeline', () => {
   it('does not persist an empty render when the chapter has no text source yet', async () => {
     const h = makeHarness({ fileExists: async () => false });
 
+    // loadInitialContent loads only; the switch tail issues the one render.
     await h.manager.loadInitialContent();
+    const rendered = h.manager.forcePreviewUpdate();
     await vi.advanceTimersByTimeAsync(20);
     h.finishTransform('<body></body>');
     await vi.advanceTimersByTimeAsync(0);
+    await rendered;
 
     expect(h.workspaceService.writeFile).not.toHaveBeenCalled();
     // The preview itself still updates
@@ -253,10 +256,12 @@ describe('SpinePreviewManager pipeline', () => {
     h.finishTransform('<body><p>ch1 output</p></body>');
     await vi.advanceTimersByTimeAsync(0);
     await switchDone;
-    // The queued post-switch debounce render (from loadInitialContent) fires
+    // The switch tail's single explicit render (switchToSpineItem only loads)
+    const rendered = h.manager.forcePreviewUpdate();
     await vi.advanceTimersByTimeAsync(20);
     h.finishTransform('<body><p>ch2 output</p></body>');
     await vi.advanceTimersByTimeAsync(0);
+    await rendered;
 
     const writes = h.workspaceService.writeFile.mock.calls;
     const ch1Writes = writes.filter(c => c[1] === CH1_XHTML_PATH);
@@ -265,6 +270,30 @@ describe('SpinePreviewManager pipeline', () => {
     expect(ch1Writes[0][2]).toContain('ch1 output');
     expect(ch2Writes).toHaveLength(1);
     expect(ch2Writes[0][2]).toContain('ch2 output');
+  });
+
+  // Acceptance criterion from process/CHAPTER_SWITCH_SERVICE.md: a switch
+  // renders exactly once. switchToSpineItem loads content without scheduling;
+  // the tail's explicit forcePreviewUpdate is the single trigger, and nothing
+  // remains queued afterwards.
+  it('a chapter switch triggers exactly one render (no echo)', async () => {
+    const h = makeHarness({});
+
+    await h.manager.switchToSpineItem('ch2');
+    expect(h.transformEngine.executeTransform).not.toHaveBeenCalled();
+
+    const rendered = h.manager.forcePreviewUpdate();
+    await vi.advanceTimersByTimeAsync(20);
+    h.finishTransform('<body><p>ch2 output</p></body>');
+    await vi.advanceTimersByTimeAsync(0);
+    await rendered;
+
+    expect(h.transformEngine.executeTransform).toHaveBeenCalledTimes(1);
+    expect(h.onPreviewUpdate).toHaveBeenCalledTimes(1);
+
+    // No debounced echo fires later.
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(h.transformEngine.executeTransform).toHaveBeenCalledTimes(1);
   });
 
   it('surfaces manifest persistence failures via onError while the preview still updates', async () => {

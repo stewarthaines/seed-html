@@ -206,7 +206,11 @@ export class SpinePreviewManager {
   }
 
   /**
-   * Load initial content from workspace files
+   * Load initial content from workspace files. Content load only — it does
+   * NOT schedule a render. Both callers (initial creation and
+   * switchToSpineItem) are steps of a chapter switch whose tail issues one
+   * explicit forcePreviewUpdate; scheduling a debounced render here too made
+   * slow switches render twice (process/CHAPTER_SWITCH_SERVICE.md).
    */
   async loadInitialContent(): Promise<void> {
     // Load text content only - CSS/JS are handled by SpineView auto-save
@@ -230,9 +234,6 @@ export class SpinePreviewManager {
       this.suppressPersist = true;
       this.handleError('initialization', error);
     }
-
-    // Trigger transform pipeline directly to expose text store integration issues
-    this.debounceRender();
   }
 
   /**
