@@ -48,17 +48,23 @@ const MANIFEST_SUFFIX = `/${MANIFEST_FILE}`;
 /**
  * Scan each `SOURCE/generators/<id>/generator.json` → the project's available
  * generators, sorted by name. Malformed manifests are skipped; a missing workspace
- * yields [].
+ * yields []. Pass `knownFiles` (a pre-listed workspace enumeration) to avoid a
+ * second recursive directory walk when the caller already has one.
  */
 export async function listGenerators(
   fileStorage: FileStorageAPI,
-  workspaceId: string
+  workspaceId: string,
+  knownFiles?: string[]
 ): Promise<InstalledGenerator[]> {
   let files: string[];
-  try {
-    files = await fileStorage.listFiles(workspaceId);
-  } catch {
-    return [];
+  if (knownFiles) {
+    files = knownFiles;
+  } else {
+    try {
+      files = await fileStorage.listFiles(workspaceId);
+    } catch {
+      return [];
+    }
   }
 
   const manifestPaths = files.filter(
