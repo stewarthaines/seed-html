@@ -1662,6 +1662,10 @@
     border-top-color: var(--color-accent-primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
+    /* Own compositor layer from insertion: the switch does synchronous work
+       right after this mounts, and without the layer promotion the animation
+       can't start until the blocked main thread paints it (frozen spinner). */
+    will-change: transform;
     margin-bottom: var(--space-4);
   }
 
