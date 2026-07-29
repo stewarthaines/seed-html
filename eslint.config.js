@@ -191,6 +191,9 @@ export default [
       // Vendored foliate-js renderer for the READ.html device preview — see
       // public/foliate/VENDORED.md.
       'public/foliate/**',
+      // Vendored Chromium XML tree viewer for the Source view (kept close to
+      // upstream for diffability — see the file's provenance header).
+      'public/xml-tree-viewer/**',
       // Ignore specific generated files
       '**/lcov-report/',
       '**/coverage-report/',

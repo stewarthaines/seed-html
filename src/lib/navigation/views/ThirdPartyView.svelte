@@ -121,6 +121,14 @@
       copyright: 'Copyright (c) 2023 Craig Morten',
     },
     {
+      name: 'Chromium DocumentXMLTreeViewer',
+      version: 'N/A',
+      license: 'BSD-3-Clause',
+      url: 'https://chromium.googlesource.com/chromium/src/+/main/third_party/blink/renderer/core/xml/DocumentXMLTreeViewer.js',
+      description: 'Collapsible XML tree in the Source view (adapted)',
+      copyright: 'Copyright 2014 The Chromium Authors',
+    },
+    {
       name: 'Paged.js',
       version: '0.4.3',
       license: 'MIT',
