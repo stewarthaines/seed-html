@@ -34,6 +34,7 @@
   } from './sr-walk.js';
   import { SpeechService } from '$lib/speech/speech.service.js';
   import { isHttpContext } from '$lib/reader/open-in-reader.js';
+  import { canShowXmlTree, loadXmlTreeViewer } from '$lib/xml-tree/tree-viewer-loader.js';
   import {
     buildReadDocument,
     readerSimCss,
@@ -67,6 +68,7 @@
   // Props using Svelte 5 runes syntax
   let {
     xhtmlContent = '',
+    persistedXhtml = undefined,
     isTransforming = false,
     transformError = null,
     transformWarnings = [],
@@ -89,6 +91,10 @@
     spineNeighbors = undefined,
   }: {
     xhtmlContent?: string;
+    /** The XHTML as written to the workspace this render (no blob URLs) — what
+     *  the Source view shows. Absent when the render skipped persistence, in
+     *  which case the on-disk file may be stale and the view says so. */
+    persistedXhtml?: string;
     isTransforming?: boolean;
     transformError?: TransformError | null;
     transformWarnings?: string[];
@@ -154,14 +160,14 @@
   // author gets in-context feedback they can fix immediately (tweak the stylesheet,
   // re-check). axe-core (MPL-2.0) is vendored at public/axe.min.js and served over
   // http; file:// can't fetch it, so the button is hidden there.
-  const canCheckA11y = typeof location !== 'undefined' && location.protocol !== 'file:';
+  const canCheckA11y = isHttpContext();
 
   // --- Print preview (Paged.js) ------------------------------------------------
   // The "Print" device paginates the current chapter into print pages with the
   // vendored Paged.js polyfill — the same pipeline (and print.css) as "Save as
   // PDF" — so authors see what the printed page will look like. HTTP-only: the
   // polyfill is fetched from the app origin, so the option is hidden on file://.
-  const canPaginate = typeof location !== 'undefined' && location.protocol !== 'file:';
+  const canPaginate = isHttpContext();
   /** Devices that fill the pane rather than rendering a scaled device frame. */
   const isFillDevice = (id: string) =>
     id === 'desktop' || id === 'print' || id === 'proofs' || id === 'read';
@@ -174,7 +180,7 @@
   // reader), paginated or scrolled, so the preview matches what Publish → Read
   // shows. HTTP-only like Print and axe: the modules are fetched from the app
   // origin, so the option is hidden on file://. See process/READ_DEVICE_PREVIEW.md.
-  const canReadPreview = typeof location !== 'undefined' && location.protocol !== 'file:';
+  const canReadPreview = isHttpContext();
   /** postMessage token the read wrapper pings the parent with after first render. */
   const READ_DONE = 'preview-read';
   /** postMessage type the read wrapper sends on every relocation (page turns). */
@@ -970,6 +976,43 @@
   );
   let deviceOrientation = $state<'portrait' | 'landscape'>('portrait');
   let showSource = $state(false);
+  // Source view rendering: raw <pre> (always available) or the collapsible
+  // tree (http-only — the vendored viewer is fetched from the app origin).
+  // Session-local; not persisted.
+  const canSourceTree = canShowXmlTree();
+  let sourceTree = $state(false);
+  let sourceTreeEl: HTMLDivElement | undefined = $state();
+  let sourceTreeError = $state<string | null>(null);
+
+  // Render the on-disk XHTML into the tree container whenever the tree
+  // rendering is active and the content changes. The viewer module loads on
+  // first use; a load/parse failure is shown in the pane (the raw view stays
+  // one click away).
+  $effect(() => {
+    const container = sourceTreeEl;
+    const content = persistedXhtml;
+    if (!container || !content) return;
+    let cancelled = false;
+    loadXmlTreeViewer()
+      .then(viewer => {
+        if (cancelled) return;
+        const parsed = new DOMParser().parseFromString(content, 'text/xml');
+        const parseError = parsed.querySelector('parsererror');
+        if (parseError) {
+          sourceTreeError = parseError.textContent ?? 'XML parse error';
+          container.replaceChildren();
+          return;
+        }
+        sourceTreeError = null;
+        viewer.render(parsed, container);
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) sourceTreeError = String(error);
+      });
+    return () => {
+      cancelled = true;
+    };
+  });
   let previewIframe: HTMLIFrameElement | undefined = $state();
   let previewContainer: HTMLDivElement | undefined = $state();
   let previewContentEl: HTMLDivElement | undefined = $state();
@@ -3000,10 +3043,44 @@
   <!-- Preview content -->
   <div class="preview-content" bind:this={previewContentEl}>
     {#if showSource}
-      <!-- Source view -->
+      <!-- Source view: the on-disk XHTML (no preview blob URLs), raw or as a
+           collapsible tree. Tree is http-only; the options bar hides on file:. -->
       <div class="source-view">
-        <pre class="source-code" dir="ltr">{xhtmlContent ||
-            '<!-- No content generated yet -->'}</pre>
+        {#if canSourceTree}
+          <div class="source-options">
+            <button
+              type="button"
+              class="source-mode-btn"
+              class:active={!sourceTree}
+              aria-pressed={!sourceTree}
+              onclick={() => (sourceTree = false)}
+            >
+              {$t('Raw')}
+            </button>
+            <button
+              type="button"
+              class="source-mode-btn"
+              class:active={sourceTree}
+              aria-pressed={sourceTree}
+              onclick={() => (sourceTree = true)}
+            >
+              {$t('Tree')}
+            </button>
+          </div>
+        {/if}
+        {#if sourceTree && canSourceTree && persistedXhtml}
+          <div class="source-scroll">
+            {#if sourceTreeError}
+              <pre class="source-code source-tree-error" dir="ltr">{sourceTreeError}</pre>
+            {/if}
+            <div class="xml-tree-view" bind:this={sourceTreeEl}></div>
+          </div>
+        {:else}
+          <pre class="source-code" dir="ltr">{persistedXhtml ||
+              (xhtmlContent
+                ? '<!-- not written to disk -->'
+                : '<!-- No content generated yet -->')}</pre>
+        {/if}
       </div>
     {:else}
       <!-- Live preview -->
@@ -3823,10 +3900,48 @@
 
   .source-view {
     height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Raw/Tree toggle. Only rendered over http (the tree asset is fetched from
+     the app origin), so on file: the raw view fills the pane as before. */
+  .source-options {
+    flex: none;
+    display: flex;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-3);
+    border-bottom: 1px solid var(--color-border-subtle);
+    background: var(--color-surface-secondary);
+  }
+
+  .source-mode-btn {
+    font-size: var(--text-xs);
+    padding: 0 var(--space-2);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-primary);
+    color: var(--color-text-primary);
+    cursor: pointer;
+  }
+
+  .source-mode-btn:hover {
+    background: var(--color-bg-secondary);
+  }
+
+  .source-mode-btn.active {
+    background: var(--color-bg-active);
+    border-color: var(--color-accent);
+  }
+
+  .source-scroll {
+    flex: 1;
     overflow: auto;
   }
 
   .source-code {
+    flex: 1;
+    overflow: auto;
     margin: 0;
     padding: var(--space-3);
     font-family: var(--font-mono);
@@ -3836,6 +3951,11 @@
     background: var(--color-bg-primary);
     white-space: pre-wrap;
     /* word-break: break-all; */
+  }
+
+  .source-tree-error {
+    flex: none;
+    color: var(--color-status-error);
   }
 
   .preview-viewport {

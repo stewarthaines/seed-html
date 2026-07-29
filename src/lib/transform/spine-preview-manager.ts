@@ -368,9 +368,11 @@ export class SpinePreviewManager {
       // suppressPersist). A failed workspace load makes persistence impossible;
       // that's a real divergence between preview and packaged EPUB, so it is
       // surfaced the same way a failed write is.
+      let persisted = false;
       if (this.config.persistToManifest && !this.suppressPersist) {
         if (workspace) {
           await this.saveXHTMLToManifest(xhtml, workspace);
+          persisted = true;
         } else {
           this.handleError('persistence', workspaceError);
         }
@@ -386,6 +388,7 @@ export class SpinePreviewManager {
       // Notify success
       this.onPreviewUpdate({
         xhtml: processedXHTML,
+        ...(persisted ? { persistedXhtml: xhtml } : {}),
         warnings: transformResult.warnings || [],
         executionTime: Math.round(executionTime),
         timestamp: Date.now(),

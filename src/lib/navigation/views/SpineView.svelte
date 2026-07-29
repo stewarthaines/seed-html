@@ -83,6 +83,9 @@
     audioPluginUrl?: string | null;
     onPreviewUpdate?: (detail: {
       xhtmlContent: string;
+      /** The XHTML as written to the workspace this render (no blob URLs).
+       *  Absent when the render skipped persistence (disk may be stale). */
+      persistedXhtml?: string;
       isTransforming: boolean;
       transformError: TransformError | null;
       transformWarnings: string[];
@@ -1144,6 +1147,7 @@
     // Notify parent component of preview data
     onPreviewUpdate?.({
       xhtmlContent: event.xhtml,
+      persistedXhtml: event.persistedXhtml,
       isTransforming: false,
       transformError: null,
       transformWarnings: event.warnings,
@@ -1259,6 +1263,7 @@
           : `${basePath}/${manifestItem?.href}`;
 
       let xhtmlContent = '';
+      let persistedXhtml: string | undefined;
       if (manifestItem && path) {
         const stored = await fileStorage.readTextFile(workspace.id, path);
         // Resolve image/style refs against this EPUB's actual OPF directory — an
@@ -1266,10 +1271,12 @@
         blobURLManager.setBasePath(basePath);
         blobURLManager.setActiveWorkspace(workspace.id);
         xhtmlContent = await blobURLManager.processXHTMLForPreview(stored);
+        persistedXhtml = stored;
       }
 
       onPreviewUpdate?.({
         xhtmlContent,
+        persistedXhtml,
         isTransforming: false,
         transformError: null,
         transformWarnings: [],

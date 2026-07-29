@@ -22,6 +22,9 @@ public/paged.polyfill.js
 public/sr-preview/
 # Vendored foliate-js renderer for the READ.html device preview (third-party, served as-is)
 public/foliate/
+# Vendored Chromium XML tree viewer for the Source view (third-party, kept
+# close to upstream for diffability)
+public/xml-tree-viewer/
 patches/
 
 # Vendored minified libraries (e.g. axe-core for the accessibility check)

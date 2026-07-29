@@ -1,0 +1,78 @@
+/* Adapted from Chromium's built-in XML tree viewer stylesheet:
+ *   https://chromium.googlesource.com/chromium/src/+/main/third_party/blink/renderer/core/xml/DocumentXMLTreeViewer.css
+ *   (fetched from `main`, 2026-07-29)
+ *
+ * Copyright 2014 The Chromium Authors
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file: https://chromium.googlesource.com/chromium/src/+/main/LICENSE
+ *
+ * Local modifications (SEED.html):
+ * - Every rule scoped under .xml-tree-view; header/banner and source-container
+ *   rules removed with the corresponding markup.
+ * - Hardcoded fonts/sizes/colors replaced with design-system tokens; syntax
+ *   colors added (upstream leaves them to the UA default sheet). The fold
+ *   arrows keep upstream's mid-grey SVGs, legible on both themes.
+ */
+
+.xml-tree-view .folder > .hidden {
+  display: none;
+}
+
+.xml-tree-view .pretty-print {
+  margin: 0;
+  padding: var(--space-3);
+  padding-left: calc(var(--space-3) + 10px);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+  color: var(--color-text-primary);
+  background: var(--color-bg-primary);
+}
+
+.xml-tree-view .opened {
+  margin-left: 1em;
+}
+
+.xml-tree-view .comment,
+.xml-tree-view .cdata {
+  white-space: pre;
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+.xml-tree-view .html-tag {
+  color: var(--color-text-link);
+}
+
+.xml-tree-view .html-attribute-name {
+  color: var(--color-status-warning);
+}
+
+.xml-tree-view .html-attribute-value {
+  color: var(--color-success-text);
+}
+
+.xml-tree-view .folded {
+  color: var(--color-text-tertiary);
+}
+
+.xml-tree-view .folder-button {
+  user-select: none;
+  cursor: pointer;
+  display: inline-block;
+  margin-left: -10px;
+  width: 10px;
+  background-repeat: no-repeat;
+  background-position: left top;
+  vertical-align: bottom;
+}
+
+.xml-tree-view .fold {
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' fill='%23909090' width='10' height='10'><path d='M0 0 L8 0 L4 7 Z'/></svg>");
+  height: 10px;
+}
+
+.xml-tree-view .open {
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' fill='%23909090' width='10' height='10'><path d='M0 0 L0 8 L7 4 Z'/></svg>");
+  height: 10px;
+}

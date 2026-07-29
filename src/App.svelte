@@ -233,6 +233,7 @@
   // Spine preview state
   let spinePreviewData = $state<{
     xhtmlContent: string;
+    persistedXhtml?: string;
     isTransforming: boolean;
     transformError: any;
     transformWarnings: string[];
@@ -336,6 +337,7 @@
   // Handle spine preview update
   const handleSpinePreviewUpdate = (detail: {
     xhtmlContent: string;
+    persistedXhtml?: string;
     isTransforming: boolean;
     transformError: any;
     transformWarnings: string[];
@@ -346,6 +348,7 @@
   }) => {
     spinePreviewData = {
       xhtmlContent: detail.xhtmlContent,
+      persistedXhtml: detail.persistedXhtml,
       isTransforming: detail.isTransforming,
       transformError: detail.transformError,
       transformWarnings: detail.transformWarnings,
@@ -1802,6 +1805,7 @@
         {#if spinePreviewData.spineItemId}
           <PreviewPane
             xhtmlContent={spinePreviewData.xhtmlContent}
+            persistedXhtml={spinePreviewData.persistedXhtml}
             isTransforming={spinePreviewData.isTransforming}
             transformError={spinePreviewData.transformError}
             transformWarnings={spinePreviewData.transformWarnings}
