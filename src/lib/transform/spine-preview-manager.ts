@@ -58,17 +58,27 @@ const CONTENT_DERIVED_PROPERTIES: ReadonlyArray<{ token: string; selector: strin
  * change (so callers can skip the write) or when parsing fails (fail-safe: never
  * mutate properties on a parse error).
  *
- * Parsing uses `text/html`, which resolves `<svg>`/`<math>` foreign content by
- * local name and is safe under the unit test's happy-dom environment (unlike
- * namespaced application/xml).
+ * Accepts either the serialized XHTML or an already-parsed Document (the render
+ * pipeline parses the chapter once and shares it). String parsing uses
+ * `text/html`, which resolves `<svg>`/`<math>` foreign content by local name
+ * and is safe under the unit test's happy-dom environment (unlike namespaced
+ * application/xml); on a real XHTML Document, `querySelectorAll`'s
+ * unnamespaced type selectors likewise match foreign content by local name.
  */
-export function deriveContentProperties(xhtml: string, current: string[]): string[] | null {
+export function deriveContentProperties(
+  xhtml: string | Document,
+  current: string[]
+): string[] | null {
   let doc: Document;
-  try {
-    doc = new DOMParser().parseFromString(xhtml, 'text/html');
-  } catch (error) {
-    console.warn('Failed to parse XHTML for manifest-property detection:', error);
-    return null;
+  if (typeof xhtml === 'string') {
+    try {
+      doc = new DOMParser().parseFromString(xhtml, 'text/html');
+    } catch (error) {
+      console.warn('Failed to parse XHTML for manifest-property detection:', error);
+      return null;
+    }
+  } else {
+    doc = xhtml;
   }
 
   const ownedTokens = CONTENT_DERIVED_PROPERTIES.map(p => p.token);
@@ -363,6 +373,18 @@ export class SpinePreviewManager {
       const xhtml = generateXHTMLDocument(content, metadata, bodyAttributes);
       if (epoch !== this.renderEpoch) return;
 
+      // Parse the rendered document ONCE and share it between the manifest
+      // property derivation (Step 4, read-only) and the blob-URL rewrite
+      // (Step 5, mutating — safe because it runs last and the on-disk string
+      // above is already final). The output is well-formed by construction;
+      // should parsing ever fail, fall back to the string paths, which
+      // reproduce the original per-step behavior including error reporting.
+      let xhtmlDoc: Document | null = null;
+      {
+        const parsed = new DOMParser().parseFromString(xhtml, 'application/xhtml+xml');
+        if (parsed.documentElement?.tagName !== 'parsererror') xhtmlDoc = parsed;
+      }
+
       // Step 4: Save XHTML as spine item content to manifest (unless the
       // chapter's source was unreadable and the user hasn't edited yet — see
       // suppressPersist). A failed workspace load makes persistence impossible;
@@ -371,7 +393,7 @@ export class SpinePreviewManager {
       let persisted = false;
       if (this.config.persistToManifest && !this.suppressPersist) {
         if (workspace) {
-          await this.saveXHTMLToManifest(xhtml, workspace);
+          await this.saveXHTMLToManifest(xhtml, xhtmlDoc, workspace);
           persisted = true;
         } else {
           this.handleError('persistence', workspaceError);
@@ -379,7 +401,7 @@ export class SpinePreviewManager {
       }
 
       // Step 5: Process XHTML for blob URL substitution (preview only)
-      const processedXHTML = await this.blobURLManager.processXHTMLForPreview(xhtml);
+      const processedXHTML = await this.blobURLManager.processXHTMLForPreview(xhtmlDoc ?? xhtml);
       if (epoch !== this.renderEpoch) return;
 
       const executionTime = performance.now() - startTime;
@@ -442,7 +464,11 @@ export class SpinePreviewManager {
    * Save generated XHTML as spine item content to manifest. The workspace is
    * supplied by the render that produced the XHTML (loaded once per render).
    */
-  private async saveXHTMLToManifest(xhtml: string, workspace: WorkspaceState): Promise<void> {
+  private async saveXHTMLToManifest(
+    xhtml: string,
+    xhtmlDoc: Document | null,
+    workspace: WorkspaceState
+  ): Promise<void> {
     try {
       // Find the current spine item in manifest
       const manifestItem = workspace.opf.manifest.find(item => item.id === this.spineItemId);
@@ -460,7 +486,7 @@ export class SpinePreviewManager {
       await this.workspaceService.writeFile(this.workspaceId, spineItemPath, xhtml);
 
       // Analyze XHTML for content-derived manifest properties (svg, mathml)
-      await this.updateContentProperties(xhtml, workspace, manifestItem);
+      await this.updateContentProperties(xhtmlDoc ?? xhtml, workspace, manifestItem);
     } catch (error) {
       // Don't block the preview, but DO tell the owner: a swallowed write
       // failure here means the on-screen preview and the packaged EPUB
@@ -491,7 +517,7 @@ export class SpinePreviewManager {
    * `appState.workspace`, or the next full-OPF save overwrites this change.
    */
   private async updateContentProperties(
-    xhtml: string,
+    xhtml: string | Document,
     workspace: WorkspaceState,
     manifestItem: ManifestItem
   ): Promise<void> {

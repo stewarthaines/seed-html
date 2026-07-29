@@ -144,9 +144,14 @@ export class BlobURLManager {
   }
 
   /**
-   * Process XHTML content and substitute relative URLs with blob URLs
+   * Process XHTML content and substitute relative URLs with blob URLs.
+   *
+   * Accepts either the serialized document or an already-parsed Document (the
+   * render pipeline parses the chapter once and shares it — see
+   * process/CHAPTER_SWITCH_PERFORMANCE.md). A passed Document is mutated in
+   * place (asset URLs swapped for blob URLs) and serialized.
    */
-  async processXHTMLForPreview(xhtmlContent: string): Promise<string> {
+  async processXHTMLForPreview(xhtmlContent: string | Document): Promise<string> {
     // Check capacity before processing
     if (this.isAtCapacity()) {
       this.onCapacityReached?.();
@@ -154,13 +159,18 @@ export class BlobURLManager {
     }
 
     try {
-      // Parse XHTML with DOMParser
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(xhtmlContent, 'application/xhtml+xml');
+      let doc: Document;
+      if (typeof xhtmlContent === 'string') {
+        // Parse XHTML with DOMParser
+        const parser = new DOMParser();
+        doc = parser.parseFromString(xhtmlContent, 'application/xhtml+xml');
 
-      // Check for parsing errors
-      if (doc.documentElement && doc.documentElement.tagName === 'parsererror') {
-        throw new XHTMLProcessingError('Invalid XHTML content');
+        // Check for parsing errors
+        if (doc.documentElement && doc.documentElement.tagName === 'parsererror') {
+          throw new XHTMLProcessingError('Invalid XHTML content');
+        }
+      } else {
+        doc = xhtmlContent;
       }
 
       // Find all asset references
