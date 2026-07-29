@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-28\n"
-"PO-Revision-Date: 2026-07-28\n"
+"POT-Creation-Date: 2026-07-29\n"
+"PO-Revision-Date: 2026-07-29\n"
 "Language: de\n"
 "Language-Team: \n"
 "Last-Translator: Claude (machine first pass)\n"
@@ -3714,6 +3714,10 @@ msgstr ""
 msgid "Rate"
 msgstr "Geschwindigkeit"
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Raw"
+msgstr "Roh"
+
 #: plugins/publish-to-remote/src/components/RemoteSelector.svelte
 msgid "Re-check the device and refresh its book list"
 msgstr "Gerät neu prüfen und die Buchliste aktualisieren"
@@ -4615,6 +4619,10 @@ msgstr "Transformation läuft..."
 #. Device category for e-reader devices designed for portable reading
 msgid "Travel (e-ink)"
 msgstr "Reise (E-Ink)"
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Tree"
+msgstr "Baum"
 
 #: src/lib/components/manifest/ManifestTable.svelte
 msgid "Try adjusting your search terms"

@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-28\n"
-"PO-Revision-Date: 2026-07-28\n"
+"POT-Creation-Date: 2026-07-29\n"
+"PO-Revision-Date: 2026-07-29\n"
 "Language: ka\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -3733,6 +3733,10 @@ msgstr ""
 msgid "Rate"
 msgstr "სიჩქარე"
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Raw"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/RemoteSelector.svelte
 msgid "Re-check the device and refresh its book list"
 msgstr "მოწყობილობის ხელახლა შემოწმება და მისი წიგნების სიის განახლება"
@@ -4634,6 +4638,10 @@ msgstr "მიმდინარეობს გარდაქმნა..."
 #. Device category for e-reader devices designed for portable reading
 msgid "Travel (e-ink)"
 msgstr "სამგზავრო (e-ink)"
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Tree"
+msgstr ""
 
 #: src/lib/components/manifest/ManifestTable.svelte
 msgid "Try adjusting your search terms"
