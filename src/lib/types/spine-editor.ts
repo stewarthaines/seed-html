@@ -98,6 +98,12 @@ export interface AutoSaveResult {
  */
 export interface PreviewUpdateEvent {
   xhtml: string;
+  /**
+   * The XHTML exactly as written to the workspace this render (pre blob-URL
+   * rewrite). Absent when the render skipped persistence, in which case the
+   * on-disk file may be stale relative to `xhtml`.
+   */
+  persistedXhtml?: string;
   warnings: string[];
   executionTime: number;
   timestamp: number;
