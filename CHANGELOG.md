@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The preview's Source view now shows the chapter file exactly as saved in the project (real image and stylesheet paths, not preview-only addresses), and a Raw/Tree toggle offers a collapsible tree of the markup with syntax colors — fold a section closed to see the chapter's structure at a glance. The tree is available when the editor runs online.
 
+### Changed
+
+- Switching chapters is much faster — the editor and preview now appear in a fraction of the previous time, the preview no longer re-renders a second time after settling, and nothing is written to disk until you actually edit.
+
 ## [0.15.0] - 2026-07-28
 
 ### Added

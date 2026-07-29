@@ -1,6 +1,6 @@
 # Chapter-switch service — design draft
 
-Status: DRAFT for review (2026-07-29). Follows `process/CHAPTER_SWITCH_PERFORMANCE.md`; candidates 1 (stat-based `fileExists`) and 4 (single parse in `doRender`) are already shipped as standalone service fixes. This design covers the remaining candidates — the duplicated loading (2), the echo render (3), and the editor unmount (5) — which share one root cause: the switch sequence has no single owner.
+Status: APPROVED; phases 1–2 BUILT (2026-07-29). Phase 1 (shared enumeration) and phase 2 (echo-render elimination + `performSwitch` owning the switch's I/O with a single source read) are merged; measured switch time fell from ~650–750 ms to ~180–210 ms in the bulletin project. Remaining: hoisting the latest-wins sequencing fully into the service (SpineView still owns the guard), and the optional phase 3 (keep EditorPane mounted) — with ~200 ms switches its value has shrunk; decide after using it. Follows `process/CHAPTER_SWITCH_PERFORMANCE.md`; candidates 1 (stat-based `fileExists`) and 4 (single parse in `doRender`) shipped separately.
 
 ## Motivation
 
