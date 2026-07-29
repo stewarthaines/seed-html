@@ -781,11 +781,14 @@ export class StorageManager {
   }
 
   /**
-   * Check if a file exists
+   * Check if a file exists. Stats the file instead of reading it — on OPFS
+   * this resolves the handle without touching the content, which matters on
+   * hot paths that probe every chapter (see
+   * process/CHAPTER_SWITCH_PERFORMANCE.md).
    */
   async fileExists(workspaceId: string, path: string): Promise<boolean> {
     try {
-      await this.readFile(workspaceId, path);
+      await this.getFileInfo(workspaceId, path);
       return true;
     } catch {
       return false;
@@ -796,8 +799,8 @@ export class StorageManager {
    * Get file size without reading full content
    */
   async getFileSize(workspaceId: string, path: string): Promise<number> {
-    const buffer = await this.readFile(workspaceId, path);
-    return buffer.byteLength;
+    const info = await this.getFileInfo(workspaceId, path);
+    return info.size;
   }
 
   /**

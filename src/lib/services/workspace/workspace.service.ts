@@ -1271,15 +1271,11 @@ export class WorkspaceService {
   }
 
   /**
-   * Check if a file exists in the workspace
+   * Check if a file exists in the workspace. Delegates to the storage layer's
+   * stat-based check — never reads content.
    */
   async fileExists(workspaceId: string, filePath: string): Promise<boolean> {
-    try {
-      await this.fileStorage.readFile(workspaceId, filePath);
-      return true;
-    } catch {
-      return false;
-    }
+    return this.fileStorage.fileExists(workspaceId, filePath);
   }
 
   /**
