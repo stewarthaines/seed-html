@@ -19,7 +19,7 @@ The checks _dropdown_ lives in band 1; the checks _results_ live in band 3. The 
 ## Placement rules
 
 - **Inputs go to the options bar; status stays in the header.** An input is something the author sets (flow, columns, page, orientation). Status is something the app reports (transforming, error/warnings, out-of-date, declared FXL page size). The out-of-date **Refresh** is a borderline case kept in the header: it is a response to status ("this is stale") and wants to sit by the title, not among the preview's steady-state controls.
-- **The bar appears only when the preview has options.** Responsive and Source have none, so no bar. Print has none _yet_ (see below). The reader views and the scaled device frames do.
+- **The bar appears only when the preview has options.** Responsive has none, so no bar. Source has one online (the raw/tree rendering select — under `file://` the tree asset can't load, so Source has no inputs and no bar). Print has none _yet_ (see below). The reader views and the scaled device frames do.
 - **Disabled in place, never removed.** Within a preview, a control that does not currently apply is shown disabled, not hidden — so nothing in the bar moves as you operate it. The control _set_ still differs between previews (that is expected — you deliberately switched preview), but it never shifts _within_ one.
 
 ## Foliate adoption (built)
@@ -29,11 +29,15 @@ The reader-engine previews were the first adopter, on the "Option B" model: stab
 - **READ.html fill entry** → Reading flow · Columns · Page-picker · Prev/Next. Columns disables under Scroll flow; the pager disables under Scroll or a single-page chapter. No orientation (it is a fill preset).
 - **Scaled device presets** (foliate, e.g. Standard / Compact / Kindle) → Reading flow · Page-picker · Prev/Next · Orientation. No Columns — the device width decides column count honestly (the realism argument from `FOLIATE_UNIFIED_PREVIEW.md`); the pager disables as above.
 - **Non-foliate scaled device frames** (a device preset over `file://`, or a fixed-layout chapter on a device) → Orientation only.
-- **Responsive / Source / Print / fill fixed-layout** → no bar.
+- **Responsive / Print / fill fixed-layout** → no bar. (Source since adopted the bar — see below.)
 
 Enablement is derived, not branched into existence: `readColumnsEnabled = flow === 'paginated'` and `readPagerEnabled = flow === 'paginated' && readPages > 1`. The page picker keeps a `1 / 1` placeholder option while disabled so the select box holds its width. The bar renders when `usesFoliate(device) || !isFillDevice(device)`.
 
 No new strings — the flow/columns/pager/orientation controls moved verbatim from the old header. `isFillDevice` (desktop/print/read) keeps orientation and the whole bar off the fill presets and Print.
+
+## Source adoption (built)
+
+The Source view became the second adopter with one input: a **Raw / Tree** rendering select (`process/SOURCE_PANE_TREE_VIEW.md`). It follows the contract: rendered in the shared `.preview-options` band between the header and the checks panels, present only when the input exists (http only — the vendored tree viewer is fetched from the app origin, so under `file://` Source is back to "no inputs, no bar"), and the foliate/orientation controls are guarded off while Source is showing. Still inline in `PreviewPane.svelte`; two adopters with this little markup doesn't yet justify the component factoring reserved for Print.
 
 ## Reusability
 

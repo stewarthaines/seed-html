@@ -4268,6 +4268,10 @@ msgid "Source on GitHub"
 msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
+msgid "Source rendering"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
 msgid "Speak announcements aloud"
 msgstr ""
 

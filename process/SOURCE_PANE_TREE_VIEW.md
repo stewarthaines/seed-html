@@ -65,7 +65,7 @@ Adaptations (keep the diff against upstream as small as practical):
 
 ### 4. `PreviewPane.svelte` — source view options bar with raw/tree toggle
 
-- The view dropdown is unchanged — `source` stays a single entry. The source view itself grows a small options bar containing a raw/tree toggle (two short i18n labels, working names "Raw" / "Tree").
+- The view dropdown is unchanged — `source` stays a single entry. The raw/tree control is a two-option select ("Raw" / "Tree") in the shared preview options bar (`.preview-options`, `process/PREVIEW_OPTIONS_BAR.md`) — Source is that pattern's second adopter, so the control sits above the checks panels like the reader and orientation inputs do. (Originally built as an in-pane bar; moved same day for consistency.)
 - The tree half of the toggle exists only when `isHttpContext()`; under `file:` the options bar collapses to nothing and the view is the raw `<pre>` as today.
 - Toggle state is plain `$state` (session-local; not persisted — add the `seedhtml_`-key pattern later only if it proves annoying).
 - Tree rendering: an `$effect` runs while the tree is the active rendering and `persistedXhtml` changes — parse with `new DOMParser().parseFromString(persistedXhtml, 'text/xml')`; on a `parsererror` document, show the parser's error text in the pane (accurate information, not a fallback); otherwise call the loader's `render(doc, container)` into a `.xml-tree-view` container div. Don't rebuild while the source view is hidden.

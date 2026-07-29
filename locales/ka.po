@@ -4306,6 +4306,10 @@ msgid "Source on GitHub"
 msgstr "წყარო GitHub-ზე"
 
 #: src/lib/components/spine/PreviewPane.svelte
+msgid "Source rendering"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
 msgid "Speak announcements aloud"
 msgstr ""
 

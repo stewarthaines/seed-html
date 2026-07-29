@@ -4287,6 +4287,10 @@ msgid "Source on GitHub"
 msgstr "Quellcode auf GitHub"
 
 #: src/lib/components/spine/PreviewPane.svelte
+msgid "Source rendering"
+msgstr "Quelldarstellung"
+
+#: src/lib/components/spine/PreviewPane.svelte
 msgid "Speak announcements aloud"
 msgstr "Ansagen laut vorlesen"
 

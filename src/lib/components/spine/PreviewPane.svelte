@@ -2701,12 +2701,24 @@
        fixed positions and disabled-in-place (never appearing/disappearing) so
        the permanent header above stays still. Present only when the current
        preview has options — the reader controls for foliate views, the
-       orientation toggle for scaled device frames. Sits above the (independently
-       toggled) checks panels. Never in the Source view (it has no preview to
-       drive). See process/PREVIEW_OPTIONS_BAR.md. -->
-  {#if !showSource && (usesFoliate(selectedDevice.current) || !isFillDevice(selectedDevice.current))}
+       orientation toggle for scaled device frames, the raw/tree rendering for
+       the Source view (online only — the tree asset is fetched from the app
+       origin, so on file: Source has no inputs and no bar). Sits above the
+       (independently toggled) checks panels. See process/PREVIEW_OPTIONS_BAR.md. -->
+  {#if showSource ? canSourceTree : usesFoliate(selectedDevice.current) || !isFillDevice(selectedDevice.current)}
     <div class="preview-options">
-      {#if usesFoliate(selectedDevice.current)}
+      {#if showSource}
+        <select
+          class="device-selector read-control"
+          value={sourceTree ? 'tree' : 'raw'}
+          onchange={e => (sourceTree = (e.currentTarget as HTMLSelectElement).value === 'tree')}
+          aria-label={$t('Source rendering')}
+        >
+          <option value="raw">{$t('Raw')}</option>
+          <option value="tree">{$t('Tree')}</option>
+        </select>
+      {/if}
+      {#if !showSource && usesFoliate(selectedDevice.current)}
         <!-- Reading flow — always live. Applied to the running renderer, no re-render. -->
         <select
           class="device-selector read-control"
@@ -2780,7 +2792,7 @@
       {/if}
 
       <!-- Orientation — scaled device frames only (not the fill presets or print). -->
-      {#if !isFillDevice(selectedDevice.current)}
+      {#if !showSource && !isFillDevice(selectedDevice.current)}
         <button
           type="button"
           class="orientation-toggle"
@@ -3044,30 +3056,9 @@
   <div class="preview-content" bind:this={previewContentEl}>
     {#if showSource}
       <!-- Source view: the on-disk XHTML (no preview blob URLs), raw or as a
-           collapsible tree. Tree is http-only; the options bar hides on file:. -->
+           collapsible tree. The raw/tree control lives in the preview options
+           bar above (http-only, like the tree asset itself). -->
       <div class="source-view">
-        {#if canSourceTree}
-          <div class="source-options">
-            <button
-              type="button"
-              class="source-mode-btn"
-              class:active={!sourceTree}
-              aria-pressed={!sourceTree}
-              onclick={() => (sourceTree = false)}
-            >
-              {$t('Raw')}
-            </button>
-            <button
-              type="button"
-              class="source-mode-btn"
-              class:active={sourceTree}
-              aria-pressed={sourceTree}
-              onclick={() => (sourceTree = true)}
-            >
-              {$t('Tree')}
-            </button>
-          </div>
-        {/if}
         {#if sourceTree && canSourceTree && persistedXhtml}
           <div class="source-scroll">
             {#if sourceTreeError}
@@ -3902,36 +3893,6 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-  }
-
-  /* Raw/Tree toggle. Only rendered over http (the tree asset is fetched from
-     the app origin), so on file: the raw view fills the pane as before. */
-  .source-options {
-    flex: none;
-    display: flex;
-    gap: var(--space-1);
-    padding: var(--space-1) var(--space-3);
-    border-bottom: 1px solid var(--color-border-subtle);
-    background: var(--color-surface-secondary);
-  }
-
-  .source-mode-btn {
-    font-size: var(--text-xs);
-    padding: 0 var(--space-2);
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-sm);
-    background: var(--color-surface-primary);
-    color: var(--color-text-primary);
-    cursor: pointer;
-  }
-
-  .source-mode-btn:hover {
-    background: var(--color-bg-secondary);
-  }
-
-  .source-mode-btn.active {
-    background: var(--color-bg-active);
-    border-color: var(--color-accent);
   }
 
   .source-scroll {
