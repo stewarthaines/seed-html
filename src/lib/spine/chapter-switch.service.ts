@@ -1,17 +1,23 @@
 /**
  * Chapter-switch orchestration (process/CHAPTER_SWITCH_SERVICE.md).
  *
- * Phase 1: the per-switch context. One workspace enumeration and one settings
- * read, shared by every consumer that previously enumerated for itself
- * (generators, extension preview-heads, the editor's file dropdown). The
- * context is built fresh on every switch and discarded — the orchestrator
+ * The switch's I/O runs behind one entry point: `performSwitch` lists the
+ * spine, builds the shared per-switch context (one workspace enumeration, one
+ * settings read — shared by generators, extension preview-heads, and the
+ * editor's file dropdown), and reads the incoming chapter's source text
+ * exactly once, for both the preview manager and the editor store to consume.
+ * The context is built fresh on every switch and discarded — the orchestrator
  * holds no cross-switch state, so there is nothing to invalidate; services
  * that want longer-lived caching own it themselves (workspace mtime cache
- * precedent).
+ * precedent). The counting tests in test/chapter-switch.test.ts are the
+ * design's acceptance criteria.
  */
 import type { FileStorageAPI } from '../storage/index.js';
 import type { SettingsService, EPUBSettings } from '../services/settings/settings.service.js';
 import type { ExtensionManager } from '../extensions/extension-manager.js';
+import type { SpineService } from '../services/spine/spine.service.js';
+import type { WorkspaceState } from '../services/workspace/workspace.service.js';
+import type { SpineItemWithSource } from './types.js';
 import { listGenerators, type InstalledGenerator } from '../generators/generator-store.js';
 
 export interface SwitchContextDeps {
@@ -69,6 +75,61 @@ export async function buildSwitchContext(deps: SwitchContextDeps): Promise<Switc
   ]);
 
   return { files, settings, previewHeadPath, previewHeadContent, extensionPreviewHead, generators };
+}
+
+/**
+ * The incoming chapter's source text, read once per switch. `missing` means
+ * there is no source file (new chapter, or hand-authored XHTML) — render
+ * empty but never persist over the stored XHTML; `error` means the read
+ * failed (possibly transient) — same persistence block, but surfaced.
+ */
+export type ChapterSource =
+  | { state: 'loaded'; text: string }
+  | { state: 'missing' }
+  | { state: 'error'; error: unknown };
+
+export interface PerformSwitchDeps extends SwitchContextDeps {
+  spineService: SpineService;
+  workspace: WorkspaceState;
+  /** The spine item (idref) being switched to. */
+  selectedItemId: string;
+}
+
+export interface SwitchResult {
+  spineItems: SpineItemWithSource[];
+  /** The item matching selectedItemId, or null when it is not in the spine. */
+  selectedItem: SpineItemWithSource | null;
+  context: SwitchContext;
+  /** The chapter's source text — the switch's single read of it. */
+  source: ChapterSource;
+}
+
+/**
+ * Run one chapter switch's I/O: list the spine, build the shared context, and
+ * read the incoming chapter's source once. Pure data in/out — UI sequencing
+ * (stores, panes, the single render trigger) stays with the caller.
+ */
+export async function performSwitch(deps: PerformSwitchDeps): Promise<SwitchResult> {
+  const { fileStorage, spineService, workspace, selectedItemId } = deps;
+
+  const spineItems = await spineService.loadSpineItems(workspace);
+  const selectedItem = spineItems.find(item => item.id === selectedItemId) ?? null;
+
+  const context = await buildSwitchContext(deps);
+
+  let source: ChapterSource;
+  const sourcePath = `SOURCE/text/${selectedItemId}.txt`;
+  try {
+    if (await fileStorage.fileExists(workspace.id, sourcePath)) {
+      source = { state: 'loaded', text: await fileStorage.readTextFile(workspace.id, sourcePath) };
+    } else {
+      source = { state: 'missing' };
+    }
+  } catch (error) {
+    source = { state: 'error', error };
+  }
+
+  return { spineItems, selectedItem, context, source };
 }
 
 /**
