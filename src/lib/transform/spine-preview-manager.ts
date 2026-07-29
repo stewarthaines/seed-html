@@ -21,6 +21,7 @@ import {
 import { primaryLanguage } from '../epub/opf-utils.js';
 import { DEFAULT_FXL_VIEWPORT } from '../epub/fixed-layout.js';
 import { readChapterMeta } from '../spine/chapter-metadata.js';
+import type { ChapterSource } from '../spine/chapter-switch.service.js';
 import type { ExtensionManager } from '../extensions/extension-manager.js';
 import type { SettingsService } from '../services/settings/settings.service.js';
 import type { WorkspaceService } from '../services/workspace/workspace.service.js';
@@ -211,8 +212,23 @@ export class SpinePreviewManager {
    * switchToSpineItem) are steps of a chapter switch whose tail issues one
    * explicit forcePreviewUpdate; scheduling a debounced render here too made
    * slow switches render twice (process/CHAPTER_SWITCH_SERVICE.md).
+   *
+   * When the switch already read the source (performSwitch's single read),
+   * pass it as `preloaded` — no second read, same state semantics.
    */
-  async loadInitialContent(): Promise<void> {
+  async loadInitialContent(preloaded?: ChapterSource): Promise<void> {
+    if (preloaded) {
+      if (preloaded.state === 'loaded') {
+        this.currentContent.text = preloaded.text;
+        this.suppressPersist = false;
+      } else {
+        this.currentContent.text = '';
+        this.suppressPersist = true;
+        if (preloaded.state === 'error') this.handleError('initialization', preloaded.error);
+      }
+      return;
+    }
+
     // Load text content only - CSS/JS are handled by SpineView auto-save
     const path = `SOURCE/text/${this.spineItemId}.txt`;
     try {
@@ -652,9 +668,14 @@ export class SpinePreviewManager {
 
   /**
    * Switch to a different spine item without recreating the manager
-   * This maintains workspace-level resources while updating spine-specific context
+   * This maintains workspace-level resources while updating spine-specific
+   * context. `preloaded` is the switch's single source read (performSwitch).
    */
-  async switchToSpineItem(newSpineItemId: string, newSpineItem?: any): Promise<void> {
+  async switchToSpineItem(
+    newSpineItemId: string,
+    newSpineItem?: any,
+    preloaded?: ChapterSource
+  ): Promise<void> {
     // Clear any pending operations
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
@@ -683,7 +704,7 @@ export class SpinePreviewManager {
 
     // Load initial content for new spine item (read failures are handled and
     // surfaced inside loadInitialContent; content loads on first edit)
-    await this.loadInitialContent();
+    await this.loadInitialContent(preloaded);
   }
 
   /**

@@ -9,7 +9,12 @@
   import type { ContentService } from '../../services/content/content.service.js';
   import type { AudioClipService } from '../../audio/audio-clip.service.js';
   import type { SpineItemWithSource } from '../../spine/types';
-  import { buildSwitchContext, type SwitchContext } from '../../spine/chapter-switch.service.js';
+  import {
+    performSwitch,
+    type ChapterSource,
+    type SwitchContext,
+    type SwitchResult,
+  } from '../../spine/chapter-switch.service.js';
   import { readChapterMeta, writeChapterMeta } from '../../spine/chapter-metadata.js';
   import EditorPane from '../../components/spine/EditorPane.svelte';
   import {
@@ -574,18 +579,22 @@
       type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head' | 'generator';
     },
     workspaceId: string,
-    workspaceService: WorkspaceService
+    workspaceService: WorkspaceService,
+    seededContent?: string
   ): Promise<TextEditorStore> {
     const filePath = manifestItem.path;
     const editorId = `file-content-${filePath.replace(/[^a-zA-Z0-9]/g, '-')}`;
 
-    // Load initial content from file
-    let initialContent = '';
-    try {
-      const buffer = await workspaceService.readFile(workspaceId, filePath);
-      initialContent = new TextDecoder().decode(buffer);
-    } catch {
-      // File doesn't exist, start with empty content
+    // Initial content: the switch's already-read chapter source when supplied
+    // (one read per switch — process/CHAPTER_SWITCH_SERVICE.md), else read it.
+    let initialContent = seededContent ?? '';
+    if (seededContent === undefined) {
+      try {
+        const buffer = await workspaceService.readFile(workspaceId, filePath);
+        initialContent = new TextDecoder().decode(buffer);
+      } catch {
+        // File doesn't exist, start with empty content
+      }
     }
 
     const store = createTextEditorStore(editorId, initialContent);
@@ -660,7 +669,8 @@
       type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head' | 'generator';
     },
     workspaceId: string,
-    workspaceService: WorkspaceService
+    workspaceService: WorkspaceService,
+    seededContent?: string
   ): Promise<TextEditorStore | null> {
     try {
       const filePath = manifestItem.path;
@@ -671,7 +681,12 @@
       }
 
       // Create new file-backed store
-      const store = await createFileBackedStore(manifestItem, workspaceId, workspaceService);
+      const store = await createFileBackedStore(
+        manifestItem,
+        workspaceId,
+        workspaceService,
+        seededContent
+      );
 
       // Cache for session (check again in case of concurrent creation)
       if (!fileContentStores.has(filePath)) {
@@ -692,16 +707,11 @@
   // when the caller (handleSpineItemSwitch) already built one; builds it
   // otherwise (initial load path). One context — one workspace enumeration —
   // per switch either way.
-  async function initializeSpineEditor(context?: SwitchContext) {
+  async function initializeSpineEditor(result: SwitchResult) {
     if (!selectedItemId || !servicesInitialized) return;
 
     try {
-      context ??= await buildSwitchContext({
-        fileStorage,
-        settingsService: settingsService!,
-        extensionManager,
-        workspaceId: workspace.id,
-      });
+      const context = result.context;
 
       // Load available files for editor panes
       loadAvailableFiles(context);
@@ -739,11 +749,11 @@
         // Initialize transform pipeline first
         await previewManager.initialize();
 
-        // Load initial content and render
-        await previewManager.loadInitialContent();
+        // Seed with the switch's single source read (no re-read)
+        await previewManager.loadInitialContent(result.source);
       } else {
-        // Existing preview manager - switch spine context
-        await previewManager.switchToSpineItem(selectedItem.idref, selectedItem);
+        // Existing preview manager - switch spine context, seeded likewise
+        await previewManager.switchToSpineItem(selectedItem.idref, selectedItem, result.source);
       }
 
       // Discover the project's generators (for the editor's Generators panel).
@@ -753,15 +763,26 @@
       currentContent = previewManager.getCurrentContent();
 
       // Restore saved pane configuration or initialize with defaults
-      await restoreOrInitializePaneContent();
+      await restoreOrInitializePaneContent(result.source);
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to initialize spine editor';
       console.error('Failed to initialize spine editor:', err);
     }
   }
 
+  /** The chapter source read by this switch, when it seeds this file's store
+   *  (the chapter text file only) — saves the store's own read. */
+  function chapterSeed(
+    file: { path: string; type: string },
+    source?: ChapterSource
+  ): string | undefined {
+    if (!source || file.type !== 'text') return undefined;
+    if (file.path !== `SOURCE/text/${selectedItemId}.txt`) return undefined;
+    return source.state === 'loaded' ? source.text : '';
+  }
+
   // Restore saved pane configuration or initialize with defaults
-  async function restoreOrInitializePaneContent() {
+  async function restoreOrInitializePaneContent(source?: ChapterSource) {
     if (availableFiles.length === 0) return;
 
     // Try to restore saved configuration from navigationStore
@@ -769,7 +790,7 @@
 
     if (savedConfig && (savedConfig.pane1 || savedConfig.pane2)) {
       // Restore saved pane configuration
-      await restorePaneConfiguration(savedConfig);
+      await restorePaneConfiguration(savedConfig, source);
     } else {
       // Default initialization - text content in pane 1
       const textFile = availableFiles.find(f => f.type === 'text');
@@ -790,7 +811,12 @@
         // project's first spine item shows a blank editor and drops keystrokes
         // ("No file store available for input") until a reload runs the
         // saved-config path. Mirrors restorePaneState's store creation.
-        const store = await getOrCreateFileStore(textFile, workspace.id, workspaceService);
+        const store = await getOrCreateFileStore(
+          textFile,
+          workspace.id,
+          workspaceService,
+          chapterSeed(textFile, source)
+        );
         if (store) {
           pane1Store = store;
         } else {
@@ -1053,25 +1079,26 @@
   }
 
   // Restore pane configuration from saved state
-  async function restorePaneConfiguration(savedConfig: SpineEditorConfig) {
+  async function restorePaneConfiguration(savedConfig: SpineEditorConfig, source?: ChapterSource) {
     // Restore editor mode
     paneState.mode = savedConfig.mode;
 
     // Restore pane 1 configuration
     if (savedConfig.pane1) {
-      await restorePaneState(1, savedConfig.pane1);
+      await restorePaneState(1, savedConfig.pane1, source);
     }
 
     // Restore pane 2 configuration
     if (savedConfig.pane2) {
-      await restorePaneState(2, savedConfig.pane2);
+      await restorePaneState(2, savedConfig.pane2, source);
     }
   }
 
   // Restore individual pane state
   async function restorePaneState(
     pane: 1 | 2,
-    paneConfig: { fileType: string; selectedFile?: string; content?: string }
+    paneConfig: { fileType: string; selectedFile?: string; content?: string },
+    source?: ChapterSource
   ) {
     const { fileType, selectedFile } = paneConfig;
 
@@ -1107,7 +1134,12 @@
       };
 
       // Create store and assign to appropriate pane (same logic as handleFileSelect)
-      const store = await getOrCreateFileStore(targetFile, workspace.id, workspaceService);
+      const store = await getOrCreateFileStore(
+        targetFile,
+        workspace.id,
+        workspaceService,
+        chapterSeed(targetFile, source)
+      );
 
       if (store) {
         // Assign store to appropriate pane
@@ -1315,9 +1347,27 @@
     error = null;
 
     try {
-      // Load spine items to find the selected one
-      const spineItems = await spineService.loadSpineItems(workspace);
-      const newSelectedItem = spineItems.find(item => item.id === selectedItemId) || null;
+      // One entry point for the switch's I/O: spine listing, the shared
+      // per-switch context, and the chapter source's single read
+      // (process/CHAPTER_SWITCH_SERVICE.md). Before the services exist, only
+      // the spine listing is possible (or needed) — selection still updates.
+      let result: SwitchResult | null = null;
+      let newSelectedItem: SpineItemWithSource | null;
+      if (servicesInitialized && selectedItemId) {
+        result = await performSwitch({
+          fileStorage,
+          settingsService: settingsService!,
+          extensionManager,
+          workspaceId: workspace.id,
+          spineService,
+          workspace,
+          selectedItemId,
+        });
+        newSelectedItem = result.selectedItem;
+      } else {
+        const spineItems = await spineService.loadSpineItems(workspace);
+        newSelectedItem = spineItems.find(item => item.id === selectedItemId) || null;
+      }
 
       // Check if this is a spine item switch (not initial load)
       const oldItemId = selectedItem?.id;
@@ -1327,14 +1377,14 @@
       // Update selected item reference
       selectedItem = newSelectedItem;
 
-      if (selectedItem && servicesInitialized) {
+      if (selectedItem && result) {
         // File stores are now created on-demand when files are selected
 
         // Initialize services and preview as needed
         if (isSpineItemSwitch) {
-          await handleSpineItemSwitch();
+          await handleSpineItemSwitch(result);
         } else {
-          await initializeSpineEditor();
+          await initializeSpineEditor(result);
         }
       }
     } catch (err) {
@@ -1345,25 +1395,16 @@
   }
 
   // Handle spine item switching with preserved global file selections
-  async function handleSpineItemSwitch() {
+  async function handleSpineItemSwitch(result: SwitchResult) {
     try {
-      // One shared context for the whole switch (one workspace enumeration,
-      // one settings read) — see process/CHAPTER_SWITCH_SERVICE.md.
-      const context = await buildSwitchContext({
-        fileStorage,
-        settingsService: settingsService!,
-        extensionManager,
-        workspaceId: workspace.id,
-      });
-
       // Update available files for new spine item
-      loadAvailableFiles(context);
+      loadAvailableFiles(result.context);
 
       // Update only spine-specific content in panes while preserving global selections
       await updateSpineSpecificContent();
 
       // Use the same initialization logic that handles both creation and reuse
-      await initializeSpineEditor(context);
+      await initializeSpineEditor(result);
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to switch spine item';
     }
