@@ -1178,92 +1178,98 @@
          dropdown right-floats via margin-inline-start:auto. -->
     <div class="header-main">
       <div class="preview-title">
-        <!-- Previous/next chapter navigation (replaces the filename readout —
+        <!-- Left cluster: navigation + status read-outs, boxed as one unit so
+             its auto end-margin anchors it left while the header's flex-end
+             right-aligns every wrapped row of controls (mirroring the editor
+             pane's wrapping). -->
+        <div class="header-left">
+          <!-- Previous/next chapter navigation (replaces the filename readout —
              the chapter's identity is already in the sidebar and editor). -->
-        {#if chapterId}
-          <div class="chapter-nav">
-            <button
-              type="button"
-              class="btn btn-icon chapter-nav-btn"
-              disabled={!spineNeighbors?.prev}
-              onclick={() => spineNeighbors?.prev && onNavigate?.(spineNeighbors.prev)}
-              aria-label={$t('Previous chapter')}
-              title={spineNeighbors?.prev ?? undefined}
-            >
-              <CaretLeft size={16} aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              class="btn btn-icon chapter-nav-btn"
-              disabled={!spineNeighbors?.next}
-              onclick={() => spineNeighbors?.next && onNavigate?.(spineNeighbors.next)}
-              aria-label={$t('Next chapter')}
-              title={spineNeighbors?.next ?? undefined}
-            >
-              <CaretRight size={16} aria-hidden="true" />
-            </button>
-          </div>
-        {/if}
+          {#if chapterId}
+            <div class="chapter-nav">
+              <button
+                type="button"
+                class="btn btn-icon chapter-nav-btn"
+                disabled={!spineNeighbors?.prev}
+                onclick={() => spineNeighbors?.prev && onNavigate?.(spineNeighbors.prev)}
+                aria-label={$t('Previous chapter')}
+                title={spineNeighbors?.prev ?? undefined}
+              >
+                <CaretLeft size={16} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                class="btn btn-icon chapter-nav-btn"
+                disabled={!spineNeighbors?.next}
+                onclick={() => spineNeighbors?.next && onNavigate?.(spineNeighbors.next)}
+                aria-label={$t('Next chapter')}
+                title={spineNeighbors?.next ?? undefined}
+              >
+                <CaretRight size={16} aria-hidden="true" />
+              </button>
+            </div>
+          {/if}
 
-        <!-- Transform status: failures stay persistently visible in the header. The
+          <!-- Transform status: failures stay persistently visible in the header. The
            success (timing) + content-size move to the hover/focus overlay below. -->
-        {#if isTransforming}
-          <div class="status-indicator transforming" title={$t('Transform in progress')}>
-            <div class="status-spinner"></div>
-            <span>{$t('Transforming...')}</span>
-          </div>
-        {:else if transformError}
-          <div class="status-indicator error" title={$t('Transform error')}>
-            <span class="status-icon">⚠️</span>
-            <span>{$t('Error')}</span>
-          </div>
-        {:else if transformWarnings.length > 0}
-          <div
-            class="status-indicator warning"
-            title={$t('{n} warnings', { n: transformWarnings.length })}
-          >
-            <span class="status-icon">⚠️</span>
-            <span>{transformWarnings.length} {$t('warnings')}</span>
-          </div>
-        {/if}
+          {#if isTransforming}
+            <div class="status-indicator transforming" title={$t('Transform in progress')}>
+              <div class="status-spinner"></div>
+              <span>{$t('Transforming...')}</span>
+            </div>
+          {:else if transformError}
+            <div class="status-indicator error" title={$t('Transform error')}>
+              <span class="status-icon">⚠️</span>
+              <span>{$t('Error')}</span>
+            </div>
+          {:else if transformWarnings.length > 0}
+            <div
+              class="status-indicator warning"
+              title={$t('{n} warnings', { n: transformWarnings.length })}
+            >
+              <span class="status-icon">⚠️</span>
+              <span>{transformWarnings.length} {$t('warnings')}</span>
+            </div>
+          {/if}
 
-        <!-- On-demand refresh: shown when the current preview type has auto-update off
+          <!-- On-demand refresh: shown when the current preview type has auto-update off
            and the chapter (or injected head) changed since it was last rendered.
            Placed after the transform status (rather than among the device controls)
            so the control order stays stable as it appears/disappears. -->
-        {#if surfaceRef?.isStale()}
-          <button
-            type="button"
-            class="print-refresh"
-            onclick={() => surfaceRef?.renderNow()}
-            title={$t('Preview out of date')}
-            aria-label={$t('Refresh')}
-          >
-            <ArrowsClockwise size={16} aria-hidden="true" />
-          </button>
-        {/if}
-
-        <!-- Fixed-layout page box: the declared size the author is composing
-             against; warning-coloured when the chapter's content exceeds it. -->
-        {#if fxlActive}
-          <div
-            class="status-indicator fxl-badge"
-            class:warning={fxlOverflow}
-            title={fxlOverflow
-              ? $t('Content is {cw}×{ch}px; the declared page is {pw}×{ph}px', {
-                  cw: fxlOverflow.width,
-                  ch: fxlOverflow.height,
-                  pw: fxlPage.width,
-                  ph: fxlPage.height,
-                })
-              : $t('Declared fixed-layout page size')}
-          >
-            {#if fxlOverflow}<span class="status-icon">⚠️</span>{/if}
-            <span
-              >{fxlOverflow ? $t('overflows {size}', { size: fxlPageLabel }) : fxlPageLabel}</span
+          {#if surfaceRef?.isStale()}
+            <button
+              type="button"
+              class="print-refresh"
+              onclick={() => surfaceRef?.renderNow()}
+              title={$t('Preview out of date')}
+              aria-label={$t('Refresh')}
             >
-          </div>
-        {/if}
+              <ArrowsClockwise size={16} aria-hidden="true" />
+            </button>
+          {/if}
+
+          <!-- Fixed-layout page box: the declared size the author is composing
+             against; warning-coloured when the chapter's content exceeds it. -->
+          {#if fxlActive}
+            <div
+              class="status-indicator fxl-badge"
+              class:warning={fxlOverflow}
+              title={fxlOverflow
+                ? $t('Content is {cw}×{ch}px; the declared page is {pw}×{ph}px', {
+                    cw: fxlOverflow.width,
+                    ch: fxlOverflow.height,
+                    pw: fxlPage.width,
+                    ph: fxlPage.height,
+                  })
+                : $t('Declared fixed-layout page size')}
+            >
+              {#if fxlOverflow}<span class="status-icon">⚠️</span>{/if}
+              <span
+                >{fxlOverflow ? $t('overflows {size}', { size: fxlPageLabel }) : fxlPageLabel}</span
+              >
+            </div>
+          {/if}
+        </div>
 
         <!-- View selector: the generated Source view + the device presets. Source and
              the responsive (fill) preset sit ungrouped at the top; the sized device
@@ -1389,11 +1395,12 @@
     </div>
 
     <!-- Split toggle: add/remove the second preview surface
-         (process/SPLIT_PREVIEW.md). Between the checks dropdown and the pinned
-         hide-preview button, mirroring the editor pane's toggle and icons. -->
+         (process/SPLIT_PREVIEW.md). Pinned beside the hide-preview button
+         (out of flow, like it) so the pair holds the top-right corner at any
+         pane width; mirrors the editor pane's toggle icons. -->
     <button
       type="button"
-      class="btn btn-icon btn-icon-lg"
+      class="btn btn-icon btn-icon-lg split-toggle"
       onclick={toggleSplit}
       aria-pressed={splitOn.current}
       title={splitOn.current ? $t('Switch to single preview') : $t('Add second preview pane')}
@@ -1836,7 +1843,6 @@
               readFlow={readFlow.current}
               readColumns={readColumns.current}
               onContentEvent={e => handleSurfaceContentEvent(e, 1)}
-              onRequestDevice={id => handleDeviceChange(id, 1)}
               {...sharedSurfaceProps}
             />
           </div>
@@ -1857,7 +1863,6 @@
               readFlow={readFlow2.current}
               readColumns={readColumns2.current}
               onContentEvent={e => handleSurfaceContentEvent(e, 2)}
-              onRequestDevice={id => handleDeviceChange(id, 2)}
               {...sharedSurfaceProps}
             />
           </div>
@@ -1872,7 +1877,6 @@
         readFlow={readFlow.current}
         readColumns={readColumns.current}
         onContentEvent={e => handleSurfaceContentEvent(e, 1)}
-        onRequestDevice={id => handleDeviceChange(id, 1)}
         {...sharedSurfaceProps}
       />
     {/if}
@@ -1894,13 +1898,17 @@
        (the group wrappers are display:contents — see .header-main), so a
        narrow pane packs the two dropdowns onto a shared second row. */
     flex-wrap: wrap;
+    /* Wrapped control rows pack right (the left cluster's auto end-margin
+       keeps row one anchored left) — coherent second/third rows on narrow
+       panes, mirroring the editor pane's input wrapping. */
+    justify-content: flex-end;
     gap: var(--space-2);
     /* Match the sidebar header height + grey (see PaneHeader) so all top bars align. */
     min-height: var(--touch-target-min);
     padding: var(--space-1) var(--space-3);
-    /* The collapse toggle is pinned to the top-right corner; reserve its column
-       so the dropdowns never slide under it. */
-    padding-inline-end: calc(var(--touch-target-min) + var(--space-2));
+    /* The collapse + split toggles are pinned to the top-right corner; reserve
+       both columns so the dropdowns never slide under them. */
+    padding-inline-end: calc(2 * var(--touch-target-min) + var(--space-2));
     position: relative;
     border-bottom: 1px solid var(--color-border-default);
     background: var(--color-bg-tertiary);
@@ -1913,6 +1921,14 @@
     position: absolute;
     inset-block-start: 0;
     inset-inline-end: 0;
+    border-radius: 0;
+  }
+
+  /* The split toggle pins immediately left of the collapse button. */
+  .split-toggle {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: var(--touch-target-min);
     border-radius: 0;
   }
 
@@ -1949,18 +1965,15 @@
     cursor: default;
   }
 
-  /* Right-float the device dropdown (replaces the old space-between of the
-     .header-main group); the panel selector packs beside it, not floated. */
-  select.device-selector {
-    margin-inline-start: auto;
-  }
-  select.panel-selector {
-    margin-inline-start: 0;
-  }
-
-  /* The split's second dropdown packs beside the first instead of floating. */
-  select.second-view {
-    margin-inline-start: 0;
+  /* The left cluster (nav + status read-outs) is one flex unit whose auto end
+     margin absorbs row one's free space — controls right-align via the
+     header's flex-end without disturbing the cluster's left anchor. */
+  .header-left {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-inline-end: auto;
   }
 
   /* The preview options bar: a second toolbar under the permanent header,
