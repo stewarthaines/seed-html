@@ -1,6 +1,6 @@
 # Split preview — two preview surfaces in the spine item preview pane
 
-Status: DESIGN (2026-07-30), settled in discussion; not started. Companion to the editor's existing single/dual pane toggle, and structurally a sibling of the chapter-switch extraction (`process/CHAPTER_SWITCH_SERVICE.md`): the feature is small once a per-preview component exists, and the extraction is the bulk of the work.
+Status: phase 1 BUILT (2026-07-30) — `PreviewSurface` extracted, no behavior change, full preview matrix verified live. Phase 2 (the split itself) not started. Companion to the editor's existing single/dual pane toggle, and structurally a sibling of the chapter-switch extraction (`process/CHAPTER_SWITCH_SERVICE.md`): the feature is small once a per-preview component exists, and the extraction is the bulk of the work.
 
 ## Motivation and use cases
 
