@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The reading-theme colours in the reader-engine previews now defer to the book's own colours, matching the Responsive preview — an author's explicit background and text colours show as a real reader's night mode would show them. Force reading-system colours overrides in every preview, as before.
 - Clicking a page in the Proofs preview no longer switches to the Print view — text can be selected in place, and with the split preview a Print pane alongside shows any page full-size without leaving Proofs.
 - Switching chapters is much faster — the editor and preview now appear in a fraction of the previous time, the preview no longer re-renders a second time after settling, and nothing is written to disk until you actually edit.
 

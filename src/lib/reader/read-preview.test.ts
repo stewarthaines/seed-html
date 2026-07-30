@@ -69,8 +69,11 @@ describe('buildReadDocument', () => {
       force: false,
     });
     expect(soft).toContain(':root { font-size: 17px; color-scheme: light; }');
-    expect(soft).toContain('html { background: #f4ecd8; }');
-    expect(soft).toContain('body { color: #5b4636; }');
+    // Zero-specificity palette: foliate keeps this sheet after the book's own,
+    // so :where() makes an author's explicit colours win ties — the same
+    // faithful night-mode the raw preview gets from head-first injection.
+    expect(soft).toContain(':where(html) { background: #f4ecd8; }');
+    expect(soft).toContain(':where(body) { color: #5b4636; }');
     expect(soft).not.toContain('!important');
     const forced = readerSimCss({
       basePx: 23,
