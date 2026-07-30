@@ -51,6 +51,11 @@ describe('source-utils', () => {
       expect(classifySourceFile('SOURCE/extensions/lib/helper.py')).toBe('extension');
     });
 
+    it('should classify stored translation files as locale type', () => {
+      expect(classifySourceFile('SOURCE/locale/en/text/chapter1.txt')).toBe('locale');
+      expect(classifySourceFile('SOURCE/locale/en/meta.json')).toBe('locale');
+    });
+
     it('should classify other files as other type', () => {
       expect(classifySourceFile('SOURCE/README.md')).toBe('other');
       expect(classifySourceFile('SOURCE/config.yaml')).toBe('other');
