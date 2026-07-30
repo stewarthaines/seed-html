@@ -11,6 +11,7 @@ import type { SpineItem, ManifestItem } from '../../epub/opf-utils.js';
 import type { SpineItemWithSource } from '../../spine/types.js';
 import { sanitizeChapterId } from '../../import/collision.js';
 import { previewDataChapterDir } from '../../preview/preview-data.js';
+import { chapterCompanionFiles, renamedCompanionPath } from '../../spine/chapter-companions.js';
 import { translate } from '$lib/i18n/index.js';
 
 // Re-export existing SpineItemWithSource type for compatibility
@@ -526,14 +527,26 @@ ${body}
       // Drop the chapter's preview scratch data (any SOURCE/data/preview/<id>/<slot>.json
       // a preview head.xml wrote via window.seed.saveData). Best-effort and any-slot —
       // the app owns this path scheme, so it can GC it; it must never fail the delete.
+      // The same enumeration sweeps the chapter's companions: frozen copies in
+      // stored translations (SOURCE/locale/) and its track-changes base
+      // (SOURCE/main/), which would otherwise be stranded under a dead id.
       try {
         const dir = previewDataChapterDir(chapterId);
-        if (dir) {
-          const items = await this.workspaceService.listSourceFiles(updatedWorkspace);
-          for (const item of items) {
-            if (item.path.startsWith(dir)) {
-              await this.workspaceService.deleteSourceFile(updatedWorkspace, item.path);
-            }
+        const items = await this.workspaceService.listSourceFiles(updatedWorkspace);
+        const companions = new Set(
+          chapterCompanionFiles(
+            items.map(item => item.path),
+            chapterId
+          )
+        );
+        for (const item of items) {
+          if (dir && item.path.startsWith(dir)) {
+            await this.workspaceService.deleteSourceFile(updatedWorkspace, item.path);
+          } else if (companions.has(item.path)) {
+            // Companions live outside SOURCE/data/, so the scoped
+            // deleteSourceFile refuses them — plain deleteFile, like the
+            // chapter's own SOURCE/text files above.
+            await this.workspaceService.deleteFile(updatedWorkspace.id, item.path);
           }
         }
       } catch (error) {
@@ -611,21 +624,35 @@ ${body}
       }
 
       // Move the chapter's preview scratch data to the new id, so page-index
-      // and other window.seed.saveData output follows the rename. Best-effort —
-      // stale scratch under the old id is harmless if this fails.
+      // and other window.seed.saveData output follows the rename. The same
+      // enumeration renames the chapter's companions — frozen copies in stored
+      // translations (SOURCE/locale/) and its track-changes base (SOURCE/main/)
+      // — which a rename would otherwise strand under the old id, silently
+      // dropping them from the editor's dropdown and the Changes view.
+      // Best-effort — stale files under the old id are harmless if this fails.
       try {
         const oldDir = previewDataChapterDir(oldId);
         const newDir = previewDataChapterDir(newId);
-        if (oldDir && newDir) {
-          const items = await this.workspaceService.listSourceFiles(workspace);
-          for (const item of items) {
-            if (item.path.startsWith(oldDir)) {
-              await this.workspaceService.renameFile(
-                workspace.id,
-                item.path,
-                newDir + item.path.slice(oldDir.length)
-              );
-            }
+        const items = await this.workspaceService.listSourceFiles(workspace);
+        const companions = new Set(
+          chapterCompanionFiles(
+            items.map(item => item.path),
+            oldId
+          )
+        );
+        for (const item of items) {
+          if (oldDir && newDir && item.path.startsWith(oldDir)) {
+            await this.workspaceService.renameFile(
+              workspace.id,
+              item.path,
+              newDir + item.path.slice(oldDir.length)
+            );
+          } else if (companions.has(item.path)) {
+            await this.workspaceService.renameFile(
+              workspace.id,
+              item.path,
+              renamedCompanionPath(item.path, oldId, newId)
+            );
           }
         }
       } catch (error) {
