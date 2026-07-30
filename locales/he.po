@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-29\n"
-"PO-Revision-Date: 2026-07-29\n"
+"POT-Creation-Date: 2026-07-30\n"
+"PO-Revision-Date: 2026-07-30\n"
 "Language: he\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -385,6 +385,10 @@ msgstr ""
 
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Add second editor pane"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Add second preview pane"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -813,7 +817,7 @@ msgstr ""
 msgid "Chapter not found."
 msgstr ""
 
-#: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/components/spine/PreviewSurface.svelte
 msgid "Chapter PDF"
 msgstr ""
 
@@ -2874,7 +2878,7 @@ msgstr ""
 msgid "matches this project"
 msgstr ""
 
-#: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/components/spine/PreviewSurface.svelte
 msgid "Message:"
 msgstr ""
 
@@ -3075,7 +3079,7 @@ msgstr ""
 msgid "No chapters yet"
 msgstr ""
 
-#: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/components/spine/PreviewSurface.svelte
 msgid "No Content"
 msgstr ""
 
@@ -3437,7 +3441,7 @@ msgstr ""
 msgid "Paginated"
 msgstr ""
 
-#: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/components/spine/PreviewSurface.svelte
 msgid "Paginating…"
 msgstr ""
 
@@ -4118,6 +4122,10 @@ msgstr ""
 msgid "Select navigation file"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Select second view"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Select This Folder"
 msgstr ""
@@ -4288,11 +4296,11 @@ msgid "Spread"
 msgstr ""
 
 #: src/lib/components/spine/EditorPane.svelte
-#: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/components/spine/PreviewSurface.svelte
 msgid "Stack Trace"
 msgstr ""
 
-#: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/components/spine/PreviewSurface.svelte
 msgid "Stage:"
 msgstr ""
 
@@ -4305,7 +4313,7 @@ msgstr ""
 msgid "Start time"
 msgstr ""
 
-#: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/components/spine/PreviewSurface.svelte
 msgid "Start typing in the editor to see your XHTML preview here."
 msgstr ""
 
@@ -4369,6 +4377,10 @@ msgstr ""
 
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Switch to single pane"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Switch to single preview"
 msgstr ""
 
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
@@ -4580,7 +4592,7 @@ msgstr ""
 msgid "Transform error"
 msgstr ""
 
-#: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/components/spine/PreviewSurface.svelte
 msgid "Transform Error"
 msgstr ""
 
@@ -4592,7 +4604,7 @@ msgstr ""
 msgid "Transform in progress"
 msgstr ""
 
-#: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/components/spine/PreviewSurface.svelte
 msgid "Transform successful"
 msgstr ""
 
@@ -4857,7 +4869,7 @@ msgstr ""
 msgid "Wide"
 msgstr ""
 
-#: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/components/spine/PreviewSurface.svelte
 msgid "XHTML Preview"
 msgstr ""
 

@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A split preview: the toggle beside the Checks menu stacks a second, independent preview under the first — two devices side by side, portrait next to landscape, scrolled next to paginated, or the Source view above its rendered result. Each half has its own view dropdown and options, the divider position is remembered, and checks run against whichever half supports them.
 - The preview's Source view now shows the chapter file exactly as saved in the project (real image and stylesheet paths, not preview-only addresses), and a Raw/Tree toggle offers a collapsible tree of the markup with syntax colors — fold a section closed to see the chapter's structure at a glance. The tree is available when the editor runs online.
 
 ### Changed
