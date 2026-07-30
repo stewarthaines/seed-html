@@ -3799,6 +3799,7 @@ msgstr ""
 msgid "Read whole chapter"
 msgstr ""
 
+#: src/lib/components/spine/EditorPane.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Read-only"
 msgstr "მხოლოდ წასაკითხი"
@@ -4697,6 +4698,10 @@ msgstr "გარდაქმნა წარმატებულია"
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Transforming..."
 msgstr "მიმდინარეობს გარდაქმნა..."
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Translation reference — read-only"
+msgstr ""
 
 #: src/lib/components/settings/TranslationsPanel.svelte
 msgid "Translations"

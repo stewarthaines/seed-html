@@ -16,6 +16,7 @@ import {
   listTranslations,
   localeMetaPath,
   localeTextPrefix,
+  parseLocaleTextPath,
   recoverPendingSwap,
   removeTranslation,
   swapMetadataUpdates,
@@ -116,6 +117,18 @@ describe('translationMetaFrom', () => {
     expect(
       translationMetaFrom({ title: 'T', titleFileAs: '  ', description: 'D' } as EPUBMetadata)
     ).toEqual({ title: 'T', description: 'D' });
+  });
+});
+
+describe('parseLocaleTextPath', () => {
+  it('parses tag and rest from locale text paths only', () => {
+    expect(parseLocaleTextPath('SOURCE/locale/en/text/ch1.txt')).toEqual({
+      tag: 'en',
+      rest: 'ch1.txt',
+    });
+    expect(parseLocaleTextPath('SOURCE/locale/en/meta.json')).toBeNull();
+    expect(parseLocaleTextPath(SWAP_JOURNAL_PATH)).toBeNull();
+    expect(parseLocaleTextPath('SOURCE/text/ch1.txt')).toBeNull();
   });
 });
 

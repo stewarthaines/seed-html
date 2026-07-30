@@ -32,7 +32,7 @@
   import { primaryLanguage } from '$lib/epub/opf-utils.js';
   import { convertManifestPathToXHTMLPath } from '$lib/epub/path-utils.js';
   import { t } from '$lib/i18n';
-  import { RowsIcon, SquareIcon, ArrowUUpLeft, X } from 'phosphor-svelte';
+  import { RowsIcon, SquareIcon, ArrowUUpLeft, X, Lock } from 'phosphor-svelte';
   import { onMount } from 'svelte';
   import { FileStorageAPI } from '$lib/storage/index.js';
   import {
@@ -109,13 +109,27 @@
       value: string;
       label: string;
       path: string;
-      type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head' | 'generator';
+      type:
+        | 'text'
+        | 'locale-text'
+        | 'css'
+        | 'javascript'
+        | 'transform'
+        | 'preview-head'
+        | 'generator';
     }>;
     availableFiles2?: Array<{
       value: string;
       label: string;
       path: string;
-      type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head' | 'generator';
+      type:
+        | 'text'
+        | 'locale-text'
+        | 'css'
+        | 'javascript'
+        | 'transform'
+        | 'preview-head'
+        | 'generator';
     }>;
     /** Basic mode hides JavaScript/transform entries from the file dropdowns —
         JS isn't exposed as editable there. */
@@ -155,8 +169,10 @@
   } = $props();
 
   // Basic mode hides JavaScript, transform-script, generator and preview-head
-  // entries, so power-user surfaces aren't offered as editable; text and CSS stay.
-  const isEditableInBasicMode = (type: string) => type === 'text' || type === 'css';
+  // entries, so power-user surfaces aren't offered as editable; text, CSS and
+  // translation references stay (translators aren't power users).
+  const isEditableInBasicMode = (type: string) =>
+    type === 'text' || type === 'locale-text' || type === 'css';
   const visibleFiles1 = $derived(
     advancedMode ? availableFiles1 : availableFiles1.filter(f => isEditableInBasicMode(f.type))
   );
@@ -181,7 +197,7 @@
       case 'preview-head':
         return 'preview';
       default:
-        return null; // 'text' — rendered as a bare option, not grouped
+        return null; // 'text' / 'locale-text' — rendered as bare options, not grouped
     }
   };
   const fileGroupLabel = (key: string): string => {
@@ -202,7 +218,10 @@
         return key;
     }
   };
-  const textFilesOf = (files: FileEntry[]) => files.filter(f => f.type === 'text');
+  // Bare leading options: the chapter text plus any frozen translation
+  // references — they belong beside it, not under a group header.
+  const textFilesOf = (files: FileEntry[]) =>
+    files.filter(f => f.type === 'text' || f.type === 'locale-text');
   const fileGroupsOf = (files: FileEntry[]) =>
     FILE_GROUP_ORDER.map(key => ({
       key,
@@ -551,11 +570,16 @@
   const bookIsRtl = $derived(isRtlLanguage(primaryLanguage(workspace?.opf?.metadata)));
 
   /**
-   * Editing direction for a pane: prose ('text') follows the book; everything
-   * else (css/js/transform/generator) stays left-to-right.
+   * Editing direction for a pane: the chapter text follows the book; a frozen
+   * translation reference follows its own language (its value encodes the tag,
+   * `locale-<tag>`); everything else (css/js/transform/generator) stays LTR.
    */
-  function paneDir(fileType: string): 'rtl' | 'ltr' {
-    return fileType === 'text' ? (bookIsRtl ? 'rtl' : 'ltr') : 'ltr';
+  function paneDir(fileValue: string): 'rtl' | 'ltr' {
+    if (fileValue === 'text') return bookIsRtl ? 'rtl' : 'ltr';
+    if (fileValue.startsWith('locale-')) {
+      return isRtlLanguage(fileValue.slice('locale-'.length)) ? 'rtl' : 'ltr';
+    }
+    return 'ltr';
   }
 
   /**
@@ -584,10 +608,23 @@
   let pane1Textarea: HTMLTextAreaElement | undefined = $state();
   let pane2Textarea: HTMLTextAreaElement | undefined = $state();
 
-  // Code panes (non-prose) get a line-number gutter and no soft-wrap; prose ('text')
-  // keeps wrapping and shows no gutter.
-  const pane1IsCode = $derived(pane1SelectedFile !== 'text');
-  const pane2IsCode = $derived(pane2SelectedFile !== 'text');
+  const selectedFile1 = $derived(availableFiles1.find(f => f.value === pane1SelectedFile) ?? null);
+  const selectedFile2 = $derived(availableFiles2.find(f => f.value === pane2SelectedFile) ?? null);
+
+  // Frozen translation references are read-only: the textarea rejects edits
+  // (and workspaceService.writeFile rejects SOURCE/locale/** as the backstop).
+  const pane1ReadOnly = $derived(selectedFile1?.type === 'locale-text');
+  const pane2ReadOnly = $derived(selectedFile2?.type === 'locale-text');
+
+  // Code panes (non-prose) get a line-number gutter and no soft-wrap; prose (the
+  // chapter text and translation references) keeps wrapping and shows no gutter.
+  const PROSE_TYPES = new Set(['text', 'locale-text']);
+  const pane1IsCode = $derived(
+    selectedFile1 ? !PROSE_TYPES.has(selectedFile1.type) : pane1SelectedFile !== 'text'
+  );
+  const pane2IsCode = $derived(
+    selectedFile2 ? !PROSE_TYPES.has(selectedFile2.type) : pane2SelectedFile !== 'text'
+  );
   const pane1Content = $derived(pane1FileStore ? ($pane1FileStore?.content ?? '') : '');
   const pane2Content = $derived(pane2FileStore ? ($pane2FileStore?.content ?? '') : '');
   const pane1LineCount = $derived(pane1IsCode ? pane1Content.split('\n').length : 1);
@@ -596,8 +633,6 @@
   // Track-changes "Changes" toggle: when a base snapshot exists for the selected
   // file, show an inline diff (base vs current) instead of the textarea. Per pane.
   const TRACKABLE_TYPES = new Set(['text', 'css', 'javascript']);
-  const selectedFile1 = $derived(availableFiles1.find(f => f.value === pane1SelectedFile) ?? null);
-  const selectedFile2 = $derived(availableFiles2.find(f => f.value === pane2SelectedFile) ?? null);
   // Base content if a snapshot exists for the pane's file, else null (no button).
   let base1 = $state<string | null>(null);
   let base2 = $state<string | null>(null);
@@ -964,6 +999,21 @@
   {/each}
 {/snippet}
 
+<!-- Padlock shown beside a pane's file picker when its file is a frozen
+     translation reference. -->
+{#snippet readOnlyBadge(pane: 1 | 2)}
+  {#if pane === 1 ? pane1ReadOnly : pane2ReadOnly}
+    <span
+      class="readonly-badge"
+      role="img"
+      aria-label={$t('Read-only')}
+      title={$t('Translation reference — read-only')}
+    >
+      <Lock size={14} weight="fill" aria-hidden="true" />
+    </span>
+  {/if}
+{/snippet}
+
 <!-- Pane 1's file picker. Lives in the header row in single-pane mode; moves
      into pane 1's own header in dual mode (next to its editor). -->
 {#snippet pane1FileSelector()}
@@ -975,6 +1025,7 @@
   >
     {@render fileOptions(visibleFiles1)}
   </select>
+  {@render readOnlyBadge(1)}
 {/snippet}
 
 <!-- Track-changes diff toggle for a pane, shown only when the file has a base snapshot. -->
@@ -1243,6 +1294,7 @@
               >
                 {@render fileOptions(visibleFiles2)}
               </select>
+              {@render readOnlyBadge(2)}
               {@render changesToggle(2)}
             </div>
 
@@ -1262,6 +1314,8 @@
                 class:has-error={pane2Error}
                 class:with-gutter={pane2IsCode}
                 class:drop-target={dropTargetPane === 2}
+                class:readonly={pane2ReadOnly}
+                readonly={pane2ReadOnly}
                 ondragover={e => handleEditorDragOver(2, e)}
                 ondragleave={e => handleEditorDragLeave(2, e)}
                 ondrop={e => handleEditorDrop(2, e)}
@@ -1317,6 +1371,8 @@
               class:has-error={pane1Error}
               class:with-gutter={pane1IsCode}
               class:drop-target={dropTargetPane === 1}
+              class:readonly={pane1ReadOnly}
+              readonly={pane1ReadOnly}
               ondragover={e => handleEditorDragOver(1, e)}
               ondragleave={e => handleEditorDragLeave(1, e)}
               ondrop={e => handleEditorDrop(1, e)}
@@ -1731,6 +1787,20 @@
     line-height: var(--leading-relaxed);
     resize: none;
     outline-offset: -2px;
+  }
+
+  /* Frozen translation reference: visibly not an editing surface, but text
+     stays selectable/copyable (readonly, not disabled). */
+  .content-textarea.readonly {
+    background: var(--color-surface-secondary);
+    color: var(--color-text-secondary);
+  }
+
+  .readonly-badge {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    color: var(--color-text-secondary);
   }
 
   .font-size-controls {

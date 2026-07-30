@@ -3780,6 +3780,7 @@ msgstr "Vorlesen"
 msgid "Read whole chapter"
 msgstr "Ganzes Kapitel vorlesen"
 
+#: src/lib/components/spine/EditorPane.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Read-only"
 msgstr "Schreibgeschützt"
@@ -4678,6 +4679,10 @@ msgstr "Transformation erfolgreich"
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Transforming..."
 msgstr "Transformation läuft..."
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Translation reference — read-only"
+msgstr ""
 
 #: src/lib/components/settings/TranslationsPanel.svelte
 msgid "Translations"

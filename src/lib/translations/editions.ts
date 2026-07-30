@@ -71,6 +71,12 @@ export function localeMetaPath(tag: string): string {
   return `${LOCALE_PREFIX}${tag}/meta.json`;
 }
 
+/** Parse `SOURCE/locale/<tag>/text/<rest>`; null for any other path. */
+export function parseLocaleTextPath(path: string): { tag: string; rest: string } | null {
+  const match = /^SOURCE\/locale\/([^/.][^/]*)\/text\/(.+)$/.exec(path);
+  return match ? { tag: match[1], rest: match[2] } : null;
+}
+
 // BCP 47 tags are ASCII alphanumerics and hyphens; anything else would also be
 // a path-injection risk since tags become directory names.
 function assertSafeTag(tag: string): void {
