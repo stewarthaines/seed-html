@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-29\n"
-"PO-Revision-Date: 2026-07-29\n"
+"POT-Creation-Date: 2026-07-30\n"
+"PO-Revision-Date: 2026-07-30\n"
 "Language: ka\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -424,6 +424,10 @@ msgstr "როლის დამატება"
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Add second editor pane"
 msgstr "რედაქტორის მეორე პანელის დამატება"
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Add second preview pane"
+msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Add SEED.html to package"
@@ -851,7 +855,7 @@ msgstr "თავის შინაარსის გენერაცია"
 msgid "Chapter not found."
 msgstr ""
 
-#: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/components/spine/PreviewSurface.svelte
 msgid "Chapter PDF"
 msgstr "თავის PDF"
 
@@ -2912,7 +2916,7 @@ msgstr "მინდორი"
 msgid "matches this project"
 msgstr "ემთხვევა ამ პროექტს"
 
-#: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/components/spine/PreviewSurface.svelte
 msgid "Message:"
 msgstr "შეტყობინება:"
 
@@ -3113,7 +3117,7 @@ msgstr ""
 msgid "No chapters yet"
 msgstr ""
 
-#: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/components/spine/PreviewSurface.svelte
 msgid "No Content"
 msgstr "შიგთავსი არ არის"
 
@@ -3475,7 +3479,7 @@ msgstr "გვერდები"
 msgid "Paginated"
 msgstr "პაგინირებული"
 
-#: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/components/spine/PreviewSurface.svelte
 msgid "Paginating…"
 msgstr "მიმდინარეობს პაგინაცია…"
 
@@ -4156,6 +4160,10 @@ msgstr "ფაილის არჩევა მე-2 პანელისთ�
 msgid "Select navigation file"
 msgstr "ნავიგაციის ფაილის არჩევა"
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Select second view"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Select This Folder"
 msgstr "ამ საქაღალდის არჩევა"
@@ -4326,11 +4334,11 @@ msgid "Spread"
 msgstr "გაშლილი გვერდები"
 
 #: src/lib/components/spine/EditorPane.svelte
-#: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/components/spine/PreviewSurface.svelte
 msgid "Stack Trace"
 msgstr "სტეკ-ტრეისი"
 
-#: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/components/spine/PreviewSurface.svelte
 msgid "Stage:"
 msgstr "ეტაპი:"
 
@@ -4343,7 +4351,7 @@ msgstr "სტანდარტული"
 msgid "Start time"
 msgstr "დაწყების დრო"
 
-#: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/components/spine/PreviewSurface.svelte
 msgid "Start typing in the editor to see your XHTML preview here."
 msgstr "დაიწყეთ წერა რედაქტორში, რომ აქ იხილოთ თქვენი XHTML-ის გადახედვა."
 
@@ -4408,6 +4416,10 @@ msgstr "{mode} თემაზე გადართვა"
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Switch to single pane"
 msgstr "ერთ პანელზე გადართვა"
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Switch to single preview"
+msgstr ""
 
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/navigation/views/ChaptersView.svelte
@@ -4618,7 +4630,7 @@ msgstr "გარდაქმნის ძრავის შეცდომა"
 msgid "Transform error"
 msgstr "გარდაქმნის შეცდომა"
 
-#: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/components/spine/PreviewSurface.svelte
 msgid "Transform Error"
 msgstr "გარდაქმნის შეცდომა"
 
@@ -4630,7 +4642,7 @@ msgstr "გარდაქმნის შეცდომა ({stage})"
 msgid "Transform in progress"
 msgstr "გარდაქმნა მიმდინარეობს"
 
-#: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/components/spine/PreviewSurface.svelte
 msgid "Transform successful"
 msgstr "გარდაქმნა წარმატებულია"
 
@@ -4895,7 +4907,7 @@ msgstr ""
 msgid "Wide"
 msgstr "ფართო"
 
-#: src/lib/components/spine/PreviewPane.svelte
+#: src/lib/components/spine/PreviewSurface.svelte
 msgid "XHTML Preview"
 msgstr "XHTML გადახედვა"
 

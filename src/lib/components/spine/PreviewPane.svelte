@@ -43,9 +43,12 @@
     CaretLeft,
     CaretRight,
     DeviceRotate,
+    RowsIcon,
+    SquareIcon,
     X,
     CircleHalf,
   } from 'phosphor-svelte';
+  import { PaneGroup, Pane, PaneResizer } from 'paneforge';
   import { layoutStore } from '../../stores/layout';
   import { pagedDevicePreviews } from '../../stores/paged-device-previews.js';
   import { persisted, asBoolean, asInt, asEnum, asString } from '../../state/persisted.svelte.js';
@@ -190,30 +193,36 @@
   // exported commands/read-outs.
   let surfaceRef = $state<ReturnType<typeof PreviewSurface> | undefined>();
 
-  /** Checks re-establishment on the surface's render lifecycle. */
-  function handleSurfaceContentEvent(event: SurfaceContentEvent): void {
+  /** Checks re-establishment on a surface's render lifecycle. Events from a
+   *  surface a check is not bound to are ignored — that check's document is
+   *  untouched by the other surface's re-render. */
+  function handleSurfaceContentEvent(event: SurfaceContentEvent, which: 1 | 2 = 1): void {
+    const a11yBound = which === boundIndexA11y;
+    const srBound = which === boundIndexSr;
     if (event === 'will-rewrite') {
       // A screen-reader walk must not keep stepping through the dying document,
       // and its queued speech would outlive the rewrite.
-      cancelSrActivity();
-      srHoverTarget = null;
+      if (srBound) {
+        cancelSrActivity();
+        srHoverTarget = null;
+      }
       return;
     }
     if (event === 'rewrite' || event === 'section-ready') {
       // The rewrite invalidated any prior axe results; re-check if open, and
       // re-establish the screen-reader affordances on the fresh document.
-      scheduleAutoA11yCheck();
-      if (activePanel === 'sr') void ensureSrReady();
+      if (a11yBound) scheduleAutoA11yCheck();
+      if (srBound && activePanel === 'sr') void ensureSrReady();
       return;
     }
     if (event === 'frame-load') {
       // Device re-key rebuilt the iframe (fresh Window): reload + re-instrument
       // the screen reader preview when its panel is open.
-      if (activePanel === 'sr') void ensureSrReady();
+      if (srBound && activePanel === 'sr') void ensureSrReady();
       return;
     }
     // 'section-reflow': same section view re-laid-out; refresh stale highlights.
-    scheduleAutoA11yCheck();
+    if (a11yBound) scheduleAutoA11yCheck();
   }
 
   interface AxeViolation {
@@ -318,7 +327,7 @@
    * iframe. Resolved fresh per run — each foliate re-render replaces the doc.
    */
   function a11yTarget(): { doc: Document; win: AxeWindow } | null {
-    const target = surfaceRef?.getCheckTarget();
+    const target = surfaceFor(boundIndexA11y)?.getCheckTarget();
     return target ? { doc: target.doc, win: target.win as AxeWindow } : null;
   }
 
@@ -381,12 +390,18 @@
     if (validationReport && validationReportMatches) {
       list.push({ id: 'epubcheck', label: 'EpubCheck', disabled: false });
     }
-    if (readerModeActive) {
+    if (readerModeActiveAny) {
       list.push({ id: 'reader', label: $t('Reader'), disabled: false });
     }
     // On foliate views the walk targets the section document (phase B); still
     // not on the paged views (Paged.js wrapper elements are not the chapter).
-    if (canSrPreview && engineOfDevice(selectedDevice.current) !== 'paged') {
+    // Split: superset — offered when EITHER surface's view supports it; the
+    // binding rule decides which document it runs against.
+    if (
+      canSrPreview &&
+      (engineOfDevice(selectedDevice.current) !== 'paged' ||
+        (splitOn.current && engineOfDevice(selectedDevice2.current) !== 'paged'))
+    ) {
       // <!-- i18n: preview Checks dropdown entry — announcement preview -->
       list.push({ id: 'sr', label: $t('Screen reader'), disabled: !xhtmlContent });
     }
@@ -485,7 +500,7 @@
    * reuses the same view, so they survive that — see paginator `render()`).
    */
   function srTarget(): { doc: Document; win: VsrWindow } | null {
-    const target = surfaceRef?.getCheckTarget();
+    const target = surfaceFor(boundIndexSr)?.getCheckTarget();
     return target ? { doc: target.doc, win: target.win as VsrWindow } : null;
   }
 
@@ -858,6 +873,64 @@
   // Session-local; not persisted.
   const canSourceTree = canShowXmlTree();
   let sourceTree = $state(false);
+
+  // --- Split preview (process/SPLIT_PREVIEW.md phase 2) ------------------------
+  // A second, independent surface below the first. Its settings mirror the
+  // top's under `_2` keys; the split itself persists, and the splitter
+  // position persists through PaneForge (autoSaveId seedhtml-preview-panes).
+  const splitOn = persisted('seedhtml_preview_split', false, asBoolean);
+  const selectedDevice2 = persisted(
+    'seedhtml_preview_device_2',
+    'desktop',
+    asEnum(DEVICE_PRESETS.map(d => d.id))
+  );
+  let showSource2 = $state(false);
+  let sourceTree2 = $state(false);
+  const readFlow2 = persisted<ReadFlow>(
+    'seedhtml_preview_read_flow_2',
+    'paginated',
+    asEnum(['paginated', 'scrolled'])
+  );
+  const readColumns2 = persisted<ReadColumns>(
+    'seedhtml_preview_read_columns_2',
+    '2',
+    asEnum(['1', '2'])
+  );
+  let surfaceRef2 = $state<ReturnType<typeof PreviewSurface> | undefined>();
+  const surfaceFor = (which: 1 | 2) => (which === 1 ? surfaceRef : surfaceRef2);
+
+  function toggleSplit(): void {
+    // The surfaces remount into the new layout; each fresh instance sizes and
+    // renders itself (mount sizing + the first-show render effect).
+    splitOn.current = !splitOn.current;
+  }
+
+  // --- Check binding (split) ----------------------------------------------------
+  // Every check runs against ONE document. Binding rule: a check targets the
+  // top surface when the top surface's view supports it, otherwise the bottom
+  // (process/SPLIT_PREVIEW.md). The screen reader follows the same rule — one
+  // injected walker, one speech queue; two documents cannot share it.
+  function viewSupportsCheck(check: 'a11y' | 'sr', dev: string, source: boolean): boolean {
+    if (source) return false; // the Source view has no rendered document
+    // axe can audit any rendered document; the SR walk stays off the paged
+    // views (Paged.js wrapper elements are not the chapter).
+    return check === 'a11y' ? true : engineOfDevice(dev) !== 'paged';
+  }
+  const boundIndexA11y = $derived(
+    viewSupportsCheck('a11y', selectedDevice.current, showSource)
+      ? 1
+      : splitOn.current && viewSupportsCheck('a11y', selectedDevice2.current, showSource2)
+        ? 2
+        : 1
+  );
+  const boundIndexSr = $derived(
+    viewSupportsCheck('sr', selectedDevice.current, showSource)
+      ? 1
+      : splitOn.current && viewSupportsCheck('sr', selectedDevice2.current, showSource2)
+        ? 2
+        : 1
+  );
+
   // --- Fixed-layout page box -------------------------------------------------
   // For pre-paginated books the device presets behave like a real FXL reading
   // system: the page renders at its DECLARED viewport size and is contain-fit
@@ -880,6 +953,39 @@
       columnsEnabled: readFlow.current === 'paginated',
     }
   );
+  const pager2 = $derived(
+    surfaceRef2?.pagerState() ?? {
+      enabled: false,
+      page: 0,
+      pages: 0,
+      columnsEnabled: readFlow2.current === 'paginated',
+    }
+  );
+
+  // Everything the shared options-bar snippet needs, per surface.
+  const bar1 = $derived({
+    which: 1 as 1 | 2,
+    device: selectedDevice.current,
+    showSource,
+    sourceTree,
+    flow: readFlow.current,
+    columns: readColumns.current,
+    pager,
+  });
+  const bar2 = $derived({
+    which: 2 as 1 | 2,
+    device: selectedDevice2.current,
+    showSource: showSource2,
+    sourceTree: sourceTree2,
+    flow: readFlow2.current,
+    columns: readColumns2.current,
+    pager: pager2,
+  });
+
+  /** A surface's options bar renders only when its view has inputs
+   *  (process/PREVIEW_OPTIONS_BAR.md). */
+  const barVisible = (bar: typeof bar1): boolean =>
+    bar.showSource ? canSourceTree : usesFoliate(bar.device) || !isFillDevice(bar.device);
 
   // Group devices by category for dropdown
   const groupedDevices = $derived.by(() => {
@@ -924,12 +1030,45 @@
   );
   const forceColors = persisted('seedhtml_preview_force_colors', false, asBoolean);
 
+  // Props identical for both surfaces: the chapter's data, the shared reader
+  // appearance, and the pass-through callbacks.
+  const sharedSurfaceProps = $derived({
+    xhtmlContent,
+    persistedXhtml,
+    isTransforming,
+    transformError,
+    transformWarnings,
+    executionTime,
+    onNavigate,
+    onPreviewClick,
+    chapterId,
+    printSettings,
+    onGeneratePdf,
+    previewHead,
+    extensionPreviewHead,
+    previewAutoUpdate,
+    previewIncludeHead,
+    isFixedLayout,
+    renditionViewport,
+    onSavePreviewData,
+    getPagedStartPage,
+    readerTheme: previewTheme.current,
+    fontStepIndex: fontStep.current,
+    forceColors: forceColors.current,
+  });
+
   // Whether the reader-mode controls apply: reflowable previews only (not the print
   // preset, not fixed-layout chapters — readers disable user theming/sizing there).
   // Foliate-rendered views (READ.html + device presets) are included: their sim
   // goes through renderer.setStyles() instead of head injection.
   const readerModeActive = $derived(
     engineOfDevice(selectedDevice.current) !== 'paged' && !isFixedLayout
+  );
+  // Split: the reader panel controls SHARED appearance (theme/font), so it is
+  // offered when either surface shows a reflowable rendered view.
+  const readerModeActiveAny = $derived(
+    readerModeActive ||
+      (splitOn.current && engineOfDevice(selectedDevice2.current) !== 'paged' && !isFixedLayout)
   );
 
   function decreaseFont(): void {
@@ -958,49 +1097,59 @@
     return `${sizeLabel} ${margin}`;
   });
 
-  function setReadFlow(value: string): void {
-    readFlow.current = value as ReadFlow;
-    surfaceRef?.applyReadSettings();
+  function setReadFlow(value: string, which: 1 | 2 = 1): void {
+    (which === 1 ? readFlow : readFlow2).current = value as ReadFlow;
+    surfaceFor(which)?.applyReadSettings();
   }
 
-  function setReadColumns(value: string): void {
-    readColumns.current = value as ReadColumns;
-    surfaceRef?.applyReadSettings();
+  function setReadColumns(value: string, which: 1 | 2 = 1): void {
+    (which === 1 ? readColumns : readColumns2).current = value as ReadColumns;
+    surfaceFor(which)?.applyReadSettings();
+  }
+
+  function setSourceTree(value: boolean, which: 1 | 2): void {
+    if (which === 1) sourceTree = value;
+    else sourceTree2 = value;
   }
 
   /**
    * Handle device preset selection: the setting is pane-owned, the frame
    * sizing lives in the surface.
    */
-  function handleDeviceChange(deviceId: string): void {
-    selectedDevice.current = deviceId as (typeof DEVICE_PRESETS)[number]['id'];
-    surfaceRef?.applyDeviceSizing(deviceId);
+  function handleDeviceChange(deviceId: string, which: 1 | 2 = 1): void {
+    (which === 1 ? selectedDevice : selectedDevice2).current =
+      deviceId as (typeof DEVICE_PRESETS)[number]['id'];
+    surfaceFor(which)?.applyDeviceSizing(deviceId);
   }
 
   /**
    * Toggle source view
    */
-  // Pick either the generated-source view or a device preset from the single view
-  // dropdown. Switching away from source re-renders the preview and re-applies the
-  // chosen device's dimensions/scaling.
-  function handleViewSelect(value: string): void {
+  // Pick either the generated-source view or a device preset from a view
+  // dropdown. Switching away from source re-renders the preview and re-applies
+  // the chosen device's dimensions/scaling.
+  function handleViewSelect(value: string, which: 1 | 2 = 1): void {
     if (value === 'source') {
       // The Source view is advanced-only; ignore the selection in basic mode
       // (the option is also hidden from the dropdown there).
-      if (advancedMode) showSource = true;
+      if (advancedMode) {
+        if (which === 1) showSource = true;
+        else showSource2 = true;
+      }
       return;
     }
-    const wasSource = showSource;
-    showSource = false;
+    const wasSource = which === 1 ? showSource : showSource2;
+    if (which === 1) showSource = false;
+    else showSource2 = false;
     if (wasSource) {
       // Leaving the source view: re-render, then re-apply the chosen device's
       // dimensions/scaling once the preview iframe is back in the DOM.
       setTimeout(() => {
-        surfaceRef?.renderNow();
-        handleDeviceChange(value);
+        surfaceFor(which)?.renderNow();
+        handleDeviceChange(value, which);
       }, 0);
     } else {
-      handleDeviceChange(value);
+      handleDeviceChange(value, which);
     }
   }
 
@@ -1009,6 +1158,9 @@
     if (engineOfDevice(selectedDevice.current) === 'paged' && !canPaginate)
       selectedDevice.current = 'desktop';
     if (selectedDevice.current === 'read' && !canReadPreview) selectedDevice.current = 'desktop';
+    if (engineOfDevice(selectedDevice2.current) === 'paged' && !canPaginate)
+      selectedDevice2.current = 'desktop';
+    if (selectedDevice2.current === 'read' && !canReadPreview) selectedDevice2.current = 'desktop';
 
     return () => {
       // Timers this component scheduled must not outlive it (2026-07 timer audit).
@@ -1115,14 +1267,9 @@
 
         <!-- View selector: the generated Source view + the device presets. Source and
              the responsive (fill) preset sit ungrouped at the top; the sized device
-             presets follow under their category groups. -->
-        <!-- i18n: Accessibility label for the view / device dropdown menu -->
-        <select
-          class="device-selector"
-          value={showSource ? 'source' : selectedDevice.current}
-          onchange={e => handleViewSelect((e.target as HTMLSelectElement).value)}
-          aria-label={$t('Select view')}
-        >
+             presets follow under their category groups. The option list is shared
+             with the split's second dropdown. -->
+        {#snippet deviceOptions()}
           {#if advancedMode}
             <option value="source">{$t('Source')}</option>
           {/if}
@@ -1144,7 +1291,28 @@
               </optgroup>
             {/if}
           {/each}
+        {/snippet}
+        <!-- i18n: Accessibility label for the view / device dropdown menu -->
+        <select
+          class="device-selector"
+          value={showSource ? 'source' : selectedDevice.current}
+          onchange={e => handleViewSelect((e.target as HTMLSelectElement).value, 1)}
+          aria-label={$t('Select view')}
+        >
+          {@render deviceOptions()}
         </select>
+        {#if splitOn.current}
+          <!-- The split's second dropdown, driving the bottom surface. -->
+          <!-- i18n: Accessibility label for the split preview's second view dropdown -->
+          <select
+            class="device-selector second-view"
+            value={showSource2 ? 'source' : selectedDevice2.current}
+            onchange={e => handleViewSelect((e.target as HTMLSelectElement).value, 2)}
+            aria-label={$t('Select second view')}
+          >
+            {@render deviceOptions()}
+          </select>
+        {/if}
       </div>
     </div>
 
@@ -1220,6 +1388,24 @@
       {/if}
     </div>
 
+    <!-- Split toggle: add/remove the second preview surface
+         (process/SPLIT_PREVIEW.md). Between the checks dropdown and the pinned
+         hide-preview button, mirroring the editor pane's toggle and icons. -->
+    <button
+      type="button"
+      class="btn btn-icon btn-icon-lg"
+      onclick={toggleSplit}
+      aria-pressed={splitOn.current}
+      title={splitOn.current ? $t('Switch to single preview') : $t('Add second preview pane')}
+      aria-label={splitOn.current ? $t('Switch to single preview') : $t('Add second preview pane')}
+    >
+      {#if splitOn.current}
+        <SquareIcon size={16} aria-hidden="true" />
+      {:else}
+        <RowsIcon size={16} aria-hidden="true" />
+      {/if}
+    </button>
+
     <!-- Collapse the preview pane (spine view only) — mirrors the sidebar's
          toggle, right edge instead of left. Pinned to the header's top-right
          corner (out of flow, so it never adds row height): right of the Checks
@@ -1238,33 +1424,35 @@
     </button>
   </div>
 
-  <!-- Preview options bar: the inputs specific to the current preview, kept in
-       fixed positions and disabled-in-place (never appearing/disappearing) so
-       the permanent header above stays still. Present only when the current
-       preview has options — the reader controls for foliate views, the
-       orientation toggle for scaled device frames, the raw/tree rendering for
-       the Source view (online only — the tree asset is fetched from the app
-       origin, so on file: Source has no inputs and no bar). Sits above the
-       (independently toggled) checks panels. See process/PREVIEW_OPTIONS_BAR.md. -->
-  {#if showSource ? canSourceTree : usesFoliate(selectedDevice.current) || !isFillDevice(selectedDevice.current)}
+  <!-- Preview options bar: the inputs specific to a surface's current preview,
+       kept in fixed positions and disabled-in-place (never
+       appearing/disappearing) so the permanent header above stays still.
+       Present only when that preview has options — the reader controls for
+       foliate views, the orientation toggle for scaled device frames, the
+       raw/tree rendering for the Source view (online only). One snippet, two
+       renderings: the TOP surface's bar here in band 2 (above the checks
+       panels), the BOTTOM surface's attached to the top of the lower split
+       pane. See process/PREVIEW_OPTIONS_BAR.md + process/SPLIT_PREVIEW.md. -->
+  {#snippet optionsBar(bar: typeof bar1)}
     <div class="preview-options">
-      {#if showSource}
+      {#if bar.showSource}
         <select
           class="device-selector read-control"
-          value={sourceTree ? 'tree' : 'raw'}
-          onchange={e => (sourceTree = (e.currentTarget as HTMLSelectElement).value === 'tree')}
+          value={bar.sourceTree ? 'tree' : 'raw'}
+          onchange={e =>
+            setSourceTree((e.currentTarget as HTMLSelectElement).value === 'tree', bar.which)}
           aria-label={$t('Source rendering')}
         >
           <option value="raw">{$t('Raw')}</option>
           <option value="tree">{$t('Tree')}</option>
         </select>
       {/if}
-      {#if !showSource && usesFoliate(selectedDevice.current)}
+      {#if !bar.showSource && usesFoliate(bar.device)}
         <!-- Reading flow — always live. Applied to the running renderer, no re-render. -->
         <select
           class="device-selector read-control"
-          value={readFlow.current}
-          onchange={e => setReadFlow((e.currentTarget as HTMLSelectElement).value)}
+          value={bar.flow}
+          onchange={e => setReadFlow((e.currentTarget as HTMLSelectElement).value, bar.which)}
           aria-label={$t('Reading flow')}
         >
           <!-- i18n: Reading flow option — paginated pages -->
@@ -1275,13 +1463,13 @@
 
         <!-- Column cap — the fill-size READ.html entry only (device widths decide
              columns honestly). Held in place and disabled under Scroll. -->
-        {#if selectedDevice.current === 'read'}
+        {#if bar.device === 'read'}
           <select
             class="device-selector read-control"
-            value={readColumns.current}
-            onchange={e => setReadColumns((e.currentTarget as HTMLSelectElement).value)}
+            value={bar.columns}
+            onchange={e => setReadColumns((e.currentTarget as HTMLSelectElement).value, bar.which)}
             aria-label={$t('Columns')}
-            disabled={!pager.columnsEnabled}
+            disabled={!bar.pager.columnsEnabled}
           >
             <!-- i18n: Column setting — up to two columns where they fit -->
             <option value="2">{$t('Auto columns')}</option>
@@ -1297,8 +1485,8 @@
           <button
             type="button"
             class="orientation-toggle"
-            onclick={() => surfaceRef?.readPageLeft()}
-            disabled={!pager.enabled}
+            onclick={() => surfaceFor(bar.which)?.readPageLeft()}
+            disabled={!bar.pager.enabled}
             aria-label={$t('Previous page')}
             title={$t('Previous page')}
           >
@@ -1306,14 +1494,15 @@
           </button>
           <select
             class="device-selector read-control"
-            value={String(pager.enabled ? pager.page : 1)}
-            onchange={e => surfaceRef?.goToReadPage((e.currentTarget as HTMLSelectElement).value)}
+            value={String(bar.pager.enabled ? bar.pager.page : 1)}
+            onchange={e =>
+              surfaceFor(bar.which)?.goToReadPage((e.currentTarget as HTMLSelectElement).value)}
             aria-label={$t('Page')}
-            disabled={!pager.enabled}
+            disabled={!bar.pager.enabled}
           >
-            {#if pager.enabled}
-              {#each Array.from({ length: pager.pages }, (_, i) => i + 1) as n}
-                <option value={String(n)}>{n} / {pager.pages}</option>
+            {#if bar.pager.enabled}
+              {#each Array.from({ length: bar.pager.pages }, (_, i) => i + 1) as n}
+                <option value={String(n)}>{n} / {bar.pager.pages}</option>
               {/each}
             {:else}
               <option value="1">1 / 1</option>
@@ -1322,8 +1511,8 @@
           <button
             type="button"
             class="orientation-toggle"
-            onclick={() => surfaceRef?.readPageRight()}
-            disabled={!pager.enabled}
+            onclick={() => surfaceFor(bar.which)?.readPageRight()}
+            disabled={!bar.pager.enabled}
             aria-label={$t('Next page')}
             title={$t('Next page')}
           >
@@ -1333,11 +1522,11 @@
       {/if}
 
       <!-- Orientation — scaled device frames only (not the fill presets or print). -->
-      {#if !showSource && !isFillDevice(selectedDevice.current)}
+      {#if !bar.showSource && !isFillDevice(bar.device)}
         <button
           type="button"
           class="orientation-toggle"
-          onclick={() => surfaceRef?.toggleOrientation()}
+          onclick={() => surfaceFor(bar.which)?.toggleOrientation()}
           title={$t('Toggle orientation')}
           aria-label={$t('Toggle device orientation')}
         >
@@ -1345,6 +1534,9 @@
         </button>
       {/if}
     </div>
+  {/snippet}
+  {#if barVisible(bar1)}
+    {@render optionsBar(bar1)}
   {/if}
 
   <!-- Accessibility results panel (spike): plain-text violations, sorted by impact -->
@@ -1401,7 +1593,7 @@
 
   <!-- Reader-mode panel: theme + text size + force-colours, in the same band as the
        other checks. Reflowable previews only. -->
-  {#if activePanel === 'reader' && readerModeActive}
+  {#if activePanel === 'reader' && readerModeActiveAny}
     <div class="a11y-panel reader-panel" role="region" aria-label={$t('Reading preview settings')}>
       <div class="a11y-panel-header">
         <strong>{$t('Reading preview')}</strong>
@@ -1630,38 +1822,60 @@
         </ol>
       </div>
     {/if}
-    <PreviewSurface
-      bind:this={surfaceRef}
-      device={selectedDevice.current}
-      {showSource}
-      {sourceTree}
-      readFlow={readFlow.current}
-      readColumns={readColumns.current}
-      readerTheme={previewTheme.current}
-      fontStepIndex={fontStep.current}
-      forceColors={forceColors.current}
-      onContentEvent={handleSurfaceContentEvent}
-      onRequestDevice={handleDeviceChange}
-      {xhtmlContent}
-      {persistedXhtml}
-      {isTransforming}
-      {transformError}
-      {transformWarnings}
-      {executionTime}
-      {onNavigate}
-      {onPreviewClick}
-      {chapterId}
-      {printSettings}
-      {onGeneratePdf}
-      {previewHead}
-      {extensionPreviewHead}
-      {previewAutoUpdate}
-      {previewIncludeHead}
-      {isFixedLayout}
-      {renditionViewport}
-      {onSavePreviewData}
-      {getPagedStartPage}
-    />
+    {#if splitOn.current}
+      <!-- Two independent surfaces, stacked; the splitter position persists
+           through PaneForge's autosave (process/SPLIT_PREVIEW.md). -->
+      <PaneGroup direction="vertical" autoSaveId="seedhtml-preview-panes">
+        <Pane defaultSize={50} minSize={15}>
+          <div class="preview-split-pane">
+            <PreviewSurface
+              bind:this={surfaceRef}
+              device={selectedDevice.current}
+              {showSource}
+              {sourceTree}
+              readFlow={readFlow.current}
+              readColumns={readColumns.current}
+              onContentEvent={e => handleSurfaceContentEvent(e, 1)}
+              onRequestDevice={id => handleDeviceChange(id, 1)}
+              {...sharedSurfaceProps}
+            />
+          </div>
+        </Pane>
+        <PaneResizer />
+        <Pane defaultSize={50} minSize={15}>
+          <div class="preview-split-pane">
+            <!-- The bottom surface's options bar attaches to its pane's top
+                 edge (the top surface's stays in band 2 under the header). -->
+            {#if barVisible(bar2)}
+              {@render optionsBar(bar2)}
+            {/if}
+            <PreviewSurface
+              bind:this={surfaceRef2}
+              device={selectedDevice2.current}
+              showSource={showSource2}
+              sourceTree={sourceTree2}
+              readFlow={readFlow2.current}
+              readColumns={readColumns2.current}
+              onContentEvent={e => handleSurfaceContentEvent(e, 2)}
+              onRequestDevice={id => handleDeviceChange(id, 2)}
+              {...sharedSurfaceProps}
+            />
+          </div>
+        </Pane>
+      </PaneGroup>
+    {:else}
+      <PreviewSurface
+        bind:this={surfaceRef}
+        device={selectedDevice.current}
+        {showSource}
+        {sourceTree}
+        readFlow={readFlow.current}
+        readColumns={readColumns.current}
+        onContentEvent={e => handleSurfaceContentEvent(e, 1)}
+        onRequestDevice={id => handleDeviceChange(id, 1)}
+        {...sharedSurfaceProps}
+      />
+    {/if}
   </div>
 </div>
 
@@ -1741,6 +1955,11 @@
     margin-inline-start: auto;
   }
   select.panel-selector {
+    margin-inline-start: 0;
+  }
+
+  /* The split's second dropdown packs beside the first instead of floating. */
+  select.second-view {
     margin-inline-start: 0;
   }
 
@@ -1834,6 +2053,35 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
+  }
+
+  /* Each split pane hosts (optionally) an options bar and a surface, stacked. */
+  .preview-split-pane {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Horizontal splitter between the two surfaces — same treatment as the
+     app-level pane resizers (LayoutManager), rotated for the vertical group. */
+  .preview-body :global([data-pane-resizer]) {
+    background: var(--color-border-strong);
+    block-size: 4px;
+    inline-size: auto;
+    cursor: row-resize;
+    transition: background-color var(--duration-fast) ease;
+  }
+
+  .preview-body :global([data-pane-resizer]:hover),
+  .preview-body :global([data-pane-resizer][data-resize-handle-active]) {
+    background: var(--color-accent);
+  }
+
+  .preview-body :global([data-pane-resizer]:focus-visible) {
+    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
+    outline-offset: var(--focus-ring-offset);
   }
 
   .a11y-panel {
