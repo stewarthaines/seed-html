@@ -4,6 +4,13 @@
   import { Package, Robot } from 'phosphor-svelte';
   import { workspaceOpfsPath } from './lib/plugins/contract.js';
   import { primaryLanguage } from './lib/epub/opf-utils.js';
+  import {
+    addTranslation,
+    switchTranslation,
+    removeTranslation,
+    swapMetadataUpdates,
+    translationMetaFrom,
+  } from './lib/translations/editions.js';
   import type { AgentBridge } from './lib/agent-bridge/loader.svelte.js';
   import LayoutManager from './lib/LayoutManager.svelte';
   import Toast from './lib/components/Toast.svelte';
@@ -528,6 +535,57 @@
         new CustomEvent('seed:source-files-changed', { detail: { paths: changedPaths } })
       );
     }
+  };
+
+  // Translation editions (process/TRANSLATION_EDITIONS.md): file mechanics live
+  // in the translations module; this orchestrates the OPF update and the
+  // mandatory full re-render (stored XHTML bakes in xml:lang at render time).
+  const handleTranslationAction = async (
+    action: 'add' | 'switch' | 'remove',
+    tag: string
+  ): Promise<void> => {
+    if (!appState?.workspace) return;
+    const workspaceId = appState.workspace.id;
+    const metadata = appState.workspace.opf.metadata;
+    const currentTag = primaryLanguage(metadata);
+    const languages = Array.isArray(metadata.language)
+      ? metadata.language
+      : [metadata.language].filter(Boolean);
+
+    if (action === 'add') {
+      await addTranslation(fileStorage, workspaceId, {
+        currentTag,
+        targetTag: tag,
+        meta: translationMetaFrom(metadata),
+      });
+      appState.workspace = await workspaceService.updateMetadata(appState.workspace, {
+        language: [tag, ...languages.filter(t => t !== tag)],
+      });
+      await regenerateAllChapters(workspaceId);
+    } else if (action === 'switch') {
+      const { changedPaths } = await switchTranslation(fileStorage, workspaceId, {
+        fromTag: currentTag,
+        toTag: tag,
+        outgoingMeta: translationMetaFrom(metadata),
+        applyMetadata: async (incoming, toTag, fromTag) => {
+          if (!appState?.workspace) return;
+          appState.workspace = await workspaceService.updateMetadata(
+            appState.workspace,
+            swapMetadataUpdates(appState.workspace.opf.metadata, toTag, fromTag, incoming)
+          );
+        },
+      });
+      window.dispatchEvent(
+        new CustomEvent('seed:source-files-changed', { detail: { paths: changedPaths } })
+      );
+      await regenerateAllChapters(workspaceId);
+    } else {
+      await removeTranslation(fileStorage, workspaceId, tag);
+      appState.workspace = await workspaceService.updateMetadata(appState.workspace, {
+        language: languages.filter(t => t !== tag),
+      });
+    }
+    manifestRefreshToken += 1;
   };
 
   // Handle EPUB import (unified handler for local files and remote URLs)
@@ -1468,8 +1526,24 @@
       }
     }
 
+    // A language switch interrupted by a crash was completed during workspace
+    // load — refresh open editors and re-render every chapter's stored XHTML.
+    function handleSwapRecovered(event: Event) {
+      const detail = (event as CustomEvent).detail as
+        | { workspaceId?: string; changedPaths?: string[] }
+        | undefined;
+      if (!detail?.workspaceId) return;
+      if (detail.changedPaths?.length) {
+        window.dispatchEvent(
+          new CustomEvent('seed:source-files-changed', { detail: { paths: detail.changedPaths } })
+        );
+      }
+      void regenerateAllChapters(detail.workspaceId);
+    }
+
     window.addEventListener('select-spine-item', handleSelectSpineItem);
     window.addEventListener('clear-spine-selection', handleClearSpineSelection);
+    window.addEventListener('seed:swap-recovered', handleSwapRecovered);
     window.addEventListener('hashchange', handleHashChange);
     window.addEventListener('epub-packaged', refreshPackagedEpubs);
     window.addEventListener('workspace-list-refresh', refreshHasProjects);
@@ -1477,6 +1551,7 @@
     return () => {
       window.removeEventListener('select-spine-item', handleSelectSpineItem);
       window.removeEventListener('clear-spine-selection', handleClearSpineSelection);
+      window.removeEventListener('seed:swap-recovered', handleSwapRecovered);
       window.removeEventListener('hashchange', handleHashChange);
       window.removeEventListener('epub-packaged', refreshPackagedEpubs);
       window.removeEventListener('workspace-list-refresh', refreshHasProjects);
@@ -1726,6 +1801,7 @@
           workspaceId={appState.currentWorkspaceId}
           workspace={currentWorkspaceState}
           onApplyPatchset={handleApplyPatchset}
+          onTranslationAction={handleTranslationAction}
           {availablePlugins}
           {enabledPluginIds}
           {availableExtensions}

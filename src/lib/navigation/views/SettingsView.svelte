@@ -18,6 +18,7 @@
   import ExtensionItem from '../../components/extensions/ExtensionItem.svelte';
   import GeneratorSettings from '../../components/settings/GeneratorSettings.svelte';
   import TrackChangesPanel from '../../components/settings/TrackChangesPanel.svelte';
+  import TranslationsPanel from '../../components/settings/TranslationsPanel.svelte';
   import CustomMetaCatalogSettings from '../../components/settings/CustomMetaCatalogSettings.svelte';
   import SettingsSection from '../../components/settings/SettingsSection.svelte';
   import PaneHeader from '../../components/layout/PaneHeader.svelte';
@@ -83,6 +84,8 @@
     onSettingsChanged?: () => void;
     /** Apply accepted track-changes patchset items to the current project. */
     onApplyPatchset?: (resolved: ResolvedChange[]) => Promise<void>;
+    /** Translation editions: add/switch/remove a language (owned by App). */
+    onTranslationAction?: (action: 'add' | 'switch' | 'remove', tag: string) => Promise<void>;
   }
 
   const {
@@ -101,6 +104,7 @@
     hasProjects = false,
     onSettingsChanged,
     onApplyPatchset,
+    onTranslationAction,
   }: Props = $props();
 
   // State management
@@ -1523,6 +1527,16 @@
                     {/each}
                   </div>
                 </SettingsSection>
+              {/if}
+
+              <!-- Translation editions -->
+              {#if canEditEPUBSettings && !readOnly}
+                <TranslationsPanel
+                  {workspaceId}
+                  {workspace}
+                  reviewMode={epubSettings?.track_changes ?? false}
+                  onAction={onTranslationAction}
+                />
               {/if}
 
               <!-- Track changes (review mode) -->
