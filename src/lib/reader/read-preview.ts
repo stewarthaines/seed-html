@@ -123,6 +123,13 @@ export interface ReaderSimOptions {
  * preview's head-injected theme (`applyPreviewAppearance`): root font-size in
  * px so em/rem text scales while fixed-px text deliberately stays put, palette
  * background/color with an `!important` force variant.
+ *
+ * The non-forced palette rules use `:where()` (zero specificity) because
+ * foliate keeps this stylesheet AFTER the book's own — without it, the sim
+ * won source-order ties that the raw preview deliberately loses. An author's
+ * explicit colours now win in every reflowable preview alike (faithful night
+ * mode, dark-text-on-dark-bg discovery included); Force is the one switch
+ * that overrides everywhere.
  */
 export function readerSimCss(o: ReaderSimOptions): string {
   const font = `:root { font-size: ${o.basePx}px; color-scheme: ${o.scheme}; }`;
@@ -133,8 +140,8 @@ body { background: ${o.bg} !important; }
 body, body * { color: ${o.fg} !important; }`;
   }
   return `${font}
-html { background: ${o.bg}; }
-body { color: ${o.fg}; }`;
+:where(html) { background: ${o.bg}; }
+:where(body) { color: ${o.fg}; }`;
 }
 
 /**
