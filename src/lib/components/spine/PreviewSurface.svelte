@@ -58,7 +58,6 @@
     fontStepIndex = 2,
     forceColors = false,
     onContentEvent = undefined,
-    onRequestDevice = undefined,
     xhtmlContent = '',
     persistedXhtml = undefined,
     isTransforming = false,
@@ -97,8 +96,6 @@
     forceColors?: boolean;
     /** Render-lifecycle events the parent's checks react to. */
     onContentEvent?: (event: import('./preview-devices.js').SurfaceContentEvent) => void;
-    /** The surface asks the parent to switch device (Proofs page → Print). */
-    onRequestDevice?: (id: string) => void;
     xhtmlContent?: string;
     /** The XHTML as written to the workspace this render (no blob URLs) — what
      *  the Source view shows. Absent when the render skipped persistence, in
@@ -238,9 +235,6 @@
   // Page index to restore after Paged.js finishes repaginating (same-chapter
   // re-render only); consumed by the PAGED_DONE handler.
   let pendingPrintPage: number | null = null;
-  // Explicit page request from a Proofs thumbnail click — wins over the
-  // first-visible-page continuity computation on the next paged render.
-  let requestedPrintPage: number | null = null;
 
   /**
    * The document + window checks should target: under a reader-engine view the
@@ -875,13 +869,9 @@
     // Keep the reader's place across re-renders of the SAME chapter: remember
     // the page currently at the top of the viewport, by index — pixel offsets
     // don't survive repagination, page boundaries do. A chapter switch (or
-    // arriving from a non-print render) starts at page one. An explicit page
-    // request (a Proofs thumbnail click) wins over the continuity computation.
+    // arriving from a non-print render) starts at page one.
     pendingPrintPage = null;
-    if (requestedPrintPage !== null) {
-      pendingPrintPage = requestedPrintPage;
-      requestedPrintPage = null;
-    } else if (renderedType === 'pdf' && renderedChapterId === chapterId) {
+    if (renderedType === 'pdf' && renderedChapterId === chapterId) {
       const pages = iframeDoc.querySelectorAll<HTMLElement>('.pagedjs_page');
       for (let i = 0; i < pages.length; i++) {
         if (pages[i].getBoundingClientRect().bottom > 1) {
@@ -1100,7 +1090,6 @@
 }
 .seed-proofs-cell {
   position: relative;
-  cursor: pointer;
   /* Clip the page's pre-transform layout box: Firefox counts it into the
      scrollable overflow (Chrome/Safari use post-transform bounds), which
      otherwise makes the grid scroll a huge phantom area. The caption paints
@@ -1149,21 +1138,18 @@
       iframeDoc.head.appendChild(style);
     }
 
-    // Wrap each page in a cell (once); the cell is also the click target →
-    // Print view landed on that page.
+    // Wrap each page in a cell (once); the grid sizes the cell, the page
+    // transform-scales within it. Clicks deliberately do nothing beyond text
+    // selection — pair Proofs with a Print surface in the split preview to see
+    // a page full-size.
     const cells: HTMLElement[] = [];
-    iframeDoc.querySelectorAll<HTMLElement>('.pagedjs_page').forEach((page, index) => {
+    iframeDoc.querySelectorAll<HTMLElement>('.pagedjs_page').forEach(page => {
       let cell = page.parentElement;
       if (!cell || !cell.classList.contains('seed-proofs-cell')) {
         cell = iframeDoc.createElement('div');
         cell.className = 'seed-proofs-cell';
         page.replaceWith(cell);
         cell.appendChild(page);
-        cell.addEventListener('click', () => {
-          requestedPrintPage = index;
-          // The device setting is parent-owned; ask it to switch to Print.
-          onRequestDevice?.('print');
-        });
       }
       cells.push(cell);
     });
