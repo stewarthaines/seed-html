@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Clicking a page in the Proofs preview no longer switches to the Print view — text can be selected in place, and with the split preview a Print pane alongside shows any page full-size without leaving Proofs.
 - Switching chapters is much faster — the editor and preview now appear in a fraction of the previous time, the preview no longer re-renders a second time after settling, and nothing is written to disk until you actually edit.
 
 ## [0.15.0] - 2026-07-28
