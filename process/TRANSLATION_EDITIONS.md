@@ -153,6 +153,20 @@ Fix both operations to sweep `SOURCE/locale/*/text/` **and** `SOURCE/main/SOURCE
 
 The app's UI language (`SettingsView` language-select, `ENABLED_LOCALES`) is independent of the book's language. The Translations section copy must not conflate them — e.g. adding a KA translation of a book does not require, imply, or enable a KA app UI.
 
+## Chapter parity across editions (resolved 2026-07-30)
+
+The manifest and spine are shared across all editions — chapter membership is global, only the text under `SOURCE/text/` is per-edition. A chapter added while one language is active therefore has no copy in the other editions, and that is by design: the swap moves whatever files exist, so a missing `<id>.txt` cleanly means "this edition hasn't authored that chapter yet."
+
+Consequences, all accepted:
+
+- The new chapter shows no reference entry in the editor dropdown for languages that lack it (nothing to reference), and switching to such an edition brings the chapter up source-less.
+- First edit under that edition creates `SOURCE/text/<id>.txt` through the editor's normal first-save path; from the next swap onward every edition that was visited carries the chapter. Chapter parity is the author's responsibility and is achieved lazily.
+- Until that first edit, the chapter's **stored XHTML remains the other edition's rendering** (content and `xml:lang`), because `regenerateAllChapters()` deliberately skips source-less chapters to protect hand-authored XHTML. An export in the meantime silently includes the other language's chapter — consistent with the resolved stance that the translator visits all chapters before exporting, but note the failure mode is cross-language content in an export, not just a stale preview.
+
+Rejected alternative: seeding copies into every locale tree on `addChapter`. That would write placeholder text into frozen references, break the "only swap operations write `SOURCE/locale/`" invariant, and manufacture fake "translated" chapters.
+
+v2 option, folds into the staleness work: a parity note in the switch confirmation ("the EN edition has no text for 2 chapters") — one tree comparison at swap time.
+
 ## Translation staleness (v2, design now so v1 doesn't preclude it)
 
 Once the author can switch back to EN and keep editing, the KA translation silently drifts out of date. The frozen `locale/en` copy is effectively the **translation basis**: what the English said when translation began.
