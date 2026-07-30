@@ -2,7 +2,7 @@
 
 Support for translating a finished SEED EPUB into a second language, with the original text visible read-only beside the translation-in-progress, and language choice at export time.
 
-Status: design agreed 2026-07-30; Phase 1 (swap core) implemented on `feat/translation-editions`. Phases 2+ not started.
+Status: design agreed 2026-07-30; Phases 1 (swap core) and 2 (editor experience) implemented on `feat/translation-editions`. Phase 3 (v2 staleness basis) not started.
 
 ## Goal and constraints
 
