@@ -13,16 +13,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-07-31
+
 ### Added
 
 - A split preview: the toggle beside the Checks menu stacks a second, independent preview under the first — two devices side by side, portrait next to landscape, scrolled next to paginated, or the Source view above its rendered result. Each half has its own view dropdown and options, the divider position is remembered, and checks run against whichever half supports them.
 - The preview's Source view now shows the chapter file exactly as saved in the project (real image and stylesheet paths, not preview-only addresses), and a Raw/Tree toggle offers a collapsible tree of the markup with syntax colors — fold a section closed to see the chapter's structure at a glance. The tree is available when the editor runs online.
+- Translate your book into another language: add a translation in Project settings and the current text is kept as a stored reference edition. Each chapter's file menu then offers that original beside the editable text (read-only, marked with a padlock) so you can translate side by side in the two-pane editor. Switch the active language back and forth at any time — the title, sort title, and description travel with each language, and every chapter re-renders in the right language for correct hyphenation and screen-reader voices.
+- Hovering a preview names the device it is showing — the same wording as the view menu (e.g. "Commute (phone): Plus") — beside the existing size and render-time readout, so the two halves of a split preview are easy to tell apart.
 
 ### Changed
 
 - The reading-theme colours in the reader-engine previews now defer to the book's own colours, matching the Responsive preview — an author's explicit background and text colours show as a real reader's night mode would show them. Force reading-system colours overrides in every preview, as before.
 - Clicking a page in the Proofs preview no longer switches to the Print view — text can be selected in place, and with the split preview a Print pane alongside shows any page full-size without leaving Proofs.
 - Switching chapters is much faster — the editor and preview now appear in a fraction of the previous time, the preview no longer re-renders a second time after settling, and nothing is written to disk until you actually edit.
+
+### Fixed
+
+- Re-packaging an EPUB under the same name no longer leaves the previous package's validation report showing in the editor — the report clears until you validate the new package.
+- Renaming or deleting a chapter now carries its stored translation copies and its track-changes base along, instead of stranding them under the old name.
+- Packaged books now declare the book's own language on the package element instead of always English.
 
 ## [0.15.0] - 2026-07-28
 
