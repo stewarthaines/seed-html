@@ -2144,6 +2144,20 @@
     outline-offset: var(--focus-ring-offset);
   }
 
+  /* Touch thumb (LayoutManager's global coarse-pointer rule) re-anchored for
+     this horizontal bar: straddle the bar vertically, sit near the inline end —
+     the app handle's bottom-edge placement, rotated. */
+  @media (pointer: coarse) {
+    .preview-body :global([data-pane-resizer])::after {
+      inset-block-end: auto;
+      left: auto;
+      inset-inline-end: var(--space-4);
+      /* Physical centering on the bar (translateY doesn't flip in RTL). */
+      top: 50%;
+      transform: translateY(-50%);
+    }
+  }
+
   .a11y-panel {
     max-height: 220px;
     overflow-y: auto;
