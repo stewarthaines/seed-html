@@ -4,6 +4,8 @@
   import { Package, Robot } from 'phosphor-svelte';
   import { workspaceOpfsPath } from './lib/plugins/contract.js';
   import { primaryLanguage } from './lib/epub/opf-utils.js';
+  import { readValidationReport } from './lib/plugins/validation-report.js';
+  import { buildEpubcheckSection } from './lib/checks/epubcheck-section.js';
   import {
     addTranslation,
     switchTranslation,
@@ -422,6 +424,19 @@
             ? { chapterId: spinePreviewData.spineItemId, xhtml: spinePreviewData.xhtmlContent }
             : null,
         getLastClick: () => lastPreviewClick,
+        getChecks: () => ({
+          chapterId: spinePreviewData.spineItemId ?? null,
+          // Live axe over the bridge is phase 2 (process/BRIDGE_CHECKS.md);
+          // the panel's results are component-local and usually absent.
+          a11y: {
+            status: 'unavailable',
+            reason: 'not served yet — the author can run the preview Checks panel',
+          },
+          epubcheck: buildEpubcheckSection(
+            readValidationReport(),
+            appState?.workspace?.opf?.metadata
+          ),
+        }),
         // Writes route through workspaceService (the editor's own save path),
         // so copy-on-write snapshots and cache hygiene hold; the event tells
         // SpineView to reload open stores and repaint the preview.

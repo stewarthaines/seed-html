@@ -22,6 +22,12 @@ export interface AgentBridgeModuleContext {
   getRenderedXhtml: () => { chapterId: string | null; xhtml: string } | null;
   getLastClick: () => Record<string, unknown> | null;
   /**
+   * Triaged checker findings (process/BRIDGE_CHECKS.md): the epubcheck report
+   * with a freshness verdict; the a11y section reports unavailable until the
+   * live-axe phase lands.
+   */
+  getChecks: () => Record<string, unknown>;
+  /**
    * Phase 2 writes — service-routed so state propagation and track-changes
    * copy-on-write hold (raw OPFS writes get clobbered or never render).
    * Text and binary are distinct because only the text path is trackable.

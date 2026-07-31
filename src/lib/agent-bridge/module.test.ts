@@ -121,6 +121,11 @@ function makeContext(overrides: Record<string, unknown> = {}) {
     getWorkspaceDir: async () => workspace,
     getRenderedXhtml: () => ({ chapterId: 'ch-1', xhtml: '<html/>' }),
     getLastClick: () => null,
+    getChecks: () => ({
+      chapterId: 'ch-1',
+      a11y: { status: 'unavailable', reason: 'not served yet' },
+      epubcheck: { status: 'none' },
+    }),
     writeTextFile: vi.fn(async (path: string, text: string) => {
       if (path === 'OEBPS/Styles/page.css') cssContent = text;
     }),
@@ -187,6 +192,22 @@ describe('agent bridge module', () => {
       id: 3,
       ok: true,
       result: { kind: 'none' },
+    });
+  });
+
+  it('serves the checks payload straight from the context', async () => {
+    const { ctx } = makeContext();
+    start(ctx);
+    const socket = FakeWebSocket.last!;
+    socket.open();
+    expect(await socket.receive({ id: 1, tool: 'get_checks' })).toEqual({
+      id: 1,
+      ok: true,
+      result: {
+        chapterId: 'ch-1',
+        a11y: { status: 'unavailable', reason: 'not served yet' },
+        epubcheck: { status: 'none' },
+      },
     });
   });
 
