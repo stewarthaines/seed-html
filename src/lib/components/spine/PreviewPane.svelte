@@ -969,10 +969,11 @@
   // Cleared on mount when advanced mode is off (the option is hidden there, so
   // a restored Source view would be unleaveable).
   const showSource = persisted('seedhtml_preview_source', false, asBoolean);
-  // Source view rendering: raw <pre> (always available) or the collapsible
-  // tree (http-only — the vendored viewer is fetched from the app origin).
+  // Source view rendering: the collapsible tree (http-only — the vendored
+  // viewer is fetched from the app origin) or a raw <pre>. Tree is the default;
+  // it degrades to raw wherever the viewer can't be fetched.
   const canSourceTree = canShowXmlTree();
-  const sourceTree = persisted('seedhtml_preview_source_tree', false, asBoolean);
+  const sourceTree = persisted('seedhtml_preview_source_tree', true, asBoolean);
 
   // --- Split preview (process/SPLIT_PREVIEW.md phase 2) ------------------------
   // A second, independent surface below the first. Its settings mirror the
@@ -985,7 +986,7 @@
     asEnum(DEVICE_PRESETS.map(d => d.id))
   );
   const showSource2 = persisted('seedhtml_preview_source_2', false, asBoolean);
-  const sourceTree2 = persisted('seedhtml_preview_source_tree_2', false, asBoolean);
+  const sourceTree2 = persisted('seedhtml_preview_source_tree_2', true, asBoolean);
   const readFlow2 = persisted<ReadFlow>(
     'seedhtml_preview_read_flow_2',
     'paginated',
