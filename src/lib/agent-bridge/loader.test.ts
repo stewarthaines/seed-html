@@ -29,6 +29,7 @@ const buildContext = () => ({
   getRenderedXhtml: () => null,
   getLastClick: () => null,
   getChecks: async () => ({}),
+  inspectElements: () => ({}),
   writeTextFile: async () => {},
   writeBinaryFile: async () => {},
   isFileDirty: () => false,

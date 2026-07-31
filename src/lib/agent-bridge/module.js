@@ -174,6 +174,19 @@ async function handleTool(ctx, session, ui, tool, params) {
     }
     case 'get_checks':
       return ctx.getChecks();
+    case 'inspect_elements': {
+      // `.every()` is vacuously true on an empty array, so the length check
+      // must come first or a selectorless call reaches the preview.
+      const selectors = Array.isArray(params.selectors) ? params.selectors : null;
+      if (!selectors?.length || !selectors.every(s => typeof s === 'string' && s.trim())) {
+        throw new Error('selectors required: a non-empty array of CSS selector strings');
+      }
+      const properties = Array.isArray(params.properties)
+        ? params.properties.filter(p => typeof p === 'string')
+        : undefined;
+      const surface = params.surface === 2 ? 2 : params.surface === 1 ? 1 : undefined;
+      return ctx.inspectElements({ selectors, properties, surface });
+    }
     case 'project_setup': {
       const dir = await ctx.getWorkspaceDir();
       if (!dir) throw new Error('no project open');
@@ -357,6 +370,8 @@ function describeAction(tool, params, result) {
   if (tool === 'get_rendered_xhtml') return 'read rendered chapter';
   if (tool === 'get_selection') return 'read last click';
   if (tool === 'get_checks') return 'read validation checks';
+  if (tool === 'inspect_elements')
+    return `measured ${(params?.selectors ?? []).join(', ') || 'elements'} in the preview`;
   if (tool === 'project_info') return 'read project info';
   return tool;
 }

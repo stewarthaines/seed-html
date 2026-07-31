@@ -34,6 +34,11 @@
   import { SpeechService } from '$lib/speech/speech.service.js';
   import { isHttpContext } from '$lib/reader/open-in-reader.js';
   import { buildA11ySection, type A11ySection } from '$lib/checks/a11y-section.js';
+  import {
+    buildInspectSection,
+    DEFAULT_INSPECT_PROPERTIES,
+    type InspectSection,
+  } from '$lib/checks/inspect-element.js';
   import { canShowXmlTree } from '$lib/xml-tree/tree-viewer-loader.js';
   import type { ReadColumns, ReadFlow } from '$lib/reader/read-preview.js';
   import { MARGIN_MM } from '$lib/pdf/pdf-export.js';
@@ -388,6 +393,64 @@
         reason: `axe run failed: ${error instanceof Error ? error.message : String(error)}`,
       };
     }
+  }
+
+  /**
+   * Measure selectors in the live preview for the agent bridge. Answers
+   * placement questions the rendered XHTML cannot: the four engines lay the
+   * same chapter out differently, so
+   * "where did this land" only has an answer in a rendered document.
+   *
+   * Surface binding follows the checks rule (top surface unless its view has no
+   * rendered document); an explicit `surface` overrides it, which is how an
+   * agent compares the same selector across two devices in a split preview.
+   */
+  export function inspectForAgent(
+    selectors: string[],
+    properties?: string[],
+    surface?: 1 | 2
+  ): InspectSection {
+    if (!Array.isArray(selectors) || selectors.length === 0) {
+      return { status: 'unavailable', reason: 'selectors required' };
+    }
+    if (surface === 2 && !splitOn.current) {
+      return { status: 'unavailable', reason: 'surface 2 requested but the preview is not split' };
+    }
+    const which = surface ?? boundIndexA11y;
+    const target = surfaceFor(which);
+    if (!target) {
+      return { status: 'unavailable', reason: 'no chapter preview open' };
+    }
+    const requested =
+      properties && properties.length > 0 ? properties : [...DEFAULT_INSPECT_PROPERTIES];
+    const results = target.measureElements(selectors, requested);
+    if (!results) {
+      return {
+        status: 'unavailable',
+        reason:
+          which === 1 && showSource
+            ? 'the Source view has no rendered document — switch the preview to a rendered view'
+            : 'no rendered document on that surface yet',
+      };
+    }
+    const device = which === 1 ? selectedDevice.current : selectedDevice2.current;
+    const engine = engineOfDevice(device);
+    return buildInspectSection(
+      {
+        chapterId: chapterId ?? null,
+        engine,
+        device,
+        // Flow only shapes layout under foliate; reporting it elsewhere would
+        // imply the setting had an effect on the measured document.
+        ...(engine === 'foliate'
+          ? { flow: which === 1 ? readFlow.current : readFlow2.current }
+          : {}),
+        surface: which,
+        rendering: target.isRendering(),
+      },
+      results,
+      selectors.length
+    );
   }
 
   // Open a specific header panel, or close all with null. The panels are mutually

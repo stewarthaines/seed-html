@@ -30,6 +30,7 @@
   } from '$lib/reader/read-preview.js';
   import { buildPagedDocument, chapterToSection } from '$lib/pdf/pdf-export.js';
   import { acceptPreviewSaveData } from '$lib/preview/preview-data.js';
+  import { measureSelectors, type SelectorResult } from '$lib/checks/inspect-element.js';
   import type { PrintSettings, PreviewSettings } from '$lib/services/settings/settings.service.js';
   import { DEFAULT_PREVIEW } from '$lib/services/settings/settings.service.js';
   import { FilePdf } from 'phosphor-svelte';
@@ -257,6 +258,28 @@
     const doc = previewIframe?.contentDocument;
     const win = previewIframe?.contentWindow;
     return doc && win ? { doc, win } : null;
+  }
+
+  /**
+   * Measure selectors against this surface's live rendered document for the
+   * agent bridge — the same engine-correct target axe audits, so a measurement
+   * describes the layout the author is actually looking at. Null when nothing
+   * is rendered (Source view, or a render that has not produced a document).
+   */
+  export function measureElements(
+    selectors: string[],
+    properties: readonly string[]
+  ): SelectorResult[] | null {
+    if (showSource) return null;
+    const target = getCheckTarget();
+    if (!target) return null;
+    return measureSelectors(target.doc, target.win, selectors, properties);
+  }
+
+  /** A render is still in flight, so any measurement may describe the previous
+   *  layout — the parent surfaces this as a caveat rather than blocking. */
+  export function isRendering(): boolean {
+    return readRendering || printPaginating;
   }
 
   // --- Reader-mode simulation (theme + font size) ------------------------------

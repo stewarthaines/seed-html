@@ -162,6 +162,33 @@ const TOOLS = [
     inputSchema: { type: 'object', properties: {} },
   },
   {
+    name: 'seed_inspect_elements',
+    description:
+      "Measure elements in the LIVE rendered preview: bounding rect, offsetParent, and computed style properties for each CSS selector. Use when a placement or styling question cannot be answered from markup — the same chapter lays out differently under each preview engine (built-in, foliate paginated, foliate scrolled, Paged.js), so 'why is this box in the wrong place' has no answer in seed_get_rendered_xhtml, which returns the transform pipeline's output before any engine touched it. Typical uses: debugging a preview head.xml script, a transform's output, or book CSS that behaves in one preview type and not another. All selectors are measured in ONE pass, so rects from the same call are directly comparable — pass several selectors rather than making several calls. The reply states the engine, device, reader flow, and which split-preview surface was measured; a 'render-in-flight' caveat means a render had not settled and the measurement may describe the previous layout, so re-run. Rects are viewport-relative within the preview document; under a paginated engine the viewport is the current page, so a box on a later page legitimately reports coordinates outside it.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        selectors: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'CSS selectors to measure (max 8, first 10 matches each)',
+        },
+        properties: {
+          type: 'array',
+          items: { type: 'string' },
+          description:
+            'CSS property names to report per element. Omit for a layout-shaped default (display, position, float, visibility, box-sizing, overflow, z-index, width, height, margin, padding).',
+        },
+        surface: {
+          type: 'number',
+          description:
+            'Which split-preview surface to measure (1 = top, 2 = bottom). Omit to use the surface the checks bind to.',
+        },
+      },
+      required: ['selectors'],
+    },
+  },
+  {
     name: 'seed_write_file',
     description:
       'Overwrite an EXISTING non-generated project file (sources, transform scripts, styles, media). Requires seed_get_authoring_guide this session, and expected_hash from a prior seed_read_file of the same path — rejected if the file changed since. Writes to chapter sources (SOURCE/text/) additionally require seed_get_project_setup and a seed_read_file of every transform script it lists — chapter markup is the transforms’ output. Cannot create files, and cannot touch generated XHTML, the nav, the OPF, or settings. The author approves the first write in the app (per write, or once for the whole session) and sees every write in the activity feed; a prompt they ignore times out as a denial.',
@@ -228,6 +255,12 @@ async function handleToolCall(name, args) {
       return callTab('get_selection', {});
     case 'seed_get_checks':
       return callTab('get_checks', {});
+    case 'seed_inspect_elements':
+      return callTab('inspect_elements', {
+        selectors: args?.selectors,
+        properties: args?.properties,
+        surface: args?.surface,
+      });
     case 'seed_write_file':
       if (!guideServed) {
         throw new Error(

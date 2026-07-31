@@ -440,6 +440,13 @@
             appState?.workspace?.opf?.metadata
           ),
         }),
+        inspectElements: params =>
+          previewPaneRef
+            ? previewPaneRef.inspectForAgent(params.selectors, params.properties, params.surface)
+            : {
+                status: 'unavailable',
+                reason: 'no chapter preview open — open a chapter in the spine editor',
+              },
         // Writes route through workspaceService (the editor's own save path),
         // so copy-on-write snapshots and cache hygiene hold; the event tells
         // SpineView to reload open stores and repaint the preview.

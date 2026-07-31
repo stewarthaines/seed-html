@@ -28,6 +28,17 @@ export interface AgentBridgeModuleContext {
    */
   getChecks: () => Promise<Record<string, unknown>>;
   /**
+   * Measurements from the live rendered preview: geometry, positioning
+   * context, and requested computed properties for each
+   * selector. The rendered XHTML is the pipeline's output — only a rendered
+   * document can answer where a box actually landed under a given engine.
+   */
+  inspectElements: (params: {
+    selectors: string[];
+    properties?: string[];
+    surface?: 1 | 2;
+  }) => object;
+  /**
    * Phase 2 writes — service-routed so state propagation and track-changes
    * copy-on-write hold (raw OPFS writes get clobbered or never render).
    * Text and binary are distinct because only the text path is trackable.

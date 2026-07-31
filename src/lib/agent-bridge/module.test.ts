@@ -126,6 +126,7 @@ function makeContext(overrides: Record<string, unknown> = {}) {
       a11y: { status: 'ok', engine: 'raw', caveats: [], violations: [], needsReview: [] },
       epubcheck: { status: 'none' },
     }),
+    inspectElements: vi.fn((params: unknown) => ({ status: 'ok', echo: params })),
     writeTextFile: vi.fn(async (path: string, text: string) => {
       if (path === 'OEBPS/Styles/page.css') cssContent = text;
     }),
@@ -208,6 +209,58 @@ describe('agent bridge module', () => {
         a11y: { status: 'ok', engine: 'raw', caveats: [], violations: [], needsReview: [] },
         epubcheck: { status: 'none' },
       },
+    });
+  });
+
+  it('passes inspect selectors through, normalising optional params', async () => {
+    const { ctx } = makeContext();
+    start(ctx);
+    const socket = FakeWebSocket.last!;
+    socket.open();
+    const response = (await socket.receive({
+      id: 1,
+      tool: 'inspect_elements',
+      params: { selectors: ['img', '.badge'], properties: ['position', 42], surface: 2 },
+    })) as { ok: boolean };
+    expect(response.ok).toBe(true);
+    // Non-string property names are dropped rather than passed to the DOM.
+    expect(ctx.inspectElements).toHaveBeenCalledWith({
+      selectors: ['img', '.badge'],
+      properties: ['position'],
+      surface: 2,
+    });
+  });
+
+  it('rejects an inspect call with no usable selectors', async () => {
+    const { ctx } = makeContext();
+    start(ctx);
+    const socket = FakeWebSocket.last!;
+    socket.open();
+    for (const params of [{}, { selectors: [] }, { selectors: ['  '] }, { selectors: 'img' }]) {
+      const response = (await socket.receive({ id: 1, tool: 'inspect_elements', params })) as {
+        ok: boolean;
+        error: string;
+      };
+      expect(response.ok).toBe(false);
+      expect(response.error).toMatch(/selectors required/);
+    }
+    expect(ctx.inspectElements).not.toHaveBeenCalled();
+  });
+
+  it('drops a surface value that is not 1 or 2 instead of forwarding it', async () => {
+    const { ctx } = makeContext();
+    start(ctx);
+    const socket = FakeWebSocket.last!;
+    socket.open();
+    await socket.receive({
+      id: 1,
+      tool: 'inspect_elements',
+      params: { selectors: ['img'], surface: 7 },
+    });
+    expect(ctx.inspectElements).toHaveBeenCalledWith({
+      selectors: ['img'],
+      properties: undefined,
+      surface: undefined,
     });
   });
 
