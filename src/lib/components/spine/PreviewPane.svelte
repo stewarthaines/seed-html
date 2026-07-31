@@ -1097,6 +1097,17 @@
     return `${sizeLabel} ${margin}`;
   });
 
+  // The device line in a surface's hover stats — the same text as its dropdown
+  // option, qualified by the option's group (e.g. "Commute (phone): Plus").
+  function deviceStatsLabel(id: string): string {
+    const preset = DEVICE_PRESETS.find(d => d.id === id);
+    if (!preset) return '';
+    if (preset.category === 'responsive') return $t('Responsive');
+    if (preset.category === 'read') return 'READ.html';
+    const name = preset.id === 'print' ? printDeviceLabel : getDeviceLabel(preset);
+    return `${getCategoryLabel(preset.category)}: ${name}`;
+  }
+
   function setReadFlow(value: string, which: 1 | 2 = 1): void {
     (which === 1 ? readFlow : readFlow2).current = value as ReadFlow;
     surfaceFor(which)?.applyReadSettings();
@@ -1838,6 +1849,7 @@
             <PreviewSurface
               bind:this={surfaceRef}
               device={selectedDevice.current}
+              deviceLabel={deviceStatsLabel(selectedDevice.current)}
               {showSource}
               {sourceTree}
               readFlow={readFlow.current}
@@ -1858,6 +1870,7 @@
             <PreviewSurface
               bind:this={surfaceRef2}
               device={selectedDevice2.current}
+              deviceLabel={deviceStatsLabel(selectedDevice2.current)}
               showSource={showSource2}
               sourceTree={sourceTree2}
               readFlow={readFlow2.current}
@@ -1872,6 +1885,7 @@
       <PreviewSurface
         bind:this={surfaceRef}
         device={selectedDevice.current}
+        deviceLabel={deviceStatsLabel(selectedDevice.current)}
         {showSource}
         {sourceTree}
         readFlow={readFlow.current}

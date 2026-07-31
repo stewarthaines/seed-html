@@ -50,6 +50,7 @@
   // parent; this surface consumes them and renders.
   let {
     device,
+    deviceLabel = '',
     showSource = false,
     sourceTree = false,
     readFlow = 'paginated',
@@ -80,6 +81,9 @@
   }: {
     /** The device preset id this surface renders. */
     device: string;
+    /** Human label for the device, as shown in the view dropdown, qualified by
+     *  its group (e.g. "Commute (phone): Plus") — shown in the hover stats. */
+    deviceLabel?: string;
     /** Show the Source view (raw/tree) instead of a rendered preview. */
     showSource?: boolean;
     /** Source view rendering: collapsible tree instead of the raw <pre>. */
@@ -1693,6 +1697,9 @@
              transform errors/warnings remain in the header, always visible. -->
         {#if xhtmlContent}
           <div class="preview-stats" aria-live="polite">
+            {#if deviceLabel}
+              <span class="stat-device">{deviceLabel}</span>
+            {/if}
             <span class="content-size">{Math.round(xhtmlContent.length / 1024)}KB</span>
             {#if !isTransforming && !transformError && transformWarnings.length === 0}
               <span class="stat-timing" title={$t('Transform successful')}>
@@ -1848,6 +1855,10 @@
 
   .stat-timing {
     color: var(--color-success-text, var(--color-text-secondary));
+  }
+
+  .stat-device {
+    color: var(--color-text-primary);
   }
 
   /* Generated file size shown beside the view dropdown in the header. */
