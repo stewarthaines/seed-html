@@ -399,6 +399,9 @@
   let lastPreviewClick = $state<Record<string, unknown> | null>(null);
   let agentBridge = $state<AgentBridge | null>(null);
   let agentMountEl = $state<HTMLDivElement>();
+  // The mounted spine preview, for the bridge's live axe run (unset outside
+  // the spine view — the checks tool reports a11y unavailable then).
+  let previewPaneRef = $state<PreviewPane | undefined>();
 
   async function toggleAgentBridge(): Promise<void> {
     if (!import.meta.env.DEV) return;
@@ -424,14 +427,14 @@
             ? { chapterId: spinePreviewData.spineItemId, xhtml: spinePreviewData.xhtmlContent }
             : null,
         getLastClick: () => lastPreviewClick,
-        getChecks: () => ({
+        getChecks: async () => ({
           chapterId: spinePreviewData.spineItemId ?? null,
-          // Live axe over the bridge is phase 2 (process/BRIDGE_CHECKS.md);
-          // the panel's results are component-local and usually absent.
-          a11y: {
-            status: 'unavailable',
-            reason: 'not served yet — the author can run the preview Checks panel',
-          },
+          a11y: previewPaneRef
+            ? await previewPaneRef.runChecksForAgent()
+            : {
+                status: 'unavailable',
+                reason: 'no chapter preview open — open a chapter in the spine editor',
+              },
           epubcheck: buildEpubcheckSection(
             readValidationReport(),
             appState?.workspace?.opf?.metadata
@@ -1895,6 +1898,7 @@
       {:else if currentView === 'spine'}
         {#if spinePreviewData.spineItemId}
           <PreviewPane
+            bind:this={previewPaneRef}
             xhtmlContent={spinePreviewData.xhtmlContent}
             persistedXhtml={spinePreviewData.persistedXhtml}
             isTransforming={spinePreviewData.isTransforming}

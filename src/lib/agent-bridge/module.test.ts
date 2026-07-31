@@ -121,9 +121,9 @@ function makeContext(overrides: Record<string, unknown> = {}) {
     getWorkspaceDir: async () => workspace,
     getRenderedXhtml: () => ({ chapterId: 'ch-1', xhtml: '<html/>' }),
     getLastClick: () => null,
-    getChecks: () => ({
+    getChecks: async () => ({
       chapterId: 'ch-1',
-      a11y: { status: 'unavailable', reason: 'not served yet' },
+      a11y: { status: 'ok', engine: 'raw', caveats: [], violations: [], needsReview: [] },
       epubcheck: { status: 'none' },
     }),
     writeTextFile: vi.fn(async (path: string, text: string) => {
@@ -205,7 +205,7 @@ describe('agent bridge module', () => {
       ok: true,
       result: {
         chapterId: 'ch-1',
-        a11y: { status: 'unavailable', reason: 'not served yet' },
+        a11y: { status: 'ok', engine: 'raw', caveats: [], violations: [], needsReview: [] },
         epubcheck: { status: 'none' },
       },
     });
