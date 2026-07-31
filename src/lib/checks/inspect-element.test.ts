@@ -7,6 +7,7 @@ import {
   MAX_MATCHES_PER_SELECTOR,
   MAX_SELECTORS,
   type InspectContext,
+  type InspectedElement,
 } from './inspect-element.js';
 
 /** happy-dom gives real querySelectorAll / getComputedStyle over plain HTML,
@@ -145,7 +146,9 @@ describe('buildInspectSection', () => {
         {
           selector: 'p',
           total: 40,
-          elements: new Array(MAX_MATCHES_PER_SELECTOR).fill(null) as [],
+          elements: new Array(MAX_MATCHES_PER_SELECTOR).fill({
+            tag: 'p',
+          }) as unknown as InspectedElement[],
         },
       ],
       MAX_SELECTORS + 2
@@ -155,6 +158,32 @@ describe('buildInspectSection', () => {
       `selectors truncated to the first ${MAX_SELECTORS}`,
       `matches truncated to the first ${MAX_MATCHES_PER_SELECTOR} per selector`,
     ]);
+  });
+
+  it('announces scaled rects when any element sits under a transform', () => {
+    const section = buildInspectSection(
+      context(),
+      [
+        {
+          selector: '.pagedjs_page_content',
+          total: 1,
+          elements: [{ scale: 0.2254 } as unknown as InspectedElement],
+        },
+      ],
+      1
+    );
+    if (section.status !== 'ok') throw new Error('expected ok');
+    expect(section.caveats.some(c => c.startsWith('scaled-rects'))).toBe(true);
+  });
+
+  it('stays silent about scale when nothing is transformed', () => {
+    const section = buildInspectSection(
+      context(),
+      [{ selector: 'p', total: 1, elements: [{ tag: 'p' } as unknown as InspectedElement] }],
+      1
+    );
+    if (section.status !== 'ok') throw new Error('expected ok');
+    expect(section.caveats).toEqual([]);
   });
 
   it('defaults to layout-shaped properties', () => {

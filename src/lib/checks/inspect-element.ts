@@ -38,6 +38,8 @@ export const DEFAULT_INSPECT_PROPERTIES = [
 export const MAX_MATCHES_PER_SELECTOR = 10;
 export const MAX_SELECTORS = 8;
 const HTML_SNIPPET_LIMIT = 200;
+/** Sub-percent scale differences are subpixel rounding, not a transform. */
+const SCALE_EPSILON = 0.01;
 /** Ancestor chain depth in `path` — enough to locate a node, short enough to read. */
 const PATH_DEPTH = 6;
 
@@ -63,6 +65,12 @@ export interface InspectedElement {
   /** The element the rect is positioned against, when it is not the initial
    *  containing block — the usual culprit for a box landing somewhere odd. */
   offsetParent?: string;
+  /** Cumulative scale applied by ancestor transforms, present only when it is
+   *  not 1. `rect` is post-transform (what the author sees on screen) while the
+   *  computed `width`/`height` are pre-transform CSS pixels, so the two
+   *  legitimately disagree by this factor — divide a rect by it to compare.
+   *  The Proofs device scales every page this way. */
+  scale?: number;
   /** Only the properties that were asked for. */
   styles: Record<string, string>;
   /** Opening tag, truncated — identifies the node without dumping subtrees. */
@@ -152,9 +160,23 @@ export function describeElement(
   // reaching for the iframe's own constructors buys nothing over a property
   // check. `offsetParent` is null for the initial containing block (and for
   // display:none), which is exactly when we omit it.
-  const offsetHost = el as Element & { offsetParent?: Element | null };
+  const offsetHost = el as Element & {
+    offsetParent?: Element | null;
+    offsetWidth?: number;
+  };
   const offsetParent = offsetHost.offsetParent ? elementPath(offsetHost.offsetParent) : undefined;
   const className = typeof el.className === 'string' ? el.className.trim() : '';
+  // offsetWidth is the untransformed border box; getBoundingClientRect is the
+  // transformed one. Their ratio is the cumulative ancestor scale — derived
+  // rather than looked up, so it catches any transformed ancestor, not just the
+  // Proofs grid that prompted it. Skipped for zero-width and non-HTML elements,
+  // where offsetWidth is absent or meaningless.
+  const layoutWidth = offsetHost.offsetWidth;
+  const scale =
+    typeof layoutWidth === 'number' && layoutWidth > 0 && box.width > 0
+      ? box.width / layoutWidth
+      : 1;
+  const scaled = Math.abs(scale - 1) > SCALE_EPSILON;
   return {
     index,
     tag: el.tagName.toLowerCase(),
@@ -168,6 +190,7 @@ export function describeElement(
       height: Math.round(box.height),
     },
     ...(offsetParent ? { offsetParent } : {}),
+    ...(scaled ? { scale: Math.round(scale * 1e4) / 1e4 } : {}),
     styles,
     html: openingTag(el),
   };
@@ -217,6 +240,14 @@ export function buildInspectSection(
   }
   if (results.some(result => result.total > result.elements.length)) {
     caveats.push(`matches truncated to the first ${MAX_MATCHES_PER_SELECTOR} per selector`);
+  }
+  // Announced, not merely discoverable: an agent that compares a scaled rect
+  // against an unscaled computed width without noticing draws a wrong
+  // conclusion, which is exactly the trap this field exists to close.
+  if (results.some(result => result.elements.some(el => el?.scale !== undefined))) {
+    caveats.push(
+      'scaled-rects: rects are post-transform; divide by each element’s scale for CSS px'
+    );
   }
   return { status: 'ok', ...context, caveats, results };
 }
