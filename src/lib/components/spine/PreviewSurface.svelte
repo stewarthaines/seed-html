@@ -213,6 +213,14 @@
     engineOfDeviceId(id, engineFlags());
 
   let printPaginating = $state(false);
+  // A render that produced no document. The chapter transformed fine and was
+  // written to the iframe, but the iframe holds nothing to show — the author
+  // would otherwise face a blank frame indistinguishable from an empty chapter.
+  let renderFailed = $state(false);
+  // Files the chapter references that could not be resolved out of the
+  // workspace, collected from the rendered document (see data-seed-missing).
+  let missingAssets = $state<string[]>([]);
+  let renderCheckTimer: ReturnType<typeof setTimeout> | undefined;
   // The preview is out of date because auto-update is off for the current type and
   // the chapter (or the injected head) changed since the last render. Drives the
   // on-demand Refresh badge; was print-only, now applies to every preview type.
@@ -755,6 +763,48 @@
   }
 
   /**
+   * How long to give a written document before calling it a failed render. A
+   * stalled parse never finishes, so any delay would do; this one is short
+   * enough to be useful feedback and long enough to outlast a slow blob fetch.
+   */
+  const RENDER_CHECK_DELAY = 1500;
+
+  /**
+   * Report what the author actually got, once the write has had time to settle.
+   *
+   * Two distinct findings, both invisible until now:
+   *  - a document with no body (or an empty one) while the chapter transformed
+   *    to real content — an app-level failure, not an empty chapter. The
+   *    `body:empty::before` hint in setupIframeInteractivity cannot cover this:
+   *    a stalled parse leaves no body for it to attach to.
+   *  - assets the chapter references that are not in the workspace, stamped
+   *    element-side by the blob URL manager. Author-fixable, and previously only
+   *    a console warning.
+   *
+   * Deliberately driven by a timer rather than the iframe `load` event: the
+   * failure this exists to catch is precisely the one where the parse never
+   * finishes, so `load` may never arrive.
+   */
+  function scheduleRenderCheck(): void {
+    clearTimeout(renderCheckTimer);
+    renderFailed = false;
+    missingAssets = [];
+    renderCheckTimer = setTimeout(() => {
+      const doc = previewIframe?.contentDocument;
+      if (!doc) return;
+      const body = doc.body;
+      renderFailed = !body || (body.childElementCount === 0 && !body.textContent?.trim());
+      missingAssets = [
+        ...new Set(
+          Array.from(doc.querySelectorAll('[data-seed-missing]'), el =>
+            el.getAttribute('data-seed-missing')
+          ).filter((path): path is string => !!path)
+        ),
+      ];
+    }, RENDER_CHECK_DELAY);
+  }
+
+  /**
    * Update iframe with new XHTML content while preserving scroll position
    */
   function updatePreviewContent(content: string): void {
@@ -779,6 +829,7 @@
       iframeDoc.open();
       iframeDoc.write(content);
       iframeDoc.close();
+      scheduleRenderCheck();
 
       // Re-apply the reader-mode theme + font synchronously: the fresh document
       // dropped them, and relying on the iframe `load` event alone races with a
@@ -808,6 +859,12 @@
   export function renderNow(): void {
     const content = xhtmlContent;
     fxlContentSize = null; // stale overflow badge must not survive a rewrite
+    // Findings belong to one render. The built-in path re-arms the check; the
+    // paged and foliate engines build documents of their own shape (foliate
+    // nests the chapter in a further iframe), so they simply clear it.
+    clearTimeout(renderCheckTimer);
+    renderFailed = false;
+    missingAssets = [];
     // Route on engine: Print → Paged.js; READ.html entry + device presets →
     // foliate (http, reflowable — usesFoliate); everything else (Responsive,
     // file://, fixed layout) → the built-in preview.
@@ -1454,6 +1511,13 @@
    * Called both on initial load and after content updates
    */
   function setupIframeInteractivity(iframeDoc: Document): void {
+    // Never mutate a body-less document — the same guard applyPreviewAppearance
+    // carries. A `load` that arrives while a written document is still stalled
+    // mid-parse would otherwise have us inject the style element below into a
+    // half-built head. The watchdog reports the stall; interactivity is restored
+    // by the next render's load.
+    if (!iframeDoc.body) return;
+
     // Add click event listener to the iframe document
     iframeDoc.addEventListener('click', handlePreviewClick);
 
@@ -1656,6 +1720,7 @@
       clearTimeout(resizeDebounce);
       clearTimeout(printSafetyTimer);
       clearTimeout(readSafetyTimer);
+      clearTimeout(renderCheckTimer);
       if (readSectionUrl) URL.revokeObjectURL(readSectionUrl);
     };
   });
@@ -1741,6 +1806,21 @@
           <div class="print-paginating" role="status">
             <div class="status-spinner"></div>
             <span>{$t('Paginating…')}</span>
+          </div>
+        {/if}
+        {#if renderFailed || missingAssets.length > 0}
+          <div class="preview-problem" role="alert">
+            {#if renderFailed}
+              <p class="problem-title">{$t('Preview failed to render')}</p>
+            {/if}
+            {#if missingAssets.length > 0}
+              <p class="problem-title">{$t('Missing files')}</p>
+              <ul class="problem-list">
+                {#each missingAssets as path (path)}
+                  <li>{path}</li>
+                {/each}
+              </ul>
+            {/if}
           </div>
         {/if}
         <div class="preview-frame-wrapper">
@@ -1966,6 +2046,32 @@
     background: color-mix(in srgb, var(--color-bg-tertiary) 80%, transparent);
     color: var(--color-text-secondary);
     font-size: var(--text-sm);
+  }
+
+  /* Render findings: top of the viewport, above the frame. Not an overlay —
+     a failed render has nothing behind it to obscure, and a missing file is
+     read alongside the content that is missing it. */
+  .preview-problem {
+    position: absolute;
+    inset: 0 0 auto 0;
+    z-index: 3;
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-bg-secondary);
+    border-bottom: 1px solid var(--color-error-text);
+    color: var(--color-error-text);
+    font-size: var(--text-sm);
+  }
+
+  .problem-title {
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .problem-list {
+    margin: var(--space-1) 0 0 0;
+    padding-left: var(--space-4);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
   }
 
   .preview-frame-wrapper {

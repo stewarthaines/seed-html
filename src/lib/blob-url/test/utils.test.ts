@@ -6,6 +6,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { BlobURLManager } from '../blob-url-manager.js';
+import { deferParserBlockingScripts } from '../utils.js';
 import type { BlobURLManagerConfig } from '../types.js';
 
 // Mock FileStorageAPI
@@ -431,5 +432,36 @@ describe('Blob URL Manager Utilities', () => {
       expect(manager.getBlobURLCount()).toBe(1);
       expect(mockFileStorage.getFile).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+describe('deferParserBlockingScripts', () => {
+  // Parsed, not live: an inert document keeps the assertions about script
+  // attributes free of any script loading.
+  const headDoc = (html: string): Document =>
+    new DOMParser().parseFromString(`<html><head>${html}</head><body></body></html>`, 'text/html');
+
+  it('defers external scripts so a written preview cannot stall mid-parse', () => {
+    const doc = headDoc('<script src="blob:one"></script><script src="blob:two"></script>');
+
+    deferParserBlockingScripts(doc);
+
+    const scripts = Array.from(doc.querySelectorAll('script'));
+    expect(scripts.map(s => s.hasAttribute('defer'))).toEqual([true, true]);
+  });
+
+  it('leaves inline, async and module scripts as the author wrote them', () => {
+    const doc = headDoc(
+      '<script>window.x = 1;</script>' +
+        '<script src="blob:a" async=""></script>' +
+        '<script src="blob:b" type="module"></script>'
+    );
+
+    deferParserBlockingScripts(doc);
+
+    const deferred = Array.from(doc.querySelectorAll('script')).filter(s =>
+      s.hasAttribute('defer')
+    );
+    expect(deferred).toEqual([]);
   });
 });

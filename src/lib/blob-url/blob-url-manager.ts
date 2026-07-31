@@ -16,6 +16,7 @@ import { convertXHTMLPathToManifestPath } from '../epub/path-utils.js';
 import type { FileStorageAPI } from '../storage/index.js';
 import type { BlobURLManagerConfig, BlobURLRegistry } from './types.js';
 import { BlobURLError, BlobURLCapacityError, XHTMLProcessingError } from './types.js';
+import { deferParserBlockingScripts } from './utils.js';
 
 export class BlobURLManager {
   private activeWorkspaceId: string | null = null;
@@ -181,6 +182,10 @@ export class BlobURLManager {
       for (const element of assetElements) {
         await this.processAssetElement(element);
       }
+
+      // Preview documents are written into the iframe with document.write(); a
+      // parser-blocking script there can strand the write before <body>.
+      deferParserBlockingScripts(doc);
 
       // Serialize back to string
       const serializer = new XMLSerializer();
@@ -362,6 +367,12 @@ export class BlobURLManager {
     // Convert XHTML path to manifest path before resolving
     const manifestPath = convertXHTMLPathToManifestPath(href);
     const resolvedPath = this.resolveManifestPath(manifestPath);
+
+    // Stamp the failure on the element so the preview can tell the author which
+    // files are missing. A console warning reaches the developer, not the person
+    // whose book has a broken reference. Display-only documents (preview iframe,
+    // print window) — never persisted, same contract as data-source-href.
+    element.setAttribute('data-seed-missing', manifestPath);
 
     // Visual assets get error icons
     if (['img', 'video', 'audio', 'object', 'image'].includes(tagName)) {
