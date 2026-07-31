@@ -2,7 +2,7 @@
 
 Expose accessibility (axe-core) and EPUB validation (EPUBCheck) results to terminal agents over the seed-bridge, so an agent can **explain issues and propose solutions** — not necessarily fix them directly. Companion to `process/AGENT_BRIDGE.md` (architecture, "reads are never gated" principle).
 
-Status: design agreed 2026-07-31. Not implemented.
+Status: design agreed 2026-07-31; Phase 1 (epubcheck side + mirror-clearing fix) implemented on `feat/translation-editions`. Phases 2 (live axe) and 3 (guidance) not started.
 
 ## Current state (facts)
 
