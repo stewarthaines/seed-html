@@ -302,8 +302,12 @@
         let report = await loadValidationReport(file.name);
         // A report from before the file's last write is stale — the epub was
         // re-packaged under the same name — so drop it and offer Validate again.
+        // Clear the localStorage mirror too, or the spine editor (and the
+        // agent bridge) keeps serving a report about a package that no longer
+        // exists.
         if (report && file.lastModified > report.timestamp) {
           await deleteValidationReport(file.name);
+          clearLatestReport(file.name);
           report = null;
         }
         if (report) report.isValid = report.errorCount === 0;

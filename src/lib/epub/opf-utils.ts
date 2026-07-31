@@ -967,7 +967,7 @@ export class OPFUtils {
     }
 
     let xml = `<?xml version="1.0" encoding="utf-8"?>
-<package version="${version}" xmlns="http://www.idpf.org/2007/opf" unique-identifier="${uniqueId}" prefix="${prefixAttr}" xml:lang="en"${bookIsRtl ? ' dir="rtl"' : ''}>
+<package version="${version}" xmlns="http://www.idpf.org/2007/opf" unique-identifier="${uniqueId}" prefix="${prefixAttr}" xml:lang="${escapeXML(languageTags[0] || 'en')}"${bookIsRtl ? ' dir="rtl"' : ''}>
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:ibooks="http://vocabulary.itunes.apple.com/rdf/ibooks/vocabularies/2012/01/ibooks-specific">
     ${titleXML}
     ${languageXML}

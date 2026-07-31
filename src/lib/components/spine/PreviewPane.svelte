@@ -33,6 +33,7 @@
   } from './sr-walk.js';
   import { SpeechService } from '$lib/speech/speech.service.js';
   import { isHttpContext } from '$lib/reader/open-in-reader.js';
+  import { buildA11ySection, type A11ySection } from '$lib/checks/a11y-section.js';
   import { canShowXmlTree } from '$lib/xml-tree/tree-viewer-loader.js';
   import type { ReadColumns, ReadFlow } from '$lib/reader/read-preview.js';
   import { MARGIN_MM } from '$lib/pdf/pdf-export.js';
@@ -234,7 +235,11 @@
     nodes: Array<{ target: string[]; html: string }>;
   }
   interface AxeWindow extends Window {
-    axe?: { run: (context: Document | Element) => Promise<{ violations: AxeViolation[] }> };
+    axe?: {
+      run: (
+        context: Document | Element
+      ) => Promise<{ violations: AxeViolation[]; incomplete: AxeViolation[] }>;
+    };
   }
 
   let a11yRunning = $state(false);
@@ -354,6 +359,34 @@
       a11yIssueCount = null;
     } finally {
       a11yRunning = false;
+    }
+  }
+
+  /**
+   * Headless axe run for the agent bridge (process/BRIDGE_CHECKS.md phase 2):
+   * the panel's own target resolution and bundle injection, but no panel
+   * state, no highlights, no console table — and unlike the panel it keeps
+   * axe's `incomplete` bucket (as needsReview). Never throws; failure modes
+   * come back as an explicit `unavailable` with the reason.
+   */
+  export async function runChecksForAgent(): Promise<A11ySection> {
+    if (!canCheckA11y) {
+      return { status: 'unavailable', reason: 'accessibility checks need an http(s) context' };
+    }
+    const target = a11yTarget();
+    if (!target) {
+      return { status: 'unavailable', reason: 'no rendered preview for the current chapter yet' };
+    }
+    const boundDevice = boundIndexA11y === 1 ? selectedDevice.current : selectedDevice2.current;
+    try {
+      await loadAxe(target.doc, target.win);
+      const results = await target.win.axe!.run(target.doc);
+      return buildA11ySection(engineOfDevice(boundDevice), results);
+    } catch (error) {
+      return {
+        status: 'unavailable',
+        reason: `axe run failed: ${error instanceof Error ? error.message : String(error)}`,
+      };
     }
   }
 
@@ -1097,6 +1130,17 @@
     return `${sizeLabel} ${margin}`;
   });
 
+  // The device line in a surface's hover stats — the same text as its dropdown
+  // option, qualified by the option's group (e.g. "Commute (phone): Plus").
+  function deviceStatsLabel(id: string): string {
+    const preset = DEVICE_PRESETS.find(d => d.id === id);
+    if (!preset) return '';
+    if (preset.category === 'responsive') return $t('Responsive');
+    if (preset.category === 'read') return 'READ.html';
+    const name = preset.id === 'print' ? printDeviceLabel : getDeviceLabel(preset);
+    return `${getCategoryLabel(preset.category)}: ${name}`;
+  }
+
   function setReadFlow(value: string, which: 1 | 2 = 1): void {
     (which === 1 ? readFlow : readFlow2).current = value as ReadFlow;
     surfaceFor(which)?.applyReadSettings();
@@ -1838,6 +1882,7 @@
             <PreviewSurface
               bind:this={surfaceRef}
               device={selectedDevice.current}
+              deviceLabel={deviceStatsLabel(selectedDevice.current)}
               {showSource}
               {sourceTree}
               readFlow={readFlow.current}
@@ -1858,6 +1903,7 @@
             <PreviewSurface
               bind:this={surfaceRef2}
               device={selectedDevice2.current}
+              deviceLabel={deviceStatsLabel(selectedDevice2.current)}
               showSource={showSource2}
               sourceTree={sourceTree2}
               readFlow={readFlow2.current}
@@ -1872,6 +1918,7 @@
       <PreviewSurface
         bind:this={surfaceRef}
         device={selectedDevice.current}
+        deviceLabel={deviceStatsLabel(selectedDevice.current)}
         {showSource}
         {sourceTree}
         readFlow={readFlow.current}

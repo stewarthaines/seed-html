@@ -16,6 +16,7 @@
     type SwitchResult,
   } from '../../spine/chapter-switch.service.js';
   import { readChapterMeta, writeChapterMeta } from '../../spine/chapter-metadata.js';
+  import { parseLocaleTextPath } from '../../translations/editions.js';
   import EditorPane from '../../components/spine/EditorPane.svelte';
   import {
     listGenerators,
@@ -209,34 +210,30 @@
       : null
   );
 
-  // Available files for editor pane dropdowns
-  let availableFiles: Array<{
+  // One dropdown entry in the editor panes' file pickers. 'locale-text' is a
+  // frozen translation reference (read-only, process/TRANSLATION_EDITIONS.md).
+  type EditorFileType =
+    | 'text'
+    | 'locale-text'
+    | 'css'
+    | 'javascript'
+    | 'transform'
+    | 'preview-head'
+    | 'generator';
+  type EditorFileEntry = {
     value: string;
     label: string;
     path: string;
     href: string;
-    type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head' | 'generator';
-  }> = [];
+    type: EditorFileType;
+  };
+
+  // Available files for editor pane dropdowns
+  let availableFiles: EditorFileEntry[] = [];
 
   // Pane-specific available files (filtered to prevent conflicts)
-  let availableFiles1 = $state<
-    Array<{
-      value: string;
-      label: string;
-      path: string;
-      href: string;
-      type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head' | 'generator';
-    }>
-  >([]);
-  let availableFiles2 = $state<
-    Array<{
-      value: string;
-      label: string;
-      path: string;
-      href: string;
-      type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head' | 'generator';
-    }>
-  >([]);
+  let availableFiles1 = $state<EditorFileEntry[]>([]);
+  let availableFiles2 = $state<EditorFileEntry[]>([]);
 
   // Track previous selectedItemId to prevent unnecessary reloads
   let previousSelectedItemId: string | null = null;
@@ -406,24 +403,12 @@
       availableFiles1 = availableFiles;
       availableFiles2 = availableFiles;
     } else {
-      // Dual pane mode - prevent text content conflicts between visible panes
-      const pane1HasText = paneState.pane1.fileType === 'text';
-      const pane2HasText = paneState.pane2.fileType === 'text';
-
-      // Filter available files for each pane to prevent conflicts
-      availableFiles1 = availableFiles.filter(file => {
-        if (file.type === 'text' && pane2HasText) {
-          return false; // Hide text option from pane 1 if pane 2 has it
-        }
-        return true;
-      });
-
-      availableFiles2 = availableFiles.filter(file => {
-        if (file.type === 'text' && pane1HasText) {
-          return false; // Hide text option from pane 2 if pane 1 has it
-        }
-        return true;
-      });
+      // Dual pane mode: a file already open in the other pane is hidden (two
+      // editors on one file would fight over a single store). Keyed on path,
+      // not type, so the chapter text and a frozen translation reference can
+      // be shown side by side.
+      availableFiles1 = availableFiles.filter(file => file.path !== paneState.pane2.filePath);
+      availableFiles2 = availableFiles.filter(file => file.path !== paneState.pane1.filePath);
     }
   }
 
@@ -439,13 +424,7 @@
 
     try {
       // Always include text content for current spine item
-      const files: Array<{
-        value: string;
-        label: string;
-        path: string;
-        href: string;
-        type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head' | 'generator';
-      }> = [
+      const files: EditorFileEntry[] = [
         {
           value: 'text',
           // Show the actual chapter plain-text filename; it's the primary edit target.
@@ -455,6 +434,21 @@
           type: 'text',
         },
       ];
+
+      // This chapter's frozen copies in stored translations (SOURCE/locale/,
+      // process/TRANSLATION_EDITIONS.md) — read-only references beside the
+      // editable text. Derived from the switch's single workspace enumeration.
+      for (const path of context.files) {
+        const locale = parseLocaleTextPath(path);
+        if (!locale || locale.rest !== `${selectedItemId}.txt`) continue;
+        files.push({
+          value: `locale-${locale.tag}`,
+          label: `${locale.tag.toUpperCase()} · ${selectedItemId}.txt`,
+          path,
+          href: path, // not a manifest item
+          type: 'locale-text',
+        });
+      }
 
       // Add CSS and JavaScript files from the manifest. The manifest is the
       // source of truth (it's what gets injected into the rendered/preview
@@ -571,13 +565,7 @@
    * Implements the pattern from text-editor-store-API.md
    */
   async function createFileBackedStore(
-    manifestItem: {
-      value: string;
-      label: string;
-      path: string;
-      href: string;
-      type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head' | 'generator';
-    },
+    manifestItem: EditorFileEntry,
     workspaceId: string,
     workspaceService: WorkspaceService,
     seededContent?: string
@@ -598,6 +586,12 @@
     }
 
     const store = createTextEditorStore(editorId, initialContent);
+
+    // Frozen translation references are never saved — the pane is read-only
+    // and workspaceService.writeFile rejects SOURCE/locale/** regardless.
+    if (manifestItem.type === 'locale-text') {
+      return store;
+    }
 
     // Save + preview subscription. The manager owns the debounce, the
     // schedule-time identity (`workspaceId` here is the workspace this store
@@ -661,13 +655,7 @@
    * Stores are cached for session-level performance
    */
   async function getOrCreateFileStore(
-    manifestItem: {
-      value: string;
-      label: string;
-      path: string;
-      href: string;
-      type: 'text' | 'css' | 'javascript' | 'transform' | 'preview-head' | 'generator';
-    },
+    manifestItem: EditorFileEntry,
     workspaceId: string,
     workspaceService: WorkspaceService,
     seededContent?: string
@@ -1108,6 +1096,15 @@
     if (fileType === 'text') {
       // Text files: always use current spine item's text file
       targetFile = availableFiles.find(f => f.type === 'text');
+    } else if (fileType === 'locale-text') {
+      // Translation references: follow the same language to the current
+      // chapter's frozen copy; fall back to any reference, then the chapter
+      // text, when this chapter has no copy in that language.
+      const tag = selectedFile ? parseLocaleTextPath(selectedFile)?.tag : undefined;
+      targetFile =
+        (tag ? availableFiles.find(f => f.value === `locale-${tag}`) : undefined) ??
+        availableFiles.find(f => f.type === 'locale-text') ??
+        availableFiles.find(f => f.type === 'text');
     } else if (selectedFile) {
       // Global files (CSS/JS/transform): try to find the same file
       targetFile = availableFiles.find(f => f.path === selectedFile);

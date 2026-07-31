@@ -48,6 +48,11 @@ export function classifySourceFile(path: string): SourceFileType {
     return 'extension';
   }
 
+  // Stored translation editions (in locale/ directory)
+  if (relativePath.startsWith('locale/')) {
+    return 'locale';
+  }
+
   // Everything else
   return 'other';
 }
@@ -244,6 +249,7 @@ export async function calculateDirectoryStats(
       text: 0,
       scripts: 0,
       extensions: 0,
+      locale: 0,
     },
     hasSettingsFile: false,
   };
@@ -270,6 +276,8 @@ export async function calculateDirectoryStats(
       stats.directories.scripts++;
     } else if (filePath.startsWith('SOURCE/extensions/')) {
       stats.directories.extensions++;
+    } else if (filePath.startsWith('SOURCE/locale/')) {
+      stats.directories.locale++;
     }
   }
 

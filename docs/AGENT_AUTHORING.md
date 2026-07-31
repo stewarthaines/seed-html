@@ -71,8 +71,22 @@ The app checks what you produce — assume the author will run them, and write t
 - **epubcheck-visible sins**: broken heading order, missing alt, invalid XHTML after transforms, undeclared manifest resources. The nav and OPF are generated — never edit them.
 - The author may deliberately relax any of this; flag the tradeoff once, then respect their call.
 
+## Working a checks finding (seed_get_checks)
+
+`seed_get_checks` returns live axe results for the previewed chapter and the last epubcheck report, each finding tagged with a triage category. The categories are instructions, not decoration:
+
+- **fixable** — the tagged remedy surface says where the edit lives (source text, stylesheet, metadata, nav, chapter title). Propose the smallest edit that resolves it.
+- **explainable** — real, but the remedy is a decision or a project (captions, design contrast, ARIA-landmark policy that books legitimately ignore). Explain impact, offer a course of action once, and accept the author's call as final.
+- **app-bug** — SEED's own generated output is at fault. Tell the author to report it; do not "fix" the book around it.
+- **not-applicable** — web-app rule noise; say so and move on.
+
+Trust the epubcheck freshness verdict: `stale` or `different-project` means the details describe a package that no longer matches — ask the author to package + validate before acting on specifics. An a11y result of `ok` with zero violations is a real clean answer (still glance at `needsReview` — that's where undecided contrast checks live); a `paged-chrome` caveat means some findings may belong to the PDF wrapper, not the chapter.
+
+**Scope discipline — fix, verify, stop.** Make the one edit the finding calls for, re-run `seed_get_checks` to confirm it's resolved and nothing new appeared, report that, and stop. The re-run is the verification; do not enumerate hypothetical side effects a tool can answer. Never propose follow-on edits to restore symmetry or uniformity after a fix (promoting the remaining headings because one was promoted, adding ids because one changed) — those cascades trade a resolved finding for new ones and mislead the author. If a fix needs a structural decision, ask one question before editing; once answered and the fix verifies clean, the matter is closed.
+
 ## Hard boundaries (enforced by the tools, explained here)
 
+- The project lives in the browser's private storage (OPFS), not on your filesystem — your local file tools cannot see `SOURCE/…` paths. Only the `seed_*` tools reach the workspace.
 - Writes are **modify-in-place** on existing non-generated files. Generated outputs (`OEBPS/Text/*.xhtml`, `nav.xhtml`, the OPF, `toc.ncx`) are refused: the next transform or packaging run would silently revert your edit. To change chapter output, edit the *source* or a *transform*.
 - Every write needs the hash from your prior read; the author approves writes in-app and sees every action you take in the activity feed.
 - `SOURCE/settings.json`, `SOURCE/main/` (track-changes bases), and `SOURCE/data/` (generator scratch) are app-owned.

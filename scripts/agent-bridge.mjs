@@ -156,6 +156,12 @@ const TOOLS = [
     inputSchema: { type: 'object', properties: {} },
   },
   {
+    name: 'seed_get_checks',
+    description:
+      "Validation and accessibility findings for the open project, each tagged with a triage category — 'fixable' (remedy in author-editable files; the tagged remedy surface says where), 'explainable' (real issue, remedy outside the sources — explain and propose), 'app-bug' (SEED's own generated output — tell the author to report it, do not 'fix' the book), 'not-applicable' (web-app rule noise). a11y: axe-core run live against the currently previewed chapter's rendered document — 'violations' plus 'needsReview' (axe's undecided checks, e.g. color-contrast candidates; check these especially when violations is empty), with the render engine noted and a 'paged-chrome' caveat when Paged.js wrapper markup may contribute findings. epubcheck: the author's last package+validate report with an explicit freshness status — none | different-project | stale | current; 'stale' means the project was edited after validation, so ask the author to package + validate before trusting details.",
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
     name: 'seed_write_file',
     description:
       'Overwrite an EXISTING non-generated project file (sources, transform scripts, styles, media). Requires seed_get_authoring_guide this session, and expected_hash from a prior seed_read_file of the same path — rejected if the file changed since. Writes to chapter sources (SOURCE/text/) additionally require seed_get_project_setup and a seed_read_file of every transform script it lists — chapter markup is the transforms’ output. Cannot create files, and cannot touch generated XHTML, the nav, the OPF, or settings. The author approves the first write in the app (per write, or once for the whole session) and sees every write in the activity feed; a prompt they ignore times out as a denial.',
@@ -220,6 +226,8 @@ async function handleToolCall(name, args) {
       return callTab('get_rendered_xhtml', {});
     case 'seed_get_selection':
       return callTab('get_selection', {});
+    case 'seed_get_checks':
+      return callTab('get_checks', {});
     case 'seed_write_file':
       if (!guideServed) {
         throw new Error(

@@ -145,6 +145,10 @@ msgstr "{n} კბ"
 msgid "{n} MB"
 msgstr "{n} მბ"
 
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "{n} stored"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 msgid "{n} warning"
 msgstr "{n} გაფრთხილება"
@@ -354,6 +358,7 @@ msgstr "აქტიური remote:"
 
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
+#: src/lib/components/settings/TranslationsPanel.svelte
 msgid "Add"
 msgstr "დამატება"
 
@@ -444,6 +449,10 @@ msgstr "პროექტში დამატება"
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Add to the current project, then enable under Project Settings."
 msgstr "დაამატეთ მიმდინარე პროექტში, შემდეგ ჩართეთ პროექტის პარამეტრებში."
+
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Add translation"
+msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Added"
@@ -711,6 +720,10 @@ msgstr ""
 msgid "Bold, emphasis and heading styles only."
 msgstr "მხოლოდ მუქი, კურსივი და სათაურის სტილები."
 
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Book language"
+msgstr ""
+
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Both"
 msgstr "ორივე"
@@ -747,6 +760,7 @@ msgstr "ჩაშენებული"
 #: src/lib/components/manifest/MoveReviewDialog.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
+#: src/lib/components/settings/TranslationsPanel.svelte
 #: src/lib/components/track-changes/PatchsetReviewDialog.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 #: src/lib/components/workspace/DuplicateProjectDialog.svelte
@@ -1102,6 +1116,10 @@ msgstr "შიგთავსის ტიპი"
 msgid "Content Type:"
 msgstr "შიგთავსის ტიპი:"
 
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Continue"
+msgstr ""
+
 #: src/lib/components/metadata/AdvancedFields.svelte
 msgid "Contributor name"
 msgstr "მონაწილის სახელი"
@@ -1363,6 +1381,7 @@ msgstr ""
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 #: src/lib/components/manifest/ManifestPreview.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
+#: src/lib/components/settings/TranslationsPanel.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
 #: src/lib/navigation/views/ChaptersView.svelte
 #: src/lib/navigation/views/PublishView.svelte
@@ -1412,6 +1431,10 @@ msgstr "პროექტის წაშლა: {title}"
 #: plugins/audio-clip-editor/src/App.svelte
 msgid "Delete the selected clip from the library"
 msgstr "მონიშნული კლიპის წაშლა ბიბლიოთეკიდან"
+
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Delete the stored {tag} translation? This cannot be undone."
+msgstr ""
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Deleted {count} chapters"
@@ -2611,6 +2634,10 @@ msgstr "იაპონური გამოცემა"
 msgid "Just now"
 msgstr "ახლახან"
 
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Keep a stored copy of the {from} text and switch the book to {to}? All chapters re-render."
+msgstr ""
+
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "Keep both"
@@ -2691,6 +2718,7 @@ msgid "Language"
 msgstr "ენა"
 
 #: src/lib/components/metadata/LanguageEditor.svelte
+#: src/lib/components/settings/TranslationsPanel.svelte
 msgid "Language tag"
 msgstr "ენის ტეგი"
 
@@ -3340,6 +3368,10 @@ msgstr "ამ თავის გახსნა რედაქტორში
 msgid "Opens your device's print dialog."
 msgstr "ხსნის თქვენი მოწყობილობის ბეჭდვის დიალოგს."
 
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Operation failed"
+msgstr ""
+
 #: src/lib/components/metadata/OPFPreview.svelte
 msgid "OPF source preview"
 msgstr "OPF წყაროს გადახედვა"
@@ -3749,6 +3781,10 @@ msgstr "მოწყობილობის ხელახლა შემო�
 msgid "Re-render the preview live as you edit."
 msgstr "ჩასწორების დროს გადახედვა ავტომატურად განახლდება."
 
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Re-rendering chapters…"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 #: src/lib/navigation/views/PublishView.svelte
@@ -3763,6 +3799,7 @@ msgstr ""
 msgid "Read whole chapter"
 msgstr ""
 
+#: src/lib/components/spine/EditorPane.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Read-only"
 msgstr "მხოლოდ წასაკითხი"
@@ -4364,6 +4401,14 @@ msgstr "სტატუსი:"
 msgid "Stop"
 msgstr "გაჩერება"
 
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Store the current {from} text and make {to} the active language? All chapters re-render. Edits made after switching can leave other editions out of date."
+msgstr ""
+
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Stored translations"
+msgstr ""
+
 #: src/lib/components/spine/sr-walk.ts
 msgid "strong"
 msgstr ""
@@ -4407,6 +4452,10 @@ msgstr "შეჯამება"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "superscript"
+msgstr ""
+
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Switch to"
 msgstr ""
 
 #: src/lib/ThemeToggle.svelte
@@ -4650,6 +4699,14 @@ msgstr "გარდაქმნა წარმატებულია"
 msgid "Transforming..."
 msgstr "მიმდინარეობს გარდაქმნა..."
 
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Translation reference — read-only"
+msgstr ""
+
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Translations"
+msgstr ""
+
 #: src/lib/components/spine/PreviewPane.svelte
 #. Device category for e-reader devices designed for portable reading
 msgid "Travel (e-ink)"
@@ -4683,6 +4740,10 @@ msgstr "ტიპი"
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Typesetting"
 msgstr "ტიპოგრაფია"
+
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Unavailable while track changes is on."
+msgstr ""
 
 #: src/App.svelte
 msgid "Unknown View"
@@ -4906,6 +4967,10 @@ msgstr ""
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Wide"
 msgstr "ფართო"
+
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Working…"
+msgstr ""
 
 #: src/lib/components/spine/PreviewSurface.svelte
 msgid "XHTML Preview"

@@ -8,7 +8,7 @@
 export interface SourceFileInfo {
   path: string; // Relative path within SOURCE/
   size: number; // File size in bytes
-  type: 'settings' | 'text' | 'script' | 'extension' | 'other';
+  type: SourceFileType;
   lastModified?: Date; // Last modification time (if available)
 }
 
@@ -28,6 +28,7 @@ export interface SourceStats {
     text: number; // Files in SOURCE/text/
     scripts: number; // Files in SOURCE/scripts/
     extensions: number; // Files in SOURCE/extensions/
+    locale: number; // Files in SOURCE/locale/ (stored translations)
   };
   hasSettingsFile: boolean; // Whether settings.json exists
 }
@@ -38,7 +39,7 @@ export interface SettingsValidation {
   warnings: string[]; // Non-critical issues (unknown fields)
 }
 
-export type SourceFileType = 'settings' | 'text' | 'script' | 'extension' | 'other';
+export type SourceFileType = 'settings' | 'text' | 'script' | 'extension' | 'locale' | 'other';
 
 /**
  * Valid settings.json structure for SOURCE/ directory

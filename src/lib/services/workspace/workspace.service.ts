@@ -23,6 +23,7 @@ import type { SourceItem } from '../../manifest/types.js';
 import { resolveSourceWritePath } from '../../transform/transform-broker.js';
 import { getBrowserLocale } from '../../i18n/locale-config.js';
 import { captureBaseIfNeeded } from '../../track-changes/base-snapshot.js';
+import { LOCALE_PREFIX } from '../../translations/editions.js';
 
 // Service-specific types
 export interface WorkspaceState {
@@ -1320,6 +1321,7 @@ export class WorkspaceService {
    * Write a file to the workspace
    */
   async writeFile(workspaceId: string, filePath: string, content: string): Promise<void> {
+    this.rejectLocaleWrite(workspaceId, filePath);
     try {
       // Track changes: snapshot the pre-edit version of trackable content the first
       // time it's actually changed in review mode (no-op otherwise).
@@ -1361,6 +1363,21 @@ export class WorkspaceService {
   }
 
   /**
+   * Stored translations under SOURCE/locale/ are frozen editions — only the
+   * translation swap operations (which use fileStorage directly) may touch
+   * them. Rejecting here backstops the editor's read-only UI.
+   */
+  private rejectLocaleWrite(workspaceId: string, filePath: string): void {
+    if (filePath.startsWith(LOCALE_PREFIX)) {
+      throw new WorkspaceServiceError(
+        `${filePath} belongs to a stored translation and is read-only`,
+        'LOCALE_WRITE_REJECTED',
+        workspaceId
+      );
+    }
+  }
+
+  /**
    * Write a binary file to the workspace
    */
   async writeBinaryFile(
@@ -1368,6 +1385,7 @@ export class WorkspaceService {
     filePath: string,
     content: ArrayBuffer
   ): Promise<void> {
+    this.rejectLocaleWrite(workspaceId, filePath);
     try {
       await this.fileStorage.writeFile(workspaceId, filePath, content);
       this.noteFileWritten(workspaceId, filePath);

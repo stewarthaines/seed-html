@@ -172,6 +172,8 @@ async function handleTool(ctx, session, ui, tool, params) {
       const click = ctx.getLastClick();
       return click ?? { kind: 'none' };
     }
+    case 'get_checks':
+      return ctx.getChecks();
     case 'project_setup': {
       const dir = await ctx.getWorkspaceDir();
       if (!dir) throw new Error('no project open');
@@ -354,6 +356,7 @@ function describeAction(tool, params, result) {
   if (tool === 'list_files') return 'listed project files';
   if (tool === 'get_rendered_xhtml') return 'read rendered chapter';
   if (tool === 'get_selection') return 'read last click';
+  if (tool === 'get_checks') return 'read validation checks';
   if (tool === 'project_info') return 'read project info';
   return tool;
 }

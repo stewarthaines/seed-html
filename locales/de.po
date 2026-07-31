@@ -145,6 +145,10 @@ msgstr "{n} KB"
 msgid "{n} MB"
 msgstr "{n} MB"
 
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "{n} stored"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 msgid "{n} warning"
 msgstr "{n} Warnung"
@@ -335,6 +339,7 @@ msgstr "Aktives Remote:"
 
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
+#: src/lib/components/settings/TranslationsPanel.svelte
 msgid "Add"
 msgstr "Hinzufügen"
 
@@ -425,6 +430,10 @@ msgstr "Hinzufügen"
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Add to the current project, then enable under Project Settings."
 msgstr "Zum aktuellen Projekt hinzufügen, dann in den Projekteinstellungen aktivieren."
+
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Add translation"
+msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Added"
@@ -692,6 +701,10 @@ msgstr "Zitatblock"
 msgid "Bold, emphasis and heading styles only."
 msgstr "Nur Fett-, Hervorhebungs- und Überschriftenstile."
 
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Book language"
+msgstr ""
+
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Both"
 msgstr "Beide"
@@ -728,6 +741,7 @@ msgstr "Integriert"
 #: src/lib/components/manifest/MoveReviewDialog.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
+#: src/lib/components/settings/TranslationsPanel.svelte
 #: src/lib/components/track-changes/PatchsetReviewDialog.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 #: src/lib/components/workspace/DuplicateProjectDialog.svelte
@@ -1083,6 +1097,10 @@ msgstr "Inhaltstyp"
 msgid "Content Type:"
 msgstr "Inhaltstyp:"
 
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Continue"
+msgstr ""
+
 #: src/lib/components/metadata/AdvancedFields.svelte
 msgid "Contributor name"
 msgstr "Name des Mitwirkenden"
@@ -1344,6 +1362,7 @@ msgstr "Definition"
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 #: src/lib/components/manifest/ManifestPreview.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
+#: src/lib/components/settings/TranslationsPanel.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
 #: src/lib/navigation/views/ChaptersView.svelte
 #: src/lib/navigation/views/PublishView.svelte
@@ -1392,6 +1411,10 @@ msgstr "Projekt löschen: {title}"
 
 #: plugins/audio-clip-editor/src/App.svelte
 msgid "Delete the selected clip from the library"
+msgstr ""
+
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Delete the stored {tag} translation? This cannot be undone."
 msgstr ""
 
 #: src/lib/navigation/views/ChaptersView.svelte
@@ -2592,6 +2615,10 @@ msgstr "Japanisches Verlagswesen"
 msgid "Just now"
 msgstr "Gerade eben"
 
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Keep a stored copy of the {from} text and switch the book to {to}? All chapters re-render."
+msgstr ""
+
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "Keep both"
@@ -2672,6 +2699,7 @@ msgid "Language"
 msgstr "Sprache"
 
 #: src/lib/components/metadata/LanguageEditor.svelte
+#: src/lib/components/settings/TranslationsPanel.svelte
 msgid "Language tag"
 msgstr "Sprach-Tag"
 
@@ -3321,6 +3349,10 @@ msgstr "Dieses Kapitel im Editor öffnen"
 msgid "Opens your device's print dialog."
 msgstr "Öffnet den Druckdialog Ihres Geräts."
 
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Operation failed"
+msgstr ""
+
 #: src/lib/components/metadata/OPFPreview.svelte
 msgid "OPF source preview"
 msgstr "OPF-Quellvorschau"
@@ -3730,6 +3762,10 @@ msgstr "Gerät neu prüfen und die Buchliste aktualisieren"
 msgid "Re-render the preview live as you edit."
 msgstr "Rendert die Vorschau beim Bearbeiten live neu."
 
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Re-rendering chapters…"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 #: src/lib/navigation/views/PublishView.svelte
@@ -3744,6 +3780,7 @@ msgstr "Vorlesen"
 msgid "Read whole chapter"
 msgstr "Ganzes Kapitel vorlesen"
 
+#: src/lib/components/spine/EditorPane.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Read-only"
 msgstr "Schreibgeschützt"
@@ -4345,6 +4382,14 @@ msgstr "Status:"
 msgid "Stop"
 msgstr ""
 
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Store the current {from} text and make {to} the active language? All chapters re-render. Edits made after switching can leave other editions out of date."
+msgstr ""
+
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Stored translations"
+msgstr ""
+
 #: src/lib/components/spine/sr-walk.ts
 msgid "strong"
 msgstr ""
@@ -4388,6 +4433,10 @@ msgstr "Zusammenfassung"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "superscript"
+msgstr ""
+
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Switch to"
 msgstr ""
 
 #: src/lib/ThemeToggle.svelte
@@ -4631,6 +4680,14 @@ msgstr "Transformation erfolgreich"
 msgid "Transforming..."
 msgstr "Transformation läuft..."
 
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Translation reference — read-only"
+msgstr ""
+
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Translations"
+msgstr ""
+
 #: src/lib/components/spine/PreviewPane.svelte
 #. Device category for e-reader devices designed for portable reading
 msgid "Travel (e-ink)"
@@ -4664,6 +4721,10 @@ msgstr "Typ"
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Typesetting"
 msgstr "Schriftsatz"
+
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Unavailable while track changes is on."
+msgstr ""
 
 #: src/App.svelte
 msgid "Unknown View"
@@ -4887,6 +4948,10 @@ msgstr "Ganzes Kapitel"
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Wide"
 msgstr "Breit"
+
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Working…"
+msgstr ""
 
 #: src/lib/components/spine/PreviewSurface.svelte
 msgid "XHTML Preview"

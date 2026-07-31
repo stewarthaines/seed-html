@@ -145,6 +145,10 @@ msgstr ""
 msgid "{n} MB"
 msgstr ""
 
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "{n} stored"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 msgid "{n} warning"
 msgstr ""
@@ -316,6 +320,7 @@ msgstr ""
 
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
+#: src/lib/components/settings/TranslationsPanel.svelte
 msgid "Add"
 msgstr ""
 
@@ -405,6 +410,10 @@ msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Add to the current project, then enable under Project Settings."
+msgstr ""
+
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Add translation"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -673,6 +682,10 @@ msgstr ""
 msgid "Bold, emphasis and heading styles only."
 msgstr ""
 
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Book language"
+msgstr ""
+
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Both"
 msgstr ""
@@ -709,6 +722,7 @@ msgstr ""
 #: src/lib/components/manifest/MoveReviewDialog.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
+#: src/lib/components/settings/TranslationsPanel.svelte
 #: src/lib/components/track-changes/PatchsetReviewDialog.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 #: src/lib/components/workspace/DuplicateProjectDialog.svelte
@@ -1064,6 +1078,10 @@ msgstr ""
 msgid "Content Type:"
 msgstr ""
 
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Continue"
+msgstr ""
+
 #: src/lib/components/metadata/AdvancedFields.svelte
 msgid "Contributor name"
 msgstr ""
@@ -1325,6 +1343,7 @@ msgstr ""
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 #: src/lib/components/manifest/ManifestPreview.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
+#: src/lib/components/settings/TranslationsPanel.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
 #: src/lib/navigation/views/ChaptersView.svelte
 #: src/lib/navigation/views/PublishView.svelte
@@ -1373,6 +1392,10 @@ msgstr ""
 
 #: plugins/audio-clip-editor/src/App.svelte
 msgid "Delete the selected clip from the library"
+msgstr ""
+
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Delete the stored {tag} translation? This cannot be undone."
 msgstr ""
 
 #: src/lib/navigation/views/ChaptersView.svelte
@@ -2573,6 +2596,10 @@ msgstr ""
 msgid "Just now"
 msgstr ""
 
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Keep a stored copy of the {from} text and switch the book to {to}? All chapters re-render."
+msgstr ""
+
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "Keep both"
@@ -2653,6 +2680,7 @@ msgid "Language"
 msgstr ""
 
 #: src/lib/components/metadata/LanguageEditor.svelte
+#: src/lib/components/settings/TranslationsPanel.svelte
 msgid "Language tag"
 msgstr ""
 
@@ -3302,6 +3330,10 @@ msgstr ""
 msgid "Opens your device's print dialog."
 msgstr ""
 
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Operation failed"
+msgstr ""
+
 #: src/lib/components/metadata/OPFPreview.svelte
 msgid "OPF source preview"
 msgstr ""
@@ -3711,6 +3743,10 @@ msgstr ""
 msgid "Re-render the preview live as you edit."
 msgstr ""
 
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Re-rendering chapters…"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 #: src/lib/navigation/views/PublishView.svelte
@@ -3725,6 +3761,7 @@ msgstr ""
 msgid "Read whole chapter"
 msgstr ""
 
+#: src/lib/components/spine/EditorPane.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Read-only"
 msgstr ""
@@ -4326,6 +4363,14 @@ msgstr ""
 msgid "Stop"
 msgstr ""
 
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Store the current {from} text and make {to} the active language? All chapters re-render. Edits made after switching can leave other editions out of date."
+msgstr ""
+
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Stored translations"
+msgstr ""
+
 #: src/lib/components/spine/sr-walk.ts
 msgid "strong"
 msgstr ""
@@ -4369,6 +4414,10 @@ msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "superscript"
+msgstr ""
+
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Switch to"
 msgstr ""
 
 #: src/lib/ThemeToggle.svelte
@@ -4612,6 +4661,14 @@ msgstr ""
 msgid "Transforming..."
 msgstr ""
 
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Translation reference — read-only"
+msgstr ""
+
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Translations"
+msgstr ""
+
 #: src/lib/components/spine/PreviewPane.svelte
 #. Device category for e-reader devices designed for portable reading
 msgid "Travel (e-ink)"
@@ -4644,6 +4701,10 @@ msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Typesetting"
+msgstr ""
+
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Unavailable while track changes is on."
 msgstr ""
 
 #: src/App.svelte
@@ -4867,6 +4928,10 @@ msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Wide"
+msgstr ""
+
+#: src/lib/components/settings/TranslationsPanel.svelte
+msgid "Working…"
 msgstr ""
 
 #: src/lib/components/spine/PreviewSurface.svelte

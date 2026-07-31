@@ -22,6 +22,7 @@ import type {
 import { creatorName, primaryLanguage } from './epub/opf-utils.js';
 import { workspaceIsReadOnly } from './source/source-utils.js';
 import { setReviewMode } from './track-changes/base-snapshot.js';
+import { recoverPendingSwap, swapMetadataUpdates } from './translations/editions.js';
 import type {
   GlobalSettings,
   WorkspaceSettings,
@@ -408,6 +409,31 @@ export class EnhancedAppState {
       this.errorMessage = null;
 
       this.workspace = await this.workspaceService.loadWorkspace(workspaceId);
+
+      // Complete an interrupted language switch before the user can edit.
+      // Failure is surfaced but doesn't block opening — the journal stays put
+      // for another attempt on the next load.
+      try {
+        const recovered = await recoverPendingSwap(
+          this.fileStorage,
+          workspaceId,
+          async (incoming, toTag, fromTag) => {
+            if (!this.workspace) return;
+            this.workspace = await this.workspaceService.updateMetadata(
+              this.workspace,
+              swapMetadataUpdates(this.workspace.opf.metadata, toTag, fromTag, incoming)
+            );
+          }
+        );
+        if (recovered) {
+          // App re-renders all chapters and refreshes open editors on this.
+          window.dispatchEvent(
+            new CustomEvent('seed:swap-recovered', { detail: { workspaceId, ...recovered } })
+          );
+        }
+      } catch (error) {
+        this.errorMessage = `Failed to complete interrupted language switch: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      }
 
       // A regular EPUB (no SOURCE/ files) opens read-only — viewable, not editable.
       try {
