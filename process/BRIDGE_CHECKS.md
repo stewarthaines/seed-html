@@ -2,7 +2,7 @@
 
 Expose accessibility (axe-core) and EPUB validation (EPUBCheck) results to terminal agents over the seed-bridge, so an agent can **explain issues and propose solutions** — not necessarily fix them directly. Companion to `process/AGENT_BRIDGE.md` (architecture, "reads are never gated" principle).
 
-Status: design agreed 2026-07-31; Phases 1 (epubcheck side + mirror-clearing fix) and 2 (live axe) implemented on `feat/translation-editions`. Phase 3 (AGENT_AUTHORING.md guidance) not started.
+Status: design agreed 2026-07-31; all three phases implemented on `feat/translation-editions`. Phase 3 guidance ("Working a checks finding" in AGENT_AUTHORING.md) encodes scope discipline — fix, re-run to verify, stop; no symmetry-restoring follow-on edits — prompted by a live session where an agent fixed a heading finding then proposed cascade edits that would have introduced new findings. The EPUB-tuned axe config question was revisited and declined: the default ruleset stays, curation remains tag-based.
 
 ## Current state (facts)
 
