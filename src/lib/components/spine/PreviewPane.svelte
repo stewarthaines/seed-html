@@ -428,7 +428,7 @@
       return {
         status: 'unavailable',
         reason:
-          which === 1 && showSource
+          which === 1 && showSource.current
             ? 'the Source view has no rendered document — switch the preview to a rendered view'
             : 'no rendered document on that surface yet',
       };
@@ -963,12 +963,16 @@
     'desktop',
     asEnum(DEVICE_PRESETS.map(d => d.id))
   );
-  let showSource = $state(false);
+  // The Source view is the one dropdown entry that is not a device preset, so
+  // it needs its own key — without it a reload fell back to `selectedDevice`,
+  // silently restoring the device chosen BEFORE the author switched to Source.
+  // Cleared on mount when advanced mode is off (the option is hidden there, so
+  // a restored Source view would be unleaveable).
+  const showSource = persisted('seedhtml_preview_source', false, asBoolean);
   // Source view rendering: raw <pre> (always available) or the collapsible
   // tree (http-only — the vendored viewer is fetched from the app origin).
-  // Session-local; not persisted.
   const canSourceTree = canShowXmlTree();
-  let sourceTree = $state(false);
+  const sourceTree = persisted('seedhtml_preview_source_tree', false, asBoolean);
 
   // --- Split preview (process/SPLIT_PREVIEW.md phase 2) ------------------------
   // A second, independent surface below the first. Its settings mirror the
@@ -980,8 +984,8 @@
     'desktop',
     asEnum(DEVICE_PRESETS.map(d => d.id))
   );
-  let showSource2 = $state(false);
-  let sourceTree2 = $state(false);
+  const showSource2 = persisted('seedhtml_preview_source_2', false, asBoolean);
+  const sourceTree2 = persisted('seedhtml_preview_source_tree_2', false, asBoolean);
   const readFlow2 = persisted<ReadFlow>(
     'seedhtml_preview_read_flow_2',
     'paginated',
@@ -1013,16 +1017,16 @@
     return check === 'a11y' ? true : engineOfDevice(dev) !== 'paged';
   }
   const boundIndexA11y = $derived(
-    viewSupportsCheck('a11y', selectedDevice.current, showSource)
+    viewSupportsCheck('a11y', selectedDevice.current, showSource.current)
       ? 1
-      : splitOn.current && viewSupportsCheck('a11y', selectedDevice2.current, showSource2)
+      : splitOn.current && viewSupportsCheck('a11y', selectedDevice2.current, showSource2.current)
         ? 2
         : 1
   );
   const boundIndexSr = $derived(
-    viewSupportsCheck('sr', selectedDevice.current, showSource)
+    viewSupportsCheck('sr', selectedDevice.current, showSource.current)
       ? 1
-      : splitOn.current && viewSupportsCheck('sr', selectedDevice2.current, showSource2)
+      : splitOn.current && viewSupportsCheck('sr', selectedDevice2.current, showSource2.current)
         ? 2
         : 1
   );
@@ -1062,8 +1066,8 @@
   const bar1 = $derived({
     which: 1 as 1 | 2,
     device: selectedDevice.current,
-    showSource,
-    sourceTree,
+    showSource: showSource.current,
+    sourceTree: sourceTree.current,
     flow: readFlow.current,
     columns: readColumns.current,
     pager,
@@ -1071,8 +1075,8 @@
   const bar2 = $derived({
     which: 2 as 1 | 2,
     device: selectedDevice2.current,
-    showSource: showSource2,
-    sourceTree: sourceTree2,
+    showSource: showSource2.current,
+    sourceTree: sourceTree2.current,
     flow: readFlow2.current,
     columns: readColumns2.current,
     pager: pager2,
@@ -1215,8 +1219,8 @@
   }
 
   function setSourceTree(value: boolean, which: 1 | 2): void {
-    if (which === 1) sourceTree = value;
-    else sourceTree2 = value;
+    if (which === 1) sourceTree.current = value;
+    else sourceTree2.current = value;
   }
 
   /**
@@ -1240,14 +1244,14 @@
       // The Source view is advanced-only; ignore the selection in basic mode
       // (the option is also hidden from the dropdown there).
       if (advancedMode) {
-        if (which === 1) showSource = true;
-        else showSource2 = true;
+        if (which === 1) showSource.current = true;
+        else showSource2.current = true;
       }
       return;
     }
-    const wasSource = which === 1 ? showSource : showSource2;
-    if (which === 1) showSource = false;
-    else showSource2 = false;
+    const wasSource = which === 1 ? showSource.current : showSource2.current;
+    if (which === 1) showSource.current = false;
+    else showSource2.current = false;
     if (wasSource) {
       // Leaving the source view: re-render, then re-apply the chosen device's
       // dimensions/scaling once the preview iframe is back in the DOM.
@@ -1259,6 +1263,16 @@
       handleDeviceChange(value, which);
     }
   }
+
+  // The Source entry is advanced-only and hidden from the dropdown in basic
+  // mode, so a persisted Source view must not survive advanced mode being
+  // turned off — the author would have no control to leave it. Runs on mount
+  // and whenever the mode flips.
+  $effect(() => {
+    if (advancedMode) return;
+    if (showSource.current) showSource.current = false;
+    if (showSource2.current) showSource2.current = false;
+  });
 
   onMount(() => {
     // Print and READ.html previews are HTTP-only; never start on them under file://.
@@ -1408,7 +1422,7 @@
         <!-- i18n: Accessibility label for the view / device dropdown menu -->
         <select
           class="device-selector"
-          value={showSource ? 'source' : selectedDevice.current}
+          value={showSource.current ? 'source' : selectedDevice.current}
           onchange={e => handleViewSelect((e.target as HTMLSelectElement).value, 1)}
           aria-label={$t('Select view')}
         >
@@ -1419,7 +1433,7 @@
           <!-- i18n: Accessibility label for the split preview's second view dropdown -->
           <select
             class="device-selector second-view"
-            value={showSource2 ? 'source' : selectedDevice2.current}
+            value={showSource2.current ? 'source' : selectedDevice2.current}
             onchange={e => handleViewSelect((e.target as HTMLSelectElement).value, 2)}
             aria-label={$t('Select second view')}
           >
@@ -1557,8 +1571,8 @@
             setSourceTree((e.currentTarget as HTMLSelectElement).value === 'tree', bar.which)}
           aria-label={$t('Source rendering')}
         >
-          <option value="raw">{$t('Raw')}</option>
           <option value="tree">{$t('Tree')}</option>
+          <option value="raw">{$t('Raw')}</option>
         </select>
       {/if}
       {#if !bar.showSource && usesFoliate(bar.device)}
@@ -1946,8 +1960,8 @@
               bind:this={surfaceRef}
               device={selectedDevice.current}
               deviceLabel={deviceStatsLabel(selectedDevice.current)}
-              {showSource}
-              {sourceTree}
+              showSource={showSource.current}
+              sourceTree={sourceTree.current}
               readFlow={readFlow.current}
               readColumns={readColumns.current}
               onContentEvent={e => handleSurfaceContentEvent(e, 1)}
@@ -1967,8 +1981,8 @@
               bind:this={surfaceRef2}
               device={selectedDevice2.current}
               deviceLabel={deviceStatsLabel(selectedDevice2.current)}
-              showSource={showSource2}
-              sourceTree={sourceTree2}
+              showSource={showSource2.current}
+              sourceTree={sourceTree2.current}
               readFlow={readFlow2.current}
               readColumns={readColumns2.current}
               onContentEvent={e => handleSurfaceContentEvent(e, 2)}
@@ -1982,8 +1996,8 @@
         bind:this={surfaceRef}
         device={selectedDevice.current}
         deviceLabel={deviceStatsLabel(selectedDevice.current)}
-        {showSource}
-        {sourceTree}
+        showSource={showSource.current}
+        sourceTree={sourceTree.current}
         readFlow={readFlow.current}
         readColumns={readColumns.current}
         onContentEvent={e => handleSurfaceContentEvent(e, 1)}
