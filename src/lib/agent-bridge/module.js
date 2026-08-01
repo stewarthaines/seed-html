@@ -54,6 +54,46 @@ export function isWritablePath(path) {
   return false;
 }
 
+/**
+ * Does this path hold code — something that will EXECUTE rather than be read?
+ *
+ * Writing prose and writing a script that runs on a reader's device are
+ * different acts, and the consent model treats them differently: a code write
+ * is always reviewed as a diff, and is never covered by a session grant.
+ *
+ * The three roots each execute somewhere that matters: `SOURCE/scripts/` in the
+ * app's render pipeline, `SOURCE/preview/` in the preview realm that holds the
+ * `window.seed` channel, and `OEBPS/Scripts/` inside the packaged EPUB on a
+ * reader's device. A `.js` anywhere writable counts too — a script does not
+ * become safe by sitting in the styles folder.
+ */
+export function isCodePath(path) {
+  if (typeof path !== 'string') return false;
+  const normalized = path.split('/').filter(Boolean).join('/');
+  return (
+    normalized.startsWith('SOURCE/scripts/') ||
+    normalized.startsWith('SOURCE/preview/') ||
+    normalized.startsWith('OEBPS/Scripts/') ||
+    /\.(js|mjs|xml)$/i.test(normalized)
+  );
+}
+
+/**
+ * A session grant is a convenience for a run of prose edits, not a standing
+ * authorisation. It expires so an idle session cannot be resumed hours later
+ * into an approval the author has forgotten giving.
+ */
+const GRANT_TTL_MS = 10 * 60 * 1000;
+const GRANT_MAX_WRITES = 20;
+
+// Deliberately no pattern scan for agent-directed text in project content: one
+// was built and removed (process/BRIDGE_WRITE_REVIEW.md, mitigation 3 — an
+// English deny-list in a seven-locale product, silent on the other six and
+// noisy on any book quoting a shell command). What replaces it is structural:
+// payloads are marked untrusted at delivery (agent-bridge.mjs), the agent's
+// contract treats them as data (docs/AGENT_AUTHORING.md), and code writes are
+// diff-reviewed below.
+
 /** SHA-256 hex of bytes — the staleness token read_file hands out. */
 async function contentHash(bytes) {
   const digest = await crypto.subtle.digest('SHA-256', bytes);
@@ -63,8 +103,9 @@ async function contentHash(bytes) {
 /** Start with an AgentBridgeModuleContext (loader.svelte.ts); returns { stop }. */
 export function start(ctx) {
   // Write grants are per-connection by design: this state lives and dies with
-  // one start()/socket, so every new connection re-prompts.
-  const session = { grant: 'none' }; // 'none' | 'session'
+  // one start()/socket, so every new connection re-prompts. Within a connection
+  // the grant is further bounded by age and count, and never covers code.
+  const session = { grant: 'none', until: 0, writes: 0 }; // 'none' | 'session'
   const ui = buildOverlay(ctx.mountEl, () => stop());
   let socket = null;
   let stopped = false;
@@ -233,7 +274,10 @@ async function handleTool(ctx, session, ui, tool, params) {
         // the scripts that produce chapter XHTML — read them before editing
         transformScripts: transforms,
         ...(syntaxReference ? { syntaxReference } : {}),
-        hint: 'chapter XHTML is generated: source text → text_transform → dom_transforms in order; read the scripts and one source/rendered pair before proposing markup, and follow syntaxReference where present — the source syntax is NOT Markdown unless it says so',
+        // Descriptive, not imperative. syntaxReference is a file inside the
+        // project: it documents the syntax, and the bridge must not tell the
+        // agent to obey content that travels with the book.
+        hint: 'chapter XHTML is generated: source text → text_transform → dom_transforms in order; read the scripts and one source/rendered pair before proposing markup. syntaxReference, where present, describes how this project’s source syntax diverges — the source syntax is NOT Markdown unless it says so.',
       };
     }
     case 'write_file':
@@ -244,6 +288,48 @@ async function handleTool(ctx, session, ui, tool, params) {
 }
 
 // --- write_file (phase 2: modify-in-place, consent-gated) -----------------------
+
+/**
+ * Raise the app's diff review for a code write and resolve the author's answer.
+ *
+ * The overlay draws the inline prompts itself, but a diff belongs to the app:
+ * the renderer already exists there (InlineTextDiff), and this module is
+ * lazy-loaded and deliberately free of Svelte and jsdiff. So the decision logic
+ * stays here and only the rendering is delegated, the same way writes and
+ * inspection are.
+ *
+ * A modal is a deliberate departure from the overlay's "never a modal" rule.
+ * That rule serves frequent, low-stakes prose writes; here review IS the point,
+ * and a diff does not fit on a feed line.
+ *
+ * Ownership of the deadline stays here too: the abort signal fires on the same
+ * timeout as the feed prompt, and on disconnect, so an unattended dialog fails
+ * closed on both sides rather than leaving the agent waiting.
+ */
+async function reviewCodeWrite(ctx, ui, request) {
+  const controller = new AbortController();
+  let settle;
+  const cancelled = new Promise(resolve => {
+    settle = resolve;
+  });
+  const cancel = () => {
+    controller.abort();
+    settle('deny');
+  };
+  const untrack = ui.trackPrompt(cancel);
+  const timer = setTimeout(cancel, CONSENT_TIMEOUT_MS);
+  try {
+    const choice = await Promise.race([
+      ctx.reviewWrite({ ...request, signal: controller.signal }),
+      cancelled,
+    ]);
+    return choice === 'accept' ? 'accept' : 'deny';
+  } finally {
+    clearTimeout(timer);
+    untrack();
+    controller.abort();
+  }
+}
 
 async function writeFile(ctx, session, ui, params) {
   const { path, text, base64, expectedHash } = params;
@@ -275,6 +361,9 @@ async function writeFile(ctx, session, ui, params) {
   // can sit open for up to 90s, and the author may edit the file or switch
   // projects in that window. Consent approves the write that was validated,
   // not whatever the world looks like later.
+  // The file's current text, captured by validate() — the hash check has to
+  // read the bytes anyway, so the "before" side of the diff costs nothing.
+  let currentText = null;
   const validate = async () => {
     if (ctx.getProjectInfo().workspaceId !== requestWorkspaceId) {
       throw new Error('the open project changed while the write was pending');
@@ -290,6 +379,7 @@ async function writeFile(ctx, session, ui, params) {
       );
     }
     const currentBytes = new Uint8Array(await currentFile.arrayBuffer());
+    currentText = isText ? new TextDecoder().decode(currentBytes) : null;
     if ((await contentHash(currentBytes)) !== expectedHash) {
       // States only what is known (a mistyped hash and a concurrent edit look
       // identical from here), and deliberately does NOT include the current
@@ -300,18 +390,42 @@ async function writeFile(ctx, session, ui, params) {
       );
     }
     // Dirty check applies to text files only (binary never opens in a text pane).
-    const diskText = isText ? new TextDecoder().decode(currentBytes) : null;
-    if (ctx.isFileDirty(path, diskText)) {
+    if (ctx.isFileDirty(path, currentText)) {
       throw new Error(
         'the editor has unsaved changes for this file — ask the author to save first'
       );
     }
   };
   await validate();
-  if (session.grant !== 'session') {
-    const choice = await ui.promptWrite(path, bytes.length);
+  const isCode = isCodePath(path);
+  // A grant expires by age and by count, and never reaches code.
+  const granted =
+    !isCode &&
+    session.grant === 'session' &&
+    Date.now() < session.until &&
+    session.writes < GRANT_MAX_WRITES;
+  if (granted) {
+    session.writes += 1;
+  } else if (isCode) {
+    // Code is reviewed as a diff, every time — the author sees what will run
+    // before it can run. Both sides are already in hand from validate().
+    const choice = await reviewCodeWrite(ctx, ui, {
+      path,
+      current: currentText,
+      incoming: isText ? text : null,
+      bytes: bytes.length,
+    });
+    if (choice !== 'accept') throw new Error('the author denied this write');
+    await validate();
+  } else {
+    const stat = isText ? ctx.diffStat(currentText, text) : null;
+    const choice = await ui.promptWrite(path, bytes.length, stat);
     if (choice === 'deny') throw new Error('the author denied this write');
-    if (choice === 'session') session.grant = 'session';
+    if (choice === 'session') {
+      session.grant = 'session';
+      session.until = Date.now() + GRANT_TTL_MS;
+      session.writes = 1;
+    }
     await validate();
   }
   if (isText) await ctx.writeTextFile(path, text, requestWorkspaceId);
@@ -370,8 +484,13 @@ function describeAction(tool, params, result) {
   if (tool === 'get_rendered_xhtml') return 'read rendered chapter';
   if (tool === 'get_selection') return 'read last click';
   if (tool === 'get_checks') return 'read validation checks';
-  if (tool === 'inspect_elements')
-    return `measured ${(params?.selectors ?? []).join(', ') || 'elements'} in the preview`;
+  if (tool === 'inspect_elements') {
+    // Describes REJECTED calls too, where selectors is whatever the agent sent
+    // — a string, a number, absent. Throwing here would happen inside the catch
+    // that reports the rejection, so the agent would get no response at all.
+    const selectors = Array.isArray(params?.selectors) ? params.selectors.join(', ') : '';
+    return `measured ${selectors || 'elements'} in the preview`;
+  }
   if (tool === 'project_info') return 'read project info';
   return tool;
 }
@@ -477,6 +596,15 @@ function buildOverlay(mountEl, onDisconnect) {
     cancelPrompts() {
       for (const finish of [...pendingPrompts]) finish('deny');
     },
+    /**
+     * Register a canceller for a prompt this overlay does not draw (the app's
+     * code-write diff), so disconnect and teardown close it like any other.
+     * Returns its unregister.
+     */
+    trackPrompt(cancel) {
+      pendingPrompts.add(cancel);
+      return () => pendingPrompts.delete(cancel);
+    },
     setStatus(status, detail) {
       dot.style.background =
         status === 'connected' ? '#2e7d32' : status === 'connecting' ? '#fbc02d' : '#b3261e';
@@ -502,14 +630,18 @@ function buildOverlay(mountEl, onDisconnect) {
      * 'once' | 'session' | 'deny'; auto-denies before the bridge's tool
      * timeout so an unattended prompt fails cleanly on the agent side.
      */
-    promptWrite(path, size) {
+    promptWrite(path, size, stat) {
       panel.hidden = false;
       pill.setAttribute('aria-expanded', 'true');
       return new Promise(resolve => {
         const li = document.createElement('li');
         Object.assign(li.style, { padding: '4px 12px', overflowWrap: 'anywhere' });
         const question = document.createElement('div');
-        question.textContent = `agent wants to write ${path} (${size} bytes)`;
+        // Line counts, not just a byte total: "+2 −1" and "+400 −380" are the
+        // difference between a tweak and a rewrite, and the byte count alone
+        // cannot tell them apart.
+        const scale = stat ? ` +${stat.added} −${stat.removed} lines` : '';
+        question.textContent = `agent wants to write ${path} (${size} bytes${scale})`;
         const row = document.createElement('div');
         Object.assign(row.style, { display: 'flex', gap: '6px', marginBlockStart: '4px' });
         const finish = choice => {

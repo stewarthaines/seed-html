@@ -33,6 +33,8 @@ const buildContext = () => ({
   writeTextFile: async () => {},
   writeBinaryFile: async () => {},
   isFileDirty: () => false,
+  reviewWrite: async () => 'deny' as const,
+  diffStat: () => ({ added: 0, removed: 0 }),
 });
 
 describe('agent bridge loader', () => {

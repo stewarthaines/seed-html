@@ -55,6 +55,30 @@ export interface AgentBridgeModuleContext {
    * would be clobbered by the post-write store reload.
    */
   isFileDirty: (path: string, diskText: string | null) => boolean;
+  /**
+   * Review a write to executable content — a script that will run in the render
+   * pipeline, in the preview realm, or on a reader's device. The author sees the
+   * diff and answers; there is no session grant for code, so this is raised
+   * every time. Resolves 'deny' when `signal` aborts (timeout or disconnect).
+   *
+   * Whole-payload only: an agent write is one proposal, taken or refused.
+   * Partial acceptance would store bytes the agent never sent, breaking the
+   * read-back ack and leaving its `expected_hash` silently stale.
+   */
+  reviewWrite: (request: {
+    path: string;
+    /** Current file text; null when the target is binary. */
+    current: string | null;
+    /** Proposed text; null when the payload is binary (no diff to show). */
+    incoming: string | null;
+    bytes: number;
+    signal: AbortSignal;
+  }) => Promise<'accept' | 'deny'>;
+  /**
+   * Line counts for the inline (content-tier) prompt. Computed app-side because
+   * jsdiff lives there and the overlay is dependency-free imperative DOM.
+   */
+  diffStat: (current: string | null, incoming: string | null) => { added: number; removed: number };
 }
 
 interface AgentBridgeModule {

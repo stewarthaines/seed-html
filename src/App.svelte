@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { diffLines } from 'diff';
   import { randomUUID } from './lib/utils/uuid.js';
   import { Package, Robot } from 'phosphor-svelte';
   import { workspaceOpfsPath } from './lib/plugins/contract.js';
@@ -470,6 +471,51 @@
           window.dispatchEvent(
             new CustomEvent('seed:source-files-changed', { detail: { paths: [path] } })
           );
+        },
+        // Code writes are reviewed as a diff, every time — the renderer already
+        // exists (InlineTextDiff), so the bridge module delegates the drawing
+        // and keeps the decision. Mounted imperatively behind a dynamic import
+        // so no bridge UI reaches a production bundle.
+        reviewWrite: async ({ path, current, incoming, bytes, signal }) => {
+          const [{ mount, unmount }, { default: AgentWriteReviewDialog }] = await Promise.all([
+            import('svelte'),
+            import('./lib/components/agent-bridge/AgentWriteReviewDialog.svelte'),
+          ]);
+          const host = document.createElement('div');
+          document.body.appendChild(host);
+          return await new Promise<'accept' | 'deny'>(resolve => {
+            let app: Record<string, unknown> | undefined;
+            let settled = false;
+            const finish = (choice: 'accept' | 'deny'): void => {
+              if (settled) return;
+              settled = true;
+              signal.removeEventListener('abort', onAbort);
+              if (app) void unmount(app);
+              host.remove();
+              resolve(choice);
+            };
+            const onAbort = (): void => finish('deny');
+            app = mount(AgentWriteReviewDialog, {
+              target: host,
+              props: { path, current, incoming, bytes, onDecision: finish },
+            });
+            // Aborted before the dialog even mounted (disconnect races the
+            // dynamic import): close it immediately rather than orphan it.
+            if (signal.aborted) finish('deny');
+            else signal.addEventListener('abort', onAbort);
+          });
+        },
+        diffStat: (current, incoming) => {
+          let added = 0;
+          let removed = 0;
+          for (const part of diffLines(current ?? '', incoming ?? '')) {
+            if (!part.added && !part.removed) continue;
+            const lines = part.value.split('\n');
+            if (lines.length > 1 && lines[lines.length - 1] === '') lines.pop();
+            if (part.added) added += lines.length;
+            else removed += lines.length;
+          }
+          return { added, removed };
         },
         isFileDirty: (path, diskText) => {
           if (diskText === null) return false;
