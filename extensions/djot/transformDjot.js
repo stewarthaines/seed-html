@@ -7,7 +7,73 @@
 function transformText(text, idref) {
   let ast = djot.parse(text);
   djot.applyFilter(ast, clipFilter);
+  djot.applyFilter(ast, idFilter);
   return djot.renderHTML(ast);
+}
+
+/**
+ * Djot filter: give every section an XML-legal id.
+ *
+ * Djot mints section ids from heading text and keeps punctuation that XML
+ * forbids — `# Bruce's Notes` renders as `<section id="Bruce's-Notes">`, and an
+ * apostrophe is not legal in an XML ID (it is not an NCName character), so
+ * epubcheck rejects the chapter. Setting `attributes.id` ourselves takes
+ * precedence over the generated one.
+ *
+ * Unicode letters and digits are KEPT: a Georgian or German heading must not be
+ * reduced to a row of hyphens, and NCName permits them. Only characters outside
+ * the set are replaced, runs collapse to one hyphen, and an id that would start
+ * with a digit gets an underscore (XML forbids a leading digit).
+ *
+ * `#fragment` link destinations go through the same slug function. An author
+ * linking to djot's generated id still resolves, because the heading text and
+ * djot's id differ only in the characters this function normalises anyway.
+ */
+function idFilter() {
+  const slug = raw => {
+    const id = String(raw)
+      .replace(/[^\p{L}\p{N}._-]+/gu, '-')
+      // Trim leading/trailing separators. The dot is legal in an NCName but
+      // djot drops a trailing one, so keeping it here would put a section id
+      // and a link to it out of step ("…-Co." vs "…-Co").
+      .replace(/^[-.]+|[-.]+$/g, '');
+    if (!id) return '_';
+    return /^[\p{L}_]/u.test(id) ? id : '_' + id;
+  };
+
+  // Heading text as authored — every node's `text` concatenated, so smart
+  // punctuation contributes the character the author typed.
+  const textOf = node => {
+    let out = '';
+    const walk = n => {
+      if (typeof n.text === 'string') out += n.text;
+      (n.children || []).forEach(walk);
+    };
+    (node.children || []).forEach(walk);
+    return out;
+  };
+
+  const taken = new Set();
+  return {
+    section: {
+      enter: node => {
+        const heading = (node.children || []).find(child => child.tag === 'heading');
+        if (!heading) return;
+        const base = slug(textOf(heading));
+        let id = base;
+        for (let n = 2; taken.has(id); n++) id = `${base}-${n}`;
+        taken.add(id);
+        node.attributes = { ...(node.attributes || {}), id };
+      },
+    },
+    link: {
+      enter: node => {
+        if (typeof node.destination === 'string' && node.destination.startsWith('#')) {
+          node.destination = '#' + slug(node.destination.slice(1));
+        }
+      },
+    },
+  };
 }
 
 /**
