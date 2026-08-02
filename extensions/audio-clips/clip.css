@@ -46,26 +46,34 @@
    transformClipProgress.js. Both inherit the surrounding text colour, so a
    book tints the whole control with one `color` declaration.
 
-   Only the hidden glyph gets a display value, and the shown one is switched
-   with a plain `display: inline` — no :not() here, because this pair is the
-   whole affordance and a dropped rule would show play and stop at once. */
+   Both glyphs are hidden by default and revealed only under [role='button'],
+   the attribute the player adds at init — so the affordance appears exactly
+   when it works, and a reader that drops a rule shows nothing rather than a
+   dead button or play and stop at once. No :not() anywhere in the pair. */
 
 .clip-icon {
+  /* Hidden until the player has run, exactly like the text glyph above: the
+     markup is in the file whether or not scripting is available, so without
+     this gate a script-less reading system would paint a play button that does
+     nothing. Default-hidden also fails safe — if a reader drops the rules
+     below, the result is no control rather than play and stop at once. */
+  display: none;
   width: 1.1em;
   height: 1.1em;
   vertical-align: -0.15em;
+  margin-right: 0.25em; /* physical first: older engines stop here */
   margin-inline-end: 0.25em;
 }
 
-.clip-icon--stop {
+.clip[role='button'] .clip-icon--play {
+  display: inline;
+}
+
+.clip[role='button'].clip-playing .clip-icon--play {
   display: none;
 }
 
-.clip-playing .clip-icon--play {
-  display: none;
-}
-
-.clip-playing .clip-icon--stop {
+.clip[role='button'].clip-playing .clip-icon--stop {
   display: inline;
 }
 
@@ -77,6 +85,7 @@
    the animation — matching the player's stop-means-restart model. */
 
 .clip-progress {
+  margin-left: 0.35em; /* physical first: older engines stop here */
   margin-inline-start: 0.35em;
   vertical-align: -0.15em;
 }
