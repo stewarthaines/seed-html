@@ -76,6 +76,61 @@ Then the icon itself: `1.1em` square, `vertical-align: -0.15em`, `margin-inline-
 
 The description names `data-progress`; it should name both axes. No change to `assets` or `scripts` — the icon ships inside the transform, not as a file.
 
+## The two layouts are the project's, not the extension's
+
+Kenya's clip style is two things, and only one of them is generalised here.
+
+The **control** — the play/stop glyph — is what this plan moves into the extension.
+
+The **layout** is the `.container` system and stays with the project: `structureSetup` in `SOURCE/scripts/transformDom.js` pairs `p:has(.clip) + blockquote` into a `div.container`, and `page.css` arranges it in two ways:
+
+|                            | Arrangement                                                                                              |
+| -------------------------- | -------------------------------------------------------------------------------------------------------- |
+| default (layer 1)          | one column — the control sits above its transcript, between the blockquote's paragraphs                  |
+| `@media (min-width: 34em)` | `grid-template-columns: 2em 1fr` — the control sits left of a transcript carrying the blue `border-left` |
+
+The extension cannot own this and should not try. It styles a `span.clip`; it has no idea that a transcript follows one, because that pairing is a convention of _this book_. A different book might put labelled clips inline in a paragraph with no container at all. The boundary is: the extension decides what the control looks like, the project decides where it sits and how big it is.
+
+**This boundary was drawn wrongly once already.** The `page.css` rewrite deleted these as "clip presentation the extension now owns":
+
+```css
+.narrow .clip {
+  display: inline-block;
+  width: 100%;
+  text-align: center;
+}
+.narrow .clip .icon,
+.narrow .clip svg {
+  display: block;
+  margin: 0 auto 0.3em;
+}
+.narrow .clip .icon {
+  width: 2.3em;
+  height: 2.3em;
+}
+```
+
+`clip.css` has no equivalent, so the narrow layout lost its larger, block-centred control and showed a small inline glyph (41 × 19px measured). Those rules were about the control's size _inside the container_ — project business — and are now back in `page.css`, scoped to `.container .clip` rather than to a body class:
+
+- default: `font-size: 1.6em` on the clip (clip.css sizes everything in `em`, so one declaration scales the whole control) with `inline-block` so the indicator can become a block child, and `.clip-progress { display: block; margin-inline: auto }` to stack it under the glyph
+- `@media (min-width: 34em)`: back to `inline` at inherited size, restoring clip.css's own `margin-inline-start: 0.35em` on the indicator, so it fits the 2em column
+
+Measured after the fix: 29 × 56px against 41 × 19px before, which also takes it over the 24 × 24px floor in WCAG 2.5.8.
+
+### Width buckets misfire in a paginated reading system
+
+Measuring the same rules under the iPhone/foliate paginated preview showed the **wide** bucket active on a phone — `font-size: 16px` and an inline indicator, where the floor would give 28.8px and a block one. Element rects ran out to x≈3504px: foliate lays a chapter out as one wide multi-column strip, and `@media (min-width: 34em)` matches against that rather than the visible page.
+
+This is the authoring guide's warning about paginated viewports, observed rather than anticipated — and it means the width bucket is load-bearing in exactly the case the layer-1 rule says it must not be. Whether real reading systems behave like foliate here is untested; it needs a packaged book in Books or Thorium before anyone changes CSS over it. Container queries are not the escape hatch: `responsive.css` deliberately keeps containment off the page wrapper because chapter-wide containment breaks fragmentation.
+
+Related: the `2em` control column is narrower than the default affordance (`▶` plus a ring measures ~41px against a 36px column), so the two wrap onto separate lines. `data-affordance="icon"` with `data-progress="none"` is a single glyph and fits — but if the column keeps a progress indicator, it needs widening.
+
+## Open question: should the pairing graduate too?
+
+The clip-plus-transcript pattern is reusable — an interview book, an oral history, anything with a recording and its text. `structureSetup` is nine lines and the layout is a dozen rules. It is a candidate for an extension of its own (or a second transform in audio-clips), the same shape as the wrapped-figure system in the bulletin project.
+
+Not proposed here, because one book is not evidence of a pattern. Worth revisiting if a second project wants it.
+
 ## Adopting it in Kenya
 
 **This depends on the djot migration, and cannot precede it.** Kenya's bespoke `clipPlugin` builds a fixed attribute list (`class`, `data-src`, `data-begin`, `data-end`) and silently drops anything else, so `data-affordance` written in a source would never reach the span. Djot's `clipFilter` spreads `...rest`, so arbitrary attributes pass through — which is what makes per-clip options work at all.
