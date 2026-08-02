@@ -32,8 +32,33 @@ The agent registers the bridge once: `claude mcp add seed-bridge -- node scripts
 - **Module-owned** (decided): core provides only a mount element at the app root (beside the toast host); the fetched module paints and updates the pill/feed itself — hand-rolled DOM in the spike's style, themed via the context object's theme field. No overlay component exists in core (a core Svelte component would ship as dead code in every production bundle, since the asset gate is a runtime fact).
 - Position: bottom edge, above navigation (toast z-token family). Styling: the sr-caption family — dark translucent, rounded, monospace lines — not toast styling; it is a persistent surface, not a notification.
 - **Collapsed (default): a pill** — state dot (connected / agent active / disconnected) + the most recent action line ("read `OEBPS/Styles/page.css`"), brief pulse on activity.
-- **Expanded (click): the action feed** — one line per tool call, scrolling, newest last; disconnect button. Every tool invocation appears here; the feed is the trust surface ("literally everything the agent has done"), and later the write-approval prompts render inline in the feed rather than as modals.
+- **Expanded (click): the action feed** — one line per tool call, scrolling, newest last; disconnect button. Every tool invocation appears here; the feed is the trust surface ("literally everything the agent has done"), and later the write-approval prompts render inline in the feed rather than as modals. **Partly revised since**: prose and asset writes still prompt inline, but a write to code is reviewed as a full diff in a modal (`process/BRIDGE_WRITE_REVIEW.md`). The no-modal rule was aimed at frequent, low-stakes writes and holds for those; where review is the entire point, a diff does not fit on a feed line.
 - **The bottom edge belongs to the agent overlay.** Companion change (decided): toasts move to the top of the screen and all auto-dismiss on a timer — notifications are transient and glanceable; the bottom is for persistent surfaces. The sr-caption stays inside the preview viewport and doesn't collide.
+
+### Audio cues (built)
+
+The overlay is a small pill at the foot of one tab, and consent prompts auto-deny after ninety seconds. That combination loses writes whenever the author's attention is in another application — it did, twice, before this existed. Nothing visual solves it, because the problem is that the author is not looking at the screen.
+
+**The feed is the activity log; sound is the summons.** A cue fires only for something that needs the author, never to narrate what the agent did. Sounding routine traffic would train the author to ignore the one cue that matters, which is worse than silence.
+
+| Event                                 | Cue       | Why it earns a sound                                                                       |
+| ------------------------------------- | --------- | ------------------------------------------------------------------------------------------ |
+| connected                             | `ready`   | confirmation, and a self-test — see below                                                  |
+| consent prompt raised                 | `chime`   | the summons; the event the author misses                                                   |
+| code diff review raised               | `bloom`   | deliberately unlike the routine ask: modal, no session grant, and about code that will run |
+| 15s before an auto-deny               | `whisper` | the failure is not missing the prompt, it is missing it for the full ninety seconds        |
+| write failed (not a refusal)          | `error`   | a stale hash or dirty editor is otherwise discovered much later                            |
+| unexpected disconnect                 | `release` | the agent is gone and only the pill says so                                                |
+| reads, inspections, successful writes | _silent_  | that is what the feed is for; the author who just clicked Allow already knows              |
+
+Two decisions inside that table are load-bearing:
+
+- **The connect cue is a self-test.** Web Audio needs a user gesture, and clicking "Allow agent assistance" is one — so playing a cue there proves the audio path works. A silent connect tells the author now that notifications will not reach them, instead of an hour later by missing a prompt.
+- **A refusal is not a fault.** `writeFile` flags the error it throws on denial, so the error cue can stay silent for it. Sounding a failure at someone who has just pressed Deny reports a problem where there is none — and the distinction is structural rather than a match on message text.
+
+**Sound is a second channel, never the only one.** The `aria-live` feed and the visible prompt are untouched: a sound-only cue is no cue at all to a deaf author. The overlay carries a persisted toggle (`seedhtml_agent_bridge_muted`), labelled by state rather than action.
+
+Implementation: cuelume (MIT), synthesized via Web Audio so there are no audio files to serve, **vendored** beside the module rather than depended on. The module is served raw by dev middleware — no bundler, so no bare-specifier resolution — and everything here must stay out of the production build, which rules out `public/`. The middleware serves the second asset alongside the first; the production bundle is byte-identical with no trace of it. Only the recipes and engine are taken; the package's `bind()` scans a document for `data-cuelume-*` attributes and the overlay simply calls `play()`.
 
 ## Technical detail
 
