@@ -2,6 +2,8 @@
 
 Generalise the icon style from "Letter from Kenya" into the AudioClips extension, picked per clip the way progress indicators already are.
 
+**Built.** `data-affordance` takes `text` (default) | `icon` | `none`, independent of `data-progress`. The glyphs are traced verbatim from the project's `play.svg` / `stop.svg`, each keeping its own viewBox (142.448 and 30.05) so the paths are copied rather than rescaled. Verified against the transform directly: all four affordance/progress combinations, the icon leading the clip, and idempotence across two runs. Not adopted in Kenya yet — that needs `data-affordance="icon" data-progress="bar"` on the clips, which the author is doing by hand.
+
 ## What each side has today
 
 **The extension** draws two things on a clip, both presentational, both driven by the player toggling `.clip-playing` and publishing `--clip-duration`:

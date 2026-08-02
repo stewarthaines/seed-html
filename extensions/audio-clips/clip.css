@@ -12,13 +12,61 @@
   cursor: pointer;
 }
 
-.clip[role='button']::before {
+/* --- Play affordance -------------------------------------------------------
+   Two forms, picked with data-affordance: the default text glyph below, or the
+   icon further down (data-affordance=icon). data-affordance=none suppresses
+   both, for a design that marks the clip some other way.
+
+   The default is written as TWO rules rather than one selector list. An invalid
+   selector invalidates the whole list it appears in, so pairing the explicit
+   [data-affordance='text'] with the :not() that covers untagged clips would
+   take the default down with it on any parser that chokes on :not(). Split,
+   the worst case is that untagged clips lose the glyph and stay working,
+   dotted-underlined, clickable text. */
+
+.clip[role='button'][data-affordance='text']::before {
   content: '\25B6\00A0'; /* ▶ + no-break space */
   font-size: 0.8em;
 }
 
-.clip[role='button'].clip-playing::before {
+.clip[role='button']:not([data-affordance])::before {
+  content: '\25B6\00A0';
+  font-size: 0.8em;
+}
+
+.clip[role='button'][data-affordance='text'].clip-playing::before {
   content: '\25A0\00A0'; /* ■ (stop) + no-break space */
+}
+
+.clip[role='button']:not([data-affordance]).clip-playing::before {
+  content: '\25A0\00A0';
+}
+
+/* The icon form: circled play and stop, injected as a pair by
+   transformClipProgress.js. Both inherit the surrounding text colour, so a
+   book tints the whole control with one `color` declaration.
+
+   Only the hidden glyph gets a display value, and the shown one is switched
+   with a plain `display: inline` — no :not() here, because this pair is the
+   whole affordance and a dropped rule would show play and stop at once. */
+
+.clip-icon {
+  width: 1.1em;
+  height: 1.1em;
+  vertical-align: -0.15em;
+  margin-inline-end: 0.25em;
+}
+
+.clip-icon--stop {
+  display: none;
+}
+
+.clip-playing .clip-icon--play {
+  display: none;
+}
+
+.clip-playing .clip-icon--stop {
+  display: inline;
 }
 
 /* --- Clip progress indicators (injected by transformClipProgress.js) --------
