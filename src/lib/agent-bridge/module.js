@@ -564,6 +564,13 @@ function buildOverlay(mountEl, onDisconnect) {
     listStyle: 'none',
     maxBlockSize: '30vh',
     overflowY: 'auto',
+    // The overlay is dark in both themes, so the UA scrollbar arrives as a
+    // slab of light chrome down its edge. These two properties are the whole
+    // fix and are settable inline — ::-webkit-scrollbar would need a
+    // stylesheet, which this deliberately dependency-free module has no way
+    // to add.
+    scrollbarWidth: 'thin',
+    scrollbarColor: 'rgba(255, 255, 255, 0.3) transparent',
   });
   const disconnect = document.createElement('button');
   disconnect.type = 'button';
