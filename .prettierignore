@@ -30,6 +30,10 @@ patches/
 # Vendored minified libraries (e.g. axe-core for the accessibility check)
 *.min.js
 
+# Vendored cuelume build, served dev-only beside the agent bridge module
+# (third-party, kept close to upstream for diffability)
+src/lib/agent-bridge/cuelume.js
+
 # Workspace plugins are separate packages with their own formatting config
 plugins/
 

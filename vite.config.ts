@@ -319,13 +319,20 @@ export default defineConfig({
       name: 'serve-agent-bridge-dev',
       apply: 'serve',
       configureServer(server) {
-        server.middlewares.use('/agent-bridge/module.js', async (_req, res) => {
-          const file = await fs.readFile(
-            path.join(dirname, 'src', 'lib', 'agent-bridge', 'module.js')
-          );
-          res.setHeader('Content-Type', 'text/javascript; charset=utf-8');
-          res.end(file);
-        });
+        // The module is served raw, so it has no bundler and no bare-specifier
+        // resolution: anything it imports must be served alongside it at a URL
+        // that resolves relative to /agent-bridge/. cuelume is vendored here
+        // rather than in public/ for the same reason the module is — public/
+        // ships, and none of this may reach the production build.
+        for (const asset of ['module.js', 'cuelume.js']) {
+          server.middlewares.use(`/agent-bridge/${asset}`, async (_req, res) => {
+            const file = await fs.readFile(
+              path.join(dirname, 'src', 'lib', 'agent-bridge', asset)
+            );
+            res.setHeader('Content-Type', 'text/javascript; charset=utf-8');
+            res.end(file);
+          });
+        }
       },
     },
     // Dev only: serve the vendored reader at its branded root URL. In production

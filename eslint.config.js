@@ -166,6 +166,9 @@ export default [
       '.wrangler/',
       // Local Python virtualenv (untracked) — not app code.
       '.venv/',
+      // Vendored third-party runtime asset (MIT), served dev-only beside the
+      // agent bridge module. Not app code; upstream formatting is left intact.
+      'src/lib/agent-bridge/cuelume.js',
       // Workspace plugin sources are linted by this config; only their build
       // output and per-package deps are excluded.
       'plugins/*/dist/',

@@ -18,11 +18,49 @@
  * Deliberately untranslated (dev tool, outside the app's catalogs).
  */
 
+import { play, setEnabled } from './cuelume.js';
+
 const FEED_LIMIT = 100;
 /** Decoded byte cap for binary overwrites riding base64 through JSON-RPC. */
 const WRITE_SIZE_LIMIT = 2 * 1024 * 1024;
 /** Consent prompt auto-denies before the bridge's tool-call timeout fires. */
 const CONSENT_TIMEOUT_MS = 90_000;
+/**
+ * A second, softer cue this long before the auto-deny. The failure worth
+ * designing for is not missing the prompt, it is missing it for the full ninety
+ * seconds — one chime you are away from does not help, a reminder might.
+ */
+const CONSENT_REMINDER_MS = CONSENT_TIMEOUT_MS - 15_000;
+
+/**
+ * Audio cues, from the vendored cuelume beside this file.
+ *
+ * The feed is the activity log; sound is the summons. A cue fires only for
+ * something that needs the author — a prompt raised, a prompt about to expire,
+ * an unexpected disconnect, a write that failed for a reason other than their
+ * own refusal. Reads, inspections and successful writes stay silent: sounding
+ * routine traffic teaches the author to ignore the one cue that matters.
+ *
+ * Never the only channel. The overlay's aria-live feed and the visible prompt
+ * remain primary — a sound-only cue is no cue at all to a deaf author.
+ */
+const MUTE_KEY = 'seedhtml_agent_bridge_muted';
+
+function readMuted() {
+  try {
+    return localStorage.getItem(MUTE_KEY) === '1';
+  } catch {
+    return false; // storage refused (private mode) — audible is the safer default
+  }
+}
+
+function writeMuted(muted) {
+  try {
+    localStorage.setItem(MUTE_KEY, muted ? '1' : '0');
+  } catch {
+    // A storage refusal must not break the bridge; the session stays muted.
+  }
+}
 
 /**
  * Phase 2 write policy (process/AGENT_BRIDGE.md): modify-in-place on
@@ -106,6 +144,7 @@ export function start(ctx) {
   // one start()/socket, so every new connection re-prompts. Within a connection
   // the grant is further bounded by age and count, and never covers code.
   const session = { grant: 'none', until: 0, writes: 0 }; // 'none' | 'session'
+  setEnabled(!readMuted());
   const ui = buildOverlay(ctx.mountEl, () => stop());
   let socket = null;
   let stopped = false;
@@ -121,6 +160,10 @@ export function start(ctx) {
   socket.onopen = () => {
     opened = true;
     setStatus('connected');
+    // Doubles as a self-test. Web Audio needs a user gesture, and the click
+    // that enabled the bridge is it — so if this is silent the author learns
+    // now, rather than an hour later by missing a consent prompt.
+    play('ready');
     socket.send(
       JSON.stringify({ hello: 'seed-agent-bridge', projectId: ctx.getProjectInfo().workspaceId })
     );
@@ -141,6 +184,9 @@ export function start(ctx) {
         'disconnected',
         opened ? 'bridge closed the connection' : 'bridge not reachable — is it running?'
       );
+      // The agent is gone and nothing else says so — the overlay is a pill the
+      // author may not be looking at.
+      play('release');
     }
   };
   socket.onmessage = async event => {
@@ -157,6 +203,11 @@ export function start(ctx) {
       send(JSON.stringify({ id: request.id, ok: true, result }));
     } catch (error) {
       ui.addAction(`${describeAction(request.tool, request.params)} — failed`);
+      // Only a write, and only a real fault: a rejected selector is the agent's
+      // problem to retry, and a denial is the author's own answer. What earns a
+      // cue is a write that failed for a reason they would otherwise discover
+      // much later — a stale hash, an open editor, a verification mismatch.
+      if (request.tool === 'write_file' && !error?.denied) play('error');
       send(JSON.stringify({ id: request.id, ok: false, error: String(error?.message ?? error) }));
     }
   };
@@ -318,6 +369,11 @@ async function reviewCodeWrite(ctx, ui, request) {
   };
   const untrack = ui.trackPrompt(cancel);
   const timer = setTimeout(cancel, CONSENT_TIMEOUT_MS);
+  const reminder = setTimeout(() => play('whisper'), CONSENT_REMINDER_MS);
+  // Deliberately not the prompt's chime: this one is modal, cannot be covered
+  // by a session grant, and is about code that will run — it should not sound
+  // like the routine ask.
+  play('bloom');
   try {
     const choice = await Promise.race([
       ctx.reviewWrite({ ...request, signal: controller.signal }),
@@ -326,9 +382,22 @@ async function reviewCodeWrite(ctx, ui, request) {
     return choice === 'accept' ? 'accept' : 'deny';
   } finally {
     clearTimeout(timer);
+    clearTimeout(reminder);
     untrack();
     controller.abort();
   }
+}
+
+/**
+ * The author's refusal, flagged as such. It reaches the agent as an ordinary
+ * error, but locally it is an answer rather than a fault — so the error cue can
+ * stay silent for it. Sounding a failure when someone has just pressed Deny
+ * would report a problem where there is none.
+ */
+function denied() {
+  const error = new Error('the author denied this write');
+  error.denied = true;
+  return error;
 }
 
 async function writeFile(ctx, session, ui, params) {
@@ -415,12 +484,12 @@ async function writeFile(ctx, session, ui, params) {
       incoming: isText ? text : null,
       bytes: bytes.length,
     });
-    if (choice !== 'accept') throw new Error('the author denied this write');
+    if (choice !== 'accept') throw denied();
     await validate();
   } else {
     const stat = isText ? ctx.diffStat(currentText, text) : null;
     const choice = await ui.promptWrite(path, bytes.length, stat);
-    if (choice === 'deny') throw new Error('the author denied this write');
+    if (choice === 'deny') throw denied();
     if (choice === 'session') {
       session.grant = 'session';
       session.until = Date.now() + GRANT_TTL_MS;
@@ -576,7 +645,8 @@ function buildOverlay(mountEl, onDisconnect) {
   disconnect.type = 'button';
   disconnect.textContent = 'Disconnect';
   Object.assign(disconnect.style, {
-    margin: '4px 12px 6px',
+    // Horizontal spacing is the actions row's padding now, not this button's.
+    margin: '4px 0 6px',
     padding: '3px 10px',
     font: 'inherit',
     color: 'inherit',
@@ -586,7 +656,41 @@ function buildOverlay(mountEl, onDisconnect) {
     cursor: 'pointer',
   });
   disconnect.addEventListener('click', onDisconnect);
-  panel.append(feed, disconnect);
+
+  // Sound toggle. Persisted, because an author who turns it off means it, and
+  // labelled with its current state rather than the action — the pill is small
+  // and "Sound off" reads faster than working out what the button will do.
+  const sound = document.createElement('button');
+  sound.type = 'button';
+  Object.assign(sound.style, {
+    margin: '4px 0 6px',
+    padding: '3px 10px',
+    font: 'inherit',
+    color: 'inherit',
+    background: 'rgba(255,255,255,0.12)',
+    border: '0',
+    borderRadius: '4px',
+    cursor: 'pointer',
+  });
+  const paintSound = () => {
+    const muted = readMuted();
+    sound.textContent = muted ? 'Sound off' : 'Sound on';
+    sound.setAttribute('aria-pressed', String(!muted));
+  };
+  paintSound();
+  sound.addEventListener('click', () => {
+    const muted = !readMuted();
+    writeMuted(muted);
+    setEnabled(!muted);
+    paintSound();
+    // Unmuting confirms itself; muting has nothing to say.
+    if (!muted) play('toggle');
+  });
+
+  const actions = document.createElement('div');
+  Object.assign(actions.style, { display: 'flex', gap: '6px', padding: '0 12px' });
+  actions.append(disconnect, sound);
+  panel.append(feed, actions);
 
   pill.addEventListener('click', () => {
     panel.hidden = !panel.hidden;
@@ -654,12 +758,15 @@ function buildOverlay(mountEl, onDisconnect) {
         const finish = choice => {
           pendingPrompts.delete(finish);
           clearTimeout(timer);
+          clearTimeout(reminder);
           row.remove();
           question.textContent = `${choice === 'deny' ? 'denied' : 'allowed'}: write ${path}`;
           resolve(choice);
         };
         pendingPrompts.add(finish);
         const timer = setTimeout(() => finish('deny'), CONSENT_TIMEOUT_MS);
+        const reminder = setTimeout(() => play('whisper'), CONSENT_REMINDER_MS);
+        play('chime');
         for (const [labelText, choice] of [
           ['Allow once', 'once'],
           ['Allow this session', 'session'],
