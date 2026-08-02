@@ -372,7 +372,13 @@ export class BlobURLManager {
     // files are missing. A console warning reaches the developer, not the person
     // whose book has a broken reference. Display-only documents (preview iframe,
     // print window) — never persisted, same contract as data-source-href.
-    element.setAttribute('data-seed-missing', manifestPath);
+    //
+    // Anchors are excluded, matching the no-special-handling branch below: a
+    // chapter-to-chapter link (`recordings.xhtml`) is written relative to
+    // OEBPS/Text/, so it never resolves against the manifest root and never
+    // needs to — the reading system resolves it in the packaged book. Reporting
+    // those as missing files would flag every internal link in the book.
+    if (tagName !== 'a') element.setAttribute('data-seed-missing', manifestPath);
 
     // Visual assets get error icons
     if (['img', 'video', 'audio', 'object', 'image'].includes(tagName)) {
