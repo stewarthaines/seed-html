@@ -7,9 +7,10 @@ This guide covers building and deploying SEED.html for various distribution meth
 1. [Building for Production](#building-for-production)
 2. [Web Server Deployment](#web-server-deployment)
 3. [Standalone Distribution](#standalone-distribution)
-4. [EPUB Embedding](#epub-embedding)
-5. [Version Management](#version-management)
-6. [Security Considerations](#security-considerations)
+4. [npm Package](#npm-package)
+5. [EPUB Embedding](#epub-embedding)
+6. [Version Management](#version-management)
+7. [Security Considerations](#security-considerations)
 
 ## Building for Production
 
@@ -245,6 +246,34 @@ The application includes a self-download feature:
 - Users can download their own copy from the web version
 - Accessed via File → Download Editor
 - Includes current version with all updates
+
+## npm Package
+
+[`@stewarthaines/seed-html`](https://www.npmjs.com/package/@stewarthaines/seed-html) serves the **full deployed app** — the extensions and plugins catalogs, locales, and the service worker, which the single-file download cannot carry — from a local server with one command:
+
+```bash
+npx @stewarthaines/seed-html            # serve + open the browser (default port 8417)
+npx @stewarthaines/seed-html --port 9000 --no-open
+npx @stewarthaines/seed-html bridge     # the agent bridge (MCP over stdio), for e.g.:
+                                        #   claude mcp add seed-bridge -- npx -y @stewarthaines/seed-html bridge
+```
+
+localhost is a secure context, so OPFS project storage, the PWA behavior, and the http-only preview devices all work as on the hosted site. Projects are stored by the browser **per address** (port included). Not included: the WebDAV publish proxy (a Cloudflare function) — remote publishing needs the hosted app.
+
+### Package source and publishing
+
+The package lives in [`npm-package/`](../npm-package/): a zero-dependency static server (`lib/serve.mjs`), a dispatcher bin (`bin/seed-html.mjs`), and a `prepack` hook (`sync-assets.mjs`) that stages the repo's built `dist/`, the agent bridge (`scripts/agent-bridge.mjs` + `docs/AGENT_AUTHORING.md`, relative layout preserved), and syncs the version from the root `package.json`. Only those source files are committed; the staged payload is gitignored.
+
+To publish a release (after the normal deploy build, as the same person who ran it):
+
+```bash
+npm run build:i18n && npm run build:plugins   # the payload the package stages
+cd npm-package
+npm pack --dry-run                            # optional: inspect the ~4 MB tarball
+npm publish                                   # prepack stages + version-syncs; OTP prompt (2FA)
+```
+
+npm refuses to republish an existing version, so this naturally pairs with the `chore(release)` version bump — publish once per released version.
 
 ## EPUB Embedding
 

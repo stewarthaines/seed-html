@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Run the editor on your own machine with one command: `npx @stewarthaines/seed-html` starts a local server with the complete app — extensions catalog, plugins, and offline support included — no build step, nothing uploaded anywhere.
+
 ### Fixed
 
 - In Firefox, the preview kept its scroll position and click-to-select after every edit again — previously both stopped working on every second re-render.
@@ -21,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Mermaid diagrams: with the new Mermaid extension installed, a ```` ```mermaid ```` code block renders as a crisp diagram that scales to the reading column and travels inside the book — no scripts, fonts or network needed to read it. Flowchart, sequence, class, state, pie and gantt diagrams are supported, a block can pick its own theme, and a generator inserts a ready-made sample of any of the six types with an accessible title and description filled in.
+- Mermaid diagrams: with the new Mermaid extension installed, a ` ```mermaid ` code block renders as a crisp diagram that scales to the reading column and travels inside the book — no scripts, fonts or network needed to read it. Flowchart, sequence, class, state, pie and gantt diagrams are supported, a block can pick its own theme, and a generator inserts a ready-made sample of any of the six types with an accessible title and description filled in.
 
 ### Fixed
 

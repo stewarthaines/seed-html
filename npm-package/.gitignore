@@ -1,0 +1,7 @@
+# Staged by sync-assets.mjs at pack time — never committed.
+dist/
+scripts/
+docs/
+node_modules/
+package-lock.json
+*.tgz

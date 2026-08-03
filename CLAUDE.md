@@ -71,11 +71,12 @@ style.
 
 ### Distribution Model
 
-**SEED.html is distributed as MIT licensed open source** with three deployment methods:
+**SEED.html is distributed as MIT licensed open source** with four deployment methods:
 
 1. **Web Application** - Hosted version accessible via browser
 2. **Standalone HTML** - Single file download for offline use
 3. **SEED EPUB** - Embedded within EPUB files for self-editing capability
+4. **npm package** - `npx @stewarthaines/seed-html` serves the full app (extensions/plugins catalogs included) locally; source in `npm-package/`, published per release (see DEPLOYMENT.md)
 
 The build process creates a single `index.html` file (~1MB) with all assets inlined, suitable for all distribution methods. See [DEPLOYMENT.md](./docs/DEPLOYMENT.md) for deployment details.
 

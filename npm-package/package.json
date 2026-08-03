@@ -1,0 +1,41 @@
+{
+  "name": "@stewarthaines/seed-html",
+  "version": "0.17.0",
+  "description": "SEED.html (Simple EPUB Editor) — the full app on a local server with one command: npx @stewarthaines/seed-html",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "seed-html": "bin/seed-html.mjs"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "dist",
+    "scripts",
+    "docs"
+  ],
+  "scripts": {
+    "prepack": "node sync-assets.mjs"
+  },
+  "dependencies": {
+    "ws": "8.21.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "epub",
+    "editor",
+    "ebook",
+    "publishing",
+    "offline"
+  ],
+  "homepage": "https://github.com/stewarthaines/seed-html",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stewarthaines/seed-html.git"
+  }
+}
