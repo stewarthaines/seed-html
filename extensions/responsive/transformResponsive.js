@@ -3,9 +3,11 @@
  * transform only guarantees the markup the stylesheet needs:
  *
  *   1. The chapter's body content is wrapped in <div class="sr-page"> — the
- *      reading-measure hook. A dedicated wrapper (rather than styling <body>)
- *      keeps the rules clear of reading-system user-setting overrides, which
- *      commonly rewrite body margins.
+ *      scope for the prose measure (each prose block is capped and centered
+ *      individually; non-prose blocks use the full column). A dedicated
+ *      wrapper (rather than styling <body>) keeps the rules clear of
+ *      reading-system user-setting overrides, which commonly rewrite body
+ *      margins.
  *   2. Each <figure> is wrapped in <div class="sr-figure"> — the container-query
  *      container. The figure itself must stay a *descendant* of the container so
  *      @container rules can restyle it; an element cannot query its own size.

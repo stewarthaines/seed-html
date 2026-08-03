@@ -6,21 +6,53 @@
   Everything is in em, so the buckets track the reader's chosen font size:
   a large-print reader gets the narrow layout — which is the correct one.
 
+  The measure constrains PROSE, not the page (restructured 2026-08-03): each
+  prose block is capped and centered individually, so figures, scores, code
+  variants and other non-prose blocks take the full column naturally — on a
+  wide page or A4 print their own container ladders can reach the full
+  variants. This replaces the old wrapper-wide max-width plus negative-margin
+  figure breakout: negative margins misbehave in EPUB reading-system layouts.
+
   Layer 1  intrinsic/fluid CSS   — no query support needed; correct everywhere
   Layer 2  @media (monochrome)   — e-ink adjustments
-  Layer 3  @media width buckets  — coarse chrome; the viewport may be a spread,
-                                   so treat these as approximate
   Layer 4  @container on figures — precise, gated behind @supports; containment
-                                   is applied ONLY to figure wrappers because
+                                   is applied ONLY to small wrappers because
                                    chapter-wide containment can break pagination
 */
 
-/* ---- Layer 1: the reading measure and fluid media (works everywhere) ---- */
+/* ---- Layer 1: the prose measure and fluid media (works everywhere) ---- */
 
-.sr-page {
-  max-width: 36em; /* the default measure — ~60–70 characters */
+/* The reading measure, per prose block (~60–70 characters), centered in the
+   column. Nested occurrences (a p inside a measured blockquote or li) are
+   no-ops. Non-prose blocks — figures, tables, pre, the score/code variant
+   containers — are deliberately absent: they use the full column. */
+.sr-page p,
+.sr-page h1,
+.sr-page h2,
+.sr-page h3,
+.sr-page h4,
+.sr-page h5,
+.sr-page h6,
+.sr-page ul,
+.sr-page ol,
+.sr-page dl {
+  max-width: 36em;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* Slightly tighter than the prose measure: centered, the symmetric inset
+   reads as the traditional blockquote indent. */
+.sr-page blockquote {
+  max-width: 33em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* An element holding inline width alternatives describes the page, not the
+   prose — let it span the column so its Full variant can actually appear. */
+.sr-page .sr-switch {
+  max-width: none;
 }
 
 .sr-page img,
@@ -49,30 +81,22 @@
   margin-top: 0.5em;
 }
 
-/* ---- Layer 3: coarse width buckets (approximate on paginated spreads) ---- */
-
-@media (min-width: 40em) {
-  /* Wide page: let figures break out of the measure symmetrically. */
-  .sr-figure {
-    width: 120%;
-    margin-left: -10%;
-    margin-right: -10%;
-  }
-}
-
 /* ---- Layer 2 (last so it wins): e-ink ---- */
 
 @media (monochrome) {
-  /* E-ink pages are already narrow; give the text the whole column and keep
-     figures in the flow (no breakouts on a device that can't scroll). */
-  .sr-page {
+  /* E-ink pages are already narrow; give the text the whole column. */
+  .sr-page p,
+  .sr-page h1,
+  .sr-page h2,
+  .sr-page h3,
+  .sr-page h4,
+  .sr-page h5,
+  .sr-page h6,
+  .sr-page ul,
+  .sr-page ol,
+  .sr-page dl,
+  .sr-page blockquote {
     max-width: 100%;
-  }
-
-  .sr-figure {
-    width: auto;
-    margin-left: 0;
-    margin-right: 0;
   }
 }
 

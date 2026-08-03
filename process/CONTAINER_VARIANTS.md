@@ -50,7 +50,7 @@ The wide→full switch moved **45 → 40** (em/rem) across all four sheets, incl
 
 Two facts found while measuring the live paged preview over the bridge, for future reference:
 
-- **Inside the Responsive extension, `.sr-page`'s 36em measure caps every descendant container** — the full bucket (40+) is unreachable there on any paper size. Projects using abc/prettier without Responsive (e.g. the bulletin) are unaffected. If full variants should appear inside the measure, the element needs a breakout like `.sr-figure`'s 120% — a separate design decision, not taken.
+- **Inside the Responsive extension, `.sr-page`'s 36em measure capped every descendant container** — the full bucket (40+) was unreachable there on any paper size. Resolved the same day by restructuring the measure: it now constrains **prose blocks individually** (p, headings, lists, blockquote — the last slightly tighter so its centered inset reads as the traditional indent) instead of the page wrapper, so figures, scores and code variants take the full column naturally and their ladders work. The negative-margin `.sr-figure` breakout is retired with it (user rule: negative margins misbehave in EPUB reading-system layouts), and `.sr-switch` elements are excluded from the measure — an element describing the page width must be allowed to reflect it. sr-switch stamping is also spans-only now: the abc/prettier variant DIVS share the narrow/wide/full class convention and were being double-driven.
 - **The fit-to-width Print preview applies `zoom` (~0.65 at typical pane sizes), which shrinks container layout widths** — the preview can show a narrower variant than the real print/PDF chooses. Print at 100% (or the PDF) is the truth for variant selection.
 
 ## Out of scope
