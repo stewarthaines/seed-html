@@ -4,7 +4,7 @@ Design of record for the live-session agent bridge — an author working in SEED
 
 ## Decision summary
 
-- **Core app owns the socket, not a plugin.** The consent gesture ("allow agent assistance") is an app-level act, and tool execution belongs next to the app services that make writes correct (state propagation, track-changes copy-on-write). Dev-only, at zero production cost: the module is a dev-middleware-served asset; core carries only the button (build-time folded) and a loader stub.
+- **Core app owns the socket, not a plugin.** The consent gesture ("allow agent assistance") is an app-level act, and tool execution belongs next to the app services that make writes correct (state propagation, track-changes copy-on-write). Localhost-only (revised 2026-08-03; originally dev-only, when the only other target was the hosted site): the button and loader stub ship in every build behind a runtime `location.hostname` gate — `localhost`/`127.0.0.1` covers the dev server and the npm package (`npx seed-html`), and is also the only place the feature can work, since the socket dials the author's own `ws://localhost:8747`. The module stays an external asset (dev middleware serves it from source; the build copies it to `dist/agent-bridge/`), inert on the hosted site. The bridge process verifies the WebSocket `Origin` header is a localhost origin — WebSockets are not CORS-gated, and without that check any web page open in a browser on the machine could impersonate the tab (poisoned reads to the agent, agent writes delivered to the attacker); pages cannot forge Origin, and a hostile local process is outside the threat model.
 - **Chat stays in the terminal; the app contributes pointing and consent.** The agent's conversation loop, context, and approvals live in Claude Code (or any MCP client). The app's unique contributions are deixis — "what is the author pointing at" as a tool over the existing click-to-source pipeline — and the visible record of agent actions.
 - **Topology (three parts, two legs):**
 
@@ -20,7 +20,7 @@ The agent registers the bridge once: `claude mcp add seed-bridge -- node scripts
 
 ### The gesture: "Allow agent assistance"
 
-- Button in the sidebar footer (`src/lib/Sidebar.svelte`, `.sidebar-footer`, line ~503), left of Package EPUB. Icon: `Robot` from the phosphor-svelte set. The button itself renders only when `import.meta.env.DEV` (build-time folded from production; if the bridge ever ships to production, that one-line gate change is the only rebuild the feature needs — the module is already a published asset).
+- Button in the sidebar footer (`src/lib/Sidebar.svelte`, `.sidebar-footer`, line ~503), left of Package EPUB. Icon: `Robot` from the phosphor-svelte set. The button renders when the app is served from localhost (runtime `location.hostname` gate — was `import.meta.env.DEV` until 2026-08-03; the predicted "one-line gate change" is what shipped the feature to the npm distribution).
 - Click fetches the module (first time) and connects the WebSocket; the button shows a pressed/active state while allowed. Click again disconnects and tears down the overlay.
 - Consent is **per-session, never persisted** — each session's first connection is a deliberate human act. This is the foundation the write-approval model builds on.
 - Bridge not running → transient failure state on the button naming the command (`node scripts/agent-bridge.mjs`).

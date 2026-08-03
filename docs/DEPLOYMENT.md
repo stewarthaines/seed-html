@@ -260,7 +260,7 @@ npx seed-html bridge                    # the agent bridge (MCP over stdio), for
 
 The unscoped `seed-html` is an alias of the canonical `@stewarthaines/seed-html` — the same payload and version are published under both names.
 
-localhost is a secure context, so OPFS project storage, the PWA behavior, and the http-only preview devices all work as on the hosted site. Projects are stored by the browser **per address** (port included). Not included: the WebDAV publish proxy (a Cloudflare function) — remote publishing needs the hosted app.
+localhost is a secure context, so OPFS project storage, the PWA behavior, and the http-only preview devices all work as on the hosted site. Projects are stored by the browser **per address** (port included). Because the app is served from localhost, the **Allow agent assistance** button appears in the sidebar (it is hidden on the hosted site): clicking it pairs the tab with a running `seed-html bridge`, granting the connected agent read access to the open project, with writes gated by in-app review dialogs. The bridge only accepts tabs from localhost origins. Not included: the WebDAV publish proxy (a Cloudflare function) — remote publishing needs the hosted app.
 
 ### Package source and publishing
 

@@ -34,7 +34,12 @@ const MOUNT_TIMEOUT_MS = 20000;
 // Raised 1060→1075 on 2026-07-24: the READ.html device preview (toolbar
 // controls, pager, wrapper builder, page-restore) lands at ~1062KB. The
 // foliate renderer itself is dist/foliate/ assets, not inlined.
-const SIZE_BUDGET_KB = 1075;
+// Raised 1075→1175 on 2026-08-03: another unnoticed accumulation — v0.16's
+// split preview, translation editions and Source tree grew the build to
+// ~1148KB — plus ~14KB now that the agent-bridge loader and write-review
+// dialog ship in every bundle behind the runtime localhost gate (the module
+// itself stays external; see the canary below).
+const SIZE_BUDGET_KB = 1175;
 
 // Console errors that are noise, not boot failures.
 const IGNORED_CONSOLE = [/favicon\.ico/i, /Failed to load resource.*favicon/i];
@@ -99,12 +104,18 @@ function artifactChecks() {
     );
   }
 
-  // The agent bridge is dev-only (process/AGENT_BRIDGE.md): its loader and
-  // module are dynamically imported behind import.meta.env.DEV, so no bridge
-  // code may reach the production bundle. The wire-protocol hello token is the
-  // canary — it appears in every bridge file and nowhere else.
-  if (html.includes('seed-agent-bridge') || html.includes('agent-bridge/module')) {
-    problems.push('[artifact] agent bridge code leaked into the production bundle');
+  // The agent bridge is localhost-only (process/AGENT_BRIDGE.md): the button
+  // and loader stub ship in the bundle (runtime hostname gate), but the module
+  // itself must stay an EXTERNAL asset at dist/agent-bridge/ — fetched on first
+  // click, never inlined. The wire-protocol hello token is the canary: it
+  // appears in module.js and nowhere in loader or app code.
+  if (html.includes('seed-agent-bridge')) {
+    problems.push('[artifact] agent bridge module leaked into the production bundle');
+  }
+  for (const asset of ['module.js', 'cuelume.js']) {
+    if (!fs.existsSync(path.join(distDir, 'agent-bridge', asset))) {
+      problems.push(`[artifact] dist/agent-bridge/${asset} missing — the build copy step failed`);
+    }
   }
 
   // The i18n anchor must survive the single-file inlining: it is the injection

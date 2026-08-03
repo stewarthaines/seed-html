@@ -311,19 +311,18 @@ export default defineConfig({
         });
       },
     },
-    // Dev only: serve the agent bridge module (process/AGENT_BRIDGE.md). The
-    // module is an app-realm asset fetched when the author clicks "Allow agent
-    // assistance"; serving it only here is what makes the feature dev-only —
-    // production never carries or serves the file.
+    // Serve (dev) / copy (build) the agent bridge module (process/AGENT_BRIDGE.md).
+    // The module is an app-realm asset fetched when the author clicks "Allow
+    // agent assistance" — the button shows only when the app is served from
+    // localhost (dev server, `npx seed-html`), so the hosted site carries the
+    // files inert. The module is served raw, so it has no bundler and no
+    // bare-specifier resolution: anything it imports must live alongside it at
+    // a URL resolving relative to /agent-bridge/ — which is why cuelume is
+    // vendored next to it rather than installed as a dependency.
     {
       name: 'serve-agent-bridge-dev',
       apply: 'serve',
       configureServer(server) {
-        // The module is served raw, so it has no bundler and no bare-specifier
-        // resolution: anything it imports must be served alongside it at a URL
-        // that resolves relative to /agent-bridge/. cuelume is vendored here
-        // rather than in public/ for the same reason the module is — public/
-        // ships, and none of this may reach the production build.
         for (const asset of ['module.js', 'cuelume.js']) {
           server.middlewares.use(`/agent-bridge/${asset}`, async (_req, res) => {
             const file = await fs.readFile(
@@ -332,6 +331,23 @@ export default defineConfig({
             res.setHeader('Content-Type', 'text/javascript; charset=utf-8');
             res.end(file);
           });
+        }
+      },
+    },
+    {
+      name: 'copy-agent-bridge-build',
+      apply: 'build',
+      async closeBundle() {
+        // Not emitFile: the single-file inliner consumes emitted chunks, and
+        // these must stay external files exactly as the dev middleware serves
+        // them.
+        const outDir = path.join(dirname, 'dist', 'agent-bridge');
+        await fs.mkdir(outDir, { recursive: true });
+        for (const asset of ['module.js', 'cuelume.js']) {
+          await fs.copyFile(
+            path.join(dirname, 'src', 'lib', 'agent-bridge', asset),
+            path.join(outDir, asset)
+          );
         }
       },
     },

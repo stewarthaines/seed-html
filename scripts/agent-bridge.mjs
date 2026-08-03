@@ -42,12 +42,36 @@ let tabProject = null;
 let nextRequestId = 1;
 const pending = new Map(); // request id → { resolve, reject, timer }
 
+// Only a locally-served app tab may pair. WebSockets are not CORS-gated, so
+// without this ANY web page open in a browser on this machine could dial
+// ws://127.0.0.1:8747 and impersonate the tab — feeding the agent poisoned
+// reads and receiving its writes. Browsers always send Origin on WebSocket
+// upgrades and pages cannot forge it; a hostile local PROCESS can, but it
+// already owns the machine. Reject everything whose origin host isn't local
+// (including absent Origin — the legitimate client is always a browser tab).
+function isLocalOrigin(origin) {
+  try {
+    const { hostname } = new URL(origin);
+    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
+  } catch {
+    return false;
+  }
+}
+
 // Fail alive on a taken port (design resolution 5, process/AGENT_BRIDGE.md):
 // the MCP server keeps running and every tool call returns the explanation
 // in-band, where the agent reads it — a crashed process would leave the user
 // a dead server and a mystery.
 let bindError = null;
-const wss = new WebSocketServer({ host: '127.0.0.1', port: PORT });
+const wss = new WebSocketServer({
+  host: '127.0.0.1',
+  port: PORT,
+  verifyClient: info => {
+    if (isLocalOrigin(info.origin)) return true;
+    process.stderr.write(`[bridge] rejected connection from origin ${info.origin ?? '(none)'}\n`);
+    return false;
+  },
+});
 wss.on('error', error => {
   bindError =
     error?.code === 'EADDRINUSE'

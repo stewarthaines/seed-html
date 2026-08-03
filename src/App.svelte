@@ -394,9 +394,16 @@
     }
   };
 
-  // --- Agent bridge (dev-only; process/AGENT_BRIDGE.md) ------------------------
-  // The loader stub and module are dynamically imported behind import.meta.env.DEV,
-  // so production and file: builds carry none of this beyond the folded guards.
+  // --- Agent bridge (localhost-only; process/AGENT_BRIDGE.md) -------------------
+  // Available wherever the app is served from the author's own machine — the dev
+  // server and the npm package (`npx seed-html`) alike — because the bridge socket
+  // is ws://localhost:8747: from any other host it could only dial the VISITOR's
+  // machine. Hidden on the hosted site and file:/EPUB-embedded copies. The bridge
+  // module stays an external asset fetched on first click (dev middleware serves
+  // it from source; the build copies it to dist/agent-bridge/).
+  const agentBridgeAvailable = ['localhost', '127.0.0.1'].includes(
+    globalThis.location?.hostname ?? ''
+  );
   let lastPreviewClick = $state<Record<string, unknown> | null>(null);
   let agentBridge = $state<AgentBridge | null>(null);
   let agentMountEl = $state<HTMLDivElement>();
@@ -405,7 +412,7 @@
   let previewPaneRef = $state<PreviewPane | undefined>();
 
   async function toggleAgentBridge(): Promise<void> {
-    if (!import.meta.env.DEV) return;
+    if (!agentBridgeAvailable) return;
     if (!agentBridge) {
       const { createAgentBridge } = await import('./lib/agent-bridge/loader.svelte.js');
       agentBridge = createAgentBridge(() => ({
@@ -1695,8 +1702,9 @@
     {#snippet sidebarFooter()}
       {#if currentWorkspaceState}
         <div class="package-epub-section">
-          {#if import.meta.env.DEV}
-            <!-- Dev-only, deliberately untranslated: absent from production builds. -->
+          {#if agentBridgeAvailable}
+            <!-- Localhost-only, deliberately untranslated: absent from the hosted
+                 site and embedded copies. -->
             <!-- i18n-ignore -->
             <button
               class="agent-toggle"
@@ -2007,7 +2015,7 @@
 
 <!-- App-wide toast host for fleeting notifications (see Toast.svelte). -->
 <Toast />
-{#if import.meta.env.DEV}
+{#if agentBridgeAvailable}
   <!-- Agent activity overlay mount: the bridge module paints into this. -->
   <div bind:this={agentMountEl}></div>
 {/if}
