@@ -52,8 +52,12 @@ async function transformDOM(htmlDocument, idref, ctx) {
     wrapper.appendChild(figure);
   }
 
-  // 3. Inline width alternatives (classList.add is idempotent).
-  for (const narrow of [...htmlDocument.querySelectorAll('.narrow')]) {
+  // 3. Inline width alternatives (classList.add is idempotent). Spans only:
+  //    the block variant systems (abc2svg / abcjs / prettier) name their
+  //    variant DIVS with the same narrow/wide/full convention and carry their
+  //    own complete ladders — stamping their containers would double-drive
+  //    the same children from two stylesheets.
+  for (const narrow of [...htmlDocument.querySelectorAll('span.narrow')]) {
     const host = narrow.parentElement;
     if (!host || host.classList.contains('sr-switch')) continue;
     const children = [...host.children];

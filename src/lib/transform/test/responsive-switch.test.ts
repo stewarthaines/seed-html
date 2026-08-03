@@ -56,6 +56,18 @@ describe('transformResponsive (sr-switch stamping)', () => {
     expect(doc.querySelector('.sr-switch')).toBeNull();
   });
 
+  it('ignores block variant systems (abc/prettier divs carry their own ladder)', async () => {
+    const doc = parse(
+      '<div class="abc2svg-container">' +
+        '<div class="abc2svg-variant narrow is-default">n</div>' +
+        '<div class="abc2svg-variant wide">w</div>' +
+        '<div class="abc2svg-variant full is-widest">f</div>' +
+        '</div>'
+    );
+    await transformDOM(doc, 'ch1', {});
+    expect(doc.querySelector('.sr-switch')).toBeNull();
+  });
+
   it('requires the variants to be siblings of .narrow', async () => {
     const doc = parse(
       '<div><p><span class="narrow">N</span></p><p><span class="wide">W</span></p></div>'
