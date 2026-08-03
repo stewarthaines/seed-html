@@ -18,6 +18,8 @@ async function transformPrettier(htmlDocument, widths) {
 
     for (const code of blocks) {
       const pre = code.parentElement;
+      // Re-entry safety: the emitted variants match the block selector too.
+      if (pre.parentElement && pre.parentElement.classList.contains('code-variants')) continue;
       const source = code.textContent;                 // plain text, spans flattened
       const codeClass = code.getAttribute('class') || 'language-js';
 

@@ -9,6 +9,14 @@
  *   2. Each <figure> is wrapped in <div class="sr-figure"> — the container-query
  *      container. The figure itself must stay a *descendant* of the container so
  *      @container rules can restyle it; an element cannot query its own size.
+ *   3. An element whose direct children carry the conventional width-alternative
+ *      classes — [Narrow]{.narrow}[Wide]{.wide}[Full]{.full} in the source —
+ *      is stamped sr-switch, making it the query container its child spans
+ *      display against. .narrow plus at least one other variant is required
+ *      (the guard against unrelated .narrow usage; .narrow is also the ladder's
+ *      universal fallback, so it must exist). Absent variants are stamped
+ *      no-wide / no-full — the stylesheet's fallback layers cannot depend on
+ *      :has(), which is newer than container queries.
  *
  * Deliberately NOT here: `container-type` on .sr-page. Inline-size containment
  * wrapped around an entire chapter has a history of breaking fragmentation in
@@ -42,6 +50,19 @@ async function transformDOM(htmlDocument, idref, ctx) {
     wrapper.setAttribute('class', 'sr-figure');
     figure.replaceWith(wrapper);
     wrapper.appendChild(figure);
+  }
+
+  // 3. Inline width alternatives (classList.add is idempotent).
+  for (const narrow of [...htmlDocument.querySelectorAll('.narrow')]) {
+    const host = narrow.parentElement;
+    if (!host || host.classList.contains('sr-switch')) continue;
+    const children = [...host.children];
+    const hasWide = children.some(c => c.classList.contains('wide'));
+    const hasFull = children.some(c => c.classList.contains('full'));
+    if (!hasWide && !hasFull) continue;
+    host.classList.add('sr-switch');
+    if (!hasWide) host.classList.add('no-wide');
+    if (!hasFull) host.classList.add('no-full');
   }
 
   return htmlDocument;

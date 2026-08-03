@@ -103,3 +103,92 @@
     }
   }
 }
+
+/* ---- Inline width alternatives (.sr-switch) ----
+   [Narrow]{.narrow}[Wide]{.wide}[Full]{.full} authoring: the transform stamps
+   sr-switch (plus no-wide / no-full for absent variants) on the element
+   holding the alternatives, and that element is itself the query container —
+   small and pagination-safe, like .sr-figure. Same three-layer ladder and
+   switch points (30em / 45em) as the code/score variant extensions; exactly
+   one alternative displays (and is exposed to screen readers). */
+
+.sr-switch > .wide,
+.sr-switch > .full {
+  display: none;
+}
+
+@supports not (container-type: inline-size) {
+  @media (min-width: 30em) {
+    .sr-switch > .narrow {
+      display: none;
+    }
+    .sr-switch > .wide {
+      display: inline;
+    }
+    /* No wide alternative: keep the narrow one. */
+    .sr-switch.no-wide > .narrow {
+      display: inline;
+    }
+  }
+
+  @media (min-width: 45em) {
+    .sr-switch > .narrow,
+    .sr-switch > .wide {
+      display: none;
+    }
+    .sr-switch.no-wide > .narrow {
+      display: none;
+    }
+    .sr-switch > .full {
+      display: inline;
+    }
+    /* No full alternative: show the widest one this element defines. */
+    .sr-switch.no-full > .wide {
+      display: inline;
+    }
+    .sr-switch.no-full.no-wide > .narrow {
+      display: inline;
+    }
+  }
+}
+
+@supports (container-type: inline-size) {
+  .sr-switch {
+    container-type: inline-size;
+  }
+
+  /* rem, not em: in a @container condition em resolves against the CONTAINER's
+     own font-size, and these containers are commonly headings — a 1.5em h2
+     would push "30em" to 45 body-ems. rem matches the @media fallback above
+     (media-query em is root-based) and still tracks the reader's font size. */
+  @container (min-width: 30rem) {
+    .sr-switch > .narrow {
+      display: none;
+    }
+    .sr-switch > .wide {
+      display: inline;
+    }
+    .sr-switch.no-wide > .narrow {
+      display: inline;
+    }
+  }
+
+  @container (min-width: 45rem) {
+    .sr-switch > .narrow,
+    .sr-switch > .wide {
+      display: none;
+    }
+    .sr-switch.no-wide > .narrow {
+      display: none;
+    }
+    .sr-switch > .full {
+      display: inline;
+    }
+    .sr-switch.no-full > .wide {
+      display: inline;
+    }
+    .sr-switch.no-full.no-wide > .narrow {
+      display: inline;
+    }
+  }
+}

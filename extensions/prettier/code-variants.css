@@ -1,0 +1,75 @@
+/*
+  Prettier code variants — which of the three formatted widths displays, in
+  three layers of progressively narrower support (the same ladder as the
+  abc2svg / abcjs / Responsive extensions; no reading-system JavaScript):
+
+  1. base                   — the narrow variant; works everywhere
+  2. @supports not + @media — approximate viewport buckets where container
+                              queries are unavailable
+  3. @supports + @container — precise buckets against the reading column
+
+  transformPrettier.js always emits exactly three variants (pre.narrow,
+  pre.wide, pre.full) inside one div.code-variants, so none of the abc
+  sheets' missing-variant machinery is needed. Switch points are the fixed
+  convention (30em / 45em); the Prettier print widths control the formatting,
+  not when a variant displays.
+*/
+
+/* ---- Layer 1: the narrow variant only (works everywhere) ---- */
+
+.code-variants > pre.wide,
+.code-variants > pre.full {
+  display: none;
+}
+
+/* ---- Layer 2: approximate viewport buckets (no container-query support) ---- */
+
+@supports not (container-type: inline-size) {
+  @media (min-width: 30em) {
+    .code-variants > pre.narrow {
+      display: none;
+    }
+    .code-variants > pre.wide {
+      display: block;
+    }
+  }
+
+  @media (min-width: 45em) {
+    .code-variants > pre.wide {
+      display: none;
+    }
+    .code-variants > pre.full {
+      display: block;
+    }
+  }
+}
+
+/* ---- Layer 3: precise container buckets (progressive enhancement) ---- */
+
+@supports (container-type: inline-size) {
+  .code-variants {
+    container-type: inline-size;
+  }
+
+  /* rem, not em: in a @container condition em resolves against the container's
+     own font-size, so a project styling code blocks smaller would shift the
+     buckets. rem matches the @media fallback (media-query em is root-based)
+     and still tracks the reader's font size. */
+  @container (min-width: 30rem) {
+    .code-variants > pre.narrow {
+      display: none;
+    }
+    .code-variants > pre.wide {
+      display: block;
+    }
+  }
+
+  @container (min-width: 45rem) {
+    .code-variants > pre.wide {
+      display: none;
+    }
+    .code-variants > pre.full {
+      display: block;
+    }
+  }
+}

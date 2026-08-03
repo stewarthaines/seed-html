@@ -14,5 +14,12 @@
   "domTransforms": [
     "transformPrettier.js"
   ],
-  "textTransforms": []
+  "textTransforms": [],
+  "assets": [
+    {
+      "file": "code-variants.css",
+      "target": "Styles/code-variants.css",
+      "media": "text/css"
+    }
+  ]
 }
