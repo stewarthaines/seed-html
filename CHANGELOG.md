@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- In Firefox, the preview kept its scroll position and click-to-select after every edit again — previously both stopped working on every second re-render.
+
 ## [0.17.0] - 2026-08-03
 
 ### Added

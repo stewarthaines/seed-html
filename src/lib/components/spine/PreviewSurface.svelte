@@ -386,6 +386,15 @@
     fallbackScrollTop: number;
   } | null = $state(null);
 
+  // Written documents handled by handleIframeLoad, keyed by their <body> (the
+  // Document object survives document.open() cycles; the body is fresh per
+  // write). handleIframeLoad is invoked from two sides — the iframe `load`
+  // event AND directly after a rewrite's document.close() — because current
+  // Firefox leaves a written document at readyState "interactive" on alternate
+  // open()/write()/close() cycles and never fires `load` for it. First
+  // invocation per written document wins; the other is a no-op.
+  const handledBodies = new WeakSet<HTMLElement>();
+
   // Reactive state
   const lastUpdateTime = writable<number>(Date.now());
 
@@ -837,6 +846,15 @@
       // this rewrite replaces it). Doing it here guarantees the new device's base
       // font and the current theme are on the freshly written document.
       applyPreviewAppearance();
+
+      // Run the post-load work directly: document.write is synchronous, so the
+      // DOM is complete once close() returns — but current Firefox leaves the
+      // written document at readyState "interactive" on alternate rewrite
+      // cycles and never fires the iframe `load` event, which would strand
+      // scroll restoration and preview interactivity. handleIframeLoad is
+      // guarded per written document, so browsers that do fire `load` won't
+      // run it twice.
+      handleIframeLoad();
 
       lastUpdateTime.set(Date.now());
 
@@ -1609,6 +1627,14 @@
   function handleIframeLoad(): void {
     if (previewIframe?.contentDocument) {
       const iframeDoc = previewIframe.contentDocument;
+
+      // Once per written document (see handledBodies). A body-less document is
+      // a stalled parse: leave it unmarked so a later real `load` can still
+      // run the setup (setupIframeInteractivity guards itself against it).
+      if (iframeDoc.body) {
+        if (handledBodies.has(iframeDoc.body)) return;
+        handledBodies.add(iframeDoc.body);
+      }
 
       // Set up interactivity first. Not on foliate-rendered views: the click
       // deixis and hover outlines belong to the chapter document, and here the
