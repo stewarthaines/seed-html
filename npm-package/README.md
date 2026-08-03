@@ -3,8 +3,10 @@
 Run the full [SEED.html](https://github.com/stewarthaines/seed-html) EPUB editor locally with one command:
 
 ```
-npx @stewarthaines/seed-html
+npx seed-html
 ```
+
+(`seed-html` and `@stewarthaines/seed-html` are the same package — same payload, same versions; the scoped name is canonical.)
 
 That starts a local server (default `http://localhost:8417/`) and opens your browser. Everything runs in the browser — your projects are stored by the browser itself (OPFS), nothing is uploaded anywhere, and after the first visit the app works offline as a PWA.
 

@@ -252,11 +252,13 @@ The application includes a self-download feature:
 [`@stewarthaines/seed-html`](https://www.npmjs.com/package/@stewarthaines/seed-html) serves the **full deployed app** — the extensions and plugins catalogs, locales, and the service worker, which the single-file download cannot carry — from a local server with one command:
 
 ```bash
-npx @stewarthaines/seed-html            # serve + open the browser (default port 8417)
-npx @stewarthaines/seed-html --port 9000 --no-open
-npx @stewarthaines/seed-html bridge     # the agent bridge (MCP over stdio), for e.g.:
-                                        #   claude mcp add seed-bridge -- npx -y @stewarthaines/seed-html bridge
+npx seed-html                           # serve + open the browser (default port 8417)
+npx seed-html --port 9000 --no-open
+npx seed-html bridge                    # the agent bridge (MCP over stdio), for e.g.:
+                                        #   claude mcp add seed-bridge -- npx -y seed-html bridge
 ```
+
+The unscoped `seed-html` is an alias of the canonical `@stewarthaines/seed-html` — the same payload and version are published under both names.
 
 localhost is a secure context, so OPFS project storage, the PWA behavior, and the http-only preview devices all work as on the hosted site. Projects are stored by the browser **per address** (port included). Not included: the WebDAV publish proxy (a Cloudflare function) — remote publishing needs the hosted app.
 
@@ -269,11 +271,11 @@ To publish a release (after the normal deploy build, as the same person who ran 
 ```bash
 npm run build:i18n && npm run build:plugins   # the payload the package stages
 cd npm-package
-npm pack --dry-run                            # optional: inspect the ~4 MB tarball
-npm publish                                   # prepack stages + version-syncs; OTP prompt (2FA)
+npm run release                               # publishes BOTH names; OTP prompt (2FA)
+npm run release -- --dry-run                  # optional: stage + pack without uploading
 ```
 
-npm refuses to republish an existing version, so this naturally pairs with the `chore(release)` version bump — publish once per released version.
+`npm run release` (`publish.mjs`) stages the payload, version-syncs from the root `package.json`, and publishes under both names, skipping any name+version already on the registry — so it's safe to rerun after a partial release, and it naturally pairs with the `chore(release)` version bump: publish once per released version.
 
 ## EPUB Embedding
 

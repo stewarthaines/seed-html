@@ -1,5 +1,5 @@
 {
-  "name": "@stewarthaines/seed-html",
+  "name": "seed-html",
   "version": "0.17.0",
   "description": "SEED.html (Simple EPUB Editor) — the full app on a local server with one command: npx @stewarthaines/seed-html",
   "license": "MIT",
@@ -15,7 +15,8 @@
     "docs"
   ],
   "scripts": {
-    "prepack": "node sync-assets.mjs"
+    "prepack": "node sync-assets.mjs",
+    "release": "node publish.mjs"
   },
   "dependencies": {
     "ws": "8.21.0"

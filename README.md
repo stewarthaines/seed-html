@@ -23,7 +23,7 @@ SEED.html is distributed under the terms of the MIT license. It is free to use, 
 1. **Web Application** - Access at [readitinabook.com](https://readitinabook.com) for immediate use
 2. **Downloadable HTML** - Save locally from the above site for offline authoring by opening the SEED.html file from your device
 3. **Embedded in EPUBs** - The core SEED.html app can be added to an EPUB as a non-manifest item, so it travels with the book for the life of that artifact
-4. **npm package** - `npx @stewarthaines/seed-html` serves the full app (including the extensions and plugins catalogs the single file can't carry) on your own machine — see [@stewarthaines/seed-html](https://www.npmjs.com/package/@stewarthaines/seed-html)
+4. **npm package** - `npx seed-html` serves the full app (including the extensions and plugins catalogs the single file can't carry) on your own machine — see [@stewarthaines/seed-html](https://www.npmjs.com/package/@stewarthaines/seed-html) (also published unscoped as `seed-html`)
 
 See [USER_GUIDE.md](./docs/user/USER_GUIDE.md) for detailed usage instructions.
 
