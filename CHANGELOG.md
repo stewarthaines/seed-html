@@ -13,14 +13,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-08-03
+
 ### Added
 
 - Run the editor on your own machine with one command: `npx seed-html` starts a local server with the complete app — extensions catalog, plugins, the READ.html reader, and offline support included — no build step, nothing uploaded anywhere. The app and reader live at the same `/SEED.html` and `/READ.html` addresses as the hosted site.
 - Agent assistance now works when the editor runs on your own machine (`npx seed-html`, not just the dev checkout): the robot button in the sidebar pairs the tab with a running `npx seed-html bridge`, and the bridge only accepts connections from your own machine's pages.
+- Inline width alternatives: write `[Narrow]{.narrow}[Wide]{.wide}[Full]{.full}` in a heading or paragraph and exactly one shows, chosen by the width of the page it is read on.
+
+### Changed
+
+- The Responsive extension's reading measure now applies to prose only: paragraphs keep a comfortable line length while music scores, formatted code, figures and tables use the full width of the page or paper.
+- Music scores and formatted code now choose their full-width rendering on A4 and US Letter pages, and on equally wide screens — previously print always got the middle size.
 
 ### Fixed
 
 - In Firefox, the preview kept its scroll position and click-to-select after every edit again — previously both stopped working on every second re-render.
+- The Prettier extension shows one formatted width at a time again, chosen to fit the column — the three variants had been rendering stacked.
+- The robot and Package buttons stack in the collapsed sidebar instead of sharing a row that overflowed it.
 
 ## [0.17.0] - 2026-08-03
 
