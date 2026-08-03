@@ -11,7 +11,7 @@
   The transform stamps the classes this sheet keys on: .is-default (largest
   scale = narrow-column variant), .is-widest (smallest scale), and .no-wide /
   .no-full on the container when a block doesn't define those conventional
-  variants. Switch points are a fixed convention (30em / 45em); the
+  variants. Switch points are a fixed convention (30em / 40em); the
   frontmatter scales control the engraving size, not when a variant displays.
 */
 
@@ -52,7 +52,7 @@
     }
   }
 
-  @media (min-width: 45em) {
+  @media (min-width: 40em) {
     .abc2svg-container .abc2svg-variant.is-default,
     .abc2svg-container .abc2svg-variant.wide {
       display: none;
@@ -89,7 +89,7 @@
     }
   }
 
-  @container (min-width: 45em) {
+  @container (min-width: 40em) {
     .abc2svg-container .abc2svg-variant.is-default,
     .abc2svg-container .abc2svg-variant.wide {
       display: none;

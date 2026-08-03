@@ -11,7 +11,7 @@
   transformPrettier.js always emits exactly three variants (pre.narrow,
   pre.wide, pre.full) inside one div.code-variants, so none of the abc
   sheets' missing-variant machinery is needed. Switch points are the fixed
-  convention (30em / 45em); the Prettier print widths control the formatting,
+  convention (30em / 40em); the Prettier print widths control the formatting,
   not when a variant displays.
 */
 
@@ -34,7 +34,7 @@
     }
   }
 
-  @media (min-width: 45em) {
+  @media (min-width: 40em) {
     .code-variants > pre.wide {
       display: none;
     }
@@ -64,7 +64,7 @@
     }
   }
 
-  @container (min-width: 45rem) {
+  @container (min-width: 40rem) {
     .code-variants > pre.wide {
       display: none;
     }

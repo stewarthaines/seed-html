@@ -51,7 +51,7 @@
 
 /* ---- Layer 3: coarse width buckets (approximate on paginated spreads) ---- */
 
-@media (min-width: 45em) {
+@media (min-width: 40em) {
   /* Wide page: let figures break out of the measure symmetrically. */
   .sr-figure {
     width: 120%;
@@ -109,7 +109,7 @@
    sr-switch (plus no-wide / no-full for absent variants) on the element
    holding the alternatives, and that element is itself the query container —
    small and pagination-safe, like .sr-figure. Same three-layer ladder and
-   switch points (30em / 45em) as the code/score variant extensions; exactly
+   switch points (30em / 40em) as the code/score variant extensions; exactly
    one alternative displays (and is exposed to screen readers). */
 
 .sr-switch > .wide,
@@ -131,7 +131,7 @@
     }
   }
 
-  @media (min-width: 45em) {
+  @media (min-width: 40em) {
     .sr-switch > .narrow,
     .sr-switch > .wide {
       display: none;
@@ -173,7 +173,7 @@
     }
   }
 
-  @container (min-width: 45rem) {
+  @container (min-width: 40rem) {
     .sr-switch > .narrow,
     .sr-switch > .wide {
       display: none;

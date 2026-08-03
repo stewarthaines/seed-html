@@ -11,7 +11,7 @@
   The transform stamps the classes this sheet keys on: .is-default (narrowest),
   .is-widest, and .no-wide / .no-full on the container when a block doesn't
   define those conventional variants. Switch points are a fixed convention
-  (30em / 45em); the frontmatter staff widths control each variant's line
+  (30em / 40em); the frontmatter staff widths control each variant's line
   breaking, not when it displays.
 */
 
@@ -58,7 +58,7 @@
     }
   }
 
-  @media (min-width: 45em) {
+  @media (min-width: 40em) {
     .abcjs-container .abcjs-variant.is-default,
     .abcjs-container .abcjs-variant.wide {
       display: none;
@@ -95,7 +95,7 @@
     }
   }
 
-  @container (min-width: 45em) {
+  @container (min-width: 40em) {
     .abcjs-container .abcjs-variant.is-default,
     .abcjs-container .abcjs-variant.wide {
       display: none;

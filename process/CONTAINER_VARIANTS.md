@@ -44,6 +44,15 @@ Both phases built and browser-verified (12/12 fixture cells across 20/35/50em co
 
 **One discovery worth keeping**: in a `@container` condition, `em` resolves against the **container's own font-size** — not the root, and not like `@media` em (which is root-based). An `h2` at 1.5em pushed "min-width: 30em" to 45 body-ems and every sr-switch bucket fired late. Both new sheets use `rem` in `@container` conditions (root-tracking, so the reader's font-size preference still moves the buckets; identical semantics to the `@media` fallback layer). The abc sheets keep `em` — their containers are body-font divs, so it's latent there; align them to `rem` if a project ever styles those containers' font-size.
 
+## Retune (2026-08-03, same day)
+
+The wide→full switch moved **45 → 40** (em/rem) across all four sheets, including the abc pair and the Responsive figure breakout. Measured cause: an A4 page with the 18mm preset has a 174mm ≈ 41.1rem content column (US Letter ≈ 42.5rem) — both sat just under 45, so print always got `wide`. At 40, print paper gets the full variants; A5 (~26rem) stays narrow. Verified 16/16 in the harness with a 42em A4-stand-in column.
+
+Two facts found while measuring the live paged preview over the bridge, for future reference:
+
+- **Inside the Responsive extension, `.sr-page`'s 36em measure caps every descendant container** — the full bucket (40+) is unreachable there on any paper size. Projects using abc/prettier without Responsive (e.g. the bulletin) are unaffected. If full variants should appear inside the measure, the element needs a breakout like `.sr-figure`'s 120% — a separate design decision, not taken.
+- **The fit-to-width Print preview applies `zoom` (~0.65 at typical pane sizes), which shrinks container layout widths** — the preview can show a narrower variant than the real print/PDF chooses. Print at 100% (or the PDF) is the truth for variant selection.
+
 ## Out of scope
 
 - Migrating `.code-variants` to arbitrary variant sets (frontmatter-driven widths like abc's scales) — no current use case.
