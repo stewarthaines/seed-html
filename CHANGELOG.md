@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Run the editor on your own machine with one command: `npx @stewarthaines/seed-html` starts a local server with the complete app — extensions catalog, plugins, and offline support included — no build step, nothing uploaded anywhere.
+- Run the editor on your own machine with one command: `npx seed-html` starts a local server with the complete app — extensions catalog, plugins, the READ.html reader, and offline support included — no build step, nothing uploaded anywhere. The app and reader live at the same `/SEED.html` and `/READ.html` addresses as the hosted site.
 
 ### Fixed
 

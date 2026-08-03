@@ -62,7 +62,34 @@ export function serve(argv) {
   }
 
   const server = createServer((req, res) => {
-    const path = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+    const url = new URL(req.url, 'http://localhost');
+    const path = decodeURIComponent(url.pathname);
+
+    // Mirror the hosted site's branded routes (Cloudflare Pages Functions in
+    // functions/): the app lives at /SEED.html, the reader at /READ.html, and
+    // a saved copy of either page should be named like the product it is.
+    if (path === '/') {
+      res.writeHead(302, { location: '/SEED.html' + url.search }).end();
+      return;
+    }
+    if (path === '/read/READ.html') {
+      res.writeHead(301, { location: '/READ.html' + url.search }).end();
+      return;
+    }
+    const branded = {
+      '/SEED.html': { asset: 'index.html', filename: 'SEED.html' },
+      '/READ.html': { asset: 'read/READ.html', filename: 'READ.html' },
+    }[path];
+    if (branded) {
+      res.writeHead(200, {
+        'content-type': MIME['.html'],
+        'content-disposition': `inline; filename="${branded.filename}"`,
+        'cache-control': 'no-cache',
+      });
+      createReadStream(join(DIST, branded.asset)).pipe(res);
+      return;
+    }
+
     let file = resolve(DIST, '.' + (path.endsWith('/') ? path + 'index.html' : path));
     if (!file.startsWith(DIST)) {
       res.writeHead(403).end('forbidden');
