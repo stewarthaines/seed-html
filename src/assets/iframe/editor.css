@@ -130,11 +130,12 @@ body {
   }
 }
 
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+/* No motion, ever: this iframe is invisible scratch space, and transforms
+   measure geometry synchronously (getBBox). A transition in flight — even the
+   0.01ms reduced-motion pattern, which CREATES transitions because
+   transition-property defaults to `all` — makes those reads return stale
+   values (e.g. mermaid viewBoxes measured before node transforms applied). */
+* {
+  animation: none !important;
+  transition: none !important;
 }
