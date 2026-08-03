@@ -13,6 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-08-03
+
+### Added
+
+- Mermaid diagrams: with the new Mermaid extension installed, a ```` ```mermaid ```` code block renders as a crisp diagram that scales to the reading column and travels inside the book — no scripts, fonts or network needed to read it. Flowchart, sequence, class, state, pie and gantt diagrams are supported, a block can pick its own theme, and a generator inserts a ready-made sample of any of the six types with an accessible title and description filled in.
+
+### Fixed
+
+- Rendered diagrams no longer come out clipped when the system's Reduce Motion accessibility setting is turned on.
+
 ## [0.16.0] - 2026-07-31
 
 ### Added
