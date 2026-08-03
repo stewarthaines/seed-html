@@ -1,0 +1,111 @@
+{
+  "id": "mermaid",
+  "name": "Mermaid",
+  "description": "Render Mermaid diagram code blocks (flowcharts, sequence, class, state, pie, gantt) as static SVG. Per-block titles and config via Mermaid's own frontmatter and %%{init}%% directives.",
+  "category": "code-blocks",
+  "url": "https://mermaid.js.org/",
+  "licenseName": "MIT",
+  "license": "LICENSE.txt",
+  "scripts": [
+    "mermaid.min.js"
+  ],
+  "assets": [
+    {
+      "file": "mermaid.css",
+      "target": "Styles/mermaid.css",
+      "media": "text/css"
+    }
+  ],
+  "generators": [
+    {
+      "id": "mermaid-sample",
+      "name": "Mermaid Sample",
+      "description": "Insert a sample Mermaid diagram: choose the diagram type, theme, and accessibility keywords.",
+      "script": "mermaid-sample.js",
+      "options": [
+        {
+          "type": "select",
+          "name": "format",
+          "label": "Plain text wrapper",
+          "default": "markdown",
+          "options": [
+            {
+              "value": "markdown",
+              "label": "Markdown"
+            },
+            {
+              "value": "textile",
+              "label": "Textile"
+            }
+          ]
+        },
+        {
+          "type": "select",
+          "name": "diagram",
+          "label": "Diagram type",
+          "default": "flowchart",
+          "options": [
+            {
+              "value": "flowchart",
+              "label": "Flowchart"
+            },
+            {
+              "value": "sequence",
+              "label": "Sequence"
+            },
+            {
+              "value": "class",
+              "label": "Class"
+            },
+            {
+              "value": "state",
+              "label": "State"
+            },
+            {
+              "value": "pie",
+              "label": "Pie"
+            },
+            {
+              "value": "gantt",
+              "label": "Gantt"
+            }
+          ]
+        },
+        {
+          "type": "select",
+          "name": "theme",
+          "label": "Theme",
+          "default": "neutral",
+          "options": [
+            {
+              "value": "neutral",
+              "label": "Neutral (extension default)"
+            },
+            {
+              "value": "default",
+              "label": "Mermaid default"
+            },
+            {
+              "value": "dark",
+              "label": "Dark"
+            },
+            {
+              "value": "forest",
+              "label": "Forest"
+            }
+          ]
+        },
+        {
+          "type": "boolean",
+          "name": "titled",
+          "label": "Accessible title and description",
+          "default": true
+        }
+      ]
+    }
+  ],
+  "domTransforms": [
+    "transformMermaid.js"
+  ],
+  "textTransforms": []
+}

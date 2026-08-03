@@ -1,0 +1,18 @@
+/*
+  Mermaid diagram placement. Each diagram's look (colors, fonts, shapes) is
+  embedded in its own SVG, scoped to the diagram id — this sheet only places
+  the container in the reading column.
+*/
+
+.mermaid-container {
+  margin-block: 1em;
+  text-align: center;
+  break-inside: avoid;
+}
+
+/* The SVG carries width="100%" plus a native-size max-width; cap it to the
+   column and keep the viewBox aspect ratio. */
+.mermaid-container svg {
+  max-inline-size: 100%;
+  block-size: auto;
+}
