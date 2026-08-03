@@ -128,7 +128,12 @@ export default [
     },
   },
   {
-    files: ['scripts/**/*.{js,mjs,cjs}', 'build-scripts/**/*.{js,cjs}'],
+    files: [
+      'scripts/**/*.{js,mjs,cjs}',
+      'build-scripts/**/*.{js,cjs}',
+      // The npm package's CLI sources (its staged payload is ignored below).
+      'npm-package/**/*.mjs',
+    ],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
@@ -166,6 +171,13 @@ export default [
       '.wrangler/',
       // Local Python virtualenv (untracked) — not app code.
       '.venv/',
+      // npm package staging (untracked): the built app payload plus copies of
+      // scripts/agent-bridge.mjs and docs/, staged by sync-assets.mjs at pack
+      // time. The package's own sources (bin/, lib/, *.mjs) stay linted.
+      'npm-package/dist/',
+      'npm-package/scripts/',
+      'npm-package/docs/',
+      'npm-package/node_modules/',
       // Vendored third-party runtime asset (MIT), served dev-only beside the
       // agent bridge module. Not app code; upstream formatting is left intact.
       'src/lib/agent-bridge/cuelume.js',
