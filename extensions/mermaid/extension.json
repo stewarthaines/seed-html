@@ -1,7 +1,7 @@
 {
   "id": "mermaid",
   "name": "Mermaid",
-  "description": "Render Mermaid diagram code blocks (flowcharts, sequence, class, state, pie, gantt) as static SVG. Per-block titles and config via Mermaid's own frontmatter and %%{init}%% directives.",
+  "description": "Render mermaid code blocks as self-contained SVG diagrams: flowchart, sequence, class, state, pie, and gantt.",
   "category": "code-blocks",
   "url": "https://mermaid.js.org/",
   "licenseName": "MIT",

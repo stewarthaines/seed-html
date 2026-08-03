@@ -26,6 +26,7 @@ When the user asks you to document a plan or write a new document describing det
 - The user will run the npm dev server, so the agent never needs to
 - When writing api docs only document methods specified. do not invent features that haven't been requested.
 - don't write fallback style code (auto-creating files, or other content) unless explicitly approved by the user
+- **In-app copy is not documentation**: extension/generator descriptions and any other UI strings get one or two short sentences saying what the user gains — never attribute names, option values, or usage instructions. Instructional text burdens localization (every string × every catalog). Mechanics belong in the extension's code headers; usage belongs in the user manuals.
 
 ## SEED.html - Simple EPUB Editor
 

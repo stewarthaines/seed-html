@@ -1,11 +1,13 @@
 {
   "id": "audio-clips",
   "name": "AudioClips",
-  "description": "Tap-to-play audio clips in the packaged EPUB: a reading-system script and styles for the span.clip markup that the Djot and MarkdownIt transforms produce from the :clip directive, plus two independent per-clip options: the play affordance (a text glyph by default, or a circled play/stop icon with data-affordance=icon, or none) and an animated progress indicator (ring, bar, or waveform with data-progress, or none). Both take the surrounding text colour. Chapters with clips get one static audio element (required by iOS Books); inline your own <audio controls> to make the player visible.",
+  "description": "Tap-to-play audio clips in packaged EPUBs, created with the :clip directive. Play and progress indicators are selectable per clip.",
   "licenseName": "MIT",
   "category": "chapter-content",
   "scripts": [],
-  "domTransforms": ["transformClipProgress.js"],
+  "domTransforms": [
+    "transformClipProgress.js"
+  ],
   "textTransforms": [],
   "assets": [
     {
