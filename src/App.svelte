@@ -2185,8 +2185,11 @@
     min-height: 36px;
   }
 
-  /* Collapsed sidebar: show the package icon only (the label is illegible squeezed). */
+  /* Collapsed sidebar: show the package icon only (the label is illegible
+     squeezed), and stack the robot and package buttons — side by side they
+     don't fit the 48px rail. */
   :global(.sidebar.collapsed) .package-epub-section {
+    flex-direction: column;
     padding: var(--space-2);
   }
 
