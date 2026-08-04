@@ -40,10 +40,75 @@ export class Zip {
   }
 
   /**
-   * Reads and parses the ZIP file structure
+   * Reads and parses the ZIP file structure.
+   *
+   * The central directory is the source of truth: streaming writers (general
+   * purpose bit 3, common in EPUBs exported by server-side tools) leave the
+   * local header's crc/sizes ZERO and put the real values in a trailing data
+   * descriptor and the central directory. Reading sizes from local headers
+   * extracts every such entry as 0 bytes. So: locate the end-of-central-
+   * directory record, walk the central directory, and take each entry's data
+   * offset from its local header but its sizes from the directory.
    */
   private read(): void {
-    while (!this.#endOfCentralDirectory && this.#index < this.#dataView.byteLength - 4) {
+    const eocdOffset = this.findEndOfCentralDirectory();
+    if (eocdOffset === null) {
+      // No end-of-central-directory record (truncated file): fall back to a
+      // sequential local-header walk, which recovers whatever is readable.
+      this.readSequential();
+      return;
+    }
+
+    this.#endOfCentralDirectory = this.readEndCentralDirectory(eocdOffset);
+    let offset = this.#endOfCentralDirectory.centralDirectoryOffset;
+    for (let i = 0; i < this.#endOfCentralDirectory.numberCentralDirectoryRecords; i++) {
+      if (
+        offset + 46 > this.#dataView.byteLength ||
+        this.#dataView.getUint32(offset, true) !== 0x02014b50
+      ) {
+        break;
+      }
+      const cd = this.readCentralDirectory(offset);
+      this.#centralDirectories.push(cd);
+      offset += 46 + cd.fileNameLength + cd.extraLength + cd.fileCommentLength;
+
+      if (this.#dataView.getUint32(cd.offset, true) !== 0x04034b50) {
+        continue; // directory points at something that isn't a local header
+      }
+      const entry = this.readLocalFile(cd.offset);
+      entry.startsAt = cd.offset + 30 + entry.fileNameLength + entry.extraLength;
+      // Central directory values are authoritative (see method comment).
+      entry.crc = cd.crc;
+      entry.compressedSize = cd.compressedSize;
+      entry.uncompressedSize = cd.uncompressedSize;
+      entry.extract = this.extract.bind(this, entry);
+      this.#localFiles.push(entry);
+    }
+  }
+
+  /**
+   * Locate the end-of-central-directory record: scan back from the end of the
+   * file (the record is last, followed only by an optional comment of up to
+   * 65535 bytes).
+   */
+  private findEndOfCentralDirectory(): number | null {
+    const min = Math.max(0, this.#dataView.byteLength - 22 - 65535);
+    for (let i = this.#dataView.byteLength - 22; i >= min; i--) {
+      if (this.#dataView.getUint32(i, true) === 0x06054b50) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Legacy sequential walk over local headers, used only when the file has no
+   * end-of-central-directory record. Trusts local-header sizes, so streaming
+   * (bit 3) entries extract empty here — nothing better is possible without
+   * the directory.
+   */
+  private readSequential(): void {
+    while (this.#index < this.#dataView.byteLength - 4) {
       const signature = this.#dataView.getUint32(this.#index, true);
 
       if (signature === 0x04034b50) {
