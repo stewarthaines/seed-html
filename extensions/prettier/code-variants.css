@@ -73,3 +73,21 @@
     }
   }
 }
+
+/* ---- Print: deterministic variant choice ----
+   Chromium print does not reliably evaluate size container queries (see
+   abc2svg.css); print shows the full-width formatting with plain rules and
+   drops containment. Paged.js appends unwrapped print rules last. */
+
+@media print {
+  .code-variants {
+    container-type: normal;
+  }
+  .code-variants > pre.narrow,
+  .code-variants > pre.wide {
+    display: none !important;
+  }
+  .code-variants > pre.full {
+    display: block !important;
+  }
+}

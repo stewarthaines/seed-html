@@ -216,3 +216,30 @@
     }
   }
 }
+
+/* ---- Print: deterministic variant choice ----
+   Chromium print does not reliably evaluate size container queries (see
+   abc2svg.css); print picks the widest inline alternative with plain rules
+   and drops containment (.sr-figure included — inline-size containment has
+   print-layout bugs of its own). Paged.js appends unwrapped print rules
+   last, so these win by cascade position. */
+
+@media print {
+  .sr-switch,
+  .sr-figure {
+    container-type: normal;
+  }
+  .sr-switch > .narrow,
+  .sr-switch > .wide {
+    display: none !important;
+  }
+  .sr-switch > .full {
+    display: inline !important;
+  }
+  .sr-switch.no-full > .wide {
+    display: inline !important;
+  }
+  .sr-switch.no-full.no-wide > .narrow {
+    display: inline !important;
+  }
+}

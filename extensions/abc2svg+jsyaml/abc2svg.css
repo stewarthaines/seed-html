@@ -105,3 +105,30 @@
     }
   }
 }
+
+/* ---- Print: deterministic variant choice ----
+   Chromium's print rendering does not reliably evaluate size container
+   queries: the paged preview honors them, but the print dialog's re-render
+   can treat them as never matching, blanking every variant the queries
+   manage. Print therefore picks its variant with plain rules — the full
+   variant, with the stamped fallback classes covering blocks that don't
+   define one — and drops containment, which has print-layout bugs of its
+   own. Paged.js unwraps this block and appends it after the stylesheet, so
+   these rules win by cascade position. */
+
+@media print {
+  .abc2svg-container {
+    container-type: normal;
+  }
+  /* !important: the ladder's show-rules carry more classes than a plain
+     hide-all, and appended-last only breaks ties. */
+  .abc2svg-container .abc2svg-variant {
+    display: none !important;
+  }
+  .abc2svg-container .abc2svg-variant.full {
+    display: block !important;
+  }
+  .abc2svg-container.no-full .abc2svg-variant.is-widest {
+    display: block !important;
+  }
+}

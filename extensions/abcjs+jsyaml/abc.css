@@ -111,3 +111,25 @@
     }
   }
 }
+
+/* ---- Print: deterministic variant choice ----
+   Chromium print does not reliably evaluate size container queries (see
+   abc2svg.css); print picks its variant with plain rules and drops
+   containment. Paged.js appends unwrapped print rules last, so these win. */
+
+@media print {
+  .abcjs-container {
+    container-type: normal;
+  }
+  /* !important: the ladder's show-rules carry more classes than a plain
+     hide-all, and appended-last only breaks ties. */
+  .abcjs-container .abcjs-variant {
+    display: none !important;
+  }
+  .abcjs-container .abcjs-variant.full {
+    display: block !important;
+  }
+  .abcjs-container.no-full .abcjs-variant.is-widest {
+    display: block !important;
+  }
+}
