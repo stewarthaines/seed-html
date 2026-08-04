@@ -10,18 +10,20 @@ genuine, reviewed translation are shipped** — see below.
 ## Languages
 
 **Shipped / enabled** (the single source of truth is `ENABLED_LOCALES` in
-`locale-config.ts`; only these are bundled, offered in the picker, and eligible for
-browser auto-detection):
+`locale-meta.js`, re-exported by `locale-config.ts` for the runtime and by
+`build-scripts/enabled-locales.js` for the build; only these are bundled, offered in the
+picker, and eligible for browser auto-detection):
 
 - **English** (en) - Primary development / source language
-- **German** (de) - Deutsch — complete, hand-reviewed
+- **German** (de) - Deutsch — substantially complete and hand-reviewed; the strings not
+  yet translated fall back to English at runtime
 
 **Scaffolded but not enabled** — display names, RTL flags, and `.po` files exist, but the
 translations are not yet done, so these are deliberately kept out of the bundle and the UI.
 A user whose browser is set to one of these falls back cleanly to English (never a
 half-translated/placeholder screen). Re-enable a locale by adding it to `ENABLED_LOCALES`
-(both the runtime list and `build-scripts/enabled-locales.js`) once a real translation is
-in place and reviewed:
+in `locale-meta.js` — that one list gates the runtime and the build — once a real
+translation is in place and reviewed:
 
 - **Arabic** (ar) - العربية (RTL)
 - **Hebrew** (he) - עברית (RTL)
@@ -413,7 +415,8 @@ const textAlign = isRTL ? 'right' : 'left';
 
 ### Translation Loading
 
-- **ZIP compression**: All 7 languages compressed to ~20-30KB
+- **ZIP compression**: The shipped catalogs — German today, since English needs none —
+  deflate to ~21KB
 - **First-run extraction**: Extracts to storage with 'locales' workspace ID
 - **Offline-first**: No network dependency after initial load
 - **Version-based updates**: Re-extracts when app version changes
