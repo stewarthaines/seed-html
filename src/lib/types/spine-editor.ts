@@ -27,6 +27,10 @@ export interface TransformResult {
 export interface TransformScripts {
   textTransform?: string;
   domTransforms?: string[];
+  /** Script basenames matching textTransform / domTransforms — used to
+   *  attribute captured console warnings to the emitting script. */
+  textTransformName?: string;
+  domTransformNames?: string[];
   settings?: {
     transform_pipeline?: {
       timeout_ms?: number;

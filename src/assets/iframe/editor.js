@@ -15,9 +15,16 @@ class TransformExecutionEngine {
   constructor() {
     this.textTransformScript = '';
     this.domTransformScripts = [];
+    this.textTransformName = '';
+    this.domTransformNames = [];
     this.loadedExtensionScripts = [];
     this.debugMode = false;
     this.messageHandlers = new Map();
+
+    // console.error/warn output captured from sandboxed scripts during the
+    // current transform run, surfaced to the host as TransformResult.warnings.
+    this.capturedWarnings = [];
+    this.droppedWarnings = 0;
 
     // Brokered file-access requests awaiting a BROKER_RESPONSE from the parent.
     this.brokerPending = new Map();
@@ -139,6 +146,8 @@ class TransformExecutionEngine {
     try {
       this.textTransformScript = scripts.textTransform || '';
       this.domTransformScripts = scripts.domTransforms || [];
+      this.textTransformName = scripts.textTransformName || '';
+      this.domTransformNames = scripts.domTransformNames || [];
 
       const textScriptLength = this.textTransformScript.length;
       const domScriptCount = this.domTransformScripts.length;
@@ -319,6 +328,8 @@ class TransformExecutionEngine {
     const { plainText, timeout = 3000, idref, transformCtx } = request;
     const ctx = this.createTransformContext(transformCtx);
     const startTime = performance.now();
+    this.capturedWarnings = [];
+    this.droppedWarnings = 0;
 
     try {
       this.updateStatus('Executing transform pipeline...', 'info');
@@ -363,6 +374,7 @@ class TransformExecutionEngine {
       this.respondToParent(messageId, {
         success: true,
         html,
+        warnings: this.collectWarnings(),
         executionTime: Math.round(executionTime),
       });
     } catch (error) {
@@ -441,7 +453,7 @@ class TransformExecutionEngine {
     }
 
     // Create sandboxed execution environment
-    const globals = this.createSafeExecutionEnvironment();
+    const globals = this.createSafeExecutionEnvironment(this.textTransformName || 'text transform');
     const globalNames = Object.keys(globals);
     const globalValues = Object.values(globals);
 
@@ -828,7 +840,9 @@ class TransformExecutionEngine {
    */
   async executeSingleDOMTransform(document, script, index, idref, ctx) {
     // Create sandboxed execution environment
-    const globals = this.createSafeExecutionEnvironment();
+    const globals = this.createSafeExecutionEnvironment(
+      this.domTransformNames[index] || `dom-transform-${index}`
+    );
     const globalNames = Object.keys(globals);
     const globalValues = Object.values(globals);
 
@@ -855,13 +869,70 @@ class TransformExecutionEngine {
   }
 
   /**
-   * Create safe execution environment with restricted globals
+   * A console for sandboxed scripts. error and warn are captured — tagged with
+   * the emitting script's name — so the host can surface them in the preview UI
+   * (extensions conventionally report recoverable problems via console.error:
+   * abc2svg's errmsg, mermaid's render catch), and still forwarded to the real
+   * console for devtools users. Other methods pass through. The buffer is reset
+   * per transform run and capped so a loop cannot grow it unbounded.
    */
-  createSafeExecutionEnvironment() {
+  createCapturingConsole(tag) {
+    const capture = (level, args) => {
+      console[level](...args);
+      if (this.capturedWarnings.length >= 50) {
+        this.droppedWarnings += 1;
+        return;
+      }
+      const text = args
+        .map(arg => {
+          if (arg instanceof Error) return arg.message;
+          if (typeof arg === 'object' && arg !== null) {
+            try {
+              return JSON.stringify(arg);
+            } catch {
+              return String(arg);
+            }
+          }
+          return String(arg);
+        })
+        .join(' ')
+        .slice(0, 500);
+      this.capturedWarnings.push(`${tag}: ${text}`);
+    };
+    return {
+      ...console,
+      error: (...args) => capture('error', args),
+      warn: (...args) => capture('warn', args),
+    };
+  }
+
+  /**
+   * The current run's captured warnings, deduplicated. Identical messages —
+   * e.g. one abc2svg errmsg repeated per pre-rendered scale variant — collapse
+   * to a single entry with a ×count, in first-seen order. A marker records any
+   * dropped past the capture cap.
+   */
+  collectWarnings() {
+    const counts = new Map();
+    for (const message of this.capturedWarnings) {
+      counts.set(message, (counts.get(message) || 0) + 1);
+    }
+    const warnings = [...counts].map(([message, n]) => (n > 1 ? `${message} (×${n})` : message));
+    if (this.droppedWarnings > 0) warnings.push(`(+${this.droppedWarnings} more)`);
+    return warnings;
+  }
+
+  /**
+   * Create safe execution environment with restricted globals
+   * @param {string} [consoleTag] - when set, the script's console.error/warn
+   *   are captured under this tag (see createCapturingConsole); omitted for
+   *   generators, which run outside the render path.
+   */
+  createSafeExecutionEnvironment(consoleTag) {
     // Start with safe browser APIs
     const safeGlobals = {
       // Safe JavaScript built-ins
-      console,
+      console: consoleTag ? this.createCapturingConsole(consoleTag) : console,
       JSON,
       Math,
       Date,

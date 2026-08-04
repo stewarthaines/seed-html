@@ -175,25 +175,36 @@ export class SpineTransformPipeline {
         // (the file may still be being written on a fresh unpack).
         let complete = true;
 
+        // Basename of a configured script path, for attributing captured
+        // console warnings to the script that emitted them.
+        const basename = (path: string): string => path.split('/').pop() || path;
+
         if (settings.text_transform) {
           const content = await this.readScriptWithRetry(
             resolveTransformPath(settings.text_transform)
           );
           // Leave textTransform empty if unreadable; the engine passes the input
           // through unchanged rather than erroring.
-          if (content !== null) scripts.textTransform = content;
-          else complete = false;
+          if (content !== null) {
+            scripts.textTransform = content;
+            scripts.textTransformName = basename(settings.text_transform);
+          } else complete = false;
         }
 
         if (settings.dom_transforms && settings.dom_transforms.length > 0) {
           const domTransforms: string[] = [];
+          const domTransformNames: string[] = [];
           for (const scriptName of settings.dom_transforms) {
             const content = await this.readScriptWithRetry(resolveTransformPath(scriptName));
-            // Skip an unreadable DOM transform rather than queueing an empty one.
-            if (content !== null) domTransforms.push(content);
-            else complete = false;
+            // Skip an unreadable DOM transform rather than queueing an empty one
+            // (names stay index-aligned with the contents).
+            if (content !== null) {
+              domTransforms.push(content);
+              domTransformNames.push(basename(scriptName));
+            } else complete = false;
           }
           scripts.domTransforms = domTransforms;
+          scripts.domTransformNames = domTransformNames;
         }
 
         if (complete) {
