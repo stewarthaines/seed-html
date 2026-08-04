@@ -23,6 +23,31 @@ const PRECACHE_URLS = [
   '/icons/apple-touch-icon.png',
   '/paged.polyfill.js',
   '/axe.min.js',
+  // Lazy-loaded into the preview realm on demand, like axe — precached so the
+  // first announcement walk works offline rather than only after one online use.
+  '/sr-preview/virtual-screen-reader.js',
+  // The reader engine behind the reader-engine preview surface. view.js is the
+  // entry; the rest are its static imports plus the two renderers it picks
+  // between at runtime — a session that only ever paginates would otherwise
+  // never warm fixed-layout.js, and vice versa.
+  '/foliate/view.js',
+  '/foliate/epubcfi.js',
+  '/foliate/overlayer.js',
+  '/foliate/progress.js',
+  '/foliate/text-walker.js',
+  '/foliate/paginator.js',
+  '/foliate/fixed-layout.js',
+  // The reader template "package as READ" fetches to build an export. This is
+  // the asset; /READ.html is the Pages Function that serves it at its branded
+  // URL and is not ours to cache.
+  '/read/READ.html',
+  '/xml-tree-viewer/xml-tree-viewer.js',
+  '/xml-tree-viewer/xml-tree-viewer.css',
+  // The bridge speaks to a localhost websocket, so losing the network doesn't
+  // disable it — only failing to fetch its own module would. cuelume is a
+  // static import of module.js.
+  '/agent-bridge/module.js',
+  '/agent-bridge/cuelume.js',
 ];
 
 self.addEventListener('install', event => {
