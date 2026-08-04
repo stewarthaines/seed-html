@@ -100,9 +100,8 @@ async function main() {
   console.log('\n🎉 Demo translations created in .po files!');
   console.log('\n📦 Next steps:');
   console.log('   1. Convert .po to .json: npm run i18n:convert');
-  console.log('   2. Compress translations: npm run i18n:compress');
-  console.log('   3. Test in Storybook: npm run storybook');
-  console.log('   4. Use the 🌍 locale switcher in Storybook toolbar!');
+  console.log('   2. Test in Storybook: npm run storybook');
+  console.log('   3. Use the 🌍 locale switcher in Storybook toolbar!');
 }
 
 main().catch(console.error);
