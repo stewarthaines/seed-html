@@ -60,6 +60,19 @@ Syllables map to notes in order. Before writing a `w:` line, count: notes in the
 
 `!pralltriller!`, `!trill!`, `!fermata!`, `!invertedturn!` — written immediately before the note (`e !pralltriller!d2`). xml2abc writes a bare `T` prefix for a trill; normalise it to a `!…!` decoration.
 
+**Vertical nudging**: decorations have no offset parameter (`%%deco`'s height only reserves space — the glyph stays clamped near the staff). The working mechanism is stacking over an invisible user glyph:
+
+```
+%%beginsvg
+<defs>
+<g id="nul"></g>
+</defs>
+%%endsvg
+%%deco lift 3 nul 12 0 0
+```
+
+then `!lift!!pralltriller!d2` raises the ornament by exactly the deco's height (12). Order is load-bearing — `!lift!` must come FIRST or the spacer stacks on top and nothing moves. The empty glyph must be written `<g id="nul"></g>`, not self-closing `<g id="nul"/>`, or every variant reports `no definition of nul`. Define several heights (`lift6`, `lift12`, …) as needed; stacking only lifts — there is no downward nudge.
+
 ## Cleaning OCR / xml2abc output
 
 - `[K:bass]` / `[K:treble]` mid-line are inline CLEF CHANGES. In homr/xml2abc output they are almost always staff-hopping artifacts (the OCR serialised different staves into one voice): delete them and reassign each passage to the correct voice.
