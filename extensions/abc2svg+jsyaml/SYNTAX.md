@@ -38,6 +38,7 @@ Syllables map to notes in order. Before writing a `w:` line, count: notes in the
 - `*` skips one note. Legal standalone (`chvents * gva`) or sandwiched mid-word (`da-*brdzan`). **Never trailing** — `na-ni-*` miscounts.
 - `_` extends the previous syllable over the next note and draws the melisma sustain line (matches printed "na — o").
 - A syllable ending in `-` joins the next token as one word across notes (`shvi-*li`).
+- `~` renders as a space INSIDE the syllable — still one token, still one note. A **leading** `~` nudges a syllable's glyphs rightward (`chvents ~gva` clears a wide left neighbour; stack `~~` for more). A trailing `~` moves nothing: abc2svg anchors each syllable's left edge, so extra width only ever grows to the right.
 
 ## Ties vs slurs
 
@@ -68,7 +69,9 @@ Syllables map to notes in order. Before writing a `w:` line, count: notes in the
 
 ## Lyric crowding (syllables colliding)
 
-The one lever that works is `%%vocalfont serif <size>` in the block (smaller font both narrows syllables and slightly opens spacing). `%%maxshrink` and `y` spacers do NOT help, and a larger variant scale makes crowding WORSE (text zooms with the music while the line keeps its bars).
+- Targeted fix: prefix the crowded pair's RIGHT syllable with `~` (see the lyrics section) — the engraver's nudge, one collision at a time.
+- Global fix: `%%vocalfont serif <size>` in the block (smaller font both narrows syllables and slightly opens spacing).
+- Dead ends, measured: `%%maxshrink` and `y` spacers do NOT help, and a larger variant scale makes crowding WORSE (text zooms with the music while the line keeps its bars).
 
 ## Print / PDF
 
