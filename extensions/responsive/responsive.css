@@ -3,8 +3,13 @@
   narrower support. The markup hooks (.sr-page, .sr-figure) are added by
   transformResponsive.js at build time.
 
-  Everything is in em, so the buckets track the reader's chosen font size:
-  a large-print reader gets the narrow layout — which is the correct one.
+  Buckets are in em, so they track the reader's chosen font size: a
+  large-print reader gets the narrow layout — which is the correct one. The
+  measure caps are in REM for the same reason with one refinement: em resolves
+  against each element's own font size, so a 1.5em h2 would cap at 54
+  body-ems and escape the measure entirely, sitting flush left while the
+  paragraphs beside it center. rem gives every block the same cap and still
+  tracks the reader's font size.
 
   The measure constrains PROSE, not the page (restructured 2026-08-03): each
   prose block is capped and centered individually, so figures, scores, code
@@ -36,7 +41,10 @@
 .sr-page ul,
 .sr-page ol,
 .sr-page dl {
+  /* Same-property fallback: pre-rem parsers keep the em cap (headings run
+     wide there, as they always did); everyone else gets the shared measure. */
   max-width: 36em;
+  max-width: 36rem;
   margin-left: auto;
   margin-right: auto;
 }
@@ -45,6 +53,7 @@
    reads as the traditional blockquote indent. */
 .sr-page blockquote {
   max-width: 33em;
+  max-width: 33rem;
   margin-left: auto;
   margin-right: auto;
 }
