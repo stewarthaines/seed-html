@@ -56,6 +56,12 @@ function transformDOM(document, idref) {
     blockIndex += 1
     const container = document.createElement('div')
     container.setAttribute('class', 'abc2svg-container')
+    // One announced object per score: role="img" makes every descendant
+    // presentational, so screen readers hear this label once instead of the
+    // per-syllable SVG text of every scale variant (all variants are in the
+    // DOM; CSS hides all but one, and no-CSS readers show them all).
+    container.setAttribute('role', 'img')
+    container.setAttribute('aria-label', `Musical score, part ${blockIndex} of ${codes.length}`)
 
     let abcContent = c.querySelector('code').textContent
     const frontmatterMatch = abcContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)

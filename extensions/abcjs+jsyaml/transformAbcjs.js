@@ -171,11 +171,17 @@ function transformDOM(chapterDocument, idref) {
     },
   }
 
-  codes.forEach(c => {
+  codes.forEach((c, blockIndex) => {
     let options = { ...defaultOptions }
 
     const container = chapterDocument.createElement('div')
     container.setAttribute('class', 'abcjs-container')
+    // One announced object per score: role="img" makes every descendant
+    // presentational, so screen readers hear this label once instead of the
+    // per-syllable SVG text of every staff-width variant (all variants are in
+    // the DOM; CSS hides all but one, and no-CSS readers show them all).
+    container.setAttribute('role', 'img')
+    container.setAttribute('aria-label', `Musical score, part ${blockIndex + 1} of ${codes.length}`)
 
     // Live, attached scratch area for rendering (see header). Removed per
     // block, so glyph ids never leak between blocks or runs.
