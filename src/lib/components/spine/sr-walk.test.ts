@@ -17,6 +17,7 @@ describe('resolveAnnounceTarget', () => {
     <ul id="list"><li id="item"><span id="date">1 July</span> Concert</li></ul>
     <blockquote id="quote"><p id="quote-p">Quoted <span id="quote-span">text</span></p></blockquote>
     <div id="plain"><b id="plain-b">not announceable</b></div>
+    <div id="score" role="img" aria-label="Musical score, part 1 of 5"><svg id="score-svg"><text id="score-syllable">ბა</text></svg></div>
   `;
   const el = (id: string) => container.querySelector(`#${id}`)!;
 
@@ -37,6 +38,94 @@ describe('resolveAnnounceTarget', () => {
 
   it('returns null outside any announceable block', () => {
     expect(resolveAnnounceTarget(el('plain-b'))).toBeNull();
+  });
+
+  it('resolves role="img" content to the labeled element (its subtree is presentational)', () => {
+    expect(resolveAnnounceTarget(el('score'))).toBe(el('score'));
+    expect(resolveAnnounceTarget(el('score-svg'))).toBe(el('score'));
+    expect(resolveAnnounceTarget(el('score-syllable'))).toBe(el('score'));
+  });
+
+  it('a role="img" target announces once and never steps into its subtree', async () => {
+    // The vendored virtual screen reader lacks children-presentational, so
+    // the driver must end the walk itself after the single announcement.
+    const timeline = ['document', 'image, Musical score, part 1 of 5'];
+    let index = 0;
+    const next = vi.fn(async () => {
+      index = Math.min(index + 1, timeline.length - 1);
+    });
+    const vsr: VsrLike = {
+      start: async () => {},
+      next,
+      stop: vi.fn(async () => {}),
+      lastSpokenPhrase: async () => timeline[index],
+    };
+    const root = document.createElement('div');
+    const score = document.createElement('div');
+    score.setAttribute('role', 'img');
+    score.setAttribute('aria-label', 'Musical score, part 1 of 5');
+    root.appendChild(score);
+    // The driver jumps the cursor via focus; the scripted stand-in advances on it.
+    score.focus = () => {
+      index = 1;
+    };
+    const heard: string[] = [];
+    await walkAnnouncements(vsr, root, {
+      signal: new AbortController().signal,
+      target: score,
+      stepDelayMs: 0,
+      onPhrase: phrase => heard.push(phrase),
+    });
+    expect(heard).toEqual(['image, Musical score, part 1 of 5']);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('a whole-chapter walk announces a role="img" once and skips its subtree silently', async () => {
+    const root = document.createElement('div');
+    root.innerHTML = `
+      <p id="p1">before</p>
+      <div id="score" role="img" aria-label="Musical score, part 1 of 5">
+        <svg><text id="s1">ბა</text><text id="s2">ტო</text></svg>
+      </div>
+      <p id="p2">after</p>
+    `;
+    const q = (id: string) => root.querySelector(`#${id}`)!;
+    // Cursor positions the vendored library would visit — it steps INTO the
+    // presentational subtree (s1, s2); the driver must swallow those.
+    const timeline: Array<{ phrase: string; node: Node }> = [
+      { phrase: 'document', node: root },
+      { phrase: 'paragraph, before', node: q('p1') },
+      { phrase: 'image, Musical score, part 1 of 5', node: q('score') },
+      { phrase: 'ბა', node: q('s1') },
+      { phrase: 'ტო', node: q('s2') },
+      { phrase: 'paragraph, after', node: q('p2') },
+      { phrase: 'end of document', node: root },
+    ];
+    let index = 0;
+    const vsr: VsrLike & { activeNode: Node } = {
+      start: async () => {},
+      next: async () => {
+        index = Math.min(index + 1, timeline.length - 1);
+      },
+      stop: async () => {},
+      lastSpokenPhrase: async () => timeline[index].phrase,
+      get activeNode() {
+        return timeline[index].node;
+      },
+    };
+    const heard: string[] = [];
+    await walkAnnouncements(vsr, root, {
+      signal: new AbortController().signal,
+      stepDelayMs: 0,
+      onPhrase: phrase => heard.push(phrase),
+    });
+    expect(heard).toEqual([
+      'document',
+      'paragraph, before',
+      'image, Musical score, part 1 of 5',
+      'paragraph, after',
+      'end of document',
+    ]);
   });
 });
 

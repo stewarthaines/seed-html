@@ -11,9 +11,12 @@
 
 import { _ } from '$lib/i18n/msgid.js';
 
-/** Elements an author can announce individually — the deepest match wins. */
+/** Elements an author can announce individually — the deepest match wins.
+ *  role="img" is announceable by definition: its subtree is presentational,
+ *  so the labeled element is the exact unit a reading cursor lands on (e.g.
+ *  the abc2svg/abcjs score containers). */
 export const ANNOUNCEABLE_SELECTOR =
-  'h1, h2, h3, h4, h5, h6, p, li, figure, table, blockquote, aside, dl, pre';
+  'h1, h2, h3, h4, h5, h6, p, li, figure, table, blockquote, aside, dl, pre, [role="img"]';
 
 /**
  * The block the hover affordance should target for an event target: the
@@ -235,6 +238,14 @@ export interface WalkOptions {
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+/** The role="img" ancestor-or-self of a node, if any — the marker of a
+ *  presentational subtree the walk must not read into. */
+function roleImgOf(node: Node | null | undefined): Element | null {
+  if (!node) return null;
+  const el = node.nodeType === Node.ELEMENT_NODE ? (node as Element) : node.parentElement;
+  return el?.closest('[role="img"]') ?? null;
+}
+
 /** Poll until the last spoken phrase changes from `previous` (or time out). */
 async function awaitPhraseChange(
   vsr: VsrLike,
@@ -272,11 +283,32 @@ export async function walkAnnouncements(
       if (ownTabindex === null) target.removeAttribute('tabindex');
     }
     onPhrase(first);
+    // A role="img" target IS its single announcement: per spec its subtree is
+    // presentational, but the vendored virtual screen reader steps into it
+    // anyway (children-presentational is not implemented), so stepping would
+    // read every SVG syllable of a score. Announce and end the walk.
+    if (target?.closest('[role="img"]')) return;
     let prev = first;
     for (let i = 0; i < maxSteps && !signal.aborted; i++) {
       if (stepDelayMs > 0) await delay(stepDelayMs);
       if (signal.aborted) break;
       await vsr.next();
+      // Entering a role="img" subtree: announce the labeled element's phrase
+      // once, then fast-forward silently (no step delay, no emission) until
+      // the cursor exits — same children-presentational gap as the target
+      // early-end above, hit by the whole-chapter walk.
+      if (roleImgOf(vsr.activeNode)) {
+        const entry = await vsr.lastSpokenPhrase();
+        if (entry !== prev && entry !== first) {
+          onPhrase(entry);
+          prev = entry;
+        }
+        for (let j = 0; j < maxSteps && !signal.aborted; j++) {
+          await vsr.next();
+          if (!roleImgOf(vsr.activeNode)) break;
+        }
+        if (signal.aborted) break;
+      }
       // The cursor leaving the target ends the walk — the authoritative stop
       // for elements that never announce an end phrase (a heading flattens
       // into one phrase; there is no "end of heading" to wait for).
