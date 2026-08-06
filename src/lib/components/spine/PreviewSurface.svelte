@@ -516,12 +516,16 @@
     }
 
     // Always render on first show (nothing rendered yet, or only empty content), a
-    // chapter change, or a device-type switch (so a stale frame of the previous type
-    // never lingers); otherwise honour auto-update. Empty `renderedContent` counts as
-    // "not yet rendered" so the first real content shows even when auto-update is off.
+    // chapter change, or ANY device switch; otherwise honour auto-update. Empty
+    // `renderedContent` counts as "not yet rendered" so the first real content shows
+    // even when auto-update is off. The device comparison must be the raw id, not
+    // just type/engine: {#key device} rebuilds the iframe on every device change,
+    // so two same-engine devices (Print ↔ Proofs) still need a fresh render —
+    // auto-update governs content edits, never whether a rebuilt frame gets one.
     const firstOrSwitch =
       !renderedContent ||
       chapter !== renderedChapterId ||
+      device !== renderedDevice ||
       type !== renderedType ||
       engine !== renderedEngine;
     if (firstOrSwitch || auto) {
@@ -813,15 +817,73 @@
     }, RENDER_CHECK_DELAY);
   }
 
+  /** Attribute stamped on every document this component writes. A loaded
+   *  document WITHOUT it is not ours: a freshly created iframe's pending
+   *  about:blank navigation can commit AFTER our document.write and silently
+   *  replace the written document with a pristine empty one (Firefox commits
+   *  the initial about:blank asynchronously). handleIframeLoad heals that
+   *  case by re-rendering. */
+  const RENDER_STAMP = 'data-seed-render';
+
+  /** Mark the just-written document as ours. Re-reads contentDocument rather
+   *  than trusting a pre-open() reference (see preview-iframe realm notes). */
+  function stampWrittenDoc(): void {
+    previewIframe?.contentDocument?.documentElement?.setAttribute(RENDER_STAMP, '');
+  }
+
+  const WRITE_SETTLE_MS = 250;
+  /** Extra checks after the engine settles (raw writes settle immediately). */
+  const WRITE_SETTLE_TAIL = 4;
+  let writeSettleTimer: ReturnType<typeof setTimeout> | undefined;
+  let writeSettleTail = 0;
+  let writeRetries = 0;
+
+  /** Watch that the write survives, on a timer — NOT the iframe `load` event:
+   *  Firefox replaces the written document with the late-committing initial
+   *  about:blank without firing `load` for either document, so an event-based
+   *  heal never runs there (the handleIframeLoad heal still covers browsers
+   *  that do fire it). A single check is not enough either: the pending
+   *  about:blank commit is a queued task that only runs when the event loop
+   *  yields, so under Paged.js chunking it can land seconds into pagination.
+   *  Poll while the engine is still rendering (the DONE ping clears the
+   *  in-flight flag) plus a short tail; a vanished stamp means the document
+   *  we wrote is gone — rewrite it. Bounded so a frame owned by something
+   *  else can't loop. */
+  function scheduleWriteSettleCheck(): void {
+    clearTimeout(writeSettleTimer);
+    writeSettleTail = WRITE_SETTLE_TAIL;
+    const tick = () => {
+      const doc = previewIframe?.contentDocument;
+      if (!doc) return;
+      if (!doc.documentElement?.hasAttribute(RENDER_STAMP)) {
+        if (writeRetries >= 3) return;
+        writeRetries += 1;
+        renderNow(true); // its write arms a fresh settle watch
+        return;
+      }
+      if (printPaginating || readRendering) {
+        writeSettleTimer = setTimeout(tick, WRITE_SETTLE_MS);
+      } else if (writeSettleTail > 0) {
+        writeSettleTail -= 1;
+        writeSettleTimer = setTimeout(tick, WRITE_SETTLE_MS);
+      } else {
+        writeRetries = 0; // survived the whole watch
+      }
+    };
+    writeSettleTimer = setTimeout(tick, WRITE_SETTLE_MS);
+  }
+
   /**
-   * Update iframe with new XHTML content while preserving scroll position
+   * Update iframe with new XHTML content while preserving scroll position.
+   * Returns whether the document was actually written — callers must not
+   * record the render as done on false.
    */
-  function updatePreviewContent(content: string): void {
-    if (!previewIframe || !content) return;
+  function updatePreviewContent(content: string): boolean {
+    if (!previewIframe || !content) return false;
 
     try {
       const iframeDoc = previewIframe.contentDocument;
-      if (!iframeDoc) return;
+      if (!iframeDoc) return false;
 
       // Save scroll position and find anchor before updating
       const scrollTop = iframeDoc.documentElement.scrollTop || iframeDoc.body?.scrollTop || 0;
@@ -838,6 +900,8 @@
       iframeDoc.open();
       iframeDoc.write(content);
       iframeDoc.close();
+      stampWrittenDoc();
+      scheduleWriteSettleCheck();
       scheduleRenderCheck();
 
       // Re-apply the reader-mode theme + font synchronously: the fresh document
@@ -861,8 +925,10 @@
       // The rewrite invalidated prior check results and injected affordances;
       // the parent re-establishes whichever panel is open.
       onContentEvent?.('rewrite');
+      return true;
     } catch (error) {
       console.error('Failed to update preview content:', error);
+      return false;
     }
   }
 
@@ -873,8 +939,11 @@
    * was rendered (content, chapter, preview type, injected head) so the auto-update
    * effect can decide between re-rendering and showing the stale Refresh badge.
    * The single entry point for both the effect and the on-demand Refresh button.
+   * `isRetry` marks a settle-check rewrite, which must not refill its own
+   * bounded retry budget; every externally driven render starts a fresh one.
    */
-  export function renderNow(): void {
+  export function renderNow(isRetry = false): void {
+    if (!isRetry) writeRetries = 0;
     const content = xhtmlContent;
     fxlContentSize = null; // stale overflow badge must not survive a rewrite
     // Findings belong to one render. The built-in path re-arms the check; the
@@ -886,9 +955,17 @@
     // Route on engine: Print → Paged.js; READ.html entry + device presets →
     // foliate (http, reflowable — usesFoliate); everything else (Responsive,
     // file://, fixed layout) → the built-in preview.
-    if (engineOfDevice(device) === 'paged') writePagedDoc(content);
-    else if (usesFoliate(device)) writeFoliateDoc(content);
-    else updatePreviewContent(withPreviewHead(content));
+    const wrote =
+      engineOfDevice(device) === 'paged'
+        ? writePagedDoc(content)
+        : usesFoliate(device)
+          ? writeFoliateDoc(content)
+          : updatePreviewContent(withPreviewHead(content));
+    // A skipped write (iframe not ready) must stay eligible for re-render:
+    // recording it would satisfy the auto-update effect and freeze a blank
+    // frame with no error anywhere. The stamp heal re-enters here on the
+    // iframe's next `load`.
+    if (!wrote) return;
     renderedContent = content;
     renderedChapterId = chapterId;
     renderedType = typeOfDeviceId(device);
@@ -936,14 +1013,13 @@
    * write; the 'preview-paged' ping (handled by the message effect) clears the
    * spinner and fits the pages to the pane width.
    */
-  function writePagedDoc(content: string): void {
-    if (!previewIframe || !content) return;
+  function writePagedDoc(content: string): boolean {
+    if (!previewIframe || !content) return false;
     const wrapped = chapterToSection(content, chapterId ?? undefined);
     if (!wrapped) {
       // Malformed / no <body>: fall back to the plain render rather than a blank
       // paginated frame.
-      updatePreviewContent(content);
-      return;
+      return updatePreviewContent(content);
     }
     const doc = buildPagedDocument([wrapped.section], {
       title: 'Print preview',
@@ -961,7 +1037,7 @@
     });
 
     const iframeDoc = previewIframe.contentDocument;
-    if (!iframeDoc) return;
+    if (!iframeDoc) return false;
 
     printPaginating = true;
     // Print output has a different DOM than the live preview; don't carry over
@@ -988,12 +1064,15 @@
     iframeDoc.open();
     iframeDoc.write(doc);
     iframeDoc.close();
+    stampWrittenDoc();
+    scheduleWriteSettleCheck();
 
     // Safety: if Paged.js never pings (e.g. it throws), don't leave the spinner up.
     clearTimeout(printSafetyTimer);
     printSafetyTimer = setTimeout(() => {
       printPaginating = false;
     }, 10000);
+    return true;
   }
 
   // --- READ.html reader preview ------------------------------------------------
@@ -1094,10 +1173,10 @@
    * the iframe to the device, so the engine paginates at true device pixels.
    * The READ_DONE ping (message effect) clears the spinner.
    */
-  function writeFoliateDoc(content: string): void {
-    if (!previewIframe || !content) return;
+  function writeFoliateDoc(content: string): boolean {
+    if (!previewIframe || !content) return false;
     const iframeDoc = previewIframe.contentDocument;
-    if (!iframeDoc) return;
+    if (!iframeDoc) return false;
 
     // The chapter document itself is the section; the preview-head fragment
     // (when the READ.html includeHead toggle is on) rides inside it.
@@ -1155,12 +1234,15 @@
     iframeDoc.open();
     iframeDoc.write(doc);
     iframeDoc.close();
+    stampWrittenDoc();
+    scheduleWriteSettleCheck();
 
     // Safety: if the wrapper never pings (e.g. module fetch fails), drop the spinner.
     clearTimeout(readSafetyTimer);
     readSafetyTimer = setTimeout(() => {
       readRendering = false;
     }, 10000);
+    return true;
   }
 
   /**
@@ -1627,6 +1709,18 @@
   function handleIframeLoad(): void {
     if (previewIframe?.contentDocument) {
       const iframeDoc = previewIframe.contentDocument;
+
+      // Heal a clobbered write: a loaded document without the render stamp is
+      // not one this component wrote — the fresh iframe's pending about:blank
+      // navigation committed after our document.write and replaced it (or the
+      // write was skipped on a not-yet-ready frame). Re-render instead of
+      // instrumenting a document that holds nothing. Converges: the initial
+      // about:blank commits at most once per iframe, so the re-render's write
+      // sticks and arrives here stamped.
+      if (!iframeDoc.documentElement?.hasAttribute(RENDER_STAMP)) {
+        if (xhtmlContent) renderNow();
+        return;
+      }
 
       // Once per written document (see handledBodies). A body-less document is
       // a stalled parse: leave it unmarked so a later real `load` can still
