@@ -79,9 +79,9 @@ npm install
 npm run dev
 ```
 
-### Agent assistance (dev server only)
+### Agent assistance (dev server and npm installation only)
 
-The repo includes an MCP bridge (`scripts/agent-bridge.mjs`) that connects a coding agent such as Claude Code to the running dev app, so the agent works against your live project: it can read source files and settings, follow the transform pipeline, inspect the rendered chapter as you see it, and — with your in-app approval, per write — edit chapter sources, stylesheets, and transform scripts. Useful when debugging CSS, transform output, or reading-system behavior is faster shown than described. The bridge also serves an authoring guide (`docs/AGENT_AUTHORING.md`) that teaches the agent the project's EPUB and pipeline constraints before it may write.
+The repo includes an MCP bridge (`scripts/agent-bridge.mjs`) that connects a coding agent such as Claude Code to the running dev app, so the agent works against your live project: it can read source files and settings, follow the transform pipeline, inspect the rendered chapter as you see it, and — with your in-app approval, per write — edit chapter sources, stylesheets, and transform scripts. Useful when debugging CSS, transform output, or reading-system behavior. The bridge also serves an authoring guide (`docs/AGENT_AUTHORING.md`) that teaches the agent the project's EPUB and pipeline constraints before it may write.
 
 ```bash
 # One-time: register the bridge with your agent CLI
@@ -90,7 +90,7 @@ claude mcp add seed-bridge -- node scripts/agent-bridge.mjs
 
 Then: start `npm run dev` and open the app, start the agent session (the session spawns the bridge and keeps it alive), and click **Allow agent assistance** (robot icon, sidebar footer). The connection lasts for the session; every agent action appears in an in-app activity feed, and writes prompt for approval individually.
 
-This is a development-workbench feature only: the button and module exist under `vite dev` and are absent from production builds (enforced by the build smoke test). Design and security model: [process/AGENT_BRIDGE.md](./process/AGENT_BRIDGE.md).
+This is a local-workbench feature only: the button and module are absent from production builds. Design and security model: [process/AGENT_BRIDGE.md](./process/AGENT_BRIDGE.md).
 
 ### Quality Standards
 
