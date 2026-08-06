@@ -6,7 +6,7 @@ Run the full [SEED.html](https://github.com/stewarthaines/seed-html) EPUB editor
 npx seed-html
 ```
 
-(`seed-html` and `@stewarthaines/seed-html` are the same package — same payload, same versions; the scoped name is canonical.)
+(The former scoped name `@stewarthaines/seed-html` remains as a compatibility alias that installs and launches this package; releases ship here only.)
 
 That starts a local server (default `http://localhost:8417/`) and opens your browser. Everything runs in the browser — your projects are stored by the browser itself (OPFS), nothing is uploaded anywhere, and after the first visit the app works offline as a PWA.
 
@@ -15,18 +15,18 @@ This is the same app as the hosted version, including the full extensions catalo
 ## Options
 
 ```
-npx @stewarthaines/seed-html --port 9000   # pick a port (default 8417, walks up if taken)
-npx @stewarthaines/seed-html --no-open     # don't launch the browser
+npx seed-html --port 9000   # pick a port (default 8417, walks up if taken)
+npx seed-html --no-open     # don't launch the browser
 ```
 
-Projects live in browser storage **per address**, so use a consistent port if you return often. Pin a version with `@stewarthaines/seed-html@<version>`; plain `npx` may reuse a cached copy — use `@latest` to update.
+Projects live in browser storage **per address**, so use a consistent port if you return often. Pin a version with `seed-html@<version>`; plain `npx` may reuse a cached copy — use `@latest` to update.
 
 ## Agent bridge (optional)
 
 For agent-assisted authoring, the package also carries the SEED agent bridge — an MCP server (stdio) that relays read-only tool calls to the app session where you clicked **Allow agent assistance**:
 
 ```
-claude mcp add seed-bridge -- npx -y @stewarthaines/seed-html bridge
+claude mcp add seed-bridge -- npx -y seed-html bridge
 ```
 
 ## License
