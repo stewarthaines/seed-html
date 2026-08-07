@@ -13,6 +13,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-08-07
+
+### Changed
+
+- Screen readers announce a music score as one labeled image — "Musical score, part 2 of 5" — instead of reading out every lyric syllable of every size variant. The score's sung text still reads normally wherever the book sets it as text.
+
+### Fixed
+
+- Switching straight between the PDF and Proofs previews shows the pages again; the preview had been going blank until you switched away and back.
+- Figures, publication rows and other laid-out blocks no longer come out blank in the printed PDF while everything around them prints.
+- The editor is published under the single npm name `seed-html`; `npx @stewarthaines/seed-html` still works and now launches the current release.
+
 ## [0.18.0] - 2026-08-03
 
 ### Added
