@@ -422,6 +422,9 @@
           workspaceId: currentWorkspaceState?.id ?? null,
           title: appState?.workspace?.opf?.metadata?.title ?? null,
           language: primaryLanguage(appState?.workspace?.opf?.metadata) || null,
+          // The browser IS the agent's render target — engine identity shapes
+          // preview diagnosis (paged raster, foliate clamps), so say it up front.
+          userAgent: navigator.userAgent,
         }),
         getWorkspaceDir: async () => {
           const id = currentWorkspaceState?.id;

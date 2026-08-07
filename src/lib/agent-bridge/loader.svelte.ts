@@ -17,6 +17,8 @@ export interface AgentBridgeModuleContext {
     workspaceId: string | null;
     title: string | null;
     language: string | null;
+    /** navigator.userAgent of the tab the agent is working against. */
+    userAgent: string;
   };
   getWorkspaceDir: () => Promise<FileSystemDirectoryHandle | null>;
   getRenderedXhtml: () => { chapterId: string | null; xhtml: string } | null;

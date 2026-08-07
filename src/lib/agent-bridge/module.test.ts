@@ -130,7 +130,12 @@ function makeContext(overrides: Record<string, unknown> = {}) {
     wsUrl: 'ws://localhost:8747',
     mountEl: document.createElement('div'),
     onStatus: (status: string, detail?: string) => statuses.push([status, detail]),
-    getProjectInfo: () => ({ workspaceId, title: 'Bulletin', language: 'en' }),
+    getProjectInfo: () => ({
+      workspaceId,
+      title: 'Bulletin',
+      language: 'en',
+      userAgent: 'TestUA/1.0',
+    }),
     getWorkspaceDir: async () => workspace,
     getRenderedXhtml: () => ({ chapterId: 'ch-1', xhtml: '<html/>' }),
     getLastClick: () => null,
@@ -198,7 +203,7 @@ describe('agent bridge module', () => {
     expect(await socket.receive({ id: 1, tool: 'project_info' })).toEqual({
       id: 1,
       ok: true,
-      result: { workspaceId: 'ws-1', title: 'Bulletin', language: 'en' },
+      result: { workspaceId: 'ws-1', title: 'Bulletin', language: 'en', userAgent: 'TestUA/1.0' },
     });
     expect(await socket.receive({ id: 2, tool: 'get_rendered_xhtml' })).toEqual({
       id: 2,

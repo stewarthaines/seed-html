@@ -148,7 +148,7 @@ const TOOLS = [
   {
     name: 'seed_project_info',
     description:
-      "The open SEED.html project's identity (workspace id) and bridge connection state.",
+      "The open SEED.html project's identity (workspace id), bridge connection state, and the browser user agent of the connected tab — the engine every preview measurement and screenshotless diagnosis runs against.",
     inputSchema: { type: 'object', properties: {} },
   },
   {

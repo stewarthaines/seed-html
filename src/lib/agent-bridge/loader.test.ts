@@ -24,7 +24,12 @@ function makeFakeModule() {
 const buildContext = () => ({
   wsUrl: 'ws://localhost:8747',
   mountEl: document.createElement('div'),
-  getProjectInfo: () => ({ workspaceId: 'ws-1', title: null, language: null }),
+  getProjectInfo: () => ({
+    workspaceId: 'ws-1',
+    title: null,
+    language: null,
+    userAgent: 'TestUA/1.0',
+  }),
   getWorkspaceDir: async () => null,
   getRenderedXhtml: () => null,
   getLastClick: () => null,
