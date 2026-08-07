@@ -252,3 +252,16 @@
     display: inline !important;
   }
 }
+
+/* Print: the print dialog's re-render (a separate rasterization pass) can
+   paint boxes with SIZE CONTAINMENT as blank, and Chromium's print render
+   may treat size container queries as never matching — the paged preview
+   honors both, so the loss is print-only and easy to miss. Drop containment
+   for print (the abc2svg extension's print block sets the precedent); the
+   base layer's layouts are the print form. */
+@media print {
+  .sr-figure,
+  .sr-switch {
+    container-type: normal;
+  }
+}
