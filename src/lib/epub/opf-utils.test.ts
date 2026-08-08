@@ -960,6 +960,7 @@ describe('OPFUtils', () => {
         { name: 'The Chronicles', type: 'series', position: '2' },
         { name: '2024 Box Set', type: 'set' },
       ];
+      testDoc.metadata.collections[0].identifier = 'urn:issn:2346-7614';
 
       const xml = OPFUtils.generateOPFXML(testDoc);
       expectValidXML(xml, 'OPF with collections');
@@ -976,6 +977,11 @@ describe('OPFUtils', () => {
       );
       expect(xml).toContain('<meta refines="#collection2" property="collection-type">set</meta>');
       expect(xml).not.toContain('refines="#collection2" property="group-position"');
+      // The collection's own identifier (the series' ISSN, not the publication's id).
+      expect(xml).toContain(
+        '<meta refines="#collection1" property="dcterms:identifier">urn:issn:2346-7614</meta>'
+      );
+      expect(xml).not.toContain('refines="#collection2" property="dcterms:identifier"');
     });
 
     it('emits nothing when no collections are declared', () => {

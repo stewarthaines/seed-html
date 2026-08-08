@@ -86,13 +86,16 @@ export interface SubjectEntry {
 
 /**
  * A collection this publication belongs to (belongs-to-collection). `type` is
- * the collection-type (typically "series" or "set") and `position` is the
- * group-position within that collection.
+ * the collection-type (typically "series" or "set"), `position` is the
+ * group-position within that collection, and `identifier` is the collection's
+ * own dcterms:identifier — the identifier of the SERIES, not this publication
+ * (e.g. a periodical's ISSN as `urn:issn:2346-7614`).
  */
 export interface CollectionEntry {
   name: string;
   type?: string;
   position?: string;
+  identifier?: string;
   id?: string;
 }
 
@@ -724,6 +727,7 @@ export class OPFUtils {
           name: el.textContent?.trim() ?? '',
           type: refineValue(id, 'collection-type'),
           position: refineValue(id, 'group-position'),
+          identifier: refineValue(id, 'dcterms:identifier'),
         };
       })
       .filter(c => c.name);
@@ -1057,8 +1061,8 @@ export class OPFUtils {
       xml += `\n    <dc:format>${escapeXML(metadata.format)}</dc:format>`;
     }
 
-    // Collections (belongs-to-collection) with collection-type / group-position
-    // refinements. Each named collection gets an id when present.
+    // Collections (belongs-to-collection) with collection-type / group-position /
+    // dcterms:identifier refinements. Each named collection gets an id when present.
     let collectionIdCounter = 0;
     for (const collection of metadata.collections ?? []) {
       if (!collection.name?.trim()) continue;
@@ -1069,6 +1073,9 @@ export class OPFUtils {
       }
       if (collection.position?.trim()) {
         xml += refinementMeta(id, 'group-position', collection.position.trim());
+      }
+      if (collection.identifier?.trim()) {
+        xml += refinementMeta(id, 'dcterms:identifier', collection.identifier.trim());
       }
     }
 

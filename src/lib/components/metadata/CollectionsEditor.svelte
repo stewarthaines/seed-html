@@ -78,6 +78,14 @@
         onfocus={focus}
       />
     </div>
+    <TextMetadataField
+      id="collection-identifier-{index}"
+      label={$t('Collection identifier')}
+      value={entry.identifier ?? ''}
+      placeholder={$t('e.g. urn:issn:2346-7614')}
+      onblur={e => updateEntry(index, { identifier: e.value })}
+      onfocus={focus}
+    />
   </div>
 {/each}
 
