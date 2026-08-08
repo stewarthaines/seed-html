@@ -177,6 +177,18 @@ v2 answer: on the first "add translation", additionally snapshot the original un
 
 v1 ships without this but must not preclude it: the `locale/<tag>/text/` vs future `basis/` separation in the layout above is the reservation. v1 mitigation: when switching languages while any translation exists, note in the confirmation dialog that edits to this language may leave other editions out of date.
 
+## Publishing separate editions (v2 — first real-world target, 2026-08-08)
+
+Polyphony Bulletin 39 is published in English and Georgian editions (English imprint: eISSN 2346-7614) and is the first project that wants to *ship* both editions as separate EPUBs rather than merely edit them in one project. That stresses the v1 scope decision: `meta.json` varies only title / file-as / description, so an exported Georgian edition is metadata-identical to the English one everywhere else. Separately published editions should differ in five more places:
+
+- **Package identifier — the gap that bites.** A translated edition is a distinct publication and needs its own `dc:identifier`. Today both exports share the project UUID, so reading systems treat them as the same book: one shelves over the other, and reading state transfers across languages. A per-edition identifier is the first candidate for the widened override set.
+- **`dc:language`.** The swap keeps the outgoing tag as a secondary entry (`ka, en-GB`), which describes the project; a published monolingual edition should arguably declare only its own language. Needs a decision on whether export (or the swap) trims to the primary tag — defensible to keep both only when the edition genuinely retains content in the other language.
+- **Collection entry.** The series name should appear in the edition's language, and ISSN rules assign a separate ISSN per language edition — the Georgian bulletin likely carries its own eISSN (verify against the Georgian imprint; do not reuse 2346-7614). `CollectionEntry` supports a per-collection `dcterms:identifier` (added 2026-08-08), but collections are not in the override set.
+- **`accessibilitySummary`.** Prose read aloud to users in bookstore/library interfaces; belongs in the publication's language.
+- **Creator/contributor name forms.** Georgian script plus per-edition file-as. Murkiest of the five — creators are structural (roles, ids, ordering), not plain strings, so this may stay manual or land later than the rest.
+
+The `meta.json` format needs no change for any of this; the work is choosing the publishing-scope field set and a UI for editing a per-edition value without switching into that edition. Lands alongside Phase 3.
+
 ## Resolved questions (2026-07-30)
 
 1. **Basis refresh policy:** per-translation — each translation carries its own basis snapshot. v2.
@@ -193,6 +205,6 @@ Each phase is independently shippable.
 
 **Phase 2 — editor experience.** Dropdown entries for inactive-language chapter files, path-keyed dual-pane exclusion, `EditorPane` read-only pane, `classifySourceFile` locale type. Rename/delete sweep of `locale/**` and `main/**`.
 
-**Phase 3 (v2) — staleness.** Per-translation basis snapshot + `diffSegments` "what changed since translation began" view. Extended `meta.json` field set lands here too if wanted.
+**Phase 3 (v2) — staleness.** Per-translation basis snapshot + `diffSegments` "what changed since translation began" view. Extended `meta.json` field set lands here too if wanted — the publishing-scope fields (per-edition identifier, language trim, collection entry, accessibility summary; see Publishing separate editions above) are the concrete candidates, with Bulletin 39's Georgian edition as the proving case.
 
 **Deferred, possibly never — export picker.** Language choice on PDF and plain-EPUB export via swap → regenerate → export → swap back. The manual route (switch language, export, switch back) uses the same operations.
