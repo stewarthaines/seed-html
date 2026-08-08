@@ -229,6 +229,58 @@ describe('exportPdf', () => {
     vi.restoreAllMocks();
   });
 
+  it('rewrites cross-chapter links to internal fragments for the combined document', async () => {
+    const win = makeWin();
+    vi.spyOn(window, 'open').mockReturnValue(win);
+
+    await exportPdf(
+      workspace,
+      {} as any,
+      service([
+        chapter(
+          'toc',
+          CH_XHTML(
+            '<a href="other.xhtml#sec-unique">deep</a>' +
+              '<a href="other.xhtml">chapter</a>' +
+              '<a href="https://example.com/other.xhtml">external</a>'
+          )
+        ),
+        chapter('other', CH_XHTML('<section id="sec-unique"><p>target</p></section>')),
+      ])
+    );
+
+    const written = (win.document.write as any).mock.calls.at(-1)[0] as string;
+    // Unique fragment → direct target; bare file link → the chapter's anchor.
+    expect(written).toContain('href="#sec-unique"');
+    expect(written).toContain('href="#pdf-chapter-other"');
+    expect(written).toContain('id="pdf-chapter-other"');
+    // External links pass through untouched.
+    expect(written).toContain('href="https://example.com/other.xhtml"');
+    expect(written).not.toContain('href="other.xhtml');
+  });
+
+  it('falls back to the chapter anchor when the fragment id repeats across chapters', async () => {
+    const win = makeWin();
+    vi.spyOn(window, 'open').mockReturnValue(win);
+
+    await exportPdf(
+      workspace,
+      {} as any,
+      service([
+        chapter('toc', CH_XHTML('<a href="b.xhtml#Intro">to b</a>')),
+        chapter('a', CH_XHTML('<section id="Intro"><a href="#Intro">self</a></section>')),
+        chapter('b', CH_XHTML('<section id="Intro"><p>x</p></section>')),
+      ])
+    );
+
+    const written = (win.document.write as any).mock.calls.at(-1)[0] as string;
+    // The cross-file link lands on chapter b, not the first #Intro in the book…
+    expect(written).toContain('href="#pdf-chapter-b"');
+    // …and chapter a's own-page link is retargeted to its own chapter anchor.
+    expect(written).toContain('href="#pdf-chapter-a"');
+    expect(written).not.toContain('href="#Intro"');
+  });
+
   it('reports unparseable chapters instead of silently omitting them', async () => {
     const win = makeWin();
     vi.spyOn(window, 'open').mockReturnValue(win);

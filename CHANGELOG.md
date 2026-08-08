@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Contents-page and cross-chapter links in the exported PDF now jump to their target pages instead of pointing at a web address.
+
 ## [0.19.0] - 2026-08-07
 
 ### Changed

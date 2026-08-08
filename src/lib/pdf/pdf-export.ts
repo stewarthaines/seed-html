@@ -165,16 +165,54 @@ const PRINT_TOOLBAR_CSS = `
 }`;
 
 /**
+ * Cross-chapter links in the combined print document. In the EPUB each chapter is
+ * its own file, so internal links are cross-FILE (`other.xhtml#id`); concatenated
+ * into one master document those hrefs resolve against the app origin and the
+ * saved PDF gets useless external URL annotations. Rewritten to same-document
+ * fragments (`#id`) they become internal go-to-page links (Chrome and Firefox
+ * print-to-PDF both emit them). Fragment ids only had to be unique per FILE in
+ * the EPUB, so a fragment is a safe direct target only when its id appears once
+ * across the whole book — otherwise the browser would jump to the first
+ * occurrence, possibly in the wrong chapter, and the link falls back to the
+ * owning chapter's section anchor (right chapter, first page).
+ */
+export interface InternalLinkMap {
+  /** Chapter file name (href's last path segment) → its pdf-chapter anchor id. */
+  anchorByFile: Map<string, string>;
+  /** Element ids that appear exactly once across all exported chapters. */
+  uniqueIds: Set<string>;
+}
+
+/** The combined document's anchor id for a chapter's `pdf-chapter` section. */
+export function pdfChapterAnchor(idref: string): string {
+  return `pdf-chapter-${idref}`;
+}
+
+/**
+ * Every element id in one chapter's XHTML (empty for a malformed chapter) — the
+ * export's first pass over the book, feeding `InternalLinkMap.uniqueIds`.
+ */
+export function collectChapterIds(xhtml: string): string[] {
+  const doc = new DOMParser().parseFromString(xhtml, 'application/xhtml+xml');
+  if (doc.querySelector('parsererror')) return [];
+  return Array.from(doc.querySelectorAll('[id]'), el => el.id);
+}
+
+/**
  * Parse one chapter's XHTML and return its `<body>` inner serialized inside a
- * `<section class="pdf-chapter">` (so it starts on a fresh page under print.css),
- * plus the stylesheet hrefs the chapter links and the source `<html>` language
- * (so a single-chapter preview can carry it onto its own `<html>`). Returns null
- * for a malformed chapter or one without a `<body>`. Shared by the PDF export and
- * the print preview so both build identical Paged.js input.
+ * `<section class="pdf-chapter">` (so it starts on a fresh page under print.css,
+ * carrying its idref as an anchor id for rewritten internal links), plus the
+ * stylesheet hrefs the chapter links and the source `<html>` language (so a
+ * single-chapter preview can carry it onto its own `<html>`). When `links` is
+ * given (the full-book export), hrefs that point at other chapters are rewritten
+ * to same-document fragments so the printed PDF gets internal navigation.
+ * Returns null for a malformed chapter or one without a `<body>`. Shared by the
+ * PDF export and the print preview so both build identical Paged.js input.
  */
 export function chapterToSection(
   xhtml: string,
-  idref?: string
+  idref?: string,
+  links?: InternalLinkMap
 ): { section: string; hrefs: string[]; lang: string | null } | null {
   const parser = new DOMParser();
   const serializer = new XMLSerializer();
@@ -192,6 +230,28 @@ export function chapterToSection(
     const href = link.getAttribute('href');
     if (href) hrefs.push(href);
   });
+  if (links) {
+    const ownAnchor = idref ? pdfChapterAnchor(idref) : null;
+    body.querySelectorAll('a[href]').forEach(a => {
+      const href = a.getAttribute('href');
+      if (!href || /^[a-z][a-z0-9+.-]*:/i.test(href)) return; // external/protocol
+      const [path, frag] = href.split('#');
+      if (!path) {
+        // Same-chapter fragment: already document-internal, but if the id repeats
+        // in another chapter the combined document resolves it to the FIRST
+        // occurrence — retarget the owning chapter's anchor instead.
+        if (frag && !links.uniqueIds.has(frag) && ownAnchor) {
+          a.setAttribute('href', `#${ownAnchor}`);
+        }
+        return;
+      }
+      const file = path.split('/').pop();
+      const anchor = file ? links.anchorByFile.get(file) : undefined;
+      if (!anchor) return; // not a linear spine chapter — leave untouched
+      const direct = frag && links.uniqueIds.has(frag);
+      a.setAttribute('href', direct ? `#${frag}` : `#${anchor}`);
+    });
+  }
   const inner = Array.from(body.childNodes)
     .map(node => serializer.serializeToString(node))
     .join('');
@@ -219,8 +279,12 @@ export function chapterToSection(
   // Carry RTL direction onto the section too, so a multi-language book's RTL
   // chapters render right-to-left even under an LTR book default.
   const dirAttr = isRtlLanguage(lang) ? ' dir="rtl"' : '';
+  // The chapter anchor rewritten internal links target. Paged.js keeps an id on
+  // the first fragment when it splits a section, so the anchor lands on the
+  // chapter's first page.
+  const idAttr = idref ? ` id="${xmlEscape(pdfChapterAnchor(idref))}"` : '';
   return {
-    section: `<section class="pdf-chapter"${langAttr}${dirAttr}>${titleEl}${inner}</section>`,
+    section: `<section class="pdf-chapter"${idAttr}${langAttr}${dirAttr}>${titleEl}${inner}</section>`,
     hrefs,
     lang,
   };
@@ -466,6 +530,27 @@ export async function exportPdf(
     const chapters = await workspaceService.loadAllLinearChapterContents(workspace);
     if (chapters.length === 0) throw new Error(translate('No chapters to export.'));
 
+    // First pass: map each chapter's file name to its section anchor and count
+    // element ids across the book, so cross-chapter hrefs can be rewritten to
+    // same-document fragments (internal PDF links) with a safe fallback when a
+    // fragment id repeats between chapters. Parses each chapter a second time —
+    // negligible next to the export's asset pass.
+    const manifestHrefById = new Map(workspace.opf.manifest.map(m => [m.id, m.href]));
+    const anchorByFile = new Map<string, string>();
+    const idCounts = new Map<string, number>();
+    for (const chapter of chapters) {
+      const href = manifestHrefById.get(chapter.id) ?? `${chapter.id}.xhtml`;
+      const file = href.split('/').pop();
+      if (file) anchorByFile.set(file, pdfChapterAnchor(chapter.id));
+      for (const id of collectChapterIds(chapter.xhtmlContent)) {
+        idCounts.set(id, (idCounts.get(id) ?? 0) + 1);
+      }
+    }
+    const links: InternalLinkMap = {
+      anchorByFile,
+      uniqueIds: new Set([...idCounts].filter(([, n]) => n === 1).map(([id]) => id)),
+    };
+
     // Concatenate each chapter's <body> (wrapped so it starts on a new page) and
     // collect the stylesheet links the chapters reference (deduped) so the book's
     // own styling carries through — works for app-created and imported EPUBs.
@@ -473,7 +558,7 @@ export async function exportPdf(
     const sections: string[] = [];
     const skippedChapterIds: string[] = [];
     for (const chapter of chapters) {
-      const wrapped = chapterToSection(chapter.xhtmlContent, chapter.id);
+      const wrapped = chapterToSection(chapter.xhtmlContent, chapter.id, links);
       if (!wrapped) {
         // Malformed chapter / no <body> — excluded from the PDF, reported back.
         skippedChapterIds.push(chapter.id);
