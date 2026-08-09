@@ -106,9 +106,17 @@ Extension point for the future drawing tool: an entry may also be `{ person: id,
 
 Deliberately NOT in this slice: crops (need canvas + a manifest item, so plugin-side), and the click-to-spotlight overlay. Note for that one: an **inline SVG overlay with `<a>` regions and CSS `:hover`/`:focus` needs no scripting** — it keeps `scripted` off the chapters, which phase 2 worked to remove.
 
-Architecture note for the authoring UI, verified against `src/lib/plugins/contract.ts`: it must be a **plugin** (extensions have no UI surface), and today `init` hands a plugin the shared **output** directory, not the project workspace — so reading `OEBPS/Images/` and writing region data needs the workspace handle the design note already anticipates. The `insert` message (panel plugins) is a partial workaround: the plugin could emit the `photos:` block at the editor cursor.
+### Phase 4b — the drawing tool (`plugins/photo-regions`, 2026-08-09)
 
-Worth checking before building a drawing tool: if the scans ever passed through Picasa/digiKam/Lightroom, face regions may already be embedded as `mwg-rs:Regions` XMP (normalized x/y/w/h + name) — `exiftool -Regions:all` on the originals.
+**Correction to the earlier architecture note**: `init` hands a plugin the shared _output_ directory only for the publish **view** plugin. `PluginPanel.svelte` sends `workspaceOpfsPath(projectId)` — panel plugins get the **project workspace root**. The audio clip editor already relies on this (it reads the OPF and audio bytes itself). So the drawing tool needed **no core change**.
+
+Built as a panel plugin modelled on `audio-clip-editor`: reads `META-INF/container.xml` → OPF → image items + chapter ids, loads the chosen image's bytes to an object URL, drags boxes over it, and emits the `photos:` block through the host's `insert` message. The plugin only ever READS the workspace; the source edit goes through `insert`, so it cannot write over a chapter. No third-party library — the drawing is pointer events on a percentage-positioned overlay.
+
+Details worth keeping: geometry in **percent of the image's own box** (Media Fragments `xywh=percent:` quantities) so regions survive re-export at another size; entries emitted **sorted left to right by x** within a row, which is the order the caption reads; the image keyed by **manifest href**; and a YAML emitter that matches hand-written style — bare keys unless they would misparse, quoted flow values unless a bare id, with ids that spell YAML keywords (`true`, `null`) quoted so they don't parse as booleans and render as nothing. Verified end-to-end: tool output → js-yaml → `facesSetup` → caption.
+
+Not covered: reading existing regions back out of a chapter (the plugin is insert-only, so amending means redrawing), and drawing is pointer-only — the region list is keyboard-operable but the canvas is not. A checkbox controls whether the `photos:` line is emitted, since a second image has to merge into the block a chapter already has (duplicate keys would throw).
+
+Worth checking if more photos get tagged: if the scans ever passed through Picasa/digiKam/Lightroom, face regions may already be embedded as `mwg-rs:Regions` XMP (normalized x/y/w/h + name) — `exiftool -Regions:all` on the originals. Checked for `014-Family-of-Thomas-and-Emma.JPG`: none present.
 
 ## Housekeeping (any phase)
 
