@@ -61,3 +61,15 @@ export interface Region {
   w: number;
   h: number;
 }
+
+/** A region as persisted — the list key is a runtime detail, not stored. */
+export type SavedRegion = Omit<Region, 'key'>;
+
+/**
+ * The per-project region library. Keyed by the image's OPF-relative href, the
+ * same key the chapter's `photos:` block uses.
+ */
+export interface RegionStore {
+  version: 1;
+  files: Record<string, SavedRegion[]>;
+}

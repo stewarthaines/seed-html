@@ -9,11 +9,13 @@
   host's `insert` message, so nothing here can write over a chapter.
 -->
 <script lang="ts">
-  import { activeChapterId, dirHandle } from './store.js';
+  import { untrack } from 'svelte';
+  import { activeChapterId, dirHandle, dirPath } from './store.js';
   import { t, translate } from './i18n.js';
   import { readManifest, readFile, imagesInChapter } from './opf.js';
   import { toYaml } from './regions.js';
-  import type { ImageManifestItem, Region } from './types.js';
+  import { emptyStore, loadRegions, saveRegions, toSaved } from './library.js';
+  import type { ImageManifestItem, Region, RegionStore } from './types.js';
 
   let images = $state<ImageManifestItem[]>([]);
   let chapterIds = $state<string[]>([]);
@@ -28,6 +30,9 @@
   let status = $state('');
   let lastRow = $state('');
   let nextKey = 1;
+  /** The saved region library, keyed by image href. */
+  let store = $state<RegionStore>(emptyStore());
+  let saveTimer: ReturnType<typeof setTimeout> | undefined;
 
   let canvasEl: HTMLDivElement | undefined = $state();
   let draft = $state<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
@@ -49,9 +54,10 @@
     const root = $dirHandle;
     if (!root) return;
     let cancelled = false;
-    readManifest(root)
-      .then(manifest => {
+    Promise.all([readManifest(root), loadRegions(root)])
+      .then(([manifest, saved]) => {
         if (cancelled) return;
+        store = saved;
         images = manifest.images;
         chapterIds = manifest.chapterIds;
         chapterHrefs = manifest.chapterHrefs;
@@ -96,6 +102,21 @@
     const list = offered;
     if (list.length === 1) selectedHref = list[0].href;
     else if (selectedHref && !list.some(image => image.href === selectedHref)) selectedHref = '';
+  });
+
+  // Restore the boxes previously drawn on this image, so a revision starts from
+  // the saved work rather than a blank photo.
+  //
+  // `store` is read UNTRACKED deliberately: persisting rewrites it, and a
+  // tracked read would re-enter here on every save, rebuild the list with fresh
+  // keys, and tear down the input being typed into. The library is loaded
+  // before any image can be chosen, so keying this on the selection alone still
+  // restores at the right moment.
+  $effect(() => {
+    const href = selectedHref;
+    const saved = href ? untrack(() => store.files[href] ?? []) : [];
+    regions = saved.map(region => ({ ...region, key: nextKey++ }));
+    draft = null;
   });
 
   // Load the chosen image's bytes into an object URL, and revoke the old one.
@@ -162,14 +183,36 @@
     // A click rather than a drag: too small to be a face.
     if (box.w < 1 || box.h < 1) return;
     regions.push({ key: nextKey++, person: '', row: lastRow, ...box });
+    persist();
+  }
+
+  /** Write the library (fire-and-forget; failures surface in the status row). */
+  function persist(): void {
+    const root = $dirHandle;
+    if (!root || !selectedHref) return;
+    store = {
+      ...store,
+      files: { ...store.files, [selectedHref]: toSaved(regions) },
+    };
+    saveRegions(root, $dirPath, store).catch((error: unknown) => {
+      status = translate('Could not save the regions: {error}', { error: String(error) });
+    });
+  }
+
+  /** Text edits save on a short delay rather than per keystroke. */
+  function persistSoon(): void {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(persist, 600);
   }
 
   function removeRegion(key: number) {
     regions = regions.filter(region => region.key !== key);
+    persist();
   }
 
   function onRowInput(region: Region) {
     lastRow = region.row;
+    persistSoon();
   }
 
   function insert() {
@@ -181,6 +224,7 @@
   function clearAll() {
     regions = [];
     draft = null;
+    persist();
   }
 </script>
 
@@ -239,6 +283,7 @@
             list="chapter-ids"
             placeholder={$t('person id or name')}
             bind:value={region.person}
+            oninput={persistSoon}
           />
           <input
             type="text"
