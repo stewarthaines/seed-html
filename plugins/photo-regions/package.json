@@ -1,0 +1,32 @@
+{
+  "name": "photo-regions",
+  "version": "0.1.0",
+  "description": "Draw regions on a photo and name who is pictured, for the chapter's photos: frontmatter",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 8002",
+    "build": "tsc && vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5.0.3",
+    "svelte": "^5.55.9",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5",
+    "vite-plugin-singlefile": "^2.3.3"
+  },
+  "seedhtmlPlugin": {
+    "id": "photo-regions",
+    "name": "Photo Regions",
+    "presentation": "panel",
+    "buildEntry": "dist/plugin.html"
+  },
+  "keywords": [
+    "epub",
+    "images",
+    "annotation",
+    "opfs",
+    "plugin"
+  ],
+  "license": "MIT"
+}
