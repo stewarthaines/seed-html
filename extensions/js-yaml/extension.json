@@ -1,0 +1,15 @@
+{
+  "id": "js-yaml",
+  "name": "js-yaml",
+  "description": "The js-yaml parser, made available to this project's transform scripts for reading structured data such as YAML frontmatter.",
+  "url": "https://github.com/nodeca/js-yaml",
+  "licenseName": "MIT",
+  "scripts": [
+    {
+      "file": "js-yaml.min.js",
+      "license": "jsyaml-LICENSE.txt"
+    }
+  ],
+  "domTransforms": [],
+  "textTransforms": []
+}

@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - OPDS catalogs published to a remote now carry each book's accessibility metadata, so catalog apps can show what to expect before downloading.
 - Published catalogs now default to the OPDS 2.0 format, which library reading apps like Cantook read accessibility details from; existing catalogs keep working in the classic format.
 - Import from Catalog reads OPDS 2.0 feeds too, so books published in the new default format can be imported back.
+- A js-yaml extension, for projects whose transform scripts read structured data such as YAML frontmatter.
 
 ### Fixed
 
