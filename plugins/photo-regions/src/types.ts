@@ -20,6 +20,9 @@ export interface ContextMessage {
   dir: 'ltr' | 'rtl';
   messages?: Record<string, string>;
   activeIdentifier?: string;
+  /** Spine item id of the chapter the editor has open — the panel lists only
+   *  the images that chapter renders. Absent → every manifested image. */
+  activeChapterId?: string;
 }
 
 export type MainToPlugin = InitMessage | ContextMessage;

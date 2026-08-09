@@ -9,14 +9,18 @@
   host's `insert` message, so nothing here can write over a chapter.
 -->
 <script lang="ts">
-  import { dirHandle } from './store.js';
+  import { activeChapterId, dirHandle } from './store.js';
   import { t, translate } from './i18n.js';
-  import { readManifest, readFile } from './opf.js';
+  import { readManifest, readFile, imagesInChapter } from './opf.js';
   import { toYaml } from './regions.js';
   import type { ImageManifestItem, Region } from './types.js';
 
   let images = $state<ImageManifestItem[]>([]);
   let chapterIds = $state<string[]>([]);
+  let chapterHrefs = $state<Record<string, string>>({});
+  let opfDir = $state('');
+  /** Manifest hrefs this chapter renders; null = unknown (not rendered yet). */
+  let usedHrefs = $state<Set<string> | null>(null);
   let selectedHref = $state('');
   let imageUrl = $state('');
   let regions = $state<Region[]>([]);
@@ -28,6 +32,12 @@
   let canvasEl: HTMLDivElement | undefined = $state();
   let draft = $state<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
 
+  // The panel is for the chapter in the editor, so offer the images that
+  // chapter actually renders. Before its first render there is nothing to read,
+  // so fall back to the whole manifest rather than an empty list.
+  const offered = $derived(
+    usedHrefs ? images.filter(image => usedHrefs.has(image.href)) : images
+  );
   const selectedImage = $derived(images.find(image => image.href === selectedHref));
   const namedCount = $derived(regions.filter(region => region.person.trim()).length);
   const yaml = $derived(
@@ -44,9 +54,8 @@
         if (cancelled) return;
         images = manifest.images;
         chapterIds = manifest.chapterIds;
-        if (!selectedHref && manifest.images.length === 1) {
-          selectedHref = manifest.images[0].href;
-        }
+        chapterHrefs = manifest.chapterHrefs;
+        opfDir = manifest.opfDir;
       })
       .catch(error => {
         if (!cancelled) status = translate('Could not read the manifest: {error}', {
@@ -56,6 +65,37 @@
     return () => {
       cancelled = true;
     };
+  });
+
+  // Which of them this chapter renders — from its generated XHTML, since the
+  // transforms decide what a chapter contains.
+  $effect(() => {
+    const root = $dirHandle;
+    const id = $activeChapterId;
+    const href = id ? chapterHrefs[id] : undefined;
+    if (!root || !href) {
+      usedHrefs = null;
+      return;
+    }
+    let cancelled = false;
+    imagesInChapter(root, href, opfDir)
+      .then(used => {
+        if (!cancelled) usedHrefs = used;
+      })
+      .catch(() => {
+        if (!cancelled) usedHrefs = null;
+      });
+    return () => {
+      cancelled = true;
+    };
+  });
+
+  // Keep the selection valid: pick the only offered image, or drop a choice
+  // that this chapter doesn't render.
+  $effect(() => {
+    const list = offered;
+    if (list.length === 1) selectedHref = list[0].href;
+    else if (selectedHref && !list.some(image => image.href === selectedHref)) selectedHref = '';
   });
 
   // Load the chosen image's bytes into an object URL, and revoke the old one.
@@ -150,7 +190,7 @@
       <span class="label">{$t('Photo')}</span>
       <select bind:value={selectedHref}>
         <option value="">{$t('Choose an image…')}</option>
-        {#each images as image (image.href)}
+        {#each offered as image (image.href)}
           <option value={image.href}>{image.href}</option>
         {/each}
       </select>
@@ -303,8 +343,8 @@
 
   .region {
     position: absolute;
-    border: 2px solid var(--color-accent, #518bb5);
-    background: rgba(81, 139, 181, 0.15);
+    border: 2px solid var(--color-interactive-primary);
+    background: var(--color-region-fill);
     pointer-events: none;
   }
 
@@ -319,8 +359,8 @@
     font-size: 11px;
     line-height: 1.5;
     text-align: center;
-    color: #fff;
-    background: var(--color-accent, #518bb5);
+    color: var(--color-text-inverse);
+    background: var(--color-interactive-primary);
     border-radius: 3px;
   }
 
@@ -389,8 +429,8 @@
   }
 
   .actions button.primary {
-    color: #fff;
-    background: var(--color-accent, #518bb5);
+    color: var(--color-text-inverse);
+    background: var(--color-interactive-primary);
     border-color: transparent;
   }
 

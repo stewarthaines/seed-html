@@ -9,3 +9,6 @@ export const dirPath = writable<string[] | null>(null);
 
 /** The active workspace id, from the same `init` message. */
 export const projectId = writable<string | null>(null);
+
+/** Spine item id of the chapter the editor has open (from `context`). */
+export const activeChapterId = writable<string | null>(null);

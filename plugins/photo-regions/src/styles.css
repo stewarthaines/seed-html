@@ -39,6 +39,13 @@ button {
   --color-button-secondary-border: #f0f0f0;
   --color-button-focus-ring: #3333ff;
 
+  /* Accent for the region boxes and the primary action. Mirrors core's
+     --color-interactive-primary / --color-text-inverse. */
+  --color-interactive-primary: #0000ee;
+  --color-text-inverse: #ffffff;
+  /* The box fill: the accent at low alpha, so the face stays visible. */
+  --color-region-fill: rgba(0, 0, 238, 0.15);
+
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --radius-sm: 4px;
@@ -56,6 +63,10 @@ button {
   --color-button-secondary-bg-hover: #3a3a3a;
   --color-button-secondary-text: #e0e0e0;
   --color-button-secondary-border: #3a3a3a;
+
+  --color-interactive-primary: #3333ff;
+  --color-text-inverse: #222222;
+  --color-region-fill: rgba(102, 102, 255, 0.22);
 }
 
 /* Buttons — usage matches core: <button class="btn btn-sm">. */

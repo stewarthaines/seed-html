@@ -10,7 +10,7 @@
 import { mount } from 'svelte';
 import App from './App.svelte';
 import './styles.css';
-import { dirHandle, dirPath, projectId } from './store.js';
+import { activeChapterId, dirHandle, dirPath, projectId } from './store.js';
 import { setPluginMessages } from './i18n.js';
 import type { ContextMessage, InitMessage, MainToPlugin } from './types.js';
 
@@ -37,6 +37,7 @@ function handleContext(message: ContextMessage) {
   root.lang = message.locale;
   root.dir = message.dir;
   setPluginMessages(message.messages ?? {});
+  activeChapterId.set(message.activeChapterId ?? null);
 }
 
 async function handleInit(message: InitMessage) {
