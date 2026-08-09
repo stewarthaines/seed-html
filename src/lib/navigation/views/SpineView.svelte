@@ -71,6 +71,7 @@
     readOnly = false,
     advancedMode = false,
     audioPluginUrl = null,
+    photoPluginUrl = null,
     onPreviewUpdate,
     onWorkspaceUpdate,
   }: {
@@ -88,6 +89,7 @@
     /** Resolved iframe src for the audio clip panel plugin (supersedes the
         built-in audio clip editor when set). */
     audioPluginUrl?: string | null;
+    photoPluginUrl?: string | null;
     onPreviewUpdate?: (detail: {
       xhtmlContent: string;
       /** The XHTML as written to the workspace this render (no blob URLs).
@@ -1658,6 +1660,8 @@
       {settingsService}
       {generatorRunner}
       {audioPluginUrl}
+      {photoPluginUrl}
+      chapterId={selectedItemId}
       onWorkspaceUpdate={ws => onWorkspaceUpdate?.(ws)}
     />
   </div>

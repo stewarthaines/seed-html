@@ -32,11 +32,22 @@
     onInsert?: (content: string) => void;
     /** Accessible iframe title. */
     title: string;
+    /** Spine item id of the open chapter, passed through in `context` so a
+     *  plugin can scope itself to this chapter. Omit where it has no meaning. */
+    activeChapterId?: string;
     /** Rendered instead of the iframe when the plugin fails to come alive. */
     fallback?: Snippet;
   }
 
-  let { pluginUrl, projectId, getDirHandle, onInsert, title, fallback }: Props = $props();
+  let {
+    pluginUrl,
+    projectId,
+    getDirHandle,
+    onInsert,
+    title,
+    activeChapterId,
+    fallback,
+  }: Props = $props();
 
   let pluginFrame = $state<HTMLIFrameElement | null>(null);
   let pluginReady = $state(false);
@@ -120,7 +131,14 @@
     const dir = $documentDirection === 'rtl' ? 'rtl' : 'ltr';
     const messages = i18nService.getCatalogs()[$currentLocale]?.messages ?? {};
     frameWindow.postMessage(
-      createContextMessage($themeStore.current, $currentLocale, dir, messages),
+      createContextMessage(
+        $themeStore.current,
+        $currentLocale,
+        dir,
+        messages,
+        undefined,
+        activeChapterId
+      ),
       targetOrigin
     );
   }
@@ -132,6 +150,7 @@
     void $themeStore.current;
     void $currentLocale;
     void $documentDirection;
+    void activeChapterId;
     sendPluginContext();
   });
 

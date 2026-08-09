@@ -167,6 +167,10 @@
   // The audio clip `panel` plugin: supersedes the built-in audio clip editor in
   // the spine item editor when available + enabled (built-in stays as fallback).
   const AUDIO_PLUGIN_ID = 'audio-clip-editor';
+  // The photo-regions `panel` plugin: adds a face-tagging panel to the spine
+  // item editor when available + enabled. No built-in equivalent, so the panel
+  // is simply absent otherwise.
+  const PHOTO_PLUGIN_ID = 'photo-regions';
   let availablePlugins = $state<PluginManifestEntry[]>([]);
   let enabledPluginIds = $state<string[]>([]);
   // HTTP-delivered extensions catalog (extensions/manifest.json), importable per project.
@@ -177,6 +181,10 @@
   });
   let audioPluginUrl = $derived.by(() => {
     const entry = findActivePlugin(availablePlugins, enabledPluginIds, AUDIO_PLUGIN_ID);
+    return entry ? resolvePluginEntryUrl(entry) : null;
+  });
+  let photoPluginUrl = $derived.by(() => {
+    const entry = findActivePlugin(availablePlugins, enabledPluginIds, PHOTO_PLUGIN_ID);
     return entry ? resolvePluginEntryUrl(entry) : null;
   });
 
@@ -1845,6 +1853,7 @@
             readOnly={isReadOnly}
             advancedMode={advancedMode.current}
             {audioPluginUrl}
+            {photoPluginUrl}
             onPreviewUpdate={handleSpinePreviewUpdate}
             onWorkspaceUpdate={updatedWorkspace => {
               if (appState) appState.workspace = updatedWorkspace;

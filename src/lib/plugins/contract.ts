@@ -103,6 +103,13 @@ export interface ContextMessage {
    * row is highlighted.
    */
   activeIdentifier?: string;
+  /**
+   * Spine item id of the chapter the editor currently has open, so a panel
+   * plugin can scope itself to that chapter's own content rather than the whole
+   * book (the photo-regions panel lists the images this chapter renders).
+   * Optional / back-compat; absent → the plugin falls back to book-wide.
+   */
+  activeChapterId?: string;
 }
 
 /** plugin → main, inserts a plain string at the active textarea's cursor. */
@@ -167,9 +174,18 @@ export function createContextMessage(
   locale: string,
   dir: 'ltr' | 'rtl',
   messages?: Record<string, string>,
-  activeIdentifier?: string
+  activeIdentifier?: string,
+  activeChapterId?: string
 ): ContextMessage {
-  return { type: 'context', theme, locale, dir, messages, activeIdentifier };
+  return {
+    type: 'context',
+    theme,
+    locale,
+    dir,
+    messages,
+    activeIdentifier,
+    activeChapterId,
+  };
 }
 
 /** Runtime guard: is this an `init` message carrying a usable directory handle? */

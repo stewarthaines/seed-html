@@ -101,6 +101,8 @@
     onChapterTitleChange,
     generatorRunner = null,
     audioPluginUrl = null,
+    photoPluginUrl = null,
+    chapterId = null,
     onWorkspaceUpdate,
   }: {
     transformError?: TransformError | null;
@@ -163,6 +165,10 @@
     /** Resolved iframe src for the audio clip panel plugin; when set it supersedes
         the built-in AudioClipEditor (which stays as the load-failure fallback). */
     audioPluginUrl?: string | null;
+    /** photo-regions plugin entry, when available + enabled; null hides the panel. */
+    photoPluginUrl?: string | null;
+    /** Spine item id of the open chapter — the photo-regions panel scopes to it. */
+    chapterId?: string | null;
     /** Report a manifest change (drop-to-insert media import) back to app state —
         without it the next full-OPF save clobbers the added item. */
     onWorkspaceUpdate?: (workspace: WorkspaceState) => void;
@@ -726,10 +732,11 @@
   // Insert panels (audio clip editor / images / generators): one active at a
   // time. The per-panel `…Visible` names survive as deriveds so the render
   // blocks read as before.
-  type InsertPanelId = 'audio' | 'images' | 'generators';
+  type InsertPanelId = 'audio' | 'images' | 'regions' | 'generators';
   let activeInsertPanel = $state<InsertPanelId | null>(null);
   const audioEditorVisible = $derived(activeInsertPanel === 'audio');
   const mediaBrowserVisible = $derived(activeInsertPanel === 'images');
+  const photoRegionsVisible = $derived(activeInsertPanel === 'regions');
   const generatorPanelVisible = $derived(activeInsertPanel === 'generators');
 
   let textareaSelection = $state<{ start: number; end: number } | null>(null);
@@ -766,6 +773,11 @@
     }
     if (textPaneActive && hasImageFiles && workspace && workspaceService) {
       list.push({ id: 'images', label: $t('Images') });
+    }
+    // Only with the plugin enabled: unlike the others there is no built-in
+    // fallback for it.
+    if (textPaneActive && hasImageFiles && workspace && photoPluginUrl) {
+      list.push({ id: 'regions', label: $t('Photo Regions') });
     }
     if (textPaneActive && hasGenerators) {
       list.push({ id: 'generators', label: $t('Generators') });
@@ -1268,6 +1280,23 @@
     <div class="insert-panel-host">
       {@render insertPanelClose($t('Images'))}
       <MediaBrowserPanel {workspace} {workspaceService} onPick={handleInsertImage} />
+    </div>
+  {/if}
+
+  <!-- Photo regions: draw boxes over the faces in one of this chapter's images
+       and insert the resulting `photos:` block. Plugin-only — no built-in
+       equivalent, so the panel is simply absent when the plugin is not enabled. -->
+  {#if photoRegionsVisible && photoPluginUrl && hasImageFiles && textPaneActive && workspace}
+    <div class="insert-panel-host">
+      {@render insertPanelClose($t('Photo Regions'))}
+      <PluginPanel
+        pluginUrl={photoPluginUrl}
+        projectId={workspace.id}
+        getDirHandle={getWorkspaceDirHandle}
+        onInsert={insertClipDirective}
+        activeChapterId={chapterId ?? undefined}
+        title={$t('Photo Regions')}
+      />
     </div>
   {/if}
 
