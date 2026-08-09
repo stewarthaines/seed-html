@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Metadata collections can carry the series' own identifier — a periodical's ISSN, for example — alongside the collection name and position.
+- OPDS catalogs published to a remote now carry each book's accessibility metadata, so catalog apps can show what to expect before downloading.
 
 ### Fixed
 

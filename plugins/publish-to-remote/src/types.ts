@@ -171,4 +171,15 @@ export interface CatalogEntryMeta {
   thumbnailBytes?: ArrayBuffer;
   /** Resolvable URL of the hosted thumbnail, set once uploaded. */
   thumbnailUrl?: string;
+  /** Accessibility metadata (schema.org tokens, verbatim from the book's OPF). */
+  accessibility?: {
+    accessMode?: string[];
+    /** Each entry is ONE sufficient combination, comma-separated ("textual,visual"). */
+    accessModeSufficient?: string[];
+    feature?: string[];
+    hazard?: string[];
+    summary?: string;
+    conformsTo?: string;
+    certifiedBy?: string;
+  };
 }

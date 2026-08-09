@@ -28,6 +28,25 @@ export interface PublishSidecar {
   subjects?: string[];
   /** Sibling thumbnail filename (`<base>.thumb.png`), present only with a cover. */
   thumbnail?: string;
+  /**
+   * Accessibility metadata, mirroring the OPF's schema.org properties verbatim
+   * (controlled-vocabulary tokens, already validated at authoring time). The
+   * grouping matches OPDS 2.0's `metadata.accessibility` object so a future
+   * OPDS 2.0 builder consumes the same sidecar unchanged.
+   */
+  accessibility?: PublishAccessibility;
+}
+
+export interface PublishAccessibility {
+  accessMode?: string[];
+  /** Each entry is ONE sufficient combination, comma-separated ("textual,visual"). */
+  accessModeSufficient?: string[];
+  feature?: string[];
+  hazard?: string[];
+  summary?: string;
+  /** dcterms:conformsTo, e.g. "EPUB Accessibility 1.1 - WCAG 2.1 Level AA". */
+  conformsTo?: string;
+  certifiedBy?: string;
 }
 
 const THUMB_MAX_DIM = 256;
@@ -64,6 +83,26 @@ export async function writePublishSidecar(
   // Drop empty arrays/undefined for a tidy sidecar.
   if (!sidecar.authors?.length) delete sidecar.authors;
   if (!sidecar.subjects?.length) delete sidecar.subjects;
+
+  const accessibility: PublishAccessibility = {};
+  if (metadata.accessMode?.length) accessibility.accessMode = metadata.accessMode;
+  if (metadata.accessModeSufficient?.length) {
+    accessibility.accessModeSufficient = metadata.accessModeSufficient;
+  }
+  if (metadata.accessibilityFeature?.length) {
+    accessibility.feature = metadata.accessibilityFeature;
+  }
+  if (metadata.accessibilityHazard?.length) accessibility.hazard = metadata.accessibilityHazard;
+  if (metadata.accessibilitySummary?.trim()) {
+    accessibility.summary = metadata.accessibilitySummary.trim();
+  }
+  if (metadata.accessibilityConformance?.trim()) {
+    accessibility.conformsTo = metadata.accessibilityConformance.trim();
+  }
+  if (metadata.accessibilityCertifiedBy?.trim()) {
+    accessibility.certifiedBy = metadata.accessibilityCertifiedBy.trim();
+  }
+  if (Object.keys(accessibility).length > 0) sidecar.accessibility = accessibility;
 
   if (coverImageData) {
     try {

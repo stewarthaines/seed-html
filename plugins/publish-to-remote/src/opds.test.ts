@@ -203,6 +203,68 @@ describe('generateOpdsFeed', () => {
     });
   });
 
+  describe('accessibility metadata', () => {
+    const SCHEMA_NS = 'http://schema.org/';
+    const DC_NS = 'http://purl.org/dc/terms/';
+
+    it('emits schema.org elements and dc:conformsTo from the sidecar accessibility block', () => {
+      const meta = new Map([
+        [
+          'book1.epub',
+          {
+            title: 'Bulletin 39',
+            accessibility: {
+              accessMode: ['textual', 'visual', 'auditory'],
+              accessModeSufficient: ['textual,visual,auditory'],
+              feature: ['alternativeText', 'structuralNavigation'],
+              hazard: ['none'],
+              summary: 'The music scores are presented as images only.',
+              conformsTo: 'EPUB Accessibility 1.1 - WCAG 2.1 Level AA',
+              certifiedBy: 'The Publisher',
+            },
+          },
+        ],
+      ]);
+
+      const doc = parse(generateOpdsFeed(s3Config, twoEpubs, FEED_URL, meta));
+
+      expect(doc.documentElement.getAttribute('xmlns:schema')).toBe(SCHEMA_NS);
+      const values = (local: string) =>
+        Array.from(doc.getElementsByTagNameNS(SCHEMA_NS, local)).map(
+          (el) => el.textContent,
+        );
+      expect(values('accessMode')).toEqual(['textual', 'visual', 'auditory']);
+      // One element per sufficient COMBINATION, comma-separated inside.
+      expect(values('accessModeSufficient')).toEqual([
+        'textual,visual,auditory',
+      ]);
+      expect(values('accessibilityFeature')).toEqual([
+        'alternativeText',
+        'structuralNavigation',
+      ]);
+      expect(values('accessibilityHazard')).toEqual(['none']);
+      expect(values('accessibilitySummary')).toEqual([
+        'The music scores are presented as images only.',
+      ]);
+      expect(values('certifiedBy')).toEqual(['The Publisher']);
+      expect(
+        Array.from(doc.getElementsByTagNameNS(DC_NS, 'conformsTo')).map(
+          (el) => el.textContent,
+        ),
+      ).toEqual(['EPUB Accessibility 1.1 - WCAG 2.1 Level AA']);
+    });
+
+    it('emits no accessibility elements for entries without the sidecar block', () => {
+      const meta = new Map([['book1.epub', { title: 'Bulletin 39' }]]);
+
+      const xml = generateOpdsFeed(s3Config, twoEpubs, FEED_URL, meta);
+      const doc = parse(xml);
+
+      expect(doc.getElementsByTagNameNS(SCHEMA_NS, 'accessMode').length).toBe(0);
+      expect(xml).not.toContain('accessibilitySummary');
+    });
+  });
+
   describe('parseOpdsFeed (round-trip)', () => {
     it('reads the feed title and author back from a generated feed', () => {
       const xml = generateOpdsFeed(

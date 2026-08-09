@@ -12,6 +12,7 @@ import type {
 
 const ATOM_NS = 'http://www.w3.org/2005/Atom';
 const DC_NS = 'http://purl.org/dc/terms/';
+const SCHEMA_NS = 'http://schema.org/';
 
 /** Default catalog author (the publisher), used when a catalog leaves it blank. */
 export const DEFAULT_CATALOG_AUTHOR_NAME = 'SEED.html';
@@ -68,6 +69,7 @@ export function generateOpdsFeed(
   // Declare prefixes as proper namespace attributes so the serializer keeps them
   // on the root rather than re-declaring `xmlns:dc` on every dc: element.
   feed.setAttributeNS(XMLNS_NS, 'xmlns:dc', DC_NS);
+  feed.setAttributeNS(XMLNS_NS, 'xmlns:schema', SCHEMA_NS);
   feed.setAttributeNS(
     XMLNS_NS,
     'xmlns:opds',
@@ -94,6 +96,14 @@ export function generateOpdsFeed(
   // Dublin Core (dcterms) element, e.g. <dc:language>.
   function dcChild(parent: Element, tag: string, text: string) {
     const el = doc.createElementNS(DC_NS, `dc:${tag}`);
+    el.textContent = text;
+    parent.appendChild(el);
+    return el;
+  }
+
+  // schema.org element, e.g. <schema:accessMode>.
+  function schemaChild(parent: Element, tag: string, text: string) {
+    const el = doc.createElementNS(SCHEMA_NS, `schema:${tag}`);
     el.textContent = text;
     parent.appendChild(el);
     return el;
@@ -145,6 +155,32 @@ export function generateOpdsFeed(
       if (meta.identifier) dcChild(entry, 'identifier', meta.identifier);
       for (const subject of meta.subjects ?? []) {
         child(entry, 'category', undefined, { term: subject });
+      }
+      // Accessibility metadata: one element per value for the repeatable
+      // properties (mirroring the OPF's repeated <meta> elements); each
+      // accessModeSufficient entry stays one element per sufficient
+      // COMBINATION, comma-separated, preserving the list-of-lists semantics.
+      const a11y = meta.accessibility;
+      if (a11y) {
+        for (const v of a11y.accessMode ?? []) {
+          schemaChild(entry, 'accessMode', v);
+        }
+        for (const v of a11y.accessModeSufficient ?? []) {
+          schemaChild(entry, 'accessModeSufficient', v);
+        }
+        for (const v of a11y.feature ?? []) {
+          schemaChild(entry, 'accessibilityFeature', v);
+        }
+        for (const v of a11y.hazard ?? []) {
+          schemaChild(entry, 'accessibilityHazard', v);
+        }
+        if (a11y.summary) {
+          schemaChild(entry, 'accessibilitySummary', a11y.summary);
+        }
+        if (a11y.conformsTo) dcChild(entry, 'conformsTo', a11y.conformsTo);
+        if (a11y.certifiedBy) {
+          schemaChild(entry, 'certifiedBy', a11y.certifiedBy);
+        }
       }
       if (meta.thumbnailUrl) {
         // Emit both relations (some clients read only the full `image`) pointing
