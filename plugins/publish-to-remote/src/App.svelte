@@ -35,6 +35,7 @@
     DEFAULT_CATALOG_AUTHOR_NAME,
     DEFAULT_CATALOG_AUTHOR_URI,
   } from './opds.js';
+  import { generateOpds2Feed, parseOpds2Feed, OPDS2_TYPE } from './opds2.js';
   import {
     validateEpub,
     saveValidationReport,
@@ -84,16 +85,25 @@
 
   // The catalog currently being edited in the right pane. `catalogFile` is the
   // remote object key it reads from / writes to (multiple catalogs can live on
-  // one remote); name/uri drive the feed-level <author>. The bucket itself is
-  // the source of truth — clicking a remote .xml loads it into these.
-  const DEFAULT_CATALOG_FILE = 'catalog.xml';
-  let catalogFile = $state(DEFAULT_CATALOG_FILE);
+  // one remote); name/uri drive the feed-level author. The bucket itself is
+  // the source of truth — clicking a remote catalog loads it into these.
+  // Format follows the filename: .json is OPDS 2.0, anything else OPDS 1.2.
+  type CatalogFormat = 'opds2' | 'opds1';
+  const DEFAULT_FILE_FOR_FORMAT: Record<CatalogFormat, string> = {
+    opds2: 'catalog.json',
+    opds1: 'catalog.xml',
+  };
+  const formatForKey = (key: string): CatalogFormat =>
+    key.toLowerCase().endsWith('.json') ? 'opds2' : 'opds1';
+  let catalogFormat = $state<CatalogFormat>('opds2');
+  let catalogFile = $state(DEFAULT_FILE_FOR_FORMAT.opds2);
   let catalogTitle = $state('');
   let catalogName = $state(DEFAULT_CATALOG_AUTHOR_NAME);
   let catalogUri = $state(DEFAULT_CATALOG_AUTHOR_URI);
   // Snapshot of the last loaded/published catalog, for change detection. Null
   // until a remote loads, or when the typed filename isn't on the remote yet.
   let catalogSnapshot = $state<{
+    format: CatalogFormat;
     file: string;
     title: string;
     name: string;
@@ -102,21 +112,23 @@
   } | null>(null);
 
   const currentCatalog = $derived({
+    format: catalogFormat,
     file: catalogFile.trim(),
     title: catalogTitle.trim(),
     name: catalogName.trim(),
     uri: catalogUri.trim(),
     keys: [...selectedKeys].sort(),
   });
-  // The editor is "dirty" (Update/Create enabled) when the filename, title,
-  // name, uri, or epub selection differs from the loaded snapshot. No snapshot
-  // (a brand-new or never-loaded catalog) counts as dirty so the first publish
-  // is allowed.
+  // The editor is "dirty" (Update/Create enabled) when the format, filename,
+  // title, name, uri, or epub selection differs from the loaded snapshot. No
+  // snapshot (a brand-new or never-loaded catalog) counts as dirty so the first
+  // publish is allowed.
   const catalogDirty = $derived.by(() => {
     const snap = catalogSnapshot;
     if (!snap) return true;
     const cur = currentCatalog;
     return (
+      snap.format !== cur.format ||
       snap.file !== cur.file ||
       snap.title !== cur.title ||
       snap.name !== cur.name ||
@@ -125,6 +137,17 @@
       snap.keys.some((k, i) => k !== cur.keys[i])
     );
   });
+
+  // Switching format nudges the filename with it — but only when the current
+  // name carries the other format's extension; hand-typed names are left alone.
+  // Converting an existing catalog thus writes a NEW file (e.g. catalog.json
+  // beside the old catalog.xml); the old-format file stays until deleted.
+  function onFormatChange() {
+    const oldExt = catalogFormat === 'opds2' ? /\.xml$/i : /\.json$/i;
+    const newExt = catalogFormat === 'opds2' ? '.json' : '.xml';
+    const file = catalogFile.trim();
+    if (oldExt.test(file)) catalogFile = file.replace(oldExt, newExt);
+  }
   // Whether the typed filename already exists on the remote (→ "Update" vs "Create").
   const catalogExistsRemotely = $derived(
     remoteObjects.some((o) => o.key === catalogFile.trim()),
@@ -136,6 +159,7 @@
 
   function captureCatalogSnapshot() {
     catalogSnapshot = {
+      format: catalogFormat,
       file: catalogFile.trim(),
       title: catalogTitle.trim(),
       name: catalogName.trim(),
@@ -735,12 +759,23 @@
     }
   }
 
-  // The catalog filename for a remote (configurable on S3/WebDAV; default below).
-  function catalogFilenameFor(remote: RemoteConfig): string {
-    return (remote.type === 's3-compatible' || remote.type === 'webdav') &&
-      remote.catalogFilename?.trim()
-      ? remote.catalogFilename.trim()
-      : 'catalog.xml';
+  // Candidate catalog filenames for a remote: the configured one (S3/WebDAV)
+  // when set, otherwise the OPDS 2.0 default with the legacy Atom name as a
+  // fallback so remotes with an existing catalog.xml still load it.
+  function catalogFilenamesFor(remote: RemoteConfig): string[] {
+    const configured =
+      (remote.type === 's3-compatible' || remote.type === 'webdav') &&
+      remote.catalogFilename?.trim();
+    return configured
+      ? [configured]
+      : [DEFAULT_FILE_FOR_FORMAT.opds2, DEFAULT_FILE_FOR_FORMAT.opds1];
+  }
+
+  // Parse a catalog by its filename's format; both parsers return the same shape.
+  function parseCatalog(key: string, text: string) {
+    return formatForKey(key) === 'opds2'
+      ? parseOpds2Feed(text)
+      : parseOpdsFeed(text);
   }
 
   function onToggleSelect(key: string, checked: boolean) {
@@ -764,49 +799,56 @@
     );
   }
 
-  // Initialise the editor for a remote from its default catalog (catalog.xml or
-  // the configured filename): load name/uri + selection if it exists, else start
-  // a new catalog with all epubs selected. Snapshots the clean state.
+  // Initialise the editor for a remote from its default catalog (the configured
+  // filename, else catalog.json with catalog.xml as the legacy fallback): load
+  // name/uri + selection if one exists, else start a new catalog with all epubs
+  // selected. Snapshots the clean state.
   async function initCatalogForRemote(
     remote: RemoteConfig,
     objects: S3Object[],
   ) {
-    const file = catalogFilenameFor(remote);
-    catalogFile = file;
+    const candidates = catalogFilenamesFor(remote);
+    catalogFile = candidates[0];
+    catalogFormat = formatForKey(candidates[0]);
     catalogTitle = defaultCatalogTitle(remote);
     catalogName = DEFAULT_CATALOG_AUTHOR_NAME;
     catalogUri = DEFAULT_CATALOG_AUTHOR_URI;
     const epubs = objects.filter((o) => o.key.toLowerCase().endsWith('.epub'));
-    try {
-      const xml = await downloadTextFile(remote, file);
-      if (xml) {
-        const parsed = parseOpdsFeed(xml);
+    for (const file of candidates) {
+      try {
+        const text = await downloadTextFile(remote, file);
+        if (!text) continue;
+        const parsed = parseCatalog(file, text);
+        catalogFile = file;
+        catalogFormat = formatForKey(file);
         if (parsed.title) catalogTitle = parsed.title;
         if (parsed.authorName) catalogName = parsed.authorName;
         if (parsed.authorUri) catalogUri = parsed.authorUri;
         selectedKeys = keysFromHrefs(remote, objects, parsed.epubHrefs);
         captureCatalogSnapshot();
         return;
+      } catch {
+        // Missing/unparseable candidate: try the next, else a new catalog.
       }
-    } catch {
-      // Fall through to a new catalog with all epubs selected.
     }
     selectedKeys = new Set(epubs.map((o) => o.key));
     catalogSnapshot = null;
   }
 
-  // Click a remote .xml catalog to load it into the editor: parse its author +
-  // selection, then snapshot so the button reads clean until something changes.
+  // Click a remote catalog (.xml or .json) to load it into the editor: parse its
+  // author + selection, then snapshot so the button reads clean until something
+  // changes.
   async function onLoadCatalog(key: string) {
     if (!activeRemote) return;
     try {
-      const xml = await downloadTextFile(activeRemote, key);
-      if (!xml) {
+      const text = await downloadTextFile(activeRemote, key);
+      if (!text) {
         showStatus(translate('Could not read that catalog'), 'error');
         return;
       }
-      const parsed = parseOpdsFeed(xml);
+      const parsed = parseCatalog(key, text);
       catalogFile = key;
+      catalogFormat = formatForKey(key);
       catalogTitle = parsed.title || defaultCatalogTitle(activeRemote);
       catalogName = parsed.authorName || DEFAULT_CATALOG_AUTHOR_NAME;
       catalogUri = parsed.authorUri || DEFAULT_CATALOG_AUTHOR_URI;
@@ -865,7 +907,9 @@
         delete meta.thumbnailBytes;
       }
 
-      const xml = generateOpdsFeed(
+      const generate =
+        catalogFormat === 'opds2' ? generateOpds2Feed : generateOpdsFeed;
+      const body = generate(
         activeRemote,
         remoteObjects,
         feedUrl,
@@ -877,7 +921,16 @@
           authorUri: catalogUri,
         },
       );
-      const result = await uploadTextFile(activeRemote, catalogKey, xml);
+      const contentType =
+        catalogFormat === 'opds2'
+          ? OPDS2_TYPE
+          : 'application/atom+xml;profile=opds-catalog;kind=acquisition';
+      const result = await uploadTextFile(
+        activeRemote,
+        catalogKey,
+        body,
+        contentType,
+      );
       if (result.success) {
         showStatus(
           translate('Catalog updated: {url}', { url: result.url || feedUrl }),
@@ -996,7 +1049,18 @@
                 {#if activeRemote && activeRemote.type !== 'google-drive' && activeRemote.type !== 'device'}
                   <div class="catalog-editor">
                     <div class="catalog-fields">
-                      <label class="catalog-field catalog-field-file">
+                      <label class="catalog-field catalog-field-format">
+                        <span class="catalog-field-label">{$t('Format')}</span>
+                        <select
+                          class="catalog-input"
+                          bind:value={catalogFormat}
+                          onchange={onFormatChange}
+                        >
+                          <option value="opds2">OPDS 2.0</option>
+                          <option value="opds1">OPDS 1.2</option>
+                        </select>
+                      </label>
+                      <label class="catalog-field">
                         <span class="catalog-field-label"
                           >{$t('Catalog file')}</span
                         >
@@ -1004,7 +1068,7 @@
                           type="text"
                           class="catalog-input"
                           bind:value={catalogFile}
-                          placeholder={DEFAULT_CATALOG_FILE}
+                          placeholder={DEFAULT_FILE_FOR_FORMAT[catalogFormat]}
                           spellcheck="false"
                           autocomplete="off"
                         />
@@ -1187,9 +1251,15 @@
     min-width: 0;
   }
 
-  /* The filename takes a line of its own; name + uri share the next row. */
+  /* The title takes a line of its own; format + filename share a wrapping row
+     above it, name + uri one below. */
   .catalog-field-file {
     flex-basis: 100%;
+  }
+
+  /* The format dropdown sizes to its options; the filename takes the rest. */
+  .catalog-field-format {
+    flex: 0 1 auto;
   }
 
   .catalog-field-label {

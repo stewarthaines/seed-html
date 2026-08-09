@@ -663,7 +663,7 @@
       <input
         id="catalog-filename"
         type="text"
-        placeholder="catalog.xml"
+        placeholder="catalog.json"
         bind:value={form.catalogFilename}
       />
     </div>
@@ -944,7 +944,7 @@
       <input
         id="webdav-catalog-filename"
         type="text"
-        placeholder="catalog.xml"
+        placeholder="catalog.json"
         bind:value={form.catalogFilename}
       />
     </div>

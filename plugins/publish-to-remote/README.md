@@ -11,6 +11,21 @@ per-remote in the browser's private OPFS storage (`remotes.json`). Nothing is ba
 the build — Google Drive and Dropbox are **bring-your-own OAuth app**, so an advanced user
 can use their own Google/Dropbox credentials rather than the project owner's.
 
+## OPDS catalogs
+
+Catalogs publish in one of two formats, chosen per catalog in the editor:
+
+- **OPDS 2.0** (JSON, `catalog.json`) — the default. Publications carry full metadata
+  including the accessibility block (`metadata.accessibility` per the Readium Web
+  Publication Manifest), which Readium-based apps such as Cantook by Aldiko and
+  Thorium Reader display when browsing.
+- **OPDS 1.2** (Atom XML, `catalog.xml`) — the legacy format, still generated and
+  updateable; existing `.xml` catalogs load with this format selected.
+
+The filename's extension picks the parser on load; switching format in the editor swaps
+the extension when the filename still carries the other format's default extension, and
+writes a new file — an old-format catalog left behind can be deleted from the file list.
+
 ## Google Drive setup
 
 1. Create a project at <https://console.cloud.google.com/>.

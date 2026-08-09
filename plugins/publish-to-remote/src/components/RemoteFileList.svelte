@@ -43,12 +43,15 @@
   let deleteConfirmKey: string | null = $state(null);
 
   const isEpub = (key: string) => key.toLowerCase().endsWith('.epub');
-  const isXml = (key: string) => key.toLowerCase().endsWith('.xml');
-  // A catalog row is loadable when it's an .xml and the remote supports reads.
-  const isLoadable = (key: string) => isXml(key) && !!onLoadCatalog;
+  // Catalogs are .json (OPDS 2.0) or .xml (OPDS 1.2). Sidecar .json files stay
+  // local (only thumbnails upload), so remote .json is treated as a catalog.
+  const isCatalog = (key: string) =>
+    key.toLowerCase().endsWith('.xml') || key.toLowerCase().endsWith('.json');
+  // A catalog row is loadable when the remote supports reads.
+  const isLoadable = (key: string) => isCatalog(key) && !!onLoadCatalog;
 
   // Hide the uploaded cover thumbnails (.png) from the list; they remain on the
-  // remote to back the OPDS covers. Books and catalog.xml stay visible.
+  // remote to back the OPDS covers. Books and catalogs stay visible.
   const visibleObjects = $derived(
     objects.filter((o) => !o.key.toLowerCase().endsWith('.png')),
   );
@@ -61,17 +64,17 @@
   };
   const byNewest = (a: S3Object, b: S3Object) => ts(b) - ts(a);
 
-  // Grouped for display, mirroring the manifest table: catalogs (.xml) first,
-  // then EPUBs, then anything else. Each group renders under its own heading.
+  // Grouped for display, mirroring the manifest table: catalogs first, then
+  // EPUBs, then anything else. Each group renders under its own heading.
   const catalogObjects = $derived(
-    visibleObjects.filter((o) => isXml(o.key)).sort(byNewest),
+    visibleObjects.filter((o) => isCatalog(o.key)).sort(byNewest),
   );
   const epubObjects = $derived(
     visibleObjects.filter((o) => isEpub(o.key)).sort(byNewest),
   );
   const otherObjects = $derived(
     visibleObjects
-      .filter((o) => !isXml(o.key) && !isEpub(o.key))
+      .filter((o) => !isCatalog(o.key) && !isEpub(o.key))
       .sort(byNewest),
   );
 </script>

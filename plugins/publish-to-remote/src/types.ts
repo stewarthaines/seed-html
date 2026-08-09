@@ -58,7 +58,8 @@ export interface S3RemoteConfig {
   secretAccessKey: string;
   region?: string;
   publicUrlBase?: string;
-  /** OPDS catalog filename (defaults to catalog.xml when unset). */
+  /** OPDS catalog filename. Unset → catalog.json (OPDS 2.0), falling back to
+   * an existing catalog.xml (OPDS 1.2). The extension picks the format. */
   catalogFilename?: string;
 }
 
@@ -100,7 +101,8 @@ export interface WebDAVRemoteConfig {
   /** Optional unauthenticated read URL base for public links (mirrors S3's
    * publicUrlBase). Falls back to `url` when unset. */
   publicUrlBase?: string;
-  /** OPDS catalog filename (defaults to catalog.xml when unset). */
+  /** OPDS catalog filename. Unset → catalog.json (OPDS 2.0), falling back to
+   * an existing catalog.xml (OPDS 1.2). The extension picks the format. */
   catalogFilename?: string;
   /**
    * Route requests through the app's same-origin `/dav` proxy (for WebDAV
