@@ -90,8 +90,8 @@
       if (!response.ok) {
         throw new Error(`${response.status} ${response.statusText}`);
       }
-      const xml = await response.text();
-      const feed = parseOpdsFeed(xml, target);
+      const text = await response.text();
+      const feed = parseOpdsFeed(text, target);
       books = feed.books;
       hasFetched = true;
 
@@ -208,7 +208,7 @@
           bind:value={url}
           type="url"
           class="opds-url-input"
-          placeholder={$t('https://example.com/catalog.xml')}
+          placeholder={$t('https://example.com/catalog.json')}
           aria-label={$t('Catalog URL')}
           onkeydown={handleUrlKeydown}
           disabled={loading || importing}

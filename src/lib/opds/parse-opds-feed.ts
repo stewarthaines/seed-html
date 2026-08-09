@@ -1,10 +1,12 @@
 /**
  * OPDS feed parsing for "Import from Catalog".
  *
- * Parses an OPDS (Atom) acquisition feed into the list of downloadable EPUBs it
- * advertises. Mirrors the schema produced by the publish plugin's
- * generateOpdsFeed (entries carrying a
- * `<link rel="http://opds-spec.org/acquisition" type="application/epub+zip">`).
+ * Parses an OPDS acquisition feed — 2.0 (JSON) or 1.2 (Atom XML), sniffed from
+ * the document itself — into the list of downloadable EPUBs it advertises.
+ * Mirrors the schemas produced by the publish plugin's generateOpds2Feed
+ * (publications linking `application/epub+zip`) and generateOpdsFeed (entries
+ * carrying a `<link rel="http://opds-spec.org/acquisition"
+ * type="application/epub+zip">`).
  */
 
 /** A downloadable EPUB advertised by an OPDS feed entry. */
@@ -29,13 +31,105 @@ export interface OpdsFeed {
 const EPUB_TYPE = 'application/epub+zip';
 
 /**
- * Parse an OPDS feed document into its title and EPUB entries.
+ * Parse an OPDS feed document into its title and EPUB entries. A document
+ * opening with `{` is treated as OPDS 2.0 JSON, anything else as Atom XML
+ * (the dialog takes a pasted URL, so the content is the only format signal).
  *
- * @param xml      Raw feed XML.
+ * @param text     Raw feed document (JSON or XML).
  * @param feedUrl  URL the feed was fetched from; used to resolve relative hrefs.
- * @throws if the XML cannot be parsed as a document.
+ * @throws if the document cannot be parsed as a feed.
  */
-export function parseOpdsFeed(xml: string, feedUrl: string): OpdsFeed {
+export function parseOpdsFeed(text: string, feedUrl: string): OpdsFeed {
+  if (text.trimStart().startsWith('{')) {
+    return parseOpds2Feed(text, feedUrl);
+  }
+  return parseOpds1Feed(text, feedUrl);
+}
+
+/** OPDS 2.0: a feed of `publications`, each with RWPM `metadata` + `links`. */
+function parseOpds2Feed(json: string, feedUrl: string): OpdsFeed {
+  let feed: Opds2Feed;
+  try {
+    feed = JSON.parse(json) as Opds2Feed;
+  } catch {
+    throw new Error('Could not parse the catalog feed (invalid JSON).');
+  }
+
+  const books: OpdsBook[] = [];
+  for (const pub of feed.publications ?? []) {
+    const href = opds2AcquisitionHref(pub, feedUrl);
+    if (!href) continue; // navigation-only publications are skipped
+
+    books.push({
+      title: localizedString(pub.metadata?.title) || 'Untitled',
+      author: contributorName(pub.metadata?.author),
+      updated: pub.metadata?.modified || pub.metadata?.published || undefined,
+      href,
+      thumbnailHref: resolveUrl(pub.images?.[0]?.href, feedUrl),
+    });
+  }
+
+  return { title: localizedString(feed.metadata?.title) || undefined, books };
+}
+
+/** The subset of an OPDS 2.0 feed the importer reads. */
+interface Opds2Feed {
+  metadata?: { title?: unknown };
+  publications?: Array<{
+    metadata?: {
+      title?: unknown;
+      author?: unknown;
+      modified?: string;
+      published?: string;
+    };
+    links?: Array<{ rel?: string | string[]; href?: string; type?: string }>;
+    images?: Array<{ href?: string }>;
+  }>;
+}
+
+/** RWPM localizable string: plain, or a language-map — take its first value. */
+function localizedString(value: unknown): string | undefined {
+  if (typeof value === 'string') return value.trim() || undefined;
+  if (value && typeof value === 'object') {
+    const first = Object.values(value)[0];
+    if (typeof first === 'string') return first.trim() || undefined;
+  }
+  return undefined;
+}
+
+/** RWPM contributor(s): string, {name}, or an array of either — take the first. */
+function contributorName(value: unknown): string | undefined {
+  const first = Array.isArray(value) ? value[0] : value;
+  if (typeof first === 'string') return first.trim() || undefined;
+  if (first && typeof first === 'object' && 'name' in first) {
+    return localizedString((first as { name?: unknown }).name);
+  }
+  return undefined;
+}
+
+/** A publication's EPUB acquisition link, preferring an acquisition rel. */
+function opds2AcquisitionHref(
+  pub: NonNullable<Opds2Feed['publications']>[number],
+  feedUrl: string
+): string | undefined {
+  const epubLinks = (pub.links ?? []).filter(l => l.type === EPUB_TYPE);
+  const rels = (l: { rel?: string | string[] }) =>
+    Array.isArray(l.rel) ? l.rel : l.rel ? [l.rel] : [];
+  const link = epubLinks.find(l => rels(l).some(r => r.includes('acquisition'))) ?? epubLinks[0];
+  return resolveUrl(link?.href, feedUrl);
+}
+
+function resolveUrl(href: string | undefined, feedUrl: string): string | undefined {
+  if (!href) return undefined;
+  try {
+    return new URL(href, feedUrl).href;
+  } catch {
+    return undefined;
+  }
+}
+
+/** OPDS 1.2: an Atom feed of `<entry>` elements. */
+function parseOpds1Feed(xml: string, feedUrl: string): OpdsFeed {
   const doc = new DOMParser().parseFromString(xml, 'application/xml');
 
   // A parse failure yields a document containing a <parsererror> element.
