@@ -147,7 +147,37 @@ Constraints to carry into the real feature:
 - **A chapter cannot carry its own `<style>`** — epubcheck RSC-005, since the `head` is generated. Chapter-specific CSS has to live in a stylesheet.
 - **B's accessible name must come from a `<title>` child, not `role="img"`** — an SVG declared as an image swallows the links inside it (axe `nested-interactive`).
 
-Open, and the reason F is not finished: **badge placement**. A badge pinned to its region's corner lands on a face or another telling detail as often as not — only the author can see that. This belongs in the drawing tool: store a per-region badge position alongside `at:`, and let the author nudge it while identifying the face.
+### Phase 4d — crops (settled 2026-08-10)
+
+The claim that crops need a host affordance to add an image to the manifest was **wrong**, and the author was right to push on it. Two routes work, neither touching the OPF:
+
+|     | construction                                                   | result                                                 |
+| --- | -------------------------------------------------------------- | ------------------------------------------------------ |
+| H   | crop carried inline as a `data:` URL                           | ✓ renders in Books + Thorium; **epubcheck accepts it** |
+| I   | `background-image` viewport onto the photo already in the book | ✓ renders everywhere, **zero new bytes**               |
+| J   | as I, but the `url()` declared in a stylesheet                 | ✓ — was the workaround for the preview gap below       |
+
+**I is the recommendation.** The region percentages already stored turn straight into sprite arithmetic — `background-size` scaled by `100/w`, `background-position` at `x/(100−w)` — so nothing is generated, nothing is embedded, and no canvas is involved. Being a background rather than an `<img>`, it is also immune to the reading-system image clamping that killed A and D. H stays useful only where the source photo is not in the book.
+
+Size was never the deciding factor: a face crop is ~15–25KB, ~20–33KB base64, against a book already carrying ~4MB of photographs.
+
+**Neither route gets tap-to-zoom** — H is inline bytes, I is not an `<img>` at all. Acceptable: a crop is a picture to read, and the full photo in the same chapter still zooms.
+
+**The preview gap this exposed (fixed in the app, not the book).** I rendered correctly in Books and Thorium but was blank in the app's preview and the exported PDF. `BlobURLManager.findAssetElements` only matched attributes holding a bare path — `src`, `href`, `data`, `poster` — so a resource named from CSS was invisible to it. A stylesheet's `url()` was already rewritten when the sheet was blobbed; the same declaration written inline was not. That failed in the worst direction: **the preview lied about the package**. Fixed by a second pass over `[style]` reusing the existing (renamed) `processCSSURLs`. J is no longer needed, though it remains a legitimate pattern when several crops share one photo.
+
+Checked, because it looked like a possible confound: crops do **not** depend on the full photo appearing earlier in the chapter. `createBlobURL` consults its registry and creates the blob on demand, so a crop-only chapter resolves identically.
+
+### Badge placement — proposed UI
+
+The reason F is not finished. A badge pinned to its region's corner lands on a face or another telling detail as often as not, and only the author can see that. Proposed, in order of how much each matters:
+
+1. **Draw the badges on the plugin's canvas.** It currently draws only boxes, so badge placement cannot be judged in the tool at all — the author discovers the collision in the reader. Showing the number exactly as the book will render it is the change that makes the rest unnecessary or obvious.
+2. **Default placement, computed:** just above the region's top-left, flipped below when the region sits too near the top edge to fit.
+3. **Override by dragging the badge** on the canvas. Placement is a spatial judgement made while looking at the photo, so a pointer drag beats a control in the region list — and the list stays as it is, with no extra column.
+4. **Store as `badge: "x,y"`** in the same percent space as `at:`, written only when the author has moved it, so the common case stays terse.
+5. **Reset** to the computed default (double-click the badge).
+
+Numbering follows the emitted left-to-right order within a row, so what the tool shows is what the reader sees. The badge is black on white rather than themed: it has to stay legible over an arbitrary photograph.
 
 ## Housekeeping (any phase)
 
