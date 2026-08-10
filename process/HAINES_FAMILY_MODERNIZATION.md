@@ -179,6 +179,19 @@ The reason F is not finished. A badge pinned to its region's corner lands on a f
 
 Numbering follows the emitted left-to-right order within a row, so what the tool shows is what the reader sees. The badge is black on white rather than themed: it has to stay legible over an arbitrary photograph.
 
+### Phase 4e — `:portraits:` strips (built 2026-08-10)
+
+`:portraits:{of=thomas_haynes}` on a line of its own renders a strip of that person's face crops, one per region naming them in any chapter's `photos:` block; bare `:portraits:` defaults to the chapter's own person, and either form renders nothing when there are no regions, so it is safe anywhere. Each crop is the phase-4d technique I (a `background-image` viewport, zero new bytes) and links to the chapter whose photo it came from — except the current chapter, where it stays a plain `role="img"` (the `faceName` self-link rule).
+
+The parts, and why they sit where they do:
+
+- **`portraitsFilter` in `transformText.js`** — djot's HTML renderer **drops attributes on symbols** (this is what parked `:family:{of=…}`), so the `of=` parameter only survives via an AST filter, which converts the marker paragraph to `<div class="portraits" data-of="…">`. The attribute-less `:family:` markers stay on the rendered-text path in `anchorSetup`.
+- **`portraitsSetup` in `transformDom.js`** — builds the strip from `photosByChapter`, which `loadPeople` already aggregates; `relativeHref` (inverse of `resolveHref`) re-relativises the image href for whichever chapter is rendering.
+- **`size: WxH` per photo in the `photos:` block** — the one new datum. Region percentages alone can't give a crop its aspect ratio (a wide box and a tall box are indistinguishable without the photo's own aspect); a photo without `size:` is skipped with a console note. `size` is therefore a reserved row label. The Photo Regions panel stamps it automatically on insert, read off the loaded image.
+- **`.portrait-strip` / `.portrait` in `page.css`** — inline-block flow (no flex; layer-1 floor), `break-inside: avoid` + legacy alias, `print-color-adjust: exact` carried over from `.ot-crop` so the PDF keeps the backgrounds.
+
+Verified end to end in a local node harness (real vendored djot + jsyaml + happy-dom) before the bridge writes, then live in the app: geometry math, cross-chapter link vs self-chapter span, chapter-relative URLs, and the sizeless-photo skip. The `015` wedding photo has no `size:` yet — re-inserting its block from the updated panel (or hand-adding the line) turns its crop on.
+
 ## Housekeeping (any phase)
 
 - **~5MB of unmanifested Kenya-project images**: `Bert_tying_Fita.jpg`, `Camp_at_Hola2.jpg`, `Main_street_Hola.jpg`, `Main_street_Laza.jpg`, `PICT0102.JPG`, `Sammy_2.jpg`, `Jim_HAYNES.jpg`, plus unused `james_henry_haines2.jpg` — none referenced by manifest or sources; delete.

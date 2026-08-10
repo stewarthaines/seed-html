@@ -4,6 +4,7 @@
  *
  *   photos:
  *     Images/014-Family-of-Thomas-and-Emma.JPG:
+ *       size: 1422x1000
  *       Back:
  *         - { person: james_haddow, at: "3.1,12,9.4,18.2" }
  *         - { person: "Mrs Ted [Edith] Haines", at: "14.2,11.8,8.9,17.4" }
@@ -76,8 +77,17 @@ function at(region: Region): string {
  * @param regions        drawn regions, any order
  * @param includeHeader  emit the `photos:` line; turn off when pasting a second
  *                       image under a block the chapter already has
+ * @param size           the photo's pixel size, emitted as a `size: WxH` line —
+ *                       what lets a crop of a region know its aspect ratio
+ *                       (transformDom.js portraitsSetup). `size` is a reserved
+ *                       row label for this reason.
  */
-export function toYaml(href: string, regions: Region[], includeHeader: boolean): string {
+export function toYaml(
+  href: string,
+  regions: Region[],
+  includeHeader: boolean,
+  size?: { w: number; h: number }
+): string {
   const named = regions.filter(region => region.person.trim());
   if (named.length === 0) return '';
 
@@ -93,6 +103,7 @@ export function toYaml(href: string, regions: Region[], includeHeader: boolean):
   const lines: string[] = [];
   if (includeHeader) lines.push('photos:');
   lines.push(`  ${key(href)}:`);
+  if (size && size.w > 0 && size.h > 0) lines.push(`    size: ${size.w}x${size.h}`);
   for (const [row, group] of rows) {
     lines.push(`    ${key(row)}:`);
     for (const region of [...group].sort((a, b) => a.x - b.x)) {

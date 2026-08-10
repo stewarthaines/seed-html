@@ -36,6 +36,9 @@
   let store = $state<RegionStore>(emptyStore());
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
 
+  /** The photo's pixel size, read off the loaded <img> — stamped into the
+      YAML as `size: WxH` so a crop of a region can know its aspect ratio. */
+  let imageSize = $state<{ w: number; h: number } | null>(null);
   let canvasEl: HTMLDivElement | undefined = $state();
   let draft = $state<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
   /** In-flight badge drag: which region, and where in the badge it was grabbed. */
@@ -82,7 +85,7 @@
   const selectedImage = $derived(images.find(image => image.href === selectedHref));
   const namedCount = $derived(regions.filter(region => region.person.trim()).length);
   const yaml = $derived(
-    selectedHref ? toYaml(selectedHref, regions, includeHeader) : ''
+    selectedHref ? toYaml(selectedHref, regions, includeHeader, imageSize ?? undefined) : ''
   );
 
   // Read the OPF once the host hands us the workspace.
@@ -159,6 +162,7 @@
   $effect(() => {
     const root = $dirHandle;
     const image = selectedImage;
+    imageSize = null; // stale until the new image's load event reports it
     if (!root || !image) {
       imageUrl = '';
       return;
@@ -339,7 +343,15 @@
       onpointerup={endDraw}
       onpointercancel={() => (draft = null)}
     >
-      <img src={imageUrl} alt="" draggable="false" />
+      <img
+        src={imageUrl}
+        alt=""
+        draggable="false"
+        onload={event => {
+          const img = event.currentTarget as HTMLImageElement;
+          imageSize = { w: img.naturalWidth, h: img.naturalHeight };
+        }}
+      />
       {#each regions as region (region.key)}
         <div
           class="region"
