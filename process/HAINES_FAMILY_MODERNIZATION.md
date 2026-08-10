@@ -194,6 +194,21 @@ Verified end to end in a local node harness (real vendored djot + jsyaml + happy
 
 **Dedup (added 2026-08-10, surfaced by emma_hallworth).** Every chapter that shows a photo declares its own `photos:` entry for the caption, so the same region reaches the strip once per declaring chapter — Emma's wedding-photo face appeared twice, once from Thomas's block and once from her own. The strip now keeps **one crop per photograph** (the original framing: crops of all the _images_): among duplicates, an entry that can render (has `size:`) beats one that can't, then the current chapter's own entry wins (its crop stays unlinked — the full photo is on the same page), and the first-seen spine position is kept either way. The sized-over-sizeless preference also means one chapter stamping `size:` turns the crop on for every strip, whichever block it renders from.
 
+### Phase 4f — name-the-faces overlay (G productionised, built 2026-08-10)
+
+Adding `.name-faces` beside `.figure` on an image opts that figure into the interactive overlay: the generated caption's entries that carry a region each gain a numbered chip, and hovering a chip, a name, or a row label lights up the matching face box on the photograph. Boxes are invisible at rest (author's call: keep the photo clean), `currentColor` so night themes work, with a short opacity fade. Trial figure: the 014 group portrait in `thomas_haynes`.
+
+Design decisions, and why:
+
+- **No new marker** — the class rides djot's own attribute syntax on the figure the book already authors, and everything else derives from the `photos:` block. A standalone `:faces:` symbol was rejected as a marker-modifies-its-neighbour idiom (the positional fragility that drove the Markdown exit); a YAML `overlay:` flag remains a viable alternative home if the overlay comes to feel like a property of the photo rather than of one placement.
+- **`:has()` instead of G's sibling combinator.** `~` only reaches forward, which is why the G test had to put names above the photo; `figure.name-faces:has(.fc-name-N:hover) .fc-box-N` pairs caption to box regardless of document order, so the caption stays a figcaption after the image. A reader without `:has()` drops the two pairing rules whole and keeps the plain caption — correct degradation for a hover effect. CSS cannot express "matching N" generically, so page.css carries static pairings (ceiling: 20 faces, 8 rows).
+- **The touch contention is resolved by the chips.** The caption names are links and stay links; the numbered chip beside each name is a non-link span, which is exactly what WebKit's tap-applies-hover drives on iOS — tap the number to see the face, tap the name to visit the chapter. G felt good on iOS Books precisely because the test's names were non-link spans; the chips preserve that mechanism. Row labels (`fc-row-R`) are hover sources too and light their whole row.
+- **`figureSetup` now lifts extra image classes onto the `<figure>`** (`{.figure .name-faces}` → `<figure class="name-faces">`) — previously it dropped everything but src/alt.
+- The overlay layer is `pointer-events: none` (tap-to-zoom survives, per the C finding), `aria-hidden` along with the chips (the caption text is the accessible representation), and the figure carries `break-inside: avoid` + legacy alias so Paged.js cannot split caption from photo (the failure G hit in print).
+- Regions are percentages of the rendered box, so — unlike crops — the overlay needs no `size:`.
+
+To try in readers: open the chapter in Books/Thorium and hover or tap the chips, names, and the "Back –"/"Middle –" row labels under the group portrait.
+
 ## Housekeeping (any phase)
 
 - **~5MB of unmanifested Kenya-project images**: `Bert_tying_Fita.jpg`, `Camp_at_Hola2.jpg`, `Main_street_Hola.jpg`, `Main_street_Laza.jpg`, `PICT0102.JPG`, `Sammy_2.jpg`, `Jim_HAYNES.jpg`, plus unused `james_henry_haines2.jpg` — none referenced by manifest or sources; delete.
