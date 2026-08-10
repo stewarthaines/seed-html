@@ -60,6 +60,12 @@ export interface Region {
   y: number;
   w: number;
   h: number;
+  /**
+   * Where the number sits, as the badge's top-left in the same percent space.
+   * Absent means "wherever the default puts it" — stored only once the author
+   * has moved it, so the common case stays terse and hand-editable.
+   */
+  badge?: { x: number; y: number };
 }
 
 /** A region as persisted — the list key is a runtime detail, not stored. */

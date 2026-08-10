@@ -69,5 +69,9 @@ export async function saveRegions(
 
 /** Strip the runtime list key so only the region's own data is stored. */
 export function toSaved(regions: Region[]): SavedRegion[] {
-  return regions.map(({ person, row, x, y, w, h }) => ({ person, row, x, y, w, h }));
+  return regions.map(({ person, row, x, y, w, h, badge }) => {
+    const saved: SavedRegion = { person, row, x, y, w, h };
+    if (badge) saved.badge = { x: badge.x, y: badge.y };
+    return saved;
+  });
 }

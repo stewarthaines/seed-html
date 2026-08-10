@@ -14,7 +14,11 @@
  * `xywh=percent:` selector, so the geometry survives re-export at another size.
  *
  * Rows group the caption ("Back", "Front"); within a row, entries are sorted
- * left to right by x, which is the order the generated caption reads in.
+ * left to right by x, which is the order the generated caption reads in — and
+ * therefore the order the badge numbers run in.
+ *
+ * `badge` is the number's own position, written only when the author has moved
+ * it off the computed default.
  */
 
 import type { Region } from './types.js';
@@ -92,7 +96,12 @@ export function toYaml(href: string, regions: Region[], includeHeader: boolean):
   for (const [row, group] of rows) {
     lines.push(`    ${key(row)}:`);
     for (const region of [...group].sort((a, b) => a.x - b.x)) {
-      lines.push(`      - { person: ${flow(region.person.trim())}, at: "${at(region)}" }`);
+      const fields = [`person: ${flow(region.person.trim())}`, `at: "${at(region)}"`];
+      // Only when moved off its default, so an untouched badge adds no noise.
+      if (region.badge) {
+        fields.push(`badge: "${round(region.badge.x)},${round(region.badge.y)}"`);
+      }
+      lines.push(`      - { ${fields.join(', ')} }`);
     }
   }
   return lines.join('\n') + '\n';

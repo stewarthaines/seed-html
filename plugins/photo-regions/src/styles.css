@@ -46,6 +46,13 @@ button {
   /* The box fill: the accent at low alpha, so the face stays visible. */
   --color-region-fill: rgba(0, 0, 238, 0.15);
 
+  /* The number badge, matching what the book draws. Deliberately NOT themed
+     and deliberately not overridden in the dark block below: a badge sits on
+     a photograph, not on the panel, so it has to stay legible whatever the
+     app's theme is doing. */
+  --color-badge-ink: #000000;
+  --color-badge-paper: #ffffff;
+
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --radius-sm: 4px;

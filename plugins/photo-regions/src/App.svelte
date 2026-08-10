@@ -30,12 +30,16 @@
   let status = $state('');
   let lastRow = $state('');
   let nextKey = 1;
+  /** Roughly a badge's height in percent of the photo — the default offset. */
+  const BADGE_CLEARANCE = 6;
   /** The saved region library, keyed by image href. */
   let store = $state<RegionStore>(emptyStore());
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
 
   let canvasEl: HTMLDivElement | undefined = $state();
   let draft = $state<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
+  /** In-flight badge drag: which region, and where in the badge it was grabbed. */
+  let badgeDrag = $state<{ key: number; dx: number; dy: number } | null>(null);
 
   // The panel is for the chapter in the editor, so offer the images that
   // chapter actually renders. Before its first render there is nothing to read,
@@ -43,6 +47,38 @@
   const offered = $derived(
     usedHrefs ? images.filter(image => usedHrefs.has(image.href)) : images
   );
+  /**
+   * Region key → the number the reader will see. Mirrors toYaml exactly — rows
+   * in the order first drawn, entries left to right within a row — so the
+   * badge in the tool is the badge in the book. Only named regions are
+   * numbered, because only they are emitted.
+   */
+  const numbering = $derived.by(() => {
+    const rows = new Map<string, Region[]>();
+    for (const region of regions) {
+      if (!region.person.trim()) continue;
+      const row = region.row.trim() || 'Pictured';
+      const group = rows.get(row);
+      if (group) group.push(region);
+      else rows.set(row, [region]);
+    }
+    const numbers = new Map<number, number>();
+    let next = 1;
+    for (const group of rows.values()) {
+      for (const region of [...group].sort((a, b) => a.x - b.x)) {
+        numbers.set(region.key, next++);
+      }
+    }
+    return numbers;
+  });
+
+  /** Just above the region's top-left, flipped below when it would fall off. */
+  function badgeAt(region: Region): { x: number; y: number } {
+    if (region.badge) return region.badge;
+    const above = region.y - BADGE_CLEARANCE;
+    return { x: region.x, y: above >= 0 ? above : region.y + region.h + 1 };
+  }
+
   const selectedImage = $derived(images.find(image => image.href === selectedHref));
   const namedCount = $derived(regions.filter(region => region.person.trim()).length);
   const yaml = $derived(
@@ -205,6 +241,56 @@
     saveTimer = setTimeout(persist, 600);
   }
 
+  function startBadgeDrag(event: PointerEvent, region: Region) {
+    // Don't let the canvas read this as the start of a new box.
+    event.stopPropagation();
+    event.preventDefault();
+    const at = badgeAt(region);
+    const here = percentAt(event);
+    badgeDrag = { key: region.key, dx: here.x - at.x, dy: here.y - at.y };
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+  }
+
+  function moveBadge(event: PointerEvent, region: Region) {
+    if (!badgeDrag || badgeDrag.key !== region.key) return;
+    event.stopPropagation();
+    const here = percentAt(event);
+    region.badge = {
+      x: Math.min(100, Math.max(0, here.x - badgeDrag.dx)),
+      y: Math.min(100, Math.max(0, here.y - badgeDrag.dy)),
+    };
+  }
+
+  function endBadgeDrag(event: PointerEvent) {
+    if (!badgeDrag) return;
+    event.stopPropagation();
+    badgeDrag = null;
+    (event.currentTarget as HTMLElement).releasePointerCapture(event.pointerId);
+    persist();
+  }
+
+  /** Back to the computed default. */
+  function resetBadge(region: Region) {
+    region.badge = undefined;
+    persist();
+  }
+
+  /** Arrow keys nudge a focused badge — the one part of the canvas that does
+   *  not need a pointer. */
+  function nudgeBadge(event: KeyboardEvent, region: Region) {
+    const step = event.shiftKey ? 2 : 0.5;
+    const from = badgeAt(region);
+    let { x, y } = from;
+    if (event.key === 'ArrowLeft') x -= step;
+    else if (event.key === 'ArrowRight') x += step;
+    else if (event.key === 'ArrowUp') y -= step;
+    else if (event.key === 'ArrowDown') y += step;
+    else return;
+    event.preventDefault();
+    region.badge = { x: Math.min(100, Math.max(0, x)), y: Math.min(100, Math.max(0, y)) };
+    persistSoon();
+  }
+
   function removeRegion(key: number) {
     regions = regions.filter(region => region.key !== key);
     persist();
@@ -254,13 +340,32 @@
       onpointercancel={() => (draft = null)}
     >
       <img src={imageUrl} alt="" draggable="false" />
-      {#each regions as region, index (region.key)}
+      {#each regions as region (region.key)}
         <div
           class="region"
           style="left:{region.x}%; top:{region.y}%; width:{region.w}%; height:{region.h}%"
-        >
-          <span class="tag">{index + 1}</span>
-        </div>
+        ></div>
+      {/each}
+      <!-- Badges are drawn here, as the book will draw them, because placement
+           can only be judged against the photo — a number pinned to a corner
+           lands on a face as often as not. Drag to move, double-click to reset,
+           arrows to nudge once focused. -->
+      {#each regions as region (region.key)}
+        {#if numbering.has(region.key)}
+          <button
+            type="button"
+            class="badge"
+            class:dragging={badgeDrag?.key === region.key}
+            style="left:{badgeAt(region).x}%; top:{badgeAt(region).y}%"
+            title={$t('Drag to move, double-click to reset')}
+            onpointerdown={event => startBadgeDrag(event, region)}
+            onpointermove={event => moveBadge(event, region)}
+            onpointerup={endBadgeDrag}
+            onpointercancel={endBadgeDrag}
+            ondblclick={() => resetBadge(region)}
+            onkeydown={event => nudgeBadge(event, region)}>{numbering.get(region.key)}</button
+          >
+        {/if}
       {/each}
       {#if draft}
         <div
@@ -274,9 +379,11 @@
 
   {#if regions.length > 0}
     <ul class="regions">
-      {#each regions as region, index (region.key)}
+      {#each regions as region (region.key)}
         <li>
-          <span class="tag">{index + 1}</span>
+          <span class="tag" class:unnumbered={!numbering.has(region.key)}
+            >{numbering.get(region.key) ?? '–'}</span
+          >
           <input
             type="text"
             class="person"
@@ -407,6 +514,39 @@
     color: var(--color-text-inverse);
     background: var(--color-interactive-primary);
     border-radius: 3px;
+  }
+
+  /* Not yet named, so not yet numbered — nothing to emit for it. */
+  .tag.unnumbered {
+    color: var(--color-text-secondary);
+    background: var(--color-button-secondary-bg);
+  }
+
+  /* Matching the book: a badge has to stay legible over an arbitrary
+     photograph, so its tokens are fixed rather than themed (see styles.css). */
+  .badge {
+    position: absolute;
+    min-width: 1.5em;
+    padding: 0 0.25em;
+    font: inherit;
+    font-size: 11px;
+    line-height: 1.5;
+    text-align: center;
+    color: var(--color-badge-ink);
+    background: var(--color-badge-paper);
+    border: 1px solid var(--color-badge-ink);
+    border-radius: 3px;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .badge.dragging {
+    cursor: grabbing;
+  }
+
+  .badge:focus-visible {
+    outline: 2px solid var(--color-interactive-primary);
+    outline-offset: 1px;
   }
 
   .regions {
