@@ -209,6 +209,23 @@ Design decisions, and why:
 
 To try in readers: open the chapter in Books/Thorium and hover or tap the chips, names, and the "Back –"/"Middle –" row labels under the group portrait.
 
+Follow-on fixes from first use: chips are `display: inline` rather than inline-block (an inline-block is an atomic inline — browsers put a soft wrap opportunity on both sides, which stranded a chip at a line end away from its name; a plain inline box with no space after it glues to the first word), and `.fc-stack` claims the `flex: 1 1 70%` share responsive.css gives a figure's direct img child (the wrapper had left that rule unmatched, so the side-by-side figure layout collapsed the caption to a sliver — flex properties are inert outside that layout, so the rule needs no query).
+
+### Phase 4g — `:lifeline:` charts (built 2026-08-10)
+
+Sparkline-inspired event timelines from the data layer:
+
+```
+:lifeline:{of=thomas_haynes as=Tom}
+:lifeline:{of=emma_hallworth as=Emma}
+```
+
+Markers on CONSECUTIVE LINES (one djot paragraph) become ONE chart on a SHARED time scale — the grouping rule fell out of djot itself: adjacent marker lines parse as a single paragraph of symbols split by soft breaks, so the `markerFilter` (generalised from `portraitsFilter`; a table maps marker alias → carried attributes) emits them as one `.lifeline-set`, and one paragraph = one comparison is exactly the semantics wanted. A blank line between markers still merges them if they stay adjacent in the DOM; any prose between starts a new group with its own scale.
+
+Per row: the name (linked cross-chapter, plain for the chapter's own person, `as=` overrides), a `visually-hidden` prose summary ("born 1807, married 1857, died 1905") for screen readers, and an aria-hidden track — a line from first to last event, a dot per event, year labels below the line, marriage labels ("m. 1857") ABOVE it so partners' aligned marriage marks stay clear of each other's year labels. `include="birth,death"` filters kinds (default all three). Marriages come from `partnershipsOf`, whichever side declared the date; years are the first four digits in the value, so "c. 1850" charts at 1850. Scale pads ~5% (min 2 years) so edge labels have room. Geometry is inline percentages; the look lives in page.css (`.lifeline-*`). Layer-1 floor: without flex the name stacks above a full-width track.
+
+**Djot attribute syntax note (the one authoring trap): space-separated `key=value`, no commas or colons** — `{of=x, as: "Tom"}` fails djot's attribute parser and the marker stays visible literal text (a breadcrumb, not a vanish); `{of=x as=Tom include="birth,death"}` is the valid form.
+
 ## Housekeeping (any phase)
 
 - **~5MB of unmanifested Kenya-project images**: `Bert_tying_Fita.jpg`, `Camp_at_Hola2.jpg`, `Main_street_Hola.jpg`, `Main_street_Laza.jpg`, `PICT0102.JPG`, `Sammy_2.jpg`, `Jim_HAYNES.jpg`, plus unused `james_henry_haines2.jpg` — none referenced by manifest or sources; delete.
