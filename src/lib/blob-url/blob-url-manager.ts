@@ -106,12 +106,13 @@ export class BlobURLManager {
         let content: ArrayBuffer;
 
         if (isCSSFile) {
-          // CSS files: read as text, process font URLs, then convert back to ArrayBuffer
+          // CSS files: read as text, rewrite their url() references, then
+          // convert back to ArrayBuffer
           const textContent = await this.fileStorage.readTextFile(
             this.activeWorkspaceId,
             resolvedPath
           );
-          const processedCSS = await this.processCSSFontURLs(textContent);
+          const processedCSS = await this.processCSSURLs(textContent);
           const uint8Array = new TextEncoder().encode(processedCSS);
           content = uint8Array.buffer as ArrayBuffer;
         } else {
@@ -182,6 +183,10 @@ export class BlobURLManager {
       for (const element of assetElements) {
         await this.processAssetElement(element);
       }
+
+      // Resources referenced from an inline `style` attribute, which the
+      // attribute-based pass above cannot see.
+      await this.processInlineStyleURLs(doc);
 
       // Preview documents are written into the iframe with document.write(); a
       // parser-blocking script there can strand the write before <body>.
@@ -315,6 +320,28 @@ export class BlobURLManager {
   }
 
   /**
+   * Rewrite `url()` references inside inline `style` attributes.
+   *
+   * findAssetElements only matches attributes that hold a bare path — src,
+   * href, data, poster — so a resource named from CSS is invisible to it. A
+   * stylesheet's url() is already rewritten when the sheet is blobbed; without
+   * this, the same declaration written inline is not, and the asset 404s. That
+   * fails in the worst direction: the preview and the generated PDF show a gap
+   * while real reading systems render it correctly, so the preview lies about
+   * the package. A cropped region positioned with `background-image` is the
+   * case that surfaced it.
+   */
+  private async processInlineStyleURLs(doc: Document): Promise<void> {
+    for (const element of Array.from(doc.querySelectorAll('[style]'))) {
+      const style = element.getAttribute('style');
+      // Cheap guard: only pay the regex cost for styles that name a resource.
+      if (!style || !style.includes('url(')) continue;
+      const processed = await this.processCSSURLs(style);
+      if (processed !== style) element.setAttribute('style', processed);
+    }
+  }
+
+  /**
    * Process a single asset element
    */
   private async processAssetElement(element: Element): Promise<void> {
@@ -438,9 +465,14 @@ export class BlobURLManager {
   }
 
   /**
-   * Process CSS content to replace font url() references with blob URLs
+   * Rewrite every workspace-relative `url()` in a chunk of CSS to a blob URL.
+   *
+   * Used for two kinds of CSS: the text of a stylesheet being blobbed, and the
+   * value of an inline `style` attribute (see processInlineStyleURLs). Fonts
+   * were the original case, but nothing here is font-specific — a
+   * `background-image` resolves the same way.
    */
-  private async processCSSFontURLs(cssContent: string): Promise<string> {
+  private async processCSSURLs(cssContent: string): Promise<string> {
     // Regex to match url() patterns: url('path'), url("path"), url(path)
     const urlPattern = /url\(\s*(['"]?)(.*?)\1\s*\)/g;
     let processedCSS = cssContent;

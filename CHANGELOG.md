@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Contents-page and cross-chapter links in the exported PDF now jump to their target pages instead of pointing at a web address.
+- An image referenced from a style attribute — a background image, say — now appears in the preview and the exported PDF, instead of showing a gap there while rendering correctly in reading systems.
 
 ## [0.19.0] - 2026-08-07
 

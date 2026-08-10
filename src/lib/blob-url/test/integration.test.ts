@@ -504,4 +504,61 @@ describe('Blob URL Manager Integration', () => {
       expect(manager.getMimeType('images/diagrams/figure1.svg')).toBe('image/svg+xml');
     });
   });
+  describe('Inline style url() references', () => {
+    beforeEach(() => {
+      mockFileStorage.supportsDirectBlobURLs.mockReturnValue(true);
+      mockFileStorage.getFile.mockResolvedValue(new File(['jpeg'], 'photo.jpg'));
+
+      manager = new BlobURLManager({
+        maxBlobURLs: 100,
+        fileStorage: mockFileStorage as any,
+        basePath: 'OEBPS',
+        onCapacityReached: vi.fn(),
+      });
+      manager.setActiveWorkspace('workspace-123');
+    });
+
+    // A resource named from CSS is invisible to the attribute-based pass, so
+    // without this the preview and the PDF show a gap while real reading
+    // systems render it — the preview lying about the package.
+    it('rewrites a background-image in a style attribute to a blob URL', async () => {
+      const xhtml =
+        '<html xmlns="http://www.w3.org/1999/xhtml"><body>' +
+        '<span style="width:7em; background-image:url(\'../Images/photo.jpg\'); background-size:909%"></span>' +
+        '</body></html>';
+
+      const result = await manager.processXHTMLForPreview(xhtml);
+
+      expect(result).toContain('url(');
+      expect(result).toContain('blob:');
+      expect(result).not.toContain('../Images/photo.jpg');
+      // The rest of the declaration survives untouched.
+      expect(result).toContain('background-size:909%');
+    });
+
+    it('leaves a style attribute with no url() alone', async () => {
+      const xhtml =
+        '<html xmlns="http://www.w3.org/1999/xhtml"><body>' +
+        '<span style="left:44%; top:40%"></span>' +
+        '</body></html>';
+
+      const result = await manager.processXHTMLForPreview(xhtml);
+
+      expect(result).toContain('left:44%');
+      expect(result).not.toContain('blob:');
+    });
+
+    it('leaves a data: URL in a style attribute alone', async () => {
+      const dataUrl = 'data:image/png;base64,iVBORw0KGgo=';
+      const xhtml =
+        '<html xmlns="http://www.w3.org/1999/xhtml"><body>' +
+        `<span style="background-image:url(${dataUrl})"></span>` +
+        '</body></html>';
+
+      const result = await manager.processXHTMLForPreview(xhtml);
+
+      expect(result).toContain(dataUrl);
+      expect(result).not.toContain('blob:');
+    });
+  });
 });
