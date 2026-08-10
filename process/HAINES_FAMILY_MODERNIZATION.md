@@ -104,7 +104,7 @@ Keyed by the image's **manifest href** — the path as the OPF lists it. The fig
 
 Extension point for the future drawing tool: an entry may also be `{ person: id, as: "Ted" }` — `as` prints the name as authored while still linking, and the object form is where a face box (`xywh` percent, per W3C Media Fragments) would hang.
 
-Deliberately NOT in this slice: crops (need canvas + a manifest item, so plugin-side), and the click-to-spotlight overlay. Note for that one: an **inline SVG overlay with `<a>` regions and CSS `:hover`/`:focus` needs no scripting** — it keeps `scripted` off the chapters, which phase 2 worked to remove.
+Deliberately NOT in this slice: crops (need canvas + a manifest item, so plugin-side), and the click-to-spotlight overlay. ~~An inline SVG overlay with `<a>` regions and CSS `:hover`/`:focus` needs no scripting.~~ That proposal was tested and is largely wrong — see phase 4c.
 
 ### Phase 4b — the drawing tool (`plugins/photo-regions`, 2026-08-09)
 
@@ -117,6 +117,37 @@ Details worth keeping: geometry in **percent of the image's own box** (Media Fra
 Not covered: reading existing regions back out of a chapter (the plugin is insert-only, so amending means redrawing), and drawing is pointer-only — the region list is keyboard-operable but the canvas is not. A checkbox controls whether the `photos:` line is emitted, since a second image has to merge into the block a chapter already has (duplicate keys would throw).
 
 Worth checking if more photos get tagged: if the scans ever passed through Picasa/digiKam/Lightroom, face regions may already be embedded as `mwg-rs:Regions` XMP (normalized x/y/w/h + name) — `exiftool -Regions:all` on the originals. Checked for `014-Family-of-Thomas-and-Emma.JPG`: none present.
+
+### Phase 4c — what actually works in a reading system (settled 2026-08-10)
+
+Seven constructions were built into a throwaway `overlay_test` chapter and read in Apple Books (macOS and iOS) alongside the app's responsive, foliate and PDF previews. The chapter draws **calibration targets** — a frame just inside the photo's edges, corner squares, a centre square — rather than guessed faces, so "did the geometry survive?" is answerable at a glance without knowing the picture. Delete the chapter and the fenced `overlay_test` block in `Styles/page.css` together; nothing else references either.
+
+**The verdict: build on C + F, with G as a desktop bonus.**
+
+|     | construction                                          | result                                            |
+| --- | ----------------------------------------------------- | ------------------------------------------------- |
+| A   | SVG overlay absolutely positioned over `<img>`        | ✗ drifts out of aspect in Books                   |
+| B   | one SVG holding both `<image>` and shapes             | ✓ geometry holds, but see the a11y constraint     |
+| C   | **no SVG: absolutely positioned `<a>`/`<span>`**      | ✓ **correct in every engine; links work**         |
+| D   | A inside a `<figure>` (adds `.sr-figure` containment) | ✗ same drift as A — containment was not the cause |
+| E   | name → face via `:target`                             | ✗ Books navigates without applying `:target`      |
+| F   | **always-visible numbered badges + numbered caption** | ✓ **works everywhere, including e-ink and print** |
+| G   | name → face via sibling combinator on `:hover`        | ✓ on desktop Books; mouse-only by construction    |
+
+Why A and D failed is the load-bearing lesson: they size the overlay from the photo's **intrinsic** aspect (`viewBox` + `height: auto`), which ignores whatever size the reading system actually gave the `<img>` — and Books sizes images itself, exactly the clamping the authoring guide documents. C's percentage height resolves against the shared wrapper, so it tracks the **rendered** box whatever the reader does. **Rule: derive an overlay's box from the image's rendered box, never from its intrinsic aspect.**
+
+Note the trap this sits in. `height: 100%` on the _SVG_ failed the other way, in Firefox: a replaced element with an indefinite containing-block height falls back to its viewBox aspect and renders square. So `height: 100%` is wrong on an SVG and right on a div — which is a second reason C wins, and why the first fix for the Firefox bug caused the Books bug.
+
+Constraints to carry into the real feature:
+
+- **`pointer-events: none` on the region layer, `auto` on the links.** A full-size layer over the photo otherwise eats every tap and silently kills Books' tap-to-zoom. With it: tap a face for that person's chapter, tap anywhere else to zoom.
+- **Books' zoom viewer shows only the `<img>`** — the overlay does not come with it, so badges and outlines vanish exactly when the reader zooms in to study a face. Not fixable in CSS; the answers are a larger image or burnt-in crops.
+- **A spotlight needs scripting.** `:target` is out (E), so name→face on touch would need JS, which puts `scripted` back on all 19 chapters — the compatibility win phase 2 bought. Not worth it for decoration.
+- **An overlay wrapper must not fragment**: Paged.js split G's wrapper across a page boundary, severing the sibling relationship the selector depends on, and it matched nothing in print. `break-inside: avoid` plus the legacy `page-break-inside` alias.
+- **A chapter cannot carry its own `<style>`** — epubcheck RSC-005, since the `head` is generated. Chapter-specific CSS has to live in a stylesheet.
+- **B's accessible name must come from a `<title>` child, not `role="img"`** — an SVG declared as an image swallows the links inside it (axe `nested-interactive`).
+
+Open, and the reason F is not finished: **badge placement**. A badge pinned to its region's corner lands on a face or another telling detail as often as not — only the author can see that. This belongs in the drawing tool: store a per-region badge position alongside `at:`, and let the author nudge it while identifying the face.
 
 ## Housekeeping (any phase)
 
