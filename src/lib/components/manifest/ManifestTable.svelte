@@ -13,6 +13,7 @@
   let {
     manifestItems = [],
     sourceItems = [],
+    unmanifestedItems = [],
     seedHtmlPresent = false,
     advancedMode = true,
     readOnly = false,
@@ -28,6 +29,9 @@
   }: {
     manifestItems?: ManifestItem[];
     sourceItems?: SourceItem[];
+    /** Workspace files in neither the manifest nor SOURCE/ (paths are full
+     *  workspace paths). Rendered in their own "Not in manifest" group. */
+    unmanifestedItems?: SourceItem[];
     /** Whether the embedded editor (SEED.html) is present — shown as a
         non-deletable payload row next to SEED.zip. */
     seedHtmlPresent?: boolean;
@@ -69,6 +73,10 @@
     },
     // Advanced mode: show individual SOURCE files
     ...(advancedMode ? sourceItems.map(item => ({ ...item, _type: 'source' as const })) : []),
+    // Strays ride the 'source' plumbing (selection, preview, download) but are
+    // grouped separately below. Distinguishable by path: real SOURCE items
+    // always start with SOURCE/.
+    ...unmanifestedItems.map(item => ({ ...item, _type: 'source' as const })),
     // Non-advanced mode: show the bundled editor-source archive placeholder
     ...(!advancedMode
       ? [
@@ -164,7 +172,7 @@
   type RowGroup = {
     key: string;
     label: string;
-    kind: 'root' | 'dir' | 'source' | 'opf';
+    kind: 'root' | 'dir' | 'source' | 'opf' | 'unmanifested';
     indent: number;
     items: typeof filteredItems;
   };
@@ -178,7 +186,13 @@
   const groups = $derived.by((): RowGroup[] => {
     const manifest = filteredItems.filter(i => i._type === 'manifest');
     const source = filteredItems.filter(
-      i => i._type === 'source' || i._type === 'source-zip' || i._type === 'seed-html'
+      i =>
+        (i._type === 'source' && (i as SourceItem).path.startsWith('SOURCE/')) ||
+        i._type === 'source-zip' ||
+        i._type === 'seed-html'
+    );
+    const strays = filteredItems.filter(
+      i => i._type === 'source' && !(i as SourceItem).path.startsWith('SOURCE/')
     );
     const opf = filteredItems.filter(i => i._type === 'opf');
 
@@ -230,6 +244,18 @@
         kind: 'opf',
         indent: 0,
         items: sortGroup(opf),
+      });
+    }
+    // Last, and visually apart: these files are in the workspace (and travel in
+    // the packaged EPUB — the sweep is lossless) but the book never references
+    // them. Select one to preview it, delete it, or add it to the manifest.
+    if (strays.length) {
+      result.push({
+        key: 'unmanifested',
+        label: $t('Not in manifest'),
+        kind: 'unmanifested',
+        indent: 0,
+        items: sortGroup(strays),
       });
     }
     return result;

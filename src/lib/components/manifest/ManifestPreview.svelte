@@ -608,23 +608,49 @@
           };
         }
       } else if (selectedItemType === 'source') {
-        // Handle SOURCE items - read and display their content
+        // Handle path-based items — SOURCE files and unmanifested strays alike.
         const sourceItem = selectedItem as SourceItem;
         try {
           const content = await workspaceService.readFile(workspace.id, sourceItem.path);
-          const isText = isTextMediaType(sourceItem.mediaType || 'text/plain');
+          const mediaType = sourceItem.mediaType || 'text/plain';
+          const isText = isTextMediaType(mediaType);
+          const isImage = isImageMediaType(mediaType);
+          const isAudio = isAudioMediaType(mediaType);
+          const isVideo = isVideoMediaType(mediaType);
 
           let textContent: string | undefined;
-          if (isText) {
+          let previewUrl: string | undefined;
+          let contentType: 'text' | 'image' | 'audio' | 'video' | 'binary';
+
+          // Same ordering as the manifest branch: image before text, so an SVG
+          // renders (with its source below) rather than reading as markup.
+          if (isImage) {
+            const blob = new Blob([content], { type: mediaType });
+            previewUrl = URL.createObjectURL(blob);
+            activeBlobUrl = previewUrl;
+            contentType = 'image';
+            if (mediaType === 'image/svg+xml') {
+              textContent = new TextDecoder('utf-8').decode(content);
+            }
+          } else if (isAudio || isVideo) {
+            const blob = new Blob([content], { type: mediaType });
+            previewUrl = URL.createObjectURL(blob);
+            activeBlobUrl = previewUrl;
+            contentType = isAudio ? 'audio' : 'video';
+          } else if (isText) {
             const decoder = new TextDecoder('utf-8');
             textContent = decoder.decode(content);
+            contentType = 'text';
+          } else {
+            contentType = 'binary';
           }
 
           contentPreview = {
             itemId: sourceItem.path,
-            mediaType: sourceItem.mediaType || 'text/plain',
-            contentType: isText ? 'text' : 'binary',
+            mediaType,
+            contentType,
             textContent,
+            previewUrl,
             metadata: {
               characterCount: textContent ? textContent.length : undefined,
               lineCount: textContent ? textContent.split('\n').length : undefined,
@@ -680,14 +706,50 @@
     }
   };
 
-  // A SOURCE/data/ file (created by a transform script) is the only SOURCE item
-  // we allow deleting here — chapter text, settings and scripts stay protected.
-  const isDeletableSource = $derived(
+  // A workspace file the book never references — rides the 'source' item type
+  // (real SOURCE paths always start with SOURCE/).
+  const isUnmanifested = $derived(
     selectedItemType === 'source' &&
       !!selectedItem &&
       typeof (selectedItem as SourceItem).path === 'string' &&
-      (selectedItem as SourceItem).path.startsWith('SOURCE/data/')
+      !(selectedItem as SourceItem).path.startsWith('SOURCE/')
   );
+
+  // A SOURCE/data/ file (created by a transform script) is the only true SOURCE
+  // item we allow deleting here — chapter text, settings and scripts stay
+  // protected. Unmanifested strays are deletable too (the service re-checks
+  // membership, so nothing the book references can go through this door).
+  const isDeletableSource = $derived(
+    (selectedItemType === 'source' &&
+      !!selectedItem &&
+      typeof (selectedItem as SourceItem).path === 'string' &&
+      (selectedItem as SourceItem).path.startsWith('SOURCE/data/')) ||
+      isUnmanifested
+  );
+
+  // A stray can be promoted into the manifest when it lives under the OPF base
+  // directory (only there can a manifest href reach it without escaping).
+  const canAddToManifest = $derived(
+    isUnmanifested &&
+      !!workspace &&
+      (selectedItem as SourceItem).path.startsWith(workspace.pathInfo.basePath + '/')
+  );
+
+  let addingToManifest = $state(false);
+  const handleAddToManifest = async () => {
+    if (!canAddToManifest || !workspace || !workspaceService || addingToManifest) return;
+    const path = (selectedItem as SourceItem).path;
+    const href = path.slice(workspace.pathInfo.basePath.length + 1);
+    try {
+      addingToManifest = true;
+      const updated = await workspaceService.addManifestItem(workspace, { href });
+      onWorkspaceUpdate?.(updated);
+    } catch (err) {
+      error = err instanceof Error ? err.message : String(err);
+    } finally {
+      addingToManifest = false;
+    }
+  };
 
   const handleDeleteClick = () => {
     if (selectedItemType === 'manifest' && selectedItem) {
@@ -795,6 +857,16 @@
           <button type="button" class="btn btn-secondary" onclick={handleDownloadClick}>
             {$t('Download')}
           </button>
+          {#if canAddToManifest && !readOnly}
+            <button
+              type="button"
+              class="btn btn-secondary"
+              disabled={addingToManifest}
+              onclick={handleAddToManifest}
+            >
+              {$t('Add to manifest')}
+            </button>
+          {/if}
           {#if (selectedItemType === 'manifest' || isDeletableSource) && !readOnly}
             <button type="button" class="btn btn-danger" onclick={handleDeleteClick}>
               {$t('Delete')}

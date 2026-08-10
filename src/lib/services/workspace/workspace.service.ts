@@ -20,6 +20,7 @@ import {
   workspaceIsReadOnly,
 } from '../../source/source-utils.js';
 import type { SourceItem } from '../../manifest/types.js';
+import { SEED_HTML_NAME } from '../../epub/seed-html.js';
 import { resolveSourceWritePath } from '../../transform/transform-broker.js';
 import { getBrowserLocale } from '../../i18n/locale-config.js';
 import { captureBaseIfNeeded } from '../../track-changes/base-snapshot.js';
@@ -1454,6 +1455,74 @@ export class WorkspaceService {
    * can't be removed through this path. SOURCE/ files aren't in the OPF manifest,
    * so this touches storage only and leaves content.opf untouched.
    */
+  /**
+   * Workspace files that are part of neither the book (OPF manifest) nor the
+   * editor source tree — strays, typically inherited from an imported EPUB or
+   * left behind by an earlier project layout. Packaging sweeps the whole
+   * workspace (deliberately: the EPUB is the durable artifact, so losing files
+   * silently would be worse), which makes these immortal unless they are
+   * surfaced and deletable. This lists them for the manifest view.
+   *
+   * Excluded from "unmanifested": SOURCE/ (travels as SEED.zip), the EPUB
+   * skeleton (mimetype, META-INF/container.xml, the OPF itself), the embedded
+   * editor build, and the app's own workspace-state file.
+   */
+  async listUnmanifestedFiles(workspace: WorkspaceState): Promise<SourceItem[]> {
+    const allFiles = await this.fileStorage.listFiles(workspace.id);
+
+    const reserved = new Set([
+      'mimetype',
+      'META-INF/container.xml',
+      workspace.pathInfo.rootfilePath,
+      SEED_HTML_NAME,
+      '.workspace-metadata.json',
+    ]);
+    const manifested = new Set(
+      workspace.opf.manifest.map(item =>
+        this.resolveManifestPath(item.href, workspace.pathInfo.basePath)
+      )
+    );
+
+    const strays = allFiles.filter(
+      path => !path.startsWith('SOURCE/') && !reserved.has(path) && !manifested.has(path)
+    );
+
+    const items: SourceItem[] = [];
+    for (const filePath of strays) {
+      try {
+        const fileInfo = await this.fileStorage.getFileInfo(workspace.id, filePath);
+        items.push({
+          path: filePath,
+          name: filePath.split('/').pop() || filePath,
+          type: 'file',
+          size: fileInfo.size,
+          modified: fileInfo.lastModified,
+          mediaType: this.detectMediaType(filePath),
+        });
+      } catch {
+        continue; // Skip files that can't be accessed
+      }
+    }
+    return items;
+  }
+
+  /**
+   * Delete a stray workspace file. Guarded by membership in the unmanifested
+   * list computed at call time, so a path that is (or has just become) part of
+   * the book, the skeleton, or SOURCE/ can never be deleted through this door.
+   */
+  async deleteUnmanifestedFile(workspace: WorkspaceState, path: string): Promise<void> {
+    const unmanifested = await this.listUnmanifestedFiles(workspace);
+    if (!unmanifested.some(item => item.path === path)) {
+      throw new WorkspaceServiceError(
+        `Refusing to delete: ${path} is not an unmanifested file`,
+        'INVALID_UNMANIFESTED_DELETE',
+        workspace.id
+      );
+    }
+    await this.fileStorage.deleteFile(workspace.id, path);
+  }
+
   async deleteSourceFile(workspace: WorkspaceState, path: string): Promise<void> {
     const safePath = resolveSourceWritePath(path);
     if (!safePath) {

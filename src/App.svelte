@@ -583,9 +583,12 @@
     }
   };
 
-  // Delete a transform-created SOURCE/data/ file. Unlike manifest items these
-  // aren't in content.opf, so we delete the file directly and nudge the table to
-  // reload its SOURCE list (its workspace reference is unchanged).
+  // Delete a path-based file the manifest preview allows deleting: a
+  // transform-created SOURCE/data/ file, or an unmanifested stray (a workspace
+  // file the book never references — packaging preserves those, so this is the
+  // only way they leave). Neither is in content.opf, so the file is deleted
+  // directly and the table nudged to reload (its workspace reference is
+  // unchanged). Each service method re-checks its own guard.
   const handleSourceFileDelete = async (detail: { path: string }) => {
     if (!currentWorkspaceState || isReadOnly) return;
 
@@ -593,7 +596,11 @@
     if (!confirm($t('Delete {name}? This cannot be undone.', { name }))) return;
 
     try {
-      await workspaceService.deleteSourceFile(currentWorkspaceState, detail.path);
+      if (detail.path.startsWith('SOURCE/')) {
+        await workspaceService.deleteSourceFile(currentWorkspaceState, detail.path);
+      } else {
+        await workspaceService.deleteUnmanifestedFile(currentWorkspaceState, detail.path);
+      }
 
       if (
         selectedManifestItemType === 'source' &&

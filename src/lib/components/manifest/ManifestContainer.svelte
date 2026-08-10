@@ -56,6 +56,10 @@
   // Component state using runes
   let manifestItems = $state<ManifestItem[]>([]);
   let sourceItems = $state<SourceItem[]>([]);
+  // Workspace files in neither the manifest nor SOURCE/ — strays that packaging
+  // preserves (the sweep is deliberately lossless), surfaced so they can be
+  // previewed, deleted, or promoted into the manifest.
+  let unmanifestedItems = $state<SourceItem[]>([]);
   // Whether the editor build (SEED.html) is embedded — shown as a non-deletable row.
   let seedHtmlPresent = $state(false);
   let selectedItem = $state<ManifestItem | SourceItem | any | null>(null);
@@ -145,6 +149,13 @@
         }
       } else {
         sourceItems = [];
+      }
+
+      try {
+        unmanifestedItems = await workspaceService.listUnmanifestedFiles(workspace);
+      } catch (error) {
+        console.warn('Failed to list unmanifested files:', error);
+        unmanifestedItems = [];
       }
 
       seedHtmlPresent = await hasSeedHtml(FileStorageAPI.getInstance(), workspace.id).catch(
@@ -492,6 +503,7 @@
   <ManifestTable
     {manifestItems}
     {sourceItems}
+    {unmanifestedItems}
     {seedHtmlPresent}
     {advancedMode}
     {readOnly}

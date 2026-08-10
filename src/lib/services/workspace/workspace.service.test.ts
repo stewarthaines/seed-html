@@ -719,6 +719,76 @@ describe('WorkspaceService Contract Tests', () => {
     });
   });
 
+  describe('Contract: Unmanifested files', () => {
+    // A workspace fresh from createWorkspace, with its manifest pointing at
+    // Text/chapter1.xhtml (per the mock OPF) and a mix of stray files on disk.
+    const strayListing = (workspace: { pathInfo: { rootfilePath: string } }) => [
+      'mimetype',
+      'META-INF/container.xml',
+      'META-INF/calibre_bookmarks.txt',
+      workspace.pathInfo.rootfilePath,
+      'OEBPS/Images/stray.jpg',
+      'Text/orphan.xhtml',
+      '.workspace-metadata.json',
+      'SEED.html',
+      'SOURCE/text/chapter1.txt',
+    ];
+
+    test('lists only files that are neither manifested, reserved, nor SOURCE/', async () => {
+      const workspace = await service.createWorkspace({
+        title: 'Test',
+        language: ['en'],
+        identifier: 'test',
+      });
+      const withAsset = await service.addManifestItem(workspace, {
+        href: 'Images/kept.jpg',
+        mediaType: 'image/jpeg',
+      });
+      mockFileStorage.listFiles.mockResolvedValue([
+        ...strayListing(withAsset),
+        'OEBPS/Images/kept.jpg',
+      ]);
+
+      const items = await service.listUnmanifestedFiles(withAsset);
+      const paths = items.map(i => i.path).sort();
+
+      // The strays: a book-area image, a root-level orphan, and reader cruft in
+      // META-INF. NOT listed: the skeleton, the manifested image, SOURCE/, the
+      // embedded editor, or the app's workspace state.
+      expect(paths).toEqual([
+        'META-INF/calibre_bookmarks.txt',
+        'OEBPS/Images/stray.jpg',
+        'Text/orphan.xhtml',
+      ]);
+      // Media type comes from the manifest-side detector (images included).
+      expect(items.find(i => i.path === 'OEBPS/Images/stray.jpg')?.mediaType).toBe('image/jpeg');
+    });
+
+    test('deleteUnmanifestedFile deletes a stray and refuses everything else', async () => {
+      const workspace = await service.createWorkspace({
+        title: 'Test',
+        language: ['en'],
+        identifier: 'test',
+      });
+      mockFileStorage.listFiles.mockResolvedValue(strayListing(workspace));
+
+      await service.deleteUnmanifestedFile(workspace, 'OEBPS/Images/stray.jpg');
+      expect(mockFileStorage.deleteFile).toHaveBeenCalledWith(
+        workspace.id,
+        'OEBPS/Images/stray.jpg'
+      );
+
+      // The guard recomputes membership: reserved and SOURCE/ paths never pass.
+      await expect(
+        service.deleteUnmanifestedFile(workspace, 'META-INF/container.xml')
+      ).rejects.toThrow(/not an unmanifested file/);
+      await expect(
+        service.deleteUnmanifestedFile(workspace, 'SOURCE/text/chapter1.txt')
+      ).rejects.toThrow(/not an unmanifested file/);
+      expect(mockFileStorage.deleteFile).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('updateManifestItem: file path sanitization', () => {
     test('sanitizes a renamed href to an EPUB-safe path', async () => {
       const workspace = await service.createWorkspace({

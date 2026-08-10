@@ -21,11 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Import from Catalog reads OPDS 2.0 feeds too, so books published in the new default format can be imported back.
 - A js-yaml extension, for projects whose transform scripts read structured data such as YAML frontmatter.
 - A Photo Regions panel: drag boxes over the faces in one of the book's images, name who each one is, and insert the result into the chapter you are editing.
+- The manifest table shows workspace files the book doesn't reference in their own "Not in manifest" section — preview them, delete them, or add one to the manifest.
 
 ### Fixed
 
 - Contents-page and cross-chapter links in the exported PDF now jump to their target pages instead of pointing at a web address.
 - An image referenced from a style attribute — a background image, say — now appears in the preview and the exported PDF, instead of showing a gap there while rendering correctly in reading systems.
+- Packaged EPUBs no longer carry the app's internal workspace-state file.
 
 ## [0.19.0] - 2026-08-07
 
