@@ -107,7 +107,9 @@ export function toYaml(
   for (const [row, group] of rows) {
     lines.push(`    ${key(row)}:`);
     for (const region of [...group].sort((a, b) => a.x - b.x)) {
-      const fields = [`person: ${flow(region.person.trim())}`, `at: "${at(region)}"`];
+      const fields = [`person: ${flow(region.person.trim())}`];
+      if (region.as && region.as.trim()) fields.push(`as: ${flow(region.as.trim())}`);
+      fields.push(`at: "${at(region)}"`);
       // Only when moved off its default, so an untouched badge adds no noise.
       if (region.badge) {
         fields.push(`badge: "${round(region.badge.x)},${round(region.badge.y)}"`);

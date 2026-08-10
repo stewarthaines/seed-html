@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A js-yaml extension, for projects whose transform scripts read structured data such as YAML frontmatter.
 - A Photo Regions panel: drag boxes over the faces in one of the book's images, name who each one is, and insert the result into the chapter you are editing.
 - The manifest table shows workspace files the book doesn't reference in their own "Not in manifest" section — preview them, delete them, or add one to the manifest.
+- The Photo Regions panel remembers each photo's pixel size and offers a "shown as" name per region, and its saved library can now serve as the book's own record of who is pictured — transforms can read it directly, no pasting into chapters.
+- Agent assistance can maintain plugin-saved data files (like the photo regions library), with the usual per-write approval.
 
 ### Fixed
 

@@ -399,6 +399,7 @@ describe('agent bridge module', () => {
       'SOURCE/text/item-2-the-news.txt',
       'SOURCE/scripts/transformDom.js',
       'SOURCE/preview/head.xml',
+      'SOURCE/plugins/photo-regions/regions.json', // plugin work-product a book may render from
       'OEBPS/Styles/page.css',
       'OEBPS/Images/cover.jpg',
       'OEBPS/Scripts/clip-player.js',

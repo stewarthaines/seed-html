@@ -54,6 +54,8 @@ export interface Region {
   key: number;
   /** A person id (linked when they have a chapter) or a name as authored. */
   person: string;
+  /** Display override: link the person's chapter but show this text ("Ted"). */
+  as?: string;
   /** Row label — the caption groups by this ("Back", "Front", "Pictured"). */
   row: string;
   x: number;
@@ -71,11 +73,24 @@ export interface Region {
 /** A region as persisted — the list key is a runtime detail, not stored. */
 export type SavedRegion = Omit<Region, 'key'>;
 
+/** One image's stored work: its pixel size (what lets a crop of a region know
+ *  its aspect ratio) and the drawn regions. */
+export interface RegionEntry {
+  size?: { w: number; h: number };
+  regions: SavedRegion[];
+}
+
 /**
  * The per-project region library. Keyed by the image's OPF-relative href, the
  * same key the chapter's `photos:` block uses.
+ *
+ * This schema is PUBLIC, not plugin-private: a book's transform scripts may
+ * read this file (via ctx.readSourceText) as the canonical record of who is
+ * pictured where — the Haines family book renders captions, face overlays
+ * and portrait crops straight from it. Change it additively, and keep
+ * loadRegions able to read every version ever written.
  */
 export interface RegionStore {
-  version: 1;
-  files: Record<string, SavedRegion[]>;
+  version: 2;
+  files: Record<string, RegionEntry>;
 }

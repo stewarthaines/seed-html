@@ -13,13 +13,13 @@
  */
 
 import { writeOpfsFile } from './opfs-write.js';
-import type { Region, RegionStore, SavedRegion } from './types.js';
+import type { Region, RegionEntry, RegionStore, SavedRegion } from './types.js';
 
 const DATA_DIR = ['SOURCE', 'plugins', 'photo-regions'];
 const FILENAME = 'regions.json';
 
 export function emptyStore(): RegionStore {
-  return { version: 1, files: {} };
+  return { version: 2, files: {} };
 }
 
 async function dataDir(
@@ -38,8 +38,20 @@ export async function loadRegions(root: FileSystemDirectoryHandle): Promise<Regi
     const dir = await dataDir(root, false);
     const file = await (await dir.getFileHandle(FILENAME)).getFile();
     const parsed = JSON.parse(await file.text());
-    if (parsed && parsed.version === 1 && parsed.files && typeof parsed.files === 'object') {
-      return parsed as RegionStore;
+    if (
+      parsed &&
+      (parsed.version === 1 || parsed.version === 2) &&
+      parsed.files &&
+      typeof parsed.files === 'object'
+    ) {
+      // v1 stored a bare region array per image; v2 wraps it so the entry can
+      // also carry the image's pixel size. Read both, write v2.
+      const files: Record<string, RegionEntry> = {};
+      for (const [href, entry] of Object.entries(parsed.files)) {
+        if (Array.isArray(entry)) files[href] = { regions: entry as SavedRegion[] };
+        else if (entry && typeof entry === 'object') files[href] = entry as RegionEntry;
+      }
+      return { version: 2, files };
     }
   } catch {
     // No library yet (or unreadable) — start empty.
@@ -69,8 +81,9 @@ export async function saveRegions(
 
 /** Strip the runtime list key so only the region's own data is stored. */
 export function toSaved(regions: Region[]): SavedRegion[] {
-  return regions.map(({ person, row, x, y, w, h, badge }) => {
+  return regions.map(({ person, as, row, x, y, w, h, badge }) => {
     const saved: SavedRegion = { person, row, x, y, w, h };
+    if (as && as.trim()) saved.as = as.trim();
     if (badge) saved.badge = { x: badge.x, y: badge.y };
     return saved;
   });

@@ -82,7 +82,12 @@ export function isWritablePath(path) {
   if (
     normalized.startsWith('SOURCE/text/') ||
     normalized.startsWith('SOURCE/scripts/') ||
-    normalized.startsWith('SOURCE/preview/')
+    normalized.startsWith('SOURCE/preview/') ||
+    // Plugin work-product (e.g. photo-regions' regions.json). Not app-owned:
+    // a book's transforms may render from these files, which makes them
+    // authored data an agent legitimately maintains. A .js here still takes
+    // the code-review flow via isCodePath.
+    normalized.startsWith('SOURCE/plugins/')
   ) {
     return true;
   }

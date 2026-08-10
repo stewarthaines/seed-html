@@ -153,7 +153,7 @@
   // restores at the right moment.
   $effect(() => {
     const href = selectedHref;
-    const saved = href ? untrack(() => store.files[href] ?? []) : [];
+    const saved = href ? untrack(() => store.files[href]?.regions ?? []) : [];
     regions = saved.map(region => ({ ...region, key: nextKey++ }));
     draft = null;
   });
@@ -230,9 +230,17 @@
   function persist(): void {
     const root = $dirHandle;
     if (!root || !selectedHref) return;
+    // A drag can finish before the image's load event reports its pixel size —
+    // fall back to the size already on record rather than erasing it.
+    const size = imageSize ?? untrack(() => store.files[selectedHref])?.size;
     store = {
       ...store,
-      files: { ...store.files, [selectedHref]: toSaved(regions) },
+      files: {
+        ...store.files,
+        [selectedHref]: size
+          ? { size, regions: toSaved(regions) }
+          : { regions: toSaved(regions) },
+      },
     };
     saveRegions(root, $dirPath, store).catch((error: unknown) => {
       status = translate('Could not save the regions: {error}', { error: String(error) });
@@ -350,6 +358,10 @@
         onload={event => {
           const img = event.currentTarget as HTMLImageElement;
           imageSize = { w: img.naturalWidth, h: img.naturalHeight };
+          // Backfill: an entry saved before sizes were stored (or before this
+          // image's size was known) gains one just by being opened.
+          const entry = untrack(() => store.files[selectedHref]);
+          if (entry && entry.regions.length > 0 && !entry.size) persistSoon();
         }}
       />
       {#each regions as region (region.key)}
@@ -402,6 +414,13 @@
             list="chapter-ids"
             placeholder={$t('person id or name')}
             bind:value={region.person}
+            oninput={persistSoon}
+          />
+          <input
+            type="text"
+            class="shownas"
+            placeholder={$t('shown as')}
+            bind:value={region.as}
             oninput={persistSoon}
           />
           <input
@@ -578,6 +597,10 @@
 
   .regions .person {
     flex: 2 1 0;
+  }
+
+  .regions .shownas {
+    flex: 1 1 0;
   }
 
   .regions .rowname {
