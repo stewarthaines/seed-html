@@ -220,6 +220,24 @@ describe('EPUBPackager', () => {
       expect(sourceSpy).not.toHaveBeenCalled();
     });
 
+    it('never packages the app-internal .workspace-metadata.json', async () => {
+      mockStorage.listFiles.mockResolvedValue([
+        ...mockValidFiles.map(f => f.path),
+        '.workspace-metadata.json',
+      ]);
+
+      const files = await packager.readWorkspaceFiles(mockWorkspaceId);
+
+      // Workspace state is the app's, not the book's (settings.service.ts
+      // documents that it must not travel) — but stray book-area files DO
+      // travel: the sweep is deliberately lossless for author files.
+      expect(files.some(f => f.path === '.workspace-metadata.json')).toBe(false);
+      expect(mockStorage.readFile).not.toHaveBeenCalledWith(
+        mockWorkspaceId,
+        '.workspace-metadata.json'
+      );
+    });
+
     it('does not persist to the publish dir when persistToPublish is false', async () => {
       const result = await packager.packageEPUB(mockWorkspaceId, { persistToPublish: false });
 

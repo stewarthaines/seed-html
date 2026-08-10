@@ -175,8 +175,12 @@ export class EPUBPackager {
     // Separate SOURCE/ files from EPUB files. The editor build (SEED.html) lives
     // at the workspace root but is a non-manifest payload added conditionally
     // below (mirroring SEED.zip), so it's excluded from the generic sweep.
+    // `.workspace-metadata.json` is app-internal workspace state (see
+    // settings.service.ts) — never part of the book.
     const sourceFiles = allFilePaths.filter(f => f.startsWith('SOURCE/'));
-    const epubFiles = allFilePaths.filter(f => !f.startsWith('SOURCE/') && f !== SEED_HTML_NAME);
+    const epubFiles = allFilePaths.filter(
+      f => !f.startsWith('SOURCE/') && f !== SEED_HTML_NAME && f !== '.workspace-metadata.json'
+    );
 
     const files: WorkspaceFile[] = [];
 
