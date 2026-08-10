@@ -226,6 +226,20 @@ Per row: the name (linked cross-chapter, plain for the chapter's own person, `as
 
 **Djot attribute syntax note (the one authoring trap): space-separated `key=value`, no commas or colons** — `{of=x, as: "Tom"}` fails djot's attribute parser and the marker stays visible literal text (a breadcrumb, not a vanish); `{of=x as=Tom include="birth,death"}` is the valid form.
 
+### Phase 4h — the region library becomes the photos store (built 2026-08-10)
+
+The `photos:` frontmatter transport is retired. The Photo Regions panel's own library — `SOURCE/plugins/photo-regions/regions.json` — is now the canonical record of who is pictured, read directly by transformDom (`loadPhotoStore`; verified: `ctx.readSourceText` reads anywhere under SOURCE/, and SEED.zip archives all of SOURCE/). **Drawing and naming a region is the authoring act**: named regions render on the next pass, unnamed drafts stay invisible. No insert step; the YAML/Insert path survives in the plugin for other books only.
+
+What changed with the move:
+
+- **Schema v2** (plugin): per-image entries `{ size?, regions[] }` — the panel stamps the photo's pixel size on open (backfilling old entries) and regions gain an optional `as` ("shown as" input). v1 libraries migrate on read, in both the plugin and the transform.
+- **Captions need no declaration**: any figure whose image has named regions gets the caption in every chapter that shows it — Emma's duplicate blocks (and the portraits dedup machinery they forced) are gone. One crop per photograph by construction.
+- **Crop links** derive from the figures data (`SOURCE/data/figures/<id>.json`): first spine-order chapter rendering the photo; self-chapter crops stay plain. Portrait strips order by that spine position.
+- **Bridge**: `SOURCE/plugins/` joined the agent-writable allowlist (app repo), so name reconciliations land in the store; the bridge cannot CREATE files, so a fresh book needs the panel opened once before an agent can maintain the library.
+- **What was consciously given up**: the explicit insert gate (naming is the gate now), per-chapter caption variation, and track-changes coverage of photo identifications — the YAML was never usefully hand-edited, which is what prompted the move.
+
+Migration: store reconciled to the frontmatter's hand corrections ("Mrs Ted (Edith)", "Eliza Evelyn", "Mr W.C. Craigie", Ria's `as`), sizes for 013/014/015; `photos:` blocks deleted from `thomas_haynes` and `emma_hallworth`. The four still-sizeless photos (004, 005, 023, 006-Wedding-Party, james_henry_haines.jpg) gain sizes — and therefore crops — the first time each is opened in the panel.
+
 ## Housekeeping (any phase)
 
 - **~5MB of unmanifested Kenya-project images**: `Bert_tying_Fita.jpg`, `Camp_at_Hola2.jpg`, `Main_street_Hola.jpg`, `Main_street_Laza.jpg`, `PICT0102.JPG`, `Sammy_2.jpg`, `Jim_HAYNES.jpg`, plus unused `james_henry_haines2.jpg` — none referenced by manifest or sources; delete.
