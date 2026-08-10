@@ -192,6 +192,8 @@ The parts, and why they sit where they do:
 
 Verified end to end in a local node harness (real vendored djot + jsyaml + happy-dom) before the bridge writes, then live in the app: geometry math, cross-chapter link vs self-chapter span, chapter-relative URLs, and the sizeless-photo skip. The `015` wedding photo has no `size:` yet — re-inserting its block from the updated panel (or hand-adding the line) turns its crop on.
 
+**Dedup (added 2026-08-10, surfaced by emma_hallworth).** Every chapter that shows a photo declares its own `photos:` entry for the caption, so the same region reaches the strip once per declaring chapter — Emma's wedding-photo face appeared twice, once from Thomas's block and once from her own. The strip now keeps **one crop per photograph** (the original framing: crops of all the _images_): among duplicates, an entry that can render (has `size:`) beats one that can't, then the current chapter's own entry wins (its crop stays unlinked — the full photo is on the same page), and the first-seen spine position is kept either way. The sized-over-sizeless preference also means one chapter stamping `size:` turns the crop on for every strip, whichever block it renders from.
+
 ## Housekeeping (any phase)
 
 - **~5MB of unmanifested Kenya-project images**: `Bert_tying_Fita.jpg`, `Camp_at_Hola2.jpg`, `Main_street_Hola.jpg`, `Main_street_Laza.jpg`, `PICT0102.JPG`, `Sammy_2.jpg`, `Jim_HAYNES.jpg`, plus unused `james_henry_haines2.jpg` — none referenced by manifest or sources; delete.
