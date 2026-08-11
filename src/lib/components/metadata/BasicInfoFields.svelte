@@ -202,11 +202,14 @@
           onfocus={() => handleFieldFocus('renditionSpread')}
         />
 
+        <!-- Reading systems must ignore rendition:flow for pre-paginated content
+             (EPUB RS 3.3 §8.2.1); the value is kept, only the control is inert. -->
         <SelectMetadataField
           id="renditionFlow"
           label={$t('Flow')}
           value={metadata.renditionFlow || 'auto'}
           options={flowOptions}
+          disabled={(metadata.renditionLayout || 'reflowable') === 'pre-paginated'}
           error={getFieldError('renditionFlow')}
           onblur={e => handleFieldSave('renditionFlow', e.value)}
           onfocus={() => handleFieldFocus('renditionFlow')}
