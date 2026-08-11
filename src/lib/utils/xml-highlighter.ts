@@ -48,7 +48,7 @@ const PRIMARY_MAPPINGS: PrimaryMapping[] = [
   { field: 'renditionLayout', metaProperty: 'rendition:layout' },
   { field: 'renditionOrientation', metaProperty: 'rendition:orientation' },
   { field: 'renditionSpread', metaProperty: 'rendition:spread' },
-  { field: 'renditionViewport', metaProperty: 'rendition:viewport' },
+  { field: 'renditionViewport', metaProperty: 'seedhtml:viewport' },
   { field: 'renditionFlow', metaProperty: 'rendition:flow' },
   { field: 'collections', metaProperty: 'belongs-to-collection' },
   { field: 'accessMode', metaProperty: 'schema:accessMode' },

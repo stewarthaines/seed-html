@@ -1213,7 +1213,6 @@ describe('OPFUtils', () => {
       testDoc.metadata.renditionLayout = 'pre-paginated';
       testDoc.metadata.renditionOrientation = 'landscape';
       testDoc.metadata.renditionSpread = 'none';
-      testDoc.metadata.renditionViewport = 'width=1200, height=600';
       testDoc.metadata.renditionFlow = 'scrolled-doc';
       testDoc.metadata.pageProgressionDirection = 'rtl';
 
@@ -1224,7 +1223,6 @@ describe('OPFUtils', () => {
       expect(xml).toContain('<meta property="rendition:layout">pre-paginated</meta>');
       expect(xml).toContain('<meta property="rendition:orientation">landscape</meta>');
       expect(xml).toContain('<meta property="rendition:spread">none</meta>');
-      expect(xml).toContain('<meta property="rendition:viewport">width=1200, height=600</meta>');
       expect(xml).toContain('<meta property="rendition:flow">scrolled-doc</meta>');
       expect(xml).toContain('<spine page-progression-direction="rtl">');
     });
@@ -1248,16 +1246,32 @@ describe('OPFUtils', () => {
       expect(xml).toContain('<spine>');
     });
 
-    it('omits rendition:viewport for reflowable layout even when a value is set', () => {
+    it('emits the viewport as seedhtml:viewport with its prefix declared, never as rendition:viewport', () => {
+      // rendition:viewport is deprecated (epubcheck OPF-086); the publication
+      // viewport round-trips as the app's own declared-prefix property, while
+      // reading systems take each document's <meta name="viewport">.
+      const testDoc = createTestOPFDocument();
+      testDoc.metadata.renditionLayout = 'pre-paginated';
+      testDoc.metadata.renditionViewport = 'width=1200, height=1600';
+
+      const xml = OPFUtils.generateOPFXML(testDoc);
+      expectValidXML(xml, 'OPF with seedhtml:viewport');
+
+      expect(xml).toContain('<meta property="seedhtml:viewport">width=1200, height=1600</meta>');
+      expect(xml).toContain('seedhtml: https://github.com/stewarthaines/seed-html/vocab/#');
+      expect(xml).not.toContain('rendition:viewport');
+    });
+
+    it('omits seedhtml:viewport for reflowable layout even when a value is set', () => {
       // A viewport left over from a pre-paginated session must not leak into the
-      // OPF once the layout is reflowable (rendition:viewport is fixed-layout only).
+      // OPF once the layout is reflowable (the viewport is fixed-layout only).
       const testDoc = createTestOPFDocument();
       testDoc.metadata.renditionLayout = 'reflowable';
       testDoc.metadata.renditionViewport = 'width=1200, height=1600';
 
       const xml = OPFUtils.generateOPFXML(testDoc);
 
-      expect(xml).not.toContain('rendition:viewport');
+      expect(xml).not.toContain('seedhtml');
     });
 
     // Note: Parsing tests require getElementsByTagNameNS which doesn't work in happy-dom

@@ -339,6 +339,7 @@ export const KNOWN_META_PROPERTIES: ReadonlySet<string> = new Set([
   'rendition:orientation',
   'rendition:spread',
   'rendition:viewport',
+  'seedhtml:viewport',
   'rendition:flow',
   'belongs-to-collection',
   'schema:accessMode',
@@ -360,6 +361,16 @@ export const KNOWN_META_NAMES: ReadonlySet<string> = new Set(['generator']);
 // Prefixes usable in package metadata without a declaration (EPUB 3.3 reserved
 // set, plus the legacy msv/prism entries epubcheck still accepts). ibooks and
 // rendition are included because the generated package always declares them.
+/**
+ * The fixed-layout viewport is serialized as this custom declared-prefix
+ * property: rendition:viewport is deprecated (epubcheck OPF-086), and reading
+ * systems size pages from each document's <meta name="viewport"> anyway — the
+ * OPF copy is the editor's own record, so it travels under the app's vocabulary.
+ */
+export const SEEDHTML_VIEWPORT_PROPERTY = 'seedhtml:viewport';
+export const SEEDHTML_PREFIX = 'seedhtml';
+export const SEEDHTML_PREFIX_URI = 'https://github.com/stewarthaines/seed-html/vocab/#';
+
 export const RESERVED_PREFIXES: ReadonlySet<string> = new Set([
   'a11y',
   'dcterms',
@@ -694,7 +705,11 @@ export class OPFUtils {
     const layoutMeta = doc.querySelector('meta[property="rendition:layout"]');
     const orientationMeta = doc.querySelector('meta[property="rendition:orientation"]');
     const spreadMeta = doc.querySelector('meta[property="rendition:spread"]');
-    const viewportMeta = doc.querySelector('meta[property="rendition:viewport"]');
+    // The app's own property first; legacy rendition:viewport (deprecated) is
+    // still read so older books migrate to the new property on their next save.
+    const viewportMeta =
+      doc.querySelector(`meta[property="${SEEDHTML_VIEWPORT_PROPERTY}"]`) ??
+      doc.querySelector('meta[property="rendition:viewport"]');
     const flowMeta = doc.querySelector('meta[property="rendition:flow"]');
 
     // Parse spine page-progression-direction
@@ -966,6 +981,13 @@ export class OPFUtils {
         ([prefix]) => !RESERVED_PREFIXES.has(prefix)
       )
     );
+    // seedhtml:viewport (emitted below for fixed layout) needs its prefix
+    // declared, unless a customMeta declaration already covers it.
+    const emitsViewport =
+      !!metadata.renditionViewport && metadata.renditionLayout === 'pre-paginated';
+    if (emitsViewport && !extraPrefixes[SEEDHTML_PREFIX]) {
+      extraPrefixes[SEEDHTML_PREFIX] = SEEDHTML_PREFIX_URI;
+    }
     if (Object.keys(extraPrefixes).length > 0) {
       prefixAttr += ` ${escapeXML(formatPrefixAttribute(extraPrefixes))}`;
     }
@@ -1113,11 +1135,12 @@ export class OPFUtils {
       xml += `\n    <meta property="rendition:spread">${escapeXML(metadata.renditionSpread)}</meta>`;
     }
 
-    // rendition:viewport only applies to fixed-layout content; a value left over
-    // from a pre-paginated session must not be emitted once the layout is
-    // reflowable (where it is inert and deprecated).
-    if (metadata.renditionViewport && metadata.renditionLayout === 'pre-paginated') {
-      xml += `\n    <meta property="rendition:viewport">${escapeXML(metadata.renditionViewport)}</meta>`;
+    // The fixed-layout viewport, as the app's own declared-prefix property —
+    // never as rendition:viewport, which is deprecated (epubcheck OPF-086).
+    // Reading systems size pages from each document's <meta name="viewport">;
+    // this is the publication-level record the editor round-trips.
+    if (emitsViewport) {
+      xml += `\n    <meta property="${SEEDHTML_VIEWPORT_PROPERTY}">${escapeXML(metadata.renditionViewport!)}</meta>`;
     }
 
     if (metadata.renditionFlow && metadata.renditionFlow !== 'auto') {
