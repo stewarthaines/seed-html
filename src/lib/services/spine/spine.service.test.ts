@@ -276,7 +276,8 @@ describe('SpineService.addChapter', () => {
     const writeFile = ws.writeFile as ReturnType<typeof vi.fn>;
     expect(writeFile).toHaveBeenCalledTimes(1);
     const [, path, content] = writeFile.mock.calls[0] as [string, string, string];
-    expect(path).toBe('Text/chapter01.xhtml');
+    // Written at the storage path (OPF base dir + href), not the bare href.
+    expect(path).toBe('OEBPS/Text/chapter01.xhtml');
     expect(content).toContain('<title>My Chapter</title>');
     expect(content).toContain('<h1>My Chapter</h1>');
   });
@@ -397,7 +398,8 @@ describe('SpineService.overwriteChapter', () => {
     const writeFile = ws.writeFile as ReturnType<typeof vi.fn>;
     expect(writeFile).toHaveBeenCalledTimes(2);
     const [, xhtmlPath, xhtmlContent] = writeFile.mock.calls[0] as [string, string, string];
-    expect(xhtmlPath).toBe('Text/chap01.xhtml');
+    // Written at the storage path (OPF base dir + href), not the bare href.
+    expect(xhtmlPath).toBe('OEBPS/Text/chap01.xhtml');
     expect(xhtmlContent).toContain('<title>Rewritten</title>');
     expect(xhtmlContent).toContain('<p>New body.</p>');
     expect(writeFile).toHaveBeenCalledWith('ws', 'SOURCE/text/chap01.txt', 'New body.');

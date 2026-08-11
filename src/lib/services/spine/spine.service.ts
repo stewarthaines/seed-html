@@ -175,7 +175,11 @@ export class SpineService {
         options.sourceText !== undefined
           ? this.generateChapterXHTMLFromText(options.title, options.sourceText)
           : this.generateChapterXHTML(options.title);
-      await this.workspaceService.writeFile(workspace.id, href, xhtmlContent);
+      await this.workspaceService.writeFile(
+        workspace.id,
+        this.contentPath(workspace, href),
+        xhtmlContent
+      );
 
       // Create source file if requested
       let hasSourceFile = false;
@@ -236,7 +240,11 @@ export class SpineService {
       }
 
       const xhtmlContent = this.generateChapterXHTMLFromText(options.title, options.sourceText);
-      await this.workspaceService.writeFile(workspace.id, manifestItem.href, xhtmlContent);
+      await this.workspaceService.writeFile(
+        workspace.id,
+        this.contentPath(workspace, manifestItem.href),
+        xhtmlContent
+      );
       await this.workspaceService.writeFile(
         workspace.id,
         `SOURCE/text/${chapterId}.txt`,
@@ -386,6 +394,15 @@ export class SpineService {
 
   // Private helper methods
 
+  /** Storage path for a manifest href: prefixed with the OPF's base directory
+   * (e.g. Text/ch.xhtml → OEBPS/Text/ch.xhtml). The trailing slash matters: a
+   * bare startsWith would falsely match an href under a sibling directory
+   * (OEBPSx/…). */
+  private contentPath(workspace: WorkspaceState, href: string): string {
+    const basePath = workspace.pathInfo.basePath;
+    return !basePath || href.startsWith(`${basePath}/`) ? href : `${basePath}/${href}`;
+  }
+
   /** Derive an XML-safe, unique chapter id from a name (e.g. a filename). */
   private chapterIdFromName(name: string, existingIds: Set<string>): string {
     const sanitized = sanitizeChapterId(name);
@@ -503,12 +520,15 @@ ${body}
 
       // Delete associated files (best-effort; the OPF was pruned first)
       try {
-        // Delete XHTML file. The trailing slash matters: a bare startsWith
-        // would falsely match an href under a sibling directory (OEBPSx/…).
-        const xhtmlPath = manifestItem.href.startsWith(`${workspace.pathInfo.basePath}/`)
-          ? manifestItem.href
-          : `${workspace.pathInfo.basePath}/${manifestItem.href}`;
+        const xhtmlPath = this.contentPath(workspace, manifestItem.href);
         await this.workspaceService.deleteFile(updatedWorkspace.id, xhtmlPath);
+        // Sweep the bare-href stray a pre-fix addChapter/overwriteChapter left
+        // at the workspace root (it wrote Text/… without the OPF base dir).
+        if (xhtmlPath !== manifestItem.href) {
+          if (await this.workspaceService.fileExists(updatedWorkspace.id, manifestItem.href)) {
+            await this.workspaceService.deleteFile(updatedWorkspace.id, manifestItem.href);
+          }
+        }
       } catch (error) {
         console.warn('Failed to delete XHTML file:', error);
       }
