@@ -555,28 +555,36 @@
     await agentBridge.toggle();
   }
 
-  // Handle manifest item deletion
-  const handleManifestItemDelete = async (detail: { itemId: string }) => {
-    if (!currentWorkspaceState || !appState || isReadOnly) return;
+  // Handle manifest item deletion (single item or the whole multi-selection)
+  const handleManifestItemDelete = async (detail: { itemIds: string[] }) => {
+    if (!currentWorkspaceState || !appState || isReadOnly || detail.itemIds.length === 0) return;
 
-    const confirmed = confirm($t('Are you sure you want to delete this item?'));
+    const confirmed = confirm(
+      detail.itemIds.length === 1
+        ? $t('Are you sure you want to delete this item?')
+        : $t('Delete {count} items? This cannot be undone.', { count: detail.itemIds.length })
+    );
     if (!confirmed) return;
 
     try {
-      // Use workspaceService to remove the manifest item
-      const updatedWorkspace = await workspaceService.removeManifestItem(
-        currentWorkspaceState,
-        detail.itemId
-      );
+      // Remove sequentially, threading the returned workspace through each call
+      // (every removal saves the OPF).
+      let workspace = currentWorkspaceState;
+      for (const itemId of detail.itemIds) {
+        workspace = await workspaceService.removeManifestItem(workspace, itemId);
+      }
 
       // Update the workspace state in appState (same pattern as upload)
-      appState.workspace = updatedWorkspace;
+      appState.workspace = workspace;
 
-      // Clear selection if deleted item was selected
-      if (selectedManifestItem && selectedManifestItem.id === detail.itemId) {
+      // Clear selection if a deleted item was selected
+      if (selectedManifestItem && detail.itemIds.includes(selectedManifestItem.id)) {
         selectedManifestItem = null;
         selectedManifestItemType = null;
       }
+      selectedManifestItems = selectedManifestItems.filter(
+        item => !detail.itemIds.includes(item.id)
+      );
     } catch (error) {
       console.error('Failed to delete manifest item:', error);
       // Could add a toast notification here in the future

@@ -45,7 +45,7 @@
     // table, and the in-memory workspace in lockstep).
     workspaceService?: WorkspaceService;
     onWorkspaceUpdate?: (workspace: WorkspaceState) => void;
-    onItemDelete?: (detail: { itemId: string }) => void;
+    onItemDelete?: (detail: { itemIds: string[] }) => void;
     /** Delete a transform-created SOURCE/data/ file (not in the OPF manifest). */
     onSourceDelete?: (detail: { path: string }) => void;
     /** Moved/rewritten hrefs whose cached blob URLs are now stale. */
@@ -753,7 +753,11 @@
 
   const handleDeleteClick = () => {
     if (selectedItemType === 'manifest' && selectedItem) {
-      onItemDelete?.({ itemId: (selectedItem as ManifestItem).id });
+      // A multi-selection deletes as a batch; otherwise just the shown item.
+      const itemIds = batchMode
+        ? batchItems.map(item => item.id)
+        : [(selectedItem as ManifestItem).id];
+      onItemDelete?.({ itemIds });
     } else if (isDeletableSource) {
       onSourceDelete?.({ path: (selectedItem as SourceItem).path });
     }
