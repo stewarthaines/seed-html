@@ -15,9 +15,19 @@
     type StagedFile,
   } from '../import/import-staging.js';
   import type { ReviewDecision, ReviewItem } from '../import/types.js';
+  import {
+    importFileToManifest,
+    reliableMediaType,
+    filenameStem,
+    formatImageSnippet,
+  } from '../import/import-media.js';
+  import { convertManifestPathToXHTMLPath } from '../epub/path-utils.js';
   import type { SpineService } from '../services/spine/spine.service.js';
   import type { SpineItemWithSource } from '../spine/types.js';
-  import type { WorkspaceState } from '../services/workspace/workspace.service.js';
+  import type {
+    WorkspaceService,
+    WorkspaceState,
+  } from '../services/workspace/workspace.service.js';
   import type { SettingsService } from '../services/settings/settings.service.js';
   import FolderSyncReviewDialog from './folder-sync/FolderSyncReviewDialog.svelte';
   import type { FolderSyncDecision } from './folder-sync/FolderSyncReviewDialog.svelte';
@@ -42,6 +52,7 @@
     readOnly = false,
     advancedMode = false,
     settingsService = null,
+    workspaceService = null,
   }: {
     workspace?: WorkspaceState | null;
     spineService: SpineService;
@@ -55,6 +66,9 @@
     /** For folder-sync link metadata (folder name, last synced); optional so the
         sidebar still works standalone (Storybook) without settings plumbing. */
     settingsService?: SettingsService | null;
+    /** For image-chapter import (manifest file writes); optional so the sidebar
+        still works standalone (Storybook) without workspace plumbing. */
+    workspaceService?: WorkspaceService | null;
   } = $props();
 
   // State
@@ -103,6 +117,15 @@
     };
     window.addEventListener('import-text-chapters', handleImportEvent);
 
+    // Listen for "import images as chapters" events (fixed-layout projects)
+    const handleImportImagesEvent = (event: Event) => {
+      const detail = (event as CustomEvent<{ files: File[] }>).detail;
+      if (detail?.files?.length) {
+        void handleImportImageChapters(detail.files);
+      }
+    };
+    window.addEventListener('import-image-chapters', handleImportImagesEvent);
+
     // Folder-sync button in the Chapters header (Sidebar) — link, reconnect,
     // or open the sync review, depending on the stored handle's state.
     const handleFolderSyncEvent = () => {
@@ -114,6 +137,7 @@
     return () => {
       window.removeEventListener('append-spine-item', handleAppendEvent);
       window.removeEventListener('import-text-chapters', handleImportEvent);
+      window.removeEventListener('import-image-chapters', handleImportImagesEvent);
       window.removeEventListener('folder-sync-open', handleFolderSyncEvent);
     };
   });
@@ -191,6 +215,9 @@
       }
       const result = await spineService.addChapter(workspace, {
         title: 'New Chapter',
+        idBasename: settingsService
+          ? (await settingsService.loadEPUBSettings(workspace.id)).spine_basename
+          : undefined,
         linear: true,
         createSourceFile: true,
         insertIndex,
@@ -273,6 +300,67 @@
       }));
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to import chapters';
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  // EPUB core image media types — what an image chapter may be made from.
+  const CHAPTER_IMAGE_TYPES = new Set([
+    'image/png',
+    'image/jpeg',
+    'image/gif',
+    'image/webp',
+    'image/svg+xml',
+  ]);
+
+  // Create a chapter per uploaded image (fixed-layout page import): the image
+  // lands in the manifest (Images/, auto-renamed on collision) and the chapter
+  // source is the project's image insertion template pointing at it. Files are
+  // ordered by name so a picker's selection order can't scramble the pages.
+  async function handleImportImageChapters(files: File[]) {
+    if (!workspace || !workspaceService) return;
+
+    const unsupported = files.filter(file => !CHAPTER_IMAGE_TYPES.has(reliableMediaType(file)));
+    if (unsupported.length > 0) {
+      error = 'Only PNG, JPEG, GIF, WebP or SVG images can be imported as chapters.';
+      return;
+    }
+
+    const ordered = [...files].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+    );
+
+    try {
+      isLoading = true;
+      const settings = settingsService
+        ? await settingsService.loadEPUBSettings(workspace.id)
+        : null;
+
+      let firstChapterId: string | null = null;
+      for (const file of ordered) {
+        const imported = await importFileToManifest(workspace, workspaceService, file);
+        workspace = imported.workspace;
+        const sourceText = formatImageSnippet(settings?.image_template || '![<alt>](<href>)', {
+          href: convertManifestPathToXHTMLPath(imported.href),
+          alt: filenameStem(file.name),
+        });
+        const result = await spineService.addChapter(workspace, {
+          title: filenameStem(file.name),
+          idBasename: settings?.spine_basename,
+          sourceText,
+          createSourceFile: true,
+          linear: true,
+        });
+        workspace = result.updatedWorkspace;
+        if (!firstChapterId) firstChapterId = result.newChapter.id;
+      }
+
+      onWorkspaceUpdate?.(workspace);
+      await loadSpineItems();
+      if (firstChapterId) handleSelectItem(firstChapterId);
+    } catch (err) {
+      error = err instanceof Error ? err.message : 'Failed to import image chapters';
     } finally {
       isLoading = false;
     }

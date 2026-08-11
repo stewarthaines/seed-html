@@ -25,6 +25,10 @@ export interface ChapterCreationOptions {
   /** Derive the chapter id/idref from this name (e.g. an uploaded filename)
    * instead of the auto-numbered chapterNN. Sanitized and made unique. */
   baseName?: string;
+  /** Base word for the auto-numbered id (default 'chapter' → chapterNN) — the
+   * project's spine_basename setting; fixed-layout projects use 'page'.
+   * Ignored when baseName is given. */
+  idBasename?: string;
   /** Initial plain-text source for the chapter (e.g. an uploaded file's text).
    * Written to the SOURCE file and rendered into the chapter XHTML. */
   sourceText?: string;
@@ -144,7 +148,7 @@ export class SpineService {
             options.baseName,
             new Set(workspace.opf.manifest.map(item => item.id))
           )
-        : this.generateUniqueChapterId(workspace);
+        : this.generateUniqueChapterId(workspace, options.idBasename);
       const href = `Text/${chapterId}.xhtml`;
 
       // Create manifest item
@@ -415,14 +419,14 @@ export class SpineService {
     return id;
   }
 
-  private generateUniqueChapterId(workspace: WorkspaceState): string {
+  private generateUniqueChapterId(workspace: WorkspaceState, basename = 'chapter'): string {
     const existingIds = new Set(workspace.opf.manifest.map(item => item.id));
     let counter = 1;
-    let id = `chapter${counter.toString().padStart(2, '0')}`;
+    let id = `${basename}${counter.toString().padStart(2, '0')}`;
 
     while (existingIds.has(id)) {
       counter++;
-      id = `chapter${counter.toString().padStart(2, '0')}`;
+      id = `${basename}${counter.toString().padStart(2, '0')}`;
     }
 
     return id;

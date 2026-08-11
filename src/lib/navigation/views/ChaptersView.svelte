@@ -60,6 +60,14 @@
   let applyBtn = $state<HTMLButtonElement | undefined>(undefined);
 
   // --- derived -------------------------------------------------------------
+  // Fixed-layout projects can import page images as chapters, so the file
+  // picker also offers the EPUB core image types there.
+  const isFixedLayout = $derived(workspace.opf.metadata.renditionLayout === 'pre-paginated');
+  const importAccept = $derived(
+    isFixedLayout
+      ? '.txt,.md,.markdown,text/plain,.png,.jpg,.jpeg,.gif,.webp,.svg,image/png,image/jpeg,image/gif,image/webp,image/svg+xml'
+      : '.txt,.md,.markdown,text/plain'
+  );
   const orderIds = $derived(items.map(i => i.id));
   const selectedCount = $derived(selectedIds.size);
   const hasSelection = $derived(selectedCount > 0);
@@ -440,12 +448,23 @@
   function handleTextFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      window.dispatchEvent(
-        new CustomEvent('import-text-chapters', {
-          detail: { files: Array.from(input.files) },
-          bubbles: true,
-        })
-      );
+      // One selection may mix text and images (fixed layout only); each kind
+      // goes to its own import pipeline in SpineSidebar.
+      const files = Array.from(input.files);
+      const isImage = (f: File) =>
+        f.type.startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/i.test(f.name);
+      const images = files.filter(isImage);
+      const texts = files.filter(f => !isImage(f));
+      if (texts.length > 0) {
+        window.dispatchEvent(
+          new CustomEvent('import-text-chapters', { detail: { files: texts }, bubbles: true })
+        );
+      }
+      if (images.length > 0) {
+        window.dispatchEvent(
+          new CustomEvent('import-image-chapters', { detail: { files: images }, bubbles: true })
+        );
+      }
       input.value = '';
     }
   }
@@ -492,7 +511,7 @@
           bind:this={textFileInput}
           type="file"
           multiple
-          accept=".txt,.md,.markdown,text/plain"
+          accept={importAccept}
           class="hidden-file-input"
           onchange={handleTextFilesSelected}
         />

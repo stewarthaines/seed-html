@@ -293,6 +293,27 @@
   const handleMetadataChanged = async (detail: { field: string; value: any }) => {
     const { field } = detail;
 
+    // Switching to fixed layout retargets the default spine naming: generated
+    // items in a fixed-layout book are pages, not chapters (and back again).
+    // Only the counterpart default is rewritten, so a hand-edited
+    // spine_basename in SOURCE/settings.json survives the toggle.
+    if (field === 'renditionLayout' && appState && currentWorkspaceState) {
+      try {
+        const settingsService = appState.getSettingsService();
+        const settings = await settingsService.loadEPUBSettings(currentWorkspaceState.id);
+        const target = detail.value === 'pre-paginated' ? 'page' : 'chapter';
+        const counterpart = target === 'page' ? 'chapter' : 'page';
+        if (settings.spine_basename === counterpart) {
+          await settingsService.saveEPUBSettings(currentWorkspaceState.id, {
+            ...settings,
+            spine_basename: target,
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to retarget spine_basename for layout change:', err);
+      }
+    }
+
     // Refresh workspace list for fields that affect workspace display
     if (field === 'creator' || field === 'title' || field === 'language') {
       // Trigger workspace list refresh by dispatching event to WorkspaceView
@@ -1714,6 +1735,7 @@
           readOnly={structureLocked}
           advancedMode={advancedMode.current}
           settingsService={appState ? appState.getSettingsService() : null}
+          {workspaceService}
           onWorkspaceUpdate={updatedWorkspace => {
             if (appState) appState.workspace = updatedWorkspace;
           }}
