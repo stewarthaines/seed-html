@@ -64,6 +64,13 @@ figure.name-faces {
   transition: opacity 0.2s ease;
 }
 
+/* The name list is its own caption line, below the caption text (whether an
+ * existing figcaption's or the lifted title=). Without this the two run on
+ * inline — still readable, so a missing stylesheet degrades gracefully. */
+.fc-stack {
+  display: block;
+}
+
 /* The caption-side number next to each name. */
 .fc-chip {
   font-size: 0.7em;

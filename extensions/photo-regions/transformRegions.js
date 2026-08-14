@@ -199,6 +199,19 @@ async function transformDOM(htmlDocument, idref, ctx) {
     if (!figcaption) {
       figcaption = htmlDocument.createElement('figcaption');
       figure.appendChild(figcaption);
+      // A figcaption this transform creates lifts the image's title= in as the
+      // caption's first line — otherwise the authored caption text would
+      // survive only as a tooltip. The attribute moves (not copies), so the
+      // same text isn't presented twice. An existing figcaption is trusted:
+      // whoever built it (the book's figureSetup) owns the title idiom.
+      const title = img.getAttribute('title');
+      if (title) {
+        const captionText = htmlDocument.createElement('span');
+        captionText.className = 'fc-caption-text';
+        captionText.textContent = title;
+        figcaption.appendChild(captionText);
+        img.removeAttribute('title');
+      }
     }
     const stack = htmlDocument.createElement('span');
     stack.className = 'fc-stack';

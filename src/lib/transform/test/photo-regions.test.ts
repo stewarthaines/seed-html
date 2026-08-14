@@ -95,6 +95,36 @@ describe('transformRegions (binding and construction)', () => {
     expect(figcaption.querySelector('.fc-name-1')!.textContent).toBe('Solo Person1');
   });
 
+  it('lifts the image title into a created figcaption as its first line', async () => {
+    const doc = parse(
+      '<p><img src="a.jpg" title="The survey team at Nairobi."/></p>' +
+        '<p><span class="region" data-at="1,2,3,4" data-as="Roger King"></span></p>'
+    );
+    await transformDOM(doc, 'ch1', {});
+
+    const figcaption = doc.querySelector('figcaption')!;
+    const first = figcaption.firstElementChild!;
+    expect(first.classList.contains('fc-caption-text')).toBe(true);
+    expect(first.textContent).toBe('The survey team at Nairobi.');
+    // The attribute moves, so the text isn't presented twice.
+    expect(doc.querySelector('img')!.hasAttribute('title')).toBe(false);
+    // The name stack follows the caption text.
+    expect(figcaption.querySelector('.fc-caption-text + .fc-stack')).not.toBeNull();
+  });
+
+  it('trusts an existing figcaption and leaves the image title alone', async () => {
+    const doc = parse(
+      '<figure><img src="a.jpg" title="tooltip"/><figcaption>Built caption.</figcaption></figure>' +
+        '<p><span class="region" data-at="1,2,3,4" data-as="Roger King"></span></p>'
+    );
+    await transformDOM(doc, 'ch1', {});
+
+    const figcaption = doc.querySelector('figcaption')!;
+    expect(figcaption.textContent).toContain('Built caption.');
+    expect(figcaption.querySelector('.fc-caption-text')).toBeNull();
+    expect(doc.querySelector('img')!.getAttribute('title')).toBe('tooltip');
+  });
+
   it('links of= through ctx.manifest, never to the current chapter', async () => {
     const ctx = {
       manifest: [
