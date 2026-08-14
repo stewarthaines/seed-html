@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-31\n"
-"PO-Revision-Date: 2026-07-31\n"
+"POT-Creation-Date: 2026-08-14\n"
+"PO-Revision-Date: 2026-08-14\n"
 "Language: \n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -402,6 +402,10 @@ msgstr ""
 
 #: src/lib/components/metadata/CustomMetaSection.svelte
 msgid "Add to catalog"
+msgstr ""
+
+#: src/lib/components/manifest/ManifestPreview.svelte
+msgid "Add to manifest"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -878,12 +882,20 @@ msgstr ""
 msgid "Choose a generator"
 msgstr ""
 
+#: plugins/photo-regions/src/App.svelte
+msgid "Choose an image…"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Choose device again…"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Choose the SEED.html file to embed."
+msgstr ""
+
+#: plugins/photo-regions/src/App.svelte
+msgid "Clear"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestTable.svelte
@@ -962,6 +974,10 @@ msgstr ""
 #: src/lib/components/metadata/CollectionsEditor.svelte
 #: src/lib/components/metadata/TitleEditor.svelte
 msgid "Collection"
+msgstr ""
+
+#: src/lib/components/metadata/CollectionsEditor.svelte
+msgid "Collection identifier"
 msgstr ""
 
 #: src/lib/components/metadata/CollectionsEditor.svelte
@@ -1139,8 +1155,20 @@ msgstr ""
 msgid "Could not read that catalog"
 msgstr ""
 
+#: plugins/photo-regions/src/App.svelte
+msgid "Could not read the image: {error}"
+msgstr ""
+
+#: plugins/photo-regions/src/App.svelte
+msgid "Could not read the manifest: {error}"
+msgstr ""
+
 #: plugins/audio-clip-editor/src/App.svelte
 msgid "Could not read the project: {error}"
+msgstr ""
+
+#: plugins/photo-regions/src/App.svelte
+msgid "Could not save the regions: {error}"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
@@ -1358,6 +1386,10 @@ msgstr ""
 msgid "Delete {count} chapters?"
 msgstr ""
 
+#: src/App.svelte
+msgid "Delete {count} items? This cannot be undone."
+msgstr ""
+
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Delete {filename}? This cannot be undone."
 msgstr ""
@@ -1480,6 +1512,10 @@ msgstr ""
 msgid "Drag on the waveform to define a clip."
 msgstr ""
 
+#: plugins/photo-regions/src/App.svelte
+msgid "Drag to move, double-click to reset"
+msgstr ""
+
 #: src/lib/components/manifest/ManifestContainer.svelte
 msgid "Drop to add to the manifest"
 msgstr ""
@@ -1548,6 +1584,10 @@ msgstr ""
 
 #: src/lib/components/metadata/IdentifierEditor.svelte
 msgid "e.g. urn:isbn:9780000000001"
+msgstr ""
+
+#: src/lib/components/metadata/CollectionsEditor.svelte
+msgid "e.g. urn:issn:2346-7614"
 msgstr ""
 
 #: src/lib/components/metadata/AccessibilityFields.svelte
@@ -2259,6 +2299,7 @@ msgstr ""
 msgid "form"
 msgstr ""
 
+#: plugins/publish-to-remote/src/App.svelte
 #: src/lib/components/metadata/AdvancedFields.svelte
 msgid "Format"
 msgstr ""
@@ -2504,6 +2545,7 @@ msgid "Inject preview/head.xml into the preview, per preview type. Never exporte
 msgstr ""
 
 #: plugins/audio-clip-editor/src/App.svelte
+#: plugins/photo-regions/src/App.svelte
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Insert"
 msgstr ""
@@ -2532,6 +2574,10 @@ msgstr ""
 msgid "Insert the clip directive at the editor cursor"
 msgstr ""
 
+#: plugins/photo-regions/src/App.svelte
+msgid "Inserted {count} region(s) at the cursor"
+msgstr ""
+
 #: src/lib/components/spine/sr-walk.ts
 msgid "insertion"
 msgstr ""
@@ -2558,6 +2604,10 @@ msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Invalid media template"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Invalid photo region template"
 msgstr ""
 
 #: src/stories/preview/ContentPreviewDemo.svelte
@@ -3248,6 +3298,10 @@ msgstr ""
 msgid "Not created in the Simple EPUB Editor — viewable but not editable."
 msgstr ""
 
+#: src/lib/components/manifest/ManifestTable.svelte
+msgid "Not in manifest"
+msgstr ""
+
 #: src/lib/components/SpineItem.svelte
 msgid "Not in the linear reading order"
 msgstr ""
@@ -3531,8 +3585,32 @@ msgstr ""
 msgid "PDF is missing unreadable chapters: {chapters}"
 msgstr ""
 
+#: plugins/photo-regions/src/App.svelte
+msgid "person id or name"
+msgstr ""
+
+#: plugins/photo-regions/src/App.svelte
+msgid "Photo"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Photo Region Directive"
+msgstr ""
+
+#: plugins/photo-regions/src/App.svelte
+msgid "Photo region editor"
+msgstr ""
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Photo Regions"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Placeholder: <href>."
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Placeholders: <at> required; <of>, <as>, <row>, <badge> optional."
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -3882,6 +3960,7 @@ msgstr ""
 msgid "Remote:"
 msgstr ""
 
+#: plugins/photo-regions/src/App.svelte
 #: plugins/publish-to-remote/src/components/RemoteSelector.svelte
 #: src/lib/components/extensions/ExtensionItem.svelte
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
@@ -4020,6 +4099,7 @@ msgstr ""
 msgid "Route uploads through the app proxy (for servers without CORS)"
 msgstr ""
 
+#: plugins/photo-regions/src/App.svelte
 #: src/lib/components/spine/sr-walk.ts
 msgid "row"
 msgstr ""
@@ -4254,6 +4334,10 @@ msgstr ""
 
 #: src/lib/components/workspace/WorkspaceList.svelte
 msgid "Showing {filtered} of {total} workspaces"
+msgstr ""
+
+#: plugins/photo-regions/src/App.svelte
+msgid "shown as"
 msgstr ""
 
 #: plugins/publish-to-remote/src/App.svelte
