@@ -1123,6 +1123,7 @@
         image_template: entry.templates?.image ?? defaults.image_template,
         video_template: entry.templates?.video ?? defaults.video_template,
         audio_clip_template: entry.templates?.audioClip ?? defaults.audio_clip_template,
+        photo_region_template: entry.templates?.photoRegion ?? defaults.photo_region_template,
       };
     }
     if (next !== epub) {

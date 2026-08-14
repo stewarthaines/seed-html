@@ -280,6 +280,38 @@
     }
   }
 
+  // Persist the photo region directive template (validated: must keep the <at>
+  // placeholder; cleared → the built-in default applies).
+  async function handlePhotoRegionTemplateChange(event: Event): Promise<void> {
+    if (!workspaceId || !epubSettings) return;
+
+    const target = event.target as HTMLInputElement;
+    const newTemplate = target.value.trim();
+
+    const validation = settingsService.validateEPUBSettings({
+      photo_region_template: newTemplate,
+    });
+    if (!validation.isValid) {
+      error = validation.errors[0] || $t('Invalid photo region template');
+      return;
+    }
+
+    const previous = epubSettings.photo_region_template;
+    const updatedSettings: EPUBSettings = {
+      ...epubSettings,
+      photo_region_template: newTemplate,
+    };
+    epubSettings = updatedSettings;
+
+    try {
+      await settingsService.saveEPUBSettings(workspaceId, updatedSettings);
+      onSettingsChanged?.();
+    } catch (err) {
+      error = err instanceof Error ? err.message : $t('Failed to save EPUB settings');
+      epubSettings = { ...epubSettings, photo_region_template: previous };
+    }
+  }
+
   // Persist a drop-to-insert media template (image/video). Validated (<href>
   // required); cleared → the built-in default applies.
   async function handleMediaTemplateChange(
@@ -594,6 +626,7 @@
       image_template: templates?.image ?? defaults.image_template,
       video_template: templates?.video ?? defaults.video_template,
       audio_clip_template: templates?.audioClip ?? defaults.audio_clip_template,
+      photo_region_template: templates?.photoRegion ?? defaults.photo_region_template,
     };
     epubSettings = updatedSettings;
 
@@ -1316,6 +1349,25 @@
                       {$t(
                         'Placeholders: <href>, <begin>, <end> required; <label>, <rate> optional.'
                       )}
+                    </p>
+                  </div>
+
+                  <div class="setting-group">
+                    <label for="photo-region-template" class="setting-label-text">
+                      {$t('Photo Region Directive')}
+                    </label>
+                    <!-- i18n-ignore: literal directive template, not prose -->
+                    <input
+                      id="photo-region-template"
+                      type="text"
+                      class="template-input"
+                      value={epubSettings?.photo_region_template || ''}
+                      placeholder=":region:{'{'}at=&quot;&lt;at&gt;&quot; of=&lt;of&gt; as=&quot;&lt;as&gt;&quot; row=&quot;&lt;row&gt;&quot;{'}'}"
+                      onblur={handlePhotoRegionTemplateChange}
+                      disabled={epubLoading}
+                    />
+                    <p class="setting-description">
+                      {$t('Placeholders: <at> required; <of>, <as>, <row>, <badge> optional.')}
                     </p>
                   </div>
 

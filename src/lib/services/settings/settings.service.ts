@@ -115,6 +115,10 @@ export interface EPUBSettings {
   dom_transforms: string[];
   spine_basename: string;
   audio_clip_template?: string;
+  /** Photo-region directive, one line per region (photo-regions plugin Insert).
+      Placeholders: <at> required; <of>, <as>, <row>, <badge> optional — an
+      optional attribute whose value is empty is omitted whole. */
+  photo_region_template?: string;
   /** Inserted when an image is dropped into a chapter. Placeholders: <href>, <alt>. */
   image_template?: string;
   /** Inserted when a video is dropped into a chapter. Placeholder: <href>. */
@@ -435,6 +439,7 @@ export class SettingsService {
         ),
         spine_basename: settings.spine_basename ?? defaults.spine_basename,
         audio_clip_template: settings.audio_clip_template ?? defaults.audio_clip_template,
+        photo_region_template: settings.photo_region_template ?? defaults.photo_region_template,
         image_template: settings.image_template ?? defaults.image_template,
         video_template: settings.video_template ?? defaults.video_template,
         filename_template: settings.filename_template ?? defaults.filename_template,
@@ -509,6 +514,9 @@ export class SettingsService {
       dom_transforms: ['SOURCE/scripts/transformDom.js'],
       spine_basename: 'chapter',
       audio_clip_template: ':clip[<label>]{src=<href> begin=<begin> end=<end>}',
+      // Region values force quoting (commas, spaces), so unlike the clip
+      // template this one quoted form is valid in both markdown and djot.
+      photo_region_template: ':region:{at="<at>" of=<of> as="<as>" row="<row>" badge="<badge>"}',
       // Valid in both markdown and djot; textile projects set e.g. `!<href>!`.
       image_template: '![<alt>](<href>)',
       // Raw XHTML passes through markdown-it (html:true); djot projects wrap it
@@ -754,6 +762,13 @@ export class SettingsService {
         errors.push(
           `Audio clip template missing required placeholders: ${missingPlaceholders.join(', ')}`
         );
+      }
+    }
+
+    // Validate photo region template
+    if (settings.photo_region_template !== undefined && settings.photo_region_template) {
+      if (!settings.photo_region_template.includes('<at>')) {
+        errors.push('Photo region template missing required placeholder: <at>');
       }
     }
 

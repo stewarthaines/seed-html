@@ -268,6 +268,7 @@ describe('SettingsService Contract Tests', () => {
       // defaults when absent from the file.
       expect(result).toEqual({
         ...mockSettings,
+        photo_region_template: ':region:{at="<at>" of=<of> as="<as>" row="<row>" badge="<badge>"}',
         image_template: '![<alt>](<href>)',
         video_template: '<video src="<href>" controls="controls"></video>',
         preview: {
@@ -289,6 +290,7 @@ describe('SettingsService Contract Tests', () => {
         dom_transforms: ['SOURCE/scripts/transformDom.js'],
         spine_basename: 'chapter',
         audio_clip_template: ':clip[<label>]{src=<href> begin=<begin> end=<end>}',
+        photo_region_template: ':region:{at="<at>" of=<of> as="<as>" row="<row>" badge="<badge>"}',
         image_template: '![<alt>](<href>)',
         video_template: '<video src="<href>" controls="controls"></video>',
         filename_template: '<title>-<author>-<date>',
@@ -540,6 +542,19 @@ describe('SettingsService Contract Tests', () => {
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('Text transform must start with SOURCE/');
       expect(result.errors).toContain('Spine basename cannot be empty');
+    });
+
+    test('validateEPUBSettings requires <at> in the photo region template', () => {
+      const invalid = service.validateEPUBSettings({
+        photo_region_template: ':region:{as="<as>" row="<row>"}',
+      });
+      expect(invalid.isValid).toBe(false);
+      expect(invalid.errors).toContain('Photo region template missing required placeholder: <at>');
+
+      const valid = service.validateEPUBSettings({
+        photo_region_template: ':region:{at="<at>"}',
+      });
+      expect(valid.isValid).toBe(true);
     });
   });
 
