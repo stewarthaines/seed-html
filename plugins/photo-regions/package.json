@@ -1,7 +1,7 @@
 {
   "name": "photo-regions",
   "version": "0.1.0",
-  "description": "Draw regions on a photo and name who is pictured, for the chapter's photos: frontmatter",
+  "description": "Draw regions on a photo and name who is pictured, inserted as :region: directive lines",
   "type": "module",
   "scripts": {
     "dev": "vite --port 8002",

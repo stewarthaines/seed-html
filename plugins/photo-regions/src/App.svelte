@@ -1,7 +1,8 @@
 <!--
   Photo Regions panel: pick an image the book already manifests, drag boxes
-  over the faces, name who each one is, and insert the resulting `photos:`
-  block at the editor cursor.
+  over the faces, name who each one is, and insert the resulting :region:
+  directive lines at the editor cursor (directly under the photo's figure
+  line — the paragraph they form binds to the figure above it).
 
   Geometry is kept in percent of the image's own box, so what you draw at panel
   size still describes the full-size image. The plugin only ever READS the
@@ -13,7 +14,8 @@
   import { activeChapterId, dirHandle, dirPath } from './store.js';
   import { t, translate } from './i18n.js';
   import { readManifest, readFile, imagesInChapter } from './opf.js';
-  import { toYaml } from './regions.js';
+  import { toDirectives } from './regions.js';
+  import { DEFAULT_TEMPLATE, loadTemplate } from './template.js';
   import { emptyStore, loadRegions, saveRegions, toSaved } from './library.js';
   import type { ImageManifestItem, Region, RegionStore } from './types.js';
 
@@ -26,7 +28,7 @@
   let selectedHref = $state('');
   let imageUrl = $state('');
   let regions = $state<Region[]>([]);
-  let includeHeader = $state(true);
+  let template = $state(DEFAULT_TEMPLATE);
   let status = $state('');
   let lastRow = $state('');
   let nextKey = 1;
@@ -37,7 +39,7 @@
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
 
   /** The photo's pixel size, read off the loaded <img> — stamped into the
-      YAML as `size: WxH` so a crop of a region can know its aspect ratio. */
+      region library so a crop of a region can know its aspect ratio. */
   let imageSize = $state<{ w: number; h: number } | null>(null);
   let canvasEl: HTMLDivElement | undefined = $state();
   let draft = $state<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
@@ -51,9 +53,9 @@
     usedHrefs ? images.filter(image => usedHrefs.has(image.href)) : images
   );
   /**
-   * Region key → the number the reader will see. Mirrors toYaml exactly — rows
-   * in the order first drawn, entries left to right within a row — so the
-   * badge in the tool is the badge in the book. Only named regions are
+   * Region key → the number the reader will see. Mirrors toDirectives exactly
+   * — rows in the order first drawn, entries left to right within a row — so
+   * the badge in the tool is the badge in the book. Only named regions are
    * numbered, because only they are emitted.
    */
   const numbering = $derived.by(() => {
@@ -84,15 +86,17 @@
 
   const selectedImage = $derived(images.find(image => image.href === selectedHref));
   const namedCount = $derived(regions.filter(region => region.person.trim()).length);
-  const yaml = $derived(
-    selectedHref ? toYaml(selectedHref, regions, includeHeader, imageSize ?? undefined) : ''
-  );
+  const markup = $derived(selectedHref ? toDirectives(template, regions) : '');
 
-  // Read the OPF once the host hands us the workspace.
+  // Read the OPF once the host hands us the workspace. The directive template
+  // is re-read at insert time too, so a mid-session settings change applies.
   $effect(() => {
     const root = $dirHandle;
     if (!root) return;
     let cancelled = false;
+    loadTemplate(root).then(loaded => {
+      if (!cancelled) template = loaded;
+    });
     Promise.all([readManifest(root), loadRegions(root)])
       .then(([manifest, saved]) => {
         if (cancelled) return;
@@ -313,9 +317,14 @@
     persistSoon();
   }
 
-  function insert() {
-    if (!yaml) return;
-    window.parent.postMessage({ type: 'insert', content: yaml }, window.origin);
+  async function insert() {
+    if (!markup) return;
+    // Re-read the template so a settings change since panel load still applies.
+    const root = $dirHandle;
+    if (root) template = await loadTemplate(root);
+    const content = toDirectives(template, regions);
+    if (!content) return;
+    window.parent.postMessage({ type: 'insert', content }, window.origin);
     status = translate('Inserted {count} region(s) at the cursor', { count: namedCount });
   }
 
@@ -448,10 +457,6 @@
     </datalist>
 
     <div class="footer">
-      <label class="check">
-        <input type="checkbox" bind:checked={includeHeader} />
-        {$t('Include the photos: line')}
-      </label>
       <div class="actions">
         <button type="button" onclick={clearAll}>{$t('Clear')}</button>
         <button type="button" class="primary" disabled={namedCount === 0} onclick={insert}>
@@ -621,17 +626,9 @@
   .footer {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: 10px;
     flex-wrap: wrap;
-  }
-
-  .check {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 12px;
-    color: var(--color-text-secondary);
   }
 
   .actions {
