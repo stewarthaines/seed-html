@@ -12,6 +12,7 @@ function transformText(markdown, idref) {
   });
   md.use(window.markdownItAttrs);
   md.use(clipPlugin);
+  md.use(regionPlugin);
   return md.render(markdown);
 }
 
@@ -52,6 +53,48 @@ function clipPlugin(md) {
       const text = state.push('text', '', 0);
       text.content = match[1];
       state.push('seed_clip_close', 'span', -1);
+    }
+    state.pos += match[0].length;
+    return true;
+  });
+}
+
+/**
+ * markdown-it inline rule: rewrite the SEED photo-region directive (the default
+ * photo region template) into the neutral carrier span the photo-regions
+ * extension's DOM transform consumes.
+ *
+ *   :region:{at="5.2,17.7,11.4,21.9" of=roger_king as="Roger King" row="Back"}
+ *     → <span class="region" data-at="…" data-of="…" data-as="…" data-row="…"></span>
+ *
+ * Consecutive :region: lines form one paragraph — that paragraph is the region
+ * set, bound to the figure directly above it by the DOM transform
+ * (extensions/photo-regions/transformRegions.js). Attribute values may be bare
+ * or double-quoted; at= is required — a directive without it is left for the
+ * normal rules (visible breadcrumb; note markdown-it-attrs may then consume
+ * the trailing {…}). Registered before `link`, and consuming the whole
+ * directive as one token, so markdown-it-attrs never sees a well-formed
+ * region's braces.
+ */
+function regionPlugin(md) {
+  const DIRECTIVE = /^:region:\{([^}]*)\}/;
+  const ATTR = /([a-zA-Z_][\w-]*)=(?:"([^"]*)"|([^\s"]+))/g;
+  const CARRIED = ['at', 'of', 'as', 'row', 'badge'];
+
+  md.inline.ruler.before('link', 'seed_region', (state, silent) => {
+    if (state.src.charCodeAt(state.pos) !== 0x3a /* : */) return false;
+    const match = DIRECTIVE.exec(state.src.slice(state.pos));
+    if (!match) return false;
+    const attrs = {};
+    for (const m of match[1].matchAll(ATTR)) attrs[m[1]] = m[2] !== undefined ? m[2] : m[3];
+    if (!attrs.at) return false;
+    if (!silent) {
+      const open = state.push('seed_region_open', 'span', 1);
+      open.attrs = [['class', 'region']];
+      for (const name of CARRIED) {
+        if (attrs[name] !== undefined) open.attrs.push([`data-${name}`, attrs[name]]);
+      }
+      state.push('seed_region_close', 'span', -1);
     }
     state.pos += match[0].length;
     return true;

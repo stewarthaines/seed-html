@@ -7,6 +7,7 @@
 function transformText(text, idref) {
   let ast = djot.parse(text);
   djot.applyFilter(ast, clipFilter);
+  djot.applyFilter(ast, regionFilter);
   djot.applyFilter(ast, idFilter);
   return djot.renderHTML(ast);
 }
@@ -142,6 +143,73 @@ function clipFilter() {
       enter: doc => {
         walk(doc);
         for (const key in doc.footnotes) walk(doc.footnotes[key]);
+      },
+    },
+  };
+}
+
+/**
+ * Djot filter: rewrite a photo-region paragraph into the neutral carrier the
+ * photo-regions extension's DOM transform consumes.
+ *
+ *   :region:{at="5.2,17.7,11.4,21.9" of=roger_king as="Roger King" row="Back"}
+ *   :region:{at="17.3,14.8,9.9,20.4" as="Ian Vitcheff" row="Back"}
+ *     → <p class="region-set"><span class="region" data-at="…" …></span>…</p>
+ *
+ * Consecutive :region: lines form one djot paragraph, and that paragraph is
+ * the region set — the same grouping rule as the :lifeline: block. Djot's
+ * HTML renderer drops attributes on symbols, which is why this must happen as
+ * a filter. Only a paragraph consisting ENTIRELY of :region: symbols (each
+ * carrying the required at= attribute) is rewritten; anything else — a region
+ * marker mixed into prose, or one missing at= — is left alone, so the symbol
+ * renders as visible literal text (a breadcrumb, not a vanish). Values must
+ * be QUOTED (djot's bare attribute values reject ',' and spaces):
+ *
+ *   :region:{at="<at>" of=<of> as="<as>" row="<row>" badge="<badge>"}
+ *
+ * The DOM transform (extensions/photo-regions/transformRegions.js) binds the
+ * carrier to the figure directly above it and builds the overlay + caption.
+ */
+function regionFilter() {
+  const isRegionSymbol = node => node.tag === 'symb' && node.alias === 'region';
+
+  const toCarrier = para => {
+    const symbols = para.children.filter(isRegionSymbol);
+    if (symbols.length === 0) return false;
+    const onlyRegions = para.children.every(
+      node => isRegionSymbol(node) || node.tag === 'soft_break'
+    );
+    if (!onlyRegions) return false;
+    if (!symbols.every(node => typeof (node.attributes || {}).at === 'string')) return false;
+
+    para.attributes = { ...(para.attributes || {}), class: 'region-set' };
+    para.children = symbols.map(node => {
+      const { at, of, as, row, badge } = node.attributes;
+      const attributes = { class: 'region', 'data-at': at };
+      if (typeof of === 'string') attributes['data-of'] = of;
+      if (typeof as === 'string') attributes['data-as'] = as;
+      if (typeof row === 'string') attributes['data-row'] = row;
+      if (typeof badge === 'string') attributes['data-badge'] = badge;
+      return { tag: 'span', attributes, children: [] };
+    });
+    return true;
+  };
+
+  // Paragraphs live in blocks (doc, sections, divs, …) — walk block children
+  // arrays from the root, like clipFilter, rather than visiting tag-by-tag.
+  const walk = node => {
+    if (Array.isArray(node.children)) {
+      for (const child of node.children) {
+        if (child.tag === 'para' && Array.isArray(child.children) && toCarrier(child)) continue;
+        walk(child);
+      }
+    }
+  };
+
+  return {
+    doc: {
+      enter: doc => {
+        walk(doc);
       },
     },
   };
