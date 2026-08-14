@@ -1,6 +1,6 @@
 # Photo regions in chapter markup — `:region:` directives
 
-Status: DRAFT for discussion, 2026-08-14.
+Status: design SETTLED 2026-08-14 — all open questions decided (see inline DECIDED/RESOLVED notes); remaining work is implementation mechanics (omit-when-empty template filler, format adapters, DOM transform extension).
 
 ## Motivation
 
@@ -51,7 +51,7 @@ If external-tool measurement ever matters, the escape hatch is an explicit unit 
 
 The region paragraph binds to the **nearest preceding image** in the same section — in practice, the figure line directly above it. This is data-bearing adjacency, not the rejected marker-modifies-neighbour idiom: the `:faces:` flag was rejected because it was a *switch* pretending to be content, whereas `:region:` lines *are* the content, in the same way consecutive `:lifeline:` lines are the chart.
 
-Open question: whether `.name-faces` on the image stays required. The presence of a region paragraph could imply the treatment (class-free), or the class could remain the opt-in and the regions inert without it. Leaning towards presence-implies: one less thing to forget, and a region paragraph with no styling applied is a confusing authoring dead end.
+DECIDED 2026-08-14: presence-implies. The region paragraph is the statement of intent; requiring `{.name-faces}` as well is a second switch that can only agree with or contradict the first, and the contradiction (regions present, class forgotten) is a dead end where directives vanish but nothing renders. The DOM transform **stamps** `class="name-faces"` onto the bound figure, so the CSS contract (`figure.name-faces:has(…)` selectors) is unchanged and a hand-authored `{.figure .name-faces}` stays harmless and redundant — Haines chapters need no rewriting if that book ever migrates.
 
 ## Per-project template
 
@@ -61,7 +61,7 @@ Following the `audio_clip_template` pattern exactly:
 - Default (djot, quoted): `:region:{at="<at>" as="<as>" row="<row>"}`.
 - Placeholders: `<at>` required; `<as>`, `<of>`, `<row>`, `<badge>` optional. Validation via `validateEPUBSettings` like the clip template's required-placeholder check.
 - The template is **per region line**; the plugin's Insert emits one filled line per named region, sorted by row then left-to-right by `x` (the badge-numbering order), joined with newlines. Optional attributes with no value are omitted along with their `attr="…"` wrapper — this needs slightly smarter filling than the clip formatter's simple substitution (a `row="<row>"` with no row must vanish, not emit `row=""`).
-- Per-format override via `extension.json` `templates.photoRegion`, next to `templates.audioClip` (markdown-it gets the unquoted variant, etc.).
+- Per-format override via `extension.json` `templates.photoRegion`, next to `templates.audioClip` — but unlike clip, one template likely serves every format. Clip's templates diverge (djot quoted, markdown-it bare) only because djot rejects bare values containing dots; region values force quoting everywhere (`at=` has commas, `as=` has spaces), so the quoted default is valid in both djot and markdown-it verbatim. The override slot exists for formats with genuinely different syntax (textile etc.), not for quoting variants.
 - Editable in Project Settings → EPUB beside the Audio Clip Directive field.
 - Default duplicated in the plugin (`plugins/photo-regions/src/template.ts` equivalent) since plugins build separately and read `SOURCE/settings.json` themselves.
 
@@ -88,9 +88,9 @@ Geometry is percent-of-image-box, so the overlay needs no `size:` — one of the
 ## Gaps and open questions
 
 1. **Round-trip.** DECIDED 2026-08-14: insert-only. Authoring is either insert-then-manual-tweak, or delete the block and re-insert. The plugin never reads markup back, and Insert never edits existing paragraphs — nothing more complicated is needed.
-2. **`of=` link resolution.** In the Haines book, person ids resolve to chapters and crop links derive from `SOURCE/data/figures/<id>.json` — both book conventions. The generic extension needs a defined, degradable behaviour: link to `#person_id` / chapter if resolvable, plain text otherwise. Crop-link derivation probably stays book-territory.
-3. **Binding edge cases.** Two images in one figure; a region paragraph separated from its image by a caption paragraph; a region paragraph with no preceding image at all (render nothing? leave literal text as the breadcrumb, per the lifeline failure mode?).
-4. **Non-djot formats.** `:region:{…}` passes through markdown as literal text until markdown-it grows a handler, same as `:clip`. Acceptable staging, but worth stating.
-5. **Attribute-name bikeshed.** `at=` vs the sketch's `of=` for geometry — see vocabulary section; needs a decision before templates ossify it.
+2. **`of=` link resolution.** DECIDED 2026-08-14: the DOM transform checks the manifest (via the `ctx` broker) for a spine item whose id matches `of=`; if found, the caption name links to that chapter (a chapter never links to itself), otherwise it renders as plain text, identical to an `as=`-only region. `of=` is therefore safe to fill speculatively — links light up book-wide when a matching person chapter appears. Crop-thumbnail derivation stays book-territory (it depends on the Haines figures store).
+3. **Binding edge cases.** DECIDED 2026-08-14: strict binding — the region set binds to the figure that is its immediately preceding sibling block, nothing in between. A region paragraph whose preceding sibling isn't a figure renders as visible literal text (a breadcrumb, not a vanish — silent disappearance is the worst outcome in an insert-only world). Multi-image figures: bind to the first image only; the percentages are relative to one image's box, so a book that needs two photos annotated splits them into two figures.
+4. **Non-djot formats.** RESOLVED 2026-08-14 in discussion: the `:name` directive surface was never native to markdown-it anyway — `:clip` works there only via a bespoke inline rule (`clipPlugin` in `extensions/markdown-it/transformMarkdown.js`), and `:region:` gets a sibling rule matching the identical string. The parsing burden is symmetrical: djot parses the syntax but drops symbol attributes (AST filter needed), markdown-it doesn't parse it at all (custom rule needed); each format contributes one small adapter emitting the same neutral carrier. One hazard for the markdown rule: markdown-it-attrs is loaded, so a *malformed* region line can have its trailing `{…}` eaten by attrs and applied to the paragraph, degrading the breadcrumb to a bare `:region:`. Registering the rule early and consuming the whole directive as one token protects the well-formed case, exactly as `seed_clip` does. The CommonMark generic-directives leaf-block form (`::region{…}`) was considered and rejected: it would split the template per format to honor a proposal that never landed, while we write the rule ourselves regardless.
+5. **Attribute-name bikeshed.** DECIDED 2026-08-14: `at=` for geometry, `of=` for the optional person id, `as=` for the display name (required only when no `of=`) — as in the vocabulary section.
 6. **Conditional placeholders.** The template filler needs omit-when-empty semantics for optional attributes; the clip formatter has nothing like it (its only optional, `rate`, is injected by code, not template). Simplest rule: a placeholder's enclosing `name="…"` token vanishes when the value is empty.
-7. **`.name-faces` opt-in vs presence-implies** — see binding section.
+7. **`.name-faces` opt-in vs presence-implies.** DECIDED 2026-08-14: presence-implies, with the transform stamping the class onto the bound figure — see binding section.
