@@ -1,0 +1,19 @@
+{
+  "id": "photo-regions",
+  "name": "PhotoRegions",
+  "description": "Names the faces in a photograph. Exploring the caption lights up the matching face, and named people link to their chapters.",
+  "licenseName": "MIT",
+  "category": "chapter-content",
+  "scripts": [],
+  "domTransforms": [
+    "transformRegions.js"
+  ],
+  "textTransforms": [],
+  "assets": [
+    {
+      "file": "regions.css",
+      "target": "Styles/regions.css",
+      "media": "text/css"
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+/*
+ * Name-faces styling for photo regions (built by transformRegions.js).
+ *
+ * The overlay is aria-hidden and pointer-events: none — the row-grouped name
+ * list in the figcaption is the accessible representation, and tap-to-zoom on
+ * the photograph survives. Boxes and badges are invisible at rest; hovering
+ * (or keyboard-focusing) a name in the caption lights its box and badge, and
+ * hovering a row label lights the whole row.
+ *
+ * CSS cannot express "the box whose number matches this name" generically, so
+ * the pairings are static: 20 faces and 8 rows per figure. Beyond the ceiling
+ * everything still renders — the extras just have no hover pairing. A reading
+ * system without :has() drops the pairing rules and keeps the plain caption.
+ */
+
+figure.name-faces {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+/* Positioning context sized exactly to the image's box: region geometry is
+ * percent-of-image, so boxes need no pixel knowledge at all. */
+.fc-frame {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.fc-frame > img {
+  display: block;
+  max-width: 100%;
+}
+
+.fc-overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.fc-box {
+  position: absolute;
+  border: 2px solid currentColor;
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* The badge sits over the photograph, so its colours cannot come from the
+ * page theme: a light pill with dark text reads on any photo. */
+.fc-badge {
+  position: absolute;
+  min-width: 1.4em;
+  padding: 0 0.3em;
+  border-radius: 0.7em;
+  background: rgba(255, 255, 255, 0.85);
+  color: #222222;
+  text-align: center;
+  font-size: 0.7em;
+  line-height: 1.4em;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* The caption-side number next to each name. */
+.fc-chip {
+  font-size: 0.7em;
+  vertical-align: super;
+  margin-inline-start: 0.15em;
+  opacity: 0.75;
+}
+
+.fc-rowlabel {
+  font-style: italic;
+}
+
+/* Name → box/badge pairings (ceiling: 20 faces). */
+figure.name-faces:has(.fc-name-1:is(:hover, :focus-within)) :is(.fc-box-1, .fc-badge-1),
+figure.name-faces:has(.fc-name-2:is(:hover, :focus-within)) :is(.fc-box-2, .fc-badge-2),
+figure.name-faces:has(.fc-name-3:is(:hover, :focus-within)) :is(.fc-box-3, .fc-badge-3),
+figure.name-faces:has(.fc-name-4:is(:hover, :focus-within)) :is(.fc-box-4, .fc-badge-4),
+figure.name-faces:has(.fc-name-5:is(:hover, :focus-within)) :is(.fc-box-5, .fc-badge-5),
+figure.name-faces:has(.fc-name-6:is(:hover, :focus-within)) :is(.fc-box-6, .fc-badge-6),
+figure.name-faces:has(.fc-name-7:is(:hover, :focus-within)) :is(.fc-box-7, .fc-badge-7),
+figure.name-faces:has(.fc-name-8:is(:hover, :focus-within)) :is(.fc-box-8, .fc-badge-8),
+figure.name-faces:has(.fc-name-9:is(:hover, :focus-within)) :is(.fc-box-9, .fc-badge-9),
+figure.name-faces:has(.fc-name-10:is(:hover, :focus-within)) :is(.fc-box-10, .fc-badge-10),
+figure.name-faces:has(.fc-name-11:is(:hover, :focus-within)) :is(.fc-box-11, .fc-badge-11),
+figure.name-faces:has(.fc-name-12:is(:hover, :focus-within)) :is(.fc-box-12, .fc-badge-12),
+figure.name-faces:has(.fc-name-13:is(:hover, :focus-within)) :is(.fc-box-13, .fc-badge-13),
+figure.name-faces:has(.fc-name-14:is(:hover, :focus-within)) :is(.fc-box-14, .fc-badge-14),
+figure.name-faces:has(.fc-name-15:is(:hover, :focus-within)) :is(.fc-box-15, .fc-badge-15),
+figure.name-faces:has(.fc-name-16:is(:hover, :focus-within)) :is(.fc-box-16, .fc-badge-16),
+figure.name-faces:has(.fc-name-17:is(:hover, :focus-within)) :is(.fc-box-17, .fc-badge-17),
+figure.name-faces:has(.fc-name-18:is(:hover, :focus-within)) :is(.fc-box-18, .fc-badge-18),
+figure.name-faces:has(.fc-name-19:is(:hover, :focus-within)) :is(.fc-box-19, .fc-badge-19),
+figure.name-faces:has(.fc-name-20:is(:hover, :focus-within)) :is(.fc-box-20, .fc-badge-20) {
+  opacity: 1;
+}
+
+/* Row label → whole-row pairings (ceiling: 8 rows). */
+figure.name-faces:has(.fc-rowlabel-1:hover) .fc-inrow-1,
+figure.name-faces:has(.fc-rowlabel-2:hover) .fc-inrow-2,
+figure.name-faces:has(.fc-rowlabel-3:hover) .fc-inrow-3,
+figure.name-faces:has(.fc-rowlabel-4:hover) .fc-inrow-4,
+figure.name-faces:has(.fc-rowlabel-5:hover) .fc-inrow-5,
+figure.name-faces:has(.fc-rowlabel-6:hover) .fc-inrow-6,
+figure.name-faces:has(.fc-rowlabel-7:hover) .fc-inrow-7,
+figure.name-faces:has(.fc-rowlabel-8:hover) .fc-inrow-8 {
+  opacity: 1;
+}
