@@ -1,0 +1,19 @@
+# Achievement /Unlocked!/
+
+This is a minimal sample EPUB created in the Simple EPUB Editor app - *SEED.html*.
+
+This project provides a text processor called `carve` which is based on markdown and djot.
+
+## Markdown-like
+
+*This is strong* and is created by wrapping text in single asterisks.
+
+/This is emphasised/ and is created by wrapping text in forward slashes.
+
+=This is marked= with equals signs, and _this is underlined_ with underscores.
+
+You can also write xhtml directly in `<em><strong>this</strong> EPUB</em>`{=html}.
+
+## More about carve
+
+Read more about `<a target="_blank" href="https://markup-carve.github.io/carve/">carve syntax</a>`{=html}

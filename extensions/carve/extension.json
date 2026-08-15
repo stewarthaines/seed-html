@@ -1,0 +1,29 @@
+{
+  "id": "carve",
+  "name": "Carve",
+  "description": "Carve is a Markdown-like markup with a formatter, linter and migration tooling, suited to long-lived books. Rendered by carve-js.",
+  "url": "https://github.com/markup-carve/carve-js",
+  "licenseName": "MIT",
+  "license": "LICENSE.txt",
+  "scripts": [
+    "carve.js"
+  ],
+  "chapter": "chapter.txt",
+  "domTransforms": [],
+  "textTransforms": [
+    "transformCarve.js"
+  ],
+  "templates": {
+    "image": "![<alt>](<href>)",
+    "video": "`<video src=\"<href>\" controls=\"controls\"></video>`{=html}",
+    "audioClip": ":clip[<label>]{src=\"<href>\" begin=\"<begin>\" end=\"<end>\"}"
+  },
+  "generators": [
+    {
+      "id": "carve-example",
+      "name": "Carve syntax example",
+      "description": "Insert a concise example of Carve syntax: headings, emphasis, lists, links, a quote, a code block and an attributed span.",
+      "script": "generateCarveExample.js"
+    }
+  ]
+}
