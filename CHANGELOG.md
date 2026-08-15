@@ -13,8 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-08-15
+
 ### Added
 
+- Carve joins Djot, Markdown, AsciiDoc, Textile and Org as a chapter text format, with the same media and audio-clip templates.
+- Fixed-layout projects can import images as chapters: pick image files in the chapter importer and each becomes a page, in filename order. Generated chapters in a fixed-layout book are numbered page01, page02… rather than chapter01 (the base word is a project setting).
+- The Photo Regions panel's Insert now writes readable `:region:` lines into the chapter — editable markup that stays meaningful without the panel. The new PhotoRegions extension renders them: face outlines and numbered badges on the photo, a row-grouped name list in the caption, and names that link to a person's chapter when the book has one. The directive's shape is a project setting, beside the audio clip directive.
+- Several manifest items can be selected and deleted in one confirmed action.
 - Metadata collections can carry the series' own identifier — a periodical's ISSN, for example — alongside the collection name and position.
 - OPDS catalogs published to a remote now carry each book's accessibility metadata, so catalog apps can show what to expect before downloading.
 - Published catalogs now default to the OPDS 2.0 format, which library reading apps like Cantook read accessibility details from; existing catalogs keep working in the classic format.
@@ -25,8 +31,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Photo Regions panel remembers each photo's pixel size and offers a "shown as" name per region, and its saved library can now serve as the book's own record of who is pictured — transforms can read it directly, no pasting into chapters.
 - Agent assistance can maintain plugin-saved data files (like the photo regions library), with the usual per-write approval.
 
+### Changed
+
+- The Flow dropdown is disabled while the layout is pre-paginated — reading systems must ignore flow for fixed-layout books.
+- The fixed-layout viewport is recorded in the package under the app's own vocabulary instead of the deprecated rendition:viewport, so epubcheck no longer warns about it (OPF-086); older books migrate on their next save.
+
 ### Fixed
 
+- Chapters created in the editor are now stored inside the book's content folder; removing a chapter also cleans up the stray copy earlier versions left at the workspace root.
 - Contents-page and cross-chapter links in the exported PDF now jump to their target pages instead of pointing at a web address.
 - An image referenced from a style attribute — a background image, say — now appears in the preview and the exported PDF, instead of showing a gap there while rendering correctly in reading systems.
 - Packaged EPUBs no longer carry the app's internal workspace-state file.
