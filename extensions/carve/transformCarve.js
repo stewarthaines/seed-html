@@ -5,148 +5,69 @@
  * @returns {string} Valid XHTML output
  */
 function transformText(text, idref) {
-  const doc = carve.resolve(carve.parse(text));
-  rewriteClips(doc);
-  fixSectionIds(doc);
-  return carve.renderHtml(doc);
+  // Heading ids via carve's own opt-ins rather than a post-pass: 'strict'
+  // guarantees pure-ASCII ids (transliterated where the fold map can, dropped
+  // where it can't), and the resolver itself dedups collisions, prefixes a
+  // leading digit (# 2001 → s-2001) and resolves every cross-reference
+  // against the FINAL ids — so the output is XML-NCName-legal (epubcheck
+  // OPF/id-safe) with no fixup and no old→new link map on our side.
+  //
+  // Trade-off, accepted for now: a fully non-Latin heading (Georgian,
+  // Japanese) has nothing the fold map can keep and collapses to `s`, `s-2`…
+  // — unlike the djot extension's fixup, which keeps Unicode letters (NCName
+  // allows them). 'fold' would keep them but also keeps emoji, which is the
+  // epubcheck failure this exists to prevent. Revisit if a non-Latin book
+  // adopts carve (an upstream 'ncname' mode would serve XML embedders
+  // exactly).
+  const doc = carve.resolve(carve.parse(text), {
+    asciiHeadingIds: 'strict',
+    lowercaseHeadingIds: true,
+  });
+  return carve.renderHtml(doc, { extensions: [seedDirectives] });
 }
 
 /**
- * Walk every array of AST nodes reachable from the document, wherever it
- * hangs. Carve stores inlines in `children` (span, link, emphasis) or
- * `content` (inline_extension), table content under `rows` → `cells`, and
- * footnote bodies in the top-level `footnoteDefs` map — so rather than
- * enumerating container keys (and silently missing the next one), the walker
- * recurses generically over every own property, treating any array holding
- * objects with a `type` field as a node array. `pos` and `attrs` subtrees
- * never contain nodes and are skipped.
- */
-function walkNodeArrays(doc, visit) {
-  const seen = new Set();
-  const recurse = value => {
-    if (!value || typeof value !== 'object' || seen.has(value)) return;
-    seen.add(value);
-    if (Array.isArray(value)) {
-      if (value.some(el => el && typeof el === 'object' && typeof el.type === 'string')) {
-        visit(value);
-      }
-      value.forEach(recurse);
-      return;
-    }
-    for (const key in value) {
-      if (key !== 'pos' && key !== 'attrs') recurse(value[key]);
-    }
-  };
-  recurse(doc);
-}
-
-/**
- * Rewrite the SEED audio-clip directive into a playable span.
+ * SEED's directive renderers, registered through carve's extension contract
+ * (renderers are keyed by the `:name` in `:name[…]{…}`; return undefined to
+ * fall through to carve's generic `ext-name` rendering).
+ *
+ * clip — the audio-clip directive, rendered to the audio-clips span contract:
  *
  *   :clip[label]{src="../Audio/a.mp3" begin="0:00:05.00" end="0:00:15.00"}
  *     → <span class="clip" data-src="../Audio/a.mp3" data-begin="…" data-end="…">label</span>
  *
- * Carve parses the directive as a single `inline_extension` node named `clip`
- * with a clean attribute map — no marker/span pairing to reassemble (compare
- * extensions/djot/transformDjot.js, whose clipFilter must coalesce and splice
- * sibling nodes). The node is replaced in place with a styled `span` node so
- * the stock renderer emits it; without the rewrite the default rendering is
- * `<span class="ext-clip" src="…">`, and a bare `src` attribute on a span is
- * not valid EPUB content (epubcheck rejects it).
- *
- * Only a directive carrying all three of src/begin/end is rewritten; anything
- * else is left for carve's default `ext-clip` rendering. An optional rate="…"
- * carries through as data-rate. Playback and styling come from the
- * audio-clips extension (Scripts/clip-player.js targets span.clip).
+ * Carve parses the directive as a single inline_extension node with a clean
+ * attribute map, and this renderer owns the emitted markup completely — no
+ * AST surgery, no walking (compare extensions/djot/transformDjot.js, whose
+ * clipFilter must coalesce and splice sibling nodes because djot's renderer
+ * drops symbol attributes). Only a directive carrying all three of
+ * src/begin/end is claimed; anything else falls through to carve's default
+ * `ext-clip` rendering. An optional rate="…" carries through as data-rate,
+ * and remaining attributes (data-progress, data-affordance) pass through
+ * as-is. Playback and styling come from the audio-clips extension
+ * (Scripts/clip-player.js targets span.clip).
  */
-function rewriteClips(doc) {
-  walkNodeArrays(doc, children => {
-    for (let i = 0; i < children.length; i++) {
-      const node = children[i];
-      if (node.type !== 'inline_extension' || node.name !== 'clip') continue;
+const seedDirectives = {
+  name: 'seed-directives',
+  renderers: {
+    clip(node, ctx) {
       const kv = (node.attrs && node.attrs.keyValues) || {};
       const { src, begin, end, rate, ...rest } = kv;
       if (typeof src !== 'string' || typeof begin !== 'string' || typeof end !== 'string') {
-        continue;
+        return undefined;
       }
-      const keyValues = { ...rest, 'data-src': src, 'data-begin': begin, 'data-end': end };
-      if (typeof rate === 'string') keyValues['data-rate'] = rate;
-      const classes = [...((node.attrs && node.attrs.classes) || [])];
-      if (!classes.includes('clip')) classes.push('clip');
-      children[i] = {
-        type: 'span',
-        children: node.content || [],
-        attrs: {
-          classes,
-          keyValues,
-          // A single '.class' entry stands for the whole class list (matching
-          // what carve's own parser records for [x]{.a .b}); one per class
-          // makes the renderer emit the class attribute repeatedly.
-          order: [...(classes.length ? ['.class'] : []), ...Object.keys(keyValues)],
-        },
-        pos: node.pos,
-      };
-    }
-  });
-}
-
-/**
- * Give every section an XML-legal id.
- *
- * Carve's own heading ids already survive most epubcheck hazards the djot
- * extension has to correct by hand — apostrophes are replaced
- * (`# Bruce's Notes` → `Bruce-s-Notes`) and a leading digit is prefixed
- * (`# 2001` → `s-2001`) — but characters outside XML's NCName set that are
- * neither punctuation nor whitespace are kept verbatim, so `# 🎉 Party`
- * renders as `<section id="🎉-Party">` and epubcheck rejects the chapter.
- *
- * Unicode letters and digits are KEPT: a Georgian or German heading must not
- * be reduced to a row of hyphens, and NCName permits them. Only characters
- * outside the set are replaced, runs collapse to one hyphen, and an id that
- * would start with a digit gets an underscore (XML forbids a leading digit).
- *
- * By render time carve has already minted every heading id and resolved
- * `</#id>` cross-references and implicit `[Heading][]` links to exact `href`
- * fragments, so the fixup runs on the resolved ids: pass one normalises each
- * heading's id (deduplicating collisions) and records old → new; pass two
- * rewrites `#fragment` hrefs through that map, falling back to the same slug
- * function for a hand-typed fragment that never matched a heading — the
- * heading text and carve's minted id differ only in the characters this
- * function normalises anyway.
- */
-function fixSectionIds(doc) {
-  const slug = raw => {
-    const id = String(raw)
-      .replace(/[^\p{L}\p{N}._-]+/gu, '-')
-      // Trim leading/trailing separators. The dot is legal in an NCName but a
-      // trailing one reads as sentence punctuation, so keeping it would put a
-      // section id and a hand-typed link to it out of step ("…-Co." vs "…-Co").
-      .replace(/^[-.]+|[-.]+$/g, '');
-    if (!id) return '_';
-    return /^[\p{L}_]/u.test(id) ? id : '_' + id;
-  };
-
-  const renamed = new Map();
-  const taken = new Set();
-  walkNodeArrays(doc, children => {
-    for (const node of children) {
-      if (node.type !== 'heading') continue;
-      const original = node.attrs && node.attrs.id;
-      if (typeof original !== 'string') continue;
-      const base = slug(original);
-      let id = base;
-      for (let n = 2; taken.has(id); n++) id = `${base}-${n}`;
-      taken.add(id);
-      renamed.set(original, id);
-      node.attrs.id = id;
-    }
-  });
-
-  walkNodeArrays(doc, children => {
-    for (const node of children) {
-      if (typeof node.href !== 'string' || !node.href.startsWith('#')) continue;
-      const fragment = node.href.slice(1);
-      node.href = '#' + (renamed.get(fragment) || slug(fragment));
-    }
-  });
-}
+      const classes = ['clip', ...((node.attrs && node.attrs.classes) || [])].filter(
+        (cls, i, all) => all.indexOf(cls) === i
+      );
+      let attrs = ` class="${ctx.escapeAttr(classes.join(' '))}"`;
+      attrs += ` data-src="${ctx.escapeAttr(src)}"`;
+      attrs += ` data-begin="${ctx.escapeAttr(begin)}"`;
+      attrs += ` data-end="${ctx.escapeAttr(end)}"`;
+      if (typeof rate === 'string') attrs += ` data-rate="${ctx.escapeAttr(rate)}"`;
+      for (const [key, value] of Object.entries(rest)) {
+        if (/^[a-zA-Z_][\w-]*$/.test(key)) attrs += ` ${key}="${ctx.escapeAttr(String(value))}"`;
+      }
+      return `<span${attrs}>${ctx.renderInlines(node.content || [])}</span>`;
+    },
+  },
+};
