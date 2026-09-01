@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A `:detail:` directive shows one drawn region of an image as a crop in the chapter — a single register line, a face in a crowd — with no new bytes in the book, optionally linked to the page showing the full image. The Photo Regions panel inserts one from any drawn box, and its image picker now offers every image in the book, not just the open chapter's.
+
 ## [0.20.0] - 2026-08-15
 
 ### Added
