@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The browser's Back and Forward buttons now walk the editor's own history: every chapter opened — by following a link in the preview, the reading-order arrows, or the spine list — and every view visited between them.
+- Chapter links that point at a section (`chapter.xhtml#heading`) land on that section in the preview, and a link to a section of the open chapter scrolls straight to it.
 - A `:detail:` directive shows one drawn region of an image as a crop in the chapter — a single register line, a face in a crowd — with no new bytes in the book, optionally linked to the page showing the full image. The Photo Regions panel inserts one from any drawn box, and its image picker now offers every image in the book, not just the open chapter's.
 
 ## [0.20.0] - 2026-08-15

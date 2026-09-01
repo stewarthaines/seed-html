@@ -67,6 +67,8 @@
     transformWarnings = [],
     executionTime = 0,
     onNavigate = undefined,
+    pendingFragment = null,
+    onFragmentConsumed = undefined,
     onPreviewClick = null,
     chapterId = null,
     printSettings = undefined,
@@ -110,7 +112,12 @@
     transformError?: TransformError | null;
     transformWarnings?: string[];
     executionTime?: number;
-    onNavigate: ((chapterId: string) => void) | undefined;
+    onNavigate: ((chapterId: string, fragment?: string) => void) | undefined;
+    /** A #fragment to scroll to once the written document IS this chapter —
+     *  the chapterId guard keeps an interim re-render of the previous chapter
+     *  from consuming it. */
+    pendingFragment?: { chapterId: string; fragment: string } | null;
+    onFragmentConsumed?: (() => void) | undefined;
     onPreviewClick?:
       | ((detail: { text: string; documentPosition: number; elementType: string }) => void)
       | null;
@@ -666,6 +673,16 @@
     } catch (error) {
       console.warn('Failed to find scroll anchor:', error);
       return null;
+    }
+  }
+
+  /** Scroll the written document to the element with `fragment` id, when it
+   *  exists (a missing id — e.g. a slug mismatch — is a silent no-op). */
+  function scrollToFragment(doc: Document | null, fragment: string): void {
+    try {
+      doc?.getElementById(fragment)?.scrollIntoView();
+    } catch {
+      // A torn-down or cross-realm document: nothing to scroll.
     }
   }
 
@@ -1753,11 +1770,18 @@
             const href = target.getAttribute('href');
             if (href && href.includes('.xhtml')) {
               e.preventDefault();
-              // Extract chapter ID from Text/chapter1.xhtml
-              const match = href.match(/([^/]+)\.xhtml(#.*)?$/);
+              // Chapter id + optional fragment from Text/chapter1.xhtml#section
+              const match = href.match(/([^/]+)\.xhtml(#(.*))?$/);
               if (match) {
-                const chapterId = match[1];
-                onNavigate(chapterId);
+                const targetChapter = match[1];
+                const fragment = match[3] || undefined;
+                if (targetChapter === chapterId && fragment) {
+                  // A link to a section of the chapter already on screen:
+                  // scroll locally instead of re-selecting the chapter.
+                  scrollToFragment(previewIframe?.contentDocument ?? null, fragment);
+                } else {
+                  onNavigate(targetChapter, fragment);
+                }
               }
             }
           }
@@ -1776,6 +1800,19 @@
           // Clear the pending data
           pendingScrollRestore = null;
         });
+      }
+
+      // A cross-chapter link (or history Back/Forward) carried a #fragment:
+      // scroll to it now that the document on screen is that chapter, and
+      // tell the parent it is consumed. Queued after the scroll restore
+      // above (same frame, later in queue) so the fragment wins on a fresh
+      // navigation.
+      if (pendingFragment && pendingFragment.chapterId === chapterId) {
+        const consumed = pendingFragment;
+        requestAnimationFrame(() => {
+          scrollToFragment(iframeDoc, consumed.fragment);
+        });
+        onFragmentConsumed?.();
       }
     }
   }

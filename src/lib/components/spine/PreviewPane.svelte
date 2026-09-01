@@ -78,6 +78,8 @@
     transformWarnings = [],
     executionTime = 0,
     onNavigate = undefined,
+    pendingFragment = null,
+    onFragmentConsumed = undefined,
     onPreviewClick = null,
     chapterId = null,
     printSettings = undefined,
@@ -103,7 +105,11 @@
     transformError?: TransformError | null;
     transformWarnings?: string[];
     executionTime?: number;
-    onNavigate: ((chapterId: string) => void) | undefined;
+    onNavigate: ((chapterId: string, fragment?: string) => void) | undefined;
+    /** Fragment awaiting the arrival of its chapter's render (see
+     *  PreviewSurface); forwarded to every surface, consumed once. */
+    pendingFragment?: { chapterId: string; fragment: string } | null;
+    onFragmentConsumed?: (() => void) | undefined;
     onPreviewClick?:
       | ((detail: { text: string; documentPosition: number; elementType: string }) => void)
       | null;
@@ -1141,6 +1147,8 @@
     transformWarnings,
     executionTime,
     onNavigate,
+    pendingFragment,
+    onFragmentConsumed,
     onPreviewClick,
     chapterId,
     printSettings,

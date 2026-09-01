@@ -15,7 +15,7 @@
     deviceSize?: DeviceSize;
     orientation?: 'portrait' | 'landscape';
     fontSizeAdjustment?: number;
-    onNavigate?: (chapterId: string) => void;
+    onNavigate?: (chapterId: string, fragment?: string) => void;
     class?: string;
   } = $props();
 
@@ -162,11 +162,10 @@
             const href = target.getAttribute('href');
             if (href && href.includes('.xhtml')) {
               e.preventDefault();
-              // Extract chapter ID from Text/chapter1.xhtml
-              const match = href.match(/([^/]+)\.xhtml(#.*)?$/);
+              // Chapter id + optional fragment from Text/chapter1.xhtml#section
+              const match = href.match(/([^/]+)\.xhtml(#(.*))?$/);
               if (match) {
-                const chapterId = match[1];
-                onNavigate(chapterId);
+                onNavigate(match[1], match[3] || undefined);
               }
             }
           }

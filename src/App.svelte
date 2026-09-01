@@ -18,6 +18,7 @@
   import LayoutManager from './lib/LayoutManager.svelte';
   import Toast from './lib/components/Toast.svelte';
   import { navigationStore } from './lib/navigation';
+  import type { ViewType } from './lib/navigation/types';
   import AboutView from './lib/navigation/views/AboutView.svelte';
   import ThirdPartyView from './lib/navigation/views/ThirdPartyView.svelte';
   import WorkspaceView from './lib/navigation/views/WorkspaceView.svelte';
@@ -357,7 +358,7 @@
     };
   });
 
-  function handleNavigationClick(chapterId: string) {
+  function handleNavigationClick(chapterId: string, fragment?: string) {
     // Find manifest item by matching href
     const manifestItem = currentWorkspaceState?.opf?.manifest?.find(item =>
       item.href?.includes(`${chapterId}.xhtml`)
@@ -366,12 +367,69 @@
     if (manifestItem) {
       // Use the exact same event flow as SpineSidebar
       const event = new CustomEvent('select-spine-item', {
-        detail: { itemId: manifestItem.id },
+        detail: { itemId: manifestItem.id, fragment },
         bubbles: true,
       });
       window.dispatchEvent(event);
     }
   }
+
+  /**
+   * Mirror chapter selection into the browser history so Back/Forward walk
+   * chapters. State-only pushState — the URL never changes, and the hash
+   * stays free for the remote-EPUB import fragment (handleHashChange). The
+   * first user navigation replaces the bare entry with the chapter it is
+   * leaving, so Back from the second chapter reaches the first rather than
+   * a dead entry. pushState can throw in odd contexts (some engines under
+   * file:); history integration then degrades to nothing, never to a broken
+   * chapter switch.
+   */
+  function recordChapterInHistory(
+    itemId: string,
+    fragment: string | undefined,
+    fromHistory: boolean
+  ): void {
+    if (fromHistory) return;
+    try {
+      const current = history.state as { seedChapter?: string; seedView?: string } | null;
+      if (current?.seedChapter === itemId) return; // re-selecting the open chapter
+      if (
+        !current?.seedChapter &&
+        !current?.seedView &&
+        appState?.selectedChapterId &&
+        appState.selectedChapterId !== itemId
+      ) {
+        history.replaceState({ seedChapter: appState.selectedChapterId }, '');
+      }
+      history.pushState({ seedChapter: itemId, fragment }, '');
+    } catch {
+      // History unavailable — chapter switching works without it.
+    }
+  }
+
+  // Non-spine views become history entries too, so Back walks every screen
+  // the user actually saw — without this, a Settings visit is invisible to
+  // history and Back skips straight past the chapter beneath it. Chapter
+  // entries own the spine view; the same state-only pushState rules apply.
+  $effect(() => {
+    const view = currentView;
+    if (view === lastRecordedView) return;
+    const previous = lastRecordedView;
+    lastRecordedView = view;
+    if (previous === null) return; // the restored startup view
+    if (suppressViewHistoryPush) {
+      suppressViewHistoryPush = false;
+      return;
+    }
+    if (view === 'spine') return;
+    try {
+      const current = history.state as { seedView?: string } | null;
+      if (current?.seedView === view) return;
+      history.pushState({ seedView: view }, '');
+    } catch {
+      // History unavailable — view switching works without it.
+    }
+  });
 
   // Handle spine preview update
   const handleSpinePreviewUpdate = (detail: {
@@ -439,6 +497,17 @@
   // The mounted spine preview, for the bridge's live axe run (unset outside
   // the spine view — the checks tool reports a11y unavailable then).
   let previewPaneRef = $state<PreviewPane | undefined>();
+
+  // A #fragment travelling with a chapter switch (preview link or history
+  // Back/Forward), consumed by the preview once that chapter renders.
+  let pendingPreviewFragment = $state<{ chapterId: string; fragment: string } | null>(null);
+
+  // Suppresses the view-history effect for the view change that history
+  // itself caused (Back/Forward restoring a view must not push a new entry).
+  let suppressViewHistoryPush = false;
+  // The last view the history effect saw; null until its first run, so the
+  // restored startup view never records an entry.
+  let lastRecordedView: ViewType | null = null;
 
   async function toggleAgentBridge(): Promise<void> {
     if (!agentBridgeAvailable) return;
@@ -1623,11 +1692,43 @@
     // Listen for spine item selection events
     const handleSelectSpineItem = (event: Event) => {
       if (!appState) return;
-      const customEvent = event as CustomEvent<{ itemId: string }>;
-      appState.selectChapter(customEvent.detail.itemId);
+      const customEvent = event as CustomEvent<{
+        itemId: string;
+        fragment?: string;
+        fromHistory?: boolean;
+      }>;
+      const { itemId, fragment, fromHistory } = customEvent.detail;
+      pendingPreviewFragment = fragment ? { chapterId: itemId, fragment } : null;
+      // Record BEFORE selecting: the baseline entry needs the chapter being left.
+      recordChapterInHistory(itemId, fragment, fromHistory ?? false);
+      appState.selectChapter(itemId);
 
       // Automatically navigate to spine view when a spine item is selected
       navigationStore.navigateTo('spine');
+    };
+
+    // Browser Back/Forward re-selects the chapter recorded at that history
+    // entry, through the same event flow as every other selection — flagged
+    // so it is not pushed again.
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state as {
+        seedChapter?: string;
+        fragment?: string;
+        seedView?: string;
+      } | null;
+      if (!state) return;
+      if (state.seedView) {
+        // Restoring a view entry must not push it again.
+        suppressViewHistoryPush = true;
+        void navigationStore.navigateTo(state.seedView as ViewType);
+        return;
+      }
+      if (!state.seedChapter || !appState) return;
+      window.dispatchEvent(
+        new CustomEvent('select-spine-item', {
+          detail: { itemId: state.seedChapter, fragment: state.fragment, fromHistory: true },
+        })
+      );
     };
 
     // Listen for spine item clear events
@@ -1668,6 +1769,7 @@
     }
 
     window.addEventListener('select-spine-item', handleSelectSpineItem);
+    window.addEventListener('popstate', handlePopState);
     window.addEventListener('clear-spine-selection', handleClearSpineSelection);
     window.addEventListener('seed:swap-recovered', handleSwapRecovered);
     window.addEventListener('hashchange', handleHashChange);
@@ -1676,6 +1778,7 @@
 
     return () => {
       window.removeEventListener('select-spine-item', handleSelectSpineItem);
+      window.removeEventListener('popstate', handlePopState);
       window.removeEventListener('clear-spine-selection', handleClearSpineSelection);
       window.removeEventListener('seed:swap-recovered', handleSwapRecovered);
       window.removeEventListener('hashchange', handleHashChange);
@@ -2018,6 +2121,8 @@
             executionTime={spinePreviewData.executionTime}
             onPreviewClick={handlePreviewClick}
             onNavigate={handleNavigationClick}
+            pendingFragment={pendingPreviewFragment}
+            onFragmentConsumed={() => (pendingPreviewFragment = null)}
             chapterId={spinePreviewData.spineItemId}
             printSettings={appState?.epubSettings?.print}
             projectIdentifier={currentWorkspaceState?.opf?.metadata?.identifier}
