@@ -8,6 +8,7 @@ function transformText(text, idref) {
   let ast = djot.parse(text);
   djot.applyFilter(ast, clipFilter);
   djot.applyFilter(ast, regionFilter);
+  djot.applyFilter(ast, detailFilter);
   djot.applyFilter(ast, idFilter);
   return djot.renderHTML(ast);
 }
@@ -197,6 +198,77 @@ function regionFilter() {
 
   // Paragraphs live in blocks (doc, sections, divs, …) — walk block children
   // arrays from the root, like clipFilter, rather than visiting tag-by-tag.
+  const walk = node => {
+    if (Array.isArray(node.children)) {
+      for (const child of node.children) {
+        if (child.tag === 'para' && Array.isArray(child.children) && toCarrier(child)) continue;
+        walk(child);
+      }
+    }
+  };
+
+  return {
+    doc: {
+      enter: doc => {
+        walk(doc);
+      },
+    },
+  };
+}
+
+/**
+ * Djot filter: rewrite a :detail: paragraph — a single-region crop of an
+ * image, standing alone — into the neutral carrier the photo-regions
+ * extension's DOM transform consumes.
+ *
+ *   :detail:{src="../Images/page.jpg" at="14.4,18.8,82.8,5.3" size="1696x2385"
+ *            alt="The register line, transcribed" to="notes.xhtml#the-page"}
+ *     → <p class="detail-set"><span class="detail" data-src="…" …></span></p>
+ *
+ * Same grouping and breadcrumb rules as regionFilter: only a paragraph made
+ * entirely of :detail: symbols converts, and each needs src= and at= here
+ * (size, alt and to are validated at the DOM stage — a miss there
+ * reconstitutes the directive as visible text). An authored class on the
+ * paragraph is KEPT beside detail-set, so `{.half}` above the directive can
+ * size the crop.
+ */
+function detailFilter() {
+  const isDetailSymbol = node => node.tag === 'symb' && node.alias === 'detail';
+
+  const toCarrier = para => {
+    const symbols = para.children.filter(isDetailSymbol);
+    if (symbols.length === 0) return false;
+    const onlyDetails = para.children.every(
+      node => isDetailSymbol(node) || node.tag === 'soft_break'
+    );
+    if (!onlyDetails) return false;
+    if (
+      !symbols.every(node => {
+        const attrs = node.attributes || {};
+        return typeof attrs.src === 'string' && typeof attrs.at === 'string';
+      })
+    ) {
+      return false;
+    }
+
+    const authored = (para.attributes && para.attributes.class) || '';
+    para.attributes = {
+      ...(para.attributes || {}),
+      class: authored ? authored + ' detail-set' : 'detail-set',
+    };
+    para.children = symbols.map(node => {
+      const { src, at, size, alt, to } = node.attributes;
+      const attributes = { class: 'detail', 'data-src': src, 'data-at': at };
+      if (typeof size === 'string') attributes['data-size'] = size;
+      if (typeof alt === 'string') attributes['data-alt'] = alt;
+      if (typeof to === 'string') attributes['data-to'] = to;
+      return { tag: 'span', attributes, children: [] };
+    });
+    return true;
+  };
+
+  // Paragraphs live in blocks (doc, sections, divs, …) — walk block children
+  // arrays from the root, like regionFilter.
   const walk = node => {
     if (Array.isArray(node.children)) {
       for (const child of node.children) {

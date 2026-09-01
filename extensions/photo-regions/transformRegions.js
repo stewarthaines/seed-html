@@ -35,7 +35,21 @@
  * itself); an unresolvable id degrades to plain text.
  *
  * Hover/focus pairing between names and boxes is Styles/regions.css
- * (static pairings: 20 faces, 8 rows per figure).
+ * (static pairings: 30 faces, 8 rows per figure).
+ *
+ * :detail: carriers are handled here too — a paragraph of span.detail
+ * elements (djot detailFilter / markdown-it detailPlugin). A detail is a
+ * standalone single-region crop with NO figure binding: it carries its own
+ * data-src, data-at (same percent geometry), data-size (the image's WxH in
+ * pixels, so the crop knows its aspect without any library at hand),
+ * REQUIRED data-alt (a detail is content — a register line, a face — not
+ * decoration) and optional data-to, the href of the page showing the full
+ * image (fragments welcome). Rendering is a viewport onto the image the book
+ * already carries — zero new bytes: padding-top carries the crop's aspect
+ * (column-wide by default, scales with the column), background-size/position
+ * select the region, portraits-style. Invalid details reconstitute as
+ * visible directive text — the breadcrumb rule — followed by a note naming
+ * the missing attributes ("— needs alt"), so the author can see what to fix.
  *
  * @param {Document} htmlDocument - the chapter's rendered DOM (HTML)
  * @param {string} idref - spine item id for this chapter
@@ -44,7 +58,7 @@
 async function transformDOM(htmlDocument, idref, ctx) {
   const BADGE_CLEARANCE = 6; // percent; mirrors the panel's badgeAt()
   const DEFAULT_ROW = 'Pictured';
-  const MAX_FACES = 20; // regions.css pairing ceiling
+  const MAX_FACES = 30; // regions.css pairing ceiling
   const MAX_ROWS = 8;
 
   /** Whitespace-only text nodes are layout, not content. */
@@ -61,7 +75,15 @@ async function transformDOM(htmlDocument, idref, ctx) {
       elementOnly(p)
     );
   });
-  if (carriers.length === 0) return htmlDocument;
+  const detailCarriers = [...htmlDocument.querySelectorAll('p')].filter(p => {
+    const children = [...p.children];
+    return (
+      children.length > 0 &&
+      children.every(el => el.tagName === 'SPAN' && el.classList.contains('detail')) &&
+      elementOnly(p)
+    );
+  });
+  if (carriers.length === 0 && detailCarriers.length === 0) return htmlDocument;
 
   const parseAt = value => {
     const parts = String(value ?? '')
@@ -259,6 +281,90 @@ async function transformDOM(htmlDocument, idref, ctx) {
     figcaption.appendChild(stack);
 
     carrier.remove();
+  }
+
+  // ---- :detail: — single-region crops, standing alone ----------------------
+  const round2 = value => Math.round(value * 100) / 100;
+  const parseSize = value => {
+    const m = /^\s*(\d+)\s*[x\u00d7]\s*(\d+)\s*$/.exec(String(value ?? ''));
+    return m && Number(m[1]) > 0 && Number(m[2]) > 0 ? [Number(m[1]), Number(m[2])] : null;
+  };
+
+  /** Missing/invalid attribute names for one detail — empty means renderable. */
+  const detailNeeds = detail => {
+    const box = parseAt(detail.at);
+    const needs = [];
+    if (!detail.src) needs.push('src');
+    if (!box || !(box[2] > 0) || !(box[3] > 0)) needs.push('at');
+    if (!parseSize(detail.size)) needs.push('size');
+    if (!detail.alt) needs.push('alt');
+    return needs;
+  };
+
+  /** Reconstitute the directive lines as visible text (the breadcrumb),
+   *  each followed by an italic note naming what it still needs. */
+  const detailBreadcrumb = (carrier, details, needsList) => {
+    carrier.removeAttribute('class');
+    carrier.textContent = '';
+    details.forEach((detail, i) => {
+      if (i > 0) carrier.appendChild(htmlDocument.createElement('br'));
+      const attrs = [`src="${detail.src}"`, `at="${detail.at}"`];
+      if (detail.size) attrs.push(`size="${detail.size}"`);
+      attrs.push(`alt="${detail.alt}"`);
+      if (detail.to) attrs.push(`to="${detail.to}"`);
+      carrier.appendChild(htmlDocument.createTextNode(`:detail:{${attrs.join(' ')}}`));
+      const needs = needsList[i];
+      if (needs.length > 0) {
+        const note = htmlDocument.createElement('em');
+        note.textContent = ` — needs ${needs.join(', ')}`;
+        carrier.appendChild(note);
+      }
+    });
+  };
+
+  for (const carrier of detailCarriers) {
+    const details = [...carrier.children].map(span => ({
+      src: span.getAttribute('data-src') ?? '',
+      at: span.getAttribute('data-at') ?? '',
+      size: span.getAttribute('data-size') ?? '',
+      alt: span.getAttribute('data-alt') ?? '',
+      to: span.getAttribute('data-to') ?? '',
+    }));
+    const needsList = details.map(detailNeeds);
+    if (needsList.some(needs => needs.length > 0)) {
+      console.warn(
+        'photo-regions: :detail: not rendered — needs',
+        needsList.filter(needs => needs.length > 0).map(needs => needs.join(', ')).join('; ')
+      );
+      detailBreadcrumb(carrier, details, needsList);
+      continue;
+    }
+
+    const set = htmlDocument.createElement('div');
+    const extra = (carrier.getAttribute('class') || '')
+      .split(/\s+/)
+      .filter(cls => cls && cls !== 'detail-set');
+    set.setAttribute('class', ['detail-set', ...extra].join(' '));
+    for (const detail of details) {
+      const [x, y, w, h] = parseAt(detail.at);
+      const [imgW, imgH] = parseSize(detail.size);
+      const padTop = round2((((h / 100) * imgH) / ((w / 100) * imgW)) * 100);
+      const posX = w >= 100 ? 0 : (x / (100 - w)) * 100;
+      const posY = h >= 100 ? 0 : (y / (100 - h)) * 100;
+      const el = htmlDocument.createElement(detail.to ? 'a' : 'span');
+      el.setAttribute('class', 'detail');
+      el.setAttribute(
+        'style',
+        `padding-top:${padTop}%; background-image:url('${detail.src.replace(/'/g, "\\'")}'); ` +
+          `background-size:${round2(10000 / w)}% auto; ` +
+          `background-position:${round2(posX)}% ${round2(posY)}%;`
+      );
+      if (detail.to) el.setAttribute('href', detail.to);
+      else el.setAttribute('role', 'img');
+      el.setAttribute('aria-label', detail.alt);
+      set.appendChild(el);
+    }
+    carrier.replaceWith(set);
   }
 
   return htmlDocument;

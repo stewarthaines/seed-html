@@ -13,6 +13,7 @@ function transformText(markdown, idref) {
   md.use(window.markdownItAttrs);
   md.use(clipPlugin);
   md.use(regionPlugin);
+  md.use(detailPlugin);
   return md.render(markdown);
 }
 
@@ -95,6 +96,44 @@ function regionPlugin(md) {
         if (attrs[name] !== undefined) open.attrs.push([`data-${name}`, attrs[name]]);
       }
       state.push('seed_region_close', 'span', -1);
+    }
+    state.pos += match[0].length;
+    return true;
+  });
+}
+
+/**
+ * markdown-it inline rule: rewrite the :detail: directive — a single-region
+ * crop of an image, standing alone — into the neutral carrier span the
+ * photo-regions extension's DOM transform consumes.
+ *
+ *   :detail:{src="../Images/page.jpg" at="14.4,18.8,82.8,5.3" size="1696x2385" alt="…" to="notes.xhtml#the-page"}
+ *     → <span class="detail" data-src="…" data-at="…" …></span>
+ *
+ * src= and at= are required here; size, alt and to are validated at the DOM
+ * stage (a miss reconstitutes the directive as visible breadcrumb text).
+ * Registered before `link`, and consuming the whole directive as one token,
+ * so markdown-it-attrs never sees a well-formed detail's braces.
+ */
+function detailPlugin(md) {
+  const DIRECTIVE = /^:detail:\{([^}]*)\}/;
+  const ATTR = /([a-zA-Z_][\w-]*)=(?:"([^"]*)"|([^\s"]+))/g;
+  const CARRIED = ['src', 'at', 'size', 'alt', 'to'];
+
+  md.inline.ruler.before('link', 'seed_detail', (state, silent) => {
+    if (state.src.charCodeAt(state.pos) !== 0x3a /* : */) return false;
+    const match = DIRECTIVE.exec(state.src.slice(state.pos));
+    if (!match) return false;
+    const attrs = {};
+    for (const m of match[1].matchAll(ATTR)) attrs[m[1]] = m[2] !== undefined ? m[2] : m[3];
+    if (!attrs.src || !attrs.at) return false;
+    if (!silent) {
+      const open = state.push('seed_detail_open', 'span', 1);
+      open.attrs = [['class', 'detail']];
+      for (const name of CARRIED) {
+        if (attrs[name] !== undefined) open.attrs.push([`data-${name}`, attrs[name]]);
+      }
+      state.push('seed_detail_close', 'span', -1);
     }
     state.pos += match[0].length;
     return true;

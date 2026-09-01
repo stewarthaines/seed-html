@@ -8,7 +8,7 @@
  * hovering a row label lights the whole row.
  *
  * CSS cannot express "the box whose number matches this name" generically, so
- * the pairings are static: 20 faces and 8 rows per figure. Beyond the ceiling
+ * the pairings are static: 30 faces and 8 rows per figure. Beyond the ceiling
  * everything still renders — the extras just have no hover pairing. A reading
  * system without :has() drops the pairing rules and keeps the plain caption.
  */
@@ -83,7 +83,7 @@ figure.name-faces {
   font-style: italic;
 }
 
-/* Name → box/badge pairings (ceiling: 20 faces). */
+/* Name → box/badge pairings (ceiling: 30 faces). */
 figure.name-faces:has(.fc-name-1:is(:hover, :focus-within)) :is(.fc-box-1, .fc-badge-1),
 figure.name-faces:has(.fc-name-2:is(:hover, :focus-within)) :is(.fc-box-2, .fc-badge-2),
 figure.name-faces:has(.fc-name-3:is(:hover, :focus-within)) :is(.fc-box-3, .fc-badge-3),
@@ -103,7 +103,17 @@ figure.name-faces:has(.fc-name-16:is(:hover, :focus-within)) :is(.fc-box-16, .fc
 figure.name-faces:has(.fc-name-17:is(:hover, :focus-within)) :is(.fc-box-17, .fc-badge-17),
 figure.name-faces:has(.fc-name-18:is(:hover, :focus-within)) :is(.fc-box-18, .fc-badge-18),
 figure.name-faces:has(.fc-name-19:is(:hover, :focus-within)) :is(.fc-box-19, .fc-badge-19),
-figure.name-faces:has(.fc-name-20:is(:hover, :focus-within)) :is(.fc-box-20, .fc-badge-20) {
+figure.name-faces:has(.fc-name-20:is(:hover, :focus-within)) :is(.fc-box-20, .fc-badge-20),
+figure.name-faces:has(.fc-name-21:is(:hover, :focus-within)) :is(.fc-box-21, .fc-badge-21),
+figure.name-faces:has(.fc-name-22:is(:hover, :focus-within)) :is(.fc-box-22, .fc-badge-22),
+figure.name-faces:has(.fc-name-23:is(:hover, :focus-within)) :is(.fc-box-23, .fc-badge-23),
+figure.name-faces:has(.fc-name-24:is(:hover, :focus-within)) :is(.fc-box-24, .fc-badge-24),
+figure.name-faces:has(.fc-name-25:is(:hover, :focus-within)) :is(.fc-box-25, .fc-badge-25),
+figure.name-faces:has(.fc-name-26:is(:hover, :focus-within)) :is(.fc-box-26, .fc-badge-26),
+figure.name-faces:has(.fc-name-27:is(:hover, :focus-within)) :is(.fc-box-27, .fc-badge-27),
+figure.name-faces:has(.fc-name-28:is(:hover, :focus-within)) :is(.fc-box-28, .fc-badge-28),
+figure.name-faces:has(.fc-name-29:is(:hover, :focus-within)) :is(.fc-box-29, .fc-badge-29),
+figure.name-faces:has(.fc-name-30:is(:hover, :focus-within)) :is(.fc-box-30, .fc-badge-30) {
   opacity: 1;
 }
 
@@ -117,4 +127,29 @@ figure.name-faces:has(.fc-rowlabel-6:hover) .fc-inrow-6,
 figure.name-faces:has(.fc-rowlabel-7:hover) .fc-inrow-7,
 figure.name-faces:has(.fc-rowlabel-8:hover) .fc-inrow-8 {
   opacity: 1;
+}
+
+/* :detail: crops (built by transformRegions.js): each is a viewport onto an
+ * image the book already carries — no new bytes. Geometry rides inline:
+ * padding-top is the crop's aspect (so the element is column-wide by default
+ * and scales with the column), background-size/position select the region.
+ * An authored class on the directive's paragraph lands on .detail-set for
+ * sizing overrides. print-color-adjust keeps the backgrounds from being
+ * dropped in printed PDF output. */
+.detail-set {
+  margin: 1em 0;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.detail-set .detail {
+  display: block;
+  background-repeat: no-repeat;
+  border: 1px solid currentColor;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.detail-set .detail + .detail {
+  margin-top: 0.5em;
 }
