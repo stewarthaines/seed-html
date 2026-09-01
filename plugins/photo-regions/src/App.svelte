@@ -14,8 +14,8 @@
   import { activeChapterId, dirHandle, dirPath } from './store.js';
   import { t, translate } from './i18n.js';
   import { readManifest, readFile, imagesInChapter } from './opf.js';
-  import { toDirectives } from './regions.js';
-  import { DEFAULT_TEMPLATE, loadTemplate } from './template.js';
+  import { relativeToChapter, toDetailDirective, toDirectives } from './regions.js';
+  import { DEFAULT_DETAIL_TEMPLATE, DEFAULT_TEMPLATE, loadDetailTemplate, loadTemplate } from './template.js';
   import { emptyStore, loadRegions, saveRegions, toSaved } from './library.js';
   import type { ImageManifestItem, Region, RegionStore } from './types.js';
 
@@ -29,6 +29,7 @@
   let imageUrl = $state('');
   let regions = $state<Region[]>([]);
   let template = $state(DEFAULT_TEMPLATE);
+  let detailTemplate = $state(DEFAULT_DETAIL_TEMPLATE);
   let status = $state('');
   let lastRow = $state('');
   let nextKey = 1;
@@ -46,11 +47,15 @@
   /** In-flight badge drag: which region, and where in the badge it was grabbed. */
   let badgeDrag = $state<{ key: number; dx: number; dy: number } | null>(null);
 
-  // The panel is for the chapter in the editor, so offer the images that
-  // chapter actually renders. Before its first render there is nothing to read,
-  // so fall back to the whole manifest rather than an empty list.
-  const offered = $derived(
+  // The chapter's own images head the list (regions bind to figures in THIS
+  // chapter), but the whole manifest is offered: a detail crop excerpts an
+  // image shown anywhere — typically an appendix page. Before the chapter's
+  // first render there is nothing to split on, so everything is one flat list.
+  const inChapter = $derived(
     usedHrefs ? images.filter(image => usedHrefs.has(image.href)) : images
+  );
+  const elsewhere = $derived(
+    usedHrefs ? images.filter(image => !usedHrefs.has(image.href)) : []
   );
   /**
    * Region key → the number the reader will see. Mirrors toDirectives exactly
@@ -97,6 +102,9 @@
     loadTemplate(root).then(loaded => {
       if (!cancelled) template = loaded;
     });
+    loadDetailTemplate(root).then(loaded => {
+      if (!cancelled) detailTemplate = loaded;
+    });
     Promise.all([readManifest(root), loadRegions(root)])
       .then(([manifest, saved]) => {
         if (cancelled) return;
@@ -139,12 +147,13 @@
     };
   });
 
-  // Keep the selection valid: pick the only offered image, or drop a choice
-  // that this chapter doesn't render.
+  // Start on the chapter's only image when nothing is chosen yet; drop a
+  // selection that has left the manifest. A choice from elsewhere in the book
+  // survives chapter switches — the working image stays put.
   $effect(() => {
-    const list = offered;
-    if (list.length === 1) selectedHref = list[0].href;
-    else if (selectedHref && !list.some(image => image.href === selectedHref)) selectedHref = '';
+    const list = inChapter;
+    if (!selectedHref && list.length === 1) selectedHref = list[0].href;
+    else if (selectedHref && !images.some(image => image.href === selectedHref)) selectedHref = '';
   });
 
   // Restore the boxes previously drawn on this image, so a revision starts from
@@ -328,6 +337,20 @@
     status = translate('Inserted {count} region(s) at the cursor', { count: namedCount });
   }
 
+  /** Insert one region as a :detail: crop directive at the editor cursor. */
+  async function insertDetail(region: Region) {
+    const root = $dirHandle;
+    if (!root || !selectedHref) return;
+    // Re-read the template so a settings change since panel load still applies.
+    detailTemplate = await loadDetailTemplate(root);
+    const chapterHref = $activeChapterId ? chapterHrefs[$activeChapterId] : undefined;
+    const src = chapterHref ? relativeToChapter(selectedHref, chapterHref) : selectedHref;
+    const size = imageSize ?? untrack(() => store.files[selectedHref])?.size;
+    const content = toDetailDirective(detailTemplate, region, src, size);
+    window.parent.postMessage({ type: 'insert', content }, window.origin);
+    status = translate('Inserted a detail crop at the cursor');
+  }
+
   function clearAll() {
     regions = [];
     draft = null;
@@ -341,9 +364,24 @@
       <span class="label">{$t('Photo')}</span>
       <select bind:value={selectedHref}>
         <option value="">{$t('Choose an image…')}</option>
-        {#each offered as image (image.href)}
-          <option value={image.href}>{image.href}</option>
-        {/each}
+        {#if elsewhere.length === 0}
+          {#each inChapter as image (image.href)}
+            <option value={image.href}>{image.href}</option>
+          {/each}
+        {:else}
+          {#if inChapter.length > 0}
+            <optgroup label={$t('In this chapter')}>
+              {#each inChapter as image (image.href)}
+                <option value={image.href}>{image.href}</option>
+              {/each}
+            </optgroup>
+          {/if}
+          <optgroup label={$t('Elsewhere in the book')}>
+            {#each elsewhere as image (image.href)}
+              <option value={image.href}>{image.href}</option>
+            {/each}
+          </optgroup>
+        {/if}
       </select>
     </label>
   </div>
@@ -439,6 +477,13 @@
             bind:value={region.row}
             oninput={() => onRowInput(region)}
           />
+          <button
+            type="button"
+            class="crop"
+            title={$t('Insert as a detail crop')}
+            aria-label={$t('Insert as a detail crop')}
+            onclick={() => insertDetail(region)}>▣</button
+          >
           <button
             type="button"
             class="remove"
@@ -612,7 +657,8 @@
     flex: 1 1 0;
   }
 
-  .remove {
+  .remove,
+  .crop {
     flex: 0 0 auto;
     padding: 3px 8px;
     font-size: 14px;

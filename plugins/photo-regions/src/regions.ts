@@ -93,3 +93,49 @@ export function toDirectives(template: string, regions: Region[]): string {
   }
   return lines.join('\n') + '\n';
 }
+
+/**
+ * One :detail: directive line for a single region: the crop's geometry plus
+ * what the renderer needs to stand alone — the image's chapter-relative src
+ * and its pixel size (so the crop knows its aspect with no library at hand).
+ * alt= seeds from the region's shown-as text, or its person field when that
+ * is a plain name rather than an id — and is NEVER omitted: an empty alt=""
+ * stays in the inserted line as the visible slot the author must fill (the
+ * DOM transform refuses to render a detail without one, and says so). to=
+ * (the full image's page) vanishes when empty, fillTemplate's usual rule.
+ */
+export function toDetailDirective(
+  template: string,
+  region: Region,
+  src: string,
+  size: { w: number; h: number } | undefined,
+): string {
+  const person = region.person.trim();
+  const alt = region.as?.trim() || (ID.test(person) ? '' : person);
+  return (
+    fillTemplate(template, {
+      src,
+      at: at(region),
+      size: size ? `${size.w}x${size.h}` : '',
+      to: '',
+    })
+      .split('<alt>')
+      .join(alt) + '\n'
+  );
+}
+
+/**
+ * The chapter-relative path that reaches `targetHref` from inside
+ * `fromHref`'s directory (both OPF-relative): "Images/x.jpg" seen from
+ * "Text/tom.xhtml" → "../Images/x.jpg". Segment arithmetic, not the URL API,
+ * so filenames needing percent-encoding compare as authored.
+ */
+export function relativeToChapter(targetHref: string, fromHref: string): string {
+  const from = fromHref.split('/').slice(0, -1);
+  const to = targetHref.split('/');
+  while (from.length > 0 && to.length > 1 && from[0] === to[0]) {
+    from.shift();
+    to.shift();
+  }
+  return '../'.repeat(from.length) + to.join('/');
+}
