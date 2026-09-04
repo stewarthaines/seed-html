@@ -251,14 +251,15 @@ describe('transformRegions (:detail: crops)', () => {
     expect(svg.getAttribute('style')).toContain('max-width: 100%');
 
     // Accessible name is the <title>; the image references the manifest file
-    // by plain href (what the preview rewrites) and xlink:href (legacy readers).
+    // by xlink:href alone — a plain href beside it would win in foliate-based
+    // readers, which only rewrite a namespaced href when no plain one exists.
     const title = svg.querySelector('title')!;
     expect(title.namespaceURI).toBe(SVGNS);
     expect(title.getAttribute('id')).toBe('detail-ch1-1');
     expect(title.textContent).toBe('Proprietor line');
     const image = svg.querySelector('image')!;
     expect(image.namespaceURI).toBe(SVGNS);
-    expect(image.getAttribute('href')).toBe('../Images/ct.jpg');
+    expect(image.hasAttribute('href')).toBe(false);
     expect(image.getAttributeNS(XLINKNS, 'href')).toBe('../Images/ct.jpg');
     expect(image.getAttribute('width')).toBe('1600');
     expect(image.getAttribute('height')).toBe('2284');

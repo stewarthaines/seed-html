@@ -54,7 +54,7 @@
  *       <svg class="detail" role="img" aria-labelledby="detail-ch1-1"
  *            viewBox="X Y W H" width="W" height="H" …>
  *         <title id="detail-ch1-1">alt text</title>
- *         <image href="../Images/page.jpg" width="imgW" height="imgH"/>
+ *         <image xlink:href="../Images/page.jpg" width="imgW" height="imgH"/>
  *       </svg>
  *     </a>
  *     <figcaption>caption</figcaption>                (only with data-caption)
@@ -409,8 +409,12 @@ async function transformDOM(htmlDocument, idref, ctx) {
       svg.appendChild(title);
 
       const image = htmlDocument.createElementNS(SVGNS, 'image');
-      image.setAttribute('href', detail.src);
-      image.setAttributeNS(XLINKNS, 'xlink:href', detail.src); // legacy reader fallback
+      // xlink:href ONLY, never a plain SVG2 href beside it: every reading
+      // system resolves xlink:href, and foliate-based readers (READ.html
+      // included) rewrite a namespaced href to the packaged resource only
+      // when no plain href is present — with both, the plain one wins and
+      // resolves against the reader's own page, and the crop is blank.
+      image.setAttributeNS(XLINKNS, 'xlink:href', detail.src);
       image.setAttribute('width', String(imgW));
       image.setAttribute('height', String(imgH));
       svg.appendChild(image);

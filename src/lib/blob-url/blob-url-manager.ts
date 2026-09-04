@@ -18,6 +18,18 @@ import type { BlobURLManagerConfig, BlobURLRegistry } from './types.js';
 import { BlobURLError, BlobURLCapacityError, XHTMLProcessingError } from './types.js';
 import { deferParserBlockingScripts } from './utils.js';
 
+/** SVG <image xlink:href> lives in this namespace; attribute selectors can't name it. */
+const XLINK_NS = 'http://www.w3.org/1999/xlink';
+
+/**
+ * The element's xlink:href, or null. Guarded: the namespace methods are
+ * universal in browsers, but the unit-test DOM lacks them on HTML elements.
+ */
+function xlinkHref(element: Element): string | null {
+  if (typeof element.getAttributeNS !== 'function') return null;
+  return element.getAttributeNS(XLINK_NS, 'href');
+}
+
 export class BlobURLManager {
   private activeWorkspaceId: string | null = null;
   private registry: BlobURLRegistry;
@@ -316,6 +328,16 @@ export class BlobURLManager {
       elements.push(...Array.from(found));
     }
 
+    // SVG <image xlink:href>: the form reading systems have always resolved,
+    // and the one foliate-based readers rewrite (they skip a namespaced href
+    // when a plain one is present, so content carries xlink:href alone). An
+    // attribute selector cannot name the namespace here; filter by hand.
+    for (const image of Array.from(doc.querySelectorAll('image'))) {
+      if (!image.hasAttribute('href') && xlinkHref(image) !== null) {
+        elements.push(image);
+      }
+    }
+
     return elements;
   }
 
@@ -345,8 +367,10 @@ export class BlobURLManager {
    * Process a single asset element
    */
   private async processAssetElement(element: Element): Promise<void> {
-    // Determine attribute name
+    // Determine attribute name. A namespaced xlink:href (SVG <image>) is read
+    // and written through the namespace API; the attribute name is a label.
     let attr: string;
+    let xlink = false;
     if (element.hasAttribute('src')) {
       attr = 'src';
     } else if (element.hasAttribute('href')) {
@@ -357,11 +381,14 @@ export class BlobURLManager {
       attr = 'poster';
     } else if (element.hasAttribute('data-src')) {
       attr = 'data-src';
+    } else if (xlinkHref(element) !== null) {
+      attr = 'xlink:href';
+      xlink = true;
     } else {
       return; // No supported attribute found
     }
 
-    const href = element.getAttribute(attr);
+    const href = xlink ? xlinkHref(element) : element.getAttribute(attr);
     if (!href || !this.isResourcePath(href)) {
       return; // Skip non-relative URLs
     }
@@ -376,7 +403,8 @@ export class BlobURLManager {
       // Convert XHTML-relative path to manifest path for registry lookup
       const manifestPath = convertXHTMLPathToManifestPath(href);
       const blobURL = await this.createBlobURL(manifestPath);
-      element.setAttribute(attr, blobURL);
+      if (xlink) element.setAttributeNS(XLINK_NS, 'xlink:href', blobURL);
+      else element.setAttribute(attr, blobURL);
       // Keep the manifest href discoverable on the element (the blob URL erases
       // it): the preview's click-to-source uses it to find the source reference.
       // Display-only documents (preview iframe, print window) — never persisted.
@@ -412,12 +440,16 @@ export class BlobURLManager {
       console.warn(`Missing image: ${resolvedPath} (referenced by <${tagName}> element)`);
 
       // Set error icon and descriptive alt text
-      const attr = element.hasAttribute('src')
-        ? 'src'
-        : element.hasAttribute('href')
-          ? 'href'
-          : 'data';
-      element.setAttribute(attr, this.getErrorIconSVG());
+      if (!element.hasAttribute('href') && xlinkHref(element) !== null) {
+        element.setAttributeNS(XLINK_NS, 'xlink:href', this.getErrorIconSVG());
+      } else {
+        const attr = element.hasAttribute('src')
+          ? 'src'
+          : element.hasAttribute('href')
+            ? 'href'
+            : 'data';
+        element.setAttribute(attr, this.getErrorIconSVG());
+      }
       element.setAttribute('alt', `Missing: ${href}`);
     }
     // Non-visual assets preserve original URL

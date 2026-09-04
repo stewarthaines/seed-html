@@ -386,6 +386,28 @@ describe('XHTML Processing', () => {
       );
     });
 
+    it('should process image[xlink:href] elements (SVG, the reading-system form)', async () => {
+      const xhtml = `
+        <html xmlns="http://www.w3.org/1999/xhtml">
+        <body>
+          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <image xlink:href="images/crop-source.jpg"/>
+          </svg>
+        </body>
+        </html>
+      `;
+
+      await manager.processXHTMLForPreview(xhtml);
+
+      // Found through the namespace (there is no plain href to select on);
+      // the in-place rewrite is verified in the browser, where a plain href
+      // beside xlink:href would take precedence in foliate-based readers.
+      expect(mockFileStorage.getFile).toHaveBeenCalledWith(
+        'test-workspace',
+        'OEBPS/images/crop-source.jpg'
+      );
+    });
+
     it('should process [data-src] elements', async () => {
       const xhtml = `
         <html xmlns="http://www.w3.org/1999/xhtml">
