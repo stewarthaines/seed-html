@@ -32,6 +32,10 @@ const DEFAULT_TRIAGE: CheckTriage = { category: 'explainable' };
 const AXE_EXACT: Record<string, CheckTriage> = {
   // Authored content — the remedy is an edit to the chapter's plain text.
   'image-alt': { category: 'fixable', remedy: 'source-text' },
+  // A :detail: crop is an inline SVG named by its <title> (the directive's
+  // alt=); an empty alt is an edit to the directive line.
+  'svg-img-alt': { category: 'fixable', remedy: 'source-text' },
+  'role-img-alt': { category: 'fixable', remedy: 'source-text' },
   'input-image-alt': { category: 'fixable', remedy: 'source-text' },
   'area-alt': { category: 'fixable', remedy: 'source-text' },
   'image-redundant-alt': { category: 'fixable', remedy: 'source-text' },

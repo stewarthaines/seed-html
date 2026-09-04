@@ -4,6 +4,9 @@ import { triageAxeRule, triageEpubcheckMessage } from './triage.js';
 describe('triageAxeRule', () => {
   it('routes authored-content rules to source text', () => {
     expect(triageAxeRule('image-alt')).toEqual({ category: 'fixable', remedy: 'source-text' });
+    // A :detail: crop's alt lives on the directive line, whichever element carries it.
+    expect(triageAxeRule('svg-img-alt')).toEqual({ category: 'fixable', remedy: 'source-text' });
+    expect(triageAxeRule('role-img-alt')).toEqual({ category: 'fixable', remedy: 'source-text' });
     expect(triageAxeRule('heading-order')).toEqual({
       category: 'fixable',
       remedy: 'source-text',
