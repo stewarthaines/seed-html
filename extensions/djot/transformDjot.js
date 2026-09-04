@@ -222,12 +222,13 @@ function regionFilter() {
  * extension's DOM transform consumes.
  *
  *   :detail:{src="../Images/page.jpg" at="14.4,18.8,82.8,5.3" size="1696x2385"
- *            alt="The register line, transcribed" to="notes.xhtml#the-page"}
+ *            alt="The register line, transcribed" caption="The 1821 entry."
+ *            to="notes.xhtml#the-page"}
  *     → <p class="detail-set"><span class="detail" data-src="…" …></span></p>
  *
  * Same grouping and breadcrumb rules as regionFilter: only a paragraph made
  * entirely of :detail: symbols converts, and each needs src= and at= here
- * (size, alt and to are validated at the DOM stage — a miss there
+ * (size, alt, to and caption are validated at the DOM stage — a miss there
  * reconstitutes the directive as visible text). An authored class on the
  * paragraph is KEPT beside detail-set, so `{.half}` above the directive can
  * size the crop.
@@ -257,11 +258,12 @@ function detailFilter() {
       class: authored ? authored + ' detail-set' : 'detail-set',
     };
     para.children = symbols.map(node => {
-      const { src, at, size, alt, to } = node.attributes;
+      const { src, at, size, alt, to, caption } = node.attributes;
       const attributes = { class: 'detail', 'data-src': src, 'data-at': at };
       if (typeof size === 'string') attributes['data-size'] = size;
       if (typeof alt === 'string') attributes['data-alt'] = alt;
       if (typeof to === 'string') attributes['data-to'] = to;
+      if (typeof caption === 'string') attributes['data-caption'] = caption;
       return { tag: 'span', attributes, children: [] };
     });
     return true;

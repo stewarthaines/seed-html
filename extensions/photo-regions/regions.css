@@ -129,27 +129,43 @@ figure.name-faces:has(.fc-rowlabel-8:hover) .fc-inrow-8 {
   opacity: 1;
 }
 
-/* :detail: crops (built by transformRegions.js): each is a viewport onto an
- * image the book already carries — no new bytes. Geometry rides inline:
- * padding-top is the crop's aspect (so the element is column-wide by default
- * and scales with the column), background-size/position select the region.
- * An authored class on the directive's paragraph lands on .detail-set for
- * sizing overrides. print-color-adjust keeps the backgrounds from being
- * dropped in printed PDF output. */
+/* :detail: crops (built by transformRegions.js): a figure holding one inline
+ * SVG per detail — a viewBox onto an image the book already carries, no new
+ * bytes. The geometry is markup (viewBox, width, height), so the crop is
+ * right even without this sheet; the inline max-width keeps it inside the
+ * column. Column-wide by default, like the book's other figures; an authored
+ * class on the directive's paragraph lands on .detail-set for sizing
+ * overrides ({.two-thirds} → .detail-set.two-thirds in the book's page.css). */
 .detail-set {
   margin: 1em 0;
   break-inside: avoid;
   page-break-inside: avoid;
 }
 
-.detail-set .detail {
+.detail-set > a {
   display: block;
-  background-repeat: no-repeat;
-  border: 1px solid currentColor;
-  -webkit-print-color-adjust: exact;
-  print-color-adjust: exact;
 }
 
-.detail-set .detail + .detail {
+.detail-set svg.detail {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid currentColor;
+}
+
+.detail-set > * + * {
   margin-top: 0.5em;
+}
+
+/* Same caption look as the responsive extension's figure caption. */
+.detail-set figcaption {
+  font-size: 0.875em;
+}
+
+/* Caption below the crop: the responsive extension's roomy-figure layout puts
+ * a caption beside the image, which squeezes the wide, short strip a detail
+ * usually is (a register line). Outranks ".sr-figure figure:has(figcaption)". */
+.sr-page .sr-figure figure.detail-set {
+  display: block;
 }

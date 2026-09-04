@@ -107,18 +107,18 @@ function regionPlugin(md) {
  * crop of an image, standing alone — into the neutral carrier span the
  * photo-regions extension's DOM transform consumes.
  *
- *   :detail:{src="../Images/page.jpg" at="14.4,18.8,82.8,5.3" size="1696x2385" alt="…" to="notes.xhtml#the-page"}
+ *   :detail:{src="../Images/page.jpg" at="14.4,18.8,82.8,5.3" size="1696x2385" alt="…" caption="…" to="notes.xhtml#the-page"}
  *     → <span class="detail" data-src="…" data-at="…" …></span>
  *
- * src= and at= are required here; size, alt and to are validated at the DOM
- * stage (a miss reconstitutes the directive as visible breadcrumb text).
+ * src= and at= are required here; size, alt, to and caption are validated at
+ * the DOM stage (a miss reconstitutes the directive as visible breadcrumb text).
  * Registered before `link`, and consuming the whole directive as one token,
  * so markdown-it-attrs never sees a well-formed detail's braces.
  */
 function detailPlugin(md) {
   const DIRECTIVE = /^:detail:\{([^}]*)\}/;
   const ATTR = /([a-zA-Z_][\w-]*)=(?:"([^"]*)"|([^\s"]+))/g;
-  const CARRIED = ['src', 'at', 'size', 'alt', 'to'];
+  const CARRIED = ['src', 'at', 'size', 'alt', 'to', 'caption'];
 
   md.inline.ruler.before('link', 'seed_detail', (state, silent) => {
     if (state.src.charCodeAt(state.pos) !== 0x3a /* : */) return false;

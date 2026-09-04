@@ -43,13 +43,34 @@
  * data-src, data-at (same percent geometry), data-size (the image's WxH in
  * pixels, so the crop knows its aspect without any library at hand),
  * REQUIRED data-alt (a detail is content — a register line, a face — not
- * decoration) and optional data-to, the href of the page showing the full
- * image (fragments welcome). Rendering is a viewport onto the image the book
- * already carries — zero new bytes: padding-top carries the crop's aspect
- * (column-wide by default, scales with the column), background-size/position
- * select the region, portraits-style. Invalid details reconstitute as
- * visible directive text — the breadcrumb rule — followed by a note naming
- * the missing attributes ("— needs alt"), so the author can see what to fix.
+ * decoration), optional data-to, the href of the page showing the full
+ * image (fragments welcome), and optional data-caption.
+ *
+ * A detail paragraph becomes ONE <figure class="detail-set"> (the authored
+ * class on the paragraph rides along) holding one inline SVG per detail:
+ *
+ *   <figure class="detail-set">
+ *     <a href="notes.xhtml#the-page">                 (only with data-to)
+ *       <svg class="detail" role="img" aria-labelledby="detail-ch1-1"
+ *            viewBox="X Y W H" width="W" height="H" …>
+ *         <title id="detail-ch1-1">alt text</title>
+ *         <image href="../Images/page.jpg" width="imgW" height="imgH"/>
+ *       </svg>
+ *     </a>
+ *     <figcaption>caption</figcaption>                (only with data-caption)
+ *   </figure>
+ *
+ * The viewBox is the crop, in the image's own pixels — a viewport onto the
+ * image the book already carries, zero new bytes, and geometry that is
+ * MARKUP, so the crop is right even where the stylesheet is lost. An SVG
+ * image prints without print-color-adjust, is clamped by reading systems
+ * like any <img>, and is announced by its <title>; the caption is visible
+ * text, which is what read-aloud engines speak. Title ids are deterministic
+ * per render and unique per book (the PDF path concatenates chapters).
+ * Several details in one paragraph stack in one figure and share one
+ * figcaption. Invalid details reconstitute as visible directive text — the
+ * breadcrumb rule — followed by a note naming the missing attributes
+ * ("— needs alt"), so the author can see what to fix.
  *
  * @param {Document} htmlDocument - the chapter's rendered DOM (HTML)
  * @param {string} idref - spine item id for this chapter
@@ -284,6 +305,13 @@ async function transformDOM(htmlDocument, idref, ctx) {
   }
 
   // ---- :detail: — single-region crops, standing alone ----------------------
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  const XLINKNS = 'http://www.w3.org/1999/xlink';
+  // Title ids: deterministic per render, unique per chapter, and — because
+  // the PDF path concatenates every chapter into one document — unique per
+  // book. The idref is slugged the way the djot idFilter slugs headings.
+  const idBase = `detail-${String(idref || 'chapter').replace(/[^\p{L}\p{N}_.-]+/gu, '-')}`;
+  let detailCount = 0;
   const round2 = value => Math.round(value * 100) / 100;
   const parseSize = value => {
     const m = /^\s*(\d+)\s*[x\u00d7]\s*(\d+)\s*$/.exec(String(value ?? ''));
@@ -312,6 +340,7 @@ async function transformDOM(htmlDocument, idref, ctx) {
       if (detail.size) attrs.push(`size="${detail.size}"`);
       attrs.push(`alt="${detail.alt}"`);
       if (detail.to) attrs.push(`to="${detail.to}"`);
+      if (detail.caption) attrs.push(`caption="${detail.caption}"`);
       carrier.appendChild(htmlDocument.createTextNode(`:detail:{${attrs.join(' ')}}`));
       const needs = needsList[i];
       if (needs.length > 0) {
@@ -329,6 +358,7 @@ async function transformDOM(htmlDocument, idref, ctx) {
       size: span.getAttribute('data-size') ?? '',
       alt: span.getAttribute('data-alt') ?? '',
       to: span.getAttribute('data-to') ?? '',
+      caption: span.getAttribute('data-caption') ?? '',
     }));
     const needsList = details.map(detailNeeds);
     if (needsList.some(needs => needs.length > 0)) {
@@ -340,31 +370,67 @@ async function transformDOM(htmlDocument, idref, ctx) {
       continue;
     }
 
-    const set = htmlDocument.createElement('div');
+    // One figure per paragraph: the authored class ({.two-thirds}) rides on it.
+    const figure = htmlDocument.createElement('figure');
     const extra = (carrier.getAttribute('class') || '')
       .split(/\s+/)
       .filter(cls => cls && cls !== 'detail-set');
-    set.setAttribute('class', ['detail-set', ...extra].join(' '));
+    figure.setAttribute('class', ['detail-set', ...extra].join(' '));
+
+    const captions = [];
     for (const detail of details) {
       const [x, y, w, h] = parseAt(detail.at);
       const [imgW, imgH] = parseSize(detail.size);
-      const padTop = round2((((h / 100) * imgH) / ((w / 100) * imgW)) * 100);
-      const posX = w >= 100 ? 0 : (x / (100 - w)) * 100;
-      const posY = h >= 100 ? 0 : (y / (100 - h)) * 100;
-      const el = htmlDocument.createElement(detail.to ? 'a' : 'span');
-      el.setAttribute('class', 'detail');
-      el.setAttribute(
-        'style',
-        `padding-top:${padTop}%; background-image:url('${detail.src.replace(/'/g, "\\'")}'); ` +
-          `background-size:${round2(10000 / w)}% auto; ` +
-          `background-position:${round2(posX)}% ${round2(posY)}%;`
+      const cropW = round2((w / 100) * imgW);
+      const cropH = round2((h / 100) * imgH);
+      const titleId = `${idBase}-${++detailCount}`;
+
+      // SVG namespace, never createElement: an XHTML-namespaced <svg>
+      // serialises but renders nothing, and setAttribute on an HTML element
+      // would lowercase viewBox and preserveAspectRatio.
+      const svg = htmlDocument.createElementNS(SVGNS, 'svg');
+      svg.setAttribute('class', 'detail');
+      svg.setAttribute('role', 'img');
+      svg.setAttribute('aria-labelledby', titleId);
+      svg.setAttribute(
+        'viewBox',
+        `${round2((x / 100) * imgW)} ${round2((y / 100) * imgH)} ${cropW} ${cropH}`
       );
-      if (detail.to) el.setAttribute('href', detail.to);
-      else el.setAttribute('role', 'img');
-      el.setAttribute('aria-label', detail.alt);
-      set.appendChild(el);
+      svg.setAttribute('width', String(cropW));
+      svg.setAttribute('height', String(cropH));
+      svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+      // A finite inline cap: reading systems clamp images from a snapshot of
+      // the computed max-width and keep a finite value. Fluid below the column.
+      svg.setAttribute('style', 'max-width: 100%; height: auto;');
+
+      const title = htmlDocument.createElementNS(SVGNS, 'title');
+      title.setAttribute('id', titleId);
+      title.textContent = detail.alt;
+      svg.appendChild(title);
+
+      const image = htmlDocument.createElementNS(SVGNS, 'image');
+      image.setAttribute('href', detail.src);
+      image.setAttributeNS(XLINKNS, 'xlink:href', detail.src); // legacy reader fallback
+      image.setAttribute('width', String(imgW));
+      image.setAttribute('height', String(imgH));
+      svg.appendChild(image);
+
+      if (detail.to) {
+        const link = htmlDocument.createElement('a');
+        link.setAttribute('href', detail.to);
+        link.appendChild(svg);
+        figure.appendChild(link);
+      } else {
+        figure.appendChild(svg);
+      }
+      if (detail.caption) captions.push(detail.caption);
     }
-    carrier.replaceWith(set);
+    if (captions.length > 0) {
+      const figcaption = htmlDocument.createElement('figcaption');
+      figcaption.textContent = captions.join(' ');
+      figure.appendChild(figcaption);
+    }
+    carrier.replaceWith(figure);
   }
 
   return htmlDocument;

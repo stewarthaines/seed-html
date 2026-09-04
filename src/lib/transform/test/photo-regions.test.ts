@@ -202,3 +202,130 @@ describe('transformRegions (binding and construction)', () => {
     expect(doc.querySelector('span.clip')).not.toBeNull();
   });
 });
+
+const SVGNS = 'http://www.w3.org/2000/svg';
+const XLINKNS = 'http://www.w3.org/1999/xlink';
+
+const detailSpan = (attrs: Record<string, string>) =>
+  '<span class="detail" ' +
+  Object.entries(attrs)
+    .map(([name, value]) => `data-${name}="${value}"`)
+    .join(' ') +
+  '></span>';
+
+const fullDetail = {
+  src: '../Images/ct.jpg',
+  at: '20,32,75,7',
+  size: '1600x2284',
+  alt: 'Proprietor line',
+  to: 'sources.xhtml#The-1882-title',
+  caption: 'The 1882 title.',
+};
+
+describe('transformRegions (:detail: crops)', () => {
+  it('builds a figure holding an SVG viewBox crop, linked and captioned', async () => {
+    const doc = parse(`<p class="detail-set two-thirds">${detailSpan(fullDetail)}</p>`);
+    await transformDOM(doc, 'ch1', {});
+
+    // The carrier paragraph is consumed; the authored class rides on the figure.
+    expect(doc.querySelector('p')).toBeNull();
+    const figure = doc.querySelector('figure')!;
+    expect(figure.getAttribute('class')).toBe('detail-set two-thirds');
+
+    // to= wraps the crop in an HTML link, the figure's first child.
+    const link = figure.firstElementChild!;
+    expect(link.tagName).toBe('A');
+    expect(link.getAttribute('href')).toBe('sources.xhtml#The-1882-title');
+
+    // The crop is a real SVG element (not an XHTML element named svg).
+    const svg = link.querySelector('svg')!;
+    expect(svg.namespaceURI).toBe(SVGNS);
+    expect(svg.getAttribute('class')).toBe('detail');
+    expect(svg.getAttribute('role')).toBe('img');
+    expect(svg.getAttribute('aria-labelledby')).toBe('detail-ch1-1');
+    // viewBox is the percent box in image pixels: x 20% of 1600, y 32% of 2284, …
+    expect(svg.getAttribute('viewBox')).toBe('320 730.88 1200 159.88');
+    expect(svg.getAttribute('width')).toBe('1200');
+    expect(svg.getAttribute('height')).toBe('159.88');
+    expect(svg.getAttribute('preserveAspectRatio')).toBe('xMidYMid meet');
+    expect(svg.getAttribute('style')).toContain('max-width: 100%');
+
+    // Accessible name is the <title>; the image references the manifest file
+    // by plain href (what the preview rewrites) and xlink:href (legacy readers).
+    const title = svg.querySelector('title')!;
+    expect(title.namespaceURI).toBe(SVGNS);
+    expect(title.getAttribute('id')).toBe('detail-ch1-1');
+    expect(title.textContent).toBe('Proprietor line');
+    const image = svg.querySelector('image')!;
+    expect(image.namespaceURI).toBe(SVGNS);
+    expect(image.getAttribute('href')).toBe('../Images/ct.jpg');
+    expect(image.getAttributeNS(XLINKNS, 'href')).toBe('../Images/ct.jpg');
+    expect(image.getAttribute('width')).toBe('1600');
+    expect(image.getAttribute('height')).toBe('2284');
+
+    // caption= becomes the figcaption.
+    expect(figure.querySelector('figcaption')!.textContent).toBe('The 1882 title.');
+  });
+
+  it('places an unlinked crop directly in the figure and omits a missing caption', async () => {
+    const { to: _to, caption: _caption, ...bare } = fullDetail;
+    const doc = parse(`<p class="detail-set">${detailSpan(bare)}</p>`);
+    await transformDOM(doc, 'ch1', {});
+
+    const figure = doc.querySelector('figure')!;
+    expect(figure.querySelector('a')).toBeNull();
+    const svg = figure.firstElementChild!;
+    expect(svg.localName).toBe('svg');
+    expect(svg.getAttribute('role')).toBe('img');
+    expect(figure.querySelector('figcaption')).toBeNull();
+  });
+
+  it('stacks several details of one paragraph in one figure with one caption', async () => {
+    const second = { ...fullDetail, at: '0,0,50,50', caption: 'And the plan.' };
+    const doc = parse(
+      `<p class="detail-set">${detailSpan(fullDetail)}${detailSpan(second)}</p>` +
+        `<p class="detail-set">${detailSpan(fullDetail)}</p>`
+    );
+    await transformDOM(doc, 'ch1', {});
+
+    const figures = [...doc.querySelectorAll('figure')];
+    expect(figures.length).toBe(2);
+    const ids = [...figures[0].querySelectorAll('svg')].map(svg =>
+      svg.getAttribute('aria-labelledby')
+    );
+    expect(ids).toEqual(['detail-ch1-1', 'detail-ch1-2']);
+    expect(figures[0].querySelectorAll('figcaption').length).toBe(1);
+    expect(figures[0].querySelector('figcaption')!.textContent).toBe(
+      'The 1882 title. And the plan.'
+    );
+    // The counter continues across carriers, so ids stay unique in the chapter.
+    expect(figures[1].querySelector('svg')!.getAttribute('aria-labelledby')).toBe('detail-ch1-3');
+  });
+
+  it('slugs the idref into the title id and renders deterministically', async () => {
+    const render = async () => {
+      const doc = parse(`<p class="detail-set">${detailSpan(fullDetail)}</p>`);
+      await transformDOM(doc, 'ch 1', {});
+      return new XMLSerializer().serializeToString(doc.body);
+    };
+    const first = await render();
+    expect(first).toBe(await render());
+    expect(first).toContain('aria-labelledby="detail-ch-1-1"');
+    expect(first).toContain('xmlns="http://www.w3.org/2000/svg"');
+  });
+
+  it('reconstitutes the directive, caption included, when alt is missing', async () => {
+    const { alt: _alt, ...noAlt } = fullDetail;
+    const doc = parse(`<p class="detail-set">${detailSpan(noAlt)}</p>`);
+    await transformDOM(doc, 'ch1', {});
+
+    expect(doc.querySelector('figure')).toBeNull();
+    expect(doc.querySelector('svg')).toBeNull();
+    const breadcrumb = doc.querySelector('p')!;
+    expect(breadcrumb.hasAttribute('class')).toBe(false);
+    expect(breadcrumb.textContent).toContain(
+      ':detail:{src="../Images/ct.jpg" at="20,32,75,7" size="1600x2284" alt="" to="sources.xhtml#The-1882-title" caption="The 1882 title."}'
+    );
+    expect(breadcrumb.textContent).toContain('— needs alt');
+  });
+});
