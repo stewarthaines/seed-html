@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- In Djot and Markdown chapters, any directive written as `:name:{key=value …}` on lines of its own now reaches the project's DOM transforms with its attributes intact, so a script can define a `:lifeline:` or `:tree:` marker without a change to the text format. `:region:` and `:detail:` work exactly as before.
 - A chapter can open with a YAML block between `---` lines. SEED.html strips it before the text format runs, so it no longer renders as a rule, and hands what it holds to the project's transform scripts as `ctx.frontmatter`, with every chapter's record kept under `SOURCE/data/frontmatter/` for scripts that combine chapters.
 - The browser's Back and Forward buttons now walk the editor's own history: every chapter opened — by following a link in the preview, the reading-order arrows, or the spine list — and every view visited between them.
 - Chapter links that point at a section (`chapter.xhtml#heading`) land on that section in the preview, and a link to a section of the open chapter scrolls straight to it.
