@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Allowing an agent's writes "for this session" now holds for the whole bridge connection. It used to lapse after ten minutes or twenty writes, so a long search between edits meant a fresh prompt that expired unanswered while you were away. Script writes are still reviewed one by one.
+
 ### Added
 
 - The browser's Back and Forward buttons now walk the editor's own history: every chapter opened — by following a link in the preview, the reading-order arrows, or the spine list — and every view visited between them.

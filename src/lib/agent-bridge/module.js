@@ -121,13 +121,16 @@ export function isCodePath(path) {
   );
 }
 
-/**
- * A session grant is a convenience for a run of prose edits, not a standing
- * authorisation. It expires so an idle session cannot be resumed hours later
- * into an approval the author has forgotten giving.
- */
-const GRANT_TTL_MS = 10 * 60 * 1000;
-const GRANT_MAX_WRITES = 20;
+// A session grant covers prose writes for the life of the bridge connection —
+// no age or write-count bound. Both bounds were tried (ten minutes, twenty
+// writes) and removed on 2026-09-08: a research session runs long agent
+// searches between short bursts of writes, so a grant bounded by minutes
+// lapsed during every search, and each write after that raised a fresh prompt
+// that timed out as a denial while the author was away from the screen. What
+// stands instead: the grant dies with the socket (a reconnect re-prompts), it
+// never covers code (isCodePath), and every write still lands in the feed with
+// its size and hash. The tool's own description promises "once for the whole
+// session", and this is what makes that true.
 
 // Deliberately no pattern scan for agent-directed text in project content: one
 // was built and removed (process/BRIDGE_WRITE_REVIEW.md, mitigation 3 — an
@@ -147,8 +150,8 @@ async function contentHash(bytes) {
 export function start(ctx) {
   // Write grants are per-connection by design: this state lives and dies with
   // one start()/socket, so every new connection re-prompts. Within a connection
-  // the grant is further bounded by age and count, and never covers code.
-  const session = { grant: 'none', until: 0, writes: 0 }; // 'none' | 'session'
+  // the grant covers every prose write; it never covers code.
+  const session = { grant: 'none' }; // 'none' | 'session'
   setEnabled(!readMuted());
   const ui = buildOverlay(ctx.mountEl, () => stop());
   let socket = null;
@@ -472,14 +475,10 @@ async function writeFile(ctx, session, ui, params) {
   };
   await validate();
   const isCode = isCodePath(path);
-  // A grant expires by age and by count, and never reaches code.
-  const granted =
-    !isCode &&
-    session.grant === 'session' &&
-    Date.now() < session.until &&
-    session.writes < GRANT_MAX_WRITES;
+  // A grant lasts the connection, and never reaches code.
+  const granted = !isCode && session.grant === 'session';
   if (granted) {
-    session.writes += 1;
+    // covered: no prompt, the feed line is the record
   } else if (isCode) {
     // Code is reviewed as a diff, every time — the author sees what will run
     // before it can run. Both sides are already in hand from validate().
@@ -495,11 +494,7 @@ async function writeFile(ctx, session, ui, params) {
     const stat = isText ? ctx.diffStat(currentText, text) : null;
     const choice = await ui.promptWrite(path, bytes.length, stat);
     if (choice === 'deny') throw denied();
-    if (choice === 'session') {
-      session.grant = 'session';
-      session.until = Date.now() + GRANT_TTL_MS;
-      session.writes = 1;
-    }
+    if (choice === 'session') session.grant = 'session';
     await validate();
   }
   if (isText) await ctx.writeTextFile(path, text, requestWorkspaceId);

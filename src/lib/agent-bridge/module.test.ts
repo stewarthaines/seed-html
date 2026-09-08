@@ -629,6 +629,47 @@ describe('agent bridge module', () => {
     expect(ctx.writeTextFile).toHaveBeenCalledTimes(2);
   });
 
+  it('a session grant is not bounded by write count or by age', async () => {
+    const { ctx } = makeContext();
+    start(ctx);
+    const socket = FakeWebSocket.last!;
+    socket.open();
+    const send = (id: number, text: string, expectedHash: string) =>
+      socket.onmessage?.({
+        data: JSON.stringify({
+          id,
+          tool: 'write_file',
+          params: { path: 'OEBPS/Styles/page.css', text, expectedHash },
+        }),
+      });
+    send(1, 'w0', await sha256('body { color: red }'));
+    await waitFor(() =>
+      [...ctx.mountEl.querySelectorAll('button')].some(b => b.textContent === 'Allow this session')
+    );
+    [...ctx.mountEl.querySelectorAll('button')]
+      .find(b => b.textContent === 'Allow this session')!
+      .click();
+    await waitFor(() => socket.sent.filter(s => s.includes('"written"')).length === 1);
+    // Well past the old twenty-write cap, with the clock pushed past the old
+    // ten-minute age bound between writes: still no prompt.
+    const realNow = Date.now;
+    let clock = realNow();
+    vi.spyOn(Date, 'now').mockImplementation(() => clock);
+    try {
+      for (let i = 1; i <= 25; i++) {
+        clock += 15 * 60 * 1000;
+        send(i + 1, `w${i}`, await sha256(`w${i - 1}`));
+        await waitFor(() => socket.sent.filter(s => s.includes('"written"')).length === i + 1);
+      }
+    } finally {
+      vi.mocked(Date.now).mockRestore();
+    }
+    expect(
+      [...ctx.mountEl.querySelectorAll('button')].filter(b => b.textContent === 'Allow once')
+    ).toHaveLength(0);
+    expect(ctx.writeTextFile).toHaveBeenCalledTimes(26);
+  });
+
   it('Deny refuses the write and nothing is written', async () => {
     const { ctx } = makeContext();
     start(ctx);
