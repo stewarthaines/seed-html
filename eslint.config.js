@@ -171,6 +171,9 @@ export default [
       '.wrangler/',
       // Local Python virtualenv (untracked) — not app code.
       '.venv/',
+      // Playwright MCP scratch (untracked): page snapshots, and staged copies
+      // of a book's own transform scripts — a project's code, not the app's.
+      '.playwright-mcp/',
       // npm package staging (untracked): the built app payload plus copies of
       // scripts/agent-bridge.mjs and docs/, staged by sync-assets.mjs at pack
       // time. The package's own sources (bin/, lib/, *.mjs) stay linted.
