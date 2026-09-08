@@ -36,6 +36,10 @@ The CSS files, transform scripts, and head.xml shown here are this book's — yo
 
 These scripts and their configuration travel inside the packaged EPUB — in its SEED.zip, alongside your plain-text chapter source.
 
+### Chapter frontmatter
+
+A chapter can open with a block of YAML between two `---` lines, the first on line 1. SEED.html removes the block before the text format sees the chapter and keeps what it says as data for scripts to use — a person's dates in a family history, say, or anything a transform in your project reads. Whatever the block holds is up to you and your scripts; SEED.html asks nothing of it, and lines starting with `#` are comments that go nowhere. If the block does not parse, the chapter still renders without it.
+
 ## Reading System JavaScript
 
 The transforms above run here, while you build the book. **Reading System JavaScript** is different: it runs in the reading app, when someone reads the book. Add a script to the manifest and SEED.html marks all chapters as `scripted` in the file list, so reading apps know they carry code to run. It's how a chapter can do something interactive for the reader — within the limits each reading app places on scripting, which vary widely.
