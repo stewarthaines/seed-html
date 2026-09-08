@@ -12,15 +12,19 @@ describe('chapterCompanionFiles', () => {
     'SOURCE/locale/en/meta.json',
     'SOURCE/main/SOURCE/text/ch1.txt',
     'SOURCE/main/OEBPS/Styles/style.css', // base of a stylesheet, not a chapter
+    'SOURCE/data/frontmatter/ch1.json',
+    'SOURCE/data/frontmatter/ch10.json',
+    'SOURCE/data/figures/ch1.json', // another store, not swept here
     'OEBPS/Text/ch1.xhtml',
   ];
 
-  it('matches locale copies and track-changes bases for the exact id', () => {
+  it('matches locale copies, track-changes bases and the frontmatter record for the exact id', () => {
     expect(chapterCompanionFiles(paths, 'ch1')).toEqual([
       'SOURCE/locale/en/text/ch1.txt',
       'SOURCE/locale/en/text/ch1.json',
       'SOURCE/locale/de/text/ch1.txt',
       'SOURCE/main/SOURCE/text/ch1.txt',
+      'SOURCE/data/frontmatter/ch1.json',
     ]);
   });
 
@@ -37,6 +41,9 @@ describe('renamedCompanionPath', () => {
     );
     expect(renamedCompanionPath('SOURCE/main/SOURCE/text/ch1.json', 'ch1', 'intro')).toBe(
       'SOURCE/main/SOURCE/text/intro.json'
+    );
+    expect(renamedCompanionPath('SOURCE/data/frontmatter/ch1.json', 'ch1', 'intro')).toBe(
+      'SOURCE/data/frontmatter/intro.json'
     );
   });
 });

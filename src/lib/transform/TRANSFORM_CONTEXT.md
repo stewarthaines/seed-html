@@ -50,6 +50,7 @@ Built per-invocation by `createTransformContext` in `src/assets/iframe/editor.js
 | `ctx.idref`                             | `string`          | Current spine item id.                                                                                                          |
 | `ctx.basePath`                          | `string`          | OPF content base path (e.g. `"OEBPS"`). Manifest hrefs are relative to this; you pass the bare href, the broker joins the base. |
 | `ctx.manifest`                          | `ManifestItem[]`  | The OPF manifest: `{ id, href, mediaType, properties?, fallback? }` per item. Read-only snapshot.                               |
+| `ctx.frontmatter`                       | `unknown \| null` | The chapter's parsed frontmatter (see below), or `null` when it has none.                                                       |
 | `await ctx.readManifestText(href)`      | `Promise<string>` | Decoded UTF-8 text of a **declared** manifest item.                                                                             |
 | `await ctx.readManifestDataURL(href)`   | `Promise<string>` | `data:` URL of a manifest item — use for binary assets (images, fonts).                                                         |
 | `await ctx.readSourceText(path)`        | `Promise<string>` | Read a file from the editor's `SOURCE/` tree as text.                                                                           |
@@ -62,6 +63,14 @@ All four methods are async and reject (throw) on failure — wrap in `try/catch`
 - **Manifest reads** key off the OPF `href` exactly as it appears in `ctx.manifest` (relative to `basePath`). For an asset an extension shipped via `assets[].target` (see below), that href **is** the `target` string, e.g. `ctx.readManifestText('Images/fleuron.svg')`.
 - **Source reads** accept either a `SOURCE/`-prefixed path or one relative to it; e.g. `ctx.readSourceText('SOURCE/settings.json')`. Traversal/absolute paths are rejected.
 - **Source writes** land under `SOURCE/data/`: a bare name is placed there, an explicit path must already be under it. Anything else is rejected.
+
+## Chapter frontmatter
+
+A chapter source may begin with a YAML block fenced by `---` on line 1 and a closing `---` line. The **app** owns that block, not the text format: `SpineTransformPipeline` splits it off before the text transform runs (a leading `---` would otherwise be a thematic break to djot or Markdown), parses it with js-yaml's JSON schema (dates stay strings), and passes the result as `ctx.frontmatter`. The transform receives the body only. A block that fails to parse is stripped anyway, reported on the console, and arrives as `null`.
+
+The frontmatter is a transport, not a schema: core imposes no keys. A transform validates the keys it owns and ignores the rest, so one block can carry nav metadata and, say, a person record for a family-history extension together. YAML comments never reach the store; a block that is only comments is `null`.
+
+Every chapter's record is also kept as JSON at `SOURCE/data/frontmatter/<idref>.json` (written by the app on render; deleted when the chapter loses its block, and never written for a chapter that has none), so a transform can read another chapter's record with `ctx.readSourceText('data/frontmatter/<idref>.json')` and combine records across the spine. Records exist for chapters that have rendered since the block was added — package the book once to fill the store for every chapter. Design: `process/CHAPTER_FRONTMATTER.md`.
 
 ## How an extension delivers a file its transform reads
 

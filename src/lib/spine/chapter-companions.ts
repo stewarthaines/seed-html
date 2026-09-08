@@ -1,18 +1,20 @@
 /**
  * Companion files that must follow a chapter delete or id rename: the
  * chapter's frozen copies in stored translations (`SOURCE/locale/<tag>/text/`,
- * process/TRANSLATION_EDITIONS.md) and its track-changes base snapshot
- * (`SOURCE/main/SOURCE/text/`). Without the sweep, a rename strands these
- * under the old id — they silently vanish from the editor's dropdown and the
- * Changes view. The chapter's own `SOURCE/text/` files are handled directly
- * by the spine service.
+ * process/TRANSLATION_EDITIONS.md), its track-changes base snapshot
+ * (`SOURCE/main/SOURCE/text/`), and its frontmatter record
+ * (`SOURCE/data/frontmatter/`, src/lib/source/frontmatter.ts). Without the
+ * sweep, a rename strands these under the old id — they silently vanish from
+ * the editor's dropdown and the Changes view, or a dead chapter's record keeps
+ * feeding cross-chapter consumers. The chapter's own `SOURCE/text/` files are
+ * handled directly by the spine service.
  */
 
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 function companionPattern(chapterId: string): RegExp {
   return new RegExp(
-    `^SOURCE/(?:locale/[^/]+/text|main/SOURCE/text)/${escapeRegExp(chapterId)}\\.(?:txt|json)$`
+    `^SOURCE/(?:locale/[^/]+/text|main/SOURCE/text|data/frontmatter)/${escapeRegExp(chapterId)}\\.(?:txt|json)$`
   );
 }
 

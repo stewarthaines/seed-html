@@ -16,6 +16,7 @@ import type {
 } from '../infrastructure/transform-engine.js';
 import type { TransformResult, TransformScripts } from '../types/spine-editor.js';
 import { resolveTransformPath } from '../settings/dom-transforms.js';
+import { splitFrontmatter, frontmatterStorePath } from '../source/frontmatter.js';
 
 /**
  * Spine-specific transform pipeline using global transform engine
@@ -29,6 +30,11 @@ export class SpineTransformPipeline {
   // transform script (see invalidateScriptCache). Out-of-band writers
   // (plugins) are not covered; they'd need the same explicit call.
   private scriptCache: { key: string; scripts: TransformScripts } | null = null;
+
+  // Last frontmatter JSON persisted per chapter, so a render that changed only
+  // the prose (every autosave keystroke) costs no storage write. `null` means
+  // the record is known to be absent.
+  private frontmatterWritten = new Map<string, string | null>();
 
   constructor(
     private workspaceId: string,
@@ -66,13 +72,26 @@ export class SpineTransformPipeline {
       };
     }
 
+    // Chapter frontmatter (process/CHAPTER_FRONTMATTER.md): the leading `---`
+    // YAML block is the app's, not the format's — split it off here so every
+    // caller (chapter preview, nav generation) renders the body alone, hand
+    // the parsed data to the transforms as ctx.frontmatter, and keep the
+    // chapter's record in SOURCE/data/frontmatter/ for cross-chapter readers.
+    const frontmatter = splitFrontmatter(plainText);
+    if (frontmatter.error) {
+      console.warn(
+        `Chapter frontmatter in ${idref ?? 'chapter'} did not parse: ${frontmatter.error}`
+      );
+    }
+    if (idref) await this.persistFrontmatter(idref, frontmatter.data);
+
     try {
       // Execute the transform using the engine, supplying the workspace-scoped
       // file-access context (if the caller provided manifest/basePath).
       const context: TransformBrokerContext | undefined = brokerContext
-        ? { workspaceId: this.workspaceId, ...brokerContext }
+        ? { workspaceId: this.workspaceId, ...brokerContext, frontmatter: frontmatter.data }
         : undefined;
-      return await this.transformEngine.executeTransform(plainText, timeout, idref, context);
+      return await this.transformEngine.executeTransform(frontmatter.body, timeout, idref, context);
     } catch (error) {
       return {
         success: false,
@@ -81,6 +100,31 @@ export class SpineTransformPipeline {
           message: String((error as any)?.message || error),
         },
       };
+    }
+  }
+
+  /**
+   * Keep the chapter's frontmatter record in SOURCE/data/frontmatter/<idref>.json
+   * in step with its source: the parsed object while the chapter has a block,
+   * no file once it has none (so removing the block clears the record, and a
+   * book that never uses frontmatter grows no scratch files). Best-effort — a
+   * storage failure is logged and never fails the render.
+   */
+  private async persistFrontmatter(idref: string, data: unknown): Promise<void> {
+    const json = data === null ? null : JSON.stringify(data, null, 2) + '\n';
+    if (this.frontmatterWritten.has(idref) && this.frontmatterWritten.get(idref) === json) return;
+    const path = frontmatterStorePath(idref);
+    try {
+      if (json === null) {
+        if (await this.fileStorage.fileExists(this.workspaceId, path)) {
+          await this.fileStorage.deleteFile(this.workspaceId, path);
+        }
+      } else {
+        await this.fileStorage.writeTextFile(this.workspaceId, path, json);
+      }
+      this.frontmatterWritten.set(idref, json);
+    } catch (error) {
+      console.warn(`Failed to store frontmatter for ${idref}:`, error);
     }
   }
 

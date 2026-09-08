@@ -567,10 +567,15 @@ ${body}
           if (dir && item.path.startsWith(dir)) {
             await this.workspaceService.deleteSourceFile(updatedWorkspace, item.path);
           } else if (companions.has(item.path)) {
-            // Companions live outside SOURCE/data/, so the scoped
+            // Most companions live outside SOURCE/data/, so the scoped
             // deleteSourceFile refuses them — plain deleteFile, like the
-            // chapter's own SOURCE/text files above.
-            await this.workspaceService.deleteFile(updatedWorkspace.id, item.path);
+            // chapter's own SOURCE/text files above. The frontmatter record
+            // is the exception: app-owned scratch, deleted through the scope.
+            if (item.path.startsWith('SOURCE/data/')) {
+              await this.workspaceService.deleteSourceFile(updatedWorkspace, item.path);
+            } else {
+              await this.workspaceService.deleteFile(updatedWorkspace.id, item.path);
+            }
           }
         }
       } catch (error) {

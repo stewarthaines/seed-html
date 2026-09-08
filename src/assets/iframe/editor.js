@@ -310,6 +310,10 @@ class TransformExecutionEngine {
       // The OPF spine in reading order ({ idref, linear }[]) — walk chapters in
       // order and combine per-chapter data (e.g. a page index).
       spine: Array.isArray(data.spine) ? data.spine : [],
+      // The chapter's parsed frontmatter — the leading `---` YAML block, which
+      // the app stripped from plainText before it got here — or null. Other
+      // chapters' records: readSourceText('data/frontmatter/<idref>.json').
+      frontmatter: data.frontmatter === undefined ? null : data.frontmatter,
       // Read a manifest item (declared in the OPF) as decoded UTF-8 text.
       readManifestText: href => this.callBroker('readManifestText', { href }),
       // Read a manifest item as a data: URL (for binary assets like images).

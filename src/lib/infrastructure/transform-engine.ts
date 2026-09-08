@@ -36,6 +36,10 @@ export interface TransformBrokerContext {
   /** The OPF spine in reading order (idref + linear), so a transform can walk
    *  chapters in order and combine per-chapter data (e.g. a page index). */
   spine?: SpineItem[];
+  /** The chapter's parsed frontmatter (the leading `---` YAML block, already
+   *  stripped from the text the transform receives); `null` when it has none.
+   *  See src/lib/source/frontmatter.ts. */
+  frontmatter?: unknown;
 }
 
 /** Content equality for transform-script bundles (drives the send dedup). */
@@ -152,6 +156,7 @@ export class TransformEngine {
           manifest: brokerContext.manifest,
           language: brokerContext.language ?? '',
           spine: brokerContext.spine ?? [],
+          frontmatter: brokerContext.frontmatter ?? null,
         }
       : {
           idref,
@@ -159,6 +164,7 @@ export class TransformEngine {
           manifest: [] as ManifestItem[],
           language: '',
           spine: [] as SpineItem[],
+          frontmatter: null,
         };
 
     // The transform may now await brokered file I/O, so the message round-trip can
@@ -201,6 +207,9 @@ export class TransformEngine {
       manifest: brokerContext.manifest,
       language: brokerContext.language ?? '',
       spine: brokerContext.spine ?? [],
+      // A generator has no chapter text, so no block of its own; the invoking
+      // chapter's record is readable from the store like any other's.
+      frontmatter: brokerContext.frontmatter ?? null,
     };
 
     // Options often arrive as a Svelte $state proxy, which postMessage can't
