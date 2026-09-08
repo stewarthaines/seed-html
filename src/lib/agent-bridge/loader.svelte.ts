@@ -19,6 +19,13 @@ export interface AgentBridgeModuleContext {
     language: string | null;
     /** navigator.userAgent of the tab the agent is working against. */
     userAgent: string;
+    /**
+     * Track changes (review mode) is on: the app keeps a base copy of each
+     * edited chapter source, stylesheet and script under `SOURCE/main/<path>`
+     * from its first change. Read live, so a toggle mid-session shows on the
+     * next call.
+     */
+    reviewMode: boolean;
   };
   getWorkspaceDir: () => Promise<FileSystemDirectoryHandle | null>;
   getRenderedXhtml: () => { chapterId: string | null; xhtml: string } | null;

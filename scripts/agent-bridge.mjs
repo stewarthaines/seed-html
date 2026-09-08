@@ -148,7 +148,7 @@ const TOOLS = [
   {
     name: 'seed_project_info',
     description:
-      "The open SEED.html project's identity (workspace id), bridge connection state, and the browser user agent of the connected tab — the engine every preview measurement and screenshotless diagnosis runs against.",
+      "The open SEED.html project's identity (workspace id), bridge connection state, the browser user agent of the connected tab — the engine every preview measurement and screenshotless diagnosis runs against — and reviewMode: whether track changes is on, which keeps a base copy of each edited file under SOURCE/main/ from its first change (write results then carry reviewMode, and baseCaptured on the write that made the copy).",
     inputSchema: { type: 'object', properties: {} },
   },
   {

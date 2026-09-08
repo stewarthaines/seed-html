@@ -336,7 +336,7 @@ async function handleTool(ctx, session, ui, tool, params) {
         // Descriptive, not imperative. syntaxReference is a file inside the
         // project: it documents the syntax, and the bridge must not tell the
         // agent to obey content that travels with the book.
-        hint: 'chapter XHTML is generated: source text → text_transform → dom_transforms in order; read the scripts and one source/rendered pair before proposing markup. syntaxReference, where present, describes how this project’s source syntax diverges — the source syntax is NOT Markdown unless it says so.',
+        hint: 'chapter XHTML is generated: source text → text_transform → dom_transforms in order; read the scripts and one source/rendered pair before proposing markup. syntaxReference, where present, describes how this project’s source syntax diverges — the source syntax is NOT Markdown unless it says so. settings.track_changes true means review mode: the app keeps a base copy of each edited chapter source, stylesheet and script under SOURCE/main/<path> from its first change, for a later patchset; SOURCE/main/ is app-owned.',
       };
     }
     case 'write_file':
@@ -402,6 +402,13 @@ async function reviewCodeWrite(ctx, ui, request) {
  * stay silent for it. Sounding a failure when someone has just pressed Deny
  * would report a problem where there is none.
  */
+/**
+ * Where track changes keeps a file's base copy (src/lib/track-changes/
+ * base-snapshot.ts, BASE_PREFIX). Repeated here because this module is a
+ * dependency-free asset, not a bundle import; keep the two in step.
+ */
+const BASE_PREFIX = 'SOURCE/main/';
+
 function denied() {
   const error = new Error('the author denied this write');
   error.denied = true;
@@ -497,8 +504,22 @@ async function writeFile(ctx, session, ui, params) {
     if (choice === 'session') session.grant = 'session';
     await validate();
   }
-  if (isText) await ctx.writeTextFile(path, text, requestWorkspaceId);
-  else await ctx.writeBinaryFile(path, bytes, requestWorkspaceId);
+  // Review mode (track changes): the service snapshots the file's pre-edit
+  // bytes to SOURCE/main/<path> on its first real change and announces it on
+  // window. Listen across the write so the result can say a base was kept —
+  // the agent has no other way to learn the mode is on, or was turned on
+  // since it last asked.
+  let baseCaptured = null;
+  const onBaseCaptured = event => {
+    if (event?.detail?.path === path) baseCaptured = BASE_PREFIX + path;
+  };
+  window.addEventListener('seed:base-captured', onBaseCaptured);
+  try {
+    if (isText) await ctx.writeTextFile(path, text, requestWorkspaceId);
+    else await ctx.writeBinaryFile(path, bytes, requestWorkspaceId);
+  } finally {
+    window.removeEventListener('seed:base-captured', onBaseCaptured);
+  }
   // Read-back ack (incident recommendation 1): the acked size/hash come from
   // the bytes actually stored, not the request payload — a misdirected or
   // lost write becomes a same-turn error instead of a silent lie.
@@ -512,7 +533,15 @@ async function writeFile(ctx, session, ui, params) {
       `write verification failed: stored bytes at ${path} do not match the payload (stored ${storedBytes.length} bytes, ${storedHash.slice(0, 12)}…) — report this to the author`
     );
   }
-  return { written: true, size: storedBytes.length, hash: storedHash, verified: true };
+  const reviewMode = ctx.getProjectInfo().reviewMode === true;
+  return {
+    written: true,
+    size: storedBytes.length,
+    hash: storedHash,
+    verified: true,
+    ...(reviewMode ? { reviewMode: true } : {}),
+    ...(baseCaptured ? { baseCaptured } : {}),
+  };
 }
 
 function base64ToBytes(base64) {
@@ -547,7 +576,8 @@ function describeAction(tool, params, result) {
     return `read ${params.path}`;
   if (tool === 'write_file' && params && typeof params.path === 'string')
     return result
-      ? `wrote ${params.path} (${result.size} bytes, ${result.hash?.slice(0, 8) ?? '?'})`
+      ? `wrote ${params.path} (${result.size} bytes, ${result.hash?.slice(0, 8) ?? '?'})` +
+          (result.baseCaptured ? ' — base kept for track changes' : '')
       : `write ${params.path}`;
   if (tool === 'list_files') return 'listed project files';
   if (tool === 'get_rendered_xhtml') return 'read rendered chapter';

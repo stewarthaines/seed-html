@@ -523,6 +523,9 @@
           // The browser IS the agent's render target — engine identity shapes
           // preview diagnosis (paged raster, foliate clamps), so say it up front.
           userAgent: navigator.userAgent,
+          // Read live from app state, not captured: the author can toggle
+          // track changes while the bridge is connected.
+          reviewMode: appState?.reviewMode ?? false,
         }),
         getWorkspaceDir: async () => {
           const id = currentWorkspaceState?.id;

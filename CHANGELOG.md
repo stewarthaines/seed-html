@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- An agent working over the bridge is now told when Track Changes is on: the project info carries the flag, and each write it makes says when the app kept a base copy of the file for a later patchset.
 - Allowing an agent's writes "for this session" now holds for the whole bridge connection. It used to lapse after ten minutes or twenty writes, so a long search between edits meant a fresh prompt that expired unanswered while you were away. Script writes are still reviewed one by one.
 
 ### Added

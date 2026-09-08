@@ -126,6 +126,7 @@ function makeContext(overrides: Record<string, unknown> = {}) {
     }),
   });
   const statuses: Array<[string, string | undefined]> = [];
+  let reviewMode = false;
   const ctx = {
     wsUrl: 'ws://localhost:8747',
     mountEl: document.createElement('div'),
@@ -135,6 +136,7 @@ function makeContext(overrides: Record<string, unknown> = {}) {
       title: 'Bulletin',
       language: 'en',
       userAgent: 'TestUA/1.0',
+      reviewMode,
     }),
     getWorkspaceDir: async () => workspace,
     getRenderedXhtml: () => ({ chapterId: 'ch-1', xhtml: '<html/>' }),
@@ -162,6 +164,7 @@ function makeContext(overrides: Record<string, unknown> = {}) {
     statuses,
     setCss: (value: string) => (cssContent = value),
     setWorkspaceId: (value: string) => (workspaceId = value),
+    setReviewMode: (value: boolean) => (reviewMode = value),
   };
 }
 
@@ -203,7 +206,13 @@ describe('agent bridge module', () => {
     expect(await socket.receive({ id: 1, tool: 'project_info' })).toEqual({
       id: 1,
       ok: true,
-      result: { workspaceId: 'ws-1', title: 'Bulletin', language: 'en', userAgent: 'TestUA/1.0' },
+      result: {
+        workspaceId: 'ws-1',
+        title: 'Bulletin',
+        language: 'en',
+        userAgent: 'TestUA/1.0',
+        reviewMode: false,
+      },
     });
     expect(await socket.receive({ id: 2, tool: 'get_rendered_xhtml' })).toEqual({
       id: 2,
@@ -387,6 +396,9 @@ describe('agent bridge module', () => {
       'SOURCE/scripts/transformDom.js',
     ]);
     expect(response.result.hint).toContain('generated');
+    // review mode is explained where the flag travels (settings.track_changes)
+    expect(response.result.hint).toContain('track_changes');
+    expect(response.result.hint).toContain('SOURCE/main/');
     // the SYNTAX.md sibling of the text transform is picked up from the project
     expect(
       (response.result as { syntaxReference?: { source: string; text: string } }).syntaxReference
@@ -569,6 +581,62 @@ describe('agent bridge module', () => {
     expect(
       items.some(t => t?.includes(`wrote OEBPS/Styles/page.css (20 bytes, ${expectedPrefix})`))
     ).toBe(true);
+  });
+
+  it('reports review mode on the write result, and the base the app kept', async () => {
+    // The track-changes service snapshots a file's pre-edit bytes on its first
+    // real change and announces the path on window; the bridge relays both
+    // facts because the agent hears nothing else about the mode.
+    const { ctx, setReviewMode } = makeContext({
+      writeTextFile: vi.fn(async (path: string) => {
+        window.dispatchEvent(
+          new CustomEvent('seed:base-captured', { detail: { path: 'SOURCE/text/other.txt' } })
+        );
+        window.dispatchEvent(new CustomEvent('seed:base-captured', { detail: { path } }));
+      }),
+    });
+    setReviewMode(true);
+    start(ctx);
+    const socket = FakeWebSocket.last!;
+    socket.open();
+    const write = async (id: number, text: string, expectedHash: string) => {
+      const before = socket.sent.length;
+      socket.onmessage?.({
+        data: JSON.stringify({
+          id,
+          tool: 'write_file',
+          params: { path: 'OEBPS/Styles/page.css', text, expectedHash },
+        }),
+      });
+      await waitFor(() => socket.sent.length > before);
+      return JSON.parse(socket.sent[socket.sent.length - 1]);
+    };
+    // The fake service never stores, so the read-back ack sees the old bytes:
+    // write the same content and the ack passes.
+    const same = 'body { color: red }';
+    const promise = write(1, same, await sha256(same));
+    await waitFor(() =>
+      [...ctx.mountEl.querySelectorAll('button')].some(b => b.textContent === 'Allow this session')
+    );
+    [...ctx.mountEl.querySelectorAll('button')]
+      .find(b => b.textContent === 'Allow this session')!
+      .click();
+    const first = await promise;
+    expect(first.result).toMatchObject({
+      written: true,
+      reviewMode: true,
+      baseCaptured: 'SOURCE/main/OEBPS/Styles/page.css',
+    });
+    const items = [...ctx.mountEl.querySelectorAll('li')].map(li => li.textContent);
+    expect(items.some(t => t?.includes('base kept for track changes'))).toBe(true);
+
+    // Mode off, no event: neither field appears.
+    setReviewMode(false);
+    ctx.writeTextFile = vi.fn(async () => {});
+    const second = await write(2, same, await sha256(same));
+    expect(second.ok).toBe(true);
+    expect(second.result).not.toHaveProperty('reviewMode');
+    expect(second.result).not.toHaveProperty('baseCaptured');
   });
 
   it('read-back ack catches a write that did not land', async () => {

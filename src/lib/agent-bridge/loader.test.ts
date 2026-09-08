@@ -29,6 +29,7 @@ const buildContext = () => ({
     title: null,
     language: null,
     userAgent: 'TestUA/1.0',
+    reviewMode: false,
   }),
   getWorkspaceDir: async () => null,
   getRenderedXhtml: () => null,
