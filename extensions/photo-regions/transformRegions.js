@@ -4,8 +4,9 @@
  * photograph, and a row-grouped name list appended to the figcaption.
  *
  * The carrier is a paragraph of span.region elements, produced from the
- * :region: directive by the text format's adapter (djot regionFilter /
- * markdown-it regionPlugin):
+ * :region: directive by the text format's attributed-symbol carrier (djot
+ * symbolFilter / markdown-it symbolPlugin — any alias, every attribute as
+ * data-*; which attributes a directive NEEDS is checked here, not there):
  *
  *   <p class="region-set">
  *     <span class="region" data-at="5.2,17.7,11.4,21.9" data-of="roger_king"
@@ -38,7 +39,7 @@
  * (static pairings: 30 faces, 8 rows per figure).
  *
  * :detail: carriers are handled here too — a paragraph of span.detail
- * elements (djot detailFilter / markdown-it detailPlugin). A detail is a
+ * elements from the same carrier mechanism. A detail is a
  * standalone single-region crop with NO figure binding: it carries its own
  * data-src, data-at (same percent geometry), data-size (the image's WxH in
  * pixels, so the crop knows its aspect without any library at hand),
@@ -125,7 +126,8 @@ async function transformDOM(htmlDocument, idref, ctx) {
     carrier.textContent = '';
     regions.forEach((region, i) => {
       if (i > 0) carrier.appendChild(htmlDocument.createElement('br'));
-      const attrs = [`at="${region.at}"`];
+      const attrs = [];
+      if (region.at) attrs.push(`at="${region.at}"`);
       if (region.of) attrs.push(`of=${region.of}`);
       if (region.as) attrs.push(`as="${region.as}"`);
       if (region.row) attrs.push(`row="${region.row}"`);

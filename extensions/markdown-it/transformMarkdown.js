@@ -12,8 +12,7 @@ function transformText(markdown, idref) {
   });
   md.use(window.markdownItAttrs);
   md.use(clipPlugin);
-  md.use(regionPlugin);
-  md.use(detailPlugin);
+  md.use(symbolPlugin);
   return md.render(markdown);
 }
 
@@ -60,83 +59,85 @@ function clipPlugin(md) {
   });
 }
 
+
 /**
- * markdown-it inline rule: rewrite the SEED photo-region directive (the default
- * photo region template) into the neutral carrier span the photo-regions
- * extension's DOM transform consumes.
+ * markdown-it plugin: rewrite an attributed SEED directive — `:alias:{…}`,
+ * any alias — into the neutral carrier span a DOM transform consumes, and
+ * mark a paragraph made only of same-alias directives as the set:
  *
  *   :region:{at="5.2,17.7,11.4,21.9" of=roger_king as="Roger King" row="Back"}
- *     → <span class="region" data-at="…" data-of="…" data-as="…" data-row="…"></span>
+ *   :region:{at="17.3,14.8,9.9,20.4" as="Ian Vitcheff" row="Back"}
+ *     → <p class="region-set"><span class="region" data-at="…" data-of="…" …></span>…</p>
  *
- * Consecutive :region: lines form one paragraph — that paragraph is the region
- * set, bound to the figure directly above it by the DOM transform
- * (extensions/photo-regions/transformRegions.js). Attribute values may be bare
- * or double-quoted; at= is required — a directive without it is left for the
- * normal rules (visible breadcrumb; note markdown-it-attrs may then consume
- * the trailing {…}). Registered before `link`, and consuming the whole
- * directive as one token, so markdown-it-attrs never sees a well-formed
- * region's braces.
+ * Every attribute becomes data-<name> on the span; values may be bare or
+ * double-quoted. A directive with no attributes is left for the normal rules
+ * (visible text). The inline rule is registered before `link` and consumes
+ * the whole directive as one token, so markdown-it-attrs never sees a
+ * well-formed directive's braces. Consecutive directive lines form one
+ * paragraph; the core rule stamps that paragraph `<alias>-set` (joined to any
+ * class markdown-it-attrs put there) when its inline content is nothing but
+ * same-alias directives and line breaks — the same shape the djot
+ * symbolFilter produces, so a consumer binds one shape. A paragraph mixing
+ * prose or aliases keeps its spans but gets no set class. markdown-it-attrs
+ * rules apply on top: `:detail:{…} {.half}` (a space before the braces) puts
+ * .half on the paragraph, `:detail:{…}{.half}` puts it on the span.
+ *
+ * Which attributes a directive needs is the consuming DOM transform's
+ * business — photo-regions (extensions/photo-regions/transformRegions.js)
+ * reconstitutes a region without a usable at=, or a detail without src=, as
+ * visible text with a note saying what it needs.
  */
-function regionPlugin(md) {
-  const DIRECTIVE = /^:region:\{([^}]*)\}/;
+function symbolPlugin(md) {
+  const DIRECTIVE = /^:([A-Za-z0-9_+-]+):\{([^}]*)\}/;
   const ATTR = /([a-zA-Z_][\w-]*)=(?:"([^"]*)"|([^\s"]+))/g;
-  const CARRIED = ['at', 'of', 'as', 'row', 'badge'];
 
-  md.inline.ruler.before('link', 'seed_region', (state, silent) => {
+  md.inline.ruler.before('link', 'seed_symbol', (state, silent) => {
     if (state.src.charCodeAt(state.pos) !== 0x3a /* : */) return false;
     const match = DIRECTIVE.exec(state.src.slice(state.pos));
     if (!match) return false;
-    const attrs = {};
-    for (const m of match[1].matchAll(ATTR)) attrs[m[1]] = m[2] !== undefined ? m[2] : m[3];
-    if (!attrs.at) return false;
+    const attrs = [];
+    for (const m of match[2].matchAll(ATTR)) {
+      attrs.push([`data-${m[1]}`, m[2] !== undefined ? m[2] : m[3]]);
+    }
+    if (attrs.length === 0) return false;
     if (!silent) {
-      const open = state.push('seed_region_open', 'span', 1);
-      open.attrs = [['class', 'region']];
-      for (const name of CARRIED) {
-        if (attrs[name] !== undefined) open.attrs.push([`data-${name}`, attrs[name]]);
-      }
-      state.push('seed_region_close', 'span', -1);
+      const open = state.push('seed_symbol_open', 'span', 1);
+      open.attrs = [['class', match[1]], ...attrs];
+      open.meta = { alias: match[1] };
+      state.push('seed_symbol_close', 'span', -1);
     }
     state.pos += match[0].length;
     return true;
   });
-}
 
-/**
- * markdown-it inline rule: rewrite the :detail: directive — a single-region
- * crop of an image, standing alone — into the neutral carrier span the
- * photo-regions extension's DOM transform consumes.
- *
- *   :detail:{src="../Images/page.jpg" at="14.4,18.8,82.8,5.3" size="1696x2385" alt="…" caption="…" to="notes.xhtml#the-page"}
- *     → <span class="detail" data-src="…" data-at="…" …></span>
- *
- * src= and at= are required here; size, alt, to and caption are validated at
- * the DOM stage (a miss reconstitutes the directive as visible breadcrumb text).
- * Registered before `link`, and consuming the whole directive as one token,
- * so markdown-it-attrs never sees a well-formed detail's braces.
- */
-function detailPlugin(md) {
-  const DIRECTIVE = /^:detail:\{([^}]*)\}/;
-  const ATTR = /([a-zA-Z_][\w-]*)=(?:"([^"]*)"|([^\s"]+))/g;
-  const CARRIED = ['src', 'at', 'size', 'alt', 'to', 'caption'];
-
-  md.inline.ruler.before('link', 'seed_detail', (state, silent) => {
-    if (state.src.charCodeAt(state.pos) !== 0x3a /* : */) return false;
-    const match = DIRECTIVE.exec(state.src.slice(state.pos));
-    if (!match) return false;
-    const attrs = {};
-    for (const m of match[1].matchAll(ATTR)) attrs[m[1]] = m[2] !== undefined ? m[2] : m[3];
-    if (!attrs.src || !attrs.at) return false;
-    if (!silent) {
-      const open = state.push('seed_detail_open', 'span', 1);
-      open.attrs = [['class', 'detail']];
-      for (const name of CARRIED) {
-        if (attrs[name] !== undefined) open.attrs.push([`data-${name}`, attrs[name]]);
+  md.core.ruler.push('seed_symbol_set', state => {
+    const tokens = state.tokens;
+    for (let i = 1; i < tokens.length; i++) {
+      const inline = tokens[i];
+      const open = tokens[i - 1];
+      if (inline.type !== 'inline' || open.type !== 'paragraph_open') continue;
+      const children = inline.children || [];
+      let alias = null;
+      let uniform = true;
+      for (const child of children) {
+        if (child.type === 'seed_symbol_open') {
+          const symbolAlias = child.meta.alias;
+          if (alias === null) alias = symbolAlias;
+          else if (alias !== symbolAlias) uniform = false;
+        } else if (
+          child.type === 'seed_symbol_close' ||
+          child.type === 'softbreak' ||
+          child.type === 'hardbreak' ||
+          (child.type === 'text' && !child.content.trim())
+        ) {
+          continue;
+        } else {
+          uniform = false;
+        }
+        if (!uniform) break;
       }
-      state.push('seed_detail_close', 'span', -1);
+      if (uniform && alias !== null) open.attrJoin('class', `${alias}-set`);
     }
-    state.pos += match[0].length;
-    return true;
   });
 }
 

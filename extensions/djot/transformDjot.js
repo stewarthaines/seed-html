@@ -7,8 +7,7 @@
 function transformText(text, idref) {
   let ast = djot.parse(text);
   djot.applyFilter(ast, clipFilter);
-  djot.applyFilter(ast, regionFilter);
-  djot.applyFilter(ast, detailFilter);
+  djot.applyFilter(ast, symbolFilter);
   djot.applyFilter(ast, idFilter);
   return djot.renderHTML(ast);
 }
@@ -150,47 +149,57 @@ function clipFilter() {
 }
 
 /**
- * Djot filter: rewrite a photo-region paragraph into the neutral carrier the
- * photo-regions extension's DOM transform consumes.
+ * Djot filter: rewrite a paragraph of attributed symbols into the neutral
+ * carrier a DOM transform consumes — any alias, every attribute.
  *
  *   :region:{at="5.2,17.7,11.4,21.9" of=roger_king as="Roger King" row="Back"}
  *   :region:{at="17.3,14.8,9.9,20.4" as="Ian Vitcheff" row="Back"}
- *     → <p class="region-set"><span class="region" data-at="…" …></span>…</p>
+ *     → <p class="region-set"><span class="region" data-at="…" data-of="…" …></span>…</p>
  *
- * Consecutive :region: lines form one djot paragraph, and that paragraph is
- * the region set — the same grouping rule as the :lifeline: block. Djot's
- * HTML renderer drops attributes on symbols, which is why this must happen as
- * a filter. Only a paragraph consisting ENTIRELY of :region: symbols (each
- * carrying the required at= attribute) is rewritten; anything else — a region
- * marker mixed into prose, or one missing at= — is left alone, so the symbol
- * renders as visible literal text (a breadcrumb, not a vanish). Values must
- * be QUOTED (djot's bare attribute values reject ',' and spaces):
+ * Djot's HTML renderer drops a symbol's attributes — `:lifeline:{of=x}` would
+ * render as bare `:lifeline:` — so a directive whose data lives in its
+ * attributes has to become an element before rendering. Consecutive directive
+ * lines form one djot paragraph, and that paragraph is the set. Only a
+ * paragraph consisting ENTIRELY of same-alias symbols, each carrying at least
+ * one attribute (soft breaks between them allowed), is rewritten: a bare
+ * `:emoji:` paragraph, a mix of aliases, or a directive amid prose is left
+ * alone and renders as visible literal text. Every attribute becomes
+ * data-<name> on its span; an authored class on the paragraph ({.half} above
+ * the directive) is kept beside <alias>-set. A single symbol still yields a
+ * one-span set, so a consumer binds one shape.
+ *
+ * Which attributes a directive needs is the consuming DOM transform's
+ * business, not this filter's — photo-regions
+ * (extensions/photo-regions/transformRegions.js) reconstitutes a region
+ * without a usable at=, or a detail without src=, as visible text with a note
+ * saying what it needs. Values containing ',' or spaces must be QUOTED
+ * (djot's bare attribute values reject them):
  *
  *   :region:{at="<at>" of=<of> as="<as>" row="<row>" badge="<badge>"}
- *
- * The DOM transform (extensions/photo-regions/transformRegions.js) binds the
- * carrier to the figure directly above it and builds the overlay + caption.
  */
-function regionFilter() {
-  const isRegionSymbol = node => node.tag === 'symb' && node.alias === 'region';
+function symbolFilter() {
+  const isAttributed = node =>
+    node.tag === 'symb' && !!node.attributes && Object.keys(node.attributes).length > 0;
 
   const toCarrier = para => {
-    const symbols = para.children.filter(isRegionSymbol);
+    const symbols = para.children.filter(node => node.tag === 'symb');
     if (symbols.length === 0) return false;
-    const onlyRegions = para.children.every(
-      node => isRegionSymbol(node) || node.tag === 'soft_break'
+    const alias = symbols[0].alias;
+    const uniform = para.children.every(
+      node => (isAttributed(node) && node.alias === alias) || node.tag === 'soft_break'
     );
-    if (!onlyRegions) return false;
-    if (!symbols.every(node => typeof (node.attributes || {}).at === 'string')) return false;
+    if (!uniform) return false;
 
-    para.attributes = { ...(para.attributes || {}), class: 'region-set' };
+    const authored = (para.attributes && para.attributes.class) || '';
+    para.attributes = {
+      ...(para.attributes || {}),
+      class: authored ? `${authored} ${alias}-set` : `${alias}-set`,
+    };
     para.children = symbols.map(node => {
-      const { at, of, as, row, badge } = node.attributes;
-      const attributes = { class: 'region', 'data-at': at };
-      if (typeof of === 'string') attributes['data-of'] = of;
-      if (typeof as === 'string') attributes['data-as'] = as;
-      if (typeof row === 'string') attributes['data-row'] = row;
-      if (typeof badge === 'string') attributes['data-badge'] = badge;
+      const attributes = { class: alias };
+      for (const [name, value] of Object.entries(node.attributes)) {
+        attributes[`data-${name}`] = value;
+      }
       return { tag: 'span', attributes, children: [] };
     });
     return true;
@@ -198,79 +207,6 @@ function regionFilter() {
 
   // Paragraphs live in blocks (doc, sections, divs, …) — walk block children
   // arrays from the root, like clipFilter, rather than visiting tag-by-tag.
-  const walk = node => {
-    if (Array.isArray(node.children)) {
-      for (const child of node.children) {
-        if (child.tag === 'para' && Array.isArray(child.children) && toCarrier(child)) continue;
-        walk(child);
-      }
-    }
-  };
-
-  return {
-    doc: {
-      enter: doc => {
-        walk(doc);
-      },
-    },
-  };
-}
-
-/**
- * Djot filter: rewrite a :detail: paragraph — a single-region crop of an
- * image, standing alone — into the neutral carrier the photo-regions
- * extension's DOM transform consumes.
- *
- *   :detail:{src="../Images/page.jpg" at="14.4,18.8,82.8,5.3" size="1696x2385"
- *            alt="The register line, transcribed" caption="The 1821 entry."
- *            to="notes.xhtml#the-page"}
- *     → <p class="detail-set"><span class="detail" data-src="…" …></span></p>
- *
- * Same grouping and breadcrumb rules as regionFilter: only a paragraph made
- * entirely of :detail: symbols converts, and each needs src= and at= here
- * (size, alt, to and caption are validated at the DOM stage — a miss there
- * reconstitutes the directive as visible text). An authored class on the
- * paragraph is KEPT beside detail-set, so `{.half}` above the directive can
- * size the crop.
- */
-function detailFilter() {
-  const isDetailSymbol = node => node.tag === 'symb' && node.alias === 'detail';
-
-  const toCarrier = para => {
-    const symbols = para.children.filter(isDetailSymbol);
-    if (symbols.length === 0) return false;
-    const onlyDetails = para.children.every(
-      node => isDetailSymbol(node) || node.tag === 'soft_break'
-    );
-    if (!onlyDetails) return false;
-    if (
-      !symbols.every(node => {
-        const attrs = node.attributes || {};
-        return typeof attrs.src === 'string' && typeof attrs.at === 'string';
-      })
-    ) {
-      return false;
-    }
-
-    const authored = (para.attributes && para.attributes.class) || '';
-    para.attributes = {
-      ...(para.attributes || {}),
-      class: authored ? authored + ' detail-set' : 'detail-set',
-    };
-    para.children = symbols.map(node => {
-      const { src, at, size, alt, to, caption } = node.attributes;
-      const attributes = { class: 'detail', 'data-src': src, 'data-at': at };
-      if (typeof size === 'string') attributes['data-size'] = size;
-      if (typeof alt === 'string') attributes['data-alt'] = alt;
-      if (typeof to === 'string') attributes['data-to'] = to;
-      if (typeof caption === 'string') attributes['data-caption'] = caption;
-      return { tag: 'span', attributes, children: [] };
-    });
-    return true;
-  };
-
-  // Paragraphs live in blocks (doc, sections, divs, …) — walk block children
-  // arrays from the root, like regionFilter.
   const walk = node => {
     if (Array.isArray(node.children)) {
       for (const child of node.children) {

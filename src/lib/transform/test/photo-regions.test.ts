@@ -190,6 +190,19 @@ describe('transformRegions (binding and construction)', () => {
     expect(doc.body.textContent).toContain(':region:{at="not,numbers,at,all" as="Bad"}');
   });
 
+  it('breadcrumbs a region that arrives without data-at, omitting the empty attribute', async () => {
+    // The text formats' carriers no longer gate on at= — the check lives here.
+    const doc = parse(
+      '<figure><img src="a.jpg"/></figure>' +
+        '<p class="region-set"><span class="region" data-as="Nobody" data-row="Back"></span></p>'
+    );
+    await transformDOM(doc, 'ch1', {});
+    expect(doc.querySelector('.fc-overlay')).toBeNull();
+    const breadcrumb = doc.querySelector('p')!;
+    expect(breadcrumb.hasAttribute('class')).toBe(false);
+    expect(breadcrumb.textContent).toBe(':region:{as="Nobody" row="Back"}');
+  });
+
   it('leaves ordinary paragraphs and non-region spans alone', async () => {
     const body =
       '<p>Prose with a <span class="clip" data-src="a.mp3">clip</span>.</p>' +
@@ -313,6 +326,17 @@ describe('transformRegions (:detail: crops)', () => {
     expect(first).toBe(await render());
     expect(first).toContain('aria-labelledby="detail-ch-1-1"');
     expect(first).toContain('xmlns="http://www.w3.org/2000/svg"');
+  });
+
+  it('reconstitutes a detail without src, naming it in the note', async () => {
+    const { src: _src, ...noSrc } = fullDetail;
+    const doc = parse(`<p class="detail-set">${detailSpan(noSrc)}</p>`);
+    await transformDOM(doc, 'ch1', {});
+
+    expect(doc.querySelector('svg')).toBeNull();
+    const breadcrumb = doc.querySelector('p')!;
+    expect(breadcrumb.textContent).toContain(':detail:{src="" at="20,32,75,7"');
+    expect(breadcrumb.textContent).toContain('— needs src');
   });
 
   it('reconstitutes the directive, caption included, when alt is missing', async () => {
