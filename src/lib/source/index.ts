@@ -11,3 +11,11 @@ export { SourceManager } from './source-manager.js';
 
 // Utility functions
 export { SOURCE_ARCHIVE_NAME, SOURCE_ARCHIVE_NAMES } from './source-utils.js';
+
+// Chapter frontmatter (the leading `---` YAML block) and its store
+export {
+  splitFrontmatter,
+  frontmatterStorePath,
+  FRONTMATTER_STORE_PREFIX,
+  type FrontmatterSplit,
+} from './frontmatter.js';

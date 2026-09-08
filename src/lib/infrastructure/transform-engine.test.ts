@@ -272,7 +272,14 @@ describe('executeTransform', () => {
       plainText: 'hello world',
       timeout: 3000,
       idref: undefined,
-      transformCtx: { idref: undefined, basePath: '', manifest: [], language: '', spine: [] },
+      transformCtx: {
+        idref: undefined,
+        basePath: '',
+        manifest: [],
+        language: '',
+        spine: [],
+        frontmatter: null,
+      },
     });
 
     resolveLastRequest(harness, { success: true, html: '<p>hi</p>' });
@@ -293,8 +300,27 @@ describe('executeTransform', () => {
         manifest: MANIFEST,
         language: 'de',
         spine: [{ idref: 'ch1', linear: true }],
+        frontmatter: null,
       },
     });
+
+    resolveLastRequest(harness, { success: true });
+    await promise;
+  });
+
+  it('forwards the chapter frontmatter in the ctx when the caller supplies it', async () => {
+    const harness = await makeInitializedEngine();
+    const promise = harness.engine.executeTransform('body only', 2000, 'ch1', {
+      ...BROKER_CONTEXT,
+      frontmatter: { display: 'Thomas Pattenden', birth: 1821 },
+    });
+
+    const payload = harness.posted[0].payload as {
+      plainText: string;
+      transformCtx: { frontmatter: unknown };
+    };
+    expect(payload.plainText).toBe('body only');
+    expect(payload.transformCtx.frontmatter).toEqual({ display: 'Thomas Pattenden', birth: 1821 });
 
     resolveLastRequest(harness, { success: true });
     await promise;

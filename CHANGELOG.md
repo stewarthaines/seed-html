@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A chapter can open with a YAML block between `---` lines. SEED.html strips it before the text format runs, so it no longer renders as a rule, and hands what it holds to the project's transform scripts as `ctx.frontmatter`, with every chapter's record kept under `SOURCE/data/frontmatter/` for scripts that combine chapters.
 - The browser's Back and Forward buttons now walk the editor's own history: every chapter opened — by following a link in the preview, the reading-order arrows, or the spine list — and every view visited between them.
 - Chapter links that point at a section (`chapter.xhtml#heading`) land on that section in the preview, and a link to a section of the open chapter scrolls straight to it.
 - A `:detail:` directive shows one drawn region of an image as a crop in the chapter — a single register line, a face in a crowd — with no new bytes in the book, optionally linked to the page showing the full image and captioned with `caption=`. The crop is a real image in the chapter: it prints, screen readers announce its alt text, and it needs no stylesheet to show the right region. The Photo Regions panel inserts one from any drawn box, and its image picker now offers every image in the book, not just the open chapter's.
