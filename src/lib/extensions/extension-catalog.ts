@@ -259,18 +259,24 @@ function asGeneratorArray(v: unknown): GeneratorManifest[] {
   return v.map(normalizeGenerator).filter((g): g is GeneratorManifest => g !== null);
 }
 
-/** Every license file to bundle: extension-wide + per-script + per-asset + per-generator, deduped, order-stable. */
+/** Every license file to bundle: extension-wide + per-script + per-asset + per-generator, deduped, order-stable.
+ *  A manifest built by scripts/generate-extensions-manifest.js (or the dev middleware) has already
+ *  flattened object-form scripts to filenames and aggregated their licenses into `licenses`, so
+ *  that list is merged in first — without it a per-script license (js-yaml's, the family-history
+ *  validator's) would be lost on install. */
 function collectLicenses(
   scripts: unknown,
   license: unknown,
   assets: ExtensionAsset[],
-  generators: GeneratorManifest[]
+  generators: GeneratorManifest[],
+  declared?: unknown
 ): string[] {
   const out: string[] = [];
   const add = (l: unknown) => {
     if (typeof l === 'string' && l && !out.includes(l)) out.push(l);
   };
   add(license);
+  if (Array.isArray(declared)) declared.forEach(add);
   if (Array.isArray(scripts)) {
     for (const s of scripts) {
       // Only a well-formed script entry (one with a file) contributes its license.
@@ -319,7 +325,7 @@ function normalizeCatalogEntry(value: unknown): ExtensionCatalogEntry | null {
     assets,
     previewHead: asString(e.previewHead),
     files: isStringArray(e.files) && e.files.length > 0 ? e.files : undefined,
-    licenses: collectLicenses(e.scripts, e.license, assets, generators),
+    licenses: collectLicenses(e.scripts, e.license, assets, generators, e.licenses),
     chapter: asString(e.chapter),
     templates: asTemplates(e.templates),
   };

@@ -244,6 +244,24 @@ describe('extension-catalog', () => {
     expect(prism.previewHead).toBeUndefined();
   });
 
+  it('keeps per-script licenses a manifest has already aggregated into licenses', async () => {
+    // The manifest builders flatten { file, license } scripts to filenames and
+    // put their licenses in `licenses`; the entry must not lose them.
+    const entries = [
+      {
+        id: 'family-history',
+        name: 'Family',
+        license: 'LICENSE.txt',
+        scripts: ['json-schema.js'],
+        domTransforms: ['x.js'],
+        licenses: ['LICENSE.txt', 'LICENSE-json-schema.txt'],
+      },
+    ];
+    const fetchFn = vi.fn(async () => jsonResponse(entries));
+    const [family] = await loadExtensionCatalog({ protocol: 'https:', baseUrl: BASE, fetch: fetchFn });
+    expect(family.licenses).toEqual(['LICENSE.txt', 'LICENSE-json-schema.txt']);
+  });
+
   it('parses the optional extra data files list', async () => {
     const entries = [
       { id: 'family-history', name: 'Family', domTransforms: ['x.js'], files: ['person.schema.json'] },
