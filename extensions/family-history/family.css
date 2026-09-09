@@ -1,0 +1,169 @@
+/*
+ * Family History extension — the structural rules its transform relies on:
+ * portrait strips, lifelines, family trees and the findings list. The book's
+ * own look (type, colour, spacing hooks) belongs in the project's page.css;
+ * override any of these there.
+ */
+
+/* Findings the transform prints into the :family: panel while editing. */
+.family-findings {
+  list-style: none;
+  margin: 0 0 1em;
+  padding: 0.5em 0.75em;
+  border-left: 3px solid #c8a200;
+  background: #fff8dc;
+  font-size: 0.875em;
+}
+.family-findings li + li {
+  margin-top: 0.25em;
+}
+
+/* A relative named without a chapter to link to. */
+.person-name {
+  font-style: inherit;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- Portrait strips ---------------------------------------------------- */
+
+.portrait-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  margin: 1em 0;
+}
+.portrait {
+  display: inline-block;
+  flex: none;
+  background-repeat: no-repeat;
+  border-radius: 2px;
+}
+a.portrait {
+  outline-offset: 2px;
+}
+
+/* ---- Lifelines ---------------------------------------------------------- */
+
+.lifeline-group {
+  margin: 1.5em 0;
+}
+.lifeline-row {
+  display: grid;
+  grid-template-columns: minmax(6em, 10em) 1fr;
+  align-items: center;
+  column-gap: 1em;
+  margin: 1.75em 0;
+}
+.lifeline-name {
+  text-align: right;
+}
+.lifeline-track {
+  position: relative;
+  display: block;
+  height: 2px;
+  background: rgba(0, 0, 0, 0.15);
+}
+.lifeline-span {
+  position: absolute;
+  top: 0;
+  height: 2px;
+  background: currentColor;
+}
+.lifeline-event {
+  position: absolute;
+  top: 1px;
+  width: 0;
+}
+.lifeline-dot {
+  position: absolute;
+  left: -0.3em;
+  top: -0.3em;
+  width: 0.6em;
+  height: 0.6em;
+  border-radius: 50%;
+  background: currentColor;
+}
+.lifeline-date {
+  position: absolute;
+  left: 0;
+  transform: translateX(-50%);
+  top: 0.6em;
+  font-size: 0.75em;
+  white-space: nowrap;
+}
+.lifeline-marriage .lifeline-date {
+  top: auto;
+  bottom: 0.6em;
+}
+.lifeline-marriage .lifeline-dot {
+  background: transparent;
+  border: 1px solid currentColor;
+}
+
+/* ---- Family trees ------------------------------------------------------- */
+
+.tree ul {
+  list-style: none;
+  margin: 0;
+  padding-left: 1.5em;
+  position: relative;
+}
+.tree > ul {
+  padding-left: 0;
+}
+.tree li {
+  position: relative;
+  padding: 0.15em 0 0.15em 0.75em;
+}
+.tree > ul > li {
+  padding-left: 0;
+}
+.tree ul ul li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid rgba(0, 0, 0, 0.35);
+}
+.tree ul ul li:last-child::before {
+  bottom: auto;
+  height: 1em;
+}
+.tree ul ul li::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 1em;
+  width: 0.6em;
+  border-top: 1px solid rgba(0, 0, 0, 0.35);
+}
+.tree-couple {
+  display: block;
+}
+.tree-remarried {
+  margin-top: 0.15em;
+}
+.tree-dates,
+.tree-married {
+  font-size: 0.85em;
+  opacity: 0.75;
+}
+.tree-married::before {
+  content: ' ';
+}
+.tree-more {
+  display: block;
+  padding-left: 1.5em;
+  font-size: 0.85em;
+  opacity: 0.75;
+}
