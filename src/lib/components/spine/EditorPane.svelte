@@ -1953,6 +1953,11 @@
     margin: 0;
     padding-left: var(--space-4);
     font-size: var(--text-sm);
+    /* A transform that reports per record (the family-history findings) can
+       emit dozens of lines; the list scrolls inside a few lines' height so
+       the editor underneath stays reachable. */
+    max-height: 9em;
+    overflow-y: auto;
   }
 
   .warnings-list li {
