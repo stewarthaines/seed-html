@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A Family History extension: give each person's chapter a frontmatter record of dates, parents and partners, and `:family:`, `:family-index:`, `:portraits:`, `:lifeline:` and `:tree:` markers render a kinship panel, a surname index, portrait crops from the book's photographs, lifelines and family trees. A record that breaks the rules is listed at the top of the panel while you write, in the book's language (English and German).
 - The photo-regions extension now records each chapter's named regions under `SOURCE/data/regions/`, with the image's pixel size when the Photo Regions panel has seen it, for transform scripts that gather every photograph of a person across the book.
 - In Djot and Markdown chapters, any directive written as `:name:{key=value …}` on lines of its own now reaches the project's DOM transforms with its attributes intact, so a script can define a `:lifeline:` or `:tree:` marker without a change to the text format. `:region:` and `:detail:` work exactly as before.
 - A chapter can open with a YAML block between `---` lines. SEED.html strips it before the text format runs, so it no longer renders as a rule, and hands what it holds to the project's transform scripts as `ctx.frontmatter`, with every chapter's record kept under `SOURCE/data/frontmatter/` for scripts that combine chapters.
