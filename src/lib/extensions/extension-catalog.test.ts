@@ -244,6 +244,25 @@ describe('extension-catalog', () => {
     expect(prism.previewHead).toBeUndefined();
   });
 
+  it('parses the optional extra data files list', async () => {
+    const entries = [
+      { id: 'family-history', name: 'Family', domTransforms: ['x.js'], files: ['person.schema.json'] },
+      { id: 'prism', name: 'Prism', scripts: ['prism.js'], files: [] },
+      { id: 'bad', name: 'Bad', scripts: ['b.js'], files: ['ok.json', 3] },
+    ];
+    const fetchFn = vi.fn(async () => jsonResponse(entries));
+
+    const [family, prism, bad] = await loadExtensionCatalog({
+      protocol: 'https:',
+      baseUrl: BASE,
+      fetch: fetchFn,
+    });
+
+    expect(family.files).toEqual(['person.schema.json']);
+    expect(prism.files).toBeUndefined();
+    expect(bad.files).toBeUndefined();
+  });
+
   it('parses the optional insertion templates (dropping non-string/empty keys)', async () => {
     const entries = [
       {

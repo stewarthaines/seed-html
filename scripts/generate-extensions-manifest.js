@@ -99,6 +99,13 @@ for (const dirent of dirents) {
   // Optional authoring-time preview-head fragment (a filename) injected into the
   // previews while installed; never packaged. Keep in sync with serve-extensions-dev.
   const previewHead = typeof meta.previewHead === 'string' ? meta.previewHead : undefined;
+  // Optional extra files copied into SOURCE/extensions/<id>/ on install, neither
+  // loaded nor packaged (data a transform reads back). Keep in sync with
+  // serve-extensions-dev.
+  const files =
+    Array.isArray(meta.files) && meta.files.every(f => typeof f === 'string') && meta.files.length
+      ? meta.files
+      : undefined;
   // An extension must bring at least one of: a 3rd-party lib, a transform, a
   // generator, or an EPUB asset (e.g. audio-clips ships only a reading-system
   // script + CSS as assets).
@@ -128,6 +135,7 @@ for (const dirent of dirents) {
     ...licenses,
     ...(chapter ? [chapter] : []),
     ...(previewHead ? [previewHead] : []),
+    ...(files ?? []),
     'extension.json',
   ];
   const destDir = path.join(outDir, id);
@@ -181,6 +189,7 @@ for (const dirent of dirents) {
     generators,
     assets,
     previewHead,
+    files,
     licenses,
     chapter,
     templates: templates && Object.keys(templates).length > 0 ? templates : undefined,

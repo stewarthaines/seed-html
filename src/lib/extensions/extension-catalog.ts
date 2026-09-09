@@ -101,6 +101,10 @@ export interface ExtensionCatalogEntry {
    *  process/PREVIEW_HEAD_EXTENSIONS.md. Fragments should self-guard (e.g.
    *  `if (window.seed) …`) since capabilities like the seed bridge aren't in every preview. */
   previewHead?: string;
+  /** Extra files copied into SOURCE/extensions/<id>/ on install and otherwise left
+   *  alone — neither loaded into the transform iframe nor packaged. Data a transform
+   *  reads back with ctx.readSourceText (a JSON schema, a lookup table). */
+  files?: string[];
   /** All license files to bundle into SOURCE/ (extension-wide + per-script + per-asset). */
   licenses: string[];
   /** Sample chapter (plain-text source) used to seed a new project's first chapter. */
@@ -314,6 +318,7 @@ function normalizeCatalogEntry(value: unknown): ExtensionCatalogEntry | null {
     generators,
     assets,
     previewHead: asString(e.previewHead),
+    files: isStringArray(e.files) && e.files.length > 0 ? e.files : undefined,
     licenses: collectLicenses(e.scripts, e.license, assets, generators),
     chapter: asString(e.chapter),
     templates: asTemplates(e.templates),
