@@ -13,6 +13,7 @@
     "build:plugins": "npm run build --workspaces --if-present && node scripts/generate-plugin-manifest.js && node scripts/generate-extensions-manifest.js && node scripts/generate-locales-dist.js",
     "build:extensions": "node scripts/generate-extensions-manifest.js && node scripts/generate-locales-dist.js",
     "build:locales": "node scripts/generate-locales-dist.js",
+    "build:json-schema-lib": "esbuild node_modules/@cfworker/json-schema/dist/esm/index.js --bundle --format=iife --global-name=jsonSchema --minify --define:self=undefined --banner:js=\"/*! @cfworker/json-schema 4.1.1 — https://github.com/cfworker/cfworker — MIT (LICENSE-json-schema.txt). Bundled for the transform iframe as the global jsonSchema ({ Validator }) with self undefined, so its base-URI probe never touches location — a blob: iframe has none it can parse: npm run build:json-schema-lib */\" --outfile=extensions/family-history/json-schema.js",
     "preview": "vite preview",
     "deploy": "wrangler pages deploy dist --project-name readitinabook --branch main",
     "smoke": "node scripts/smoke-build.js",
@@ -49,6 +50,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
+    "@cfworker/json-schema": "^4.1.1",
     "@chromatic-com/storybook": "^4.0.0",
     "@eslint/js": "^9.29.0",
     "@storybook/addon-a11y": "~9.0.14",

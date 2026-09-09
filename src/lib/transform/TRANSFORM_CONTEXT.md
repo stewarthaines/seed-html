@@ -100,6 +100,7 @@ Contrast the three `extension.json` delivery mechanisms:
 
 - `scripts[]` — JS libraries injected as **iframe globals** (not readable as files; you call them).
 - `assets[]` — files **copied into the EPUB** and registered in the OPF manifest; readable via `ctx.readManifest*`.
+- `files[]` — data files **copied into `SOURCE/extensions/<id>/` on install** and otherwise left alone (never loaded, never packaged); readable via `ctx.readSourceText('SOURCE/extensions/<id>/<file>')`. For what the transform needs at render time but the reader never does — a JSON schema, a lookup table.
 - `domTransforms[]` / `textTransforms[]` / `generators[]` — the transform scripts themselves.
 
 A raw asset is **not** reachable by guessing a path: `readManifest*` only resolves hrefs that are actually declared in the OPF manifest (the read-scoping guarantee). That is why the asset must be a real manifest item, which the install flow guarantees.
@@ -124,4 +125,5 @@ These helpers are pure string functions and unit-tested without a storage backen
 
 - `extensions/impressum/transformImpressum.js` — reads `SOURCE/settings.json` and per-extension `extension.json` via `ctx.readSourceText`, and filters `ctx.manifest` for embedded fonts. The clearest end-to-end `ctx` user.
 - `extensions/katex/transformKaTeX.js`, `extensions/abc2svg+jsyaml/transformABC.js` — use injected `scripts[]` globals (`katex`, `abc2svg`/`jsyaml`) and ignore `ctx`.
+- `extensions/family-history/transformFamily.js` — reads `ctx.frontmatter`, every other chapter's `SOURCE/data/frontmatter/<idref>.json`, the photo-regions `SOURCE/data/regions/<idref>.json` records and its own `person.schema.json` (a `files[]` entry) via `ctx.readSourceText`; walks `ctx.spine`; labels by `ctx.language`.
 - `extensions/highlight/extension.json` — `assets[]` shipping a CSS theme into `OEBPS/Styles/` (asset-as-manifest-item, though its transform doesn't read it back).

@@ -243,6 +243,14 @@ export default defineConfig({
               // Optional preview-head fragment filename — keep in sync with
               // scripts/generate-extensions-manifest.js.
               const previewHead = typeof m.previewHead === 'string' ? m.previewHead : undefined;
+              // Extra data files copied on install — keep in sync with
+              // scripts/generate-extensions-manifest.js.
+              const files =
+                Array.isArray(m.files) &&
+                m.files.every((f: unknown) => typeof f === 'string') &&
+                m.files.length > 0
+                  ? (m.files as string[])
+                  : undefined;
               // An extension must bring at least one of: a lib, a transform, a
               // generator, an EPUB asset, or a preview-head fragment (mirrors
               // generate-extensions-manifest.js).
@@ -268,6 +276,7 @@ export default defineConfig({
                   generators,
                   assets,
                   previewHead,
+                  files,
                   licenses,
                   chapter,
                   templates:

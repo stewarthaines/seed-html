@@ -73,6 +73,39 @@ describe('ExtensionManager.importCatalogExtension', () => {
     expect(written).toEqual([]);
   });
 
+  it('writes the extra data files an extension declares', async () => {
+    const { api, files } = makeFileStorage();
+    const entry: ExtensionCatalogEntry = {
+      id: 'family-history',
+      name: 'Family History',
+      scripts: [],
+      domTransforms: ['transformFamily.js'],
+      textTransforms: [],
+      generators: [],
+      assets: [],
+      files: ['person.schema.json'],
+      licenses: [],
+    };
+    const bodies: Record<string, string> = {
+      'transformFamily.js': 'TRANSFORM',
+      'person.schema.json': '{"type":"object"}',
+      'extension.json': '{"id":"family-history"}',
+    };
+    const fetchImpl = vi.fn(async (input: RequestInfo | URL) => {
+      const file = String(input).split('/').pop() as string;
+      return { ok: true, arrayBuffer: async () => enc.encode(bodies[file]).buffer } as Response;
+    });
+
+    await new ExtensionManager(api).importCatalogExtension('ws', entry, {
+      fetch: fetchImpl,
+      baseUrl: 'https://x/',
+    });
+
+    expect(dec.decode(files.get('SOURCE/extensions/family-history/person.schema.json')!)).toBe(
+      '{"type":"object"}'
+    );
+  });
+
   it('does not write the dev SPA fallback (index.html) as SYNTAX.md', async () => {
     const { api, files } = makeFileStorage();
     const entry = {

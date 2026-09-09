@@ -148,6 +148,8 @@ export class ExtensionManager {
         // Preview-head fragment (authoring-only; injected into previews, never
         // packaged). Lands in SOURCE/extensions/<id>/ alongside the transforms.
         ...(entry.previewHead ? [entry.previewHead] : []),
+        // Extra data files the transforms read back (a schema, a table).
+        ...(entry.files ?? []),
         'extension.json',
       ]),
     ];
