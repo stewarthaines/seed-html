@@ -354,3 +354,132 @@ describe('transformRegions (:detail: crops)', () => {
     expect(breadcrumb.textContent).toContain('— needs alt');
   });
 });
+
+// ---- the chapter's regions record -----------------------------------------
+
+/** A SOURCE/ tree the transform can read and write, with every write logged. */
+function sourceStore(files: Record<string, string> = {}) {
+  const writes: Array<[string, string]> = [];
+  return {
+    files,
+    writes,
+    ctx: {
+      manifest: [
+        { id: 'ch1', href: 'Text/ch1.xhtml', mediaType: 'application/xhtml+xml' },
+        { id: 'img1', href: 'Images/team.jpg', mediaType: 'image/jpeg' },
+      ],
+      readSourceText: async (path: string) => {
+        if (!(path in files)) throw new Error(`Missing: ${path}`);
+        return files[path];
+      },
+      writeSourceText: async (path: string, text: string) => {
+        files[path] = text;
+        writes.push([path, text]);
+        return path;
+      },
+    },
+  };
+}
+
+const RECORD = 'SOURCE/data/regions/ch1.json';
+const LIBRARY = 'SOURCE/plugins/photo-regions/regions.json';
+const figureAndCarrier = '<figure><img src="../Images/team.jpg"/></figure>' + carrier;
+
+describe('transformRegions (regions record)', () => {
+  it('records every bound region under the resolved manifest href, with size from the library', async () => {
+    const store = sourceStore({
+      [LIBRARY]: JSON.stringify({
+        version: 2,
+        files: { 'Images/team.jpg': { size: { w: 1600, h: 1067 }, regions: [] } },
+      }),
+    });
+    await transformDOM(parse(figureAndCarrier), 'ch1', store.ctx);
+
+    expect(store.writes.map(([path]) => path)).toEqual([RECORD]);
+    const record = JSON.parse(store.files[RECORD]);
+    expect(record.length).toBe(3);
+    expect(record[0]).toEqual({
+      href: 'Images/team.jpg',
+      at: '5.2,17.7,11.4,21.9',
+      of: 'roger_king',
+      as: 'Roger King',
+      row: 'Back',
+      size: { w: 1600, h: 1067 },
+    });
+    expect(record[2].row).toBe('Front');
+    expect(record[2].badge).toBeUndefined();
+  });
+
+  it('omits size when the library is absent, or holds a v1 entry, or does not know the image', async () => {
+    const absent = sourceStore();
+    await transformDOM(parse(figureAndCarrier), 'ch1', absent.ctx);
+    expect(JSON.parse(absent.files[RECORD])[0].size).toBeUndefined();
+
+    const v1 = sourceStore({
+      [LIBRARY]: JSON.stringify({ version: 1, files: { 'Images/team.jpg': [] } }),
+    });
+    await transformDOM(parse(figureAndCarrier), 'ch1', v1.ctx);
+    expect(JSON.parse(v1.files[RECORD])[0].size).toBeUndefined();
+
+    const other = sourceStore({
+      [LIBRARY]: JSON.stringify({
+        version: 2,
+        files: { 'Images/other.jpg': { size: { w: 10, h: 10 }, regions: [] } },
+      }),
+    });
+    await transformDOM(parse(figureAndCarrier), 'ch1', other.ctx);
+    expect(JSON.parse(other.files[RECORD])[0].size).toBeUndefined();
+  });
+
+  it('does not rewrite an unchanged record', async () => {
+    const store = sourceStore();
+    await transformDOM(parse(figureAndCarrier), 'ch1', store.ctx);
+    await transformDOM(parse(figureAndCarrier), 'ch1', store.ctx);
+    expect(store.writes.length).toBe(1);
+  });
+
+  it('writes null over a stale record when the chapter loses its regions, and never creates one otherwise', async () => {
+    const stale = sourceStore({ [RECORD]: '[{"href":"Images/team.jpg"}]' });
+    await transformDOM(parse('<p>Prose only now.</p>'), 'ch1', stale.ctx);
+    expect(stale.writes).toEqual([[RECORD, 'null']]);
+
+    // Already null: nothing to do.
+    await transformDOM(parse('<p>Prose only now.</p>'), 'ch1', stale.ctx);
+    expect(stale.writes.length).toBe(1);
+
+    const fresh = sourceStore();
+    await transformDOM(parse('<p>Never had regions.</p>'), 'ch1', fresh.ctx);
+    expect(fresh.writes).toEqual([]);
+    expect(RECORD in fresh.files).toBe(false);
+  });
+
+  it('does not record a breadcrumbed set', async () => {
+    const store = sourceStore({ [RECORD]: '[{"href":"Images/team.jpg"}]' });
+    await transformDOM(
+      parse(
+        '<p>Just prose.</p><p><span class="region" data-at="1,2,3,4" data-as="Nobody"></span></p>'
+      ),
+      'ch1',
+      store.ctx
+    );
+    expect(store.writes).toEqual([[RECORD, 'null']]);
+  });
+
+  it('resolves the image href against the chapter, and survives a missing manifest', async () => {
+    const nested = sourceStore();
+    nested.ctx.manifest = [
+      { id: 'ch1', href: 'Text/part1/ch1.xhtml', mediaType: 'application/xhtml+xml' },
+    ];
+    await transformDOM(
+      parse('<figure><img src="../../Images/team.jpg"/></figure>' + carrier),
+      'ch1',
+      nested.ctx
+    );
+    expect(JSON.parse(nested.files[RECORD])[0].href).toBe('Images/team.jpg');
+
+    const bare = sourceStore();
+    (bare.ctx as { manifest?: unknown }).manifest = undefined;
+    await transformDOM(parse(figureAndCarrier), 'ch1', bare.ctx);
+    expect(JSON.parse(bare.files[RECORD])[0].href).toBe('Images/team.jpg');
+  });
+});

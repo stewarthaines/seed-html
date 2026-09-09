@@ -38,6 +38,27 @@
  * Hover/focus pairing between names and boxes is Styles/regions.css
  * (static pairings: 30 faces, 8 rows per figure).
  *
+ * THE RECORD: every region this transform binds is also written to
+ * SOURCE/data/regions/<idref>.json, so a transform that combines chapters
+ * (a family-history extension gathering every photograph of one person) can
+ * read who is pictured where without parsing chapter sources:
+ *
+ *   [{ "href": "Images/team.jpg", "at": "5.2,17.7,11.4,21.9",
+ *      "of": "roger_king", "as": "Roger King", "row": "Back",
+ *      "size": { "w": 1600, "h": 1067 } }, …]
+ *
+ * href is the image's OPF-relative manifest href (the chapter-relative src
+ * resolved against the chapter's own href). size is the image's pixel size
+ * — what a crop of the region needs to know its aspect — copied from the
+ * photo-regions panel's library (SOURCE/plugins/photo-regions/regions.json,
+ * which stamps it whenever the image is opened there) and simply absent when
+ * the library does not know it. Breadcrumbed sets are not recorded. A chapter
+ * with no bound regions writes `null` over a record it used to have and never
+ * gains a file otherwise; an unchanged record is not rewritten. Reading it
+ * back: ctx.readSourceText('data/regions/<idref>.json') — `null` or missing
+ * both mean none. The library itself stays the panel's working store, never
+ * the render-time truth: the source's directives are.
+ *
  * :detail: carriers are handled here too — a paragraph of span.detail
  * elements from the same carrier mechanism. A detail is a
  * standalone single-region crop with NO figure binding: it carries its own
@@ -105,7 +126,72 @@ async function transformDOM(htmlDocument, idref, ctx) {
       elementOnly(p)
     );
   });
-  if (carriers.length === 0 && detailCarriers.length === 0) return htmlDocument;
+  /** Bound regions, for the chapter's record (see the header). */
+  const records = [];
+
+  /** Manifest href of an image src, resolved against this chapter's href. */
+  const currentHref = (
+    (ctx && Array.isArray(ctx.manifest) && ctx.manifest.find(item => item.id === idref)) || {}
+  ).href;
+  const imageHref = src => {
+    const parts = typeof currentHref === 'string' ? currentHref.split('/').slice(0, -1) : [];
+    for (const part of String(src).split('/')) {
+      if (part === '..') parts.pop();
+      else if (part && part !== '.') parts.push(part);
+    }
+    return parts.join('/');
+  };
+
+  /** Write the chapter's record — skipped when it would not change, and never
+   *  created for a chapter that has no regions and no record. */
+  const persistRecord = async () => {
+    if (
+      !ctx ||
+      !idref ||
+      typeof ctx.readSourceText !== 'function' ||
+      typeof ctx.writeSourceText !== 'function'
+    ) {
+      return;
+    }
+    const path = `SOURCE/data/regions/${idref}.json`;
+    try {
+      let existing = null;
+      try {
+        existing = await ctx.readSourceText(path);
+      } catch {
+        existing = null;
+      }
+      if (records.length === 0) {
+        if (existing !== null && existing.trim() !== 'null') await ctx.writeSourceText(path, 'null');
+        return;
+      }
+      let library = {};
+      try {
+        const parsed = JSON.parse(
+          await ctx.readSourceText('SOURCE/plugins/photo-regions/regions.json')
+        );
+        if (parsed && parsed.files && typeof parsed.files === 'object') library = parsed.files;
+      } catch {
+        library = {};
+      }
+      for (const record of records) {
+        const entry = library[record.href];
+        const size = entry && !Array.isArray(entry) ? entry.size : undefined;
+        if (size && Number(size.w) > 0 && Number(size.h) > 0) {
+          record.size = { w: Number(size.w), h: Number(size.h) };
+        }
+      }
+      const text = JSON.stringify(records);
+      if (existing !== text) await ctx.writeSourceText(path, text);
+    } catch (error) {
+      console.error('photo-regions: failed to record regions', error);
+    }
+  };
+
+  if (carriers.length === 0 && detailCarriers.length === 0) {
+    await persistRecord();
+    return htmlDocument;
+  }
 
   const parseAt = value => {
     const parts = String(value ?? '')
@@ -186,6 +272,11 @@ async function transformDOM(htmlDocument, idref, ctx) {
     }
 
     figure.classList.add('name-faces');
+
+    const href = imageHref(img.getAttribute('src') || '');
+    for (const region of regions) {
+      records.push({ href, at: region.at, of: region.of, as: region.as, row: region.row });
+    }
 
     // Positioning context exactly matching the image's box.
     const frame = htmlDocument.createElement('span');
@@ -439,5 +530,6 @@ async function transformDOM(htmlDocument, idref, ctx) {
     carrier.replaceWith(figure);
   }
 
+  await persistRecord();
   return htmlDocument;
 }
