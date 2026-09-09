@@ -28,16 +28,17 @@
  * they are typing next to, and go to the console as well for chapters
  * without a panel.
  *
- * MARKERS, each a paragraph of its own. `:family:` and `:family-index:`
- * are bare symbols (rendered as literal text by djot, untouched by
- * Markdown) — matched by paragraph text. `:portraits:{of=…}`,
- * `:lifeline:{of=… as=… include=…}` and `:tree:{of=… depth=… to=… via=…}`
- * carry attributes, so they arrive as the text formats' attributed-symbol
- * carrier, `<p class="<alias>-set"><span class="<alias>" data-…></span></p>`
- * — consecutive lines form one set, which for `:lifeline:` is the unit that
- * shares a time scale. A bare `:portraits:` / `:lifeline:` / `:tree:` with no
- * attributes stays literal text: give it `{of=…}` (or any attribute) to
- * mean "this chapter's person".
+ * MARKERS, each a paragraph of its own. Written bare — `:family:`,
+ * `:family-index:`, `:portraits:`, `:lifeline:`, `:tree:` — a marker is a
+ * symbol with no attributes, which djot renders as literal text and
+ * Markdown never parses; it is matched here by paragraph text and means
+ * "this chapter's person". With attributes — `:portraits:{of=…}`,
+ * `:lifeline:{of=… as=… include=…}`, `:tree:{of=… depth=… to=… via=…}` —
+ * it arrives as the text formats' attributed-symbol carrier,
+ * `<p class="<alias>-set"><span class="<alias>" data-…></span></p>`, where
+ * consecutive lines form one set — for `:lifeline:` the unit that shares a
+ * time scale. A bare marker becomes a one-span set here, so both forms
+ * reach the renderers as one shape.
  *
  * PORTRAITS read what the photo-regions extension recorded per chapter at
  * SOURCE/data/regions/<idref>.json — every `:region:` it bound, with the
@@ -630,6 +631,28 @@ function carrierSets(document, alias) {
 /** Extra classes on a carrier paragraph, beyond the set class. */
 function extraClasses(el, ...drop) {
   return (el.getAttribute('class') || '').split(/\s+/).filter(cls => cls && !drop.includes(cls));
+}
+
+const BARE_CARRIERS = ['portraits', 'lifeline', 'tree'];
+
+/**
+ * A bare `:portraits:` / `:lifeline:` / `:tree:` paragraph (literal text —
+ * no attributes, so the text format left it alone) becomes the one-span
+ * carrier its attributed form would have produced, with no data-*: the
+ * chapter's own person, every default.
+ */
+function bareMarkerSetup(document) {
+  document.querySelectorAll('p').forEach(p => {
+    if (p.children.length > 0) return;
+    const m = /^:([a-z-]+):$/.exec(p.textContent.trim());
+    if (!m || !BARE_CARRIERS.includes(m[1])) return;
+    const set = document.createElement('p');
+    set.setAttribute('class', `${m[1]}-set`);
+    const span = document.createElement('span');
+    span.setAttribute('class', m[1]);
+    set.appendChild(span);
+    p.replaceWith(set);
+  });
 }
 
 /**
@@ -1227,6 +1250,7 @@ function treesSetup(document, idref) {
 
 async function transformDOM(document, idref, ctx) {
   try {
+    bareMarkerSetup(document);
     const anchors = anchorSetup(document, idref);
     const wanted =
       anchors.length > 0 ||

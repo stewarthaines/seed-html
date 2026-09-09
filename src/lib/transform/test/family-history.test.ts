@@ -190,6 +190,16 @@ describe('family-history: the kinship panel', () => {
     expect(texts(doc, 'div.family > p')[0]).toBe('b. 2 May 1831, Norwich');
   });
 
+  it('takes a bare :portraits: / :lifeline: / :tree: as the chapter’s own person', async () => {
+    const { ctx } = book({ chapters: ASHBYS, open: 'harriet_ashby', regions: ASHBY_REGIONS });
+    const doc = parse('<p>:portraits:</p><p>:lifeline:</p><p>:tree:</p><p>:wink:</p>');
+    await transformDOM(doc, 'harriet_ashby', ctx);
+    expect(doc.querySelector('.portrait-strip .portrait')).not.toBeNull();
+    expect(doc.querySelector('.lifeline-group .lifeline-name')!.textContent).toBe('Harriet Ashby');
+    expect(doc.querySelector('div.tree .tree-couple')!.textContent).toContain('Harriet Ashby');
+    expect(doc.body.textContent).toContain(':wink:');
+  });
+
   it('speaks German when the book does', async () => {
     const { ctx } = book({ chapters: ASHBYS, open: 'edwin_ashby', language: 'de' });
     const doc = parse('<p>:family:</p>');

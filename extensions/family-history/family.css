@@ -1,8 +1,8 @@
 /*
  * Family History extension — the structural rules its transform relies on:
- * portrait strips, lifelines, family trees and the findings list. The book's
- * own look (type, colour, spacing hooks) belongs in the project's page.css;
- * override any of these there.
+ * the findings list, portrait strips, lifelines and family trees. Carried
+ * over from the family books' page.css. The book's own look (type, colour,
+ * measure) stays in its page.css and may override any of these.
  */
 
 /* Findings the transform prints into the :family: panel while editing. */
@@ -14,6 +14,7 @@
   background: #fff8dc;
   font-size: 0.875em;
 }
+
 .family-findings li + li {
   margin-top: 0.25em;
 }
@@ -23,147 +24,197 @@
   font-style: inherit;
 }
 
+/* Off-screen but announced: dates as prose for screen readers, which the
+   absolutely-positioned visual labels can't provide in order. */
 .visually-hidden {
   position: absolute;
   width: 1px;
   height: 1px;
   overflow: hidden;
   clip: rect(0 0 0 0);
-  clip-path: inset(50%);
   white-space: nowrap;
 }
 
-/* ---- Portrait strips ---------------------------------------------------- */
-
+/* Portrait strips: face crops from the `:portraits:` marker. Each crop is a
+   viewport onto a photograph the book already carries — its geometry (box
+   size, background scale and position) rides inline on the element as plain
+   numbers; only the shared treatment lives here. print-color-adjust keeps
+   the background crops from being dropped in the printed PDF. */
 .portrait-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5em;
   margin: 1em 0;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
-.portrait {
+
+.portrait-strip .portrait {
   display: inline-block;
-  flex: none;
+  margin: 0 0.5em 0.5em 0;
   background-repeat: no-repeat;
-  border-radius: 2px;
-}
-a.portrait {
-  outline-offset: 2px;
+  border: 1px solid currentColor;
+  vertical-align: middle;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
-/* ---- Lifelines ---------------------------------------------------------- */
-
+/* Lifelines: sparkline-style event timelines from the `:lifeline:` marker.
+   Markers on consecutive lines share one time scale, so partners' and
+   siblings' lives line up. Geometry (event positions, the life segment)
+   rides inline as percentages of the track; this block owns the look. The
+   line is a border and the dots are tiny currentColor discs, so night
+   themes and the PDF both keep them (print-color-adjust for the discs).
+   Layer-1 fallback: without flex the name sits above a full-width track —
+   stacked, still readable. */
 .lifeline-group {
-  margin: 1.5em 0;
+  max-width: 32rem;
+  margin: 0 auto;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
+
 .lifeline-row {
-  display: grid;
-  grid-template-columns: minmax(6em, 10em) 1fr;
-  align-items: center;
-  column-gap: 1em;
-  margin: 1.75em 0;
+  display: flex;
+  align-items: flex-start;
 }
+
 .lifeline-name {
-  text-align: right;
+  flex: 0 0 6em;
+  font-size: 0.875em;
+  padding-top: 0.7em; /* sits level with the line */
 }
+
 .lifeline-track {
   position: relative;
   display: block;
-  height: 2px;
-  background: rgba(0, 0, 0, 0.15);
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 2.6em;
 }
+
 .lifeline-span {
   position: absolute;
-  top: 0;
-  height: 2px;
-  background: currentColor;
+  top: 1.1em;
+  border-top: 2px solid currentColor;
 }
+
 .lifeline-event {
   position: absolute;
-  top: 1px;
-  width: 0;
+  top: 0;
 }
+
 .lifeline-dot {
   position: absolute;
-  left: -0.3em;
-  top: -0.3em;
-  width: 0.6em;
-  height: 0.6em;
+  top: 0.93em;
+  left: -0.2em;
+  width: 0.4em;
+  height: 0.4em;
   border-radius: 50%;
   background: currentColor;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
+
+/* Year labels below the line; em offsets resolve against the label's own
+   0.75em size. translateX centers each label on its dot — a reader without
+   transforms shows it left-anchored instead, which still reads. */
 .lifeline-date {
   position: absolute;
-  left: 0;
+  top: 1.75em;
   transform: translateX(-50%);
-  top: 0.6em;
   font-size: 0.75em;
   white-space: nowrap;
 }
+
+/* Marriage labels go ABOVE the line: partners' marriage marks share an x,
+   and the opposite side keeps them clear of each other's year labels. */
 .lifeline-marriage .lifeline-date {
-  top: auto;
-  bottom: 0.6em;
-}
-.lifeline-marriage .lifeline-dot {
-  background: transparent;
-  border: 1px solid currentColor;
+  top: 0;
 }
 
-/* ---- Family trees ------------------------------------------------------- */
+/* Family trees from the `:tree:` marker: nested lists, one couple per item,
+   children beneath. The connectors are pseudo-element borders — decorative,
+   invisible to assistive tech, and a reader that drops them still has a
+   plain nested list, which is the accessible form anyway. Layer 1 needs
+   nothing beyond the list; `position` is confined to the tree's own boxes.
 
+   The stem is drawn PER ITEM, not per list: a middle child's stem runs its
+   full height (spanning any subtree beneath it, so the line reaches the next
+   sibling), and the last child's is cut to the stub's height — the elbow.
+   Row spacing is padding, not margin, so the stem shows no gaps. The stub
+   sits at padding-top + half the 1.3em list line-height.
+   A couple never splits across a page; the list as a whole may. */
 .tree ul {
   list-style: none;
   margin: 0;
-  padding-left: 1.5em;
-  position: relative;
+  padding-left: 1.4em;
 }
+
+.tree li {
+  position: relative;
+  padding: 0.3em 0 0 0.7em;
+  line-height: 1.3em;
+}
+
+.tree li:before {
+  content: '';
+  position: absolute;
+  left: -0.7em;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid currentColor;
+}
+
+.tree li:last-child:before {
+  bottom: auto;
+  height: 0.95em;
+}
+
+.tree li:after {
+  content: '';
+  position: absolute;
+  left: -0.7em;
+  top: 0.95em;
+  width: 0.7em;
+  border-top: 1px solid currentColor;
+}
+
 .tree > ul {
   padding-left: 0;
 }
-.tree li {
-  position: relative;
-  padding: 0.15em 0 0.15em 0.75em;
-}
+
 .tree > ul > li {
   padding-left: 0;
 }
-.tree ul ul li::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  border-left: 1px solid rgba(0, 0, 0, 0.35);
+
+.tree > ul > li:before,
+.tree > ul > li:after {
+  display: none;
 }
-.tree ul ul li:last-child::before {
-  bottom: auto;
-  height: 1em;
-}
-.tree ul ul li::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 1em;
-  width: 0.6em;
-  border-top: 1px solid rgba(0, 0, 0, 0.35);
-}
+
 .tree-couple {
-  display: block;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
+
+/* A later marriage on its own row, after the previous marriage's children:
+   "= Partner (dates) m. YYYY". Block so it takes a row of its own, with the
+   same top spacing as a list item. */
 .tree-remarried {
-  margin-top: 0.15em;
-}
-.tree-dates,
-.tree-married {
-  font-size: 0.85em;
-  opacity: 0.75;
-}
-.tree-married::before {
-  content: ' ';
-}
-.tree-more {
   display: block;
-  padding-left: 1.5em;
+  padding-top: 0.3em;
+}
+
+.tree-dates,
+.tree-married,
+.tree-more {
   font-size: 0.85em;
-  opacity: 0.75;
+  opacity: 0.95;
+}
+
+.tree-married,
+.tree-more {
+  margin-left: 0.5em;
+}
+
+.tree-more {
+  font-style: italic;
 }
