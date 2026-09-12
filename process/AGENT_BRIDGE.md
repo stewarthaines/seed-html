@@ -37,7 +37,7 @@ The agent registers the bridge once: `claude mcp add seed-bridge -- node scripts
 
 ### Audio cues (built)
 
-The overlay is a small pill at the foot of one tab, and consent prompts auto-deny after ninety seconds. That combination loses writes whenever the author's attention is in another application — it did, twice, before this existed. Nothing visual solves it, because the problem is that the author is not looking at the screen.
+The overlay is a small pill at the foot of one tab, and consent prompts time out after ninety seconds. That combination loses writes whenever the author's attention is in another application — it did, twice, before this existed. Nothing visual solves it, because the problem is that the author is not looking at the screen.
 
 **The feed is the activity log; sound is the summons.** A cue fires only for something that needs the author, never to narrate what the agent did. Sounding routine traffic would train the author to ignore the one cue that matters, which is worse than silence.
 
@@ -46,7 +46,7 @@ The overlay is a small pill at the foot of one tab, and consent prompts auto-den
 | connected                             | `ready`   | confirmation, and a self-test — see below                                                  |
 | consent prompt raised                 | `chime`   | the summons; the event the author misses                                                   |
 | code diff review raised               | `bloom`   | deliberately unlike the routine ask: modal, no session grant, and about code that will run |
-| 15s before an auto-deny               | `whisper` | the failure is not missing the prompt, it is missing it for the full ninety seconds        |
+| 15s before the timeout                | `whisper` | the failure is not missing the prompt, it is missing it for the full ninety seconds        |
 | write failed (not a refusal)          | `error`   | a stale hash or dirty editor is otherwise discovered much later                            |
 | unexpected disconnect                 | `release` | the agent is gone and only the pill says so                                                |
 | reads, inspections, successful writes | _silent_  | that is what the feed is for; the author who just clicked Allow already knows              |
@@ -54,7 +54,7 @@ The overlay is a small pill at the foot of one tab, and consent prompts auto-den
 Two decisions inside that table are load-bearing:
 
 - **The connect cue is a self-test.** Web Audio needs a user gesture, and clicking "Allow agent assistance" is one — so playing a cue there proves the audio path works. A silent connect tells the author now that notifications will not reach them, instead of an hour later by missing a prompt.
-- **A refusal is not a fault.** `writeFile` flags the error it throws on denial, so the error cue can stay silent for it. Sounding a failure at someone who has just pressed Deny reports a problem where there is none — and the distinction is structural rather than a match on message text.
+- **A refusal is not a fault.** `writeFile` flags the error it throws on denial, so the error cue can stay silent for it. Sounding a failure at someone who has just pressed Deny reports a problem where there is none — and the distinction is structural rather than a match on message text. An unanswered prompt (a timeout, or a disconnect) is flagged the same way, and reaches the agent as its own error rather than a denial, because a timeout usually means the author is away and the write is still wanted.
 
 **Sound is a second channel, never the only one.** The `aria-live` feed and the visible prompt are untouched: a sound-only cue is no cue at all to a deaf author. The overlay carries a persisted toggle (`seedhtml_agent_bridge_muted`), labelled by state rather than action.
 

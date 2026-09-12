@@ -2,9 +2,9 @@
  * Tests for the agent bridge module asset (src/lib/agent-bridge/module.js,
  * served at agent-bridge/module.js by the dev middleware). The asset is plain
  * ESM, imported directly; the WebSocket is a scripted fake and the workspace
- * directory is a plain-object handle tree. The consent-timeout auto-deny is
- * deliberately untested (fake timers fight the crypto/microtask polling);
- * cancellation-on-disconnect covers the same finish path.
+ * directory is a plain-object handle tree. The consent timeout runs under fake
+ * timers that still advance with real time (shouldAdvanceTime), so the
+ * crypto/microtask polling keeps working while the test jumps ninety seconds.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { start, isWritablePath, isCodePath } from './module.js';
@@ -764,6 +764,78 @@ describe('agent bridge module', () => {
     expect(ctx.writeTextFile).not.toHaveBeenCalled();
   });
 
+  it('an unanswered prompt times out as its own error, not a denial', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'], shouldAdvanceTime: true });
+    try {
+      const { ctx } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      socket.onmessage?.({
+        data: JSON.stringify({
+          id: 1,
+          tool: 'write_file',
+          params: {
+            path: 'OEBPS/Styles/page.css',
+            text: 'x',
+            expectedHash: await sha256('body { color: red }'),
+          },
+        }),
+      });
+      await waitFor(() =>
+        [...ctx.mountEl.querySelectorAll('button')].some(b => b.textContent === 'Allow once')
+      );
+      vi.advanceTimersByTime(90_000);
+      await waitFor(() => socket.sent.some(s => s.includes('no answer')));
+      const response = JSON.parse(socket.sent[socket.sent.length - 1]);
+      expect(response).toMatchObject({ id: 1, ok: false });
+      expect(response.error).not.toContain('denied');
+      expect(ctx.mountEl.textContent).toContain('timed out, no answer');
+      expect(ctx.writeTextFile).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('an unanswered code review times out as its own error, not a denial', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'], shouldAdvanceTime: true });
+    try {
+      // Like the app's dialog: an abort resolves 'deny'. The timeout must still
+      // reach the agent as a timeout.
+      const { ctx } = makeContext({
+        reviewWrite: vi.fn(
+          (request: Record<string, unknown>) =>
+            new Promise<'deny'>(resolve =>
+              (request.signal as AbortSignal).addEventListener('abort', () => resolve('deny'))
+            )
+        ),
+      });
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      socket.onmessage?.({
+        data: JSON.stringify({
+          id: 1,
+          tool: 'write_file',
+          params: {
+            path: 'OEBPS/Scripts/clip-player.js',
+            text: '// changed',
+            expectedHash: await sha256('// player'),
+          },
+        }),
+      });
+      await waitFor(() => ctx.reviewWrite.mock.calls.length > 0);
+      vi.advanceTimersByTime(90_000);
+      await waitFor(() => socket.sent.some(s => s.includes('no answer')));
+      const response = JSON.parse(socket.sent[socket.sent.length - 1]);
+      expect(response).toMatchObject({ id: 1, ok: false });
+      expect(response.error).not.toContain('denied');
+      expect(ctx.writeTextFile).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('refuses without consent UI: bad path, missing file, stale hash, dirty editor', async () => {
     const { ctx } = makeContext({ isFileDirty: vi.fn(() => true) });
     start(ctx);
@@ -868,6 +940,8 @@ describe('agent bridge module', () => {
     );
     await tick();
     expect(ctx.writeTextFile).not.toHaveBeenCalled();
+    // the feed says why the prompt closed, not that the author denied it
+    expect(ctx.mountEl.textContent).toContain('cancelled, connection closed');
   });
 
   it('writes binary via base64 and enforces the size limit up front', async () => {
