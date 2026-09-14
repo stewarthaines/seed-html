@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The screen reader preview announces a heading once. A heading with a line break or an emphasised word inside it used to be read three times: the title, each of its parts, then the title again as the heading ended. The Read aloud view repeated it too.
+
 ## [0.21.0] - 2026-09-09
 
 ### Changed

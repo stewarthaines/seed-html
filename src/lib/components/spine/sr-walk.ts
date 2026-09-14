@@ -238,12 +238,23 @@ export interface WalkOptions {
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-/** The role="img" ancestor-or-self of a node, if any — the marker of a
- *  presentational subtree the walk must not read into. */
-function roleImgOf(node: Node | null | undefined): Element | null {
+/**
+ * Elements a real screen reader announces as ONE phrase, whatever their
+ * children. `role="img"` by spec (children-presentational). Headings by
+ * behaviour: VoiceOver and NVDA speak a heading's name and level once. The
+ * vendored library collapses an element only when its single child is a text
+ * node equal to its accessible name — so a heading holding a `<br>`, an
+ * `<em>`, or a language span is walked as a container: entry phrase with the
+ * full name, every text run, then "end of heading" with the full name again.
+ * The driver announces these once and skips the subtree.
+ */
+const ATOMIC_SELECTOR = '[role="img"], h1, h2, h3, h4, h5, h6';
+
+/** The atomic ancestor-or-self of a node, if any — see ATOMIC_SELECTOR. */
+function atomicOf(node: Node | null | undefined): Element | null {
   if (!node) return null;
   const el = node.nodeType === Node.ELEMENT_NODE ? (node as Element) : node.parentElement;
-  return el?.closest('[role="img"]') ?? null;
+  return el?.closest(ATOMIC_SELECTOR) ?? null;
 }
 
 /** Poll until the last spoken phrase changes from `previous` (or time out). */
@@ -283,21 +294,23 @@ export async function walkAnnouncements(
       if (ownTabindex === null) target.removeAttribute('tabindex');
     }
     onPhrase(first);
-    // A role="img" target IS its single announcement: per spec its subtree is
-    // presentational, but the vendored virtual screen reader steps into it
-    // anyway (children-presentational is not implemented), so stepping would
-    // read every SVG syllable of a score. Announce and end the walk.
-    if (target?.closest('[role="img"]')) return;
+    // An atomic target IS its single announcement. role="img": per spec its
+    // subtree is presentational, but the vendored virtual screen reader steps
+    // into it anyway (children-presentational is not implemented), so stepping
+    // would read every SVG syllable of a score. Headings: stepping would repeat
+    // the title around each text run. Announce and end the walk.
+    if (target?.closest(ATOMIC_SELECTOR)) return;
     let prev = first;
     for (let i = 0; i < maxSteps && !signal.aborted; i++) {
       if (stepDelayMs > 0) await delay(stepDelayMs);
       if (signal.aborted) break;
       await vsr.next();
-      // Entering a role="img" subtree: announce the labeled element's phrase
-      // once, then fast-forward silently (no step delay, no emission) until
-      // the cursor exits — same children-presentational gap as the target
+      // Entering an atomic subtree (role="img", heading): announce the entry
+      // phrase once, then fast-forward silently (no step delay, no emission)
+      // until the cursor exits — the library's "end of" marker still has the
+      // element as its node, so it is swallowed too. Same gap as the target
       // early-end above, hit by the whole-chapter walk.
-      if (roleImgOf(vsr.activeNode)) {
+      if (atomicOf(vsr.activeNode)) {
         const entry = await vsr.lastSpokenPhrase();
         if (entry !== prev && entry !== first) {
           onPhrase(entry);
@@ -305,13 +318,13 @@ export async function walkAnnouncements(
         }
         for (let j = 0; j < maxSteps && !signal.aborted; j++) {
           await vsr.next();
-          if (!roleImgOf(vsr.activeNode)) break;
+          if (!atomicOf(vsr.activeNode)) break;
         }
         if (signal.aborted) break;
       }
       // The cursor leaving the target ends the walk — the authoritative stop
-      // for elements that never announce an end phrase (a heading flattens
-      // into one phrase; there is no "end of heading" to wait for).
+      // for elements that never announce an end phrase (a plain-text heading
+      // is one phrase to the library; there is no "end of heading" to wait for).
       if (target && vsr.activeNode && !target.contains(vsr.activeNode)) break;
       const phrase = await vsr.lastSpokenPhrase();
       if (phrase === prev || phrase === first) break;
