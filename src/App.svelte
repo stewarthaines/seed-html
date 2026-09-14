@@ -359,9 +359,11 @@
   });
 
   function handleNavigationClick(chapterId: string, fragment?: string) {
-    // Find manifest item by matching href
-    const manifestItem = currentWorkspaceState?.opf?.manifest?.find(item =>
-      item.href?.includes(`${chapterId}.xhtml`)
+    // Find the manifest item whose href's filename is exactly the link's. A
+    // substring test would send james_mccoll.xhtml to john_james_mccoll.xhtml.
+    const fileName = `${chapterId}.xhtml`;
+    const manifestItem = currentWorkspaceState?.opf?.manifest?.find(
+      item => item.href?.split('/').pop() === fileName
     );
 
     if (manifestItem) {
