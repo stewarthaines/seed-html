@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-14\n"
-"PO-Revision-Date: 2026-08-14\n"
+"POT-Creation-Date: 2026-09-09\n"
+"PO-Revision-Date: 2026-09-09\n"
 "Language: de\n"
 "Language-Team: \n"
 "Last-Translator: Claude (machine first pass)\n"
@@ -1646,6 +1646,10 @@ msgstr "Editor-Textgröße"
 msgid "element"
 msgstr "Element"
 
+#: plugins/photo-regions/src/App.svelte
+msgid "Elsewhere in the book"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Embed the editor in the EPUB so the book can be reopened and edited."
 msgstr "Den Editor in das EPUB einbetten, damit das Buch erneut geöffnet und bearbeitet werden kann."
@@ -2511,6 +2515,10 @@ msgstr "JavaScript-Erweiterung importieren"
 msgid "Importing…"
 msgstr "Wird importiert…"
 
+#: plugins/photo-regions/src/App.svelte
+msgid "In this chapter"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Include cover page"
 msgstr "Inklusive Titelseite"
@@ -2573,6 +2581,10 @@ msgstr ""
 msgid "Insert {name} at the cursor"
 msgstr ""
 
+#: plugins/photo-regions/src/App.svelte
+msgid "Insert as a detail crop"
+msgstr ""
+
 #: src/lib/components/spine/GeneratorPanel.svelte
 msgid "Insert at cursor"
 msgstr "An Cursor einfügen"
@@ -2595,6 +2607,10 @@ msgstr ""
 
 #: plugins/photo-regions/src/App.svelte
 msgid "Inserted {count} region(s) at the cursor"
+msgstr ""
+
+#: plugins/photo-regions/src/App.svelte
+msgid "Inserted a detail crop at the cursor"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts

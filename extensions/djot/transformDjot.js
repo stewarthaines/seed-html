@@ -43,11 +43,16 @@ function idFilter() {
   };
 
   // Heading text as authored — every node's `text` concatenated, so smart
-  // punctuation contributes the character the author typed.
+  // punctuation contributes the character the author typed. A non-breaking
+  // space (`\ `) and a line break inside the heading carry no text, so they
+  // count as a space: `Varden\ Meparishvili` slugs to "Varden-Meparishvili",
+  // the same as a link retyped from the visible title.
+  const SPACE_NODES = new Set(['non_breaking_space', 'hard_break', 'soft_break']);
   const textOf = node => {
     let out = '';
     const walk = n => {
-      if (typeof n.text === 'string') out += n.text;
+      if (SPACE_NODES.has(n.tag)) out += ' ';
+      else if (typeof n.text === 'string') out += n.text;
       (n.children || []).forEach(walk);
     };
     (node.children || []).forEach(walk);

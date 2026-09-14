@@ -150,6 +150,11 @@ describe('family-history: the kinship panel', () => {
     expect(parents.querySelector('span.person-name')!.textContent).toBe('Walter Ashby');
     // Siblings: Ada (full) and Tom (half, through Harriet), in birth order.
     expect(items(doc, 'div.family > ul', 0)).toBe('Ada Ashby (b. 1854) | Tom Moore (b. 1873)');
+    // The siblings label and list, and nothing else, carry the class a book
+    // can hide them by.
+    const siblingParts = [...doc.querySelectorAll('div.family > .family-siblings')];
+    expect(siblingParts.map(el => el.tagName)).toEqual(['P', 'UL']);
+    expect(siblingParts[0].textContent).toBe('Siblings');
     // Partner with the record's own marriage date and place.
     expect(texts(doc, 'div.family > p')[4]).toBe('Partner');
     expect(items(doc, 'div.family > ul', 1)).toBe('Clara Bell, m. 10 October 1880, Ipswich');
