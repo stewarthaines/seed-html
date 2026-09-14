@@ -387,6 +387,90 @@ describe('walkAnnouncements', () => {
     expect(heard).toEqual(['heading, Title, level 2']);
   });
 
+  it('a heading target with inline children announces once and never steps into them', async () => {
+    // The library only collapses an element whose single child is a text node
+    // equal to its accessible name. A <br> (or a span) makes it a container:
+    // entry phrase, each text run, then "end of heading" repeating the name.
+    // Real screen readers speak a heading once — so must the driver.
+    const root = document.createElement('div');
+    root.innerHTML = `<h1 id="h">Last Soinari Player — Varden Meparishvili<br />\n(1877–1969)</h1>`;
+    const heading = root.querySelector('#h') as HTMLElement;
+    const timeline = [
+      'document',
+      'heading, Last Soinari Player — Varden Meparishvili (1877–1969), level 1',
+    ];
+    let index = 0;
+    const next = vi.fn(async () => {
+      index = Math.min(index + 1, timeline.length - 1);
+    });
+    const vsr: VsrLike = {
+      start: async () => {},
+      next,
+      stop: async () => {},
+      lastSpokenPhrase: async () => timeline[index],
+    };
+    heading.focus = () => {
+      index = 1;
+    };
+    const heard: string[] = [];
+    await walkAnnouncements(vsr, root, {
+      signal: new AbortController().signal,
+      target: heading,
+      stepDelayMs: 0,
+      onPhrase: phrase => heard.push(phrase),
+    });
+    expect(heard).toEqual([
+      'heading, Last Soinari Player — Varden Meparishvili (1877–1969), level 1',
+    ]);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('a whole-chapter walk announces a heading with inline children once', async () => {
+    const root = document.createElement('div');
+    root.innerHTML = `
+      <h1 id="h">Last Soinari Player — Varden Meparishvili<br />\n(1877–1969)</h1>
+      <p id="p">after</p>
+    `;
+    const q = (id: string) => root.querySelector(`#${id}`)!;
+    const h = q('h');
+    const title = 'Last Soinari Player — Varden Meparishvili (1877–1969)';
+    // Cursor positions the vendored library would visit for a non-collapsed
+    // heading: entry, each text run, the end marker (node: the heading itself).
+    const timeline: Array<{ phrase: string; node: Node }> = [
+      { phrase: 'document', node: root },
+      { phrase: `heading, ${title}, level 1`, node: h },
+      { phrase: 'Last Soinari Player — Varden Meparishvili', node: h.firstChild! },
+      { phrase: '(1877–1969)', node: h.lastChild! },
+      { phrase: `end of heading, ${title}, level 1`, node: h },
+      { phrase: 'paragraph, after', node: q('p') },
+      { phrase: 'end of document', node: root },
+    ];
+    let index = 0;
+    const vsr: VsrLike & { activeNode: Node } = {
+      start: async () => {},
+      next: async () => {
+        index = Math.min(index + 1, timeline.length - 1);
+      },
+      stop: async () => {},
+      lastSpokenPhrase: async () => timeline[index].phrase,
+      get activeNode() {
+        return timeline[index].node;
+      },
+    };
+    const heard: string[] = [];
+    await walkAnnouncements(vsr, root, {
+      signal: new AbortController().signal,
+      stepDelayMs: 0,
+      onPhrase: phrase => heard.push(phrase),
+    });
+    expect(heard).toEqual([
+      'document',
+      `heading, ${title}, level 1`,
+      'paragraph, after',
+      'end of document',
+    ]);
+  });
+
   it('always stops the reader when the walk throws, and swallows stop() failures', async () => {
     const stop = vi.fn(async () => {
       throw new Error('document rewritten');
