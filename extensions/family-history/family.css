@@ -139,9 +139,11 @@
    The stem is drawn PER ITEM, not per list: a middle child's stem runs its
    full height (spanning any subtree beneath it, so the line reaches the next
    sibling), and the last child's is cut to the stub's height — the elbow.
-   Row spacing is padding, not margin, so the stem shows no gaps. The stub
-   sits at padding-top + half the 1.3em list line-height.
-   A couple never splits across a page; the list as a whole may. */
+   Row spacing is padding, not margin, so the stem shows no gaps; the margin
+   is zeroed explicitly because a book stylesheet's list-item spacing (the
+   starter page.css gives every li a bottom margin) would otherwise open a
+   gap in every stem. The stub sits at padding-top + half the 1.3em list
+   line-height. A couple never splits across a page; the list as a whole may. */
 .tree ul {
   list-style: none;
   margin: 0;
@@ -150,6 +152,7 @@
 
 .tree li {
   position: relative;
+  margin: 0;
   padding: 0.3em 0 0 0.7em;
   line-height: 1.3em;
 }
