@@ -68,7 +68,8 @@ export interface AgentBridgeModuleContext {
    * Review a write to executable content — a script that will run in the render
    * pipeline, in the preview realm, or on a reader's device. The author sees the
    * diff and answers; there is no session grant for code, so this is raised
-   * every time. Resolves 'deny' when `signal` aborts (timeout or disconnect).
+   * every time. Resolves 'deny' when `signal` aborts; the module aborts it on a
+   * timeout or disconnect and reports that reason to the agent, not a denial.
    *
    * Whole-payload only: an agent write is one proposal, taken or refused.
    * Partial acceptance would store bytes the agent never sent, breaking the

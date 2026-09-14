@@ -23,10 +23,14 @@ import { play, setEnabled } from './cuelume.js';
 const FEED_LIMIT = 100;
 /** Decoded byte cap for binary overwrites riding base64 through JSON-RPC. */
 const WRITE_SIZE_LIMIT = 2 * 1024 * 1024;
-/** Consent prompt auto-denies before the bridge's tool-call timeout fires. */
+/**
+ * An unanswered consent prompt times out before the bridge's tool-call timeout
+ * fires. A timeout is not a refusal: it usually means the author is away, so it
+ * reaches the agent as its own error (see unanswered()), not as a denial.
+ */
 const CONSENT_TIMEOUT_MS = 90_000;
 /**
- * A second, softer cue this long before the auto-deny. The failure worth
+ * A second, softer cue this long before the timeout. The failure worth
  * designing for is not missing the prompt, it is missing it for the full ninety
  * seconds — one chime you are away from does not help, a reminder might.
  */
@@ -177,7 +181,7 @@ export function start(ctx) {
     );
   };
   // Guarded send: tool handlers can finish after the socket died (e.g. a
-  // consent prompt auto-denied post-disconnect) — never throw into that.
+  // consent prompt cancelled post-disconnect) — never throw into that.
   const send = data => {
     if (socket && socket.readyState === 1) socket.send(data);
   };
@@ -186,7 +190,7 @@ export function start(ctx) {
     // A connect failure fires error-then-close, so the message is chosen here,
     // by whether a connection ever opened — never overwritten by close.
     // A prompt the agent is no longer waiting on must not stay actionable.
-    ui.cancelPrompts();
+    ui.cancelPrompts('disconnected');
     if (!stopped) {
       setStatus(
         'disconnected',
@@ -212,10 +216,11 @@ export function start(ctx) {
     } catch (error) {
       ui.addAction(`${describeAction(request.tool, request.params)} — failed`);
       // Only a write, and only a real fault: a rejected selector is the agent's
-      // problem to retry, and a denial is the author's own answer. What earns a
-      // cue is a write that failed for a reason they would otherwise discover
-      // much later — a stale hash, an open editor, a verification mismatch.
-      if (request.tool === 'write_file' && !error?.denied) play('error');
+      // problem to retry, a denial is the author's own answer, and an unanswered
+      // prompt has already had its reminder cue. What earns a cue is a write
+      // that failed for a reason they would otherwise discover much later — a
+      // stale hash, an open editor, a verification mismatch.
+      if (request.tool === 'write_file' && !error?.denied && !error?.unanswered) play('error');
       send(JSON.stringify({ id: request.id, ok: false, error: String(error?.message ?? error) }));
     }
   };
@@ -223,7 +228,7 @@ export function start(ctx) {
   function stop() {
     // Deliberate teardown (toggle off): close and remove the overlay.
     stopped = true;
-    ui.cancelPrompts();
+    ui.cancelPrompts('disconnected');
     try {
       socket?.close();
     } catch {
@@ -363,7 +368,8 @@ async function handleTool(ctx, session, ui, tool, params) {
  *
  * Ownership of the deadline stays here too: the abort signal fires on the same
  * timeout as the feed prompt, and on disconnect, so an unattended dialog fails
- * closed on both sides rather than leaving the agent waiting.
+ * closed on both sides rather than leaving the agent waiting. Resolves 'accept'
+ * or 'deny' for an answer, 'timeout' or 'disconnected' for none.
  */
 async function reviewCodeWrite(ctx, ui, request) {
   const controller = new AbortController();
@@ -371,12 +377,14 @@ async function reviewCodeWrite(ctx, ui, request) {
   const cancelled = new Promise(resolve => {
     settle = resolve;
   });
-  const cancel = () => {
+  const cancel = reason => {
+    // Record why before aborting: the abort makes the app's dialog resolve
+    // 'deny' straight away, and the race must see the reason, not that.
+    settle(reason);
     controller.abort();
-    settle('deny');
   };
   const untrack = ui.trackPrompt(cancel);
-  const timer = setTimeout(cancel, CONSENT_TIMEOUT_MS);
+  const timer = setTimeout(() => cancel('timeout'), CONSENT_TIMEOUT_MS);
   const reminder = setTimeout(() => play('whisper'), CONSENT_REMINDER_MS);
   // Deliberately not the prompt's chime: this one is modal, cannot be covered
   // by a session grant, and is about code that will run — it should not sound
@@ -387,7 +395,8 @@ async function reviewCodeWrite(ctx, ui, request) {
       ctx.reviewWrite({ ...request, signal: controller.signal }),
       cancelled,
     ]);
-    return choice === 'accept' ? 'accept' : 'deny';
+    if (choice === 'accept' || choice === 'timeout' || choice === 'disconnected') return choice;
+    return 'deny';
   } finally {
     clearTimeout(timer);
     clearTimeout(reminder);
@@ -412,6 +421,23 @@ const BASE_PREFIX = 'SOURCE/main/';
 function denied() {
   const error = new Error('the author denied this write');
   error.denied = true;
+  return error;
+}
+
+/**
+ * No answer at all: the prompt timed out, or the connection closed under it.
+ * Worded apart from a denial on purpose — an agent treats a denial as a
+ * decision and will not resend, but a timeout usually means the author is away,
+ * and the same write is welcome once they are back. Flagged so the error cue
+ * stays silent: the reminder cue has already sounded.
+ */
+function unanswered(reason) {
+  const error = new Error(
+    reason === 'timeout'
+      ? `no answer to the write prompt within ${CONSENT_TIMEOUT_MS / 1000} seconds — the author is probably away, not refusing. Nothing was written; send the same write again once they reply`
+      : 'the bridge connection closed before the author answered — nothing was written'
+  );
+  error.unanswered = true;
   return error;
 }
 
@@ -495,12 +521,14 @@ async function writeFile(ctx, session, ui, params) {
       incoming: isText ? text : null,
       bytes: bytes.length,
     });
-    if (choice !== 'accept') throw denied();
+    if (choice === 'deny') throw denied();
+    if (choice !== 'accept') throw unanswered(choice);
     await validate();
   } else {
     const stat = isText ? ctx.diffStat(currentText, text) : null;
     const choice = await ui.promptWrite(path, bytes.length, stat);
     if (choice === 'deny') throw denied();
+    if (choice === 'timeout' || choice === 'disconnected') throw unanswered(choice);
     if (choice === 'session') session.grant = 'session';
     await validate();
   }
@@ -734,8 +762,9 @@ function buildOverlay(mountEl, onDisconnect) {
   // Live consent prompts, cancellable when the connection or module goes away.
   const pendingPrompts = new Set();
   return {
-    cancelPrompts() {
-      for (const finish of [...pendingPrompts]) finish('deny');
+    /** Close every open prompt without an answer: 'disconnected' by default. */
+    cancelPrompts(reason = 'disconnected') {
+      for (const finish of [...pendingPrompts]) finish(reason);
     },
     /**
      * Register a canceller for a prompt this overlay does not draw (the app's
@@ -768,8 +797,9 @@ function buildOverlay(mountEl, onDisconnect) {
     },
     /**
      * Inline write-consent prompt in the feed (never a modal). Resolves
-     * 'once' | 'session' | 'deny'; auto-denies before the bridge's tool
-     * timeout so an unattended prompt fails cleanly on the agent side.
+     * 'once' | 'session' | 'deny' for an answer; 'timeout' when nobody answers
+     * within CONSENT_TIMEOUT_MS (before the bridge's tool timeout, so the agent
+     * hears back cleanly), or 'disconnected' when cancelled.
      */
     promptWrite(path, size, stat) {
       panel.hidden = false;
@@ -790,11 +820,17 @@ function buildOverlay(mountEl, onDisconnect) {
           clearTimeout(timer);
           clearTimeout(reminder);
           row.remove();
-          question.textContent = `${choice === 'deny' ? 'denied' : 'allowed'}: write ${path}`;
+          const outcome =
+            {
+              deny: 'denied',
+              timeout: 'timed out, no answer',
+              disconnected: 'cancelled, connection closed',
+            }[choice] ?? 'allowed';
+          question.textContent = `${outcome}: write ${path}`;
           resolve(choice);
         };
         pendingPrompts.add(finish);
-        const timer = setTimeout(() => finish('deny'), CONSENT_TIMEOUT_MS);
+        const timer = setTimeout(() => finish('timeout'), CONSENT_TIMEOUT_MS);
         const reminder = setTimeout(() => play('whisper'), CONSENT_REMINDER_MS);
         play('chime');
         for (const [labelText, choice] of [

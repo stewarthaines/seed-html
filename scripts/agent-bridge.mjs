@@ -119,7 +119,7 @@ function callTab(tool, params) {
   }
   const id = nextRequestId++;
   // Generous timeout: a write waits on the author's in-app consent prompt,
-  // which auto-denies at 90s — this must outlast it.
+  // which times out at 90s — this must outlast it.
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       pending.delete(id);
@@ -215,7 +215,7 @@ const TOOLS = [
   {
     name: 'seed_write_file',
     description:
-      'Overwrite an EXISTING non-generated project file (sources, transform scripts, styles, media). Requires seed_get_authoring_guide this session, and expected_hash from a prior seed_read_file of the same path — rejected if the file changed since. Writes to chapter sources (SOURCE/text/) additionally require seed_get_project_setup and a seed_read_file of every transform script it lists — chapter markup is the transforms’ output. Cannot create files, and cannot touch generated XHTML, the nav, the OPF, or settings. The author approves the first write in the app (per write, or once for the whole session) and sees every write in the activity feed; a prompt they ignore times out as a denial. Writes to code — SOURCE/scripts/, SOURCE/preview/, OEBPS/Scripts/, or any .js — are different: the author reviews the full diff every time, no session approval covers them, and the answer is the whole payload or nothing. Expect them to take longer and to be refused more readily; propose the smallest change that does the job.',
+      'Overwrite an EXISTING non-generated project file (sources, transform scripts, styles, media). Requires seed_get_authoring_guide this session, and expected_hash from a prior seed_read_file of the same path — rejected if the file changed since. Writes to chapter sources (SOURCE/text/) additionally require seed_get_project_setup and a seed_read_file of every transform script it lists — chapter markup is the transforms’ output. Cannot create files, and cannot touch generated XHTML, the nav, the OPF, or settings. The author approves the first write in the app (per write, or once for the whole session) and sees every write in the activity feed; a prompt left unanswered for 90 seconds times out with its own error, distinct from a denial: it usually means the author is away, nothing was written, and the same write can be sent again once they reply. Writes to code — SOURCE/scripts/, SOURCE/preview/, OEBPS/Scripts/, or any .js — are different: the author reviews the full diff every time, no session approval covers them, and the answer is the whole payload or nothing. Expect them to take longer and to be refused more readily; propose the smallest change that does the job.',
     inputSchema: {
       type: 'object',
       properties: {
