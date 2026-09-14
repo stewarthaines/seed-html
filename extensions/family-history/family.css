@@ -19,6 +19,11 @@
   margin-top: 0.25em;
 }
 
+/* The :family: panel's siblings label and list carry .family-siblings, and
+   no rule here: a book whose chapters already show the whole family (each
+   child has a chapter, and a tree lists them all) may hide the repeat from
+   its page.css with `.family-siblings { display: none; }`. */
+
 /* A relative named without a chapter to link to. */
 .person-name {
   font-style: inherit;

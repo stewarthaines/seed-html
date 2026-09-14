@@ -735,12 +735,16 @@ function renderPersonPanel(document, personId, target) {
     target.appendChild(p);
   }
 
+  // Label and list both carry .family-siblings: a book whose chapters already
+  // show the whole family can drop the repeat from its page.css.
   const siblingIds = siblingsOf(personId);
   if (siblingIds.length > 0) {
     const p = document.createElement('p');
+    p.setAttribute('class', 'family-siblings');
     p.textContent = t('siblings');
     target.appendChild(p);
     const ul = document.createElement('ul');
+    ul.setAttribute('class', 'family-siblings');
     siblingIds.forEach(siblingId => {
       const li = document.createElement('li');
       li.appendChild(personLink(document, siblingId));
