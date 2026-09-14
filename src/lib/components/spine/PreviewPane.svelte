@@ -122,7 +122,8 @@
      *  paged preview's absolute folios; absent → relative 1-based folios. */
     getPagedStartPage?: ((idref: string) => Promise<number | null>) | undefined;
     /** Spine neighbors of the previewed chapter, for the header's previous/next
-     *  arrows (null at either end). Navigation goes through onNavigate. */
+     *  arrows (null at either end). They are spine idrefs, selected directly —
+     *  not through onNavigate, which resolves link filenames. */
     spineNeighbors?: { prev: string | null; next: string | null } | undefined;
     /** Generate a PDF of this one chapter. Provided only over http: (Paged.js needs
      *  the origin); when set, the PDF device shows a "Chapter PDF" footer. */
@@ -1137,6 +1138,14 @@
   );
   const forceColors = persisted('seedhtml_preview_force_colors', false, asBoolean);
 
+  // The header arrows carry spine idrefs, so they select the chapter by id —
+  // the same event the sidebar dispatches — rather than resolving a filename.
+  function selectSpineItem(itemId: string) {
+    window.dispatchEvent(
+      new CustomEvent('select-spine-item', { detail: { itemId }, bubbles: true })
+    );
+  }
+
   // Props identical for both surfaces: the chapter's data, the shared reader
   // appearance, and the pass-through callbacks.
   const sharedSurfaceProps = $derived({
@@ -1321,7 +1330,7 @@
                 type="button"
                 class="btn btn-icon chapter-nav-btn"
                 disabled={!spineNeighbors?.prev}
-                onclick={() => spineNeighbors?.prev && onNavigate?.(spineNeighbors.prev)}
+                onclick={() => spineNeighbors?.prev && selectSpineItem(spineNeighbors.prev)}
                 aria-label={$t('Previous chapter')}
                 title={spineNeighbors?.prev ?? undefined}
               >
@@ -1331,7 +1340,7 @@
                 type="button"
                 class="btn btn-icon chapter-nav-btn"
                 disabled={!spineNeighbors?.next}
-                onclick={() => spineNeighbors?.next && onNavigate?.(spineNeighbors.next)}
+                onclick={() => spineNeighbors?.next && selectSpineItem(spineNeighbors.next)}
                 aria-label={$t('Next chapter')}
                 title={spineNeighbors?.next ?? undefined}
               >
