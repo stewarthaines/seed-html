@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-14\n"
-"PO-Revision-Date: 2026-08-14\n"
+"POT-Creation-Date: 2026-09-09\n"
+"PO-Revision-Date: 2026-09-09\n"
 "Language: ka\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -1665,6 +1665,10 @@ msgstr "რედაქტორის ტექსტის ზომა"
 msgid "element"
 msgstr "ელემენტი"
 
+#: plugins/photo-regions/src/App.svelte
+msgid "Elsewhere in the book"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Embed the editor in the EPUB so the book can be reopened and edited."
 msgstr "რედაქტორის ჩაშენება EPUB-ში, რათა წიგნის ხელახლა გახსნა და ჩასწორება შესაძლებელი იყოს."
@@ -2530,6 +2534,10 @@ msgstr "JavaScript გაფართოების იმპორტი"
 msgid "Importing…"
 msgstr "მიმდინარეობს იმპორტი…"
 
+#: plugins/photo-regions/src/App.svelte
+msgid "In this chapter"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Include cover page"
 msgstr "ყდის გვერდის ჩართვა"
@@ -2592,6 +2600,10 @@ msgstr "ჩასმა"
 msgid "Insert {name} at the cursor"
 msgstr "{name}-ის ჩასმა კურსორთან"
 
+#: plugins/photo-regions/src/App.svelte
+msgid "Insert as a detail crop"
+msgstr ""
+
 #: src/lib/components/spine/GeneratorPanel.svelte
 msgid "Insert at cursor"
 msgstr "ჩასმა კურსორთან"
@@ -2614,6 +2626,10 @@ msgstr "კლიპის დირექტივის ჩასმა რე
 
 #: plugins/photo-regions/src/App.svelte
 msgid "Inserted {count} region(s) at the cursor"
+msgstr ""
+
+#: plugins/photo-regions/src/App.svelte
+msgid "Inserted a detail crop at the cursor"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
