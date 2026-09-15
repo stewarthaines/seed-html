@@ -13,6 +13,14 @@
 // links/entries past the first un-previewed chapter are left un-numbered rather
 // than shown wrong. Page numbers go in .pdf-page-ref, which page-index.css shows
 // only under @media print.
+//
+// A page map is refreshed only when its chapter is previewed in the PDF preset.
+// Generate PDF does not refresh them, so a change to page size or margins leaves
+// every stored map describing the OLD pagination: the numbers then come out
+// plausible and wrong (seen 2026-09-15: links landed on 12/15/17/21…, printed
+// numbers still read 13/16/18/23…). After a print-settings change, re-preview
+// each chapter in the PDF preset — or clear SOURCE/data/preview/ — before
+// generating the PDF.
 async function transformDOM(htmlDocument, idref, ctx) {
   if (!ctx || !Array.isArray(ctx.spine)) return htmlDocument;
 

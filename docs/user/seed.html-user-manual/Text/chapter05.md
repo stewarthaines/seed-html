@@ -21,6 +21,8 @@ You can also save your book as a PDF — a fixed, printable copy, handy for proo
 
 **Include cover page** starts the PDF with the project's cover image, full page; **Running header** repeats the chapter title at the top of each page. Your book's stylesheet can override the page size. In Advanced Mode, **Page size** and **Margin** each gain a **Custom…** entry accepting CSS values (e.g. `140mm 216mm`, `20mm 15mm 25mm 15mm`); clear the field to return to the preset.
 
+The PDF is made by your browser. In Chrome or Edge it keeps the book's headings, image descriptions and links, so it works with a screen reader and its contents entries can be clicked. Other browsers produce a plain picture of the pages.
+
 To save just one chapter — for a handout or a quick sample:
 
 1. Open the chapter.

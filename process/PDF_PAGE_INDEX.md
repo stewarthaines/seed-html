@@ -99,7 +99,7 @@ For the numbers to be trustworthy the capture `head.xml` must be **layout-neutra
 **Still open:**
 
 1. **Reference extension packaging.** Ship the page-index as a catalog extension (installable, coordinated head.xml + transformDOM + CSS), or a documented snippet first? A real extension is the truer demonstration of the model.
-2. **Spine-change GC (app-side, not yet built).** The path scheme is app-owned so cleanup _can_ be app-managed, but the `deleteSourceFile`/rename-on-spine-change wiring isn't implemented yet — stale `SOURCE/data/preview/<idref>/` survives a chapter delete for now. Follow-up.
+2. **Spine-change GC (app-side).** DONE — `spine.service.ts` removes `SOURCE/data/preview/<idref>/` on chapter delete and rename.
 
 ## Author gotchas
 
@@ -116,3 +116,4 @@ Real traps hit while building the reference — worth stating for anyone (person
 - **`data-page-number` dependency** — capture reads Paged.js's `.pagedjs_page[data-page-number]`; a polyfill bump that renames it breaks the walk (there is already a `patches/paged.polyfill.md` note about page-counter quirks).
 - **Chattiness** — `paginated` fires on every re-paginate; the bridge should debounce `saveData` per path.
 - **Cover/front-matter offset** — absolute numbering must account for the cover consuming `page 1` while showing no number (`print.css` restarts numbering at the first chapter); a Phase-2 detail, noted so it is not forgotten.
+- **Stale maps after a print-settings change** — observed 2026-09-15 on Bulletin 39: after a margin change, the contents links landed on pages 12/15/17/21… while the printed numbers still read 13/16/18/23…, i.e. the previous pagination. Generate PDF paginates the whole book afresh but never refreshes the maps, and `SettingsView.updatePrint` does not invalidate them. A two-pass export (capture in the export window → `regenerateAllChapters` → re-render) and a Paged.js `target-counter` alternative were both designed and **declined as out of scope**: PDF output is a by-product of authoring the EPUB, not a core feature, and page numbers are per-project code. Authorial remedy: re-preview every chapter in the PDF preset (or clear `SOURCE/data/preview/`) after changing page size or margins, and export from Chrome/Edge — Firefox's print path writes an untagged, link-less file.
