@@ -147,7 +147,9 @@
   <button
     bind:this={trigger}
     type="button"
-    class={textTrigger ? 'book-menu-trigger book-menu-trigger-text' : 'btn btn-icon book-menu-trigger'}
+    class={textTrigger
+      ? 'book-menu-trigger book-menu-trigger-text'
+      : 'btn btn-icon book-menu-trigger'}
     aria-haspopup="menu"
     aria-expanded={open}
     aria-label={textTrigger ? undefined : label}
