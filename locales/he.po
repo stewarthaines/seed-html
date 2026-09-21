@@ -1137,6 +1137,7 @@ msgstr ""
 
 #: src/lib/components/manifest/ManifestTable.svelte
 #: src/lib/components/shell/TopBar.svelte
+#: src/lib/navigation/views/ChaptersView.svelte
 msgid "Contents"
 msgstr ""
 
@@ -3213,7 +3214,6 @@ msgstr ""
 
 #: src/App.svelte
 #: src/lib/Sidebar.svelte
-#: src/lib/components/shell/TopBar.svelte
 msgid "Navigation"
 msgstr ""
 
@@ -5226,6 +5226,10 @@ msgstr ""
 
 #: src/lib/components/shell/TopBar.svelte
 msgid "Write"
+msgstr ""
+
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Write the contents by hand"
 msgstr ""
 
 #: src/lib/components/spine/PreviewSurface.svelte

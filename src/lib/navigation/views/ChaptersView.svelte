@@ -27,6 +27,8 @@
     selectedItemId?: string | null;
     readOnly?: boolean;
     onWorkspaceUpdate?: ((workspace: WorkspaceState) => void) | null;
+    /** Opens the authored contents file (the Navigation view); shown as an Advanced link when given. */
+    onEditContents?: (() => void) | null;
   }
 
   let {
@@ -36,10 +38,13 @@
     selectedItemId = null,
     readOnly = false,
     onWorkspaceUpdate = null,
+    onEditContents = null,
   }: Props = $props();
 
   // --- state ---------------------------------------------------------------
   let items = $state<SpineItemWithSource[]>([]);
+  // The contents as the book will show them: the linear chapters, in order.
+  const contentsItems = $derived(items.filter(item => item.linear !== false));
   let selectedIds = $state<Set<string>>(new Set());
   let anchorIndex = $state(-1);
   let focusIndex = $state(0);
@@ -651,6 +656,24 @@
         <div class="diagram-frame">
           <SpineDiagram {items} {selectedIds} {proposedOrder} />
         </div>
+        <!-- The contents page as the book will show it. -->
+        <div class="contents-page" aria-label={$t('Contents')}>
+          <h2 class="contents-title">{$t('Contents')}</h2>
+          {#if contentsItems.length > 0}
+            <ol class="contents-list">
+              {#each contentsItems as item (item.id)}
+                <li>{label(item)}</li>
+              {/each}
+            </ol>
+          {/if}
+          {#if onEditContents}
+            <p class="contents-advanced">
+              <button type="button" class="btn btn-link" onclick={onEditContents}>
+                {$t('Write the contents by hand')}
+              </button>
+            </p>
+          {/if}
+        </div>
       </div>
     </Pane>
   </PaneGroup>
@@ -836,5 +859,36 @@
     padding: var(--space-6);
     color: var(--color-text-tertiary);
     text-align: center;
+  }
+  /* The generated contents, set like a page of the book. */
+  .contents-page {
+    flex-shrink: 0;
+    max-block-size: 55%;
+    overflow: auto;
+    margin: var(--space-4);
+    padding-block: var(--space-6);
+    padding-inline: var(--space-6);
+    background: var(--color-bg-primary);
+    border: 1px solid var(--color-border-default);
+    font-family: Georgia, 'Times New Roman', serif;
+    color: var(--color-text-primary);
+  }
+
+  .contents-title {
+    margin: 0 0 var(--space-4);
+    font-size: var(--text-2xl);
+    font-weight: var(--font-normal);
+  }
+
+  .contents-list {
+    margin: 0;
+    padding-inline-start: var(--space-6);
+    line-height: 1.6;
+  }
+
+  .contents-advanced {
+    margin: var(--space-5) 0 0;
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
   }
 </style>

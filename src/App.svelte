@@ -2067,6 +2067,9 @@
             onWorkspaceUpdate={updatedWorkspace => {
               if (appState) appState.workspace = updatedWorkspace;
             }}
+            onEditContents={advancedMode.current
+              ? () => navigationStore.navigateTo('navigation')
+              : null}
           />
         {:else}
           <div class="view-loading">{$t('Loading project…')}</div>
