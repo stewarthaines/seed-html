@@ -525,6 +525,10 @@ msgstr "განცხადება AI-ის შესახებ"
 msgid "Already in the catalog"
 msgstr "უკვე კატალოგშია"
 
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Also in this chapter"
+msgstr ""
+
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Announce"
 msgstr ""
@@ -2155,6 +2159,10 @@ msgstr "შეცდომები:"
 msgid "Essential Information"
 msgstr "ძირითადი ინფორმაცია"
 
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Every chapter"
+msgstr ""
+
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 msgid "Everything up to date."
 msgstr "ყველაფერი განახლებულია."
@@ -2341,6 +2349,10 @@ msgstr "ფაილი"
 msgid "Files"
 msgstr ""
 
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Files for this chapter"
+msgstr ""
+
 #: src/lib/components/spine/PreviewPane.svelte
 #. Responsive view that fills all available preview space
 msgid "Fill"
@@ -2523,6 +2535,10 @@ msgstr "პროექტის სექციების დამალვ�
 #. Device category for tablet reading in comfortable home settings
 msgid "Home (tablet)"
 msgstr "სახლი (პლანშეტი)"
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "How chapters are made"
+msgstr ""
 
 #: src/lib/components/metadata/AccessibilityFields.svelte
 msgid "Human-readable summary of the accessibility of this publication"
@@ -3520,6 +3536,10 @@ msgstr "გახსენით პროექტი გაფართოე�
 msgid "Open a project to configure its settings."
 msgstr "გახსენით პროექტი მისი პარამეტრების გასამართად."
 
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Open a second pane"
+msgstr ""
+
 #: src/lib/navigation/views/BooksView.svelte
 msgid "Open an EPUB…"
 msgstr ""
@@ -4402,10 +4422,6 @@ msgid "Select audio..."
 msgstr "აუდიოს არჩევა..."
 
 #: src/lib/components/spine/EditorPane.svelte
-msgid "Select file for pane 1"
-msgstr "ფაილის არჩევა 1-ლი პანელისთვის"
-
-#: src/lib/components/spine/EditorPane.svelte
 msgid "Select file for pane 2"
 msgstr "ფაილის არჩევა მე-2 პანელისთვის"
 
@@ -4817,6 +4833,7 @@ msgid "This application is built with the following open source libraries:"
 msgstr "ეს აპლიკაცია აგებულია შემდეგი ღია კოდის ბიბლიოთეკებით:"
 
 #: src/lib/components/spine/ChapterValidationPanel.svelte
+#: src/lib/components/spine/EditorPane.svelte
 msgid "This chapter"
 msgstr "ეს თავი"
 

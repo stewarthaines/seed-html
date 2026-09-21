@@ -487,6 +487,10 @@ msgstr ""
 msgid "Already in the catalog"
 msgstr ""
 
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Also in this chapter"
+msgstr ""
+
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Announce"
 msgstr ""
@@ -2117,6 +2121,10 @@ msgstr ""
 msgid "Essential Information"
 msgstr ""
 
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Every chapter"
+msgstr ""
+
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 msgid "Everything up to date."
 msgstr ""
@@ -2303,6 +2311,10 @@ msgstr ""
 msgid "Files"
 msgstr ""
 
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Files for this chapter"
+msgstr ""
+
 #: src/lib/components/spine/PreviewPane.svelte
 #. Responsive view that fills all available preview space
 msgid "Fill"
@@ -2484,6 +2496,10 @@ msgstr ""
 #: src/lib/components/spine/PreviewPane.svelte
 #. Device category for tablet reading in comfortable home settings
 msgid "Home (tablet)"
+msgstr ""
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "How chapters are made"
 msgstr ""
 
 #: src/lib/components/metadata/AccessibilityFields.svelte
@@ -3482,6 +3498,10 @@ msgstr ""
 msgid "Open a project to configure its settings."
 msgstr ""
 
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Open a second pane"
+msgstr ""
+
 #: src/lib/navigation/views/BooksView.svelte
 msgid "Open an EPUB…"
 msgstr ""
@@ -4364,10 +4384,6 @@ msgid "Select audio..."
 msgstr ""
 
 #: src/lib/components/spine/EditorPane.svelte
-msgid "Select file for pane 1"
-msgstr ""
-
-#: src/lib/components/spine/EditorPane.svelte
 msgid "Select file for pane 2"
 msgstr ""
 
@@ -4779,6 +4795,7 @@ msgid "This application is built with the following open source libraries:"
 msgstr ""
 
 #: src/lib/components/spine/ChapterValidationPanel.svelte
+#: src/lib/components/spine/EditorPane.svelte
 msgid "This chapter"
 msgstr ""
 

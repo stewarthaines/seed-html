@@ -222,19 +222,14 @@ function transformDOM(htmlDocument) {
       await userEvent.click(chapter);
       await pollFile(seeded, ch1Path, content => content.includes(MARKER));
 
-      // Switch pane 1 to the transform script via the file picker (transform
+      // Switch pane 1 to the transform script via the files menu (transform
       // entries are Advanced-mode-only, forced on in the loader).
-      const picker = await canvas.findByRole(
-        'combobox',
-        { name: 'Select file for pane 1' },
-        { timeout: 30000 }
+      await userEvent.click(
+        await canvas.findByRole('button', { name: 'Also in this chapter' }, { timeout: 30000 })
       );
-      const option = await within(picker).findByRole(
-        'option',
-        { name: 'transformMarker.js' },
-        { timeout: 30000 }
+      await userEvent.click(
+        await canvas.findByRole('menuitemradio', { name: 'transformMarker.js' }, { timeout: 30000 })
       );
-      await userEvent.selectOptions(picker, option);
 
       // The pane loads the script from storage; wait until it's in the editor.
       const editor = await canvas.findByRole(

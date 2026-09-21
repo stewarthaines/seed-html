@@ -506,6 +506,10 @@ msgstr "KI-Hinweis"
 msgid "Already in the catalog"
 msgstr "Bereits im Katalog"
 
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Also in this chapter"
+msgstr "Auch in diesem Kapitel"
+
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Announce"
 msgstr "Ansagen"
@@ -2136,6 +2140,10 @@ msgstr "Fehler:"
 msgid "Essential Information"
 msgstr "Obligatorische Informationen"
 
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Every chapter"
+msgstr "Jedes Kapitel"
+
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 msgid "Everything up to date."
 msgstr "Alles auf dem neuesten Stand."
@@ -2322,6 +2330,10 @@ msgstr "Dateien"
 msgid "Files"
 msgstr "Dateien"
 
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Files for this chapter"
+msgstr "Dateien zu diesem Kapitel"
+
 #: src/lib/components/spine/PreviewPane.svelte
 #. Responsive view that fills all available preview space
 msgid "Fill"
@@ -2504,6 +2516,10 @@ msgstr "Projektbereiche ausblenden"
 #. Device category for tablet reading in comfortable home settings
 msgid "Home (tablet)"
 msgstr "Zuhause (Tablet)"
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "How chapters are made"
+msgstr "Wie Kapitel entstehen"
 
 #: src/lib/components/metadata/AccessibilityFields.svelte
 msgid "Human-readable summary of the accessibility of this publication"
@@ -3501,6 +3517,10 @@ msgstr "Öffnen Sie ein Projekt, um Erweiterungen hinzuzufügen"
 msgid "Open a project to configure its settings."
 msgstr "Öffnen Sie ein Projekt, um seine Einstellungen zu konfigurieren."
 
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Open a second pane"
+msgstr "Zweiten Bereich öffnen"
+
 #: src/lib/navigation/views/BooksView.svelte
 msgid "Open an EPUB…"
 msgstr "EPUB öffnen…"
@@ -4383,10 +4403,6 @@ msgid "Select audio..."
 msgstr "Audio auswählen..."
 
 #: src/lib/components/spine/EditorPane.svelte
-msgid "Select file for pane 1"
-msgstr "Datei für Bereich 1 auswählen"
-
-#: src/lib/components/spine/EditorPane.svelte
 msgid "Select file for pane 2"
 msgstr "Datei für Bereich 2 auswählen"
 
@@ -4798,6 +4814,7 @@ msgid "This application is built with the following open source libraries:"
 msgstr "Diese Anwendung wird mit den folgenden Open-Source-Bibliotheken erstellt:"
 
 #: src/lib/components/spine/ChapterValidationPanel.svelte
+#: src/lib/components/spine/EditorPane.svelte
 msgid "This chapter"
 msgstr "Dieses Kapitel"
 

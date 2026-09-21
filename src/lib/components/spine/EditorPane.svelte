@@ -27,6 +27,7 @@
   import GeneratorPanel from '$lib/components/spine/GeneratorPanel.svelte';
   import MediaBrowserPanel from '$lib/components/spine/MediaBrowserPanel.svelte';
   import LineNumberGutter from '$lib/components/spine/LineNumberGutter.svelte';
+  import BookMenu, { type MenuItem } from '$lib/components/books/BookMenu.svelte';
   import type { GeneratorRunner } from '$lib/generators/generator-store.js';
   import { isRtlLanguage } from '$lib/epub/language-direction.js';
   import { primaryLanguage } from '$lib/epub/opf-utils.js';
@@ -233,6 +234,44 @@
       key,
       files: files.filter(f => fileGroupOf(f.type) === key),
     })).filter(g => g.files.length > 0);
+
+  // The files menu (pane 1): the chapter's own text first, then the files that
+  // shape every chapter, then the scripts that make chapters. Basic mode sees
+  // only the first two (visibleFiles1 is already filtered).
+  const OPEN_SECOND_PANE = '__open-second-pane';
+  const menuGroupOf = (type: string): 'chapter' | 'every' | 'made' =>
+    type === 'text' || type === 'locale-text' ? 'chapter' : type === 'css' ? 'every' : 'made';
+  const filesMenuItems = $derived.by((): MenuItem[] => {
+    const groups: { key: 'chapter' | 'every' | 'made'; label: string }[] = [
+      { key: 'chapter', label: $t('This chapter') },
+      { key: 'every', label: $t('Every chapter') },
+      { key: 'made', label: $t('How chapters are made') },
+    ];
+    const items: MenuItem[] = [];
+    for (const group of groups) {
+      const files = visibleFiles1.filter(f => menuGroupOf(f.type) === group.key);
+      if (files.length === 0) continue;
+      items.push({ id: `heading-${group.key}`, label: group.label, heading: true });
+      for (const file of files) {
+        items.push({ id: file.value, label: file.label, checked: file.value === pane1SelectedFile });
+      }
+    }
+    if (editorMode === 'single') {
+      items.push({ id: OPEN_SECOND_PANE, label: $t('Open a second pane') });
+    }
+    return items;
+  });
+  const pane1FileLabel = $derived(
+    availableFiles1.find(f => f.value === pane1SelectedFile)?.label ?? pane1SelectedFile
+  );
+  function handleFilesMenu(id: string): void {
+    if (id === OPEN_SECOND_PANE) {
+      onPaneToggle?.();
+      return;
+    }
+    const selectedFile = availableFiles1.find(f => f.value === id);
+    if (selectedFile) onFileSelect?.(1, selectedFile.path, selectedFile.type);
+  }
 
   /**
    * Toggle between single and dual pane mode
@@ -1029,15 +1068,16 @@
 <!-- Pane 1's file picker. Lives in the header row in single-pane mode; moves
      into pane 1's own header in dual mode (next to its editor). -->
 {#snippet pane1FileSelector()}
-  <select
-    class="file-selector"
-    value={pane1SelectedFile}
-    onchange={e => handleFileSelect(1, e)}
-    aria-label={$t('Select file for pane 1')}
-  >
-    {@render fileOptions(visibleFiles1)}
-  </select>
+  <span class="file-current" title={pane1FileLabel}>{pane1FileLabel}</span>
   {@render readOnlyBadge(1)}
+  <BookMenu
+    label={$t('Files for this chapter')}
+    triggerText={$t('Also in this chapter')}
+    items={filesMenuItems}
+    onSelect={handleFilesMenu}
+    menuWidth="280px"
+    align="start"
+  />
 {/snippet}
 
 <!-- Track-changes diff toggle for a pane, shown only when the file has a base snapshot. -->
@@ -1537,6 +1577,21 @@
     flex-wrap: wrap;
     gap: var(--space-2);
     padding: var(--space-2);
+  }
+
+  .file-current {
+    display: inline-block;
+    max-inline-size: 14rem;
+    padding-block: var(--space-1);
+    padding-inline: var(--space-2);
+    border: 1px solid var(--color-text-primary);
+    border-radius: var(--radius-sm);
+    background: var(--color-text-primary);
+    color: var(--color-bg-primary);
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .file-selector {
