@@ -1,186 +1,31 @@
-# Claude Code Project Instructions
+# SEED.html — project instructions
 
-## Claude Interaction Guidelines
+SEED.html (Simple EPUB Editor) is a Svelte 5 app that turns plain-text sources into EPUBs in the browser. Call the product **SEED.html** or **Simple EPUB Editor**, never bare "SEED"; the pre-2026 name must not reappear (`npm run validate` enforces this; the one sanctioned exception is `src/lib/storage/legacy-migration.ts`). The public face is https://readitinabook.com; the public source is https://github.com/stewarthaines/seed-html.
 
-First thing - ask the user whether this session is primarily **DOCUMENTATION**, **TESTING** or **DEVELOPMENT** based.
+The user is the architect and runs the dev server, Storybook and deploys. Read the code before asking about it. For open design questions, discuss in prose and ask one question at a time; save option lists for genuine either/or forks.
 
-When the user asks you to document a plan or write a new document describing detailed technical information to be reviewed, create a new markdown document in @process/
+## Invariants
 
-### 🚨 Quality Standards for Claude
+- **Runes only.** `$props`, `$state`, `$derived`, `$effect`, callback props, snippets, `onclick` attributes. No `export let`, top-level `$:`, `createEventDispatcher`, `<slot>` or `on:` directives; convert any you touch (conversion table in `docs/DEVELOPMENT.md`).
+- **Done means `npm run validate` passes**: zero TypeScript errors, lint under the warning cap, tests green, build succeeds. Fix what it reports; never raise the `--max-warnings` cap, and lower it when you remove warnings. Details in `docs/QUALITY.md`.
+- **Tokens, not literals.** Every colour, size and radius in a component comes from `src/styles/tokens`; never a hex in a component `<style>`. `src/styles/design-language.md` is the visual reference. Buttons use the `.btn` utility classes.
+- **Logical CSS properties** (`margin-inline`, `padding-inline-start`, …) and full keyboard operability with ARIA labels are house style; RTL locales are scaffolded and must keep working.
+- **Do not enable aggressive Rollup treeshaking** (`moduleSideEffects: false` and friends): Svelte 5's signal registration is a runtime side effect and the build breaks at runtime.
+- **In-app copy is not documentation.** UI strings are one or two short sentences saying what the user gains; no usage hints, attribute names or option values. Every string is translated in every catalog. `locales/*.po` is the translation source; the JSON files are generated (`docs/LOCALIZATION.md`).
+- **No fallback-style code** (auto-creating files or content) unless the user approves it.
 
-**See [QUALITY.md](./docs/QUALITY.md) for complete quality validation requirements, TypeScript standards, and AI coding agent behavior.**
+## Conventions
 
-### Interaction Style
+- **Plans and design records** go in `process/` as markdown, one line per paragraph (the user reviews in Obsidian). Decisions already taken are in `process/DECISIONS.md`; read it before proposing something that may have been declined.
+- **Branches and commits.** Multi-phase or structural work goes on a feature branch and merges per shippable phase; `main` is what ships. One commit per concern, staging named files only; the working tree carries long-standing untracked noise that stays out of every commit. Commit only when asked.
+- **Changelog** lines say what the user will notice, one line each; the mechanism belongs in the commit message.
+- **Delegation.** Mechanical, fully specified work (scaffolding, bulk edits, transcription) can go to a cheaper-model agent with the conventions in the prompt; review its output before committing. Judgment stays in the main context.
+- **Book content over the seed-bridge** is edited with the `book-editor` agent, which has no shell, network or browser by design; the bridge's authoring guide is the contract for that work.
+- **User manuals** follow `docs/user/CLAUDE.md`.
 
-- **Quality First**: Always prioritize TypeScript compliance and test validity
-- **Error Resolution**: Fix type errors immediately, never defer or ignore
-- **Lint ratchet**: Never raise the `--max-warnings` cap; don't add warnings, and lower the cap when you remove them (see docs/QUALITY.md)
-- **Documentation**: When planning under-specified work, ask the user for clarification
-- **IMPORTANT:** Ask the user one question at a time, not a list of questions
+## Where things are
 
-## Claude Interaction Memory
-
-- The user usually has Storybook running. If Claude wants a screenshot, ask the user
-- The user is the system architecture expert. Instead of searching the whole project, try asking the user for guidance
-- **CRITICAL**: The user expects zero TypeScript errors in the codebase at all times
-- The user will run the npm dev server, so the agent never needs to
-- When writing api docs only document methods specified. do not invent features that haven't been requested.
-- don't write fallback style code (auto-creating files, or other content) unless explicitly approved by the user
-- **In-app copy is not documentation**: extension/generator descriptions and any other UI strings get one or two short sentences saying what the user gains — never attribute names, option values, or usage instructions. Instructional text burdens localization (every string × every catalog). Mechanics belong in the extension's code headers; usage belongs in the user manuals.
-
-## SEED.html - Simple EPUB Editor
-
-This is a **Svelte 5 application using runes mode** that runs in modern browsers. It allows users to create and edit EPUB files using plain text sources that are transformed to XHTML.
-
-### Project name (IMPORTANT)
-
-The product is **SEED.html** (short for _Simple EPUB EDitor_). The distributable single
-file is `SEED.html`, the editor-source archive is `SEED.zip`, and the UI name shown to
-users is **"Simple EPUB Editor"**.
-
-- Functional identifiers use the `seedhtml` prefix: `seedhtml_*` localStorage keys,
-  the `seedhtml-storage` IndexedDB database, the `__SEEDHTML_I18N_BUNDLE__` window
-  global, the `seedhtml-content-panes` PaneForge id, the `seedhtmlPlugin` package
-  metadata key. The package / repo name is `seed-html`.
-- The pre-2026 product name was retired in a full rename (see
-  `process/RENAME_SEED_HTML.md`). Do NOT reintroduce it anywhere;
-  `scripts/check-rename.mjs` (part of `npm run validate`) enforces this. The single
-  sanctioned exception is `src/lib/storage/legacy-migration.ts`, which must name the
-  legacy IndexedDB database it adopts projects from — delete that module and its
-  allowlist entry together when the migration window closes.
-
-### Svelte 5 & Runes Mode
-
-**CONSTRAINT: All Svelte components MUST use runes mode.** This is a hard project
-rule, not a preference — for new components and existing ones alike:
-
-- **State**: Use `$state()` instead of `let` for reactive variables
-- **Props**: Use `$props()` instead of `export let`
-- **Bindable Props**: Use `$bindable()` for two-way binding
-- **Derived**: Use `$derived()` for simple expressions, `$derived.by()` for function bodies
-- **Effects**: Use `$effect()` instead of reactive statements
-- **Component events**: Use **callback props** (`onFoo?: (detail) => void`), not `createEventDispatcher`/`dispatch`
-- **Composition**: Use **snippets** (`{#snippet}` / `{@render}`), not `<slot>`
-- **DOM events**: Use `onclick`/`oninput`/… attributes, not `on:click`/`on:input` directives
-
-**Legacy Svelte 4 syntax is prohibited** — `export let`, top-level `$:` reactive
-statements, `createEventDispatcher`, `<slot>`, and `on:` event directives. If you
-touch a component that still uses any of these, convert it to runes as part of
-your change; do not add new legacy syntax. A small set of components is mid-
-migration — finish them when you work in them rather than matching their old
-style.
-
-### Distribution Model
-
-**SEED.html is distributed as MIT licensed open source** with four deployment methods:
-
-1. **Web Application** - Hosted version accessible via browser
-2. **Standalone HTML** - Single file download for offline use
-3. **SEED EPUB** - Embedded within EPUB files for self-editing capability
-4. **npm package** - `npx seed-html` serves the full app (extensions/plugins catalogs included) locally; source in `npm-package/`, published per release (see DEPLOYMENT.md); `@stewarthaines/seed-html` is a frozen alias shim (`npm-package/scoped-shim/`)
-
-The build process creates a single `index.html` file (~1MB) with all assets inlined, suitable for all distribution methods. See [DEPLOYMENT.md](./docs/DEPLOYMENT.md) for deployment details.
-
-## Technical Architecture
-
-### Key Features
-
-- EPUB unpacking/packaging using Compression Streams API
-- Real-time plain text to XHTML transformation
-- Multi-device preview (iPhone, iPad, e-reader variants)
-- Extensible transform scripts loaded from EPUB manifest
-- Accessibility-focused design
-- Reactive internationalization system with RTL support (English + German shipped; 5 more scaffolded but not enabled — see `ENABLED_LOCALES`)
-
-### Code Style Preferences
-
-- **XML/HTML Parsing**: Use `DOMParser` and `querySelector` instead of regular expressions for robust parsing
-- **CSS & Styling**: Use the comprehensive design system in `src/styles/` - see `src/styles/DESIGN_SYSTEM.md` for full documentation
-- **Editor-source archive (`SEED.zip`)**: Use existing ZIP library (`src/lib/zip/`) for the editor-source archive's creation/extraction. The archive name constant lives in `src/lib/source/source-utils.ts` (`SOURCE_ARCHIVE_NAME`); imports also accept the legacy `SOURCE.zip`.
-- **Import Paths**: Use absolute paths (`$lib/`) for new code
-- Browser-native APIs preferred over regex for structured data handling
-
-### Build Configuration Constraints
-
-- **Treeshaking**: Do NOT enable aggressive Rollup treeshaking options (`moduleSideEffects: false`, `propertyReadSideEffects: false`, `unknownGlobalSideEffects: false`). Svelte 5's reactivity system requires runtime side effects for signal registration and context initialization. Aggressive treeshaking removes these dependencies, causing runtime errors like `"can't access property 'r1', t.l is null"`. Use Vite's default treeshaking instead.
-
-### Storage Strategy
-
-- OPFS (Origin Private File System) for performance
-- IndexedDB fallback for broader browser support
-- Feature detection for `.createWritable()` support
-- Project-based organization with unique IDs
-
-### State Persistence Pattern
-
-Browser reload state management follows the **navigationStore pattern** for consistency:
-
-- **Storage Keys**: Prefixed constants (`seedhtml_app_workspace_id`, `seedhtml_nav_current_view`)
-- **Auto-Persistence**: State changes automatically persist to localStorage with try/catch error handling
-- **Restoration**: Components restore state during initialization, falling back to defaults on errors
-- **Cleanup**: Invalid state is cleared when conflicts occur
-
-**Reference Implementation**: See `src/lib/navigation/navigation-store.ts` and `src/lib/app-state-enhanced.svelte.ts` for the complete pattern.
-
-### Text Processing Pipeline
-
-```
-Plain text source → transformText.js → transformDom.js → XHTML → Preview
-```
-
-## Active EPUB Format
-
-Extension to standard EPUB structure:
-
-```
-mimetype
-META-INF/content.opf
-OEBPS/ (standard EPUB content)
-SEED.zip (editor source files - extracted to SOURCE/ during editing)
-SEED.html (editor app - to be extracted by the user to edit the EPUB file)
-```
-
-**Note**: The `SEED.zip` file (formerly `SOURCE.zip`; imports still accept the old name) contains all editor-specific files (settings, plain text sources, transform scripts, extensions) and is extracted to a `SOURCE/` directory in the workspace during editing. The archive filename is `SEED.zip`; the extracted working directory remains `SOURCE/`.
-
-**Important**: When creating SEED EPUBs, always include extraction instructions for end users. See [EPUB_EMBEDDING.md](./docs/EPUB_EMBEDDING.md) for detailed embedding guidelines.
-
-## Key Systems
-
-### CSS Design System
-
-Complete design token system with utilities and themes. **Location**: All CSS files are in `src/styles/` with organized token/utility/theme structure. See `src/styles/DESIGN_SYSTEM.md` for complete documentation.
-
-### ZIP Library
-
-Complete browser-native ZIP implementation for EPUB workflows. See `src/lib/zip/API.md` for full documentation.
-
-### Internationalization (i18n) System
-
-Reactive internationalization system with instant locale switching. The framework targets seven languages, but only locales with a genuine reviewed translation are shipped/enabled (currently English + German); the rest are scaffolded but kept out of the bundle and picker via `ENABLED_LOCALES`. **Location**: All i18n code is in `src/lib/i18n/` with API documentation.
-
-**Usage Patterns:**
-
-```svelte
-<script>
-  import { t } from '../i18n';
-</script>
-
-<!-- Reactive translation --><h1>{$t('Welcome')}</h1><p>{$t('Hello {name}', { name: 'User' })}</p>
-```
-
-## Development References
-
-- **Quality Standards**: [QUALITY.md](./docs/QUALITY.md) - Complete validation requirements and TypeScript standards
-- **Development Workflow**: [DEVELOPMENT.md](./docs/DEVELOPMENT.md) - Feature development process and API documentation standards
-- **Testing Strategy**: [TESTING.md](./docs/TESTING.md) - Comprehensive testing patterns and browser API testing
-- **Linting Configuration**: [LINTING.md](./docs/LINTING.md) - ESLint configuration and environment-specific rules
-- **Storybook Guidelines**: [STORYBOOK.md](./docs/STORYBOOK.md) - Component story development and backend integration patterns
-- **Deployment**: [DEPLOYMENT.md](./docs/DEPLOYMENT.md) - Build process and distribution methods
-- **EPUB Embedding**: [EPUB_EMBEDDING.md](./docs/EPUB_EMBEDDING.md) - Active EPUB creation guidelines
-
-# important-instruction-reminders
-
-Do what has been asked; nothing more, nothing less.
-NEVER create files unless they're absolutely necessary for achieving your goal.
-ALWAYS prefer editing an existing file to creating a new one.
-NEVER proactively create documentation files (\*.md) or README files. Only create documentation files if explicitly requested by the User.
+- `docs/ARCHITECTURE.md` — how the app fits together; `docs/DEVELOPMENT.md` — feature workflow and API doc standards; `docs/TESTING.md`, `docs/LINTING.md`, `docs/STORYBOOK.md`, `docs/DEPLOYMENT.md`, `docs/EPUB_EMBEDDING.md`.
+- `src/styles/DESIGN_SYSTEM.md` — tokens, utilities, themes. `src/lib/*/API.md` — module contracts. `src/lib/zip/API.md` — the ZIP library used for `SEED.zip`.
+- Pipeline: plain text → `transformText.js` → `transformDom.js` → XHTML → preview. Parse XML and HTML with `DOMParser` and `querySelector`, not regular expressions.
+- Storage is OPFS with an IndexedDB fallback, one project per id; browser-reload state follows the `navigationStore` pattern (`src/lib/navigation/navigation-store.ts`).
