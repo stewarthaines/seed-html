@@ -30,7 +30,7 @@
     docs: {
       description: {
         story:
-          'Walks the sidebar through Metadata, Manifest, Navigation, and Settings on a seeded book, waiting for each view to render.',
+          'Walks the Book tab through Details, Files and Navigation, then Settings, on a seeded book, waiting for each view to render.',
       },
     },
   }}
@@ -40,6 +40,8 @@
 
     // Navigate by data-testid hook, assert by the localized view heading (the
     // heading assertion is the real check; the nav step is just plumbing).
+    // The Book tab reveals its sections (Contents, Navigation, Details, Files).
+    await userEvent.click(await canvas.findByTestId('nav-book', {}, { timeout: 20000 }));
     for (const section of ['metadata', 'manifest', 'navigation']) {
       const button = await canvas.findByTestId(`nav-${section}`, {}, { timeout: 20000 });
       await userEvent.click(button);
@@ -75,7 +77,8 @@
     await userEvent.click(chapter);
     await canvas.findByRole('textbox', {}, { timeout: 60000 });
 
-    // Navigate away…
+    // Navigate away… (the Book tab, then its Details section)
+    await userEvent.click(await canvas.findByTestId('nav-book', {}, { timeout: 20000 }));
     const metadata = await canvas.findByTestId('nav-metadata', {}, { timeout: 20000 });
     await userEvent.click(metadata);
     await canvas.findByRole('heading', { name: /Metadata/i }, { timeout: 20000 });

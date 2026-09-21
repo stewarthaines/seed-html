@@ -46,17 +46,21 @@ async function clickNav(page, name) {
   await page.waitForTimeout(800);
 }
 
-// A project must exist to reach the workspace views. Reuse one if present (e.g. restored
-// after a theme reload), otherwise create a minimal one.
+// A book must be open to reach the in-book views (the top bar with the Write tab).
+// Reuse the open one if present (e.g. restored after a theme reload); otherwise open
+// the first book on the shelf, or create a minimal one.
 async function ensureWorkspace(page) {
-  const metadataNav = page.getByRole('button', { name: 'Metadata', exact: true }).first();
-  if (await metadataNav.isVisible().catch(() => false)) return true;
-  await clickNav(page, 'Projects');
-  await page
-    .getByRole('button', { name: /create a new/i })
-    .first()
-    .click();
-  await metadataNav.waitFor({ state: 'visible', timeout: 20000 });
+  const writeTab = page.getByRole('button', { name: 'Write', exact: true }).first();
+  if (await writeTab.isVisible().catch(() => false)) return true;
+  const back = page.getByRole('button', { name: /^← ?Books$|^Books$/ }).first();
+  if (await back.isVisible().catch(() => false)) await back.click();
+  const firstBook = page.getByRole('button', { name: /^Open / }).first();
+  if (await firstBook.isVisible().catch(() => false)) {
+    await firstBook.click();
+  } else {
+    await page.getByRole('button', { name: 'New book', exact: true }).first().click();
+  }
+  await writeTab.waitFor({ state: 'visible', timeout: 20000 });
   return true;
 }
 
@@ -105,23 +109,28 @@ async function scanAllViews(page, theme) {
     return true;
   };
 
-  // Views reachable without a workspace. (Publish is disabled until an EPUB is packaged,
-  // so it's skipped here — clickNav reports it.)
-  for (const name of ['Projects', 'About', 'Publish', 'Settings']) {
-    if (await visit(name)) await scan(name);
-  }
+  // Outside a book: the Books shelf (the landing screen) and About.
+  await scan('Books');
+  if (await visit('About SEED.html')) await scan('About');
 
   let workspaceReady = false;
   try {
     workspaceReady = await ensureWorkspace(page);
   } catch (e) {
-    console.warn(`\nWARN [${theme}]: could not ensure a project: ${e.message}`);
+    console.warn(`\nWARN [${theme}]: could not ensure a book: ${e.message}`);
   }
 
   if (workspaceReady) {
-    for (const name of ['Metadata', 'Manifest', 'Navigation']) {
+    // Inside a book: the top bar's Settings and Share, then the Book tab's sections.
+    for (const name of ['Settings', 'Share']) {
       if (await visit(name)) await scan(name);
     }
+    if (await visit('Book')) {
+      for (const name of ['Contents', 'Navigation', 'Details', 'Files']) {
+        if (await visit(name)) await scan(name);
+      }
+    }
+    await visit('Write');
     // Spine editor: reached by selecting a chapter (best-effort).
     try {
       const firstChapter = page.locator('.spine-item').first();
