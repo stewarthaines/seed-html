@@ -87,6 +87,10 @@ Step 1 (files menu) built: `BookMenu` now supports group headings, a detail line
 
 Step 1 committed (3c933c3). Step 2 (device switch) built in PreviewPane: a `role="group"` of family buttons Fill · Phone · Tablet · E-reader · READ.html · Print (Source in advanced mode) replaces the primary "Select view" dropdown; a sizes row (Standard / Plus, Compact / Extra Large, Print / Proofs) appears under the header when the family has more than one; the split's second dropdown is unchanged. Families map from the presets' categories (commute → Phone, home → Tablet, travel → E-reader). Four new strings with German. Seen in the app at 1440px: the header wraps to three rows at the default split; step 3 shrinks the Checks dropdown to a button, which should pull it back to two.
 
+Steps 2 and 3 committed together (335524a; one file, PreviewPane): the "Show panel" dropdown is a Reader toggle plus a checks button ("✓", or "N to fix" from epubcheck's chapter count and the last axe count) that opens the last-used check panel; the check panels (EpubCheck, Accessibility, Screen reader) share a tab strip at the top of the band. With the dropdown gone the header fits in two rows again at the default split.
+
+Step 4 (chapter title) built: `EditSpineItemDialog` gains a Title field (first, focused, placeholder = the id) and saves it to the `SOURCE/text/{id}.json` sidecar through the chapter column's edit button; a `chapter-meta-changed` window event makes SpineView re-run the transform so the preview's `<title>` follows. The advanced-mode title input is gone from the editor header, along with its props. No new strings (Title exists).
+
 ### Next step
 
-Validate and commit step 2, then step 3 (checks status button, Reader toggle, panel tabs).
+Validate and commit step 4; then phase 2 is complete except for review. Update the plan's phase list and memory.

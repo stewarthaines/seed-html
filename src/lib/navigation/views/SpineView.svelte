@@ -15,7 +15,6 @@
     type SwitchContext,
     type SwitchResult,
   } from '../../spine/chapter-switch.service.js';
-  import { readChapterMeta, writeChapterMeta } from '../../spine/chapter-metadata.js';
   import { parseLocaleTextPath } from '../../translations/editions.js';
   import EditorPane from '../../components/spine/EditorPane.svelte';
   import {
@@ -113,37 +112,18 @@
   // Component state - using $state() for reactivity in Svelte 5
   let selectedItem = $state<SpineItemWithSource | null>(null);
 
-  // Authored chapter title (persisted to the SOURCE/text/{id}.json sidecar). Loaded
-  // when the selected item changes; the editor input shows the idref as placeholder.
-  let chapterTitle = $state('');
-  $effect(() => {
+  // The chapter column's edit dialog writes the title sidecar; re-run the
+  // transform so the <title> in the preview and the saved xhtml follow.
+  async function handleChapterMetaChanged(event: Event): Promise<void> {
+    const { itemId } = (event as CustomEvent<{ itemId: string }>).detail;
     const item = selectedItem;
-    if (!item || !servicesInitialized) {
-      chapterTitle = '';
-      return;
-    }
-    readChapterMeta(fileStorage, workspace.id, item.idref)
-      .then(meta => {
-        // Ignore a stale read if the selection changed while we were reading.
-        if (selectedItem?.idref === item.idref) chapterTitle = meta.title ?? '';
-      })
-      .catch(() => {
-        // Sidecar unreadable — fall back to the idref placeholder.
-      });
-  });
-
-  async function handleChapterTitleChange(title: string): Promise<void> {
-    const item = selectedItem;
-    if (!item) return;
-    chapterTitle = title;
-    try {
-      await writeChapterMeta(fileStorage, workspace.id, item.idref, { title });
-      // Re-run the transform so the <title> in the preview and the saved xhtml update.
-      await forcePreviewUpdate();
-    } catch {
-      // Persisting the title failed (e.g. storage error); the input keeps its value.
-    }
+    if (!item || item.idref !== itemId) return;
+    await forcePreviewUpdate();
   }
+  $effect(() => {
+    window.addEventListener('chapter-meta-changed', handleChapterMetaChanged);
+    return () => window.removeEventListener('chapter-meta-changed', handleChapterMetaChanged);
+  });
   let isLoading = $state(false);
   let error = $state<string | null>(null);
   let guardId: string;
@@ -1651,9 +1631,6 @@
         handleFileSelect({ detail: { pane, filePath, fileType } } as CustomEvent)}
       onContentChange={(pane, content) =>
         handlePaneContentChange({ detail: { pane, content } } as CustomEvent)}
-      {chapterTitle}
-      chapterTitlePlaceholder={selectedItem?.idref ?? ''}
-      onChapterTitleChange={handleChapterTitleChange}
       {workspace}
       {audioClipService}
       {workspaceService}

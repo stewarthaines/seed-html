@@ -97,9 +97,6 @@
     audioClipService = null,
     workspaceService = null,
     settingsService = null,
-    chapterTitle = '',
-    chapterTitlePlaceholder = '',
-    onChapterTitleChange,
     generatorRunner = null,
     audioPluginUrl = null,
     photoPluginUrl = null,
@@ -156,11 +153,6 @@
     audioClipService?: AudioClipService | null;
     workspaceService?: WorkspaceService | null;
     settingsService?: SettingsService | null;
-    /** Authored chapter title (the spine item's content-document <title>). */
-    chapterTitle?: string;
-    /** Placeholder shown when no title is set — the spine item id it falls back to. */
-    chapterTitlePlaceholder?: string;
-    onChapterTitleChange?: (title: string) => void;
     /** Available generators + how to run them; null/empty hides the Generators control. */
     generatorRunner?: GeneratorRunner | null;
     /** Resolved iframe src for the audio clip panel plugin; when set it supersedes
@@ -253,7 +245,11 @@
       if (files.length === 0) continue;
       items.push({ id: `heading-${group.key}`, label: group.label, heading: true });
       for (const file of files) {
-        items.push({ id: file.value, label: file.label, checked: file.value === pane1SelectedFile });
+        items.push({
+          id: file.value,
+          label: file.label,
+          checked: file.value === pane1SelectedFile,
+        });
       }
     }
     if (editorMode === 'single') {
@@ -1150,18 +1146,6 @@
 
 <!-- The chapter title belongs to the chapter, not a pane, so it stays in the
      header row in both single and dual mode. -->
-{#snippet chapterTitleInput()}
-  <input
-    type="text"
-    class="chapter-title-input"
-    value={chapterTitle}
-    placeholder={chapterTitlePlaceholder}
-    onchange={e => onChapterTitleChange?.((e.currentTarget as HTMLInputElement).value)}
-    dir={bookIsRtl ? 'rtl' : 'ltr'}
-    aria-label={$t('Chapter title')}
-    title={$t('Chapter title — used in the content document <title>; defaults to the spine id')}
-  />
-{/snippet}
 
 <!-- The X in each insert panel's top-right corner — same style as the checks
      panels in the preview header (btn-icon + Phosphor X). -->
@@ -1239,9 +1223,6 @@
 
       {#if editorMode === 'single'}
         {@render pane1FileSelector()}
-      {/if}
-      {#if advancedMode}
-        {@render chapterTitleInput()}
       {/if}
 
       <div class="font-size-controls" role="group" aria-label={$t('Editor text size')}>
@@ -1603,17 +1584,6 @@
     color: var(--color-text-primary);
     font-size: var(--text-sm);
     cursor: pointer;
-  }
-
-  .chapter-title-input {
-    flex: 2 1 10rem;
-    min-width: 0;
-    padding: var(--space-2);
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-sm);
-    background: var(--color-bg-primary);
-    color: var(--color-text-primary);
-    font-size: var(--text-sm);
   }
 
   .file-selector:focus {

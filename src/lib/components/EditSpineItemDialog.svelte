@@ -5,6 +5,7 @@
 
   let {
     currentId,
+    currentTitle = '',
     linear: initialLinear,
     advancedMode = false,
     onSave,
@@ -12,25 +13,28 @@
   }: {
     /** The item's current id (idref), pre-filled into the field. */
     currentId: string;
+    /** The authored chapter title (the sidecar's), empty when it falls back to the id. */
+    currentTitle?: string;
     /** Current linear reading-order flag (checked = in the reading order). */
     linear: boolean;
     /** Advanced mode: the linear reading-order toggle is hidden in basic mode. */
     advancedMode?: boolean;
-    onSave: (next: { newId: string; linear: boolean }) => Promise<void>;
+    onSave: (next: { newId: string; linear: boolean; title: string }) => Promise<void>;
     onClose: () => void;
   } = $props();
 
   // The dialog is mounted fresh each time it opens, so these seed the fields once.
   let id = $state(untrack(() => currentId));
+  let title = $state(untrack(() => currentTitle));
   let linear = $state(untrack(() => initialLinear));
   let saving = $state(false);
   let error = $state<string | null>(null);
 
-  let idInput = $state<HTMLInputElement | null>(null);
+  let titleInput = $state<HTMLInputElement | null>(null);
 
   onMount(() => {
-    idInput?.focus();
-    idInput?.select();
+    titleInput?.focus();
+    titleInput?.select();
   });
 
   async function save() {
@@ -40,7 +44,7 @@
     saving = true;
     error = null;
     try {
-      await onSave({ newId, linear });
+      await onSave({ newId, linear, title: title.trim() });
       // On success the parent reloads the list and unmounts this dialog.
     } catch (e) {
       error = e instanceof Error ? e.message : $t('Failed to update chapter.');
@@ -78,15 +82,21 @@
     </header>
 
     <div class="edit-field">
-      <label class="edit-label" for="edit-spine-id">{$t('ID')}</label>
+      <label class="edit-label" for="edit-spine-title-field">{$t('Title')}</label>
       <input
-        bind:this={idInput}
-        bind:value={id}
-        id="edit-spine-id"
+        bind:this={titleInput}
+        bind:value={title}
+        id="edit-spine-title-field"
         type="text"
         class="edit-input"
+        placeholder={currentId}
         disabled={saving}
       />
+    </div>
+
+    <div class="edit-field">
+      <label class="edit-label" for="edit-spine-id">{$t('ID')}</label>
+      <input bind:value={id} id="edit-spine-id" type="text" class="edit-input" disabled={saving} />
     </div>
 
     {#if advancedMode}
