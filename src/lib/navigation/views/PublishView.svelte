@@ -23,6 +23,17 @@
     projectId?: string;
     /** The open project's dc:identifier, for outlining its published row(s). */
     activeIdentifier?: string;
+    /** The other outputs a book can be shared as; each is shown only when passed. */
+    onGeneratePdf?: () => void;
+    pdfGenerating?: boolean;
+    onPackageWithoutSource?: () => void;
+    packagingWithoutSource?: boolean;
+    onPackageAsReadHtml?: () => void;
+    readHtmlPackaging?: boolean;
+    onPackageAsSeedHtml?: () => void;
+    seedHtmlPackaging?: boolean;
+    /** The open book is read-only (not a SEED EPUB): it cannot be repackaged. */
+    isReadOnly?: boolean;
   }
 
   let {
@@ -30,7 +41,20 @@
     pluginUrl = null,
     projectId = 'publish',
     activeIdentifier = undefined,
+    onGeneratePdf,
+    pdfGenerating = false,
+    onPackageWithoutSource,
+    packagingWithoutSource = false,
+    onPackageAsReadHtml,
+    readHtmlPackaging = false,
+    onPackageAsSeedHtml,
+    seedHtmlPackaging = false,
+    isReadOnly = false,
   }: Props = $props();
+
+  const hasExports = $derived(
+    !!(onGeneratePdf || onPackageWithoutSource || onPackageAsReadHtml || onPackageAsSeedHtml)
+  );
 
   let pluginFrame = $state<HTMLIFrameElement | null>(null);
 
@@ -272,16 +296,66 @@
   }
 </script>
 
+{#snippet exportRow()}
+  {#if hasExports}
+    <div class="export-row">
+      {#if onGeneratePdf}
+        <button
+          type="button"
+          class="btn btn-secondary"
+          onclick={onGeneratePdf}
+          disabled={pdfGenerating || isReadOnly}
+        >
+          {pdfGenerating ? $t('Preparing…') : $t('Generate PDF')}
+        </button>
+      {/if}
+      {#if onPackageWithoutSource}
+        <button
+          type="button"
+          class="btn btn-secondary"
+          onclick={onPackageWithoutSource}
+          disabled={packagingWithoutSource || isReadOnly}
+        >
+          {packagingWithoutSource ? $t('Packaging…') : $t('Package EPUB without source')}
+        </button>
+      {/if}
+      {#if onPackageAsReadHtml}
+        <button
+          type="button"
+          class="btn btn-secondary"
+          onclick={onPackageAsReadHtml}
+          disabled={readHtmlPackaging || isReadOnly}
+        >
+          {readHtmlPackaging ? $t('Packaging…') : $t('Package as READ.html')}
+        </button>
+      {/if}
+      {#if onPackageAsSeedHtml}
+        <button
+          type="button"
+          class="btn btn-secondary"
+          onclick={onPackageAsSeedHtml}
+          disabled={seedHtmlPackaging || isReadOnly}
+        >
+          {seedHtmlPackaging ? $t('Packaging…') : $t('Package as SEED.html')}
+        </button>
+      {/if}
+    </div>
+  {/if}
+{/snippet}
+
 {#if showingPlugin}
-  {#key pluginAttempt}
-    <iframe
-      bind:this={pluginFrame}
-      class="plugin-frame"
-      src={pluginUrl}
-      title={$t('Publish')}
-      onload={handlePluginFrameLoad}
-    ></iframe>
-  {/key}
+  <div class="plugin-host">
+    {@render exportRow()}
+    {#key pluginAttempt}
+      <iframe
+        bind:this={pluginFrame}
+        class="plugin-frame"
+        src={pluginUrl}
+        title={$t('Publish')}
+        onload={handlePluginFrameLoad}
+      ></iframe>
+    {/key}
+  </div>
 {:else}
   <div class="publish-view">
     <PaneHeader>
@@ -292,6 +366,7 @@
     </PaneHeader>
 
     <div class="publish-body">
+      {@render exportRow()}
       {#if pluginFailed}
         <div class="plugin-fallback" role="status">
           <p class="plugin-fallback-text">
@@ -379,9 +454,16 @@
 {/if}
 
 <style>
-  .plugin-frame {
-    width: 100%;
+  .plugin-host {
+    display: flex;
+    flex-direction: column;
     height: 100%;
+  }
+
+  .plugin-frame {
+    flex: 1;
+    min-block-size: 0;
+    width: 100%;
     border: 0;
     display: block;
   }
@@ -522,5 +604,15 @@
     display: block;
     color: var(--color-text-secondary);
     font-size: var(--text-xs);
+  }
+  /* The other outputs of the open book, above whatever lists the packaged files. */
+  .export-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding-block: var(--space-3);
+    padding-inline: var(--space-4);
+    border-block-end: 1px solid var(--color-border-subtle);
+    background: var(--color-bg-primary);
   }
 </style>

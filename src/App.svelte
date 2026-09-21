@@ -2,7 +2,6 @@
   import { onMount } from 'svelte';
   import { diffLines } from 'diff';
   import { randomUUID } from './lib/utils/uuid.js';
-  import { Package, Robot } from 'phosphor-svelte';
   import { workspaceOpfsPath } from './lib/plugins/contract.js';
   import { primaryLanguage } from './lib/epub/opf-utils.js';
   import { readValidationReport } from './lib/plugins/validation-report.js';
@@ -16,12 +15,17 @@
   } from './lib/translations/editions.js';
   import type { AgentBridge } from './lib/agent-bridge/loader.svelte.js';
   import LayoutManager from './lib/LayoutManager.svelte';
+  import TopBar from './lib/components/shell/TopBar.svelte';
+  import BrandBar from './lib/components/shell/BrandBar.svelte';
+  import WriteSidebar from './lib/components/shell/WriteSidebar.svelte';
+  import { DeleteBookDialog } from './lib/components/books';
+  import DuplicateProjectDialog from './lib/components/workspace/DuplicateProjectDialog.svelte';
   import Toast from './lib/components/Toast.svelte';
   import { navigationStore } from './lib/navigation';
   import type { ViewType } from './lib/navigation/types';
   import AboutView from './lib/navigation/views/AboutView.svelte';
   import ThirdPartyView from './lib/navigation/views/ThirdPartyView.svelte';
-  import WorkspaceView from './lib/navigation/views/WorkspaceView.svelte';
+  import BooksView from './lib/navigation/views/BooksView.svelte';
   import MetadataEditor from './lib/components/metadata/MetadataEditor.svelte';
   import SpineView from './lib/navigation/views/SpineView.svelte';
   import ChaptersView from './lib/navigation/views/ChaptersView.svelte';
@@ -129,18 +133,6 @@
   // BlobURLManager will be created after FileStorageAPI is initialized
   let blobURLManager = $state<BlobURLManager>();
 
-  // Whether any packaged EPUBs exist — drives the Publish tab's visibility (it's
-  // hidden until there's something to publish). Refreshed on mount and whenever
-  // an EPUB is packaged (the `epub-packaged` event).
-  let hasPackagedEpubs = $state(false);
-  async function refreshPackagedEpubs() {
-    try {
-      hasPackagedEpubs = (await publishService.listPublishedEpubs()).length > 0;
-    } catch {
-      hasPackagedEpubs = false;
-    }
-  }
-
   // Whether any project exists — gates the app-level Advanced mode toggle in
   // Settings (you create a project first, then opt in). Refreshed on mount and
   // whenever the workspace list changes (the `workspace-list-refresh` event).
@@ -197,13 +189,13 @@
     (
       {
         about: $t('About SEED.html'),
-        workspace: $t('Projects'),
+        workspace: $t('Books'),
         metadata: $t('Metadata'),
         manifest: $t('Manifest'),
         navigation: $t('Navigation'),
         spine: $t('Spine'),
         chapters: $t('Chapters'),
-        publish: $t('Publish'),
+        publish: $t('Share'),
         settings: $t('Settings'),
       } as Record<string, string>
     )[currentView] ?? 'SEED.html'
@@ -236,6 +228,69 @@
 
   // Dynamic window title based on workspace
   let windowTitle = $derived(workspaceTitle ? `${workspaceTitle} · SEED.html` : 'SEED.html');
+
+  // --- Book menu (top bar): duplicate and delete the open book ----------------
+  let duplicateOpen = $state(false);
+  let deleteOpen = $state(false);
+  let deleteCoverUrl = $state<string | null>(null);
+  const duplicateDefaultTitle = $derived(`${workspaceTitle || $t('Untitled Project')} (copy)`);
+  const chapterCount = $derived(currentWorkspaceState?.opf?.spine?.length ?? 0);
+  // Fixed-layout (pre-paginated) EPUBs are organized as pages, not chapters.
+  const spineLabel = $derived(
+    currentWorkspaceState?.opf?.metadata?.renditionLayout === 'pre-paginated'
+      ? $t('Pages')
+      : $t('Chapters')
+  );
+
+  async function openDeleteDialog() {
+    if (!currentWorkspaceId) return;
+    deleteCoverUrl = null;
+    deleteOpen = true;
+    try {
+      const row = await appState?.getWorkspaceRowDetails(currentWorkspaceId);
+      deleteCoverUrl = row?.coverThumbUrl ?? null;
+    } catch {
+      // No thumbnail; the dialog shows the title alone.
+    }
+  }
+
+  async function deleteCurrentBook() {
+    const id = currentWorkspaceId;
+    if (!id || !appState) return;
+    await appState.deleteWorkspace(id);
+    await refreshHasProjects();
+    deleteOpen = false;
+    navigationStore.navigateTo('workspace');
+  }
+
+  async function duplicateCurrentBook(title: string) {
+    const id = currentWorkspaceId;
+    if (!id || !appState) return;
+    await appState.duplicateWorkspace(id, title);
+    await refreshHasProjects();
+    duplicateOpen = false;
+    window.dispatchEvent(new CustomEvent('workspace-list-refresh'));
+    navigationStore.navigateTo('workspace');
+  }
+
+  // The chapter column's + button: SpineSidebar listens for this event.
+  function appendSpineItem() {
+    window.dispatchEvent(new CustomEvent('append-spine-item', { bubbles: true }));
+  }
+
+  // Opening a book from the shelf lands in the editor, or in Details when the
+  // book has no chapters yet (as import and create already do).
+  function openBookView() {
+    const spine = appState?.workspace?.opf?.spine ?? [];
+    if (spine.length === 0) {
+      navigationStore.navigateTo('metadata');
+      return;
+    }
+    // Select the last-open chapter, or the first, which also navigates to Write.
+    const remembered = appState?.selectedChapterId;
+    const itemId = spine.some(item => item.idref === remembered) ? remembered : spine[0].idref;
+    window.dispatchEvent(new CustomEvent('select-spine-item', { detail: { itemId } }));
+  }
 
   // Manifest item selection state
   let selectedManifestItem = $state<any>(null);
@@ -1668,9 +1723,7 @@
         }
         availableExtensions = await loadExtensionCatalog();
 
-        // Seed the Publish tab's visibility from any already-packaged EPUBs, and
-        // the Advanced-mode toggle's gate from whether any project exists.
-        await refreshPackagedEpubs();
+        // Seed the Advanced-mode toggle's gate from whether any project exists.
         await refreshHasProjects();
 
         // A book-carrying artifact imports (or reopens) its payload; otherwise
@@ -1778,7 +1831,6 @@
     window.addEventListener('clear-spine-selection', handleClearSpineSelection);
     window.addEventListener('seed:swap-recovered', handleSwapRecovered);
     window.addEventListener('hashchange', handleHashChange);
-    window.addEventListener('epub-packaged', refreshPackagedEpubs);
     window.addEventListener('workspace-list-refresh', refreshHasProjects);
 
     return () => {
@@ -1787,7 +1839,6 @@
       window.removeEventListener('clear-spine-selection', handleClearSpineSelection);
       window.removeEventListener('seed:swap-recovered', handleSwapRecovered);
       window.removeEventListener('hashchange', handleHashChange);
-      window.removeEventListener('epub-packaged', refreshPackagedEpubs);
       window.removeEventListener('workspace-list-refresh', refreshHasProjects);
       appState?.cleanup();
       transformEngine?.cleanup();
@@ -1816,79 +1867,64 @@
     <p>{$t('Initializing application...')}</p>
   </div>
 {:else}
-  <LayoutManager
-    hasWorkspace={!!currentWorkspaceId}
-    readOnly={structureLocked}
-    {reviewMode}
-    {hasPackagedEpubs}
-    {enabledPluginIds}
-    currentWorkspace={currentWorkspaceState}
-    {workspaceTitle}
-    {extensionManager}
-  >
-    {#snippet sidebarSpine()}
-      {#if !initialized}
-        <div class="placeholder-content">
-          <p>{$t('Loading project…')}</p>
-        </div>
-      {:else if !currentWorkspaceState}
-        <div class="placeholder-content">
-          <p>{$t('No project selected')}</p>
-        </div>
-      {:else if currentWorkspaceState}
-        <SpineSidebar
-          workspace={currentWorkspaceState}
-          {spineService}
-          selectedItemId={selectedSpineItemId}
-          {isExpanded}
-          readOnly={structureLocked}
-          advancedMode={advancedMode.current}
-          settingsService={appState ? appState.getSettingsService() : null}
-          {workspaceService}
-          onWorkspaceUpdate={updatedWorkspace => {
-            if (appState) appState.workspace = updatedWorkspace;
-          }}
-        />
-      {:else}
-        <div class="placeholder-content">
-          <p>{$t('Loading project…')}</p>
-        </div>
-      {/if}
+  <LayoutManager hasWorkspace={!!currentWorkspaceId}>
+    {#snippet brandBar()}
+      <BrandBar {currentView} onNavigate={view => navigationStore.navigateTo(view)} />
     {/snippet}
 
-    {#snippet sidebarFooter()}
-      {#if currentWorkspaceState}
-        <div class="package-epub-section">
-          {#if agentBridgeAvailable}
-            <!-- Localhost-only, deliberately untranslated: absent from the hosted
-                 site and embedded copies. -->
-            <!-- i18n-ignore -->
-            <button
-              class="agent-toggle"
-              class:active={agentBridge?.status === 'connected' ||
-                agentBridge?.status === 'connecting'}
-              onclick={toggleAgentBridge}
-              aria-pressed={agentBridge?.status === 'connected'}
-              title={agentBridge?.detail || 'Allow agent assistance'}
-              aria-label="Allow agent assistance"
-            >
-              <Robot size={18} aria-hidden="true" />
-            </button>
-          {/if}
-          <button
-            class="package-epub-button"
-            onclick={() => handlePackageRequest(currentWorkspaceState.id)}
-            disabled={isReadOnly}
-            title={isReadOnly
-              ? $t("This EPUB wasn't created in the Simple EPUB Editor, so it can't be edited.")
-              : $t('Package EPUB')}
-            data-testid="package-epub"
-          >
-            <Package size={18} aria-hidden="true" />
-            <span class="package-label">{$t('Package EPUB')}</span>
-          </button>
-        </div>
-      {/if}
+    {#snippet topBar()}
+      <TopBar
+        title={workspaceTitle}
+        {currentView}
+        readOnly={isReadOnly}
+        {reviewMode}
+        {agentBridgeAvailable}
+        agentStatus={agentBridge?.status ?? null}
+        agentDetail={agentBridge?.detail ?? null}
+        onToggleAgent={toggleAgentBridge}
+        onNavigate={view => navigationStore.navigateTo(view)}
+        onPackage={() => {
+          if (currentWorkspaceState) handlePackageRequest(currentWorkspaceState.id);
+        }}
+        onDuplicate={() => (duplicateOpen = true)}
+        onDelete={openDeleteDialog}
+      />
+    {/snippet}
+
+    {#snippet writeSidebar()}
+      <WriteSidebar
+        {isExpanded}
+        readOnly={structureLocked}
+        label={spineLabel}
+        count={chapterCount}
+        onToggle={() => layoutStore.toggleSidebar()}
+        onOpenContents={() => navigationStore.navigateTo('chapters')}
+        onAppend={appendSpineItem}
+      >
+        {#if !initialized}
+          <div class="placeholder-content">
+            <p>{$t('Loading project…')}</p>
+          </div>
+        {:else if currentWorkspaceState}
+          <SpineSidebar
+            workspace={currentWorkspaceState}
+            {spineService}
+            selectedItemId={selectedSpineItemId}
+            {isExpanded}
+            readOnly={structureLocked}
+            advancedMode={advancedMode.current}
+            settingsService={appState ? appState.getSettingsService() : null}
+            {workspaceService}
+            onWorkspaceUpdate={updatedWorkspace => {
+              if (appState) appState.workspace = updatedWorkspace;
+            }}
+          />
+        {:else}
+          <div class="placeholder-content">
+            <p>{$t('No project selected')}</p>
+          </div>
+        {/if}
+      </WriteSidebar>
     {/snippet}
 
     {#snippet leftContent()}
@@ -1902,7 +1938,7 @@
       {#if currentView === 'about'}
         <AboutView />
       {:else if currentView === 'workspace' && initialized}
-        <WorkspaceView
+        <BooksView
           onListWorkspaces={() => appState?.listWorkspaces() ?? Promise.resolve([])}
           onCreateNewRequested={openCreateDialog}
           onDeleteWorkspace={async id => {
@@ -1922,21 +1958,7 @@
           onEpubImportRequested={handleEpubImport}
           {currentWorkspaceId}
           advancedMode={advancedMode.current}
-          {isReadOnly}
-          onGeneratePdf={canGeneratePdf ? handleGeneratePdf : undefined}
-          {pdfGenerating}
-          onPackageWithoutSeed={handleExportPlainEpub}
-          packaging={plainEpubExporting}
-          onPackageAsReadHtml={canPackageReadHtml ? handleExportReadHtml : undefined}
-          readHtmlPackaging={readHtmlExporting}
-          onPackageAsSeedHtml={canPackageReadHtml ? handleExportSeedHtml : undefined}
-          seedHtmlPackaging={seedHtmlExporting}
-          onWorkspaceOpened={() => {
-            // Workspace opened
-          }}
-          onWorkspaceChanged={() => {
-            // Workspace changed
-          }}
+          onWorkspaceOpened={openBookView}
         />
       {:else if currentView === 'metadata'}
         {#if initialized && currentWorkspaceState && appState}
@@ -2029,6 +2051,15 @@
           pluginUrl={publishPluginUrl}
           projectId={currentWorkspaceId ?? 'publish'}
           activeIdentifier={currentWorkspaceState?.opf?.metadata?.identifier}
+          onGeneratePdf={canGeneratePdf ? handleGeneratePdf : undefined}
+          {pdfGenerating}
+          onPackageWithoutSource={handleExportPlainEpub}
+          packagingWithoutSource={plainEpubExporting}
+          onPackageAsReadHtml={canPackageReadHtml ? handleExportReadHtml : undefined}
+          readHtmlPackaging={readHtmlExporting}
+          onPackageAsSeedHtml={canPackageReadHtml ? handleExportSeedHtml : undefined}
+          seedHtmlPackaging={seedHtmlExporting}
+          {isReadOnly}
         />
       {:else if currentView === 'settings' && appState}
         <SettingsView
@@ -2175,6 +2206,24 @@
 
 <!-- App-wide toast host for fleeting notifications (see Toast.svelte). -->
 <Toast />
+{#if duplicateOpen}
+  <DuplicateProjectDialog
+    defaultTitle={duplicateDefaultTitle}
+    onDuplicate={duplicateCurrentBook}
+    onClose={() => (duplicateOpen = false)}
+  />
+{/if}
+
+{#if deleteOpen}
+  <DeleteBookDialog
+    title={workspaceTitle || $t('Untitled Project')}
+    {chapterCount}
+    coverUrl={deleteCoverUrl}
+    onConfirm={deleteCurrentBook}
+    onClose={() => (deleteOpen = false)}
+  />
+{/if}
+
 {#if agentBridgeAvailable}
   <!-- Agent activity overlay mount: the bridge module paints into this. -->
   <div bind:this={agentMountEl}></div>
@@ -2296,101 +2345,5 @@
     border-bottom: 1px solid var(--color-warning, var(--color-border-default));
     font-size: var(--text-sm);
     text-align: center;
-  }
-
-  /* Agent bridge toggle (dev-only; the guard folds the button out of
-     production, this rule is a few inert bytes there) */
-  .agent-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-2);
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-sm);
-    background: var(--color-surface-primary);
-    color: var(--color-text-secondary);
-    cursor: pointer;
-    min-height: 36px;
-  }
-
-  .agent-toggle.active {
-    border-color: var(--color-interactive-primary);
-    color: var(--color-interactive-primary);
-  }
-
-  /* Package EPUB button styling */
-  .package-epub-section {
-    display: flex;
-    gap: var(--space-2);
-    padding: var(--space-3);
-    border-top: 1px solid var(--color-border-default);
-  }
-
-  .package-epub-button {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-2);
-    padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--color-button-primary-bg);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-button-primary-bg);
-    color: white;
-    font-size: var(--text-sm);
-    font-weight: 500;
-    cursor: pointer;
-    transition: all var(--duration-fast) ease;
-    min-height: 36px;
-  }
-
-  /* Collapsed sidebar: show the package icon only (the label is illegible
-     squeezed), and stack the robot and package buttons — side by side they
-     don't fit the 48px rail. */
-  :global(.sidebar.collapsed) .package-epub-section {
-    flex-direction: column;
-    padding: var(--space-2);
-  }
-
-  :global(.sidebar.collapsed) .package-epub-button {
-    padding: var(--space-2);
-  }
-
-  :global(.sidebar.collapsed) .package-epub-button .package-label {
-    display: none;
-  }
-
-  .package-epub-button:hover:not(:disabled) {
-    background-color: var(--color-button-primary-bg-hover);
-    border-color: var(--color-button-primary-bg-hover);
-  }
-
-  /* Dark: a tonal treatment instead of the heavy primary fill — softer on the
-     dark sidebar while still reading as the accent CTA. (Light is unchanged.) */
-  :global([data-theme='dark']) .package-epub-button {
-    background-color: var(--color-surface-elevated);
-    border-color: var(--color-border-accent);
-    color: var(--color-text-link);
-  }
-
-  :global([data-theme='dark']) .package-epub-button:hover:not(:disabled) {
-    background-color: var(--color-surface-hover);
-    border-color: var(--color-border-focus);
-    color: var(--color-text-link-hover);
-  }
-
-  .package-epub-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .package-epub-button:focus-visible {
-    /* The ring is a similar blue to the button fill, so an inset ring blends
-       in. Sit an actual outline a couple of pixels OUTSIDE the button, against
-       the lighter sidebar, where it reads. */
-    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
-    outline-offset: var(--focus-ring-offset);
-    box-shadow: none;
   }
 </style>

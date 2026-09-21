@@ -1,156 +1,145 @@
+<!--
+  LayoutManager — the page frame. A bar across the top (the brand bar on the
+  Books and About screens, the book's TopBar everywhere else), then the body:
+  in Write, the chapter column beside the editor and preview; in every other
+  view, the content alone, split or single-pane as the view needs.
+
+  The bars and the chapter column are snippets the app fills, so this file
+  owns only geometry (process/APP_MAKEOVER_LIBRARY.md, phase 1).
+-->
 <script lang="ts">
   import { PaneGroup, Pane, PaneResizer } from 'paneforge';
   import type { Snippet } from 'svelte';
-  import Sidebar from './Sidebar.svelte';
   import { layoutStore } from './stores/layout';
   import { t } from './i18n';
   import { CaretLeft } from 'phosphor-svelte';
 
-  // Props
   let {
     hasWorkspace = false,
-    readOnly = false,
-    reviewMode = false,
-    hasPackagedEpubs = false,
-    enabledPluginIds = [],
-    currentWorkspace = null,
-    workspaceTitle = undefined,
-    extensionManager = null,
+    topBar,
+    brandBar,
+    writeSidebar,
     leftContent,
     rightContent,
-    sidebarWorkspace,
-    sidebarMetadata,
-    sidebarManifest,
-    sidebarNavigation,
-    sidebarSpine,
-    sidebarSettings,
-    sidebarFooter,
   }: {
     hasWorkspace?: boolean;
-    readOnly?: boolean;
-    reviewMode?: boolean;
-    hasPackagedEpubs?: boolean;
-    enabledPluginIds?: string[];
-    currentWorkspace?: any;
-    workspaceTitle?: string | undefined;
-    extensionManager?: any;
+    topBar?: Snippet;
+    brandBar?: Snippet;
+    writeSidebar?: Snippet;
     leftContent?: Snippet;
     rightContent?: Snippet;
-    sidebarWorkspace?: Snippet;
-    sidebarMetadata?: Snippet;
-    sidebarManifest?: Snippet;
-    sidebarNavigation?: Snippet;
-    sidebarSpine?: Snippet;
-    sidebarSettings?: Snippet;
-    sidebarFooter?: Snippet;
   } = $props();
 
-  // Subscribe to layout store
   const sidebar = $derived($layoutStore.sidebar);
+  const view = $derived(sidebar.activeSection);
 
-  // Reactive sidebar width for grid template
-  const sidebarWidth = $derived(sidebar.isExpanded ? '250px' : '48px');
+  // Books and About stand outside any book: brand bar, no chapter column.
+  const outsideBook = $derived(view === 'workspace' || view === 'about' || !hasWorkspace);
 
-  // Determine which sections should show preview pane
+  // The chapter column exists only beside the editor.
+  const showWriteSidebar = $derived(view === 'spine' && hasWorkspace);
+  const sidebarWidth = $derived(sidebar.isExpanded ? 'var(--sidebar-width)' : '48px');
+
+  // Which views keep a right-hand pane.
   const showPreviewPane = $derived(
-    sidebar.activeSection !== 'workspace' &&
-      sidebar.activeSection !== 'settings' &&
-      sidebar.activeSection !== 'publish' &&
-      sidebar.activeSection !== 'chapters'
+    view !== 'workspace' && view !== 'settings' && view !== 'publish' && view !== 'chapters'
   );
 
   // Spine view only: the preview pane collapses to a slim rail (writing mode).
-  // Other views always keep their right pane.
-  const previewCollapsed = $derived(
-    $layoutStore.spinePreviewCollapsed && sidebar.activeSection === 'spine'
-  );
+  const previewCollapsed = $derived($layoutStore.spinePreviewCollapsed && view === 'spine');
 </script>
 
-<div class="app-layout" style="grid-template-columns: {sidebarWidth} 1fr">
-  <Sidebar
-    isExpanded={sidebar.isExpanded}
-    activeSection={sidebar.activeSection}
-    {hasWorkspace}
-    {readOnly}
-    {reviewMode}
-    {hasPackagedEpubs}
-    {enabledPluginIds}
-    {currentWorkspace}
-    {workspaceTitle}
-    {extensionManager}
-    {sidebarWorkspace}
-    {sidebarMetadata}
-    {sidebarManifest}
-    {sidebarNavigation}
-    {sidebarSpine}
-    {sidebarSettings}
-    {sidebarFooter}
-  />
+<div class="app-shell">
+  {#if outsideBook}
+    {@render brandBar?.()}
+  {:else}
+    {@render topBar?.()}
+  {/if}
 
-  <main class="main-content">
-    {#if showPreviewPane && previewCollapsed}
-      <!-- Writing mode: editor full width, preview folded into a rail that
-           mirrors the collapsed sidebar (toggle at the top edge). -->
-      <div class="preview-collapsed-layout">
-        <div class="pane-content">
-          {@render leftContent?.()}
-        </div>
-        <div class="preview-rail">
-          <button
-            class="btn btn-icon btn-icon-lg"
-            onclick={() => layoutStore.toggleSpinePreview()}
-            aria-expanded="false"
-            aria-label={$t('Show preview')}
-            title={$t('Show preview')}
-          >
-            <CaretLeft size={16} aria-hidden="true" />
-          </button>
-        </div>
-      </div>
-    {:else if showPreviewPane}
-      <PaneGroup direction="horizontal" autoSaveId="seedhtml-content-panes">
-        <Pane defaultSize={50} minSize={25}>
+  <div
+    class="app-body"
+    class:with-sidebar={showWriteSidebar}
+    style={showWriteSidebar ? `grid-template-columns: ${sidebarWidth} 1fr` : undefined}
+  >
+    {#if showWriteSidebar}
+      {@render writeSidebar?.()}
+    {/if}
+
+    <main class="main-content">
+      {#if showPreviewPane && previewCollapsed}
+        <!-- Writing mode: editor full width, preview folded into a rail. -->
+        <div class="preview-collapsed-layout">
           <div class="pane-content">
             {@render leftContent?.()}
           </div>
-        </Pane>
-
-        <PaneResizer />
-
-        <Pane defaultSize={50} minSize={20}>
-          <div class="pane-content">
-            {@render rightContent?.()}
+          <div class="preview-rail">
+            <button
+              class="btn btn-icon btn-icon-lg"
+              onclick={() => layoutStore.toggleSpinePreview()}
+              aria-expanded="false"
+              aria-label={$t('Show preview')}
+              title={$t('Show preview')}
+            >
+              <CaretLeft size={16} aria-hidden="true" />
+            </button>
           </div>
-        </Pane>
-      </PaneGroup>
-    {:else}
-      <!-- Single pane mode for workspace and settings views -->
-      <div class="single-pane-container">
-        {@render leftContent?.()}
-      </div>
-    {/if}
-  </main>
+        </div>
+      {:else if showPreviewPane}
+        <PaneGroup direction="horizontal" autoSaveId="seedhtml-content-panes">
+          <Pane defaultSize={50} minSize={25}>
+            <div class="pane-content">
+              {@render leftContent?.()}
+            </div>
+          </Pane>
+
+          <PaneResizer />
+
+          <Pane defaultSize={50} minSize={20}>
+            <div class="pane-content">
+              {@render rightContent?.()}
+            </div>
+          </Pane>
+        </PaneGroup>
+      {:else}
+        <div class="single-pane-container">
+          {@render leftContent?.()}
+        </div>
+      {/if}
+    </main>
+  </div>
 </div>
 
 <style>
-  .app-layout {
-    display: grid;
+  .app-shell {
+    --sidebar-width: 240px;
+
+    display: flex;
+    flex-direction: column;
     height: 100vh;
     height: 100dvh; /* dynamic viewport: excludes mobile browser UI chrome */
     width: 100vw;
     margin: 0;
     padding: 0;
+    background: var(--color-bg-primary);
+  }
+
+  .app-body {
+    flex: 1;
+    min-block-size: 0;
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   .main-content {
-    min-inline-size: 0; /* Using logical properties */
+    min-inline-size: 0;
+    min-block-size: 0;
     overflow: hidden;
   }
 
   .pane-content {
     flex: 1;
     overflow: auto;
-    background: var(--color-bg-primary); /* Using design tokens */
+    background: var(--color-bg-primary);
     height: 100%;
   }
 
@@ -161,7 +150,7 @@
   }
 
   /* Writing mode: editor + a slim rail where the preview pane was. The rail
-     mirrors the collapsed sidebar — 48px wide, toggle in a header-height strip. */
+     mirrors the collapsed chapter column — 48px wide, toggle in a header-height strip. */
   .preview-collapsed-layout {
     display: flex;
     height: 100%;
@@ -255,7 +244,7 @@
 
   /* High contrast mode support */
   @media (prefers-contrast: high) {
-    .main-content {
+    .with-sidebar .main-content {
       border-inline-start: 2px solid var(--color-forced-border);
     }
   }
