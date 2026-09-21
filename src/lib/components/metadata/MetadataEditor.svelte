@@ -1,10 +1,8 @@
 <script lang="ts">
   import { t } from '../../i18n';
   import { randomUUID } from '../../utils/uuid.js';
-  import { persisted, asEnum } from '../../state/persisted.svelte.js';
+  import { persisted, asBoolean } from '../../state/persisted.svelte.js';
   import { getTabFields } from './metadata-tabs.js';
-  import MetadataTabBar from './MetadataTabBar.svelte';
-  import PaneHeader from '../layout/PaneHeader.svelte';
   import BasicInfoFields from './BasicInfoFields.svelte';
   import AdvancedFields from './AdvancedFields.svelte';
   import AccessibilityFields from './AccessibilityFields.svelte';
@@ -47,31 +45,12 @@
     workspace?.opf.manifest.find(item => item.properties?.includes('cover-image'))?.id
   );
 
-  // Remember the selected tab across reloads (validated against the known ids).
-  const TAB_IDS = ['basic', 'advanced', 'accessibility'];
-  const activeTab = persisted('seedhtml_metadata_left_tab', 'basic', asEnum(TAB_IDS));
+  // Details is one page: the basic fields, then, in Advanced mode, a disclosure
+  // holding the advanced and accessibility fields. Its open state is remembered.
+  const advancedOpen = persisted('seedhtml_metadata_advanced_open', false, asBoolean);
+  const showAdvanced = $derived(advancedMode && advancedOpen.current);
   let saving = $state(false);
   let error = $state<string | null>(null);
-
-  // Tab definitions with labels. Basic mode shows only Basic Info; the Advanced
-  // and Accessibility tabs (and everything in them) are Advanced-mode features.
-  let tabs = $derived(
-    advancedMode
-      ? [
-          { id: 'basic', label: $t('Basic Info') },
-          { id: 'advanced', label: $t('Advanced') },
-          { id: 'accessibility', label: $t('Accessibility') },
-        ]
-      : [{ id: 'basic', label: $t('Basic Info') }]
-  );
-
-  // A persisted or currently selected tab that is no longer offered (advanced
-  // mode turned off) snaps back to Basic Info.
-  $effect(() => {
-    if (!advancedMode && activeTab.current !== 'basic') {
-      activeTab.current = 'basic';
-    }
-  });
 
   const handleFieldChange = (_event: { detail: any }) => {
     // Field changes are handled by the input component's internal state
@@ -198,32 +177,19 @@
     await handleFieldSave({ detail: { field: 'identifier', value: newIdentifier } });
   };
 
-  const handleTabSwitch = async (detail: { tabId: any }) => {
-    const newTabId = detail.tabId;
-
-    // Allow tab switching - validation errors will be shown inline
-    // No need to block navigation, users should be able to access all tabs
-    activeTab.current = newTabId;
-  };
-
-  // Tell the preview which fields the active tab owns, so it can softly
-  // highlight that group in the content.opf.
+  // Tell the preview which fields are on show, so it can softly highlight
+  // them in the content.opf.
   $effect(() => {
-    onTabFieldsChange?.({ fields: getTabFields(activeTab.current) });
+    const fields = showAdvanced
+      ? [...getTabFields('basic'), ...getTabFields('advanced'), ...getTabFields('accessibility')]
+      : getTabFields('basic');
+    onTabFieldsChange?.({ fields });
   });
 </script>
 
 <div class="metadata-editor">
-  <PaneHeader>
-    <MetadataTabBar
-      activeTab={activeTab.current}
-      {validationErrors}
-      {tabs}
-      onTabClick={handleTabSwitch}
-    />
-  </PaneHeader>
-
   <div class="pane-content" tabindex="-1">
+    <h2 class="details-title">{$t('Details')}</h2>
     {#if loading}
       <div class="loading-state">
         <p>{$t('Loading metadata…')}</p>
@@ -244,49 +210,83 @@
       <fieldset
         class="fields-fieldset"
         class:is-readonly={readOnly}
-        disabled={readOnly && activeTab.current !== 'advanced'}
-        id="metadata-panel-{activeTab.current}"
-        aria-labelledby="metadata-tab-{activeTab.current}"
+        disabled={readOnly}
+        id="metadata-panel-basic"
         tabindex="-1"
       >
-        {#if activeTab.current === 'basic'}
-          <BasicInfoFields
-            {metadata}
-            {validationErrors}
-            {saving}
-            {advancedMode}
-            onfieldChange={handleFieldChange}
-            onfieldSave={handleFieldSave}
-            onfieldFocus={handleFieldFocus}
-            onarrayAdd={handleArrayAdd}
-            onarrayRemove={handleArrayRemove}
-            ongenerateIdentifier={handleGenerateIdentifier}
-          />
-        {:else if activeTab.current === 'advanced'}
-          <AdvancedFields
-            {metadata}
-            {validationErrors}
-            {saving}
-            {advancedMode}
-            {readOnly}
-            {coverImageId}
-            onfieldChange={handleFieldChange}
-            onfieldSave={handleFieldSave}
-            onfieldFocus={handleFieldFocus}
-            onarrayAdd={handleArrayAdd}
-            onarrayRemove={handleArrayRemove}
-          />
-        {:else if activeTab.current === 'accessibility'}
-          <AccessibilityFields
-            {metadata}
-            {validationErrors}
-            {saving}
-            onfieldChange={handleFieldChange}
-            onfieldSave={handleFieldSave}
-            onfieldFocus={handleFieldFocus}
-          />
-        {/if}
+        <BasicInfoFields
+          {metadata}
+          {validationErrors}
+          {saving}
+          {advancedMode}
+          onfieldChange={handleFieldChange}
+          onfieldSave={handleFieldSave}
+          onfieldFocus={handleFieldFocus}
+          onarrayAdd={handleArrayAdd}
+          onarrayRemove={handleArrayRemove}
+          ongenerateIdentifier={handleGenerateIdentifier}
+        />
       </fieldset>
+
+      {#if advancedMode}
+        <div class="details-advanced">
+          <button
+            type="button"
+            class="btn btn-link details-advanced-toggle"
+            aria-expanded={advancedOpen.current}
+            aria-controls="metadata-panel-advanced"
+            onclick={() => (advancedOpen.current = !advancedOpen.current)}
+          >
+            {$t('Advanced details')}
+          </button>
+          <span class="details-advanced-hint">
+            {$t('Publisher, rights, subjects, accessibility')}
+          </span>
+        </div>
+        {#if advancedOpen.current}
+          <!-- The Advanced fields gate per column (see AdvancedFields), so the
+               Custom metadata section's adopt buttons — which write app settings,
+               not the book — stay usable on read-only books. -->
+          <fieldset
+            class="fields-fieldset"
+            class:is-readonly={readOnly}
+            id="metadata-panel-advanced"
+            tabindex="-1"
+          >
+            <h3 class="details-section">{$t('Advanced')}</h3>
+            <AdvancedFields
+              {metadata}
+              {validationErrors}
+              {saving}
+              {advancedMode}
+              {readOnly}
+              {coverImageId}
+              onfieldChange={handleFieldChange}
+              onfieldSave={handleFieldSave}
+              onfieldFocus={handleFieldFocus}
+              onarrayAdd={handleArrayAdd}
+              onarrayRemove={handleArrayRemove}
+            />
+          </fieldset>
+          <fieldset
+            class="fields-fieldset"
+            class:is-readonly={readOnly}
+            disabled={readOnly}
+            id="metadata-panel-accessibility"
+            tabindex="-1"
+          >
+            <h3 class="details-section">{$t('Accessibility')}</h3>
+            <AccessibilityFields
+              {metadata}
+              {validationErrors}
+              {saving}
+              onfieldChange={handleFieldChange}
+              onfieldSave={handleFieldSave}
+              onfieldFocus={handleFieldFocus}
+            />
+          </fieldset>
+        {/if}
+      {/if}
     {/if}
   </div>
 </div>
@@ -307,8 +307,36 @@
 
   /* Fieldset used only to disable the whole field group in read-only mode;
      reset its native chrome so it lays out like the plain panel it replaced. */
+  .details-title {
+    margin: var(--space-5) var(--space-6) var(--space-2);
+    font-size: var(--text-3xl);
+    font-weight: var(--font-bold);
+  }
+
+  .details-advanced {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    margin: var(--space-4) var(--space-6);
+    padding-block-start: var(--space-4);
+    border-block-start: 1px solid var(--color-border-subtle);
+  }
+
+  .details-advanced-hint {
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+  }
+
+  .details-section {
+    margin: var(--space-4) var(--space-6) 0;
+    font-size: var(--text-xs);
+    font-weight: var(--font-bold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+
   .fields-fieldset {
-    height: 100%;
     margin: 0;
     padding: 0;
     border: 0;

@@ -489,6 +489,10 @@ msgstr "Eine Auszeichnungssprache für das aktuelle Projekt übernehmen."
 msgid "Advanced"
 msgstr "Erweitert"
 
+#: src/lib/components/metadata/MetadataEditor.svelte
+msgid "Advanced details"
+msgstr "Erweiterte Angaben"
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Advanced mode"
 msgstr "Erweiterter Modus"
@@ -694,10 +698,6 @@ msgstr "Banner"
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Basic"
 msgstr "Einfach"
-
-#: src/lib/components/metadata/MetadataEditor.svelte
-msgid "Basic Info"
-msgstr "Generelle Informationen"
 
 #: src/lib/Sidebar.svelte
 msgid "Basic mode"
@@ -1521,6 +1521,7 @@ msgstr "Demo-Steuerung"
 msgid "Description"
 msgstr "Beschreibung"
 
+#: src/lib/components/metadata/MetadataEditor.svelte
 #: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/CoverView.svelte
 msgid "Details"
@@ -3992,6 +3993,10 @@ msgstr "Veröffentlicht"
 #: src/lib/components/metadata/AdvancedFields.svelte
 msgid "Publisher"
 msgstr "Verlag"
+
+#: src/lib/components/metadata/MetadataEditor.svelte
+msgid "Publisher, rights, subjects, accessibility"
+msgstr "Verlag, Rechte, Themen, Barrierefreiheit"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "pull quote"

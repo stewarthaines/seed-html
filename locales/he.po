@@ -470,6 +470,10 @@ msgstr ""
 msgid "Advanced"
 msgstr ""
 
+#: src/lib/components/metadata/MetadataEditor.svelte
+msgid "Advanced details"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Advanced mode"
 msgstr ""
@@ -674,10 +678,6 @@ msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Basic"
-msgstr ""
-
-#: src/lib/components/metadata/MetadataEditor.svelte
-msgid "Basic Info"
 msgstr ""
 
 #: src/lib/Sidebar.svelte
@@ -1502,6 +1502,7 @@ msgstr ""
 msgid "Description"
 msgstr ""
 
+#: src/lib/components/metadata/MetadataEditor.svelte
 #: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/CoverView.svelte
 msgid "Details"
@@ -3972,6 +3973,10 @@ msgstr ""
 
 #: src/lib/components/metadata/AdvancedFields.svelte
 msgid "Publisher"
+msgstr ""
+
+#: src/lib/components/metadata/MetadataEditor.svelte
+msgid "Publisher, rights, subjects, accessibility"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts

@@ -107,6 +107,10 @@ Step 1 (Cover) built: a `cover` view id (added to `ViewType`, `VALID_VIEW_TYPES`
 
 Step 1 committed (6edece9). Step 2 (Files) built: the manifest table's Properties column is "Used as" (Cover, Contents, Chapter N, Every chapter; raw properties as the fallback), "Load File" is "Add files…", and the detail pane's cover checkbox is "Cover · Change in Cover" on the cover row and "Use as the cover" on other images. Source and app files were already behind Advanced mode in this table, so nothing more hides. Five strings with German.
 
+Step 2 committed (8047793). Step 3 (Contents) committed (662ad96): the Chapters view keeps its list, placement diagram and operations, and gains the contents page as the book will show it (the linear chapters in order, set in serif) beneath the diagram, with "Write the contents by hand" (→ the Navigation view) shown in Advanced mode; Navigation leaves the Book sub-nav. Decision: the contents page is generated from the spine here rather than read from nav.xhtml, so it is always current and needs no file read.
+
+Step 4 (Details) built: `MetadataEditor` drops its Basic Info / Advanced / Accessibility tab bar for one page: the basic fields under a Details heading, then, in Advanced mode, an "Advanced details" disclosure (remembered) revealing the Advanced and Accessibility sections in turn. The OPF preview on the right is unchanged. Two strings with German; lint cap lowered to 141.
+
 ### Next step
 
-Validate and commit step 2. Then step 3: Contents (merge the Chapters view's operations with the Navigation view's generated contents; the authored nav file behind Advanced), the largest piece; then step 4: Details (metadata basic as the page; Advanced and Accessibility behind "Advanced details").
+Validate and commit step 4; phase 3 is then complete except for review. Remaining from the plan: phases 4 (Share and Settings) and 5 (phone). Also owed: the plan's "Sidebar.svelte / WorkspaceView.svelte / LayoutManager.stories.svelte" removal once the user has reviewed.
