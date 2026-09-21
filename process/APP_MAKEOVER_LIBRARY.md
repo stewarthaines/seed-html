@@ -1,6 +1,6 @@
 # App makeover: the Library model
 
-Status: design settled on the canvas, 21 September 2026. Phases 1 and 2 built on branches `makeover/phase-1-shell` and `makeover/phase-2-write` (stacked), awaiting review; the running log is `process/APP_MAKEOVER_STATUS.md`.
+Status: design settled on the canvas, 21 September 2026. Phases 1, 2 and 3 built on branches `makeover/phase-1-shell`, `makeover/phase-2-write` and `makeover/phase-3-book` (each stacked on the previous), awaiting review; the running log is `process/APP_MAKEOVER_STATUS.md`. Phases 4 (Share and Settings) and 5 (phone) are not started.
 
 Canvas: https://claude.ai/artifact/GUiwcGUbX9KdkmuovT7DRK (page "Library" is the direction being built; "Directions" holds the two rejected alternatives; "Today" holds the 0.21 screens for reference).
 

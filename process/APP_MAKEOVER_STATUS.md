@@ -111,6 +111,16 @@ Step 2 committed (8047793). Step 3 (Contents) committed (662ad96): the Chapters 
 
 Step 4 (Details) built: `MetadataEditor` drops its Basic Info / Advanced / Accessibility tab bar for one page: the basic fields under a Details heading, then, in Advanced mode, an "Advanced details" disclosure (remembered) revealing the Advanced and Accessibility sections in turn. The OPF preview on the right is unchanged. Two strings with German; lint cap lowered to 141.
 
+Step 4 committed (e7e485b), plus a small menu fix (876c6ac). Phase 3 is complete on `makeover/phase-3-book`, pending review.
+
+## Where things stand (end of the overnight run, 22 September 2026)
+
+Three stacked branches, none merged: `makeover/phase-1-shell` (8 commits) → `makeover/phase-2-write` (5) → `makeover/phase-3-book` (6). `npm run validate` is green on each; the story suite passes except `LayoutManager.stories.svelte`, stale since before the makeover; the accessibility scan reports only the About page's two pre-existing findings.
+
+Not started: phase 4 (the Share screen as outcome cards with the plugin inside "Publish to the web", and Settings as a sheet split You / This book) and phase 5 (phone). Phase 4's Settings sheet is the one piece deliberately left for a session with the user present: `SettingsView.svelte` is two thousand lines of conditionally rendered sections, and the sheet needs a section list that mirrors those conditions, which is a design call about what belongs under You and This book in Basic mode.
+
+Open from the plan: per-book Share versus the global packaged list; what the sample book opens into; whether About needs a page. Owed after review: deleting `Sidebar.svelte`, `WorkspaceView.svelte`, `MetadataTabBar.svelte`/`MetadataTab.svelte` and `LayoutManager.stories.svelte`, which are no longer rendered.
+
 ### Next step
 
-Validate and commit step 4; phase 3 is then complete except for review. Remaining from the plan: phases 4 (Share and Settings) and 5 (phone). Also owed: the plan's "Sidebar.svelte / WorkspaceView.svelte / LayoutManager.stories.svelte" removal once the user has reviewed.
+User review of the three branches. Then phase 4.
