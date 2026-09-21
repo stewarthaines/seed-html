@@ -4,6 +4,7 @@ import type { Writable } from 'svelte/store';
 export type ViewType =
   | 'about' // About information and licenses
   | 'workspace' // Workspace selection and management
+  | 'cover' // The book's cover (generator and image)
   | 'metadata' // EPUB metadata editing
   | 'manifest' // File listing and management
   | 'navigation' // Table of contents editing

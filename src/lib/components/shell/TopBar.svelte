@@ -16,8 +16,14 @@
   import BookMenu from '../books/BookMenu.svelte';
 
   type Tab = 'write' | 'book' | 'share';
-  type BookSection = 'chapters' | 'navigation' | 'metadata' | 'manifest';
-  const BOOK_SECTIONS: readonly BookSection[] = ['chapters', 'navigation', 'metadata', 'manifest'];
+  type BookSection = 'cover' | 'chapters' | 'navigation' | 'metadata' | 'manifest';
+  const BOOK_SECTIONS: readonly BookSection[] = [
+    'cover',
+    'chapters',
+    'navigation',
+    'metadata',
+    'manifest',
+  ];
 
   let {
     title,
@@ -76,6 +82,7 @@
   ]);
 
   const sections = $derived<{ id: BookSection; label: string }[]>([
+    { id: 'cover', label: $t('Cover') },
     { id: 'chapters', label: $t('Contents') },
     { id: 'navigation', label: $t('Navigation') },
     { id: 'metadata', label: $t('Details') },

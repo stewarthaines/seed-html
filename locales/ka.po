@@ -910,14 +910,6 @@ msgstr ""
 msgid "Chapter PDF"
 msgstr "თავის PDF"
 
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Chapter title"
-msgstr "თავის სათაური"
-
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Chapter title — used in the content document <title>; defaults to the spine id"
-msgstr "თავის სათაური — გამოიყენება შინაარსის დოკუმენტის <title> ელემენტში; ნაგულისხმევად spine-ის id-ს იღებს"
-
 #: src/App.svelte
 #: src/lib/Sidebar.svelte
 #: src/lib/navigation/views/ChaptersView.svelte
@@ -1061,6 +1053,10 @@ msgstr "კოლექციები"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "colophon"
+msgstr ""
+
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Colour"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
@@ -1250,7 +1246,10 @@ msgstr ""
 msgid "cover"
 msgstr ""
 
+#: src/App.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/components/shell/TopBar.svelte
+#: src/lib/navigation/views/CoverView.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Cover"
 msgstr "ყდა"
@@ -1263,17 +1262,13 @@ msgstr "ყდის ფონის ელფერი"
 msgid "Cover image"
 msgstr "ყდის გამოსახულება"
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Cover image generated"
 msgstr "ყდის გამოსახულება შეიქმნა"
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Cover image updated"
 msgstr "ყდის გამოსახულება განახლდა"
-
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Cover text style"
-msgstr "ყდის ტექსტის სტილი"
 
 #: src/lib/components/metadata/AdvancedFields.svelte
 msgid "Coverage"
@@ -1306,10 +1301,6 @@ msgstr "„შექმნა“ ქმნის საწყის სკრი
 #: src/lib/components/manifest/ManifestTable.svelte
 msgid "Create your first item using the buttons above"
 msgstr "შექმენით პირველი ელემენტი ზემოთ მოცემული ღილაკებით"
-
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Creates a cover with the colour and theme above."
-msgstr "ქმნის ყდას ზემოთ არჩეული ფერითა და თემით."
 
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "Creating…"
@@ -1404,9 +1395,9 @@ msgstr "მუქი"
 msgid "Dark"
 msgstr "მუქი"
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Dark text on a light cover"
-msgstr "მუქი ტექსტი ღია ყდაზე"
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Dark on light"
+msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Declared fixed-layout page size"
@@ -1538,6 +1529,7 @@ msgid "Description"
 msgstr "აღწერა"
 
 #: src/lib/components/shell/TopBar.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Details"
 msgstr ""
 
@@ -2253,6 +2245,10 @@ msgstr "EPUB-ის იმპორტი ვერ მოხერხდა: {e
 msgid "Failed to import extension"
 msgstr "გაფართოების იმპორტი ვერ მოხერხდა"
 
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Failed to import file"
+msgstr ""
+
 #: src/lib/components/import/ImportReviewDialog.svelte
 #: src/lib/components/manifest/ManifestContainer.svelte
 msgid "Failed to import files"
@@ -2439,7 +2435,10 @@ msgstr "ზოგადი"
 msgid "Generate"
 msgstr "გენერაცია"
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Generate cover"
+msgstr ""
+
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "Generate cover image"
 msgstr "ყდის გამოსახულების გენერაცია"
@@ -2458,9 +2457,9 @@ msgstr "PDF-ის გენერაცია"
 msgid "Generating navigation from chapters..."
 msgstr "თავებიდან ნავიგაციის გენერაცია..."
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
 #: src/lib/components/spine/GeneratorPanel.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Generating…"
 msgstr "გენერირდება…"
 
@@ -2621,8 +2620,13 @@ msgstr "JavaScript გაფართოების იმპორტი"
 
 #: src/lib/components/import/ImportReviewDialog.svelte
 #: src/lib/components/workspace/OPDSImportDialog.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Importing…"
 msgstr "მიმდინარეობს იმპორტი…"
+
+#: src/lib/navigation/views/CoverView.svelte
+msgid "In a reading app"
+msgstr ""
 
 #: plugins/photo-regions/src/App.svelte
 msgid "In this chapter"
@@ -2935,9 +2939,9 @@ msgstr "ღია"
 msgid "Light"
 msgstr "ღია"
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Light text on a dark cover"
-msgstr "ღია ტექსტი მუქ ყდაზე"
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Light on dark"
+msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "link"
@@ -3523,6 +3527,10 @@ msgstr "გამორთული"
 #: src/lib/components/settings/TrackChangesPanel.svelte
 msgid "On — review mode"
 msgstr "ჩართული — განხილვის რეჟიმი"
+
+#: src/lib/navigation/views/CoverView.svelte
+msgid "On the shelf"
+msgstr ""
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "One EPUB made with the editor, opening on phones, tablets, and e-readers."
@@ -4226,7 +4234,7 @@ msgstr "მოთხოვნები ამ აპლიკაციის /da
 msgid "Required field"
 msgstr "სავალდებულო ველი"
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Reset"
 msgstr "ჩამოყრა"
 
@@ -4769,6 +4777,7 @@ msgstr "ტერმინი (მაგ. FIC028000)"
 
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Text"
 msgstr "ტექსტი"
 
@@ -4898,6 +4907,7 @@ msgid "tip"
 msgstr ""
 
 #: plugins/publish-to-remote/src/App.svelte
+#: src/lib/components/EditSpineItemDialog.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/metadata/TitleEditor.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
@@ -5024,6 +5034,7 @@ msgstr "საქაღალდის ბმის გაუქმება"
 #: src/App.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
+#: src/lib/navigation/views/CoverView.svelte
 #: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Untitled"
 msgstr "უსათაურო"
@@ -5039,19 +5050,15 @@ msgstr "უსათაურო პროექტი"
 msgid "Update Catalog"
 msgstr "კატალოგის განახლება"
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Update cover image"
-msgstr "ყდის გამოსახულების განახლება"
-
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Updates the cover with the colour and theme above."
-msgstr "აახლებს ყდას ზემოთ მითითებული ფერითა და თემით."
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Update cover"
+msgstr ""
 
 #: plugins/publish-to-remote/src/App.svelte
 msgid "Updating..."
 msgstr "მიმდინარეობს განახლება..."
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Updating…"
 msgstr "მიმდინარეობს განახლება…"
 
@@ -5086,6 +5093,10 @@ msgstr "USB ელწამკითხველი"
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "USB e-reader (browse…)"
 msgstr "USB ელწამკითხველი (დათვალიერება…)"
+
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Use my own image…"
+msgstr ""
 
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "Use the download button to access the file"
@@ -5277,3 +5288,7 @@ msgstr "თქვენი ბრაუზერი ვიდეო ელემ
 #: src/lib/services/spine/spine.service.ts
 msgid "Your chapter content goes here..."
 msgstr "აქ განთავსდება თქვენი თავის შინაარსი..."
+
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Your own image"
+msgstr ""

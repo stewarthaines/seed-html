@@ -891,14 +891,6 @@ msgstr ""
 msgid "Chapter PDF"
 msgstr "Kapitel-PDF"
 
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Chapter title"
-msgstr "Kapiteltitel"
-
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Chapter title — used in the content document <title>; defaults to the spine id"
-msgstr "Kapiteltitel – wird im <title> des Inhaltsdokuments verwendet; Standard ist die Spine-ID"
-
 #: src/App.svelte
 #: src/lib/Sidebar.svelte
 #: src/lib/navigation/views/ChaptersView.svelte
@@ -1043,6 +1035,10 @@ msgstr "Sammlungen"
 #: src/lib/components/spine/sr-walk.ts
 msgid "colophon"
 msgstr ""
+
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Colour"
+msgstr "Farbe"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "column header"
@@ -1231,7 +1227,10 @@ msgstr ""
 msgid "cover"
 msgstr "Cover"
 
+#: src/App.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/components/shell/TopBar.svelte
+#: src/lib/navigation/views/CoverView.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Cover"
 msgstr "Cover"
@@ -1244,17 +1243,13 @@ msgstr "Cover-Hintergrundton"
 msgid "Cover image"
 msgstr "Coverbild"
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Cover image generated"
 msgstr "Coverbild erzeugt"
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Cover image updated"
 msgstr "Coverbild aktualisiert"
-
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Cover text style"
-msgstr "Cover-Textstil"
 
 #: src/lib/components/metadata/AdvancedFields.svelte
 msgid "Coverage"
@@ -1287,10 +1282,6 @@ msgstr "„Erstellen“ legt ein Startskript an, bearbeitbar über das Dateimen�
 #: src/lib/components/manifest/ManifestTable.svelte
 msgid "Create your first item using the buttons above"
 msgstr "Erstellen Sie Ihr erstes Element über die Schaltflächen oben"
-
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Creates a cover with the colour and theme above."
-msgstr "Erstellt ein Coverbild mit der oben gewählten Farbe und dem Thema."
 
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "Creating…"
@@ -1385,9 +1376,9 @@ msgstr "dunkel"
 msgid "Dark"
 msgstr "Dunkel"
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Dark text on a light cover"
-msgstr "Dunkler Text auf hellem Cover"
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Dark on light"
+msgstr "Dunkel auf Hell"
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Declared fixed-layout page size"
@@ -1519,6 +1510,7 @@ msgid "Description"
 msgstr "Beschreibung"
 
 #: src/lib/components/shell/TopBar.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Details"
 msgstr "Details"
 
@@ -2234,6 +2226,10 @@ msgstr "EPUB konnte nicht importiert werden: {error}"
 msgid "Failed to import extension"
 msgstr "Erweiterung konnte nicht importiert werden"
 
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Failed to import file"
+msgstr "Die Datei konnte nicht importiert werden"
+
 #: src/lib/components/import/ImportReviewDialog.svelte
 #: src/lib/components/manifest/ManifestContainer.svelte
 msgid "Failed to import files"
@@ -2420,7 +2416,10 @@ msgstr "Allgemein"
 msgid "Generate"
 msgstr "Erzeugen"
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Generate cover"
+msgstr "Cover erzeugen"
+
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "Generate cover image"
 msgstr "Coverbild erzeugen"
@@ -2439,9 +2438,9 @@ msgstr "PDF erstellen"
 msgid "Generating navigation from chapters..."
 msgstr "Navigation wird aus Kapiteln erzeugt..."
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
 #: src/lib/components/spine/GeneratorPanel.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Generating…"
 msgstr "Wird erzeugt…"
 
@@ -2602,8 +2601,13 @@ msgstr "JavaScript-Erweiterung importieren"
 
 #: src/lib/components/import/ImportReviewDialog.svelte
 #: src/lib/components/workspace/OPDSImportDialog.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Importing…"
 msgstr "Wird importiert…"
+
+#: src/lib/navigation/views/CoverView.svelte
+msgid "In a reading app"
+msgstr "In einer Lese-App"
 
 #: plugins/photo-regions/src/App.svelte
 msgid "In this chapter"
@@ -2916,9 +2920,9 @@ msgstr "hell"
 msgid "Light"
 msgstr "Hell"
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Light text on a dark cover"
-msgstr "Heller Text auf dunklem Cover"
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Light on dark"
+msgstr "Hell auf Dunkel"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "link"
@@ -3504,6 +3508,10 @@ msgstr "Aus"
 #: src/lib/components/settings/TrackChangesPanel.svelte
 msgid "On — review mode"
 msgstr "An – Überprüfungsmodus"
+
+#: src/lib/navigation/views/CoverView.svelte
+msgid "On the shelf"
+msgstr "Im Regal"
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "One EPUB made with the editor, opening on phones, tablets, and e-readers."
@@ -4207,7 +4215,7 @@ msgstr "Anfragen laufen über den /dav-Endpunkt dieser App; Ihre WebDAV-Anmelded
 msgid "Required field"
 msgstr "Pflichtfeld"
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Reset"
 msgstr "Zurücksetzen"
 
@@ -4750,6 +4758,7 @@ msgstr "Begriff (z. B. FIC028000)"
 
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Text"
 msgstr "Text"
 
@@ -4879,6 +4888,7 @@ msgid "tip"
 msgstr "Tipp"
 
 #: plugins/publish-to-remote/src/App.svelte
+#: src/lib/components/EditSpineItemDialog.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/metadata/TitleEditor.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
@@ -5005,6 +5015,7 @@ msgstr "Ordnerverknüpfung aufheben"
 #: src/App.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
+#: src/lib/navigation/views/CoverView.svelte
 #: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Untitled"
 msgstr "Ohne Titel"
@@ -5020,19 +5031,15 @@ msgstr "Unbenanntes Projekt"
 msgid "Update Catalog"
 msgstr "Katalog aktualisieren"
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Update cover image"
-msgstr "Coverbild aktualisieren"
-
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Updates the cover with the colour and theme above."
-msgstr "Aktualisiert das Coverbild mit der oben gewählten Farbe und dem Thema."
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Update cover"
+msgstr "Cover aktualisieren"
 
 #: plugins/publish-to-remote/src/App.svelte
 msgid "Updating..."
 msgstr "Wird aktualisiert..."
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Updating…"
 msgstr "Wird aktualisiert…"
 
@@ -5067,6 +5074,10 @@ msgstr "USB-E-Reader"
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "USB e-reader (browse…)"
 msgstr "USB-E-Reader (durchsuchen…)"
+
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Use my own image…"
+msgstr "Eigenes Bild verwenden…"
 
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "Use the download button to access the file"
@@ -5258,3 +5269,7 @@ msgstr "Ihr Browser unterstützt das Videoelement nicht."
 #: src/lib/services/spine/spine.service.ts
 msgid "Your chapter content goes here..."
 msgstr "Hier steht Ihr Kapitelinhalt …"
+
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Your own image"
+msgstr "Eigenes Bild"

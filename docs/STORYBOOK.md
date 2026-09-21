@@ -126,7 +126,7 @@ Keep testids **sparse** — they are Testing Library's explicit last resort (the
 
 | `data-testid`            | Element                           | Where                                                                                       |
 | ------------------------ | --------------------------------- | ------------------------------------------------------------------------------------------- |
-| `nav-<sectionId>`        | Shell navigation controls         | `src/lib/components/shell/TopBar.svelte` inside a book: `nav-workspace` (← Books), `nav-write`, `nav-book`, `nav-publish` (Share), `nav-settings`, and the Book sections `nav-chapters`, `nav-navigation`, `nav-metadata`, `nav-manifest` (rendered only while the Book tab is active); `src/lib/components/shell/BrandBar.svelte` on the Books screen: `nav-workspace`, `nav-about` |
+| `nav-<sectionId>`        | Shell navigation controls         | `src/lib/components/shell/TopBar.svelte` inside a book: `nav-workspace` (← Books), `nav-write`, `nav-book`, `nav-publish` (Share), `nav-settings`, and the Book sections `nav-cover`, `nav-chapters`, `nav-navigation`, `nav-metadata`, `nav-manifest` (rendered only while the Book tab is active); `src/lib/components/shell/BrandBar.svelte` on the Books screen: `nav-workspace`, `nav-about` |
 | `create-project`         | New-book button                   | `src/lib/navigation/views/BooksView.svelte`                                                 |
 | `import-from-catalog`    | Sample-books button               | `src/lib/navigation/views/BooksView.svelte`                                                 |
 | `package-epub`           | Package-EPUB button               | `src/lib/components/shell/TopBar.svelte`                                                    |

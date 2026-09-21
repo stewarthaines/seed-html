@@ -26,6 +26,7 @@
   import AboutView from './lib/navigation/views/AboutView.svelte';
   import ThirdPartyView from './lib/navigation/views/ThirdPartyView.svelte';
   import BooksView from './lib/navigation/views/BooksView.svelte';
+  import CoverView from './lib/navigation/views/CoverView.svelte';
   import MetadataEditor from './lib/components/metadata/MetadataEditor.svelte';
   import SpineView from './lib/navigation/views/SpineView.svelte';
   import ChaptersView from './lib/navigation/views/ChaptersView.svelte';
@@ -190,6 +191,7 @@
       {
         about: $t('About SEED.html'),
         workspace: $t('Books'),
+        cover: $t('Cover'),
         metadata: $t('Metadata'),
         manifest: $t('Manifest'),
         navigation: $t('Navigation'),
@@ -1971,6 +1973,19 @@
           advancedMode={advancedMode.current}
           onWorkspaceOpened={openBookView}
         />
+      {:else if currentView === 'cover'}
+        {#if initialized && currentWorkspaceState && appState}
+          <CoverView
+            workspace={currentWorkspaceState}
+            {workspaceService}
+            coverSettings={appState.epubSettings?.cover}
+            onGenerateCover={handleGenerateCover}
+            readOnly={structureLocked}
+            onWorkspaceUpdate={updatedWorkspace => {
+              if (appState) appState.workspace = updatedWorkspace;
+            }}
+          />
+        {/if}
       {:else if currentView === 'metadata'}
         {#if initialized && currentWorkspaceState && appState}
           <MetadataEditor

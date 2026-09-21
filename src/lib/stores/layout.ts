@@ -28,6 +28,7 @@ export interface LayoutStore extends Writable<LayoutState> {
 export type SidebarSection =
   | 'about'
   | 'workspace'
+  | 'cover'
   | 'metadata'
   | 'manifest'
   | 'navigation'
@@ -213,6 +214,7 @@ function isValidSidebarSection(value: string): value is SidebarSection {
   const validSections: SidebarSection[] = [
     'about',
     'workspace',
+    'cover',
     'metadata',
     'manifest',
     'navigation',

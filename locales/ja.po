@@ -872,14 +872,6 @@ msgstr ""
 msgid "Chapter PDF"
 msgstr ""
 
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Chapter title"
-msgstr ""
-
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Chapter title — used in the content document <title>; defaults to the spine id"
-msgstr ""
-
 #: src/App.svelte
 #: src/lib/Sidebar.svelte
 #: src/lib/navigation/views/ChaptersView.svelte
@@ -1023,6 +1015,10 @@ msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "colophon"
+msgstr ""
+
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Colour"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
@@ -1212,7 +1208,10 @@ msgstr ""
 msgid "cover"
 msgstr ""
 
+#: src/App.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/components/shell/TopBar.svelte
+#: src/lib/navigation/views/CoverView.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Cover"
 msgstr ""
@@ -1225,16 +1224,12 @@ msgstr ""
 msgid "Cover image"
 msgstr ""
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Cover image generated"
 msgstr ""
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Cover image updated"
-msgstr ""
-
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Cover text style"
 msgstr ""
 
 #: src/lib/components/metadata/AdvancedFields.svelte
@@ -1267,10 +1262,6 @@ msgstr ""
 
 #: src/lib/components/manifest/ManifestTable.svelte
 msgid "Create your first item using the buttons above"
-msgstr ""
-
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Creates a cover with the colour and theme above."
 msgstr ""
 
 #: src/lib/components/workspace/CreateProjectDialog.svelte
@@ -1366,8 +1357,8 @@ msgstr ""
 msgid "Dark"
 msgstr ""
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Dark text on a light cover"
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Dark on light"
 msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
@@ -1500,6 +1491,7 @@ msgid "Description"
 msgstr ""
 
 #: src/lib/components/shell/TopBar.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Details"
 msgstr ""
 
@@ -2215,6 +2207,10 @@ msgstr ""
 msgid "Failed to import extension"
 msgstr ""
 
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Failed to import file"
+msgstr ""
+
 #: src/lib/components/import/ImportReviewDialog.svelte
 #: src/lib/components/manifest/ManifestContainer.svelte
 msgid "Failed to import files"
@@ -2401,7 +2397,10 @@ msgstr ""
 msgid "Generate"
 msgstr ""
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Generate cover"
+msgstr ""
+
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "Generate cover image"
 msgstr ""
@@ -2420,9 +2419,9 @@ msgstr ""
 msgid "Generating navigation from chapters..."
 msgstr ""
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
 #: src/lib/components/spine/GeneratorPanel.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Generating…"
 msgstr ""
 
@@ -2583,7 +2582,12 @@ msgstr ""
 
 #: src/lib/components/import/ImportReviewDialog.svelte
 #: src/lib/components/workspace/OPDSImportDialog.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Importing…"
+msgstr ""
+
+#: src/lib/navigation/views/CoverView.svelte
+msgid "In a reading app"
 msgstr ""
 
 #: plugins/photo-regions/src/App.svelte
@@ -2897,8 +2901,8 @@ msgstr ""
 msgid "Light"
 msgstr ""
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Light text on a dark cover"
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Light on dark"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
@@ -3484,6 +3488,10 @@ msgstr ""
 
 #: src/lib/components/settings/TrackChangesPanel.svelte
 msgid "On — review mode"
+msgstr ""
+
+#: src/lib/navigation/views/CoverView.svelte
+msgid "On the shelf"
 msgstr ""
 
 #: src/lib/navigation/views/AboutView.svelte
@@ -4188,7 +4196,7 @@ msgstr ""
 msgid "Required field"
 msgstr ""
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Reset"
 msgstr ""
 
@@ -4731,6 +4739,7 @@ msgstr ""
 
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Text"
 msgstr ""
 
@@ -4860,6 +4869,7 @@ msgid "tip"
 msgstr ""
 
 #: plugins/publish-to-remote/src/App.svelte
+#: src/lib/components/EditSpineItemDialog.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/metadata/TitleEditor.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
@@ -4986,6 +4996,7 @@ msgstr ""
 #: src/App.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
+#: src/lib/navigation/views/CoverView.svelte
 #: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Untitled"
 msgstr ""
@@ -5001,19 +5012,15 @@ msgstr ""
 msgid "Update Catalog"
 msgstr ""
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Update cover image"
-msgstr ""
-
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Updates the cover with the colour and theme above."
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Update cover"
 msgstr ""
 
 #: plugins/publish-to-remote/src/App.svelte
 msgid "Updating..."
 msgstr ""
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Updating…"
 msgstr ""
 
@@ -5047,6 +5054,10 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "USB e-reader (browse…)"
+msgstr ""
+
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Use my own image…"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestPreview.svelte
@@ -5238,4 +5249,8 @@ msgstr ""
 
 #: src/lib/services/spine/spine.service.ts
 msgid "Your chapter content goes here..."
+msgstr ""
+
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Your own image"
 msgstr ""

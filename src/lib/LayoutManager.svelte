@@ -42,7 +42,11 @@
 
   // Which views keep a right-hand pane.
   const showPreviewPane = $derived(
-    view !== 'workspace' && view !== 'settings' && view !== 'publish' && view !== 'chapters'
+    view !== 'workspace' &&
+      view !== 'settings' &&
+      view !== 'publish' &&
+      view !== 'chapters' &&
+      view !== 'cover'
   );
 
   // Spine view only: the preview pane collapses to a slim rail (writing mode).

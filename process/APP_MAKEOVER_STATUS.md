@@ -99,6 +99,12 @@ Step 4 committed (665c7db). Phase 2 is complete on `makeover/phase-2-write` (fou
 - Decisions taken alone are listed under each phase above; the ones most worth a look: Share always visible with the export row; Cover absent from the Book sub-nav until phase 3; generator scripts under "How chapters are made"; the first-visit redirect to Books; `Sidebar.svelte` and `WorkspaceView.svelte` left on disk unrendered.
 - `LayoutManager.stories.svelte` fails as it did before the makeover (Svelte 4 slot syntax); it describes the old layout and can be deleted or rewritten with phase 3.
 
+## Phase 3 — Book
+
+Branch `makeover/phase-3-book`, stacked on phase 2.
+
+Step 1 (Cover) built: a `cover` view id (added to `ViewType`, `VALID_VIEW_TYPES`, `SidebarSection` and its validator; the nine-id test literals still hold), first in the Book sub-nav. `CoverView` shows the cover large (the proposal while anything differs, else the stored image), the generator's controls (Light on dark / Dark on light, the hue ribbon, "from Details", Update or Generate, Reset), "Use my own image…" (imports the file through `importFileToManifest` and moves the `cover-image` mark to it), and how the cover reads on the shelf and in a reading-app list. The generator's controls left `SimpleMetadataView`, which keeps the before/after preview only. Twelve strings with German.
+
 ### Next step
 
-Phase 3 (Book tab): Cover screen first, then Files, then Contents merging Chapters and Navigation, then Details. Branch `makeover/phase-3-book` stacked on phase 2.
+Validate and commit step 1. Then step 2: Files (the manifest with a "Used as" column, source and app files hidden by default, `Change in Cover` for the cover row).

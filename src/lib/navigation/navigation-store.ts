@@ -34,6 +34,7 @@ const DEFAULT_STATE: NavigationState = {
 const VALID_VIEW_TYPES: ViewType[] = [
   'about',
   'workspace',
+  'cover',
   'metadata',
   'manifest',
   'navigation',
