@@ -66,6 +66,10 @@ msgstr ""
 msgid "{count} selected"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "{count} to fix"
+msgstr ""
+
 #: src/lib/components/spine/EditorPane.svelte
 msgid "{count} Warnings"
 msgstr ""
@@ -300,10 +304,6 @@ msgstr ""
 
 #: src/lib/components/metadata/AccessibilityFields.svelte
 msgid "Accessibility API"
-msgstr ""
-
-#: src/lib/components/spine/PreviewPane.svelte
-msgid "Accessibility check (axe-core) — re-runs as you edit while open"
 msgstr ""
 
 #: src/lib/components/metadata/AccessibilityFields.svelte
@@ -1516,6 +1516,10 @@ msgstr ""
 msgid "Device"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Device size"
+msgstr ""
+
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Device:"
 msgstr ""
@@ -1612,6 +1616,10 @@ msgstr ""
 
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Duration"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "E-reader"
 msgstr ""
 
 #: src/lib/components/metadata/CollectionsEditor.svelte
@@ -3445,6 +3453,10 @@ msgstr ""
 msgid "note reference"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Nothing to fix"
+msgstr ""
+
 #: src/lib/components/SpineSidebar.svelte
 #: src/lib/components/manifest/ManifestContainer.svelte
 msgid "Nothing to import — the file(s) already match the existing content."
@@ -3730,6 +3742,10 @@ msgstr ""
 
 #: plugins/photo-regions/src/App.svelte
 msgid "person id or name"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Phone"
 msgstr ""
 
 #: plugins/photo-regions/src/App.svelte
@@ -4400,6 +4416,7 @@ msgid "Select This Folder"
 msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
+#. Accessibility label for the device switch
 msgid "Select view"
 msgstr ""
 
@@ -4461,10 +4478,6 @@ msgstr ""
 
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Show {name}"
-msgstr ""
-
-#: src/lib/components/spine/PreviewPane.svelte
-msgid "Show panel"
 msgstr ""
 
 #: src/lib/LayoutManager.svelte
@@ -4698,6 +4711,10 @@ msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "table of contents"
+msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Tablet"
 msgstr ""
 
 #: src/lib/navigation/views/ThirdPartyView.svelte
@@ -5086,10 +5103,6 @@ msgstr ""
 
 #: src/lib/components/spine/ChapterValidationPanel.svelte
 msgid "Validation issues for this chapter"
-msgstr ""
-
-#: src/lib/components/spine/PreviewPane.svelte
-msgid "Validation report (epubcheck) for this chapter"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte

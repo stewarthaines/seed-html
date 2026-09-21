@@ -64,6 +64,29 @@ Shelf components landed (`src/lib/components/books/`): BookCover, BookMenu (acce
 
 Seen in the running app (localhost:5173, screenshots under `.playwright-mcp/makeover/dev-*.png`): Books shelf with two covers and the ring on the open book; Write with the chapter column; Book tab with its section row above the existing Metadata tabs; Share with the export row above the plugin. At 390px the bar wraps onto two rows (a stop-gap; the phone layout is phase 5).
 
+Phase 1 committed (236621a…202a75d). After the first four commits: a first visit now lands on Books (an App-level redirect when no view is persisted; the store's default stays About so its tests hold), and the accessibility scan walks the new shell (Books and About scan clean; the About page's two findings, `.license-meta` contrast and the scrollable body, are pre-existing). Story tests (`npm run test:stories`): 16 failures on the branch; `LayoutManager.stories.svelte` (4 of them) was already stale before the makeover; the rest are being triaged against the new shell (see the log in the session scratchpad and the notes below).
+
+## Phase 2 — Write
+
+Branch `makeover/phase-2-write`, stacked on phase 1. The toolbars as they are: EditorPane header 1183–1310, PreviewPane header 1313–1570, options bar 1582–1683, panels 1688–1932; `preview-devices.ts`.
+
+Scope, in commit order, each validated:
+
+1. **Files menu.** Replace the file `<select>` in EditorPane's single-mode header with a menu button (extend `BookMenu` with group headings, a `detail` line and a checked item): groups This chapter (text, locale refs), Format (generators from text-format extensions, e.g. the Djot syntax example), Every chapter (css), How chapters are made (transforms, scripts, head.xml). Basic mode keeps today's gating (`isEditableInBasicMode`). A final item "Open in a second pane" targets pane 2 (SpineView already switches to dual). Pane 2's own select stays for now.
+2. **Device switch.** Replace the "Select view" `<select>` with a segmented control Fill · Phone · Tablet · E-reader · READ.html · Print (Source appended in advanced mode); category → family mapping commute→Phone, home→Tablet, travel→E-reader, print→Print. The size variants (Standard/Plus, Compact/Extra Large, Print/Proofs) appear as chips at the start of the existing options bar once a family is chosen. The second select under split stays.
+3. **Checks and Reader.** Replace the "Show panel" `<select>` with a Reader toggle button and a checks status button ("✓" or "N to fix", from the epubcheck report for this chapter plus the last axe count). The panel band gets a tab strip Checks (epubcheck) · Accessibility · Screen reader over the existing panels; panels stay mutually exclusive.
+4. **Chapter title.** Remove the advanced-mode title input from the editor header; add a Title field to `EditSpineItemDialog` (writes the `SOURCE/text/{id}.json` sidecar via `writeChapterMeta`), so rename lives beside the chapter.
+
+Not in phase 2: the layout control (hide preview and split already exist as pinned buttons), text size, the Insert select, dual-mode pane headers.
+
+Story triage done (phase 1, commit a8209c7): the failures were the shell's, not the views'. The stories asserted the book title in the always-present sidebar and clicked chapters from any view; now the title is the top bar's heading and the chapter column exists only under Write, so the plays return to Write first. The App re-reads the persisted view on mount because the Storybook seed writes it after the store module loaded. `LayoutManager.stories.svelte` (4 failures) was stale before the makeover (Svelte 4 slot syntax against snippet props) and is left as is.
+
+### Phase 2 progress
+
+Step 1 (files menu) built: `BookMenu` now supports group headings, a detail line, a checked item (`menuitemradio`), a text trigger and start alignment; EditorPane's pane-1 picker is a current-file chip plus an "Also in this chapter" menu grouped This chapter / Every chapter / How chapters are made, with "Open a second pane" last. Pane 2 keeps its `<select>`. Decision: generator scripts (the Djot syntax example among them) sit under "How chapters are made", since what the entry opens is the generator's source, not a sample chapter; the plan's "Format · Djot" chapter needs a sample chapter to exist first. Six new strings with German. `TransformPipeline.stories.svelte` drives the menu instead of the select.
+
+Step 1 committed (3c933c3). Step 2 (device switch) built in PreviewPane: a `role="group"` of family buttons Fill · Phone · Tablet · E-reader · READ.html · Print (Source in advanced mode) replaces the primary "Select view" dropdown; a sizes row (Standard / Plus, Compact / Extra Large, Print / Proofs) appears under the header when the family has more than one; the split's second dropdown is unchanged. Families map from the presets' categories (commute → Phone, home → Tablet, travel → E-reader). Four new strings with German. Seen in the app at 1440px: the header wraps to three rows at the default split; step 3 shrinks the Checks dropdown to a button, which should pull it back to two.
+
 ### Next step
 
-`npm run validate` (running), then commit per concern on the branch: shell + shelf + tokens; stories/docs/scan; locales; status. Then update memory. Phase 1 is then complete except for review.
+Validate and commit step 2, then step 3 (checks status button, Reader toggle, panel tabs).

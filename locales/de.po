@@ -66,6 +66,10 @@ msgstr "{count} Verweise aktualisiert"
 msgid "{count} selected"
 msgstr "{count} ausgewählt"
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "{count} to fix"
+msgstr "{count} zu beheben"
+
 #: src/lib/components/spine/EditorPane.svelte
 msgid "{count} Warnings"
 msgstr "{count} Warnungen"
@@ -320,10 +324,6 @@ msgstr "Barrierefreiheit"
 #: src/lib/components/metadata/AccessibilityFields.svelte
 msgid "Accessibility API"
 msgstr "Barrierefreiheits-API"
-
-#: src/lib/components/spine/PreviewPane.svelte
-msgid "Accessibility check (axe-core) — re-runs as you edit while open"
-msgstr "Barrierefreiheitsprüfung (axe-core) – wird bei Änderungen erneut ausgeführt, solange geöffnet"
 
 #: src/lib/components/metadata/AccessibilityFields.svelte
 #: src/lib/navigation/views/SettingsView.svelte
@@ -1535,6 +1535,10 @@ msgstr "Entwickelt von Stewart Haines."
 msgid "Device"
 msgstr "Gerät"
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Device size"
+msgstr "Gerätegröße"
+
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Device:"
 msgstr "Gerät:"
@@ -1632,6 +1636,10 @@ msgstr "Wird dupliziert…"
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Duration"
 msgstr "Dauer"
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "E-reader"
+msgstr "E-Reader"
 
 #: src/lib/components/metadata/CollectionsEditor.svelte
 msgid "e.g. 2"
@@ -3464,6 +3472,10 @@ msgstr "Anmerkung"
 msgid "note reference"
 msgstr "Anmerkungsverweis"
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Nothing to fix"
+msgstr "Nichts zu beheben"
+
 #: src/lib/components/SpineSidebar.svelte
 #: src/lib/components/manifest/ManifestContainer.svelte
 msgid "Nothing to import — the file(s) already match the existing content."
@@ -3750,6 +3762,10 @@ msgstr ""
 #: plugins/photo-regions/src/App.svelte
 msgid "person id or name"
 msgstr ""
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Phone"
+msgstr "Telefon"
 
 #: plugins/photo-regions/src/App.svelte
 msgid "Photo"
@@ -4419,6 +4435,7 @@ msgid "Select This Folder"
 msgstr "Diesen Ordner auswählen"
 
 #: src/lib/components/spine/PreviewPane.svelte
+#. Accessibility label for the device switch
 msgid "Select view"
 msgstr "Ansicht wählen"
 
@@ -4481,10 +4498,6 @@ msgstr "Kurz"
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Show {name}"
 msgstr ""
-
-#: src/lib/components/spine/PreviewPane.svelte
-msgid "Show panel"
-msgstr "Bereich anzeigen"
 
 #: src/lib/LayoutManager.svelte
 msgid "Show preview"
@@ -4718,6 +4731,10 @@ msgstr "Tabelle"
 #: src/lib/components/spine/sr-walk.ts
 msgid "table of contents"
 msgstr "Inhaltsverzeichnis"
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Tablet"
+msgstr "Tablet"
 
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "Technical Info"
@@ -5106,10 +5123,6 @@ msgstr "Validierung fehlgeschlagen: {error}"
 #: src/lib/components/spine/ChapterValidationPanel.svelte
 msgid "Validation issues for this chapter"
 msgstr "Validierungsprobleme für dieses Kapitel"
-
-#: src/lib/components/spine/PreviewPane.svelte
-msgid "Validation report (epubcheck) for this chapter"
-msgstr "Validierungsbericht (epubcheck) für dieses Kapitel"
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 msgid "Validation Report: {filename}"
