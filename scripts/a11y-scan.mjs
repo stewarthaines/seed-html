@@ -52,13 +52,17 @@ async function clickNav(page, name) {
 async function ensureWorkspace(page) {
   const writeTab = page.getByRole('button', { name: 'Write', exact: true }).first();
   if (await writeTab.isVisible().catch(() => false)) return true;
-  const back = page.getByRole('button', { name: /^← ?Books$|^Books$/ }).first();
-  if (await back.isVisible().catch(() => false)) await back.click();
+  // Back to the shelf (the hook exists on both the brand bar and the top bar).
+  await page.locator('[data-testid="nav-workspace"]').first().click();
+  await page.waitForTimeout(500);
   const firstBook = page.getByRole('button', { name: /^Open / }).first();
   if (await firstBook.isVisible().catch(() => false)) {
     await firstBook.click();
   } else {
     await page.getByRole('button', { name: 'New book', exact: true }).first().click();
+    // The new-book dialog: accept its defaults.
+    const create = page.getByRole('dialog').getByRole('button', { name: /create/i }).first();
+    if (await create.isVisible({ timeout: 3000 }).catch(() => false)) await create.click();
   }
   await writeTab.waitFor({ state: 'visible', timeout: 20000 });
   return true;
@@ -109,7 +113,10 @@ async function scanAllViews(page, theme) {
     return true;
   };
 
-  // Outside a book: the Books shelf (the landing screen) and About.
+  // Outside a book: the Books shelf (the landing screen) and About. Reach Books
+  // by its hook — the brand button's visible name is the app name.
+  await page.locator('[data-testid="nav-workspace"]').first().click();
+  await page.waitForTimeout(800);
   await scan('Books');
   if (await visit('About SEED.html')) await scan('About');
 

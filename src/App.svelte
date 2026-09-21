@@ -1726,6 +1726,12 @@
         // Seed the Advanced-mode toggle's gate from whether any project exists.
         await refreshHasProjects();
 
+        // A first visit lands on the Books shelf; a returning visit restores the
+        // last view (the navigation store's own default is About).
+        if (localStorage.getItem('seedhtml_nav_current_view') === null) {
+          navigationStore.navigateTo('workspace', { replaceHistory: true });
+        }
+
         // A book-carrying artifact imports (or reopens) its payload; otherwise
         // a ?book= deep link (the READ.html hand-off), then the legacy hash
         // form — all after appState is fully ready.
