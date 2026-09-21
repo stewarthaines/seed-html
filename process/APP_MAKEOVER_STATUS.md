@@ -105,6 +105,8 @@ Branch `makeover/phase-3-book`, stacked on phase 2.
 
 Step 1 (Cover) built: a `cover` view id (added to `ViewType`, `VALID_VIEW_TYPES`, `SidebarSection` and its validator; the nine-id test literals still hold), first in the Book sub-nav. `CoverView` shows the cover large (the proposal while anything differs, else the stored image), the generator's controls (Light on dark / Dark on light, the hue ribbon, "from Details", Update or Generate, Reset), "Use my own image…" (imports the file through `importFileToManifest` and moves the `cover-image` mark to it), and how the cover reads on the shelf and in a reading-app list. The generator's controls left `SimpleMetadataView`, which keeps the before/after preview only. Twelve strings with German.
 
+Step 1 committed (6edece9). Step 2 (Files) built: the manifest table's Properties column is "Used as" (Cover, Contents, Chapter N, Every chapter; raw properties as the fallback), "Load File" is "Add files…", and the detail pane's cover checkbox is "Cover · Change in Cover" on the cover row and "Use as the cover" on other images. Source and app files were already behind Advanced mode in this table, so nothing more hides. Five strings with German.
+
 ### Next step
 
-Validate and commit step 1. Then step 2: Files (the manifest with a "Used as" column, source and app files hidden by default, `Change in Cover` for the cover row).
+Validate and commit step 2. Then step 3: Contents (merge the Chapters view's operations with the Navigation view's generated contents; the authored nav file behind Advanced), the largest piece; then step 4: Details (metadata basic as the page; Advanced and Accessibility behind "Advanced details").

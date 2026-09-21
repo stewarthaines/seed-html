@@ -423,6 +423,10 @@ msgstr "ახალი თავის სახით დამატება
 msgid "Add Destination"
 msgstr "დანიშნულების დამატება"
 
+#: src/lib/components/manifest/ManifestTable.svelte
+msgid "Add files…"
+msgstr ""
+
 #: src/lib/components/metadata/LanguageEditor.svelte
 msgid "Add Language"
 msgstr "ენის დამატება"
@@ -877,6 +881,10 @@ msgstr "საქაღალდის შეცვლა"
 msgid "Change folder…"
 msgstr "საქაღალდის შეცვლა…"
 
+#: src/lib/components/manifest/ManifestPreview.svelte
+msgid "Change in Cover"
+msgstr ""
+
 #: src/lib/components/track-changes/PatchsetReviewDialog.svelte
 msgid "Changed files"
 msgstr "შეცვლილი ფაილები"
@@ -888,6 +896,10 @@ msgstr "ცვლილებები"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "chapter"
+msgstr ""
+
+#: src/lib/components/manifest/ManifestTable.svelte
+msgid "Chapter {n}"
 msgstr ""
 
 #: src/lib/content/types.ts
@@ -1161,6 +1173,7 @@ msgstr "შიგთავსის ტიპი"
 msgid "Content Type:"
 msgstr "შიგთავსის ტიპი:"
 
+#: src/lib/components/manifest/ManifestTable.svelte
 #: src/lib/components/shell/TopBar.svelte
 msgid "Contents"
 msgstr ""
@@ -1247,6 +1260,8 @@ msgid "cover"
 msgstr ""
 
 #: src/App.svelte
+#: src/lib/components/manifest/ManifestPreview.svelte
+#: src/lib/components/manifest/ManifestTable.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/CoverView.svelte
@@ -1257,10 +1272,6 @@ msgstr "ყდა"
 #: src/lib/components/HueSelector.svelte
 msgid "Cover background hue"
 msgstr "ყდის ფონის ელფერი"
-
-#: src/lib/components/manifest/ManifestPreview.svelte
-msgid "Cover image"
-msgstr "ყდის გამოსახულება"
 
 #: src/lib/navigation/views/CoverView.svelte
 msgid "Cover image generated"
@@ -2159,6 +2170,7 @@ msgstr "შეცდომები:"
 msgid "Essential Information"
 msgstr "ძირითადი ინფორმაცია"
 
+#: src/lib/components/manifest/ManifestTable.svelte
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Every chapter"
 msgstr ""
@@ -2970,10 +2982,6 @@ msgstr ""
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Load clip data from selected text"
 msgstr "კლიპის მონაცემების ჩატვირთვა მონიშნული ტექსტიდან"
-
-#: src/lib/components/manifest/ManifestTable.svelte
-msgid "Load File"
-msgstr "ფაილის ჩატვირთვა"
 
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Load from Selection"
@@ -3978,10 +3986,6 @@ msgstr ""
 #. The chapter-proofs preview option — a grid of small print pages
 msgid "Proofs"
 msgstr ""
-
-#: src/lib/components/manifest/ManifestTable.svelte
-msgid "Properties"
-msgstr "თვისებები"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Public URL Base (optional)"
@@ -5094,6 +5098,10 @@ msgstr "USB ელწამკითხველი"
 msgid "USB e-reader (browse…)"
 msgstr "USB ელწამკითხველი (დათვალიერება…)"
 
+#: src/lib/components/manifest/ManifestPreview.svelte
+msgid "Use as the cover"
+msgstr ""
+
 #: src/lib/navigation/views/CoverView.svelte
 msgid "Use my own image…"
 msgstr ""
@@ -5109,6 +5117,10 @@ msgstr "გამოიყენეთ საკუთარი Dropbox-აპ�
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Use your own Google app: create an OAuth client ID and an API key in the Google Cloud console, enable the Drive and Picker APIs, and add this app’s origin ({origin}) to the OAuth client’s Authorized JavaScript origins."
 msgstr "გამოიყენეთ საკუთარი Google-აპლიკაცია: შექმენით OAuth კლიენტის ID და API-გასაღები Google Cloud კონსოლში, ჩართეთ Drive და Picker API-ები და დაამატეთ ამ აპლიკაციის წარმომავლობა ({origin}) OAuth კლიენტის „Authorized JavaScript origins“ სიაში."
+
+#: src/lib/components/manifest/ManifestTable.svelte
+msgid "Used as"
+msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "username"

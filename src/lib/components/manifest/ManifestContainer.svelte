@@ -502,6 +502,7 @@
 {:else}
   <ManifestTable
     {manifestItems}
+    spineIds={workspace?.opf?.spine?.map(s => s.idref) ?? []}
     {sourceItems}
     {unmanifestedItems}
     {seedHtmlPresent}

@@ -404,6 +404,10 @@ msgstr "Als neues Kapitel hinzufügen"
 msgid "Add Destination"
 msgstr "Ziel hinzufügen"
 
+#: src/lib/components/manifest/ManifestTable.svelte
+msgid "Add files…"
+msgstr "Dateien hinzufügen…"
+
 #: src/lib/components/metadata/LanguageEditor.svelte
 msgid "Add Language"
 msgstr "Sprache hinzufügen"
@@ -858,6 +862,10 @@ msgstr "Ordner ändern"
 msgid "Change folder…"
 msgstr "Ordner wechseln…"
 
+#: src/lib/components/manifest/ManifestPreview.svelte
+msgid "Change in Cover"
+msgstr "Unter „Cover“ ändern"
+
 #: src/lib/components/track-changes/PatchsetReviewDialog.svelte
 msgid "Changed files"
 msgstr "Geänderte Dateien"
@@ -870,6 +878,10 @@ msgstr "Änderungen"
 #: src/lib/components/spine/sr-walk.ts
 msgid "chapter"
 msgstr "Kapitel"
+
+#: src/lib/components/manifest/ManifestTable.svelte
+msgid "Chapter {n}"
+msgstr "Kapitel {n}"
 
 #: src/lib/content/types.ts
 msgid "Chapter 1: Getting Started"
@@ -1142,6 +1154,7 @@ msgstr "Inhaltstyp"
 msgid "Content Type:"
 msgstr "Inhaltstyp:"
 
+#: src/lib/components/manifest/ManifestTable.svelte
 #: src/lib/components/shell/TopBar.svelte
 msgid "Contents"
 msgstr "Inhalt"
@@ -1228,6 +1241,8 @@ msgid "cover"
 msgstr "Cover"
 
 #: src/App.svelte
+#: src/lib/components/manifest/ManifestPreview.svelte
+#: src/lib/components/manifest/ManifestTable.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/CoverView.svelte
@@ -1238,10 +1253,6 @@ msgstr "Cover"
 #: src/lib/components/HueSelector.svelte
 msgid "Cover background hue"
 msgstr "Cover-Hintergrundton"
-
-#: src/lib/components/manifest/ManifestPreview.svelte
-msgid "Cover image"
-msgstr "Coverbild"
 
 #: src/lib/navigation/views/CoverView.svelte
 msgid "Cover image generated"
@@ -2140,6 +2151,7 @@ msgstr "Fehler:"
 msgid "Essential Information"
 msgstr "Obligatorische Informationen"
 
+#: src/lib/components/manifest/ManifestTable.svelte
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Every chapter"
 msgstr "Jedes Kapitel"
@@ -2951,10 +2963,6 @@ msgstr "Listeneintrag"
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Load clip data from selected text"
 msgstr "Clip-Daten aus ausgewähltem Text laden"
-
-#: src/lib/components/manifest/ManifestTable.svelte
-msgid "Load File"
-msgstr "Datei laden"
 
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Load from Selection"
@@ -3959,10 +3967,6 @@ msgstr "Prolog"
 #. The chapter-proofs preview option — a grid of small print pages
 msgid "Proofs"
 msgstr "Seitenübersicht"
-
-#: src/lib/components/manifest/ManifestTable.svelte
-msgid "Properties"
-msgstr "Eigenschaften"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Public URL Base (optional)"
@@ -5075,6 +5079,10 @@ msgstr "USB-E-Reader"
 msgid "USB e-reader (browse…)"
 msgstr "USB-E-Reader (durchsuchen…)"
 
+#: src/lib/components/manifest/ManifestPreview.svelte
+msgid "Use as the cover"
+msgstr "Als Cover verwenden"
+
 #: src/lib/navigation/views/CoverView.svelte
 msgid "Use my own image…"
 msgstr "Eigenes Bild verwenden…"
@@ -5090,6 +5098,10 @@ msgstr "Verwenden Sie Ihre eigene Dropbox-App: Erstellen Sie eine App in der Dro
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Use your own Google app: create an OAuth client ID and an API key in the Google Cloud console, enable the Drive and Picker APIs, and add this app’s origin ({origin}) to the OAuth client’s Authorized JavaScript origins."
 msgstr "Verwenden Sie Ihre eigene Google-App: Erstellen Sie eine OAuth-Client-ID und einen API-Schlüssel in der Google Cloud Console, aktivieren Sie die Drive- und Picker-APIs und fügen Sie den Ursprung dieser App ({origin}) zu den autorisierten JavaScript-Quellen der OAuth-Client-ID hinzu."
+
+#: src/lib/components/manifest/ManifestTable.svelte
+msgid "Used as"
+msgstr "Verwendet als"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "username"
