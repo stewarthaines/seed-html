@@ -50,21 +50,55 @@ async function clickNav(page, name) {
 // Reuse the open one if present (e.g. restored after a theme reload); otherwise open
 // the first book on the shelf, or create a minimal one.
 async function ensureWorkspace(page) {
-  const writeTab = page.getByRole('button', { name: 'Write', exact: true }).first();
+  // Surface what the app says while a book is being created.
+  const onConsole = m => {
+    if (m.type() === 'error') console.warn(`\nAPP ${m.text().slice(0, 200)}`);
+  };
+  const onPageError = e => console.warn(`\nAPP pageerror ${String(e).slice(0, 200)}`);
+  page.on('console', onConsole);
+  page.on('pageerror', onPageError);
+  try {
+    return await ensureWorkspaceInner(page);
+  } finally {
+    page.off('console', onConsole);
+    page.off('pageerror', onPageError);
+  }
+}
+
+async function ensureWorkspaceInner(page) {
+  const writeTab = page.locator('[data-testid="nav-write"]').first();
   if (await writeTab.isVisible().catch(() => false)) return true;
   // Back to the shelf (the hook exists on both the brand bar and the top bar).
   await page.locator('[data-testid="nav-workspace"]').first().click();
-  await page.waitForTimeout(500);
+  // Let the shelf finish loading before clicking: its rows shift the Start row
+  // while they arrive, and a click computed too early lands on a neighbour.
+  await page
+    .locator('.books-view')
+    .first()
+    .waitFor({ state: 'visible', timeout: 10000 })
+    .catch(() => undefined);
+  await page.waitForTimeout(1500);
   const firstBook = page.getByRole('button', { name: /^Open / }).first();
   if (await firstBook.isVisible().catch(() => false)) {
     await firstBook.click();
   } else {
-    await page.getByRole('button', { name: 'New book', exact: true }).first().click();
+    // Activate by keyboard: immune to the row reflowing under a pointer click.
+    const newBook = page.locator('[data-testid="create-project"]').first();
+    await newBook.focus();
+    await page.keyboard.press('Enter');
     // The new-book dialog: accept its defaults.
-    const create = page.getByRole('dialog').getByRole('button', { name: /create/i }).first();
-    if (await create.isVisible({ timeout: 3000 }).catch(() => false)) await create.click();
+    const create = page
+      .getByRole('dialog')
+      .getByRole('button', { name: /create/i })
+      .first();
+    if (await create.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await create.click();
+    } else {
+      console.warn(`\nWARN: the New book dialog did not open`);
+    }
   }
-  await writeTab.waitFor({ state: 'visible', timeout: 20000 });
+  // Creating a book copies its starter files; allow for a slow first run.
+  await writeTab.waitFor({ state: 'visible', timeout: 45000 });
   return true;
 }
 
@@ -125,6 +159,10 @@ async function scanAllViews(page, theme) {
     workspaceReady = await ensureWorkspace(page);
   } catch (e) {
     console.warn(`\nWARN [${theme}]: could not ensure a book: ${e.message}`);
+    // What the page looked like when the book could not be opened or created.
+    await page
+      .screenshot({ path: `.playwright-mcp/a11y-no-book-${theme}.png` })
+      .catch(() => undefined);
   }
 
   if (workspaceReady) {
@@ -194,7 +232,7 @@ async function setTheme(page, theme) {
   await page.evaluate(([key, value]) => localStorage.setItem(key, value), [THEME_KEY, theme]);
   await page.reload({ waitUntil: 'networkidle' });
   await page
-    .getByRole('button', { name: 'Projects', exact: true })
+    .locator('[data-testid="nav-workspace"]')
     .first()
     .waitFor({ timeout: 15000 })
     .catch(() => undefined);
@@ -213,7 +251,7 @@ async function main() {
     process.exit(2);
   }
   await page
-    .getByRole('button', { name: 'Projects', exact: true })
+    .locator('[data-testid="nav-workspace"]')
     .first()
     .waitFor({ timeout: 15000 })
     .catch(() => undefined);

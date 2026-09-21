@@ -1941,7 +1941,10 @@
     {/snippet}
 
     {#snippet leftContent()}
-      <h1 class="sr-only">{viewTitle}</h1>
+      {#if currentView !== 'workspace' && currentView !== 'cover'}
+        <!-- Books and Cover carry their own visible heading. -->
+        <h1 class="sr-only">{viewTitle}</h1>
+      {/if}
       {#if isReadOnly && currentView !== 'workspace' && currentView !== 'about'}
         <div class="readonly-banner" role="status">
           {$t("This EPUB wasn't created in the Simple EPUB Editor, so it can't be edited.")}

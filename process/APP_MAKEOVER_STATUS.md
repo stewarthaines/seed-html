@@ -121,6 +121,8 @@ Not started: phase 4 (the Share screen as outcome cards with the plugin inside "
 
 Open from the plan: per-book Share versus the global packaged list; what the sample book opens into; whether About needs a page. Owed after review: deleting `Sidebar.svelte`, `WorkspaceView.svelte`, `MetadataTabBar.svelte`/`MetadataTab.svelte` and `LayoutManager.stories.svelte`, which are no longer rendered.
 
+One loose end in the tooling: `scripts/a11y-scan.mjs` cannot get past creating a book in its own headless context (the New book dialog opens and Create is pressed, but no book appears and no error is logged), so only the Books and About screens are scanned. The same steps succeed in a fresh headless Chromium run by hand (`.playwright-mcp/makeover/scan-debug.mjs`) and in the user's browser. The scan now saves `.playwright-mcp/a11y-no-book-<theme>.png` when this happens; worth a look with the dev server open.
+
 ### Next step
 
 User review of the three branches. Then phase 4.
