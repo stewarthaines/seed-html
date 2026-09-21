@@ -91,6 +91,14 @@ Steps 2 and 3 committed together (335524a; one file, PreviewPane): the "Show pan
 
 Step 4 (chapter title) built: `EditSpineItemDialog` gains a Title field (first, focused, placeholder = the id) and saves it to the `SOURCE/text/{id}.json` sidecar through the chapter column's edit button; a `chapter-meta-changed` window event makes SpineView re-run the transform so the preview's `<title>` follows. The advanced-mode title input is gone from the editor header, along with its props. No new strings (Title exists).
 
+Step 4 committed (665c7db). Phase 2 is complete on `makeover/phase-2-write` (four commits on top of phase 1), pending review. Seen in the app: the files menu, the device switch with the Standard/Plus row, the checks button opening the Accessibility panel with its tab strip, and the chapter dialog with the title pre-filled.
+
+## Review notes for the user
+
+- Phase 1 (`makeover/phase-1-shell`, 7 commits) and phase 2 (`makeover/phase-2-write`, 4 commits) are stacked; merge phase 1 first or merge phase 2 alone, which carries both.
+- Decisions taken alone are listed under each phase above; the ones most worth a look: Share always visible with the export row; Cover absent from the Book sub-nav until phase 3; generator scripts under "How chapters are made"; the first-visit redirect to Books; `Sidebar.svelte` and `WorkspaceView.svelte` left on disk unrendered.
+- `LayoutManager.stories.svelte` fails as it did before the makeover (Svelte 4 slot syntax); it describes the old layout and can be deleted or rewritten with phase 3.
+
 ### Next step
 
-Validate and commit step 4; then phase 2 is complete except for review. Update the plan's phase list and memory.
+Phase 3 (Book tab): Cover screen first, then Files, then Contents merging Chapters and Navigation, then Details. Branch `makeover/phase-3-book` stacked on phase 2.
