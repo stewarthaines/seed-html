@@ -163,7 +163,9 @@ function transformDOM(htmlDocument) {
         content => !JSON.parse(content).dom_transforms.includes(MARKER_TRANSFORM_PATH)
       );
 
-      // Back to the chapter; type a sentinel so a fresh render persists.
+      // Back to the chapter (the chapter column lives under Write); type a
+      // sentinel so a fresh render persists.
+      await userEvent.click(await canvas.findByTestId('nav-write', {}, { timeout: 30000 }));
       await userEvent.click(
         await canvas.findByTestId('spine-item-chapter01', {}, { timeout: 30000 })
       );

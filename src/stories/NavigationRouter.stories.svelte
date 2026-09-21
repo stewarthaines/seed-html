@@ -83,7 +83,9 @@
     await userEvent.click(metadata);
     await canvas.findByRole('heading', { name: /Metadata/i }, { timeout: 20000 });
 
-    // …and back: the editor state is restored without re-selecting the chapter.
+    // …and back: the chapter column lives under Write; the editor state is
+    // restored without re-selecting the chapter.
+    await userEvent.click(await canvas.findByTestId('nav-write', {}, { timeout: 20000 }));
     const chapterAgain = await canvas.findByTestId('spine-item-chapter01', {}, { timeout: 20000 });
     await userEvent.click(chapterAgain);
     await canvas.findByRole('textbox', {}, { timeout: 60000 });

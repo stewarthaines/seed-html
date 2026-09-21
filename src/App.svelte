@@ -1727,9 +1727,14 @@
         await refreshHasProjects();
 
         // A first visit lands on the Books shelf; a returning visit restores the
-        // last view (the navigation store's own default is About).
-        if (localStorage.getItem('seedhtml_nav_current_view') === null) {
+        // last view (the navigation store's own default is About). The store
+        // reads storage when its module loads; re-reading here also honours a
+        // view written after that moment (the Storybook seed does this).
+        const savedView = localStorage.getItem('seedhtml_nav_current_view');
+        if (savedView === null) {
           navigationStore.navigateTo('workspace', { replaceHistory: true });
+        } else if (savedView !== currentView) {
+          navigationStore.navigateTo(savedView as ViewType, { replaceHistory: true });
         }
 
         // A book-carrying artifact imports (or reopens) its payload; otherwise
