@@ -2118,6 +2118,7 @@
 
 <style>
   .preview-pane-container {
+    container: preview / inline-size;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -2917,12 +2918,21 @@
       display: none;
     }
 
-    /* One row: the device chips scroll sideways in the space left by the
-       Reader and checks buttons, rather than wrapping under them. */
     .preview-header {
-      flex-wrap: nowrap;
       /* No corner toggles to reserve room for. */
       padding-inline-end: var(--space-3);
+    }
+  }
+
+  /* A narrow pane, on a phone or a desktop split: one row, the device chips
+     scrolling sideways in the space left by the other controls rather than
+     wrapping under them. Keyed on the pane's own width, not the viewport's. */
+  @container preview (max-width: 760px) {
+    .preview-header {
+      flex-wrap: nowrap;
+      /* Packed from the start: whatever cannot fit overflows at the end
+         instead of pushing the chapter arrows out past the pane's edge. */
+      justify-content: flex-start;
     }
 
     .header-left {
@@ -2931,7 +2941,8 @@
 
     .device-switch {
       flex: 1 1 0;
-      min-inline-size: 0;
+      /* Room for one chip, so the row still scrolls. */
+      min-inline-size: 3rem;
       overflow-x: auto;
     }
 
