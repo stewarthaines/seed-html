@@ -81,7 +81,10 @@ export async function authorizeDropbox(
     authUrl.searchParams.set('token_access_type', 'offline');
     authUrl.searchParams.set(
       'scope',
-      'files.content.write files.metadata.read sharing.read sharing.write',
+      // content.read: the plugin reads each catalog back from the folder
+      // (and downloads a book to import); a destination authorised before
+      // this scope was added must be reconnected.
+      'files.content.read files.content.write files.metadata.read sharing.read sharing.write',
     );
     authUrl.searchParams.set('redirect_uri', actualRedirectUri);
     authUrl.searchParams.set('state', state);

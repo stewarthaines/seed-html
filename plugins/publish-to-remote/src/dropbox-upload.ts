@@ -31,12 +31,37 @@ async function getValidToken(config: DropboxRemoteConfig): Promise<string> {
   return accessToken;
 }
 
+
+/**
+ * A 401 means the token is stale or the app lacks a scope. Refresh once and
+ * let the caller retry; a second 401 is an error (an unlimited retry once
+ * looped forever on a scope the app never had — files.content.read).
+ */
+async function refreshOnce(
+  config: DropboxRemoteConfig,
+  retried: boolean,
+): Promise<boolean> {
+  if (retried) return false;
+  const newToken = await refreshDropboxToken(
+    config.appKey,
+    config.refreshToken,
+  );
+  config.accessToken = newToken.accessToken;
+  config.tokenExpiry = newToken.tokenExpiry;
+  return true;
+}
+
+/** The message shown when Dropbox still refuses after a fresh token. */
+export const DROPBOX_REAUTH_MESSAGE =
+  'Dropbox refused the request. Reconnect the destination to grant the app its permissions.';
+
 export async function uploadToDropbox(
   config: DropboxRemoteConfig,
   objectKey: string,
   blob: Blob,
   contentType = 'application/epub+zip',
   onProgress?: (percent: number) => void,
+  retried = false,
 ): Promise<UploadResult> {
   try {
     const token = await getValidToken(config);
@@ -58,13 +83,17 @@ export async function uploadToDropbox(
     );
 
     if (response.status === 401) {
-      const newToken = await refreshDropboxToken(
-        config.appKey,
-        config.refreshToken,
-      );
-      config.accessToken = newToken.accessToken;
-      config.tokenExpiry = newToken.tokenExpiry;
-      return uploadToDropbox(config, objectKey, blob, contentType, onProgress);
+      if (await refreshOnce(config, retried)) {
+        return uploadToDropbox(
+          config,
+          objectKey,
+          blob,
+          contentType,
+          onProgress,
+          true,
+        );
+      }
+      return { success: false, error: DROPBOX_REAUTH_MESSAGE };
     }
 
     if (!response.ok) {
@@ -84,6 +113,7 @@ export async function uploadToDropbox(
 
 export async function listDropboxFiles(
   config: DropboxRemoteConfig,
+  retried = false,
 ): Promise<ListResult> {
   try {
     const token = await getValidToken(config);
@@ -101,13 +131,10 @@ export async function listDropboxFiles(
     );
 
     if (listResponse.status === 401) {
-      const newToken = await refreshDropboxToken(
-        config.appKey,
-        config.refreshToken,
-      );
-      config.accessToken = newToken.accessToken;
-      config.tokenExpiry = newToken.tokenExpiry;
-      return listDropboxFiles(config);
+      if (await refreshOnce(config, retried)) {
+        return listDropboxFiles(config, true);
+      }
+      return { objects: [], error: DROPBOX_REAUTH_MESSAGE };
     }
 
     if (!listResponse.ok) {
@@ -147,6 +174,7 @@ export async function listDropboxFiles(
 export async function downloadDropboxFile(
   config: DropboxRemoteConfig,
   objectKey: string,
+  retried = false,
 ): Promise<Blob | null> {
   const token = await getValidToken(config);
   const path = config.folderId
@@ -163,13 +191,10 @@ export async function downloadDropboxFile(
     },
   );
   if (response.status === 401) {
-    const newToken = await refreshDropboxToken(
-      config.appKey,
-      config.refreshToken,
-    );
-    config.accessToken = newToken.accessToken;
-    config.tokenExpiry = newToken.tokenExpiry;
-    return downloadDropboxFile(config, objectKey);
+    if (await refreshOnce(config, retried)) {
+      return downloadDropboxFile(config, objectKey, true);
+    }
+    throw new Error(DROPBOX_REAUTH_MESSAGE);
   }
   if (response.status === 409) return null; // path/not_found
   if (!response.ok) {
@@ -184,6 +209,7 @@ export async function downloadDropboxFile(
 export async function deleteDropboxFile(
   config: DropboxRemoteConfig,
   objectKey: string,
+  retried = false,
 ): Promise<DeleteResult> {
   try {
     const token = await getValidToken(config);
@@ -204,13 +230,10 @@ export async function deleteDropboxFile(
     );
 
     if (response.status === 401) {
-      const newToken = await refreshDropboxToken(
-        config.appKey,
-        config.refreshToken,
-      );
-      config.accessToken = newToken.accessToken;
-      config.tokenExpiry = newToken.tokenExpiry;
-      return deleteDropboxFile(config, objectKey);
+      if (await refreshOnce(config, retried)) {
+        return deleteDropboxFile(config, objectKey, true);
+      }
+      return { success: false, error: DROPBOX_REAUTH_MESSAGE };
     }
 
     if (response.status === 200 || response.status === 404) {

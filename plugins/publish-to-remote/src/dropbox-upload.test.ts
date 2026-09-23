@@ -4,6 +4,8 @@ import {
   uploadToDropbox,
   listDropboxFiles,
   deleteDropboxFile,
+  downloadDropboxFile,
+  DROPBOX_REAUTH_MESSAGE,
 } from './dropbox-upload.js';
 import type { DropboxRemoteConfig } from './types.js';
 
@@ -377,5 +379,24 @@ describe('deleteDropboxFile', () => {
       'app-key',
       'refresh-token',
     );
+  });
+});
+
+describe('a 401 that survives a refresh', () => {
+  it('lists once more and then gives up with the reconnect message', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 401 });
+    const result = await listDropboxFiles(config);
+    expect(result.error).toBe(DROPBOX_REAUTH_MESSAGE);
+    expect(vi.mocked(refreshDropboxToken)).toHaveBeenCalledTimes(1);
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('downloads once more and then throws', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 401 });
+    await expect(downloadDropboxFile(config, 'catalog.json')).rejects.toThrow(
+      DROPBOX_REAUTH_MESSAGE,
+    );
+    expect(vi.mocked(refreshDropboxToken)).toHaveBeenCalledTimes(1);
+    expect(global.fetch).toHaveBeenCalledTimes(2);
   });
 });
