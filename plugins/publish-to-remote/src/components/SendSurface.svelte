@@ -6,6 +6,7 @@
   Destinations settings (process/PUBLISH_REWORK.md).
 -->
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
   import { t, translate } from '../i18n.js';
   import { dirHandle, activeIdentifier } from '../store.js';
@@ -154,24 +155,29 @@
   }
 
   // List every destination once the list is known, and again when another
-  // frame changes one (a send from Published, a removal in Settings).
-  let listedVersions = new Map<string, number>();
+  // frame changes one (a send from Published, a removal in Settings). Only
+  // the destinations and the change counters are tracked: `rows` is read
+  // untracked, or every listing that lands would re-list the ones still
+  // pending (five destinations became fifteen listings).
+  const listedVersions = new Map<string, number>();
   $effect(() => {
     if (!$remotesLoaded) return;
     const versions = $contentVersions;
-    for (const remote of $remotesStore.remotes) {
-      const version = versions[remote.id] ?? 0;
-      if (listedVersions.get(remote.id) === version && rows.has(remote.id))
-        continue;
-      listedVersions.set(remote.id, version);
-      void refreshRow(remote);
-    }
-    for (const id of [...rows.keys()]) {
-      if (!$remotesStore.remotes.some((r) => r.id === id)) {
-        rows.delete(id);
-        listedVersions.delete(id);
+    const remotes = $remotesStore.remotes;
+    untrack(() => {
+      for (const remote of remotes) {
+        const version = versions[remote.id] ?? 0;
+        if (listedVersions.get(remote.id) === version) continue;
+        listedVersions.set(remote.id, version);
+        void refreshRow(remote);
       }
-    }
+      for (const id of [...rows.keys()]) {
+        if (!remotes.some((r) => r.id === id)) {
+          rows.delete(id);
+          listedVersions.delete(id);
+        }
+      }
+    });
   });
 
   function stateFor(remote: RemoteConfig, row: RowData): SendState | null {

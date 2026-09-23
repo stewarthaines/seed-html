@@ -5,6 +5,7 @@
   (process/PUBLISH_REWORK.md).
 -->
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
   import { t, translate } from '../i18n.js';
   import {
@@ -36,23 +37,28 @@
 
   // --- Each destination's state ------------------------------------------------------
   const reach: Map<string, Reach | 'checking'> = new SvelteMap();
-  let checkedVersions = new Map<string, number>();
+  const checkedVersions = new Map<string, number>();
 
+  // Same shape as the Send band's effect: `reach` is read untracked so a
+  // check landing does not re-check the ones still pending.
   $effect(() => {
     if (!$remotesLoaded) return;
     const versions = $contentVersions;
-    for (const remote of $remotesStore.remotes) {
-      const version = versions[remote.id] ?? 0;
-      if (checkedVersions.get(remote.id) === version && reach.has(remote.id)) continue;
-      checkedVersions.set(remote.id, version);
-      void check(remote);
-    }
-    for (const id of [...reach.keys()]) {
-      if (!$remotesStore.remotes.some((r) => r.id === id)) {
-        reach.delete(id);
-        checkedVersions.delete(id);
+    const remotes = $remotesStore.remotes;
+    untrack(() => {
+      for (const remote of remotes) {
+        const version = versions[remote.id] ?? 0;
+        if (checkedVersions.get(remote.id) === version) continue;
+        checkedVersions.set(remote.id, version);
+        void check(remote);
       }
-    }
+      for (const id of [...reach.keys()]) {
+        if (!remotes.some((r) => r.id === id)) {
+          reach.delete(id);
+          checkedVersions.delete(id);
+        }
+      }
+    });
   });
 
   async function check(remote: RemoteConfig) {
@@ -103,8 +109,8 @@
       await saveRemote(remote, isNew);
       editing = null;
       adding = null;
+      // Forget its state; the effect checks it again as the store changes.
       checkedVersions.delete(remote.id);
-      void check(remote);
     } catch (error) {
       showStatus(translate('Failed to save config: {error}', { error: String(error) }), 'error');
     }
