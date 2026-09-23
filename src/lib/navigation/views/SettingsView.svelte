@@ -21,7 +21,7 @@
   import TranslationsPanel from '../../components/settings/TranslationsPanel.svelte';
   import CustomMetaCatalogSettings from '../../components/settings/CustomMetaCatalogSettings.svelte';
   import { onMount, tick } from 'svelte';
-  import { persisted, asString, asBoolean } from '../../state/persisted.svelte.js';
+  import { persisted, asBoolean } from '../../state/persisted.svelte.js';
   import {
     addTransform,
     removeTransformAt,
@@ -48,6 +48,8 @@
     removeSeedHtml,
   } from '../../epub/seed-html.js';
   import type { PluginManifestEntry } from '../../plugins/contract';
+  import PluginFrame from '../../components/plugins/PluginFrame.svelte';
+  import { settingsSection } from '../../stores/settings-section.js';
   import type { ExtensionCatalogEntry } from '../../extensions/extension-catalog';
 
   interface Props {
@@ -64,6 +66,10 @@
     /** Extensions catalog from extensions/manifest.json (empty unless served over HTTP). */
     availableExtensions?: ExtensionCatalogEntry[];
     onTogglePlugin?: (id: string, enabled: boolean) => void;
+    /** The publish plugin's frame URL when it is on: adds the Destinations section. */
+    publishPluginUrl?: string | null;
+    /** The shared output directory for the publish plugin's frame. */
+    getPublishDirHandle?: () => Promise<FileSystemDirectoryHandle | null>;
     /**
      * Register EPUB assets an imported extension wrote to OEBPS/ (e.g. a CSS theme)
      * in the manifest and re-link them into chapters. Owned by App (needs the
@@ -99,6 +105,8 @@
     enabledPluginIds = [],
     availableExtensions = [],
     onTogglePlugin,
+    publishPluginUrl = null,
+    getPublishDirHandle,
     onExtensionAssets,
     onWorkspaceFilesChanged,
     readOnly = false,
@@ -884,6 +892,7 @@
     | 'language'
     | 'advanced'
     | 'plugins'
+    | 'destinations'
     | 'format'
     | 'transforms'
     | 'custom-metadata'
@@ -927,6 +936,9 @@
         label: $t('Plugins'),
         summary: $t('{n} on', { n: enabledPluginIds.length }),
       });
+    }
+    if (publishPluginUrl && getPublishDirHandle) {
+      items.push({ id: 'destinations', label: $t('Destinations') });
     }
     return items;
   });
@@ -972,7 +984,7 @@
   // The open section is remembered across sheets and reloads. When the remembered
   // one is not available right now (no book open, Basic mode), the first listed
   // section shows instead — without overwriting the remembered choice.
-  const rememberedSection = persisted<string>('seedhtml_settings_section', 'appearance', asString);
+  const rememberedSection = settingsSection;
   const allSections = $derived([...youSections, ...bookSections]);
   const activeSection = $derived.by((): SectionId => {
     const wanted = rememberedSection.current;
@@ -1371,6 +1383,18 @@
                 <span class="setting-text">{$t('Paged device previews')}</span>
               </label>
             </div>
+          {/if}
+        {:else if activeSection === 'destinations'}
+          <p class="setting-description setting-description-flush">
+            {$t('Where Send puts a book. Yours, not the book’s.')}
+          </p>
+          {#if publishPluginUrl && getPublishDirHandle}
+            <PluginFrame
+              pluginUrl={publishPluginUrl}
+              surface="destinations"
+              getDirHandle={getPublishDirHandle}
+              title={$t('Destinations')}
+            />
           {/if}
         {:else if activeSection === 'format'}
           <h3 id="text-format-heading" class="sub-heading">{$t('Text format')}</h3>
