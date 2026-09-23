@@ -4982,6 +4982,10 @@ msgid "The catalog cannot be read right now."
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "The catalog could not be read: {error}"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 msgid "The catalog lists {n} file that is no longer here."
 msgstr ""
 
