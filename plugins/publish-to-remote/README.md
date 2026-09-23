@@ -28,8 +28,8 @@ The filename's extension picks the parser on load; switching format swaps the ex
 when the filename still carries the other format's default extension, and writes a new
 file. Membership is the "In the catalog" switch on Share or on Published; each flip
 regenerates the feed. A destination may carry several feeds (every `.xml` and
-`.json` on it): Published offers a picker and New catalog…, and the Share row
-shows one switch per feed.
+`.json` on it): Published offers a picker, New catalog… and Delete catalog (the books
+stay), and the Share row shows one switch per feed.
 
 ## Google Drive setup
 
