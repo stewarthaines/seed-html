@@ -503,14 +503,14 @@
                 >
                   {$t('Edit…')}
                 </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  onclick={startNewCatalog}
+                >
+                  {$t('New catalog…')}
+                </button>
                 {#if catalog.exists}
-                  <button
-                    type="button"
-                    class="btn btn-secondary btn-sm"
-                    onclick={startNewCatalog}
-                  >
-                    {$t('New catalog…')}
-                  </button>
                   {#if confirmDeleteCatalog}
                     <span class="confirm">
                       {$t('Delete {file}? The books stay.', { file: catalog.file })}
@@ -571,10 +571,11 @@
                 <button
                   type="button"
                   class="btn btn-primary btn-sm"
-                  onclick={updateCatalog}
+                  aria-expanded={editingIdentity}
+                  onclick={() => (editingIdentity = true)}
                   disabled={writingCatalog}
                 >
-                  {writingCatalog ? $t('Updating...') : $t('Create catalog')}
+                  {$t('Create catalog…')}
                 </button>
               {:else if catalog.missingHrefs.length > 0}
                 <span class="warn">

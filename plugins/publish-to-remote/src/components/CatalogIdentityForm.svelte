@@ -106,7 +106,7 @@
       {$t('Cancel')}
     </button>
     <button type="submit" class="btn btn-primary" disabled={busy}>
-      {busy ? $t('Updating...') : $t('Save')}
+      {busy ? $t('Updating...') : catalog.exists ? $t('Save') : $t('Create')}
     </button>
   </div>
 </form>
