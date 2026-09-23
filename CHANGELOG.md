@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Publishing to the web is now per book and per destination. The Share page's "Publish to the web" band lists your destinations and says what this book's latest package is doing on each, with one Send button and an "In the catalog" switch per row; the catalog updates as you flip the switch. The latest package can be validated from the same band.
+- A Published page beside Books shows every book on a destination: the catalog's title, format, feed link and state, the books on it, and, dimmed, the books on this device that have not been sent there. A book on a destination that is not on this device can be imported with one confirmation.
+- Destinations (S3, Google Drive, Dropbox, WebDAV, USB e-readers) are set up under Settings › You › Destinations rather than inside the publishing pane.
+
 ### Fixed
 
 - The screen reader preview announces a heading once. A heading with a line break or an emphasised word inside it used to be read three times: the title, each of its parts, then the title again as the heading ended. The Read aloud view repeated it too.

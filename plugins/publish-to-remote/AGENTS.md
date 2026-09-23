@@ -4,23 +4,31 @@ Best practices for agents working on this Svelte plugin project.
 
 ## Architecture
 
+The host mounts this one build three times, naming a **surface** in the `init` message (see `process/PUBLISH_REWORK.md` and `src/lib/plugins/API.md` in the host repo):
+
+- `send` — the "Publish to the web" band on the host's Share page: one row per destination saying what the open book's latest package is doing there, with Send and an "In the catalog" switch. Content-height (the host measures the body).
+- `published` — the host's Published page: a destination picker, the catalog's identity and state, the shelf of EPUBs on the destination (Import… for books not on this device), and the books here not sent there. Fills the frame.
+- `destinations` — Settings › You › Destinations: the list with Edit / Reconnect / Remove and the add form. Content-height.
+
 **Separation of concerns:**
-- `src/index.ts` — message handling, store updates (imperative)
-- `src/App.svelte` — UI, state machine, user interactions (reactive)
-- `src/types.ts` — discriminated union types for S3/Dropbox/Google Drive config
-- `src/remote-ops.ts` — dispatch layer for remote storage operations
-- `src/opfs.ts` — file system operations (navigator.storage.getDirectory for shared credentials, dirHandle for project files)
-- `src/s3-upload.ts` — S3 API calls (aws4fetch for signing)
-- `src/dropbox.ts` — Dropbox OAuth 2.0 PKCE flow, folder listing
-- `src/dropbox-upload.ts` — Dropbox file operations (upload, list, delete, shared links)
-- `src/google-drive.ts` — Google OAuth, Google Picker for folder selection
-- `src/google-drive-upload.ts` — Google Drive file operations (upload, list, delete)
+- `src/index.ts` — message handling: records the surface, the directory handle, the open book's identifier and the identifiers of every book on the device
+- `src/App.svelte` — loads the destinations once, renders the surface, hosts the toast
+- `src/components/{Send,Published,Destinations}Surface.svelte` — the three surfaces; `ConfigureForm.svelte` (add/edit a destination), `ValidationModal.svelte` (the epubcheck report), `CatalogIdentityForm.svelte`, `ImportDialog.svelte`, `Switch.svelte`, `DestinationBadge.svelte`, `Toast.svelte`
+- `src/remotes.ts` — the destinations store (remotes.json in OPFS) synced across frames over a BroadcastChannel; `announceContentChanged` tells other frames to list a destination again
+- `src/local-packages.ts` — the packages in the handed directory joined with their sidecars
+- `src/remote-status.ts` — listing with reachability named (`ok` / `sign-in` / `reconnect` / `unplugged` / `error`), and the pure derivations: `sendStateFor` (the Send row) and `shelfFor` (the Published shelf); tested
+- `src/catalog.ts` — read a destination's feed (`loadCatalog`), write it from a key set (`writeCatalog`, hosting the cover thumbnails), feed URL per remote type; tested
+- `src/send.ts` — `sendPackage` (upload, then put the book in the catalog, replacing an older package of the same book in the feed) and `setInCatalog`
+- `src/reconnect.ts` — a fresh Google token; a device permission re-granted
+- `src/types.ts` — message shapes mirrored from the host contract; discriminated union of remote configs
+- `src/remote-ops.ts` — dispatch layer for remote storage operations, including `downloadFile` for every type
+- `src/opfs.ts` — remotes.json and the sidecars; `src/s3-upload.ts`, `src/dropbox.ts` + `src/dropbox-upload.ts`, `src/google-drive.ts` + `src/google-drive-upload.ts`, `src/webdav-upload.ts`, `src/device-upload.ts` — one module per remote type
 
 **Data flow:**
-- Credentials live in localStorage (keyed by remote config name), not per-project
-- Remote type selector → OAuth/credential entry → folder selection (Dropbox/Google Drive) or credential validation (S3) → file operations
-- UI state machine: `init → select-remote → configure ↔ loading → ready`
-- Each remote type (S3, Dropbox, Google Drive) has its own configuration shape in `RemoteConfig` discriminated union
+- Destinations live in the plugin's own OPFS (`remotes.json`), shared by every frame; the host never sees them
+- "Known on this device" = the host's `knownIdentifiers` (dc:identifiers of its books); a remote EPUB's identifier comes from the local sidecar of the same filename or from the catalog entry with the same acquisition URL
+- The feed on the destination is the truth for catalog membership and identity; every change regenerates the whole file
+- Import: the plugin downloads the bytes and posts `import-epub` to the host, which runs its normal importer
 
 ## Key Patterns
 
@@ -119,8 +127,8 @@ Run `npm run lint` to check for errors. Run `npm run lint:fix` to auto-fix. Conf
 
 ## Testing
 
-**Manual testing workflow:**
-1. Open http://localhost:8000 (or 8001 if port 8000 is in use)
+**Manual testing workflow** (in the host app, served over http, with the plugin enabled in Settings › Plugins):
+1. Open Settings › Destinations; add a destination
 2. Select remote type (S3, Dropbox, or Google Drive)
 3. **For S3:**
    - Enter Access Key ID and Secret Access Key
@@ -136,10 +144,9 @@ Run `npm run lint` to check for errors. Run `npm run lint:fix` to auto-fix. Conf
    - Select folder via Google Picker
    - Click "Save & Connect"
 6. Verify:
-   - File list populates with EPUBs from source directory
-   - Upload succeeds and file appears in list
-   - "Copy URL" provides a download link
-   - Delete removes file from remote
+   - The Share page's band lists the destination and says "Not sent"
+   - Send uploads the latest package; the row reads "Sent just now"; the switch is on
+   - Published shows the book on the destination; Copy feed link gives the catalog URL; Remove deletes the file and updates the feed
 7. Reload page — remote config and credentials should persist
 
 **Debugging in browser console:**
@@ -162,7 +169,7 @@ Run `npm run lint` to check for errors. Run `npm run lint:fix` to auto-fix. Conf
 
 ### Google Drive: no OPDS catalog (feed)
 
-Google serves public Drive files only through generic/sandboxed responses — a virus-scan interstitial or `text/html`/`application/octet-stream`, never a controllable content type — so an OPDS reader rejects the *catalog feed document* ("Not a valid OPDS HTTP Content-Type … (text/html)"). Individual **book** downloads are fine (a download's content type doesn't matter), so Drive is good for publishing/sharing books, just not for hosting the feed. Verified dead ends: `files.get?alt=media&key=…` → 404; `drive.usercontent.google.com/download?…&confirm=t` → still ends at `text/html`. This is a Google policy wall, not a bug — do not try to "fix" it by tweaking the URL. Use an **S3 or WebDAV** remote for a catalog. The gate lives in `App.svelte` (catalog editor `{#if activeRemote.type !== 'google-drive'}`).
+Google serves public Drive files only through generic/sandboxed responses — a virus-scan interstitial or `text/html`/`application/octet-stream`, never a controllable content type — so an OPDS reader rejects the *catalog feed document* ("Not a valid OPDS HTTP Content-Type … (text/html)"). Individual **book** downloads are fine (a download's content type doesn't matter), so Drive is good for publishing/sharing books, just not for hosting the feed. Verified dead ends: `files.get?alt=media&key=…` → 404; `drive.usercontent.google.com/download?…&confirm=t` → still ends at `text/html`. This is a Google policy wall, not a bug — do not try to "fix" it by tweaking the URL. Use an **S3 or WebDAV** remote for a catalog. The gate is `hasCatalog()` in `src/catalog.ts` (S3, Dropbox and WebDAV only).
 
 Note `uploadToGoogleDrive` is **update-in-place** (find by name → PATCH, else create), so re-publishing a same-named book replaces it rather than duplicating.
 
