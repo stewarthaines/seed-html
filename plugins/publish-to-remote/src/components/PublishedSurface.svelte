@@ -982,6 +982,7 @@
 
   .cover {
     display: block;
+    box-sizing: border-box;
     inline-size: 100%;
     aspect-ratio: 2 / 3;
     object-fit: cover;
@@ -996,7 +997,6 @@
     flex-direction: column;
     justify-content: flex-end;
     gap: 4px;
-    box-sizing: border-box;
     padding: 10px;
     font-size: 11px;
     color: var(--color-text-secondary);

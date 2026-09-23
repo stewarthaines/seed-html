@@ -113,6 +113,7 @@
 
   .cover {
     display: block;
+    box-sizing: border-box;
     inline-size: 96px;
     block-size: 144px;
     object-fit: cover;
