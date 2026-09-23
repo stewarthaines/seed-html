@@ -1,7 +1,7 @@
 {
   "name": "publish-to-remote",
   "version": "1.0.0",
-  "description": "Plugin for publishing EPUB files to Cloudflare R2 and other S3-compatible storage",
+  "description": "Plugin for sending EPUBs to S3-compatible storage, Google Drive, Dropbox, WebDAV and USB e-readers, with an OPDS catalog per destination",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -43,7 +43,6 @@
   "dependencies": {
     "@likecoin/epubcheck-ts": "^0.3.0",
     "aws4fetch": "^1.0.20",
-    "paneforge": "^1.0.0",
     "phosphor-svelte": "^3.1.0"
   }
 }

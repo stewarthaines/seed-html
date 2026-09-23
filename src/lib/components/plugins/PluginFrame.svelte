@@ -157,7 +157,8 @@
         messages,
         activeIdentifier,
         undefined,
-        knownIdentifiers
+        // A plain array: a $state proxy cannot be structured-cloned.
+        knownIdentifiers ? [...knownIdentifiers] : undefined
       ),
       targetOrigin
     );

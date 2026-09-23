@@ -1,6 +1,9 @@
-html,
-body,
-#app {
+/* The published surface fills its frame; the send and destinations surfaces
+   are content-height (the host measures the body), so only that surface pins
+   the document to the viewport. */
+html[data-surface='published'],
+html[data-surface='published'] body,
+html[data-surface='published'] #app {
   height: 100%;
 }
 

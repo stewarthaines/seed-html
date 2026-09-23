@@ -34,20 +34,6 @@
     },
   } as const;
 
-  let {
-    editingRemote,
-    canCancel,
-    onSave,
-    onCancel,
-    onStatus,
-  }: {
-    editingRemote: RemoteConfig | null;
-    canCancel: boolean;
-    onSave: (remote: RemoteConfig, isNew: boolean) => void;
-    onCancel: () => void;
-    onStatus: (text: string, type: 'info' | 'success' | 'error') => void;
-  } = $props();
-
   type RemoteType =
     | 'none'
     | 's3-compatible'
@@ -55,6 +41,23 @@
     | 'dropbox'
     | 'webdav'
     | 'device';
+
+  let {
+    editingRemote,
+    initialType = 'none',
+    canCancel,
+    onSave,
+    onCancel,
+    onStatus,
+  }: {
+    editingRemote: RemoteConfig | null;
+    /** Open a new destination's form at this kind instead of the chooser. */
+    initialType?: RemoteType;
+    canCancel: boolean;
+    onSave: (remote: RemoteConfig, isNew: boolean) => void;
+    onCancel: () => void;
+    onStatus: (text: string, type: 'info' | 'success' | 'error') => void;
+  } = $props();
 
   let remoteType: RemoteType = $state('none');
   let form = $state({
@@ -267,7 +270,7 @@
   }
 
   function resetForm() {
-    remoteType = 'none';
+    remoteType = initialType;
     form = {
       name: '',
       endpoint: '',
@@ -988,7 +991,9 @@
     </div>
 
     <p class="device-summary">
-      {#if deviceKind === 'kobo'}
+      {#if !editingRemote && !pickedDeviceHandle}
+        {$t('Plug the reader in, then choose its volume.')}
+      {:else if deviceKind === 'kobo'}
         {$t('Detected: {detail} on volume "{volume}"', {
           detail: deviceDetail || 'Kobo',
           volume: deviceVolumeLabel,
@@ -1022,7 +1027,27 @@
       </small>
     </div>
 
-    {#if editingRemote && !pickedDeviceHandle}
+    {#if !editingRemote && !pickedDeviceHandle}
+      <div class="form-group">
+        <!-- aria-disabled (not disabled) keeps the button hoverable and focusable
+             so the title explaining WHY is reachable in the very browsers that
+             lack the API. -->
+        <button
+          class="btn btn-secondary"
+          aria-disabled={!deviceSupported}
+          title={deviceSupported
+            ? undefined
+            : $t(
+                'Not available in this browser — connecting a USB device needs the File System Access API (Chrome, Edge)',
+              )}
+          onclick={() => {
+            if (deviceSupported) onPickDevice();
+          }}
+        >
+          {$t('Choose device…')}
+        </button>
+      </div>
+    {:else if editingRemote && !pickedDeviceHandle}
       <div class="form-group">
         <button class="btn btn-secondary" onclick={onPickDevice}>
           {$t('Choose device again…')}
