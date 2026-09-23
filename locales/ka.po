@@ -359,6 +359,10 @@ msgstr "აქტიური remote:"
 msgid "Add"
 msgstr "დამატება"
 
+#: src/lib/navigation/views/SpineView.svelte
+msgid "Add a chapter to start writing."
+msgstr ""
+
 #: src/lib/components/metadata/CollectionsEditor.svelte
 msgid "Add a collection"
 msgstr "კოლექციის დამატება"

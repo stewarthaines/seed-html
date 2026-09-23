@@ -340,6 +340,10 @@ msgstr "Aktives Remote:"
 msgid "Add"
 msgstr "Hinzufügen"
 
+#: src/lib/navigation/views/SpineView.svelte
+msgid "Add a chapter to start writing."
+msgstr "Füge ein Kapitel hinzu, um zu schreiben."
+
 #: src/lib/components/metadata/CollectionsEditor.svelte
 msgid "Add a collection"
 msgstr "Sammlung hinzufügen"

@@ -172,12 +172,6 @@ function createNavigationStore(): NavigationStore {
           }
         }
 
-        // Clear spine item selection when navigating away from spine view
-        if (currentState.currentView === 'spine' && view !== 'spine') {
-          const clearEvent = new CustomEvent('clear-spine-selection');
-          window.dispatchEvent(clearEvent);
-        }
-
         // Perform navigation
         await performNavigation(view, options);
 

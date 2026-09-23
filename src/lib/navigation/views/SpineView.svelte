@@ -1642,6 +1642,11 @@
       onWorkspaceUpdate={ws => onWorkspaceUpdate?.(ws)}
     />
   </div>
+{:else if !selectedItem}
+  <!-- An empty book: nothing to edit until a chapter exists. -->
+  <div class="loading-state">
+    <p>{$t('Add a chapter to start writing.')}</p>
+  </div>
 {:else}
   <div class="loading-state">
     <div class="spinner"></div>

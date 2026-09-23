@@ -321,6 +321,10 @@ msgstr ""
 msgid "Add"
 msgstr ""
 
+#: src/lib/navigation/views/SpineView.svelte
+msgid "Add a chapter to start writing."
+msgstr ""
+
 #: src/lib/components/metadata/CollectionsEditor.svelte
 msgid "Add a collection"
 msgstr ""

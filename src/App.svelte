@@ -327,6 +327,18 @@
     window.dispatchEvent(new CustomEvent('select-spine-item', { detail: { itemId } }));
   }
 
+  // The Write tab always shows a chapter: arriving with none selected (a new
+  // book, a chapter deleted, a selection that no longer exists) opens the first.
+  $effect(() => {
+    if (currentView !== 'spine' || !appState?.workspace) return;
+    const spine = appState.workspace.opf?.spine ?? [];
+    const selected = appState.selectedChapterId;
+    if (spine.length === 0 || spine.some(item => item.idref === selected)) return;
+    window.dispatchEvent(
+      new CustomEvent('select-spine-item', { detail: { itemId: spine[0].idref } })
+    );
+  });
+
   // Manifest item selection state
   let selectedManifestItem = $state<any>(null);
   let selectedManifestItemType = $state<'manifest' | 'source' | 'opf' | null>(null);
@@ -1835,12 +1847,6 @@
       );
     };
 
-    // Listen for spine item clear events
-    const handleClearSpineSelection = () => {
-      if (!appState) return;
-      appState.selectChapter(null);
-    };
-
     // Handle hashchange events for remote EPUB imports
     function handleHashChange() {
       const fragment = window.location.hash.slice(1); // Remove #
@@ -1874,7 +1880,6 @@
 
     window.addEventListener('select-spine-item', handleSelectSpineItem);
     window.addEventListener('popstate', handlePopState);
-    window.addEventListener('clear-spine-selection', handleClearSpineSelection);
     window.addEventListener('seed:swap-recovered', handleSwapRecovered);
     window.addEventListener('hashchange', handleHashChange);
     window.addEventListener('workspace-list-refresh', refreshHasProjects);
@@ -1882,7 +1887,6 @@
     return () => {
       window.removeEventListener('select-spine-item', handleSelectSpineItem);
       window.removeEventListener('popstate', handlePopState);
-      window.removeEventListener('clear-spine-selection', handleClearSpineSelection);
       window.removeEventListener('seed:swap-recovered', handleSwapRecovered);
       window.removeEventListener('hashchange', handleHashChange);
       window.removeEventListener('workspace-list-refresh', refreshHasProjects);
