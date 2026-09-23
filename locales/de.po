@@ -254,10 +254,6 @@ msgstr ""
 msgid "A book needs at least one chapter"
 msgstr "Ein Buch braucht mindestens ein Kapitel"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
-msgid "A copy opened from your computer edits and packages books as usual. Features that need a web host are unavailable: publishing plugins, PDF export, the built-in reader, and installing new extensions."
-msgstr "Eine von Ihrem Computer geöffnete Kopie bearbeitet und paketiert Bücher wie gewohnt. Funktionen, die einen Webhost benötigen, sind nicht verfügbar: Veröffentlichungs-Plugins, PDF-Export, der eingebaute Reader und das Installieren neuer Erweiterungen."
-
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "A generator is a script that produces source text to insert at the editor caret."
 msgstr "Ein Generator ist ein Skript, das Quelltext erzeugt, der an der Cursorposition eingefügt wird."
@@ -270,7 +266,7 @@ msgstr "Ein Generator mit diesem Namen existiert bereits."
 msgid "A name is required."
 msgstr "Ein Name ist erforderlich."
 
-#: src/lib/navigation/views/AboutView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "A SEED EPUB is a living document rather than a publishing dead-end, suited to distribution, contribution and long-term preservation."
 msgstr "Ein SEED-EPUB ist ein lebendiges Dokument statt einer Sackgasse des Publizierens – geeignet für Verbreitung, Mitarbeit und langfristige Bewahrung."
 
@@ -456,10 +452,6 @@ msgstr "Zusätzliche Kennung"
 msgid "Additional Information"
 msgstr "Zusätzliche Informationen"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
-msgid "Additional libraries used when the editor runs online."
-msgstr "Zusätzliche Bibliotheken, die verwendet werden, wenn der Editor online läuft."
-
 #: src/lib/components/metadata/TitleEditor.svelte
 msgid "Additional title"
 msgstr "Zusätzlicher Titel"
@@ -484,10 +476,6 @@ msgstr "Für die Erweiterungsverwaltung ist der erweiterte Modus erforderlich"
 #: src/lib/components/spine/sr-walk.ts
 msgid "afterword"
 msgstr ""
-
-#: src/lib/navigation/views/ThirdPartyView.svelte
-msgid "AI Disclaimer"
-msgstr "KI-Hinweis"
 
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 msgid "Already in the catalog"
@@ -658,7 +646,7 @@ msgstr "Automatisch aus der URL ausgefüllt"
 msgid "Automatic: {id}"
 msgstr "Automatisch: {id}"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Available when running online"
 msgstr "Verfügbar im Online-Betrieb"
 
@@ -955,6 +943,7 @@ msgstr "Clip-Bezeichnung"
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
 #: src/lib/components/manifest/MoveReviewDialog.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 #: src/lib/components/spine/ChapterValidationPanel.svelte
 #: src/lib/components/spine/EditorPane.svelte
 #: src/lib/components/spine/PreviewPane.svelte
@@ -1160,10 +1149,6 @@ msgstr "Kopiert"
 #: src/lib/components/spine/GeneratorPanel.svelte
 msgid "Copy"
 msgstr "Kopieren"
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Copy the library's license text into the License field below."
-msgstr "Kopieren Sie den Lizenztext der Bibliothek in das untenstehende Lizenzfeld."
 
 #: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 msgid "Copy URL"
@@ -1504,7 +1489,7 @@ msgstr "Details"
 msgid "Detected: {detail} on volume \"{volume}\""
 msgstr "Erkannt: {detail} auf Laufwerk \"{volume}\""
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Developed by Stewart Haines."
 msgstr "Entwickelt von Stewart Haines."
 
@@ -1548,17 +1533,13 @@ msgstr "Herunterladen"
 msgid "Download EPUB to disk"
 msgstr "EPUB auf die Festplatte herunterladen"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Download failed — try again"
 msgstr "Download fehlgeschlagen — bitte erneut versuchen"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Download SEED.html"
 msgstr "SEED.html herunterladen"
-
-#: src/lib/navigation/views/ThirdPartyView.svelte
-msgid "Download the app"
-msgstr "Die App herunterladen"
 
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Download the EPUB"
@@ -2095,10 +2076,6 @@ msgstr "EPUB-2-Name"
 msgid "EPUB 3 property"
 msgstr "EPUB-3-Eigenschaft"
 
-#: src/lib/navigation/views/AboutView.svelte
-msgid "EPUB is the open standard for digital books: a self-contained file of text, styles, and images that any Reading System app can open. Because the format is open, your book can be read anywhere. It reflows to fit any screen and adapts to each reader's chosen size, font, and contrast."
-msgstr "EPUB ist der offene Standard für digitale Bücher: eine eigenständige Datei aus Text, Stilen und Bildern, die jede Lesesystem-App öffnen kann. Weil das Format offen ist, lässt sich Ihr Buch überall lesen. Es fließt auf jede Bildschirmgröße um und passt sich der gewählten Schriftgröße, Schriftart und dem Kontrast an."
-
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "EPUB Properties"
 msgstr "EPUB-Eigenschaften"
@@ -2424,7 +2401,6 @@ msgstr "Coverbild erzeugen"
 msgid "Generate patchset"
 msgstr "Änderungssatz erzeugen"
 
-#: src/lib/navigation/views/AboutView.svelte
 #: src/lib/navigation/views/PublishView.svelte
 #: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Generate PDF"
@@ -2911,7 +2887,7 @@ msgid "level {n}"
 msgstr "Ebene {n}"
 
 #: src/lib/components/extensions/ExtensionItem.svelte
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "License"
 msgstr "Lizenz"
 
@@ -3072,13 +3048,9 @@ msgstr "Hauptnavigation"
 msgid "Make a PDF"
 msgstr "PDF erstellen"
 
-#: src/lib/navigation/views/AboutView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Make ebooks anyone can read — right now in your browser."
 msgstr "Erstellen Sie E-Books, die jeder lesen kann — direkt in Ihrem Browser."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "Make it once — read it anywhere: phones, tablets, e-readers, and apps."
-msgstr "Einmal erstellen — überall lesen: Smartphones, Tablets, E-Reader und Apps."
 
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Malformed XHTML"
@@ -3204,7 +3176,7 @@ msgstr "{count} Kapitel verschoben"
 msgid "Moves"
 msgstr "Verschiebungen"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Much of this software was written with AI coding agents, primarily Anthropic's Claude Code."
 msgstr "Ein Großteil dieser Software wurde mit KI-Coding-Agenten geschrieben, vor allem mit Claude Code von Anthropic."
 
@@ -3533,10 +3505,6 @@ msgstr "An – Überprüfungsmodus"
 msgid "On the shelf"
 msgstr "Im Regal"
 
-#: src/lib/navigation/views/AboutView.svelte
-msgid "One EPUB made with the editor, opening on phones, tablets, and e-readers."
-msgstr "Ein mit dem Editor erstelltes EPUB, das sich auf Smartphones, Tablets und E-Readern öffnet."
-
 #: src/lib/navigation/views/PublishView.svelte
 msgid "One page, no app needed."
 msgstr "Eine Seite, keine App nötig."
@@ -3660,13 +3628,11 @@ msgstr "Überschreiben?"
 msgid "Package again"
 msgstr "Erneut packen"
 
-#: src/lib/navigation/views/AboutView.svelte
 #: src/lib/navigation/views/PublishView.svelte
 #: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Package as READ.html"
 msgstr "Als READ.html verpacken"
 
-#: src/lib/navigation/views/AboutView.svelte
 #: src/lib/navigation/views/PublishView.svelte
 #: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Package as SEED.html"
@@ -3677,7 +3643,6 @@ msgstr "Als SEED.html verpacken"
 msgid "Package EPUB"
 msgstr "EPUB packen"
 
-#: src/lib/navigation/views/AboutView.svelte
 #: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Package EPUB without SEED"
 msgstr "EPUB ohne SEED verpacken"
@@ -3936,8 +3901,8 @@ msgstr "Präfix-URI"
 msgid "Preparing your PDF…"
 msgstr ""
 
+#: src/lib/components/shell/AboutDialog.svelte
 #: src/lib/navigation/views/PublishView.svelte
-#: src/lib/navigation/views/ThirdPartyView.svelte
 #: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Preparing…"
 msgstr "Wird vorbereitet…"
@@ -4459,13 +4424,9 @@ msgstr "Secret Key"
 msgid "SEED.html included"
 msgstr "SEED.html enthalten"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "SEED.html is a single file, and this page is the whole app. Keep your own copy and it will keep working even if this website goes away — a fully offline editor."
 msgstr "SEED.html ist eine einzige Datei, und diese Seite ist die ganze App. Bewahren Sie Ihre eigene Kopie auf, und sie funktioniert weiter, selbst wenn diese Website verschwindet — ein vollständig offline nutzbarer Editor."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "SEED.html makes two outputs that can return for further editing — an EPUB carrying its SEED.zip source, and a SEED.html web page wrapping the app and the book together — plus three one-way outputs: a PDF, an EPUB without SEED, and a READ.html web book."
-msgstr "SEED.html erzeugt zwei Ausgaben, die zur weiteren Bearbeitung zurückkehren können — ein EPUB mit seiner SEED.zip-Source und eine SEED.html-Webseite, die App und Buch gemeinsam umschließt — dazu drei Einweg-Ausgaben: ein PDF, ein EPUB ohne SEED und ein READ.html-Webbuch."
 
 #: src/App.svelte
 msgid "Select a spine item to see the preview here"
@@ -4574,7 +4535,7 @@ msgstr "Vorschau einblenden"
 msgid "Show project sections"
 msgstr "Projektbereiche anzeigen"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Show the full license text"
 msgstr "Vollständigen Lizenztext anzeigen"
 
@@ -4595,12 +4556,13 @@ msgid "Sign out error: {error}"
 msgstr "Fehler beim Abmelden: {error}"
 
 #: src/lib/Sidebar.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Simple EPUB Editor"
 msgstr "Simple EPUB Editor"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Simple EPUB Editor (distributed as SEED.html) is free and open-source software, released under the MIT License. You're welcome to use it, modify it, and redistribute it — including embedding it inside the EPUBs you create."
-msgstr "Simple EPUB Editor (vertrieben als SEED.html) ist freie und quelloffene Software, veröffentlicht unter der MIT-Lizenz. Sie dürfen sie verwenden, verändern und weiterverbreiten — einschließlich der Einbettung in die EPUBs, die Sie erstellen."
+msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
 #. Column setting — always a single column
@@ -4650,7 +4612,7 @@ msgstr "Nach Größe sortieren"
 msgid "Source"
 msgstr "Quelltext"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Source on GitHub"
 msgstr "Quellcode auf GitHub"
 
@@ -4803,10 +4765,6 @@ msgstr "Inhaltsverzeichnis"
 msgid "Tablet"
 msgstr "Tablet"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
-msgid "Technical Info"
-msgstr "Technische Informationen"
-
 #: src/lib/components/spine/sr-walk.ts
 msgid "term"
 msgstr "Begriff"
@@ -4841,10 +4799,6 @@ msgstr "Schriftgröße"
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Text transform"
 msgstr "Texttransformation"
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "The book you build here is a valid, self-contained EPUB that also carries its own editable source (bundled as SEED.zip) inside it."
-msgstr "Das Buch, das Sie hier bauen, ist ein gültiges, eigenständiges EPUB, das auch seine eigene bearbeitbare Source (gebündelt als SEED.zip) in sich trägt."
 
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 msgid "The chapter id collides with {label}; it will be added under a new id."
@@ -4891,13 +4845,9 @@ msgstr "Diese Dateien stimmen mit vorhandenen Kapiteln überein. Wählen Sie fü
 msgid "These files match existing manifest items. Choose what to do with each."
 msgstr "Diese Dateien stimmen mit vorhandenen Manifest-Elementen überein. Wählen Sie für jede aus, was geschehen soll."
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Third-Party Libraries"
 msgstr "Bibliotheken von Drittanbietern"
-
-#: src/lib/navigation/views/ThirdPartyView.svelte
-msgid "This application is built with the following open source libraries:"
-msgstr "Diese Anwendung wird mit den folgenden Open-Source-Bibliotheken erstellt:"
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "This book"
@@ -4907,10 +4857,6 @@ msgstr "Dieses Buch"
 #: src/lib/components/spine/EditorPane.svelte
 msgid "This chapter"
 msgstr "Dieses Kapitel"
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "This editor turns plain text into a valid EPUB. You write in simple, readable source; it's packaged into a standards-compliant book."
-msgstr "Dieser Editor verwandelt reinen Text in ein gültiges EPUB. Sie schreiben in einfacher, lesbarer Source; sie wird zu einem standardkonformen Buch gepackt."
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "This EPUB is read-only, so extensions can't be added."
@@ -5052,10 +4998,6 @@ msgstr "Ausschalten und Basis verwerfen"
 #: src/lib/components/settings/TrackChangesPanel.svelte
 msgid "Turning off track changes deletes the saved base version. Continue?"
 msgstr "Das Ausschalten der Änderungsverfolgung löscht die gespeicherte Basisversion. Fortfahren?"
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "Two outputs come back to be edited again: the EPUB with SEED.zip inside, and the SEED.html web page that wraps it."
-msgstr "Zwei Ausgaben kommen zur weiteren Bearbeitung zurück: das EPUB mit SEED.zip darin und die SEED.html-Webseite, die es umschließt."
 
 #: src/lib/components/metadata/CollectionsEditor.svelte
 #: src/lib/components/metadata/TitleEditor.svelte
@@ -5221,7 +5163,7 @@ msgstr "Werttyp"
 msgid "value:Label, value:Label"
 msgstr "Wert:Beschriftung, Wert:Beschriftung"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Version"
 msgstr "Version"
 
@@ -5276,18 +5218,6 @@ msgstr "WebDAV-Speicher"
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "WebDAV URL"
 msgstr "WebDAV-URL"
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "Welcome"
-msgstr "Willkommen"
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "What is an EPUB?"
-msgstr "Was ist ein EPUB?"
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "What is different about a SEED EPUB?"
-msgstr "Was unterscheidet ein SEED-EPUB?"
 
 #: src/lib/components/settings/TrackChangesPanel.svelte
 msgid "While locked, you can edit existing chapters, styles and scripts; structural changes are disabled."
