@@ -39,6 +39,12 @@ export async function sendPackage(
   let catalog: CatalogInfo | null = null;
   if (hasCatalog(remote) && listing.reach === 'ok') {
     catalog = await loadCatalog(remote, listing.objects);
+    if (catalog.error) {
+      // The feed is there but unreadable: the book is sent, the feed is
+      // left alone rather than overwritten.
+      announceContentChanged(remote.id);
+      return { success: true, listing, catalog };
+    }
     const epubs = listing.objects.filter((o) => o.key.toLowerCase().endsWith('.epub'));
     const keys = catalog.exists
       ? new Set(catalog.keys)

@@ -69,6 +69,9 @@ export interface CatalogInfo {
   /** Feed hrefs that match no object on the destination any more. */
   missingHrefs: string[];
   lastModified?: string;
+  /** The feed is there but could not be read (auth, network): nothing may
+   *  be written over it until it can. */
+  error?: string;
 }
 
 /** Candidate feed filenames: the configured one, else the OPDS 2 default with
@@ -186,6 +189,7 @@ export async function loadCatalog(
   file?: string,
 ): Promise<CatalogInfo> {
   const candidates = file ? [file] : catalogFilenamesFor(remote);
+  let failure: string | undefined;
   for (const file of candidates) {
     try {
       const text = await downloadTextFile(remote, file);
@@ -211,11 +215,14 @@ export async function loadCatalog(
         missingHrefs,
         lastModified: objects.find((o) => o.key === file)?.lastModified,
       };
-    } catch {
-      // Unreadable candidate: try the next, else report no catalog.
+    } catch (error) {
+      // Unreadable candidate: try the next; if none reads, say so rather
+      // than report "no catalog" (a Create would then overwrite it).
+      failure = error instanceof Error ? error.message : String(error);
     }
   }
-  return emptyCatalog(remote, candidates[0]);
+  const empty = emptyCatalog(remote, candidates[0]);
+  return failure ? { ...empty, error: failure } : empty;
 }
 
 /**

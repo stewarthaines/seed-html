@@ -400,11 +400,13 @@
                   label={row.catalogs.length > 1
                     ? $t('In {catalog}', { catalog: catalog.identity.title })
                     : $t('In the catalog')}
-                  disabled={!state || state.kind === 'not-sent'}
+                  disabled={!state || state.kind === 'not-sent' || !!catalog.error}
                   busy={row.toggling === catalog.file}
-                  title={!state || state.kind === 'not-sent'
-                    ? $t('Send the book first')
-                    : catalog.file}
+                  title={catalog.error
+                    ? catalog.error
+                    : !state || state.kind === 'not-sent'
+                      ? $t('Send the book first')
+                      : catalog.file}
                   onChange={(next) => toggleCatalog(remote, catalog, next)}
                 />
               {/each}

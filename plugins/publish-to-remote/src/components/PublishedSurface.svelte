@@ -566,7 +566,11 @@
               {/if}
             </div>
             <div class="catalog-row">
-              {#if !catalog.exists}
+              {#if catalog.error}
+                <span class="warn">
+                  {$t('The catalog could not be read: {error}', { error: catalog.error })}
+                </span>
+              {:else if !catalog.exists}
                 <span class="muted">{$t('No catalog yet.')}</span>
                 <button
                   type="button"
