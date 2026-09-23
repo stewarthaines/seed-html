@@ -1,6 +1,6 @@
 <!--
   LayoutManager — the page frame. A bar across the top (the brand bar on the
-  Books and About screens, the book's TopBar everywhere else), then the body:
+  Books screen, the book's TopBar everywhere else), then the body:
   in Write, the chapter column beside the editor and preview; in every other
   view, the content alone, split or single-pane as the view needs.
 
@@ -38,8 +38,8 @@
   const sidebar = $derived($layoutStore.sidebar);
   const view = $derived(viewOverride ?? sidebar.activeSection);
 
-  // Books and About stand outside any book: brand bar, no chapter column.
-  const outsideBook = $derived(view === 'workspace' || view === 'about' || !hasWorkspace);
+  // Books stands outside any book: brand bar, no chapter column.
+  const outsideBook = $derived(view === 'workspace' || !hasWorkspace);
 
   // The chapter column exists only beside the editor.
   const showWriteSidebar = $derived(view === 'spine' && hasWorkspace);

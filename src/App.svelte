@@ -23,8 +23,7 @@
   import Toast from './lib/components/Toast.svelte';
   import { navigationStore } from './lib/navigation';
   import type { ViewType } from './lib/navigation/types';
-  import AboutView from './lib/navigation/views/AboutView.svelte';
-  import ThirdPartyView from './lib/navigation/views/ThirdPartyView.svelte';
+  import AboutDialog from './lib/components/shell/AboutDialog.svelte';
   import BooksView from './lib/navigation/views/BooksView.svelte';
   import CoverView from './lib/navigation/views/CoverView.svelte';
   import MetadataEditor from './lib/components/metadata/MetadataEditor.svelte';
@@ -185,21 +184,23 @@
   // Reactive getters for template access
   let currentView = $derived($navigationStore.currentView);
 
-  // The Settings sheet opens over whatever you were doing: the layout keeps
-  // rendering the last content view underneath it, and closing the sheet returns
-  // there (process/APP_MAKEOVER_LIBRARY.md, phase 4).
+  // Settings and About open over whatever you were doing: the layout keeps
+  // rendering the last content view underneath, and closing returns there
+  // (process/APP_MAKEOVER_LIBRARY.md, phase 4).
+  const OVERLAY_VIEWS: ReadonlySet<ViewType> = new Set(['settings', 'about']);
   let lastContentView = $state<ViewType>('workspace');
   $effect(() => {
-    if (currentView !== 'settings') lastContentView = currentView;
+    if (!OVERLAY_VIEWS.has(currentView)) lastContentView = currentView;
   });
-  let contentView = $derived(currentView === 'settings' ? lastContentView : currentView);
+  let contentView = $derived(OVERLAY_VIEWS.has(currentView) ? lastContentView : currentView);
   let settingsOpen = $derived(currentView === 'settings');
+  let aboutOpen = $derived(currentView === 'about');
 
-  function closeSettings(): void {
+  // Close an overlay and return focus to the control that opened it.
+  function closeOverlay(opener: 'nav-settings' | 'nav-about'): void {
     navigationStore.navigateTo(lastContentView);
-    // Return focus to the control that opened the sheet.
     tick().then(() => {
-      document.querySelector<HTMLElement>('[data-testid="nav-settings"]')?.focus();
+      document.querySelector<HTMLElement>(`[data-testid="${opener}"]`)?.focus();
     });
   }
 
@@ -1980,15 +1981,13 @@
         <!-- Books, Cover and Share carry their own visible heading. -->
         <h1 class="sr-only">{viewTitle}</h1>
       {/if}
-      {#if isReadOnly && contentView !== 'workspace' && contentView !== 'about'}
+      {#if isReadOnly && contentView !== 'workspace'}
         <div class="readonly-banner" role="status">
           {$t("This EPUB wasn't created in the Simple EPUB Editor, so it can't be edited.")}
         </div>
       {/if}
       <!-- Main content area - switches based on current view -->
-      {#if contentView === 'about'}
-        <AboutView />
-      {:else if contentView === 'workspace' && initialized}
+      {#if contentView === 'workspace' && initialized}
         <BooksView
           onListWorkspaces={() => appState?.listWorkspaces() ?? Promise.resolve([])}
           onCreateNewRequested={openCreateDialog}
@@ -2139,9 +2138,7 @@
     {/snippet}
 
     {#snippet rightContent()}
-      {#if contentView === 'about'}
-        <ThirdPartyView />
-      {:else if contentView === 'metadata' && initialized && currentWorkspaceState}
+      {#if contentView === 'metadata' && initialized && currentWorkspaceState}
         <OPFPreview
           workspace={currentWorkspaceState}
           focusedField={focusedMetadataField}
@@ -2230,6 +2227,10 @@
     {/snippet}
   </LayoutManager>
 
+  {#if aboutOpen}
+    <AboutDialog onClose={() => closeOverlay('nav-about')} />
+  {/if}
+
   {#if settingsOpen && appState}
     <SettingsView
       settingsService={appState.getSettingsService()}
@@ -2258,7 +2259,7 @@
           appState.loadEPUBSettings(appState.currentWorkspaceId);
         }
       }}
-      onClose={closeSettings}
+      onClose={() => closeOverlay('nav-settings')}
     />
   {/if}
 

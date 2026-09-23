@@ -1,6 +1,6 @@
 <!--
-  BrandBar — the bar above the Books screen and the About page: the mark and
-  the app name, then About and the theme toggle. Inside a book the TopBar
+  BrandBar — the bar above the Books screen: the mark and the app name, then
+  About (a dialog), Settings (a sheet) and the theme toggle. Inside a book the TopBar
   takes its place.
 -->
 <script lang="ts">
@@ -12,11 +12,14 @@
   let {
     currentView,
     settingsOpen = false,
+    aboutOpen = false,
     onNavigate,
   }: {
     currentView: ViewType;
     /** The Settings sheet is open over this view. */
     settingsOpen?: boolean;
+    /** The About dialog is open over this view. */
+    aboutOpen?: boolean;
     onNavigate: (view: ViewType) => void;
   } = $props();
 
@@ -41,8 +44,8 @@
     <button
       type="button"
       class="link"
-      class:active={currentView === 'about'}
-      aria-current={currentView === 'about' ? 'page' : undefined}
+      class:active={aboutOpen}
+      aria-expanded={aboutOpen}
       onclick={() => onNavigate('about')}
       data-testid="nav-about"
     >

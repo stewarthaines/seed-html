@@ -152,7 +152,12 @@ async function scanAllViews(page, theme) {
   await page.locator('[data-testid="nav-workspace"]').first().click();
   await page.waitForTimeout(800);
   await scan('Books');
-  if (await visit('About SEED.html')) await scan('About');
+  if (await visit('About SEED.html')) {
+    await scan('About');
+    // About is a dialog over the shelf; Escape closes it.
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+  }
 
   let workspaceReady = false;
   try {
