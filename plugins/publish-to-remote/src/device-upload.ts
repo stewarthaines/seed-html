@@ -255,6 +255,23 @@ export async function listDeviceFiles(
   }
 }
 
+/** Read a book off the device (an EPUB to import). Null when it is not there. */
+export async function readDeviceFile(
+  remote: DeviceRemoteConfig,
+  objectKey: string,
+): Promise<{ blob?: Blob | null; error?: string }> {
+  const conn = await connectDevice(remote);
+  if (!conn.handle) return { error: conn.error ?? 'unknown' };
+  try {
+    const dir = await targetDir(conn.handle, remote.targetFolder, false);
+    const fh = await dir.getFileHandle(objectKey);
+    return { blob: await fh.getFile() };
+  } catch (error) {
+    if ((error as DOMException)?.name === 'NotFoundError') return { blob: null };
+    return { error: String(error) };
+  }
+}
+
 export async function deleteDeviceFile(
   remote: DeviceRemoteConfig,
   objectKey: string,

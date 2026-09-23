@@ -305,6 +305,27 @@ describe('generateOpdsFeed', () => {
       expect(parsed.authorUri).toBe('https://lib.example');
     });
 
+    it('reads each entry with its identifier and title', () => {
+      const meta = new Map([
+        ['book1.epub', { title: 'Book One', identifier: 'urn:uuid:one' }],
+      ]);
+      const parsed = parseOpdsFeed(
+        generateOpdsFeed(s3Config, twoEpubs, FEED_URL, meta),
+      );
+      expect(parsed.entries).toEqual([
+        {
+          href: 'https://s3.example.com/my-bucket/book1.epub',
+          identifier: 'urn:uuid:one',
+          title: 'Book One',
+        },
+        {
+          href: 'https://s3.example.com/my-bucket/book2.epub',
+          identifier: undefined,
+          title: 'book2',
+        },
+      ]);
+    });
+
     it('extracts the epub acquisition hrefs', () => {
       const xml = generateOpdsFeed(s3Config, twoEpubs, FEED_URL);
       const parsed = parseOpdsFeed(xml);

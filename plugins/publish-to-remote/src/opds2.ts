@@ -5,7 +5,12 @@ import {
   DEFAULT_CATALOG_AUTHOR_URI,
 } from './opds.js';
 import type { CatalogIdentity, ParsedOpdsFeed } from './opds.js';
-import type { RemoteConfig, S3Object, CatalogEntryMeta } from './types.js';
+import type {
+  RemoteConfig,
+  S3Object,
+  CatalogEntry,
+  CatalogEntryMeta,
+} from './types.js';
 
 /** OPDS 2.0 feed media type (self link + upload content type). */
 export const OPDS2_TYPE = 'application/opds+json';
@@ -142,16 +147,22 @@ export function parseOpds2Feed(json: string): ParsedOpdsFeed {
       author?: string | { name?: string; identifier?: string };
     };
     publications?: Array<{
+      metadata?: { title?: string; identifier?: string };
       links?: Array<{ href?: string; type?: string }>;
     }>;
   };
 
-  const epubHrefs = new Set<string>();
+  const entries: CatalogEntry[] = [];
   for (const pub of feed.publications ?? []) {
-    for (const link of pub.links ?? []) {
-      if (link.type === EPUB_TYPE && link.href) epubHrefs.add(link.href);
-    }
+    const link = (pub.links ?? []).find((l) => l.type === EPUB_TYPE && l.href);
+    if (!link?.href) continue;
+    entries.push({
+      href: link.href,
+      identifier: pub.metadata?.identifier?.trim() || undefined,
+      title: pub.metadata?.title?.trim() || undefined,
+    });
   }
+  const epubHrefs = new Set(entries.map((e) => e.href));
 
   const author = feed.metadata?.author;
   const authorName =
@@ -164,5 +175,6 @@ export function parseOpds2Feed(json: string): ParsedOpdsFeed {
     authorName: authorName || undefined,
     authorUri: authorUri || undefined,
     epubHrefs,
+    entries,
   };
 }

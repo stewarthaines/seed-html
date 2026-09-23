@@ -140,6 +140,47 @@ export async function listDropboxFiles(
   }
 }
 
+/**
+ * Fetch a file's bytes (an EPUB to import, or a catalog to read back). Null
+ * when the path is not there; throws on other failures.
+ */
+export async function downloadDropboxFile(
+  config: DropboxRemoteConfig,
+  objectKey: string,
+): Promise<Blob | null> {
+  const token = await getValidToken(config);
+  const path = config.folderId
+    ? `${config.folderId}/${objectKey}`
+    : `/${objectKey}`;
+  const response = await fetch(
+    'https://content.dropboxapi.com/2/files/download',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Dropbox-API-Arg': JSON.stringify({ path }),
+      },
+    },
+  );
+  if (response.status === 401) {
+    const newToken = await refreshDropboxToken(
+      config.appKey,
+      config.refreshToken,
+    );
+    config.accessToken = newToken.accessToken;
+    config.tokenExpiry = newToken.tokenExpiry;
+    return downloadDropboxFile(config, objectKey);
+  }
+  if (response.status === 409) return null; // path/not_found
+  if (!response.ok) {
+    const error = await response.text().catch(() => '');
+    throw new Error(
+      `Download failed: ${response.status} ${response.statusText}${error ? '\n' + error : ''}`,
+    );
+  }
+  return response.blob();
+}
+
 export async function deleteDropboxFile(
   config: DropboxRemoteConfig,
   objectKey: string,

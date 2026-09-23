@@ -1,14 +1,20 @@
 /**
- * Publish to Cloudflare Plugin - Entry Point
+ * Publish-to-remote plugin - entry point
  *
- * This plugin receives an OPFS directory handle from the main app via message,
- * and provides a UI to upload EPUBs to S3-compatible storage.
+ * The host mounts this document three times, naming a surface in `init`
+ * (send / published / destinations); each frame receives the shared output
+ * directory handle and renders only its surface (process/PUBLISH_REWORK.md).
  */
 
 import { mount } from 'svelte';
 import App from './App.svelte';
 import './styles.css';
-import { dirHandle, activeIdentifier } from './store.js';
+import {
+  dirHandle,
+  activeIdentifier,
+  knownIdentifiers,
+  surface,
+} from './store.js';
 import { setPluginMessages } from './i18n.js';
 import type { ContextMessage, InitMessage, MainToPlugin } from './types.js';
 
@@ -38,6 +44,7 @@ function handleContext(message: ContextMessage) {
   setPluginMessages(message.messages ?? {});
   // Track the open project so its published rows can be outlined.
   activeIdentifier.set(message.activeIdentifier);
+  knownIdentifiers.set(new Set(message.knownIdentifiers ?? []));
 }
 
 async function handleInit(message: InitMessage) {
@@ -46,6 +53,13 @@ async function handleInit(message: InitMessage) {
   if (!projectId) {
     console.error('Invalid init message: missing projectId');
     return;
+  }
+
+  if (message.surface) {
+    surface.set(message.surface);
+    // The published surface fills its frame; the others are content-height
+    // (the host measures the body), so the stylesheet keys off this.
+    document.documentElement.dataset.surface = message.surface;
   }
 
   if (opfsDirHandle && typeof opfsDirHandle === 'object') {

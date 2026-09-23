@@ -216,12 +216,34 @@ describe('generateOpds2Feed', () => {
       );
     });
 
+    it('reads each entry with its identifier and title', () => {
+      const meta = new Map([
+        ['book1.epub', { title: 'Book One', identifier: 'urn:uuid:one' }],
+      ]);
+      const parsed = parseOpds2Feed(
+        generateOpds2Feed(s3Config, twoEpubs, FEED_URL, meta),
+      );
+      expect(parsed.entries).toEqual([
+        {
+          href: 'https://s3.example.com/my-bucket/book1.epub',
+          identifier: 'urn:uuid:one',
+          title: 'Book One',
+        },
+        {
+          href: 'https://s3.example.com/my-bucket/book2.epub',
+          identifier: undefined,
+          title: 'book2',
+        },
+      ]);
+    });
+
     it('tolerates a minimal feed', () => {
       const parsed = parseOpds2Feed('{"metadata":{"title":"Bare"}}');
       expect(parsed.title).toBe('Bare');
       expect(parsed.authorName).toBeUndefined();
       expect(parsed.authorUri).toBeUndefined();
       expect(parsed.epubHrefs.size).toBe(0);
+      expect(parsed.entries).toEqual([]);
     });
 
     it('throws on invalid JSON', () => {

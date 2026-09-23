@@ -6,6 +6,7 @@ import {
   getPublicUrl as getS3PublicUrl,
   uploadText as uploadS3Text,
   getObjectText as getS3ObjectText,
+  getObjectBlob as getS3ObjectBlob,
 } from './s3-upload.js';
 import {
   uploadToGoogleDrive,
@@ -14,6 +15,7 @@ import {
   getGoogleDrivePublicUrl,
   getGoogleDriveThumbnailUrl,
   uploadTextToGoogleDrive,
+  downloadGoogleDriveFile,
 } from './google-drive-upload.js';
 import {
   uploadToDropbox,
@@ -21,11 +23,13 @@ import {
   deleteDropboxFile,
   getDropboxPublicUrl,
   uploadTextToDropbox,
+  downloadDropboxFile,
 } from './dropbox-upload.js';
 import {
   uploadToDevice,
   listDeviceFiles,
   deleteDeviceFile,
+  readDeviceFile,
 } from './device-upload.js';
 import {
   uploadToWebDAV,
@@ -34,6 +38,7 @@ import {
   getWebDAVPublicUrl,
   uploadTextToWebDAV,
   getWebDAVText,
+  getWebDAVBlob,
 } from './webdav-upload.js';
 
 export async function uploadFile(
@@ -134,9 +139,9 @@ export function getThumbnailUrl(
 }
 
 /**
- * Fetch a remote text file's contents (e.g. the existing catalog.xml). Returns
- * null if the file is missing or the remote type isn't supported for reads
- * (Google Drive / Dropbox). Throws on transport errors so callers can fall back.
+ * Fetch a remote text file's contents (the existing catalog). Returns null if
+ * the file is missing or the remote type cannot host a catalog (Google Drive,
+ * device). Throws on transport errors so callers can fall back.
  */
 export async function downloadTextFile(
   remote: RemoteConfig,
@@ -146,8 +151,42 @@ export async function downloadTextFile(
     return getS3ObjectText(remote, objectKey);
   } else if (remote.type === 'webdav') {
     return getWebDAVText(remote, objectKey);
+  } else if (remote.type === 'dropbox') {
+    const blob = await downloadDropboxFile(remote, objectKey);
+    return blob ? blob.text() : null;
   }
-  return null; // Drive/Dropbox/device: not supported for catalog pre-population.
+  return null;
+}
+
+/**
+ * Fetch a remote file's bytes (an EPUB to import onto this device). `blob` is
+ * null when the file is not there; `error` names a failure, including the
+ * device and Google sentinels the callers already know.
+ */
+export async function downloadFile(
+  remote: RemoteConfig,
+  objectKey: string,
+  fileId?: string,
+): Promise<{ blob?: Blob | null; error?: string }> {
+  try {
+    if (remote.type === 's3-compatible') {
+      return { blob: await getS3ObjectBlob(remote, objectKey) };
+    } else if (remote.type === 'webdav') {
+      return { blob: await getWebDAVBlob(remote, objectKey) };
+    } else if (remote.type === 'dropbox') {
+      return { blob: await downloadDropboxFile(remote, objectKey) };
+    } else if (remote.type === 'google-drive') {
+      if (!fileId) return { error: 'File not found' };
+      return { blob: await downloadGoogleDriveFile(remote, fileId) };
+    } else if (remote.type === 'device') {
+      return readDeviceFile(remote, objectKey);
+    }
+    return { error: 'Unknown remote type' };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
 }
 
 export async function uploadTextFile(
