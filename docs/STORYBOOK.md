@@ -130,7 +130,7 @@ Keep testids **sparse** — they are Testing Library's explicit last resort (the
 | `create-project`         | New-book button                   | `src/lib/navigation/views/BooksView.svelte`                                                 |
 | `import-from-catalog`    | Sample-books button               | `src/lib/navigation/views/BooksView.svelte`                                                 |
 | `package-epub`           | Package-EPUB button               | `src/lib/components/shell/TopBar.svelte`                                                    |
-| `settings-section-<id>`, `settings-close`, `about-close` | Settings sheet: section list items and the close button; the About dialog's close button (`src/lib/components/shell/AboutDialog.svelte`) | `src/lib/navigation/views/SettingsView.svelte` (ids `appearance`, `language`, `advanced`, `plugins`, `format`, `packaging`, `preview`, `pdf`, `translations`, `track-changes`) |
+| `settings-section-<id>`, `settings-close`, `about-close` | Settings sheet: section list items and the close button; the About dialog's close button (`src/lib/components/shell/AboutDialog.svelte`) | `src/lib/navigation/views/SettingsView.svelte` (ids `appearance`, `language`, `advanced`, `plugins`, `format`, `transforms`, `custom-metadata`, `packaging`, `preview`, `pdf`, `translations`, `track-changes`) |
 | `spine-item-<chapterId>` | Chapter buttons in the spine list | `src/lib/components/SpineItem.svelte` (e.g. `spine-item-chapter01`)                         |
 
 Adding a hook: prefer a stable, non-localized suffix (a section/chapter **id**, not a label). Add the row above, and reach for a testid only when a semantic query would be locale- or copy-brittle for a step that isn't itself under test.
