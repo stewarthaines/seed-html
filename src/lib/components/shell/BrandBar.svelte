@@ -11,9 +11,12 @@
 
   let {
     currentView,
+    settingsOpen = false,
     onNavigate,
   }: {
     currentView: ViewType;
+    /** The Settings sheet is open over this view. */
+    settingsOpen?: boolean;
     onNavigate: (view: ViewType) => void;
   } = $props();
 
@@ -48,8 +51,8 @@
     <button
       type="button"
       class="link"
-      class:active={currentView === 'settings'}
-      aria-current={currentView === 'settings' ? 'page' : undefined}
+      class:active={settingsOpen}
+      aria-expanded={settingsOpen}
       onclick={() => onNavigate('settings')}
       data-testid="nav-settings"
     >

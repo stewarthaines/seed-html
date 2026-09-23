@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { diffLines } from 'diff';
   import { randomUUID } from './lib/utils/uuid.js';
   import { workspaceOpfsPath } from './lib/plugins/contract.js';
@@ -184,6 +184,38 @@
 
   // Reactive getters for template access
   let currentView = $derived($navigationStore.currentView);
+
+  // The Settings sheet opens over whatever you were doing: the layout keeps
+  // rendering the last content view underneath it, and closing the sheet returns
+  // there (process/APP_MAKEOVER_LIBRARY.md, phase 4).
+  let lastContentView = $state<ViewType>('workspace');
+  $effect(() => {
+    if (currentView !== 'settings') lastContentView = currentView;
+  });
+  let contentView = $derived(currentView === 'settings' ? lastContentView : currentView);
+  let settingsOpen = $derived(currentView === 'settings');
+
+  function closeSettings(): void {
+    navigationStore.navigateTo(lastContentView);
+    // Return focus to the control that opened the sheet.
+    tick().then(() => {
+      document.querySelector<HTMLElement>('[data-testid="nav-settings"]')?.focus();
+    });
+  }
+
+  // The full package (with source) from the top bar or the Share page.
+  let epubPackaging = $state(false);
+  async function packageCurrentBook(): Promise<void> {
+    if (!currentWorkspaceState || epubPackaging) return;
+    epubPackaging = true;
+    try {
+      await handlePackageRequest(currentWorkspaceState.id);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : $t('Failed to package EPUB'), 'error');
+    } finally {
+      epubPackaging = false;
+    }
+  }
   // Single canonical page heading per view (visually hidden) for screen readers, so
   // every view satisfies "page should contain a level-one heading".
   let viewTitle = $derived(
@@ -1880,15 +1912,20 @@
     <p>{$t('Initializing application...')}</p>
   </div>
 {:else}
-  <LayoutManager hasWorkspace={!!currentWorkspaceId}>
+  <LayoutManager hasWorkspace={!!currentWorkspaceId} view={contentView}>
     {#snippet brandBar()}
-      <BrandBar {currentView} onNavigate={view => navigationStore.navigateTo(view)} />
+      <BrandBar
+        currentView={contentView}
+        {settingsOpen}
+        onNavigate={view => navigationStore.navigateTo(view)}
+      />
     {/snippet}
 
     {#snippet topBar()}
       <TopBar
         title={workspaceTitle}
-        {currentView}
+        currentView={contentView}
+        {settingsOpen}
         readOnly={isReadOnly}
         {reviewMode}
         {agentBridgeAvailable}
@@ -1896,9 +1933,7 @@
         agentDetail={agentBridge?.detail ?? null}
         onToggleAgent={toggleAgentBridge}
         onNavigate={view => navigationStore.navigateTo(view)}
-        onPackage={() => {
-          if (currentWorkspaceState) handlePackageRequest(currentWorkspaceState.id);
-        }}
+        onPackage={packageCurrentBook}
         onDuplicate={() => (duplicateOpen = true)}
         onDelete={openDeleteDialog}
       />
@@ -1941,19 +1976,19 @@
     {/snippet}
 
     {#snippet leftContent()}
-      {#if currentView !== 'workspace' && currentView !== 'cover'}
-        <!-- Books and Cover carry their own visible heading. -->
+      {#if contentView !== 'workspace' && contentView !== 'cover' && contentView !== 'publish'}
+        <!-- Books, Cover and Share carry their own visible heading. -->
         <h1 class="sr-only">{viewTitle}</h1>
       {/if}
-      {#if isReadOnly && currentView !== 'workspace' && currentView !== 'about'}
+      {#if isReadOnly && contentView !== 'workspace' && contentView !== 'about'}
         <div class="readonly-banner" role="status">
           {$t("This EPUB wasn't created in the Simple EPUB Editor, so it can't be edited.")}
         </div>
       {/if}
       <!-- Main content area - switches based on current view -->
-      {#if currentView === 'about'}
+      {#if contentView === 'about'}
         <AboutView />
-      {:else if currentView === 'workspace' && initialized}
+      {:else if contentView === 'workspace' && initialized}
         <BooksView
           onListWorkspaces={() => appState?.listWorkspaces() ?? Promise.resolve([])}
           onCreateNewRequested={openCreateDialog}
@@ -1976,7 +2011,7 @@
           advancedMode={advancedMode.current}
           onWorkspaceOpened={openBookView}
         />
-      {:else if currentView === 'cover'}
+      {:else if contentView === 'cover'}
         {#if initialized && currentWorkspaceState && appState}
           <CoverView
             workspace={currentWorkspaceState}
@@ -1989,7 +2024,7 @@
             }}
           />
         {/if}
-      {:else if currentView === 'metadata'}
+      {:else if contentView === 'metadata'}
         {#if initialized && currentWorkspaceState && appState}
           <MetadataEditor
             bind:workspace={appState.workspace}
@@ -2003,7 +2038,7 @@
         {:else}
           <div class="view-loading">{$t('Loading project…')}</div>
         {/if}
-      {:else if currentView === 'manifest'}
+      {:else if contentView === 'manifest'}
         {#if initialized && currentWorkspaceState && appState}
           <ManifestContainer
             workspace={currentWorkspaceState}
@@ -2020,7 +2055,7 @@
         {:else}
           <div class="view-loading">{$t('Loading project…')}</div>
         {/if}
-      {:else if currentView === 'navigation'}
+      {:else if contentView === 'navigation'}
         {#if initialized && currentWorkspaceState && appState && blobURLManager}
           <OutlineView
             workspace={currentWorkspaceState}
@@ -2037,7 +2072,7 @@
         {:else}
           <div class="view-loading">{$t('Loading project…')}</div>
         {/if}
-      {:else if currentView === 'spine'}
+      {:else if contentView === 'spine'}
         {#if initialized && currentWorkspaceState && appState}
           <SpineView
             workspace={currentWorkspaceState}
@@ -2059,7 +2094,7 @@
         {:else}
           <div class="view-loading">{$t('Loading project…')}</div>
         {/if}
-      {:else if currentView === 'chapters'}
+      {:else if contentView === 'chapters'}
         {#if initialized && currentWorkspaceState && appState}
           <ChaptersView
             workspace={currentWorkspaceState}
@@ -2077,12 +2112,14 @@
         {:else}
           <div class="view-loading">{$t('Loading project…')}</div>
         {/if}
-      {:else if currentView === 'publish'}
+      {:else if contentView === 'publish'}
         <PublishView
           {publishService}
           pluginUrl={publishPluginUrl}
           projectId={currentWorkspaceId ?? 'publish'}
           activeIdentifier={currentWorkspaceState?.opf?.metadata?.identifier}
+          onPackage={packageCurrentBook}
+          packaging={epubPackaging}
           onGeneratePdf={canGeneratePdf ? handleGeneratePdf : undefined}
           {pdfGenerating}
           onPackageWithoutSource={handleExportPlainEpub}
@@ -2093,47 +2130,18 @@
           seedHtmlPackaging={seedHtmlExporting}
           {isReadOnly}
         />
-      {:else if currentView === 'settings' && appState}
-        <SettingsView
-          settingsService={appState.getSettingsService()}
-          extensionManager={appState.getExtensionManager()}
-          transformEngine={appState.getTransformEngine()}
-          workspaceId={appState.currentWorkspaceId}
-          workspace={currentWorkspaceState}
-          onApplyPatchset={handleApplyPatchset}
-          onTranslationAction={handleTranslationAction}
-          {availablePlugins}
-          {enabledPluginIds}
-          {availableExtensions}
-          readOnly={isReadOnly}
-          {hasProjects}
-          onExtensionAssets={handleExtensionAssets}
-          onWorkspaceFilesChanged={id => appState?.invalidateWorkspaceCache(id)}
-          onTogglePlugin={(id, enabled) => {
-            appState?.getSettingsService().setPluginEnabled(id, enabled);
-            enabledPluginIds = appState?.getSettingsService().getEnabledPlugins() ?? [];
-          }}
-          onSettingsChanged={() => {
-            // Reload workspace + EPUB settings in AppState after they're changed in
-            // SettingsView, so the print preview and PDF export see new print settings.
-            if (appState?.currentWorkspaceId) {
-              appState.loadWorkspaceSettings(appState.currentWorkspaceId);
-              appState.loadEPUBSettings(appState.currentWorkspaceId);
-            }
-          }}
-        />
       {:else}
         <div class="placeholder-content">
           <h3>{$t('Unknown View')}</h3>
-          <p>{$t('View type')}: {currentView}</p>
+          <p>{$t('View type')}: {contentView}</p>
         </div>
       {/if}
     {/snippet}
 
     {#snippet rightContent()}
-      {#if currentView === 'about'}
+      {#if contentView === 'about'}
         <ThirdPartyView />
-      {:else if currentView === 'metadata' && initialized && currentWorkspaceState}
+      {:else if contentView === 'metadata' && initialized && currentWorkspaceState}
         <OPFPreview
           workspace={currentWorkspaceState}
           focusedField={focusedMetadataField}
@@ -2144,7 +2152,7 @@
           coverSettings={appState?.epubSettings?.cover}
           onGenerateCover={handleGenerateCover}
         />
-      {:else if currentView === 'manifest' && initialized && currentWorkspaceState}
+      {:else if contentView === 'manifest' && initialized && currentWorkspaceState}
         <ManifestPreview
           selectedItem={selectedManifestItem}
           selectedItemType={selectedManifestItemType}
@@ -2159,7 +2167,7 @@
             if (appState) appState.workspace = updatedWorkspace;
           }}
         />
-      {:else if currentView === 'navigation'}
+      {:else if contentView === 'navigation'}
         <div class="nav-preview-pane">
           <PaneHeader>
             <span class="pane-title">{$t('Navigation Preview')}</span>
@@ -2177,7 +2185,7 @@
             </div>
           {/if}
         </div>
-      {:else if currentView === 'spine'}
+      {:else if contentView === 'spine'}
         {#if spinePreviewData.spineItemId}
           <PreviewPane
             bind:this={previewPaneRef}
@@ -2221,6 +2229,38 @@
       {/if}
     {/snippet}
   </LayoutManager>
+
+  {#if settingsOpen && appState}
+    <SettingsView
+      settingsService={appState.getSettingsService()}
+      extensionManager={appState.getExtensionManager()}
+      transformEngine={appState.getTransformEngine()}
+      workspaceId={appState.currentWorkspaceId}
+      workspace={currentWorkspaceState}
+      onApplyPatchset={handleApplyPatchset}
+      onTranslationAction={handleTranslationAction}
+      {availablePlugins}
+      {enabledPluginIds}
+      {availableExtensions}
+      readOnly={isReadOnly}
+      {hasProjects}
+      onExtensionAssets={handleExtensionAssets}
+      onWorkspaceFilesChanged={id => appState?.invalidateWorkspaceCache(id)}
+      onTogglePlugin={(id, enabled) => {
+        appState?.getSettingsService().setPluginEnabled(id, enabled);
+        enabledPluginIds = appState?.getSettingsService().getEnabledPlugins() ?? [];
+      }}
+      onSettingsChanged={() => {
+        // Reload workspace + EPUB settings in AppState after they're changed in
+        // SettingsView, so the print preview and PDF export see new print settings.
+        if (appState?.currentWorkspaceId) {
+          appState.loadWorkspaceSettings(appState.currentWorkspaceId);
+          appState.loadEPUBSettings(appState.currentWorkspaceId);
+        }
+      }}
+      onClose={closeSettings}
+    />
+  {/if}
 
   {#if showCreateDialog}
     <CreateProjectDialog

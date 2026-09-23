@@ -20,8 +20,8 @@
   import TrackChangesPanel from '../../components/settings/TrackChangesPanel.svelte';
   import TranslationsPanel from '../../components/settings/TranslationsPanel.svelte';
   import CustomMetaCatalogSettings from '../../components/settings/CustomMetaCatalogSettings.svelte';
-  import SettingsSection from '../../components/settings/SettingsSection.svelte';
-  import PaneHeader from '../../components/layout/PaneHeader.svelte';
+  import { onMount, tick } from 'svelte';
+  import { persisted, asString, asBoolean } from '../../state/persisted.svelte.js';
   import {
     addTransform,
     removeTransformAt,
@@ -33,7 +33,6 @@
     extensionOf,
   } from '../../settings/dom-transforms.js';
   import { ArrowSquareOut, CaretUp, CaretDown, CaretRight, X } from 'phosphor-svelte';
-  import { PaneGroup, Pane, PaneResizer } from 'paneforge';
   import { t, currentLocale, setLocale, availableLocales } from '../../i18n';
   import { LOCALE_CONFIGS } from '../../i18n/locale-config.js';
   import { themeStore } from '../../stores/theme.js';
@@ -86,6 +85,8 @@
     onApplyPatchset?: (resolved: ResolvedChange[]) => Promise<void>;
     /** Translation editions: add/switch/remove a language (owned by App). */
     onTranslationAction?: (action: 'add' | 'switch' | 'remove', tag: string) => Promise<void>;
+    /** Close the sheet (the app returns focus to the opener). */
+    onClose: () => void;
   }
 
   const {
@@ -105,6 +106,7 @@
     onSettingsChanged,
     onApplyPatchset,
     onTranslationAction,
+    onClose,
   }: Props = $props();
 
   // State management
@@ -853,17 +855,10 @@
     }
   }
 
-  // --- Section summaries (shown in each collapsed disclosure header) ------------
+  // --- Section summaries (shown beside each item in the sheet's section list) --
   const themeSummaryLabel = $derived(
     themeChoice === 'light' ? $t('Light') : themeChoice === 'dark' ? $t('Dark') : $t('System')
   );
-  const generalSummary = $derived(
-    `${$t('Theme')}: ${themeSummaryLabel} · ${$t('Language')}: ${
-      LOCALE_CONFIGS[$currentLocale]?.name ?? $currentLocale
-    } · ${$t('Mode')}: ${isAdvancedMode ? $t('Advanced') : $t('Basic')}`
-  );
-  const textFormatsSummary = $derived($t('{n} available', { n: textFormatExtensions.length }));
-  const contentTransformsSummary = $derived($t('{n} available', { n: contentTransforms.length }));
   const printSummary = $derived.by(() => {
     const p = epubSettings?.print ?? DEFAULT_PRINT;
     const size =
@@ -873,22 +868,267 @@
       (p.margin === 'narrow' ? $t('Narrow') : p.margin === 'wide' ? $t('Wide') : $t('Normal'));
     return `${size} · ${margin}`;
   });
-  const epubSummary = $derived.by(() => {
-    const tt = epubSettings?.text_transform ? transformLabel(epubSettings.text_transform).name : '';
-    const n = epubSettings?.dom_transforms?.length ?? 0;
-    const domLabel = n === 1 ? $t('{n} DOM transform', { n }) : $t('{n} DOM transforms', { n });
-    return tt ? `${tt} · ${domLabel}` : domLabel;
-  });
-  const extensionsSummary = $derived($t('{n} installed', { n: extensions.length }));
   const previewSummary = $derived.by(() => {
     const au = epubSettings?.preview?.autoUpdate ?? DEFAULT_PREVIEW.autoUpdate;
     const n = PREVIEW_TYPES.filter(pt => au[pt.key]).length;
     return $t('{n}/3 auto-update', { n });
   });
+  const onOff = (value: boolean) => (value ? $t('On') : $t('Off'));
 
-  // Which section starts open in each pane (the first present one). Captured once —
-  // a plain const, so it isn't reactively re-applied and yanked open later.
-  const projectFirstOpen: 'print' | 'editor' = isHttp ? 'print' : 'editor';
+  // --- The sheet's section list ------------------------------------------------
+  // Two groups: "You" (app-level preferences, always listed) and "This book"
+  // (the open project's settings). Each item's availability mirrors the
+  // condition its controls had in the old accordion.
+  type SectionId =
+    | 'appearance'
+    | 'language'
+    | 'advanced'
+    | 'plugins'
+    | 'format'
+    | 'packaging'
+    | 'preview'
+    | 'pdf'
+    | 'translations'
+    | 'track-changes';
+  interface SectionItem {
+    id: SectionId;
+    label: string;
+    summary?: string;
+  }
+
+  // The book's text format by name: the catalog entry that owns the current
+  // text transform, Plain text for the built-in one, else the script's name.
+  const formatSummary = $derived.by(() => {
+    const path = epubSettings?.text_transform;
+    if (!path) return undefined;
+    if (path === settingsService.getDefaultEPUBSettings().text_transform) return $t('Plain text');
+    const owner = extensionOf(path);
+    const entry = owner ? textFormatExtensions.find(e => e.id === owner) : undefined;
+    return entry?.name ?? transformLabel(path).name;
+  });
+
+  const youSections = $derived.by((): SectionItem[] => {
+    const items: SectionItem[] = [
+      { id: 'appearance', label: $t('Appearance'), summary: themeSummaryLabel },
+      {
+        id: 'language',
+        label: $t('Language'),
+        summary: LOCALE_CONFIGS[$currentLocale]?.name ?? $currentLocale,
+      },
+    ];
+    if (hasProjects) {
+      items.push({ id: 'advanced', label: $t('Advanced mode'), summary: onOff(isAdvancedMode) });
+    }
+    if (isAdvancedMode && (availablePlugins.length > 0 || isHttp)) {
+      items.push({
+        id: 'plugins',
+        label: $t('Plugins'),
+        summary: $t('{n} on', { n: enabledPluginIds.length }),
+      });
+    }
+    return items;
+  });
+
+  const bookSections = $derived.by((): SectionItem[] => {
+    if (!canEditSettings) return [];
+    const items: SectionItem[] = [];
+    if (isAdvancedMode && canEditEPUBSettings) {
+      items.push({
+        id: 'format',
+        label: $t('Format'),
+        summary: formatSummary,
+      });
+      items.push({
+        id: 'packaging',
+        label: $t('Packaging'),
+        summary: epubSettings?.include_seed_html_in_package ? $t('SEED.html included') : undefined,
+      });
+      items.push({ id: 'preview', label: $t('Preview'), summary: previewSummary });
+    }
+    if (isHttp && canEditEPUBSettings) {
+      items.push({ id: 'pdf', label: $t('PDF'), summary: printSummary });
+    }
+    if (canEditEPUBSettings && !readOnly) {
+      items.push({ id: 'translations', label: $t('Translations') });
+    }
+    if (isAdvancedMode && canEditEPUBSettings) {
+      items.push({
+        id: 'track-changes',
+        label: $t('Track changes'),
+        summary: onOff(epubSettings?.track_changes ?? false),
+      });
+    }
+    return items;
+  });
+
+  // The open section is remembered across sheets and reloads. When the remembered
+  // one is not available right now (no book open, Basic mode), the first listed
+  // section shows instead — without overwriting the remembered choice.
+  const rememberedSection = persisted<string>('seedhtml_settings_section', 'appearance', asString);
+  const allSections = $derived([...youSections, ...bookSections]);
+  const activeSection = $derived.by((): SectionId => {
+    const wanted = rememberedSection.current;
+    const found = allSections.find(s => s.id === wanted);
+    return found ? found.id : allSections[0].id;
+  });
+  const activeLabel = $derived(allSections.find(s => s.id === activeSection)?.label ?? '');
+
+  // Catalog panels reached from Format (not listed in the nav). Format stays the
+  // current item while one is shown; switching sections clears it.
+  let catalogPanel = $state<'formats' | 'transforms' | null>(null);
+  let backButton = $state<HTMLButtonElement | null>(null);
+  let moreFormatsButton = $state<HTMLButtonElement | null>(null);
+  let moreTransformsButton = $state<HTMLButtonElement | null>(null);
+
+  function selectSection(id: SectionId): void {
+    rememberedSection.current = id;
+    catalogPanel = null;
+  }
+
+  async function openCatalog(panel: 'formats' | 'transforms'): Promise<void> {
+    catalogPanel = panel;
+    await tick();
+    backButton?.focus();
+  }
+
+  async function closeCatalog(): Promise<void> {
+    const opener = catalogPanel === 'formats' ? moreFormatsButton : moreTransformsButton;
+    catalogPanel = null;
+    await tick();
+    if (opener?.isConnected && opener.getClientRects().length > 0) opener.focus();
+    else focusActiveNavItem();
+  }
+
+  // Format → Advanced disclosure: open state remembered, closed by default.
+  const formatAdvancedOpen = persisted<boolean>(
+    'seedhtml_settings_format_advanced_open',
+    false,
+    asBoolean
+  );
+
+  // --- Text format chooser (segmented radio group) ------------------------------
+  // "Plain text" is the built-in text transform; every other option is a
+  // text-format extension from the catalog. The checked option is the one whose
+  // extension owns the current text_transform.
+  const defaultTextTransform = $derived(settingsService.getDefaultEPUBSettings().text_transform);
+  const formatOptions = $derived.by(() => {
+    const options: Array<{ id: string | null; name: string; entry?: ExtensionCatalogEntry }> = [
+      { id: null, name: $t('Plain text') },
+    ];
+    for (const entry of textFormatExtensions)
+      options.push({ id: entry.id, name: entry.name, entry });
+    return options;
+  });
+  const activeFormatId = $derived.by((): string | null | undefined => {
+    const current = epubSettings?.text_transform;
+    if (!current || current === defaultTextTransform) return null;
+    return extensionOf(current);
+  });
+  const formatChooserDisabled = $derived(importingExtensionId !== null || readOnly || epubLoading);
+
+  async function chooseFormat(option: (typeof formatOptions)[number]): Promise<void> {
+    if (formatChooserDisabled || !epubSettings) return;
+    if (!option.entry) {
+      await persistTextTransform(defaultTextTransform);
+      return;
+    }
+    const path = `SOURCE/extensions/${option.entry.id}/${option.entry.textTransforms[0]}`;
+    if (installedExtensionIds.has(option.entry.id)) {
+      await persistTextTransform(path);
+      return;
+    }
+    // Install, then adopt. handleAddCatalogExtension only adopts when the project
+    // is still on the default transform; choosing a format here means adopting it.
+    await handleAddCatalogExtension(option.entry);
+    if (
+      extensions.some(e => e.name === option.entry?.id) &&
+      epubSettings?.text_transform !== path
+    ) {
+      await persistTextTransform(path);
+    }
+  }
+
+  let formatGroup = $state<HTMLElement | null>(null);
+  function handleFormatKeydown(event: KeyboardEvent): void {
+    const forward = event.key === 'ArrowRight' || event.key === 'ArrowDown';
+    const backward = event.key === 'ArrowLeft' || event.key === 'ArrowUp';
+    if (!forward && !backward) return;
+    const radios = [...(formatGroup?.querySelectorAll<HTMLButtonElement>('[role="radio"]') ?? [])];
+    if (radios.length === 0) return;
+    const index = radios.indexOf(event.target as HTMLButtonElement);
+    const step = forward ? 1 : -1;
+    const next = radios[(index + step + radios.length) % radios.length];
+    event.preventDefault();
+    next.focus();
+    void chooseFormat(formatOptions[radios.indexOf(next)]);
+  }
+
+  // --- Dialog behaviour: focus on open, Tab trap, Escape closes -----------------
+  let dialogEl = $state<HTMLElement | null>(null);
+  let navEl = $state<HTMLElement | null>(null);
+
+  function focusActiveNavItem(): void {
+    navEl?.querySelector<HTMLButtonElement>('[aria-current="page"]')?.focus();
+  }
+
+  onMount(() => {
+    focusActiveNavItem();
+  });
+
+  // The book's sections arrive once its settings load, which can move the active
+  // item after mount: keep focus with it while focus still sits on a nav item.
+  $effect(() => {
+    void activeSection;
+    const focused = document.activeElement;
+    if (
+      navEl &&
+      focused instanceof HTMLElement &&
+      navEl.contains(focused) &&
+      focused.getAttribute('aria-current') !== 'page'
+    ) {
+      tick().then(focusActiveNavItem);
+    }
+  });
+
+  const FOCUSABLE =
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), ' +
+    'textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
+  function focusables(): HTMLElement[] {
+    if (!dialogEl) return [];
+    return [...dialogEl.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+      el => el.tabIndex >= 0 && el.getClientRects().length > 0
+    );
+  }
+
+  function handleDocumentKeydown(event: KeyboardEvent): void {
+    if (!dialogEl) return;
+    // A dialog opened from inside the sheet (patchset review) owns its own keys.
+    const target = event.target instanceof Element ? event.target : null;
+    const nearestDialog = target?.closest('[role="dialog"]');
+    if (nearestDialog && nearestDialog !== dialogEl) return;
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      onClose();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const items = focusables();
+    if (items.length === 0) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    const active = document.activeElement;
+    const inside = active instanceof HTMLElement && dialogEl.contains(active);
+    if (event.shiftKey) {
+      if (!inside || active === first) {
+        event.preventDefault();
+        last.focus();
+      }
+    } else if (!inside || active === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
 </script>
 
 {#snippet catalogItem(ext: ExtensionCatalogEntry)}
@@ -934,801 +1174,1106 @@
   </div>
 {/snippet}
 
-<div class="settings-view">
-  {#if error}
-    <div class="error-message" role="alert">
-      <strong>{$t('Error')}:</strong>
-      {error}
-    </div>
-  {/if}
+{#snippet navItem(item: SectionItem)}
+  {@const active = item.id === activeSection}
+  <button
+    type="button"
+    class="nav-item"
+    class:active
+    aria-current={active ? 'page' : undefined}
+    data-testid="settings-section-{item.id}"
+    onclick={() => selectSection(item.id)}
+  >
+    <span class="nav-item-label">{item.label}</span>
+    {#if item.summary}
+      <span class="nav-item-summary">{item.summary}</span>
+    {/if}
+  </button>
+{/snippet}
 
-  <!-- Shares the editor's pane key so the split proportion is one global value. -->
-  <div class="settings-panes-wrap">
-    <PaneGroup direction="horizontal" autoSaveId="seedhtml-content-panes">
-      <!-- App settings: global, usable without a project. -->
-      <Pane defaultSize={50} minSize={25}>
-        <div class="settings-pane">
-          <PaneHeader>
-            <span class="pane-title">{$t('App Settings')}</span>
-          </PaneHeader>
-          <div class="settings-pane-body">
-            <SettingsSection
-              title={$t('General')}
-              summary={generalSummary}
-              name="app-settings"
-              persistKey="settings-app-general"
-              open
+{#snippet textTransformSelect(labelled: boolean)}
+  <div class="setting-group">
+    {#if labelled}
+      <label for="text-transform" class="setting-label-text">{$t('Text transform')}</label>
+    {/if}
+    <select
+      id="text-transform"
+      aria-labelledby={labelled ? undefined : 'text-transform-heading'}
+      class="setting-select"
+      value={epubSettings?.text_transform ?? ''}
+      onchange={e => persistTextTransform((e.currentTarget as HTMLSelectElement).value)}
+      disabled={epubLoading}
+    >
+      {#each textTransformGroups as grp (grp.group)}
+        <optgroup label={grp.group}>
+          {#each grp.options as opt (opt.path)}
+            <option value={opt.path}>{opt.fileName}</option>
+          {/each}
+        </optgroup>
+      {/each}
+    </select>
+    <p class="setting-description">
+      {$t('The plain text → XHTML step.')}
+    </p>
+  </div>
+{/snippet}
+
+<svelte:document onkeydown={handleDocumentKeydown} />
+
+<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+<div class="settings-backdrop" onclick={onClose} role="presentation">
+  <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+  <div
+    bind:this={dialogEl}
+    class="settings-sheet"
+    role="dialog"
+    tabindex="-1"
+    aria-modal="true"
+    aria-labelledby="settings-sheet-title"
+    onclick={event => event.stopPropagation()}
+  >
+    <aside class="sheet-nav">
+      <h2 id="settings-sheet-title" class="sheet-title">{$t('Settings')}</h2>
+      <nav bind:this={navEl} aria-label={$t('Settings sections')}>
+        <div class="nav-group">
+          <span class="nav-group-label">{$t('You')}</span>
+          {#each youSections as item (item.id)}
+            {@render navItem(item)}
+          {/each}
+        </div>
+        <div class="nav-group">
+          <span class="nav-group-label">{$t('This book')}</span>
+          {#if canEditSettings}
+            {#each bookSections as item (item.id)}
+              {@render navItem(item)}
+            {/each}
+          {:else if loading}
+            <p class="nav-note">{$t('Loading settings…')}</p>
+          {:else}
+            <p class="nav-note">{$t('Open a book to change its settings.')}</p>
+          {/if}
+        </div>
+      </nav>
+    </aside>
+
+    <button
+      type="button"
+      class="btn btn-icon sheet-close"
+      onclick={onClose}
+      aria-label={$t('Close')}
+      data-testid="settings-close"
+    >
+      <X size={18} aria-hidden="true" />
+    </button>
+
+    <div class="sheet-body">
+      {#if error}
+        <div class="error-message" role="alert">
+          <strong>{$t('Error')}:</strong>
+          {error}
+        </div>
+      {/if}
+
+      {#if catalogPanel === 'formats'}
+        <button
+          bind:this={backButton}
+          type="button"
+          class="btn btn-link sheet-back"
+          onclick={closeCatalog}
+        >
+          <span aria-hidden="true">←</span>
+          {$t('Format')}
+        </button>
+        <h1 class="section-title">{$t('Text formats')}</h1>
+        {#each textFormatExtensions as ext (ext.id)}
+          {@render catalogItem(ext)}
+        {/each}
+      {:else if catalogPanel === 'transforms'}
+        <button
+          bind:this={backButton}
+          type="button"
+          class="btn btn-link sheet-back"
+          onclick={closeCatalog}
+        >
+          <span aria-hidden="true">←</span>
+          {$t('Format')}
+        </button>
+        <h1 class="section-title">{$t('Content transforms')}</h1>
+        {#each contentCategoryGroups as group (group.key)}
+          {@const collapsed = collapsedCategories.has(group.key)}
+          <button
+            type="button"
+            class="ct-group-toggle"
+            aria-expanded={!collapsed}
+            onclick={() => toggleCategory(group.key)}
+          >
+            <span class="ct-disclosure" aria-hidden="true"><CaretRight size={14} /></span>
+            <span class="ct-group-label">{group.label}</span>
+          </button>
+          {#if !collapsed}
+            {#each group.items as ext (ext.id)}
+              {@render catalogItem(ext)}
+            {/each}
+          {/if}
+        {/each}
+      {:else}
+        <h1 class="section-title">{activeLabel}</h1>
+
+        {#if activeSection === 'appearance'}
+          <div class="setting-group">
+            <label for="theme-select" class="setting-label-text">{$t('Theme')}</label>
+            <select
+              id="theme-select"
+              class="setting-select"
+              value={themeChoice}
+              onchange={event => handleThemeChange((event.target as HTMLSelectElement).value)}
             >
-              <div class="setting-group">
-                <label for="theme-select" class="setting-label-text">{$t('Theme')}</label>
-                <select
-                  id="theme-select"
-                  class="setting-select"
-                  value={themeChoice}
-                  onchange={event => handleThemeChange((event.target as HTMLSelectElement).value)}
-                >
-                  <option value="light">{$t('Light')}</option>
-                  <option value="dark">{$t('Dark')}</option>
-                  <option value="system">{$t('System')}</option>
-                </select>
-              </div>
+              <option value="light">{$t('Light')}</option>
+              <option value="dark">{$t('Dark')}</option>
+              <option value="system">{$t('System')}</option>
+            </select>
+          </div>
+        {:else if activeSection === 'language'}
+          <div class="setting-group">
+            <label for="language-select" class="setting-label-text">{$t('Language')}</label>
+            <select
+              id="language-select"
+              class="setting-select"
+              value={$currentLocale}
+              onchange={handleLocaleChange}
+            >
+              {#each locales as loc (loc.code)}
+                <option value={loc.code}>{loc.name}</option>
+              {/each}
+            </select>
+          </div>
+        {:else if activeSection === 'advanced'}
+          <!-- Advanced mode: an app-wide preference, shown once at least one
+               project exists (create a project first, then opt in). -->
+          <div class="setting-group">
+            <label class="setting-label">
+              <input
+                type="checkbox"
+                checked={advancedMode.current}
+                onchange={e =>
+                  (advancedMode.current = (e.currentTarget as HTMLInputElement).checked)}
+              />
+              <span class="setting-text">{$t('Advanced mode')}</span>
+            </label>
+          </div>
+        {:else if activeSection === 'plugins'}
+          {#each availablePlugins as plugin (plugin.id)}
+            <div class="setting-group">
+              <label class="setting-label">
+                <input
+                  type="checkbox"
+                  checked={enabledPluginIds.includes(plugin.id)}
+                  onchange={event =>
+                    onTogglePlugin?.(plugin.id, (event.target as HTMLInputElement).checked)}
+                />
+                <span class="setting-text">{plugin.name}</span>
+              </label>
+            </div>
+          {/each}
 
-              <div class="setting-group">
-                <label for="language-select" class="setting-label-text">{$t('Language')}</label>
-                <select
-                  id="language-select"
-                  class="setting-select"
-                  value={$currentLocale}
-                  onchange={handleLocaleChange}
-                >
-                  {#each locales as loc (loc.code)}
-                    <option value={loc.code}>{loc.name}</option>
-                  {/each}
-                </select>
-              </div>
-
-              <!-- Advanced mode: an app-wide preference, shown once at least one
-                   project exists (create a project first, then opt in). -->
-              {#if hasProjects}
-                <div class="setting-group">
-                  <label class="setting-label">
-                    <input
-                      type="checkbox"
-                      checked={advancedMode.current}
-                      onchange={e =>
-                        (advancedMode.current = (e.currentTarget as HTMLInputElement).checked)}
-                    />
-                    <span class="setting-text">{$t('Advanced mode')}</span>
-                  </label>
-                </div>
-              {/if}
-            </SettingsSection>
-
-            {#if isAdvancedMode && (availablePlugins.length > 0 || isHttp)}
-              <SettingsSection
-                title={$t('Interface options')}
-                name="app-settings"
-                persistKey="settings-app-plugins"
+          <!-- Not a plugin — an app-level preview preference. Off falls the
+               device presets back to the built-in scrolling preview. Shown
+               over http only (the reader engine, like plugins, needs the
+               origin); READ.html is unaffected. -->
+          {#if isHttp}
+            <div class="setting-group">
+              <label class="setting-label">
+                <input
+                  type="checkbox"
+                  checked={pagedDevicePreviews.current}
+                  onchange={e =>
+                    (pagedDevicePreviews.current = (e.currentTarget as HTMLInputElement).checked)}
+                />
+                <span class="setting-text">{$t('Paged device previews')}</span>
+              </label>
+            </div>
+          {/if}
+        {:else if activeSection === 'format'}
+          <h3 id="text-format-heading" class="sub-heading">{$t('Text format')}</h3>
+          {#if textFormatExtensions.length > 0}
+            <div class="setting-group">
+              <div
+                bind:this={formatGroup}
+                class="seg"
+                role="radiogroup"
+                aria-labelledby="text-format-heading"
               >
-                {#each availablePlugins as plugin (plugin.id)}
-                  <div class="setting-group">
-                    <label class="setting-label">
-                      <input
-                        type="checkbox"
-                        checked={enabledPluginIds.includes(plugin.id)}
-                        onchange={event =>
-                          onTogglePlugin?.(plugin.id, (event.target as HTMLInputElement).checked)}
-                      />
-                      <span class="setting-text">{plugin.name}</span>
-                    </label>
-                  </div>
-                {/each}
-
-                <!-- Not a plugin — an app-level preview preference. Off falls the
-                     device presets back to the built-in scrolling preview. Shown
-                     over http only (the reader engine, like plugins, needs the
-                     origin); READ.html is unaffected. -->
-                {#if isHttp}
-                  <div class="setting-group">
-                    <label class="setting-label">
-                      <input
-                        type="checkbox"
-                        checked={pagedDevicePreviews.current}
-                        onchange={e =>
-                          (pagedDevicePreviews.current = (
-                            e.currentTarget as HTMLInputElement
-                          ).checked)}
-                      />
-                      <span class="setting-text">{$t('Paged device previews')}</span>
-                    </label>
-                  </div>
-                {/if}
-              </SettingsSection>
-            {/if}
-
-            {#if isAdvancedMode && textFormatExtensions.length > 0}
-              <SettingsSection
-                title={$t('Text formats')}
-                summary={textFormatsSummary}
-                name="app-settings"
-                persistKey="settings-app-text-formats"
-              >
-                <p class="setting-description">
-                  {$t('Adopt a markup language for the current project.')}
-                </p>
-                {#each textFormatExtensions as ext (ext.id)}
-                  {@render catalogItem(ext)}
-                {/each}
-              </SettingsSection>
-            {/if}
-
-            {#if isAdvancedMode && contentTransforms.length > 0}
-              <SettingsSection
-                title={$t('Content transforms')}
-                summary={contentTransformsSummary}
-                name="app-settings"
-                persistKey="settings-app-content-transforms"
-              >
-                <p class="setting-description">
-                  {$t('Add to the current project, then enable under Project Settings.')}
-                </p>
-
-                {#each contentCategoryGroups as group (group.key)}
-                  {@const collapsed = collapsedCategories.has(group.key)}
+                {#each formatOptions as option, i (option.id ?? '')}
+                  {@const checked = option.id === activeFormatId}
                   <button
                     type="button"
-                    class="ct-group-toggle"
-                    aria-expanded={!collapsed}
-                    onclick={() => toggleCategory(group.key)}
+                    role="radio"
+                    class="seg-option"
+                    aria-checked={checked}
+                    tabindex={checked || (activeFormatId === undefined && i === 0) ? 0 : -1}
+                    disabled={formatChooserDisabled}
+                    onclick={() => chooseFormat(option)}
+                    onkeydown={handleFormatKeydown}
                   >
-                    <span class="ct-disclosure" aria-hidden="true"><CaretRight size={14} /></span>
-                    <span class="ct-group-label">{group.label}</span>
+                    {option.entry && importingExtensionId === option.entry.id
+                      ? $t('Adding…')
+                      : option.name}
                   </button>
-                  {#if !collapsed}
-                    {#each group.items as ext (ext.id)}
-                      {@render catalogItem(ext)}
-                    {/each}
-                  {/if}
                 {/each}
-              </SettingsSection>
-            {/if}
-
-            {#if isAdvancedMode}
-              <SettingsSection
-                title={$t('Custom metadata catalog')}
-                name="app-settings"
-                persistKey="settings-app-custom-meta"
+              </div>
+              <button
+                bind:this={moreFormatsButton}
+                type="button"
+                class="btn btn-link more-link"
+                onclick={() => openCatalog('formats')}
               >
-                <CustomMetaCatalogSettings />
-              </SettingsSection>
-            {/if}
+                {$t('More formats…')}
+              </button>
+            </div>
+          {:else}
+            {@render textTransformSelect(true)}
+          {/if}
+
+          <h3 class="sub-heading">
+            {$t('Extensions in use')}
+            <span class="sub-heading-count">({extensions.length})</span>
+          </h3>
+          <div class="extension-import">
+            <label for="extension-file">{$t('Import JavaScript Extension')}</label>
+            <input
+              id="extension-file"
+              type="file"
+              accept=".js"
+              onchange={handleExtensionImport}
+              disabled={extensionsLoading}
+            />
           </div>
-        </div>
-      </Pane>
-
-      <PaneResizer />
-
-      <!-- Project settings: require an open project. -->
-      <Pane defaultSize={50} minSize={20}>
-        <div class="settings-pane">
-          <PaneHeader>
-            <span class="pane-title">{$t('Project Settings')}</span>
-          </PaneHeader>
-          <div class="settings-pane-body">
-            {#if canEditSettings}
-              <!-- Print settings: minimal page geometry for the PDF export / print
-                   preview. HTTP-only (gated on the Paged.js pipeline's availability)
-                   and shown to all users (not just advanced). -->
-              {#if isHttp && canEditEPUBSettings}
-                <SettingsSection
-                  title={$t('PDF')}
-                  summary={printSummary}
-                  name="project-settings"
-                  persistKey="settings-project-pdf"
-                  open={projectFirstOpen === 'print'}
-                >
-                  <div class="setting-group">
-                    <label for="print-page-size" class="setting-label-text">
-                      {$t('Page size')}
-                    </label>
-                    <select
-                      id="print-page-size"
-                      class="setting-select"
-                      value={customSizeActive
-                        ? 'custom'
-                        : (epubSettings?.print?.page_size ?? DEFAULT_PRINT.page_size)}
-                      onchange={e =>
-                        handlePageSizeChange((e.currentTarget as HTMLSelectElement).value)}
-                      disabled={epubLoading}
-                    >
-                      {#each PAGE_SIZE_OPTIONS as opt (opt.value)}
-                        <option value={opt.value}>{opt.label}</option>
-                      {/each}
-                      {#if isAdvancedMode || customSizeActive}
-                        <option value="custom">{$t('Custom…')}</option>
-                      {/if}
-                    </select>
-                    {#if customSizeActive}
-                      <!-- i18n-ignore: literal CSS value, not prose -->
-                      <input
-                        id="print-page-size-custom"
-                        type="text"
-                        class="template-input"
-                        aria-label={$t('Custom page size')}
-                        value={epubSettings?.print?.custom_size ?? ''}
-                        placeholder="140mm 216mm"
-                        onchange={e =>
-                          updatePrint({
-                            custom_size:
-                              (e.currentTarget as HTMLInputElement).value.trim() || undefined,
-                          })}
-                        disabled={epubLoading}
-                      />
-                      <p class="setting-description">
-                        <!-- i18n-ignore: literal CSS examples, not prose -->
-                        {$t('CSS @page size, e.g. "140mm 216mm" or "A4 landscape".')}
-                      </p>
-                    {/if}
-                  </div>
-
-                  <div class="setting-group">
-                    <label for="print-margin" class="setting-label-text">
-                      {$t('Margin')}
-                    </label>
-                    <select
-                      id="print-margin"
-                      class="setting-select"
-                      value={customMarginActive
-                        ? 'custom'
-                        : (epubSettings?.print?.margin ?? DEFAULT_PRINT.margin)}
-                      onchange={e =>
-                        handleMarginChange((e.currentTarget as HTMLSelectElement).value)}
-                      disabled={epubLoading}
-                    >
-                      <option value="narrow">{$t('Narrow')}</option>
-                      <option value="normal">{$t('Normal')}</option>
-                      <option value="wide">{$t('Wide')}</option>
-                      {#if isAdvancedMode || customMarginActive}
-                        <option value="custom">{$t('Custom…')}</option>
-                      {/if}
-                    </select>
-                    {#if customMarginActive}
-                      <!-- i18n-ignore: literal CSS value, not prose -->
-                      <input
-                        id="print-margin-custom"
-                        type="text"
-                        class="template-input"
-                        aria-label={$t('Custom margin')}
-                        value={epubSettings?.print?.custom_margin ?? ''}
-                        placeholder="20mm 15mm 25mm 15mm"
-                        onchange={e =>
-                          updatePrint({
-                            custom_margin:
-                              (e.currentTarget as HTMLInputElement).value.trim() || undefined,
-                          })}
-                        disabled={epubLoading}
-                      />
-                      <p class="setting-description">
-                        <!-- i18n-ignore: literal CSS example, not prose -->
-                        {$t('CSS margin, e.g. "20mm 15mm 25mm 15mm".')}
-                      </p>
-                    {/if}
-                  </div>
-
-                  <div class="setting-group">
-                    <label class="setting-label">
-                      <input
-                        type="checkbox"
-                        checked={epubSettings?.print?.page_numbers ?? DEFAULT_PRINT.page_numbers}
-                        onchange={e =>
-                          updatePrint({
-                            page_numbers: (e.currentTarget as HTMLInputElement).checked,
-                          })}
-                        disabled={epubLoading}
-                      />
-                      <span class="setting-text">{$t('Include page numbers')}</span>
-                    </label>
-                  </div>
-
-                  <div class="setting-group">
-                    <label class="setting-label">
-                      <input
-                        type="checkbox"
-                        checked={epubSettings?.print?.running_header ??
-                          DEFAULT_PRINT.running_header}
-                        onchange={e =>
-                          updatePrint({
-                            running_header: (e.currentTarget as HTMLInputElement).checked,
-                          })}
-                        disabled={epubLoading}
-                      />
-                      <span class="setting-text">{$t('Running header')}</span>
-                    </label>
-                    <p class="setting-description">
-                      {$t('The chapter title at the top of each page.')}
-                    </p>
-                  </div>
-
-                  <div class="setting-group">
-                    <label class="setting-label">
-                      <input
-                        type="checkbox"
-                        checked={epubSettings?.print?.cover_page ?? DEFAULT_PRINT.cover_page}
-                        onchange={e =>
-                          updatePrint({
-                            cover_page: (e.currentTarget as HTMLInputElement).checked,
-                          })}
-                        disabled={epubLoading}
-                      />
-                      <span class="setting-text">{$t('Include cover page')}</span>
-                    </label>
-                  </div>
-                </SettingsSection>
-              {/if}
-
-              <!-- EPUB Settings -->
-              {#if canEditEPUBSettings && isAdvancedMode}
-                <SettingsSection
-                  title={$t('EPUB Settings')}
-                  summary={epubSummary}
-                  name="project-settings"
-                  persistKey="settings-project-epub"
-                >
-                  <div class="setting-group">
-                    <label class="setting-label">
-                      <input
-                        type="checkbox"
-                        checked={epubSettings?.include_seed_html_in_package ?? false}
-                        onchange={e =>
-                          toggleSeedHtml((e.currentTarget as HTMLInputElement).checked)}
-                        disabled={epubLoading || seedHtmlBusy}
-                      />
-                      <span class="setting-text">{$t('Add SEED.html to package')}</span>
-                    </label>
-                    <p class="setting-description">
-                      {$t('Embed the editor in the EPUB so the book can be reopened and edited.')}
-                    </p>
-                    {#if (epubSettings?.include_seed_html_in_package ?? false) && !seedHtmlPresent}
-                      <div class="seed-html-load">
-                        <button
-                          type="button"
-                          class="btn btn-secondary btn-sm"
-                          onclick={() => seedHtmlInput?.click()}
-                          disabled={seedHtmlBusy}
-                        >
-                          {seedHtmlBusy ? $t('Loading…') : $t('Load SEED.html…')}
-                        </button>
-                        <span class="setting-description">
-                          {$t('Choose the SEED.html file to embed.')}
-                        </span>
-                        <input
-                          bind:this={seedHtmlInput}
-                          type="file"
-                          accept=".html,text/html"
-                          style="display: none"
-                          onchange={onSeedHtmlFile}
-                        />
-                      </div>
-                    {/if}
-                  </div>
-
-                  <div class="setting-group">
-                    <label for="filename-template" class="setting-label-text">
-                      {$t('Packaged Filename')}
-                    </label>
-                    <!-- i18n-ignore: literal token/format pattern, not prose -->
-                    <input
-                      id="filename-template"
-                      type="text"
-                      class="template-input"
-                      value={epubSettings?.filename_template || ''}
-                      placeholder="&lt;title&gt;-&lt;author&gt;-&lt;date&gt;"
-                      onblur={handleFilenameTemplateChange}
-                      disabled={epubLoading}
-                    />
-                    <p class="setting-description">
-                      {$t('Placeholders: <title>, <author>, <date>.')}
-                    </p>
-                  </div>
-
-                  <div class="setting-group">
-                    <label for="audio-clip-template" class="setting-label-text">
-                      {$t('Audio Clip Directive')}
-                    </label>
-                    <!-- i18n-ignore: literal directive template, not prose -->
-                    <input
-                      id="audio-clip-template"
-                      type="text"
-                      class="template-input"
-                      value={epubSettings?.audio_clip_template || ''}
-                      placeholder=":clip[&lt;label&gt;]{'{'}src=&lt;href&gt; begin=&lt;begin&gt; end=&lt;end&gt;{'}'}"
-                      onblur={handleAudioClipTemplateChange}
-                      disabled={epubLoading}
-                    />
-                    <p class="setting-description">
-                      {$t(
-                        'Placeholders: <href>, <begin>, <end> required; <label>, <rate> optional.'
-                      )}
-                    </p>
-                  </div>
-
-                  <div class="setting-group">
-                    <label for="photo-region-template" class="setting-label-text">
-                      {$t('Photo Region Directive')}
-                    </label>
-                    <!-- i18n-ignore: literal directive template, not prose -->
-                    <input
-                      id="photo-region-template"
-                      type="text"
-                      class="template-input"
-                      value={epubSettings?.photo_region_template || ''}
-                      placeholder=":region:{'{'}at=&quot;&lt;at&gt;&quot; of=&lt;of&gt; as=&quot;&lt;as&gt;&quot; row=&quot;&lt;row&gt;&quot;{'}'}"
-                      onblur={handlePhotoRegionTemplateChange}
-                      disabled={epubLoading}
-                    />
-                    <p class="setting-description">
-                      {$t('Placeholders: <at> required; <of>, <as>, <row>, <badge> optional.')}
-                    </p>
-                  </div>
-
-                  <div class="setting-group">
-                    <label for="image-template" class="setting-label-text">
-                      {$t('Image Insertion')}
-                    </label>
-                    <!-- i18n-ignore: literal template, not prose -->
-                    <input
-                      id="image-template"
-                      type="text"
-                      class="template-input"
-                      value={epubSettings?.image_template || ''}
-                      placeholder="![&lt;alt&gt;](&lt;href&gt;)"
-                      onblur={e => handleMediaTemplateChange('image_template', e)}
-                      disabled={epubLoading}
-                    />
-                    <p class="setting-description">
-                      {$t('Placeholders: <href>, <alt>.')}
-                    </p>
-                  </div>
-
-                  <div class="setting-group">
-                    <label for="video-template" class="setting-label-text">
-                      {$t('Video Insertion')}
-                    </label>
-                    <!-- i18n-ignore: literal template, not prose -->
-                    <input
-                      id="video-template"
-                      type="text"
-                      class="template-input"
-                      value={epubSettings?.video_template || ''}
-                      placeholder="&lt;video src=&quot;&lt;href&gt;&quot; controls=&quot;controls&quot;&gt;&lt;/video&gt;"
-                      onblur={e => handleMediaTemplateChange('video_template', e)}
-                      disabled={epubLoading}
-                    />
-                    <p class="setting-description">
-                      {$t('Placeholder: <href>.')}
-                    </p>
-                  </div>
-
-                  <!-- The transform pipeline (text + DOM). Wrapped as one unit;
-                       also the clip target for the manual's EPUB-settings shot. -->
-                  <div class="transform-pipeline-settings">
-                    <div class="setting-group">
-                      <label for="text-transform" class="setting-label-text">
-                        {$t('Text Transform')}
-                      </label>
-                      <select
-                        id="text-transform"
-                        class="setting-select"
-                        value={epubSettings?.text_transform ?? ''}
-                        onchange={e =>
-                          persistTextTransform((e.currentTarget as HTMLSelectElement).value)}
-                        disabled={epubLoading}
-                      >
-                        {#each textTransformGroups as grp (grp.group)}
-                          <optgroup label={grp.group}>
-                            {#each grp.options as opt (opt.path)}
-                              <option value={opt.path}>{opt.fileName}</option>
-                            {/each}
-                          </optgroup>
-                        {/each}
-                      </select>
-                      <p class="setting-description">
-                        {$t('The plain text → XHTML step.')}
-                      </p>
-                    </div>
-
-                    <div class="setting-group">
-                      <span class="setting-label-text">{$t('DOM Transforms')}</span>
-                      <p class="setting-description">
-                        {$t('Run top-to-bottom over the generated DOM.')}
-                      </p>
-
-                      {#if (epubSettings?.dom_transforms?.length ?? 0) === 0}
-                        <p class="setting-description">{$t('No DOM transforms configured.')}</p>
-                      {:else}
-                        <ul class="dom-transform-list">
-                          {#each epubSettings?.dom_transforms ?? [] as path, i (path)}
-                            {@const label = transformLabel(path)}
-                            <li class="dom-transform-row">
-                              <span class="dom-transform-name" title={path}>
-                                {label.name}
-                                {#if label.group}
-                                  <span class="dom-transform-group">({label.group})</span>
-                                {/if}
-                              </span>
-                              <div class="dom-transform-actions">
-                                <button
-                                  type="button"
-                                  class="btn btn-icon"
-                                  onclick={() => moveDomTransform(i, -1)}
-                                  disabled={i === 0 || epubLoading}
-                                  aria-label={$t('Move up')}
-                                  title={$t('Move up')}
-                                >
-                                  <CaretUp size={14} aria-hidden="true" />
-                                </button>
-                                <button
-                                  type="button"
-                                  class="btn btn-icon"
-                                  onclick={() => moveDomTransform(i, 1)}
-                                  disabled={i === (epubSettings?.dom_transforms.length ?? 0) - 1 ||
-                                    epubLoading}
-                                  aria-label={$t('Move down')}
-                                  title={$t('Move down')}
-                                >
-                                  <CaretDown size={14} aria-hidden="true" />
-                                </button>
-                                <button
-                                  type="button"
-                                  class="btn btn-icon"
-                                  onclick={() => removeDomTransform(i)}
-                                  disabled={epubLoading}
-                                  aria-label={$t('Remove')}
-                                  title={$t('Remove')}
-                                >
-                                  <X size={14} aria-hidden="true" />
-                                </button>
-                              </div>
-                            </li>
-                          {/each}
-                        </ul>
-                      {/if}
-
-                      {#if addableTransformGroups.length > 0}
-                        <select
-                          class="setting-select"
-                          aria-label={$t('Add a DOM transform')}
-                          disabled={epubLoading}
-                          onchange={e => {
-                            const sel = e.currentTarget as HTMLSelectElement;
-                            const value = sel.value;
-                            sel.value = '';
-                            if (value) addDomTransform(value);
-                          }}
-                        >
-                          <option value="" disabled selected>{$t('Add a DOM transform…')}</option>
-                          {#each addableTransformGroups as grp (grp.group)}
-                            <optgroup label={grp.group}>
-                              {#each grp.options as opt (opt.path)}
-                                <option value={opt.path}>{opt.fileName}</option>
-                              {/each}
-                            </optgroup>
-                          {/each}
-                        </select>
-                      {/if}
-                    </div>
-                  </div>
-                </SettingsSection>
-              {/if}
-
-              <!-- Preview -->
-              {#if canEditEPUBSettings && isAdvancedMode}
-                <SettingsSection
-                  title={$t('Preview')}
-                  summary={previewSummary}
-                  name="project-settings"
-                  persistKey="settings-project-preview"
-                >
-                  <div class="setting-group">
-                    <span class="setting-label-text">{$t('Auto Update')}</span>
-                    <p class="setting-description">
-                      {$t('Re-render the preview live as you edit.')}
-                    </p>
-                    {#each PREVIEW_TYPES as pt (pt.key)}
-                      <label class="setting-label">
-                        <input
-                          type="checkbox"
-                          checked={epubSettings?.preview?.autoUpdate?.[pt.key] ??
-                            DEFAULT_PREVIEW.autoUpdate[pt.key]}
-                          onchange={e =>
-                            setPreviewFlag(
-                              'autoUpdate',
-                              pt.key,
-                              (e.currentTarget as HTMLInputElement).checked
-                            )}
-                          disabled={epubLoading}
-                        />
-                        <span class="setting-text">{previewTypeLabel(pt.key)}</span>
-                      </label>
-                    {/each}
-                  </div>
-
-                  <div class="setting-group">
-                    <span class="setting-label-text">{$t('Include preview head')}</span>
-                    <p class="setting-description">
-                      {$t(
-                        'Inject preview/head.xml into the preview, per preview type. Never exported.'
-                      )}
-                    </p>
-                    {#each PREVIEW_TYPES as pt (pt.key)}
-                      <label class="setting-label">
-                        <input
-                          type="checkbox"
-                          checked={epubSettings?.preview?.includeHead?.[pt.key] ??
-                            DEFAULT_PREVIEW.includeHead[pt.key]}
-                          onchange={e =>
-                            setPreviewFlag(
-                              'includeHead',
-                              pt.key,
-                              (e.currentTarget as HTMLInputElement).checked
-                            )}
-                          disabled={epubLoading}
-                        />
-                        <span class="setting-text">{previewTypeLabel(pt.key)}</span>
-                      </label>
-                    {/each}
-                  </div>
-                </SettingsSection>
-              {/if}
-
-              <!-- Translation editions -->
-              {#if canEditEPUBSettings && !readOnly}
-                <TranslationsPanel
-                  {workspaceId}
-                  {workspace}
-                  reviewMode={epubSettings?.track_changes ?? false}
-                  onAction={onTranslationAction}
-                />
-              {/if}
-
-              <!-- Track changes (review mode) -->
-              {#if canEditEPUBSettings && isAdvancedMode}
-                <TrackChangesPanel
-                  {workspaceId}
-                  {workspace}
-                  {settingsService}
-                  enabled={epubSettings?.track_changes ?? false}
-                  onChanged={onSettingsChanged}
-                  onApply={onApplyPatchset}
-                />
-              {/if}
-
-              {#if isAdvancedMode}
-                <!-- Extension Management -->
-                <SettingsSection
-                  title={$t('Extensions')}
-                  summary={extensionsSummary}
-                  name="project-settings"
-                  persistKey="settings-project-extensions"
-                >
-                  <!-- Import Extension -->
-                  <div class="extension-import" class:disabled={!isAdvancedMode}>
-                    <label for="extension-file">
-                      {$t('Import JavaScript Extension')}: {$t(
-                        "Copy the library's license text into the License field below."
-                      )}
-                    </label>
-                    <input
-                      id="extension-file"
-                      type="file"
-                      accept=".js"
-                      onchange={handleExtensionImport}
-                      disabled={extensionsLoading}
-                    />
-                    {#if !isAdvancedMode}
-                      <p class="advanced-mode-note">
-                        {$t('Advanced Mode required for extension management')}
-                      </p>
-                    {/if}
-                  </div>
-
-                  <!-- Extensions List -->
-                  {#if extensionsLoading}
-                    <p>{$t('Loading extensions...')}</p>
-                  {:else if extensions.length === 0}
-                    <p>{$t('No extensions installed.')}</p>
-                  {:else}
-                    <ul class="extensions-list">
-                      {#each extensions as extension}
-                        {#if workspaceId}
-                          <ExtensionItem
-                            {extension}
-                            {workspaceId}
-                            {isAdvancedMode}
-                            {extensionManager}
-                            onRemove={() => handleExtensionRemoval(extension.name)}
-                          />
-                        {/if}
-                      {/each}
-                    </ul>
-                  {/if}
-                </SettingsSection>
-
-                <!-- Generator Management -->
+          {#if extensionsLoading}
+            <p>{$t('Loading extensions...')}</p>
+          {:else if extensions.length === 0}
+            <p>{$t('No extensions installed.')}</p>
+          {:else}
+            <ul class="extensions-list">
+              {#each extensions as extension (extension.name)}
                 {#if workspaceId}
-                  <GeneratorSettings
+                  <ExtensionItem
+                    {extension}
                     {workspaceId}
                     {isAdvancedMode}
-                    group="project-settings"
-                    onChanged={() => onSettingsChanged?.()}
+                    {extensionManager}
+                    onRemove={() => handleExtensionRemoval(extension.name)}
                   />
                 {/if}
+              {/each}
+            </ul>
+          {/if}
+
+          <details
+            class="advanced-disclosure"
+            open={formatAdvancedOpen.current}
+            ontoggle={e =>
+              (formatAdvancedOpen.current = (e.currentTarget as HTMLDetailsElement).open)}
+          >
+            <summary class="advanced-summary">
+              <span class="advanced-caret" aria-hidden="true"><CaretRight size={12} /></span>
+              {$t('Advanced')}
+            </summary>
+
+            <!-- The transform pipeline (text + DOM). Wrapped as one unit;
+                 also the clip target for the manual's EPUB-settings shot. -->
+            <div class="transform-pipeline-settings">
+              {#if textFormatExtensions.length > 0}
+                <h3 class="sub-heading" id="text-transform-heading">{$t('Text transform')}</h3>
+                {@render textTransformSelect(false)}
               {/if}
-            {:else if loading}
-              <p class="loading-message">{$t('Loading settings…')}</p>
-            {:else}
-              <p class="no-workspace-message">{$t('Open a project to configure its settings.')}</p>
+
+              <h3 class="sub-heading">{$t('Page transforms')}</h3>
+              <div class="setting-group">
+                <p class="setting-description setting-description-flush">
+                  {$t('Run top-to-bottom over the generated DOM.')}
+                </p>
+
+                {#if (epubSettings?.dom_transforms?.length ?? 0) === 0}
+                  <p class="setting-description setting-description-flush">
+                    {$t('No DOM transforms configured.')}
+                  </p>
+                {:else}
+                  <ul class="dom-transform-list">
+                    {#each epubSettings?.dom_transforms ?? [] as path, i (path)}
+                      {@const label = transformLabel(path)}
+                      <li class="dom-transform-row">
+                        <span class="dom-transform-name" title={path}>
+                          {label.name}
+                          {#if label.group}
+                            <span class="dom-transform-group">({label.group})</span>
+                          {/if}
+                        </span>
+                        <div class="dom-transform-actions">
+                          <button
+                            type="button"
+                            class="btn btn-icon"
+                            onclick={() => moveDomTransform(i, -1)}
+                            disabled={i === 0 || epubLoading}
+                            aria-label={$t('Move up')}
+                            title={$t('Move up')}
+                          >
+                            <CaretUp size={14} aria-hidden="true" />
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-icon"
+                            onclick={() => moveDomTransform(i, 1)}
+                            disabled={i === (epubSettings?.dom_transforms.length ?? 0) - 1 ||
+                              epubLoading}
+                            aria-label={$t('Move down')}
+                            title={$t('Move down')}
+                          >
+                            <CaretDown size={14} aria-hidden="true" />
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-icon"
+                            onclick={() => removeDomTransform(i)}
+                            disabled={epubLoading}
+                            aria-label={$t('Remove')}
+                            title={$t('Remove')}
+                          >
+                            <X size={14} aria-hidden="true" />
+                          </button>
+                        </div>
+                      </li>
+                    {/each}
+                  </ul>
+                {/if}
+
+                {#if addableTransformGroups.length > 0}
+                  <select
+                    class="setting-select"
+                    aria-label={$t('Add a DOM transform')}
+                    disabled={epubLoading}
+                    onchange={e => {
+                      const sel = e.currentTarget as HTMLSelectElement;
+                      const value = sel.value;
+                      sel.value = '';
+                      if (value) addDomTransform(value);
+                    }}
+                  >
+                    <option value="" disabled selected>{$t('Add a DOM transform…')}</option>
+                    {#each addableTransformGroups as grp (grp.group)}
+                      <optgroup label={grp.group}>
+                        {#each grp.options as opt (opt.path)}
+                          <option value={opt.path}>{opt.fileName}</option>
+                        {/each}
+                      </optgroup>
+                    {/each}
+                  </select>
+                {/if}
+
+                {#if contentTransforms.length > 0}
+                  <button
+                    bind:this={moreTransformsButton}
+                    type="button"
+                    class="btn btn-link more-link"
+                    onclick={() => openCatalog('transforms')}
+                  >
+                    {$t('More transforms…')}
+                  </button>
+                {/if}
+              </div>
+            </div>
+
+            <h3 class="sub-heading">{$t('Insertion templates')}</h3>
+            <div class="setting-group">
+              <label for="audio-clip-template" class="setting-label-text">
+                {$t('Audio Clip Directive')}
+              </label>
+              <!-- i18n-ignore: literal directive template, not prose -->
+              <input
+                id="audio-clip-template"
+                type="text"
+                class="template-input"
+                value={epubSettings?.audio_clip_template || ''}
+                placeholder=":clip[&lt;label&gt;]{'{'}src=&lt;href&gt; begin=&lt;begin&gt; end=&lt;end&gt;{'}'}"
+                onblur={handleAudioClipTemplateChange}
+                disabled={epubLoading}
+              />
+              <p class="setting-description">
+                {$t('Placeholders: <href>, <begin>, <end> required; <label>, <rate> optional.')}
+              </p>
+            </div>
+
+            <div class="setting-group">
+              <label for="photo-region-template" class="setting-label-text">
+                {$t('Photo Region Directive')}
+              </label>
+              <!-- i18n-ignore: literal directive template, not prose -->
+              <input
+                id="photo-region-template"
+                type="text"
+                class="template-input"
+                value={epubSettings?.photo_region_template || ''}
+                placeholder=":region:{'{'}at=&quot;&lt;at&gt;&quot; of=&lt;of&gt; as=&quot;&lt;as&gt;&quot; row=&quot;&lt;row&gt;&quot;{'}'}"
+                onblur={handlePhotoRegionTemplateChange}
+                disabled={epubLoading}
+              />
+              <p class="setting-description">
+                {$t('Placeholders: <at> required; <of>, <as>, <row>, <badge> optional.')}
+              </p>
+            </div>
+
+            <div class="setting-group">
+              <label for="image-template" class="setting-label-text">
+                {$t('Image Insertion')}
+              </label>
+              <!-- i18n-ignore: literal template, not prose -->
+              <input
+                id="image-template"
+                type="text"
+                class="template-input"
+                value={epubSettings?.image_template || ''}
+                placeholder="![&lt;alt&gt;](&lt;href&gt;)"
+                onblur={e => handleMediaTemplateChange('image_template', e)}
+                disabled={epubLoading}
+              />
+              <p class="setting-description">
+                {$t('Placeholders: <href>, <alt>.')}
+              </p>
+            </div>
+
+            <div class="setting-group">
+              <label for="video-template" class="setting-label-text">
+                {$t('Video Insertion')}
+              </label>
+              <!-- i18n-ignore: literal template, not prose -->
+              <input
+                id="video-template"
+                type="text"
+                class="template-input"
+                value={epubSettings?.video_template || ''}
+                placeholder="&lt;video src=&quot;&lt;href&gt;&quot; controls=&quot;controls&quot;&gt;&lt;/video&gt;"
+                onblur={e => handleMediaTemplateChange('video_template', e)}
+                disabled={epubLoading}
+              />
+              <p class="setting-description">
+                {$t('Placeholder: <href>.')}
+              </p>
+            </div>
+
+            <h3 class="sub-heading">{$t('Custom metadata')}</h3>
+            <div class="setting-group">
+              <CustomMetaCatalogSettings />
+            </div>
+
+            {#if workspaceId}
+              <h3 class="sub-heading">{$t('Generators')}</h3>
+              <div class="setting-group">
+                <GeneratorSettings
+                  framed={false}
+                  {workspaceId}
+                  {isAdvancedMode}
+                  onChanged={() => onSettingsChanged?.()}
+                />
+              </div>
+            {/if}
+          </details>
+        {:else if activeSection === 'packaging'}
+          <div class="setting-group">
+            <label class="setting-label">
+              <input
+                type="checkbox"
+                checked={epubSettings?.include_seed_html_in_package ?? false}
+                onchange={e => toggleSeedHtml((e.currentTarget as HTMLInputElement).checked)}
+                disabled={epubLoading || seedHtmlBusy}
+              />
+              <span class="setting-text">{$t('Add SEED.html to package')}</span>
+            </label>
+            <p class="setting-description">
+              {$t('Embed the editor in the EPUB so the book can be reopened and edited.')}
+            </p>
+            {#if (epubSettings?.include_seed_html_in_package ?? false) && !seedHtmlPresent}
+              <div class="seed-html-load">
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  onclick={() => seedHtmlInput?.click()}
+                  disabled={seedHtmlBusy}
+                >
+                  {seedHtmlBusy ? $t('Loading…') : $t('Load SEED.html…')}
+                </button>
+                <span class="setting-description">
+                  {$t('Choose the SEED.html file to embed.')}
+                </span>
+                <input
+                  bind:this={seedHtmlInput}
+                  type="file"
+                  accept=".html,text/html"
+                  style="display: none"
+                  onchange={onSeedHtmlFile}
+                />
+              </div>
             {/if}
           </div>
-        </div>
-      </Pane>
-    </PaneGroup>
+
+          <div class="setting-group">
+            <label for="filename-template" class="setting-label-text">
+              {$t('Packaged Filename')}
+            </label>
+            <!-- i18n-ignore: literal token/format pattern, not prose -->
+            <input
+              id="filename-template"
+              type="text"
+              class="template-input"
+              value={epubSettings?.filename_template || ''}
+              placeholder="&lt;title&gt;-&lt;author&gt;-&lt;date&gt;"
+              onblur={handleFilenameTemplateChange}
+              disabled={epubLoading}
+            />
+            <p class="setting-description">
+              {$t('Placeholders: <title>, <author>, <date>.')}
+            </p>
+          </div>
+        {:else if activeSection === 'preview'}
+          <div class="setting-group">
+            <span class="setting-label-text">{$t('Auto Update')}</span>
+            <p class="setting-description setting-description-flush">
+              {$t('Re-render the preview live as you edit.')}
+            </p>
+            {#each PREVIEW_TYPES as pt (pt.key)}
+              <label class="setting-label">
+                <input
+                  type="checkbox"
+                  checked={epubSettings?.preview?.autoUpdate?.[pt.key] ??
+                    DEFAULT_PREVIEW.autoUpdate[pt.key]}
+                  onchange={e =>
+                    setPreviewFlag(
+                      'autoUpdate',
+                      pt.key,
+                      (e.currentTarget as HTMLInputElement).checked
+                    )}
+                  disabled={epubLoading}
+                />
+                <span class="setting-text">{previewTypeLabel(pt.key)}</span>
+              </label>
+            {/each}
+          </div>
+
+          <div class="setting-group">
+            <span class="setting-label-text">{$t('Include preview head')}</span>
+            <p class="setting-description setting-description-flush">
+              {$t('Inject preview/head.xml into the preview, per preview type. Never exported.')}
+            </p>
+            {#each PREVIEW_TYPES as pt (pt.key)}
+              <label class="setting-label">
+                <input
+                  type="checkbox"
+                  checked={epubSettings?.preview?.includeHead?.[pt.key] ??
+                    DEFAULT_PREVIEW.includeHead[pt.key]}
+                  onchange={e =>
+                    setPreviewFlag(
+                      'includeHead',
+                      pt.key,
+                      (e.currentTarget as HTMLInputElement).checked
+                    )}
+                  disabled={epubLoading}
+                />
+                <span class="setting-text">{previewTypeLabel(pt.key)}</span>
+              </label>
+            {/each}
+          </div>
+        {:else if activeSection === 'pdf'}
+          <!-- Print settings: minimal page geometry for the PDF export / print
+               preview. HTTP-only (gated on the Paged.js pipeline's availability)
+               and shown to all users (not just advanced). -->
+          <div class="setting-group">
+            <label for="print-page-size" class="setting-label-text">
+              {$t('Page size')}
+            </label>
+            <select
+              id="print-page-size"
+              class="setting-select"
+              value={customSizeActive
+                ? 'custom'
+                : (epubSettings?.print?.page_size ?? DEFAULT_PRINT.page_size)}
+              onchange={e => handlePageSizeChange((e.currentTarget as HTMLSelectElement).value)}
+              disabled={epubLoading}
+            >
+              {#each PAGE_SIZE_OPTIONS as opt (opt.value)}
+                <option value={opt.value}>{opt.label}</option>
+              {/each}
+              {#if isAdvancedMode || customSizeActive}
+                <option value="custom">{$t('Custom…')}</option>
+              {/if}
+            </select>
+            {#if customSizeActive}
+              <!-- i18n-ignore: literal CSS value, not prose -->
+              <input
+                id="print-page-size-custom"
+                type="text"
+                class="template-input"
+                aria-label={$t('Custom page size')}
+                value={epubSettings?.print?.custom_size ?? ''}
+                placeholder="140mm 216mm"
+                onchange={e =>
+                  updatePrint({
+                    custom_size: (e.currentTarget as HTMLInputElement).value.trim() || undefined,
+                  })}
+                disabled={epubLoading}
+              />
+              <p class="setting-description">
+                <!-- i18n-ignore: literal CSS examples, not prose -->
+                {$t('CSS @page size, e.g. "140mm 216mm" or "A4 landscape".')}
+              </p>
+            {/if}
+          </div>
+
+          <div class="setting-group">
+            <label for="print-margin" class="setting-label-text">
+              {$t('Margin')}
+            </label>
+            <select
+              id="print-margin"
+              class="setting-select"
+              value={customMarginActive
+                ? 'custom'
+                : (epubSettings?.print?.margin ?? DEFAULT_PRINT.margin)}
+              onchange={e => handleMarginChange((e.currentTarget as HTMLSelectElement).value)}
+              disabled={epubLoading}
+            >
+              <option value="narrow">{$t('Narrow')}</option>
+              <option value="normal">{$t('Normal')}</option>
+              <option value="wide">{$t('Wide')}</option>
+              {#if isAdvancedMode || customMarginActive}
+                <option value="custom">{$t('Custom…')}</option>
+              {/if}
+            </select>
+            {#if customMarginActive}
+              <!-- i18n-ignore: literal CSS value, not prose -->
+              <input
+                id="print-margin-custom"
+                type="text"
+                class="template-input"
+                aria-label={$t('Custom margin')}
+                value={epubSettings?.print?.custom_margin ?? ''}
+                placeholder="20mm 15mm 25mm 15mm"
+                onchange={e =>
+                  updatePrint({
+                    custom_margin: (e.currentTarget as HTMLInputElement).value.trim() || undefined,
+                  })}
+                disabled={epubLoading}
+              />
+              <p class="setting-description">
+                <!-- i18n-ignore: literal CSS example, not prose -->
+                {$t('CSS margin, e.g. "20mm 15mm 25mm 15mm".')}
+              </p>
+            {/if}
+          </div>
+
+          <div class="setting-group">
+            <label class="setting-label">
+              <input
+                type="checkbox"
+                checked={epubSettings?.print?.page_numbers ?? DEFAULT_PRINT.page_numbers}
+                onchange={e =>
+                  updatePrint({ page_numbers: (e.currentTarget as HTMLInputElement).checked })}
+                disabled={epubLoading}
+              />
+              <span class="setting-text">{$t('Include page numbers')}</span>
+            </label>
+          </div>
+
+          <div class="setting-group">
+            <label class="setting-label">
+              <input
+                type="checkbox"
+                checked={epubSettings?.print?.running_header ?? DEFAULT_PRINT.running_header}
+                onchange={e =>
+                  updatePrint({ running_header: (e.currentTarget as HTMLInputElement).checked })}
+                disabled={epubLoading}
+              />
+              <span class="setting-text">{$t('Running header')}</span>
+            </label>
+            <p class="setting-description">
+              {$t('The chapter title at the top of each page.')}
+            </p>
+          </div>
+
+          <div class="setting-group">
+            <label class="setting-label">
+              <input
+                type="checkbox"
+                checked={epubSettings?.print?.cover_page ?? DEFAULT_PRINT.cover_page}
+                onchange={e =>
+                  updatePrint({ cover_page: (e.currentTarget as HTMLInputElement).checked })}
+                disabled={epubLoading}
+              />
+              <span class="setting-text">{$t('Include cover page')}</span>
+            </label>
+          </div>
+        {:else if activeSection === 'translations'}
+          <TranslationsPanel
+            framed={false}
+            {workspaceId}
+            {workspace}
+            reviewMode={epubSettings?.track_changes ?? false}
+            onAction={onTranslationAction}
+          />
+        {:else if activeSection === 'track-changes'}
+          <TrackChangesPanel
+            framed={false}
+            {workspaceId}
+            {workspace}
+            {settingsService}
+            enabled={epubSettings?.track_changes ?? false}
+            onChanged={onSettingsChanged}
+            onApply={onApplyPatchset}
+          />
+        {/if}
+      {/if}
+    </div>
   </div>
 </div>
 
 <style>
-  .settings-view {
-    height: 100%;
-    width: 100%;
+  /* --- The sheet ------------------------------------------------------------- */
+  .settings-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal);
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgb(0 0 0 / 0.28);
   }
 
-  .settings-panes-wrap {
-    flex: 1;
-    min-height: 0;
-  }
-
-  .settings-pane {
-    height: 100%;
+  .settings-sheet {
+    position: relative;
     display: flex;
-    flex-direction: column;
+    inline-size: min(840px, 100vw - 32px);
+    block-size: min(660px, 100dvh - 32px);
     overflow: hidden;
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-lg);
   }
 
-  .settings-pane-body {
-    flex: 1;
+  .settings-sheet:focus {
+    outline: none;
+  }
+
+  .sheet-nav {
+    flex-shrink: 0;
+    inline-size: 232px;
+    padding-block: var(--space-5);
     overflow-y: auto;
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+    background: var(--color-bg-tertiary);
+    border-inline-end: 1px solid var(--color-border-default);
   }
 
-  .pane-title {
-    margin: 0;
+  .sheet-title {
+    margin: 0 0 var(--space-4);
+    padding-inline: 20px;
     font-size: var(--text-base);
-    font-weight: 600;
+    font-weight: var(--font-semibold);
     color: var(--color-text-primary);
   }
 
-  .no-workspace-message,
-  .loading-message {
-    color: var(--color-text-secondary);
-    font-style: italic;
+  .nav-group + .nav-group {
+    margin-block-start: var(--space-5);
   }
 
+  .nav-group-label {
+    display: block;
+    padding-inline: 20px;
+    margin-block-end: var(--space-1);
+    font-size: var(--text-xs);
+    font-weight: var(--font-bold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+
+  .nav-note {
+    margin: 0;
+    padding: 7px 20px;
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: baseline;
+    inline-size: 100%;
+    padding: 7px 20px;
+    border: none;
+    border-inline-start: 3px solid transparent;
+    background: transparent;
+    color: var(--color-text-primary);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .nav-item:hover {
+    background: var(--color-bg-secondary);
+  }
+
+  .nav-item.active {
+    background: var(--color-bg-primary);
+    font-weight: var(--font-bold);
+    border-inline-start-color: var(--color-interactive-primary);
+  }
+
+  .nav-item:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--color-focus-ring);
+  }
+
+  .nav-item-label {
+    flex-shrink: 0;
+  }
+
+  .nav-item-summary {
+    flex: 1;
+    min-inline-size: 0;
+    margin-inline-start: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-sm);
+    font-weight: var(--font-normal);
+    color: var(--color-text-secondary);
+  }
+
+  .sheet-close {
+    position: absolute;
+    inset-inline-end: 20px;
+    inset-block-start: 20px;
+    z-index: 1;
+  }
+
+  .sheet-body {
+    flex: 1;
+    min-inline-size: 0;
+    min-block-size: 0;
+    padding: var(--space-6) var(--space-8);
+    overflow-y: auto;
+  }
+
+  .sheet-back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin-block-end: var(--space-3);
+    font-size: var(--text-sm);
+  }
+
+  .section-title {
+    margin: 0 0 var(--space-1);
+    padding-inline-end: var(--space-8);
+    font-size: var(--text-2xl);
+    font-weight: var(--font-bold);
+    color: var(--color-text-primary);
+  }
+
+  .section-title + .setting-group,
+  .section-title + .sub-heading,
+  .section-title + .catalog-item,
+  .section-title + .ct-group-toggle {
+    margin-block-start: var(--space-4);
+  }
+
+  .sub-heading {
+    margin: var(--space-5) 0 var(--space-2);
+    font-size: var(--text-base);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
+  }
+
+  .sub-heading-count {
+    font-weight: var(--font-normal);
+    color: var(--color-text-secondary);
+  }
+
+  .more-link {
+    display: inline-block;
+    margin-block-start: var(--space-2);
+    font-size: var(--text-sm);
+  }
+
+  /* --- Segmented text-format chooser ------------------------------------------ */
+  .seg {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+
+  .seg-option {
+    padding: 7px 12px;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font: inherit;
+    font-size: var(--text-sm);
+    cursor: pointer;
+  }
+
+  .seg-option:hover:not(:disabled) {
+    background: var(--color-bg-secondary);
+  }
+
+  .seg-option[aria-checked='true'] {
+    background: var(--color-text-primary);
+    color: var(--color-bg-primary);
+    border-color: var(--color-text-primary);
+  }
+
+  .seg-option:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-focus-ring);
+  }
+
+  .seg-option:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* --- Advanced disclosure (Format) ------------------------------------------- */
+  .advanced-disclosure {
+    margin-block-start: var(--space-6);
+    border-block-start: 1px solid var(--color-border-default);
+    padding-block-start: var(--space-3);
+  }
+
+  .advanced-summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    list-style: none;
+    cursor: pointer;
+    font-size: var(--text-xs);
+    font-weight: var(--font-bold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+
+  .advanced-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .advanced-summary:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  .advanced-caret {
+    display: inline-flex;
+    transition: transform 0.15s ease;
+  }
+
+  .advanced-disclosure[open] .advanced-caret {
+    transform: rotate(90deg);
+  }
+
+  /* --- Narrow screens: full-screen sheet, section list as a scrolling row ----- */
+  @media (max-width: 720px) {
+    .settings-backdrop {
+      padding: 0;
+    }
+
+    .settings-sheet {
+      flex-direction: column;
+      inline-size: 100vw;
+      block-size: 100dvh;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    .sheet-nav {
+      display: flex;
+      align-items: center;
+      inline-size: auto;
+      flex-shrink: 0;
+      padding-block: var(--space-2);
+      /* The close button sits beside the row, not over its last item. */
+      margin-inline-end: 56px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      border-inline-end: none;
+      border-block-end: 1px solid var(--color-border-default);
+    }
+
+    .sheet-title {
+      margin: 0;
+      padding-inline: 16px 8px;
+      white-space: nowrap;
+    }
+
+    .sheet-nav nav {
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-group {
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-group + .nav-group {
+      margin-block-start: 0;
+    }
+
+    .nav-group-label {
+      display: none;
+    }
+
+    .nav-note {
+      white-space: nowrap;
+      padding-inline: 8px;
+    }
+
+    .nav-item {
+      inline-size: auto;
+      padding: 7px 10px;
+      border-inline-start: none;
+      border-block-end: 3px solid transparent;
+      white-space: nowrap;
+    }
+
+    .nav-item.active {
+      border-block-end-color: var(--color-interactive-primary);
+    }
+
+    .nav-item-summary {
+      display: none;
+    }
+
+    .sheet-close {
+      inset-inline-end: 12px;
+      inset-block-start: 10px;
+    }
+
+    .sheet-body {
+      padding: var(--space-4) 16px;
+    }
+  }
+
+  /* --- Controls ------------------------------------------------------------- */
   .error-message {
     background: var(--color-error-bg);
     color: var(--color-error-text);
     padding: 0.75rem;
-    border-radius: 0.25rem;
+    border-radius: var(--radius-sm);
     border: 1px solid var(--color-border-error);
-    margin: 1rem;
+    margin-block-end: var(--space-4);
   }
 
   .setting-group {
-    margin-bottom: 1rem;
+    margin-block-end: 1rem;
   }
 
   .setting-label {
@@ -1739,7 +2284,7 @@
   }
 
   .setting-label input[type='checkbox'] {
-    margin-top: 0.125rem;
+    margin-block-start: 0.125rem;
     cursor: pointer;
   }
 
@@ -1749,10 +2294,19 @@
   }
 
   .setting-description {
-    margin: 0.5rem 0 0 1.75rem;
+    margin: 0.5rem 0 0;
+    margin-inline-start: 1.75rem;
     color: var(--color-text-secondary);
     font-size: 0.875rem;
     line-height: 1.4;
+  }
+
+  /* Descriptions under a heading or label rather than a checkbox sit flush. */
+  .setting-description-flush,
+  .setting-label-text + .setting-description,
+  .setting-select + .setting-description,
+  .template-input + .setting-description {
+    margin-inline-start: 0;
   }
 
   /* Manual "Load SEED.html…" fallback row (offline, where fetch is blocked). */
@@ -1761,7 +2315,8 @@
     align-items: center;
     flex-wrap: wrap;
     gap: var(--space-2);
-    margin: var(--space-2) 0 0 1.75rem;
+    margin: var(--space-2) 0 0;
+    margin-inline-start: 1.75rem;
   }
 
   .seed-html-load .setting-description {
@@ -1770,17 +2325,17 @@
 
   .setting-label-text {
     display: block;
-    margin-bottom: 0.5rem;
+    margin-block-end: 0.5rem;
     font-weight: 500;
     color: var(--color-text-primary);
   }
 
   .setting-select {
-    width: 100%;
-    max-width: 320px;
+    inline-size: 100%;
+    max-inline-size: 320px;
     padding: 0.5rem;
     border: 1px solid var(--color-border-default);
-    border-radius: 0.25rem;
+    border-radius: var(--radius-sm);
     background: var(--color-input-bg);
     color: var(--color-text-primary);
     font-size: 0.875rem;
@@ -1789,14 +2344,14 @@
   .setting-select:focus {
     outline: none;
     border-color: var(--color-focus);
-    box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.2);
+    box-shadow: 0 0 0 2px var(--color-focus-ring);
   }
 
   .template-input {
-    width: 100%;
+    inline-size: 100%;
     padding: 0.5rem;
     border: 1px solid var(--color-border-default);
-    border-radius: 0.25rem;
+    border-radius: var(--radius-sm);
     font-family: var(--font-mono, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace);
     font-size: 0.875rem;
     background: var(--color-input-bg);
@@ -1806,7 +2361,7 @@
   .template-input:focus {
     outline: none;
     border-color: var(--color-focus);
-    box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.2);
+    box-shadow: 0 0 0 2px var(--color-focus-ring);
   }
 
   .template-input:disabled {
@@ -1815,19 +2370,18 @@
     background: var(--color-surface-disabled);
   }
 
-  /* Available-extensions catalog: group subheadings (Text formats / Libraries) */
   /* Content-transform sub-group headers — mirrors the manifest table's collapsible
      group headings (ManifestTable .group-heading / .group-toggle). */
   .ct-group-toggle {
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    width: 100%;
+    inline-size: 100%;
     padding: 0.5rem 0.75rem;
     background: var(--color-bg-secondary);
     border: none;
-    border-top: 1px solid var(--color-border-default);
-    border-bottom: 1px solid var(--color-border-strong);
+    border-block-start: 1px solid var(--color-border-default);
+    border-block-end: 1px solid var(--color-border-strong);
     cursor: pointer;
     text-align: start;
     color: inherit;
@@ -1864,7 +2418,7 @@
     justify-content: space-between;
     gap: 0.75rem;
     padding: 0.5rem 0;
-    border-top: 1px solid var(--color-border-default);
+    border-block-start: 1px solid var(--color-border-default);
   }
 
   /* "Add to project" stays on one line beside the flexing description. */
@@ -1876,7 +2430,7 @@
   .catalog-item-info {
     display: flex;
     flex-direction: column;
-    min-width: 0;
+    min-inline-size: 0;
   }
 
   .catalog-item-name {
@@ -1899,7 +2453,7 @@
   /* DOM transform list (ordered pipeline editor) */
   .dom-transform-list {
     list-style: none;
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.5rem;
     padding: 0;
     display: flex;
     flex-direction: column;
@@ -1918,7 +2472,7 @@
 
   .dom-transform-name {
     flex: 1;
-    min-width: 0;
+    min-inline-size: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1938,41 +2492,27 @@
   }
 
   .extension-import {
-    margin-bottom: 1.5rem;
+    margin-block-end: 1rem;
   }
 
   .extension-import label {
     display: block;
-    margin-bottom: 0.5rem;
+    margin-block-end: 0.5rem;
     font-weight: 500;
     color: var(--color-text-primary);
   }
 
   .extension-import input[type='file'] {
-    width: 100%;
+    inline-size: 100%;
     padding: 0.5rem;
     border: 1px solid var(--color-border-default);
-    border-radius: 0.25rem;
+    border-radius: var(--radius-sm);
     cursor: pointer;
   }
 
   .extension-import input[type='file']:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-  }
-
-  .extension-import.disabled {
-    /* No opacity dimming — it drags the note text below AA contrast in dark mode.
-       The italic muted note + pointer-events convey the disabled state. */
-    pointer-events: none;
-  }
-
-  .advanced-mode-note {
-    font-size: var(--text-sm);
-    color: var(--color-text-tertiary);
-    font-style: italic;
-    margin-top: var(--space-2);
-    margin-bottom: 0;
   }
 
   .extensions-list {

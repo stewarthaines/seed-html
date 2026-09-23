@@ -14,6 +14,7 @@
     workspace,
     reviewMode = false,
     onAction,
+    framed = true,
   }: {
     workspaceId: string | null;
     workspace: WorkspaceState | null;
@@ -21,6 +22,9 @@
     reviewMode?: boolean;
     /** Owned by App: file mechanics, OPF update, full re-render. */
     onAction?: (action: TranslationAction, tag: string) => Promise<void>;
+    /** Wrap in a SettingsSection card with its own title; false renders the
+        controls only (the host supplies the heading). */
+    framed?: boolean;
   } = $props();
 
   const datalistId = 'translations-common-languages';
@@ -86,12 +90,7 @@
   });
 </script>
 
-<SettingsSection
-  title={$t('Translations')}
-  {summary}
-  name="project-settings"
-  persistKey="settings-project-translations"
->
+{#snippet body()}
   {#if reviewMode}
     <p class="setting-description">{$t('Unavailable while track changes is on.')}</p>
   {/if}
@@ -215,9 +214,29 @@
   {#if error}
     <p class="translation-error" role="alert">{error}</p>
   {/if}
-</SettingsSection>
+{/snippet}
+
+{#if framed}
+  <SettingsSection
+    title={$t('Translations')}
+    {summary}
+    name="project-settings"
+    persistKey="settings-project-translations"
+  >
+    {@render body()}
+  </SettingsSection>
+{:else}
+  <div class="panel-body">
+    {@render body()}
+  </div>
+{/if}
 
 <style>
+  /* Unframed: no SettingsSection card, so the panel supplies its own block spacing. */
+  .panel-body {
+    padding-block: var(--space-1) 0;
+  }
+
   .active-language {
     margin: 0;
     font-size: var(--text-sm);

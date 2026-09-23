@@ -166,10 +166,14 @@ async function scanAllViews(page, theme) {
   }
 
   if (workspaceReady) {
-    // Inside a book: the top bar's Settings and Share, then the Book tab's sections.
-    for (const name of ['Settings', 'Share']) {
-      if (await visit(name)) await scan(name);
+    // Inside a book: Settings (a sheet over the view; Escape closes it), Share,
+    // then the Book tab's sections.
+    if (await visit('Settings')) {
+      await scan('Settings');
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(300);
     }
+    if (await visit('Share')) await scan('Share');
     if (await visit('Book')) {
       for (const name of ['Contents', 'Navigation', 'Details', 'Files']) {
         if (await visit(name)) await scan(name);

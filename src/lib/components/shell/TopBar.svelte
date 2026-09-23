@@ -28,6 +28,7 @@
   let {
     title,
     currentView,
+    settingsOpen = false,
     readOnly = false,
     reviewMode = false,
     agentBridgeAvailable = false,
@@ -41,6 +42,8 @@
   }: {
     title: string | undefined;
     currentView: ViewType;
+    /** The Settings sheet is open over this view. */
+    settingsOpen?: boolean;
     /** The whole book is read-only (not a SEED EPUB): packaging and edits are off. */
     readOnly?: boolean;
     /** Track-changes review mode: structure and metadata are locked. */
@@ -163,8 +166,8 @@
       <button
         type="button"
         class="btn btn-secondary"
-        class:active={currentView === 'settings'}
-        aria-current={currentView === 'settings' ? 'page' : undefined}
+        class:active={settingsOpen}
+        aria-expanded={settingsOpen}
         onclick={() => onNavigate('settings')}
         data-testid="nav-settings"
       >

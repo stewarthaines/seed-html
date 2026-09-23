@@ -13,9 +13,11 @@
   import { layoutStore } from './stores/layout';
   import { t } from './i18n';
   import { CaretLeft } from 'phosphor-svelte';
+  import type { ViewType } from './navigation/types';
 
   let {
     hasWorkspace = false,
+    view: viewOverride,
     topBar,
     brandBar,
     writeSidebar,
@@ -23,6 +25,9 @@
     rightContent,
   }: {
     hasWorkspace?: boolean;
+    /** The view to lay out, when it differs from the store's (the Settings sheet
+        renders over the last content view). */
+    view?: ViewType;
     topBar?: Snippet;
     brandBar?: Snippet;
     writeSidebar?: Snippet;
@@ -31,7 +36,7 @@
   } = $props();
 
   const sidebar = $derived($layoutStore.sidebar);
-  const view = $derived(sidebar.activeSection);
+  const view = $derived(viewOverride ?? sidebar.activeSection);
 
   // Books and About stand outside any book: brand bar, no chapter column.
   const outsideBook = $derived(view === 'workspace' || view === 'about' || !hasWorkspace);
