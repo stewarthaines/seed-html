@@ -157,9 +157,10 @@
     }
   }
 
+  /* Phone: two covers across, a tighter gutter. */
   @media (max-width: 480px) {
     .books-grid {
-      grid-template-columns: 1fr;
+      gap: var(--space-6) var(--space-4);
     }
   }
 

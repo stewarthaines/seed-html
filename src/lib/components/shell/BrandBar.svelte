@@ -49,7 +49,8 @@
       onclick={() => onNavigate('about')}
       data-testid="nav-about"
     >
-      {$t('About SEED.html')}
+      <span class="text">{$t('About SEED.html')}</span>
+      <span class="phone-only">{$t('About')}</span>
     </button>
     <button
       type="button"
@@ -129,5 +130,18 @@
   .link:focus-visible {
     outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
     outline-offset: var(--focus-ring-offset);
+  }
+  .phone-only {
+    display: none;
+  }
+
+  @media (max-width: 720px) {
+    .text {
+      display: none;
+    }
+
+    .phone-only {
+      display: inline;
+    }
   }
 </style>

@@ -11,19 +11,11 @@
 <script lang="ts">
   import { t } from '../../i18n';
   import type { ViewType } from '../../navigation/types';
-  import { persisted, asEnum } from '../../state/persisted.svelte.js';
-  import { Package, Robot, Lock, ToggleRight } from 'phosphor-svelte';
+  import { BOOK_SECTIONS, lastBookSection, type BookSection } from '../../stores/book-section.js';
+  import { Package, Robot, Lock, ToggleRight, Gear } from 'phosphor-svelte';
   import BookMenu from '../books/BookMenu.svelte';
 
   type Tab = 'write' | 'book' | 'share';
-  type BookSection = 'cover' | 'chapters' | 'navigation' | 'metadata' | 'manifest';
-  const BOOK_SECTIONS: readonly BookSection[] = [
-    'cover',
-    'chapters',
-    'navigation',
-    'metadata',
-    'manifest',
-  ];
 
   let {
     title,
@@ -57,13 +49,6 @@
     onDuplicate: () => void;
     onDelete: () => void;
   } = $props();
-
-  // The Book tab remembers which of its sections was open last.
-  const lastBookSection = persisted<BookSection>(
-    'seedhtml_book_section',
-    'metadata',
-    asEnum(BOOK_SECTIONS)
-  );
 
   const activeTab = $derived.by((): Tab | null => {
     if (currentView === 'spine') return 'write';
@@ -170,8 +155,10 @@
         aria-expanded={settingsOpen}
         onclick={() => onNavigate('settings')}
         data-testid="nav-settings"
+        aria-label={$t('Settings')}
       >
-        {$t('Settings')}
+        <Gear size={18} aria-hidden="true" class="phone-only" />
+        <span class="text">{$t('Settings')}</span>
         {#if reviewMode}
           <span class="lock control" title={$t('Track changes is on — manage it in Settings')}>
             <ToggleRight size={14} weight="fill" aria-hidden="true" />
@@ -189,7 +176,7 @@
         data-testid="package-epub"
       >
         <Package size={18} aria-hidden="true" />
-        {$t('Package EPUB')}
+        <span class="text">{$t('Package EPUB')}</span>
       </button>
     </div>
   </div>
@@ -378,24 +365,40 @@
 
   /* Narrow screens (the phone layout is phase 5): the bar wraps onto two
      rows instead of pushing Package EPUB out of view. */
+  /* Desktop: the icons that stand in for text on the phone stay hidden. */
+  .trailing :global(.phone-only) {
+    display: none;
+  }
+
+  /* Phone: back, title and the two actions as icons; the tabs move to the
+     bottom bar (BottomTabs); the Book sections scroll as a row. */
   @media (max-width: 720px) {
     .bar-row {
-      flex-wrap: wrap;
-      block-size: auto;
-      min-block-size: var(--bar-height);
-      padding-block: var(--space-1);
-      row-gap: 0;
+      gap: var(--space-3);
+      padding-inline: var(--space-3);
     }
 
-    .tabs {
-      align-self: auto;
-      block-size: var(--touch-target-min);
+    .tabs,
+    .agent-toggle,
+    .trailing .text {
+      display: none;
     }
 
-    .trailing {
-      flex-basis: 100%;
-      justify-content: flex-end;
-      padding-block-end: var(--space-1);
+    .trailing :global(.phone-only) {
+      display: inline-block;
+    }
+
+    .trailing .btn {
+      padding-inline: var(--space-3);
+    }
+
+    .sections {
+      overflow-x: auto;
+      flex-wrap: nowrap;
+    }
+
+    .section {
+      flex-shrink: 0;
     }
   }
 </style>

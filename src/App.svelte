@@ -24,6 +24,11 @@
   import { navigationStore } from './lib/navigation';
   import type { ViewType } from './lib/navigation/types';
   import AboutDialog from './lib/components/shell/AboutDialog.svelte';
+  import BottomTabs, { type PhoneTab } from './lib/components/shell/BottomTabs.svelte';
+  import ChapterStrip from './lib/components/shell/ChapterStrip.svelte';
+  import { viewport } from './lib/stores/viewport.svelte.js';
+  import { persisted, asEnum } from './lib/state/persisted.svelte.js';
+  import { BOOK_SECTIONS, lastBookSection } from './lib/stores/book-section.js';
   import BooksView from './lib/navigation/views/BooksView.svelte';
   import CoverView from './lib/navigation/views/CoverView.svelte';
   import MetadataEditor from './lib/components/metadata/MetadataEditor.svelte';
@@ -202,6 +207,33 @@
     tick().then(() => {
       document.querySelector<HTMLElement>(`[data-testid="${opener}"]`)?.focus();
     });
+  }
+
+  // Phone: the editor and the preview are two tabs of the Write view.
+  const PHONE_PANES = ['editor', 'preview'] as const;
+  const phonePane = persisted<(typeof PHONE_PANES)[number]>(
+    'seedhtml_phone_pane',
+    'editor',
+    asEnum(PHONE_PANES)
+  );
+  const phoneTab = $derived.by((): PhoneTab | null => {
+    if (contentView === 'spine') return phonePane.current === 'preview' ? 'preview' : 'write';
+    if (contentView === 'publish') return 'share';
+    if (BOOK_SECTION_VIEWS.has(contentView)) return 'book';
+    return null;
+  });
+  const BOOK_SECTION_VIEWS: ReadonlySet<ViewType> = new Set(BOOK_SECTIONS);
+  function selectPhoneTab(tab: PhoneTab): void {
+    if (tab === 'write' || tab === 'preview') {
+      phonePane.current = tab === 'preview' ? 'preview' : 'editor';
+      if (contentView !== 'spine') navigationStore.navigateTo('spine');
+    } else if (tab === 'share') {
+      navigationStore.navigateTo('publish');
+    } else {
+      navigationStore.navigateTo(
+        BOOK_SECTION_VIEWS.has(contentView) ? contentView : lastBookSection.current
+      );
+    }
   }
 
   // The full package (with source) from the top bar or the Share page.
@@ -1917,7 +1949,12 @@
     <p>{$t('Initializing application...')}</p>
   </div>
 {:else}
-  <LayoutManager hasWorkspace={!!currentWorkspaceId} view={contentView}>
+  <LayoutManager
+    hasWorkspace={!!currentWorkspaceId}
+    view={contentView}
+    phone={viewport.phone}
+    phonePane={phonePane.current}
+  >
     {#snippet brandBar()}
       <BrandBar
         currentView={contentView}
@@ -1978,6 +2015,25 @@
           </div>
         {/if}
       </WriteSidebar>
+    {/snippet}
+
+    {#snippet chapterStrip()}
+      {#if currentWorkspaceState}
+        <ChapterStrip
+          workspace={currentWorkspaceState}
+          {spineService}
+          selectedItemId={selectedSpineItemId ?? null}
+          mode={phonePane.current === 'preview' ? 'preview' : 'write'}
+          readOnly={structureLocked}
+          onSelect={itemId =>
+            window.dispatchEvent(new CustomEvent('select-spine-item', { detail: { itemId } }))}
+          onAppend={appendSpineItem}
+        />
+      {/if}
+    {/snippet}
+
+    {#snippet bottomTabs()}
+      <BottomTabs active={phoneTab} onSelect={selectPhoneTab} />
     {/snippet}
 
     {#snippet leftContent()}

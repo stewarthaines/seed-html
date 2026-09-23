@@ -2908,4 +2908,13 @@
       animation: none;
     }
   }
+  /* Phone: the chapter strip moves between chapters and there is no second
+     pane to split or collapse into. */
+  @media (max-width: 720px) {
+    .chapter-nav,
+    .split-toggle,
+    .preview-collapse {
+      display: none;
+    }
+  }
 </style>

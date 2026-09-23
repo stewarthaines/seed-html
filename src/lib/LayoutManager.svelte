@@ -18,9 +18,13 @@
   let {
     hasWorkspace = false,
     view: viewOverride,
+    phone = false,
+    phonePane = 'editor',
     topBar,
     brandBar,
     writeSidebar,
+    chapterStrip,
+    bottomTabs,
     leftContent,
     rightContent,
   }: {
@@ -28,9 +32,15 @@
     /** The view to lay out, when it differs from the store's (the Settings sheet
         renders over the last content view). */
     view?: ViewType;
+    /** Phone layout: one pane, the chapter strip above it, the tab bar below. */
+    phone?: boolean;
+    /** Phone, Write view: which of the editor's two panes is showing. */
+    phonePane?: 'editor' | 'preview';
     topBar?: Snippet;
     brandBar?: Snippet;
     writeSidebar?: Snippet;
+    chapterStrip?: Snippet;
+    bottomTabs?: Snippet;
     leftContent?: Snippet;
     rightContent?: Snippet;
   } = $props();
@@ -41,8 +51,8 @@
   // Books stands outside any book: brand bar, no chapter column.
   const outsideBook = $derived(view === 'workspace' || !hasWorkspace);
 
-  // The chapter column exists only beside the editor.
-  const showWriteSidebar = $derived(view === 'spine' && hasWorkspace);
+  // The chapter column exists only beside the editor, and not on a phone.
+  const showWriteSidebar = $derived(view === 'spine' && hasWorkspace && !phone);
   const sidebarWidth = $derived(sidebar.isExpanded ? 'var(--sidebar-width)' : '48px');
 
   // Which views keep a right-hand pane.
@@ -75,7 +85,22 @@
     {/if}
 
     <main class="main-content">
-      {#if showPreviewPane && previewCollapsed}
+      {#if phone && !outsideBook}
+        <!-- Phone: one pane at a time. In Write, the tab bar swaps the editor
+             for the preview; the other views show their main pane alone. -->
+        <div class="phone-layout">
+          {#if view === 'spine'}
+            {@render chapterStrip?.()}
+          {/if}
+          <div class="single-pane-container">
+            {#if view === 'spine' && phonePane === 'preview'}
+              {@render rightContent?.()}
+            {:else}
+              {@render leftContent?.()}
+            {/if}
+          </div>
+        </div>
+      {:else if showPreviewPane && previewCollapsed}
         <!-- Writing mode: editor full width, preview folded into a rail. -->
         <div class="preview-collapsed-layout">
           <div class="pane-content">
@@ -116,6 +141,10 @@
       {/if}
     </main>
   </div>
+
+  {#if phone && !outsideBook}
+    {@render bottomTabs?.()}
+  {/if}
 </div>
 
 <style>
@@ -150,6 +179,18 @@
     overflow: auto;
     background: var(--color-bg-primary);
     height: 100%;
+  }
+
+  .phone-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-block-size: 0;
+  }
+
+  .phone-layout .single-pane-container {
+    flex: 1;
+    min-block-size: 0;
   }
 
   .single-pane-container {
