@@ -55,6 +55,10 @@ One plugin build, three surfaces. The host names the surface in the `init` messa
 4. `App.svelte` routes on the surface; `index.ts` records surface and identifiers.
 5. Tests for the derivations and the parsers; German for every new string; docs (`API.md`, plugin `AGENTS.md`, `README.md`, `STORYBOOK.md` test ids), changelog lines.
 
+## Open: the cost of reading feeds on every visit
+
+Every visit to Share lists every destination and reads every feed on every catalog-capable one, so the Send row can say which feeds hold this book; Published does the same for the picked destination. On a bucket with five catalogs that is five signed reads (each with a CORS preflight) per visit, and on Dropbox each listing also looks up a shared link per file. Suggested, not built: cache each feed's parsed contents keyed by its file and the `lastModified` the listing already reports, in the plugin's OPFS so it survives reloads, and re-read only a feed whose stamp changed or that the plugin itself just wrote; defer Dropbox's per-file shared-link lookups from the listing to the catalog write, where the links are actually needed; and read a public feed unsigned through `publicUrlBase` when the destination has one, which skips the preflight.
+
 ## Not in this pass
 
 - Reading a catalog feed in the reader tab ("Open in reader" on the canvas): the vendored reader does not take an OPDS feed.
