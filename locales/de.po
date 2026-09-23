@@ -1440,6 +1440,10 @@ msgstr "{count} Kapitel löschen?"
 msgid "Delete {count} items? This cannot be undone."
 msgstr ""
 
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "Delete {file}? The books stay."
+msgstr "{file} löschen? Die Bücher bleiben."
+
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Delete {filename}? This cannot be undone."
 msgstr "{filename} löschen? Dies kann nicht rückgängig gemacht werden."
@@ -1447,6 +1451,10 @@ msgstr "{filename} löschen? Dies kann nicht rückgängig gemacht werden."
 #: src/App.svelte
 msgid "Delete {name}? This cannot be undone."
 msgstr "{name} löschen? Dies kann nicht rückgängig gemacht werden."
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "Delete catalog"
+msgstr "Katalog löschen"
 
 #: src/lib/components/SpineItem.svelte
 msgid "Delete chapter {name}"

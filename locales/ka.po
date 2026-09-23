@@ -1459,6 +1459,10 @@ msgstr ""
 msgid "Delete {count} items? This cannot be undone."
 msgstr ""
 
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "Delete {file}? The books stay."
+msgstr ""
+
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Delete {filename}? This cannot be undone."
 msgstr "წაიშალოს {filename}? ამ მოქმედების დაბრუნება შეუძლებელია."
@@ -1466,6 +1470,10 @@ msgstr "წაიშალოს {filename}? ამ მოქმედები�
 #: src/App.svelte
 msgid "Delete {name}? This cannot be undone."
 msgstr "წაიშალოს {name}? ამ მოქმედების დაბრუნება შეუძლებელია."
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "Delete catalog"
+msgstr ""
 
 #: src/lib/components/SpineItem.svelte
 msgid "Delete chapter {name}"
