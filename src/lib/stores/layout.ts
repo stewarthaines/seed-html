@@ -35,6 +35,7 @@ export type SidebarSection =
   | 'spine'
   | 'chapters'
   | 'publish'
+  | 'published'
   | 'settings';
 
 // Storage keys for persistence
@@ -221,6 +222,7 @@ function isValidSidebarSection(value: string): value is SidebarSection {
     'spine',
     'chapters',
     'publish',
+    'published',
     'settings',
   ];
   return validSections.includes(value as SidebarSection);

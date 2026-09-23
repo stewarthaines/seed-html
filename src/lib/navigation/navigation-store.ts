@@ -41,6 +41,7 @@ const VALID_VIEW_TYPES: ViewType[] = [
   'spine',
   'chapters',
   'publish',
+  'published',
   'settings',
 ];
 

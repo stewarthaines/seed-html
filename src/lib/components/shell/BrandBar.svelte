@@ -13,6 +13,7 @@
     currentView,
     settingsOpen = false,
     aboutOpen = false,
+    publishedAvailable = false,
     onNavigate,
   }: {
     currentView: ViewType;
@@ -20,6 +21,8 @@
     settingsOpen?: boolean;
     /** The About dialog is open over this view. */
     aboutOpen?: boolean;
+    /** The publish plugin is on: show the Published page's link. */
+    publishedAvailable?: boolean;
     onNavigate: (view: ViewType) => void;
   } = $props();
 
@@ -41,6 +44,18 @@
     <span class="name">{isBrandHost ? 'ReaditInaBook.com' : 'SEED.html'}</span>
   </button>
   <nav class="links" aria-label={$t('Main navigation')}>
+    {#if publishedAvailable}
+      <button
+        type="button"
+        class="link"
+        class:active={currentView === 'published'}
+        aria-current={currentView === 'published' ? 'page' : undefined}
+        onclick={() => onNavigate('published')}
+        data-testid="nav-published"
+      >
+        {$t('Published')}
+      </button>
+    {/if}
     <button
       type="button"
       class="link"

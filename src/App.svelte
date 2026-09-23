@@ -35,6 +35,9 @@
   import SpineView from './lib/navigation/views/SpineView.svelte';
   import ChaptersView from './lib/navigation/views/ChaptersView.svelte';
   import PublishView from './lib/navigation/views/PublishView.svelte';
+  import PublishedView from './lib/navigation/views/PublishedView.svelte';
+  import { settingsSection } from './lib/stores/settings-section.js';
+  import { listWorkspaceIdentifiers } from './lib/import/boot-payload.js';
   import SettingsView from './lib/navigation/views/SettingsView.svelte';
   import {
     loadPluginManifest,
@@ -142,11 +145,38 @@
   // Settings (you create a project first, then opt in). Refreshed on mount and
   // whenever the workspace list changes (the `workspace-list-refresh` event).
   let hasProjects = $state(false);
+  // The dc:identifiers of every book here, for the publish plugin's shelf
+  // ("known on this device" versus importable). Refreshed with the list.
+  let knownIdentifiers = $state<string[]>([]);
   async function refreshHasProjects() {
     try {
-      hasProjects = ((await appState?.listWorkspaces()) ?? []).length > 0;
+      const workspaces = (await appState?.listWorkspaces()) ?? [];
+      hasProjects = workspaces.length > 0;
+      knownIdentifiers = await listWorkspaceIdentifiers(fileStorage, workspaces);
     } catch {
       hasProjects = false;
+      knownIdentifiers = [];
+    }
+  }
+
+  // The publish plugin asks for one of the host's own screens.
+  function openPluginTarget(target: 'published' | 'destinations'): void {
+    if (target === 'published') {
+      navigationStore.navigateTo('published');
+    } else {
+      settingsSection.current = 'destinations';
+      navigationStore.navigateTo('settings');
+    }
+  }
+
+  // The publish plugin fetched an EPUB from a destination: import it as a new
+  // book (or reopen the project that already carries its identifier).
+  async function importEpubFromPlugin(filename: string, bytes: ArrayBuffer): Promise<void> {
+    try {
+      await importOrReopenEpub(new Uint8Array(bytes), filename);
+    } catch (error) {
+      console.error('Import from destination failed:', error);
+      showToast(error instanceof Error ? error.message : $t('Failed to import EPUB'), 'error');
     }
   }
 
@@ -263,6 +293,7 @@
         spine: $t('Spine'),
         chapters: $t('Chapters'),
         publish: $t('Share'),
+        published: $t('Published'),
         settings: $t('Settings'),
       } as Record<string, string>
     )[currentView] ?? 'SEED.html'
@@ -1959,6 +1990,8 @@
       <BrandBar
         currentView={contentView}
         {settingsOpen}
+        {aboutOpen}
+        publishedAvailable={!!publishPluginUrl}
         onNavigate={view => navigationStore.navigateTo(view)}
       />
     {/snippet}
@@ -2037,8 +2070,8 @@
     {/snippet}
 
     {#snippet leftContent()}
-      {#if contentView !== 'workspace' && contentView !== 'cover' && contentView !== 'publish'}
-        <!-- Books, Cover and Share carry their own visible heading. -->
+      {#if contentView !== 'workspace' && contentView !== 'cover' && contentView !== 'publish' && contentView !== 'published'}
+        <!-- Books, Cover, Share and Published carry their own visible heading. -->
         <h1 class="sr-only">{viewTitle}</h1>
       {/if}
       {#if isReadOnly && contentView !== 'workspace'}
@@ -2177,6 +2210,7 @@
           pluginUrl={publishPluginUrl}
           projectId={currentWorkspaceId ?? 'publish'}
           activeIdentifier={currentWorkspaceState?.opf?.metadata?.identifier}
+          onOpen={openPluginTarget}
           onPackage={packageCurrentBook}
           packaging={epubPackaging}
           onGeneratePdf={canGeneratePdf ? handleGeneratePdf : undefined}
@@ -2188,6 +2222,14 @@
           onPackageAsSeedHtml={canPackageReadHtml ? handleExportSeedHtml : undefined}
           seedHtmlPackaging={seedHtmlExporting}
           {isReadOnly}
+        />
+      {:else if contentView === 'published' && publishPluginUrl}
+        <PublishedView
+          pluginUrl={publishPluginUrl}
+          getDirHandle={() => publishService.getOutputDirectoryHandle()}
+          {knownIdentifiers}
+          onImportEpub={importEpubFromPlugin}
+          onOpen={openPluginTarget}
         />
       {:else}
         <div class="placeholder-content">
@@ -2303,6 +2345,8 @@
       {availablePlugins}
       {enabledPluginIds}
       {availableExtensions}
+      {publishPluginUrl}
+      getPublishDirHandle={() => publishService.getOutputDirectoryHandle()}
       readOnly={isReadOnly}
       {hasProjects}
       onExtensionAssets={handleExtensionAssets}

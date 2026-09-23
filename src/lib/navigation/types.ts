@@ -11,6 +11,7 @@ export type ViewType =
   | 'spine' // Chapter ordering
   | 'chapters' // Spine reordering & bulk operations
   | 'publish' // Packaged epub output management
+  | 'published' // Every book on a destination (the publish plugin's page)
   | 'settings'; // Application settings
 
 // Navigation store state

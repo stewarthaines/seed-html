@@ -70,6 +70,30 @@ export async function readEpubIdentity(epubBytes: Uint8Array): Promise<EmbeddedE
  * workspace that fails to read is skipped, never fatal — worst case the
  * payload imports as a fresh copy.
  */
+/**
+ * The dc:identifier of every workspace that has one, for telling a remote EPUB
+ * that is "known on this device" from one that can be imported (the publish
+ * plugin's shelf). Unreadable workspaces are skipped.
+ */
+export async function listWorkspaceIdentifiers(
+  fileStorage: TextFileReader,
+  workspaces: Pick<WorkspaceInfo, 'id'>[]
+): Promise<string[]> {
+  const identifiers: string[] = [];
+  for (const { id } of workspaces) {
+    try {
+      const containerXml = await fileStorage.readTextFile(id, 'META-INF/container.xml');
+      const rootfilePath = OPFUtils.parseRootfilePath(containerXml);
+      const opfContent = await fileStorage.readTextFile(id, rootfilePath);
+      const metadata = OPFUtils.parseOPFMetadataFromString(opfContent);
+      if (metadata.identifier) identifiers.push(metadata.identifier);
+    } catch {
+      continue;
+    }
+  }
+  return identifiers;
+}
+
 export async function findWorkspaceByIdentifier(
   fileStorage: TextFileReader,
   workspaces: Pick<WorkspaceInfo, 'id'>[],

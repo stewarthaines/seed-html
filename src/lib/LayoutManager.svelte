@@ -48,8 +48,8 @@
   const sidebar = $derived($layoutStore.sidebar);
   const view = $derived(viewOverride ?? sidebar.activeSection);
 
-  // Books stands outside any book: brand bar, no chapter column.
-  const outsideBook = $derived(view === 'workspace' || !hasWorkspace);
+  // Books and Published stand outside any book: brand bar, no chapter column.
+  const outsideBook = $derived(view === 'workspace' || view === 'published' || !hasWorkspace);
 
   // The chapter column exists only beside the editor, and not on a phone.
   const showWriteSidebar = $derived(view === 'spine' && hasWorkspace && !phone);
@@ -58,6 +58,7 @@
   // Which views keep a right-hand pane.
   const showPreviewPane = $derived(
     view !== 'workspace' &&
+      view !== 'published' &&
       view !== 'settings' &&
       view !== 'publish' &&
       view !== 'chapters' &&
