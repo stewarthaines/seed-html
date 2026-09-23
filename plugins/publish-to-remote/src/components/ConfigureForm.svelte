@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import { t, translate } from '../i18n.js';
   import {
     loadGoogleScripts,
@@ -152,12 +152,16 @@
     }
   }
 
+  // Seed the form from the remote being edited, or blank it. Only the remote
+  // is tracked: populating writes the form and (for Dropbox) opens the
+  // folder browser, and tracking those would re-seed the form on every
+  // change they make, looping through folder listings.
   $effect(() => {
-    if (editingRemote) {
-      populateForm(editingRemote);
-    } else {
-      resetForm();
-    }
+    const remote = editingRemote;
+    untrack(() => {
+      if (remote) populateForm(remote);
+      else resetForm();
+    });
   });
 
   function populateForm(remote: RemoteConfig) {
@@ -375,6 +379,7 @@
   }
 
   async function openDropboxBrowser(path: string): Promise<void> {
+    if (dbxBrowserLoading) return;
     dbxBrowserPath = path;
     dbxBrowserLoading = true;
     dbxBrowserError = null;
