@@ -2916,5 +2916,15 @@
     .preview-collapse {
       display: none;
     }
+
+    /* The device row scrolls sideways rather than pushing the page wider. */
+    .device-switch {
+      max-inline-size: 100%;
+      overflow-x: auto;
+    }
+
+    .device-family {
+      flex-shrink: 0;
+    }
   }
 </style>

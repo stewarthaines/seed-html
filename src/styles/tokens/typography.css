@@ -127,3 +127,11 @@
 
   /* Metadata text */
 }
+
+/* Phones: iOS Safari zooms the page into any field whose text is under 16px
+   and does not zoom back out. Form text meets that size on small screens. */
+@media (max-width: 720px) {
+  :root {
+    --input-text-size: 1rem;
+  }
+}

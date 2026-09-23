@@ -1201,7 +1201,10 @@
   {/if}
 {/snippet}
 
-<div class="editor-pane-container" style="--editor-font-size: {fontSizeStep}px">
+<div
+  class="editor-pane-container"
+  style="--editor-font-size: max(var(--editor-min-font-size, 0px), {fontSizeStep}px)"
+>
   <!-- Single header row: pane toggle, pane-1 file picker + chapter title
        (single-pane mode), audio toggle, and the transform status. -->
   <div class="editor-header">
@@ -1993,6 +1996,15 @@
   @media (prefers-reduced-motion: reduce) {
     .pane-toggle-btn {
       transition: none;
+    }
+  }
+  /* Phones: the editor's text never drops under 16px, whatever size step is
+     chosen, so iOS Safari does not zoom into it on focus. The textarea and
+     the line-number gutter both read --editor-font-size, so the floor is
+     applied where that variable is set. */
+  @media (max-width: 720px) {
+    .editor-pane-container {
+      --editor-min-font-size: 1rem;
     }
   }
 </style>
