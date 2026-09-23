@@ -1,7 +1,6 @@
 <script lang="ts">
   import { t, currentLocale, documentDirection, i18nService } from '$lib/i18n';
   import { themeStore } from '$lib/stores/theme';
-  import PaneHeader from '$lib/components/layout/PaneHeader.svelte';
   import { saveBlob } from '$lib/zip/index.js';
   import type { PublishService, PublishedEpub } from '$lib/services/publish/publish.service.js';
   import {
@@ -23,6 +22,9 @@
     projectId?: string;
     /** The open project's dc:identifier, for outlining its published row(s). */
     activeIdentifier?: string;
+    /** Package the open book as a SEED EPUB (kept in this browser, listed below). */
+    onPackage?: () => void;
+    packaging?: boolean;
     /** The other outputs a book can be shared as; each is shown only when passed. */
     onGeneratePdf?: () => void;
     pdfGenerating?: boolean;
@@ -41,6 +43,8 @@
     pluginUrl = null,
     projectId = 'publish',
     activeIdentifier = undefined,
+    onPackage,
+    packaging = false,
     onGeneratePdf,
     pdfGenerating = false,
     onPackageWithoutSource,
@@ -51,10 +55,6 @@
     seedHtmlPackaging = false,
     isReadOnly = false,
   }: Props = $props();
-
-  const hasExports = $derived(
-    !!(onGeneratePdf || onPackageWithoutSource || onPackageAsReadHtml || onPackageAsSeedHtml)
-  );
 
   let pluginFrame = $state<HTMLIFrameElement | null>(null);
 
@@ -106,10 +106,9 @@
     }
   }
 
-  // Core feature: list packaged epubs, refreshing as new ones are packaged.
-  // Skipped when the plugin takes over the whole frame.
+  // List packaged epubs, refreshing as new ones are packaged. The cards need this
+  // book's latest package whether or not the plugin is showing its own list.
   $effect(() => {
-    if (showingPlugin) return;
     load();
     const onPackaged = () => load();
     window.addEventListener('epub-packaged', onPackaged);
@@ -285,334 +284,527 @@
     }
   }
 
+  // This book's packages (matched by dc:identifier), newest first.
+  const mine = $derived(
+    activeIdentifier
+      ? epubs
+          .filter(e => e.identifier === activeIdentifier)
+          .sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime())
+      : []
+  );
+  const latest = $derived(mine[0] ?? null);
+  const totalSize = $derived(epubs.reduce((sum, e) => sum + e.size, 0));
+  const showReadCard = $derived(!!(onPackageAsReadHtml || onPackageAsSeedHtml));
+
+  function relativeTime(date: Date): string {
+    const seconds = (new Date(date).getTime() - Date.now()) / 1000;
+    const abs = Math.abs(seconds);
+    const rtf = new Intl.RelativeTimeFormat($currentLocale, { numeric: 'auto' });
+    if (abs < 60) return rtf.format(Math.round(seconds), 'second');
+    if (abs < 3600) return rtf.format(Math.round(seconds / 60), 'minute');
+    if (abs < 86400) return rtf.format(Math.round(seconds / 3600), 'hour');
+    if (abs < 86400 * 30) return rtf.format(Math.round(seconds / 86400), 'day');
+    return new Date(date).toLocaleDateString($currentLocale);
+  }
+
   function formatSize(bytes: number): string {
     const kb = bytes / 1024;
     if (kb < 1024) return `${Math.round(kb)} KB`;
     return `${(kb / 1024).toFixed(1)} MB`;
   }
-
-  function formatDate(date: Date): string {
-    return new Date(date).toLocaleDateString();
-  }
 </script>
 
-{#snippet exportRow()}
-  {#if hasExports}
-    <div class="export-row">
-      {#if onGeneratePdf}
-        <button
-          type="button"
-          class="btn btn-secondary"
-          onclick={onGeneratePdf}
-          disabled={pdfGenerating || isReadOnly}
-        >
-          {pdfGenerating ? $t('Preparing…') : $t('Generate PDF')}
-        </button>
-      {/if}
-      {#if onPackageWithoutSource}
-        <button
-          type="button"
-          class="btn btn-secondary"
-          onclick={onPackageWithoutSource}
-          disabled={packagingWithoutSource || isReadOnly}
-        >
-          {packagingWithoutSource ? $t('Packaging…') : $t('Package EPUB without source')}
-        </button>
-      {/if}
-      {#if onPackageAsReadHtml}
-        <button
-          type="button"
-          class="btn btn-secondary"
-          onclick={onPackageAsReadHtml}
-          disabled={readHtmlPackaging || isReadOnly}
-        >
-          {readHtmlPackaging ? $t('Packaging…') : $t('Package as READ.html')}
-        </button>
-      {/if}
-      {#if onPackageAsSeedHtml}
-        <button
-          type="button"
-          class="btn btn-secondary"
-          onclick={onPackageAsSeedHtml}
-          disabled={seedHtmlPackaging || isReadOnly}
-        >
-          {seedHtmlPackaging ? $t('Packaging…') : $t('Package as SEED.html')}
-        </button>
-      {/if}
-    </div>
+{#snippet packageButtons(primary: boolean)}
+  {#if onPackage}
+    <button
+      type="button"
+      class={primary ? 'btn btn-primary' : 'btn btn-link'}
+      onclick={onPackage}
+      disabled={packaging || isReadOnly}
+    >
+      {packaging ? $t('Packaging…') : primary ? $t('Package EPUB') : $t('Package again')}
+    </button>
   {/if}
 {/snippet}
 
-{#if showingPlugin}
-  <div class="plugin-host">
-    {@render exportRow()}
-    {#key pluginAttempt}
-      <iframe
-        bind:this={pluginFrame}
-        class="plugin-frame"
-        src={pluginUrl}
-        title={$t('Publish')}
-        onload={handlePluginFrameLoad}
-      ></iframe>
-    {/key}
-  </div>
-{:else}
-  <div class="publish-view">
-    <PaneHeader>
-      <h1 class="publish-title">{$t('Publish')}</h1>
-      {#snippet actions()}
-        <button class="btn btn-secondary btn-sm" onclick={load}>{$t('Refresh')}</button>
-      {/snippet}
-    </PaneHeader>
-
-    <div class="publish-body">
-      {@render exportRow()}
-      {#if pluginFailed}
-        <div class="plugin-fallback" role="status">
-          <p class="plugin-fallback-text">
-            {$t(
-              'The publishing plugin could not be loaded — you may be offline. Showing local publishing instead.'
-            )}
-          </p>
-          <button class="btn btn-secondary btn-sm" onclick={retryPlugin}>
-            {$t('Retry plugin')}
-          </button>
-        </div>
-      {/if}
-      {#if loading}
-        <p class="status">{$t('Loading…')}</p>
-      {:else if error}
-        <p class="status error">{error}</p>
-      {:else if epubs.length === 0}
-        <div class="empty-state">
-          <p>{$t('No packaged EPUBs yet.')}</p>
-          <p class="hint">{$t('Package a project to see it here.')}</p>
-        </div>
+<div class="share-view">
+  <div class="share-page">
+    <h1 class="page-title">{$t('Share')}</h1>
+    <p class="status-line">
+      {#if loading && epubs.length === 0}
+        {$t('Loading…')}
+      {:else if latest}
+        {$t('Packaged {when}', { when: relativeTime(latest.lastModified) })} · {formatSize(
+          latest.size
+        )}
       {:else}
-        <table class="epub-table">
-          <thead>
-            <tr>
-              <th class="cover" aria-label={$t('Cover')}></th>
-              <th>{$t('Name')}</th>
-              <th class="num">{$t('Size')}</th>
-              <th class="num">{$t('Modified')}</th>
-              <th class="actions">{$t('Actions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each epubs as epub (epub.filename)}
-              <tr class:current={!!activeIdentifier && epub.identifier === activeIdentifier}>
-                <td class="cover">
-                  {#if coverUrls[epub.filename]}
-                    <img
-                      src={coverUrls[epub.filename]}
-                      alt=""
-                      class="cover-thumb"
-                      aria-hidden="true"
-                    />
-                  {/if}
-                </td>
-                <td class="name">
-                  <span class="name-title">{epub.title || epub.filename}</span>
-                  {#if epub.authors && epub.authors.length > 0}
-                    <span class="name-author">{epub.authors.join(', ')}</span>
-                  {/if}
-                </td>
-                <td class="num">{formatSize(epub.size)}</td>
-                <td class="num">{formatDate(epub.lastModified)}</td>
-                <td class="actions">
-                  <div class="action-buttons">
-                    {#if canRead}
-                      <button
-                        class="btn btn-secondary btn-sm"
-                        onclick={() => handleRead(epub.filename)}
-                      >
-                        {$t('Read')}
-                      </button>
-                    {/if}
-                    <button
-                      class="btn btn-secondary btn-sm"
-                      onclick={() => handleDownload(epub.filename)}
-                    >
-                      {$t('Download')}
-                    </button>
-                    <button
-                      class="btn btn-danger btn-sm"
-                      onclick={() => handleDelete(epub.filename)}
-                    >
-                      {$t('Delete')}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
+        {$t('Not packaged yet')}
+      {/if}
+    </p>
+
+    {#if error}
+      <p class="status error" role="alert">{error}</p>
+    {/if}
+
+    <h2 class="label">{$t('Get the book')}</h2>
+    <div class="cards">
+      <article class="card primary">
+        <h3>{$t('Download the EPUB')}</h3>
+        <p>{$t('For any reading app.')}</p>
+        {#if latest}
+          <small class="file-line">{latest.filename} · {formatSize(latest.size)}</small>
+          <div class="card-actions">
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick={() => handleDownload(latest.filename)}
+            >
+              {$t('Download')}
+            </button>
+            {#if canRead}
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick={() => handleRead(latest.filename)}
+              >
+                {$t('Read')}
+              </button>
+            {/if}
+          </div>
+          <div class="card-more">
+            {@render packageButtons(false)}
+            {#if onPackageWithoutSource}
+              <button
+                type="button"
+                class="btn btn-link"
+                onclick={onPackageWithoutSource}
+                disabled={packagingWithoutSource || isReadOnly}
+              >
+                {packagingWithoutSource ? $t('Packaging…') : $t('Package EPUB without source')}
+              </button>
+            {/if}
+          </div>
+        {:else}
+          <small class="file-line">{$t('Not made yet')}</small>
+          <div class="card-actions">
+            {@render packageButtons(true)}
+          </div>
+          {#if onPackageWithoutSource}
+            <div class="card-more">
+              <button
+                type="button"
+                class="btn btn-link"
+                onclick={onPackageWithoutSource}
+                disabled={packagingWithoutSource || isReadOnly}
+              >
+                {packagingWithoutSource ? $t('Packaging…') : $t('Package EPUB without source')}
+              </button>
+            </div>
+          {/if}
+        {/if}
+      </article>
+
+      {#if showReadCard}
+        <article class="card">
+          <h3>{$t('Read it in the browser')}</h3>
+          <p>{$t('One page, no app needed.')}</p>
+          <div class="card-actions">
+            {#if onPackageAsReadHtml}
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick={onPackageAsReadHtml}
+                disabled={readHtmlPackaging || isReadOnly}
+              >
+                {readHtmlPackaging ? $t('Packaging…') : $t('Package as READ.html')}
+              </button>
+            {/if}
+          </div>
+          {#if onPackageAsSeedHtml}
+            <div class="card-more">
+              <button
+                type="button"
+                class="btn btn-link"
+                onclick={onPackageAsSeedHtml}
+                disabled={seedHtmlPackaging || isReadOnly}
+              >
+                {seedHtmlPackaging ? $t('Packaging…') : $t('Package as SEED.html')}
+              </button>
+            </div>
+          {/if}
+        </article>
+      {/if}
+
+      {#if onGeneratePdf}
+        <article class="card">
+          <h3>{$t('Make a PDF')}</h3>
+          <p>{$t('For printing.')}</p>
+          <div class="card-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick={onGeneratePdf}
+              disabled={pdfGenerating || isReadOnly}
+            >
+              {pdfGenerating ? $t('Preparing…') : $t('Generate PDF')}
+            </button>
+          </div>
+        </article>
       {/if}
     </div>
+
+    {#if pluginUrl}
+      <section class="publish-band" aria-labelledby="publish-web-title">
+        <h2 id="publish-web-title" class="label">{$t('Publish to the web')}</h2>
+        {#if pluginFailed}
+          <div class="plugin-fallback" role="status">
+            <p class="plugin-fallback-text">
+              {$t(
+                'The publishing plugin could not be loaded — you may be offline. Showing local publishing instead.'
+              )}
+            </p>
+            <button type="button" class="btn btn-secondary btn-sm" onclick={retryPlugin}>
+              {$t('Retry plugin')}
+            </button>
+          </div>
+        {:else}
+          {#key pluginAttempt}
+            <iframe
+              bind:this={pluginFrame}
+              class="plugin-frame"
+              src={pluginUrl}
+              title={$t('Publish to the web')}
+              onload={handlePluginFrameLoad}
+            ></iframe>
+          {/key}
+        {/if}
+      </section>
+    {/if}
+
+    {#if !showingPlugin}
+      <section class="packaged" aria-labelledby="packaged-title">
+        <div class="section-head">
+          <h2 id="packaged-title" class="label">
+            {$t('Packaged files')}
+            {#if epubs.length > 0}
+              <span class="label-detail">
+                {$t('Kept in this browser')} · {formatSize(totalSize)}
+              </span>
+            {/if}
+          </h2>
+          <button type="button" class="btn btn-secondary btn-sm" onclick={load}>
+            {$t('Refresh')}
+          </button>
+        </div>
+        {#if loading && epubs.length === 0}
+          <p class="status">{$t('Loading…')}</p>
+        {:else if epubs.length === 0}
+          <p class="status">{$t('No packaged EPUBs yet.')}</p>
+        {:else}
+          <table class="epub-table">
+            <thead>
+              <tr>
+                <th class="cover"><span class="sr-only">{$t('Cover')}</span></th>
+                <th>{$t('File')}</th>
+                <th class="num">{$t('Size')}</th>
+                <th class="num">{$t('Made')}</th>
+                <th class="actions"><span class="sr-only">{$t('Actions')}</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {#each epubs as epub (epub.filename)}
+                <tr class:current={!!activeIdentifier && epub.identifier === activeIdentifier}>
+                  <td class="cover">
+                    {#if coverUrls[epub.filename]}
+                      <img src={coverUrls[epub.filename]} alt="" class="cover-thumb" />
+                    {/if}
+                  </td>
+                  <td class="name">
+                    <span class="name-title">{epub.title || epub.filename}</span>
+                    <span class="name-file">{epub.filename}</span>
+                  </td>
+                  <td class="num">{formatSize(epub.size)}</td>
+                  <td class="num">{relativeTime(epub.lastModified)}</td>
+                  <td class="actions">
+                    <div class="action-buttons">
+                      {#if canRead}
+                        <button
+                          type="button"
+                          class="btn btn-link"
+                          onclick={() => handleRead(epub.filename)}
+                        >
+                          {$t('Read')}
+                        </button>
+                      {/if}
+                      <button
+                        type="button"
+                        class="btn btn-link"
+                        onclick={() => handleDownload(epub.filename)}
+                      >
+                        {$t('Download')}
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-link danger"
+                        onclick={() => handleDelete(epub.filename)}
+                      >
+                        {$t('Delete')}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        {/if}
+      </section>
+    {/if}
   </div>
-{/if}
+</div>
 
 <style>
-  .plugin-host {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+  .share-view {
+    min-block-size: 100%;
+    background: var(--color-bg-primary);
   }
 
-  .plugin-frame {
-    flex: 1;
-    min-block-size: 0;
-    width: 100%;
-    border: 0;
-    display: block;
+  .share-page {
+    max-inline-size: 1040px;
+    margin-inline: auto;
+    padding-block: var(--space-8);
+    padding-inline: var(--space-6);
   }
 
-  /* Full-frame view: pinned PaneHeader + its own scrolling body, mirroring the
-     fixed-header/scrolling-body convention the split-pane views use. */
-  .publish-view {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+  .page-title {
+    margin: 0 0 var(--space-1);
+    font-size: var(--text-4xl);
+    font-weight: var(--font-bold);
+    letter-spacing: -0.01em;
     color: var(--color-text-primary);
   }
 
-  .publish-title {
-    margin: 0;
-    font-size: var(--text-base);
-    font-weight: 600;
-  }
-
-  .publish-body {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    padding: var(--space-4);
-  }
-
-  .status {
+  .status-line {
+    margin: 0 0 var(--space-6);
     color: var(--color-text-secondary);
+  }
+
+  .label {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-xs);
+    font-weight: var(--font-bold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+
+  .label-detail {
+    margin-inline-start: var(--space-3);
+    font-weight: var(--font-normal);
+    letter-spacing: 0;
+    text-transform: none;
     font-size: var(--text-sm);
   }
 
-  .status.error {
-    color: var(--color-error-text);
+  .status {
+    margin: 0;
+    color: var(--color-text-secondary);
   }
 
-  /* Shown when the publish plugin frame fails to come alive (e.g. offline with an
-     uncached plugin.html); the core publish list renders beneath it. */
+  .status.error {
+    margin-block-end: var(--space-4);
+    color: var(--color-error-text, var(--color-text-primary));
+  }
+
+  /* Outcome cards */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--space-5);
+    margin-block-end: var(--space-8);
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-block-size: 170px;
+    padding: var(--space-5) var(--space-5) var(--space-4);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-primary);
+  }
+
+  .card.primary {
+    border-color: var(--color-interactive-primary);
+    box-shadow: inset 0 0 0 1px var(--color-interactive-primary);
+  }
+
+  .card h3 {
+    margin: 0;
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
+  }
+
+  /* Whatever follows the description sits at the foot of every card. */
+  .card p {
+    margin: 0 0 auto;
+    color: var(--color-text-primary);
+  }
+
+  .file-line {
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+    overflow-wrap: anywhere;
+  }
+
+  .card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .card-more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+
+  .card-more .btn-link {
+    padding-inline: 0;
+    font-size: var(--text-sm);
+  }
+
+  /* Publish to the web: the plugin lives inside the band */
+  .publish-band {
+    margin-block-end: var(--space-8);
+  }
+
+  .plugin-frame {
+    display: block;
+    inline-size: 100%;
+    block-size: min(640px, 70vh);
+    border: 1px solid var(--color-border-default);
+    background: var(--color-bg-tertiary);
+  }
+
   .plugin-fallback {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-3);
-    margin-bottom: var(--space-4);
-    padding: var(--space-3);
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-5);
     border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-bg-accent);
+    background: var(--color-bg-tertiary);
   }
 
   .plugin-fallback-text {
     flex: 1;
-    min-width: 12rem;
+    min-inline-size: 16rem;
     margin: 0;
-    font-size: var(--text-sm);
     color: var(--color-text-secondary);
   }
 
-  .empty-state {
-    padding: var(--space-6) var(--space-4);
-    text-align: center;
-    color: var(--color-text-secondary);
-  }
-
-  .empty-state .hint {
-    font-size: var(--text-sm);
+  /* Packaged files */
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
   }
 
   .epub-table {
-    width: 100%;
+    inline-size: 100%;
     border-collapse: collapse;
     font-size: var(--text-sm);
   }
 
-  .epub-table th,
-  .epub-table td {
-    padding: var(--space-2) var(--space-3);
-    border-bottom: 1px solid var(--color-border-default);
-    text-align: left;
-    vertical-align: middle;
-  }
-
   .epub-table th {
-    font-weight: 600;
+    padding: 0 var(--space-2) var(--space-2) 0;
+    border-block-end: 1px solid var(--color-border-default);
+    text-align: start;
+    font-size: var(--text-xs);
+    font-weight: var(--font-bold);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
     color: var(--color-text-secondary);
   }
 
+  .epub-table td {
+    padding: var(--space-3) var(--space-2) var(--space-3) 0;
+    border-block-end: 1px solid var(--color-border-default);
+    vertical-align: middle;
+  }
+
   .epub-table .num {
-    text-align: right;
+    text-align: end;
     white-space: nowrap;
+    color: var(--color-text-secondary);
   }
 
   .epub-table .actions {
-    text-align: right;
+    text-align: end;
     white-space: nowrap;
   }
 
-  .action-buttons {
-    display: inline-flex;
-    gap: var(--space-2);
-  }
-
-  .epub-table .name {
-    word-break: break-word;
-  }
-
-  /* Active project: tint the row and add a left accent (box-shadow avoids the
-     table layout shift a border would cause). */
-  .epub-table tr.current td {
-    background-color: var(--color-bg-active);
-  }
-
-  .epub-table tr.current td:first-child {
-    box-shadow: inset 3px 0 0 var(--color-accent);
-  }
-
   .epub-table .cover {
-    inline-size: 2rem;
-    padding-inline-end: 0;
+    inline-size: 32px;
   }
 
   .cover-thumb {
     display: block;
-    inline-size: 2rem;
-    block-size: 3rem;
-    /* Override the global `img { max-width: 100% }`, which would otherwise shrink
-       the cover to the cell's padded content width and crop it via object-fit. */
-    max-inline-size: none;
+    inline-size: 24px;
+    block-size: 32px;
     object-fit: cover;
-    border-radius: var(--radius-xs);
+    border: 1px solid var(--color-border-default);
+  }
+
+  .epub-table tr.current td {
+    background: var(--color-bg-tertiary);
+  }
+
+  .name {
+    display: table-cell;
   }
 
   .name-title {
     display: block;
-    font-weight: 600;
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
   }
 
-  .name-author {
+  .name-file {
     display: block;
     color: var(--color-text-secondary);
-    font-size: var(--text-xs);
+    overflow-wrap: anywhere;
   }
-  /* The other outputs of the open book, above whatever lists the packaged files. */
-  .export-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    padding-block: var(--space-3);
-    padding-inline: var(--space-4);
-    border-block-end: 1px solid var(--color-border-subtle);
-    background: var(--color-bg-primary);
+
+  .action-buttons {
+    display: inline-flex;
+    gap: var(--space-4);
+  }
+
+  .action-buttons .btn-link {
+    padding-inline: 0;
+  }
+
+  .btn-link.danger {
+    color: var(--color-error-text, var(--color-text-primary));
+  }
+
+  @media (max-width: 720px) {
+    .share-page {
+      padding-block: var(--space-6);
+      padding-inline: var(--space-4);
+    }
+
+    .card {
+      min-block-size: 0;
+    }
+
+    .epub-table .cover,
+    .epub-table .num:nth-child(3) {
+      display: none;
+    }
   }
 </style>
