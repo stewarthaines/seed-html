@@ -1,6 +1,6 @@
 <!--
   The Published page: a destination picker, the destination's catalog with
-  its identity and state, and its shelf — every EPUB on it as a card, with
+  its identity and state (a catalog picker when it carries several), and its shelf — every EPUB on it as a card, with
   Import… for books not on this device, and the books on this device that
   have not been sent here (process/PUBLISH_REWORK.md).
 -->
@@ -28,9 +28,11 @@
   } from '../remote-status.js';
   import {
     hasCatalog,
-    loadCatalog,
+    loadCatalogs,
     writeCatalog,
     formatLabel,
+    emptyCatalog,
+    unusedCatalogFile,
     type CatalogInfo,
   } from '../catalog.js';
   import { sendPackage, setInCatalog } from '../send.js';
@@ -68,34 +70,47 @@
   // --- The picked destination ---------------------------------------------------
   const remotes = $derived($remotesStore.remotes);
   const selected = $derived(
-    remotes.find((r) => r.id === $remotesStore.activeRemoteId) ?? remotes[0] ?? null,
+    remotes.find((r) => r.id === $remotesStore.activeRemoteId) ??
+      remotes[0] ??
+      null,
   );
 
   let listing = $state<RemoteListing | null>(null);
-  let catalog = $state<CatalogInfo | null>(null);
+  // Every feed on the destination, its own first, and which one the page
+  // shows: a destination can carry several catalogs (one per shelf of books).
+  let catalogs = $state<CatalogInfo[]>([]);
+  let catalogFile = $state<string | null>(null);
+  const catalog = $derived(
+    catalogs.find((c) => c.file === catalogFile) ?? catalogs[0] ?? null,
+  );
   let loadedFor = $state<string | null>(null);
   let loadedVersion = $state(-1);
 
   async function refresh(remote: RemoteConfig) {
     listing = null;
-    catalog = null;
+    catalogs = [];
     const result = await listRemote(remote);
     if (selected?.id !== remote.id) return;
     listing = result;
     if (hasCatalog(remote) && result.reach === 'ok') {
-      const info = await loadCatalog(remote, result.objects);
-      if (selected?.id === remote.id) catalog = info;
+      const infos = await loadCatalogs(remote, result.objects);
+      if (selected?.id === remote.id) catalogs = infos;
     }
   }
+
+  // A book named only by one of the feeds still gets its identifier and title.
+  const allEntries = $derived(catalogs.flatMap((c) => c.entries));
 
   // List the picked destination, and again when another frame changes it.
   $effect(() => {
     if (!$remotesLoaded || !selected) return;
     const version = $contentVersions[selected.id] ?? 0;
     if (loadedFor === selected.id && loadedVersion === version) return;
+    if (loadedFor !== selected.id) catalogFile = null;
     loadedFor = selected.id;
     loadedVersion = version;
     editingIdentity = false;
+    creatingCatalog = null;
     void refresh(selected);
   });
 
@@ -105,7 +120,7 @@
       selected,
       listing.objects,
       packages,
-      catalog?.entries ?? [],
+      allEntries,
       catalog?.keys ?? new Set(),
       $knownIdentifiers,
     );
@@ -118,6 +133,17 @@
   // --- Catalog ------------------------------------------------------------------------
   let editingIdentity = $state(false);
   let writingCatalog = $state(false);
+  // A second (third…) catalog being added: the form's blank starting point.
+  let creatingCatalog = $state<CatalogInfo | null>(null);
+
+  function startNewCatalog() {
+    if (!selected || !listing || !hasCatalog(selected)) return;
+    editingIdentity = false;
+    creatingCatalog = emptyCatalog(
+      selected,
+      unusedCatalogFile(listing.objects),
+    );
+  }
 
   async function copyFeedLink() {
     if (!catalog) return;
@@ -129,17 +155,36 @@
     }
   }
 
-  async function writeIdentity(file: string, identity: Required<CatalogIdentity>) {
-    if (!selected || !listing || !catalog || !hasCatalog(selected)) return;
+  /**
+   * Write a feed with `identity` under `file`, starting from `from`: its own
+   * books when it exists, every EPUB for a destination's first feed, and none
+   * for a further feed (the switches fill it).
+   */
+  async function writeIdentityOf(
+    from: CatalogInfo,
+    file: string,
+    identity: Required<CatalogIdentity>,
+    isNew: boolean,
+  ) {
+    if (!selected || !listing || !hasCatalog(selected)) return;
+    if (isNew && catalogs.some((c) => c.exists && c.file === file)) {
+      showStatus(
+        translate('A catalog with that name is already here.'),
+        'error',
+      );
+      return;
+    }
     writingCatalog = true;
     try {
-      const keys = catalog.exists
-        ? catalog.keys
-        : new Set(
-            listing.objects
-              .filter((o) => o.key.toLowerCase().endsWith('.epub'))
-              .map((o) => o.key),
-          );
+      const keys = from.exists
+        ? from.keys
+        : isNew
+          ? new Set<string>()
+          : new Set(
+              listing.objects
+                .filter((o) => o.key.toLowerCase().endsWith('.epub'))
+                .map((o) => o.key),
+            );
       const result = await writeCatalog(
         selected,
         listing.objects,
@@ -152,16 +197,40 @@
         showStatus(result.error || translate('Catalog update failed'), 'error');
         return;
       }
-      if (file !== (selected.catalogFilename ?? '') && file !== catalog.file) {
+      // The destination's own feed follows a rename of the first catalog.
+      if (!isNew && from === catalogs[0] && file !== from.file) {
         await updateRemote({ ...selected, catalogFilename: file });
       }
       announceContentChanged(selected.id);
       editingIdentity = false;
-      showStatus(translate('Catalog updated: {url}', { url: result.url || catalog.feedUrl }), 'success');
+      creatingCatalog = null;
+      catalogFile = file;
+      showStatus(
+        translate('Catalog updated: {url}', {
+          url: result.url || from.feedUrl,
+        }),
+        'success',
+      );
       await refresh(selected);
     } finally {
       writingCatalog = false;
     }
+  }
+
+  async function writeIdentity(
+    file: string,
+    identity: Required<CatalogIdentity>,
+  ) {
+    if (!catalog) return;
+    await writeIdentityOf(catalog, file, identity, false);
+  }
+
+  async function writeNewCatalog(
+    file: string,
+    identity: Required<CatalogIdentity>,
+  ) {
+    if (!creatingCatalog) return;
+    await writeIdentityOf(creatingCatalog, file, identity, true);
   }
 
   /** Rewrite the feed from what is on the destination now (files gone). */
@@ -187,9 +256,22 @@
     if (!selected || !listing || !catalog) return;
     setBusy(book.key, true);
     try {
-      const result = await setInCatalog(selected, listing, catalog, [book.key], include, packages);
-      if (result.success && result.catalog) catalog = result.catalog;
-      else if (!result.success) showStatus(result.error || translate('Catalog update failed'), 'error');
+      const target = catalog;
+      const result = await setInCatalog(
+        selected,
+        listing,
+        target,
+        [book.key],
+        include,
+        packages,
+      );
+      if (result.success && result.catalog) {
+        catalogs = catalogs.map((c) =>
+          c.file === target.file ? result.catalog! : c,
+        );
+      } else if (!result.success) {
+        showStatus(result.error || translate('Catalog update failed'), 'error');
+      }
     } finally {
       setBusy(book.key, false);
     }
@@ -205,18 +287,21 @@
         showStatus(result.error || translate('Delete failed'), 'error');
         return;
       }
-      // The catalog no longer lists it either.
-      if (catalog?.keys.has(book.key) && listing && hasCatalog(selected)) {
-        const keys = new Set(catalog.keys);
-        keys.delete(book.key);
-        await writeCatalog(
-          selected,
-          listing.objects.filter((o) => o.key !== book.key),
-          keys,
-          sidecarMap(packages),
-          catalog.identity,
-          catalog.file,
-        );
+      // No feed lists it any more.
+      if (listing && hasCatalog(selected)) {
+        for (const feed of catalogs) {
+          if (!feed.keys.has(book.key)) continue;
+          const keys = new Set(feed.keys);
+          keys.delete(book.key);
+          await writeCatalog(
+            selected,
+            listing.objects.filter((o) => o.key !== book.key),
+            keys,
+            sidecarMap(packages),
+            feed.identity,
+            feed.file,
+          );
+        }
       }
       announceContentChanged(selected.id);
       showStatus(translate('{key} deleted', { key: book.key }), 'success');
@@ -235,7 +320,10 @@
         sendingPercent = percent;
       });
       if (result.success) {
-        showStatus(translate('Sent to {name}', { name: selected.name }), 'success');
+        showStatus(
+          translate('Sent to {name}', { name: selected.name }),
+          'success',
+        );
       } else {
         showStatus(result.error || translate('Upload failed'), 'error');
       }
@@ -257,11 +345,18 @@
     try {
       const result = await downloadFile(selected, book.key, book.fileId);
       if (result.error || !result.blob) {
-        showStatus(result.error || translate('Could not read that file'), 'error');
+        showStatus(
+          result.error || translate('Could not read that file'),
+          'error',
+        );
         return;
       }
       const bytes = await result.blob.arrayBuffer();
-      const message: ImportEpubMessage = { type: 'import-epub', filename: book.key, bytes };
+      const message: ImportEpubMessage = {
+        type: 'import-epub',
+        filename: book.key,
+        bytes,
+      };
       window.parent.postMessage(message, window.origin, [bytes]);
       importing = null;
     } finally {
@@ -276,13 +371,19 @@
       } else if (remote.type === 'device') {
         const ok = await reconnectDevice(remote);
         if (!ok) {
-          showStatus(translate('Choose the device again in Settings › Destinations.'), 'info');
+          showStatus(
+            translate('Choose the device again in Settings › Destinations.'),
+            'info',
+          );
           return;
         }
       }
       loadedVersion = -1;
     } catch (error) {
-      showStatus(translate('Authorization failed: {error}', { error: String(error) }), 'error');
+      showStatus(
+        translate('Authorization failed: {error}', { error: String(error) }),
+        'error',
+      );
     }
   }
 
@@ -308,7 +409,11 @@
           {remote.name}
         </button>
       {/each}
-      <button type="button" class="chip add" onclick={() => open('destinations')}>
+      <button
+        type="button"
+        class="chip add"
+        onclick={() => open('destinations')}
+      >
         {$t('+ Destination…')}
       </button>
     </div>
@@ -322,12 +427,46 @@
             <p class="muted">{$t('Checking…')}</p>
           {:else if listing.reach !== 'ok'}
             <p class="muted">{$t('The catalog cannot be read right now.')}</p>
+          {:else if creatingCatalog}
+            <div class="catalog-head">
+              <b>{$t('New catalog')}</b>
+            </div>
+            <CatalogIdentityForm
+              catalog={creatingCatalog}
+              busy={writingCatalog}
+              onSave={writeNewCatalog}
+              onCancel={() => (creatingCatalog = null)}
+            />
           {:else if catalog}
+            {#if catalogs.length > 1}
+              <div
+                class="catalog-picker"
+                role="group"
+                aria-label={$t('Catalogs')}
+              >
+                {#each catalogs as feed (feed.file)}
+                  <button
+                    type="button"
+                    class="chip small"
+                    class:on={feed.file === catalog.file}
+                    aria-pressed={feed.file === catalog.file}
+                    title={feed.file}
+                    onclick={() => (catalogFile = feed.file)}
+                  >
+                    {feed.identity.title}
+                  </button>
+                {/each}
+              </div>
+            {/if}
             <div class="catalog-head">
               <b>{catalog.identity.title}</b>
               <div class="acts">
                 {#if catalog.exists}
-                  <button type="button" class="btn btn-secondary btn-sm" onclick={copyFeedLink}>
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    onclick={copyFeedLink}
+                  >
                     {$t('Copy feed link')}
                   </button>
                 {/if}
@@ -339,15 +478,33 @@
                 >
                   {$t('Edit…')}
                 </button>
+                {#if catalog.exists}
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    onclick={startNewCatalog}
+                  >
+                    {$t('New catalog…')}
+                  </button>
+                {/if}
               </div>
             </div>
             <div class="catalog-row">
-              <span><i>{$t('Catalog')}</i> {formatLabel(catalog.format)} · {catalog.file}</span>
-              <span><i>{$t('By')}</i> {catalog.identity.authorName} · {catalog.identity.authorUri}</span>
+              <span
+                ><i>{$t('Catalog')}</i>
+                {formatLabel(catalog.format)} · {catalog.file}</span
+              >
+              <span
+                ><i>{$t('By')}</i>
+                {catalog.identity.authorName} · {catalog.identity
+                  .authorUri}</span
+              >
               {#if catalog.exists}
                 <span>
                   <i>{$t('Updated')}</i>
-                  {catalog.lastModified ? relativeTime(catalog.lastModified) : ''} ·
+                  {catalog.lastModified
+                    ? relativeTime(catalog.lastModified)
+                    : ''} ·
                   {catalog.keys.size === 1
                     ? $t('{n} book', { n: catalog.keys.size })
                     : $t('{n} books', { n: catalog.keys.size })}
@@ -357,22 +514,39 @@
             <div class="catalog-row">
               {#if !catalog.exists}
                 <span class="muted">{$t('No catalog yet.')}</span>
-                <button type="button" class="btn btn-primary btn-sm" onclick={updateCatalog} disabled={writingCatalog}>
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  onclick={updateCatalog}
+                  disabled={writingCatalog}
+                >
                   {writingCatalog ? $t('Updating...') : $t('Create catalog')}
                 </button>
               {:else if catalog.missingHrefs.length > 0}
                 <span class="warn">
                   {catalog.missingHrefs.length === 1
-                    ? $t('The catalog lists {n} file that is no longer here.', { n: 1 })
-                    : $t('The catalog lists {n} files that are no longer here.', {
-                        n: catalog.missingHrefs.length,
-                      })}
+                    ? $t('The catalog lists {n} file that is no longer here.', {
+                        n: 1,
+                      })
+                    : $t(
+                        'The catalog lists {n} files that are no longer here.',
+                        {
+                          n: catalog.missingHrefs.length,
+                        },
+                      )}
                 </span>
-                <button type="button" class="btn btn-primary btn-sm" onclick={updateCatalog} disabled={writingCatalog}>
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  onclick={updateCatalog}
+                  disabled={writingCatalog}
+                >
                   {writingCatalog ? $t('Updating...') : $t('Update catalog')}
                 </button>
               {:else}
-                <span class="ok">{$t('✓ Catalog matches the switches below')}</span>
+                <span class="ok"
+                  >{$t('✓ Catalog matches the switches below')}</span
+                >
               {/if}
             </div>
             {#if editingIdentity}
@@ -393,7 +567,9 @@
           <span>
             {listing.objects.length === 1
               ? $t('{n} file', { n: 1 })
-              : $t('{n} files', { n: listing.objects.length })} · {formatFileSize(totalSize)}
+              : $t('{n} files', { n: listing.objects.length })} · {formatFileSize(
+              totalSize,
+            )}
           </span>
         {/if}
       </h2>
@@ -403,19 +579,29 @@
       {:else if listing.reach === 'sign-in'}
         <p class="empty">
           {$t('Sign in needed')}
-          <button type="button" class="btn btn-secondary btn-sm" onclick={() => reconnect(selected)}>
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            onclick={() => reconnect(selected)}
+          >
             {$t('Connect')}
           </button>
         </p>
       {:else if listing.reach === 'reconnect'}
         <p class="empty">
           {$t('Needs permission')}
-          <button type="button" class="btn btn-secondary btn-sm" onclick={() => reconnect(selected)}>
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            onclick={() => reconnect(selected)}
+          >
             {$t('Reconnect')}
           </button>
         </p>
       {:else if listing.reach === 'unplugged'}
-        <p class="empty">{$t('Not plugged in · plug the reader in and refresh')}</p>
+        <p class="empty">
+          {$t('Not plugged in · plug the reader in and refresh')}
+        </p>
       {:else if listing.reach === 'error'}
         <p class="empty">{listing.error}</p>
       {:else if shelf}
@@ -430,11 +616,17 @@
                     src={book.thumbnailUrl}
                     alt=""
                     class="cover"
-                    onerror={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')}
+                    onerror={(e) =>
+                      ((e.currentTarget as HTMLImageElement).style.display =
+                        'none')}
                   />
                 {:else}
                   <div class="cover file">
-                    <span>{book.known ? '' : $t('No cover · not packaged here')}</span>
+                    <span
+                      >{book.known
+                        ? ''
+                        : $t('No cover · not packaged here')}</span
+                    >
                     <code>{book.key}</code>
                   </div>
                 {/if}
@@ -442,17 +634,27 @@
                 <span class="status">
                   {#if book.known}
                     {book.latest
-                      ? $t('Sent {when} · latest', { when: relativeTime(book.sentAt) })
-                      : $t('Sent {when} · an older package', { when: relativeTime(book.sentAt) })}
+                      ? $t('Sent {when} · latest', {
+                          when: relativeTime(book.sentAt),
+                        })
+                      : $t('Sent {when} · an older package', {
+                          when: relativeTime(book.sentAt),
+                        })}
                   {:else}
-                    {$t('Not on this device · {size}', { size: formatFileSize(book.size) })}
+                    {$t('Not on this device · {size}', {
+                      size: formatFileSize(book.size),
+                    })}
                   {/if}
                 </span>
                 <div class="acts">
                   {#if catalog}
                     <Switch
                       checked={book.inCatalog}
-                      label={$t('In catalog')}
+                      label={catalogs.length > 1
+                        ? $t('In {catalog}', {
+                            catalog: catalog.identity.title,
+                          })
+                        : $t('In catalog')}
                       busy={busyKeys.has(book.key)}
                       onChange={(next) => toggle(book, next)}
                     />
@@ -470,10 +672,18 @@
                   {#if confirmRemove === book.key}
                     <span class="confirm">
                       {$t('Confirm delete?')}
-                      <button type="button" class="btn btn-danger btn-sm" onclick={() => remove(book)}>
+                      <button
+                        type="button"
+                        class="btn btn-danger btn-sm"
+                        onclick={() => remove(book)}
+                      >
                         {$t('Yes')}
                       </button>
-                      <button type="button" class="btn btn-secondary btn-sm" onclick={() => (confirmRemove = null)}>
+                      <button
+                        type="button"
+                        class="btn btn-secondary btn-sm"
+                        onclick={() => (confirmRemove = null)}
+                      >
                         {$t('No')}
                       </button>
                     </span>
@@ -505,7 +715,9 @@
                 {/if}
                 <b class="title">{pkg.title || pkg.name}</b>
                 <span class="status">
-                  {$t('Packaged {when}', { when: relativeTime(pkg.lastModified) })}
+                  {$t('Packaged {when}', {
+                    when: relativeTime(pkg.lastModified),
+                  })}
                 </span>
                 <div class="acts">
                   <button
@@ -515,7 +727,9 @@
                     disabled={sendingName !== null}
                   >
                     {sendingName === pkg.name
-                      ? $t('Sending… {percent}%', { percent: sendingPercent ?? 0 })
+                      ? $t('Sending… {percent}%', {
+                          percent: sendingPercent ?? 0,
+                        })
                       : $t('Send')}
                   </button>
                 </div>
@@ -568,6 +782,18 @@
     background: var(--color-text-primary);
     border-color: var(--color-text-primary);
     color: var(--color-surface-primary);
+  }
+
+  .chip.small {
+    padding-block: 3px;
+    font-size: 12px;
+  }
+
+  .catalog-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 12px 16px 0;
   }
 
   .chip.add {

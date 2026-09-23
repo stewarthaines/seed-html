@@ -1,7 +1,7 @@
 <!--
   The Send band on Share: what the open book's latest package is doing on each
   destination, one Send per row, an "In the catalog" switch where the
-  destination has a catalog. The head names the latest package with its
+  destination has a catalog (one switch per catalog when it carries several). The head names the latest package with its
   epubcheck state; the foot links to the host's Published page and to the
   Destinations settings (process/PUBLISH_REWORK.md).
 -->
@@ -22,7 +22,7 @@
     type RemoteListing,
     type SendState,
   } from '../remote-status.js';
-  import { hasCatalog, loadCatalog, type CatalogInfo } from '../catalog.js';
+  import { hasCatalog, loadCatalogs, type CatalogInfo } from '../catalog.js';
   import { sendPackage, setInCatalog } from '../send.js';
   import { reconnectGoogle, reconnectDevice } from '../reconnect.js';
   import { showStatus } from '../status.js';
@@ -120,23 +120,37 @@
   // --- Each destination's listing and catalog --------------------------------
   interface RowData {
     listing: RemoteListing | null;
-    catalog: CatalogInfo | null;
+    /** Every feed on the destination, its own first; empty until listed. */
+    catalogs: CatalogInfo[];
     sending: number | null;
-    toggling: boolean;
+    /** The feed being rewritten, by file. */
+    toggling: string | null;
   }
   const rows: Map<string, RowData> = new SvelteMap();
 
   function rowFor(id: string): RowData {
-    return rows.get(id) ?? { listing: null, catalog: null, sending: null, toggling: false };
+    return (
+      rows.get(id) ?? {
+        listing: null,
+        catalogs: [],
+        sending: null,
+        toggling: null,
+      }
+    );
   }
 
   async function refreshRow(remote: RemoteConfig) {
     const listing = await listRemote(remote);
-    const catalog =
+    const catalogs =
       hasCatalog(remote) && listing.reach === 'ok'
-        ? await loadCatalog(remote, listing.objects)
-        : null;
-    rows.set(remote.id, { ...rowFor(remote.id), listing, catalog });
+        ? await loadCatalogs(remote, listing.objects)
+        : [];
+    rows.set(remote.id, { ...rowFor(remote.id), listing, catalogs });
+  }
+
+  // Entries from every feed, for matching a book that only a feed names.
+  function entriesOf(row: RowData) {
+    return row.catalogs.flatMap((c) => c.entries);
   }
 
   // List every destination once the list is known, and again when another
@@ -147,7 +161,8 @@
     const versions = $contentVersions;
     for (const remote of $remotesStore.remotes) {
       const version = versions[remote.id] ?? 0;
-      if (listedVersions.get(remote.id) === version && rows.has(remote.id)) continue;
+      if (listedVersions.get(remote.id) === version && rows.has(remote.id))
+        continue;
       listedVersions.set(remote.id, version);
       void refreshRow(remote);
     }
@@ -165,7 +180,7 @@
       remote,
       row.listing.objects,
       packages,
-      row.catalog?.entries ?? [],
+      entriesOf(row),
       $activeIdentifier,
     );
   }
@@ -177,14 +192,18 @@
       remote,
       row.listing.objects,
       packages,
-      row.catalog?.entries ?? [],
+      entriesOf(row),
     );
-    return [...ids].filter(([, id]) => id === $activeIdentifier).map(([key]) => key);
+    return [...ids]
+      .filter(([, id]) => id === $activeIdentifier)
+      .map(([key]) => key);
   }
 
-  function inCatalog(remote: RemoteConfig, row: RowData): boolean {
-    const catalog = row.catalog;
-    if (!catalog) return false;
+  function inCatalog(
+    remote: RemoteConfig,
+    row: RowData,
+    catalog: CatalogInfo,
+  ): boolean {
     return keysOfBook(remote, row).some((key) => catalog.keys.has(key));
   }
 
@@ -199,14 +218,21 @@
       ...rowFor(remote.id),
       sending: null,
       listing: result.listing ?? rowFor(remote.id).listing,
-      catalog: result.catalog ?? rowFor(remote.id).catalog,
     });
+    // The send may have changed the destination's own feed; read them all again.
+    if (result.listing?.reach === 'ok' && hasCatalog(remote)) {
+      const catalogs = await loadCatalogs(remote, result.listing.objects);
+      rows.set(remote.id, { ...rowFor(remote.id), catalogs });
+    }
     if (result.success) {
       showStatus(
         remote.type === 'device'
-          ? translate('{name} copied — eject the device to finish adding the book', {
-              name: latest.name,
-            })
+          ? translate(
+              '{name} copied — eject the device to finish adding the book',
+              {
+                name: latest.name,
+              },
+            )
           : translate('Sent to {name}', { name: remote.name }),
         'success',
       );
@@ -216,24 +242,34 @@
     }
   }
 
-  async function toggleCatalog(remote: RemoteConfig, include: boolean) {
+  async function toggleCatalog(
+    remote: RemoteConfig,
+    catalog: CatalogInfo,
+    include: boolean,
+  ) {
     const row = rowFor(remote.id);
-    if (!row.listing || !row.catalog) return;
-    rows.set(remote.id, { ...row, toggling: true });
+    if (!row.listing) return;
+    rows.set(remote.id, { ...row, toggling: catalog.file });
     const result = await setInCatalog(
       remote,
       row.listing,
-      row.catalog,
+      catalog,
       keysOfBook(remote, row),
       include,
       packages,
     );
+    const after = rowFor(remote.id);
     rows.set(remote.id, {
-      ...rowFor(remote.id),
-      toggling: false,
-      catalog: result.catalog ?? rowFor(remote.id).catalog,
+      ...after,
+      toggling: null,
+      catalogs: result.catalog
+        ? after.catalogs.map((c) =>
+            c.file === catalog.file ? result.catalog! : c,
+          )
+        : after.catalogs,
     });
-    if (!result.success) showStatus(result.error || translate('Catalog update failed'), 'error');
+    if (!result.success)
+      showStatus(result.error || translate('Catalog update failed'), 'error');
   }
 
   async function reconnect(remote: RemoteConfig) {
@@ -243,11 +279,15 @@
       } else if (remote.type === 'device') {
         const ok = await reconnectDevice(remote);
         if (!ok) {
-          showStatus(translate('Choose the device again in Settings › Destinations.'), 'info');
+          showStatus(
+            translate('Choose the device again in Settings › Destinations.'),
+            'info',
+          );
           return;
         }
       }
-      const current = $remotesStore.remotes.find((r) => r.id === remote.id) ?? remote;
+      const current =
+        $remotesStore.remotes.find((r) => r.id === remote.id) ?? remote;
       await refreshRow(current);
     } catch (error) {
       showStatus(
@@ -284,10 +324,17 @@
         {:else}
           <span class="check valid">{$t('Valid EPUB')}</span>
         {/if}
-        <button type="button" class="btn btn-link" onclick={openReport}>{$t('Report')}</button>
+        <button type="button" class="btn btn-link" onclick={openReport}
+          >{$t('Report')}</button
+        >
       {:else}
         <span class="muted">· {$t('Not checked')}</span>
-        <button type="button" class="btn btn-link" onclick={validate} disabled={validating}>
+        <button
+          type="button"
+          class="btn btn-link"
+          onclick={validate}
+          disabled={validating}
+        >
           {validating ? $t('Validating...') : $t('Validate')}
         </button>
       {/if}
@@ -301,7 +348,11 @@
   {:else if $remotesStore.remotes.length === 0}
     <p class="empty">
       {$t('No destinations yet.')}
-      <button type="button" class="btn btn-link" onclick={() => open('destinations')}>
+      <button
+        type="button"
+        class="btn btn-link"
+        onclick={() => open('destinations')}
+      >
         {$t('Add a destination…')}
       </button>
     </p>
@@ -342,19 +393,31 @@
             </span>
           </div>
           {#if hasCatalog(remote)}
-            <Switch
-              checked={inCatalog(remote, row)}
-              label={$t('In the catalog')}
-              disabled={!state || state.kind === 'not-sent'}
-              busy={row.toggling}
-              title={!state || state.kind === 'not-sent' ? $t('Send the book first') : undefined}
-              onChange={(next) => toggleCatalog(remote, next)}
-            />
+            <div class="switches">
+              {#each row.catalogs as catalog (catalog.file)}
+                <Switch
+                  checked={inCatalog(remote, row, catalog)}
+                  label={row.catalogs.length > 1
+                    ? $t('In {catalog}', { catalog: catalog.identity.title })
+                    : $t('In the catalog')}
+                  disabled={!state || state.kind === 'not-sent'}
+                  busy={row.toggling === catalog.file}
+                  title={!state || state.kind === 'not-sent'
+                    ? $t('Send the book first')
+                    : catalog.file}
+                  onChange={(next) => toggleCatalog(remote, catalog, next)}
+                />
+              {/each}
+            </div>
           {:else}
             <span class="no-catalog">{$t('No catalog')}</span>
           {/if}
           {#if reach === 'sign-in' || reach === 'reconnect'}
-            <button type="button" class="btn btn-secondary btn-sm" onclick={() => reconnect(remote)}>
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              onclick={() => reconnect(remote)}
+            >
               {reach === 'sign-in' ? $t('Connect') : $t('Reconnect')}
             </button>
           {:else}
@@ -363,7 +426,10 @@
               class="btn btn-sm"
               class:btn-primary={state?.kind !== 'current'}
               class:btn-secondary={state?.kind === 'current'}
-              disabled={!latest || row.sending !== null || !row.listing || reach !== 'ok'}
+              disabled={!latest ||
+                row.sending !== null ||
+                !row.listing ||
+                reach !== 'ok'}
               onclick={() => send(remote)}
             >
               {state?.kind === 'current' ? $t('Send again') : $t('Send')}
@@ -375,10 +441,18 @@
   {/if}
 
   <div class="foot">
-    <button type="button" class="btn btn-link" onclick={() => open('published')}>
+    <button
+      type="button"
+      class="btn btn-link"
+      onclick={() => open('published')}
+    >
       {$t('Published — every book on a destination')}
     </button>
-    <button type="button" class="btn btn-link" onclick={() => open('destinations')}>
+    <button
+      type="button"
+      class="btn btn-link"
+      onclick={() => open('destinations')}
+    >
       {$t('Destinations…')}
     </button>
   </div>
@@ -479,6 +553,13 @@
 
   .status.warn {
     color: var(--color-warning-text);
+  }
+
+  .switches {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
   }
 
   .no-catalog {

@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   catalogFilenamesFor,
+  catalogFilesOn,
+  unusedCatalogFile,
   feedUrlFor,
   formatForKey,
   formatLabel,
@@ -60,7 +62,9 @@ describe('catalog filenames', () => {
   });
 
   it('uses the configured name alone', () => {
-    expect(catalogFilenamesFor({ ...s3, catalogFilename: 'shelf.xml' })).toEqual(['shelf.xml']);
+    expect(
+      catalogFilenamesFor({ ...s3, catalogFilename: 'shelf.xml' }),
+    ).toEqual(['shelf.xml']);
   });
 
   it('reads the format off the extension', () => {
@@ -70,8 +74,12 @@ describe('catalog filenames', () => {
   });
 
   it('builds the feed URL per remote type', () => {
-    expect(feedUrlFor(s3, 'catalog.json')).toBe('https://s3.example.com/books/catalog.json');
-    expect(feedUrlFor(dropbox, 'catalog.json')).toBe('https://www.dropbox.com/catalog.json');
+    expect(feedUrlFor(s3, 'catalog.json')).toBe(
+      'https://s3.example.com/books/catalog.json',
+    );
+    expect(feedUrlFor(dropbox, 'catalog.json')).toBe(
+      'https://www.dropbox.com/catalog.json',
+    );
   });
 });
 
@@ -88,5 +96,45 @@ describe('keysForEntries', () => {
     ]);
     expect([...keys]).toEqual(['a.epub']);
     expect(missingHrefs).toEqual(['https://s3.example.com/books/removed.epub']);
+  });
+});
+
+describe('several catalogs on one destination', () => {
+  const at = '2026-01-01T00:00:00.000Z';
+  const objects: S3Object[] = [
+    { key: 'samples.xml', size: 1, lastModified: at },
+    { key: 'a.epub', size: 1, lastModified: at },
+    { key: 'catalog.json', size: 1, lastModified: at },
+    { key: 'family.json', size: 1, lastModified: at },
+    { key: 'a.thumb.png', size: 1, lastModified: at },
+  ];
+
+  it('lists every .xml and .json, the destination’s own first, the rest by name', () => {
+    expect(catalogFilesOn(s3, objects)).toEqual([
+      'catalog.json',
+      'family.json',
+      'samples.xml',
+    ]);
+  });
+
+  it('puts the configured file first even when the default is also there', () => {
+    expect(
+      catalogFilesOn({ ...s3, catalogFilename: 'samples.xml' }, objects),
+    ).toEqual(['samples.xml', 'catalog.json', 'family.json']);
+  });
+
+  it('falls back to the legacy catalog.xml and lists nothing on a bare destination', () => {
+    const legacy = [
+      ...objects.filter((o) => o.key !== 'catalog.json'),
+      { key: 'catalog.xml', size: 1, lastModified: at },
+    ];
+    expect(catalogFilesOn(s3, legacy)).toEqual(['catalog.xml', 'family.json', 'samples.xml']);
+    expect(catalogFilesOn(s3, [])).toEqual([]);
+  });
+
+  it('names a new catalog file that is not already there', () => {
+    expect(unusedCatalogFile([])).toBe('catalog.json');
+    expect(unusedCatalogFile(objects)).toBe('catalog-2.json');
+    expect(unusedCatalogFile(objects, 'opds1')).toBe('catalog.xml');
   });
 });

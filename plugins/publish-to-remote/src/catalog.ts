@@ -80,6 +80,47 @@ export function catalogFilenamesFor(remote: CatalogRemoteConfig): string[] {
     : [DEFAULT_FILE_FOR_FORMAT.opds2, DEFAULT_FILE_FOR_FORMAT.opds1];
 }
 
+/** A catalog is any .xml or .json on the destination: sidecars stay local
+ *  (only thumbnails upload), so a remote .json can only be a feed. */
+export function isCatalogKey(key: string): boolean {
+  const lower = key.toLowerCase();
+  return lower.endsWith('.xml') || lower.endsWith('.json');
+}
+
+/**
+ * Every catalog file on the destination, the destination's own (the
+ * configured name, else catalog.json, else catalog.xml) first and the rest
+ * by name. A destination can carry several feeds — one per shelf of books —
+ * and each is read and written on its own.
+ */
+export function catalogFilesOn(
+  remote: CatalogRemoteConfig,
+  objects: S3Object[],
+): string[] {
+  const present = objects.map((o) => o.key).filter(isCatalogKey);
+  const candidates = catalogFilenamesFor(remote);
+  const first = candidates.find((c) => present.includes(c));
+  const rest = present
+    .filter((k) => k !== first)
+    .sort((a, b) => a.localeCompare(b));
+  return first ? [first, ...rest] : rest;
+}
+
+/** A name for a new catalog that is not already on the destination. */
+export function unusedCatalogFile(
+  objects: S3Object[],
+  format: CatalogFormat = 'opds2',
+): string {
+  const present = new Set(objects.map((o) => o.key));
+  const base = DEFAULT_FILE_FOR_FORMAT[format];
+  if (!present.has(base)) return base;
+  const ext = format === 'opds2' ? '.json' : '.xml';
+  for (let n = 2; ; n += 1) {
+    const name = `catalog-${n}${ext}`;
+    if (!present.has(name)) return name;
+  }
+}
+
 export function feedUrlFor(remote: CatalogRemoteConfig, file: string): string {
   if (remote.type === 'dropbox') return `https://www.dropbox.com/${file}`;
   return getPublicUrl(remote, file);
@@ -112,16 +153,39 @@ export function keysForEntries(
   return { keys, missingHrefs };
 }
 
+/** The defaults for a feed that does not exist yet. */
+export function emptyCatalog(
+  remote: CatalogRemoteConfig,
+  file: string,
+): CatalogInfo {
+  return {
+    file,
+    format: formatForKey(file),
+    feedUrl: feedUrlFor(remote, file),
+    exists: false,
+    identity: {
+      title: defaultCatalogTitle(remote),
+      authorName: DEFAULT_CATALOG_AUTHOR_NAME,
+      authorUri: DEFAULT_CATALOG_AUTHOR_URI,
+    },
+    entries: [],
+    keys: new Set(),
+    missingHrefs: [],
+  };
+}
+
 /**
- * Read the destination's feed. A missing or unreadable feed yields an
- * `exists: false` info with the defaults, never a throw: the shelf still shows
- * and the first write creates the file.
+ * Read one feed on the destination — the named file, else the destination's
+ * own. A missing or unreadable feed yields an `exists: false` info with the
+ * defaults, never a throw: the shelf still shows and the first write creates
+ * the file.
  */
 export async function loadCatalog(
   remote: CatalogRemoteConfig,
   objects: S3Object[],
+  file?: string,
 ): Promise<CatalogInfo> {
-  const candidates = catalogFilenamesFor(remote);
+  const candidates = file ? [file] : catalogFilenamesFor(remote);
   for (const file of candidates) {
     try {
       const text = await downloadTextFile(remote, file);
@@ -151,21 +215,20 @@ export async function loadCatalog(
       // Unreadable candidate: try the next, else report no catalog.
     }
   }
-  const file = candidates[0];
-  return {
-    file,
-    format: formatForKey(file),
-    feedUrl: feedUrlFor(remote, file),
-    exists: false,
-    identity: {
-      title: defaultCatalogTitle(remote),
-      authorName: DEFAULT_CATALOG_AUTHOR_NAME,
-      authorUri: DEFAULT_CATALOG_AUTHOR_URI,
-    },
-    entries: [],
-    keys: new Set(),
-    missingHrefs: [],
-  };
+  return emptyCatalog(remote, candidates[0]);
+}
+
+/**
+ * Every feed on the destination, its own first. A destination with no feed
+ * yet yields one `exists: false` catalog so there is something to create.
+ */
+export async function loadCatalogs(
+  remote: CatalogRemoteConfig,
+  objects: S3Object[],
+): Promise<CatalogInfo[]> {
+  const files = catalogFilesOn(remote, objects);
+  if (files.length === 0) return [await loadCatalog(remote, objects)];
+  return Promise.all(files.map((file) => loadCatalog(remote, objects, file)));
 }
 
 /**
@@ -194,7 +257,8 @@ export async function writeCatalog(
       const thumbKey = `${key.replace(/\.epub$/i, '')}.thumb.png`;
       const blob = new Blob([entry.thumbnailBytes], { type: 'image/png' });
       const res = await uploadFile(remote, thumbKey, blob, 'image/png');
-      if (res.success) entry.thumbnailUrl = res.url || getPublicUrl(remote, thumbKey);
+      if (res.success)
+        entry.thumbnailUrl = res.url || getPublicUrl(remote, thumbKey);
     }
     delete entry.thumbnailBytes;
     metaByKey.set(key, entry);
