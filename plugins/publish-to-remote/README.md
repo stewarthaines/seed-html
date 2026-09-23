@@ -27,7 +27,9 @@ Catalogs publish in one of two formats, chosen per destination under Edit… on 
 The filename's extension picks the parser on load; switching format swaps the extension
 when the filename still carries the other format's default extension, and writes a new
 file. Membership is the "In the catalog" switch on Share or on Published; each flip
-regenerates the feed.
+regenerates the feed. A destination may carry several feeds (every `.xml` and
+`.json` on it): Published offers a picker and New catalog…, and the Share row
+shows one switch per feed.
 
 ## Google Drive setup
 
