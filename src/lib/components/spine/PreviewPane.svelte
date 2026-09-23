@@ -2917,9 +2917,21 @@
       display: none;
     }
 
-    /* The device row scrolls sideways rather than pushing the page wider. */
+    /* One row: the device chips scroll sideways in the space left by the
+       Reader and checks buttons, rather than wrapping under them. */
+    .preview-header {
+      flex-wrap: nowrap;
+      /* No corner toggles to reserve room for. */
+      padding-inline-end: var(--space-3);
+    }
+
+    .header-left {
+      flex-shrink: 0;
+    }
+
     .device-switch {
-      max-inline-size: 100%;
+      flex: 1 1 0;
+      min-inline-size: 0;
       overflow-x: auto;
     }
 
