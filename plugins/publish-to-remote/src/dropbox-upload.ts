@@ -148,15 +148,15 @@ export async function listDropboxFiles(
     const listData = await listResponse.json();
     const entries = listData.entries || [];
 
+    // No shared-link lookups here: a listing is one call. Links are
+    // resolved for the files a catalog write needs (resolveDropboxLinks).
     const objects: S3Object[] = [];
     for (const entry of entries) {
       if (entry['.tag'] === 'file') {
-        const fileId = await getOrCreateSharedLink(config, entry.path_display);
         objects.push({
           key: entry.name,
           size: entry.size,
           lastModified: entry.server_modified,
-          fileId,
         });
       }
     }
@@ -265,7 +265,35 @@ export function getDropboxPublicUrl(
   return fileId.includes('?') ? fileId + '&dl=1' : fileId + '?dl=1';
 }
 
-async function getOrCreateSharedLink(
+/** The folder-relative object path Dropbox wants. */
+function dropboxPath(config: DropboxRemoteConfig, objectKey: string): string {
+  return config.folderId ? `${config.folderId}/${objectKey}` : `/${objectKey}`;
+}
+
+/**
+ * Fill in the public link (`fileId`) of each listed object whose key is in
+ * `keys`, one lookup per file, leaving the others as they are. Called just
+ * before a catalog is written: those are the only links a feed needs.
+ */
+export async function resolveDropboxLinks(
+  config: DropboxRemoteConfig,
+  objects: S3Object[],
+  keys: Iterable<string>,
+): Promise<S3Object[]> {
+  const wanted = new Set(keys);
+  const out: S3Object[] = [];
+  for (const o of objects) {
+    if (!wanted.has(o.key) || o.fileId) {
+      out.push(o);
+      continue;
+    }
+    const fileId = await getOrCreateSharedLink(config, dropboxPath(config, o.key));
+    out.push(fileId ? { ...o, fileId } : o);
+  }
+  return out;
+}
+
+export async function getOrCreateSharedLink(
   config: DropboxRemoteConfig,
   filePath: string,
 ): Promise<string> {
