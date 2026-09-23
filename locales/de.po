@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-21\n"
-"PO-Revision-Date: 2026-09-21\n"
+"POT-Creation-Date: 2026-09-23\n"
+"PO-Revision-Date: 2026-09-23\n"
 "Language: de\n"
 "Language-Team: \n"
 "Last-Translator: Claude (machine first pass)\n"
@@ -96,10 +96,6 @@ msgstr ""
 msgid "{key} deleted"
 msgstr "{key} gelöscht"
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "{n} available"
-msgstr "{n} verfügbar"
-
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "{n} bytes"
 msgstr "{n} Bytes"
@@ -107,14 +103,6 @@ msgstr "{n} Bytes"
 #: src/lib/components/settings/TrackChangesPanel.svelte
 msgid "{n} change(s)"
 msgstr "{n} Änderung(en)"
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "{n} DOM transform"
-msgstr "{n} DOM-Transformation"
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "{n} DOM transforms"
-msgstr "{n} DOM-Transformationen"
 
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 msgid "{n} error"
@@ -144,10 +132,6 @@ msgstr "{n} Generatoren"
 msgid "{n} info"
 msgstr "{n} Info"
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "{n} installed"
-msgstr "{n} installiert"
-
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "{n} KB"
 msgstr "{n} KB"
@@ -155,6 +139,10 @@ msgstr "{n} KB"
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "{n} MB"
 msgstr "{n} MB"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "{n} on"
+msgstr "{n} aktiv"
 
 #: src/lib/components/settings/TranslationsPanel.svelte
 msgid "{n} stored"
@@ -448,10 +436,6 @@ msgstr ""
 msgid "Add to project"
 msgstr "Hinzufügen"
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Add to the current project, then enable under Project Settings."
-msgstr "Zum aktuellen Projekt hinzufügen, dann in den Projekteinstellungen aktivieren."
-
 #: src/lib/components/settings/TranslationsPanel.svelte
 msgid "Add translation"
 msgstr ""
@@ -480,10 +464,6 @@ msgstr "Zusätzliche Bibliotheken, die verwendet werden, wenn der Editor online 
 msgid "Additional title"
 msgstr "Zusätzlicher Titel"
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Adopt a markup language for the current project."
-msgstr "Eine Auszeichnungssprache für das aktuelle Projekt übernehmen."
-
 #: src/lib/components/metadata/MetadataEditor.svelte
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Advanced"
@@ -498,7 +478,6 @@ msgid "Advanced mode"
 msgstr "Erweiterter Modus"
 
 #: src/lib/components/settings/GeneratorSettings.svelte
-#: src/lib/navigation/views/SettingsView.svelte
 msgid "Advanced Mode required for extension management"
 msgstr "Für die Erweiterungsverwaltung ist der erweiterte Modus erforderlich"
 
@@ -539,8 +518,8 @@ msgid "App Key"
 msgstr "App-Schlüssel"
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid "App Settings"
-msgstr "App-Einstellungen"
+msgid "Appearance"
+msgstr "Darstellung"
 
 #: src/lib/Sidebar.svelte
 #: src/lib/components/shell/WriteSidebar.svelte
@@ -694,10 +673,6 @@ msgstr ""
 #: src/lib/components/spine/sr-walk.ts
 msgid "banner"
 msgstr "Banner"
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Basic"
-msgstr "Einfach"
 
 #: src/lib/Sidebar.svelte
 msgid "Basic mode"
@@ -987,6 +962,7 @@ msgstr "Clip-Bezeichnung"
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 #: src/lib/components/workspace/DuplicateProjectDialog.svelte
 #: src/lib/components/workspace/OPDSImportDialog.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 #: src/lib/pdf/pdf-export.ts
 msgid "Close"
 msgstr "Schließen"
@@ -1363,12 +1339,9 @@ msgid "Custom margin"
 msgstr ""
 
 #: src/lib/components/metadata/CustomMetaSection.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Custom metadata"
 msgstr "Benutzerdefinierte Metadaten"
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Custom metadata catalog"
-msgstr "Katalog benutzerdefinierter Metadaten"
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Custom page size"
@@ -1565,10 +1538,6 @@ msgstr "Verwerfen"
 msgid "document"
 msgstr "Dokument"
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "DOM Transforms"
-msgstr "DOM-Transformationen"
-
 #: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 #: src/lib/components/manifest/ManifestPreview.svelte
 #: src/lib/navigation/views/PublishView.svelte
@@ -1590,6 +1559,10 @@ msgstr "SEED.html herunterladen"
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "Download the app"
 msgstr "Die App herunterladen"
+
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Download the EPUB"
+msgstr "EPUB herunterladen"
 
 #: plugins/audio-clip-editor/src/App.svelte
 msgid "Drag on the waveform to define a clip."
@@ -2130,10 +2103,6 @@ msgstr "EPUB ist der offene Standard für digitale Bücher: eine eigenständige 
 msgid "EPUB Properties"
 msgstr "EPUB-Eigenschaften"
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "EPUB Settings"
-msgstr "EPUB-Einstellungen"
-
 #: src/lib/components/spine/sr-walk.ts
 msgid "errata"
 msgstr ""
@@ -2171,8 +2140,8 @@ msgid "Expanded"
 msgstr "Erweitert"
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid "Extensions"
-msgstr "Erweiterungen"
+msgid "Extensions in use"
+msgstr "Verwendete Erweiterungen"
 
 #: src/lib/components/spine/PreviewPane.svelte
 #. Device size for largest tablet screens
@@ -2284,6 +2253,10 @@ msgstr "Dateien konnten nicht verschoben werden"
 msgid "Failed to open workspace: {error}"
 msgstr "Arbeitsbereich konnte nicht geöffnet werden: {error}"
 
+#: src/App.svelte
+msgid "Failed to package EPUB"
+msgstr "EPUB konnte nicht gepackt werden"
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Failed to remove extension"
 msgstr "Erweiterung konnte nicht entfernt werden"
@@ -2335,6 +2308,10 @@ msgstr "Abrufen"
 #: src/lib/components/spine/sr-walk.ts
 msgid "figure"
 msgstr "Abbildung"
+
+#: src/lib/navigation/views/PublishView.svelte
+msgid "File"
+msgstr "Datei"
 
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "Filename"
@@ -2405,6 +2382,14 @@ msgstr "Schrift:"
 msgid "footnote"
 msgstr "Fußnote"
 
+#: src/lib/navigation/views/PublishView.svelte
+msgid "For any reading app."
+msgstr "Für jede Lese-App."
+
+#: src/lib/navigation/views/PublishView.svelte
+msgid "For printing."
+msgstr "Zum Drucken."
+
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Force reading-system colours"
 msgstr "Farben des Lesesystems erzwingen"
@@ -2419,12 +2404,9 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/App.svelte
 #: src/lib/components/metadata/AdvancedFields.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Format"
 msgstr "Format"
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "General"
-msgstr "Allgemein"
 
 #: src/lib/components/metadata/IdentifierEditor.svelte
 msgid "Generate"
@@ -2461,6 +2443,7 @@ msgstr "Wird erzeugt…"
 #: src/lib/components/settings/GeneratorSettings.svelte
 #: src/lib/components/spine/EditorPane.svelte
 #: src/lib/components/spine/GeneratorPanel.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 #. Dropdown group for on-demand content generator scripts
 msgid "Generators"
 msgstr "Generatoren"
@@ -2468,6 +2451,10 @@ msgstr "Generatoren"
 #: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Get Started"
 msgstr "Loslegen"
+
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Get the book"
+msgstr "Das Buch erhalten"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "glossary"
@@ -2726,8 +2713,8 @@ msgid "insertion"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid "Interface options"
-msgstr "Oberflächenoptionen"
+msgid "Insertion templates"
+msgstr "Einfügevorlagen"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "introduction"
@@ -2814,6 +2801,10 @@ msgstr "Beide behalten (als neues Element importieren)"
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 msgid "Keep the chapter"
 msgstr "Kapitel behalten"
+
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Kept in this browser"
+msgstr "In diesem Browser gespeichert"
 
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
@@ -3064,6 +3055,10 @@ msgstr ""
 msgid "macOS sidecar file"
 msgstr "macOS-Begleitdatei"
 
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Made"
+msgstr "Erstellt"
+
 #: src/lib/components/spine/sr-walk.ts
 msgid "main"
 msgstr "Hauptbereich"
@@ -3072,6 +3067,10 @@ msgstr "Hauptbereich"
 #: src/lib/components/shell/BrandBar.svelte
 msgid "Main navigation"
 msgstr "Hauptnavigation"
+
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Make a PDF"
+msgstr "PDF erstellen"
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "Make ebooks anyone can read — right now in your browser."
@@ -3132,17 +3131,17 @@ msgstr "Grundlegend"
 msgid "Missing files"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Mode"
-msgstr "Modus"
-
-#: src/lib/navigation/views/PublishView.svelte
-msgid "Modified"
-msgstr "Geändert"
-
 #: src/lib/components/books/BooksShelf.svelte
 msgid "More actions for {title}"
 msgstr "Weitere Aktionen für {title}"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "More formats…"
+msgstr "Weitere Formate…"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "More transforms…"
+msgstr "Weitere Transformationen…"
 
 #: src/lib/components/manifest/ManifestPreview.svelte
 #: src/lib/components/manifest/MoveReviewDialog.svelte
@@ -3216,7 +3215,6 @@ msgstr "k. A."
 #: plugins/publish-to-remote/src/App.svelte
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
-#: src/lib/navigation/views/PublishView.svelte
 msgid "Name"
 msgstr "Name"
 
@@ -3465,6 +3463,14 @@ msgstr ""
 msgid "Not in the linear reading order"
 msgstr "Nicht in der linearen Lesereihenfolge"
 
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Not made yet"
+msgstr "Noch nicht erstellt"
+
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Not packaged yet"
+msgstr "Noch nicht gepackt"
+
 #: src/lib/components/metadata/CustomMetaSection.svelte
 msgid "Not set"
 msgstr "Nicht gesetzt"
@@ -3511,8 +3517,13 @@ msgid "OAuth Client ID"
 msgstr "OAuth-Client-ID"
 
 #: src/lib/components/settings/TrackChangesPanel.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Off"
 msgstr "Aus"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "On"
+msgstr "Ein"
 
 #: src/lib/components/settings/TrackChangesPanel.svelte
 msgid "On — review mode"
@@ -3525,6 +3536,10 @@ msgstr "Im Regal"
 #: src/lib/navigation/views/AboutView.svelte
 msgid "One EPUB made with the editor, opening on phones, tablets, and e-readers."
 msgstr "Ein mit dem Editor erstelltes EPUB, das sich auf Smartphones, Tablets und E-Readern öffnet."
+
+#: src/lib/navigation/views/PublishView.svelte
+msgid "One page, no app needed."
+msgstr "Eine Seite, keine App nötig."
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Only needed if the saved connection stops working."
@@ -3539,12 +3554,12 @@ msgid "Open {title}"
 msgstr "{title} öffnen"
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid "Open a project to add extensions"
-msgstr "Öffnen Sie ein Projekt, um Erweiterungen hinzuzufügen"
+msgid "Open a book to change its settings."
+msgstr "Öffne ein Buch, um seine Einstellungen zu ändern."
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid "Open a project to configure its settings."
-msgstr "Öffnen Sie ein Projekt, um seine Einstellungen zu konfigurieren."
+msgid "Open a project to add extensions"
+msgstr "Öffnen Sie ein Projekt, um Erweiterungen hinzuzufügen"
 
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Open a second pane"
@@ -3642,8 +3657,8 @@ msgid "Overwrite?"
 msgstr "Überschreiben?"
 
 #: src/lib/navigation/views/PublishView.svelte
-msgid "Package a project to see it here."
-msgstr "Packen Sie ein Projekt, um es hier zu sehen."
+msgid "Package again"
+msgstr "Erneut packen"
 
 #: src/lib/navigation/views/AboutView.svelte
 #: src/lib/navigation/views/PublishView.svelte
@@ -3658,6 +3673,7 @@ msgid "Package as SEED.html"
 msgstr "Als SEED.html verpacken"
 
 #: src/lib/components/shell/TopBar.svelte
+#: src/lib/navigation/views/PublishView.svelte
 msgid "Package EPUB"
 msgstr "EPUB packen"
 
@@ -3678,9 +3694,21 @@ msgstr "{filename} verpackt ({size} MB)"
 msgid "Packaged {filename} ({size} MB). Large for email — share it by link instead."
 msgstr "{filename} verpackt ({size} MB). Zu groß für E-Mail — teilen Sie die Datei besser über einen Link."
 
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Packaged {when}"
+msgstr "Gepackt {when}"
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Packaged Filename"
 msgstr "Dateiname des gepackten EPUBs"
+
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Packaged files"
+msgstr "Gepackte Dateien"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Packaging"
+msgstr "Packen"
 
 #: src/lib/navigation/views/PublishView.svelte
 #: src/lib/navigation/views/WorkspaceView.svelte
@@ -3706,6 +3734,10 @@ msgstr "Seitenfortschritt"
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Page size"
 msgstr "Seitengröße"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Page transforms"
+msgstr "Seitentransformationen"
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Paged device previews"
@@ -3829,6 +3861,7 @@ msgid "Placing {count} chapters. Arrow keys to choose, Enter to confirm, Escape 
 msgstr "{count} Kapitel platzieren. Pfeiltasten zum Auswählen, Eingabetaste zum Bestätigen, Escape zum Abbrechen."
 
 #: src/lib/components/workspace/CreateProjectDialog.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Plain text"
 msgstr "Einfacher Text"
 
@@ -3863,6 +3896,10 @@ msgstr "Bitte wählen Sie zuerst einen Ordner aus und autorisieren Sie"
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Please select a remote type"
 msgstr "Bitte wählen Sie einen Remote-Typ aus"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Plugins"
+msgstr "Plugins"
 
 #: src/lib/components/spine/PreviewPane.svelte
 #. Device size for extra large mobile phones
@@ -3952,10 +3989,6 @@ msgstr "Projekt enthält Fehler"
 msgid "Project imported — your edits live in this browser. Use the package buttons to save your work as files."
 msgstr "Projekt importiert — Ihre Änderungen leben in diesem Browser. Nutzen Sie die Verpacken-Schaltflächen, um Ihre Arbeit als Dateien zu sichern."
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Project Settings"
-msgstr "Projekt-Einstellungen"
-
 #: src/lib/Sidebar.svelte
 msgid "Projects"
 msgstr "Projekte"
@@ -3982,9 +4015,12 @@ msgid "Publication Date"
 msgstr "Veröffentlichungsdatum"
 
 #: src/lib/Sidebar.svelte
-#: src/lib/navigation/views/PublishView.svelte
 msgid "Publish"
 msgstr "Veröffentlichen"
+
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Publish to the web"
+msgstr "Im Web veröffentlichen"
 
 #: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Published"
@@ -4036,6 +4072,10 @@ msgstr "Lesen"
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Read aloud"
 msgstr "Vorlesen"
+
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Read it in the browser"
+msgstr "Im Browser lesen"
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Read whole chapter"
@@ -4415,6 +4455,10 @@ msgstr "Secret Access Key"
 msgid "Secret Key"
 msgstr "Secret Key"
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "SEED.html included"
+msgstr "SEED.html enthalten"
+
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "SEED.html is a single file, and this page is the whole app. Keep your own copy and it will keep working even if this website goes away — a fully offline editor."
 msgstr "SEED.html ist eine einzige Datei, und diese Seite ist die ganze App. Bewahren Sie Ihre eigene Kopie auf, und sie funktioniert weiter, selbst wenn diese Website verschwindet — ein vollständig offline nutzbarer Editor."
@@ -4500,11 +4544,17 @@ msgstr "Auf heute setzen"
 #: src/lib/Sidebar.svelte
 #: src/lib/components/shell/BrandBar.svelte
 #: src/lib/components/shell/TopBar.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Settings"
 msgstr "Einstellungen"
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Settings sections"
+msgstr "Einstellungsbereiche"
+
 #: src/App.svelte
 #: src/lib/components/shell/TopBar.svelte
+#: src/lib/navigation/views/PublishView.svelte
 msgid "Share"
 msgstr "Teilen"
 
@@ -4776,6 +4826,7 @@ msgid "Text differences"
 msgstr "Textunterschiede"
 
 #: src/lib/components/workspace/CreateProjectDialog.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Text format"
 msgstr "Textformat"
 
@@ -4788,8 +4839,8 @@ msgid "Text size"
 msgstr "Schriftgröße"
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid "Text Transform"
-msgstr "Text-Transformation"
+msgid "Text transform"
+msgstr "Texttransformation"
 
 #: src/lib/navigation/views/AboutView.svelte
 msgid "The book you build here is a valid, self-contained EPUB that also carries its own editable source (bundled as SEED.zip) inside it."
@@ -4847,6 +4898,10 @@ msgstr "Bibliotheken von Drittanbietern"
 #: src/lib/navigation/views/ThirdPartyView.svelte
 msgid "This application is built with the following open source libraries:"
 msgstr "Diese Anwendung wird mit den folgenden Open-Source-Bibliotheken erstellt:"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "This book"
+msgstr "Dieses Buch"
 
 #: src/lib/components/spine/ChapterValidationPanel.svelte
 #: src/lib/components/spine/EditorPane.svelte
@@ -4931,6 +4986,7 @@ msgid "Toggle theme"
 msgstr "Design umschalten"
 
 #: src/lib/components/settings/TrackChangesPanel.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Track changes"
 msgstr "Änderungen verfolgen"
 
@@ -4972,6 +5028,7 @@ msgid "Translation reference — read-only"
 msgstr ""
 
 #: src/lib/components/settings/TranslationsPanel.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Translations"
 msgstr ""
 
@@ -5266,6 +5323,10 @@ msgstr "XHTML-Vorschau"
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Yes"
 msgstr "Ja"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "You"
+msgstr "Du"
 
 #: src/lib/navigation/views/WorkspaceView.svelte
 msgid "You have unsaved changes"
