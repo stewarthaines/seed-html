@@ -113,16 +113,34 @@ Step 4 (Details) built: `MetadataEditor` drops its Basic Info / Advanced / Acces
 
 Step 4 committed (e7e485b), plus a small menu fix (876c6ac). Phase 3 is complete on `makeover/phase-3-book`, pending review.
 
+## Phase 4 — Share and Settings (23 September 2026, user present)
+
+Branch `makeover/phase-4-share-settings`, stacked on phase 3.
+
+Decisions taken with the user: the Settings sheet's taxonomy is You (Appearance, Language, Advanced mode, Plugins) and This book (Format, Packaging, Preview, PDF, Translations, Track changes); the two catalogs (text formats, content transforms) are no longer sections of their own but open from Format as "More formats…" and "More transforms…"; the custom metadata catalog moves under Format's Advanced block, with the book, although it is stored app-wide.
+
+Decisions taken alone: Format, Packaging, Preview and Track changes are Advanced-only, as their contents were; in Basic mode This book lists PDF and Translations, which is what Basic showed before. "Packaging" is a new home for "Add SEED.html to package" and the packaged-filename template, which were in EPUB Settings. The text format is a segmented radio of the catalog's formats plus Plain text (the built-in transform); choosing one adopts it, installing the extension when needed; the standalone build, with no catalog, shows the text-transform select instead. The sheet dims the whole viewport including the top bar (the mock dimmed only the body), which keeps `aria-modal` honest. The Settings button shows `aria-expanded` rather than `aria-current` while the sheet is open.
+
+The sheet is `SettingsView.svelte` itself, rendered by `App.svelte` after the layout with `onClose`; the `settings` view id stays, and the layout renders the last content view underneath it (`contentView` in App, a `view` override on `LayoutManager`). Escape or the backdrop closes it and focus returns to the Settings button. The open section is remembered under `seedhtml_settings_section`. Test ids `settings-section-<id>` and `settings-close`.
+
+Share (`PublishView.svelte`) is now a page: a status line with this book's latest package (matched by `dc:identifier` from the publish sidecar, so per-book needs no workspace id), three outcome cards (Download the EPUB, with Package / Package again / without source; Read it in the browser, with READ.html and SEED.html; Make a PDF), a "Publish to the web" band that hosts the plugin's iframe at a fixed height, and, when the plugin is not showing, the packaged-files table for every book with Read, Download and Delete. The packaged list therefore stays global; only the cards are per-book. The Package EPUB action is shared between the top bar and the Share page (`packageCurrentBook` in App, with a busy flag and an error toast).
+
+Not done in this phase: the About view is unchanged (the plan said it shrinks to a dialog; left for the user's call on whether About needs a page at all); the plugin's own frame still shows its "Local Packaged EPUBs" pane, which duplicates the cards above it, and restyling the plugin is outside this pass; on the Books screen the sheet's This book group refers to the still-open book without naming it.
+
+Also in this phase: `docs/STORYBOOK.md` gains the sheet's test ids; `scripts/a11y-scan.mjs` presses Escape after scanning Settings; three process docs that failed `prettier --check` on `main` (`APP_MAKEOVER_LIBRARY`, `MERMAID_EXTENSION`, `TRANSLATION_EDITIONS`) were formatted so `npm run validate` passes; German added for every new string.
+
+Seen in the running app: the Share page at 1440 and 390 wide; the sheet on Share and on Books, the Format section with its Advanced block open, the phone layout with the section row; Escape closing and returning focus.
+
 ## Where things stand (end of the overnight run, 22 September 2026)
 
 Three stacked branches, none merged: `makeover/phase-1-shell` (8 commits) → `makeover/phase-2-write` (5) → `makeover/phase-3-book` (6). `npm run validate` is green on each; the story suite passes except `LayoutManager.stories.svelte`, stale since before the makeover; the accessibility scan reports only the About page's two pre-existing findings.
 
-Not started: phase 4 (the Share screen as outcome cards with the plugin inside "Publish to the web", and Settings as a sheet split You / This book) and phase 5 (phone). Phase 4's Settings sheet is the one piece deliberately left for a session with the user present: `SettingsView.svelte` is two thousand lines of conditionally rendered sections, and the sheet needs a section list that mirrors those conditions, which is a design call about what belongs under You and This book in Basic mode.
+Phase 4 is built on `makeover/phase-4-share-settings` (see above); phase 5 (phone) is not started.
 
-Open from the plan: per-book Share versus the global packaged list; what the sample book opens into; whether About needs a page. Owed after review: deleting `Sidebar.svelte`, `WorkspaceView.svelte`, `MetadataTabBar.svelte`/`MetadataTab.svelte` and `LayoutManager.stories.svelte`, which are no longer rendered.
+Open from the plan: what the sample book opens into; whether About needs a page (and so whether phase 4's About dialog is wanted). Owed after review: deleting `Sidebar.svelte`, `WorkspaceView.svelte`, `MetadataTabBar.svelte`/`MetadataTab.svelte` and `LayoutManager.stories.svelte`, which are no longer rendered.
 
 One loose end in the tooling: `scripts/a11y-scan.mjs` cannot get past creating a book in its own headless context (the New book dialog opens and Create is pressed, but no book appears and no error is logged), so only the Books and About screens are scanned. The same steps succeed in a fresh headless Chromium run by hand (`.playwright-mcp/makeover/scan-debug.mjs`) and in the user's browser. The scan now saves `.playwright-mcp/a11y-no-book-<theme>.png` when this happens; worth a look with the dev server open.
 
 ### Next step
 
-User review of the three branches. Then phase 4.
+User review of the four branches. Then phase 5 (phone).
