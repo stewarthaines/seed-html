@@ -1243,6 +1243,7 @@ msgstr ""
 msgid "Coverage"
 msgstr ""
 
+#: plugins/publish-to-remote/src/components/CatalogIdentityForm.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "Create"
 msgstr ""
@@ -1252,7 +1253,7 @@ msgid "Create a new minimal EPUB project"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/PublishedSurface.svelte
-msgid "Create catalog"
+msgid "Create catalog…"
 msgstr ""
 
 #: src/lib/components/settings/GeneratorSettings.svelte

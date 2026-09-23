@@ -1262,6 +1262,7 @@ msgstr "Coverbild aktualisiert"
 msgid "Coverage"
 msgstr "Abdeckung"
 
+#: plugins/publish-to-remote/src/components/CatalogIdentityForm.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "Create"
 msgstr "Erstellen"
@@ -1271,8 +1272,8 @@ msgid "Create a new minimal EPUB project"
 msgstr "Ein neues minimales EPUB-Projekt erstellen"
 
 #: plugins/publish-to-remote/src/components/PublishedSurface.svelte
-msgid "Create catalog"
-msgstr "Katalog anlegen"
+msgid "Create catalog…"
+msgstr "Katalog anlegen…"
 
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Create generator"
