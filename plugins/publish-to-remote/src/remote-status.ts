@@ -157,8 +157,11 @@ export function shelfFor(
       const thumbKey = o.key.replace(/\.epub$/i, '.thumb.png');
       const remoteThumb = byKey.get(thumbKey);
       let thumbnailUrl = local?.thumbnailUrl;
-      if (remoteThumb && remote.type !== 'device') {
-        const url = getThumbnailUrl(remote, thumbKey, remoteThumb.fileId);
+      const url =
+        remoteThumb && remote.type !== 'device'
+          ? getThumbnailUrl(remote, thumbKey, remoteThumb.fileId)
+          : '';
+      if (url && remoteThumb) {
         thumbnailUrl =
           url +
           (url.includes('?') ? '&' : '?') +

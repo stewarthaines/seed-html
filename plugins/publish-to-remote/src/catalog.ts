@@ -21,6 +21,8 @@ import {
   uploadTextFile,
   getPublicUrl,
 } from './remote-ops.js';
+import { resolveDropboxLinks } from './dropbox-upload.js';
+import { feedCache } from './feed-cache.js';
 import type {
   CatalogEntry,
   CatalogEntryMeta,
@@ -135,25 +137,61 @@ function parseCatalog(key: string, text: string): ParsedOpdsFeed {
     : parseOpdsFeed(text);
 }
 
-/** Match feed entries back to the objects on the destination by acquisition URL. */
+/** The last path segment of a URL, decoded: the filename a link points at. */
+export function hrefBasename(href: string): string {
+  try {
+    const path = new URL(href).pathname;
+    return decodeURIComponent(path.slice(path.lastIndexOf('/') + 1));
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Match feed entries back to the objects on the destination: by acquisition
+ * URL where the listing knows one, else by the filename the link ends in
+ * (a Dropbox listing carries no links until a write resolves them, and a
+ * Dropbox link ends in the file's name).
+ */
 export function keysForEntries(
   remote: RemoteConfig,
   objects: S3Object[],
   entries: CatalogEntry[],
 ): { keys: Set<string>; missingHrefs: string[] } {
   const byHref = new Map<string, string>();
+  const byName = new Set<string>();
   for (const o of objects) {
-    if (o.key.toLowerCase().endsWith('.epub'))
-      byHref.set(acquisitionUrl(remote, o), o.key);
+    if (!o.key.toLowerCase().endsWith('.epub')) continue;
+    const url = acquisitionUrl(remote, o);
+    if (url) byHref.set(url, o.key);
+    byName.add(o.key);
   }
   const keys = new Set<string>();
   const missingHrefs: string[] = [];
   for (const entry of entries) {
     const key = byHref.get(entry.href);
-    if (key) keys.add(key);
+    if (key) {
+      keys.add(key);
+      continue;
+    }
+    const name = hrefBasename(entry.href);
+    if (name && byName.has(name)) keys.add(name);
     else missingHrefs.push(entry.href);
   }
   return { keys, missingHrefs };
+}
+
+/** Read a feed's text, through the cache when the listing gives it a stamp. */
+async function feedText(
+  remote: CatalogRemoteConfig,
+  objects: S3Object[],
+  file: string,
+): Promise<string | null> {
+  const stamp = objects.find((o) => o.key === file)?.lastModified;
+  if (!stamp) return downloadTextFile(remote, file);
+  return feedCache.text(remote.id, file, stamp, () =>
+    downloadTextFile(remote, file),
+  );
 }
 
 /** The defaults for a feed that does not exist yet. */
@@ -192,7 +230,7 @@ export async function loadCatalog(
   let failure: string | undefined;
   for (const file of candidates) {
     try {
-      const text = await downloadTextFile(remote, file);
+      const text = await feedText(remote, objects, file);
       if (!text) continue;
       const parsed = parseCatalog(file, text);
       const { keys, missingHrefs } = keysForEntries(
@@ -254,6 +292,15 @@ export async function writeCatalog(
   const format = formatForKey(file);
   const feedUrl = feedUrlFor(remote, file);
   const present = new Set(objects.map((o) => o.key));
+  // A Dropbox feed links to shared URLs: look them up now, only for the
+  // books and thumbnails the feed will carry.
+  if (remote.type === 'dropbox') {
+    const linked = [...keys].flatMap((k) => [
+      k,
+      `${k.replace(/\.epub$/i, '')}.thumb.png`,
+    ]);
+    objects = await resolveDropboxLinks(remote, objects, linked);
+  }
   const metaByKey = new Map<string, CatalogEntryMeta>();
   for (const [key, meta] of sidecars) {
     if (!keys.has(key) || !present.has(key)) continue;

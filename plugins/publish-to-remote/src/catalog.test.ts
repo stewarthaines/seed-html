@@ -7,6 +7,7 @@ import {
   formatForKey,
   formatLabel,
   hasCatalog,
+  hrefBasename,
   keysForEntries,
 } from './catalog.js';
 import type {
@@ -136,5 +137,28 @@ describe('several catalogs on one destination', () => {
     expect(unusedCatalogFile([])).toBe('catalog.json');
     expect(unusedCatalogFile(objects)).toBe('catalog-2.json');
     expect(unusedCatalogFile(objects, 'opds1')).toBe('catalog.xml');
+  });
+});
+
+describe('matching a Dropbox feed without links', () => {
+  const objects: S3Object[] = [
+    { key: 'Walking the Coast.epub', size: 1, lastModified: '2026-01-01T00:00:00.000Z' },
+    { key: 'other.epub', size: 1, lastModified: '2026-01-01T00:00:00.000Z' },
+  ];
+
+  it('reads the filename off a shared link', () => {
+    expect(
+      hrefBasename('https://www.dropbox.com/scl/fi/abc/Walking%20the%20Coast.epub?rlkey=x&dl=1'),
+    ).toBe('Walking the Coast.epub');
+    expect(hrefBasename('not a url')).toBe('');
+  });
+
+  it('matches entries by the filename the link ends in when the listing has no links', () => {
+    const { keys, missingHrefs } = keysForEntries(dropbox, objects, [
+      { href: 'https://www.dropbox.com/scl/fi/abc/Walking%20the%20Coast.epub?rlkey=x&dl=1' },
+      { href: 'https://www.dropbox.com/scl/fi/def/gone.epub?dl=1' },
+    ]);
+    expect([...keys]).toEqual(['Walking the Coast.epub']);
+    expect(missingHrefs).toEqual(['https://www.dropbox.com/scl/fi/def/gone.epub?dl=1']);
   });
 });
