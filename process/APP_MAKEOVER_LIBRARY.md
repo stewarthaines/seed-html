@@ -120,5 +120,5 @@ Not touched by any phase: the transform pipeline, storage, the plugin contract, 
 
 - **Share is per book in the mock; today's packaged list is global.** Packaged files live in the shared `publish` workspace, and the sidecar carries a title but no workspace id. Per-book Share needs the sidecar to record which book made the file, or Share needs a "from other books" section. Decide before phase 4.
 - **What the sample book opens into.** The mock opens the sample from the Start row; auto-importing it on the very first visit was discussed and not decided.
-- **The About page.** Reduced to a dialog in the map above; confirm that the download-the-app and licence content does not need a page of its own.
+- **The About page.** Settled 23 September 2026: a dialog, carrying the licence, the third-party libraries and the app download.
 - **Loose screens not yet drawn.** Share with storage connected, the New book dialog, the Sample books picker, dark theme. All derivable from what is on the canvas; draw when a phase reaches them.
