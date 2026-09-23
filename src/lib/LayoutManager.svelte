@@ -91,14 +91,29 @@
         <div class="phone-layout">
           {#if view === 'spine'}
             {@render chapterStrip?.()}
-          {/if}
-          <div class="single-pane-container">
-            {#if view === 'spine' && phonePane === 'preview'}
-              {@render rightContent?.()}
-            {:else}
+            <!-- Both of the editor's panes stay mounted: the editor loads the
+                 chapter and feeds the preview, so it must keep running while
+                 the preview is the one on screen. The inactive pane keeps its
+                 layout but is invisible and inert. -->
+            <div class="phone-panes">
+              <div
+                class="single-pane-container phone-pane"
+                class:inactive={phonePane === 'preview'}
+              >
+                {@render leftContent?.()}
+              </div>
+              <div
+                class="single-pane-container phone-pane"
+                class:inactive={phonePane !== 'preview'}
+              >
+                {@render rightContent?.()}
+              </div>
+            </div>
+          {:else}
+            <div class="single-pane-container">
               {@render leftContent?.()}
-            {/if}
-          </div>
+            </div>
+          {/if}
         </div>
       {:else if showPreviewPane && previewCollapsed}
         <!-- Writing mode: editor full width, preview folded into a rail. -->
@@ -191,6 +206,21 @@
   .phone-layout .single-pane-container {
     flex: 1;
     min-block-size: 0;
+  }
+
+  .phone-panes {
+    position: relative;
+    flex: 1;
+    min-block-size: 0;
+  }
+
+  .phone-pane {
+    position: absolute;
+    inset: 0;
+  }
+
+  .phone-pane.inactive {
+    visibility: hidden;
   }
 
   .single-pane-container {
