@@ -885,6 +885,8 @@
     | 'advanced'
     | 'plugins'
     | 'format'
+    | 'transforms'
+    | 'custom-metadata'
     | 'packaging'
     | 'preview'
     | 'pdf'
@@ -939,6 +941,12 @@
         summary: formatSummary,
       });
       items.push({
+        id: 'transforms',
+        label: $t('Content transforms'),
+        summary: $t('{n} on', { n: epubSettings?.dom_transforms?.length ?? 0 }),
+      });
+      items.push({ id: 'custom-metadata', label: $t('Custom metadata') });
+      items.push({
         id: 'packaging',
         label: $t('Packaging'),
         summary: epubSettings?.include_seed_html_in_package ? $t('SEED.html included') : undefined,
@@ -973,26 +981,25 @@
   });
   const activeLabel = $derived(allSections.find(s => s.id === activeSection)?.label ?? '');
 
-  // Catalog panels reached from Format (not listed in the nav). Format stays the
-  // current item while one is shown; switching sections clears it.
-  let catalogPanel = $state<'formats' | 'transforms' | null>(null);
+  // The formats catalog, reached from Format (not listed in the nav). Format
+  // stays the current item while it is shown; switching sections clears it.
+  let catalogPanel = $state<'formats' | null>(null);
   let backButton = $state<HTMLButtonElement | null>(null);
   let moreFormatsButton = $state<HTMLButtonElement | null>(null);
-  let moreTransformsButton = $state<HTMLButtonElement | null>(null);
 
   function selectSection(id: SectionId): void {
     rememberedSection.current = id;
     catalogPanel = null;
   }
 
-  async function openCatalog(panel: 'formats' | 'transforms'): Promise<void> {
+  async function openCatalog(panel: 'formats'): Promise<void> {
     catalogPanel = panel;
     await tick();
     backButton?.focus();
   }
 
   async function closeCatalog(): Promise<void> {
-    const opener = catalogPanel === 'formats' ? moreFormatsButton : moreTransformsButton;
+    const opener = moreFormatsButton;
     catalogPanel = null;
     await tick();
     if (opener?.isConnected && opener.getClientRects().length > 0) opener.focus();
@@ -1288,34 +1295,6 @@
         {#each textFormatExtensions as ext (ext.id)}
           {@render catalogItem(ext)}
         {/each}
-      {:else if catalogPanel === 'transforms'}
-        <button
-          bind:this={backButton}
-          type="button"
-          class="btn btn-link sheet-back"
-          onclick={closeCatalog}
-        >
-          <span aria-hidden="true">←</span>
-          {$t('Format')}
-        </button>
-        <h1 class="section-title">{$t('Content transforms')}</h1>
-        {#each contentCategoryGroups as group (group.key)}
-          {@const collapsed = collapsedCategories.has(group.key)}
-          <button
-            type="button"
-            class="ct-group-toggle"
-            aria-expanded={!collapsed}
-            onclick={() => toggleCategory(group.key)}
-          >
-            <span class="ct-disclosure" aria-hidden="true"><CaretRight size={14} /></span>
-            <span class="ct-group-label">{group.label}</span>
-          </button>
-          {#if !collapsed}
-            {#each group.items as ext (ext.id)}
-              {@render catalogItem(ext)}
-            {/each}
-          {/if}
-        {/each}
       {:else}
         <h1 class="section-title">{activeLabel}</h1>
 
@@ -1486,100 +1465,6 @@
                 <h3 class="sub-heading" id="text-transform-heading">{$t('Text transform')}</h3>
                 {@render textTransformSelect(false)}
               {/if}
-
-              <h3 class="sub-heading">{$t('Page transforms')}</h3>
-              <div class="setting-group">
-                <p class="setting-description setting-description-flush">
-                  {$t('Run top-to-bottom over the generated DOM.')}
-                </p>
-
-                {#if (epubSettings?.dom_transforms?.length ?? 0) === 0}
-                  <p class="setting-description setting-description-flush">
-                    {$t('No DOM transforms configured.')}
-                  </p>
-                {:else}
-                  <ul class="dom-transform-list">
-                    {#each epubSettings?.dom_transforms ?? [] as path, i (path)}
-                      {@const label = transformLabel(path)}
-                      <li class="dom-transform-row">
-                        <span class="dom-transform-name" title={path}>
-                          {label.name}
-                          {#if label.group}
-                            <span class="dom-transform-group">({label.group})</span>
-                          {/if}
-                        </span>
-                        <div class="dom-transform-actions">
-                          <button
-                            type="button"
-                            class="btn btn-icon"
-                            onclick={() => moveDomTransform(i, -1)}
-                            disabled={i === 0 || epubLoading}
-                            aria-label={$t('Move up')}
-                            title={$t('Move up')}
-                          >
-                            <CaretUp size={14} aria-hidden="true" />
-                          </button>
-                          <button
-                            type="button"
-                            class="btn btn-icon"
-                            onclick={() => moveDomTransform(i, 1)}
-                            disabled={i === (epubSettings?.dom_transforms.length ?? 0) - 1 ||
-                              epubLoading}
-                            aria-label={$t('Move down')}
-                            title={$t('Move down')}
-                          >
-                            <CaretDown size={14} aria-hidden="true" />
-                          </button>
-                          <button
-                            type="button"
-                            class="btn btn-icon"
-                            onclick={() => removeDomTransform(i)}
-                            disabled={epubLoading}
-                            aria-label={$t('Remove')}
-                            title={$t('Remove')}
-                          >
-                            <X size={14} aria-hidden="true" />
-                          </button>
-                        </div>
-                      </li>
-                    {/each}
-                  </ul>
-                {/if}
-
-                {#if addableTransformGroups.length > 0}
-                  <select
-                    class="setting-select"
-                    aria-label={$t('Add a DOM transform')}
-                    disabled={epubLoading}
-                    onchange={e => {
-                      const sel = e.currentTarget as HTMLSelectElement;
-                      const value = sel.value;
-                      sel.value = '';
-                      if (value) addDomTransform(value);
-                    }}
-                  >
-                    <option value="" disabled selected>{$t('Add a DOM transform…')}</option>
-                    {#each addableTransformGroups as grp (grp.group)}
-                      <optgroup label={grp.group}>
-                        {#each grp.options as opt (opt.path)}
-                          <option value={opt.path}>{opt.fileName}</option>
-                        {/each}
-                      </optgroup>
-                    {/each}
-                  </select>
-                {/if}
-
-                {#if contentTransforms.length > 0}
-                  <button
-                    bind:this={moreTransformsButton}
-                    type="button"
-                    class="btn btn-link more-link"
-                    onclick={() => openCatalog('transforms')}
-                  >
-                    {$t('More transforms…')}
-                  </button>
-                {/if}
-              </div>
             </div>
 
             <h3 class="sub-heading">{$t('Insertion templates')}</h3>
@@ -1659,11 +1544,6 @@
               </p>
             </div>
 
-            <h3 class="sub-heading">{$t('Custom metadata')}</h3>
-            <div class="setting-group">
-              <CustomMetaCatalogSettings />
-            </div>
-
             {#if workspaceId}
               <h3 class="sub-heading">{$t('Generators')}</h3>
               <div class="setting-group">
@@ -1676,6 +1556,113 @@
               </div>
             {/if}
           </details>
+        {:else if activeSection === 'transforms'}
+          <!-- The book's page transforms, then the catalog to add more from. -->
+          <h3 class="sub-heading">{$t('Page transforms')}</h3>
+          <div class="setting-group">
+            <p class="setting-description setting-description-flush">
+              {$t('Run top-to-bottom over the generated DOM.')}
+            </p>
+
+            {#if (epubSettings?.dom_transforms?.length ?? 0) === 0}
+              <p class="setting-description setting-description-flush">
+                {$t('No DOM transforms configured.')}
+              </p>
+            {:else}
+              <ul class="dom-transform-list">
+                {#each epubSettings?.dom_transforms ?? [] as path, i (path)}
+                  {@const label = transformLabel(path)}
+                  <li class="dom-transform-row">
+                    <span class="dom-transform-name" title={path}>
+                      {label.name}
+                      {#if label.group}
+                        <span class="dom-transform-group">({label.group})</span>
+                      {/if}
+                    </span>
+                    <div class="dom-transform-actions">
+                      <button
+                        type="button"
+                        class="btn btn-icon"
+                        onclick={() => moveDomTransform(i, -1)}
+                        disabled={i === 0 || epubLoading}
+                        aria-label={$t('Move up')}
+                        title={$t('Move up')}
+                      >
+                        <CaretUp size={14} aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-icon"
+                        onclick={() => moveDomTransform(i, 1)}
+                        disabled={i === (epubSettings?.dom_transforms.length ?? 0) - 1 ||
+                          epubLoading}
+                        aria-label={$t('Move down')}
+                        title={$t('Move down')}
+                      >
+                        <CaretDown size={14} aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-icon"
+                        onclick={() => removeDomTransform(i)}
+                        disabled={epubLoading}
+                        aria-label={$t('Remove')}
+                        title={$t('Remove')}
+                      >
+                        <X size={14} aria-hidden="true" />
+                      </button>
+                    </div>
+                  </li>
+                {/each}
+              </ul>
+            {/if}
+
+            {#if addableTransformGroups.length > 0}
+              <select
+                class="setting-select"
+                aria-label={$t('Add a DOM transform')}
+                disabled={epubLoading}
+                onchange={e => {
+                  const sel = e.currentTarget as HTMLSelectElement;
+                  const value = sel.value;
+                  sel.value = '';
+                  if (value) addDomTransform(value);
+                }}
+              >
+                <option value="" disabled selected>{$t('Add a DOM transform…')}</option>
+                {#each addableTransformGroups as grp (grp.group)}
+                  <optgroup label={grp.group}>
+                    {#each grp.options as opt (opt.path)}
+                      <option value={opt.path}>{opt.fileName}</option>
+                    {/each}
+                  </optgroup>
+                {/each}
+              </select>
+            {/if}
+          </div>
+
+          {#if contentTransforms.length > 0}
+            <h3 class="sub-heading">{$t('Catalog')}</h3>
+            {#each contentCategoryGroups as group (group.key)}
+              {@const collapsed = collapsedCategories.has(group.key)}
+              <button
+                type="button"
+                class="ct-group-toggle"
+                aria-expanded={!collapsed}
+                onclick={() => toggleCategory(group.key)}
+              >
+                <span class="ct-disclosure" aria-hidden="true"><CaretRight size={14} /></span>
+                <span class="ct-group-label">{group.label}</span>
+              </button>
+              {#if !collapsed}
+                {#each group.items as ext (ext.id)}
+                  {@render catalogItem(ext)}
+                {/each}
+              {/if}
+            {/each}
+          {/if}
+        {:else if activeSection === 'custom-metadata'}
+          <CustomMetaCatalogSettings />
         {:else if activeSection === 'packaging'}
           <div class="setting-group">
             <label class="setting-label">
@@ -2079,8 +2066,7 @@
 
   .section-title + .setting-group,
   .section-title + .sub-heading,
-  .section-title + .catalog-item,
-  .section-title + .ct-group-toggle {
+  .section-title + .catalog-item {
     margin-block-start: var(--space-4);
   }
 
