@@ -19,6 +19,10 @@
  *     fields, so new keys can be added without breaking older plugins.
  *   - insert (plugin → main): inserts a string at the editor cursor (panel
  *     plugins only; the publish `view` plugin does not use it).
+ *   - navigate / read-epub (plugin → main): open a chapter, or an EPUB in the
+ *     reader tab.
+ *   - import-epub / open (plugin → main): import a fetched EPUB as a new book;
+ *     show the Published page or the Destinations settings.
  *
  * This mirrors the wire shapes implemented by plugins/publish-to-remote/src
  * (its src/types.ts + src/index.ts). The ./API.md spec predates the
@@ -27,6 +31,14 @@
 
 /** Presentation surface a plugin binds to. */
 export type PluginPresentation = 'panel' | 'view';
+
+/**
+ * Which of its surfaces a multi-surface plugin should render. The publish
+ * plugin has three: the Send band on Share, the Published page, and the
+ * Destinations section of Settings (process/PUBLISH_REWORK.md). Absent →
+ * the plugin's default surface (`send`).
+ */
+export type PluginSurface = 'send' | 'published' | 'destinations';
 
 /**
  * One entry in the build-generated `plugins/manifest.json`. Mirrors the schema
@@ -75,6 +87,11 @@ export interface InitMessage {
    * absent.
    */
   opfsDirPath?: string[];
+  /**
+   * The surface the host is mounting this frame for. Older plugins ignore it
+   * and render their single UI.
+   */
+  surface?: PluginSurface;
 }
 
 /**
@@ -103,6 +120,12 @@ export interface ContextMessage {
    * row is highlighted.
    */
   activeIdentifier?: string;
+  /**
+   * dc:identifiers of every book on this device, so the publish plugin can
+   * tell a remote EPUB that is "known here" from one that can be imported.
+   * Optional / back-compat; absent → nothing is known here.
+   */
+  knownIdentifiers?: string[];
   /**
    * Spine item id of the chapter the editor currently has open, so a panel
    * plugin can scope itself to that chapter's own content rather than the whole
@@ -145,6 +168,26 @@ export interface ReadEpubMessage {
 }
 
 /**
+ * plugin → main, hands the host the bytes of an EPUB fetched from a
+ * destination so the host imports it as a new book through its normal import
+ * path (the plugin has the credentials; the host has the importer).
+ */
+export interface ImportEpubMessage {
+  type: 'import-epub';
+  filename: string;
+  bytes: ArrayBuffer;
+}
+
+/**
+ * plugin → main, asks the host to show one of its own screens: the Published
+ * page, or Settings opened on the Destinations section.
+ */
+export interface OpenMessage {
+  type: 'open';
+  target: 'published' | 'destinations';
+}
+
+/**
  * The OPFS path of a workspace's directory, as segments from the storage
  * root. This layout (`workspaces/<id>`) is the storage backend's stable
  * on-disk shape (see src/lib/storage/index.ts getWorkspaceDirectoryHandle);
@@ -163,9 +206,12 @@ export function workspaceOpfsPath(workspaceId: string): string[] {
 export function createInitMessage(
   projectId: string,
   opfsDirHandle: FileSystemDirectoryHandle | undefined,
-  opfsDirPath: string[]
+  opfsDirPath: string[],
+  surface?: PluginSurface
 ): InitMessage {
-  return { type: 'init', projectId, opfsDirHandle, opfsDirPath };
+  const message: InitMessage = { type: 'init', projectId, opfsDirHandle, opfsDirPath };
+  if (surface) message.surface = surface;
+  return message;
 }
 
 /** Build a `context` message carrying the inheritable host environment. */
@@ -175,9 +221,10 @@ export function createContextMessage(
   dir: 'ltr' | 'rtl',
   messages?: Record<string, string>,
   activeIdentifier?: string,
-  activeChapterId?: string
+  activeChapterId?: string,
+  knownIdentifiers?: string[]
 ): ContextMessage {
-  return {
+  const message: ContextMessage = {
     type: 'context',
     theme,
     locale,
@@ -186,6 +233,8 @@ export function createContextMessage(
     activeIdentifier,
     activeChapterId,
   };
+  if (knownIdentifiers) message.knownIdentifiers = knownIdentifiers;
+  return message;
 }
 
 /** Runtime guard: is this an `init` message carrying a usable directory handle? */
@@ -249,5 +298,29 @@ export function isReadEpubMessage(value: unknown): value is ReadEpubMessage {
     (value as { type?: unknown }).type === 'read-epub' &&
     (typeof (value as { filename?: unknown }).filename === 'string' ||
       typeof (value as { url?: unknown }).url === 'string')
+  );
+}
+
+/** Runtime guard: is this an `import-epub` message carrying a filename and bytes? */
+export function isImportEpubMessage(value: unknown): value is ImportEpubMessage {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    (value as { type?: unknown }).type === 'import-epub' &&
+    typeof (value as { filename?: unknown }).filename === 'string' &&
+    (value as { bytes?: unknown }).bytes instanceof ArrayBuffer
+  );
+}
+
+const OPEN_TARGETS: ReadonlySet<string> = new Set(['published', 'destinations']);
+
+/** Runtime guard: is this an `open` message naming a host screen? */
+export function isOpenMessage(value: unknown): value is OpenMessage {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    (value as { type?: unknown }).type === 'open' &&
+    typeof (value as { target?: unknown }).target === 'string' &&
+    OPEN_TARGETS.has((value as { target: string }).target)
   );
 }

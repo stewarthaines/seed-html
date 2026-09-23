@@ -110,13 +110,17 @@ The API is intentionally minimal — only the two messages the current plugins a
 ```json
 {
   "type": "init",
-  "opfsDirHandle": "FileSystemDirectoryHandle"
+  "projectId": "publish",
+  "opfsDirHandle": "FileSystemDirectoryHandle",
+  "opfsDirPath": ["workspaces", "publish"],
+  "surface": "send"
 }
 ```
 
-Sent immediately after the iframe loads. Provides:
+Sent once the plugin has posted `plugin-ready`. Provides:
 
-- `opfsDirHandle` — a live handle to the shared output directory (the packaged-epub area). The plugin operates within this handle; it does not navigate the core's OPFS layout by path.
+- `opfsDirHandle` — a live handle to the shared output directory (the packaged-epub area). The plugin operates within this handle; it does not navigate the core's OPFS layout by path. WebKit cannot clone handles into iframes, so `opfsDirPath` names the same directory for the plugin to resolve itself.
+- `surface` — for a plugin with several surfaces, which one this frame is (see below). Absent for single-surface plugins.
 
 `FileSystemDirectoryHandle` is structured-cloneable across same-origin postMessage, so the handle is transferred directly.
 
@@ -172,16 +176,27 @@ Credentials stored in OPFS are volatile: not backed up, not synced, and lost if 
 
 ---
 
-## The Publish View
+## The Publish plugin's three surfaces
 
-The Publish view is the sole `view` surface. Its layout maps onto the app's left/right splitpane — but, because the plugin owns the whole frame, the plugin renders that split **inside its own iframe**.
+The publish plugin is the sole `view` plugin, and it is mounted in three places rather than one. The host names the surface in the `init` message (`surface`), and the plugin renders only that surface (process/PUBLISH_REWORK.md). Each mount is a `src/lib/components/plugins/PluginFrame.svelte`, which owns the handshake, the failure fallback and the message routing.
 
-- **Left — Local EPUBs.** The list of epubs in the shared output dir, each with per-file actions: `Upload`, `Validate`, `Report`, and `Overwrite?` + `Replace` when a matching remote file exists.
-- **Right — Remote.** An `Active Remote` selector with `Add Remote` / `Edit` / `Remove`, and a `Remote Files` table (Name / Size / Modified / Delete).
+- **`send`** — the "Publish to the web" band on the Share page. The plugin lists the user's destinations, says what the open book's latest package is doing on each (matched by the `activeIdentifier` from `context`), and offers Send and an "In the catalog" switch. The head of the band validates the latest package (epubcheck) and shows the report. The frame is content-height: the host watches the plugin document's height (same-origin ResizeObserver) like a `panel`.
+- **`published`** — the Published page beside Books. A destination picker, the catalog's identity, and the destination's shelf of EPUBs. A remote book not on this device offers Import…, which fetches the bytes and sends `import-epub`. The frame fills the page.
+- **`destinations`** — the Destinations section of Settings › You. The list of destinations with Edit / Reconnect / Remove, and the add form. Content-height.
 
-**Validation** (epubcheck-ts) is folded into this plugin as the per-file `Validate` / `Report` actions. There is no standalone validator plugin and no background auto-run.
+The three frames may be alive at once (the Settings sheet opens over Share). The plugin keeps its destinations in its own OPFS file and tells its other frames about changes over a `BroadcastChannel`, so a destination added in Settings appears in the band without a reload.
 
-**Core fallback feature** (plugin unavailable or disabled): a complete full-frame local-epub manager — an elaborated "package-then-download". It lists the epubs in the shared output dir with download/package actions, and does not split the pane or reference the plugin. When the user clicks **Package EPUB** in the sidebar an epub file is generated, stored in `/publish` and the **Publish** sidebar action is selected.
+**Validation** (epubcheck-ts) stays in this plugin, on the `send` surface. There is no standalone validator plugin and no background auto-run; the report is mirrored into localStorage for the editor's checks panel (`src/lib/plugins/validation-report.ts`).
+
+**Core fallback feature** (plugin unavailable or disabled): the Share page's own cards and packaged-files table. The band, the Published page and the Destinations section are simply absent. When the user clicks **Package EPUB** an epub file is generated, stored in `/publish` and the Share tab is selected.
+
+### Messages the publish surfaces add
+
+- `context.knownIdentifiers` (main → plugin): the dc:identifiers of every book on this device, so the shelf can tell "known here" from "importable".
+- `navigate` (plugin → main): open the chapter for a content-document path flagged by epubcheck.
+- `read-epub` (plugin → main): open a packaged or remote EPUB in the reader tab.
+- `import-epub` (plugin → main): `{ filename, bytes: ArrayBuffer }` — the host imports the bytes as a new book through its normal import path (its "already a project here" prompt included).
+- `open` (plugin → main): `{ target: 'published' | 'destinations' }` — the host shows that screen.
 
 ---
 
@@ -200,7 +215,7 @@ Enabled state is persisted via the settings service.
 | Audio Clip Editor | panel        | wavesurfer.js               | insert → main |
 | Publish           | view         | epubcheck-ts, R2/GDrive SDK | OPFS / handle |
 
-The Publish plugin combines remote publishing (Cloudflare R2, Google Drive, Dropbox) OPDS catalog generation and EPUB validation in one artifact.
+The Publish plugin combines remote publishing (S3-compatible, Google Drive, Dropbox, WebDAV, USB e-readers), OPDS catalog generation and EPUB validation in one artifact, rendered as three surfaces.
 
 ### Possible future plugins
 
@@ -214,7 +229,7 @@ These do not need to be resolved before implementation begins.
 
 - **Enabled-state scope** — per-project vs global. The enablement UI lives under Project Settings, but the persisted scope is undecided.
 - **Shared output directory name/path** — referred to here as the "output dir"; exact name (e.g. `/publish`) to be fixed during implementation.
-- **Generalized `view` extension points** — the single Publish view is hardcoded for now; a registry is deferred until a second `view` plugin exists.
+- **Generalized `view` extension points** — the publish plugin's three surfaces are hardcoded for now; a registry is deferred until a second `view` plugin exists.
 
 ## Proposed plugin.d.ts
 
