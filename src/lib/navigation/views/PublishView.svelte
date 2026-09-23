@@ -1,17 +1,9 @@
 <script lang="ts">
-  import { t, currentLocale, documentDirection, i18nService } from '$lib/i18n';
-  import { themeStore } from '$lib/stores/theme';
+  import { t, currentLocale } from '$lib/i18n';
   import { saveBlob } from '$lib/zip/index.js';
   import type { PublishService, PublishedEpub } from '$lib/services/publish/publish.service.js';
-  import {
-    createInitMessage,
-    createContextMessage,
-    isPluginReadyMessage,
-    isNavigateMessage,
-    isReadEpubMessage,
-    workspaceOpfsPath,
-  } from '$lib/plugins/contract';
-  import { PUBLISH_WORKSPACE_ID } from '$lib/workspace/types';
+  import type { OpenMessage } from '$lib/plugins/contract';
+  import PluginFrame from '$lib/components/plugins/PluginFrame.svelte';
   import { isHttpContext, openEpubInReader, openEpubUrlInReader } from '$lib/reader/open-in-reader';
 
   interface Props {
@@ -22,6 +14,8 @@
     projectId?: string;
     /** The open project's dc:identifier, for outlining its published row(s). */
     activeIdentifier?: string;
+    /** The plugin asks for the Published page or the Destinations settings. */
+    onOpen?: (target: OpenMessage['target']) => void;
     /** Package the open book as a SEED EPUB (kept in this browser, listed below). */
     onPackage?: () => void;
     packaging?: boolean;
@@ -43,6 +37,7 @@
     pluginUrl = null,
     projectId = 'publish',
     activeIdentifier = undefined,
+    onOpen,
     onPackage,
     packaging = false,
     onGeneratePdf,
@@ -55,21 +50,6 @@
     seedHtmlPackaging = false,
     isReadOnly = false,
   }: Props = $props();
-
-  let pluginFrame = $state<HTMLIFrameElement | null>(null);
-
-  // Plugin load-failure detection. The plugin owns the whole frame only while it's
-  // available AND has actually come alive. A blank/error iframe (offline with an
-  // uncached plugin.html, a 404, or a crashed plugin) never completes the
-  // `plugin-ready` handshake — and `onerror` doesn't fire for a failed navigation
-  // (the browser fires `onload` on its error page), so liveness is judged purely by
-  // the handshake. On failure we fall back to the core publish view.
-  let pluginReady = $state(false);
-  let pluginFailed = $state(false);
-  let pluginAttempt = $state(0);
-  let readyTimer: ReturnType<typeof setTimeout> | undefined;
-  let capTimer: ReturnType<typeof setTimeout> | undefined;
-  const showingPlugin = $derived(!!pluginUrl && !pluginFailed);
 
   let epubs = $state<PublishedEpub[]>([]);
   let loading = $state(true);
@@ -106,146 +86,35 @@
     }
   }
 
-  // List packaged epubs, refreshing as new ones are packaged. The cards need this
-  // book's latest package whether or not the plugin is showing its own list.
+  // List packaged epubs, refreshing as new ones are packaged. The plugin band
+  // re-reads the directory on the same signal (PluginFrame's refreshKey).
+  let packagedCount = $state(0);
   $effect(() => {
     load();
-    const onPackaged = () => load();
+    const onPackaged = () => {
+      packagedCount += 1;
+      load();
+    };
     window.addEventListener('epub-packaged', onPackaged);
     return () => window.removeEventListener('epub-packaged', onPackaged);
   });
 
-  // Plugin surface: hand the output directory over once the plugin signals ready,
-  // and re-hand it whenever a new epub is packaged so the plugin re-reads the dir.
-  // Re-sending `init` (with a fresh handle) is enough — no separate refresh message.
-  $effect(() => {
-    if (!showingPlugin) return;
-    const handler = (event: MessageEvent) => {
-      if (!pluginFrame || event.source !== pluginFrame.contentWindow) return;
-      if (event.origin !== window.location.origin) return;
-      if (isPluginReadyMessage(event.data)) {
-        // The plugin came alive — cancel failure detection and hand over.
-        pluginReady = true;
-        pluginFailed = false;
-        clearTimeout(readyTimer);
-        clearTimeout(capTimer);
-        void sendPluginInit();
-        sendPluginContext();
-      } else if (isNavigateMessage(event.data)) {
-        // Open the chapter for a content-document path by reusing the core's
-        // spine selection event. The id is the file basename (same as the nav
-        // preview's click-to-navigate), which also drops any OEBPS/ prefix.
-        const match = event.data.path.match(/([^/]+)\.xhtml(?:#.*)?$/);
-        if (match) {
-          window.dispatchEvent(
-            new CustomEvent('select-spine-item', { detail: { itemId: match[1] } })
-          );
-        }
-      } else if (isReadEpubMessage(event.data)) {
-        if (event.data.url) {
-          // A remote object's public URL — the reader fetches it directly.
-          openEpubUrlInReader(event.data.url);
-        } else if (event.data.filename) {
-          // The plugin lists the same OPFS output dir the core reads from, so
-          // the filename resolves through the same service either way.
-          void handleRead(event.data.filename);
-        }
-      }
-    };
-    const onPackaged = () => void sendPluginInit();
-    window.addEventListener('message', handler);
-    window.addEventListener('epub-packaged', onPackaged);
-    return () => {
-      window.removeEventListener('message', handler);
-      window.removeEventListener('epub-packaged', onPackaged);
-    };
-  });
-
-  async function sendPluginInit(): Promise<void> {
-    const frameWindow = pluginFrame?.contentWindow;
-    if (!frameWindow || !pluginUrl) return;
-    const handle = await publishService.getOutputDirectoryHandle();
-    if (!handle) {
-      // No OPFS backend (e.g. the IndexedDB fallback) — there's no directory handle
-      // to hand over, so the plugin stays uninitialised and shows its empty state.
-      return;
-    }
-    const targetOrigin = new URL(pluginUrl, window.location.href).origin;
-    const dirPath = workspaceOpfsPath(PUBLISH_WORKSPACE_ID);
-    try {
-      frameWindow.postMessage(createInitMessage(projectId, handle, dirPath), targetOrigin);
-    } catch {
-      // WebKit (iPadOS Safari) refuses to structured-clone a
-      // FileSystemDirectoryHandle into an iframe (DataCloneError). Re-send
-      // without the handle: the plugin walks opfsDirPath to an equivalent
-      // handle itself (same origin, same OPFS root).
-      console.warn('Plugin init: handle not cloneable here; plugin will resolve by OPFS path.');
-      frameWindow.postMessage(createInitMessage(projectId, undefined, dirPath), targetOrigin);
+  // The plugin asks to open a chapter flagged by epubcheck: reuse the core's
+  // spine selection event. The id is the file basename, which also drops any
+  // OEBPS/ prefix.
+  function handlePluginNavigate(path: string): void {
+    const match = path.match(/([^/]+)\.xhtml(?:#.*)?$/);
+    if (match) {
+      window.dispatchEvent(new CustomEvent('select-spine-item', { detail: { itemId: match[1] } }));
     }
   }
 
-  // Hand the ambient app environment (theme/locale/dir) to the plugin so it can
-  // mirror it on its own document. Reads the env stores; posting before the frame
-  // is ready is harmless (the plugin-ready handler re-sends this snapshot).
-  function sendPluginContext(): void {
-    const frameWindow = pluginFrame?.contentWindow;
-    if (!frameWindow || !pluginUrl) return;
-    const targetOrigin = new URL(pluginUrl, window.location.href).origin;
-    // documentDirection is a string store; narrow it to the contract's literal.
-    const dir = $documentDirection === 'rtl' ? 'rtl' : 'ltr';
-    // Hand over the active locale's dictionary so the plugin can translate its
-    // own UI from the shared catalog (no plugin-side bundle/pipeline).
-    const messages = i18nService.getCatalogs()[$currentLocale]?.messages ?? {};
-    frameWindow.postMessage(
-      createContextMessage($themeStore.current, $currentLocale, dir, messages, activeIdentifier),
-      targetOrigin
-    );
-  }
-
-  // Re-send context whenever the theme, locale, direction, or active project
-  // changes, so the iframe tracks the app live — no reload, no lost plugin state.
-  $effect(() => {
-    if (!showingPlugin) return;
-    // Touch each value so the effect re-runs on change.
-    void activeIdentifier;
-    void $themeStore.current;
-    void $currentLocale;
-    void $documentDirection;
-    sendPluginContext();
-  });
-
-  // (Re)arm failure detection whenever a plugin URL is assigned or a retry is
-  // requested. If the plugin never completes its `plugin-ready` handshake, fall back
-  // to the core publish view rather than leave a blank/error iframe.
-  $effect(() => {
-    void pluginAttempt; // re-arm on retry
-    if (!pluginUrl) return;
-    pluginReady = false;
-    pluginFailed = false;
-    // Backstop in case `onload` never fires; the onload grace (handlePluginFrameLoad)
-    // is the primary, fast detector for the offline/error-page case.
-    capTimer = setTimeout(() => {
-      if (!pluginReady) pluginFailed = true;
-    }, 20000);
-    return () => {
-      clearTimeout(capTimer);
-      clearTimeout(readyTimer);
-    };
-  });
-
-  function handlePluginFrameLoad(): void {
-    // The frame finished navigating. A live plugin posts `plugin-ready` almost
-    // immediately afterwards; if none arrives shortly, the frame is an error page
-    // (the offline/uncached case) — fail fast rather than wait out the backstop.
-    clearTimeout(readyTimer);
-    readyTimer = setTimeout(() => {
-      if (!pluginReady) pluginFailed = true;
-    }, 2000);
-  }
-
-  function retryPlugin(): void {
-    // Remount the iframe and re-arm detection (e.g. after coming back online).
-    pluginAttempt += 1;
+  function handlePluginRead(source: { filename?: string; url?: string }): void {
+    if (source.url) {
+      openEpubUrlInReader(source.url);
+    } else if (source.filename) {
+      void handleRead(source.filename);
+    }
   }
 
   // Reading in the vendored READ.html tab needs dist/read/ served over HTTP.
@@ -456,109 +325,97 @@
     {#if pluginUrl}
       <section class="publish-band" aria-labelledby="publish-web-title">
         <h2 id="publish-web-title" class="label">{$t('Publish to the web')}</h2>
-        {#if pluginFailed}
-          <div class="plugin-fallback" role="status">
-            <p class="plugin-fallback-text">
-              {$t(
-                'The publishing plugin could not be loaded — you may be offline. Showing local publishing instead.'
-              )}
-            </p>
-            <button type="button" class="btn btn-secondary btn-sm" onclick={retryPlugin}>
-              {$t('Retry plugin')}
-            </button>
-          </div>
-        {:else}
-          {#key pluginAttempt}
-            <iframe
-              bind:this={pluginFrame}
-              class="plugin-frame"
-              src={pluginUrl}
-              title={$t('Publish to the web')}
-              onload={handlePluginFrameLoad}
-            ></iframe>
-          {/key}
-        {/if}
+        <PluginFrame
+          {pluginUrl}
+          surface="send"
+          {projectId}
+          getDirHandle={() => publishService.getOutputDirectoryHandle()}
+          {activeIdentifier}
+          title={$t('Publish to the web')}
+          refreshKey={packagedCount}
+          onNavigate={handlePluginNavigate}
+          onReadEpub={handlePluginRead}
+          {onOpen}
+        />
       </section>
     {/if}
 
-    {#if !showingPlugin}
-      <section class="packaged" aria-labelledby="packaged-title">
-        <div class="section-head">
-          <h2 id="packaged-title" class="label">
-            {$t('Packaged files')}
-            {#if epubs.length > 0}
-              <span class="label-detail">
-                {$t('Kept in this browser')} · {formatSize(totalSize)}
-              </span>
-            {/if}
-          </h2>
-          <button type="button" class="btn btn-secondary btn-sm" onclick={load}>
-            {$t('Refresh')}
-          </button>
-        </div>
-        {#if loading && epubs.length === 0}
-          <p class="status">{$t('Loading…')}</p>
-        {:else if epubs.length === 0}
-          <p class="status">{$t('No packaged EPUBs yet.')}</p>
-        {:else}
-          <table class="epub-table">
-            <thead>
-              <tr>
-                <th class="cover"><span class="sr-only">{$t('Cover')}</span></th>
-                <th>{$t('File')}</th>
-                <th class="num">{$t('Size')}</th>
-                <th class="num">{$t('Made')}</th>
-                <th class="actions"><span class="sr-only">{$t('Actions')}</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              {#each epubs as epub (epub.filename)}
-                <tr class:current={!!activeIdentifier && epub.identifier === activeIdentifier}>
-                  <td class="cover">
-                    {#if coverUrls[epub.filename]}
-                      <img src={coverUrls[epub.filename]} alt="" class="cover-thumb" />
-                    {/if}
-                  </td>
-                  <td class="name">
-                    <span class="name-title">{epub.title || epub.filename}</span>
-                    <span class="name-file">{epub.filename}</span>
-                  </td>
-                  <td class="num">{formatSize(epub.size)}</td>
-                  <td class="num">{relativeTime(epub.lastModified)}</td>
-                  <td class="actions">
-                    <div class="action-buttons">
-                      {#if canRead}
-                        <button
-                          type="button"
-                          class="btn btn-link"
-                          onclick={() => handleRead(epub.filename)}
-                        >
-                          {$t('Read')}
-                        </button>
-                      {/if}
+    <section class="packaged" aria-labelledby="packaged-title">
+      <div class="section-head">
+        <h2 id="packaged-title" class="label">
+          {$t('Packaged files')}
+          {#if epubs.length > 0}
+            <span class="label-detail">
+              {$t('Kept in this browser')} · {formatSize(totalSize)}
+            </span>
+          {/if}
+        </h2>
+        <button type="button" class="btn btn-secondary btn-sm" onclick={load}>
+          {$t('Refresh')}
+        </button>
+      </div>
+      {#if loading && epubs.length === 0}
+        <p class="status">{$t('Loading…')}</p>
+      {:else if epubs.length === 0}
+        <p class="status">{$t('No packaged EPUBs yet.')}</p>
+      {:else}
+        <table class="epub-table">
+          <thead>
+            <tr>
+              <th class="cover"><span class="sr-only">{$t('Cover')}</span></th>
+              <th>{$t('File')}</th>
+              <th class="num">{$t('Size')}</th>
+              <th class="num">{$t('Made')}</th>
+              <th class="actions"><span class="sr-only">{$t('Actions')}</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each epubs as epub (epub.filename)}
+              <tr class:current={!!activeIdentifier && epub.identifier === activeIdentifier}>
+                <td class="cover">
+                  {#if coverUrls[epub.filename]}
+                    <img src={coverUrls[epub.filename]} alt="" class="cover-thumb" />
+                  {/if}
+                </td>
+                <td class="name">
+                  <span class="name-title">{epub.title || epub.filename}</span>
+                  <span class="name-file">{epub.filename}</span>
+                </td>
+                <td class="num">{formatSize(epub.size)}</td>
+                <td class="num">{relativeTime(epub.lastModified)}</td>
+                <td class="actions">
+                  <div class="action-buttons">
+                    {#if canRead}
                       <button
                         type="button"
                         class="btn btn-link"
-                        onclick={() => handleDownload(epub.filename)}
+                        onclick={() => handleRead(epub.filename)}
                       >
-                        {$t('Download')}
+                        {$t('Read')}
                       </button>
-                      <button
-                        type="button"
-                        class="btn btn-link danger"
-                        onclick={() => handleDelete(epub.filename)}
-                      >
-                        {$t('Delete')}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              {/each}
-            </tbody>
-          </table>
-        {/if}
-      </section>
-    {/if}
+                    {/if}
+                    <button
+                      type="button"
+                      class="btn btn-link"
+                      onclick={() => handleDownload(epub.filename)}
+                    >
+                      {$t('Download')}
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-link danger"
+                      onclick={() => handleDelete(epub.filename)}
+                    >
+                      {$t('Delete')}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      {/if}
+    </section>
   </div>
 </div>
 
@@ -678,31 +535,6 @@
   /* Publish to the web: the plugin lives inside the band */
   .publish-band {
     margin-block-end: var(--space-8);
-  }
-
-  .plugin-frame {
-    display: block;
-    inline-size: 100%;
-    block-size: min(640px, 70vh);
-    border: 1px solid var(--color-border-default);
-    background: var(--color-bg-tertiary);
-  }
-
-  .plugin-fallback {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-4);
-    padding: var(--space-4) var(--space-5);
-    border: 1px solid var(--color-border-default);
-    background: var(--color-bg-tertiary);
-  }
-
-  .plugin-fallback-text {
-    flex: 1;
-    min-inline-size: 16rem;
-    margin: 0;
-    color: var(--color-text-secondary);
   }
 
   /* Packaged files */
