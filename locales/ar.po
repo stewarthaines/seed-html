@@ -140,6 +140,10 @@ msgstr ""
 msgid "{n} MB"
 msgstr ""
 
+#: src/lib/components/shell/ChapterStrip.svelte
+msgid "{n} of {total}"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "{n} on"
 msgstr ""
@@ -249,6 +253,10 @@ msgstr ""
 
 #: src/lib/components/shell/AboutDialog.svelte
 msgid "A SEED EPUB is a living document rather than a publishing dead-end, suited to distribution, contribution and long-term preservation."
+msgstr ""
+
+#: src/lib/components/shell/BrandBar.svelte
+msgid "About"
 msgstr ""
 
 #: src/App.svelte
@@ -367,6 +375,10 @@ msgstr ""
 
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 msgid "Add as a new chapter"
+msgstr ""
+
+#: src/lib/components/shell/ChapterStrip.svelte
+msgid "Add chapter"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
@@ -675,6 +687,7 @@ msgstr ""
 msgid "Bold, emphasis and heading styles only."
 msgstr ""
 
+#: src/lib/components/shell/BottomTabs.svelte
 #: src/lib/components/shell/TopBar.svelte
 msgid "Book"
 msgstr ""
@@ -853,6 +866,7 @@ msgstr ""
 
 #: src/App.svelte
 #: src/lib/Sidebar.svelte
+#: src/lib/components/shell/ChapterStrip.svelte
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Chapters"
 msgstr ""
@@ -3236,6 +3250,7 @@ msgstr ""
 msgid "New Project"
 msgstr ""
 
+#: src/lib/components/shell/ChapterStrip.svelte
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Next chapter"
 msgstr ""
@@ -3896,6 +3911,7 @@ msgstr ""
 msgid "Preset"
 msgstr ""
 
+#: src/lib/components/shell/BottomTabs.svelte
 #: src/lib/components/spine/EditorPane.svelte
 #: src/lib/navigation/views/SettingsView.svelte
 #. Dropdown group for the preview-only head fragment
@@ -3918,6 +3934,7 @@ msgstr ""
 msgid "Preview Pane"
 msgstr ""
 
+#: src/lib/components/shell/ChapterStrip.svelte
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Previous chapter"
 msgstr ""
@@ -4499,6 +4516,7 @@ msgid "Settings sections"
 msgstr ""
 
 #: src/App.svelte
+#: src/lib/components/shell/BottomTabs.svelte
 #: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Share"
@@ -5220,6 +5238,7 @@ msgstr ""
 msgid "Working…"
 msgstr ""
 
+#: src/lib/components/shell/BottomTabs.svelte
 #: src/lib/components/shell/TopBar.svelte
 msgid "Write"
 msgstr ""

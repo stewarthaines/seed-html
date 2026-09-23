@@ -140,6 +140,10 @@ msgstr "{n} კბ"
 msgid "{n} MB"
 msgstr "{n} მბ"
 
+#: src/lib/components/shell/ChapterStrip.svelte
+msgid "{n} of {total}"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "{n} on"
 msgstr ""
@@ -289,6 +293,10 @@ msgstr "სახელი აუცილებელია."
 msgid "A SEED EPUB is a living document rather than a publishing dead-end, suited to distribution, contribution and long-term preservation."
 msgstr "SEED EPUB ცოცხალი დოკუმენტია და არა გამოცემის ჩიხი — გამოსადეგი გავრცელებისთვის, წვლილის შეტანისთვის და გრძელვადიანი შენახვისთვის."
 
+#: src/lib/components/shell/BrandBar.svelte
+msgid "About"
+msgstr ""
+
 #: src/App.svelte
 #: src/lib/Sidebar.svelte
 #: src/lib/components/shell/BrandBar.svelte
@@ -406,6 +414,10 @@ msgstr "კიდევ ერთი სათაურის დამატე
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 msgid "Add as a new chapter"
 msgstr "ახალი თავის სახით დამატება"
+
+#: src/lib/components/shell/ChapterStrip.svelte
+msgid "Add chapter"
+msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Add Destination"
@@ -713,6 +725,7 @@ msgstr ""
 msgid "Bold, emphasis and heading styles only."
 msgstr "მხოლოდ მუქი, კურსივი და სათაურის სტილები."
 
+#: src/lib/components/shell/BottomTabs.svelte
 #: src/lib/components/shell/TopBar.svelte
 msgid "Book"
 msgstr ""
@@ -891,6 +904,7 @@ msgstr "თავის PDF"
 
 #: src/App.svelte
 #: src/lib/Sidebar.svelte
+#: src/lib/components/shell/ChapterStrip.svelte
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Chapters"
 msgstr "თავები"
@@ -3274,6 +3288,7 @@ msgstr "პირველად ხართ? სანიმუშო წი�
 msgid "New Project"
 msgstr "ახალი პროექტი"
 
+#: src/lib/components/shell/ChapterStrip.svelte
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Next chapter"
 msgstr ""
@@ -3934,6 +3949,7 @@ msgstr "მზადდება…"
 msgid "Preset"
 msgstr "პრესეტი"
 
+#: src/lib/components/shell/BottomTabs.svelte
 #: src/lib/components/spine/EditorPane.svelte
 #: src/lib/navigation/views/SettingsView.svelte
 #. Dropdown group for the preview-only head fragment
@@ -3956,6 +3972,7 @@ msgstr "გადახედვა მოძველებულია"
 msgid "Preview Pane"
 msgstr "გადახედვის პანელი"
 
+#: src/lib/components/shell/ChapterStrip.svelte
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Previous chapter"
 msgstr ""
@@ -4537,6 +4554,7 @@ msgid "Settings sections"
 msgstr ""
 
 #: src/App.svelte
+#: src/lib/components/shell/BottomTabs.svelte
 #: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Share"
@@ -5258,6 +5276,7 @@ msgstr "ფართო"
 msgid "Working…"
 msgstr ""
 
+#: src/lib/components/shell/BottomTabs.svelte
 #: src/lib/components/shell/TopBar.svelte
 msgid "Write"
 msgstr ""

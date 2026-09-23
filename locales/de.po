@@ -140,6 +140,10 @@ msgstr "{n} KB"
 msgid "{n} MB"
 msgstr "{n} MB"
 
+#: src/lib/components/shell/ChapterStrip.svelte
+msgid "{n} of {total}"
+msgstr "{n} von {total}"
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "{n} on"
 msgstr "{n} aktiv"
@@ -270,6 +274,10 @@ msgstr "Ein Name ist erforderlich."
 msgid "A SEED EPUB is a living document rather than a publishing dead-end, suited to distribution, contribution and long-term preservation."
 msgstr "Ein SEED-EPUB ist ein lebendiges Dokument statt einer Sackgasse des Publizierens – geeignet für Verbreitung, Mitarbeit und langfristige Bewahrung."
 
+#: src/lib/components/shell/BrandBar.svelte
+msgid "About"
+msgstr "Über"
+
 #: src/App.svelte
 #: src/lib/Sidebar.svelte
 #: src/lib/components/shell/BrandBar.svelte
@@ -387,6 +395,10 @@ msgstr "Weiteren Titel hinzufügen"
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 msgid "Add as a new chapter"
 msgstr "Als neues Kapitel hinzufügen"
+
+#: src/lib/components/shell/ChapterStrip.svelte
+msgid "Add chapter"
+msgstr "Kapitel hinzufügen"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Add Destination"
@@ -694,6 +706,7 @@ msgstr "Zitatblock"
 msgid "Bold, emphasis and heading styles only."
 msgstr "Nur Fett-, Hervorhebungs- und Überschriftenstile."
 
+#: src/lib/components/shell/BottomTabs.svelte
 #: src/lib/components/shell/TopBar.svelte
 msgid "Book"
 msgstr "Buch"
@@ -872,6 +885,7 @@ msgstr "Kapitel-PDF"
 
 #: src/App.svelte
 #: src/lib/Sidebar.svelte
+#: src/lib/components/shell/ChapterStrip.svelte
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Chapters"
 msgstr "Kapitel"
@@ -3255,6 +3269,7 @@ msgstr "Neu hier? Öffnen Sie „Aus Katalog importieren“, um Beispielbücher 
 msgid "New Project"
 msgstr "Neues Projekt"
 
+#: src/lib/components/shell/ChapterStrip.svelte
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Next chapter"
 msgstr "Nächstes Kapitel"
@@ -3915,6 +3930,7 @@ msgstr "Wird vorbereitet…"
 msgid "Preset"
 msgstr "Voreinstellung"
 
+#: src/lib/components/shell/BottomTabs.svelte
 #: src/lib/components/spine/EditorPane.svelte
 #: src/lib/navigation/views/SettingsView.svelte
 #. Dropdown group for the preview-only head fragment
@@ -3937,6 +3953,7 @@ msgstr "Vorschau veraltet"
 msgid "Preview Pane"
 msgstr "Vorschaubereich"
 
+#: src/lib/components/shell/ChapterStrip.svelte
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Previous chapter"
 msgstr "Vorheriges Kapitel"
@@ -4518,6 +4535,7 @@ msgid "Settings sections"
 msgstr "Einstellungsbereiche"
 
 #: src/App.svelte
+#: src/lib/components/shell/BottomTabs.svelte
 #: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Share"
@@ -5239,6 +5257,7 @@ msgstr "Breit"
 msgid "Working…"
 msgstr ""
 
+#: src/lib/components/shell/BottomTabs.svelte
 #: src/lib/components/shell/TopBar.svelte
 msgid "Write"
 msgstr "Schreiben"
