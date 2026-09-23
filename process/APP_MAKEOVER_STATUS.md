@@ -129,6 +129,8 @@ About is now a dialog off the brand bar (`src/lib/components/shell/AboutDialog.s
 
 Also in this phase: `docs/STORYBOOK.md` gains the sheet's test ids; `scripts/a11y-scan.mjs` presses Escape after scanning Settings; three process docs that failed `prettier --check` on `main` (`APP_MAKEOVER_LIBRARY`, `MERMAID_EXTENSION`, `TRANSLATION_EDITIONS`) were formatted so `npm run validate` passes; German added for every new string.
 
+Fix found by the user on 23 September: the navigation store cleared the chapter selection whenever you left the Write view, which the old sidebar hid because its chapter list was always there to click. The Write tab now reopens on the chapter you left; entering it with no valid selection opens the first chapter; an empty book shows one line instead of the editor's spinner. The `clear-spine-selection` event is gone.
+
 Seen in the running app: the Share page at 1440 and 390 wide; the sheet on Share and on Books, the Format section with its Advanced block open, the phone layout with the section row; Escape closing and returning focus.
 
 ## Where things stand (end of the overnight run, 22 September 2026)
