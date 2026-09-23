@@ -56,9 +56,29 @@
   const actionable = $derived(items.filter(item => !item.heading && !item.disabled));
   const textTrigger = $derived(typeof triggerText === 'string');
 
+  // The list stays on screen: it drops below the trigger when there is room,
+  // opens upward when there is more room above, and scrolls within whichever
+  // space it has.
+  let above = $state(false);
+  let maxBlockSize = $state<string | null>(null);
+
+  function fitToViewport(): void {
+    if (!trigger || !menu) return;
+    const anchor = trigger.getBoundingClientRect();
+    const margin = 8;
+    const below = window.innerHeight - anchor.bottom - margin;
+    const aboveSpace = anchor.top - margin;
+    const needed = menu.scrollHeight;
+    above = needed > below && aboveSpace > below;
+    maxBlockSize = `${Math.max(120, Math.floor(above ? aboveSpace : below))}px`;
+  }
+
   async function openMenu() {
     open = true;
+    above = false;
+    maxBlockSize = null;
     await tick();
+    fitToViewport();
     const current = actionable.findIndex(item => item.checked);
     itemRefs[current >= 0 ? current : 0]?.focus();
   }
@@ -167,9 +187,10 @@
     <div
       bind:this={menu}
       class="book-menu-list"
+      class:above
       role="menu"
       aria-label={textTrigger ? label : undefined}
-      style="inline-size: {menuWidth}"
+      style="inline-size: {menuWidth}; {maxBlockSize ? `max-block-size: ${maxBlockSize};` : ''}"
     >
       {#each items as item (item.id)}
         {#if item.heading}
@@ -257,11 +278,17 @@
     z-index: 10;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
     padding: var(--space-1);
     background-color: var(--color-surface-elevated);
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-md);
+  }
+
+  .book-menu-list.above {
+    inset-block-start: auto;
+    inset-block-end: 100%;
   }
 
   .book-menu.align-start .book-menu-list {

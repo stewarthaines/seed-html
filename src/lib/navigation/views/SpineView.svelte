@@ -389,8 +389,15 @@
       // editors on one file would fight over a single store). Keyed on path,
       // not type, so the chapter text and a frozen translation reference can
       // be shown side by side.
-      availableFiles1 = availableFiles.filter(file => file.path !== paneState.pane2.filePath);
-      availableFiles2 = availableFiles.filter(file => file.path !== paneState.pane1.filePath);
+      // Each pane offers every file but the other pane's — except its own
+      // current file, which stays so the pane can still name it (both panes
+      // open on the same file when the second pane is first opened).
+      availableFiles1 = availableFiles.filter(
+        file => file.path !== paneState.pane2.filePath || file.path === paneState.pane1.filePath
+      );
+      availableFiles2 = availableFiles.filter(
+        file => file.path !== paneState.pane1.filePath || file.path === paneState.pane2.filePath
+      );
     }
   }
 
