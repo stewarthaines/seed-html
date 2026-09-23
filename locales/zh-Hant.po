@@ -726,11 +726,6 @@ msgstr ""
 msgid "Bucket Name"
 msgstr ""
 
-#: src/lib/components/spine/EditorPane.svelte
-#. Dropdown group for build-time transform scripts (not shipped)
-msgid "Build scripts"
-msgstr ""
-
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 msgid "Built-in"
 msgstr ""
@@ -765,6 +760,10 @@ msgstr ""
 
 #: src/lib/components/settings/TrackChangesPanel.svelte
 msgid "Captured change sets. Those matching this project are listed first."
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Catalog"
 msgstr ""
 
 #: plugins/publish-to-remote/src/App.svelte
@@ -2419,7 +2418,6 @@ msgstr ""
 #: src/lib/components/spine/EditorPane.svelte
 #: src/lib/components/spine/GeneratorPanel.svelte
 #: src/lib/navigation/views/SettingsView.svelte
-#. Dropdown group for on-demand content generator scripts
 msgid "Generators"
 msgstr ""
 
@@ -3108,10 +3106,6 @@ msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "More formats…"
-msgstr ""
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "More transforms…"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestPreview.svelte
@@ -3912,9 +3906,7 @@ msgid "Preset"
 msgstr ""
 
 #: src/lib/components/shell/BottomTabs.svelte
-#: src/lib/components/spine/EditorPane.svelte
 #: src/lib/navigation/views/SettingsView.svelte
-#. Dropdown group for the preview-only head fragment
 msgid "Preview"
 msgstr ""
 
@@ -4081,11 +4073,6 @@ msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Reading preview settings"
-msgstr ""
-
-#: src/lib/components/spine/EditorPane.svelte
-#. Dropdown group for CSS/JS files loaded by the e-reader
-msgid "Reading System"
 msgstr ""
 
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
@@ -4440,10 +4427,6 @@ msgstr ""
 
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Select audio..."
-msgstr ""
-
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Select file for pane 2"
 msgstr ""
 
 #: src/lib/components/outline/OutlineView.svelte

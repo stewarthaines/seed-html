@@ -745,11 +745,6 @@ msgstr "Bucket ist leer"
 msgid "Bucket Name"
 msgstr "Bucket-Name"
 
-#: src/lib/components/spine/EditorPane.svelte
-#. Dropdown group for build-time transform scripts (not shipped)
-msgid "Build scripts"
-msgstr "Build-Skripte"
-
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 msgid "Built-in"
 msgstr "Integriert"
@@ -785,6 +780,10 @@ msgstr "{n} geänderte Datei(en) erfasst."
 #: src/lib/components/settings/TrackChangesPanel.svelte
 msgid "Captured change sets. Those matching this project are listed first."
 msgstr "Erfasste Änderungssätze. Passende zu diesem Projekt werden zuerst aufgeführt."
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Catalog"
+msgstr "Katalog"
 
 #: plugins/publish-to-remote/src/App.svelte
 msgid "Catalog file"
@@ -2438,7 +2437,6 @@ msgstr "Wird erzeugt…"
 #: src/lib/components/spine/EditorPane.svelte
 #: src/lib/components/spine/GeneratorPanel.svelte
 #: src/lib/navigation/views/SettingsView.svelte
-#. Dropdown group for on-demand content generator scripts
 msgid "Generators"
 msgstr "Generatoren"
 
@@ -3128,10 +3126,6 @@ msgstr "Weitere Aktionen für {title}"
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "More formats…"
 msgstr "Weitere Formate…"
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "More transforms…"
-msgstr "Weitere Transformationen…"
 
 #: src/lib/components/manifest/ManifestPreview.svelte
 #: src/lib/components/manifest/MoveReviewDialog.svelte
@@ -3931,9 +3925,7 @@ msgid "Preset"
 msgstr "Voreinstellung"
 
 #: src/lib/components/shell/BottomTabs.svelte
-#: src/lib/components/spine/EditorPane.svelte
 #: src/lib/navigation/views/SettingsView.svelte
-#. Dropdown group for the preview-only head fragment
 msgid "Preview"
 msgstr "Vorschau"
 
@@ -4101,11 +4093,6 @@ msgstr "Lesevorschau (Design und Schriftgröße)"
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Reading preview settings"
 msgstr "Einstellungen für die Lesevorschau"
-
-#: src/lib/components/spine/EditorPane.svelte
-#. Dropdown group for CSS/JS files loaded by the e-reader
-msgid "Reading System"
-msgstr "Lesesystem"
 
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 msgid "Recognized fields are offered on every book you edit. The catalog is stored in this browser and does not travel with your EPUBs."
@@ -4460,10 +4447,6 @@ msgstr "Audiodatei auswählen"
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Select audio..."
 msgstr "Audio auswählen..."
-
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Select file for pane 2"
-msgstr "Datei für Bereich 2 auswählen"
 
 #: src/lib/components/outline/OutlineView.svelte
 msgid "Select navigation file"

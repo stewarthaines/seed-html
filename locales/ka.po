@@ -764,11 +764,6 @@ msgstr "ბაკეტი ცარიელია"
 msgid "Bucket Name"
 msgstr "ბაკეტის სახელი"
 
-#: src/lib/components/spine/EditorPane.svelte
-#. Dropdown group for build-time transform scripts (not shipped)
-msgid "Build scripts"
-msgstr "აგების სკრიპტები"
-
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 msgid "Built-in"
 msgstr "ჩაშენებული"
@@ -804,6 +799,10 @@ msgstr "დაფიქსირდა {n} შეცვლილი ფაილ
 #: src/lib/components/settings/TrackChangesPanel.svelte
 msgid "Captured change sets. Those matching this project are listed first."
 msgstr "დაფიქსირებული ცვლილებათა ნაკრებები. ამ პროექტთან შესაბამისი ნაკრებები ჩამონათვალში პირველია."
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Catalog"
+msgstr ""
 
 #: plugins/publish-to-remote/src/App.svelte
 msgid "Catalog file"
@@ -2457,7 +2456,6 @@ msgstr "გენერირდება…"
 #: src/lib/components/spine/EditorPane.svelte
 #: src/lib/components/spine/GeneratorPanel.svelte
 #: src/lib/navigation/views/SettingsView.svelte
-#. Dropdown group for on-demand content generator scripts
 msgid "Generators"
 msgstr "გენერატორები"
 
@@ -3146,10 +3144,6 @@ msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "More formats…"
-msgstr ""
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "More transforms…"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestPreview.svelte
@@ -3950,9 +3944,7 @@ msgid "Preset"
 msgstr "პრესეტი"
 
 #: src/lib/components/shell/BottomTabs.svelte
-#: src/lib/components/spine/EditorPane.svelte
 #: src/lib/navigation/views/SettingsView.svelte
-#. Dropdown group for the preview-only head fragment
 msgid "Preview"
 msgstr "გადახედვა"
 
@@ -4120,11 +4112,6 @@ msgstr "კითხვის გადახედვა (თემა და �
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Reading preview settings"
 msgstr "კითხვის გადახედვის პარამეტრები"
-
-#: src/lib/components/spine/EditorPane.svelte
-#. Dropdown group for CSS/JS files loaded by the e-reader
-msgid "Reading System"
-msgstr "კითხვის სისტემა"
 
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 msgid "Recognized fields are offered on every book you edit. The catalog is stored in this browser and does not travel with your EPUBs."
@@ -4479,10 +4466,6 @@ msgstr "აუდიოფაილის არჩევა"
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Select audio..."
 msgstr "აუდიოს არჩევა..."
-
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Select file for pane 2"
-msgstr "ფაილის არჩევა მე-2 პანელისთვის"
 
 #: src/lib/components/outline/OutlineView.svelte
 msgid "Select navigation file"
