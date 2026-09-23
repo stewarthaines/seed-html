@@ -111,6 +111,7 @@
     loadedVersion = version;
     editingIdentity = false;
     creatingCatalog = null;
+    confirmDeleteCatalog = false;
     void refresh(selected);
   });
 
@@ -237,6 +238,30 @@
   async function updateCatalog() {
     if (!catalog) return;
     await writeIdentity(catalog.file, catalog.identity);
+  }
+
+  // Delete the feed file itself; the books stay. The thumbnails hosted for
+  // it stay too (another feed may use them).
+  let confirmDeleteCatalog = $state(false);
+
+  async function deleteCatalog() {
+    if (!selected || !catalog) return;
+    confirmDeleteCatalog = false;
+    writingCatalog = true;
+    try {
+      const result = await deleteFile(selected, catalog.file);
+      if (!result.success) {
+        showStatus(result.error || translate('Delete failed'), 'error');
+        return;
+      }
+      announceContentChanged(selected.id);
+      showStatus(translate('{key} deleted', { key: catalog.file }), 'success');
+      catalogFile = null;
+      editingIdentity = false;
+      await refresh(selected);
+    } finally {
+      writingCatalog = false;
+    }
   }
 
   // --- Per-book actions ------------------------------------------------------------
@@ -486,6 +511,35 @@
                   >
                     {$t('New catalog…')}
                   </button>
+                  {#if confirmDeleteCatalog}
+                    <span class="confirm">
+                      {$t('Delete {file}? The books stay.', { file: catalog.file })}
+                      <button
+                        type="button"
+                        class="btn btn-danger btn-sm"
+                        onclick={deleteCatalog}
+                        disabled={writingCatalog}
+                      >
+                        {$t('Yes')}
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-secondary btn-sm"
+                        onclick={() => (confirmDeleteCatalog = false)}
+                      >
+                        {$t('No')}
+                      </button>
+                    </span>
+                  {:else}
+                    <button
+                      type="button"
+                      class="btn btn-link danger"
+                      onclick={() => (confirmDeleteCatalog = true)}
+                      disabled={writingCatalog}
+                    >
+                      {$t('Delete catalog')}
+                    </button>
+                  {/if}
                 {/if}
               </div>
             </div>
@@ -973,6 +1027,16 @@
   }
 
   .book .btn-link:hover {
+    text-decoration: underline;
+  }
+
+  .btn-link.danger {
+    color: var(--color-error-text);
+    font-size: 12px;
+    text-decoration: none;
+  }
+
+  .btn-link.danger:hover {
     text-decoration: underline;
   }
 
