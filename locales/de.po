@@ -266,6 +266,10 @@ msgstr ""
 msgid "A book needs at least one chapter"
 msgstr "Ein Buch braucht mindestens ein Kapitel"
 
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "A catalog with that name is already here."
+msgstr "Ein Katalog mit diesem Namen ist schon hier."
+
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "A generator is a script that produces source text to insert at the editor caret."
 msgstr "Ein Generator ist ein Skript, das Quelltext erzeugt, der an der Cursorposition eingefügt wird."
@@ -818,6 +822,10 @@ msgstr "Katalog aktualisiert: {url}"
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 msgid "Catalog URL"
 msgstr "Katalog-URL"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "Catalogs"
+msgstr "Kataloge"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "cell"
@@ -2632,6 +2640,11 @@ msgstr "Importieren…"
 msgid "Importing…"
 msgstr "Wird importiert…"
 
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "In {catalog}"
+msgstr "In {catalog}"
+
 #: src/lib/navigation/views/CoverView.svelte
 msgid "In a reading app"
 msgstr "In einer Lese-App"
@@ -3284,6 +3297,14 @@ msgstr "Neu"
 #: src/lib/navigation/views/BooksView.svelte
 msgid "New book"
 msgstr "Neues Buch"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "New catalog"
+msgstr "Neuer Katalog"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "New catalog…"
+msgstr "Neuer Katalog…"
 
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 msgid "New chapter"

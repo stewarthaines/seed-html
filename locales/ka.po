@@ -285,6 +285,10 @@ msgstr "მანიფესტს დაემატა 1 ფაილი"
 msgid "A book needs at least one chapter"
 msgstr "წიგნს სულ მცირე ერთი თავი სჭირდება"
 
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "A catalog with that name is already here."
+msgstr ""
+
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "A generator is a script that produces source text to insert at the editor caret."
 msgstr "გენერატორი არის სკრიპტი, რომელიც ქმნის წყაროს ტექსტს რედაქტორის კურსორის პოზიციაზე ჩასასმელად."
@@ -837,6 +841,10 @@ msgstr "კატალოგი განახლდა: {url}"
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 msgid "Catalog URL"
 msgstr "კატალოგის URL"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "Catalogs"
+msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "cell"
@@ -2651,6 +2659,11 @@ msgstr ""
 msgid "Importing…"
 msgstr "მიმდინარეობს იმპორტი…"
 
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "In {catalog}"
+msgstr ""
+
 #: src/lib/navigation/views/CoverView.svelte
 msgid "In a reading app"
 msgstr ""
@@ -3302,6 +3315,14 @@ msgstr "ახალი"
 
 #: src/lib/navigation/views/BooksView.svelte
 msgid "New book"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "New catalog"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "New catalog…"
 msgstr ""
 
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
