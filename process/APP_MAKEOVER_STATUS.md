@@ -133,11 +133,25 @@ Fix found by the user on 23 September: the navigation store cleared the chapter 
 
 Seen in the running app: the Share page at 1440 and 390 wide; the sheet on Share and on Books, the Format section with its Advanced block open, the phone layout with the section row; Escape closing and returning focus.
 
+## Phase 5 — Phone (23 September 2026)
+
+Same branch, `makeover/phase-4-share-settings`, after phase 4.
+
+A `viewport` store (`src/lib/stores/viewport.svelte.ts`) answers one media query, `(max-width: 720px)`, the line the components' own narrow styles already used. Inside a book on a phone, `LayoutManager` renders one pane with a chapter strip above it and the tab bar below; outside a book the shelf keeps two covers across (`BooksShelf`), and the brand bar shortens About.
+
+The tab bar (`src/lib/components/shell/BottomTabs.svelte`) is Write, Preview, Book, Share. Preview is a tab only here: in Write the two panes of the editor become two tabs, remembered under `seedhtml_phone_pane`. Book reopens the last section (`lastBookSection`, moved from `TopBar` into `src/lib/stores/book-section.ts` so App can read it). Test ids `phone-tab-<id>`.
+
+The chapter strip (`src/lib/components/shell/ChapterStrip.svelte`) shows the chapter's name and "n of N"; in Write a Chapters menu lists the chapters and offers Add chapter; in Preview it steps with previous/next. The top bar on a phone keeps back, title and its menu, then Settings and Package as icons; the tabs are hidden (the bottom bar has them), as is the bridge toggle. The Book sections scroll as a row. The preview header hides its own chapter arrows and the split and collapse controls on a phone.
+
+Not done: the right-hand previews of Details, Files and Navigation are not reachable on a phone (only the main pane renders); the editor's second-pane toggle stays, since a vertical split still works on a phone; the phone was checked in a 390px desktop viewport, not on a device.
+
+Seen in the running app at 390 wide: Books, Write with the strip and menu, Preview with the device chips, Book › Details and Files, the bottom bar throughout.
+
 ## Where things stand (end of the overnight run, 22 September 2026)
 
 Three stacked branches, none merged: `makeover/phase-1-shell` (8 commits) → `makeover/phase-2-write` (5) → `makeover/phase-3-book` (6). `npm run validate` is green on each; the story suite passes except `LayoutManager.stories.svelte`, stale since before the makeover; the accessibility scan reports only the About page's two pre-existing findings.
 
-Phase 4 is built on `makeover/phase-4-share-settings` (see above); phase 5 (phone) is not started.
+Phases 4 and 5 are built on `makeover/phase-4-share-settings` (see above).
 
 Open from the plan: what the sample book opens into. Owed after review: deleting `Sidebar.svelte`, `WorkspaceView.svelte`, `MetadataTabBar.svelte`/`MetadataTab.svelte` and `LayoutManager.stories.svelte`, which are no longer rendered (the two About views are already gone).
 
@@ -145,4 +159,4 @@ One loose end in the tooling: `scripts/a11y-scan.mjs` cannot get past creating a
 
 ### Next step
 
-User review of the four branches. Then phase 5 (phone).
+User review of the four branches, then the merge and the deletions owed; then the sample book.
