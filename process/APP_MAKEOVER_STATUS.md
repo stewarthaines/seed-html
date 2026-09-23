@@ -143,6 +143,8 @@ The tab bar (`src/lib/components/shell/BottomTabs.svelte`) is Write, Preview, Bo
 
 The chapter strip (`src/lib/components/shell/ChapterStrip.svelte`) shows the chapter's name and "n of N"; in Write a Chapters menu lists the chapters and offers Add chapter; in Preview it steps with previous/next. The top bar on a phone keeps back, title and its menu, then Settings and Package as icons; the tabs are hidden (the bottom bar has them), as is the bridge toggle. The Book sections scroll as a row. The preview header hides its own chapter arrows and the split and collapse controls on a phone.
 
+Fix found by the user: with only the preview pane mounted, the strip's previous/next changed the selection but nothing rendered it, because the editor component is what loads a chapter and feeds the preview. Both panes of the Write view now stay mounted on a phone; the inactive one keeps its layout but is invisible and inert (`visibility: hidden`).
+
 Not done: the right-hand previews of Details, Files and Navigation are not reachable on a phone (only the main pane renders); the editor's second-pane toggle stays, since a vertical split still works on a phone; the phone was checked in a 390px desktop viewport, not on a device.
 
 Seen in the running app at 390 wide: Books, Write with the strip and menu, Preview with the device chips, Book › Details and Files, the bottom bar throughout.
