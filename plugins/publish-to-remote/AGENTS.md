@@ -18,6 +18,7 @@ The host mounts this one build three times, naming a **surface** in the `init` m
 - `src/local-packages.ts` — the packages in the handed directory joined with their sidecars
 - `src/remote-status.ts` — listing with reachability named (`ok` / `sign-in` / `reconnect` / `unplugged` / `error`), and the pure derivations: `sendStateFor` (the Send row) and `shelfFor` (the Published shelf); tested
 - `src/catalog.ts` — list every feed on a destination (`catalogFilesOn`, the destination's own first), read them (`loadCatalog`, `loadCatalogs`), write one from a key set (`writeCatalog`, hosting the cover thumbnails), feed URL per remote type; tested
+- `src/feed-cache.ts` — feed texts cached in OPFS by destination, file and listing stamp, shared by every frame; tested with a memory store
 - `src/send.ts` — `sendPackage` (upload, then put the book in the catalog, replacing an older package of the same book in the feed) and `setInCatalog`
 - `src/reconnect.ts` — a fresh Google token; a device permission re-granted
 - `src/types.ts` — message shapes mirrored from the host contract; discriminated union of remote configs
@@ -162,7 +163,7 @@ Run `npm run lint` to check for errors. Run `npm run lint:fix` to auto-fix. Conf
 **Current status:** All three remotes (S3/R2, Dropbox, Google Drive) confirmed working end-to-end.
 
 **Current limitations:**
-- File list refresh: calls shared link endpoints for each file (slower for large folders)
+- Dropbox shared links are looked up only when a catalog is written (`resolveDropboxLinks`), for the files the feed carries; the listing itself is one call
 - No batch upload UI (files uploaded one at a time)
 - Google Drive token expires after ~1 hour — user must click "Connect to Google Drive" banner to re-authorize
 - **Google Drive can't host an OPDS catalog (feed).** The catalog editor is intentionally hidden for `google-drive` remotes (S3/WebDAV only) — see below.

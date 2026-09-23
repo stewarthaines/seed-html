@@ -55,9 +55,9 @@ One plugin build, three surfaces. The host names the surface in the `init` messa
 4. `App.svelte` routes on the surface; `index.ts` records surface and identifiers.
 5. Tests for the derivations and the parsers; German for every new string; docs (`API.md`, plugin `AGENTS.md`, `README.md`, `STORYBOOK.md` test ids), changelog lines.
 
-## Open: the cost of reading feeds on every visit
+## The cost of reading feeds
 
-Every visit to Share lists every destination and reads every feed on every catalog-capable one, so the Send row can say which feeds hold this book; Published does the same for the picked destination. On a bucket with five catalogs that is five signed reads (each with a CORS preflight) per visit, and on Dropbox each listing also looks up a shared link per file. Suggested, not built: cache each feed's parsed contents keyed by its file and the `lastModified` the listing already reports, in the plugin's OPFS so it survives reloads, and re-read only a feed whose stamp changed or that the plugin itself just wrote; defer Dropbox's per-file shared-link lookups from the listing to the catalog write, where the links are actually needed; and read a public feed unsigned through `publicUrlBase` when the destination has one, which skips the preflight.
+Every visit to Share lists every destination and reads every feed on every catalog-capable one, so the Send row can say which feeds hold this book; Published does the same for the picked destination. Two measures keep that cheap (built 24 September 2026): feed texts are cached in the plugin's OPFS keyed by destination, file and the `lastModified` the listing reports, shared by every frame, so a feed is fetched once and again only when its stamp moves (a feed the plugin writes is fetched once more on the next visit, when its new stamp is known); and a Dropbox listing is one `list_folder` call, with the per-file shared-link lookups moved to the catalog write and done only for the books and thumbnails the feed carries. Feed entries on Dropbox are matched back to files by the filename the link ends in, since the listing carries no links. Still open: read a public feed unsigned through `publicUrlBase` where the destination has one, which would skip the CORS preflight on S3.
 
 ## Not in this pass
 
