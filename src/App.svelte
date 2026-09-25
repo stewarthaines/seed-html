@@ -482,9 +482,9 @@
 
     // Refresh workspace list for fields that affect workspace display
     if (field === 'creator' || field === 'title' || field === 'language') {
-      // Trigger workspace list refresh by dispatching event to WorkspaceView
+      // Trigger workspace list refresh by dispatching event to the Books shelf
       // Since we don't have direct access to the loadWorkspaces function,
-      // we'll emit a custom event that the WorkspaceView can listen for
+      // we'll emit a custom event that the Books shelf can listen for
       window.dispatchEvent(new CustomEvent('workspace-list-refresh'));
     }
   };

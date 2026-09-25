@@ -159,4 +159,4 @@ Before considering a component complete:
 - **Import Paths**: Use `$lib` alias for new code (`import { createPendingSaves } from '$lib/editor/pending-saves'`). Relative imports are acceptable for local files within the same feature directory.
 - **CSS & Styling**: Use the design system in `src/styles/` (see `src/styles/DESIGN_SYSTEM.md`)
 - **Browser APIs**: Prefer browser-native APIs (`DOMParser`, `querySelector`) over regex for structured data handling
-- **Reference components**: `src/lib/components/metadata/MetadataEditor.svelte` (forms/validation), `src/lib/components/manifest/ManifestTable.svelte` (data display), `src/lib/navigation/views/WorkspaceView.svelte` (complex state)
+- **Reference components**: `src/lib/components/metadata/MetadataEditor.svelte` (forms/validation), `src/lib/components/manifest/ManifestTable.svelte` (data display), `src/lib/navigation/views/BooksView.svelte` (complex state)

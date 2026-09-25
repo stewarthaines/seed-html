@@ -2,12 +2,12 @@
 
 ## Overview
 
-The Layout System provides the foundational UI structure for the SEED.html EPUB editor with a collapsible sidebar, resizable content panes, and persistent state management. The system is built using Svelte's reactive patterns integrated with PaneForge for robust pane resizing functionality.
+The Layout System provides the foundational UI structure for the SEED.html EPUB editor with the shell bars, a collapsible chapter column beside the editor, resizable content panes, and persistent state management. The system is built using Svelte's reactive patterns integrated with PaneForge for robust pane resizing functionality.
 
 **Key Components:**
 
 - `LayoutManager` - Main layout orchestrator with grid structure
-- `Sidebar` - Collapsible navigation with 6 sections
+- The shell bars in `src/lib/components/shell/` (`BrandBar` outside a book, `TopBar` inside one, `WriteSidebar` beside the editor) - the navigation the old `Sidebar` used to carry
 - `layoutStore` - Reactive state management with localStorage persistence
 
 ## Core Classes and Components
@@ -58,44 +58,9 @@ interface LayoutManagerSlots {
 - Initializes PaneForge components with localStorage persistence
 - Subscribes to layout store for state changes
 
-### Sidebar Component
+### Shell bars (formerly the Sidebar)
 
-Collapsible navigation sidebar with section switching.
-
-#### Props
-
-```typescript
-interface SidebarProps {
-  isExpanded: boolean;
-  activeSection: 'workspace' | 'metadata' | 'manifest' | 'nav' | 'spine' | 'settings';
-}
-```
-
-**Input:**
-
-- `isExpanded: boolean` - Controls sidebar collapsed/expanded state
-- `activeSection: string` - Currently active sidebar section
-
-**Output:** Component renders sidebar with navigation sections
-
-**Side Effects:**
-
-- Calls `layoutStore.toggleSidebar()` on toggle button click
-- Calls `layoutStore.setSidebarSection()` on section button click
-- Updates ARIA attributes for accessibility
-
-**Usage:**
-
-```svelte
-<Sidebar
-  isExpanded={$layoutStore.sidebar.isExpanded}
-  activeSection={$layoutStore.sidebar.activeSection}
->
-  <svelte:fragment slot="sidebar-workspace">
-    <div>Workspace content</div>
-  </svelte:fragment>
-</Sidebar>
-```
+Navigation lives in `src/lib/components/shell/`: `BrandBar.svelte` outside a book (Books, Published, About, Settings, theme), `TopBar.svelte` inside one (back to Books, the book's title and menu, the Write / Book / Share tabs, the bridge toggle, Settings, Package EPUB), and `WriteSidebar.svelte`, the collapsible chapter column beside the editor. `LayoutManager` renders them as snippets and decides which bar shows from the current view and whether a book is open. The section ids the store tracks are unchanged; the bars call `navigationStore.navigateTo()` and the store keeps `layoutStore.sidebar.activeSection` in step.
 
 ## State Management
 
