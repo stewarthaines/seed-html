@@ -157,7 +157,7 @@ Phases 4 and 5 are built on `makeover/phase-4-share-settings` (see above).
 
 Open from the plan: what the sample book opens into. Owed after review: deleting `Sidebar.svelte`, `WorkspaceView.svelte`, `MetadataTabBar.svelte`/`MetadataTab.svelte` and `LayoutManager.stories.svelte`, which are no longer rendered (the two About views are already gone).
 
-One loose end in the tooling: `scripts/a11y-scan.mjs` cannot get past creating a book in its own headless context (the New book dialog opens and Create is pressed, but no book appears and no error is logged), so only the Books and About screens are scanned. The same steps succeed in a fresh headless Chromium run by hand (`.playwright-mcp/makeover/scan-debug.mjs`) and in the user's browser. The scan now saves `.playwright-mcp/a11y-no-book-<theme>.png` when this happens; worth a look with the dev server open.
+A loose end in the tooling, fixed 25 September 2026: `scripts/a11y-scan.mjs` could not get past creating a book because, on an empty shelf, its "first book" lookup matched the Start row's "Open an EPUB…" button by name and opened a file chooser instead; it now looks for a cover on the shelf. Earlier note: the scan could not get past creating a book in its own headless context (the New book dialog opens and Create is pressed, but no book appears and no error is logged), so only the Books and About screens are scanned. The same steps succeed in a fresh headless Chromium run by hand (`.playwright-mcp/makeover/scan-debug.mjs`) and in the user's browser. The scan now saves `.playwright-mcp/a11y-no-book-<theme>.png` when this happens; worth a look with the dev server open.
 
 ## Publish rework (23 September 2026)
 

@@ -78,7 +78,9 @@ async function ensureWorkspaceInner(page) {
     .waitFor({ state: 'visible', timeout: 10000 })
     .catch(() => undefined);
   await page.waitForTimeout(1500);
-  const firstBook = page.getByRole('button', { name: /^Open / }).first();
+  // A cover on the shelf, not the Start row's "Open an EPUB…" (which only opens
+  // a native file chooser, and matched a name-based lookup on an empty shelf).
+  const firstBook = page.locator('.books-grid .book-open').first();
   if (await firstBook.isVisible().catch(() => false)) {
     await firstBook.click();
   } else {
@@ -108,11 +110,17 @@ async function ensureWorkspaceInner(page) {
 // persists in OPFS across the light/dark passes).
 async function ensureDemoExtension(page) {
   await clickNav(page, 'Settings');
-  const advanced = page.getByRole('checkbox', { name: /Advanced Mode/i }).first();
+  // The sheet shows one section at a time: Advanced mode lives under You ›
+  // Advanced mode, the extension import under This book › Format (which
+  // only lists once advanced mode is on).
+  await page.locator('[data-testid="settings-section-advanced"]').first().click();
+  const advanced = page.getByRole('checkbox', { name: /Advanced mode/i }).first();
   if ((await advanced.count()) && !(await advanced.isChecked())) {
     await advanced.check();
     await page.waitForTimeout(400);
   }
+  await page.locator('[data-testid="settings-section-format"]').first().click();
+  await page.waitForTimeout(400);
   if ((await page.locator('.extension-item').count()) === 0) {
     await page.setInputFiles('#extension-file', {
       name: 'a11y-demo.js',
@@ -180,7 +188,8 @@ async function scanAllViews(page, theme) {
     }
     if (await visit('Share')) await scan('Share');
     if (await visit('Book')) {
-      for (const name of ['Contents', 'Navigation', 'Details', 'Files']) {
+      // Navigation is reached from Contents in advanced mode, not a section.
+      for (const name of ['Contents', 'Details', 'Files']) {
         if (await visit(name)) await scan(name);
       }
     }
@@ -208,6 +217,9 @@ async function scanAllViews(page, theme) {
     } catch (e) {
       console.warn(`\nWARN [${theme}]: could not seed/scan extensions: ${e.message}`);
     }
+    // Leave the sheet closed: its backdrop would block the next pass's clicks.
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
   }
   return reports;
 }
