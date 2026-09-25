@@ -60,7 +60,8 @@ stay), and the Share row shows one switch per feed.
 2. Enable the permissions `files.content.read`, `files.content.write`,
    `files.metadata.read`, `sharing.read`, `sharing.write`. A destination
    connected before `files.content.read` was needed (the plugin now reads each
-   catalog back) must be reconnected: Settings › Destinations → Edit → Connect.
+   catalog back) must be reconnected: Settings › Destinations → Edit → Connect to Dropbox
+   again → Save & Connect.
 3. Under **OAuth 2 → Redirect URIs**, register the exact redirect URI shown in the form
    (this app's origin, e.g. `https://your-app.example`).
 4. In Settings › Destinations: Add a destination → Dropbox → paste the **App key** and confirm the **Redirect
