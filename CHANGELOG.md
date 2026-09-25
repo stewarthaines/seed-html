@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Destinations (S3, Google Drive, Dropbox, WebDAV, USB e-readers) are set up under Settings › You › Destinations rather than inside the publishing pane.
 - A Dropbox destination now needs the app's `files.content.read` permission, because the catalog on it is read back rather than rebuilt blind. A destination connected earlier must be reconnected once (Settings › Destinations → Edit → Connect to Dropbox again → Save & Connect).
 
+- Over http, the preview serves the open book's files to the chapter under a book address, so an interactive book's scripts find their media at runtime: a widget that builds a video player when clicked now plays. Books opened from a file: URL are unchanged.
+- A book that was not made here previews with its scripts switched off. "Run this book's scripts" in the yellow banner turns them on for that book, and the choice is remembered in this browser.
+
 ### Fixed
 
 - An EPUB made elsewhere now previews with its own styles, scripts and images when its chapters sit deeper than one folder below the package file, or when its manifest reaches beside the package folder (`../`). References are resolved against the file they are written in, as the EPUB specification says, instead of assuming the layout this editor produces. Books made here are unaffected.

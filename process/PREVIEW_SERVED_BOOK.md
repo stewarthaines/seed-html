@@ -26,3 +26,7 @@ The preview writes the chapter into its iframe with `document.write`, so the doc
 
 - Unit tests: the URL builder, the page-side request handler (bytes, media type, not found), range slicing, `stripScripts`.
 - In the browser: the Kotobee sample plays its video after the switch is turned on; a SEED book's preview is unchanged; the missing-files report still reports; click-to-source still works.
+
+## Built (25 September 2026)
+
+All three steps are on the makeover branch. Two things the build taught, both recorded above as decisions: Chromium does not treat an `about:blank` frame that the app writes into as a controlled client (WebKit and Firefox do), so the preview frame now starts on a served empty document and the write waits for that load; and the worker settles a missing file on the first "not found" from a page after a short grace, because a book's own frames are window clients too and never answer. The Kotobee sample's video plays in the preview once its scripts are switched on; a SEED book's preview is unchanged; the whole unit suite passes.
