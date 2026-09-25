@@ -37,6 +37,9 @@ describe('answering a request', () => {
       if (workspaceId === 'ws' && path === 'EPUB/css/base.css') return bytes;
       throw new Error('not found');
     },
+    async listWorkspaces() {
+      return ['ws'];
+    },
   };
 
   it('replies with the bytes and a media type from the extension', async () => {
@@ -48,12 +51,21 @@ describe('answering a request', () => {
     expect(reply).toEqual({ ok: true, bytes, contentType: 'text/css' });
   });
 
-  it('replies not found when storage has no such file', async () => {
+  it('replies not found when the workspace is here but the file is not', async () => {
     const reply = await answerBookFile(reader, {
       type: 'book-file',
       workspaceId: 'ws',
       path: 'EPUB/js/missing.js',
     });
-    expect(reply).toEqual({ ok: false, status: 404 });
+    expect(reply).toEqual({ ok: false, reason: 'not-found' });
+  });
+
+  it('replies not mine when the workspace is not here, so another page may answer', async () => {
+    const reply = await answerBookFile(reader, {
+      type: 'book-file',
+      workspaceId: 'a-readers-book',
+      path: 'EPUB/video/clip.mp4',
+    });
+    expect(reply).toEqual({ ok: false, reason: 'not-mine' });
   });
 });

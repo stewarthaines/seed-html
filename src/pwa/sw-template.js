@@ -35,10 +35,13 @@ function parseBookRoute(pathname) {
   return { workspaceId: decodeURIComponent(rest.slice(0, slash)), path: path.join('/') };
 }
 
-// Ask every window client; the app page answers, a book's own frames never
-// do. The first `ok` wins. A "not found" from any page settles a 404 after a
-// short grace for another page to say `ok`, since silent frames would
-// otherwise hold the answer until the timeout; silence throughout is a 504.
+// Ask every window client. The page holding the workspace answers `ok`, or
+// "not found" when it holds the workspace but not the file; a page holding
+// other books (the reader tab, another editor tab) answers "not mine"; a
+// book's own frames never answer. The first `ok` wins. A "not found" settles
+// a 404 after a short grace for another page to say `ok`, since silent
+// frames would otherwise hold the answer until the timeout; "not mine" from
+// every client settles a 404 at once; silence throughout is a 504.
 const BOOK_NOT_FOUND_GRACE_MS = 400;
 async function askPageForBookFile(workspaceId, path) {
   const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
@@ -46,6 +49,7 @@ async function askPageForBookFile(workspaceId, path) {
   return new Promise(resolve => {
     let settled = false;
     let grace = null;
+    let notMine = 0;
     const settle = reply => {
       if (settled) return;
       settled = true;
@@ -59,7 +63,9 @@ async function askPageForBookFile(workspaceId, path) {
       channel.port1.onmessage = event => {
         const reply = event.data;
         if (reply && reply.ok) settle(reply);
-        else if (grace === null) {
+        else if (reply && reply.reason === 'not-mine') {
+          if (++notMine === windows.length) settle({ ok: false, status: 404 });
+        } else if (grace === null) {
           grace = setTimeout(() => settle({ ok: false, status: 404 }), BOOK_NOT_FOUND_GRACE_MS);
         }
       };

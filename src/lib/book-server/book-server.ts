@@ -30,13 +30,21 @@ export interface BookFileRequest {
   path: string;
 }
 
+/**
+ * `not-found` means this page holds the workspace but not the file, so the
+ * worker can stop waiting; `not-mine` means the workspace is not this
+ * page's, and another page (a reader tab, another editor tab) may still
+ * answer. The reader (READ.html) answers with the same shapes for the book
+ * it has open.
+ */
 export type BookFileReply =
   | { ok: true; bytes: ArrayBuffer; contentType: string }
-  | { ok: false; status: 404 };
+  | { ok: false; reason: 'not-found' | 'not-mine' };
 
 /** What the page needs from storage to answer. */
 export interface BookFileReader {
   readFile(workspaceId: string, path: string): Promise<ArrayBuffer>;
+  listWorkspaces(): Promise<string[]>;
 }
 
 /** Whether a base under the route means anything here: HTTP with a worker in control. */
@@ -88,7 +96,13 @@ export async function answerBookFile(
     const bytes = await reader.readFile(request.workspaceId, request.path);
     return { ok: true, bytes, contentType: getMimeType(request.path) };
   } catch {
-    return { ok: false, status: 404 };
+    // Only the failure path pays for the listing: a missing file in a
+    // workspace this page holds is final, a workspace it does not hold is not.
+    const mine = await reader
+      .listWorkspaces()
+      .then(ids => ids.includes(request.workspaceId))
+      .catch(() => false);
+    return { ok: false, reason: mine ? 'not-found' : 'not-mine' };
   }
 }
 
