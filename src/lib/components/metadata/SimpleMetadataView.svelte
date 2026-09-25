@@ -6,6 +6,7 @@
     WorkspaceService,
   } from '../../services/workspace/workspace.service.js';
   import type { EPUBMetadata } from '../../epub/opf-utils.js';
+  import { manifestHrefToPath } from '../../epub/path-utils.js';
 
   interface Props {
     workspace: WorkspaceState;
@@ -86,7 +87,7 @@
 
     let stale = false;
     let url: string | null = null;
-    const fullPath = ws.pathInfo.basePath ? `${ws.pathInfo.basePath}/${item.href}` : item.href;
+    const fullPath = manifestHrefToPath(ws.pathInfo.basePath, item.href);
     svc
       .readFile(ws.id, fullPath)
       .then(buffer => {

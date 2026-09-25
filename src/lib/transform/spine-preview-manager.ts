@@ -19,6 +19,7 @@ import {
   serializeElementAttributes,
 } from './xhtml-template.js';
 import { primaryLanguage } from '../epub/opf-utils.js';
+import { manifestHrefToPath } from '../epub/path-utils.js';
 import { DEFAULT_FXL_VIEWPORT } from '../epub/fixed-layout.js';
 import { readChapterMeta } from '../spine/chapter-metadata.js';
 import type { ChapterSource } from '../spine/chapter-switch.service.js';
@@ -516,10 +517,7 @@ export class SpinePreviewManager {
    * Resolve manifest href to actual file path (same logic as workspace service)
    */
   private resolveManifestPath(href: string, basePath: string): string {
-    if (!basePath || href.startsWith(basePath + '/')) {
-      return href;
-    }
-    return `${basePath}/${href}`;
+    return manifestHrefToPath(basePath, href);
   }
 
   /**

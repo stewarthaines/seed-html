@@ -6,6 +6,7 @@
 -->
 <script lang="ts">
   import { t } from '../../i18n';
+  import { manifestHrefToPath } from '../../epub/path-utils.js';
   import {
     titleHue,
     generateCoverSvg,
@@ -94,7 +95,7 @@
     }
     let stale = false;
     let url: string | null = null;
-    const fullPath = ws.pathInfo.basePath ? `${ws.pathInfo.basePath}/${item.href}` : item.href;
+    const fullPath = manifestHrefToPath(ws.pathInfo.basePath, item.href);
     workspaceService
       .readFile(ws.id, fullPath)
       .then(buffer => {

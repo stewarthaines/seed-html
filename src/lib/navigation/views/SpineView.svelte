@@ -52,6 +52,7 @@
     clearAllTextEditorStores,
   } from '../../stores/text-editor-store.js';
   import { createPendingSaves } from '$lib/editor/pending-saves';
+  import { manifestHrefToPath } from '$lib/epub/path-utils.js';
   import type { TextEditorStore } from '../../stores/index.js';
   import { Lock } from 'phosphor-svelte';
 
@@ -445,7 +446,7 @@
       // appears here and the dropdown always matches the head. Resolve each
       // manifest href to its actual workspace path for content loading.
       const resolveManifestHref = (href: string) =>
-        workspace.pathInfo.basePath ? `${workspace.pathInfo.basePath}/${href}` : href;
+        manifestHrefToPath(workspace.pathInfo.basePath, href);
 
       for (const item of workspace.opf.manifest) {
         if (item.mediaType === 'text/css') {
@@ -1261,10 +1262,7 @@
 
       const manifestItem = workspace.opf.manifest.find(m => m.id === selectedItem!.idref);
       const basePath = workspace.pathInfo.basePath;
-      const path =
-        manifestItem && (!basePath || manifestItem.href.startsWith(basePath + '/'))
-          ? manifestItem?.href
-          : `${basePath}/${manifestItem?.href}`;
+      const path = manifestItem ? manifestHrefToPath(basePath, manifestItem.href) : '';
 
       let xhtmlContent = '';
       let persistedXhtml: string | undefined;
@@ -1274,7 +1272,14 @@
         // imported book may not live under "OEBPS/" (the blob manager defaults to it).
         blobURLManager.setBasePath(basePath);
         blobURLManager.setActiveWorkspace(workspace.id);
-        xhtmlContent = await blobURLManager.processXHTMLForPreview(stored);
+        // References resolve against the chapter's own directory: an imported
+        // book may keep its chapters deeper than one level below the OPF.
+        blobURLManager.setDocumentPath(path);
+        try {
+          xhtmlContent = await blobURLManager.processXHTMLForPreview(stored);
+        } finally {
+          blobURLManager.setDocumentPath(null);
+        }
         persistedXhtml = stored;
       }
 

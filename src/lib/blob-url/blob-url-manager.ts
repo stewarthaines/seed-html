@@ -12,7 +12,13 @@
  */
 
 import { getMimeType } from '../utils/mime-types.js';
-import { convertXHTMLPathToManifestPath } from '../epub/path-utils.js';
+import {
+  convertXHTMLPathToManifestPath,
+  dirOfPath,
+  manifestHrefToPath,
+  relativePathFrom,
+  resolveRelativePath,
+} from '../epub/path-utils.js';
 import type { FileStorageAPI } from '../storage/index.js';
 import type { BlobURLManagerConfig, BlobURLRegistry } from './types.js';
 import { BlobURLError, BlobURLCapacityError, XHTMLProcessingError } from './types.js';
@@ -75,6 +81,33 @@ export class BlobURLManager {
   }
 
   /**
+   * The container path of the document whose references are being
+   * rewritten (e.g. `EPUB/xhtml/raw/ch1.xhtml`), so they resolve against its
+   * own directory as EPUB requires. Null means the caller has not said, and
+   * references are read with the SEED layout's one-level shortcut.
+   */
+  private documentPath: string | null = null;
+
+  setDocumentPath(path: string | null): void {
+    this.documentPath = path;
+  }
+
+  /**
+   * A reference written in the current document (or in the file at
+   * `fromManifestPath`, for a stylesheet's url()) as the manifest-relative
+   * path the registry is keyed by.
+   */
+  private manifestPathFor(href: string, fromManifestPath?: string): string {
+    const fromDir = fromManifestPath
+      ? dirOfPath(manifestHrefToPath(this.basePath, fromManifestPath))
+      : this.documentPath
+        ? dirOfPath(this.documentPath)
+        : null;
+    if (fromDir === null) return convertXHTMLPathToManifestPath(href);
+    return relativePathFrom(this.basePath, resolveRelativePath(fromDir, href));
+  }
+
+  /**
    * Create blob URL for a file using optimal backend path
    *
    * Note: This method is designed for serial usage (one call at a time per resource).
@@ -124,7 +157,8 @@ export class BlobURLManager {
             this.activeWorkspaceId,
             resolvedPath
           );
-          const processedCSS = await this.processCSSURLs(textContent);
+          // url() in a stylesheet is relative to the stylesheet.
+          const processedCSS = await this.processCSSURLs(textContent, filePath);
           const uint8Array = new TextEncoder().encode(processedCSS);
           content = uint8Array.buffer as ArrayBuffer;
         } else {
@@ -296,11 +330,9 @@ export class BlobURLManager {
    * Resolve manifest item href to full workspace path
    */
   private resolveManifestPath(href: string): string {
-    // Handle OPF in container root (empty basePath)
-    if (!this.basePath) return href;
-
-    // Standard case: basePath + href
-    return `${this.basePath}/${href}`;
+    // Against the OPF directory, dot segments collapsed: a manifest may
+    // reach beside or above the OPF (`../_kmeta/config.js`).
+    return manifestHrefToPath(this.basePath, href);
   }
 
   /**
@@ -400,8 +432,8 @@ export class BlobURLManager {
         throw new BlobURLCapacityError(this.getBlobURLCount(), this.registry.maxCount);
       }
 
-      // Convert XHTML-relative path to manifest path for registry lookup
-      const manifestPath = convertXHTMLPathToManifestPath(href);
+      // The reference as a manifest path, resolved against the document.
+      const manifestPath = this.manifestPathFor(href);
       const blobURL = await this.createBlobURL(manifestPath);
       if (xlink) element.setAttributeNS(XLINK_NS, 'xlink:href', blobURL);
       else element.setAttribute(attr, blobURL);
@@ -419,8 +451,7 @@ export class BlobURLManager {
    */
   private handleMissingAsset(element: Element, href: string, _error: Error): void {
     const tagName = element.tagName.toLowerCase();
-    // Convert XHTML path to manifest path before resolving
-    const manifestPath = convertXHTMLPathToManifestPath(href);
+    const manifestPath = this.manifestPathFor(href);
     const resolvedPath = this.resolveManifestPath(manifestPath);
 
     // Stamp the failure on the element so the preview can tell the author which
@@ -504,7 +535,7 @@ export class BlobURLManager {
    * were the original case, but nothing here is font-specific — a
    * `background-image` resolves the same way.
    */
-  private async processCSSURLs(cssContent: string): Promise<string> {
+  private async processCSSURLs(cssContent: string, fromManifestPath?: string): Promise<string> {
     // Regex to match url() patterns: url('path'), url("path"), url(path)
     const urlPattern = /url\(\s*(['"]?)(.*?)\1\s*\)/g;
     let processedCSS = cssContent;
@@ -527,8 +558,9 @@ export class BlobURLManager {
           throw new BlobURLCapacityError(this.getBlobURLCount(), this.registry.maxCount);
         }
 
-        // Convert XHTML path to manifest path
-        const manifestPath = convertXHTMLPathToManifestPath(url);
+        // The url() as a manifest path: relative to the stylesheet it is in,
+        // or to the document for an inline style.
+        const manifestPath = this.manifestPathFor(url, fromManifestPath);
 
         // Create blob URL for the font file (recursive call but for non-CSS file)
         // createBlobURL() will handle path resolution internally

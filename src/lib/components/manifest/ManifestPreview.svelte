@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onDestroy, untrack } from 'svelte';
+  import { manifestHrefToPath } from '../../epub/path-utils.js';
   import { t } from '../../i18n';
   import PaneHeader from '../layout/PaneHeader.svelte';
   import { navigationStore } from '../../navigation/navigation-store';
@@ -525,9 +526,7 @@
         // read from its new location rather than the stale selectedItem prop.
         const manifestItem = (liveItem ?? selectedItem) as ManifestItem;
         // For now, create a simplified preview since we don't have getContentPreview in WorkspaceService yet
-        const filePath = manifestItem.href.startsWith(workspace.pathInfo.basePath + '/')
-          ? manifestItem.href
-          : `${workspace.pathInfo.basePath}/${manifestItem.href}`;
+        const filePath = manifestHrefToPath(workspace.pathInfo.basePath, manifestItem.href);
 
         try {
           let content;
@@ -778,9 +777,7 @@
         const manifestItem = (liveItem ?? selectedItem) as ManifestItem;
 
         // Resolve file path using same logic as loadContentPreview
-        const filePath = manifestItem.href.startsWith(workspace.pathInfo.basePath + '/')
-          ? manifestItem.href
-          : `${workspace.pathInfo.basePath}/${manifestItem.href}`;
+        const filePath = manifestHrefToPath(workspace.pathInfo.basePath, manifestItem.href);
 
         try {
           content = await workspaceService.readFile(workspace.id, filePath);

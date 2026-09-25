@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- An EPUB made elsewhere now previews with its own styles, scripts and images when its chapters sit deeper than one folder below the package file, or when its manifest reaches beside the package folder (`../`). References are resolved against the file they are written in, as the EPUB specification says, instead of assuming the layout this editor produces. Books made here are unaffected.
 - The screen reader preview announces a heading once. A heading with a line break or an emphasised word inside it used to be read three times: the title, each of its parts, then the title again as the heading ended. The Read aloud view repeated it too.
 
 ## [0.21.0] - 2026-09-09

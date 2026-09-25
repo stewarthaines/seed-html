@@ -12,6 +12,7 @@ import type {
 } from '../services/workspace/workspace.service.js';
 import type { SpineTransformPipeline } from '$lib/transform/spine-transform-pipeline';
 import type { ManifestItem } from '../epub/opf-utils.js';
+import { manifestHrefToPath } from '../epub/path-utils.js';
 import { isRtlLanguage } from '../epub/language-direction.js';
 // import type { TransformEngine } from '$lib/infrastructure/transform-engine';
 
@@ -130,7 +131,7 @@ export class OutlineGenerator {
 
       try {
         // Construct full file path using workspace basePath
-        const fullFilePath = `${pathInfo?.basePath}/${spineItem.href}`;
+        const fullFilePath = manifestHrefToPath(pathInfo?.basePath ?? '', spineItem.href);
         const xhtmlBuffer = await workspaceService.readFile(workspaceId, fullFilePath);
         const xhtmlContent = new TextDecoder().decode(xhtmlBuffer);
 

@@ -5,6 +5,7 @@
   import ManifestTable from './ManifestTable.svelte';
   import ImportReviewDialog from '../import/ImportReviewDialog.svelte';
   import { generateEPUBPath, ensureUniqueHref } from '../../epub/opf-utils.js';
+  import { manifestHrefToPath } from '../../epub/path-utils.js';
   import { FileStorageAPI } from '../../storage/index.js';
   import { hasSeedHtml } from '../../epub/seed-html.js';
   import { manifestCollision } from '../../import/collision.js';
@@ -99,9 +100,7 @@
         baseManifestItems.map(async item => {
           try {
             // Resolve manifest item href to full workspace path
-            const resolvedPath = workspace!.pathInfo.basePath
-              ? `${workspace!.pathInfo.basePath}/${item.href}`
-              : item.href;
+            const resolvedPath = manifestHrefToPath(workspace!.pathInfo.basePath, item.href);
 
             const cacheKey = `${workspace!.id}\u0001${resolvedPath}`;
             let size = sizeCache.get(cacheKey);
@@ -220,7 +219,7 @@
     mediaType.startsWith('text/') || mediaType.includes('json') || mediaType.includes('xml');
 
   const resolvePath = (href: string): string =>
-    workspace!.pathInfo.basePath ? `${workspace!.pathInfo.basePath}/${href}` : href;
+    manifestHrefToPath(workspace!.pathInfo.basePath, href);
 
   const writeBytes = async (
     filePath: string,

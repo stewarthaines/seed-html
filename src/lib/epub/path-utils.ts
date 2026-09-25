@@ -84,3 +84,66 @@ export function convertXHTMLPathToManifestPath(
 
   return xhtmlHref;
 }
+
+/**
+ * Collapse `.` and `..` segments in a container path. `..` at the root is
+ * dropped rather than escaping the container (EPUB references never leave
+ * the container; a stray one is a broken link, not a way out).
+ */
+export function normalizePath(path: string): string {
+  const out: string[] = [];
+  for (const segment of path.split('/')) {
+    if (segment === '' || segment === '.') continue;
+    if (segment === '..') {
+      out.pop();
+      continue;
+    }
+    out.push(segment);
+  }
+  return out.join('/');
+}
+
+/** The directory part of a container path: `EPUB/xhtml/raw/ch1.xhtml` → `EPUB/xhtml/raw`; `ch1.xhtml` → ``. */
+export function dirOfPath(path: string): string {
+  const i = path.lastIndexOf('/');
+  return i === -1 ? '' : path.slice(0, i);
+}
+
+/**
+ * Resolve a relative reference the way EPUB and URLs do: against the
+ * directory it is written in, with dot segments collapsed and any fragment
+ * or query dropped. `resolveRelativePath('EPUB/xhtml/raw', '../../css/a.css')`
+ * → `EPUB/css/a.css`; `resolveRelativePath('EPUB', '../_kmeta/x.js')` →
+ * `_kmeta/x.js`. A leading slash means the container root.
+ */
+export function resolveRelativePath(fromDir: string, href: string): string {
+  const bare = href.split('#')[0].split('?')[0];
+  if (bare.startsWith('/')) return normalizePath(bare);
+  return normalizePath(fromDir ? `${fromDir}/${bare}` : bare);
+}
+
+/**
+ * A manifest href as a container path: resolved against the package
+ * document's directory (`basePath`, '' when the OPF sits at the root). An
+ * href that already carries the base is returned as is, since some callers
+ * hold full paths.
+ */
+export function manifestHrefToPath(basePath: string, href: string): string {
+  if (!basePath) return normalizePath(href.split('#')[0]);
+  if (href.startsWith(basePath + '/')) return href;
+  return resolveRelativePath(basePath, href);
+}
+
+/**
+ * A container path as an href relative to `dir` (the package document's
+ * directory, or a chapter's): `relativePathFrom('EPUB', '_kmeta/x.js')` →
+ * `../_kmeta/x.js`; `relativePathFrom('EPUB', 'EPUB/css/a.css')` → `css/a.css`.
+ */
+export function relativePathFrom(dir: string, path: string): string {
+  const from = dir ? dir.split('/') : [];
+  const to = path.split('/');
+  let common = 0;
+  while (common < from.length && common < to.length && from[common] === to[common]) common++;
+  const ups = from.length - common;
+  return [...Array(ups).fill('..'), ...to.slice(common)].join('/');
+}
