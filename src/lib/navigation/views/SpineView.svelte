@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, untrack } from 'svelte';
   import { navigationStore } from '../navigation-store';
   import type {
     WorkspaceService,
@@ -105,6 +105,9 @@
       /** Preview-head fragments from installed extensions — injected into every
        *  preview regardless of includeHead (they self-guard). Never packaged. */
       extensionPreviewHead?: string;
+      /** The chapter's container path (e.g. OEBPS/Text/ch1.xhtml), for the
+       *  preview document's base URL. */
+      documentPath?: string;
     }) => void;
     /** Report a manifest change (content-derived properties) back to app state. */
     onWorkspaceUpdate?: (workspace: WorkspaceState) => void;
@@ -112,6 +115,12 @@
 
   // Component state - using $state() for reactivity in Svelte 5
   let selectedItem = $state<SpineItemWithSource | null>(null);
+
+  /** The open chapter's container path, for the preview's base URL. */
+  function currentChapterPath(): string | undefined {
+    const item = workspace.opf.manifest.find(m => m.id === selectedItem?.idref);
+    return item ? manifestHrefToPath(workspace.pathInfo.basePath, item.href) : undefined;
+  }
 
   // The chapter column's edit dialog writes the title sidecar; re-run the
   // transform so the <title> in the preview and the saved xhtml follow.
@@ -1160,6 +1169,7 @@
       spineItemId: selectedItemId,
       previewHead: previewHeadContent,
       extensionPreviewHead: extensionPreviewHeadContent,
+      documentPath: currentChapterPath(),
     });
   }
 
@@ -1293,6 +1303,7 @@
         spineItemId: selectedItemId,
         previewHead: previewHeadContent,
         extensionPreviewHead: extensionPreviewHeadContent,
+        documentPath: path,
       });
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to load chapter';

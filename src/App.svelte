@@ -28,6 +28,7 @@
   import ChapterStrip from './lib/components/shell/ChapterStrip.svelte';
   import { viewport } from './lib/stores/viewport.svelte.js';
   import { persisted, asEnum } from './lib/state/persisted.svelte.js';
+  import { startBookServer, bookRoutePath } from './lib/book-server/book-server.js';
   import { BOOK_SECTIONS, lastBookSection } from './lib/stores/book-section.js';
   import BooksView from './lib/navigation/views/BooksView.svelte';
   import CoverView from './lib/navigation/views/CoverView.svelte';
@@ -425,6 +426,7 @@
     spineItemId: string | null;
     previewHead: string;
     extensionPreviewHead: string;
+    documentPath?: string;
   }>({
     xhtmlContent: '',
     isTransforming: false,
@@ -609,6 +611,7 @@
     spineItemId: string | null;
     previewHead?: string;
     extensionPreviewHead?: string;
+    documentPath?: string;
   }) => {
     spinePreviewData = {
       xhtmlContent: detail.xhtmlContent,
@@ -620,8 +623,30 @@
       spineItemId: detail.spineItemId,
       previewHead: detail.previewHead ?? '',
       extensionPreviewHead: detail.extensionPreviewHead ?? '',
+      documentPath: detail.documentPath,
     };
   };
+
+  // The served book (process/PREVIEW_SERVED_BOOK.md): over http the service
+  // worker answers /__book/… by asking this page, and the preview document
+  // gets a base URL there. Whether a worker controls the page is tracked so
+  // the base appears once it does.
+  let bookServed = $state(
+    typeof navigator !== 'undefined' &&
+      location.protocol.startsWith('http') &&
+      !!navigator.serviceWorker?.controller
+  );
+  $effect(() => {
+    if (typeof navigator === 'undefined' || !navigator.serviceWorker) return;
+    const onControl = () => (bookServed = !!navigator.serviceWorker.controller);
+    navigator.serviceWorker.addEventListener('controllerchange', onControl);
+    return () => navigator.serviceWorker.removeEventListener('controllerchange', onControl);
+  });
+  let previewBaseUrl = $derived(
+    bookServed && currentWorkspaceId && spinePreviewData.documentPath
+      ? bookRoutePath(currentWorkspaceId, spinePreviewData.documentPath, location.origin)
+      : null
+  );
 
   // Handle preview click for text selection in editor
   const handlePreviewClick = (detail: {
@@ -1778,6 +1803,8 @@
       try {
         // Initialize FileStorageAPI first
         await fileStorage.init();
+        // Answer the service worker's requests for a book's files (http only).
+        startBookServer(fileStorage);
 
         // Create extension manager after FileStorageAPI is initialized
         extensionManager = new ExtensionManager(fileStorage);
@@ -2307,6 +2334,7 @@
             {spineNeighbors}
             previewHead={spinePreviewData.previewHead}
             extensionPreviewHead={spinePreviewData.extensionPreviewHead}
+            baseUrl={previewBaseUrl}
             previewAutoUpdate={appState?.epubSettings?.preview?.autoUpdate}
             previewIncludeHead={appState?.epubSettings?.preview?.includeHead}
             isFixedLayout={currentWorkspaceState?.opf?.metadata?.renditionLayout ===

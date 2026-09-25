@@ -86,6 +86,7 @@
     projectIdentifier = null,
     onGeneratePdf = undefined,
     previewHead = '',
+    baseUrl = null,
     extensionPreviewHead = '',
     previewAutoUpdate = DEFAULT_PREVIEW.autoUpdate,
     previewIncludeHead = DEFAULT_PREVIEW.includeHead,
@@ -135,6 +136,8 @@
      *  injected into the preview head for the preview types whose `includeHead`
      *  is on. Authoring-time only — never reaches the packaged EPUB. */
     previewHead?: string;
+    /** The served URL of the chapter document, for `<base href>` (http only). */
+    baseUrl?: string | null;
     /** Preview-head fragments from installed extensions (process/PREVIEW_HEAD_EXTENSIONS.md).
      *  Injected into EVERY preview regardless of `includeHead` (fragments self-guard);
      *  authoring-time only, never packaged. */
@@ -1244,6 +1247,7 @@
     onGeneratePdf,
     previewHead,
     extensionPreviewHead,
+    baseUrl,
     previewAutoUpdate,
     previewIncludeHead,
     isFixedLayout,

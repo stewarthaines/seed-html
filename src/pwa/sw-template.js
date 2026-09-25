@@ -1,4 +1,4 @@
-// SEED.html service worker — offline app shell.
+// SEED.html service worker — offline app shell, and the served book.
 //
 // This file is the SOURCE. The build (`emit-service-worker` plugin in
 // vite.config.ts) stamps a per-build cache id into the version placeholder below
@@ -10,6 +10,110 @@
 
 const CACHE_VERSION = '__SW_VERSION__';
 const CACHE_NAME = `seed-shell-${CACHE_VERSION}`;
+// On the dev server the worker exists only to serve books (below): it neither
+// precaches nor caches assets, which would fight Vite's module serving.
+const DEV = CACHE_VERSION.startsWith('dev-');
+
+// --- The served book -------------------------------------------------------
+// `GET /__book/<workspace>/<path>` is answered by asking the app page(s) for
+// the bytes over a message channel (src/lib/book-server/book-server.ts;
+// process/PREVIEW_SERVED_BOOK.md). The worker holds nothing.
+const BOOK_ROUTE = '/__book/';
+const BOOK_REPLY_TIMEOUT_MS = 10000;
+
+function parseBookRoute(pathname) {
+  if (!pathname.startsWith(BOOK_ROUTE)) return null;
+  const rest = pathname.slice(BOOK_ROUTE.length);
+  const slash = rest.indexOf('/');
+  if (slash <= 0) return null;
+  const path = rest
+    .slice(slash + 1)
+    .split('/')
+    .map(s => decodeURIComponent(s))
+    .filter(s => s !== '' && s !== '.');
+  if (path.some(s => s === '..')) return null;
+  return { workspaceId: decodeURIComponent(rest.slice(0, slash)), path: path.join('/') };
+}
+
+// Ask every window client; the app page answers, a book's own frames never
+// do. The first `ok` wins. A "not found" from any page settles a 404 after a
+// short grace for another page to say `ok`, since silent frames would
+// otherwise hold the answer until the timeout; silence throughout is a 504.
+const BOOK_NOT_FOUND_GRACE_MS = 400;
+async function askPageForBookFile(workspaceId, path) {
+  const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  if (windows.length === 0) return { ok: false, status: 404 };
+  return new Promise(resolve => {
+    let settled = false;
+    let grace = null;
+    const settle = reply => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      clearTimeout(grace);
+      resolve(reply);
+    };
+    const timer = setTimeout(() => settle({ ok: false, status: 504 }), BOOK_REPLY_TIMEOUT_MS);
+    for (const client of windows) {
+      const channel = new MessageChannel();
+      channel.port1.onmessage = event => {
+        const reply = event.data;
+        if (reply && reply.ok) settle(reply);
+        else if (grace === null) {
+          grace = setTimeout(() => settle({ ok: false, status: 404 }), BOOK_NOT_FOUND_GRACE_MS);
+        }
+      };
+      try {
+        client.postMessage({ type: 'book-file', workspaceId, path }, [channel.port2]);
+      } catch {
+        // A client that cannot be reached is one that will not answer.
+      }
+    }
+  });
+}
+
+// A Range request (media) gets the slice with a 206; anything else the whole
+// file. WebKit refuses to play media from a server that ignores Range.
+function bookFileResponse(request, reply) {
+  if (!reply.ok)
+    return new Response('', {
+      status: reply.status,
+      statusText: reply.status === 404 ? 'Not Found' : 'Book unavailable',
+    });
+  const bytes = reply.bytes;
+  const total = bytes.byteLength;
+  const headers = {
+    'Content-Type': reply.contentType || 'application/octet-stream',
+    'Accept-Ranges': 'bytes',
+    'Cache-Control': 'no-store',
+  };
+  const range = request.headers.get('Range');
+  const match = range && /^bytes=(\d*)-(\d*)$/.exec(range);
+  if (match && (match[1] !== '' || match[2] !== '')) {
+    let start = match[1] === '' ? Math.max(0, total - Number(match[2])) : Number(match[1]);
+    let end =
+      match[1] === ''
+        ? total - 1
+        : match[2] === ''
+          ? total - 1
+          : Math.min(Number(match[2]), total - 1);
+    if (start > end || start >= total) {
+      return new Response('', { status: 416, headers: { 'Content-Range': `bytes */${total}` } });
+    }
+    return new Response(bytes.slice(start, end + 1), {
+      status: 206,
+      headers: {
+        ...headers,
+        'Content-Range': `bytes ${start}-${end}/${total}`,
+        'Content-Length': String(end - start + 1),
+      },
+    });
+  }
+  return new Response(bytes, {
+    status: 200,
+    headers: { ...headers, 'Content-Length': String(total) },
+  });
+}
 
 const PRECACHE_URLS = [
   // The app document. The bare origin '/' redirects here (public/_redirects) and
@@ -51,7 +155,7 @@ const PRECACHE_URLS = [
 ];
 
 self.addEventListener('install', event => {
-  event.waitUntil(precache());
+  if (!DEV) event.waitUntil(precache());
   self.skipWaiting();
 });
 
@@ -105,6 +209,27 @@ self.addEventListener('fetch', event => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return; // leave cross-origin requests alone
+
+  // The served book, in every mode. The `_` workspace holds the empty frame
+  // document the preview starts its iframe on (see book-server.ts).
+  const book = parseBookRoute(url.pathname);
+  if (book && book.workspaceId === '_') {
+    event.respondWith(
+      new Response('<!DOCTYPE html><html><head></head><body></body></html>', {
+        headers: { 'Content-Type': 'text/html', 'Cache-Control': 'no-store' },
+      })
+    );
+    return;
+  }
+  if (book) {
+    event.respondWith(
+      askPageForBookFile(book.workspaceId, book.path).then(reply =>
+        bookFileResponse(request, reply)
+      )
+    );
+    return;
+  }
+  if (DEV) return; // nothing else is the worker's business on the dev server
 
   // App-shell navigation (/SEED.html is the app; '/' and '/index.html' redirect
   // to it): network-first (fresh when online), falling back to the cached shell
