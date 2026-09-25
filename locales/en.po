@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-23\n"
-"PO-Revision-Date: 2026-09-23\n"
+"POT-Creation-Date: 2026-09-25\n"
+"PO-Revision-Date: 2026-09-25\n"
 "Language: en\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -1107,8 +1107,20 @@ msgstr ""
 msgid "Connect to Dropbox"
 msgstr ""
 
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Connect to Dropbox again"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
 msgid "Connected"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Connected to Dropbox again. Save to keep it."
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Connecting…"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
@@ -3272,6 +3284,10 @@ msgstr ""
 
 #: src/App.svelte
 msgid "Navigation Preview"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Needed once after the app gains a permission."
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/DestinationsSurface.svelte

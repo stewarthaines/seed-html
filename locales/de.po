@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-23\n"
-"PO-Revision-Date: 2026-09-23\n"
+"POT-Creation-Date: 2026-09-25\n"
+"PO-Revision-Date: 2026-09-25\n"
 "Language: de\n"
 "Language-Team: \n"
 "Last-Translator: Claude (machine first pass)\n"
@@ -1126,9 +1126,21 @@ msgstr "Verbinden & Ordner auswählen"
 msgid "Connect to Dropbox"
 msgstr "Mit Dropbox verbinden"
 
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Connect to Dropbox again"
+msgstr "Erneut mit Dropbox verbinden"
+
 #: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
 msgid "Connected"
 msgstr "Verbunden"
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Connected to Dropbox again. Save to keep it."
+msgstr "Erneut mit Dropbox verbunden. Speichern, um es zu behalten."
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Connecting…"
+msgstr "Wird verbunden…"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "content information"
@@ -3292,6 +3304,10 @@ msgstr "Navigations-Editor"
 #: src/App.svelte
 msgid "Navigation Preview"
 msgstr "Navigationsvorschau"
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Needed once after the app gains a permission."
+msgstr "Einmal nötig, nachdem die App eine Berechtigung dazubekommen hat."
 
 #: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
 #: plugins/publish-to-remote/src/components/PublishedSurface.svelte
