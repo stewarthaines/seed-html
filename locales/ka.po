@@ -310,7 +310,6 @@ msgid "About"
 msgstr ""
 
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/BrandBar.svelte
 msgid "About SEED.html"
 msgstr "SEED.html-ის შესახებ"
@@ -556,7 +555,6 @@ msgstr "აპლიკაციის გასაღები"
 msgid "Appearance"
 msgstr ""
 
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/WriteSidebar.svelte
 msgid "Append Item"
 msgstr "ელემენტის დამატება ბოლოში"
@@ -710,10 +708,6 @@ msgstr ""
 #: src/lib/components/spine/sr-walk.ts
 msgid "banner"
 msgstr ""
-
-#: src/lib/Sidebar.svelte
-msgid "Basic mode"
-msgstr "მარტივი რეჟიმი"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "bibliography"
@@ -916,7 +910,6 @@ msgid "Chapter PDF"
 msgstr "თავის PDF"
 
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/ChapterStrip.svelte
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Chapters"
@@ -1377,10 +1370,6 @@ msgstr "ამჟამინდელი ყდის გამოსახუ�
 msgid "Current Settings:"
 msgstr "მიმდინარე პარამეტრები:"
 
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "Currently Active Project"
-msgstr "ამჟამად აქტიური პროექტი"
-
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Currently open"
 msgstr "ამჟამად გახსნილი"
@@ -1459,10 +1448,6 @@ msgstr ""
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Delete"
 msgstr "წაშლა"
-
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "Delete \"{title}\"? This cannot be undone."
-msgstr "წაიშალოს \"{title}\"? ამ მოქმედების დაბრუნება შეუძლებელია."
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Delete {count} chapters?"
@@ -2237,10 +2222,6 @@ msgstr ""
 msgid "Failed to delete item"
 msgstr "ელემენტის წაშლა ვერ მოხერხდა"
 
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "Failed to delete workspace: {error}"
-msgstr "სამუშაო სივრცის წაშლა ვერ მოხერხდა: {error}"
-
 #: src/lib/components/workspace/DuplicateProjectDialog.svelte
 msgid "Failed to duplicate project."
 msgstr "პროექტის დუბლირება ვერ მოხერხდა."
@@ -2266,7 +2247,6 @@ msgid "Failed to import EPUB"
 msgstr ""
 
 #: src/lib/navigation/views/BooksView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Failed to import EPUB: {error}"
 msgstr "EPUB-ის იმპორტი ვერ მოხერხდა: {error}"
 
@@ -2305,7 +2285,6 @@ msgid "Failed to load manifest"
 msgstr "მანიფესტის ჩატვირთვა ვერ მოხერხდა"
 
 #: src/lib/navigation/views/BooksView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Failed to load projects"
 msgstr "პროექტების ჩატვირთვა ვერ მოხერხდა"
 
@@ -2319,7 +2298,6 @@ msgid "Failed to move files"
 msgstr ""
 
 #: src/lib/navigation/views/BooksView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Failed to open workspace: {error}"
 msgstr "სამუშაო სივრცის გახსნა ვერ მოხერხდა: {error}"
 
@@ -2495,7 +2473,6 @@ msgid "Generate patchset"
 msgstr "ცვლილებათა ნაკრების გენერაცია"
 
 #: src/lib/navigation/views/PublishView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Generate PDF"
 msgstr "PDF-ის გენერაცია"
 
@@ -2515,10 +2492,6 @@ msgstr "გენერირდება…"
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Generators"
 msgstr "გენერატორები"
-
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "Get Started"
-msgstr "დაწყება"
 
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Get the book"
@@ -2580,10 +2553,6 @@ msgstr "{name}-ის დამალვა"
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Hide preview"
 msgstr "გადახედვის დამალვა"
-
-#: src/lib/Sidebar.svelte
-msgid "Hide project sections"
-msgstr "პროექტის სექციების დამალვა"
 
 #: src/lib/components/spine/PreviewPane.svelte
 #. Device category for tablet reading in comfortable home settings
@@ -2943,7 +2912,6 @@ msgstr "ალბომური"
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 #: src/lib/navigation/views/SettingsView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Language"
 msgstr "ენა"
 
@@ -3092,10 +3060,6 @@ msgstr "თავი იტვირთება..."
 msgid "Loading spine items…"
 msgstr "თავები იტვირთება…"
 
-#: src/lib/Sidebar.svelte
-msgid "Loading..."
-msgstr "იტვირთება..."
-
 #: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
 #: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 #: plugins/publish-to-remote/src/components/SendSurface.svelte
@@ -3115,7 +3079,6 @@ msgstr "მდებარეობა:"
 msgid "Lock package structure and track content changes"
 msgstr "პაკეტის სტრუქტურის ჩაკეტვა და შიგთავსის ცვლილებების აღრიცხვა"
 
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/TopBar.svelte
 msgid "Locked while track changes is on"
 msgstr "ჩაკეტილია, სანამ ცვლილებების აღრიცხვა ჩართულია"
@@ -3136,7 +3099,6 @@ msgstr ""
 msgid "main"
 msgstr ""
 
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/BrandBar.svelte
 msgid "Main navigation"
 msgstr "მთავარი ნავიგაცია"
@@ -3153,13 +3115,11 @@ msgstr "შექმენით ელწიგნები, რომელთ
 msgid "Malformed XHTML"
 msgstr "არასწორად ფორმირებული XHTML"
 
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/WriteSidebar.svelte
 msgid "Manage chapter order"
 msgstr ""
 
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
 msgid "Manifest"
 msgstr "მანიფესტი"
 
@@ -3176,25 +3136,12 @@ msgid "Message:"
 msgstr "შეტყობინება:"
 
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
 msgid "Metadata"
 msgstr "მეტამონაცემები"
 
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 msgid "Metadata Summary"
 msgstr "მეტამონაცემების შეჯამება"
-
-#: src/lib/components/metadata/MetadataTabBar.svelte
-msgid "metadata.tab.accessibility"
-msgstr "წვდომადობა"
-
-#: src/lib/components/metadata/MetadataTabBar.svelte
-msgid "metadata.tab.advanced"
-msgstr "დამატებითი"
-
-#: src/lib/components/metadata/MetadataTabBar.svelte
-msgid "metadata.tab.basic"
-msgstr "ძირითადი"
 
 #: src/lib/components/spine/PreviewSurface.svelte
 msgid "Missing files"
@@ -3296,7 +3243,6 @@ msgid "navigation"
 msgstr ""
 
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
 msgid "Navigation"
 msgstr "ნავიგაცია"
 
@@ -3782,12 +3728,10 @@ msgid "Package again"
 msgstr ""
 
 #: src/lib/navigation/views/PublishView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Package as READ.html"
 msgstr ""
 
 #: src/lib/navigation/views/PublishView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Package as SEED.html"
 msgstr ""
 
@@ -3795,10 +3739,6 @@ msgstr ""
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Package EPUB"
 msgstr "EPUB-ის შეფუთვა"
-
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "Package EPUB without SEED"
-msgstr "EPUB-ის შეფუთვა SEED-ის გარეშე"
 
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Package EPUB without source"
@@ -3830,7 +3770,6 @@ msgid "Packaging"
 msgstr ""
 
 #: src/lib/navigation/views/PublishView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Packaging…"
 msgstr "იფუთება…"
 
@@ -3863,7 +3802,6 @@ msgid "Paged device previews"
 msgstr ""
 
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
 #: src/lib/components/spine/PreviewPane.svelte
 #. Reading flow option — paginated pages
 msgid "Pages"
@@ -4061,7 +3999,6 @@ msgstr ""
 
 #: src/lib/components/shell/AboutDialog.svelte
 #: src/lib/navigation/views/PublishView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Preparing…"
 msgstr "მზადდება…"
 
@@ -4112,10 +4049,6 @@ msgstr "პროექტი შეცდომებს შეიცავს"
 msgid "Project imported — your edits live in this browser. Use the package buttons to save your work as files."
 msgstr ""
 
-#: src/lib/Sidebar.svelte
-msgid "Projects"
-msgstr "პროექტები"
-
 #: src/lib/components/spine/sr-walk.ts
 msgid "prologue"
 msgstr ""
@@ -4137,10 +4070,6 @@ msgstr "გამოცემა"
 msgid "Publication Date"
 msgstr "გამოცემის თარიღი"
 
-#: src/lib/Sidebar.svelte
-msgid "Publish"
-msgstr "გამოქვეყნება"
-
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Publish to the web"
 msgstr ""
@@ -4148,7 +4077,6 @@ msgstr ""
 #: src/App.svelte
 #: src/lib/components/shell/BrandBar.svelte
 #: src/lib/navigation/views/PublishedView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Published"
 msgstr "გამოქვეყნებულია"
 
@@ -4412,7 +4340,6 @@ msgstr ""
 #: src/lib/components/metadata/MetadataEditor.svelte
 #: src/lib/components/metadata/OPFPreview.svelte
 #: src/lib/navigation/views/BooksView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Retry"
 msgstr "თავიდან ცდა"
 
@@ -4460,6 +4387,10 @@ msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "row header"
+msgstr ""
+
+#: src/App.svelte
+msgid "Run this book’s scripts"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -4688,7 +4619,6 @@ msgid "Set to today"
 msgstr "დღევანდელი თარიღის დაყენება"
 
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/BrandBar.svelte
 #: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/SettingsView.svelte
@@ -4718,10 +4648,6 @@ msgstr "{name}-ის ჩვენება"
 msgid "Show preview"
 msgstr "გადახედვის ჩვენება"
 
-#: src/lib/Sidebar.svelte
-msgid "Show project sections"
-msgstr "პროექტის განყოფილებების ჩვენება"
-
 #: src/lib/components/shell/AboutDialog.svelte
 msgid "Show the full license text"
 msgstr "ლიცენზიის სრული ტექსტის ჩვენება"
@@ -4748,7 +4674,6 @@ msgstr ""
 msgid "Sign out error: {error}"
 msgstr "გამოსვლის შეცდომა: {error}"
 
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/AboutDialog.svelte
 msgid "Simple EPUB Editor"
 msgstr "Simple EPUB Editor"
@@ -5078,10 +5003,6 @@ msgstr "ეს EPUB მხოლოდ წასაკითხია, ამი
 msgid "This EPUB wasn't created in the Simple EPUB Editor, so it can't be edited."
 msgstr "ეს EPUB არ არის შექმნილი Simple EPUB Editor-ში, ამიტომ მისი ჩასწორება შეუძლებელია."
 
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "This EPUB wasn't created in the Simple EPUB Editor, so it can't be repackaged."
-msgstr "ეს EPUB არ არის შექმნილი Simple EPUB Editor-ში, ამიტომ მისი ხელახლა შეფუთვა შეუძლებელია."
-
 #: src/App.svelte
 msgid "This file carries a book, but the book could not be read."
 msgstr ""
@@ -5131,7 +5052,6 @@ msgstr "ცარიელი მდგომარეობის გადა�
 msgid "Toggle orientation"
 msgstr "ორიენტაციის გადართვა"
 
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/WriteSidebar.svelte
 msgid "Toggle sidebar"
 msgstr "გვერდითი პანელის გადართვა"
@@ -5145,7 +5065,6 @@ msgstr "თემის გადართვა"
 msgid "Track changes"
 msgstr "ცვლილებების აღრიცხვა"
 
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/TopBar.svelte
 msgid "Track changes is on — manage it in Settings"
 msgstr "ცვლილებების აღრიცხვა ჩართულია — მართეთ ის პარამეტრებში"
@@ -5233,12 +5152,10 @@ msgstr "საქაღალდის ბმის გაუქმება"
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
 #: src/lib/navigation/views/CoverView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Untitled"
 msgstr "უსათაურო"
 
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/BooksView.svelte
 msgid "Untitled Project"
@@ -5463,14 +5380,6 @@ msgstr "დიახ"
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "You"
 msgstr ""
-
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "You have unsaved changes"
-msgstr "თქვენ გაქვთ შეუნახავი ცვლილებები"
-
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "You have unsaved project changes. Continue?"
-msgstr "თქვენ გაქვთ პროექტის შეუნახავი ცვლილებები. გავაგრძელოთ?"
 
 #: src/lib/components/books/BooksShelf.svelte
 msgid "Your books"

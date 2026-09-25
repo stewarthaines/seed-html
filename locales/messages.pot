@@ -272,7 +272,6 @@ msgid "About"
 msgstr ""
 
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/BrandBar.svelte
 msgid "About SEED.html"
 msgstr ""
@@ -518,7 +517,6 @@ msgstr ""
 msgid "Appearance"
 msgstr ""
 
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/WriteSidebar.svelte
 msgid "Append Item"
 msgstr ""
@@ -671,10 +669,6 @@ msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "banner"
-msgstr ""
-
-#: src/lib/Sidebar.svelte
-msgid "Basic mode"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
@@ -878,7 +872,6 @@ msgid "Chapter PDF"
 msgstr ""
 
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/ChapterStrip.svelte
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Chapters"
@@ -1339,10 +1332,6 @@ msgstr ""
 msgid "Current Settings:"
 msgstr ""
 
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "Currently Active Project"
-msgstr ""
-
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Currently open"
 msgstr ""
@@ -1420,10 +1409,6 @@ msgstr ""
 #: src/lib/navigation/views/ChaptersView.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Delete"
-msgstr ""
-
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "Delete \"{title}\"? This cannot be undone."
 msgstr ""
 
 #: src/lib/navigation/views/ChaptersView.svelte
@@ -2199,10 +2184,6 @@ msgstr ""
 msgid "Failed to delete item"
 msgstr ""
 
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "Failed to delete workspace: {error}"
-msgstr ""
-
 #: src/lib/components/workspace/DuplicateProjectDialog.svelte
 msgid "Failed to duplicate project."
 msgstr ""
@@ -2228,7 +2209,6 @@ msgid "Failed to import EPUB"
 msgstr ""
 
 #: src/lib/navigation/views/BooksView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Failed to import EPUB: {error}"
 msgstr ""
 
@@ -2267,7 +2247,6 @@ msgid "Failed to load manifest"
 msgstr ""
 
 #: src/lib/navigation/views/BooksView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Failed to load projects"
 msgstr ""
 
@@ -2281,7 +2260,6 @@ msgid "Failed to move files"
 msgstr ""
 
 #: src/lib/navigation/views/BooksView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Failed to open workspace: {error}"
 msgstr ""
 
@@ -2457,7 +2435,6 @@ msgid "Generate patchset"
 msgstr ""
 
 #: src/lib/navigation/views/PublishView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Generate PDF"
 msgstr ""
 
@@ -2476,10 +2453,6 @@ msgstr ""
 #: src/lib/components/spine/GeneratorPanel.svelte
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Generators"
-msgstr ""
-
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "Get Started"
 msgstr ""
 
 #: src/lib/navigation/views/PublishView.svelte
@@ -2541,10 +2514,6 @@ msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Hide preview"
-msgstr ""
-
-#: src/lib/Sidebar.svelte
-msgid "Hide project sections"
 msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
@@ -2905,7 +2874,6 @@ msgstr ""
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 #: src/lib/navigation/views/SettingsView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Language"
 msgstr ""
 
@@ -3054,10 +3022,6 @@ msgstr ""
 msgid "Loading spine items…"
 msgstr ""
 
-#: src/lib/Sidebar.svelte
-msgid "Loading..."
-msgstr ""
-
 #: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
 #: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 #: plugins/publish-to-remote/src/components/SendSurface.svelte
@@ -3077,7 +3041,6 @@ msgstr ""
 msgid "Lock package structure and track content changes"
 msgstr ""
 
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/TopBar.svelte
 msgid "Locked while track changes is on"
 msgstr ""
@@ -3098,7 +3061,6 @@ msgstr ""
 msgid "main"
 msgstr ""
 
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/BrandBar.svelte
 msgid "Main navigation"
 msgstr ""
@@ -3115,13 +3077,11 @@ msgstr ""
 msgid "Malformed XHTML"
 msgstr ""
 
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/WriteSidebar.svelte
 msgid "Manage chapter order"
 msgstr ""
 
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
 msgid "Manifest"
 msgstr ""
 
@@ -3138,24 +3098,11 @@ msgid "Message:"
 msgstr ""
 
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
 msgid "Metadata"
 msgstr ""
 
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 msgid "Metadata Summary"
-msgstr ""
-
-#: src/lib/components/metadata/MetadataTabBar.svelte
-msgid "metadata.tab.accessibility"
-msgstr ""
-
-#: src/lib/components/metadata/MetadataTabBar.svelte
-msgid "metadata.tab.advanced"
-msgstr ""
-
-#: src/lib/components/metadata/MetadataTabBar.svelte
-msgid "metadata.tab.basic"
 msgstr ""
 
 #: src/lib/components/spine/PreviewSurface.svelte
@@ -3258,7 +3205,6 @@ msgid "navigation"
 msgstr ""
 
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
 msgid "Navigation"
 msgstr ""
 
@@ -3744,22 +3690,16 @@ msgid "Package again"
 msgstr ""
 
 #: src/lib/navigation/views/PublishView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Package as READ.html"
 msgstr ""
 
 #: src/lib/navigation/views/PublishView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Package as SEED.html"
 msgstr ""
 
 #: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Package EPUB"
-msgstr ""
-
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "Package EPUB without SEED"
 msgstr ""
 
 #: src/lib/navigation/views/PublishView.svelte
@@ -3792,7 +3732,6 @@ msgid "Packaging"
 msgstr ""
 
 #: src/lib/navigation/views/PublishView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Packaging…"
 msgstr ""
 
@@ -3825,7 +3764,6 @@ msgid "Paged device previews"
 msgstr ""
 
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
 #: src/lib/components/spine/PreviewPane.svelte
 #. Reading flow option — paginated pages
 msgid "Pages"
@@ -4023,7 +3961,6 @@ msgstr ""
 
 #: src/lib/components/shell/AboutDialog.svelte
 #: src/lib/navigation/views/PublishView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Preparing…"
 msgstr ""
 
@@ -4074,10 +4011,6 @@ msgstr ""
 msgid "Project imported — your edits live in this browser. Use the package buttons to save your work as files."
 msgstr ""
 
-#: src/lib/Sidebar.svelte
-msgid "Projects"
-msgstr ""
-
 #: src/lib/components/spine/sr-walk.ts
 msgid "prologue"
 msgstr ""
@@ -4099,10 +4032,6 @@ msgstr ""
 msgid "Publication Date"
 msgstr ""
 
-#: src/lib/Sidebar.svelte
-msgid "Publish"
-msgstr ""
-
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Publish to the web"
 msgstr ""
@@ -4110,7 +4039,6 @@ msgstr ""
 #: src/App.svelte
 #: src/lib/components/shell/BrandBar.svelte
 #: src/lib/navigation/views/PublishedView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Published"
 msgstr ""
 
@@ -4374,7 +4302,6 @@ msgstr ""
 #: src/lib/components/metadata/MetadataEditor.svelte
 #: src/lib/components/metadata/OPFPreview.svelte
 #: src/lib/navigation/views/BooksView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Retry"
 msgstr ""
 
@@ -4422,6 +4349,10 @@ msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "row header"
+msgstr ""
+
+#: src/App.svelte
+msgid "Run this book’s scripts"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -4650,7 +4581,6 @@ msgid "Set to today"
 msgstr ""
 
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/BrandBar.svelte
 #: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/SettingsView.svelte
@@ -4680,10 +4610,6 @@ msgstr ""
 msgid "Show preview"
 msgstr ""
 
-#: src/lib/Sidebar.svelte
-msgid "Show project sections"
-msgstr ""
-
 #: src/lib/components/shell/AboutDialog.svelte
 msgid "Show the full license text"
 msgstr ""
@@ -4710,7 +4636,6 @@ msgstr ""
 msgid "Sign out error: {error}"
 msgstr ""
 
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/AboutDialog.svelte
 msgid "Simple EPUB Editor"
 msgstr ""
@@ -5040,10 +4965,6 @@ msgstr ""
 msgid "This EPUB wasn't created in the Simple EPUB Editor, so it can't be edited."
 msgstr ""
 
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "This EPUB wasn't created in the Simple EPUB Editor, so it can't be repackaged."
-msgstr ""
-
 #: src/App.svelte
 msgid "This file carries a book, but the book could not be read."
 msgstr ""
@@ -5093,7 +5014,6 @@ msgstr ""
 msgid "Toggle orientation"
 msgstr ""
 
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/WriteSidebar.svelte
 msgid "Toggle sidebar"
 msgstr ""
@@ -5107,7 +5027,6 @@ msgstr ""
 msgid "Track changes"
 msgstr ""
 
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/TopBar.svelte
 msgid "Track changes is on — manage it in Settings"
 msgstr ""
@@ -5195,12 +5114,10 @@ msgstr ""
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
 #: src/lib/navigation/views/CoverView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Untitled"
 msgstr ""
 
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
 #: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/BooksView.svelte
 msgid "Untitled Project"
@@ -5424,14 +5341,6 @@ msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "You"
-msgstr ""
-
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "You have unsaved changes"
-msgstr ""
-
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "You have unsaved project changes. Continue?"
 msgstr ""
 
 #: src/lib/components/books/BooksShelf.svelte

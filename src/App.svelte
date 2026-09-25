@@ -27,7 +27,7 @@
   import BottomTabs, { type PhoneTab } from './lib/components/shell/BottomTabs.svelte';
   import ChapterStrip from './lib/components/shell/ChapterStrip.svelte';
   import { viewport } from './lib/stores/viewport.svelte.js';
-  import { persisted, asEnum } from './lib/state/persisted.svelte.js';
+  import { persisted, asEnum, asJSON } from './lib/state/persisted.svelte.js';
   import { startBookServer, bookRoutePath } from './lib/book-server/book-server.js';
   import { BOOK_SECTIONS, lastBookSection } from './lib/stores/book-section.js';
   import BooksView from './lib/navigation/views/BooksView.svelte';
@@ -647,6 +647,22 @@
       ? bookRoutePath(currentWorkspaceId, spinePreviewData.documentPath, location.origin)
       : null
   );
+
+  // A book made elsewhere runs its scripts in the preview only once the
+  // reader has said so for that book; remembered in this browser, per book.
+  const scriptsAllowedBooks = persisted<string[]>(
+    'seedhtml_scripts_allowed_books',
+    [],
+    asJSON<string[]>()
+  );
+  let runScripts = $derived(
+    !!currentWorkspaceId && scriptsAllowedBooks.current.includes(currentWorkspaceId)
+  );
+  function setRunScripts(on: boolean): void {
+    if (!currentWorkspaceId) return;
+    const rest = scriptsAllowedBooks.current.filter(id => id !== currentWorkspaceId);
+    scriptsAllowedBooks.current = on ? [...rest, currentWorkspaceId] : rest;
+  }
 
   // Handle preview click for text selection in editor
   const handlePreviewClick = (detail: {
@@ -2102,8 +2118,18 @@
         <h1 class="sr-only">{viewTitle}</h1>
       {/if}
       {#if isReadOnly && contentView !== 'workspace'}
-        <div class="readonly-banner" role="status">
-          {$t("This EPUB wasn't created in the Simple EPUB Editor, so it can't be edited.")}
+        <div class="readonly-banner">
+          <span role="status">
+            {$t("This EPUB wasn't created in the Simple EPUB Editor, so it can't be edited.")}
+          </span>
+          <label class="readonly-scripts">
+            <input
+              type="checkbox"
+              checked={runScripts}
+              onchange={e => setRunScripts((e.currentTarget as HTMLInputElement).checked)}
+            />
+            {$t('Run this book’s scripts')}
+          </label>
         </div>
       {/if}
       <!-- Main content area - switches based on current view -->
@@ -2202,6 +2228,7 @@
             contentService={appState.getContentService()}
             audioClipService={appState.getAudioClipService()}
             readOnly={isReadOnly}
+            {runScripts}
             advancedMode={advancedMode.current}
             {audioPluginUrl}
             {photoPluginUrl}
@@ -2544,11 +2571,23 @@
     position: sticky;
     top: 0;
     z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2) var(--space-5);
     padding: var(--space-2) var(--space-4);
     background-color: var(--color-warning-surface, var(--color-bg-tertiary));
     color: var(--color-warning, var(--color-text-primary));
-    border-bottom: 1px solid var(--color-warning, var(--color-border-default));
+    border-block-end: 1px solid var(--color-warning, var(--color-border-default));
     font-size: var(--text-sm);
     text-align: center;
+  }
+
+  .readonly-scripts {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
   }
 </style>

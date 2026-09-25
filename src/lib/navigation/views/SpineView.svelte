@@ -53,6 +53,7 @@
   } from '../../stores/text-editor-store.js';
   import { createPendingSaves } from '$lib/editor/pending-saves';
   import { manifestHrefToPath } from '$lib/epub/path-utils.js';
+  import { stripScripts } from '$lib/preview/script-policy.js';
   import type { TextEditorStore } from '../../stores/index.js';
   import { Lock } from 'phosphor-svelte';
 
@@ -69,6 +70,7 @@
     selectedItemId = null,
     transformEngine = null as any,
     readOnly = false,
+    runScripts = false,
     advancedMode = false,
     audioPluginUrl = null,
     photoPluginUrl = null,
@@ -84,6 +86,9 @@
     transformEngine: TransformEngine;
     /** Read-only EPUB: preview the stored XHTML, no editor, no writes. */
     readOnly?: boolean;
+    /** A book made elsewhere previews with its scripts only when this is on
+     *  for the book (process/PREVIEW_SERVED_BOOK.md). */
+    runScripts?: boolean;
     /** Basic mode hides JavaScript/transform entries from the file dropdown. */
     advancedMode?: boolean;
     /** Resolved iframe src for the audio clip panel plugin (supersedes the
@@ -1245,6 +1250,16 @@
   // Race condition prevention
   let currentSpineItemLoadPromise: Promise<void> | null = null;
 
+  // Turning a book's scripts on or off re-renders the read-only preview:
+  // the stripped and the unstripped document are different documents.
+  let lastRunScripts = untrack(() => runScripts);
+  $effect(() => {
+    const on = runScripts;
+    if (on === lastRunScripts) return;
+    lastRunScripts = on;
+    if (readOnly && selectedItemId) untrack(() => renderReadOnlyChapter());
+  });
+
   // Single entry point for loading the selected chapter: a read-only EPUB
   // previews its stored XHTML; an editable project runs the full editor path.
   // All callers (onViewEnter, setViewData, the prop effect) route through here so
@@ -1290,6 +1305,9 @@
         } finally {
           blobURLManager.setDocumentPath(null);
         }
+        // A book made elsewhere runs its scripts only when the reader has
+        // said so for this book.
+        if (!runScripts) xhtmlContent = stripScripts(xhtmlContent);
         persistedXhtml = stored;
       }
 
