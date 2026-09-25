@@ -431,7 +431,7 @@
 
   .disclosure-summary {
     cursor: pointer;
-    color: var(--color-interactive-primary);
+    color: var(--color-text-link);
     font-size: var(--text-sm);
   }
 

@@ -1397,7 +1397,7 @@
             />
           {/if}
         {:else if activeSection === 'format'}
-          <h3 id="text-format-heading" class="sub-heading">{$t('Text format')}</h3>
+          <h2 id="text-format-heading" class="sub-heading">{$t('Text format')}</h2>
           {#if textFormatExtensions.length > 0}
             <div class="setting-group">
               <div
@@ -1437,10 +1437,10 @@
             {@render textTransformSelect(true)}
           {/if}
 
-          <h3 class="sub-heading">
+          <h2 class="sub-heading">
             {$t('Extensions in use')}
             <span class="sub-heading-count">({extensions.length})</span>
-          </h3>
+          </h2>
           <div class="extension-import">
             <label for="extension-file">{$t('Import JavaScript Extension')}</label>
             <input
@@ -1486,12 +1486,12 @@
                  also the clip target for the manual's EPUB-settings shot. -->
             <div class="transform-pipeline-settings">
               {#if textFormatExtensions.length > 0}
-                <h3 class="sub-heading" id="text-transform-heading">{$t('Text transform')}</h3>
+                <h2 class="sub-heading" id="text-transform-heading">{$t('Text transform')}</h2>
                 {@render textTransformSelect(false)}
               {/if}
             </div>
 
-            <h3 class="sub-heading">{$t('Insertion templates')}</h3>
+            <h2 class="sub-heading">{$t('Insertion templates')}</h2>
             <div class="setting-group">
               <label for="audio-clip-template" class="setting-label-text">
                 {$t('Audio Clip Directive')}
@@ -1569,7 +1569,7 @@
             </div>
 
             {#if workspaceId}
-              <h3 class="sub-heading">{$t('Generators')}</h3>
+              <h2 class="sub-heading">{$t('Generators')}</h2>
               <div class="setting-group">
                 <GeneratorSettings
                   framed={false}
@@ -1582,7 +1582,7 @@
           </details>
         {:else if activeSection === 'transforms'}
           <!-- The book's page transforms, then the catalog to add more from. -->
-          <h3 class="sub-heading">{$t('Page transforms')}</h3>
+          <h2 class="sub-heading">{$t('Page transforms')}</h2>
           <div class="setting-group">
             <p class="setting-description setting-description-flush">
               {$t('Run top-to-bottom over the generated DOM.')}
@@ -1666,7 +1666,7 @@
           </div>
 
           {#if contentTransforms.length > 0}
-            <h3 class="sub-heading">{$t('Catalog')}</h3>
+            <h2 class="sub-heading">{$t('Catalog')}</h2>
             {#each contentCategoryGroups as group (group.key)}
               {@const collapsed = collapsedCategories.has(group.key)}
               <button

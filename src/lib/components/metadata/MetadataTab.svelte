@@ -63,7 +63,9 @@
     border: none;
     border-block-start: 3px solid transparent;
     background-color: transparent;
-    color: var(--color-text-link);
+    /* On the pane header (tertiary background) the dark link colour falls
+       short of AA; an inactive tab reads as secondary text, hover as a link. */
+    color: var(--color-text-secondary);
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;

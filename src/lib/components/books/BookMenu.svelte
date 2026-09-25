@@ -253,7 +253,10 @@
     min-block-size: 32px;
     font: inherit;
     font-size: var(--text-sm);
-    color: var(--color-text-link);
+    /* The trigger sits on pane headers (tertiary background), where the
+       dark link colour falls short of AA; the text reads as text, the caret
+       and hover say it is a menu. */
+    color: var(--color-text-primary);
     cursor: pointer;
     white-space: nowrap;
   }

@@ -319,7 +319,8 @@
     gap: var(--space-1);
     padding-inline: var(--space-5);
     border-block-start: 1px solid var(--color-border-subtle);
-    background: var(--color-bg-tertiary);
+    /* Secondary, not tertiary: the dark link colour needs the darker row. */
+    background: var(--color-bg-secondary);
   }
 
   .section {
