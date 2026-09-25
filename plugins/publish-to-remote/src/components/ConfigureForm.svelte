@@ -378,6 +378,38 @@
     }
   }
 
+  // A fresh consent screen for a destination that already has tokens: a
+  // refresh token keeps the permissions it was issued with, so a permission
+  // added since (files.content.read) needs authorising again. The folder
+  // is kept; Save & Connect persists the new tokens.
+  let reauthorising = $state(false);
+  async function onReauthorizeDropbox(): Promise<void> {
+    if (!dropboxAppKey) {
+      onStatus(translate('Dropbox app key not configured'), 'error');
+      return;
+    }
+    reauthorising = true;
+    try {
+      const { accessToken, refreshToken, tokenExpiry } = await authorizeDropbox(
+        dropboxAppKey,
+        dropboxRedirectUri,
+      );
+      form.accessToken = accessToken;
+      form.refreshToken = refreshToken;
+      form.tokenExpiry = tokenExpiry;
+      onStatus(translate('Connected to Dropbox again. Save to keep it.'), 'success');
+    } catch (error) {
+      onStatus(
+        translate('Dropbox authorization failed: {error}', {
+          error: String(error),
+        }),
+        'error',
+      );
+    } finally {
+      reauthorising = false;
+    }
+  }
+
   async function openDropboxBrowser(path: string): Promise<void> {
     if (dbxBrowserLoading) return;
     dbxBrowserPath = path;
@@ -864,6 +896,16 @@
         >
           {$t('Change Folder')}
         </button>
+        <button
+          class="btn btn-secondary btn-sm"
+          onclick={onReauthorizeDropbox}
+          disabled={reauthorising}
+        >
+          {reauthorising ? $t('Connecting…') : $t('Connect to Dropbox again')}
+        </button>
+        <small class="field-note">
+          {$t('Needed once after the app gains a permission.')}
+        </small>
       </div>
 
       <div class="form-group">
