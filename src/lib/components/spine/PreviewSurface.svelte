@@ -15,7 +15,7 @@
   import { onMount, untrack } from 'svelte';
   import { writable } from 'svelte/store';
   import type { TransformError } from '$lib/types/spine-editor.js';
-  import { BOOK_FRAME_PATH } from '$lib/book-server/book-server.js';
+  import { BOOK_FRAME_PATH, parseBookRoute, serveDocument } from '$lib/book-server/book-server.js';
   import { t } from '$lib/i18n';
   import { snippetAroundClick } from './preview-click.js';
   import { isHttpContext } from '$lib/reader/open-in-reader.js';
@@ -207,6 +207,9 @@
   let readSafetyTimer: ReturnType<typeof setTimeout> | undefined;
   /** Blob URL of the chapter section handed to foliate; revoked on replacement. */
   let readSectionUrl: string | null = null;
+  // Releases the rendered chapter registered under its served URL for the
+  // reader engine's section frame (book-server.ts `serveDocument`).
+  let releaseReadDocument: (() => void) | null = null;
   // Options-bar enablement (grounded layout: the reader controls hold their
   // positions and disable in place rather than appear/disappear). Columns
   // applies only while paginated; the pager needs more than one content page.
@@ -1248,9 +1251,20 @@
     readSectionUrl = URL.createObjectURL(
       new Blob([sectionContent], { type: 'application/xhtml+xml' })
     );
+    // With a served book the section frame navigates to the chapter's served
+    // URL, which this pane answers with the same rendered markup (as text/html,
+    // the parsing srcdoc gave it), so the chapter has a real address for what
+    // its scripts build at runtime. Without one the engine loads srcdoc.
+    releaseReadDocument?.();
+    releaseReadDocument = null;
+    const served = baseUrl ? parseBookRoute(new URL(baseUrl).pathname) : null;
+    if (served) {
+      releaseReadDocument = serveDocument(served.workspaceId, served.path, sectionContent);
+    }
 
     const doc = buildReadDocument({
       sectionUrl: readSectionUrl,
+      servedUrl: served ? baseUrl : null,
       sectionSize: sectionContent.length,
       flow: readFlow,
       // Device presets: Auto — the device width decides column count honestly.
@@ -1915,6 +1929,7 @@
       clearTimeout(readSafetyTimer);
       clearTimeout(renderCheckTimer);
       if (readSectionUrl) URL.revokeObjectURL(readSectionUrl);
+      releaseReadDocument?.();
     };
   });
 

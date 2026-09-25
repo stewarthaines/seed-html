@@ -7,7 +7,11 @@
  * one-section book around a blob URL of the rendered chapter, mounts
  * `foliate-view`, and posts `doneMessage` to the parent when the first render
  * completes. HTTP-only by construction — file:// cannot fetch the modules, and
- * the device is hidden there.
+ * the device is hidden there. With a served book the section also carries
+ * its served URL, and the engine navigates the section frame there (vendored
+ * patch 8) instead of writing srcdoc, so the chapter has a real address and
+ * what its scripts build at runtime resolves to the book's own files; the
+ * preview pane answers that URL with the same rendered markup.
  *
  * The one-section book implements the minimum interface the renderer touches
  * (verified against the vendored code, phase 0/1 of the plan): `sections`
@@ -83,6 +87,12 @@ export interface FoliateViewLike {
 export interface ReadDocumentOptions {
   /** Blob URL of the rendered chapter (assets already blob-resolved). */
   sectionUrl: string;
+  /**
+   * The chapter's served URL under the book route, when the book is served:
+   * the section frame navigates there instead of loading srcdoc. The pane
+   * registers the same markup for it before writing this document.
+   */
+  servedUrl?: string | null;
   /** Byte-ish size of the section (chapter string length is fine). */
   sectionSize: number;
   flow: ReadFlow;
@@ -151,6 +161,7 @@ body, body * { color: ${o.fg} !important; }`;
 export function buildReadDocument(opts: ReadDocumentOptions): string {
   const {
     sectionUrl,
+    servedUrl,
     sectionSize,
     flow,
     maxColumnCount,
@@ -241,6 +252,7 @@ const book = {
   sections: [{
     id: 'chapter',
     load: () => ${JSON.stringify(sectionUrl)},
+    ${servedUrl ? `servedURL: ${JSON.stringify(servedUrl)},` : ''}
     size: ${JSON.stringify(sectionSize)},
     linear: 'yes',
   }],

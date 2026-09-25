@@ -87,11 +87,49 @@ export function parseBookRoute(pathname: string): { workspaceId: string; path: s
   return { workspaceId, path: path.join('/') };
 }
 
+/**
+ * Documents the page has prepared and answers in place of the stored file
+ * while they are registered: the reader-engine preview's rendered chapter,
+ * which its section frame navigates to (`process/PREVIEW_SERVED_BOOK.md`).
+ */
+const preparedDocuments = new Map<string, { markup: string; contentType: string }>();
+
+function preparedKey(workspaceId: string, path: string): string {
+  return `${workspaceId}\n${path}`;
+}
+
+/**
+ * Answer `path` in `workspaceId` with `markup` until the returned function
+ * is called. A later registration for the same file replaces this one, and
+ * this one's release then leaves the newer registration alone.
+ */
+export function serveDocument(
+  workspaceId: string,
+  path: string,
+  markup: string,
+  contentType = 'text/html'
+): () => void {
+  const key = preparedKey(workspaceId, path);
+  const entry = { markup, contentType };
+  preparedDocuments.set(key, entry);
+  return () => {
+    if (preparedDocuments.get(key) === entry) preparedDocuments.delete(key);
+  };
+}
+
 /** Answer one request from storage. Exported for tests; `startBookServer` wires it. */
 export async function answerBookFile(
   reader: BookFileReader,
   request: BookFileRequest
 ): Promise<BookFileReply> {
+  const prepared = preparedDocuments.get(preparedKey(request.workspaceId, request.path));
+  if (prepared) {
+    return {
+      ok: true,
+      bytes: new TextEncoder().encode(prepared.markup).buffer as ArrayBuffer,
+      contentType: prepared.contentType,
+    };
+  }
   try {
     const bytes = await reader.readFile(request.workspaceId, request.path);
     return { ok: true, bytes, contentType: getMimeType(request.path) };

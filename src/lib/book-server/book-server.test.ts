@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { answerBookFile, bookRoutePath, parseBookRoute, BOOK_ROUTE } from './book-server';
+import {
+  answerBookFile,
+  bookRoutePath,
+  parseBookRoute,
+  serveDocument,
+  BOOK_ROUTE,
+} from './book-server';
 
 describe('book route', () => {
   it('builds a served URL from a workspace id and a container path', () => {
@@ -67,5 +73,38 @@ describe('answering a request', () => {
       path: 'EPUB/video/clip.mp4',
     });
     expect(reply).toEqual({ ok: false, reason: 'not-mine' });
+  });
+});
+
+describe('a prepared document', () => {
+  const reader = {
+    async readFile() {
+      return new TextEncoder().encode('<p>stored</p>').buffer as ArrayBuffer;
+    },
+    async listWorkspaces() {
+      return ['ws'];
+    },
+  };
+  const ask = { type: 'book-file' as const, workspaceId: 'ws', path: 'EPUB/text/ch1.xhtml' };
+  const text = async () => {
+    const reply = await answerBookFile(reader, ask);
+    if (!reply.ok) throw new Error('expected ok');
+    return { body: new TextDecoder().decode(reply.bytes), type: reply.contentType };
+  };
+
+  it('is answered in place of the stored file until released', async () => {
+    const release = serveDocument('ws', 'EPUB/text/ch1.xhtml', '<p>rendered</p>');
+    expect(await text()).toEqual({ body: '<p>rendered</p>', type: 'text/html' });
+    release();
+    expect((await text()).body).toBe('<p>stored</p>');
+  });
+
+  it('is replaced by a newer registration, which an old release leaves alone', async () => {
+    const first = serveDocument('ws', 'EPUB/text/ch1.xhtml', '<p>first</p>');
+    const second = serveDocument('ws', 'EPUB/text/ch1.xhtml', '<p>second</p>');
+    first();
+    expect((await text()).body).toBe('<p>second</p>');
+    second();
+    expect((await text()).body).toBe('<p>stored</p>');
   });
 });
