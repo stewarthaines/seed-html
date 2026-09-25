@@ -352,7 +352,17 @@
       } else {
         showStatus(result.error || translate('Upload failed'), 'error');
       }
-      await refresh(selected);
+      if (result.catalog?.error && result.listing) {
+        // The feeds could not be read during the send: show the sent book
+        // from the fresh listing and mark the feeds, rather than read again.
+        const failure = result.catalog.error;
+        listing = result.listing;
+        catalogs = (catalogs.length ? catalogs : [result.catalog]).map(
+          (c) => ({ ...c, error: failure }),
+        );
+      } else {
+        await refresh(selected);
+      }
     } finally {
       sendingName = null;
       sendingPercent = null;

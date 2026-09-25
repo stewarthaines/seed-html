@@ -225,10 +225,19 @@
       sending: null,
       listing: result.listing ?? rowFor(remote.id).listing,
     });
-    // The send may have changed the destination's own feed; read them all again.
+    // The send may have changed the destination's own feed; read them all
+    // again — unless the send already found the feeds unreadable, in which
+    // case every feed on the row is marked so instead of being tried again.
     if (result.listing?.reach === 'ok' && hasCatalog(remote)) {
-      const catalogs = await loadCatalogs(remote, result.listing.objects);
-      rows.set(remote.id, { ...rowFor(remote.id), catalogs });
+      const failure = result.catalog?.error;
+      const after = rowFor(remote.id);
+      const catalogs = failure
+        ? (after.catalogs.length ? after.catalogs : [result.catalog!]).map((c) => ({
+            ...c,
+            error: failure,
+          }))
+        : await loadCatalogs(remote, result.listing.objects);
+      rows.set(remote.id, { ...after, catalogs });
     }
     if (result.success) {
       showStatus(

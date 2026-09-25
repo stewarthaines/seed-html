@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   catalogFilenamesFor,
   catalogFilesOn,
@@ -160,5 +160,31 @@ describe('matching a Dropbox feed without links', () => {
     ]);
     expect([...keys]).toEqual(['Walking the Coast.epub']);
     expect(missingHrefs).toEqual(['https://www.dropbox.com/scl/fi/def/gone.epub?dl=1']);
+  });
+});
+
+describe('loadCatalog on a failing read', () => {
+  it('stops at the first candidate that fails and reports the failure', async () => {
+    const remoteOps = await import('./remote-ops.js');
+    const spy = vi
+      .spyOn(remoteOps, 'downloadTextFile')
+      .mockRejectedValue(new Error('Dropbox refused the request.'));
+    const { loadCatalog } = await import('./catalog.js');
+    const info = await loadCatalog(dropbox, []);
+    expect(info.exists).toBe(false);
+    expect(info.error).toBe('Dropbox refused the request.');
+    expect(spy).toHaveBeenCalledTimes(1);
+    spy.mockRestore();
+  });
+
+  it('moves to the legacy name when the first candidate is merely missing', async () => {
+    const remoteOps = await import('./remote-ops.js');
+    const spy = vi.spyOn(remoteOps, 'downloadTextFile').mockResolvedValue(null);
+    const { loadCatalog } = await import('./catalog.js');
+    const info = await loadCatalog(dropbox, []);
+    expect(info.exists).toBe(false);
+    expect(info.error).toBeUndefined();
+    expect(spy).toHaveBeenCalledTimes(2);
+    spy.mockRestore();
   });
 });

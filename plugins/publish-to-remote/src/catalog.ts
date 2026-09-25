@@ -254,9 +254,11 @@ export async function loadCatalog(
         lastModified: objects.find((o) => o.key === file)?.lastModified,
       };
     } catch (error) {
-      // Unreadable candidate: try the next; if none reads, say so rather
-      // than report "no catalog" (a Create would then overwrite it).
+      // A read that fails (auth, network) will fail for every candidate;
+      // stop here and say so rather than report "no catalog" (a Create
+      // would then overwrite it). Only a missing file moves to the next.
       failure = error instanceof Error ? error.message : String(error);
+      break;
     }
   }
   const empty = emptyCatalog(remote, candidates[0]);
