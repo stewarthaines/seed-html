@@ -1,7 +1,7 @@
 # Vendored: READ.html (EPUB reader)
 
 - **Upstream**: the `read-html` repo (Codeberg origin, public GitHub mirror) — the standalone in-browser EPUB reader, foliate-js + Svelte 5
-- **Source of this snapshot**: `dist-single/READ.html` built from read-html commit `e72da21`, `readhtml-version` 0.5.0 — payload-slot contract (`docs/PAYLOAD_SLOT.md`), host-provided manifest link (`docs/PWA_MANIFEST.md` — this repo serves the matching `public/READ.webmanifest`, scoped to /READ.html), srcdoc section delivery, Safari 16 browser floor, editor hand-off ("Edit in SEED.html" opens `SEED.html?book=<url>`), Download and trust controls moved into the reader's settings, Pages/Scroll reading modes with Auto/Single columns, richer OPDS browsing (covers via details pages, format preference, update detection against the library)
+- **Source of this snapshot**: `dist-single/READ.html` built from read-html commit `acc3aa8`, `readhtml-version` 0.6.0 — served-book route (`docs/SERVED_BOOK.md`: under this repo's service worker a section frame navigates to `/__book/<id>/<path>` and the reader answers for the open book, so a trusted book's runtime-built media plays; srcdoc elsewhere), payload-slot contract (`docs/PAYLOAD_SLOT.md`), host-provided manifest link (`docs/PWA_MANIFEST.md` — this repo serves the matching `public/READ.webmanifest`, scoped to /READ.html), srcdoc section delivery, Safari 16 browser floor, editor hand-off ("Edit in SEED.html" opens `SEED.html?book=<url>`), Download and trust controls moved into the reader's settings, Pages/Scroll reading modes with Auto/Single columns, richer OPDS browsing (covers via details pages, format preference, update detection against the library)
 - **License**: MIT
 
 ## What it is here for

@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Over http, the preview serves the open book's files to the chapter under a book address, so an interactive book's scripts find their media at runtime: a widget that builds a video player when clicked now plays. Books opened from a file: URL are unchanged.
 - A book that was not made here previews with its scripts switched off. "Run this book's scripts" in the yellow banner turns them on for that book, and the choice is remembered in this browser.
+- The reader tab (READ.html 0.6.0) gives the same address to a book's chapters, so an interactive book you have trusted there plays media its scripts build at runtime, in every browser.
 
 ### Fixed
 
