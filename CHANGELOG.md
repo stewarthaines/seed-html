@@ -13,13 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-09-26
+
 ### Changed
 
 - Publishing to the web is now per book and per destination. The Share page's "Publish to the web" band lists your destinations and says what this book's latest package is doing on each, with one Send button and an "In the catalog" switch per row (one per catalog when a destination has several); the catalog updates as you flip the switch. The latest package can be validated from the same band.
 - A Published page beside Books shows every book on a destination: the catalog's title, format, feed link and state (with a picker, New catalog… and Delete catalog; the books stay when a catalog goes), the books on it, and, dimmed, the books on this device that have not been sent there. A book on a destination that is not on this device can be imported with one confirmation.
 - Destinations (S3, Google Drive, Dropbox, WebDAV, USB e-readers) are set up under Settings › You › Destinations rather than inside the publishing pane.
 - A Dropbox destination now needs the app's `files.content.read` permission, because the catalog on it is read back rather than rebuilt blind. A destination connected earlier must be reconnected once (Settings › Destinations → Edit → Connect to Dropbox again → Save & Connect).
-
 - Over http, the preview serves the open book's files to the chapter under a book address, so an interactive book's scripts find their media at runtime: a widget that builds a video player when clicked now plays. Books opened from a file: URL are unchanged.
 - A book that was not made here previews with its scripts switched off. "Run this book's scripts" in the yellow banner turns them on for that book, and the choice is remembered in this browser.
 - The reader tab (READ.html 0.6.0) gives the same address to a book's chapters, so an interactive book you have trusted there plays media its scripts build at runtime, in every browser.
