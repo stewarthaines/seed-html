@@ -51,6 +51,8 @@ export default defineConfig({
         // measures nothing about the app and would distort directory locks.
         'src/**/test/**',
         'src/lib/test/**',
+        // Vendored third-party library (Cuelume); not maintained here.
+        'src/lib/agent-bridge/cuelume.js',
       ],
       reporter: ['text-summary', 'html'],
       // Per-directory coverage locks, in the lint-ratchet spirit: set slightly
