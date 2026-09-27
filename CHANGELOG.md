@@ -13,10 +13,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.22.0] - 2026-09-26
+## [0.22.0] - 2026-09-27
+
+### Added
+
+- Your books sit on a shelf with their covers. A first visit opens there, and a book opens with a click on its cover; Duplicate and Delete are in the menu beside each title.
+- Inside a book, three tabs: Write, Book and Share.
+- Book gathers the Cover, the Contents (chapters beside the contents page they make), the Details and the Files, each file labelled with what it is used for.
+- On a phone, bottom tabs switch between Write, Preview, Book and Share, and a chapter strip picks the chapter; one pane shows at a time.
+- About opens as a dialog from the SEED.html name in the corner.
 
 ### Changed
 
+- Settings opens as a sheet over the book, split into You (appearance, language, editor, destinations) and This book (format, preview, PDF, translations, track changes, extensions). Content transforms and Custom metadata have sections of their own.
+- The files behind a chapter are one menu, grouped into this chapter, every chapter, and how chapters are made; the second pane has the same menu.
+- The preview bar has a device switch, a checks button and one panel with tabs for Checks, Accessibility and Screen reader.
+- The chapter title is edited beside the chapter rather than in the toolbar.
+- The Share page offers the EPUB, the browser page and the PDF as cards, with packaged files listed beneath.
+- The Write tab reopens on the chapter you left.
 - Publishing to the web is now per book and per destination. The Share page's "Publish to the web" band lists your destinations and says what this book's latest package is doing on each, with one Send button and an "In the catalog" switch per row (one per catalog when a destination has several); the catalog updates as you flip the switch. The latest package can be validated from the same band.
 - A Published page beside Books shows every book on a destination: the catalog's title, format, feed link and state (with a picker, New catalog… and Delete catalog; the books stay when a catalog goes), the books on it, and, dimmed, the books on this device that have not been sent there. A book on a destination that is not on this device can be imported with one confirmation.
 - Destinations (S3, Google Drive, Dropbox, WebDAV, USB e-readers) are set up under Settings › You › Destinations rather than inside the publishing pane.
@@ -29,6 +43,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - An EPUB made elsewhere now previews with its own styles, scripts and images when its chapters sit deeper than one folder below the package file, or when its manifest reaches beside the package folder (`../`). References are resolved against the file they are written in, as the EPUB specification says, instead of assuming the layout this editor produces. Books made here are unaffected.
+- The preview's previous and next chapter arrows reach every chapter. A chapter whose file name ended another's (james_mccoll inside john_james_mccoll) used to be skipped.
+- A Djot heading with a non-breaking space or line break in it gets an id with a hyphen there, so a link typed from the visible title finds it.
+- Family History trees keep their stems joined when the book's stylesheet spaces list items, and the kinship panel's siblings list can be hidden from the book's stylesheet.
+- An agent over the bridge whose write prompt went unanswered is told it timed out, not that you denied it, so it sends the write again once you are back.
 - The screen reader preview announces a heading once. A heading with a line break or an emphasised word inside it used to be read three times: the title, each of its parts, then the title again as the heading ended. The Read aloud view repeated it too.
 
 ## [0.21.0] - 2026-09-09
