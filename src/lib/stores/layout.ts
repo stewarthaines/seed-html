@@ -28,12 +28,14 @@ export interface LayoutStore extends Writable<LayoutState> {
 export type SidebarSection =
   | 'about'
   | 'workspace'
+  | 'cover'
   | 'metadata'
   | 'manifest'
   | 'navigation'
   | 'spine'
   | 'chapters'
   | 'publish'
+  | 'published'
   | 'settings';
 
 // Storage keys for persistence
@@ -213,12 +215,14 @@ function isValidSidebarSection(value: string): value is SidebarSection {
   const validSections: SidebarSection[] = [
     'about',
     'workspace',
+    'cover',
     'metadata',
     'manifest',
     'navigation',
     'spine',
     'chapters',
     'publish',
+    'published',
     'settings',
   ];
   return validSections.includes(value as SidebarSection);

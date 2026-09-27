@@ -34,12 +34,14 @@ const DEFAULT_STATE: NavigationState = {
 const VALID_VIEW_TYPES: ViewType[] = [
   'about',
   'workspace',
+  'cover',
   'metadata',
   'manifest',
   'navigation',
   'spine',
   'chapters',
   'publish',
+  'published',
   'settings',
 ];
 
@@ -169,12 +171,6 @@ function createNavigationStore(): NavigationStore {
             update(state => ({ ...state, isTransitioning: false }));
             return false;
           }
-        }
-
-        // Clear spine item selection when navigating away from spine view
-        if (currentState.currentView === 'spine' && view !== 'spine') {
-          const clearEvent = new CustomEvent('clear-spine-selection');
-          window.dispatchEvent(clearEvent);
         }
 
         // Perform navigation

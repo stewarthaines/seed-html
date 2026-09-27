@@ -108,8 +108,9 @@
       </div>
     </PaneHeader>
 
+    <!-- The tab strip's aria-controls names this panel. -->
     {#if activeTab.current === 'summary'}
-      <div class="summary-panel">
+      <div class="summary-panel" id="metadata-panel-summary">
         <SimpleMetadataView
           {workspace}
           {focusedField}
@@ -121,14 +122,14 @@
         />
       </div>
     {:else if error}
-      <div class="error-state">
+      <div class="error-state" id="metadata-panel-opf">
         <p class="error-message">{error}</p>
         <button type="button" class="btn btn-secondary" onclick={updateHighlighting}>
           {$t('Retry')}
         </button>
       </div>
     {:else if highlightedContent}
-      <div class="preview-body">
+      <div class="preview-body" id="metadata-panel-opf">
         <div class="text-preview">
           <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
           <pre
@@ -140,7 +141,7 @@
         </div>
       </div>
     {:else}
-      <div class="no-content">
+      <div class="no-content" id="metadata-panel-opf">
         <p>{$t('No content available')}</p>
       </div>
     {/if}

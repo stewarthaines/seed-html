@@ -323,3 +323,15 @@ hr {
     scroll-behavior: auto !important;
   }
 }
+
+/* Phones: iOS Safari zooms the page into any input, select or textarea whose
+   text is under 16px, and stays zoomed. Every form control meets that size on
+   small screens, whatever a component set (hence the !important). The editor's
+   textarea keeps its own size steps and applies the same floor itself. */
+@media (max-width: 720px) {
+  input,
+  select,
+  textarea:not(.content-textarea) {
+    font-size: max(1rem, 1em) !important;
+  }
+}

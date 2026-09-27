@@ -213,7 +213,7 @@
 
   .license-preview-text {
     font-size: 0.75rem;
-    color: var(--color-text-tertiary, #6c757d);
+    color: var(--color-text-secondary);
     font-style: italic;
     line-height: 1.3;
   }

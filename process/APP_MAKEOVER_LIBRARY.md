@@ -1,6 +1,6 @@
 # App makeover: the Library model
 
-Status: design settled on the canvas, 21 September 2026. Implementation not started.
+Status: design settled on the canvas, 21 September 2026. Phases 1, 2 and 3 built on branches `makeover/phase-1-shell`, `makeover/phase-2-write` and `makeover/phase-3-book` (each stacked on the previous), awaiting review; the running log is `process/APP_MAKEOVER_STATUS.md`. Phases 4 (Share, Settings, About) and 5 (phone) are built on `makeover/phase-4-share-settings`.
 
 Canvas: https://claude.ai/artifact/GUiwcGUbX9KdkmuovT7DRK (page "Library" is the direction being built; "Directions" holds the two rejected alternatives; "Today" holds the 0.21 screens for reference).
 
@@ -54,29 +54,29 @@ Recorded so they are not re-argued during the build.
 
 Most of the design is the existing token set. The palette, the 2px radius and Helvetica are unchanged; the design language note in `src/styles/design-language.md` still applies. The values below are what the mocks use, expressed against `src/styles/tokens`.
 
-| Element | Value in the mocks | Token or change |
-| --- | --- | --- |
-| Ground, ink | `#ffffff`, `#222222` | `--color-bg-primary`, `--color-text-primary` |
-| Hairlines | `#cccccc`, `#e0e0e0` | `--color-border-default`, `--color-border-subtle` |
-| Secondary text | `#666666`, `#444444` | `--color-text-secondary`, `--color-neutral-700` |
-| Link and primary action | `#0000ee` | `--color-text-link`, `--color-interactive-primary` |
-| Selected surface | `#f0f0f0`, `#f0f0ff` | `--color-bg-secondary`, `--color-bg-accent` |
-| Danger | `#dc2626` | `--color-error-600` |
-| Success status line | `#166534` | `--color-success-text` |
-| Warning status line | `#b45309` | new `--color-warning-text` is `#92400e`; use it |
-| Top bar | 52px, hairline below | new `--bar-height`; replaces the 44px sidebar header |
-| Write sidebar, Book sub-nav | 240px | `--sidebar-width` goes from 250 to 240 |
-| Section labels | 11px, 700, 0.12em, uppercase | `--text-xs`, `--font-bold`; the existing "PRICE/BEDROOMS" pattern |
-| Page title (Books) | 30px, 700 | `--text-4xl` |
-| Screen title (Details, Share) | 22px, 700 | use `--text-3xl` (24px) |
-| Tabs | 14px, active 700 with a 3px black underline | `--text-base`; new `.tabs` component |
-| Buttons | 32px, 2px radius, `.btn` | existing button system; `.btn-primary` becomes blue fill, white text |
-| Segmented control | 26–32px, 1px border, pressed black fill | new `.seg` component; used for devices, cover text style, text format |
-| Sheet (Settings, Delete) | 1px border, `0 14px 40px rgba(0,0,0,.18)` | `--shadow-lg` from `tokens/elevation.css` |
-| Menus | 1px border, `0 8px 24px rgba(0,0,0,.14)` | `--shadow-md` |
-| Cover thumbnails | 30×45 (list), 44×66 (dialog), 96×144 (Cover preview), 140×210 (Start card), shelf 2:3 fluid | one `.cover` component with a size modifier; always 2:3 |
-| Shelf grid | four a row, 40px column gap, 32px row gap | new; collapses to two a row under 900px, one under 500px |
-| Editor and preview text | unchanged | `--font-mono` in the textarea; preview is the book's own CSS |
+| Element                       | Value in the mocks                                                                          | Token or change                                                       |
+| ----------------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Ground, ink                   | `#ffffff`, `#222222`                                                                        | `--color-bg-primary`, `--color-text-primary`                          |
+| Hairlines                     | `#cccccc`, `#e0e0e0`                                                                        | `--color-border-default`, `--color-border-subtle`                     |
+| Secondary text                | `#666666`, `#444444`                                                                        | `--color-text-secondary`, `--color-neutral-700`                       |
+| Link and primary action       | `#0000ee`                                                                                   | `--color-text-link`, `--color-interactive-primary`                    |
+| Selected surface              | `#f0f0f0`, `#f0f0ff`                                                                        | `--color-bg-secondary`, `--color-bg-accent`                           |
+| Danger                        | `#dc2626`                                                                                   | `--color-error-600`                                                   |
+| Success status line           | `#166534`                                                                                   | `--color-success-text`                                                |
+| Warning status line           | `#b45309`                                                                                   | new `--color-warning-text` is `#92400e`; use it                       |
+| Top bar                       | 52px, hairline below                                                                        | new `--bar-height`; replaces the 44px sidebar header                  |
+| Write sidebar, Book sub-nav   | 240px                                                                                       | `--sidebar-width` goes from 250 to 240                                |
+| Section labels                | 11px, 700, 0.12em, uppercase                                                                | `--text-xs`, `--font-bold`; the existing "PRICE/BEDROOMS" pattern     |
+| Page title (Books)            | 30px, 700                                                                                   | `--text-4xl`                                                          |
+| Screen title (Details, Share) | 22px, 700                                                                                   | use `--text-3xl` (24px)                                               |
+| Tabs                          | 14px, active 700 with a 3px black underline                                                 | `--text-base`; new `.tabs` component                                  |
+| Buttons                       | 32px, 2px radius, `.btn`                                                                    | existing button system; `.btn-primary` becomes blue fill, white text  |
+| Segmented control             | 26–32px, 1px border, pressed black fill                                                     | new `.seg` component; used for devices, cover text style, text format |
+| Sheet (Settings, Delete)      | 1px border, `0 14px 40px rgba(0,0,0,.18)`                                                   | `--shadow-lg` from `tokens/elevation.css`                             |
+| Menus                         | 1px border, `0 8px 24px rgba(0,0,0,.14)`                                                    | `--shadow-md`                                                         |
+| Cover thumbnails              | 30×45 (list), 44×66 (dialog), 96×144 (Cover preview), 140×210 (Start card), shelf 2:3 fluid | one `.cover` component with a size modifier; always 2:3               |
+| Shelf grid                    | four a row, 40px column gap, 32px row gap                                                   | new; collapses to two a row under 900px, one under 500px              |
+| Editor and preview text       | unchanged                                                                                   | `--font-mono` in the textarea; preview is the book's own CSS          |
 
 Dark theme: every value above is a token, so `data-theme="dark"` continues to work. The mocks were drawn in light only; the Settings sheet's Appearance section keeps the current theme choice.
 
@@ -84,19 +84,19 @@ Dark theme: every value above is a token, so `data-theme="dark"` continues to wo
 
 Today's navigation store has nine views and the plugin. The new shell has four, plus a sheet.
 
-| Today (`ViewType`) | New home |
-| --- | --- |
-| `about` | A link in the Books top bar to a short About dialog: licence, version, download |
-| `workspace` (Projects) | **Books**: `WorkspaceList` and `WorkspaceItem` become the shelf; `WorkspaceActionBar` becomes the Start row; `CreateProjectDialog` is "New book"; `OPDSImportDialog` is "Sample books…" |
-| `spine` (editor) | **Write**: `SpineSidebar` stays as the chapter list; `EditorPane`'s file select becomes the "Also in this chapter" menu; `PreviewPane`'s view select becomes the device switch (Fill, Phone, Tablet, E-reader, READ.html, Print, with size variants as a second row); its panel select becomes the Reader toggle plus the checks status line, with Checks, Accessibility and Screen reader as tabs of one panel |
-| `chapters` | **Book › Contents** together with `navigation` |
-| `navigation` | **Book › Contents**: the generated TOC on the right; the authored nav file under "Write the contents by hand" |
-| `metadata` | **Book › Details**: `BasicInfoFields` as the page; `AdvancedFields` and `AccessibilityFields` behind "Advanced details"; `OPFPreview` reachable from Files |
-| `manifest` | **Book › Files**: the table with a "Used as" column; source and app files hidden unless shown |
-| (cover controls in `SimpleMetadataView`) | **Book › Cover**: the same controls as a screen, plus the shelf and list previews |
-| `publish` and the publish-to-remote plugin | **Share**: outcome cards, the plugin inside "Publish to the web", packaged files as a table |
-| `settings` | **Settings sheet**: `SettingsView`'s sections become list entries; the accordion goes |
-| `Sidebar.svelte` | Replaced by the top bar (title menu, tabs, Settings, Package EPUB) and the Write chapter list |
+| Today (`ViewType`)                         | New home                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `about`                                    | A link in the Books top bar to a short About dialog: licence, version, download                                                                                                                                                                                                                                                                                                                                 |
+| `workspace` (Projects)                     | **Books**: `WorkspaceList` and `WorkspaceItem` become the shelf; `WorkspaceActionBar` becomes the Start row; `CreateProjectDialog` is "New book"; `OPDSImportDialog` is "Sample books…"                                                                                                                                                                                                                         |
+| `spine` (editor)                           | **Write**: `SpineSidebar` stays as the chapter list; `EditorPane`'s file select becomes the "Also in this chapter" menu; `PreviewPane`'s view select becomes the device switch (Fill, Phone, Tablet, E-reader, READ.html, Print, with size variants as a second row); its panel select becomes the Reader toggle plus the checks status line, with Checks, Accessibility and Screen reader as tabs of one panel |
+| `chapters`                                 | **Book › Contents** together with `navigation`                                                                                                                                                                                                                                                                                                                                                                  |
+| `navigation`                               | **Book › Contents**: the generated TOC on the right; the authored nav file under "Write the contents by hand"                                                                                                                                                                                                                                                                                                   |
+| `metadata`                                 | **Book › Details**: `BasicInfoFields` as the page; `AdvancedFields` and `AccessibilityFields` behind "Advanced details"; `OPFPreview` reachable from Files                                                                                                                                                                                                                                                      |
+| `manifest`                                 | **Book › Files**: the table with a "Used as" column; source and app files hidden unless shown                                                                                                                                                                                                                                                                                                                   |
+| (cover controls in `SimpleMetadataView`)   | **Book › Cover**: the same controls as a screen, plus the shelf and list previews                                                                                                                                                                                                                                                                                                                               |
+| `publish` and the publish-to-remote plugin | **Share**: outcome cards, the plugin inside "Publish to the web", packaged files as a table                                                                                                                                                                                                                                                                                                                     |
+| `settings`                                 | **Settings sheet**: `SettingsView`'s sections become list entries; the accordion goes                                                                                                                                                                                                                                                                                                                           |
+| `Sidebar.svelte`                           | Replaced by the top bar (title menu, tabs, Settings, Package EPUB) and the Write chapter list                                                                                                                                                                                                                                                                                                                   |
 
 The top bar's "Package EPUB" keeps today's behaviour; the outputs it can make (with source, without source, READ.html, SEED.html, PDF) are what the Share screen lists.
 
@@ -120,5 +120,5 @@ Not touched by any phase: the transform pipeline, storage, the plugin contract, 
 
 - **Share is per book in the mock; today's packaged list is global.** Packaged files live in the shared `publish` workspace, and the sidecar carries a title but no workspace id. Per-book Share needs the sidecar to record which book made the file, or Share needs a "from other books" section. Decide before phase 4.
 - **What the sample book opens into.** The mock opens the sample from the Start row; auto-importing it on the very first visit was discussed and not decided.
-- **The About page.** Reduced to a dialog in the map above; confirm that the download-the-app and licence content does not need a page of its own.
+- **The About page.** Settled 23 September 2026: a dialog, carrying the licence, the third-party libraries and the app download.
 - **Loose screens not yet drawn.** Share with storage connected, the New book dialog, the Sample books picker, dark theme. All derivable from what is on the canvas; draw when a phase reaches them.

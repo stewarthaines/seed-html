@@ -163,7 +163,9 @@ function transformDOM(htmlDocument) {
         content => !JSON.parse(content).dom_transforms.includes(MARKER_TRANSFORM_PATH)
       );
 
-      // Back to the chapter; type a sentinel so a fresh render persists.
+      // Back to the chapter (the chapter column lives under Write); type a
+      // sentinel so a fresh render persists.
+      await userEvent.click(await canvas.findByTestId('nav-write', {}, { timeout: 30000 }));
       await userEvent.click(
         await canvas.findByTestId('spine-item-chapter01', {}, { timeout: 30000 })
       );
@@ -220,19 +222,14 @@ function transformDOM(htmlDocument) {
       await userEvent.click(chapter);
       await pollFile(seeded, ch1Path, content => content.includes(MARKER));
 
-      // Switch pane 1 to the transform script via the file picker (transform
+      // Switch pane 1 to the transform script via the files menu (transform
       // entries are Advanced-mode-only, forced on in the loader).
-      const picker = await canvas.findByRole(
-        'combobox',
-        { name: 'Select file for pane 1' },
-        { timeout: 30000 }
+      await userEvent.click(
+        await canvas.findByRole('button', { name: 'Also in this chapter' }, { timeout: 30000 })
       );
-      const option = await within(picker).findByRole(
-        'option',
-        { name: 'transformMarker.js' },
-        { timeout: 30000 }
+      await userEvent.click(
+        await canvas.findByRole('menuitemradio', { name: 'transformMarker.js' }, { timeout: 30000 })
       );
-      await userEvent.selectOptions(picker, option);
 
       // The pane loads the script from storage; wait until it's in the editor.
       const editor = await canvas.findByRole(

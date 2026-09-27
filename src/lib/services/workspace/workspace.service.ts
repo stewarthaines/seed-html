@@ -8,6 +8,7 @@
 import type { FileStorageAPI } from '../../storage/index.js';
 import { randomUUID } from '../../utils/uuid.js';
 import type { EPUBMetadata, OPFDocument, ManifestItem, SpineItem } from '../../epub/opf-utils.js';
+import { manifestHrefToPath } from '../../epub/path-utils.js';
 import {
   generateEPUBTimestamp,
   creatorName,
@@ -990,8 +991,8 @@ export class WorkspaceService {
       const href = coverEl?.getAttribute('href');
       const mediaType = coverEl?.getAttribute('media-type') ?? 'image/png';
       if (href) {
-        const opfDir = opfPath.substring(0, opfPath.lastIndexOf('/'));
-        cover = { path: `${opfDir}/${href}`, mediaType };
+        const opfDir = opfPath.includes('/') ? opfPath.substring(0, opfPath.lastIndexOf('/')) : '';
+        cover = { path: manifestHrefToPath(opfDir, href), mediaType };
       }
     } catch {
       // Cover image is optional — don't fail the row.
@@ -1266,10 +1267,9 @@ export class WorkspaceService {
   }
 
   private resolveManifestPath(href: string, basePath: string): string {
-    if (!basePath || href.startsWith(basePath + '/')) {
-      return href;
-    }
-    return `${basePath}/${href}`;
+    // Against the OPF directory with dot segments collapsed, so a manifest
+    // may reach beside or above the OPF (`../_kmeta/config.js`).
+    return manifestHrefToPath(basePath, href);
   }
 
   /**

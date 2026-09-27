@@ -1,7 +1,7 @@
 /**
  * The metadata fields belonging to each Metadata view tab — the single source
  * of truth shared by MetadataEditor (publishes the active tab's fields for OPF
- * preview highlighting) and MetadataTabBar (per-tab validation error counts).
+ * preview highlighting) and the OPF preview's tabs (per-tab validation error counts).
  */
 export function getTabFields(tabId: string): string[] {
   switch (tabId) {

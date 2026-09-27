@@ -126,9 +126,11 @@ Keep testids **sparse** — they are Testing Library's explicit last resort (the
 
 | `data-testid`            | Element                           | Where                                                                                       |
 | ------------------------ | --------------------------------- | ------------------------------------------------------------------------------------------- |
-| `nav-<sectionId>`        | Sidebar section buttons           | `src/lib/Sidebar.svelte` (e.g. `nav-workspace` is Projects, `nav-metadata`, `nav-settings`) |
-| `create-project`         | New-project button                | `src/lib/components/workspace/WorkspaceActionBar.svelte`                                    |
-| `package-epub`           | Package-EPUB button               | `src/App.svelte`                                                                            |
+| `nav-<sectionId>`        | Shell navigation controls         | `src/lib/components/shell/TopBar.svelte` inside a book: `nav-workspace` (← Books), `nav-write`, `nav-book`, `nav-publish` (Share), `nav-settings`, and the Book sections `nav-cover`, `nav-chapters`, `nav-metadata`, `nav-manifest` (rendered only while the Book tab is active; the Navigation view is reached from Contents in Advanced mode); `src/lib/components/shell/BrandBar.svelte` on the Books screen: `nav-workspace`, `nav-published` (while the publish plugin is on), `nav-about` |
+| `create-project`         | New-book button                   | `src/lib/navigation/views/BooksView.svelte`                                                 |
+| `import-from-catalog`    | Sample-books button               | `src/lib/navigation/views/BooksView.svelte`                                                 |
+| `package-epub`           | Package-EPUB button               | `src/lib/components/shell/TopBar.svelte`                                                    |
+| `settings-section-<id>`, `settings-close`, `about-close` | Settings sheet: section list items and the close button; the About dialog's close button (`src/lib/components/shell/AboutDialog.svelte`) | `src/lib/navigation/views/SettingsView.svelte` (ids `appearance`, `language`, `advanced`, `plugins`, `destinations` (while the publish plugin is on), `format`, `transforms`, `custom-metadata`, `packaging`, `preview`, `pdf`, `translations`, `track-changes`) |
 | `spine-item-<chapterId>` | Chapter buttons in the spine list | `src/lib/components/SpineItem.svelte` (e.g. `spine-item-chapter01`)                         |
 
 Adding a hook: prefer a stable, non-localized suffix (a section/chapter **id**, not a label). Add the row above, and reach for a testid only when a semantic query would be locale- or copy-brittle for a step that isn't itself under test.

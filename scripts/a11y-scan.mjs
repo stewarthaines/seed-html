@@ -46,17 +46,61 @@ async function clickNav(page, name) {
   await page.waitForTimeout(800);
 }
 
-// A project must exist to reach the workspace views. Reuse one if present (e.g. restored
-// after a theme reload), otherwise create a minimal one.
+// A book must be open to reach the in-book views (the top bar with the Write tab).
+// Reuse the open one if present (e.g. restored after a theme reload); otherwise open
+// the first book on the shelf, or create a minimal one.
 async function ensureWorkspace(page) {
-  const metadataNav = page.getByRole('button', { name: 'Metadata', exact: true }).first();
-  if (await metadataNav.isVisible().catch(() => false)) return true;
-  await clickNav(page, 'Projects');
+  // Surface what the app says while a book is being created.
+  const onConsole = m => {
+    if (m.type() === 'error') console.warn(`\nAPP ${m.text().slice(0, 200)}`);
+  };
+  const onPageError = e => console.warn(`\nAPP pageerror ${String(e).slice(0, 200)}`);
+  page.on('console', onConsole);
+  page.on('pageerror', onPageError);
+  try {
+    return await ensureWorkspaceInner(page);
+  } finally {
+    page.off('console', onConsole);
+    page.off('pageerror', onPageError);
+  }
+}
+
+async function ensureWorkspaceInner(page) {
+  const writeTab = page.locator('[data-testid="nav-write"]').first();
+  if (await writeTab.isVisible().catch(() => false)) return true;
+  // Back to the shelf (the hook exists on both the brand bar and the top bar).
+  await page.locator('[data-testid="nav-workspace"]').first().click();
+  // Let the shelf finish loading before clicking: its rows shift the Start row
+  // while they arrive, and a click computed too early lands on a neighbour.
   await page
-    .getByRole('button', { name: /create a new/i })
+    .locator('.books-view')
     .first()
-    .click();
-  await metadataNav.waitFor({ state: 'visible', timeout: 20000 });
+    .waitFor({ state: 'visible', timeout: 10000 })
+    .catch(() => undefined);
+  await page.waitForTimeout(1500);
+  // A cover on the shelf, not the Start row's "Open an EPUB…" (which only opens
+  // a native file chooser, and matched a name-based lookup on an empty shelf).
+  const firstBook = page.locator('.books-grid .book-open').first();
+  if (await firstBook.isVisible().catch(() => false)) {
+    await firstBook.click();
+  } else {
+    // Activate by keyboard: immune to the row reflowing under a pointer click.
+    const newBook = page.locator('[data-testid="create-project"]').first();
+    await newBook.focus();
+    await page.keyboard.press('Enter');
+    // The new-book dialog: accept its defaults.
+    const create = page
+      .getByRole('dialog')
+      .getByRole('button', { name: /create/i })
+      .first();
+    if (await create.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await create.click();
+    } else {
+      console.warn(`\nWARN: the New book dialog did not open`);
+    }
+  }
+  // Creating a book copies its starter files; allow for a slow first run.
+  await writeTab.waitFor({ state: 'visible', timeout: 45000 });
   return true;
 }
 
@@ -66,11 +110,17 @@ async function ensureWorkspace(page) {
 // persists in OPFS across the light/dark passes).
 async function ensureDemoExtension(page) {
   await clickNav(page, 'Settings');
-  const advanced = page.getByRole('checkbox', { name: /Advanced Mode/i }).first();
+  // The sheet shows one section at a time: Advanced mode lives under You ›
+  // Advanced mode, the extension import under This book › Format (which
+  // only lists once advanced mode is on).
+  await page.locator('[data-testid="settings-section-advanced"]').first().click();
+  const advanced = page.getByRole('checkbox', { name: /Advanced mode/i }).first();
   if ((await advanced.count()) && !(await advanced.isChecked())) {
     await advanced.check();
     await page.waitForTimeout(400);
   }
+  await page.locator('[data-testid="settings-section-format"]').first().click();
+  await page.waitForTimeout(400);
   if ((await page.locator('.extension-item').count()) === 0) {
     await page.setInputFiles('#extension-file', {
       name: 'a11y-demo.js',
@@ -105,23 +155,45 @@ async function scanAllViews(page, theme) {
     return true;
   };
 
-  // Views reachable without a workspace. (Publish is disabled until an EPUB is packaged,
-  // so it's skipped here — clickNav reports it.)
-  for (const name of ['Projects', 'About', 'Publish', 'Settings']) {
-    if (await visit(name)) await scan(name);
+  // Outside a book: the Books shelf (the landing screen) and About. Reach Books
+  // by its hook — the brand button's visible name is the app name.
+  await page.locator('[data-testid="nav-workspace"]').first().click();
+  await page.waitForTimeout(800);
+  await scan('Books');
+  if (await visit('About SEED.html')) {
+    await scan('About');
+    // About is a dialog over the shelf; Escape closes it.
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
   }
 
   let workspaceReady = false;
   try {
     workspaceReady = await ensureWorkspace(page);
   } catch (e) {
-    console.warn(`\nWARN [${theme}]: could not ensure a project: ${e.message}`);
+    console.warn(`\nWARN [${theme}]: could not ensure a book: ${e.message}`);
+    // What the page looked like when the book could not be opened or created.
+    await page
+      .screenshot({ path: `.playwright-mcp/a11y-no-book-${theme}.png` })
+      .catch(() => undefined);
   }
 
   if (workspaceReady) {
-    for (const name of ['Metadata', 'Manifest', 'Navigation']) {
-      if (await visit(name)) await scan(name);
+    // Inside a book: Settings (a sheet over the view; Escape closes it), Share,
+    // then the Book tab's sections.
+    if (await visit('Settings')) {
+      await scan('Settings');
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(300);
     }
+    if (await visit('Share')) await scan('Share');
+    if (await visit('Book')) {
+      // Navigation is reached from Contents in advanced mode, not a section.
+      for (const name of ['Contents', 'Details', 'Files']) {
+        if (await visit(name)) await scan(name);
+      }
+    }
+    await visit('Write');
     // Spine editor: reached by selecting a chapter (best-effort).
     try {
       const firstChapter = page.locator('.spine-item').first();
@@ -145,6 +217,9 @@ async function scanAllViews(page, theme) {
     } catch (e) {
       console.warn(`\nWARN [${theme}]: could not seed/scan extensions: ${e.message}`);
     }
+    // Leave the sheet closed: its backdrop would block the next pass's clicks.
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
   }
   return reports;
 }
@@ -178,7 +253,7 @@ async function setTheme(page, theme) {
   await page.evaluate(([key, value]) => localStorage.setItem(key, value), [THEME_KEY, theme]);
   await page.reload({ waitUntil: 'networkidle' });
   await page
-    .getByRole('button', { name: 'Projects', exact: true })
+    .locator('[data-testid="nav-workspace"]')
     .first()
     .waitFor({ timeout: 15000 })
     .catch(() => undefined);
@@ -197,7 +272,7 @@ async function main() {
     process.exit(2);
   }
   await page
-    .getByRole('button', { name: 'Projects', exact: true })
+    .locator('[data-testid="nav-workspace"]')
     .first()
     .waitFor({ timeout: 15000 })
     .catch(() => undefined);

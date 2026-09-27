@@ -28,15 +28,15 @@
     docs: {
       description: {
         story:
-          "🌍 Boots the seeded app with the story's locale global set to German (the preview decorator applies it via setLocale) and asserts translated chrome: the sidebar shows Metadaten, Einstellungen, and Kapitel.",
+          "🌍 Boots the seeded app with the story's locale global set to German (the preview decorator applies it via setLocale) and asserts translated chrome: the top bar shows Schreiben and Einstellungen, the chapter column Kapitel.",
       },
     },
   }}
   play={async ({ canvas }) => {
-    await canvas.findByText('i18n Demo Book', {}, { timeout: 60000 });
+    await canvas.findByRole('heading', { name: 'i18n Demo Book' }, { timeout: 60000 });
 
     // Real assertions: the German catalog is applied to the app chrome.
-    await canvas.findByText('Metadaten', {}, { timeout: 20000 });
+    await canvas.findByText('Schreiben', {}, { timeout: 20000 });
     await canvas.findByText('Einstellungen', {}, { timeout: 20000 });
     await canvas.findByText(/Kapitel/, {}, { timeout: 20000 });
   }}

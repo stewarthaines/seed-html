@@ -27,6 +27,7 @@
     group = 'project-settings',
     open = false,
     onChanged,
+    framed = true,
   }: {
     workspaceId: string;
     isAdvancedMode?: boolean;
@@ -35,6 +36,9 @@
     /** Start expanded. */
     open?: boolean;
     onChanged?: () => void;
+    /** Wrap in a SettingsSection card with its own title; false renders the
+        controls only (the host supplies the heading). */
+    framed?: boolean;
   } = $props();
 
   const fileStorage = FileStorageAPI.getInstance();
@@ -304,7 +308,7 @@ function generateText(ctx, options) {
   }
 </script>
 
-<SettingsSection title={$t('Generators')} summary={genSummary} name={group} {open}>
+{#snippet body()}
   <div class="generator-settings">
     <p class="gs-intro">
       {$t('A generator is a script that produces source text to insert at the editor caret.')}
@@ -504,9 +508,24 @@ function generateText(ctx, options) {
       </div>
     </div>
   </div>
-</SettingsSection>
+{/snippet}
+
+{#if framed}
+  <SettingsSection title={$t('Generators')} summary={genSummary} name={group} {open}>
+    {@render body()}
+  </SettingsSection>
+{:else}
+  <div class="panel-body">
+    {@render body()}
+  </div>
+{/if}
 
 <style>
+  /* Unframed: no SettingsSection card, so the panel supplies its own block spacing. */
+  .panel-body {
+    padding-block: var(--space-1) 0;
+  }
+
   .generator-settings {
     display: flex;
     flex-direction: column;

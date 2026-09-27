@@ -75,6 +75,8 @@
 
   /* Touch target minimum sizes (WCAG AA) */
   --touch-target-min: 44px;
+  /* The shell's top bar (Books brand bar and the in-book bar). */
+  --bar-height: 52px;
 
   /* Screen reader spacing */
   --sr-only-clip: rect(0, 0, 0, 0);

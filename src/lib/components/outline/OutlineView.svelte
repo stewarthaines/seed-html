@@ -12,6 +12,7 @@
   import type { SpineService } from '../../services/spine/spine.service.js';
   import { OutlineGenerator } from '../../outline/outline-generator.js';
   import { primaryLanguage } from '../../epub/opf-utils.js';
+  import { manifestHrefToPath } from '../../epub/path-utils.js';
   import { ensureGeneratedNav } from '../../outline/nav-coherence.js';
   import { TransformEngine } from '$lib/infrastructure/transform-engine';
   import { SpineTransformPipeline } from '$lib/transform/spine-transform-pipeline';
@@ -408,10 +409,7 @@
       if (!navItem) return;
 
       const basePath = workspace.pathInfo.basePath;
-      const path =
-        !basePath || navItem.href.startsWith(basePath + '/')
-          ? navItem.href
-          : `${basePath}/${navItem.href}`;
+      const path = manifestHrefToPath(basePath, navItem.href);
 
       const buffer = await workspaceService.readFile(workspace.id, path);
       let xhtml = new TextDecoder().decode(buffer);
@@ -419,9 +417,12 @@
         // Resolve refs against this EPUB's actual OPF directory (not the default "OEBPS/").
         blobURLManager.setBasePath(basePath);
         blobURLManager.setActiveWorkspace(workspace.id);
+        blobURLManager.setDocumentPath(path);
         xhtml = await blobURLManager.processXHTMLForPreview(xhtml);
       } catch {
         // Asset rewriting failed — fall back to the raw nav markup.
+      } finally {
+        blobURLManager.setDocumentPath(null);
       }
       previewUpdate?.({ xhtml });
     } catch (e) {

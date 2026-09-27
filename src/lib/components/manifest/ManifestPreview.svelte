@@ -1,7 +1,9 @@
 <script lang="ts">
   import { onDestroy, untrack } from 'svelte';
+  import { manifestHrefToPath } from '../../epub/path-utils.js';
   import { t } from '../../i18n';
   import PaneHeader from '../layout/PaneHeader.svelte';
+  import { navigationStore } from '../../navigation/navigation-store';
   import { previewKeyFor } from '../../manifest/signatures.js';
   import type { ManifestItem, SourceItem, ContentPreview } from '../../manifest/types';
   import type {
@@ -524,9 +526,7 @@
         // read from its new location rather than the stale selectedItem prop.
         const manifestItem = (liveItem ?? selectedItem) as ManifestItem;
         // For now, create a simplified preview since we don't have getContentPreview in WorkspaceService yet
-        const filePath = manifestItem.href.startsWith(workspace.pathInfo.basePath + '/')
-          ? manifestItem.href
-          : `${workspace.pathInfo.basePath}/${manifestItem.href}`;
+        const filePath = manifestHrefToPath(workspace.pathInfo.basePath, manifestItem.href);
 
         try {
           let content;
@@ -777,9 +777,7 @@
         const manifestItem = (liveItem ?? selectedItem) as ManifestItem;
 
         // Resolve file path using same logic as loadContentPreview
-        const filePath = manifestItem.href.startsWith(workspace.pathInfo.basePath + '/')
-          ? manifestItem.href
-          : `${workspace.pathInfo.basePath}/${manifestItem.href}`;
+        const filePath = manifestHrefToPath(workspace.pathInfo.basePath, manifestItem.href);
 
         try {
           content = await workspaceService.readFile(workspace.id, filePath);
@@ -970,14 +968,24 @@
             </div>
 
             {#if isImageItem}
-              <label class="edit-checkbox">
-                <input
-                  type="checkbox"
-                  checked={editProperties.includes('cover-image')}
-                  onchange={e => setCoverImage(e.currentTarget.checked)}
-                />
-                {$t('Cover image')}
-              </label>
+              {#if editProperties.includes('cover-image')}
+                <!-- The cover has one home: its screen. -->
+                <p class="cover-note">
+                  {$t('Cover')} ·
+                  <button
+                    type="button"
+                    class="btn btn-link"
+                    onclick={() => navigationStore.navigateTo('cover')}
+                  >
+                    {$t('Change in Cover')}
+                  </button>
+                </p>
+              {:else}
+                <label class="edit-checkbox">
+                  <input type="checkbox" checked={false} onchange={() => setCoverImage(true)} />
+                  {$t('Use as the cover')}
+                </label>
+              {/if}
             {/if}
           {/if}
 
@@ -1459,5 +1467,10 @@
     padding: 1rem;
     font-style: italic;
     color: var(--color-text-secondary);
+  }
+  .cover-note {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
   }
 </style>

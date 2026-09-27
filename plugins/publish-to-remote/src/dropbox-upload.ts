@@ -31,12 +31,37 @@ async function getValidToken(config: DropboxRemoteConfig): Promise<string> {
   return accessToken;
 }
 
+
+/**
+ * A 401 means the token is stale or the app lacks a scope. Refresh once and
+ * let the caller retry; a second 401 is an error (an unlimited retry once
+ * looped forever on a scope the app never had — files.content.read).
+ */
+async function refreshOnce(
+  config: DropboxRemoteConfig,
+  retried: boolean,
+): Promise<boolean> {
+  if (retried) return false;
+  const newToken = await refreshDropboxToken(
+    config.appKey,
+    config.refreshToken,
+  );
+  config.accessToken = newToken.accessToken;
+  config.tokenExpiry = newToken.tokenExpiry;
+  return true;
+}
+
+/** The message shown when Dropbox still refuses after a fresh token. */
+export const DROPBOX_REAUTH_MESSAGE =
+  'Dropbox refused the request. Reconnect the destination to grant the app its permissions.';
+
 export async function uploadToDropbox(
   config: DropboxRemoteConfig,
   objectKey: string,
   blob: Blob,
   contentType = 'application/epub+zip',
   onProgress?: (percent: number) => void,
+  retried = false,
 ): Promise<UploadResult> {
   try {
     const token = await getValidToken(config);
@@ -58,13 +83,17 @@ export async function uploadToDropbox(
     );
 
     if (response.status === 401) {
-      const newToken = await refreshDropboxToken(
-        config.appKey,
-        config.refreshToken,
-      );
-      config.accessToken = newToken.accessToken;
-      config.tokenExpiry = newToken.tokenExpiry;
-      return uploadToDropbox(config, objectKey, blob, contentType, onProgress);
+      if (await refreshOnce(config, retried)) {
+        return uploadToDropbox(
+          config,
+          objectKey,
+          blob,
+          contentType,
+          onProgress,
+          true,
+        );
+      }
+      return { success: false, error: DROPBOX_REAUTH_MESSAGE };
     }
 
     if (!response.ok) {
@@ -84,6 +113,7 @@ export async function uploadToDropbox(
 
 export async function listDropboxFiles(
   config: DropboxRemoteConfig,
+  retried = false,
 ): Promise<ListResult> {
   try {
     const token = await getValidToken(config);
@@ -101,13 +131,10 @@ export async function listDropboxFiles(
     );
 
     if (listResponse.status === 401) {
-      const newToken = await refreshDropboxToken(
-        config.appKey,
-        config.refreshToken,
-      );
-      config.accessToken = newToken.accessToken;
-      config.tokenExpiry = newToken.tokenExpiry;
-      return listDropboxFiles(config);
+      if (await refreshOnce(config, retried)) {
+        return listDropboxFiles(config, true);
+      }
+      return { objects: [], error: DROPBOX_REAUTH_MESSAGE };
     }
 
     if (!listResponse.ok) {
@@ -121,15 +148,15 @@ export async function listDropboxFiles(
     const listData = await listResponse.json();
     const entries = listData.entries || [];
 
+    // No shared-link lookups here: a listing is one call. Links are
+    // resolved for the files a catalog write needs (resolveDropboxLinks).
     const objects: S3Object[] = [];
     for (const entry of entries) {
       if (entry['.tag'] === 'file') {
-        const fileId = await getOrCreateSharedLink(config, entry.path_display);
         objects.push({
           key: entry.name,
           size: entry.size,
           lastModified: entry.server_modified,
-          fileId,
         });
       }
     }
@@ -140,9 +167,49 @@ export async function listDropboxFiles(
   }
 }
 
+/**
+ * Fetch a file's bytes (an EPUB to import, or a catalog to read back). Null
+ * when the path is not there; throws on other failures.
+ */
+export async function downloadDropboxFile(
+  config: DropboxRemoteConfig,
+  objectKey: string,
+  retried = false,
+): Promise<Blob | null> {
+  const token = await getValidToken(config);
+  const path = config.folderId
+    ? `${config.folderId}/${objectKey}`
+    : `/${objectKey}`;
+  const response = await fetch(
+    'https://content.dropboxapi.com/2/files/download',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Dropbox-API-Arg': JSON.stringify({ path }),
+      },
+    },
+  );
+  if (response.status === 401) {
+    if (await refreshOnce(config, retried)) {
+      return downloadDropboxFile(config, objectKey, true);
+    }
+    throw new Error(DROPBOX_REAUTH_MESSAGE);
+  }
+  if (response.status === 409) return null; // path/not_found
+  if (!response.ok) {
+    const error = await response.text().catch(() => '');
+    throw new Error(
+      `Download failed: ${response.status} ${response.statusText}${error ? '\n' + error : ''}`,
+    );
+  }
+  return response.blob();
+}
+
 export async function deleteDropboxFile(
   config: DropboxRemoteConfig,
   objectKey: string,
+  retried = false,
 ): Promise<DeleteResult> {
   try {
     const token = await getValidToken(config);
@@ -163,13 +230,10 @@ export async function deleteDropboxFile(
     );
 
     if (response.status === 401) {
-      const newToken = await refreshDropboxToken(
-        config.appKey,
-        config.refreshToken,
-      );
-      config.accessToken = newToken.accessToken;
-      config.tokenExpiry = newToken.tokenExpiry;
-      return deleteDropboxFile(config, objectKey);
+      if (await refreshOnce(config, retried)) {
+        return deleteDropboxFile(config, objectKey, true);
+      }
+      return { success: false, error: DROPBOX_REAUTH_MESSAGE };
     }
 
     if (response.status === 200 || response.status === 404) {
@@ -201,7 +265,35 @@ export function getDropboxPublicUrl(
   return fileId.includes('?') ? fileId + '&dl=1' : fileId + '?dl=1';
 }
 
-async function getOrCreateSharedLink(
+/** The folder-relative object path Dropbox wants. */
+function dropboxPath(config: DropboxRemoteConfig, objectKey: string): string {
+  return config.folderId ? `${config.folderId}/${objectKey}` : `/${objectKey}`;
+}
+
+/**
+ * Fill in the public link (`fileId`) of each listed object whose key is in
+ * `keys`, one lookup per file, leaving the others as they are. Called just
+ * before a catalog is written: those are the only links a feed needs.
+ */
+export async function resolveDropboxLinks(
+  config: DropboxRemoteConfig,
+  objects: S3Object[],
+  keys: Iterable<string>,
+): Promise<S3Object[]> {
+  const wanted = new Set(keys);
+  const out: S3Object[] = [];
+  for (const o of objects) {
+    if (!wanted.has(o.key) || o.fileId) {
+      out.push(o);
+      continue;
+    }
+    const fileId = await getOrCreateSharedLink(config, dropboxPath(config, o.key));
+    out.push(fileId ? { ...o, fileId } : o);
+  }
+  return out;
+}
+
+export async function getOrCreateSharedLink(
   config: DropboxRemoteConfig,
   filePath: string,
 ): Promise<string> {

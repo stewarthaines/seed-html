@@ -179,7 +179,9 @@ describe('navigateTo', () => {
     expect(layoutMock.setSidebarSection).toHaveBeenCalledWith('publish');
   });
 
-  it('dispatches clear-spine-selection when leaving the spine view', async () => {
+  it('leaves the chapter selection alone when leaving the spine view', async () => {
+    // The Write tab reopens on the chapter you left; the shell has no chapter
+    // list elsewhere to re-select from (process/APP_MAKEOVER_STATUS.md, phase 4).
     const store = await freshStore();
     await store.navigateTo('spine');
     const listener = vi.fn();
@@ -187,7 +189,7 @@ describe('navigateTo', () => {
 
     await store.navigateTo('about');
 
-    expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener).not.toHaveBeenCalled();
     window.removeEventListener('clear-spine-selection', listener);
   });
 

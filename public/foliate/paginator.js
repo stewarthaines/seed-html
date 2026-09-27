@@ -1005,7 +1005,10 @@ export class Paginator extends HTMLElement {
                 onLoad?.({ doc, index })
             }
             const beforeRender = this.#beforeRender.bind(this)
-            await view.load(src, afterLoad, beforeRender)
+            // READ.html patch: a section the host serves over http navigates
+            // to its served URL, so the document has a real address; the
+            // blob: URL still holds the same markup. VENDORED.md #8.
+            await view.load(this.sections[index]?.servedURL ?? src, afterLoad, beforeRender)
             this.dispatchEvent(new CustomEvent('create-overlayer', {
                 detail: {
                     doc: view.document, index,
@@ -1129,15 +1132,16 @@ export class Paginator extends HTMLElement {
         } else $style.textContent = styles
 
         // NOTE: needs `requestAnimationFrame` in Chromium
-        // [SEED patch] guard: the rAF callback can fire after destroy() nulled
-        // #view (the wrapper Window survives document.open() rewrites).
+        // READ.html patch: guard — the rAF callback can fire after destroy()
+        // nulled #view (the host Window outlives the view).
         requestAnimationFrame(() => {
             if (this.#view) this.#background.style.background = getBackground(this.#view.document)
         })
 
         // needed because the resize observer doesn't work in Firefox
-        // [SEED patch] guard the fonts.ready continuation too — it resolves
-        // after destroy() when the view is torn down while fonts still load.
+        // READ.html patch: guard the fonts.ready continuation too — it
+        // resolves after destroy() when the view is torn down while the
+        // section's fonts are still loading.
         this.#view?.document?.fonts?.ready?.then(() => this.#view?.expand())
     }
     focusView() {

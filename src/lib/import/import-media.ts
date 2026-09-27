@@ -14,6 +14,7 @@
 import type { WorkspaceService, WorkspaceState } from '../services/workspace/workspace.service.js';
 import { ManifestUtils } from '../manifest/utils.js';
 import { generateEPUBPath, ensureUniqueHref } from '../epub/opf-utils.js';
+import { manifestHrefToPath } from '../epub/path-utils.js';
 import { manifestCollision } from './collision.js';
 
 /**
@@ -35,7 +36,7 @@ const isTextLike = (mediaType: string): boolean =>
   mediaType.startsWith('text/') || mediaType.includes('json') || mediaType.includes('xml');
 
 const resolvePath = (workspace: WorkspaceState, href: string): string =>
-  workspace.pathInfo.basePath ? `${workspace.pathInfo.basePath}/${href}` : href;
+  manifestHrefToPath(workspace.pathInfo.basePath, href);
 
 const bytesEqual = (a: Uint8Array, b: Uint8Array): boolean => {
   if (a.byteLength !== b.byteLength) return false;

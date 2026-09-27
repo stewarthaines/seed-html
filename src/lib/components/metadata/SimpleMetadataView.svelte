@@ -1,19 +1,12 @@
 <script lang="ts">
   import { t } from '../../i18n';
-  import {
-    titleHue,
-    generateCoverSvg,
-    coverBackgroundColor,
-    coverTextColor,
-    type CoverMode,
-  } from '../../epub/cover-generator';
-  import HueSelector from '../HueSelector.svelte';
-  import { showToast } from '../../stores/toast.svelte.js';
+  import { titleHue, generateCoverSvg, type CoverMode } from '../../epub/cover-generator';
   import type {
     WorkspaceState,
     WorkspaceService,
   } from '../../services/workspace/workspace.service.js';
   import type { EPUBMetadata } from '../../epub/opf-utils.js';
+  import { manifestHrefToPath } from '../../epub/path-utils.js';
 
   interface Props {
     workspace: WorkspaceState;
@@ -21,8 +14,10 @@
     readOnly?: boolean;
     workspaceService?: WorkspaceService;
     /** Persisted cover hue/mode + the title/author the cover was last generated with —
-        seeds the controls and drives the live before/after preview. */
+        drives the before/after preview when the title or author has changed. The
+        generator's controls live on the Cover screen. */
     coverSettings?: { hue?: number; mode?: CoverMode; title?: string; author?: string };
+    /** Kept for the caller's sake; the Cover screen generates covers now. */
     onGenerateCover?: (hue?: number, mode?: CoverMode) => Promise<void>;
     // When embedded under an external tab strip (advanced mode), hide the built-in
     // "Metadata Summary" header so it isn't doubled up.
@@ -32,15 +27,12 @@
   let {
     workspace,
     focusedField = null,
-    readOnly = false,
     workspaceService,
     coverSettings,
-    onGenerateCover,
     showHeader = true,
   }: Props = $props();
 
   let metadata = $derived(workspace?.opf?.metadata);
-  let generating = $state(false);
 
   const currentTitle = $derived(metadata?.title ?? '');
   const currentAuthor = $derived(metadata?.creator?.[0]?.name ?? '');
@@ -53,29 +45,17 @@
   const storedTitle = $derived(coverSettings?.title ?? null);
   const storedAuthor = $derived(coverSettings?.author ?? null);
 
-  // Unsaved in-editor tweaks. Null = "use the stored value". Cleared on commit
-  // (and via Reset), so the controls can diverge from settings until committed.
-  let draftHue = $state<number | null>(null);
-  let draftMode = $state<CoverMode | null>(null);
-
-  // The hue/mode the controls and preview currently reflect. Once a hue is stored,
-  // the title no longer feeds the colour — fixing the "jumps with the title" issue.
+  // Once a hue is stored, the title no longer feeds the colour.
   const titleSeedHue = $derived(titleHue(currentTitle));
-  const effectiveHue = $derived(draftHue ?? storedHue ?? titleSeedHue);
-  const effectiveMode: CoverMode = $derived(draftMode ?? storedMode);
+  const effectiveHue = $derived(storedHue ?? titleSeedHue);
+  const effectiveMode: CoverMode = $derived(storedMode);
 
-  // An unsaved hue/mode tweak — drives the Reset button (Reset can't undo a title edit).
-  const hasDraft = $derived(
-    effectiveHue !== (storedHue ?? titleSeedHue) || effectiveMode !== storedMode
-  );
-  // The title/author have drifted from the saved cover (only knowable once persisted).
-  const textDrift = $derived(
+  // The title/author have drifted from the saved cover (only knowable once
+  // persisted) — drives the before/after in the preview.
+  const isDirty = $derived(
     (storedTitle !== null && currentTitle !== storedTitle) ||
       (storedAuthor !== null && currentAuthor !== storedAuthor)
   );
-  // Anything that makes the proposed cover differ from the stored one — drives the
-  // live before/after in the preview.
-  const isDirty = $derived(hasDraft || textDrift);
 
   // Whether the project already has a cover-image — drives "Update" vs "Generate".
   const hasCover = $derived(
@@ -88,11 +68,6 @@
     const svg = generateCoverSvg(currentTitle, currentAuthor, effectiveHue, effectiveMode);
     return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
   });
-
-  function resetCover() {
-    draftHue = null;
-    draftMode = null;
-  }
 
   // The current cover-image, loaded from storage as a blob URL. Re-runs whenever the
   // workspace changes (e.g. after Generate replaces appState.workspace) and whenever
@@ -112,7 +87,7 @@
 
     let stale = false;
     let url: string | null = null;
-    const fullPath = ws.pathInfo.basePath ? `${ws.pathInfo.basePath}/${item.href}` : item.href;
+    const fullPath = manifestHrefToPath(ws.pathInfo.basePath, item.href);
     svc
       .readFile(ws.id, fullPath)
       .then(buffer => {
@@ -130,24 +105,6 @@
       coverUrl = null;
     };
   });
-
-  // Save immediately — the before/after lives in the preview, so there's no confirm
-  // step. The proposed rendering the user sees is exactly what gets written.
-  async function handleGenerate() {
-    if (generating || !onGenerateCover) return;
-    const wasUpdate = hasCover;
-    generating = true;
-    try {
-      await onGenerateCover(effectiveHue, effectiveMode);
-      // The choice is now persisted — settle the controls on the stored values and
-      // force the stored-cover blob to reload (the file was overwritten in place).
-      resetCover();
-      coverVersion++;
-      showToast(wasUpdate ? $t('Cover image updated') : $t('Cover image generated'), 'success');
-    } finally {
-      generating = false;
-    }
-  }
 </script>
 
 <div class="simple-metadata-view">
@@ -218,62 +175,6 @@
             alt={$t('Current cover image')}
             class="cover-image"
           />
-        </div>
-      {/if}
-
-      {#if onGenerateCover && !readOnly}
-        <div class="cover-action">
-          <div class="cover-theme" role="group" aria-label={$t('Cover text style')}>
-            {#each ['dark', 'light'] as const as m (m)}
-              <button
-                type="button"
-                class="cover-theme-option"
-                class:active={effectiveMode === m}
-                style="background: {coverBackgroundColor(effectiveHue, m)}; color: {coverTextColor(
-                  m
-                )}"
-                aria-pressed={effectiveMode === m}
-                title={m === 'dark'
-                  ? $t('Light text on a dark cover')
-                  : $t('Dark text on a light cover')}
-                onclick={() => (draftMode = m)}
-                disabled={generating}
-              >
-                Aa
-              </button>
-            {/each}
-          </div>
-          <HueSelector
-            value={effectiveHue}
-            disabled={generating}
-            showSwatch={false}
-            mode={effectiveMode}
-            onInput={h => (draftHue = h)}
-          />
-          <div class="cover-buttons">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              disabled={generating}
-              onclick={handleGenerate}
-            >
-              {#if generating}
-                {hasCover ? $t('Updating…') : $t('Generating…')}
-              {:else}
-                {hasCover ? $t('Update cover image') : $t('Generate cover image')}
-              {/if}
-            </button>
-            {#if hasDraft}
-              <button type="button" class="btn btn-link" disabled={generating} onclick={resetCover}>
-                {$t('Reset')}
-              </button>
-            {/if}
-          </div>
-          <p class="cover-hint">
-            {hasCover
-              ? $t('Updates the cover with the colour and theme above.')
-              : $t('Creates a cover with the colour and theme above.')}
-          </p>
         </div>
       {/if}
     </div>
@@ -417,57 +318,7 @@
     max-height: 32vh;
   }
 
-  .cover-action {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    margin-block-start: var(--space-5);
-    padding-block-start: var(--space-4);
-    border-block-start: 1px solid var(--color-border-default);
-  }
-
-  .cover-buttons {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-  }
-
   /* Light/dark toggle: two "Aa" chips previewing each theme at the current hue. */
-  .cover-theme {
-    display: flex;
-    gap: var(--space-2);
-  }
-
-  .cover-theme-option {
-    inline-size: 2.5rem;
-    block-size: 2rem;
-    border: 2px solid transparent;
-    border-radius: var(--radius-sm);
-    font-family: Georgia, 'Times New Roman', serif;
-    font-size: var(--text-base);
-    cursor: pointer;
-    transition: border-color var(--duration-fast) ease;
-  }
-
-  .cover-theme-option.active {
-    border-color: var(--color-interactive-primary);
-  }
-
-  .cover-theme-option:focus-visible {
-    outline: 2px solid var(--color-focus);
-    outline-offset: 2px;
-  }
-
-  .cover-theme-option:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
-
-  .cover-hint {
-    margin: 0;
-    font-size: var(--text-sm);
-    color: var(--color-text-secondary);
-  }
 
   .no-content {
     display: flex;

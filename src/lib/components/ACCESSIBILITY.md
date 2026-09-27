@@ -7,7 +7,7 @@ This guide documents accessibility patterns for SEED.html components, leveraging
 1. **Use Semantic HTML** - Let the browser do the heavy lifting
 2. **Trust Svelte's A11y Warnings** - The compiler catches common issues
 3. **Keep It Simple** - Avoid over-engineering ARIA
-4. **Follow Existing Patterns** - Learn from ThemeToggle and Sidebar components
+4. **Follow Existing Patterns** - Learn from ThemeToggle and the shell bars (`TopBar`, `BrandBar`)
 
 ## Patterns by Example
 
@@ -35,29 +35,20 @@ This guide documents accessibility patterns for SEED.html components, leveraging
 
 ### Navigation Accessibility
 
-**Pattern from Sidebar.svelte (View-Based SPA Navigation):**
+**Pattern from TopBar.svelte (View-Based SPA Navigation):**
 
 ```svelte
-<script>
-  import { layoutStore } from '$lib/stores/layout';
-
-  $: activeSection = $layoutStore.sidebar.activeSection;
-
-  const setSidebarSection = sectionId => {
-    layoutStore.setSidebarSection(sectionId);
-  };
-</script>
-
-<nav class="sidebar-nav" aria-label="Main navigation">
-  {#each SIDEBAR_SECTIONS as section}
+<nav class="tabs" aria-label={$t('Book')}>
+  {#each tabs as tab (tab.id)}
     <button
-      class="sidebar-section"
-      class:active={activeSection === section.id}
-      on:click={() => setSidebarSection(section.id)}
-      aria-current={activeSection === section.id ? 'page' : undefined}
-      title={section.label}
+      type="button"
+      class="tab"
+      class:active={activeTab === tab.id}
+      aria-current={activeTab === tab.id ? 'page' : undefined}
+      onclick={() => onNavigate(tab.view)}
+      data-testid={`nav-${tab.id}`}
     >
-      {section.label}
+      {tab.label}
     </button>
   {/each}
 </nav>

@@ -42,7 +42,7 @@ SEED.html is a browser-based EPUB editor built with Svelte 5 and TypeScript. It 
 ```mermaid
 graph TB
     subgraph "Layer 1: Presentation (Svelte Components)"
-        UI1[WorkspaceView]
+        UI1[BooksView]
         UI2[ManifestTable]
         UI3[MetadataEditor]
         UI4[SpineSidebar]

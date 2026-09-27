@@ -15,6 +15,7 @@
   import { onMount, untrack } from 'svelte';
   import { writable } from 'svelte/store';
   import type { TransformError } from '$lib/types/spine-editor.js';
+  import { BOOK_FRAME_PATH, parseBookRoute, serveDocument } from '$lib/book-server/book-server.js';
   import { t } from '$lib/i18n';
   import { snippetAroundClick } from './preview-click.js';
   import { isHttpContext } from '$lib/reader/open-in-reader.js';
@@ -74,6 +75,7 @@
     printSettings = undefined,
     onGeneratePdf = undefined,
     previewHead = '',
+    baseUrl = null,
     extensionPreviewHead = '',
     previewAutoUpdate = DEFAULT_PREVIEW.autoUpdate,
     previewIncludeHead = DEFAULT_PREVIEW.includeHead,
@@ -136,6 +138,10 @@
      *  injected into the preview head for the preview types whose `includeHead`
      *  is on. Authoring-time only — never reaches the packaged EPUB. */
     previewHead?: string;
+    /** Where the chapter is served from (process/PREVIEW_SERVED_BOOK.md); a
+     *  `<base href>` so references a script builds at runtime resolve to the
+     *  book's files. Null over file:, where nothing is served. */
+    baseUrl?: string | null;
     /** Preview-head fragments from installed extensions (process/PREVIEW_HEAD_EXTENSIONS.md).
      *  Injected into EVERY preview regardless of `includeHead` (fragments self-guard);
      *  authoring-time only, never packaged. */
@@ -201,6 +207,9 @@
   let readSafetyTimer: ReturnType<typeof setTimeout> | undefined;
   /** Blob URL of the chapter section handed to foliate; revoked on replacement. */
   let readSectionUrl: string | null = null;
+  // Releases the rendered chapter registered under its served URL for the
+  // reader engine's section frame (book-server.ts `serveDocument`).
+  let releaseReadDocument: (() => void) | null = null;
   // Options-bar enablement (grounded layout: the reader controls hold their
   // positions and disable in place rather than appear/disappear). Columns
   // applies only while paginated; the pager needs more than one content page.
@@ -776,6 +785,35 @@
     return content.replace('</head>', `${head}\n</head>`);
   }
 
+  // Where the frame starts. With a served book the frame first navigates to
+  // an empty served document, so that the chapter written into it is served
+  // too (Chromium does not treat an about:blank frame as a controlled
+  // client; a frame that began at a served URL stays controlled through
+  // document.write). Without one, about:blank as before.
+  const frameSrc = $derived(baseUrl ? new URL(BOOK_FRAME_PATH, baseUrl).href : undefined);
+
+  // Whether the served starting document has committed. Writing before it
+  // has would abort that navigation (document.open cancels a pending
+  // navigation) and leave the frame uncontrolled; a write before this is
+  // skipped and the frame's load re-enters the render.
+  let frameLoaded = $state(false);
+  $effect(() => {
+    void previewIframe; // a fresh iframe starts over
+    frameLoaded = false;
+  });
+
+  /**
+   * The document's base URL, first in `<head>` so everything after it
+   * resolves against it. Static references were already rewritten to blob
+   * URLs (absolute, unaffected); this is for what scripts build later. A
+   * document that carries its own `<base>` keeps it.
+   */
+  function withBase(content: string): string {
+    if (!baseUrl || /<base\s/i.test(content)) return content;
+    const escaped = baseUrl.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    return content.replace(/<head(\s[^>]*)?>/i, match => `${match}<base href="${escaped}" />`);
+  }
+
   /**
    * Pause any playing media before a same-document rewrite. document.open()
    * is not a navigation, so the old document never unloads — and a PLAYING
@@ -897,6 +935,7 @@
    */
   function updatePreviewContent(content: string): boolean {
     if (!previewIframe || !content) return false;
+    if (frameSrc && !frameLoaded) return false;
 
     try {
       const iframeDoc = previewIframe.contentDocument;
@@ -977,7 +1016,7 @@
         ? writePagedDoc(content)
         : usesFoliate(device)
           ? writeFoliateDoc(content)
-          : updatePreviewContent(withPreviewHead(content));
+          : updatePreviewContent(withPreviewHead(withBase(content)));
     // A skipped write (iframe not ready) must stay eligible for re-render:
     // recording it would satisfy the auto-update effect and freeze a blank
     // frame with no error anywhere. The stamp heal re-enters here on the
@@ -1212,9 +1251,20 @@
     readSectionUrl = URL.createObjectURL(
       new Blob([sectionContent], { type: 'application/xhtml+xml' })
     );
+    // With a served book the section frame navigates to the chapter's served
+    // URL, which this pane answers with the same rendered markup (as text/html,
+    // the parsing srcdoc gave it), so the chapter has a real address for what
+    // its scripts build at runtime. Without one the engine loads srcdoc.
+    releaseReadDocument?.();
+    releaseReadDocument = null;
+    const served = baseUrl ? parseBookRoute(new URL(baseUrl).pathname) : null;
+    if (served) {
+      releaseReadDocument = serveDocument(served.workspaceId, served.path, sectionContent);
+    }
 
     const doc = buildReadDocument({
       sectionUrl: readSectionUrl,
+      servedUrl: served ? baseUrl : null,
       sectionSize: sectionContent.length,
       flow: readFlow,
       // Device presets: Auto — the device width decides column count honestly.
@@ -1726,6 +1776,9 @@
   function handleIframeLoad(): void {
     if (previewIframe?.contentDocument) {
       const iframeDoc = previewIframe.contentDocument;
+      // The served starting document has committed (about:blank never
+      // arrives here with a URL of its own); writes may proceed.
+      if (frameSrc && iframeDoc.URL !== 'about:blank') frameLoaded = true;
 
       // Heal a clobbered write: a loaded document without the render stamp is
       // not one this component wrote — the fresh iframe's pending about:blank
@@ -1790,15 +1843,12 @@
 
       // Restore scroll position if we have pending data
       if (pendingScrollRestore) {
-        // Use requestAnimationFrame to ensure DOM is fully ready
+        // Use requestAnimationFrame to ensure DOM is fully ready. Hold the
+        // data locally: a rewrite in the meantime clears the shared slot.
+        const restore = pendingScrollRestore;
+        pendingScrollRestore = null;
         requestAnimationFrame(() => {
-          restoreScrollPosition(
-            iframeDoc,
-            pendingScrollRestore!.anchor,
-            pendingScrollRestore!.fallbackScrollTop
-          );
-          // Clear the pending data
-          pendingScrollRestore = null;
+          restoreScrollPosition(iframeDoc, restore.anchor, restore.fallbackScrollTop);
         });
       }
 
@@ -1879,6 +1929,7 @@
       clearTimeout(readSafetyTimer);
       clearTimeout(renderCheckTimer);
       if (readSectionUrl) URL.revokeObjectURL(readSectionUrl);
+      releaseReadDocument?.();
     };
   });
 
@@ -2015,9 +2066,10 @@
                    centers the scaled box; transforms don't affect layout, so
                    flex-centering can't). Undefined bindings fall back to the
                    100%×100% CSS for reflowable/fill modes. -->
-              {#key device}
+              {#key `${device}|${frameSrc ?? ''}`}
                 <iframe
                   bind:this={previewIframe}
+                  src={frameSrc}
                   class="preview-iframe"
                   class:fxl-page={fxlActive}
                   style:width={fxlGeometry ? `${fxlPage.width}px` : undefined}

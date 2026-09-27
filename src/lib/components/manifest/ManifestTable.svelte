@@ -12,6 +12,7 @@
 
   let {
     manifestItems = [],
+    spineIds = [],
     sourceItems = [],
     unmanifestedItems = [],
     seedHtmlPresent = false,
@@ -28,6 +29,8 @@
     onFileUpload,
   }: {
     manifestItems?: ManifestItem[];
+    /** The spine's idrefs in reading order, for the "Used as" column. */
+    spineIds?: string[];
     sourceItems?: SourceItem[];
     /** Workspace files in neither the manifest nor SOURCE/ (paths are full
      *  workspace paths). Rendered in their own "Not in manifest" group. */
@@ -52,6 +55,19 @@
     onItemDelete?: (detail: { itemId: string }) => void;
     onFileUpload?: (detail: { files: FileList }) => void;
   } = $props();
+
+  // What a manifest item is used as, in the book's own words: the cover, the
+  // contents, chapter N, a stylesheet every chapter loads; anything else shows
+  // its EPUB properties, or nothing.
+  const usedAs = (item: ManifestItem): string | null => {
+    const props = item.properties ?? [];
+    if (props.includes('cover-image')) return $t('Cover');
+    if (props.includes('nav')) return $t('Contents');
+    const chapter = spineIds.indexOf(item.id);
+    if (chapter >= 0) return $t('Chapter {n}', { n: chapter + 1 });
+    if (item.mediaType === 'text/css') return $t('Every chapter');
+    return null;
+  };
 
   // Filter state
   let filterText = $state('');
@@ -495,7 +511,7 @@
           onclick={handleLoadFileClick}
           disabled={loading}
         >
-          {$t('Load File')}
+          {$t('Add files…')}
         </button>
       {/if}
       <!-- Hidden file input -->
@@ -548,7 +564,7 @@
                 {getSortIcon('size')}
               </button>
             </th>
-            <th scope="col">{$t('Properties')}</th>
+            <th scope="col">{$t('Used as')}</th>
           </tr>
         </thead>
         <tbody>
@@ -610,7 +626,9 @@
                     {formatFileSize(item.size)}
                   </td>
                   <td class="properties-cell">
-                    {#if itemType === 'manifest' && (item as ManifestItem).properties && ((item as ManifestItem).properties?.length ?? 0) > 0}
+                    {#if itemType === 'manifest' && usedAs(item as ManifestItem)}
+                      <span class="used-as">{usedAs(item as ManifestItem)}</span>
+                    {:else if itemType === 'manifest' && (item as ManifestItem).properties && ((item as ManifestItem).properties?.length ?? 0) > 0}
                       <div class="properties-list">
                         {#each (item as ManifestItem).properties || [] as property}
                           <span class="property-tag">{property}</span>
@@ -879,6 +897,11 @@
   .size-cell {
     text-align: right;
     color: var(--color-text-secondary);
+  }
+
+  .used-as {
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
   }
 
   .properties-list {

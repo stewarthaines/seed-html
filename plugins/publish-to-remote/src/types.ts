@@ -8,7 +8,11 @@ export type InitMessage = {
   /** OPFS path segments to the same directory; the plugin walks these when
       the handle is absent (same origin, same OPFS root). */
   opfsDirPath?: string[];
+  /** Which surface this frame shows (process/PUBLISH_REWORK.md). Absent → send. */
+  surface?: PluginSurface;
 };
+
+export type PluginSurface = 'send' | 'published' | 'destinations';
 
 // main → plugin: ambient host environment the plugin inherits and applies to its
 // own document root (theme, locale, direction). Sent on handshake and re-sent on
@@ -24,6 +28,9 @@ export type ContextMessage = {
   // The open project's dc:identifier (urn:uuid); used to outline the matching
   // published rows. Absent → no row highlighted.
   activeIdentifier?: string;
+  // dc:identifiers of every book on this device, so a remote EPUB can be told
+  // apart as "known here" or importable. Absent → nothing is known here.
+  knownIdentifiers?: string[];
 };
 
 // plugin → main: ask the host to open the editor resource at `path` (e.g. a
@@ -43,8 +50,27 @@ export type ReadEpubMessage = {
   url?: string;
 };
 
+// plugin → main: hand the host the bytes of an EPUB fetched from a
+// destination; the host imports it as a new book through its normal path.
+export type ImportEpubMessage = {
+  type: 'import-epub';
+  filename: string;
+  bytes: ArrayBuffer;
+};
+
+// plugin → main: ask the host to show the Published page, or Settings opened
+// on the Destinations section.
+export type OpenMessage = {
+  type: 'open';
+  target: 'published' | 'destinations';
+};
+
 export type MainToPlugin = InitMessage | ContextMessage;
-export type PluginToMain = NavigateMessage | ReadEpubMessage;
+export type PluginToMain =
+  | NavigateMessage
+  | ReadEpubMessage
+  | ImportEpubMessage
+  | OpenMessage;
 
 // Remote Configuration and Objects
 
@@ -87,6 +113,9 @@ export interface DropboxRemoteConfig {
   accessToken: string;
   refreshToken: string;
   tokenExpiry: number;
+  /** OPDS catalog filename. Unset → catalog.json (OPDS 2.0), falling back to
+   * an existing catalog.xml (OPDS 1.2). */
+  catalogFilename?: string;
 }
 
 export interface WebDAVRemoteConfig {
@@ -137,6 +166,20 @@ export type RemoteConfig =
 export interface RemotesStore {
   remotes: RemoteConfig[];
   activeRemoteId: string | null;
+}
+
+/** The remote types that can host an OPDS catalog (Drive serves feeds as
+ *  HTML; a reader's filesystem has no feed). */
+export type CatalogRemoteConfig =
+  | S3RemoteConfig
+  | DropboxRemoteConfig
+  | WebDAVRemoteConfig;
+
+/** A catalog entry as read back from a destination's feed. */
+export interface CatalogEntry {
+  href: string;
+  identifier?: string;
+  title?: string;
 }
 
 export interface S3Credentials {

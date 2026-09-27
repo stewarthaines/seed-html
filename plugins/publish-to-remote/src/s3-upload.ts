@@ -193,6 +193,24 @@ export async function uploadText(
 }
 
 /** Fetch an object's text via a signed GET. Returns null if it's missing. */
+/** Fetch an object's bytes (an EPUB to import). Null when it is not there. */
+export async function getObjectBlob(
+  creds: S3RemoteConfig,
+  objectKey: string,
+): Promise<Blob | null> {
+  const awsClient = createAwsClient(creds);
+  const baseEndpoint = creds.endpoint.replace(/\/$/, '');
+  const url = `${baseEndpoint}/${creds.bucket}/${objectKey}`;
+  const response = await awsClient.fetch(url, {
+    method: 'GET',
+    cache: 'no-store',
+  });
+  if (response.status === 404) return null;
+  if (!response.ok)
+    throw new Error(`Get failed: ${response.status} ${response.statusText}`);
+  return response.blob();
+}
+
 export async function getObjectText(
   creds: S3RemoteConfig,
   objectKey: string,

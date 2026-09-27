@@ -19,6 +19,7 @@
  */
 
 import type { ManifestItem } from '../epub/opf-utils.js';
+import { manifestHrefToPath } from '../epub/path-utils.js';
 import { validateSourcePath } from '../source/source-utils.js';
 
 /** Sub-tree of SOURCE/ that transform scripts may write into. */
@@ -29,8 +30,7 @@ const SOURCE_DATA_PREFIX = 'SOURCE/data/';
  * WorkspaceService/BlobURLManager path resolution (idempotent if already joined).
  */
 export function joinBasePath(basePath: string, href: string): string {
-  if (!basePath || href.startsWith(`${basePath}/`)) return href;
-  return `${basePath}/${href}`;
+  return manifestHrefToPath(basePath, href);
 }
 
 /**

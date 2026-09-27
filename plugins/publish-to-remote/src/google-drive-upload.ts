@@ -192,6 +192,26 @@ export async function findGoogleDriveFileId(
   );
 }
 
+/** Fetch a file's bytes by id (an EPUB to import). Throws on failure. */
+export async function downloadGoogleDriveFile(
+  config: GoogleDriveRemoteConfig,
+  fileId: string,
+): Promise<Blob> {
+  const token = await getValidToken(config);
+  const response = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (response.status === 401) throw new Error('GOOGLE_AUTH_REQUIRED');
+  if (!response.ok) {
+    const error = await response.text().catch(() => '');
+    throw new Error(
+      `Download failed: ${response.status} ${response.statusText}\n${error}`,
+    );
+  }
+  return response.blob();
+}
+
 export async function deleteGoogleDriveFile(
   config: GoogleDriveRemoteConfig,
   objectKey: string,

@@ -1,7 +1,7 @@
 {
   "name": "seed-html",
   "private": true,
-  "version": "0.21.0",
+  "version": "0.22.0",
   "type": "module",
   "workspaces": [
     "plugins/*"
@@ -33,7 +33,7 @@
     "manual-shots": "node scripts/capture-manual-shots.js",
     "test:a11y": "node scripts/a11y-scan.mjs",
     "worktree": "bash scripts/new-worktree.sh",
-    "lint": "eslint . --ext .js,.ts,.svelte --max-warnings 144",
+    "lint": "eslint . --ext .js,.ts,.svelte --max-warnings 134",
     "lint:fix": "eslint . --ext .js,.ts,.svelte --fix",
     "validate": "npm run check && npm run lint && npm run format:check && npm run check:rename && npm run test:coverage",
     "format": "prettier --write .",

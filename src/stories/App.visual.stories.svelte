@@ -47,7 +47,8 @@
   play={async ({ canvas }) => {
     // Not a tour — just wait until the seeded project is fully on screen so
     // docs/capture snapshots show the real thing.
-    await canvas.findByText('Visual Demo Book', {}, { timeout: 60000 });
+    // The open book's title is the top bar's heading (the shelf may flash first).
+    await canvas.findByRole('heading', { name: 'Visual Demo Book' }, { timeout: 60000 });
     await canvas.findByText('chapter01', {}, { timeout: 60000 });
   }}
 >

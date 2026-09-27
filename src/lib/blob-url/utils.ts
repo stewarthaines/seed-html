@@ -3,17 +3,16 @@
  *
  * Helper functions for URL classification, path resolution, and XHTML processing
  */
+import { manifestHrefToPath } from '../epub/path-utils.js';
 
 /**
  * Resolve manifest item href to full workspace path
  */
 export function resolveManifestPath(href: string, basePath: string): string {
-  // Handle OPF in container root (empty basePath)
-  if (!basePath) return href;
-
-  // Standard case: basePath + href
-  // Examples: "OEBPS" + "images/cover.jpg" → "OEBPS/images/cover.jpg"
-  return `${basePath}/${href}`;
+  // Against the OPF directory with dot segments collapsed:
+  // "OEBPS" + "images/cover.jpg" → "OEBPS/images/cover.jpg";
+  // "EPUB" + "../_kmeta/config.js" → "_kmeta/config.js".
+  return manifestHrefToPath(basePath, href);
 }
 
 /**

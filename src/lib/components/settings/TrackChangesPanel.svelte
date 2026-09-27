@@ -22,6 +22,7 @@
     enabled: initialEnabled,
     onChanged,
     onApply,
+    framed = true,
   }: {
     workspaceId: string | null;
     /** Current workspace — needed to derive a patchset (identifier, manifest, content). */
@@ -35,6 +36,9 @@
     /** Apply resolved changes to the current project (orchestrated by App, which
         holds the spine/workspace services). */
     onApply?: (resolved: ResolvedChange[]) => Promise<void>;
+    /** Wrap in a SettingsSection card with its own title; false renders the
+        controls only (the host supplies the heading). */
+    framed?: boolean;
   } = $props();
 
   const currentIdentifier = $derived(workspace?.opf.metadata.identifier ?? '');
@@ -140,12 +144,7 @@
   }
 </script>
 
-<SettingsSection
-  title={$t('Track changes')}
-  summary={on ? $t('On — review mode') : $t('Off')}
-  name="project-settings"
-  persistKey="settings-project-track-changes"
->
+{#snippet body()}
   <div class="setting-group">
     <label class="setting-label">
       <input type="checkbox" checked={on} onchange={handleToggle} disabled={busy} />
@@ -249,7 +248,22 @@
       <p class="track-status" role="status">{applyMsg}</p>
     {/if}
   </div>
-</SettingsSection>
+{/snippet}
+
+{#if framed}
+  <SettingsSection
+    title={$t('Track changes')}
+    summary={on ? $t('On — review mode') : $t('Off')}
+    name="project-settings"
+    persistKey="settings-project-track-changes"
+  >
+    {@render body()}
+  </SettingsSection>
+{:else}
+  <div class="panel-body">
+    {@render body()}
+  </div>
+{/if}
 
 {#if reviewing && workspaceId}
   <PatchsetReviewDialog
@@ -261,6 +275,11 @@
 {/if}
 
 <style>
+  /* Unframed: no SettingsSection card, so the panel supplies its own block spacing. */
+  .panel-body {
+    padding-block: var(--space-1) 0;
+  }
+
   .confirm-off {
     margin-block-start: var(--space-2);
     padding: var(--space-3);

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, untrack } from 'svelte';
   import { navigationStore } from '../navigation-store';
   import type {
     WorkspaceService,
@@ -15,7 +15,6 @@
     type SwitchContext,
     type SwitchResult,
   } from '../../spine/chapter-switch.service.js';
-  import { readChapterMeta, writeChapterMeta } from '../../spine/chapter-metadata.js';
   import { parseLocaleTextPath } from '../../translations/editions.js';
   import EditorPane from '../../components/spine/EditorPane.svelte';
   import {
@@ -53,6 +52,8 @@
     clearAllTextEditorStores,
   } from '../../stores/text-editor-store.js';
   import { createPendingSaves } from '$lib/editor/pending-saves';
+  import { manifestHrefToPath } from '$lib/epub/path-utils.js';
+  import { stripScripts } from '$lib/preview/script-policy.js';
   import type { TextEditorStore } from '../../stores/index.js';
   import { Lock } from 'phosphor-svelte';
 
@@ -69,6 +70,7 @@
     selectedItemId = null,
     transformEngine = null as any,
     readOnly = false,
+    runScripts = false,
     advancedMode = false,
     audioPluginUrl = null,
     photoPluginUrl = null,
@@ -84,6 +86,9 @@
     transformEngine: TransformEngine;
     /** Read-only EPUB: preview the stored XHTML, no editor, no writes. */
     readOnly?: boolean;
+    /** A book made elsewhere previews with its scripts only when this is on
+     *  for the book (process/PREVIEW_SERVED_BOOK.md). */
+    runScripts?: boolean;
     /** Basic mode hides JavaScript/transform entries from the file dropdown. */
     advancedMode?: boolean;
     /** Resolved iframe src for the audio clip panel plugin (supersedes the
@@ -105,6 +110,9 @@
       /** Preview-head fragments from installed extensions — injected into every
        *  preview regardless of includeHead (they self-guard). Never packaged. */
       extensionPreviewHead?: string;
+      /** The chapter's container path (e.g. OEBPS/Text/ch1.xhtml), for the
+       *  preview document's base URL. */
+      documentPath?: string;
     }) => void;
     /** Report a manifest change (content-derived properties) back to app state. */
     onWorkspaceUpdate?: (workspace: WorkspaceState) => void;
@@ -113,37 +121,24 @@
   // Component state - using $state() for reactivity in Svelte 5
   let selectedItem = $state<SpineItemWithSource | null>(null);
 
-  // Authored chapter title (persisted to the SOURCE/text/{id}.json sidecar). Loaded
-  // when the selected item changes; the editor input shows the idref as placeholder.
-  let chapterTitle = $state('');
-  $effect(() => {
-    const item = selectedItem;
-    if (!item || !servicesInitialized) {
-      chapterTitle = '';
-      return;
-    }
-    readChapterMeta(fileStorage, workspace.id, item.idref)
-      .then(meta => {
-        // Ignore a stale read if the selection changed while we were reading.
-        if (selectedItem?.idref === item.idref) chapterTitle = meta.title ?? '';
-      })
-      .catch(() => {
-        // Sidecar unreadable — fall back to the idref placeholder.
-      });
-  });
-
-  async function handleChapterTitleChange(title: string): Promise<void> {
-    const item = selectedItem;
-    if (!item) return;
-    chapterTitle = title;
-    try {
-      await writeChapterMeta(fileStorage, workspace.id, item.idref, { title });
-      // Re-run the transform so the <title> in the preview and the saved xhtml update.
-      await forcePreviewUpdate();
-    } catch {
-      // Persisting the title failed (e.g. storage error); the input keeps its value.
-    }
+  /** The open chapter's container path, for the preview's base URL. */
+  function currentChapterPath(): string | undefined {
+    const item = workspace.opf.manifest.find(m => m.id === selectedItem?.idref);
+    return item ? manifestHrefToPath(workspace.pathInfo.basePath, item.href) : undefined;
   }
+
+  // The chapter column's edit dialog writes the title sidecar; re-run the
+  // transform so the <title> in the preview and the saved xhtml follow.
+  async function handleChapterMetaChanged(event: Event): Promise<void> {
+    const { itemId } = (event as CustomEvent<{ itemId: string }>).detail;
+    const item = selectedItem;
+    if (!item || item.idref !== itemId) return;
+    await forcePreviewUpdate();
+  }
+  $effect(() => {
+    window.addEventListener('chapter-meta-changed', handleChapterMetaChanged);
+    return () => window.removeEventListener('chapter-meta-changed', handleChapterMetaChanged);
+  });
   let isLoading = $state(false);
   let error = $state<string | null>(null);
   let guardId: string;
@@ -409,8 +404,15 @@
       // editors on one file would fight over a single store). Keyed on path,
       // not type, so the chapter text and a frozen translation reference can
       // be shown side by side.
-      availableFiles1 = availableFiles.filter(file => file.path !== paneState.pane2.filePath);
-      availableFiles2 = availableFiles.filter(file => file.path !== paneState.pane1.filePath);
+      // Each pane offers every file but the other pane's — except its own
+      // current file, which stays so the pane can still name it (both panes
+      // open on the same file when the second pane is first opened).
+      availableFiles1 = availableFiles.filter(
+        file => file.path !== paneState.pane2.filePath || file.path === paneState.pane1.filePath
+      );
+      availableFiles2 = availableFiles.filter(
+        file => file.path !== paneState.pane1.filePath || file.path === paneState.pane2.filePath
+      );
     }
   }
 
@@ -458,7 +460,7 @@
       // appears here and the dropdown always matches the head. Resolve each
       // manifest href to its actual workspace path for content loading.
       const resolveManifestHref = (href: string) =>
-        workspace.pathInfo.basePath ? `${workspace.pathInfo.basePath}/${href}` : href;
+        manifestHrefToPath(workspace.pathInfo.basePath, href);
 
       for (const item of workspace.opf.manifest) {
         if (item.mediaType === 'text/css') {
@@ -1172,6 +1174,7 @@
       spineItemId: selectedItemId,
       previewHead: previewHeadContent,
       extensionPreviewHead: extensionPreviewHeadContent,
+      documentPath: currentChapterPath(),
     });
   }
 
@@ -1247,6 +1250,16 @@
   // Race condition prevention
   let currentSpineItemLoadPromise: Promise<void> | null = null;
 
+  // Turning a book's scripts on or off re-renders the read-only preview:
+  // the stripped and the unstripped document are different documents.
+  let lastRunScripts = untrack(() => runScripts);
+  $effect(() => {
+    const on = runScripts;
+    if (on === lastRunScripts) return;
+    lastRunScripts = on;
+    if (readOnly && selectedItemId) untrack(() => renderReadOnlyChapter());
+  });
+
   // Single entry point for loading the selected chapter: a read-only EPUB
   // previews its stored XHTML; an editable project runs the full editor path.
   // All callers (onViewEnter, setViewData, the prop effect) route through here so
@@ -1274,10 +1287,7 @@
 
       const manifestItem = workspace.opf.manifest.find(m => m.id === selectedItem!.idref);
       const basePath = workspace.pathInfo.basePath;
-      const path =
-        manifestItem && (!basePath || manifestItem.href.startsWith(basePath + '/'))
-          ? manifestItem?.href
-          : `${basePath}/${manifestItem?.href}`;
+      const path = manifestItem ? manifestHrefToPath(basePath, manifestItem.href) : '';
 
       let xhtmlContent = '';
       let persistedXhtml: string | undefined;
@@ -1287,7 +1297,17 @@
         // imported book may not live under "OEBPS/" (the blob manager defaults to it).
         blobURLManager.setBasePath(basePath);
         blobURLManager.setActiveWorkspace(workspace.id);
-        xhtmlContent = await blobURLManager.processXHTMLForPreview(stored);
+        // References resolve against the chapter's own directory: an imported
+        // book may keep its chapters deeper than one level below the OPF.
+        blobURLManager.setDocumentPath(path);
+        try {
+          xhtmlContent = await blobURLManager.processXHTMLForPreview(stored);
+        } finally {
+          blobURLManager.setDocumentPath(null);
+        }
+        // A book made elsewhere runs its scripts only when the reader has
+        // said so for this book.
+        if (!runScripts) xhtmlContent = stripScripts(xhtmlContent);
         persistedXhtml = stored;
       }
 
@@ -1301,6 +1321,7 @@
         spineItemId: selectedItemId,
         previewHead: previewHeadContent,
         extensionPreviewHead: extensionPreviewHeadContent,
+        documentPath: path,
       });
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to load chapter';
@@ -1651,9 +1672,6 @@
         handleFileSelect({ detail: { pane, filePath, fileType } } as CustomEvent)}
       onContentChange={(pane, content) =>
         handlePaneContentChange({ detail: { pane, content } } as CustomEvent)}
-      {chapterTitle}
-      chapterTitlePlaceholder={selectedItem?.idref ?? ''}
-      onChapterTitleChange={handleChapterTitleChange}
       {workspace}
       {audioClipService}
       {workspaceService}
@@ -1664,6 +1682,11 @@
       chapterId={selectedItemId}
       onWorkspaceUpdate={ws => onWorkspaceUpdate?.(ws)}
     />
+  </div>
+{:else if !selectedItem}
+  <!-- An empty book: nothing to edit until a chapter exists. -->
+  <div class="loading-state">
+    <p>{$t('Add a chapter to start writing.')}</p>
   </div>
 {:else}
   <div class="loading-state">

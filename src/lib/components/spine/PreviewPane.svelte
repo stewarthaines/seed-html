@@ -86,6 +86,7 @@
     projectIdentifier = null,
     onGeneratePdf = undefined,
     previewHead = '',
+    baseUrl = null,
     extensionPreviewHead = '',
     previewAutoUpdate = DEFAULT_PREVIEW.autoUpdate,
     previewIncludeHead = DEFAULT_PREVIEW.includeHead,
@@ -135,6 +136,8 @@
      *  injected into the preview head for the preview types whose `includeHead`
      *  is on. Authoring-time only — never reaches the packaged EPUB. */
     previewHead?: string;
+    /** The served URL of the chapter document, for `<base href>` (http only). */
+    baseUrl?: string | null;
     /** Preview-head fragments from installed extensions (process/PREVIEW_HEAD_EXTENSIONS.md).
      *  Injected into EVERY preview regardless of `includeHead` (fragments self-guard);
      *  authoring-time only, never packaged. */
@@ -527,6 +530,28 @@
       return `${p.label} (${a11yIssueCount})`;
     }
     return p.label;
+  }
+
+  // The checks status button stands for the three check panels (EpubCheck,
+  // Accessibility, Screen reader); Reader is a separate toggle. The button
+  // shows a tick, or how many findings the current chapter has (epubcheck's
+  // count plus the last axe count once a check has run), and opens the
+  // last-used check panel; the band then carries a tab strip.
+  const checkPanels = $derived(availablePanels.filter(p => p.id !== 'reader'));
+  let lastCheckPanel = $state<PanelId | null>(null);
+  const checksOpen = $derived(activePanel !== null && activePanel !== 'reader');
+  const fixCount = $derived(validationChapterCount + (a11yIssueCount ?? 0));
+  $effect(() => {
+    if (checksOpen) lastCheckPanel = activePanel;
+  });
+  function toggleChecks(): void {
+    if (checksOpen) {
+      setPanel(null);
+      return;
+    }
+    const first = checkPanels.find(p => !p.disabled)?.id ?? null;
+    const remembered = checkPanels.find(p => p.id === lastCheckPanel && !p.disabled)?.id;
+    setPanel(remembered ?? first);
   }
 
   // The preview re-render invalidates the last report; while the panel is open,
@@ -1124,6 +1149,64 @@
     canReadPreview && !isFixedLayout ? DEVICE_PRESETS.filter(d => d.category === 'read') : []
   );
 
+  // The device switch: one button per family (Fill · Phone · Tablet · E-reader ·
+  // READ.html · Print, plus Source in advanced mode); a family's sizes are a
+  // second row of chips (Standard / Plus, Compact / Extra Large, Print / Proofs).
+  type DeviceFamily = 'fill' | 'phone' | 'tablet' | 'ereader' | 'read' | 'print' | 'source';
+  const FAMILY_OF_CATEGORY: Record<string, DeviceFamily> = {
+    responsive: 'fill',
+    commute: 'phone',
+    home: 'tablet',
+    travel: 'ereader',
+    read: 'read',
+    print: 'print',
+  };
+  const familyOfDevice = (id: string): DeviceFamily =>
+    FAMILY_OF_CATEGORY[DEVICE_PRESETS.find(d => d.id === id)?.category ?? 'responsive'] ?? 'fill';
+  const deviceFamilies = $derived.by(
+    (): { id: DeviceFamily; label: string; devices: string[] }[] => {
+      const byFamily: Partial<Record<DeviceFamily, string[]>> = {};
+      for (const device of DEVICE_PRESETS) {
+        if (device.category === 'print' && !canPaginate) continue;
+        if (device.category === 'read' && readDevices.length === 0) continue;
+        const family = FAMILY_OF_CATEGORY[device.category];
+        (byFamily[family] ??= []).push(device.id);
+      }
+      const all: { id: DeviceFamily; label: string; devices: string[] }[] = [
+        { id: 'fill', label: $t('Fill'), devices: byFamily.fill ?? [] },
+        { id: 'phone', label: $t('Phone'), devices: byFamily.phone ?? [] },
+        { id: 'tablet', label: $t('Tablet'), devices: byFamily.tablet ?? [] },
+        { id: 'ereader', label: $t('E-reader'), devices: byFamily.ereader ?? [] },
+        // i18n-ignore: product name, not translated
+        { id: 'read', label: 'READ.html', devices: byFamily.read ?? [] },
+        { id: 'print', label: $t('Print'), devices: byFamily.print ?? [] },
+      ];
+      const families = all.filter(f => f.devices.length > 0);
+      if (advancedMode) families.push({ id: 'source', label: $t('Source'), devices: [] });
+      return families;
+    }
+  );
+  const activeFamily = $derived<DeviceFamily>(
+    showSource.current ? 'source' : familyOfDevice(selectedDevice.current)
+  );
+  const familyVariants = $derived(deviceFamilies.find(f => f.id === activeFamily)?.devices ?? []);
+  function selectFamily(family: DeviceFamily): void {
+    if (family === 'source') {
+      handleViewSelect('source', 1);
+      return;
+    }
+    const devices = deviceFamilies.find(f => f.id === family)?.devices ?? [];
+    if (devices.length === 0) return;
+    // Keep the current size if it belongs to this family; otherwise its first.
+    const next = devices.includes(selectedDevice.current) ? selectedDevice.current : devices[0];
+    handleViewSelect(next, 1);
+  }
+  const variantLabel = (id: string): string => {
+    const device = DEVICE_PRESETS.find(d => d.id === id);
+    if (!device) return id;
+    return id === 'print' ? printDeviceLabel : getDeviceLabel(device);
+  };
+
   // Reader-mode preview state (theme + font size + force-colours). View-only — never
   // written to the generated/exported XHTML; persisted app-wide like the device.
   const previewTheme = persisted<'light' | 'sepia' | 'dark'>(
@@ -1164,6 +1247,7 @@
     onGeneratePdf,
     previewHead,
     extensionPreviewHead,
+    baseUrl,
     previewAutoUpdate,
     previewIncludeHead,
     isFixedLayout,
@@ -1437,15 +1521,20 @@
             {/if}
           {/each}
         {/snippet}
-        <!-- i18n: Accessibility label for the view / device dropdown menu -->
-        <select
-          class="device-selector"
-          value={showSource.current ? 'source' : selectedDevice.current}
-          onchange={e => handleViewSelect((e.target as HTMLSelectElement).value, 1)}
-          aria-label={$t('Select view')}
-        >
-          {@render deviceOptions()}
-        </select>
+        <!-- i18n: Accessibility label for the device switch -->
+        <div class="device-switch" role="group" aria-label={$t('Select view')}>
+          {#each deviceFamilies as family (family.id)}
+            <button
+              type="button"
+              class="device-family"
+              class:active={activeFamily === family.id}
+              aria-pressed={activeFamily === family.id}
+              onclick={() => selectFamily(family.id)}
+            >
+              {family.label}
+            </button>
+          {/each}
+        </div>
         {#if splitOn.current}
           <!-- The split's second dropdown, driving the bottom surface. -->
           <!-- i18n: Accessibility label for the split preview's second view dropdown -->
@@ -1462,74 +1551,44 @@
     </div>
 
     <div class="preview-controls">
-      {#if availablePanels.length >= 2}
-        <!-- More than one panel available: collapse into a single dropdown, with a
-             "Checks" entry as the none-open state. -->
-        <select
-          class="device-selector panel-selector"
-          value={activePanel ?? ''}
-          onchange={e =>
-            setPanel(((e.currentTarget as HTMLSelectElement).value || null) as PanelId | null)}
-          aria-label={$t('Show panel')}
+      <!-- Reader-mode panel toggle (theme + text size). Reflowable previews only —
+           hidden for the print preset and fixed-layout chapters. -->
+      {#if readerModeActiveAny}
+        <button
+          type="button"
+          class="a11y-check"
+          class:active={activePanel === 'reader'}
+          onclick={() => togglePanel('reader')}
+          aria-pressed={activePanel === 'reader'}
+          title={$t('Reading preview (theme and text size)')}
         >
-          <option value="">{$t('Checks')}</option>
-          {#each availablePanels as panel}
-            <option value={panel.id} disabled={panel.disabled}>{panelOptionLabel(panel)}</option>
-          {/each}
-        </select>
-      {:else}
-        <!-- Accessibility check: inject axe-core and run it against the preview
-             (the foliate section document on reader-engine views). -->
-        {#if canCheckA11y}
-          <button
-            type="button"
-            class="a11y-check"
-            class:active={activePanel === 'a11y'}
-            onclick={() => togglePanel('a11y')}
-            disabled={!xhtmlContent}
-            aria-pressed={activePanel === 'a11y'}
-            title={$t('Accessibility check (axe-core) — re-runs as you edit while open')}
-          >
-            {a11yRunning ? $t('Checking…') : $t('Accessibility')}
-            {#if !a11yRunning && activePanel === 'a11y' && a11yIssueCount !== null}
-              <span class="a11y-count" class:clean={a11yIssueCount === 0}>{a11yIssueCount}</span>
-            {/if}
-          </button>
-        {/if}
+          {$t('Reader')}
+        </button>
+      {/if}
 
-        <!-- Validation report (epubcheck), opened like the accessibility panel.
-           Only shown when the report belongs to the current project. -->
-        {#if validationReport && validationReportMatches}
-          <button
-            type="button"
-            class="a11y-check"
-            class:active={activePanel === 'epubcheck'}
-            onclick={() => togglePanel('epubcheck')}
-            aria-pressed={activePanel === 'epubcheck'}
-            title={$t('Validation report (epubcheck) for this chapter')}
-          >
-            EpubCheck
-            {#if validationChapterCount > 0}
-              <span class="a11y-count">{validationChapterCount}</span>
-            {/if}
-          </button>
-        {/if}
-
-        <!-- Reader-mode panel toggle (theme + text size). Reflowable previews only —
-           hidden for the print preset and fixed-layout chapters. The controls live
-           in a closable panel below the header (like the other checks). -->
-        {#if readerModeActive}
-          <button
-            type="button"
-            class="a11y-check"
-            class:active={activePanel === 'reader'}
-            onclick={() => togglePanel('reader')}
-            aria-pressed={activePanel === 'reader'}
-            title={$t('Reading preview (theme and text size)')}
-          >
-            {$t('Reader')}
-          </button>
-        {/if}
+      <!-- Checks: one button for the check panels, showing the chapter's count. -->
+      {#if checkPanels.length > 0}
+        <button
+          type="button"
+          class="a11y-check checks-status"
+          class:active={checksOpen}
+          class:has-findings={fixCount > 0}
+          onclick={toggleChecks}
+          disabled={checkPanels.every(p => p.disabled)}
+          aria-pressed={checksOpen}
+          aria-label={fixCount > 0
+            ? $t('{count} to fix', { count: fixCount })
+            : $t('Nothing to fix')}
+          title={$t('Checks')}
+        >
+          {#if a11yRunning}
+            {$t('Checking…')}
+          {:else if fixCount > 0}
+            {$t('{count} to fix', { count: fixCount })}
+          {:else}
+            <span aria-hidden="true">✓</span>
+          {/if}
+        </button>
       {/if}
     </div>
 
@@ -1569,6 +1628,23 @@
       <CaretRight size={16} aria-hidden="true" />
     </button>
   </div>
+
+  <!-- The chosen family's sizes, when it has more than one. -->
+  {#if !showSource.current && familyVariants.length > 1}
+    <div class="device-variants" role="group" aria-label={$t('Device size')}>
+      {#each familyVariants as id (id)}
+        <button
+          type="button"
+          class="device-variant"
+          class:active={selectedDevice.current === id}
+          aria-pressed={selectedDevice.current === id}
+          onclick={() => handleViewSelect(id, 1)}
+        >
+          {variantLabel(id)}
+        </button>
+      {/each}
+    </div>
+  {/if}
 
   <!-- Preview options bar: the inputs specific to a surface's current preview,
        kept in fixed positions and disabled-in-place (never
@@ -1683,6 +1759,25 @@
   {/snippet}
   {#if barVisible(bar1)}
     {@render optionsBar(bar1)}
+  {/if}
+
+  <!-- The check panels share one band; a tab strip switches between them. -->
+  {#if checksOpen && checkPanels.length > 1}
+    <div class="panel-tabs" role="tablist" aria-label={$t('Checks')}>
+      {#each checkPanels as panel (panel.id)}
+        <button
+          type="button"
+          role="tab"
+          class="panel-tab"
+          class:active={activePanel === panel.id}
+          aria-selected={activePanel === panel.id}
+          disabled={panel.disabled}
+          onclick={() => setPanel(panel.id)}
+        >
+          {panelOptionLabel(panel)}
+        </button>
+      {/each}
+    </div>
   {/if}
 
   <!-- Accessibility results panel (spike): plain-text violations, sorted by impact -->
@@ -2027,6 +2122,7 @@
 
 <style>
   .preview-pane-container {
+    container: preview / inline-size;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -2184,20 +2280,6 @@
   .a11y-check.active {
     border-color: var(--color-accent);
     background: var(--color-bg-tertiary);
-  }
-
-  .a11y-count {
-    min-width: 1.2em;
-    padding: 0 var(--space-1);
-    border-radius: var(--radius-xs);
-    background: var(--color-error-text, #e53935);
-    color: #fff;
-    font-size: var(--text-xs);
-    text-align: center;
-  }
-
-  .a11y-count.clean {
-    background: var(--color-success-text, #2e7d32);
   }
 
   /* The rendering surface's region: fills the pane below the header/bars and
@@ -2389,8 +2471,131 @@
   }
 
   /* Match the left pane's .file-selector dropdown sizing + focus treatment. */
-  .device-selector,
-  .panel-selector {
+  .device-switch {
+    display: inline-flex;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+
+  .device-family {
+    border: 0;
+    border-inline-start: 1px solid var(--color-border-default);
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    padding-block: var(--space-1);
+    padding-inline: var(--space-2);
+    min-block-size: 32px;
+    font: inherit;
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .device-family:first-child {
+    border-inline-start: 0;
+  }
+
+  .device-family:hover:not(.active) {
+    background: var(--color-bg-secondary);
+  }
+
+  .device-family.active {
+    background: var(--color-text-primary);
+    color: var(--color-bg-primary);
+  }
+
+  .device-family:focus-visible {
+    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
+    outline-offset: calc(-1 * var(--focus-ring-width));
+  }
+
+  .device-variants {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    padding-block: var(--space-1);
+    padding-inline: var(--space-3);
+    background: var(--color-bg-tertiary);
+    border-block-end: 1px solid var(--color-border-subtle);
+    font-size: var(--text-sm);
+  }
+
+  .device-variant {
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--color-text-link);
+    padding-block: var(--space-1);
+    padding-inline: var(--space-2);
+    min-block-size: 28px;
+    font: inherit;
+    font-size: var(--text-sm);
+    cursor: pointer;
+  }
+
+  .device-variant:hover:not(.active) {
+    color: var(--color-text-link-hover);
+  }
+
+  .device-variant.active {
+    color: var(--color-text-primary);
+    font-weight: var(--font-bold);
+    border-color: var(--color-border-default);
+    background: var(--color-bg-primary);
+  }
+
+  .device-variant:focus-visible {
+    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  .checks-status.has-findings {
+    color: var(--color-warning-text);
+    font-weight: var(--font-bold);
+  }
+
+  .panel-tabs {
+    display: flex;
+    gap: var(--space-1);
+    padding-inline: var(--space-3);
+    background: var(--color-bg-tertiary);
+    border-block-end: 1px solid var(--color-border-subtle);
+  }
+
+  .panel-tab {
+    border: 0;
+    border-block-end: 2px solid transparent;
+    background: transparent;
+    padding-block: var(--space-2);
+    padding-inline: var(--space-2);
+    min-block-size: 36px;
+    font: inherit;
+    font-size: var(--text-xs);
+    font-weight: var(--font-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+  }
+
+  .panel-tab:disabled {
+    color: var(--color-text-tertiary);
+    cursor: default;
+  }
+
+  .panel-tab.active {
+    color: var(--color-text-primary);
+    border-block-end-color: var(--color-text-primary);
+  }
+
+  .panel-tab:focus-visible {
+    outline: var(--focus-ring-width) var(--focus-ring-style) var(--color-focus);
+    outline-offset: calc(-1 * var(--focus-ring-width));
+  }
+
+  .device-selector {
     padding: var(--space-2);
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-sm);
@@ -2400,8 +2605,7 @@
     cursor: pointer;
   }
 
-  .device-selector:focus,
-  .panel-selector:focus {
+  .device-selector:focus {
     outline: none;
     border-color: var(--color-accent-primary);
     box-shadow: 0 0 0 var(--focus-ring-width) var(--color-focus);
@@ -2707,6 +2911,47 @@
   @media (prefers-reduced-motion: reduce) {
     .status-spinner {
       animation: none;
+    }
+  }
+  /* Phone: the chapter strip moves between chapters and there is no second
+     pane to split or collapse into. */
+  @media (max-width: 720px) {
+    .chapter-nav,
+    .split-toggle,
+    .preview-collapse {
+      display: none;
+    }
+
+    .preview-header {
+      /* No corner toggles to reserve room for. */
+      padding-inline-end: var(--space-3);
+    }
+  }
+
+  /* A narrow pane, on a phone or a desktop split: one row, the device chips
+     scrolling sideways in the space left by the other controls rather than
+     wrapping under them. Keyed on the pane's own width, not the viewport's. */
+  @container preview (max-width: 760px) {
+    .preview-header {
+      flex-wrap: nowrap;
+      /* Packed from the start: whatever cannot fit overflows at the end
+         instead of pushing the chapter arrows out past the pane's edge. */
+      justify-content: flex-start;
+    }
+
+    .header-left {
+      flex-shrink: 0;
+    }
+
+    .device-switch {
+      flex: 1 1 0;
+      /* Room for one chip, so the row still scrolls. */
+      min-inline-size: 3rem;
+      overflow-x: auto;
+    }
+
+    .device-family {
+      flex-shrink: 0;
     }
   }
 </style>

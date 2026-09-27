@@ -6,6 +6,7 @@
   import EditSpineItemDialog from './EditSpineItemDialog.svelte';
   import ImportReviewDialog from './import/ImportReviewDialog.svelte';
   import { FileStorageAPI } from '../storage/index.js';
+  import { readChapterMeta, writeChapterMeta } from '../spine/chapter-metadata.js';
   import { showToast } from '../stores/toast.svelte.js';
   import { sanitizeChapterId } from '../import/collision.js';
   import {
@@ -833,7 +834,29 @@
 
   // Save edits from the dialog: rename the id and/or toggle the linear flag.
   // Errors propagate to the dialog (it stays open and shows the message).
-  async function handleSaveEdit(item: SpineItemWithSource, newId: string, linear: boolean) {
+  // The authored title of the chapter being edited (its sidecar), read when the
+  // dialog opens; the dialog shows the id as the placeholder when there is none.
+  let editingItemTitle = $state('');
+  async function openEditDialog(item: SpineItemWithSource) {
+    // Read first: the dialog seeds its fields once, when it mounts.
+    editingItemTitle = '';
+    if (workspace) {
+      try {
+        const meta = await readChapterMeta(FileStorageAPI.getInstance(), workspace.id, item.id);
+        editingItemTitle = meta.title ?? '';
+      } catch {
+        // No sidecar; the placeholder stands.
+      }
+    }
+    editingItem = item;
+  }
+
+  async function handleSaveEdit(
+    item: SpineItemWithSource,
+    newId: string,
+    linear: boolean,
+    title: string
+  ) {
     if (!workspace || readOnly) return;
 
     let effectiveId = item.id;
@@ -847,6 +870,14 @@
     if (linear !== item.linear) {
       const result = await spineService.setChapterLinear(workspace, effectiveId, linear);
       workspace = result.updatedWorkspace;
+    }
+
+    if (title !== editingItemTitle) {
+      await writeChapterMeta(FileStorageAPI.getInstance(), workspace.id, effectiveId, { title });
+      // The editor re-renders the chapter so its <title> follows.
+      window.dispatchEvent(
+        new CustomEvent('chapter-meta-changed', { detail: { itemId: effectiveId } })
+      );
     }
 
     if (onWorkspaceUpdate) {
@@ -899,7 +930,7 @@
             onSelect={() => handleSelectItem(item.id)}
             onMoveUp={async () => await handleMoveUp(index)}
             onMoveDown={async () => await handleMoveDown(index)}
-            onEdit={() => (editingItem = item)}
+            onEdit={() => openEditDialog(item)}
             onDelete={async () => await handleDeleteItem(item.id)}
             dragHandleProps={{
               draggable: true,
@@ -927,9 +958,10 @@
   {@const item = editingItem}
   <EditSpineItemDialog
     currentId={item.id}
+    currentTitle={editingItemTitle}
     linear={item.linear}
     {advancedMode}
-    onSave={({ newId, linear }) => handleSaveEdit(item, newId, linear)}
+    onSave={({ newId, linear, title }) => handleSaveEdit(item, newId, linear, title)}
     onClose={() => (editingItem = null)}
   />
 {/if}

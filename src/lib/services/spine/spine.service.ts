@@ -8,6 +8,7 @@
 
 import type { WorkspaceService, WorkspaceState } from '../workspace/workspace.service.js';
 import type { SpineItem, ManifestItem } from '../../epub/opf-utils.js';
+import { manifestHrefToPath } from '../../epub/path-utils.js';
 import type { SpineItemWithSource } from '../../spine/types.js';
 import { sanitizeChapterId } from '../../import/collision.js';
 import { previewDataChapterDir } from '../../preview/preview-data.js';
@@ -112,10 +113,7 @@ export class SpineService {
   ): Promise<string | undefined> {
     try {
       const basePath = workspace.pathInfo.basePath;
-      const path =
-        !basePath || manifestItem.href.startsWith(basePath + '/')
-          ? manifestItem.href
-          : `${basePath}/${manifestItem.href}`;
+      const path = manifestHrefToPath(basePath, manifestItem.href);
       const buffer = await this.workspaceService.readFile(workspace.id, path);
       const xhtml = new TextDecoder().decode(buffer);
       // Parse as HTML (lenient) — we only need the title/heading text, and this
@@ -403,8 +401,7 @@ export class SpineService {
    * bare startsWith would falsely match an href under a sibling directory
    * (OEBPSx/…). */
   private contentPath(workspace: WorkspaceState, href: string): string {
-    const basePath = workspace.pathInfo.basePath;
-    return !basePath || href.startsWith(`${basePath}/`) ? href : `${basePath}/${href}`;
+    return manifestHrefToPath(workspace.pathInfo.basePath, href);
   }
 
   /** Derive an XML-safe, unique chapter id from a name (e.g. a filename). */

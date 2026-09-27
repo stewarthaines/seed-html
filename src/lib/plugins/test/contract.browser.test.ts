@@ -3,9 +3,11 @@ import {
   createInitMessage,
   createContextMessage,
   isContextMessage,
+  isImportEpubMessage,
   isInitMessage,
   isInsertMessage,
   isNavigateMessage,
+  isOpenMessage,
   isPluginReadyMessage,
   type PluginManifestEntry,
 } from '../contract';
@@ -73,6 +75,41 @@ describe('contract message shapes', () => {
     );
     expect(isContextMessage({ type: 'context', theme: 'dark', dir: 'ltr' })).toBe(false);
     expect(isContextMessage({ type: 'init', projectId: 'p' })).toBe(false);
+  });
+
+  it('createInitMessage carries the surface only when one is named', () => {
+    const plain = createInitMessage('p', undefined, ['workspaces', 'p']);
+    expect('surface' in plain).toBe(false);
+    const send = createInitMessage('p', undefined, ['workspaces', 'p'], 'send');
+    expect(send.surface).toBe('send');
+  });
+
+  it('createContextMessage carries the known identifiers only when given', () => {
+    const plain = createContextMessage('light', 'en', 'ltr');
+    expect('knownIdentifiers' in plain).toBe(false);
+    const known = createContextMessage('light', 'en', 'ltr', {}, 'urn:uuid:a', undefined, [
+      'urn:uuid:a',
+      'urn:uuid:b',
+    ]);
+    expect(known.knownIdentifiers).toEqual(['urn:uuid:a', 'urn:uuid:b']);
+    expect(isContextMessage(known)).toBe(true);
+  });
+
+  it('isImportEpubMessage requires a filename and an ArrayBuffer', () => {
+    const bytes = new ArrayBuffer(4);
+    expect(isImportEpubMessage({ type: 'import-epub', filename: 'b.epub', bytes })).toBe(true);
+    expect(isImportEpubMessage({ type: 'import-epub', filename: 'b.epub' })).toBe(false);
+    expect(isImportEpubMessage({ type: 'import-epub', bytes })).toBe(false);
+    expect(isImportEpubMessage({ type: 'import-epub', filename: 'b.epub', bytes: 'x' })).toBe(
+      false
+    );
+  });
+
+  it('isOpenMessage accepts the two host screens only', () => {
+    expect(isOpenMessage({ type: 'open', target: 'published' })).toBe(true);
+    expect(isOpenMessage({ type: 'open', target: 'destinations' })).toBe(true);
+    expect(isOpenMessage({ type: 'open', target: 'settings' })).toBe(false);
+    expect(isOpenMessage({ type: 'open' })).toBe(false);
   });
 
   it('isInitMessage requires a projectId and a directory handle', () => {

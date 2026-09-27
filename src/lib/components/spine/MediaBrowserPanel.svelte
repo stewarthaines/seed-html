@@ -8,6 +8,7 @@
     WorkspaceService,
     WorkspaceState,
   } from '$lib/services/workspace/workspace.service.js';
+  import { manifestHrefToPath } from '$lib/epub/path-utils.js';
   import { t } from '$lib/i18n';
 
   let {
@@ -42,7 +43,7 @@
     (async () => {
       for (const item of items) {
         try {
-          const path = ws.pathInfo.basePath ? `${ws.pathInfo.basePath}/${item.href}` : item.href;
+          const path = manifestHrefToPath(ws.pathInfo.basePath, item.href);
           const bytes = await workspaceService.readFile(ws.id, path);
           if (cancelled) return;
           const url = URL.createObjectURL(new Blob([bytes], { type: item.mediaType }));

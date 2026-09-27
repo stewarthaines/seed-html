@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-09\n"
-"PO-Revision-Date: 2026-09-09\n"
+"POT-Creation-Date: 2026-09-25\n"
+"PO-Revision-Date: 2026-09-25\n"
 "Language: de\n"
 "Language-Team: \n"
 "Last-Translator: Claude (machine first pass)\n"
@@ -24,10 +24,6 @@ msgstr ".. (nach oben)"
 msgid "· validated {ago}"
 msgstr "· validiert {ago}"
 
-#: plugins/publish-to-remote/src/App.svelte
-msgid "\"{name}\" is not connected — plug in the device and refresh"
-msgstr "\"{name}\" ist nicht verbunden — Gerät anschließen und aktualisieren"
-
 #: src/App.svelte
 msgid "“{title}” is already a project in this browser. OK opens it; Cancel imports a fresh copy."
 msgstr "„{title}“ ist in diesem Browser bereits ein Projekt. OK öffnet es; Abbrechen importiert eine neue Kopie."
@@ -36,6 +32,11 @@ msgstr "„{title}“ ist in diesem Browser bereits ein Projekt. OK öffnet es; 
 msgid "{count} accessibility issues"
 msgstr "{count} Barrierefreiheitsprobleme"
 
+#: src/lib/components/books/DeleteBookDialog.svelte
+msgid "{count} chapters"
+msgstr "{count} Kapitel"
+
+#: src/lib/components/books/BooksShelf.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "{count} days ago"
 msgstr "vor {count} Tagen"
@@ -61,14 +62,20 @@ msgstr "{count} Verweise aktualisiert"
 msgid "{count} selected"
 msgstr "{count} ausgewählt"
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "{count} to fix"
+msgstr "{count} zu beheben"
+
 #: src/lib/components/spine/EditorPane.svelte
 msgid "{count} Warnings"
 msgstr "{count} Warnungen"
 
+#: src/lib/components/books/BooksShelf.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "{count}h ago"
 msgstr "vor {count} Std."
 
+#: src/lib/components/books/BooksShelf.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "{count}w ago"
 msgstr "vor {count} Wo."
@@ -81,13 +88,17 @@ msgstr "{done}/{total} behoben"
 msgid "{href} already exists with different content. Overwrite it?"
 msgstr ""
 
-#: plugins/publish-to-remote/src/App.svelte
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 msgid "{key} deleted"
 msgstr "{key} gelöscht"
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "{n} available"
-msgstr "{n} verfügbar"
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "{n} book"
+msgstr "{n} Buch"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "{n} books"
+msgstr "{n} Bücher"
 
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "{n} bytes"
@@ -97,25 +108,25 @@ msgstr "{n} Bytes"
 msgid "{n} change(s)"
 msgstr "{n} Änderung(en)"
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "{n} DOM transform"
-msgstr "{n} DOM-Transformation"
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "{n} DOM transforms"
-msgstr "{n} DOM-Transformationen"
-
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
 msgid "{n} error"
 msgstr "{n} Fehler"
 
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
 msgid "{n} errors"
 msgstr "{n} Fehler"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "{n} file"
+msgstr "{n} Datei"
 
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 msgid "{n} file(s) unchanged"
 msgstr "{n} Datei(en) unverändert"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "{n} files"
+msgstr "{n} Dateien"
 
 #: src/lib/components/spine/EditorPane.svelte
 msgid "{n} files added to the manifest"
@@ -129,14 +140,6 @@ msgstr "{n} Generator"
 msgid "{n} generators"
 msgstr "{n} Generatoren"
 
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
-msgid "{n} info"
-msgstr "{n} Info"
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "{n} installed"
-msgstr "{n} installiert"
-
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "{n} KB"
 msgstr "{n} KB"
@@ -145,15 +148,23 @@ msgstr "{n} KB"
 msgid "{n} MB"
 msgstr "{n} MB"
 
+#: src/lib/components/shell/ChapterStrip.svelte
+msgid "{n} of {total}"
+msgstr "{n} von {total}"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "{n} on"
+msgstr "{n} aktiv"
+
 #: src/lib/components/settings/TranslationsPanel.svelte
 msgid "{n} stored"
 msgstr ""
 
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
 msgid "{n} warning"
 msgstr "{n} Warnung"
 
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "{n} warnings"
 msgstr "{n} Warnungen"
@@ -162,27 +173,15 @@ msgstr "{n} Warnungen"
 msgid "{n}/3 auto-update"
 msgstr "{n}/3 automatisch aktualisiert"
 
-#: plugins/publish-to-remote/src/App.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
 msgid "{name} copied — eject the device to finish adding the book"
 msgstr "{name} kopiert — Gerät auswerfen, um das Buch fertig hinzuzufügen"
-
-#: plugins/publish-to-remote/src/App.svelte
-msgid "{name} deleted"
-msgstr "{name} gelöscht"
-
-#: plugins/publish-to-remote/src/App.svelte
-msgid "{name} uploaded successfully"
-msgstr "{name} erfolgreich hochgeladen"
 
 #: src/lib/components/extensions/ExtensionItem.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "{name} website"
 msgstr "{name}-Website"
-
-#: plugins/publish-to-remote/src/App.svelte
-msgid "{name}: {errors} errors, {warnings} warnings"
-msgstr "{name}: {errors} Fehler, {warnings} Warnungen"
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 msgid "{path} (line {line}, col {col})"
@@ -195,6 +194,10 @@ msgstr "{path} (Zeile {line})"
 #: src/lib/components/track-changes/PatchsetReviewDialog.svelte
 msgid "{sel}/{total}"
 msgstr "{sel}/{total}"
+
+#: plugins/publish-to-remote/src/components/ImportDialog.svelte
+msgid "{size} from {destination}"
+msgstr "{size} von {destination}"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "{x} of {y}"
@@ -242,6 +245,15 @@ msgstr ""
 "\n"
 "Für echte Schreibprojekte beginnen Sie am besten damit, ein Beispiel-EPUB zu wählen, das für die Erzeugung von semantischem, barrierefreiem XHTML aus *reinem Textquelltext* vorkonfiguriert ist.\n"
 
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "+ Destination…"
+msgstr "+ Ziel…"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "✓ Catalog matches the switches below"
+msgstr "✓ Der Katalog entspricht den Schaltern unten"
+
+#: src/lib/components/books/BooksShelf.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "1 day ago"
 msgstr "vor 1 Tag"
@@ -254,9 +266,9 @@ msgstr ""
 msgid "A book needs at least one chapter"
 msgstr "Ein Buch braucht mindestens ein Kapitel"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
-msgid "A copy opened from your computer edits and packages books as usual. Features that need a web host are unavailable: publishing plugins, PDF export, the built-in reader, and installing new extensions."
-msgstr "Eine von Ihrem Computer geöffnete Kopie bearbeitet und paketiert Bücher wie gewohnt. Funktionen, die einen Webhost benötigen, sind nicht verfügbar: Veröffentlichungs-Plugins, PDF-Export, der eingebaute Reader und das Installieren neuer Erweiterungen."
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "A catalog with that name is already here."
+msgstr "Ein Katalog mit diesem Namen ist schon hier."
 
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "A generator is a script that produces source text to insert at the editor caret."
@@ -270,12 +282,16 @@ msgstr "Ein Generator mit diesem Namen existiert bereits."
 msgid "A name is required."
 msgstr "Ein Name ist erforderlich."
 
-#: src/lib/navigation/views/AboutView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "A SEED EPUB is a living document rather than a publishing dead-end, suited to distribution, contribution and long-term preservation."
 msgstr "Ein SEED-EPUB ist ein lebendiges Dokument statt einer Sackgasse des Publizierens – geeignet für Verbreitung, Mitarbeit und langfristige Bewahrung."
 
+#: src/lib/components/shell/BrandBar.svelte
+msgid "About"
+msgstr "Über"
+
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
+#: src/lib/components/shell/BrandBar.svelte
 msgid "About SEED.html"
 msgstr "Über SEED.html"
 
@@ -312,10 +328,6 @@ msgstr "Barrierefreiheit"
 msgid "Accessibility API"
 msgstr "Barrierefreiheits-API"
 
-#: src/lib/components/spine/PreviewPane.svelte
-msgid "Accessibility check (axe-core) — re-runs as you edit while open"
-msgstr "Barrierefreiheitsprüfung (axe-core) – wird bei Änderungen erneut ausgeführt, solange geöffnet"
-
 #: src/lib/components/metadata/AccessibilityFields.svelte
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Accessibility features"
@@ -333,9 +345,9 @@ msgstr ""
 msgid "Actions"
 msgstr "Aktionen"
 
-#: plugins/publish-to-remote/src/components/RemoteSelector.svelte
-msgid "Active Remote:"
-msgstr "Aktives Remote:"
+#: src/lib/components/shell/TopBar.svelte
+msgid "Actions for {title}"
+msgstr "Aktionen für {title}"
 
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
@@ -343,9 +355,21 @@ msgstr "Aktives Remote:"
 msgid "Add"
 msgstr "Hinzufügen"
 
+#: src/lib/navigation/views/SpineView.svelte
+msgid "Add a chapter to start writing."
+msgstr "Füge ein Kapitel hinzu, um zu schreiben."
+
 #: src/lib/components/metadata/CollectionsEditor.svelte
 msgid "Add a collection"
 msgstr "Sammlung hinzufügen"
+
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
+msgid "Add a destination"
+msgstr "Ziel hinzufügen"
+
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "Add a destination…"
+msgstr "Ziel hinzufügen…"
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Add a DOM transform"
@@ -387,9 +411,17 @@ msgstr "Weiteren Titel hinzufügen"
 msgid "Add as a new chapter"
 msgstr "Als neues Kapitel hinzufügen"
 
+#: src/lib/components/shell/ChapterStrip.svelte
+msgid "Add chapter"
+msgstr "Kapitel hinzufügen"
+
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Add Destination"
 msgstr "Ziel hinzufügen"
+
+#: src/lib/components/manifest/ManifestTable.svelte
+msgid "Add files…"
+msgstr "Dateien hinzufügen…"
 
 #: src/lib/components/metadata/LanguageEditor.svelte
 msgid "Add Language"
@@ -398,10 +430,6 @@ msgstr "Sprache hinzufügen"
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Add option"
 msgstr "Option hinzufügen"
-
-#: plugins/publish-to-remote/src/components/RemoteSelector.svelte
-msgid "Add Remote"
-msgstr "Remote hinzufügen"
 
 #: src/lib/components/metadata/CreatorRoleEditor.svelte
 msgid "Add role"
@@ -431,10 +459,6 @@ msgstr ""
 msgid "Add to project"
 msgstr "Hinzufügen"
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Add to the current project, then enable under Project Settings."
-msgstr "Zum aktuellen Projekt hinzufügen, dann in den Projekteinstellungen aktivieren."
-
 #: src/lib/components/settings/TranslationsPanel.svelte
 msgid "Add translation"
 msgstr ""
@@ -455,29 +479,24 @@ msgstr "Zusätzliche Kennung"
 msgid "Additional Information"
 msgstr "Zusätzliche Informationen"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
-msgid "Additional libraries used when the editor runs online."
-msgstr "Zusätzliche Bibliotheken, die verwendet werden, wenn der Editor online läuft."
-
 #: src/lib/components/metadata/TitleEditor.svelte
 msgid "Additional title"
 msgstr "Zusätzlicher Titel"
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Adopt a markup language for the current project."
-msgstr "Eine Auszeichnungssprache für das aktuelle Projekt übernehmen."
 
 #: src/lib/components/metadata/MetadataEditor.svelte
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Advanced"
 msgstr "Erweitert"
 
+#: src/lib/components/metadata/MetadataEditor.svelte
+msgid "Advanced details"
+msgstr "Erweiterte Angaben"
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Advanced mode"
 msgstr "Erweiterter Modus"
 
 #: src/lib/components/settings/GeneratorSettings.svelte
-#: src/lib/navigation/views/SettingsView.svelte
 msgid "Advanced Mode required for extension management"
 msgstr "Für die Erweiterungsverwaltung ist der erweiterte Modus erforderlich"
 
@@ -485,13 +504,13 @@ msgstr "Für die Erweiterungsverwaltung ist der erweiterte Modus erforderlich"
 msgid "afterword"
 msgstr ""
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
-msgid "AI Disclaimer"
-msgstr "KI-Hinweis"
-
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 msgid "Already in the catalog"
 msgstr "Bereits im Katalog"
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Also in this chapter"
+msgstr "Auch in diesem Kapitel"
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Announce"
@@ -514,10 +533,10 @@ msgid "App Key"
 msgstr "App-Schlüssel"
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid "App Settings"
-msgstr "App-Einstellungen"
+msgid "Appearance"
+msgstr "Darstellung"
 
-#: src/lib/Sidebar.svelte
+#: src/lib/components/shell/WriteSidebar.svelte
 msgid "Append Item"
 msgstr "Element anhängen"
 
@@ -620,7 +639,9 @@ msgstr "Name des Autors"
 msgid "Authority (e.g. BISAC)"
 msgstr "Klassifikation (z. B. BISAC)"
 
-#: plugins/publish-to-remote/src/App.svelte
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
 msgid "Authorization failed: {error}"
 msgstr "Autorisierung fehlgeschlagen: {error}"
 
@@ -653,7 +674,7 @@ msgstr "Automatisch aus der URL ausgefüllt"
 msgid "Automatic: {id}"
 msgstr "Automatisch: {id}"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Available when running online"
 msgstr "Verfügbar im Online-Betrieb"
 
@@ -668,18 +689,6 @@ msgstr ""
 #: src/lib/components/spine/sr-walk.ts
 msgid "banner"
 msgstr "Banner"
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Basic"
-msgstr "Einfach"
-
-#: src/lib/components/metadata/MetadataEditor.svelte
-msgid "Basic Info"
-msgstr "Generelle Informationen"
-
-#: src/lib/Sidebar.svelte
-msgid "Basic mode"
-msgstr "Einfacher Modus"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "bibliography"
@@ -705,9 +714,24 @@ msgstr "Zitatblock"
 msgid "Bold, emphasis and heading styles only."
 msgstr "Nur Fett-, Hervorhebungs- und Überschriftenstile."
 
+#: src/lib/components/shell/BottomTabs.svelte
+#: src/lib/components/shell/TopBar.svelte
+msgid "Book"
+msgstr "Buch"
+
 #: src/lib/components/settings/TranslationsPanel.svelte
 msgid "Book language"
 msgstr ""
+
+#: src/lib/components/shell/TopBar.svelte
+msgid "Book sections"
+msgstr "Buchbereiche"
+
+#: src/App.svelte
+#: src/lib/components/shell/TopBar.svelte
+#: src/lib/navigation/views/BooksView.svelte
+msgid "Books"
+msgstr "Bücher"
 
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Both"
@@ -717,29 +741,23 @@ msgstr "Beide"
 msgid "Both values are required. rendition:viewport is deprecated in EPUB 3.3."
 msgstr "Beide Werte sind erforderlich. rendition:viewport ist in EPUB 3.3 veraltet."
 
-#: plugins/publish-to-remote/src/App.svelte
-msgid "Bring-your-own File Storage"
-msgstr "Eigener Dateispeicher"
-
-#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
-msgid "Bucket is empty"
-msgstr "Bucket ist leer"
-
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Bucket Name"
 msgstr "Bucket-Name"
-
-#: src/lib/components/spine/EditorPane.svelte
-#. Dropdown group for build-time transform scripts (not shipped)
-msgid "Build scripts"
-msgstr "Build-Skripte"
 
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 msgid "Built-in"
 msgstr "Integriert"
 
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "By"
+msgstr "Von"
+
+#: plugins/publish-to-remote/src/components/CatalogIdentityForm.svelte
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+#: plugins/publish-to-remote/src/components/ImportDialog.svelte
 #: src/lib/components/EditSpineItemDialog.svelte
+#: src/lib/components/books/DeleteBookDialog.svelte
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
 #: src/lib/components/manifest/MoveReviewDialog.svelte
@@ -752,6 +770,10 @@ msgstr "Integriert"
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Cancel"
 msgstr "Abbrechen"
+
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
+msgid "Cannot connect"
+msgstr "Keine Verbindung"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "caption"
@@ -769,7 +791,12 @@ msgstr "{n} geänderte Datei(en) erfasst."
 msgid "Captured change sets. Those matching this project are listed first."
 msgstr "Erfasste Änderungssätze. Passende zu diesem Projekt werden zuerst aufgeführt."
 
-#: plugins/publish-to-remote/src/App.svelte
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Catalog"
+msgstr "Katalog"
+
+#: plugins/publish-to-remote/src/components/CatalogIdentityForm.svelte
 msgid "Catalog file"
 msgstr "Katalogdatei"
 
@@ -777,15 +804,12 @@ msgstr "Katalogdatei"
 msgid "Catalog Filename (optional)"
 msgstr "Katalog-Dateiname (optional)"
 
-#: plugins/publish-to-remote/src/App.svelte
-msgid "Catalog update error: {error}"
-msgstr "Fehler bei der Katalogaktualisierung: {error}"
-
-#: plugins/publish-to-remote/src/App.svelte
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
 msgid "Catalog update failed"
 msgstr "Katalogaktualisierung fehlgeschlagen"
 
-#: plugins/publish-to-remote/src/App.svelte
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 msgid "Catalog updated: {url}"
 msgstr "Katalog aktualisiert: {url}"
 
@@ -793,7 +817,7 @@ msgstr "Katalog aktualisiert: {url}"
 msgid "Catalog URL"
 msgstr "Katalog-URL"
 
-#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 msgid "Catalogs"
 msgstr "Kataloge"
 
@@ -825,6 +849,10 @@ msgstr "Ordner ändern"
 msgid "Change folder…"
 msgstr "Ordner wechseln…"
 
+#: src/lib/components/manifest/ManifestPreview.svelte
+msgid "Change in Cover"
+msgstr "Unter „Cover“ ändern"
+
 #: src/lib/components/track-changes/PatchsetReviewDialog.svelte
 msgid "Changed files"
 msgstr "Geänderte Dateien"
@@ -837,6 +865,10 @@ msgstr "Änderungen"
 #: src/lib/components/spine/sr-walk.ts
 msgid "chapter"
 msgstr "Kapitel"
+
+#: src/lib/components/manifest/ManifestTable.svelte
+msgid "Chapter {n}"
+msgstr "Kapitel {n}"
 
 #: src/lib/content/types.ts
 msgid "Chapter 1: Getting Started"
@@ -858,16 +890,8 @@ msgstr ""
 msgid "Chapter PDF"
 msgstr "Kapitel-PDF"
 
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Chapter title"
-msgstr "Kapiteltitel"
-
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Chapter title — used in the content document <title>; defaults to the spine id"
-msgstr "Kapiteltitel – wird im <title> des Inhaltsdokuments verwendet; Standard ist die Spine-ID"
-
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
+#: src/lib/components/shell/ChapterStrip.svelte
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Chapters"
 msgstr "Kapitel"
@@ -881,6 +905,9 @@ msgstr "Kontrollkästchen"
 msgid "Checked:"
 msgstr "Geprüft:"
 
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Checking…"
 msgstr "Wird geprüft…"
@@ -908,6 +935,15 @@ msgstr ""
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Choose device again…"
 msgstr "Gerät erneut auswählen…"
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Choose device…"
+msgstr "Gerät wählen…"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "Choose the device again in Settings › Destinations."
+msgstr "Wähle das Gerät unter Einstellungen › Ziele erneut."
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Choose the SEED.html file to embed."
@@ -943,6 +979,7 @@ msgstr "Clip-Bezeichnung"
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
 #: src/lib/components/manifest/MoveReviewDialog.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 #: src/lib/components/spine/ChapterValidationPanel.svelte
 #: src/lib/components/spine/EditorPane.svelte
 #: src/lib/components/spine/PreviewPane.svelte
@@ -950,6 +987,7 @@ msgstr "Clip-Bezeichnung"
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 #: src/lib/components/workspace/DuplicateProjectDialog.svelte
 #: src/lib/components/workspace/OPDSImportDialog.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 #: src/lib/pdf/pdf-export.ts
 msgid "Close"
 msgstr "Schließen"
@@ -1011,6 +1049,10 @@ msgstr "Sammlungen"
 msgid "colophon"
 msgstr ""
 
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Colour"
+msgstr "Farbe"
+
 #: src/lib/components/spine/sr-walk.ts
 msgid "column header"
 msgstr "Spaltenüberschrift"
@@ -1041,8 +1083,7 @@ msgstr "Komplex interaktiv"
 msgid "conclusion"
 msgstr "Schluss"
 
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
-#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 #: src/lib/components/extensions/ExtensionItem.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Confirm delete?"
@@ -1065,6 +1106,11 @@ msgstr "Konformität"
 msgid "Conformance level"
 msgstr "Konformitätsstufe"
 
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "Connect"
+msgstr "Verbinden"
+
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Connect & Pick Folder"
 msgstr "Verbinden & Ordner auswählen"
@@ -1073,17 +1119,21 @@ msgstr "Verbinden & Ordner auswählen"
 msgid "Connect to Dropbox"
 msgstr "Mit Dropbox verbinden"
 
-#: plugins/publish-to-remote/src/components/RemoteSelector.svelte
-msgid "Connect to Google Drive"
-msgstr "Mit Google Drive verbinden"
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Connect to Dropbox again"
+msgstr "Erneut mit Dropbox verbinden"
 
-#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
-msgid "Connect to Google Drive to view files."
-msgstr "Mit Google Drive verbinden, um Dateien anzuzeigen."
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
+msgid "Connected"
+msgstr "Verbunden"
 
-#: plugins/publish-to-remote/src/App.svelte
-msgid "Connecting to storage..."
-msgstr "Verbindung zum Speicher wird hergestellt..."
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Connected to Dropbox again. Save to keep it."
+msgstr "Erneut mit Dropbox verbunden. Speichern, um es zu behalten."
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Connecting…"
+msgstr "Wird verbunden…"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "content information"
@@ -1113,6 +1163,12 @@ msgstr "Inhaltstyp"
 msgid "Content Type:"
 msgstr "Inhaltstyp:"
 
+#: src/lib/components/manifest/ManifestTable.svelte
+#: src/lib/components/shell/TopBar.svelte
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Contents"
+msgstr "Inhalt"
+
 #: src/lib/components/settings/TranslationsPanel.svelte
 msgid "Continue"
 msgstr ""
@@ -1133,26 +1189,17 @@ msgstr "Steuerungsmethoden"
 msgid "Copied"
 msgstr "Kopiert"
 
-#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 #: src/lib/components/spine/GeneratorPanel.svelte
 msgid "Copy"
 msgstr "Kopieren"
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Copy the library's license text into the License field below."
-msgstr "Kopieren Sie den Lizenztext der Bibliothek in das untenstehende Lizenzfeld."
-
-#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
-msgid "Copy URL"
-msgstr "URL kopieren"
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "Copy feed link"
+msgstr "Feed-Link kopieren"
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Could not capture the editor"
 msgstr "Editor konnte nicht erfasst werden"
-
-#: plugins/publish-to-remote/src/App.svelte
-msgid "Could not load catalog: {error}"
-msgstr "Katalog konnte nicht geladen werden: {error}"
 
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 msgid "Could not load the feed: {error}. The server may not allow cross-origin requests."
@@ -1170,9 +1217,9 @@ msgstr "Die Screenreader-Vorschau konnte nicht geladen werden."
 msgid "Could not open the print window. Allow pop-ups for this site to save as PDF."
 msgstr ""
 
-#: plugins/publish-to-remote/src/App.svelte
-msgid "Could not read that catalog"
-msgstr "Dieser Katalog konnte nicht gelesen werden"
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "Could not read that file"
+msgstr "Die Datei konnte nicht gelesen werden"
 
 #: plugins/photo-regions/src/App.svelte
 msgid "Could not read the image: {error}"
@@ -1194,7 +1241,12 @@ msgstr ""
 msgid "cover"
 msgstr "Cover"
 
+#: src/App.svelte
+#: src/lib/components/manifest/ManifestPreview.svelte
+#: src/lib/components/manifest/ManifestTable.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/components/shell/TopBar.svelte
+#: src/lib/navigation/views/CoverView.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Cover"
 msgstr "Cover"
@@ -1203,26 +1255,19 @@ msgstr "Cover"
 msgid "Cover background hue"
 msgstr "Cover-Hintergrundton"
 
-#: src/lib/components/manifest/ManifestPreview.svelte
-msgid "Cover image"
-msgstr "Coverbild"
-
-#: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Cover image generated"
 msgstr "Coverbild erzeugt"
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Cover image updated"
 msgstr "Coverbild aktualisiert"
-
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Cover text style"
-msgstr "Cover-Textstil"
 
 #: src/lib/components/metadata/AdvancedFields.svelte
 msgid "Coverage"
 msgstr "Abdeckung"
 
+#: plugins/publish-to-remote/src/components/CatalogIdentityForm.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "Create"
 msgstr "Erstellen"
@@ -1231,9 +1276,9 @@ msgstr "Erstellen"
 msgid "Create a new minimal EPUB project"
 msgstr "Ein neues minimales EPUB-Projekt erstellen"
 
-#: plugins/publish-to-remote/src/App.svelte
-msgid "Create Catalog"
-msgstr "Katalog erstellen"
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "Create catalog…"
+msgstr "Katalog anlegen…"
 
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Create generator"
@@ -1250,10 +1295,6 @@ msgstr "„Erstellen“ legt ein Startskript an, bearbeitbar über das Dateimen�
 #: src/lib/components/manifest/ManifestTable.svelte
 msgid "Create your first item using the buttons above"
 msgstr "Erstellen Sie Ihr erstes Element über die Schaltflächen oben"
-
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Creates a cover with the colour and theme above."
-msgstr "Erstellt ein Coverbild mit der oben gewählten Farbe und dem Thema."
 
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "Creating…"
@@ -1310,10 +1351,6 @@ msgstr "Aktuelles Coverbild"
 msgid "Current Settings:"
 msgstr "Aktuelle Einstellungen:"
 
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "Currently Active Project"
-msgstr "Derzeit aktives Projekt"
-
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Currently open"
 msgstr "Derzeit geöffnet"
@@ -1323,12 +1360,9 @@ msgid "Custom margin"
 msgstr ""
 
 #: src/lib/components/metadata/CustomMetaSection.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Custom metadata"
 msgstr "Benutzerdefinierte Metadaten"
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Custom metadata catalog"
-msgstr "Katalog benutzerdefinierter Metadaten"
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Custom page size"
@@ -1348,9 +1382,9 @@ msgstr "dunkel"
 msgid "Dark"
 msgstr "Dunkel"
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Dark text on a light cover"
-msgstr "Dunkler Text auf hellem Cover"
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Dark on light"
+msgstr "Dunkel auf Hell"
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Declared fixed-layout page size"
@@ -1386,8 +1420,7 @@ msgid "definition"
 msgstr "Definition"
 
 #: plugins/audio-clip-editor/src/App.svelte
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
-#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
+#: src/lib/components/books/DeleteBookDialog.svelte
 #: src/lib/components/manifest/ManifestPreview.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
 #: src/lib/components/settings/TranslationsPanel.svelte
@@ -1397,10 +1430,6 @@ msgstr "Definition"
 msgid "Delete"
 msgstr "Löschen"
 
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "Delete \"{title}\"? This cannot be undone."
-msgstr "\"{title}\" löschen? Dies kann nicht rückgängig gemacht werden."
-
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Delete {count} chapters?"
 msgstr "{count} Kapitel löschen?"
@@ -1408,6 +1437,10 @@ msgstr "{count} Kapitel löschen?"
 #: src/App.svelte
 msgid "Delete {count} items? This cannot be undone."
 msgstr ""
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "Delete {file}? The books stay."
+msgstr "{file} löschen? Die Bücher bleiben."
 
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Delete {filename}? This cannot be undone."
@@ -1417,15 +1450,15 @@ msgstr "{filename} löschen? Dies kann nicht rückgängig gemacht werden."
 msgid "Delete {name}? This cannot be undone."
 msgstr "{name} löschen? Dies kann nicht rückgängig gemacht werden."
 
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "Delete catalog"
+msgstr "Katalog löschen"
+
 #: src/lib/components/SpineItem.svelte
 msgid "Delete chapter {name}"
 msgstr "Kapitel {name} löschen"
 
-#: plugins/publish-to-remote/src/App.svelte
-msgid "Delete error: {error}"
-msgstr "Fehler beim Löschen: {error}"
-
-#: plugins/publish-to-remote/src/App.svelte
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 msgid "Delete failed"
 msgstr "Löschen fehlgeschlagen"
 
@@ -1449,9 +1482,22 @@ msgstr ""
 msgid "Delete the stored {tag} translation? This cannot be undone."
 msgstr ""
 
+#: src/lib/components/books/DeleteBookDialog.svelte
+msgid "Delete this book?"
+msgstr "Dieses Buch löschen?"
+
+#: src/lib/components/books/BooksShelf.svelte
+#: src/lib/components/shell/TopBar.svelte
+msgid "Delete…"
+msgstr "Löschen…"
+
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Deleted {count} chapters"
 msgstr "{count} Kapitel gelöscht"
+
+#: src/lib/components/books/DeleteBookDialog.svelte
+msgid "Deleting…"
+msgstr "Wird gelöscht…"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "deletion"
@@ -1467,11 +1513,29 @@ msgstr "Demo-Steuerung"
 msgid "Description"
 msgstr "Beschreibung"
 
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "Destination"
+msgstr "Ziel"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Destinations"
+msgstr "Ziele"
+
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "Destinations…"
+msgstr "Ziele…"
+
+#: src/lib/components/metadata/MetadataEditor.svelte
+#: src/lib/components/shell/TopBar.svelte
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Details"
+msgstr "Details"
+
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Detected: {detail} on volume \"{volume}\""
 msgstr "Erkannt: {detail} auf Laufwerk \"{volume}\""
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Developed by Stewart Haines."
 msgstr "Entwickelt von Stewart Haines."
 
@@ -1479,6 +1543,10 @@ msgstr "Entwickelt von Stewart Haines."
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Device"
 msgstr "Gerät"
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Device size"
+msgstr "Gerätegröße"
 
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Device:"
@@ -1492,7 +1560,7 @@ msgstr "Verzeichnis"
 msgid "Discovered in this book"
 msgstr "In diesem Buch entdeckt"
 
-#: plugins/publish-to-remote/src/App.svelte
+#: plugins/publish-to-remote/src/components/Toast.svelte
 #: src/lib/components/Toast.svelte
 msgid "Dismiss"
 msgstr "Verwerfen"
@@ -1501,31 +1569,26 @@ msgstr "Verwerfen"
 msgid "document"
 msgstr "Dokument"
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "DOM Transforms"
-msgstr "DOM-Transformationen"
-
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
 #: src/lib/components/manifest/ManifestPreview.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Download"
 msgstr "Herunterladen"
 
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
-msgid "Download EPUB to disk"
-msgstr "EPUB auf die Festplatte herunterladen"
-
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Download failed — try again"
 msgstr "Download fehlgeschlagen — bitte erneut versuchen"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Download SEED.html"
 msgstr "SEED.html herunterladen"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
-msgid "Download the app"
-msgstr "Die App herunterladen"
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Download the EPUB"
+msgstr "EPUB herunterladen"
+
+#: plugins/publish-to-remote/src/components/ImportDialog.svelte
+msgid "Downloading…"
+msgstr "Wird heruntergeladen…"
 
 #: plugins/audio-clip-editor/src/App.svelte
 msgid "Drag on the waveform to define a clip."
@@ -1540,6 +1603,7 @@ msgid "Drop to add to the manifest"
 msgstr "Ablegen, um zum Manifest hinzuzufügen"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
 msgid "Dropbox"
 msgstr "Dropbox"
 
@@ -1555,6 +1619,8 @@ msgstr "Dropbox-Autorisierung fehlgeschlagen: {error}"
 msgid "Dropdown"
 msgstr "Auswahlliste"
 
+#: src/lib/components/books/BooksShelf.svelte
+#: src/lib/components/shell/TopBar.svelte
 #: src/lib/components/workspace/DuplicateProjectDialog.svelte
 #: src/lib/components/workspace/WorkspaceActionBar.svelte
 msgid "Duplicate"
@@ -1575,6 +1641,10 @@ msgstr "Wird dupliziert…"
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Duration"
 msgstr "Dauer"
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "E-reader"
+msgstr "E-Reader"
 
 #: src/lib/components/metadata/CollectionsEditor.svelte
 msgid "e.g. 2"
@@ -1617,7 +1687,7 @@ msgstr "Jede Zeile ist eine Kombination von Modi, die für sich genommen ausreic
 msgid "EBPAJ production guide version"
 msgstr "Version des EBPAJ-Produktionsleitfadens"
 
-#: plugins/publish-to-remote/src/components/RemoteSelector.svelte
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Edit"
 msgstr "Bearbeiten"
@@ -1633,6 +1703,10 @@ msgstr "Kapitel bearbeiten"
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Edit generator"
 msgstr "Generator bearbeiten"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "Edit…"
+msgstr "Bearbeiten…"
 
 #: src/lib/components/metadata/TitleEditor.svelte
 msgid "Edition"
@@ -2034,10 +2108,6 @@ msgstr ""
 msgid "epilogue"
 msgstr "Epilog"
 
-#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
-msgid "EPUB"
-msgstr "EPUB"
-
 #: src/lib/metadata/custom-meta-catalog.svelte.ts
 msgid "EPUB 2 cover image (Google Play Books)"
 msgstr "EPUB-2-Coverbild (Google Play Books)"
@@ -2052,22 +2122,15 @@ msgstr "EPUB-2-Name"
 msgid "EPUB 3 property"
 msgstr "EPUB-3-Eigenschaft"
 
-#: src/lib/navigation/views/AboutView.svelte
-msgid "EPUB is the open standard for digital books: a self-contained file of text, styles, and images that any Reading System app can open. Because the format is open, your book can be read anywhere. It reflows to fit any screen and adapts to each reader's chosen size, font, and contrast."
-msgstr "EPUB ist der offene Standard für digitale Bücher: eine eigenständige Datei aus Text, Stilen und Bildern, die jede Lesesystem-App öffnen kann. Weil das Format offen ist, lässt sich Ihr Buch überall lesen. Es fließt auf jede Bildschirmgröße um und passt sich der gewählten Schriftgröße, Schriftart und dem Kontrast an."
-
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "EPUB Properties"
 msgstr "EPUB-Eigenschaften"
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "EPUB Settings"
-msgstr "EPUB-Einstellungen"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "errata"
 msgstr ""
 
+#: src/lib/components/books/BooksShelf.svelte
 #: src/lib/components/spine/PreviewPane.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
 #: src/lib/navigation/views/SettingsView.svelte
@@ -2082,6 +2145,15 @@ msgstr "Fehler:"
 msgid "Essential Information"
 msgstr "Obligatorische Informationen"
 
+#: src/lib/navigation/views/PublishedView.svelte
+msgid "Every book on a destination, and whether it is in the destination’s catalog."
+msgstr "Jedes Buch auf einem Ziel, und ob es im Katalog des Ziels steht."
+
+#: src/lib/components/manifest/ManifestTable.svelte
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Every chapter"
+msgstr "Jedes Kapitel"
+
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 msgid "Everything up to date."
 msgstr "Alles auf dem neuesten Stand."
@@ -2095,8 +2167,8 @@ msgid "Expanded"
 msgstr "Erweitert"
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid "Extensions"
-msgstr "Erweiterungen"
+msgid "Extensions in use"
+msgstr "Verwendete Erweiterungen"
 
 #: src/lib/components/spine/PreviewPane.svelte
 #. Device size for largest tablet screens
@@ -2123,13 +2195,13 @@ msgstr "Sprache konnte nicht geändert werden"
 msgid "Failed to create project."
 msgstr "Projekt konnte nicht erstellt werden."
 
+#: src/lib/components/books/DeleteBookDialog.svelte
+msgid "Failed to delete book."
+msgstr "Das Buch konnte nicht gelöscht werden."
+
 #: src/lib/components/manifest/ManifestContainer.svelte
 msgid "Failed to delete item"
 msgstr "Element konnte nicht gelöscht werden"
-
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "Failed to delete workspace: {error}"
-msgstr "Arbeitsbereich konnte nicht gelöscht werden: {error}"
 
 #: src/lib/components/workspace/DuplicateProjectDialog.svelte
 msgid "Failed to duplicate project."
@@ -2151,13 +2223,21 @@ msgstr ""
 msgid "Failed to import 1 dropped file"
 msgstr ""
 
-#: src/lib/navigation/views/WorkspaceView.svelte
+#: src/App.svelte
+msgid "Failed to import EPUB"
+msgstr "EPUB konnte nicht importiert werden"
+
+#: src/lib/navigation/views/BooksView.svelte
 msgid "Failed to import EPUB: {error}"
 msgstr "EPUB konnte nicht importiert werden: {error}"
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Failed to import extension"
 msgstr "Erweiterung konnte nicht importiert werden"
+
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Failed to import file"
+msgstr "Die Datei konnte nicht importiert werden"
 
 #: src/lib/components/import/ImportReviewDialog.svelte
 #: src/lib/components/manifest/ManifestContainer.svelte
@@ -2168,11 +2248,16 @@ msgstr "Dateien konnten nicht importiert werden"
 msgid "Failed to import the selected book."
 msgstr "Das ausgewählte Buch konnte nicht importiert werden."
 
+#: plugins/publish-to-remote/src/App.svelte
+msgid "Failed to load config: {error}"
+msgstr "Konfiguration konnte nicht geladen werden: {error}"
+
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "Failed to load content preview"
 msgstr "Inhaltsvorschau konnte nicht geladen werden"
 
-#: plugins/publish-to-remote/src/App.svelte
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
 msgid "Failed to load EPUBs: {error}"
 msgstr "EPUBs konnten nicht geladen werden: {error}"
 
@@ -2180,7 +2265,7 @@ msgstr "EPUBs konnten nicht geladen werden: {error}"
 msgid "Failed to load manifest"
 msgstr "Manifest konnte nicht geladen werden"
 
-#: src/lib/navigation/views/WorkspaceView.svelte
+#: src/lib/navigation/views/BooksView.svelte
 msgid "Failed to load projects"
 msgstr "Projekte konnten nicht geladen werden"
 
@@ -2193,9 +2278,13 @@ msgstr "Einstellungen konnten nicht geladen werden"
 msgid "Failed to move files"
 msgstr "Dateien konnten nicht verschoben werden"
 
-#: src/lib/navigation/views/WorkspaceView.svelte
+#: src/lib/navigation/views/BooksView.svelte
 msgid "Failed to open workspace: {error}"
 msgstr "Arbeitsbereich konnte nicht geöffnet werden: {error}"
+
+#: src/App.svelte
+msgid "Failed to package EPUB"
+msgstr "EPUB konnte nicht gepackt werden"
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Failed to remove extension"
@@ -2205,7 +2294,7 @@ msgstr "Erweiterung konnte nicht entfernt werden"
 msgid "Failed to remove metadata item"
 msgstr "Metadaten-Element konnte nicht entfernt werden"
 
-#: plugins/publish-to-remote/src/App.svelte
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
 msgid "Failed to save config: {error}"
 msgstr "Konfiguration konnte nicht gespeichert werden: {error}"
 
@@ -2249,6 +2338,10 @@ msgstr "Abrufen"
 msgid "figure"
 msgstr "Abbildung"
 
+#: src/lib/navigation/views/PublishView.svelte
+msgid "File"
+msgstr "Datei"
+
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "Filename"
 msgstr "Dateiname"
@@ -2256,6 +2349,14 @@ msgstr "Dateiname"
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "files"
 msgstr "Dateien"
+
+#: src/lib/components/shell/TopBar.svelte
+msgid "Files"
+msgstr "Dateien"
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Files for this chapter"
+msgstr "Dateien zu diesem Kapitel"
 
 #: src/lib/components/spine/PreviewPane.svelte
 #. Responsive view that fills all available preview space
@@ -2310,6 +2411,14 @@ msgstr "Schrift:"
 msgid "footnote"
 msgstr "Fußnote"
 
+#: src/lib/navigation/views/PublishView.svelte
+msgid "For any reading app."
+msgstr "Für jede Lese-App."
+
+#: src/lib/navigation/views/PublishView.svelte
+msgid "For printing."
+msgstr "Zum Drucken."
+
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Force reading-system colours"
 msgstr "Farben des Lesesystems erzwingen"
@@ -2322,20 +2431,20 @@ msgstr "Geleitwort"
 msgid "form"
 msgstr ""
 
-#: plugins/publish-to-remote/src/App.svelte
+#: plugins/publish-to-remote/src/components/CatalogIdentityForm.svelte
 #: src/lib/components/metadata/AdvancedFields.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Format"
 msgstr "Format"
-
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "General"
-msgstr "Allgemein"
 
 #: src/lib/components/metadata/IdentifierEditor.svelte
 msgid "Generate"
 msgstr "Erzeugen"
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Generate cover"
+msgstr "Cover erzeugen"
+
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "Generate cover image"
 msgstr "Coverbild erzeugen"
@@ -2344,8 +2453,7 @@ msgstr "Coverbild erzeugen"
 msgid "Generate patchset"
 msgstr "Änderungssatz erzeugen"
 
-#: src/lib/navigation/views/AboutView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
+#: src/lib/navigation/views/PublishView.svelte
 msgid "Generate PDF"
 msgstr "PDF erstellen"
 
@@ -2353,22 +2461,22 @@ msgstr "PDF erstellen"
 msgid "Generating navigation from chapters..."
 msgstr "Navigation wird aus Kapiteln erzeugt..."
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
 #: src/lib/components/spine/GeneratorPanel.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Generating…"
 msgstr "Wird erzeugt…"
 
 #: src/lib/components/settings/GeneratorSettings.svelte
 #: src/lib/components/spine/EditorPane.svelte
 #: src/lib/components/spine/GeneratorPanel.svelte
-#. Dropdown group for on-demand content generator scripts
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Generators"
 msgstr "Generatoren"
 
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "Get Started"
-msgstr "Loslegen"
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Get the book"
+msgstr "Das Buch erhalten"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "glossary"
@@ -2383,12 +2491,9 @@ msgid "Google Cloud API key"
 msgstr "Google-Cloud-API-Schlüssel"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
 msgid "Google Drive"
 msgstr "Google Drive"
-
-#: plugins/publish-to-remote/src/components/RemoteSelector.svelte
-msgid "Google Drive authorization required."
-msgstr "Google-Drive-Autorisierung erforderlich."
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Google Drive credentials not configured"
@@ -2430,14 +2535,14 @@ msgstr ""
 msgid "Hide preview"
 msgstr "Vorschau ausblenden"
 
-#: src/lib/Sidebar.svelte
-msgid "Hide project sections"
-msgstr "Projektbereiche ausblenden"
-
 #: src/lib/components/spine/PreviewPane.svelte
 #. Device category for tablet reading in comfortable home settings
 msgid "Home (tablet)"
 msgstr "Zuhause (Tablet)"
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "How chapters are made"
+msgstr "Wie Kapitel entstehen"
 
 #: src/lib/components/metadata/AccessibilityFields.svelte
 msgid "Human-readable summary of the accessibility of this publication"
@@ -2481,9 +2586,14 @@ msgstr ""
 msgid "Images"
 msgstr ""
 
+#: plugins/publish-to-remote/src/components/ImportDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
 msgid "Import"
 msgstr "Importieren"
+
+#: plugins/publish-to-remote/src/components/ImportDialog.svelte
+msgid "Import {title}?"
+msgstr "{title} importieren?"
 
 #: src/lib/components/workspace/WorkspaceActionBar.svelte
 msgid "Import an EPUB from a catalog URL"
@@ -2510,10 +2620,32 @@ msgstr "Aus Dateien importieren"
 msgid "Import JavaScript Extension"
 msgstr "JavaScript-Erweiterung importieren"
 
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "Import…"
+msgstr "Importieren…"
+
 #: src/lib/components/import/ImportReviewDialog.svelte
 #: src/lib/components/workspace/OPDSImportDialog.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Importing…"
 msgstr "Wird importiert…"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "In {catalog}"
+msgstr "In {catalog}"
+
+#: src/lib/navigation/views/CoverView.svelte
+msgid "In a reading app"
+msgstr "In einer Lese-App"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "In catalog"
+msgstr "Im Katalog"
+
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "In the catalog"
+msgstr "Im Katalog"
 
 #: plugins/photo-regions/src/App.svelte
 msgid "In this chapter"
@@ -2522,10 +2654,6 @@ msgstr ""
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Include cover page"
 msgstr "Inklusive Titelseite"
-
-#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
-msgid "Include in catalog"
-msgstr "In Katalog aufnehmen"
 
 #: src/lib/components/EditSpineItemDialog.svelte
 msgid "Include in the linear reading order"
@@ -2562,10 +2690,6 @@ msgstr "Editor wird initialisiert..."
 #: src/App.svelte
 msgid "Initializing transform engine..."
 msgstr "Transformations-Engine wird initialisiert..."
-
-#: plugins/publish-to-remote/src/App.svelte
-msgid "Initializing..."
-msgstr "Wird initialisiert..."
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Inject preview/head.xml into the preview, per preview type. Never exported."
@@ -2618,8 +2742,8 @@ msgid "insertion"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid "Interface options"
-msgstr "Oberflächenoptionen"
+msgid "Insertion templates"
+msgstr "Einfügevorlagen"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "introduction"
@@ -2632,10 +2756,6 @@ msgstr "Ungültig"
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Invalid audio clip template"
 msgstr ""
-
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
-msgid "Invalid EPUB"
-msgstr "Ungültiges EPUB"
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Invalid media template"
@@ -2669,6 +2789,14 @@ msgstr "iPhone 15 Pro Max (430×932)"
 msgid "iPhone SE (375×667)"
 msgstr "iPhone SE (375×667)"
 
+#: plugins/publish-to-remote/src/components/ImportDialog.svelte
+msgid "It becomes a new book on this device. The copy on the destination stays as it is."
+msgstr "Es wird ein neues Buch auf diesem Gerät. Die Kopie auf dem Ziel bleibt, wie sie ist."
+
+#: src/lib/components/books/DeleteBookDialog.svelte
+msgid "It is removed from this browser. Packaged EPUBs you downloaded are unaffected."
+msgstr "Es wird aus diesem Browser entfernt. Heruntergeladene EPUB-Pakete bleiben erhalten."
+
 #: src/lib/components/SpineItem.svelte
 msgid "Item controls"
 msgstr "Element-Steuerung"
@@ -2677,6 +2805,7 @@ msgstr "Element-Steuerung"
 msgid "Japanese publishing"
 msgstr "Japanisches Verlagswesen"
 
+#: src/lib/components/books/BooksShelf.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Just now"
 msgstr "Gerade eben"
@@ -2701,6 +2830,10 @@ msgstr "Beide behalten (als neues Element importieren)"
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 msgid "Keep the chapter"
 msgstr "Kapitel behalten"
+
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Kept in this browser"
+msgstr "In diesem Browser gespeichert"
 
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
@@ -2760,7 +2893,6 @@ msgstr "Querformat"
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 #: src/lib/navigation/views/SettingsView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Language"
 msgstr "Sprache"
 
@@ -2807,7 +2939,7 @@ msgid "level {n}"
 msgstr "Ebene {n}"
 
 #: src/lib/components/extensions/ExtensionItem.svelte
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "License"
 msgstr "Lizenz"
 
@@ -2821,9 +2953,9 @@ msgstr "hell"
 msgid "Light"
 msgstr "Hell"
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Light text on a dark cover"
-msgstr "Heller Text auf dunklem Cover"
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Light on dark"
+msgstr "Hell auf Dunkel"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "link"
@@ -2853,10 +2985,6 @@ msgstr "Listeneintrag"
 msgid "Load clip data from selected text"
 msgstr "Clip-Daten aus ausgewähltem Text laden"
 
-#: src/lib/components/manifest/ManifestTable.svelte
-msgid "Load File"
-msgstr "Datei laden"
-
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Load from Selection"
 msgstr "Aus Auswahl laden"
@@ -2864,10 +2992,6 @@ msgstr "Aus Auswahl laden"
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Load SEED.html…"
 msgstr "SEED.html laden…"
-
-#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
-msgid "Load this catalog into the editor"
-msgstr "Diesen Katalog im Editor laden"
 
 #: plugins/audio-clip-editor/src/App.svelte
 msgid "Loading audio files…"
@@ -2917,11 +3041,9 @@ msgstr "Spine-Element wird geladen..."
 msgid "Loading spine items…"
 msgstr "Spine-Elemente werden geladen…"
 
-#: src/lib/Sidebar.svelte
-msgid "Loading..."
-msgstr "Wird geladen..."
-
-#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 #: src/lib/components/track-changes/PatchsetReviewDialog.svelte
 #: src/lib/components/workspace/OPDSImportDialog.svelte
@@ -2929,10 +3051,6 @@ msgstr "Wird geladen..."
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Loading…"
 msgstr "Wird geladen…"
-
-#: plugins/publish-to-remote/src/App.svelte
-msgid "Local Packaged EPUBs"
-msgstr "Lokal gepackte EPUBs"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Location:"
@@ -2942,7 +3060,7 @@ msgstr "Speicherort:"
 msgid "Lock package structure and track content changes"
 msgstr "Paketstruktur sperren und Inhaltsänderungen verfolgen"
 
-#: src/lib/Sidebar.svelte
+#: src/lib/components/shell/TopBar.svelte
 msgid "Locked while track changes is on"
 msgstr "Gesperrt, solange die Änderungsverfolgung aktiv ist"
 
@@ -2954,32 +3072,35 @@ msgstr ""
 msgid "macOS sidecar file"
 msgstr "macOS-Begleitdatei"
 
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Made"
+msgstr "Erstellt"
+
 #: src/lib/components/spine/sr-walk.ts
 msgid "main"
 msgstr "Hauptbereich"
 
-#: src/lib/Sidebar.svelte
+#: src/lib/components/shell/BrandBar.svelte
 msgid "Main navigation"
 msgstr "Hauptnavigation"
 
-#: src/lib/navigation/views/AboutView.svelte
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Make a PDF"
+msgstr "PDF erstellen"
+
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Make ebooks anyone can read — right now in your browser."
 msgstr "Erstellen Sie E-Books, die jeder lesen kann — direkt in Ihrem Browser."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "Make it once — read it anywhere: phones, tablets, e-readers, and apps."
-msgstr "Einmal erstellen — überall lesen: Smartphones, Tablets, E-Reader und Apps."
 
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Malformed XHTML"
 msgstr "Fehlerhaftes XHTML"
 
-#: src/lib/Sidebar.svelte
+#: src/lib/components/shell/WriteSidebar.svelte
 msgid "Manage chapter order"
 msgstr "Kapitelreihenfolge verwalten"
 
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
 msgid "Manifest"
 msgstr "Manifest"
 
@@ -2996,7 +3117,6 @@ msgid "Message:"
 msgstr "Nachricht:"
 
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
 msgid "Metadata"
 msgstr "Metadaten"
 
@@ -3004,29 +3124,17 @@ msgstr "Metadaten"
 msgid "Metadata Summary"
 msgstr "Metadaten-Zusammenfassung"
 
-#: src/lib/components/metadata/MetadataTabBar.svelte
-msgid "metadata.tab.accessibility"
-msgstr "Barrierefreiheit"
-
-#: src/lib/components/metadata/MetadataTabBar.svelte
-msgid "metadata.tab.advanced"
-msgstr "Erweitert"
-
-#: src/lib/components/metadata/MetadataTabBar.svelte
-msgid "metadata.tab.basic"
-msgstr "Grundlegend"
-
 #: src/lib/components/spine/PreviewSurface.svelte
 msgid "Missing files"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Mode"
-msgstr "Modus"
+#: src/lib/components/books/BooksShelf.svelte
+msgid "More actions for {title}"
+msgstr "Weitere Aktionen für {title}"
 
-#: src/lib/navigation/views/PublishView.svelte
-msgid "Modified"
-msgstr "Geändert"
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "More formats…"
+msgstr "Weitere Formate…"
 
 #: src/lib/components/manifest/ManifestPreview.svelte
 #: src/lib/components/manifest/MoveReviewDialog.svelte
@@ -3089,7 +3197,7 @@ msgstr "{count} Kapitel verschoben"
 msgid "Moves"
 msgstr "Verschiebungen"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Much of this software was written with AI coding agents, primarily Anthropic's Claude Code."
 msgstr "Ein Großteil dieser Software wurde mit KI-Coding-Agenten geschrieben, vor allem mit Claude Code von Anthropic."
 
@@ -3097,10 +3205,9 @@ msgstr "Ein Großteil dieser Software wurde mit KI-Coding-Agenten geschrieben, v
 msgid "n/a"
 msgstr "k. A."
 
-#: plugins/publish-to-remote/src/App.svelte
+#: plugins/publish-to-remote/src/components/CatalogIdentityForm.svelte
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
-#: src/lib/navigation/views/PublishView.svelte
 msgid "Name"
 msgstr "Name"
 
@@ -3117,7 +3224,6 @@ msgid "navigation"
 msgstr "Navigation"
 
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
 msgid "Navigation"
 msgstr "Navigation"
 
@@ -3145,9 +3251,31 @@ msgstr "Navigations-Editor"
 msgid "Navigation Preview"
 msgstr "Navigationsvorschau"
 
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Needed once after the app gains a permission."
+msgstr "Einmal nötig, nachdem die App eine Berechtigung dazubekommen hat."
+
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "Needs permission"
+msgstr "Berechtigung nötig"
+
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 msgid "New"
 msgstr "Neu"
+
+#: src/lib/navigation/views/BooksView.svelte
+msgid "New book"
+msgstr "Neues Buch"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "New catalog"
+msgstr "Neuer Katalog"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "New catalog…"
+msgstr "Neuer Katalog…"
 
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 msgid "New chapter"
@@ -3161,6 +3289,7 @@ msgstr "Neu hier? Öffnen Sie „Aus Katalog importieren“, um Beispielbücher 
 msgid "New Project"
 msgstr "Neues Projekt"
 
+#: src/lib/components/shell/ChapterStrip.svelte
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Next chapter"
 msgstr "Nächstes Kapitel"
@@ -3169,8 +3298,8 @@ msgstr "Nächstes Kapitel"
 msgid "Next page"
 msgstr "Nächste Seite"
 
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
-#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 #: src/lib/components/extensions/ExtensionItem.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "No"
@@ -3183,6 +3312,22 @@ msgstr "Keine Barrierefreiheitsprobleme gefunden"
 #: plugins/audio-clip-editor/src/App.svelte
 msgid "No audio files in this project."
 msgstr ""
+
+#: src/lib/components/books/BooksShelf.svelte
+msgid "No books yet."
+msgstr "Noch keine Bücher."
+
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
+msgid "no catalog"
+msgstr "kein Katalog"
+
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "No catalog"
+msgstr "Kein Katalog"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "No catalog yet."
+msgstr "Noch kein Katalog."
 
 #: src/lib/components/settings/TrackChangesPanel.svelte
 msgid "No changes to capture yet."
@@ -3204,9 +3349,19 @@ msgstr "Kein Inhalt"
 msgid "No content available"
 msgstr "Kein Inhalt verfügbar"
 
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "No cover · not packaged here"
+msgstr "Kein Cover · nicht hier gepackt"
+
 #: src/lib/components/metadata/CustomMetaSection.svelte
 msgid "No custom metadata found in this book"
 msgstr "Keine benutzerdefinierten Metadaten in diesem Buch gefunden"
+
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "No destinations yet."
+msgstr "Noch keine Ziele."
 
 #: src/lib/components/track-changes/PatchsetReviewDialog.svelte
 msgid "No differences."
@@ -3215,10 +3370,6 @@ msgstr "Keine Unterschiede."
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "No DOM transforms configured."
 msgstr "Keine DOM-Transformationen konfiguriert."
-
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
-msgid "No EPUB files found in this directory"
-msgstr "In diesem Verzeichnis wurden keine EPUB-Dateien gefunden"
 
 #: src/lib/components/workspace/OPDSImportDialog.svelte
 msgid "No EPUBs found in this feed."
@@ -3240,10 +3391,6 @@ msgstr "Keine Generatoren definiert."
 msgid "No images in this project."
 msgstr ""
 
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
-msgid "No issues"
-msgstr "Keine Probleme"
-
 #: src/lib/components/manifest/ManifestTable.svelte
 msgid "No items match your filter"
 msgstr "Keine Elemente entsprechen Ihrem Filter"
@@ -3259,6 +3406,10 @@ msgstr "Keine passende Datei im Ordner"
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 msgid "No metadata available"
 msgstr "Keine Metadaten verfügbar"
+
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "No package yet."
+msgstr "Noch kein Paket."
 
 #: src/lib/navigation/views/PublishView.svelte
 msgid "No packaged EPUBs yet."
@@ -3322,12 +3473,17 @@ msgid "not a text file"
 msgstr "keine Textdatei"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
 msgid "Not available in this browser — connecting a USB device needs the File System Access API (Chrome, Edge)"
 msgstr "In diesem Browser nicht verfügbar — zum Verbinden eines USB-Geräts wird die File System Access API benötigt (Chrome, Edge)"
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Not available in this browser — linking a folder needs the File System Access API (Chrome, Edge)"
 msgstr "In diesem Browser nicht verfügbar — zum Verknüpfen eines Ordners wird die File System Access API benötigt (Chrome, Edge)"
+
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "Not checked"
+msgstr "Nicht geprüft"
 
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Not created in the Simple EPUB Editor — viewable but not editable."
@@ -3341,6 +3497,34 @@ msgstr ""
 msgid "Not in the linear reading order"
 msgstr "Nicht in der linearen Lesereihenfolge"
 
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Not made yet"
+msgstr "Noch nicht erstellt"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "Not on this device · {size}"
+msgstr "Nicht auf diesem Gerät · {size}"
+
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Not packaged yet"
+msgstr "Noch nicht gepackt"
+
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
+msgid "Not plugged in"
+msgstr "Nicht angeschlossen"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "Not plugged in · plug the reader in and refresh"
+msgstr "Nicht angeschlossen · Reader anschließen und aktualisieren"
+
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "Not plugged in · plug the reader in to send"
+msgstr "Nicht angeschlossen · Reader anschließen, um zu senden"
+
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "Not sent"
+msgstr "Nicht gesendet"
+
 #: src/lib/components/metadata/CustomMetaSection.svelte
 msgid "Not set"
 msgstr "Nicht gesetzt"
@@ -3349,10 +3533,6 @@ msgstr "Nicht gesetzt"
 msgid "Not specified"
 msgstr "Nicht angegeben"
 
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
-msgid "Not validated"
-msgstr "Nicht validiert"
-
 #: src/lib/components/spine/sr-walk.ts
 msgid "note"
 msgstr "Anmerkung"
@@ -3360,6 +3540,14 @@ msgstr "Anmerkung"
 #: src/lib/components/spine/sr-walk.ts
 msgid "note reference"
 msgstr "Anmerkungsverweis"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "Nothing sent here yet."
+msgstr "Noch nichts hierhin gesendet."
+
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Nothing to fix"
+msgstr "Nichts zu beheben"
 
 #: src/lib/components/SpineSidebar.svelte
 #: src/lib/components/manifest/ManifestContainer.svelte
@@ -3383,33 +3571,61 @@ msgid "OAuth Client ID"
 msgstr "OAuth-Client-ID"
 
 #: src/lib/components/settings/TrackChangesPanel.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Off"
 msgstr "Aus"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "On"
+msgstr "Ein"
 
 #: src/lib/components/settings/TrackChangesPanel.svelte
 msgid "On — review mode"
 msgstr "An – Überprüfungsmodus"
 
-#: src/lib/navigation/views/AboutView.svelte
-msgid "One EPUB made with the editor, opening on phones, tablets, and e-readers."
-msgstr "Ein mit dem Editor erstelltes EPUB, das sich auf Smartphones, Tablets und E-Readern öffnet."
+#: src/lib/navigation/views/CoverView.svelte
+msgid "On the shelf"
+msgstr "Im Regal"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "On this destination"
+msgstr "Auf diesem Ziel"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "On this device, not sent here"
+msgstr "Auf diesem Gerät, nicht hierhin gesendet"
+
+#: src/lib/navigation/views/PublishView.svelte
+msgid "One page, no app needed."
+msgstr "Eine Seite, keine App nötig."
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Only needed if the saved connection stops working."
 msgstr "Nur nötig, wenn die gespeicherte Verbindung nicht mehr funktioniert."
 
+#: src/lib/components/books/BooksShelf.svelte
+msgid "Open"
+msgstr "Öffnen"
+
+#: src/lib/components/books/BooksShelf.svelte
+msgid "Open {title}"
+msgstr "{title} öffnen"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Open a book to change its settings."
+msgstr "Öffne ein Buch, um seine Einstellungen zu ändern."
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Open a project to add extensions"
 msgstr "Öffnen Sie ein Projekt, um Erweiterungen hinzuzufügen"
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Open a project to configure its settings."
-msgstr "Öffnen Sie ein Projekt, um seine Einstellungen zu konfigurieren."
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Open a second pane"
+msgstr "Zweiten Bereich öffnen"
 
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
-#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
-msgid "Open in the reader"
-msgstr "Im Lesemodus öffnen"
+#: src/lib/navigation/views/BooksView.svelte
+msgid "Open an EPUB…"
+msgstr "EPUB öffnen…"
 
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Open project: {title}"
@@ -3459,7 +3675,6 @@ msgstr "Ausrichtung"
 msgid "Orientation:"
 msgstr "Ausrichtung:"
 
-#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Other"
 msgstr "Sonstige"
@@ -3489,32 +3704,26 @@ msgstr "Kapitel überschreiben"
 msgid "Overwrite the existing item"
 msgstr "Vorhandenes Element überschreiben"
 
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
-msgid "Overwrite?"
-msgstr "Überschreiben?"
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Package again"
+msgstr "Erneut packen"
 
 #: src/lib/navigation/views/PublishView.svelte
-msgid "Package a project to see it here."
-msgstr "Packen Sie ein Projekt, um es hier zu sehen."
-
-#: src/lib/navigation/views/AboutView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
 msgid "Package as READ.html"
 msgstr "Als READ.html verpacken"
 
-#: src/lib/navigation/views/AboutView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
+#: src/lib/navigation/views/PublishView.svelte
 msgid "Package as SEED.html"
 msgstr "Als SEED.html verpacken"
 
-#: src/App.svelte
+#: src/lib/components/shell/TopBar.svelte
+#: src/lib/navigation/views/PublishView.svelte
 msgid "Package EPUB"
 msgstr "EPUB packen"
 
-#: src/lib/navigation/views/AboutView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "Package EPUB without SEED"
-msgstr "EPUB ohne SEED verpacken"
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Package EPUB without source"
+msgstr "EPUB ohne Quelltext verpacken"
 
 #: src/App.svelte
 msgid "Packaged {filename} ({size} MB)"
@@ -3524,11 +3733,24 @@ msgstr "{filename} verpackt ({size} MB)"
 msgid "Packaged {filename} ({size} MB). Large for email — share it by link instead."
 msgstr "{filename} verpackt ({size} MB). Zu groß für E-Mail — teilen Sie die Datei besser über einen Link."
 
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Packaged {when}"
+msgstr "Gepackt {when}"
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Packaged Filename"
 msgstr "Dateiname des gepackten EPUBs"
 
-#: src/lib/navigation/views/WorkspaceView.svelte
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Packaged files"
+msgstr "Gepackte Dateien"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Packaging"
+msgstr "Packen"
+
+#: src/lib/navigation/views/PublishView.svelte
 msgid "Packaging…"
 msgstr "Wird verpackt…"
 
@@ -3553,10 +3775,14 @@ msgid "Page size"
 msgstr "Seitengröße"
 
 #: src/lib/navigation/views/SettingsView.svelte
+msgid "Page transforms"
+msgstr "Seitentransformationen"
+
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Paged device previews"
 msgstr "Paginierte Gerätevorschauen"
 
-#: src/lib/Sidebar.svelte
+#: src/App.svelte
 #: src/lib/components/spine/PreviewPane.svelte
 #. Reading flow option — paginated pages
 msgid "Pages"
@@ -3624,6 +3850,10 @@ msgstr ""
 msgid "person id or name"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Phone"
+msgstr "Telefon"
+
 #: plugins/photo-regions/src/App.svelte
 msgid "Photo"
 msgstr ""
@@ -3669,6 +3899,7 @@ msgid "Placing {count} chapters. Arrow keys to choose, Enter to confirm, Escape 
 msgstr "{count} Kapitel platzieren. Pfeiltasten zum Auswählen, Eingabetaste zum Bestätigen, Escape zum Abbrechen."
 
 #: src/lib/components/workspace/CreateProjectDialog.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Plain text"
 msgstr "Einfacher Text"
 
@@ -3703,6 +3934,14 @@ msgstr "Bitte wählen Sie zuerst einen Ordner aus und autorisieren Sie"
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Please select a remote type"
 msgstr "Bitte wählen Sie einen Remote-Typ aus"
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Plug the reader in, then choose its volume."
+msgstr "Schließe den Reader an und wähle dann sein Laufwerk."
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Plugins"
+msgstr "Plugins"
 
 #: src/lib/components/spine/PreviewPane.svelte
 #. Device size for extra large mobile phones
@@ -3739,8 +3978,8 @@ msgstr "Präfix-URI"
 msgid "Preparing your PDF…"
 msgstr ""
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
+#: src/lib/navigation/views/PublishView.svelte
 msgid "Preparing…"
 msgstr "Wird vorbereitet…"
 
@@ -3748,9 +3987,8 @@ msgstr "Wird vorbereitet…"
 msgid "Preset"
 msgstr "Voreinstellung"
 
-#: src/lib/components/spine/EditorPane.svelte
+#: src/lib/components/shell/BottomTabs.svelte
 #: src/lib/navigation/views/SettingsView.svelte
-#. Dropdown group for the preview-only head fragment
 msgid "Preview"
 msgstr "Vorschau"
 
@@ -3770,6 +4008,7 @@ msgstr "Vorschau veraltet"
 msgid "Preview Pane"
 msgstr "Vorschaubereich"
 
+#: src/lib/components/shell/ChapterStrip.svelte
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Previous chapter"
 msgstr "Vorheriges Kapitel"
@@ -3791,15 +4030,6 @@ msgstr "Projekt enthält Fehler"
 msgid "Project imported — your edits live in this browser. Use the package buttons to save your work as files."
 msgstr "Projekt importiert — Ihre Änderungen leben in diesem Browser. Nutzen Sie die Verpacken-Schaltflächen, um Ihre Arbeit als Dateien zu sichern."
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Project Settings"
-msgstr "Projekt-Einstellungen"
-
-#: src/App.svelte
-#: src/lib/Sidebar.svelte
-msgid "Projects"
-msgstr "Projekte"
-
 #: src/lib/components/spine/sr-walk.ts
 msgid "prologue"
 msgstr "Prolog"
@@ -3808,10 +4038,6 @@ msgstr "Prolog"
 #. The chapter-proofs preview option — a grid of small print pages
 msgid "Proofs"
 msgstr "Seitenübersicht"
-
-#: src/lib/components/manifest/ManifestTable.svelte
-msgid "Properties"
-msgstr "Eigenschaften"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Public URL Base (optional)"
@@ -3825,19 +4051,27 @@ msgstr "Publikation"
 msgid "Publication Date"
 msgstr "Veröffentlichungsdatum"
 
-#: src/App.svelte
-#: src/lib/Sidebar.svelte
 #: src/lib/navigation/views/PublishView.svelte
-msgid "Publish"
-msgstr "Veröffentlichen"
+msgid "Publish to the web"
+msgstr "Im Web veröffentlichen"
 
-#: src/lib/navigation/views/WorkspaceView.svelte
+#: src/App.svelte
+#: src/lib/components/shell/BrandBar.svelte
+#: src/lib/navigation/views/PublishedView.svelte
 msgid "Published"
 msgstr "Veröffentlicht"
+
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "Published — every book on a destination"
+msgstr "Veröffentlicht — jedes Buch auf einem Ziel"
 
 #: src/lib/components/metadata/AdvancedFields.svelte
 msgid "Publisher"
 msgstr "Verlag"
+
+#: src/lib/components/metadata/MetadataEditor.svelte
+msgid "Publisher, rights, subjects, accessibility"
+msgstr "Verlag, Rechte, Themen, Barrierefreiheit"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "pull quote"
@@ -3856,10 +4090,6 @@ msgstr "Geschwindigkeit"
 msgid "Raw"
 msgstr "Roh"
 
-#: plugins/publish-to-remote/src/components/RemoteSelector.svelte
-msgid "Re-check the device and refresh its book list"
-msgstr "Gerät neu prüfen und die Buchliste aktualisieren"
-
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Re-render the preview live as you edit."
 msgstr "Rendert die Vorschau beim Bearbeiten live neu."
@@ -3868,8 +4098,6 @@ msgstr "Rendert die Vorschau beim Bearbeiten live neu."
 msgid "Re-rendering chapters…"
 msgstr ""
 
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
-#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Read"
 msgstr "Lesen"
@@ -3878,10 +4106,15 @@ msgstr "Lesen"
 msgid "Read aloud"
 msgstr "Vorlesen"
 
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Read it in the browser"
+msgstr "Im Browser lesen"
+
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Read whole chapter"
 msgstr "Ganzes Kapitel vorlesen"
 
+#: src/lib/components/books/BooksShelf.svelte
 #: src/lib/components/spine/EditorPane.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Read-only"
@@ -3916,11 +4149,6 @@ msgstr "Lesevorschau (Design und Schriftgröße)"
 msgid "Reading preview settings"
 msgstr "Einstellungen für die Lesevorschau"
 
-#: src/lib/components/spine/EditorPane.svelte
-#. Dropdown group for CSS/JS files loaded by the e-reader
-msgid "Reading System"
-msgstr "Lesesystem"
-
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 msgid "Recognized fields are offered on every book you edit. The catalog is stored in this browser and does not travel with your EPUBs."
 msgstr "Erkannte Felder werden in jedem Buch angeboten, das Sie bearbeiten. Der Katalog wird in diesem Browser gespeichert und reist nicht mit Ihren EPUBs mit."
@@ -3929,13 +4157,11 @@ msgstr "Erkannte Felder werden in jedem Buch angeboten, das Sie bearbeiten. Der 
 msgid "Recommended"
 msgstr "Empfohlen"
 
-#: plugins/publish-to-remote/src/components/RemoteSelector.svelte
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
 msgid "Reconnect"
 msgstr "Neu verbinden"
-
-#: plugins/publish-to-remote/src/components/RemoteSelector.svelte
-msgid "Reconnect device"
-msgstr "Gerät neu verbinden"
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Reconnect folder"
@@ -3991,12 +4217,9 @@ msgstr "Remote-Name (optional)"
 msgid "Remote storage"
 msgstr "Remote-Speicher"
 
-#: plugins/publish-to-remote/src/components/RemoteSelector.svelte
-msgid "Remote:"
-msgstr "Remote:"
-
 #: plugins/photo-regions/src/App.svelte
-#: plugins/publish-to-remote/src/components/RemoteSelector.svelte
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 #: src/lib/components/extensions/ExtensionItem.svelte
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/metadata/AccessibilityFields.svelte
@@ -4010,6 +4233,10 @@ msgstr "Remote:"
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Remove"
 msgstr "Entfernen"
+
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
+msgid "Remove {name}?"
+msgstr "{name} entfernen?"
 
 #: src/lib/components/metadata/LanguageEditor.svelte
 msgid "Remove language"
@@ -4035,7 +4262,7 @@ msgstr "Kapitel entfernen"
 msgid "Remove the selected feed from the list"
 msgstr "Den ausgewählten Feed aus der Liste entfernen"
 
-#: plugins/publish-to-remote/src/App.svelte
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
 msgid "Removed {name}"
 msgstr "{name} entfernt"
 
@@ -4043,11 +4270,7 @@ msgstr "{name} entfernt"
 msgid "Rendition Properties"
 msgstr "Rendition-Eigenschaften"
 
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
-msgid "Replace"
-msgstr "Ersetzen"
-
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
 msgid "Report"
 msgstr "Bericht"
 
@@ -4064,7 +4287,7 @@ msgstr "Anfragen laufen über den /dav-Endpunkt dieser App; Ihre WebDAV-Anmelded
 msgid "Required field"
 msgstr "Pflichtfeld"
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Reset"
 msgstr "Zurücksetzen"
 
@@ -4097,12 +4320,12 @@ msgstr "{count} Kapitel wiederhergestellt"
 #: src/lib/components/manifest/ManifestPreview.svelte
 #: src/lib/components/metadata/MetadataEditor.svelte
 #: src/lib/components/metadata/OPFPreview.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
+#: src/lib/navigation/views/BooksView.svelte
 msgid "Retry"
 msgstr "Erneut versuchen"
 
+#: src/lib/components/plugins/PluginFrame.svelte
 #: src/lib/components/plugins/PluginPanel.svelte
-#: src/lib/navigation/views/PublishView.svelte
 msgid "Retry plugin"
 msgstr "Plugin erneut laden"
 
@@ -4147,6 +4370,10 @@ msgstr "Zeilengruppe"
 msgid "row header"
 msgstr "Zeilenüberschrift"
 
+#: src/App.svelte
+msgid "Run this book’s scripts"
+msgstr "Skripte dieses Buchs ausführen"
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Run top-to-bottom over the generated DOM."
 msgstr "Laufen von oben nach unten über das erzeugte DOM."
@@ -4156,6 +4383,7 @@ msgid "Running header"
 msgstr "Kolumnentitel"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
 msgid "S3-Compatible"
 msgstr "S3-kompatibel"
 
@@ -4167,6 +4395,10 @@ msgstr "S3-kompatibler Speicher"
 msgid "Sample Author"
 msgstr "Beispielautor"
 
+#: src/lib/navigation/views/BooksView.svelte
+msgid "Sample books…"
+msgstr "Beispielbücher…"
+
 #: src/lib/content/types.ts
 msgid "Sample EPUB Book"
 msgstr "Beispiel-EPUB-Buch"
@@ -4175,6 +4407,7 @@ msgstr "Beispiel-EPUB-Buch"
 msgid "Sample Publisher"
 msgstr "Beispielverlag"
 
+#: plugins/publish-to-remote/src/components/CatalogIdentityForm.svelte
 #: src/lib/components/EditSpineItemDialog.svelte
 msgid "Save"
 msgstr "Speichern"
@@ -4250,13 +4483,13 @@ msgstr "Secret Access Key"
 msgid "Secret Key"
 msgstr "Secret Key"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "SEED.html included"
+msgstr "SEED.html enthalten"
+
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "SEED.html is a single file, and this page is the whole app. Keep your own copy and it will keep working even if this website goes away — a fully offline editor."
 msgstr "SEED.html ist eine einzige Datei, und diese Seite ist die ganze App. Bewahren Sie Ihre eigene Kopie auf, und sie funktioniert weiter, selbst wenn diese Website verschwindet — ein vollständig offline nutzbarer Editor."
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "SEED.html makes two outputs that can return for further editing — an EPUB carrying its SEED.zip source, and a SEED.html web page wrapping the app and the book together — plus three one-way outputs: a PDF, an EPUB without SEED, and a READ.html web book."
-msgstr "SEED.html erzeugt zwei Ausgaben, die zur weiteren Bearbeitung zurückkehren können — ein EPUB mit seiner SEED.zip-Source und eine SEED.html-Webseite, die App und Buch gemeinsam umschließt — dazu drei Einweg-Ausgaben: ein PDF, ein EPUB ohne SEED und ein READ.html-Webbuch."
 
 #: src/App.svelte
 msgid "Select a spine item to see the preview here"
@@ -4269,14 +4502,6 @@ msgstr "Audiodatei auswählen"
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Select audio..."
 msgstr "Audio auswählen..."
-
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Select file for pane 1"
-msgstr "Datei für Bereich 1 auswählen"
-
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Select file for pane 2"
-msgstr "Datei für Bereich 2 auswählen"
 
 #: src/lib/components/outline/OutlineView.svelte
 msgid "Select navigation file"
@@ -4291,6 +4516,7 @@ msgid "Select This Folder"
 msgstr "Diesen Ordner auswählen"
 
 #: src/lib/components/spine/PreviewPane.svelte
+#. Accessibility label for the device switch
 msgid "Select view"
 msgstr "Ansicht wählen"
 
@@ -4301,6 +4527,45 @@ msgstr "Ausgewählter Ordner: {name}"
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Selection cleared"
 msgstr "Auswahl aufgehoben"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "Send"
+msgstr "Senden"
+
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "Send again"
+msgstr "Erneut senden"
+
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "Send the book first"
+msgstr "Sende das Buch zuerst"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "Sending… {percent}%"
+msgstr "Wird gesendet… {percent}%"
+
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "Sent {when} · a newer package is here"
+msgstr "Gesendet {when} · ein neueres Paket ist hier"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "Sent {when} · an older package"
+msgstr "Gesendet {when} · ein älteres Paket"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "Sent {when} · latest"
+msgstr "Gesendet {when} · aktuell"
+
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "Sent {when} · this is the latest package"
+msgstr "Gesendet {when} · das ist das neueste Paket"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "Sent to {name}"
+msgstr "An {name} gesendet"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "separator"
@@ -4335,9 +4600,22 @@ msgid "Set to today"
 msgstr "Auf heute setzen"
 
 #: src/App.svelte
-#: src/lib/Sidebar.svelte
+#: src/lib/components/shell/BrandBar.svelte
+#: src/lib/components/shell/TopBar.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Settings"
 msgstr "Einstellungen"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Settings sections"
+msgstr "Einstellungsbereiche"
+
+#: src/App.svelte
+#: src/lib/components/shell/BottomTabs.svelte
+#: src/lib/components/shell/TopBar.svelte
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Share"
+msgstr "Teilen"
 
 #: src/lib/components/metadata/TitleEditor.svelte
 msgid "Short"
@@ -4347,19 +4625,11 @@ msgstr "Kurz"
 msgid "Show {name}"
 msgstr ""
 
-#: src/lib/components/spine/PreviewPane.svelte
-msgid "Show panel"
-msgstr "Bereich anzeigen"
-
 #: src/lib/LayoutManager.svelte
 msgid "Show preview"
 msgstr "Vorschau einblenden"
 
-#: src/lib/Sidebar.svelte
-msgid "Show project sections"
-msgstr "Projektbereiche anzeigen"
-
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Show the full license text"
 msgstr "Vollständigen Lizenztext anzeigen"
 
@@ -4375,17 +4645,23 @@ msgstr "{filtered} von {total} Arbeitsbereichen werden angezeigt"
 msgid "shown as"
 msgstr ""
 
-#: plugins/publish-to-remote/src/App.svelte
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "Sign in needed"
+msgstr "Anmeldung nötig"
+
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
 msgid "Sign out error: {error}"
 msgstr "Fehler beim Abmelden: {error}"
 
-#: src/lib/Sidebar.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Simple EPUB Editor"
 msgstr "Simple EPUB Editor"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Simple EPUB Editor (distributed as SEED.html) is free and open-source software, released under the MIT License. You're welcome to use it, modify it, and redistribute it — including embedding it inside the EPUBs you create."
-msgstr "Simple EPUB Editor (vertrieben als SEED.html) ist freie und quelloffene Software, veröffentlicht unter der MIT-Lizenz. Sie dürfen sie verwenden, verändern und weiterverbreiten — einschließlich der Einbettung in die EPUBs, die Sie erstellen."
+msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
 #. Column setting — always a single column
@@ -4435,7 +4711,7 @@ msgstr "Nach Größe sortieren"
 msgid "Source"
 msgstr "Quelltext"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Source on GitHub"
 msgstr "Quellcode auf GitHub"
 
@@ -4472,6 +4748,10 @@ msgstr "Phase:"
 #. Device size for typical/common mobile phone or e-reader screen
 msgid "Standard"
 msgstr "Standard"
+
+#: src/lib/navigation/views/BooksView.svelte
+msgid "Start"
+msgstr "Start"
 
 #: src/lib/components/audio/AudioClipEditor.svelte
 msgid "Start time"
@@ -4580,9 +4860,9 @@ msgstr "Tabelle"
 msgid "table of contents"
 msgstr "Inhaltsverzeichnis"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
-msgid "Technical Info"
-msgstr "Technische Informationen"
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "Tablet"
+msgstr "Tablet"
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "term"
@@ -4594,6 +4874,7 @@ msgstr "Begriff (z. B. FIC028000)"
 
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Text"
 msgstr "Text"
 
@@ -4602,6 +4883,7 @@ msgid "Text differences"
 msgstr "Textunterschiede"
 
 #: src/lib/components/workspace/CreateProjectDialog.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Text format"
 msgstr "Textformat"
 
@@ -4614,12 +4896,24 @@ msgid "Text size"
 msgstr "Schriftgröße"
 
 #: src/lib/navigation/views/SettingsView.svelte
-msgid "Text Transform"
-msgstr "Text-Transformation"
+msgid "Text transform"
+msgstr "Texttransformation"
 
-#: src/lib/navigation/views/AboutView.svelte
-msgid "The book you build here is a valid, self-contained EPUB that also carries its own editable source (bundled as SEED.zip) inside it."
-msgstr "Das Buch, das Sie hier bauen, ist ein gültiges, eigenständiges EPUB, das auch seine eigene bearbeitbare Source (gebündelt als SEED.zip) in sich trägt."
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "The catalog cannot be read right now."
+msgstr "Der Katalog kann gerade nicht gelesen werden."
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "The catalog could not be read: {error}"
+msgstr "Der Katalog konnte nicht gelesen werden: {error}"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "The catalog lists {n} file that is no longer here."
+msgstr "Der Katalog führt {n} Datei, die nicht mehr hier ist."
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "The catalog lists {n} files that are no longer here."
+msgstr "Der Katalog führt {n} Dateien, die nicht mehr hier sind."
 
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 msgid "The chapter id collides with {label}; it will be added under a new id."
@@ -4633,6 +4927,10 @@ msgstr "Der Kapiteltitel oben auf jeder Seite."
 msgid "the end"
 msgstr "das Ende"
 
+#: plugins/publish-to-remote/src/components/CatalogIdentityForm.svelte
+msgid "The file’s extension does not match the format."
+msgstr "Die Dateiendung passt nicht zum Format."
+
 #: src/lib/components/SpineSidebar.svelte
 msgid "The linked folder isn't available — reconnect the drive or relink the folder."
 msgstr "Der verknüpfte Ordner ist nicht verfügbar — Laufwerk anschließen oder Ordner neu verknüpfen."
@@ -4645,13 +4943,9 @@ msgstr "Der Schritt von reinem Text zu XHTML."
 msgid "The plugin could not be loaded — you may be offline."
 msgstr ""
 
-#: src/lib/navigation/views/PublishView.svelte
-msgid "The publishing plugin could not be loaded — you may be offline. Showing local publishing instead."
-msgstr "Das Veröffentlichungs-Plugin konnte nicht geladen werden — möglicherweise sind Sie offline. Stattdessen wird die lokale Veröffentlichung angezeigt."
-
-#: plugins/publish-to-remote/src/components/RemoteSelector.svelte
-msgid "The saved device connection needs to be re-granted."
-msgstr "Die gespeicherte Geräteverbindung muss neu bestätigt werden."
+#: src/lib/components/plugins/PluginFrame.svelte
+msgid "The publishing plugin could not be loaded — you may be offline."
+msgstr "Das Veröffentlichungs-Plugin konnte nicht geladen werden — vielleicht bist du offline."
 
 #: src/lib/components/spine/PreviewPane.svelte
 #: src/lib/navigation/views/SettingsView.svelte
@@ -4666,21 +4960,18 @@ msgstr "Diese Dateien stimmen mit vorhandenen Kapiteln überein. Wählen Sie fü
 msgid "These files match existing manifest items. Choose what to do with each."
 msgstr "Diese Dateien stimmen mit vorhandenen Manifest-Elementen überein. Wählen Sie für jede aus, was geschehen soll."
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Third-Party Libraries"
 msgstr "Bibliotheken von Drittanbietern"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
-msgid "This application is built with the following open source libraries:"
-msgstr "Diese Anwendung wird mit den folgenden Open-Source-Bibliotheken erstellt:"
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "This book"
+msgstr "Dieses Buch"
 
 #: src/lib/components/spine/ChapterValidationPanel.svelte
+#: src/lib/components/spine/EditorPane.svelte
 msgid "This chapter"
 msgstr "Dieses Kapitel"
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "This editor turns plain text into a valid EPUB. You write in simple, readable source; it's packaged into a standards-compliant book."
-msgstr "Dieser Editor verwandelt reinen Text in ein gültiges EPUB. Sie schreiben in einfacher, lesbarer Source; sie wird zu einem standardkonformen Buch gepackt."
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "This EPUB is read-only, so extensions can't be added."
@@ -4688,13 +4979,10 @@ msgstr "Dieses EPUB ist schreibgeschützt, daher können keine Erweiterungen hin
 
 #: src/App.svelte
 #: src/lib/components/outline/OutlineView.svelte
+#: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/SpineView.svelte
 msgid "This EPUB wasn't created in the Simple EPUB Editor, so it can't be edited."
 msgstr "Dieses EPUB wurde nicht im Simple EPUB Editor erstellt und kann daher nicht bearbeitet werden."
-
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "This EPUB wasn't created in the Simple EPUB Editor, so it can't be repackaged."
-msgstr "Dieses EPUB wurde nicht im Simple EPUB Editor erstellt und kann daher nicht neu gepackt werden."
 
 #: src/App.svelte
 msgid "This file carries a book, but the book could not be read."
@@ -4720,7 +5008,8 @@ msgstr ""
 msgid "tip"
 msgstr "Tipp"
 
-#: plugins/publish-to-remote/src/App.svelte
+#: plugins/publish-to-remote/src/components/CatalogIdentityForm.svelte
+#: src/lib/components/EditSpineItemDialog.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/metadata/TitleEditor.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
@@ -4744,7 +5033,7 @@ msgstr "Leeren Zustand umschalten"
 msgid "Toggle orientation"
 msgstr "Ausrichtung umschalten"
 
-#: src/lib/Sidebar.svelte
+#: src/lib/components/shell/WriteSidebar.svelte
 msgid "Toggle sidebar"
 msgstr "Seitenleiste umschalten"
 
@@ -4753,10 +5042,11 @@ msgid "Toggle theme"
 msgstr "Design umschalten"
 
 #: src/lib/components/settings/TrackChangesPanel.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Track changes"
 msgstr "Änderungen verfolgen"
 
-#: src/lib/Sidebar.svelte
+#: src/lib/components/shell/TopBar.svelte
 msgid "Track changes is on — manage it in Settings"
 msgstr "Änderungsverfolgung ist aktiv – in den Einstellungen verwalten"
 
@@ -4793,6 +5083,7 @@ msgid "Translation reference — read-only"
 msgstr ""
 
 #: src/lib/components/settings/TranslationsPanel.svelte
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Translations"
 msgstr ""
 
@@ -4816,10 +5107,6 @@ msgstr "Ausschalten und Basis verwerfen"
 #: src/lib/components/settings/TrackChangesPanel.svelte
 msgid "Turning off track changes deletes the saved base version. Continue?"
 msgstr "Das Ausschalten der Änderungsverfolgung löscht die gespeicherte Basisversion. Fortfahren?"
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "Two outputs come back to be edited again: the EPUB with SEED.zip inside, and the SEED.html web page that wraps it."
-msgstr "Zwei Ausgaben kommen zur weiteren Bearbeitung zurück: das EPUB mit SEED.zip darin und die SEED.html-Webseite, die es umschließt."
 
 #: src/lib/components/metadata/CollectionsEditor.svelte
 #: src/lib/components/metadata/TitleEditor.svelte
@@ -4845,51 +5132,47 @@ msgstr "Ordnerverknüpfung aufheben"
 #: src/App.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
-#: src/lib/navigation/views/WorkspaceView.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Untitled"
 msgstr "Ohne Titel"
 
-#: src/lib/Sidebar.svelte
+#: src/App.svelte
+#: src/lib/components/shell/TopBar.svelte
+#: src/lib/navigation/views/BooksView.svelte
 msgid "Untitled Project"
 msgstr "Unbenanntes Projekt"
 
-#: plugins/publish-to-remote/src/App.svelte
-msgid "Update Catalog"
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "Update catalog"
 msgstr "Katalog aktualisieren"
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Update cover image"
-msgstr "Coverbild aktualisieren"
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Update cover"
+msgstr "Cover aktualisieren"
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
-msgid "Updates the cover with the colour and theme above."
-msgstr "Aktualisiert das Coverbild mit der oben gewählten Farbe und dem Thema."
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+msgid "Updated"
+msgstr "Aktualisiert"
 
-#: plugins/publish-to-remote/src/App.svelte
+#: plugins/publish-to-remote/src/components/CatalogIdentityForm.svelte
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 msgid "Updating..."
 msgstr "Wird aktualisiert..."
 
-#: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/navigation/views/CoverView.svelte
 msgid "Updating…"
 msgstr "Wird aktualisiert…"
 
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
-msgid "Upload"
-msgstr "Hochladen"
-
-#: plugins/publish-to-remote/src/App.svelte
-msgid "Upload error: {error}"
-msgstr "Upload-Fehler: {error}"
-
-#: plugins/publish-to-remote/src/App.svelte
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
 msgid "Upload failed"
 msgstr "Upload fehlgeschlagen"
 
-#: plugins/publish-to-remote/src/App.svelte
+#: plugins/publish-to-remote/src/components/CatalogIdentityForm.svelte
 msgid "URI"
 msgstr "URI"
 
-#: plugins/publish-to-remote/src/App.svelte
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 msgid "URL copied to clipboard"
 msgstr "URL in die Zwischenablage kopiert"
 
@@ -4898,12 +5181,21 @@ msgid "USB device"
 msgstr "USB-Gerät"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
 msgid "USB e-reader"
 msgstr "USB-E-Reader"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "USB e-reader (browse…)"
 msgstr "USB-E-Reader (durchsuchen…)"
+
+#: src/lib/components/manifest/ManifestPreview.svelte
+msgid "Use as the cover"
+msgstr "Als Cover verwenden"
+
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Use my own image…"
+msgstr "Eigenes Bild verwenden…"
 
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "Use the download button to access the file"
@@ -4917,6 +5209,10 @@ msgstr "Verwenden Sie Ihre eigene Dropbox-App: Erstellen Sie eine App in der Dro
 msgid "Use your own Google app: create an OAuth client ID and an API key in the Google Cloud console, enable the Drive and Picker APIs, and add this app’s origin ({origin}) to the OAuth client’s Authorized JavaScript origins."
 msgstr "Verwenden Sie Ihre eigene Google-App: Erstellen Sie eine OAuth-Client-ID und einen API-Schlüssel in der Google Cloud Console, aktivieren Sie die Drive- und Picker-APIs und fügen Sie den Ursprung dieser App ({origin}) zu den autorisierten JavaScript-Quellen der OAuth-Client-ID hinzu."
 
+#: src/lib/components/manifest/ManifestTable.svelte
+msgid "Used as"
+msgstr "Verwendet als"
+
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "username"
 msgstr "Benutzername"
@@ -4929,19 +5225,15 @@ msgstr "Benutzername"
 msgid "Valid"
 msgstr "Gültig"
 
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
 msgid "Valid EPUB"
 msgstr "Gültiges EPUB"
 
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
 msgid "Validate"
 msgstr "Validieren"
 
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
-msgid "Validate EPUB"
-msgstr "EPUB validieren"
-
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
 msgid "Validating..."
 msgstr "Wird validiert..."
 
@@ -4953,17 +5245,13 @@ msgstr "Validierung"
 msgid "Validation error"
 msgstr "Validierungsfehler"
 
-#: plugins/publish-to-remote/src/App.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
 msgid "Validation failed: {error}"
 msgstr "Validierung fehlgeschlagen: {error}"
 
 #: src/lib/components/spine/ChapterValidationPanel.svelte
 msgid "Validation issues for this chapter"
 msgstr "Validierungsprobleme für dieses Kapitel"
-
-#: src/lib/components/spine/PreviewPane.svelte
-msgid "Validation report (epubcheck) for this chapter"
-msgstr "Validierungsbericht (epubcheck) für dieses Kapitel"
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 msgid "Validation Report: {filename}"
@@ -4977,7 +5265,7 @@ msgstr "Werttyp"
 msgid "value:Label, value:Label"
 msgstr "Wert:Beschriftung, Wert:Beschriftung"
 
-#: src/lib/navigation/views/ThirdPartyView.svelte
+#: src/lib/components/shell/AboutDialog.svelte
 msgid "Version"
 msgstr "Version"
 
@@ -4988,10 +5276,6 @@ msgstr ""
 #: src/App.svelte
 msgid "View type"
 msgstr "Ansichtstyp"
-
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
-msgid "View validation report"
-msgstr "Validierungsbericht anzeigen"
 
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Viewport"
@@ -5022,6 +5306,7 @@ msgid "Warnings:"
 msgstr "Warnungen:"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
 msgid "WebDAV"
 msgstr "WebDAV"
 
@@ -5033,17 +5318,9 @@ msgstr "WebDAV-Speicher"
 msgid "WebDAV URL"
 msgstr "WebDAV-URL"
 
-#: src/lib/navigation/views/AboutView.svelte
-msgid "Welcome"
-msgstr "Willkommen"
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "What is an EPUB?"
-msgstr "Was ist ein EPUB?"
-
-#: src/lib/navigation/views/AboutView.svelte
-msgid "What is different about a SEED EPUB?"
-msgstr "Was unterscheidet ein SEED-EPUB?"
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Where Send puts a book. Yours, not the book’s."
+msgstr "Wohin „Senden“ ein Buch bringt. Deine Ziele, nicht die des Buchs."
 
 #: src/lib/components/settings/TrackChangesPanel.svelte
 msgid "While locked, you can edit existing chapters, styles and scripts; structural changes are disabled."
@@ -5061,24 +5338,33 @@ msgstr "Breit"
 msgid "Working…"
 msgstr ""
 
+#: src/lib/components/shell/BottomTabs.svelte
+#: src/lib/components/shell/TopBar.svelte
+msgid "Write"
+msgstr "Schreiben"
+
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Write the contents by hand"
+msgstr "Inhaltsverzeichnis von Hand schreiben"
+
 #: src/lib/components/spine/PreviewSurface.svelte
 msgid "XHTML Preview"
 msgstr "XHTML-Vorschau"
 
-#: plugins/publish-to-remote/src/components/LocalEpubList.svelte
-#: plugins/publish-to-remote/src/components/RemoteFileList.svelte
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 #: src/lib/components/extensions/ExtensionItem.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Yes"
 msgstr "Ja"
 
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "You have unsaved changes"
-msgstr "Sie haben ungespeicherte Änderungen"
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "You"
+msgstr "Du"
 
-#: src/lib/navigation/views/WorkspaceView.svelte
-msgid "You have unsaved project changes. Continue?"
-msgstr "Sie haben ungespeicherte Projektänderungen. Fortfahren?"
+#: src/lib/components/books/BooksShelf.svelte
+msgid "Your books"
+msgstr "Ihre Bücher"
 
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "Your browser does not support the audio element."
@@ -5091,3 +5377,7 @@ msgstr "Ihr Browser unterstützt das Videoelement nicht."
 #: src/lib/services/spine/spine.service.ts
 msgid "Your chapter content goes here..."
 msgstr "Hier steht Ihr Kapitelinhalt …"
+
+#: src/lib/navigation/views/CoverView.svelte
+msgid "Your own image"
+msgstr "Eigenes Bild"

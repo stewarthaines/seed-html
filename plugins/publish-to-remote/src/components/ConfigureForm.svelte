@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import { t, translate } from '../i18n.js';
   import {
     loadGoogleScripts,
@@ -34,20 +34,6 @@
     },
   } as const;
 
-  let {
-    editingRemote,
-    canCancel,
-    onSave,
-    onCancel,
-    onStatus,
-  }: {
-    editingRemote: RemoteConfig | null;
-    canCancel: boolean;
-    onSave: (remote: RemoteConfig, isNew: boolean) => void;
-    onCancel: () => void;
-    onStatus: (text: string, type: 'info' | 'success' | 'error') => void;
-  } = $props();
-
   type RemoteType =
     | 'none'
     | 's3-compatible'
@@ -55,6 +41,23 @@
     | 'dropbox'
     | 'webdav'
     | 'device';
+
+  let {
+    editingRemote,
+    initialType = 'none',
+    canCancel,
+    onSave,
+    onCancel,
+    onStatus,
+  }: {
+    editingRemote: RemoteConfig | null;
+    /** Open a new destination's form at this kind instead of the chooser. */
+    initialType?: RemoteType;
+    canCancel: boolean;
+    onSave: (remote: RemoteConfig, isNew: boolean) => void;
+    onCancel: () => void;
+    onStatus: (text: string, type: 'info' | 'success' | 'error') => void;
+  } = $props();
 
   let remoteType: RemoteType = $state('none');
   let form = $state({
@@ -149,12 +152,16 @@
     }
   }
 
+  // Seed the form from the remote being edited, or blank it. Only the remote
+  // is tracked: populating writes the form and (for Dropbox) opens the
+  // folder browser, and tracking those would re-seed the form on every
+  // change they make, looping through folder listings.
   $effect(() => {
-    if (editingRemote) {
-      populateForm(editingRemote);
-    } else {
-      resetForm();
-    }
+    const remote = editingRemote;
+    untrack(() => {
+      if (remote) populateForm(remote);
+      else resetForm();
+    });
   });
 
   function populateForm(remote: RemoteConfig) {
@@ -267,7 +274,7 @@
   }
 
   function resetForm() {
-    remoteType = 'none';
+    remoteType = initialType;
     form = {
       name: '',
       endpoint: '',
@@ -371,7 +378,40 @@
     }
   }
 
+  // A fresh consent screen for a destination that already has tokens: a
+  // refresh token keeps the permissions it was issued with, so a permission
+  // added since (files.content.read) needs authorising again. The folder
+  // is kept; Save & Connect persists the new tokens.
+  let reauthorising = $state(false);
+  async function onReauthorizeDropbox(): Promise<void> {
+    if (!dropboxAppKey) {
+      onStatus(translate('Dropbox app key not configured'), 'error');
+      return;
+    }
+    reauthorising = true;
+    try {
+      const { accessToken, refreshToken, tokenExpiry } = await authorizeDropbox(
+        dropboxAppKey,
+        dropboxRedirectUri,
+      );
+      form.accessToken = accessToken;
+      form.refreshToken = refreshToken;
+      form.tokenExpiry = tokenExpiry;
+      onStatus(translate('Connected to Dropbox again. Save to keep it.'), 'success');
+    } catch (error) {
+      onStatus(
+        translate('Dropbox authorization failed: {error}', {
+          error: String(error),
+        }),
+        'error',
+      );
+    } finally {
+      reauthorising = false;
+    }
+  }
+
   async function openDropboxBrowser(path: string): Promise<void> {
+    if (dbxBrowserLoading) return;
     dbxBrowserPath = path;
     dbxBrowserLoading = true;
     dbxBrowserError = null;
@@ -856,6 +896,16 @@
         >
           {$t('Change Folder')}
         </button>
+        <button
+          class="btn btn-secondary btn-sm"
+          onclick={onReauthorizeDropbox}
+          disabled={reauthorising}
+        >
+          {reauthorising ? $t('Connecting…') : $t('Connect to Dropbox again')}
+        </button>
+        <small class="field-note">
+          {$t('Needed once after the app gains a permission.')}
+        </small>
       </div>
 
       <div class="form-group">
@@ -988,7 +1038,9 @@
     </div>
 
     <p class="device-summary">
-      {#if deviceKind === 'kobo'}
+      {#if !editingRemote && !pickedDeviceHandle}
+        {$t('Plug the reader in, then choose its volume.')}
+      {:else if deviceKind === 'kobo'}
         {$t('Detected: {detail} on volume "{volume}"', {
           detail: deviceDetail || 'Kobo',
           volume: deviceVolumeLabel,
@@ -1022,7 +1074,27 @@
       </small>
     </div>
 
-    {#if editingRemote && !pickedDeviceHandle}
+    {#if !editingRemote && !pickedDeviceHandle}
+      <div class="form-group">
+        <!-- aria-disabled (not disabled) keeps the button hoverable and focusable
+             so the title explaining WHY is reachable in the very browsers that
+             lack the API. -->
+        <button
+          class="btn btn-secondary"
+          aria-disabled={!deviceSupported}
+          title={deviceSupported
+            ? undefined
+            : $t(
+                'Not available in this browser — connecting a USB device needs the File System Access API (Chrome, Edge)',
+              )}
+          onclick={() => {
+            if (deviceSupported) onPickDevice();
+          }}
+        >
+          {$t('Choose device…')}
+        </button>
+      </div>
+    {:else if editingRemote && !pickedDeviceHandle}
       <div class="form-group">
         <button class="btn btn-secondary" onclick={onPickDevice}>
           {$t('Choose device again…')}

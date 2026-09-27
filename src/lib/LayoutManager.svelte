@@ -1,157 +1,227 @@
+<!--
+  LayoutManager — the page frame. A bar across the top (the brand bar on the
+  Books screen, the book's TopBar everywhere else), then the body:
+  in Write, the chapter column beside the editor and preview; in every other
+  view, the content alone, split or single-pane as the view needs.
+
+  The bars and the chapter column are snippets the app fills, so this file
+  owns only geometry (process/APP_MAKEOVER_LIBRARY.md, phase 1).
+-->
 <script lang="ts">
   import { PaneGroup, Pane, PaneResizer } from 'paneforge';
   import type { Snippet } from 'svelte';
-  import Sidebar from './Sidebar.svelte';
   import { layoutStore } from './stores/layout';
   import { t } from './i18n';
   import { CaretLeft } from 'phosphor-svelte';
+  import type { ViewType } from './navigation/types';
 
-  // Props
   let {
     hasWorkspace = false,
-    readOnly = false,
-    reviewMode = false,
-    hasPackagedEpubs = false,
-    enabledPluginIds = [],
-    currentWorkspace = null,
-    workspaceTitle = undefined,
-    extensionManager = null,
+    view: viewOverride,
+    phone = false,
+    phonePane = 'editor',
+    topBar,
+    brandBar,
+    writeSidebar,
+    chapterStrip,
+    bottomTabs,
     leftContent,
     rightContent,
-    sidebarWorkspace,
-    sidebarMetadata,
-    sidebarManifest,
-    sidebarNavigation,
-    sidebarSpine,
-    sidebarSettings,
-    sidebarFooter,
   }: {
     hasWorkspace?: boolean;
-    readOnly?: boolean;
-    reviewMode?: boolean;
-    hasPackagedEpubs?: boolean;
-    enabledPluginIds?: string[];
-    currentWorkspace?: any;
-    workspaceTitle?: string | undefined;
-    extensionManager?: any;
+    /** The view to lay out, when it differs from the store's (the Settings sheet
+        renders over the last content view). */
+    view?: ViewType;
+    /** Phone layout: one pane, the chapter strip above it, the tab bar below. */
+    phone?: boolean;
+    /** Phone, Write view: which of the editor's two panes is showing. */
+    phonePane?: 'editor' | 'preview';
+    topBar?: Snippet;
+    brandBar?: Snippet;
+    writeSidebar?: Snippet;
+    chapterStrip?: Snippet;
+    bottomTabs?: Snippet;
     leftContent?: Snippet;
     rightContent?: Snippet;
-    sidebarWorkspace?: Snippet;
-    sidebarMetadata?: Snippet;
-    sidebarManifest?: Snippet;
-    sidebarNavigation?: Snippet;
-    sidebarSpine?: Snippet;
-    sidebarSettings?: Snippet;
-    sidebarFooter?: Snippet;
   } = $props();
 
-  // Subscribe to layout store
   const sidebar = $derived($layoutStore.sidebar);
+  const view = $derived(viewOverride ?? sidebar.activeSection);
 
-  // Reactive sidebar width for grid template
-  const sidebarWidth = $derived(sidebar.isExpanded ? '250px' : '48px');
+  // Books and Published stand outside any book: brand bar, no chapter column.
+  const outsideBook = $derived(view === 'workspace' || view === 'published' || !hasWorkspace);
 
-  // Determine which sections should show preview pane
+  // The chapter column exists only beside the editor, and not on a phone.
+  const showWriteSidebar = $derived(view === 'spine' && hasWorkspace && !phone);
+  const sidebarWidth = $derived(sidebar.isExpanded ? 'var(--sidebar-width)' : '48px');
+
+  // Which views keep a right-hand pane.
   const showPreviewPane = $derived(
-    sidebar.activeSection !== 'workspace' &&
-      sidebar.activeSection !== 'settings' &&
-      sidebar.activeSection !== 'publish' &&
-      sidebar.activeSection !== 'chapters'
+    view !== 'workspace' &&
+      view !== 'published' &&
+      view !== 'settings' &&
+      view !== 'publish' &&
+      view !== 'chapters' &&
+      view !== 'cover'
   );
 
   // Spine view only: the preview pane collapses to a slim rail (writing mode).
-  // Other views always keep their right pane.
-  const previewCollapsed = $derived(
-    $layoutStore.spinePreviewCollapsed && sidebar.activeSection === 'spine'
-  );
+  const previewCollapsed = $derived($layoutStore.spinePreviewCollapsed && view === 'spine');
 </script>
 
-<div class="app-layout" style="grid-template-columns: {sidebarWidth} 1fr">
-  <Sidebar
-    isExpanded={sidebar.isExpanded}
-    activeSection={sidebar.activeSection}
-    {hasWorkspace}
-    {readOnly}
-    {reviewMode}
-    {hasPackagedEpubs}
-    {enabledPluginIds}
-    {currentWorkspace}
-    {workspaceTitle}
-    {extensionManager}
-    {sidebarWorkspace}
-    {sidebarMetadata}
-    {sidebarManifest}
-    {sidebarNavigation}
-    {sidebarSpine}
-    {sidebarSettings}
-    {sidebarFooter}
-  />
+<div class="app-shell">
+  {#if outsideBook}
+    {@render brandBar?.()}
+  {:else}
+    {@render topBar?.()}
+  {/if}
 
-  <main class="main-content">
-    {#if showPreviewPane && previewCollapsed}
-      <!-- Writing mode: editor full width, preview folded into a rail that
-           mirrors the collapsed sidebar (toggle at the top edge). -->
-      <div class="preview-collapsed-layout">
-        <div class="pane-content">
-          {@render leftContent?.()}
+  <div
+    class="app-body"
+    class:with-sidebar={showWriteSidebar}
+    style={showWriteSidebar ? `grid-template-columns: ${sidebarWidth} 1fr` : undefined}
+  >
+    {#if showWriteSidebar}
+      {@render writeSidebar?.()}
+    {/if}
+
+    <main class="main-content">
+      {#if phone && !outsideBook}
+        <!-- Phone: one pane at a time. In Write, the tab bar swaps the editor
+             for the preview; the other views show their main pane alone. -->
+        <div class="phone-layout">
+          {#if view === 'spine'}
+            {@render chapterStrip?.()}
+            <!-- Both of the editor's panes stay mounted: the editor loads the
+                 chapter and feeds the preview, so it must keep running while
+                 the preview is the one on screen. The inactive pane keeps its
+                 layout but is invisible and inert. -->
+            <div class="phone-panes">
+              <div
+                class="single-pane-container phone-pane"
+                class:inactive={phonePane === 'preview'}
+              >
+                {@render leftContent?.()}
+              </div>
+              <div
+                class="single-pane-container phone-pane"
+                class:inactive={phonePane !== 'preview'}
+              >
+                {@render rightContent?.()}
+              </div>
+            </div>
+          {:else}
+            <div class="single-pane-container">
+              {@render leftContent?.()}
+            </div>
+          {/if}
         </div>
-        <div class="preview-rail">
-          <button
-            class="btn btn-icon btn-icon-lg"
-            onclick={() => layoutStore.toggleSpinePreview()}
-            aria-expanded="false"
-            aria-label={$t('Show preview')}
-            title={$t('Show preview')}
-          >
-            <CaretLeft size={16} aria-hidden="true" />
-          </button>
-        </div>
-      </div>
-    {:else if showPreviewPane}
-      <PaneGroup direction="horizontal" autoSaveId="seedhtml-content-panes">
-        <Pane defaultSize={50} minSize={25}>
+      {:else if showPreviewPane && previewCollapsed}
+        <!-- Writing mode: editor full width, preview folded into a rail. -->
+        <div class="preview-collapsed-layout">
           <div class="pane-content">
             {@render leftContent?.()}
           </div>
-        </Pane>
-
-        <PaneResizer />
-
-        <Pane defaultSize={50} minSize={20}>
-          <div class="pane-content">
-            {@render rightContent?.()}
+          <div class="preview-rail">
+            <button
+              class="btn btn-icon btn-icon-lg"
+              onclick={() => layoutStore.toggleSpinePreview()}
+              aria-expanded="false"
+              aria-label={$t('Show preview')}
+              title={$t('Show preview')}
+            >
+              <CaretLeft size={16} aria-hidden="true" />
+            </button>
           </div>
-        </Pane>
-      </PaneGroup>
-    {:else}
-      <!-- Single pane mode for workspace and settings views -->
-      <div class="single-pane-container">
-        {@render leftContent?.()}
-      </div>
-    {/if}
-  </main>
+        </div>
+      {:else if showPreviewPane}
+        <PaneGroup direction="horizontal" autoSaveId="seedhtml-content-panes">
+          <Pane defaultSize={50} minSize={25}>
+            <div class="pane-content">
+              {@render leftContent?.()}
+            </div>
+          </Pane>
+
+          <PaneResizer />
+
+          <Pane defaultSize={50} minSize={20}>
+            <div class="pane-content">
+              {@render rightContent?.()}
+            </div>
+          </Pane>
+        </PaneGroup>
+      {:else}
+        <div class="single-pane-container">
+          {@render leftContent?.()}
+        </div>
+      {/if}
+    </main>
+  </div>
+
+  {#if phone && !outsideBook}
+    {@render bottomTabs?.()}
+  {/if}
 </div>
 
 <style>
-  .app-layout {
-    display: grid;
+  .app-shell {
+    --sidebar-width: 240px;
+
+    display: flex;
+    flex-direction: column;
     height: 100vh;
     height: 100dvh; /* dynamic viewport: excludes mobile browser UI chrome */
     width: 100vw;
     margin: 0;
     padding: 0;
+    background: var(--color-bg-primary);
+  }
+
+  .app-body {
+    flex: 1;
+    min-block-size: 0;
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   .main-content {
-    min-inline-size: 0; /* Using logical properties */
+    min-inline-size: 0;
+    min-block-size: 0;
     overflow: hidden;
   }
 
   .pane-content {
     flex: 1;
     overflow: auto;
-    background: var(--color-bg-primary); /* Using design tokens */
+    background: var(--color-bg-primary);
     height: 100%;
+  }
+
+  .phone-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-block-size: 0;
+  }
+
+  .phone-layout .single-pane-container {
+    flex: 1;
+    min-block-size: 0;
+  }
+
+  .phone-panes {
+    position: relative;
+    flex: 1;
+    min-block-size: 0;
+  }
+
+  .phone-pane {
+    position: absolute;
+    inset: 0;
+  }
+
+  .phone-pane.inactive {
+    visibility: hidden;
   }
 
   .single-pane-container {
@@ -161,7 +231,7 @@
   }
 
   /* Writing mode: editor + a slim rail where the preview pane was. The rail
-     mirrors the collapsed sidebar — 48px wide, toggle in a header-height strip. */
+     mirrors the collapsed chapter column — 48px wide, toggle in a header-height strip. */
   .preview-collapsed-layout {
     display: flex;
     height: 100%;
@@ -255,7 +325,7 @@
 
   /* High contrast mode support */
   @media (prefers-contrast: high) {
-    .main-content {
+    .with-sidebar .main-content {
       border-inline-start: 2px solid var(--color-forced-border);
     }
   }

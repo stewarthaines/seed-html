@@ -7,6 +7,7 @@ import type {
   S3RemoteConfig,
   GoogleDriveRemoteConfig,
   DropboxRemoteConfig,
+  CatalogEntry,
   CatalogEntryMeta,
 } from './types.js';
 
@@ -215,6 +216,8 @@ export interface ParsedOpdsFeed {
   authorUri?: string;
   /** Acquisition hrefs of the epub entries, for matching back to remote objects. */
   epubHrefs: Set<string>;
+  /** The epub entries with what identifies them, for books not on this device. */
+  entries: CatalogEntry[];
 }
 
 /** Direct child element by local name (namespace-agnostic), not a descendant —
@@ -233,15 +236,30 @@ function directChild(parent: Element, localName: string): Element | null {
  */
 export function parseOpdsFeed(xml: string): ParsedOpdsFeed {
   const doc = new DOMParser().parseFromString(xml, 'application/xml');
-  const epubHrefs = new Set(
-    Array.from(doc.querySelectorAll('entry link[type="application/epub+zip"]'))
-      .map((l) => l.getAttribute('href'))
-      .filter((h): h is string => !!h),
-  );
+  const entries: CatalogEntry[] = [];
+  for (const entry of Array.from(doc.querySelectorAll('entry'))) {
+    const link = Array.from(entry.children).find(
+      (c) =>
+        c.localName === 'link' &&
+        c.getAttribute('type') === 'application/epub+zip',
+    );
+    const href = link?.getAttribute('href');
+    if (!href) continue;
+    const identifier = Array.from(entry.children).find(
+      (c) => c.localName === 'identifier' && c.namespaceURI === DC_NS,
+    )?.textContent?.trim();
+    const title = directChild(entry, 'title')?.textContent?.trim();
+    entries.push({
+      href,
+      identifier: identifier || undefined,
+      title: title || undefined,
+    });
+  }
+  const epubHrefs = new Set(entries.map((e) => e.href));
 
   const root = doc.documentElement;
   const feed = root?.localName === 'feed' ? root : doc.querySelector('feed');
-  if (!feed) return { epubHrefs };
+  if (!feed) return { epubHrefs, entries };
 
   const title = directChild(feed, 'title')?.textContent?.trim();
   const author = directChild(feed, 'author');
@@ -257,5 +275,6 @@ export function parseOpdsFeed(xml: string): ParsedOpdsFeed {
     authorName: authorName || undefined,
     authorUri: authorUri || undefined,
     epubHrefs,
+    entries,
   };
 }

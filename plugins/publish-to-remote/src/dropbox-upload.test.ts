@@ -4,6 +4,9 @@ import {
   uploadToDropbox,
   listDropboxFiles,
   deleteDropboxFile,
+  downloadDropboxFile,
+  resolveDropboxLinks,
+  DROPBOX_REAUTH_MESSAGE,
 } from './dropbox-upload.js';
 import type { DropboxRemoteConfig } from './types.js';
 
@@ -188,8 +191,27 @@ describe('uploadToDropbox', () => {
   });
 });
 
+describe('resolveDropboxLinks', () => {
+  it('looks up a link only for the wanted files, once each', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        links: [{ url: 'https://www.dropbox.com/s/abc/book1.epub?dl=0' }],
+      }),
+    });
+    const objects = [
+      { key: 'book1.epub', size: 1, lastModified: 't' },
+      { key: 'other.epub', size: 1, lastModified: 't' },
+    ];
+    const out = await resolveDropboxLinks(config, objects, ['book1.epub']);
+    expect(out[0].fileId).toBe('https://www.dropbox.com/s/abc/book1.epub');
+    expect(out[1].fileId).toBeUndefined();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('listDropboxFiles', () => {
-  it('returns all files with shared link fileIds', async () => {
+  it('returns all files, without shared-link lookups', async () => {
     vi.stubGlobal(
       'fetch',
       vi
@@ -229,9 +251,8 @@ describe('listDropboxFiles', () => {
       'book1.epub',
       'cover.jpg',
     ]);
-    expect(result.objects[0].fileId).toBe(
-      'https://www.dropbox.com/s/abc/book1.epub',
-    );
+    expect(result.objects[0].fileId).toBeUndefined();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 
   it('includes non-epub files (e.g. the OPDS catalog)', async () => {
@@ -377,5 +398,24 @@ describe('deleteDropboxFile', () => {
       'app-key',
       'refresh-token',
     );
+  });
+});
+
+describe('a 401 that survives a refresh', () => {
+  it('lists once more and then gives up with the reconnect message', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 401 });
+    const result = await listDropboxFiles(config);
+    expect(result.error).toBe(DROPBOX_REAUTH_MESSAGE);
+    expect(vi.mocked(refreshDropboxToken)).toHaveBeenCalledTimes(1);
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('downloads once more and then throws', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 401 });
+    await expect(downloadDropboxFile(config, 'catalog.json')).rejects.toThrow(
+      DROPBOX_REAUTH_MESSAGE,
+    );
+    expect(vi.mocked(refreshDropboxToken)).toHaveBeenCalledTimes(1);
+    expect(global.fetch).toHaveBeenCalledTimes(2);
   });
 });

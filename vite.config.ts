@@ -88,10 +88,27 @@ export default defineConfig({
       },
     },
     viteSingleFile(),
+    // Dev only: serve the worker template at /sw.js with a `dev-` version, in
+    // which the worker only serves books (/__book/…) and never caches — see
+    // src/pwa/sw-template.js and process/PREVIEW_SERVED_BOOK.md.
+    {
+      name: 'serve-service-worker-dev',
+      apply: 'serve',
+      configureServer(server) {
+        server.middlewares.use('/sw.js', async (_req, res) => {
+          const template = await fs.readFile(
+            path.join(dirname, 'src', 'pwa', 'sw-template.js'),
+            'utf8'
+          );
+          res.setHeader('Content-Type', 'text/javascript');
+          res.setHeader('Cache-Control', 'no-store');
+          res.end(template.replaceAll('__SW_VERSION__', `dev-${Date.now()}`));
+        });
+      },
+    },
     // Build only: emit dist/sw.js (the offline-PWA service worker) from
     // src/pwa/sw-template.js, stamping a per-build cache version so each deploy
-    // supersedes the previous offline cache. The SW is registered only in prod
-    // over http(s) (see src/main.ts), so dev needs no serve middleware.
+    // supersedes the previous offline cache.
     {
       name: 'emit-service-worker',
       apply: 'build',

@@ -267,6 +267,21 @@ export async function uploadTextToWebDAV(
 }
 
 /** Fetch a file's text via GET (through the proxy when enabled). Null if missing. */
+/** Fetch a resource's bytes (an EPUB to import). Null when it is not there. */
+export async function getWebDAVBlob(
+  creds: WebDAVRemoteConfig,
+  objectKey: string,
+): Promise<Blob | null> {
+  const response = await davFetch(creds, resourceUrl(creds, objectKey), 'GET', {
+    Authorization: basicAuth(creds.username, creds.password),
+    'Cache-Control': 'no-cache',
+  });
+  if (response.status === 404) return null;
+  if (!response.ok)
+    throw new Error(httpError('Get', response.status, response.statusText));
+  return response.blob();
+}
+
 export async function getWebDAVText(
   creds: WebDAVRemoteConfig,
   objectKey: string,

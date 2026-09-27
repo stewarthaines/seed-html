@@ -29,6 +29,15 @@ describe('buildReadDocument', () => {
     expect(doc).toContain("linear: 'yes'");
   });
 
+  it('marks the section with its served URL only when the book is served', () => {
+    expect(buildReadDocument(base)).not.toContain('servedURL');
+    const served = buildReadDocument({
+      ...base,
+      servedUrl: 'http://localhost/__book/ws/EPUB/text/ch1.xhtml',
+    });
+    expect(served).toContain('servedURL: "http://localhost/__book/ws/EPUB/text/ch1.xhtml"');
+  });
+
   it('applies flow and column settings between open and init', () => {
     const doc = buildReadDocument({ ...base, flow: 'scrolled', maxColumnCount: '1' });
     const open = doc.indexOf('await view.open(book)');

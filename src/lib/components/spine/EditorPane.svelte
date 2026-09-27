@@ -27,6 +27,7 @@
   import GeneratorPanel from '$lib/components/spine/GeneratorPanel.svelte';
   import MediaBrowserPanel from '$lib/components/spine/MediaBrowserPanel.svelte';
   import LineNumberGutter from '$lib/components/spine/LineNumberGutter.svelte';
+  import BookMenu, { type MenuItem } from '$lib/components/books/BookMenu.svelte';
   import type { GeneratorRunner } from '$lib/generators/generator-store.js';
   import { isRtlLanguage } from '$lib/epub/language-direction.js';
   import { primaryLanguage } from '$lib/epub/opf-utils.js';
@@ -96,9 +97,6 @@
     audioClipService = null,
     workspaceService = null,
     settingsService = null,
-    chapterTitle = '',
-    chapterTitlePlaceholder = '',
-    onChapterTitleChange,
     generatorRunner = null,
     audioPluginUrl = null,
     photoPluginUrl = null,
@@ -155,11 +153,6 @@
     audioClipService?: AudioClipService | null;
     workspaceService?: WorkspaceService | null;
     settingsService?: SettingsService | null;
-    /** Authored chapter title (the spine item's content-document <title>). */
-    chapterTitle?: string;
-    /** Placeholder shown when no title is set — the spine item id it falls back to. */
-    chapterTitlePlaceholder?: string;
-    onChapterTitleChange?: (title: string) => void;
     /** Available generators + how to run them; null/empty hides the Generators control. */
     generatorRunner?: GeneratorRunner | null;
     /** Resolved iframe src for the audio clip panel plugin; when set it supersedes
@@ -186,53 +179,51 @@
     advancedMode ? availableFiles2 : availableFiles2.filter(f => isEditableInBasicMode(f.type))
   );
 
-  // Group the file-picker entries under <optgroup> headers (mirrors the preview
-  // pane's device dropdown). The chapter plain text is shown as a bare leading
-  // option; everything else buckets by kind. Only non-empty groups render.
-  type FileEntry = { value: string; label: string; path: string; type: string };
-  const FILE_GROUP_ORDER = ['reading-system', 'build', 'generator', 'preview'] as const;
-  const fileGroupOf = (type: string): (typeof FILE_GROUP_ORDER)[number] | null => {
-    switch (type) {
-      case 'css':
-      case 'javascript':
-        return 'reading-system';
-      case 'transform':
-        return 'build';
-      case 'generator':
-        return 'generator';
-      case 'preview-head':
-        return 'preview';
-      default:
-        return null; // 'text' / 'locale-text' — rendered as bare options, not grouped
+  // The files menu of a pane: the chapter's own text first, then the files that
+  // shape every chapter, then the scripts that make chapters. Basic mode sees
+  // only the first two (visibleFiles1 is already filtered).
+  const OPEN_SECOND_PANE = '__open-second-pane';
+  const menuGroupOf = (type: string): 'chapter' | 'every' | 'made' =>
+    type === 'text' || type === 'locale-text' ? 'chapter' : type === 'css' ? 'every' : 'made';
+  function filesMenuItemsFor(pane: 1 | 2): MenuItem[] {
+    const visible = pane === 1 ? visibleFiles1 : visibleFiles2;
+    const selected = pane === 1 ? pane1SelectedFile : pane2SelectedFile;
+    const groups: { key: 'chapter' | 'every' | 'made'; label: string }[] = [
+      { key: 'chapter', label: $t('This chapter') },
+      { key: 'every', label: $t('Every chapter') },
+      { key: 'made', label: $t('How chapters are made') },
+    ];
+    const items: MenuItem[] = [];
+    for (const group of groups) {
+      const files = visible.filter(f => menuGroupOf(f.type) === group.key);
+      if (files.length === 0) continue;
+      items.push({ id: `heading-${group.key}`, label: group.label, heading: true });
+      for (const file of files) {
+        items.push({ id: file.value, label: file.label, checked: file.value === selected });
+      }
     }
-  };
-  const fileGroupLabel = (key: string): string => {
-    switch (key) {
-      case 'reading-system':
-        // i18n: Dropdown group for CSS/JS files loaded by the e-reader
-        return $t('Reading System');
-      case 'build':
-        // i18n: Dropdown group for build-time transform scripts (not shipped)
-        return $t('Build scripts');
-      case 'generator':
-        // i18n: Dropdown group for on-demand content generator scripts
-        return $t('Generators');
-      case 'preview':
-        // i18n: Dropdown group for the preview-only head fragment
-        return $t('Preview');
-      default:
-        return key;
+    if (pane === 1 && editorMode === 'single') {
+      items.push({ id: OPEN_SECOND_PANE, label: $t('Open a second pane') });
     }
-  };
-  // Bare leading options: the chapter text plus any frozen translation
-  // references — they belong beside it, not under a group header.
-  const textFilesOf = (files: FileEntry[]) =>
-    files.filter(f => f.type === 'text' || f.type === 'locale-text');
-  const fileGroupsOf = (files: FileEntry[]) =>
-    FILE_GROUP_ORDER.map(key => ({
-      key,
-      files: files.filter(f => fileGroupOf(f.type) === key),
-    })).filter(g => g.files.length > 0);
+    return items;
+  }
+  const filesMenuItems = $derived(filesMenuItemsFor(1));
+  const filesMenuItems2 = $derived(filesMenuItemsFor(2));
+  const pane1FileLabel = $derived(
+    availableFiles1.find(f => f.value === pane1SelectedFile)?.label ?? pane1SelectedFile
+  );
+  const pane2FileLabel = $derived(
+    availableFiles2.find(f => f.value === pane2SelectedFile)?.label ?? pane2SelectedFile
+  );
+  function handleFilesMenu(pane: 1 | 2, id: string): void {
+    if (id === OPEN_SECOND_PANE) {
+      onPaneToggle?.();
+      return;
+    }
+    const available = pane === 1 ? availableFiles1 : availableFiles2;
+    const selectedFile = available.find(f => f.value === id);
+    if (selectedFile) onFileSelect?.(pane, selectedFile.path, selectedFile.type);
+  }
 
   /**
    * Toggle between single and dual pane mode
@@ -492,21 +483,6 @@
     // Trigger input so the file store persists the change.
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
     textarea.focus();
-  }
-
-  /**
-   * Handle file selection change
-   */
-  function handleFileSelect(pane: 1 | 2, event: Event): void {
-    const target = event.target as HTMLSelectElement;
-
-    // Use the appropriate available files array for each pane
-    const availableFiles = pane === 1 ? availableFiles1 : availableFiles2;
-    const selectedFile = availableFiles.find(f => f.value === target.value);
-
-    if (selectedFile) {
-      onFileSelect?.(pane, selectedFile.path, selectedFile.type);
-    }
   }
 
   /**
@@ -998,18 +974,6 @@
 
 <!-- Grouped <option>s for a file picker: the chapter plain text as a bare
      leading option, then one <optgroup> per non-empty kind. -->
-{#snippet fileOptions(files: FileEntry[])}
-  {#each textFilesOf(files) as file}
-    <option value={file.value}>{file.label}</option>
-  {/each}
-  {#each fileGroupsOf(files) as group}
-    <optgroup label={fileGroupLabel(group.key)}>
-      {#each group.files as file}
-        <option value={file.value}>{file.label}</option>
-      {/each}
-    </optgroup>
-  {/each}
-{/snippet}
 
 <!-- Padlock shown beside a pane's file picker when its file is a frozen
      translation reference. -->
@@ -1029,15 +993,16 @@
 <!-- Pane 1's file picker. Lives in the header row in single-pane mode; moves
      into pane 1's own header in dual mode (next to its editor). -->
 {#snippet pane1FileSelector()}
-  <select
-    class="file-selector"
-    value={pane1SelectedFile}
-    onchange={e => handleFileSelect(1, e)}
-    aria-label={$t('Select file for pane 1')}
-  >
-    {@render fileOptions(visibleFiles1)}
-  </select>
+  <span class="file-current" title={pane1FileLabel}>{pane1FileLabel}</span>
   {@render readOnlyBadge(1)}
+  <BookMenu
+    label={$t('Files for this chapter')}
+    triggerText={$t('Also in this chapter')}
+    items={filesMenuItems}
+    onSelect={id => handleFilesMenu(1, id)}
+    menuWidth="280px"
+    align="start"
+  />
 {/snippet}
 
 <!-- Track-changes diff toggle for a pane, shown only when the file has a base snapshot. -->
@@ -1110,18 +1075,6 @@
 
 <!-- The chapter title belongs to the chapter, not a pane, so it stays in the
      header row in both single and dual mode. -->
-{#snippet chapterTitleInput()}
-  <input
-    type="text"
-    class="chapter-title-input"
-    value={chapterTitle}
-    placeholder={chapterTitlePlaceholder}
-    onchange={e => onChapterTitleChange?.((e.currentTarget as HTMLInputElement).value)}
-    dir={bookIsRtl ? 'rtl' : 'ltr'}
-    aria-label={$t('Chapter title')}
-    title={$t('Chapter title — used in the content document <title>; defaults to the spine id')}
-  />
-{/snippet}
 
 <!-- The X in each insert panel's top-right corner — same style as the checks
      panels in the preview header (btn-icon + Phosphor X). -->
@@ -1177,7 +1130,10 @@
   {/if}
 {/snippet}
 
-<div class="editor-pane-container" style="--editor-font-size: {fontSizeStep}px">
+<div
+  class="editor-pane-container"
+  style="--editor-font-size: max(var(--editor-min-font-size, 0px), {fontSizeStep}px)"
+>
   <!-- Single header row: pane toggle, pane-1 file picker + chapter title
        (single-pane mode), audio toggle, and the transform status. -->
   <div class="editor-header">
@@ -1199,9 +1155,6 @@
 
       {#if editorMode === 'single'}
         {@render pane1FileSelector()}
-      {/if}
-      {#if advancedMode}
-        {@render chapterTitleInput()}
       {/if}
 
       <div class="font-size-controls" role="group" aria-label={$t('Editor text size')}>
@@ -1315,15 +1268,16 @@
         <div class="editor-pane pane-2">
           <div class="pane-header">
             <div class="pane-header-content">
-              <select
-                class="file-selector"
-                value={pane2SelectedFile}
-                onchange={e => handleFileSelect(2, e)}
-                aria-label={$t('Select file for pane 2')}
-              >
-                {@render fileOptions(visibleFiles2)}
-              </select>
+              <span class="file-current" title={pane2FileLabel}>{pane2FileLabel}</span>
               {@render readOnlyBadge(2)}
+              <BookMenu
+                label={$t('Files for this chapter')}
+                triggerText={$t('Also in this chapter')}
+                items={filesMenuItems2}
+                onSelect={id => handleFilesMenu(2, id)}
+                menuWidth="280px"
+                align="start"
+              />
               {@render changesToggle(2)}
             </div>
 
@@ -1539,32 +1493,19 @@
     padding: var(--space-2);
   }
 
-  .file-selector {
-    flex: 1 1 7rem;
-    padding: var(--space-2);
-    border: 1px solid var(--color-border-default);
+  .file-current {
+    display: inline-block;
+    max-inline-size: 14rem;
+    padding-block: var(--space-1);
+    padding-inline: var(--space-2);
+    border: 1px solid var(--color-text-primary);
     border-radius: var(--radius-sm);
-    background: var(--color-bg-primary);
-    color: var(--color-text-primary);
+    background: var(--color-text-primary);
+    color: var(--color-bg-primary);
     font-size: var(--text-sm);
-    cursor: pointer;
-  }
-
-  .chapter-title-input {
-    flex: 2 1 10rem;
-    min-width: 0;
-    padding: var(--space-2);
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-sm);
-    background: var(--color-bg-primary);
-    color: var(--color-text-primary);
-    font-size: var(--text-sm);
-  }
-
-  .file-selector:focus {
-    outline: none;
-    border-color: var(--color-accent-primary);
-    box-shadow: 0 0 0 var(--focus-ring-width) var(--color-focus);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .audio-toggle-btn {
@@ -1968,6 +1909,15 @@
   @media (prefers-reduced-motion: reduce) {
     .pane-toggle-btn {
       transition: none;
+    }
+  }
+  /* Phones: the editor's text never drops under 16px, whatever size step is
+     chosen, so iOS Safari does not zoom into it on focus. The textarea and
+     the line-number gutter both read --editor-font-size, so the floor is
+     applied where that variable is set. */
+  @media (max-width: 720px) {
+    .editor-pane-container {
+      --editor-min-font-size: 1rem;
     }
   }
 </style>
