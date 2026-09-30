@@ -130,6 +130,13 @@
       min-width: 0;
     }
 
+    /* An authored width is the author's size: a flex basis would override the
+       width attribute and stretch the image to 70% of the row. Keep it, still
+       shrinking on a narrow row; the caption takes the rest. */
+    .sr-figure figure:has(figcaption) > img[width] {
+      flex: 0 1 auto;
+    }
+
     .sr-figure figcaption {
       flex: 1 1 30%;
       margin-top: 0;

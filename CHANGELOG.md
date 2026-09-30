@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - The list of figures shows each photograph's own caption, without the names of the people in it.
+- A captioned image with a set width keeps that width on wider screens instead of stretching beside its caption.
 
 ## [0.22.0] - 2026-09-27
 
