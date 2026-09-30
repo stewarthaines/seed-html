@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A Figures extension turns captioned images into figures, so screen readers announce each image with its caption.
+
 ### Changed
 
 - Adding an extension puts its DOM transform in the right place in the project's list, so it works without reordering by hand.

@@ -1,0 +1,14 @@
+{
+  "id": "figures",
+  "name": "Figures",
+  "description": "Turns captioned images into figures, so screen readers announce each image with its caption.",
+  "category": "accessibility",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/figure",
+  "licenseName": "MIT",
+  "scripts": [],
+  "domTransforms": [
+    "transformFigures.js"
+  ],
+  "stage": "structure",
+  "textTransforms": []
+}
