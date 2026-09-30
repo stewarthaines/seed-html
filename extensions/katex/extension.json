@@ -11,6 +11,7 @@
   "domTransforms": [
     "transformKaTeX.js"
   ],
+  "stage": "blocks",
   "textTransforms": [],
   "assets": []
 }

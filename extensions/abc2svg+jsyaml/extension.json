@@ -156,5 +156,6 @@
   "domTransforms": [
     "transformABC.js"
   ],
+  "stage": "blocks",
   "textTransforms": []
 }

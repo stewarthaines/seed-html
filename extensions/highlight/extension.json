@@ -11,6 +11,7 @@
   "domTransforms": [
     "transformHighlight.js"
   ],
+  "stage": "highlight",
   "textTransforms": [],
   "assets": [
     {

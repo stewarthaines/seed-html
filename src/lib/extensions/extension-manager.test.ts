@@ -440,3 +440,59 @@ describe('ExtensionManager.getAvailableTextTransforms', () => {
     expect(paths).not.toContain('SOURCE/extensions/djot/djot.js');
   });
 });
+
+describe('ExtensionManager.placeDomTransforms', () => {
+  const entry = (id: string, stage?: ExtensionCatalogEntry['stage']): ExtensionCatalogEntry => ({
+    id,
+    name: id,
+    scripts: [],
+    domTransforms: ['transform.js'],
+    stage,
+    textTransforms: [],
+    generators: [],
+    assets: [],
+    licenses: [],
+  });
+  const path = (id: string) => `SOURCE/extensions/${id}/transform.js`;
+  const PROJECT = 'SOURCE/scripts/transformDom.js';
+
+  it('reads an installed extension’s stage from its workspace extension.json', async () => {
+    const { api } = makeFileStorage({
+      'SOURCE/extensions/responsive/extension.json': '{"id":"responsive","stage":"layout"}',
+    });
+    const manager = new ExtensionManager(api);
+    const next = await manager.placeDomTransforms(
+      'ws',
+      [PROJECT, path('responsive')],
+      entry('figures', 'structure'),
+      []
+    );
+    expect(next).toEqual([PROJECT, path('figures'), path('responsive')]);
+  });
+
+  it('falls back to the catalog for a copy installed before stages existed', async () => {
+    const { api } = makeFileStorage({
+      'SOURCE/extensions/responsive/extension.json': '{"id":"responsive"}',
+    });
+    const manager = new ExtensionManager(api);
+    const next = await manager.placeDomTransforms(
+      'ws',
+      [PROJECT, path('responsive')],
+      entry('figures', 'structure'),
+      [entry('responsive', 'layout')]
+    );
+    expect(next).toEqual([PROJECT, path('figures'), path('responsive')]);
+  });
+
+  it('appends after an extension with no known stage', async () => {
+    const { api } = makeFileStorage();
+    const manager = new ExtensionManager(api);
+    const next = await manager.placeDomTransforms(
+      'ws',
+      [path('legacy')],
+      entry('figures', 'structure'),
+      []
+    );
+    expect(next).toEqual([path('legacy'), path('figures')]);
+  });
+});

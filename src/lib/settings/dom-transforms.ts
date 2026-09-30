@@ -4,6 +4,8 @@
  * reorder / remove behaviour is unit-testable.
  */
 
+import { DOM_TRANSFORM_STAGES, type DomTransformStage } from '../extensions/stages.js';
+
 /** The extension a script belongs to, i.e. `SOURCE/extensions/<name>/…`, else undefined. */
 export function extensionOf(path: string): string | undefined {
   const m = path.match(/(?:^|\/)SOURCE\/extensions\/([^/]+)(?:\/|$)/);
@@ -28,6 +30,35 @@ export function resolveTransformPath(name: string): string {
 /** Append `path` if it isn't already in the list (dedupe). */
 export function addTransform(list: string[], path: string): string[] {
   return list.includes(path) ? list : [...list, path];
+}
+
+/**
+ * Insert an extension's DOM transforms by stage: before the first entry whose
+ * stage runs later, else at the end. Entries without a stage (project scripts,
+ * extensions whose manifest predates stages) stay put and do not affect the
+ * placement, and the existing list is never re-sorted — an author's hand order
+ * survives. Paths already in the list are left where they are.
+ *
+ * @param list - the current `dom_transforms`
+ * @param paths - the extension's scripts, in their declared order
+ * @param stage - the extension's stage; without one, the paths are appended
+ * @param stageOf - the stage of an existing entry, or undefined
+ */
+export function insertByStage(
+  list: string[],
+  paths: string[],
+  stage: DomTransformStage | undefined,
+  stageOf: (path: string) => DomTransformStage | undefined
+): string[] {
+  const fresh = paths.filter((path, i) => !list.includes(path) && paths.indexOf(path) === i);
+  if (fresh.length === 0) return list;
+  if (!stage) return [...list, ...fresh];
+  const rank = DOM_TRANSFORM_STAGES.indexOf(stage);
+  const at = list.findIndex(path => {
+    const other = stageOf(path);
+    return other !== undefined && DOM_TRANSFORM_STAGES.indexOf(other) > rank;
+  });
+  return at === -1 ? [...list, ...fresh] : [...list.slice(0, at), ...fresh, ...list.slice(at)];
 }
 
 /** Remove the entry at `index` (no-op if out of range). */

@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs';
 import * as path from 'path';
+import { DOM_TRANSFORM_STAGES, isDomTransformStage } from '../src/lib/extensions/stages.js';
 
 /**
  * Assemble the served extensions/ catalog from the source extensions/ directory.
@@ -63,6 +64,16 @@ for (const dirent of dirents) {
   const scripts = rawScripts.map(scriptFile).filter(Boolean);
   const domTransforms = Array.isArray(meta.domTransforms) ? meta.domTransforms : [];
   const textTransforms = Array.isArray(meta.textTransforms) ? meta.textTransforms : [];
+  // DOM transforms need a stage so installing can place them in the pipeline
+  // (src/lib/extensions/stages.js); a missing or unknown one fails the build.
+  // Keep in sync with serve-extensions-dev in vite.config.ts.
+  if (domTransforms.length > 0 && !isDomTransformStage(meta.stage)) {
+    console.error(
+      `❌ ${dirent.name}: extension.json has domTransforms but no valid stage (one of ${DOM_TRANSFORM_STAGES.join(', ')})`
+    );
+    process.exit(1);
+  }
+  const stage = domTransforms.length > 0 ? meta.stage : undefined;
   // Generators: { id, name, script, options?, license?, description? } objects (one
   // generateText per script). Keep only well-formed entries.
   const generators = (Array.isArray(meta.generators) ? meta.generators : []).filter(
@@ -185,6 +196,7 @@ for (const dirent of dirents) {
     licenseName,
     scripts,
     domTransforms,
+    stage,
     textTransforms,
     generators,
     assets,

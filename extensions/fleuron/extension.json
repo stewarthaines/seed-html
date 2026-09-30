@@ -9,6 +9,7 @@
   "domTransforms": [
     "transformFleuron.js"
   ],
+  "stage": "blocks",
   "textTransforms": [],
   "assets": [
     {

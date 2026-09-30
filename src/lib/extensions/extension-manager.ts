@@ -20,6 +20,8 @@ import {
   type ExtensionCatalogEntry,
   type ExtensionTemplates,
 } from './extension-catalog.js';
+import { isDomTransformStage, type DomTransformStage } from './stages.js';
+import { extensionOf, insertByStage } from '../settings/dom-transforms.js';
 import { writeGenerator } from '../generators/generator-store.js';
 import { ExtensionCache } from './extension-cache.js';
 import {
@@ -887,6 +889,39 @@ export class ExtensionManager {
     } catch {
       return undefined;
     }
+  }
+
+  /**
+   * `list` with a catalog extension's DOM transforms placed by stage (see
+   * {@link insertByStage}). An installed extension's stage is read from its
+   * workspace extension.json, falling back to the catalog entry with the same id
+   * for copies made before stages existed.
+   */
+  async placeDomTransforms(
+    workspaceId: string,
+    list: string[],
+    entry: ExtensionCatalogEntry,
+    catalog: ExtensionCatalogEntry[]
+  ): Promise<string[]> {
+    const stages = new Map<string, DomTransformStage | undefined>();
+    for (const id of new Set(list.map(extensionOf).filter(id => id !== undefined))) {
+      let stage: DomTransformStage | undefined;
+      try {
+        const meta = JSON.parse(
+          await this.fileStorage.readTextFile(workspaceId, `SOURCE/extensions/${id}/extension.json`)
+        );
+        if (isDomTransformStage(meta?.stage)) stage = meta.stage;
+      } catch {
+        // No readable manifest — fall through to the catalog.
+      }
+      stages.set(id, stage ?? catalog.find(e => e.id === id)?.stage);
+    }
+    const stageOf = (path: string) => {
+      const id = extensionOf(path);
+      return id === undefined ? undefined : stages.get(id);
+    };
+    const paths = entry.domTransforms.map(file => `SOURCE/extensions/${entry.id}/${file}`);
+    return insertByStage(list, paths, entry.stage, stageOf);
   }
 
   /**

@@ -10,5 +10,6 @@
   "domTransforms": [
     "transformImpressum.js"
   ],
+  "stage": "derive",
   "textTransforms": []
 }

@@ -703,11 +703,13 @@
 
       // Auto-enable the extension's DOM transforms — installing an extension
       // should wire up its transforms, not leave the user to enable each by hand.
-      // Appended (deduped) after the project's existing list; order is preserved.
+      // Placed by the extension's stage; the existing order is never re-sorted.
       if (entry.domTransforms.length > 0 && epubSettings) {
-        const next = entry.domTransforms.reduce(
-          (list, file) => addTransform(list, `SOURCE/extensions/${entry.id}/${file}`),
-          epubSettings.dom_transforms
+        const next = await extensionManager.placeDomTransforms(
+          workspaceId,
+          epubSettings.dom_transforms,
+          entry,
+          availableExtensions
         );
         if (next !== epubSettings.dom_transforms) {
           await persistDomTransforms(next);

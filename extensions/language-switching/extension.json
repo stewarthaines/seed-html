@@ -9,6 +9,7 @@
   "domTransforms": [
     "transformLanguageSwitching.js"
   ],
+  "stage": "language",
   "textTransforms": [],
   "generators": [
     {

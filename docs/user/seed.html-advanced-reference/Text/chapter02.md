@@ -65,7 +65,7 @@ Where a project assembles its pipeline: _Project Settings → EPUB Settings_.
 
 The text transform runs first. Its HTML is parsed to a `Document`, which then passes through each DOM transform in turn — every DOM transform receives the document the previous one produced, so order matters. The result is serialised to XHTML for the preview and for the packaged book.
 
-The active transforms are chosen per project in _Project Settings → EPUB Settings_: one **Text Transform**, then an ordered list of **DOM Transforms** you can reorder or remove. The scripts on offer are the project's own together with those supplied by enabled extensions (the next chapter). You can edit any of them from the chapter editor's file dropdown.
+The active transforms are chosen per project in _Project Settings → EPUB Settings_: one **Text Transform**, then an ordered list of **DOM Transforms** you can reorder or remove. Adding an extension puts its DOM transform in the right place in that list for you. The scripts on offer are the project's own together with those supplied by enabled extensions (the next chapter). You can edit any of them from the chapter editor's file dropdown.
 
 ## The sandbox
 

@@ -9,6 +9,7 @@ import { visualizer } from "rollup-plugin-visualizer";
 import analyzer from "rollup-plugin-analyzer";
 import checker from "vite-plugin-checker";
 import packageJson from "./package.json";
+import { isDomTransformStage } from "./src/lib/extensions/stages.js";
 
 const dirname =
   typeof __dirname !== "undefined"
@@ -211,6 +212,14 @@ export default defineConfig({
               const scripts = rawScripts.map(scriptFile).filter(Boolean);
               const domTransforms = Array.isArray(m.domTransforms) ? m.domTransforms : [];
               const textTransforms = Array.isArray(m.textTransforms) ? m.textTransforms : [];
+              // DOM-transform stage — keep in sync with
+              // scripts/generate-extensions-manifest.js (which fails the build
+              // on a missing or unknown one; here it warns and installs unplaced).
+              const stage =
+                domTransforms.length > 0 && isDomTransformStage(m.stage) ? m.stage : undefined;
+              if (domTransforms.length > 0 && !stage) {
+                console.warn(`extensions/${name}: domTransforms need a valid stage`);
+              }
               const generators = (Array.isArray(m.generators) ? m.generators : []).filter(
                 (g: unknown) =>
                   !!g &&
@@ -289,6 +298,7 @@ export default defineConfig({
                   licenseName: m.licenseName,
                   scripts,
                   domTransforms,
+                  stage,
                   textTransforms,
                   generators,
                   assets,
