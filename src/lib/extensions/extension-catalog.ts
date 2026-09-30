@@ -10,6 +10,8 @@
  * and the core stands on its own.
  */
 
+import { isDomTransformStage, type DomTransformStage } from './stages.js';
+
 /** Seams so tests can drive discovery deterministically (mirrors plugin-registry). */
 export interface ExtensionDiscoveryEnv {
   /** Document protocol, e.g. 'https:' or 'file:'. Defaults to location.protocol. */
@@ -88,6 +90,9 @@ export interface ExtensionCatalogEntry {
   scripts: string[];
   /** Suggested DOM-transform scripts (candidates for the dom_transforms list). */
   domTransforms: string[];
+  /** Where the DOM transforms run in the pipeline; installing places them by
+   *  stage (see stages.js). Absent for extensions without DOM transforms. */
+  stage?: DomTransformStage;
   /** Suggested text-transform scripts (candidates for the single text_transform). */
   textTransforms: string[];
   /** Generators this extension provides (on-demand source producers). */
@@ -320,6 +325,7 @@ function normalizeCatalogEntry(value: unknown): ExtensionCatalogEntry | null {
     license: asString(e.license),
     scripts: asScriptArray(e.scripts),
     domTransforms: asStringArray(e.domTransforms),
+    stage: isDomTransformStage(e.stage) ? e.stage : undefined,
     textTransforms: asStringArray(e.textTransforms),
     generators,
     assets,

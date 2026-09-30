@@ -244,6 +244,23 @@ describe('extension-catalog', () => {
     expect(prism.previewHead).toBeUndefined();
   });
 
+  it('keeps a known DOM-transform stage and drops an unknown one', async () => {
+    const entries = [
+      { id: 'responsive', name: 'Responsive', domTransforms: ['x.js'], stage: 'layout' },
+      { id: 'odd', name: 'Odd', domTransforms: ['y.js'], stage: 'sometime' },
+    ];
+    const fetchFn = vi.fn(async () => jsonResponse(entries));
+
+    const [responsive, odd] = await loadExtensionCatalog({
+      protocol: 'https:',
+      baseUrl: BASE,
+      fetch: fetchFn,
+    });
+
+    expect(responsive.stage).toBe('layout');
+    expect(odd.stage).toBeUndefined();
+  });
+
   it('keeps per-script licenses a manifest has already aggregated into licenses', async () => {
     // The manifest builders flatten { file, license } scripts to filenames and
     // put their licenses in `licenses`; the entry must not lose them.

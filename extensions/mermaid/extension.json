@@ -107,5 +107,6 @@
   "domTransforms": [
     "transformMermaid.js"
   ],
+  "stage": "blocks",
   "textTransforms": []
 }

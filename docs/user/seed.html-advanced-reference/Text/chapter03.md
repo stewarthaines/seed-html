@@ -49,10 +49,13 @@ Behind the one click is a small manifest the app reads — an `extension.json` t
   "license": "LICENSE.txt",
   "scripts": ["highlight.min.js"],
   "domTransforms": ["transformHighlight.js"],
+  "stage": "highlight",
   "assets": [{ "file": "themes/default.css", "target": "Styles/highlight.css" }]
 }
 ```
 
 Read top to bottom, that's the by-hand recipe: load `highlight.min.js` as a global, run `transformHighlight.js` over the DOM, and copy a theme into the book's styles — plus the licence to carry along. Installing the extension simply does what the manifest declares.
+
+The `stage` says what kind of work the DOM transform does, and so where it belongs in the list. The stages run in this order: `blocks` (code blocks and markers become rendered content), `structure` (images become figures), `annotate` (additions to those figures), `derive` (panels, lists and records built from the book), `language`, `highlight` and `layout`. Adding an extension places its transform before the first one from a later stage. Your own scripts, and the order you have set by hand, stay where they are.
 
 These manifests are part of the app, not something you write — the by-hand route is your equivalent. But an extension can declare one more thing: **generators**, scripts that build content from the whole book, like the shipped List of Figures. That's the next chapter.

@@ -11,6 +11,7 @@
   "domTransforms": [
     "transformPrism.js"
   ],
+  "stage": "highlight",
   "textTransforms": [],
   "assets": [
     {

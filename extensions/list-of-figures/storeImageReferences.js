@@ -22,11 +22,17 @@ async function transformDOM(htmlDocument, idref, ctx) {
     const src = img.getAttribute('src') || '';
     if (!src) return;
     // Prefer a <figcaption> within an enclosing <figure>; fall back to alt text.
+    // Photo-regions appends the named faces (.fc-stack) to the figcaption; they
+    // are not the caption, so they stay out of the list.
     let caption = '';
     const figure = img.closest('figure');
     if (figure) {
       const figcaption = figure.querySelector('figcaption');
-      if (figcaption) caption = (figcaption.textContent || '').trim();
+      if (figcaption) {
+        const authored = figcaption.cloneNode(true);
+        authored.querySelectorAll('.fc-stack').forEach(el => el.remove());
+        caption = (authored.textContent || '').trim();
+      }
     }
     if (!caption) caption = (img.getAttribute('alt') || '').trim();
     figures.push({ src: src, caption: caption });

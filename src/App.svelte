@@ -81,7 +81,6 @@
   import { generateEPUBTimestamp } from './lib/epub/opf-utils.js';
   import { ensureGeneratedNav } from './lib/outline/nav-coherence.js';
   import { createSpinePreviewManager } from './lib/transform/spine-preview-manager.js';
-  import { addTransform } from './lib/settings/dom-transforms.js';
   import CreateProjectDialog, {
     type CreateProjectData,
   } from './lib/components/workspace/CreateProjectDialog.svelte';
@@ -1370,8 +1369,8 @@
   };
 
   // Install a catalog extension into a project (the orchestration mirrored from
-  // SettingsView): copy files, load libs, then adopt its text transform / append
-  // its DOM transforms, and register any EPUB assets. Used by the create flow.
+  // SettingsView): copy files, load libs, then adopt its text transform / place
+  // its DOM transforms by stage, and register any EPUB assets. Used by the create flow.
   async function installCatalogExtension(
     workspaceId: string,
     entry: ExtensionCatalogEntry
@@ -1386,11 +1385,14 @@
     const settingsService = appState.getSettingsService();
     const epub = await settingsService.loadEPUBSettings(workspaceId);
     let next = epub;
-    for (const file of entry.domTransforms) {
-      next = {
-        ...next,
-        dom_transforms: addTransform(next.dom_transforms, `SOURCE/extensions/${entry.id}/${file}`),
-      };
+    if (entry.domTransforms.length > 0) {
+      const dom_transforms = await extensionManager.placeDomTransforms(
+        workspaceId,
+        epub.dom_transforms,
+        entry,
+        availableExtensions
+      );
+      if (dom_transforms !== epub.dom_transforms) next = { ...next, dom_transforms };
     }
     if (entry.textTransforms.length > 0) {
       // A text format brings its own media-insertion templates: adopting it sets

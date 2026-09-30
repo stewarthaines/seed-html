@@ -8,6 +8,7 @@
   "domTransforms": [
     "storeImageReferences.js"
   ],
+  "stage": "derive",
   "textTransforms": [],
   "generators": [
     {

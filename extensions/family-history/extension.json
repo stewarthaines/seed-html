@@ -15,6 +15,7 @@
   "domTransforms": [
     "transformFamily.js"
   ],
+  "stage": "derive",
   "textTransforms": [],
   "files": [
     "person.schema.json"

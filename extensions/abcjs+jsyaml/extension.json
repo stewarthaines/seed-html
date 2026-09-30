@@ -18,6 +18,7 @@
   "domTransforms": [
     "transformAbcjs.js"
   ],
+  "stage": "blocks",
   "textTransforms": [],
   "assets": [
     {

@@ -8,6 +8,7 @@
   "domTransforms": [
     "transformRegions.js"
   ],
+  "stage": "annotate",
   "textTransforms": [],
   "assets": [
     {

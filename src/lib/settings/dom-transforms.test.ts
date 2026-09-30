@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   addTransform,
+  insertByStage,
   removeTransformAt,
   removeTransformsForExtension,
   moveTransform,
@@ -9,6 +10,7 @@ import {
   extensionOf,
   resolveTransformPath,
 } from './dom-transforms.js';
+import type { DomTransformStage } from '../extensions/stages.js';
 
 describe('dom-transforms helpers', () => {
   describe('addTransform', () => {
@@ -19,6 +21,97 @@ describe('dom-transforms helpers', () => {
     it('dedupes an existing path', () => {
       const list = ['a', 'b'];
       expect(addTransform(list, 'a')).toBe(list); // unchanged reference
+    });
+  });
+
+  describe('insertByStage', () => {
+    const ext = (id: string, file = 'transform.js') => `SOURCE/extensions/${id}/${file}`;
+    const PROJECT = 'SOURCE/scripts/transformDom.js';
+    const stages: Record<string, DomTransformStage> = {
+      prettier: 'blocks',
+      figures: 'structure',
+      'photo-regions': 'annotate',
+      'family-history': 'derive',
+      prism: 'highlight',
+      responsive: 'layout',
+    };
+    const stageOf = (path: string) => {
+      const id = extensionOf(path);
+      return id ? stages[id] : undefined;
+    };
+
+    it('appends to an empty list', () => {
+      expect(insertByStage([], [ext('figures')], 'structure', stageOf)).toEqual([ext('figures')]);
+    });
+
+    it('goes before the first later stage, after the project script', () => {
+      const list = [PROJECT, ext('responsive')];
+      expect(insertByStage(list, [ext('figures')], 'structure', stageOf)).toEqual([
+        PROJECT,
+        ext('figures'),
+        ext('responsive'),
+      ]);
+    });
+
+    it('goes after entries of its own and earlier stages', () => {
+      const list = [ext('prettier'), ext('photo-regions'), ext('responsive')];
+      expect(insertByStage(list, [ext('family-history')], 'derive', stageOf)).toEqual([
+        ext('prettier'),
+        ext('photo-regions'),
+        ext('family-history'),
+        ext('responsive'),
+      ]);
+    });
+
+    it('appends when no entry has a later stage', () => {
+      const list = [PROJECT, ext('prettier')];
+      expect(insertByStage(list, [ext('responsive')], 'layout', stageOf)).toEqual([
+        PROJECT,
+        ext('prettier'),
+        ext('responsive'),
+      ]);
+    });
+
+    it('treats unstaged entries as transparent and never re-sorts them', () => {
+      const list = [ext('responsive'), PROJECT, ext('legacy')];
+      expect(insertByStage(list, [ext('figures')], 'structure', stageOf)).toEqual([
+        ext('figures'),
+        ext('responsive'),
+        PROJECT,
+        ext('legacy'),
+      ]);
+    });
+
+    it('keeps an existing hand order that breaks the stage order', () => {
+      const list = [ext('responsive'), ext('prettier')];
+      expect(insertByStage(list, [ext('prism')], 'highlight', stageOf)).toEqual([
+        ext('prism'),
+        ext('responsive'),
+        ext('prettier'),
+      ]);
+    });
+
+    it('inserts a multi-script extension contiguously in declared order', () => {
+      const list = [PROJECT, ext('responsive')];
+      const paths = [ext('figures', 'a.js'), ext('figures', 'b.js')];
+      expect(insertByStage(list, paths, 'structure', stageOf)).toEqual([
+        PROJECT,
+        ...paths,
+        ext('responsive'),
+      ]);
+    });
+
+    it('appends when the extension has no stage', () => {
+      const list = [ext('responsive')];
+      expect(insertByStage(list, [ext('legacy')], undefined, stageOf)).toEqual([
+        ext('responsive'),
+        ext('legacy'),
+      ]);
+    });
+
+    it('leaves paths already in the list where they are', () => {
+      const list = [ext('responsive'), ext('figures')];
+      expect(insertByStage(list, [ext('figures')], 'structure', stageOf)).toBe(list);
     });
   });
 

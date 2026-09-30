@@ -14,6 +14,7 @@
   "domTransforms": [
     "transformPrettier.js"
   ],
+  "stage": "blocks",
   "textTransforms": [],
   "assets": [
     {

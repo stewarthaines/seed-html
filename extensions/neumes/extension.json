@@ -9,6 +9,7 @@
   "domTransforms": [
     "transformNeumes.js"
   ],
+  "stage": "blocks",
   "textTransforms": [],
   "assets": [
     {

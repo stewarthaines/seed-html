@@ -9,6 +9,7 @@
   "domTransforms": [
     "transformResponsive.js"
   ],
+  "stage": "layout",
   "textTransforms": [],
   "assets": [
     {
