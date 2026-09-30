@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Adding an extension puts its DOM transform in the right place in the project's list, so it works without reordering by hand.
 
+### Fixed
+
+- The list of figures shows each photograph's own caption, without the names of the people in it.
+
 ## [0.22.0] - 2026-09-27
 
 ### Added
