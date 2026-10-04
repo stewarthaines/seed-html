@@ -298,7 +298,9 @@
     background: var(--color-bg-secondary);
   }
 
-  .agent-toggle.active {
+  /* Scoped under .trailing so it outranks `.trailing .btn.active`, whose grey
+     fill would otherwise leave the on-accent (white) icon on a pale ground. */
+  .trailing .agent-toggle.active {
     color: var(--color-on-accent);
     background: var(--color-hover-accent);
     border-color: var(--color-hover-accent);
