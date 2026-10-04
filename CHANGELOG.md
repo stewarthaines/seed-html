@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - A Figures extension turns captioned images into figures, so screen readers announce each image with its caption.
+- A Writes toggle in the agent panel lets an agent's prose writes through for this connection, so you need not wait for its first write. It switches off when you open another project, and script writes are still reviewed one by one.
 
 ### Changed
 
@@ -25,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The list of figures shows each photograph's own caption, without the names of the people in it.
 - A captioned image with a set width keeps that width on wider screens instead of stretching beside its caption.
+- The agent button in the top bar shows as active while the agent is connected, instead of a white icon on a pale button.
 
 ## [0.22.0] - 2026-09-27
 

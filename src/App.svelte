@@ -705,6 +705,13 @@
   // the spine view — the checks tool reports a11y unavailable then).
   let previewPaneRef = $state<PreviewPane | undefined>();
 
+  // A bridge write grant is bound to the project it was given for: tell a
+  // running bridge whenever the open project changes, so the grant clears.
+  $effect(() => {
+    void currentWorkspaceState?.id;
+    agentBridge?.projectChanged();
+  });
+
   // A #fragment travelling with a chapter switch (preview link or history
   // Back/Forward), consumed by the preview once that chapter renders.
   let pendingPreviewFragment = $state<{ chapterId: string; fragment: string } | null>(null);

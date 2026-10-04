@@ -154,10 +154,16 @@ async function contentHash(bytes) {
 export function start(ctx) {
   // Write grants are per-connection by design: this state lives and dies with
   // one start()/socket, so every new connection re-prompts. Within a connection
-  // the grant covers every prose write; it never covers code.
-  const session = { grant: 'none' }; // 'none' | 'session'
+  // the grant covers every prose write to the project it was given for; it
+  // never covers code, and a project change clears it
+  // (process/BRIDGE_PREAPPROVED_WRITES.md).
+  const session = { grant: 'none', workspaceId: null }; // grant: 'none' | 'session'
   setEnabled(!readMuted());
-  const ui = buildOverlay(ctx.mountEl, () => stop());
+  const ui = buildOverlay(
+    ctx.mountEl,
+    () => stop(),
+    on => setGrant(session, ui, on ? ctx.getProjectInfo().workspaceId : null)
+  );
   let socket = null;
   let stopped = false;
 
@@ -238,7 +244,30 @@ export function start(ctx) {
     ctx.onStatus('disconnected', 'stopped');
   }
 
-  return { stop };
+  /**
+   * The open project changed: a grant given for another project no longer
+   * applies. Called by the loader; the write-time workspace comparison in
+   * writeFile is the backstop if a change is ever missed.
+   */
+  function projectChanged() {
+    if (session.grant !== 'session') return;
+    if (session.workspaceId === ctx.getProjectInfo().workspaceId) return;
+    setGrant(session, ui, null);
+    ui.addAction('write permission cleared: the open project changed');
+  }
+
+  return { stop, projectChanged };
+}
+
+/**
+ * Set or clear the content-tier write grant and repaint the overlay toggle —
+ * one state behind the toggle and the prompt's "Allow this session" alike.
+ * A grant is bound to the workspace it was given for; null clears it.
+ */
+function setGrant(session, ui, workspaceId) {
+  session.grant = workspaceId ? 'session' : 'none';
+  session.workspaceId = workspaceId ?? null;
+  ui.setGrant(session.grant === 'session');
 }
 
 // --- tools ----------------------------------------------------------------------
@@ -508,7 +537,11 @@ async function writeFile(ctx, session, ui, params) {
   };
   await validate();
   const isCode = isCodePath(path);
-  // A grant lasts the connection, and never reaches code.
+  // A grant lasts the connection, covers only the project it was given for,
+  // and never reaches code.
+  if (session.grant === 'session' && session.workspaceId !== requestWorkspaceId) {
+    setGrant(session, ui, null);
+  }
   const granted = !isCode && session.grant === 'session';
   if (granted) {
     // covered: no prompt, the feed line is the record
@@ -529,7 +562,7 @@ async function writeFile(ctx, session, ui, params) {
     const choice = await ui.promptWrite(path, bytes.length, stat);
     if (choice === 'deny') throw denied();
     if (choice === 'timeout' || choice === 'disconnected') throw unanswered(choice);
-    if (choice === 'session') session.grant = 'session';
+    if (choice === 'session') setGrant(session, ui, requestWorkspaceId);
     await validate();
   }
   // Review mode (track changes): the service snapshots the file's pre-edit
@@ -624,7 +657,7 @@ function describeAction(tool, params, result) {
 
 // --- overlay (module-owned; sr-caption family: dark in both themes) -------------
 
-function buildOverlay(mountEl, onDisconnect) {
+function buildOverlay(mountEl, onDisconnect, onGrantToggle) {
   mountEl.textContent = '';
   const root = document.createElement('div');
   root.setAttribute('role', 'region');
@@ -745,9 +778,36 @@ function buildOverlay(mountEl, onDisconnect) {
     if (!muted) play('toggle');
   });
 
+  // Write-permission toggle: pre-approves prose writes for this connection and
+  // this project, so the author need not wait for an agent's first write. Not
+  // persisted — a saved setting would be a standing authorisation. Labelled
+  // with its state, like the sound toggle; scripts are reviewed regardless.
+  const writes = document.createElement('button');
+  writes.type = 'button';
+  writes.title = 'Allows prose writes without asking. Scripts are still reviewed.';
+  Object.assign(writes.style, {
+    margin: '4px 0 6px',
+    padding: '3px 10px',
+    font: 'inherit',
+    color: 'inherit',
+    background: 'rgba(255,255,255,0.12)',
+    border: '0',
+    borderRadius: '4px',
+    cursor: 'pointer',
+  });
+  const paintWrites = allowed => {
+    writes.textContent = allowed ? 'Writes: allowed' : 'Writes: ask';
+    writes.setAttribute('aria-pressed', String(allowed));
+    writes.style.background = allowed ? 'rgba(46,125,50,0.5)' : 'rgba(255,255,255,0.12)';
+  };
+  paintWrites(false);
+  writes.addEventListener('click', () => {
+    onGrantToggle(writes.getAttribute('aria-pressed') !== 'true');
+  });
+
   const actions = document.createElement('div');
   Object.assign(actions.style, { display: 'flex', gap: '6px', padding: '0 12px' });
-  actions.append(disconnect, sound);
+  actions.append(disconnect, sound, writes);
   panel.append(feed, actions);
 
   pill.addEventListener('click', () => {
@@ -774,6 +834,10 @@ function buildOverlay(mountEl, onDisconnect) {
     trackPrompt(cancel) {
       pendingPrompts.add(cancel);
       return () => pendingPrompts.delete(cancel);
+    },
+    /** Repaint the write-permission toggle (the grant itself lives in start()). */
+    setGrant(allowed) {
+      paintWrites(allowed);
     },
     setStatus(status, detail) {
       dot.style.background =

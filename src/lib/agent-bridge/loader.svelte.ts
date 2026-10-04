@@ -91,14 +91,22 @@ export interface AgentBridgeModuleContext {
   diffStat: (current: string | null, incoming: string | null) => { added: number; removed: number };
 }
 
+interface AgentBridgeHandle {
+  stop(): void;
+  /** The open project changed: clears a write grant given for another project. */
+  projectChanged?(): void;
+}
+
 interface AgentBridgeModule {
-  start(ctx: AgentBridgeModuleContext): { stop(): void };
+  start(ctx: AgentBridgeModuleContext): AgentBridgeHandle;
 }
 
 export interface AgentBridge {
   readonly status: AgentBridgeStatus;
   readonly detail: string;
   toggle(): Promise<void>;
+  /** Tell a running bridge the open project changed (no-op when off). */
+  projectChanged(): void;
 }
 
 export function createAgentBridge(
@@ -108,7 +116,7 @@ export function createAgentBridge(
 ): AgentBridge {
   let status = $state<AgentBridgeStatus>('off');
   let detail = $state('');
-  let handle: { stop(): void } | null = null;
+  let handle: AgentBridgeHandle | null = null;
   let modulePromise: Promise<AgentBridgeModule> | null = null;
 
   return {
@@ -117,6 +125,9 @@ export function createAgentBridge(
     },
     get detail() {
       return detail;
+    },
+    projectChanged() {
+      handle?.projectChanged?.();
     },
     async toggle() {
       if (handle) {
