@@ -44,6 +44,22 @@ const buildContext = () => ({
 });
 
 describe('agent bridge loader', () => {
+  it('forwards a project change to a running bridge, and ignores it when off', async () => {
+    const projectChanged = vi.fn();
+    const module = {
+      start: vi.fn((ctx: AgentBridgeModuleContext) => {
+        ctx.onStatus('connected');
+        return { stop: vi.fn(), projectChanged };
+      }),
+    };
+    const bridge = createAgentBridge(buildContext, async () => module);
+    bridge.projectChanged(); // off: nothing to tell
+    expect(projectChanged).not.toHaveBeenCalled();
+    await bridge.toggle();
+    bridge.projectChanged();
+    expect(projectChanged).toHaveBeenCalledTimes(1);
+  });
+
   it('connects on toggle and tears down on the second toggle', async () => {
     const { module, stop } = makeFakeModule();
     const bridge = createAgentBridge(buildContext, async () => module);

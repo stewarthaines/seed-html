@@ -697,6 +697,112 @@ describe('agent bridge module', () => {
     expect(ctx.writeTextFile).toHaveBeenCalledTimes(2);
   });
 
+  describe('pre-approved writes (the Writes toggle)', () => {
+    const buttons = (el: HTMLElement) => [...el.querySelectorAll('button')];
+    const writesToggle = (el: HTMLElement) =>
+      buttons(el).find(b => b.textContent?.startsWith('Writes:'))!;
+    const cssWrite = (id: number, text: string, expectedHash: string) =>
+      JSON.stringify({
+        id,
+        tool: 'write_file',
+        params: { path: 'OEBPS/Styles/page.css', text, expectedHash },
+      });
+
+    it('starts at ask, unpersisted, and lets a prose write through without a prompt once on', async () => {
+      const { ctx } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const toggle = writesToggle(ctx.mountEl);
+      expect(toggle.textContent).toBe('Writes: ask');
+      expect(toggle.getAttribute('aria-pressed')).toBe('false');
+      toggle.click();
+      expect(toggle.textContent).toBe('Writes: allowed');
+      expect(toggle.getAttribute('aria-pressed')).toBe('true');
+      socket.onmessage?.({ data: cssWrite(1, 'x', await sha256('body { color: red }')) });
+      await waitFor(() => socket.sent.some(s => s.includes('"written"')));
+      expect(buttons(ctx.mountEl).some(b => b.textContent === 'Allow once')).toBe(false);
+      expect(ctx.writeTextFile).toHaveBeenCalledTimes(1);
+    });
+
+    it('never covers a script write', async () => {
+      const { ctx } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      writesToggle(ctx.mountEl).click();
+      socket.onmessage?.({
+        data: JSON.stringify({
+          id: 1,
+          tool: 'write_file',
+          params: {
+            path: 'SOURCE/scripts/transformDom.js',
+            text: 'function transformDOM(d) { return d }',
+            expectedHash: await sha256('function transformDOM(document) { return document }'),
+          },
+        }),
+      });
+      await waitFor(() => socket.sent.length > 1);
+      expect(ctx.reviewWrite).toHaveBeenCalledTimes(1);
+    });
+
+    it('switched back off, the next prose write prompts again', async () => {
+      const { ctx } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const toggle = writesToggle(ctx.mountEl);
+      toggle.click();
+      toggle.click();
+      expect(toggle.textContent).toBe('Writes: ask');
+      socket.onmessage?.({ data: cssWrite(1, 'x', await sha256('body { color: red }')) });
+      await waitFor(() => buttons(ctx.mountEl).some(b => b.textContent === 'Allow once'));
+      expect(ctx.writeTextFile).not.toHaveBeenCalled();
+    });
+
+    it('Allow this session in a prompt turns the toggle on', async () => {
+      const { ctx } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      socket.onmessage?.({ data: cssWrite(1, 'x', await sha256('body { color: red }')) });
+      await waitFor(() => buttons(ctx.mountEl).some(b => b.textContent === 'Allow this session'));
+      buttons(ctx.mountEl)
+        .find(b => b.textContent === 'Allow this session')!
+        .click();
+      await waitFor(() => socket.sent.some(s => s.includes('"written"')));
+      expect(writesToggle(ctx.mountEl).getAttribute('aria-pressed')).toBe('true');
+    });
+
+    it('a project change clears the grant and repaints the toggle', async () => {
+      const { ctx, setWorkspaceId } = makeContext();
+      const handle = start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      writesToggle(ctx.mountEl).click();
+      setWorkspaceId('ws-2');
+      handle.projectChanged();
+      expect(writesToggle(ctx.mountEl).textContent).toBe('Writes: ask');
+      expect(ctx.mountEl.textContent).toContain('write permission cleared');
+      socket.onmessage?.({ data: cssWrite(1, 'x', await sha256('body { color: red }')) });
+      await waitFor(() => buttons(ctx.mountEl).some(b => b.textContent === 'Allow once'));
+      expect(ctx.writeTextFile).not.toHaveBeenCalled();
+    });
+
+    it('a grant for another project never covers a write, even if the change was missed', async () => {
+      const { ctx, setWorkspaceId } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      writesToggle(ctx.mountEl).click();
+      setWorkspaceId('ws-2'); // no projectChanged() call: the write-time check is the backstop
+      socket.onmessage?.({ data: cssWrite(1, 'x', await sha256('body { color: red }')) });
+      await waitFor(() => buttons(ctx.mountEl).some(b => b.textContent === 'Allow once'));
+      expect(ctx.writeTextFile).not.toHaveBeenCalled();
+      expect(writesToggle(ctx.mountEl).textContent).toBe('Writes: ask');
+    });
+  });
+
   it('a session grant is not bounded by write count or by age', async () => {
     const { ctx } = makeContext();
     start(ctx);
