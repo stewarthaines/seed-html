@@ -805,25 +805,25 @@
 
       // Update workspace state
       workspace = result.updatedWorkspace;
+
+      // If the deleted item was selected, move selection to its nearest neighbour
+      // (the item that slid into its slot, or the new last one) so the editor stays
+      // populated rather than dropping to an empty state. The guard above guarantees
+      // at least one item remains. Selected before the workspace is published, with
+      // nothing awaited between, for the same reason as a rename (handleSaveEdit).
+      if (selectedItemId === itemId) {
+        const remaining = workspace.opf.spine;
+        if (remaining.length > 0) {
+          const next = remaining[Math.min(deletedIndex, remaining.length - 1)];
+          handleSelectItem(next.idref);
+        }
+      }
       if (onWorkspaceUpdate) {
         onWorkspaceUpdate(workspace);
       }
 
       // Reload spine items with updated workspace
       spineItems = await spineService.loadSpineItems(workspace);
-
-      // If the deleted item was selected, move selection to its nearest neighbour
-      // (the item that slid into its slot, or the new last one) so the editor stays
-      // populated rather than dropping to an empty state. The guard above guarantees
-      // at least one item remains.
-      if (selectedItemId === itemId && spineItems.length > 0) {
-        const next = spineItems[Math.min(deletedIndex, spineItems.length - 1)];
-        const event = new CustomEvent('select-spine-item', {
-          detail: { itemId: next.id },
-          bubbles: true,
-        });
-        window.dispatchEvent(event);
-      }
     } catch (error) {
       console.error('Failed to delete chapter:', error);
       // Could add error notification here
@@ -880,12 +880,18 @@
       );
     }
 
+    // Select before publishing the workspace, with nothing awaited between:
+    // both state changes then land in one flush. Published first, the renamed
+    // workspace leaves the selection pointing at an id no longer in the spine,
+    // and App's "the Write tab always shows a chapter" effect jumps to the
+    // first chapter, racing this selection; the editor then kept saving under
+    // the old id.
+    handleSelectItem(effectiveId);
     if (onWorkspaceUpdate) {
       onWorkspaceUpdate(workspace);
     }
 
     await loadSpineItems();
-    handleSelectItem(effectiveId);
     editingItem = null;
   }
 </script>
