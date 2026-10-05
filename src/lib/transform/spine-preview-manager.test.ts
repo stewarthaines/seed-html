@@ -422,4 +422,32 @@ describe('SpinePreviewManager pipeline', () => {
     );
     expect(h.transformEngine.executeGenerator).not.toHaveBeenCalled();
   });
+
+  it('refuses to render or save a chapter id that is no longer in the manifest', async () => {
+    const h = makeHarness({ autoSave: true });
+
+    // A manager left on a renamed chapter's old id (the chapter01 incident).
+    await h.manager.switchToSpineItem('chapter01');
+    h.manager.updateContent('text', 'edit meant for the renamed chapter');
+    await vi.advanceTimersByTimeAsync(20);
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(h.fileStorage.writeTextFile).not.toHaveBeenCalled();
+    expect(h.transformEngine.executeTransform).not.toHaveBeenCalled();
+    expect(h.workspaceService.writeFile).not.toHaveBeenCalled();
+    expect(h.onError).toHaveBeenCalledWith(expect.objectContaining({ stage: 'persistence' }));
+    expect(h.onPreviewUpdate).not.toHaveBeenCalled();
+  });
+
+  it('still autosaves the source of a chapter that is in the manifest', async () => {
+    const h = makeHarness({ autoSave: true });
+
+    h.manager.updateContent('text', 'kept');
+    await vi.advanceTimersByTimeAsync(20);
+    h.finishTransform();
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(h.fileStorage.writeTextFile).toHaveBeenCalledWith('ws-1', 'SOURCE/text/ch1.txt', 'kept');
+    expect(h.onError).not.toHaveBeenCalled();
+  });
 });

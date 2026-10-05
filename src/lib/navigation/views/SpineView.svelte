@@ -15,6 +15,7 @@
     type SwitchContext,
     type SwitchResult,
   } from '../../spine/chapter-switch.service.js';
+  import { createLatestWinsRunner } from '../../spine/latest-wins.js';
   import { parseLocaleTextPath } from '../../translations/editions.js';
   import EditorPane from '../../components/spine/EditorPane.svelte';
   import {
@@ -235,9 +236,6 @@
   // Track previous selectedItemId to prevent unnecessary reloads
   let previousSelectedItemId: string | null = null;
 
-  // Loading guard to prevent concurrent spine item loads
-  let isLoadingSpineItem = false;
-
   // Editor reference for preview click navigation
   let editorPaneRef = $state<any>(null);
 
@@ -327,6 +325,35 @@
     // Update tracking
     previousWorkspaceId = workspace?.id || null;
   });
+
+  // A chapter that leaves the book (renamed or deleted) takes its cached
+  // editor store with it. Stores are keyed by path, and new chapters reuse the
+  // lowest free id, so a store left behind under SOURCE/text/chapter01.txt
+  // would hand the previous chapter's text to the next chapter01, and a pane
+  // still bound to it would keep saving under the departed id. Its pending
+  // save is cancelled, not flushed: the file has already moved or gone, and a
+  // flush would recreate it. Declared after the workspace-switch effect, so a
+  // project switch has already cleared the stores by the time this runs.
+  $effect(() => {
+    const manifest = workspace?.opf?.manifest;
+    const workspaceId = workspace?.id;
+    if (!manifest || !workspaceId) return;
+    const ids = new Set(manifest.map(item => item.id));
+    untrack(() => evictDepartedChapterStores(workspaceId, ids));
+  });
+
+  function evictDepartedChapterStores(workspaceId: string, manifestIds: Set<string>) {
+    for (const [path, store] of [...fileContentStores]) {
+      const match = /^SOURCE\/text\/([^/]+)\.txt$/.exec(path);
+      if (!match || manifestIds.has(match[1])) continue;
+      pendingSaves.cancel(workspaceId, path);
+      fileContentStores.delete(path);
+      if (pane1Store === store) pane1Store = null;
+      if (pane2Store === store) pane2Store = null;
+      store.destroy();
+      previewManager?.forgetChapter(match[1]);
+    }
+  }
 
   // Store subscriptions will be handled after implementing direct assignment
 
@@ -1247,9 +1274,6 @@
     };
   });
 
-  // Race condition prevention
-  let currentSpineItemLoadPromise: Promise<void> | null = null;
-
   // Turning a book's scripts on or off re-renders the read-only preview:
   // the stripped and the unstripped document are different documents.
   let lastRunScripts = untrack(() => runScripts);
@@ -1330,36 +1354,22 @@
     }
   }
 
+  // Loads never overlap, and none is dropped: a selection that changes while a
+  // load is in flight gets its own load once that one finishes. Dropping it
+  // left the preview manager and the editor pane on the previous chapter while
+  // the sidebar showed the new one, so saves went under the old id.
+  const spineItemLoads = createLatestWinsRunner(
+    () => selectedItemId,
+    async () => {
+      if (!selectedItemId || !spineService) return;
+      await performSpineItemLoad();
+    }
+  );
+
   // Load selected item data
   async function loadSelectedItem() {
     if (!selectedItemId || !spineService) return;
-
-    // Guard against concurrent spine item loads
-    if (isLoadingSpineItem) {
-      return;
-    }
-
-    // Prevent race conditions - if another load is in progress, wait for it
-    if (currentSpineItemLoadPromise) {
-      try {
-        await currentSpineItemLoadPromise;
-      } catch {
-        // Previous load failed, proceed
-      }
-    }
-
-    // Set loading flag to prevent concurrent calls
-    isLoadingSpineItem = true;
-
-    // Create new load promise
-    currentSpineItemLoadPromise = performSpineItemLoad();
-
-    try {
-      await currentSpineItemLoadPromise;
-    } finally {
-      currentSpineItemLoadPromise = null;
-      isLoadingSpineItem = false;
-    }
+    await spineItemLoads.run();
   }
 
   async function performSpineItemLoad() {

@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The list of figures shows each photograph's own caption, without the names of the people in it.
 - A captioned image with a set width keeps that width on wider screens instead of stretching beside its caption.
 - The agent button in the top bar shows as active while the agent is connected, instead of a white icon on a pale button.
+- Renaming or deleting the chapter you are editing no longer leaves a stray copy under its old name, and a new chapter no longer opens showing a renamed chapter's text.
 
 ## [0.22.0] - 2026-09-27
 
