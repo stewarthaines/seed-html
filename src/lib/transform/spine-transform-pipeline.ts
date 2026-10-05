@@ -191,6 +191,15 @@ export class SpineTransformPipeline {
   }
 
   /**
+   * Forget what was last persisted for a chapter id that has left the book.
+   * New chapters reuse the lowest free id, so a stale entry would let a later
+   * chapter with the same id and identical frontmatter skip writing its record.
+   */
+  forgetFrontmatter(idref: string): void {
+    this.frontmatterWritten.delete(idref);
+  }
+
+  /**
    * Load transform scripts from workspace settings. The settings are read from
    * storage on every call; the script files themselves are served from cache
    * while the configured pipeline (text_transform + dom_transforms) is

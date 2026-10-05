@@ -269,6 +269,11 @@ export class SpinePreviewManager {
     this.transformPipeline.invalidateScriptCache();
   }
 
+  /** A chapter id has left the book (renamed or deleted); see forgetFrontmatter. */
+  forgetChapter(idref: string): void {
+    this.transformPipeline.forgetFrontmatter(idref);
+  }
+
   /**
    * Run a generator on demand and return the produced source text (to insert at the
    * editor caret). Supplies the same brokered file-access context as a transform run
@@ -326,20 +331,7 @@ export class SpinePreviewManager {
     const epoch = this.renderEpoch;
 
     try {
-      // Step 1: Auto-save modified content to storage before preview. A failed
-      // save must be surfaced — the preview would otherwise keep rendering from
-      // memory while exports ship stale content, with no user-visible signal.
-      if (this.config.autoSave) {
-        const saved = await this.autoSaveChangedContent();
-        if (!saved.success) {
-          this.handleError(
-            'auto-save',
-            new Error(saved.errors.map(e => `${e.file}: ${e.error}`).join('; '))
-          );
-        }
-      }
-
-      // Step 2: Load the workspace ONCE for this render (loadWorkspace re-reads
+      // Step 1: Load the workspace ONCE for this render (loadWorkspace re-reads
       // and re-parses the OPF on every call; only pathInfo is cached) and thread
       // it through the transform context, metadata generation, and manifest
       // persistence below. The manifest can't change mid-render — the only OPF
@@ -353,6 +345,38 @@ export class SpinePreviewManager {
         // file access and with default metadata. Persistence, which cannot
         // proceed without the manifest, reports the error below.
         workspaceError = error;
+      }
+
+      // A chapter id no longer in the book (renamed or deleted under a manager
+      // that was never switched) must not render: the source save, the
+      // frontmatter record and the transforms' data writes are all keyed by it,
+      // and would recreate the departed chapter's files. Surfaced, not silent,
+      // so a missed switch shows up instead of edits quietly going nowhere. An
+      // unreadable workspace can't answer the question; that case renders as
+      // before and reports its persistence error below.
+      if (workspace && !workspace.opf.manifest.some(item => item.id === this.spineItemId)) {
+        if (epoch === this.renderEpoch) {
+          this.handleError(
+            'persistence',
+            new Error(
+              `Chapter '${this.spineItemId}' is no longer in the book, so this render was not saved. Select the chapter again.`
+            )
+          );
+        }
+        return;
+      }
+
+      // Step 2: Auto-save modified content to storage before preview. A failed
+      // save must be surfaced — the preview would otherwise keep rendering from
+      // memory while exports ship stale content, with no user-visible signal.
+      if (this.config.autoSave) {
+        const saved = await this.autoSaveChangedContent();
+        if (!saved.success) {
+          this.handleError(
+            'auto-save',
+            new Error(saved.errors.map(e => `${e.file}: ${e.error}`).join('; '))
+          );
+        }
       }
 
       // The brokered file-access ctx for transform scripts (read manifest
