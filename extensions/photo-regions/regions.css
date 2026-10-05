@@ -148,6 +148,7 @@ figure.name-faces:has(.fc-rowlabel-8:hover) .fc-inrow-8 {
 
 .detail-set svg.detail {
   display: block;
+  box-sizing: border-box; /* the border stays inside the column-wide max-width */
   width: 100%;
   max-width: 100%;
   height: auto;
