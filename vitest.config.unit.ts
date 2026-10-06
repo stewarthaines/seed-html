@@ -22,17 +22,37 @@ export default defineConfig({
     __VERSION__: JSON.stringify(packageJson.version),
   },
   test: {
-    environment: 'happy-dom',
-    include: [
-      'src/**/*.{test,spec}.{js,ts}',
-      // The same-origin WebDAV proxy guard (functions/_shared) is plain TS.
-      'functions/**/*.{test,spec}.{js,ts}',
-    ],
     exclude: [
       'src/**/*.stories.{js,ts}',
       '**/node_modules/**',
       // Browser-mode contract tests run separately (npm run test:plugins).
       '**/*.browser.{test,spec}.{js,ts}',
+    ],
+    // Two projects, one per DOM environment: the app on happy-dom, and the
+    // plugins' own unit tests on jsdom, as each plugin's vite config runs
+    // them (their OPDS/WebDAV parsing needs namespaced XML, which happy-dom
+    // lacks). Plugins build separately; their tests still gate validate.
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'app',
+          environment: 'happy-dom',
+          include: [
+            'src/**/*.{test,spec}.{js,ts}',
+            // The same-origin WebDAV proxy guard (functions/_shared) is plain TS.
+            'functions/**/*.{test,spec}.{js,ts}',
+          ],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'plugin-units',
+          environment: 'jsdom',
+          include: ['plugins/*/src/**/*.{test,spec}.{js,ts}'],
+        },
+      },
     ],
     // Runs in validate via npm run test:coverage; the thresholds below are the
     // coverage ratchet (ARCHITECTURE_HEALTH workstream 3).

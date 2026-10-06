@@ -20,6 +20,13 @@ This document provides comprehensive guidance for writing tests in the seed-html
 - **What to Mock**: External dependencies only (file system, network)
 - **What NOT to Mock**: Internal business logic, state management
 
+#### Plugin Unit Tests (Vitest + jsdom)
+
+- **Where**: `plugins/*/src/**/*.test.ts`, run by the root unit config as the `plugin-units` project, so they gate `npm run test` and `validate` alongside the app
+- **Environment**: jsdom, the environment each plugin's own vite config uses (namespaced XML parsing that happy-dom lacks)
+- **Coverage**: not measured; the coverage locks cover `src/**` and `functions/**` only
+- **Run one plugin**: `npx vitest run --config vitest.config.unit.ts --project plugin-units plugins/<name>`
+
 #### Storage Backend Tests (contract on fakes + real-browser certification)
 
 - **Purpose**: Real I/O coverage of the storage backends (OPFS async/sync worker, IndexedDB)
