@@ -4,6 +4,8 @@ import {
   createContextMessage,
   isContextMessage,
   isImportEpubMessage,
+  isAddMediaMessage,
+  createMediaAddedMessage,
   isInitMessage,
   isInsertMessage,
   isNavigateMessage,
@@ -103,6 +105,34 @@ describe('contract message shapes', () => {
     expect(isImportEpubMessage({ type: 'import-epub', filename: 'b.epub', bytes: 'x' })).toBe(
       false
     );
+  });
+
+  it('isAddMediaMessage requires a request id, a filename, a media type and bytes', () => {
+    const bytes = new ArrayBuffer(4);
+    const message = {
+      type: 'add-media',
+      requestId: 'r1',
+      filename: 'take.mp3',
+      mediaType: 'audio/mpeg',
+      bytes,
+    };
+    expect(isAddMediaMessage(message)).toBe(true);
+    expect(isAddMediaMessage({ ...message, requestId: undefined })).toBe(false);
+    expect(isAddMediaMessage({ ...message, mediaType: 1 })).toBe(false);
+    expect(isAddMediaMessage({ ...message, bytes: new Uint8Array(4) })).toBe(false);
+  });
+
+  it('createMediaAddedMessage carries the href or the error with the request id', () => {
+    expect(createMediaAddedMessage('r1', { href: 'Audio/take.mp3' })).toEqual({
+      type: 'media-added',
+      requestId: 'r1',
+      href: 'Audio/take.mp3',
+    });
+    expect(createMediaAddedMessage('r2', { error: 'no' })).toEqual({
+      type: 'media-added',
+      requestId: 'r2',
+      error: 'no',
+    });
   });
 
   it('isOpenMessage accepts the two host screens only', () => {

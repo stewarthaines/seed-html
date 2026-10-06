@@ -26,6 +26,7 @@ This document provides comprehensive guidance for writing tests in the seed-html
 - **Environment**: jsdom, the environment each plugin's own vite config uses (namespaced XML parsing that happy-dom lacks)
 - **Coverage**: not measured; the coverage locks cover `src/**` and `functions/**` only
 - **Run one plugin**: `npx vitest run --config vitest.config.unit.ts --project plugin-units plugins/<name>`
+- **Real-browser plugin tests**: `plugins/*/src/**/*.browser.test.ts` run with the contract tests in `npm run test:plugins` (Chromium), for code that needs real media APIs (the audio recorder: MediaRecorder, decodeAudioData, the WASM mp3 encoder, with an oscillator standing in for the microphone)
 
 #### Storage Backend Tests (contract on fakes + real-browser certification)
 

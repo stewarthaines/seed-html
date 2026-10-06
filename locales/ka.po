@@ -768,6 +768,7 @@ msgstr "ჩაშენებული"
 msgid "By"
 msgstr ""
 
+#: plugins/audio-clip-editor/src/Recorder.svelte
 #: plugins/publish-to-remote/src/components/CatalogIdentityForm.svelte
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 #: plugins/publish-to-remote/src/components/ImportDialog.svelte
@@ -1258,6 +1259,14 @@ msgstr ""
 msgid "Could not read the project: {error}"
 msgstr "პროექტის წაკითხვა ვერ მოხერხდა: {error}"
 
+#: plugins/audio-clip-editor/src/Recorder.svelte
+msgid "Could not record: {error}"
+msgstr "ჩაწერა ვერ მოხერხდა: {error}"
+
+#: plugins/audio-clip-editor/src/Recorder.svelte
+msgid "Could not save the recording: {error}"
+msgstr "ჩანაწერის შენახვა ვერ მოხერხდა: {error}"
+
 #: plugins/photo-regions/src/App.svelte
 msgid "Could not save the regions: {error}"
 msgstr ""
@@ -1580,6 +1589,10 @@ msgstr "მოწყობილობა:"
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "Directory"
 msgstr ""
+
+#: plugins/audio-clip-editor/src/Recorder.svelte
+msgid "Discard"
+msgstr "გაუქმება"
 
 #: src/lib/components/metadata/CustomMetaSection.svelte
 msgid "Discovered in this book"
@@ -2839,6 +2852,10 @@ msgstr "იაპონური გამოცემა"
 msgid "Just now"
 msgstr "ახლახან"
 
+#: plugins/audio-clip-editor/src/Recorder.svelte
+msgid "Keep"
+msgstr "შენახვა"
+
 #: src/lib/components/settings/TranslationsPanel.svelte
 msgid "Keep a stored copy of the {from} text and switch the book to {to}? All chapters re-render."
 msgstr ""
@@ -3937,6 +3954,7 @@ msgid "Plain text navigation; leave empty to auto-generate from chapter titles. 
 msgstr "უბრალო ტექსტის ნავიგაცია; დატოვეთ ცარიელი, რომ ავტომატურად შეიქმნას თავების სათაურებიდან. შესანახად დააჭირეთ Ctrl+Enter-ს (Mac-ზე Cmd+Enter)."
 
 #: plugins/audio-clip-editor/src/App.svelte
+#: plugins/audio-clip-editor/src/Recorder.svelte
 msgid "Play"
 msgstr "დაკვრა"
 
@@ -4002,6 +4020,10 @@ msgstr ""
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 msgid "Prefix URI"
 msgstr "პრეფიქსის URI"
+
+#: plugins/audio-clip-editor/src/Recorder.svelte
+msgid "Preparing the recording…"
+msgstr "ჩანაწერი მზადდება…"
 
 #: src/lib/pdf/pdf-export.ts
 msgid "Preparing your PDF…"
@@ -4199,6 +4221,18 @@ msgstr "ხელახლა დაკავშირება"
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Reconnect folder"
 msgstr "საქაღალდის ხელახლა დაკავშირება"
+
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "Record"
+msgstr "ჩაწერა"
+
+#: plugins/audio-clip-editor/src/Recorder.svelte
+msgid "Record again"
+msgstr "ხელახლა ჩაწერა"
+
+#: plugins/audio-clip-editor/src/Recorder.svelte
+msgid "Recording level"
+msgstr "ჩაწერის დონე"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Redirect URI"
@@ -4465,6 +4499,7 @@ msgstr "შენახული არხები"
 msgid "Saved feeds…"
 msgstr "შენახული არხები…"
 
+#: plugins/audio-clip-editor/src/Recorder.svelte
 #: src/lib/components/EditSpineItemDialog.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Saving…"
@@ -4799,6 +4834,7 @@ msgid "Status:"
 msgstr "სტატუსი:"
 
 #: plugins/audio-clip-editor/src/App.svelte
+#: plugins/audio-clip-editor/src/Recorder.svelte
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Stop"
 msgstr "გაჩერება"

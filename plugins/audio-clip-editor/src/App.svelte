@@ -16,6 +16,8 @@
   import { formatDirective, formatTimeString } from './format.js';
   import { loadClips, saveClips, emptyStore, type ClipRegion, type ClipStore } from './clips.js';
   import Waveform from './Waveform.svelte';
+  import Recorder from './Recorder.svelte';
+  import { canRecord } from './recording/capture.js';
   import type { AudioManifestItem, InsertMessage } from './types.js';
 
   let audioItems = $state<AudioManifestItem[]>([]);
@@ -29,6 +31,12 @@
   let loop = $state(false);
   let playing = $state(false);
   let waveform = $state<Waveform | null>(null);
+
+  // Recording: the AudioContext is made inside the Record click (iOS only runs
+  // one started by a gesture) and reused for later takes.
+  let recording = $state(false);
+  let audioContext = $state.raw<AudioContext | null>(null);
+  const recordingAvailable = canRecord();
 
   const clips = $derived(store.files[selectedHref] ?? []);
   const selectedClip = $derived(clips.find(c => c.id === selectedClipId) ?? null);
@@ -155,6 +163,33 @@
     window.parent.postMessage(message, window.origin);
   }
 
+  function startRecording(): void {
+    audioContext ??= new AudioContext();
+    if (audioContext.state === 'suspended') void audioContext.resume();
+    waveform?.stop();
+    recording = true;
+  }
+
+  // The kept take is in the manifest now: list it, select it, and start it
+  // with one clip over the whole file so Insert works straight away.
+  async function handleKept(href: string, duration: number): Promise<void> {
+    recording = false;
+    const handle = $dirHandle;
+    if (!handle) return;
+    try {
+      audioItems = await listAudioItems(handle);
+    } catch (err) {
+      errorMessage = err instanceof Error ? err.message : String(err);
+      status = 'error';
+      return;
+    }
+    selectedHref = href;
+    const clip: ClipRegion = { id: randomUUID(), begin: 0, end: duration, label: '' };
+    store = { ...store, files: { ...store.files, [href]: [...(store.files[href] ?? []), clip] } };
+    selectedClipId = clip.id;
+    persist();
+  }
+
   function clipOptionLabel(clip: ClipRegion): string {
     const range = `${formatTimeString(clip.begin)} – ${formatTimeString(clip.end)}`;
     return clip.label ? `${clip.label} (${range})` : range;
@@ -166,8 +201,15 @@
     <p class="status">{$t('Loading audio files…')}</p>
   {:else if status === 'error'}
     <p class="status error">{$t('Could not read the project: {error}', { error: errorMessage })}</p>
+  {:else if recording && audioContext}
+    <Recorder context={audioContext} onKept={handleKept} onClose={() => (recording = false)} />
   {:else if audioItems.length === 0}
     <p class="status">{$t('No audio files in this project.')}</p>
+    {#if recordingAvailable}
+      <div class="toolbar">
+        <button type="button" class="btn btn-sm" onclick={startRecording}>{$t('Record')}</button>
+      </div>
+    {/if}
   {:else}
     <div class="toolbar">
       <label class="field">
@@ -195,6 +237,9 @@
       >
         {$t('Delete')}
       </button>
+      {#if recordingAvailable}
+        <button type="button" class="btn btn-sm" onclick={startRecording}>{$t('Record')}</button>
+      {/if}
       {#if clips.length === 0}
         <span class="hint">{$t('Drag on the waveform to define a clip.')}</span>
       {/if}

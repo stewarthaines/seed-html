@@ -5,7 +5,8 @@ import * as path from 'path';
  * Assemble the served plugins/ directory from built workspace plugins.
  *
  * Scans plugins/<name>/package.json for an `seedhtmlPlugin` block, copies each
- * plugin's built single-file artifact into dist/plugins/<id>/, and writes
+ * plugin's build folder (its single-file entry plus any files kept beside it)
+ * into dist/plugins/<id>/, and writes
  * dist/plugins/manifest.json — the build-generated manifest the core fetches at
  * runtime (see plans/api/plugins.md and src/lib/plugins/plugin-registry.ts).
  *
@@ -59,10 +60,13 @@ for (const dirent of dirents) {
     continue;
   }
 
+  // Copy the entry's whole build folder: the entry is self-contained except
+  // for files a plugin deliberately keeps beside it (the audio plugin's
+  // LGPL encoder .wasm and its third-party notices).
   const filename = path.basename(buildEntry);
   const destDir = path.join(outDir, id);
-  await fs.mkdir(destDir, { recursive: true });
-  await fs.copyFile(builtPath, path.join(destDir, filename));
+  await fs.rm(destDir, { recursive: true, force: true });
+  await fs.cp(path.dirname(builtPath), destDir, { recursive: true });
 
   manifest.push({ id, name, entry: `${id}/${filename}`, presentation });
 }

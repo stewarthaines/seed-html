@@ -32,6 +32,7 @@ button {
   --color-text-secondary: #666666;
   --color-border-default: #e0e0e0;
   --color-error-text: #dc2626;
+  --color-interactive-primary: #0000ee;
 
   --color-button-secondary-bg: #f8f8f8;
   --color-button-secondary-bg-hover: #f0f0f0;
@@ -51,6 +52,7 @@ button {
   --color-text-secondary: #a0a0a0;
   --color-border-default: #404040;
   --color-error-text: #f87171;
+  --color-interactive-primary: #3333ff;
 
   --color-button-secondary-bg: #2d2d2d;
   --color-button-secondary-bg-hover: #3a3a3a;

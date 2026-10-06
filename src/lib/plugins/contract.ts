@@ -23,6 +23,9 @@
  *     reader tab.
  *   - import-epub / open (plugin → main): import a fetched EPUB as a new book;
  *     show the Published page or the Destinations settings.
+ *   - add-media (plugin → main) / media-added (main → plugin): add a media file
+ *     the plugin made (a recording) to the open book's manifest; the host
+ *     replies with where it landed.
  *
  * This mirrors the wire shapes implemented by plugins/publish-to-remote/src
  * (its src/types.ts + src/index.ts). The ./API.md spec predates the
@@ -310,6 +313,50 @@ export function isImportEpubMessage(value: unknown): value is ImportEpubMessage 
     typeof (value as { filename?: unknown }).filename === 'string' &&
     (value as { bytes?: unknown }).bytes instanceof ArrayBuffer
   );
+}
+
+/**
+ * plugin → main, asks the host to add a file the plugin made (a recorded audio
+ * clip) to the open book's manifest. The host owns manifest writes; it answers
+ * with `media-added` carrying the same `requestId`.
+ */
+export interface AddMediaMessage {
+  type: 'add-media';
+  /** Echoed in the reply so the plugin can match it. */
+  requestId: string;
+  /** Suggested file name; the host may add a suffix to keep it unique. */
+  filename: string;
+  mediaType: string;
+  bytes: ArrayBuffer;
+}
+
+/**
+ * main → plugin, the answer to `add-media`: the OPF-relative href the file
+ * landed at, or why it was refused.
+ */
+export type MediaAddedMessage =
+  | { type: 'media-added'; requestId: string; href: string }
+  | { type: 'media-added'; requestId: string; error: string };
+
+/** Runtime guard: is this an `add-media` message carrying a file? */
+export function isAddMediaMessage(value: unknown): value is AddMediaMessage {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    (value as { type?: unknown }).type === 'add-media' &&
+    typeof (value as { requestId?: unknown }).requestId === 'string' &&
+    typeof (value as { filename?: unknown }).filename === 'string' &&
+    typeof (value as { mediaType?: unknown }).mediaType === 'string' &&
+    (value as { bytes?: unknown }).bytes instanceof ArrayBuffer
+  );
+}
+
+/** Build the `media-added` reply: an href on success, an error message otherwise. */
+export function createMediaAddedMessage(
+  requestId: string,
+  result: { href: string } | { error: string }
+): MediaAddedMessage {
+  return { type: 'media-added', requestId, ...result };
 }
 
 const OPEN_TARGETS: ReadonlySet<string> = new Set(['published', 'destinations']);

@@ -1,6 +1,6 @@
 # Audio clip recording
 
-Status: proposal; open questions answered and spike done 2026-10-06; phase 1 next. Source: the author's note in the "test voice recording" book (`SOURCE/text/chapter01.txt`), 2026-10-06.
+Status: built on `feat/audio-recording` 2026-10-06 (phases 1–4 together); spike results below. Source: the author's note in the "test voice recording" book (`SOURCE/text/chapter01.txt`), 2026-10-06.
 
 ## The idea
 
@@ -106,3 +106,11 @@ Every encode was CBR at 64 kbps and seeked accurately. The microphone works in t
 2. Always decode the take to PCM and give wavesurfer a WAV built from it. Only Chrome needs it (its WebM has no duration), but one path for every browser is simpler and the decode costs tens of milliseconds.
 3. No `allow` attribute is needed on the plugin iframe: the microphone works in a same-origin frame in every browser tested, the iPad included.
 4. Expect 44.1 kHz input on Apple devices whatever the mic reports; LAME takes it as is.
+
+## Built (2026-10-06, `feat/audio-recording`)
+
+Phases 1–4 landed together, since the encoder was settled by the spike. Host: `add-media` / `media-added` in `src/lib/plugins/contract.ts`, `src/lib/plugins/add-media.ts` (audio only, file name reduced to its last segment, through `importFileToManifest`), `PluginPanel.svelte` answering `add-media` when given `onAddMedia`, and `EditorPane.svelte` offering the audio panel whenever the plugin is enabled. Plugin: `Recorder.svelte` (record, listen, crop, keep), `recording/capture.ts`, `recording/pcm.ts`, `recording/mp3.ts`, `host.ts`. Build: the plugin's `mp3-*.wasm` and `THIRD_PARTY_NOTICES.txt` sit beside `plugin.html`, and `scripts/generate-plugin-manifest.js` now copies each plugin's whole build folder.
+
+Tests: PCM, mp3 (CBR frames, duration, resampling) and the `add-media` round trip as plugin unit tests; the message guards in the contract browser test; the host's `addPluginMedia`; and `Recorder.browser.test.ts`, which records an oscillator in Chromium and checks Keep hands over a CBR mp3 of the take's length. An ad hoc Playwright run against the dev server with Chromium's fake microphone covered the whole app: the panel opens on a book with no audio, the kept take lands in `OEBPS/Audio/` with its manifest item, and Insert puts the clip directive at the caret.
+
+Not yet done: the offline case (the `.wasm` is cached on first use, so a first Keep while offline fails with an error), and the reading-system check of a recorded clip in Apple Books.
