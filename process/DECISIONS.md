@@ -13,6 +13,7 @@ Settled and declined items, one entry each, newest first within a section. Read 
 
 ## Declined or parked
 
+- **2026-09-30 — No refreshing of installed extensions.** A project keeps the extension files it was given on install; a catalog fix (such as the responsive `img[width]` rule) reaches existing books only if the author re-adds the extension or edits their copy. Not a feature to consider; do not propose it.
 - **2026-09-15 — PDF export stays single-pass.** No two-pass export, no Paged.js `target-counter` rewiring, no page-map invalidation as app work. The app is for accessible EPUB; a near-accessible PDF from one browser is a quirk, not a focus. Wrong contents page numbers after a print-settings change are fixed authorially (re-preview each chapter in the PDF preset, export from Chrome). Findings are in `process/PDF_PAGE_INDEX.md` and the manual's Save-as-PDF chapter.
 - **2026-09-11 — "Missing alt text" preview flag as a catalog extension: parked.** The mechanism exists (`previewHead` in `extension.json`, `process/PREVIEW_HEAD_EXTENSIONS.md`); the scope (alt only, or a family of invisible-in-render flags) is not decided. The user wants to use the hand-pasted `head.xml` version on real content first. Do not propose it unprompted; when it returns, start from scope.
 - **2026-07 — No further text-format extensions.** ChordPro, MediaWiki wikitext, gemtext, reST, BBCode and Typst were researched and declined: "no interest in making epubs using any of these formats at this time." The catalog serves formats the user authors in.
