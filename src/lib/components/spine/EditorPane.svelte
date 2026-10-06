@@ -24,6 +24,7 @@
   import type { SettingsService } from '$lib/services/settings/settings.service.js';
   import AudioClipEditor from '$lib/components/audio/AudioClipEditor.svelte';
   import PluginPanel from '$lib/components/plugins/PluginPanel.svelte';
+  import { addPluginMedia } from '$lib/plugins/add-media.js';
   import GeneratorPanel from '$lib/components/spine/GeneratorPanel.svelte';
   import MediaBrowserPanel from '$lib/components/spine/MediaBrowserPanel.svelte';
   import LineNumberGutter from '$lib/components/spine/LineNumberGutter.svelte';
@@ -293,6 +294,23 @@
 
     // Focus back to textarea
     textarea.focus();
+  }
+
+  // A recording from the audio plugin joins the manifest like a dropped file;
+  // the plugin inserts its own clip directive once it knows the href.
+  async function addPluginMediaFile(
+    filename: string,
+    mediaType: string,
+    bytes: ArrayBuffer
+  ): Promise<string> {
+    if (!workspace || !workspaceService) throw new Error('No book is open');
+    const imported = await addPluginMedia(
+      { filename, mediaType, bytes },
+      workspace,
+      workspaceService
+    );
+    onWorkspaceUpdate?.(imported.workspace);
+    return imported.href;
   }
 
   // --- Drop-to-insert media ------------------------------------------------
@@ -744,7 +762,9 @@
   // the preview's Checks dropdown).
   const availableInsertPanels = $derived.by(() => {
     const list: { id: InsertPanelId; label: string }[] = [];
-    if (textPaneActive && hasAudioFiles && audioClipService && workspace) {
+    // The plugin records, so it is offered before the book has any audio; the
+    // built-in editor needs a file to work on.
+    if (textPaneActive && workspace && (audioPluginUrl || (hasAudioFiles && audioClipService))) {
       list.push({ id: 'audio', label: $t('Audio Clip Editor') });
     }
     if (textPaneActive && hasImageFiles && workspace && workspaceService) {
@@ -1091,7 +1111,7 @@
 {/snippet}
 
 {#snippet builtinAudioEditor()}
-  {#if audioClipService && workspace && settingsService && workspaceService}
+  {#if hasAudioFiles && audioClipService && workspace && settingsService && workspaceService}
     <AudioClipEditor
       {workspace}
       {audioClipService}
@@ -1108,7 +1128,7 @@
      (built-in editor as its load-failure fallback), the built-in editor
      otherwise. -->
 {#snippet audioPanel(paneSelectedFile: string)}
-  {#if paneSelectedFile === 'text' && audioEditorVisible && hasAudioFiles && workspace}
+  {#if paneSelectedFile === 'text' && audioEditorVisible && (hasAudioFiles || audioPluginUrl) && workspace}
     <div class="audio-editor-panel">
       {@render insertPanelClose($t('Audio Clip Editor'))}
       {#if audioPluginUrl}
@@ -1117,6 +1137,7 @@
           projectId={workspace.id}
           getDirHandle={getWorkspaceDirHandle}
           onInsert={insertClipDirective}
+          onAddMedia={addPluginMediaFile}
           title={$t('Audio Clip Editor')}
         >
           {#snippet fallback()}

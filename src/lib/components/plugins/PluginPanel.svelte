@@ -18,6 +18,8 @@
     createContextMessage,
     isPluginReadyMessage,
     isInsertMessage,
+    isAddMediaMessage,
+    createMediaAddedMessage,
     workspaceOpfsPath,
   } from '$lib/plugins/contract';
 
@@ -30,6 +32,9 @@
     getDirHandle: () => Promise<FileSystemDirectoryHandle | null>;
     /** Receives the payload of the plugin's `insert` messages. */
     onInsert?: (content: string) => void;
+    /** Adds a file the plugin made to the book and resolves to its href;
+     *  answers the plugin's `add-media`. Omit to refuse every request. */
+    onAddMedia?: (filename: string, mediaType: string, bytes: ArrayBuffer) => Promise<string>;
     /** Accessible iframe title. */
     title: string;
     /** Spine item id of the open chapter, passed through in `context` so a
@@ -44,6 +49,7 @@
     projectId,
     getDirHandle,
     onInsert,
+    onAddMedia,
     title,
     activeChapterId,
     fallback,
@@ -90,11 +96,32 @@
         sendPluginContext();
       } else if (isInsertMessage(event.data)) {
         onInsert?.(event.data.content);
+      } else if (isAddMediaMessage(event.data)) {
+        void answerAddMedia(event.data.requestId, event.data);
       }
     };
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
   });
+
+  // Add the plugin's file through the host, then tell the plugin where it
+  // landed (or why it could not be added), matched by request id.
+  async function answerAddMedia(
+    requestId: string,
+    file: { filename: string; mediaType: string; bytes: ArrayBuffer }
+  ): Promise<void> {
+    let result: { href: string } | { error: string };
+    try {
+      if (!onAddMedia) throw new Error('This panel cannot add files');
+      result = { href: await onAddMedia(file.filename, file.mediaType, file.bytes) };
+    } catch (err) {
+      result = { error: err instanceof Error ? err.message : String(err) };
+    }
+    const frameWindow = pluginFrame?.contentWindow;
+    if (!frameWindow) return;
+    const targetOrigin = new URL(pluginUrl, window.location.href).origin;
+    frameWindow.postMessage(createMediaAddedMessage(requestId, result), targetOrigin);
+  }
 
   async function sendPluginInit(): Promise<void> {
     const frameWindow = pluginFrame?.contentWindow;

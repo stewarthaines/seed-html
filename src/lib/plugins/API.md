@@ -135,6 +135,14 @@ Sent once the plugin has posted `plugin-ready`. Provides:
 
 Inserts a string at the cursor position in the currently active textarea. The content is always a plain string — HTML, markdown, or plain text — assembled by the plugin. The main app performs the insertion without interpreting the format. Used by `panel` plugins.
 
+### Plugin → Main → Plugin (adding a media file)
+
+```json
+{ "type": "add-media", "requestId": "string", "filename": "string", "mediaType": "audio/mpeg", "bytes": "ArrayBuffer" }
+```
+
+Adds a file the plugin made to the open book's manifest, through the same import path as a file dropped on the editor (EPUB-safe path, unique href, rollback on a failed write). Only the host writes the OPF, which is why this is a request. The host answers with `{ "type": "media-added", "requestId", "href" }`, or `{ "type": "media-added", "requestId", "error" }`. Audio types only for now; the panel host answers only where the editor gives it a handler (the audio panel). Used by the Audio Clip Editor's recorder.
+
 ---
 
 ## OPFS Conventions
@@ -212,7 +220,7 @@ Enabled state is persisted via the settings service.
 
 | Plugin            | Presentation | Key Dependency              | Direction     |
 | ----------------- | ------------ | --------------------------- | ------------- |
-| Audio Clip Editor | panel        | wavesurfer.js               | insert → main |
+| Audio Clip Editor | panel        | wavesurfer.js, LAME (WASM)  | insert, add-media → main |
 | Publish           | view         | epubcheck-ts, R2/GDrive SDK | OPFS / handle |
 
 The Publish plugin combines remote publishing (S3-compatible, Google Drive, Dropbox, WebDAV, USB e-readers), OPDS catalog generation and EPUB validation in one artifact, rendered as three surfaces.
