@@ -16,7 +16,20 @@ export function formatTimeString(seconds: number): string {
   return `${h}:${pad(m)}:${pad(s)}.${pad(cs)}`;
 }
 
+/**
+ * A manifest href as a chapter sees it: chapters live in `Text/`, so
+ * `Audio/a.mp3` becomes `../Audio/a.mp3` — the same convention as every other
+ * resource reference in source markup. Mirrors the core
+ * `convertManifestPathToXHTMLPath`; relative, absolute and special-scheme
+ * hrefs pass through.
+ */
+export function chapterRelativeHref(href: string): string {
+  if (/^(\.\.?\/|\/|https?:|data:|blob:)/.test(href)) return href;
+  return `../${href}`;
+}
+
 export interface ClipDirectiveData {
+  /** The audio file's manifest (OPF-relative) href. */
   href: string;
   begin: number;
   end: number;
@@ -36,7 +49,7 @@ export interface ClipDirectiveData {
  */
 export function formatDirective(template: string, data: ClipDirectiveData): string {
   let result = template
-    .replace(/<href>|<src>/g, data.href)
+    .replace(/<href>|<src>/g, chapterRelativeHref(data.href))
     .replace(/<begin>/g, formatTimeString(data.begin))
     .replace(/<end>/g, formatTimeString(data.end))
     .replace(/<label>/g, data.label.trim());
