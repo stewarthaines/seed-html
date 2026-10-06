@@ -15,25 +15,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- The Audio Clip Editor records a clip from your microphone, lets you listen back and crop it, and adds it to the book as an mp3 that seeks reliably in reading apps, so a book can start without any audio files.
+- The Audio Clip Editor records a clip from your microphone, lets you listen back and crop it, and adds it to the book as an mp3 that seeks reliably in reading apps, so a book can start without any audio files. Once the editor has been opened online, recording works offline too, and a take you can't save yet stays on screen until you can.
 - A Figures extension turns captioned images into figures, so screen readers announce each image with its caption.
 - Copy link, on each destination's row in Share and each book in Published, copies the book's web address to send to someone, and Copy reader link copies one that opens the book in a web reader you name in the destination's settings.
 - A Writes toggle in the agent panel lets an agent's prose writes through for this connection, so you need not wait for its first write. It switches off when you open another project, and script writes are still reviewed one by one.
 
 ### Changed
 
+- Settings gathers Theme, Language, Advanced mode and Paged device previews under General, and Plugins lists only plugins.
 - Adding an extension puts its DOM transform in the right place in the project's list, so it works without reordering by hand.
 
 ### Fixed
 
-- A recording you keep while offline, or when saving fails, stays on screen so you can keep it again, and recording works offline once the Audio Clip Editor has been opened online.
-- Clips inserted from the Audio Clip Editor plugin point at the audio file correctly, so packaged books pass EPUBCheck and the clips play.
-- Settings gathers Theme, Language, Advanced mode and Paged device previews under General, so the Plugins count matches the plugins it lists.
+- Clips inserted from the Audio Clip Editor point at the audio file correctly, so packaged books pass EPUBCheck and the clips play.
+- Sending a new version of a book to a destination with several catalogs keeps it in the catalogs it was in, and no others.
+- Renaming or deleting the chapter you are editing no longer leaves a stray copy under its old name, and a new chapter no longer opens showing a renamed chapter's text.
 - The list of figures shows each photograph's own caption, without the names of the people in it.
 - A captioned image with a set width keeps that width on wider screens instead of stretching beside its caption.
 - The agent button in the top bar shows as active while the agent is connected, instead of a white icon on a pale button.
-- Renaming or deleting the chapter you are editing no longer leaves a stray copy under its old name, and a new chapter no longer opens showing a renamed chapter's text.
-- Sending a new version of a book to a destination with several catalogs keeps it in the catalogs it was in, and no others.
 
 ## [0.22.0] - 2026-09-27
 
