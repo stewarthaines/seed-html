@@ -2989,6 +2989,10 @@ msgstr ""
 msgid "License"
 msgstr "ლიცენზია"
 
+#: src/lib/components/shell/AboutDialog.svelte
+msgid "License text"
+msgstr "ლიცენზიის ტექსტი"
+
 #: src/lib/ThemeToggle.svelte
 msgid "light"
 msgstr "ღია"

@@ -2970,6 +2970,10 @@ msgstr "Ebene {n}"
 msgid "License"
 msgstr "Lizenz"
 
+#: src/lib/components/shell/AboutDialog.svelte
+msgid "License text"
+msgstr "Lizenztext"
+
 #: src/lib/ThemeToggle.svelte
 msgid "light"
 msgstr "hell"
