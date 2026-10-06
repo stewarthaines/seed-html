@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A recording you keep while offline, or when saving fails, stays on screen so you can keep it again, and recording works offline once the Audio Clip Editor has been opened online.
 - Clips inserted from the Audio Clip Editor plugin point at the audio file correctly, so packaged books pass EPUBCheck and the clips play.
 - Settings gathers Theme, Language, Advanced mode and Paged device previews under General, so the Plugins count matches the plugins it lists.
 - The list of figures shows each photograph's own caption, without the names of the people in it.
