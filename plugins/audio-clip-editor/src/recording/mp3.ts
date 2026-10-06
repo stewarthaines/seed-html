@@ -15,8 +15,20 @@ export const RECORDING_BITRATE = 64;
 /** The sample rates MPEG-1 Layer III takes as is; anything else is resampled. */
 const MPEG1_RATES = [32000, 44100, 48000];
 
-/** The LAME encoder's .wasm: a URL to fetch, or its bytes. */
-export type Mp3Wasm = string | ArrayBuffer | Uint8Array;
+/** The LAME encoder's .wasm: a URL to fetch, its bytes, or the compiled module. */
+export type Mp3Wasm = string | ArrayBuffer | Uint8Array | WebAssembly.Module;
+
+/**
+ * Fetch and compile the encoder's .wasm. Called as the recorder opens, so the
+ * file is fetched (and cached by the app's service worker) while the plugin
+ * page is, not first at Keep — offline, the encoder is then there whenever
+ * the panel is.
+ */
+export async function compileMp3Wasm(url: string): Promise<WebAssembly.Module> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`The mp3 encoder could not be loaded (${response.status})`);
+  return WebAssembly.compile(await response.arrayBuffer());
+}
 
 /** Encode a mono take to CBR mp3 at `bitrate` kbps. */
 export async function encodeMp3(
