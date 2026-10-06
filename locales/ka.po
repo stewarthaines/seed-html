@@ -551,10 +551,6 @@ msgstr "API გასაღები"
 msgid "App Key"
 msgstr "აპლიკაციის გასაღები"
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Appearance"
-msgstr ""
-
 #: src/lib/components/shell/WriteSidebar.svelte
 msgid "Append Item"
 msgstr "ელემენტის დამატება ბოლოში"
@@ -2465,6 +2461,10 @@ msgstr ""
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Format"
 msgstr "ფორმატი"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "General"
+msgstr "ზოგადი"
 
 #: src/lib/components/metadata/IdentifierEditor.svelte
 msgid "Generate"

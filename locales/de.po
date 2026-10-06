@@ -532,10 +532,6 @@ msgstr "API-Schlüssel"
 msgid "App Key"
 msgstr "App-Schlüssel"
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Appearance"
-msgstr "Darstellung"
-
 #: src/lib/components/shell/WriteSidebar.svelte
 msgid "Append Item"
 msgstr "Element anhängen"
@@ -2446,6 +2442,10 @@ msgstr ""
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Format"
 msgstr "Format"
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "General"
+msgstr "Allgemein"
 
 #: src/lib/components/metadata/IdentifierEditor.svelte
 msgid "Generate"

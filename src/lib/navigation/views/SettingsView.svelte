@@ -890,9 +890,7 @@
   // (the open project's settings). Each item's availability mirrors the
   // condition its controls had in the old accordion.
   type SectionId =
-    | 'appearance'
-    | 'language'
-    | 'advanced'
+    | 'general'
     | 'plugins'
     | 'destinations'
     | 'format'
@@ -922,17 +920,13 @@
 
   const youSections = $derived.by((): SectionItem[] => {
     const items: SectionItem[] = [
-      { id: 'appearance', label: $t('Appearance'), summary: themeSummaryLabel },
       {
-        id: 'language',
-        label: $t('Language'),
-        summary: LOCALE_CONFIGS[$currentLocale]?.name ?? $currentLocale,
+        id: 'general',
+        label: $t('General'),
+        summary: `${themeSummaryLabel} · ${LOCALE_CONFIGS[$currentLocale]?.name ?? $currentLocale}`,
       },
     ];
-    if (hasProjects) {
-      items.push({ id: 'advanced', label: $t('Advanced mode'), summary: onOff(isAdvancedMode) });
-    }
-    if (isAdvancedMode && (availablePlugins.length > 0 || isHttp)) {
+    if (isAdvancedMode && availablePlugins.length > 0) {
       items.push({
         id: 'plugins',
         label: $t('Plugins'),
@@ -1312,7 +1306,7 @@
       {:else}
         <h1 class="section-title">{activeLabel}</h1>
 
-        {#if activeSection === 'appearance'}
+        {#if activeSection === 'general'}
           <div class="setting-group">
             <label for="theme-select" class="setting-label-text">{$t('Theme')}</label>
             <select
@@ -1326,7 +1320,6 @@
               <option value="system">{$t('System')}</option>
             </select>
           </div>
-        {:else if activeSection === 'language'}
           <div class="setting-group">
             <label for="language-select" class="setting-label-text">{$t('Language')}</label>
             <select
@@ -1340,38 +1333,23 @@
               {/each}
             </select>
           </div>
-        {:else if activeSection === 'advanced'}
-          <!-- Advanced mode: an app-wide preference, shown once at least one
-               project exists (create a project first, then opt in). -->
-          <div class="setting-group">
-            <label class="setting-label">
-              <input
-                type="checkbox"
-                checked={advancedMode.current}
-                onchange={e =>
-                  (advancedMode.current = (e.currentTarget as HTMLInputElement).checked)}
-              />
-              <span class="setting-text">{$t('Advanced mode')}</span>
-            </label>
-          </div>
-        {:else if activeSection === 'plugins'}
-          {#each availablePlugins as plugin (plugin.id)}
+          <!-- Advanced mode: shown once at least one project exists (create a
+               project first, then opt in). -->
+          {#if hasProjects}
             <div class="setting-group">
               <label class="setting-label">
                 <input
                   type="checkbox"
-                  checked={enabledPluginIds.includes(plugin.id)}
-                  onchange={event =>
-                    onTogglePlugin?.(plugin.id, (event.target as HTMLInputElement).checked)}
+                  checked={advancedMode.current}
+                  onchange={e =>
+                    (advancedMode.current = (e.currentTarget as HTMLInputElement).checked)}
                 />
-                <span class="setting-text">{plugin.name}</span>
+                <span class="setting-text">{$t('Advanced mode')}</span>
               </label>
             </div>
-          {/each}
-
-          <!-- Not a plugin — an app-level preview preference. Off falls the
-               device presets back to the built-in scrolling preview. Shown
-               over http only (the reader engine, like plugins, needs the
+          {/if}
+          <!-- Off falls the device presets back to the built-in scrolling
+               preview. Shown over http only (the reader engine needs the
                origin); READ.html is unaffected. -->
           {#if isHttp}
             <div class="setting-group">
@@ -1386,6 +1364,20 @@
               </label>
             </div>
           {/if}
+        {:else if activeSection === 'plugins'}
+          {#each availablePlugins as plugin (plugin.id)}
+            <div class="setting-group">
+              <label class="setting-label">
+                <input
+                  type="checkbox"
+                  checked={enabledPluginIds.includes(plugin.id)}
+                  onchange={event =>
+                    onTogglePlugin?.(plugin.id, (event.target as HTMLInputElement).checked)}
+                />
+                <span class="setting-text">{plugin.name}</span>
+              </label>
+            </div>
+          {/each}
         {:else if activeSection === 'destinations'}
           <p class="setting-description setting-description-flush">
             {$t('Where Send puts a book. Yours, not the book’s.')}

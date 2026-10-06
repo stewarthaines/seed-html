@@ -513,10 +513,6 @@ msgstr ""
 msgid "App Key"
 msgstr ""
 
-#: src/lib/navigation/views/SettingsView.svelte
-msgid "Appearance"
-msgstr ""
-
 #: src/lib/components/shell/WriteSidebar.svelte
 msgid "Append Item"
 msgstr ""
@@ -2427,6 +2423,10 @@ msgstr ""
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Format"
 msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "General"
+msgstr "عام"
 
 #: src/lib/components/metadata/IdentifierEditor.svelte
 msgid "Generate"
