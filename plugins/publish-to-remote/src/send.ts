@@ -80,7 +80,7 @@ export async function sendPackage(
   onProgress?: (percent: number) => void,
   /** The destination as last listed, if the caller has it: whether the book
    *  was already there decides between an update and a first send. */
-  previous?: RemoteListing,
+  previous?: RemoteListing | null,
 ): Promise<SendResult> {
   const catalogCapable = hasCatalog(remote);
   const before =
