@@ -5,8 +5,4 @@
  */
 import { persisted, asString } from '../state/persisted.svelte.js';
 
-export const settingsSection = persisted<string>(
-  'seedhtml_settings_section',
-  'appearance',
-  asString
-);
+export const settingsSection = persisted<string>('seedhtml_settings_section', 'general', asString);
