@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-25\n"
-"PO-Revision-Date: 2026-09-25\n"
+"POT-Creation-Date: 2026-10-06\n"
+"PO-Revision-Date: 2026-10-06\n"
 "Language: ka\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -1215,6 +1215,16 @@ msgstr "კოპირება"
 #: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 msgid "Copy feed link"
 msgstr ""
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "Copy link"
+msgstr "ბმულის კოპირება"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "Copy reader link"
+msgstr "წამკითხველის ბმულის კოპირება"
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Could not capture the editor"
@@ -4152,6 +4162,10 @@ msgstr "მხოლოდ წასაკითხი ნავიგაცი�
 msgid "Reader"
 msgstr "წამკითხველი"
 
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Reader link (optional)"
+msgstr "წამკითხველის ბმული (არასავალდებულო)"
+
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Reading flow"
 msgstr ""
@@ -5007,6 +5021,11 @@ msgstr "ეს EPUB არ არის შექმნილი Simple EPUB Edi
 msgid "This file carries a book, but the book could not be read."
 msgstr ""
 
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/share-links.ts
+msgid "This file has no public link"
+msgstr "ამ ფაილს საჯარო ბმული არ აქვს"
+
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "This file is empty."
 msgstr "ეს ფაილი ცარიელია."
@@ -5192,6 +5211,7 @@ msgid "URI"
 msgstr "URI"
 
 #: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/share-links.ts
 msgid "URL copied to clipboard"
 msgstr "URL დაკოპირდა გაცვლის ბუფერში"
 

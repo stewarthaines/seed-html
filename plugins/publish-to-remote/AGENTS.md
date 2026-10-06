@@ -19,7 +19,8 @@ The host mounts this one build three times, naming a **surface** in the `init` m
 - `src/remote-status.ts` — listing with reachability named (`ok` / `sign-in` / `reconnect` / `unplugged` / `error`), and the pure derivations: `sendStateFor` (the Send row) and `shelfFor` (the Published shelf); tested
 - `src/catalog.ts` — list every feed on a destination (`catalogFilesOn`, the destination's own first), read them (`loadCatalog`, `loadCatalogs`), write one from a key set (`writeCatalog`, hosting the cover thumbnails), feed URL per remote type; tested
 - `src/feed-cache.ts` — feed texts cached in OPFS by destination, file and listing stamp, shared by every frame; tested with a memory store
-- `src/send.ts` — `sendPackage` (upload, then put the book in the catalog, replacing an older package of the same book in the feed) and `setInCatalog`
+- `src/send.ts` — `sendPackage` (upload, then rewrite every feed that already lists the book, the new package replacing the old; a first send goes into the first feed) with its decision in the pure `catalogWritesForSend`, and `setInCatalog`; tested
+- `src/share-links.ts` — a file's public link (`publicLinkFor`, a Dropbox shared link made on demand), the destination's reader link with `{url}` filled (`readerLinkFor`), and `copyShareLink` (copy and toast) behind every Copy link / Copy reader link button; tested
 - `src/reconnect.ts` — a fresh Google token; a device permission re-granted
 - `src/types.ts` — message shapes mirrored from the host contract; discriminated union of remote configs
 - `src/remote-ops.ts` — dispatch layer for remote storage operations, including `downloadFile` for every type
@@ -28,7 +29,7 @@ The host mounts this one build three times, naming a **surface** in the `init` m
 **Data flow:**
 - Destinations live in the plugin's own OPFS (`remotes.json`), shared by every frame; the host never sees them
 - "Known on this device" = the host's `knownIdentifiers` (dc:identifiers of its books); a remote EPUB's identifier comes from the local sidecar of the same filename or from the catalog entry with the same acquisition URL
-- The feed on the destination is the truth for catalog membership and identity; every change regenerates the whole file. A destination can carry several feeds; each is handled on its own, and Send puts a first-sent book into the destination's own feed only
+- The feed on the destination is the truth for catalog membership and identity; every change regenerates the whole file. A destination can carry several feeds; each is handled on its own, and Send updates every feed that lists the book and no other; a first send goes into the destination's first feed only
 - Import: the plugin downloads the bytes and posts `import-epub` to the host, which runs its normal importer
 
 ## Key Patterns

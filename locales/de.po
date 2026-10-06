@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-25\n"
-"PO-Revision-Date: 2026-09-25\n"
+"POT-Creation-Date: 2026-10-06\n"
+"PO-Revision-Date: 2026-10-06\n"
 "Language: de\n"
 "Language-Team: \n"
 "Last-Translator: Claude (machine first pass)\n"
@@ -1196,6 +1196,16 @@ msgstr "Kopieren"
 #: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 msgid "Copy feed link"
 msgstr "Feed-Link kopieren"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "Copy link"
+msgstr "Link kopieren"
+
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/components/SendSurface.svelte
+msgid "Copy reader link"
+msgstr "Leselink kopieren"
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Could not capture the editor"
@@ -4133,6 +4143,10 @@ msgstr "Schreibgeschützte Navigation"
 msgid "Reader"
 msgstr "Lesemodus"
 
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Reader link (optional)"
+msgstr "Leselink (optional)"
+
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Reading flow"
 msgstr "Lesefluss"
@@ -4988,6 +5002,11 @@ msgstr "Dieses EPUB wurde nicht im Simple EPUB Editor erstellt und kann daher ni
 msgid "This file carries a book, but the book could not be read."
 msgstr "Diese Datei enthält ein Buch, aber das Buch konnte nicht gelesen werden."
 
+#: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/share-links.ts
+msgid "This file has no public link"
+msgstr "Diese Datei hat keinen öffentlichen Link"
+
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "This file is empty."
 msgstr "Diese Datei ist leer."
@@ -5173,6 +5192,7 @@ msgid "URI"
 msgstr "URI"
 
 #: plugins/publish-to-remote/src/components/PublishedSurface.svelte
+#: plugins/publish-to-remote/src/share-links.ts
 msgid "URL copied to clipboard"
 msgstr "URL in die Zwischenablage kopiert"
 

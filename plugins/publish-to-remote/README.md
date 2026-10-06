@@ -31,6 +31,25 @@ regenerates the feed. A destination may carry several feeds (every `.xml` and
 `.json` on it): Published offers a picker, New catalog… and Delete catalog (the books
 stay), and the Share row shows one switch per feed.
 
+Send keeps each feed's membership: a new package of a book replaces the old one in
+every feed that lists it and is added to no other; a book's first send goes into the
+destination's first feed.
+
+## Sharing links
+
+Once a book is on a destination, **Copy link** (on its Share row, and on each book on
+Published) copies the EPUB's public address: the Public URL Base joined with the
+encoded filename for S3 and WebDAV, the "anyone with the link" download for Google
+Drive, and a shared link set to download for Dropbox. **Copy feed link** on Published
+does the same for a catalog.
+
+A destination's **Reader link** (optional, in its settings) is a web reader's address
+with a `{url}` placeholder, e.g. `https://readitinabook.com/READ.html?book={url}`.
+When it is set, **Copy reader link** puts the EPUB's address, URL-encoded, in place
+of `{url}`, giving a link that opens the book in the browser. The reader fetches the
+EPUB from the destination, so the bucket or server must allow cross-origin requests
+from the reader's site.
+
 ## Google Drive setup
 
 1. Create a project at <https://console.cloud.google.com/>.

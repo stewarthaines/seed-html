@@ -27,6 +27,7 @@
   import { sendPackage, setInCatalog } from '../send.js';
   import { reconnectGoogle, reconnectDevice } from '../reconnect.js';
   import { showStatus } from '../status.js';
+  import { canShareLinks, copyShareLink, readerLinkTemplate } from '../share-links.js';
   import { formatFileSize, relativeTime } from '../format.js';
   import {
     validateEpub,
@@ -217,27 +218,26 @@
   async function send(remote: RemoteConfig) {
     if (!latest) return;
     rows.set(remote.id, { ...rowFor(remote.id), sending: 0 });
-    const result = await sendPackage(remote, latest, packages, (percent) => {
-      rows.set(remote.id, { ...rowFor(remote.id), sending: percent });
-    });
+    const result = await sendPackage(
+      remote,
+      latest,
+      packages,
+      (percent) => {
+        rows.set(remote.id, { ...rowFor(remote.id), sending: percent });
+      },
+      rowFor(remote.id).listing,
+    );
     rows.set(remote.id, {
       ...rowFor(remote.id),
       sending: null,
       listing: result.listing ?? rowFor(remote.id).listing,
     });
-    // The send may have changed the destination's own feed; read them all
-    // again — unless the send already found the feeds unreadable, in which
-    // case every feed on the row is marked so instead of being tried again.
+    // The send hands back every feed as it left them — read after the
+    // writes, or, when one could not be read, as read with nothing written.
     if (result.listing?.reach === 'ok' && hasCatalog(remote)) {
-      const failure = result.catalog?.error;
-      const after = rowFor(remote.id);
-      const catalogs = failure
-        ? (after.catalogs.length ? after.catalogs : [result.catalog!]).map((c) => ({
-            ...c,
-            error: failure,
-          }))
-        : await loadCatalogs(remote, result.listing.objects);
-      rows.set(remote.id, { ...after, catalogs });
+      const catalogs =
+        result.catalogs ?? (await loadCatalogs(remote, result.listing.objects));
+      rows.set(remote.id, { ...rowFor(remote.id), catalogs });
     }
     if (result.success) {
       showStatus(
@@ -377,10 +377,36 @@
         {@const row = rowFor(remote.id)}
         {@const state = stateFor(remote, row)}
         {@const reach = row.listing?.reach ?? null}
+        {@const linkKey =
+          state && state.kind !== 'not-sent' && canShareLinks(remote) ? state.key : null}
         <li class="row">
           <DestinationBadge {remote} />
           <div class="text">
-            <b class="name">{remote.name}</b>
+            <span class="name-line">
+              <b class="name">{remote.name}</b>
+              {#if linkKey}
+                <button
+                  type="button"
+                  class="btn btn-link"
+                  title={linkKey}
+                  onclick={() =>
+                    copyShareLink(remote, linkKey, row.listing?.objects ?? [], 'file')}
+                >
+                  {$t('Copy link')}
+                </button>
+                {#if readerLinkTemplate(remote)}
+                  <button
+                    type="button"
+                    class="btn btn-link"
+                    title={linkKey}
+                    onclick={() =>
+                      copyShareLink(remote, linkKey, row.listing?.objects ?? [], 'reader')}
+                  >
+                    {$t('Copy reader link')}
+                  </button>
+                {/if}
+              {/if}
+            </span>
             <span class="status" class:warn={state?.kind === 'newer-here'}>
               {#if row.sending !== null}
                 {$t('Sending… {percent}%', { percent: row.sending })}
@@ -560,6 +586,13 @@
 
   .name {
     overflow-wrap: anywhere;
+  }
+
+  .name-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 12px;
   }
 
   .status {

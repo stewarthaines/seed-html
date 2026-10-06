@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
   import { t, translate } from '../i18n.js';
+  import { READER_LINK_EXAMPLE } from '../share-links.js';
   import {
     loadGoogleScripts,
     authorizeGoogleDrive,
@@ -88,6 +89,10 @@
   let routeViaProxy = $state(true);
   let proxyAvailable = $state(false);
 
+  // The web reader address for a destination's books, kept out of `form` for
+  // the same reason; every type but a device has one.
+  let readerLink = $state('');
+
   // This app's origin — the value to register as a Google "Authorized JavaScript
   // origin" (Google wants an origin, not a full URL).
   const appOrigin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -166,6 +171,7 @@
 
   function populateForm(remote: RemoteConfig) {
     if (populateDeviceForm(remote)) return;
+    readerLink = remote.type === 'device' ? '' : (remote.readerLink ?? '');
     if (remote.type === 's3-compatible') {
       remoteType = 's3-compatible';
       form = {
@@ -294,6 +300,7 @@
       catalogFilename: '',
     };
     pickedFolderName = null;
+    readerLink = '';
     pickedDeviceHandle = null;
     deviceKind = 'generic';
     deviceVolumeLabel = '';
@@ -470,6 +477,7 @@
         region: form.region.trim() || undefined,
         publicUrlBase: form.publicUrlBase.trim() || undefined,
         catalogFilename: form.catalogFilename.trim() || undefined,
+        readerLink: readerLink.trim() || undefined,
       };
     } else if (remoteType === 'google-drive') {
       if (!form.folderId) {
@@ -485,6 +493,7 @@
         folderId: form.folderId.trim(),
         folderName: form.folderName.trim(),
         accessToken: form.accessToken || undefined,
+        readerLink: readerLink.trim() || undefined,
       };
     } else if (remoteType === 'dropbox') {
       if (!form.accessToken || pickedFolderName === null) {
@@ -505,6 +514,7 @@
         accessToken: form.accessToken,
         refreshToken: form.refreshToken,
         tokenExpiry: form.tokenExpiry,
+        readerLink: readerLink.trim() || undefined,
       };
     } else if (remoteType === 'webdav') {
       if (!form.url || !form.username || !form.password) {
@@ -520,6 +530,7 @@
         password: form.password,
         publicUrlBase: form.publicUrlBase.trim() || undefined,
         catalogFilename: form.catalogFilename.trim() || undefined,
+        readerLink: readerLink.trim() || undefined,
         routeViaProxy,
       };
     } else if (remoteType === 'device') {
@@ -552,6 +563,19 @@
     onSave(remote, !editingRemote);
   }
 </script>
+
+{#snippet readerLinkField(id: string)}
+  <div class="form-group">
+    <label for={id}>{$t('Reader link (optional)')}</label>
+    <input
+      {id}
+      type="text"
+      inputmode="url"
+      placeholder={READER_LINK_EXAMPLE}
+      bind:value={readerLink}
+    />
+  </div>
+{/snippet}
 
 <div class="form-container">
   {#if remoteType === 'none'}
@@ -708,6 +732,8 @@
       />
     </div>
 
+    {@render readerLinkField('reader-link')}
+
     <div class="form-actions">
       <button onclick={handleSave} class="btn btn-primary"
         >{$t('Save & Connect')}</button
@@ -784,6 +810,8 @@
           bind:value={form.name}
         />
       </div>
+
+      {@render readerLinkField('gd-reader-link')}
 
       <div class="form-actions">
         <button onclick={handleSave} class="btn btn-primary"
@@ -918,6 +946,8 @@
         />
       </div>
 
+      {@render readerLinkField('db-reader-link')}
+
       <div class="form-actions">
         <button onclick={handleSave} class="btn btn-primary"
           >{$t('Save & Connect')}</button
@@ -998,6 +1028,8 @@
         bind:value={form.catalogFilename}
       />
     </div>
+
+    {@render readerLinkField('webdav-reader-link')}
 
     <div class="proxy-toggle">
       <label>
