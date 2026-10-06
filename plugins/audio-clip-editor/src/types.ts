@@ -31,7 +31,7 @@ export interface ContextMessage {
   activeIdentifier?: string;
 }
 
-export type MainToPlugin = InitMessage | ContextMessage;
+export type MainToPlugin = InitMessage | ContextMessage | MediaAddedMessage;
 
 /** plugin → main handshake, sent once mounted and listening. */
 export interface PluginReadyMessage {
@@ -45,7 +45,21 @@ export interface InsertMessage {
   content: string;
 }
 
-export type PluginToMain = PluginReadyMessage | InsertMessage;
+/** plugin → main, adds a file the plugin made to the book's manifest. */
+export interface AddMediaMessage {
+  type: 'add-media';
+  requestId: string;
+  filename: string;
+  mediaType: string;
+  bytes: ArrayBuffer;
+}
+
+/** main → plugin, the answer to `add-media`. */
+export type MediaAddedMessage =
+  | { type: 'media-added'; requestId: string; href: string }
+  | { type: 'media-added'; requestId: string; error: string };
+
+export type PluginToMain = PluginReadyMessage | InsertMessage | AddMediaMessage;
 
 /** One audio entry from the project's OPF manifest. */
 export interface AudioManifestItem {
