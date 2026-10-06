@@ -341,9 +341,15 @@
     sendingName = pkg.name;
     sendingPercent = 0;
     try {
-      const result = await sendPackage(selected, pkg, packages, (percent) => {
-        sendingPercent = percent;
-      });
+      const result = await sendPackage(
+        selected,
+        pkg,
+        packages,
+        (percent) => {
+          sendingPercent = percent;
+        },
+        listing ?? undefined,
+      );
       if (result.success) {
         showStatus(
           translate('Sent to {name}', { name: selected.name }),
@@ -352,14 +358,11 @@
       } else {
         showStatus(result.error || translate('Upload failed'), 'error');
       }
-      if (result.catalog?.error && result.listing) {
-        // The feeds could not be read during the send: show the sent book
-        // from the fresh listing and mark the feeds, rather than read again.
-        const failure = result.catalog.error;
+      if (result.listing && result.catalogs?.some((c) => c.error)) {
+        // A feed could not be read during the send: show the sent book from
+        // the fresh listing and the feeds as read, rather than read again.
         listing = result.listing;
-        catalogs = (catalogs.length ? catalogs : [result.catalog]).map(
-          (c) => ({ ...c, error: failure }),
-        );
+        catalogs = result.catalogs;
       } else {
         await refresh(selected);
       }
