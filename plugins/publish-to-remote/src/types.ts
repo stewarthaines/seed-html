@@ -87,6 +87,10 @@ export interface S3RemoteConfig {
   /** OPDS catalog filename. Unset → catalog.json (OPDS 2.0), falling back to
    * an existing catalog.xml (OPDS 1.2). The extension picks the format. */
   catalogFilename?: string;
+  /** Web reader address with a `{url}` placeholder for an EPUB's public
+   * link, e.g. https://readitinabook.com/READ.html?book={url}. Unset → no
+   * reader link is offered. */
+  readerLink?: string;
 }
 
 export interface GoogleDriveRemoteConfig {
@@ -98,6 +102,10 @@ export interface GoogleDriveRemoteConfig {
   folderId: string;
   folderName: string;
   accessToken?: string;
+  /** Web reader address with a `{url}` placeholder for an EPUB's public
+   * link, e.g. https://readitinabook.com/READ.html?book={url}. Unset → no
+   * reader link is offered. */
+  readerLink?: string;
 }
 
 export interface DropboxRemoteConfig {
@@ -116,6 +124,10 @@ export interface DropboxRemoteConfig {
   /** OPDS catalog filename. Unset → catalog.json (OPDS 2.0), falling back to
    * an existing catalog.xml (OPDS 1.2). */
   catalogFilename?: string;
+  /** Web reader address with a `{url}` placeholder for an EPUB's public
+   * link, e.g. https://readitinabook.com/READ.html?book={url}. Unset → no
+   * reader link is offered. */
+  readerLink?: string;
 }
 
 export interface WebDAVRemoteConfig {
@@ -140,6 +152,10 @@ export interface WebDAVRemoteConfig {
    * server directly (keeps credentials off the app host, needs server CORS).
    */
   routeViaProxy?: boolean;
+  /** Web reader address with a `{url}` placeholder for an EPUB's public
+   * link, e.g. https://readitinabook.com/READ.html?book={url}. Unset → no
+   * reader link is offered. */
+  readerLink?: string;
 }
 
 export interface DeviceRemoteConfig {

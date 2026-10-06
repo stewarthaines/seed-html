@@ -39,6 +39,13 @@
   import { reconnectGoogle, reconnectDevice } from '../reconnect.js';
   import { deleteFile, downloadFile } from '../remote-ops.js';
   import { showStatus } from '../status.js';
+  import {
+    canShareLinks,
+    copyShareLink,
+    publicLinkFor,
+    readerLinkTemplate,
+    copyText,
+  } from '../share-links.js';
   import { formatFileSize, relativeTime } from '../format.js';
   import type { CatalogIdentity } from '../opds.js';
   import type {
@@ -146,14 +153,21 @@
     );
   }
 
+  // The feed's own address: for Dropbox a shared link set to download (the
+  // feed URL recorded in the catalog is a placeholder there), else the
+  // public address.
   async function copyFeedLink() {
-    if (!catalog) return;
-    try {
-      await navigator.clipboard.writeText(catalog.feedUrl);
-      showStatus(translate('URL copied to clipboard'), 'success');
-    } catch {
-      showStatus(catalog.feedUrl, 'info');
+    if (!catalog || !selected) return;
+    const url =
+      selected.type === 'dropbox'
+        ? await publicLinkFor(selected, catalog.file, listing?.objects ?? [])
+        : catalog.feedUrl;
+    if (!url) {
+      showStatus(translate('This file has no public link'), 'error');
+      return;
     }
+    if (await copyText(url)) showStatus(translate('URL copied to clipboard'), 'success');
+    else showStatus(url, 'info');
   }
 
   /**
@@ -730,6 +744,26 @@
                       busy={busyKeys.has(book.key)}
                       onChange={(next) => toggle(book, next)}
                     />
+                  {/if}
+                  {#if canShareLinks(selected)}
+                    <button
+                      type="button"
+                      class="btn btn-link"
+                      onclick={() =>
+                        copyShareLink(selected, book.key, listing?.objects ?? [], 'file')}
+                    >
+                      {$t('Copy link')}
+                    </button>
+                    {#if readerLinkTemplate(selected)}
+                      <button
+                        type="button"
+                        class="btn btn-link"
+                        onclick={() =>
+                          copyShareLink(selected, book.key, listing?.objects ?? [], 'reader')}
+                      >
+                        {$t('Copy reader link')}
+                      </button>
+                    {/if}
                   {/if}
                   {#if !book.known}
                     <button

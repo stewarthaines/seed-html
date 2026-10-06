@@ -27,6 +27,7 @@
   import { sendPackage, setInCatalog } from '../send.js';
   import { reconnectGoogle, reconnectDevice } from '../reconnect.js';
   import { showStatus } from '../status.js';
+  import { canShareLinks, copyShareLink, readerLinkTemplate } from '../share-links.js';
   import { formatFileSize, relativeTime } from '../format.js';
   import {
     validateEpub,
@@ -376,10 +377,36 @@
         {@const row = rowFor(remote.id)}
         {@const state = stateFor(remote, row)}
         {@const reach = row.listing?.reach ?? null}
+        {@const linkKey =
+          state && state.kind !== 'not-sent' && canShareLinks(remote) ? state.key : null}
         <li class="row">
           <DestinationBadge {remote} />
           <div class="text">
-            <b class="name">{remote.name}</b>
+            <span class="name-line">
+              <b class="name">{remote.name}</b>
+              {#if linkKey}
+                <button
+                  type="button"
+                  class="btn btn-link"
+                  title={linkKey}
+                  onclick={() =>
+                    copyShareLink(remote, linkKey, row.listing?.objects ?? [], 'file')}
+                >
+                  {$t('Copy link')}
+                </button>
+                {#if readerLinkTemplate(remote)}
+                  <button
+                    type="button"
+                    class="btn btn-link"
+                    title={linkKey}
+                    onclick={() =>
+                      copyShareLink(remote, linkKey, row.listing?.objects ?? [], 'reader')}
+                  >
+                    {$t('Copy reader link')}
+                  </button>
+                {/if}
+              {/if}
+            </span>
             <span class="status" class:warn={state?.kind === 'newer-here'}>
               {#if row.sending !== null}
                 {$t('Sending… {percent}%', { percent: row.sending })}
@@ -559,6 +586,13 @@
 
   .name {
     overflow-wrap: anywhere;
+  }
+
+  .name-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 12px;
   }
 
   .status {
