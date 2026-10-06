@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-10-06
+
 ### Added
 
 - The Audio Clip Editor records a clip from your microphone, lets you listen back and crop it, and adds it to the book as an mp3 that seeks reliably in reading apps, so a book can start without any audio files. Once the editor has been opened online, recording works offline too, and a take you can't save yet stays on screen until you can.
