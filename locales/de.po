@@ -749,6 +749,7 @@ msgstr "Integriert"
 msgid "By"
 msgstr "Von"
 
+#: plugins/audio-clip-editor/src/Recorder.svelte
 #: plugins/publish-to-remote/src/components/CatalogIdentityForm.svelte
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 #: plugins/publish-to-remote/src/components/ImportDialog.svelte
@@ -1239,6 +1240,14 @@ msgstr ""
 msgid "Could not read the project: {error}"
 msgstr ""
 
+#: plugins/audio-clip-editor/src/Recorder.svelte
+msgid "Could not record: {error}"
+msgstr "Aufnahme nicht möglich: {error}"
+
+#: plugins/audio-clip-editor/src/Recorder.svelte
+msgid "Could not save the recording: {error}"
+msgstr "Die Aufnahme konnte nicht gespeichert werden: {error}"
+
 #: plugins/photo-regions/src/App.svelte
 msgid "Could not save the regions: {error}"
 msgstr ""
@@ -1561,6 +1570,10 @@ msgstr "Gerät:"
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "Directory"
 msgstr "Verzeichnis"
+
+#: plugins/audio-clip-editor/src/Recorder.svelte
+msgid "Discard"
+msgstr "Verwerfen"
 
 #: src/lib/components/metadata/CustomMetaSection.svelte
 msgid "Discovered in this book"
@@ -2820,6 +2833,10 @@ msgstr "Japanisches Verlagswesen"
 msgid "Just now"
 msgstr "Gerade eben"
 
+#: plugins/audio-clip-editor/src/Recorder.svelte
+msgid "Keep"
+msgstr "Behalten"
+
 #: src/lib/components/settings/TranslationsPanel.svelte
 msgid "Keep a stored copy of the {from} text and switch the book to {to}? All chapters re-render."
 msgstr ""
@@ -3918,8 +3935,9 @@ msgid "Plain text navigation; leave empty to auto-generate from chapter titles. 
 msgstr "Navigation als reiner Text; leer lassen, um sie automatisch aus den Kapiteltiteln zu erzeugen. Zum Speichern Strg+Eingabe (Cmd+Eingabe auf dem Mac) drücken."
 
 #: plugins/audio-clip-editor/src/App.svelte
+#: plugins/audio-clip-editor/src/Recorder.svelte
 msgid "Play"
-msgstr ""
+msgstr "Abspielen"
 
 #: plugins/audio-clip-editor/src/App.svelte
 msgid "Playback rate — 1 is normal speed (no rate in the directive)"
@@ -3983,6 +4001,10 @@ msgstr "Vorwort"
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 msgid "Prefix URI"
 msgstr "Präfix-URI"
+
+#: plugins/audio-clip-editor/src/Recorder.svelte
+msgid "Preparing the recording…"
+msgstr "Aufnahme wird vorbereitet…"
 
 #: src/lib/pdf/pdf-export.ts
 msgid "Preparing your PDF…"
@@ -4180,6 +4202,18 @@ msgstr "Neu verbinden"
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Reconnect folder"
 msgstr "Ordner erneut verbinden"
+
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "Record"
+msgstr "Aufnehmen"
+
+#: plugins/audio-clip-editor/src/Recorder.svelte
+msgid "Record again"
+msgstr "Neu aufnehmen"
+
+#: plugins/audio-clip-editor/src/Recorder.svelte
+msgid "Recording level"
+msgstr "Aufnahmepegel"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Redirect URI"
@@ -4446,6 +4480,7 @@ msgstr "Gespeicherte Feeds"
 msgid "Saved feeds…"
 msgstr "Gespeicherte Feeds…"
 
+#: plugins/audio-clip-editor/src/Recorder.svelte
 #: src/lib/components/EditSpineItemDialog.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Saving…"
@@ -4780,9 +4815,10 @@ msgid "Status:"
 msgstr "Status:"
 
 #: plugins/audio-clip-editor/src/App.svelte
+#: plugins/audio-clip-editor/src/Recorder.svelte
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Stop"
-msgstr ""
+msgstr "Stopp"
 
 #: src/lib/components/settings/TranslationsPanel.svelte
 msgid "Store the current {from} text and make {to} the active language? All chapters re-render. Edits made after switching can leave other editions out of date."

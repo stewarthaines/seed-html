@@ -730,6 +730,7 @@ msgstr ""
 msgid "By"
 msgstr ""
 
+#: plugins/audio-clip-editor/src/Recorder.svelte
 #: plugins/publish-to-remote/src/components/CatalogIdentityForm.svelte
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 #: plugins/publish-to-remote/src/components/ImportDialog.svelte
@@ -746,7 +747,7 @@ msgstr ""
 #: src/lib/components/workspace/DuplicateProjectDialog.svelte
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Cancel"
-msgstr ""
+msgstr "ביטול"
 
 #: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
 msgid "Cannot connect"
@@ -1220,6 +1221,14 @@ msgstr ""
 msgid "Could not read the project: {error}"
 msgstr ""
 
+#: plugins/audio-clip-editor/src/Recorder.svelte
+msgid "Could not record: {error}"
+msgstr "לא ניתן להקליט: {error}"
+
+#: plugins/audio-clip-editor/src/Recorder.svelte
+msgid "Could not save the recording: {error}"
+msgstr "לא ניתן לשמור את ההקלטה: {error}"
+
 #: plugins/photo-regions/src/App.svelte
 msgid "Could not save the regions: {error}"
 msgstr ""
@@ -1542,6 +1551,10 @@ msgstr ""
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "Directory"
 msgstr ""
+
+#: plugins/audio-clip-editor/src/Recorder.svelte
+msgid "Discard"
+msgstr "מחיקה"
 
 #: src/lib/components/metadata/CustomMetaSection.svelte
 msgid "Discovered in this book"
@@ -2801,6 +2814,10 @@ msgstr ""
 msgid "Just now"
 msgstr ""
 
+#: plugins/audio-clip-editor/src/Recorder.svelte
+msgid "Keep"
+msgstr "שמירה"
+
 #: src/lib/components/settings/TranslationsPanel.svelte
 msgid "Keep a stored copy of the {from} text and switch the book to {to}? All chapters re-render."
 msgstr ""
@@ -3899,8 +3916,9 @@ msgid "Plain text navigation; leave empty to auto-generate from chapter titles. 
 msgstr ""
 
 #: plugins/audio-clip-editor/src/App.svelte
+#: plugins/audio-clip-editor/src/Recorder.svelte
 msgid "Play"
-msgstr ""
+msgstr "ניגון"
 
 #: plugins/audio-clip-editor/src/App.svelte
 msgid "Playback rate — 1 is normal speed (no rate in the directive)"
@@ -3964,6 +3982,10 @@ msgstr ""
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 msgid "Prefix URI"
 msgstr ""
+
+#: plugins/audio-clip-editor/src/Recorder.svelte
+msgid "Preparing the recording…"
+msgstr "ההקלטה בהכנה…"
 
 #: src/lib/pdf/pdf-export.ts
 msgid "Preparing your PDF…"
@@ -4161,6 +4183,18 @@ msgstr ""
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Reconnect folder"
 msgstr ""
+
+#: plugins/audio-clip-editor/src/App.svelte
+msgid "Record"
+msgstr "הקלטה"
+
+#: plugins/audio-clip-editor/src/Recorder.svelte
+msgid "Record again"
+msgstr "הקלטה מחדש"
+
+#: plugins/audio-clip-editor/src/Recorder.svelte
+msgid "Recording level"
+msgstr "עוצמת הקלטה"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Redirect URI"
@@ -4427,10 +4461,11 @@ msgstr ""
 msgid "Saved feeds…"
 msgstr ""
 
+#: plugins/audio-clip-editor/src/Recorder.svelte
 #: src/lib/components/EditSpineItemDialog.svelte
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Saving…"
-msgstr ""
+msgstr "שומר…"
 
 #: src/lib/components/spine/PreviewPane.svelte
 #. preview Checks dropdown entry — announcement preview
@@ -4761,9 +4796,10 @@ msgid "Status:"
 msgstr ""
 
 #: plugins/audio-clip-editor/src/App.svelte
+#: plugins/audio-clip-editor/src/Recorder.svelte
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Stop"
-msgstr ""
+msgstr "עצירה"
 
 #: src/lib/components/settings/TranslationsPanel.svelte
 msgid "Store the current {from} text and make {to} the active language? All chapters re-render. Edits made after switching can leave other editions out of date."
