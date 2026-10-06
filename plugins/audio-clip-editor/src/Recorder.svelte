@@ -19,7 +19,7 @@
     takeDuration,
     type MonoTake,
   } from './recording/pcm.js';
-  import { encodeMp3 } from './recording/mp3.js';
+  import { compileMp3Wasm, encodeMp3 } from './recording/mp3.js';
   import { addMedia } from './host.js';
   import { formatTimeString } from './format.js';
   import type { ClipRegion } from './clips.js';
@@ -44,6 +44,8 @@
   type Phase = 'starting' | 'recording' | 'preparing' | 'review' | 'saving' | 'error';
   let phase = $state<Phase>('starting');
   let errorMessage = $state('');
+  /** Why the last Keep failed; the take stays so Keep can be tried again. */
+  let saveError = $state('');
   let elapsed = $state(0);
   let level = $state(0);
   let take = $state<MonoTake | null>(null);
@@ -55,9 +57,21 @@
   let capture: Capture | null = null;
   let frame = 0;
 
+  // The encoder, fetched and compiled once as the recorder opens. A failed
+  // load (offline, not yet cached) is forgotten so Keep tries again.
+  let encoder: Promise<WebAssembly.Module> | null = null;
+  function encoderModule(): Promise<WebAssembly.Module> {
+    encoder ??= compileMp3Wasm(mp3WasmUrl).catch((err: unknown) => {
+      encoder = null;
+      throw err;
+    });
+    return encoder;
+  }
+
   const cropDuration = $derived(Math.max(0, crop.end - crop.begin));
 
   onMount(() => {
+    encoderModule().catch(() => {});
     void record();
     return () => {
       cancelAnimationFrame(frame);
@@ -67,6 +81,7 @@
 
   async function record(): Promise<void> {
     phase = 'starting';
+    saveError = '';
     take = null;
     takeFile = null;
     try {
@@ -108,13 +123,17 @@
     if (!take || cropDuration <= 0) return;
     waveform?.stop();
     phase = 'saving';
+    saveError = '';
     try {
       const kept = cropTake(take, crop.begin, crop.end);
-      const bytes = await encodeMp3(kept, mp3WasmUrl);
+      const bytes = await encodeMp3(kept, await encoderModule());
       const href = await addFile(recordingFilename(new Date()), 'audio/mpeg', bytes.buffer as ArrayBuffer);
       onKept(href, takeDuration(kept));
     } catch (err) {
-      fail($t('Could not save the recording: {error}', { error: describe(err) }));
+      // Back to the take, not the error screen: nothing is lost, and Keep
+      // can be pressed again (once back online, say).
+      saveError = $t('Could not save the recording: {error}', { error: describe(err) });
+      phase = 'review';
     }
   }
 
@@ -200,6 +219,9 @@
         {phase === 'saving' ? $t('Saving…') : $t('Keep')}
       </button>
     </div>
+    {#if saveError}
+      <p class="status error" role="alert">{saveError}</p>
+    {/if}
   {:else}
     <p class="status error">{errorMessage}</p>
     <div class="toolbar">

@@ -68,4 +68,41 @@ describe('Recorder', () => {
     target.remove();
     await context.close();
   });
+
+  it('fetches the encoder as it opens, and keeps the take when saving fails', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch');
+    const context = new AudioContext();
+    await context.resume();
+    const target = document.createElement('div');
+    document.body.append(target);
+    const addFile = vi
+      .fn(async (_name: string, _type: string, _bytes: ArrayBuffer) => 'Audio/take.mp3')
+      .mockRejectedValueOnce(new Error('The app did not answer'));
+    const onKept = vi.fn();
+    const recorder = mount(Recorder, {
+      target,
+      props: { context, source: toneSource(context), addFile, onKept, onClose: () => {} },
+    });
+
+    const stop = await until(() => button(target, 'Stop'));
+    expect(fetchSpy.mock.calls.some(([url]) => String(url).includes('mp3'))).toBe(true);
+    await new Promise((r) => setTimeout(r, 1000));
+    stop.click();
+    flushSync();
+
+    (await until(() => button(target, 'Keep'))).click();
+    const alert = await until(() => target.querySelector('[role="alert"]'));
+    expect(alert.textContent).toContain('The app did not answer');
+    expect(onKept).not.toHaveBeenCalled();
+
+    (await until(() => button(target, 'Keep'))).click();
+    await until(() => onKept.mock.calls.length > 0, 15000);
+    expect(addFile).toHaveBeenCalledTimes(2);
+    expect(target.querySelector('[role="alert"]')).toBeNull();
+
+    unmount(recorder);
+    target.remove();
+    fetchSpy.mockRestore();
+    await context.close();
+  });
 });
