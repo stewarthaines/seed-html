@@ -61,6 +61,8 @@
     url: string;
     description: string;
     copyright: string;
+    /** Full licence text served with the library, where the licence asks for it. */
+    noticeUrl?: string;
   }
 
   // Always bundled into the app (present under file:// too). All permissive
@@ -110,8 +112,9 @@
   ];
 
   // Loaded only when the editor runs online — the vendored polyfills behind
-  // online-only features and the libraries bundled in the publish plugin (which
-  // is a separate, http-loaded iframe build).
+  // online-only features and the libraries bundled in the plugins (each a
+  // separate, http-loaded iframe build). Versions are kept by hand: check them
+  // against the plugins' package.json at each release.
   const HTTP_LIBRARIES: Library[] = [
     {
       name: 'axe-core',
@@ -160,6 +163,32 @@
       url: 'https://github.com/likecoin/epubcheck-ts',
       description: 'EPUB validation — publish plugin (bundles W3C EPUBCheck)',
       copyright: 'Copyright (c) LikeCoin Foundation; bundles W3C EPUBCheck',
+    },
+    {
+      name: 'wavesurfer.js',
+      version: '7.12.8',
+      license: 'BSD-3-Clause',
+      url: 'https://github.com/katspaugh/wavesurfer.js',
+      description: 'Waveform and clip regions — Audio Clip Editor plugin',
+      copyright: 'Copyright (c) 2012-2023, katspaugh and contributors',
+    },
+    {
+      name: 'wasm-media-encoders',
+      version: '0.7.0',
+      license: 'MIT',
+      url: 'https://github.com/arseneyr/wasm-media-encoders',
+      description: 'Runs the mp3 encoder in the browser — Audio Clip Editor plugin',
+      copyright: 'Copyright (c) 2020-2024 arseneyr',
+    },
+    {
+      name: 'LAME',
+      version: '3.100',
+      license: 'LGPL-2.0-or-later',
+      url: 'https://lame.sourceforge.io/',
+      description:
+        'mp3 encoding for recorded clips — Audio Clip Editor plugin (a separate file the plugin loads)',
+      copyright: 'Copyright (c) 1999 Mark Taylor and the LAME developers',
+      noticeUrl: 'plugins/audio-clip-editor/THIRD_PARTY_NOTICES.txt',
     },
   ];
   // --- Dialog behaviour: focus on open, Tab trap, Escape closes ---------------
@@ -310,6 +339,13 @@
           </h4>
           <p class="library-description">{library.description}</p>
           <p class="library-copyright">{library.copyright}</p>
+          {#if library.noticeUrl}
+            <p class="library-copyright">
+              <a href={library.noticeUrl} target="_blank" rel="noopener noreferrer">
+                {$t('License text')}
+              </a>
+            </p>
+          {/if}
         </div>
       {/snippet}
 

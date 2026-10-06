@@ -2951,6 +2951,10 @@ msgstr ""
 msgid "License"
 msgstr ""
 
+#: src/lib/components/shell/AboutDialog.svelte
+msgid "License text"
+msgstr "טקסט הרישיון"
+
 #: src/lib/ThemeToggle.svelte
 msgid "light"
 msgstr ""
