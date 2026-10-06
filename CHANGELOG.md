@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - A Figures extension turns captioned images into figures, so screen readers announce each image with its caption.
+- Copy link, on each destination's row in Share and each book in Published, copies the book's web address to send to someone, and Copy reader link copies one that opens the book in a web reader you name in the destination's settings.
 - A Writes toggle in the agent panel lets an agent's prose writes through for this connection, so you need not wait for its first write. It switches off when you open another project, and script writes are still reviewed one by one.
 
 ### Changed
