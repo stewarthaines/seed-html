@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- About lists the libraries the Audio Clip Editor uses, with a link to LAME's full licence text.
 - Settings gathers Theme, Language, Advanced mode and Paged device previews under General, and Plugins lists only plugins.
 - Adding an extension puts its DOM transform in the right place in the project's list, so it works without reordering by hand.
 
