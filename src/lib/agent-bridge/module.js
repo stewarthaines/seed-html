@@ -332,8 +332,13 @@ async function handleTool(ctx, session, ui, tool, params) {
       } catch (error) {
         settingsError = String(error?.message ?? error);
       }
+      // Older projects list bare names; resolve them as the pipeline does
+      // (resolveTransformPath in settings/dom-transforms.ts), so the bridge's
+      // read-before-write gate compares the same paths the agent reads.
       const transforms = settings
-        ? [settings.text_transform, ...(settings.dom_transforms ?? [])].filter(Boolean)
+        ? [settings.text_transform, ...(settings.dom_transforms ?? [])]
+            .filter(Boolean)
+            .map(name => (name.startsWith('SOURCE/') ? name : `SOURCE/scripts/${name}`))
         : [];
       // Syntax reference: divergence notes for the source syntax the text
       // transform defines (SYNTAX.md convention). Prefer the project's own

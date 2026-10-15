@@ -405,6 +405,32 @@ describe('agent bridge module', () => {
     ).toEqual({ source: 'project', text: '# divergences: emphasis roles are swapped' });
   });
 
+  it('resolves bare transform names in older settings to SOURCE/scripts/ paths', async () => {
+    // Older projects list transforms by name; the read-before-write gate in the
+    // bridge server compares these against the paths the agent actually reads.
+    const legacy = fakeDir({
+      SOURCE: fakeDir({
+        'settings.json': fakeFile(
+          JSON.stringify({
+            text_transform: 'transformText.js',
+            dom_transforms: ['transformDom.js'],
+          })
+        ),
+      }),
+    });
+    const { ctx } = makeContext({ getWorkspaceDir: async () => legacy });
+    start(ctx);
+    const socket = FakeWebSocket.last!;
+    socket.open();
+    const response = (await socket.receive({ id: 1, tool: 'project_setup' })) as {
+      result: { transformScripts: string[] };
+    };
+    expect(response.result.transformScripts).toEqual([
+      'SOURCE/scripts/transformText.js',
+      'SOURCE/scripts/transformDom.js',
+    ]);
+  });
+
   it('write policy: pipeline inputs and standalone assets only', () => {
     // allowed: sources, transforms, preview head, styles, media, RS scripts
     for (const path of [
