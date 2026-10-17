@@ -396,33 +396,42 @@ export class BlobURLManager {
   }
 
   /**
-   * Process a single asset element
+   * Process a single asset element.
+   *
+   * Every file attribute on the element is rewritten, not only the first: a
+   * video's src and poster, or an image whose data-src names a second file for
+   * a book script, each need a working URL or the preview shows less than the
+   * packaged book. The first attribute found (in the order below) is the
+   * element's primary file: it alone gets data-source-href and the
+   * missing-file treatment. A missing secondary file is stamped
+   * data-seed-missing but never replaces a working primary with an error icon.
    */
   private async processAssetElement(element: Element): Promise<void> {
-    // Determine attribute name. A namespaced xlink:href (SVG <image>) is read
-    // and written through the namespace API; the attribute name is a label.
-    let attr: string;
-    let xlink = false;
-    if (element.hasAttribute('src')) {
-      attr = 'src';
-    } else if (element.hasAttribute('href')) {
-      attr = 'href';
-    } else if (element.hasAttribute('data')) {
-      attr = 'data';
-    } else if (element.hasAttribute('poster')) {
-      attr = 'poster';
-    } else if (element.hasAttribute('data-src')) {
-      attr = 'data-src';
-    } else if (xlinkHref(element) !== null) {
-      attr = 'xlink:href';
-      xlink = true;
-    } else {
-      return; // No supported attribute found
-    }
+    // A namespaced xlink:href (SVG <image>) is read and written through the
+    // namespace API; 'xlink:href' is a label. It counts only without a plain
+    // href, which is the one reading systems prefer.
+    const attrs = ['src', 'href', 'data', 'poster', 'data-src'].filter(attr =>
+      element.hasAttribute(attr)
+    );
+    if (!element.hasAttribute('href') && xlinkHref(element) !== null) attrs.push('xlink:href');
 
+    for (const [index, attr] of attrs.entries()) {
+      await this.processAssetAttribute(element, attr, index === 0);
+    }
+  }
+
+  /**
+   * Rewrite one file attribute of an asset element to a blob URL.
+   */
+  private async processAssetAttribute(
+    element: Element,
+    attr: string,
+    primary: boolean
+  ): Promise<void> {
+    const xlink = attr === 'xlink:href';
     const href = xlink ? xlinkHref(element) : element.getAttribute(attr);
     if (!href || !this.isResourcePath(href)) {
-      return; // Skip non-relative URLs
+      return; // Skip non-relative URLs (including ones already rewritten)
     }
 
     try {
@@ -440,9 +449,14 @@ export class BlobURLManager {
       // Keep the manifest href discoverable on the element (the blob URL erases
       // it): the preview's click-to-source uses it to find the source reference.
       // Display-only documents (preview iframe, print window) — never persisted.
-      element.setAttribute('data-source-href', manifestPath);
+      if (primary) element.setAttribute('data-source-href', manifestPath);
     } catch (error) {
-      this.handleMissingAsset(element, href, error as Error);
+      if (primary) {
+        this.handleMissingAsset(element, href, error as Error);
+      } else if (element.tagName.toLowerCase() !== 'a') {
+        // Same stamp and exclusion as handleMissingAsset, without its error icon.
+        element.setAttribute('data-seed-missing', this.manifestPathFor(href));
+      }
     }
   }
 

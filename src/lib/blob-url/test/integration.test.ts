@@ -561,4 +561,73 @@ describe('Blob URL Manager Integration', () => {
       expect(result).not.toContain('blob:');
     });
   });
+
+  describe('Elements with more than one file attribute', () => {
+    beforeEach(() => {
+      mockFileStorage.supportsDirectBlobURLs.mockReturnValue(true);
+      mockFileStorage.getFile.mockImplementation((_workspace: string, path: string) =>
+        path.includes('missing')
+          ? Promise.reject(new Error('not found'))
+          : Promise.resolve(new File(['bytes'], path.split('/').pop() ?? 'file'))
+      );
+
+      manager = new BlobURLManager({
+        maxBlobURLs: 100,
+        fileStorage: mockFileStorage as any,
+        basePath: 'OEBPS',
+        onCapacityReached: vi.fn(),
+      });
+      manager.setActiveWorkspace('workspace-123');
+    });
+
+    const parse = (xhtml: string) =>
+      new DOMParser().parseFromString(xhtml, 'application/xhtml+xml');
+    const wrap = (body: string) =>
+      `<html xmlns="http://www.w3.org/1999/xhtml"><body>${body}</body></html>`;
+
+    // An image whose data-src names a second file (a book script's model,
+    // say): only the first attribute found used to be rewritten, so the second
+    // file did not load in the preview although it does in the packaged book.
+    it('rewrites both src and data-src on one element', async () => {
+      const result = parse(
+        await manager.processXHTMLForPreview(
+          wrap('<img src="../Images/photo.jpg" alt="" data-src="../Media/model.glb"/>')
+        )
+      );
+      const img = result.querySelector('img')!;
+
+      expect(img.getAttribute('src')).toMatch(/^blob:/);
+      expect(img.getAttribute('data-src')).toMatch(/^blob:/);
+      // Click-to-source keeps pointing at the element's primary file.
+      expect(img.getAttribute('data-source-href')).toBe('Images/photo.jpg');
+    });
+
+    it('rewrites both src and poster on a video', async () => {
+      const result = parse(
+        await manager.processXHTMLForPreview(
+          wrap('<video src="../Media/clip.mp4" poster="../Images/still.jpg"></video>')
+        )
+      );
+      const video = result.querySelector('video')!;
+
+      expect(video.getAttribute('src')).toMatch(/^blob:/);
+      expect(video.getAttribute('poster')).toMatch(/^blob:/);
+    });
+
+    it('keeps the primary file when a secondary file is missing', async () => {
+      const result = parse(
+        await manager.processXHTMLForPreview(
+          wrap('<img src="../Images/photo.jpg" alt="Pot" data-src="../Media/missing.glb"/>')
+        )
+      );
+      const img = result.querySelector('img')!;
+
+      // The photograph still shows: no error icon in place of a working image.
+      expect(img.getAttribute('src')).toMatch(/^blob:/);
+      expect(img.getAttribute('alt')).toBe('Pot');
+      // The missing secondary file is still reported to the author.
+      expect(img.getAttribute('data-seed-missing')).toBe('Media/missing.glb');
+      expect(img.getAttribute('data-src')).toBe('../Media/missing.glb');
+    });
+  });
 });

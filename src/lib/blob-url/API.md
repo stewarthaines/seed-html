@@ -716,6 +716,8 @@ const ASSET_SELECTORS = [
 ];
 ```
 
+An element with more than one of these attributes (a video's `src` and `poster`, an image's `src` and `data-src`) has every one rewritten. The first found, in the order `src`, `href`, `data`, `poster`, `data-src`, `xlink:href`, is the element's primary file: it alone sets `data-source-href` and gets the missing-file error icon. A missing secondary file is stamped `data-seed-missing` without disturbing the primary.
+
 **CSS Processing:** CSS `url()` and `@import` references are **not handled** by this manager - they should be processed by the Transform Pipeline (Feature #12).
 
 ### Backend Detection Strategy
