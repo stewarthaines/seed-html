@@ -1,6 +1,6 @@
 # App makeover: the Library model
 
-Status: design settled on the canvas, 21 September 2026. Phases 1, 2 and 3 built on branches `makeover/phase-1-shell`, `makeover/phase-2-write` and `makeover/phase-3-book` (each stacked on the previous), awaiting review; the running log is `process/APP_MAKEOVER_STATUS.md`. Phases 4 (Share, Settings, About) and 5 (phone) are built on `makeover/phase-4-share-settings`.
+Status: design settled on the canvas, 21 September 2026. All five phases and the publish rework (`process/PUBLISH_REWORK.md`) merged to main on 27 September 2026 (ea11d6b) and released as v0.22.0; the build log is `process/APP_MAKEOVER_STATUS.md`. Parked: the Contents and Details rework, the sample book, and the phone gaps listed under "Open questions".
 
 Canvas: https://claude.ai/artifact/GUiwcGUbX9KdkmuovT7DRK (page "Library" is the direction being built; "Directions" holds the two rejected alternatives; "Today" holds the 0.21 screens for reference).
 
@@ -118,7 +118,13 @@ Not touched by any phase: the transform pipeline, storage, the plugin contract, 
 
 ## Open questions
 
-- **Share is per book in the mock; today's packaged list is global.** Packaged files live in the shared `publish` workspace, and the sidecar carries a title but no workspace id. Per-book Share needs the sidecar to record which book made the file, or Share needs a "from other books" section. Decide before phase 4.
-- **What the sample book opens into.** The mock opens the sample from the Start row; auto-importing it on the very first visit was discussed and not decided.
+- **Contents and Details are not yet the canvas design.** Compared with the canvas on 26 September 2026: Cover and Files are close. Contents is the old Chapters view relabelled (chapter ids rather than titles, no Rename or Add chapter, the Apply bar kept). Details is the old metadata cards (Rendition Properties shown in Basic mode, the language as a raw code, the Metadata Summary pane). Parked; the user notes Details feels largely redundant beside the Settings sheet.
+- **The sample book.** Drafts in `process/SAMPLE_BOOK_START_HERE.md`. Addressing the reader directly reads wrongly in the preview and the packaged EPUB; splitting reader prose from instruction comments gives a newcomer two versions of the same text. The framing is undecided; parked.
+- **What the sample book opens into.** The Start row opens the sample; auto-importing it on the very first visit was discussed and not decided. Waits on the sample book.
+- **Phone gaps.** The right-hand previews of Details and Files are not reachable on a phone (only the main pane renders), and the phone layout has been checked in a 390px desktop viewport, not on a device.
+
+Settled during the build:
+
+- **Share is per book; the packaged list stays global.** The status line finds this book's latest package by matching `dc:identifier` in the publish sidecar, so no workspace id was needed. The outcome cards are per book; the packaged-files table lists every book.
 - **The About page.** Settled 23 September 2026: a dialog, carrying the licence, the third-party libraries and the app download.
-- **Loose screens not yet drawn.** Share with storage connected, the New book dialog, the Sample books picker, dark theme. All derivable from what is on the canvas; draw when a phase reaches them.
+- **Loose screens** (Share with storage connected, the New book dialog, the Sample books picker, dark theme) were built in the app rather than drawn on the canvas.
