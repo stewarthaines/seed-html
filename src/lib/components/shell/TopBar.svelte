@@ -2,7 +2,8 @@
   TopBar — the bar across the top of an open book: back to Books, the book's
   title with its actions, the three tabs (Write, Book, Share), and on the
   trailing side the agent-bridge toggle (localhost only), Settings and
-  Package EPUB. When the Book tab is active a second row lists its sections.
+  Package EPUB. On a phone, when the Book tab is active, a second row lists its
+  sections; on a wider screen they are the Book sidebar (BookSidebar).
 
   The tabs and sections navigate by the existing view ids; which tab is
   active is derived from the current view, so the navigation store stays the
@@ -30,6 +31,7 @@
     onNavigate,
     onPackage,
     packaging = false,
+    showSections = false,
     onDuplicate,
     onDelete,
   }: {
@@ -49,6 +51,8 @@
     onPackage: () => void;
     /** A package is being made; the button waits for it. */
     packaging?: boolean;
+    /** List the Book sections as a row under the bar (the phone layout). */
+    showSections?: boolean;
     onDuplicate: () => void;
     onDelete: () => void;
   } = $props();
@@ -89,7 +93,7 @@
   }
 </script>
 
-<header class="top-bar" class:has-sections={activeTab === 'book'}>
+<header class="top-bar">
   <div class="bar-row">
     <button
       type="button"
@@ -185,7 +189,7 @@
     </div>
   </div>
 
-  {#if activeTab === 'book'}
+  {#if showSections && activeTab === 'book'}
     <nav class="sections" aria-label={$t('Book sections')}>
       {#each sections as section (section.id)}
         <button

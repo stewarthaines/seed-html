@@ -1,8 +1,9 @@
 <!--
   LayoutManager — the page frame. A bar across the top (the brand bar on the
   Books screen, the book's TopBar everywhere else), then the body:
-  in Write, the chapter column beside the editor and preview; in every other
-  view, the content alone, split or single-pane as the view needs.
+  in Write, the chapter column beside the editor and preview; in the Book
+  tab, the section column beside its screens; in every other view, the content
+  alone, split or single-pane as the view needs.
 
   The bars and the chapter column are snippets the app fills, so this file
   owns only geometry (process/APP_MAKEOVER_LIBRARY.md, phase 1).
@@ -14,6 +15,7 @@
   import { t } from './i18n';
   import { CaretLeft } from 'phosphor-svelte';
   import type { ViewType } from './navigation/types';
+  import { BOOK_SECTIONS } from './stores/book-section.js';
 
   let {
     hasWorkspace = false,
@@ -23,6 +25,7 @@
     topBar,
     brandBar,
     writeSidebar,
+    bookSidebar,
     chapterStrip,
     bottomTabs,
     leftContent,
@@ -39,6 +42,7 @@
     topBar?: Snippet;
     brandBar?: Snippet;
     writeSidebar?: Snippet;
+    bookSidebar?: Snippet;
     chapterStrip?: Snippet;
     bottomTabs?: Snippet;
     leftContent?: Snippet;
@@ -54,6 +58,13 @@
   // The chapter column exists only beside the editor, and not on a phone.
   const showWriteSidebar = $derived(view === 'spine' && hasWorkspace && !phone);
   const sidebarWidth = $derived(sidebar.isExpanded ? 'var(--sidebar-width)' : '48px');
+
+  // The Book tab's section column takes the same place and shares its collapse
+  // state; on a phone the sections are a row under the top bar instead.
+  const showBookSidebar = $derived(
+    (BOOK_SECTIONS as readonly string[]).includes(view) && hasWorkspace && !phone
+  );
+  const columnWidth = $derived(showWriteSidebar || showBookSidebar ? sidebarWidth : null);
 
   // Which views keep a right-hand pane.
   const showPreviewPane = $derived(
@@ -78,11 +89,13 @@
 
   <div
     class="app-body"
-    class:with-sidebar={showWriteSidebar}
-    style={showWriteSidebar ? `grid-template-columns: ${sidebarWidth} 1fr` : undefined}
+    class:with-sidebar={columnWidth !== null}
+    style={columnWidth ? `grid-template-columns: ${columnWidth} 1fr` : undefined}
   >
     {#if showWriteSidebar}
       {@render writeSidebar?.()}
+    {:else if showBookSidebar}
+      {@render bookSidebar?.()}
     {/if}
 
     <main class="main-content">

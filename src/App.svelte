@@ -18,6 +18,7 @@
   import TopBar from './lib/components/shell/TopBar.svelte';
   import BrandBar from './lib/components/shell/BrandBar.svelte';
   import WriteSidebar from './lib/components/shell/WriteSidebar.svelte';
+  import BookSidebar from './lib/components/shell/BookSidebar.svelte';
   import { DeleteBookDialog } from './lib/components/books';
   import DuplicateProjectDialog from './lib/components/workspace/DuplicateProjectDialog.svelte';
   import Toast from './lib/components/Toast.svelte';
@@ -335,6 +336,22 @@
   // Granular reactive signals to prevent loading flicker during metadata updates
   let workspaceMetadata = $derived(currentWorkspaceState?.opf?.metadata);
   let workspaceTitle = $derived(workspaceMetadata?.title);
+
+  // The line under each section in the Book sidebar.
+  const bookSummaries = $derived.by(() => {
+    const cover = appState?.epubSettings?.cover;
+    const author = workspaceMetadata?.creator?.[0]?.name;
+    const fileCount = currentWorkspaceState?.opf?.manifest?.length ?? 0;
+    return {
+      cover:
+        cover?.hue !== undefined
+          ? `${cover.mode === 'light' ? $t('Dark on light') : $t('Light on dark')} · ${Math.round(cover.hue)}°`
+          : undefined,
+      chapters: $t('{count} chapters', { count: chapterCount }),
+      metadata: author || undefined,
+      manifest: $t('{count} files', { count: fileCount }),
+    };
+  });
 
   // Dynamic window title based on workspace
   let windowTitle = $derived(workspaceTitle ? `${workspaceTitle} · SEED.html` : 'SEED.html');
@@ -2071,8 +2088,19 @@
         onNavigate={view => navigationStore.navigateTo(view)}
         onPackage={packageCurrentBook}
         packaging={epubPackaging}
+        showSections={viewport.phone}
         onDuplicate={() => (duplicateOpen = true)}
         onDelete={openDeleteDialog}
+      />
+    {/snippet}
+
+    {#snippet bookSidebar()}
+      <BookSidebar
+        currentView={contentView === 'navigation' ? 'chapters' : contentView}
+        summaries={bookSummaries}
+        {isExpanded}
+        onToggle={() => layoutStore.toggleSidebar()}
+        onNavigate={section => navigationStore.navigateTo(section)}
       />
     {/snippet}
 
