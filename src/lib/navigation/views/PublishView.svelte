@@ -19,6 +19,8 @@
     /** Package the open book as a SEED EPUB (kept in this browser, listed below). */
     onPackage?: () => void;
     packaging?: boolean;
+    /** 0..1 while `packaging`; null until the files are being read. */
+    packageProgress?: number | null;
     /** The other outputs a book can be shared as; each is shown only when passed. */
     onGeneratePdf?: () => void;
     pdfGenerating?: boolean;
@@ -40,6 +42,7 @@
     onOpen,
     onPackage,
     packaging = false,
+    packageProgress = null,
     onGeneratePdf,
     pdfGenerating = false,
     onPackageWithoutSource,
@@ -85,6 +88,14 @@
       loading = false;
     }
   }
+
+  // Packaging stays on the status line until the list holds the new package, so
+  // the previous package's line does not flash in between.
+  let finishing = $state(false);
+  $effect(() => {
+    if (packaging) finishing = true;
+    else if (!loading) finishing = false;
+  });
 
   // List packaged epubs, refreshing as new ones are packaged. The plugin band
   // re-reads the directory on the same signal (PluginFrame's refreshKey).
@@ -199,8 +210,16 @@
 <div class="share-view">
   <div class="share-page">
     <h1 class="page-title">{$t('Share')}</h1>
-    <p class="status-line">
-      {#if loading && epubs.length === 0}
+    <p class="status-line" aria-live="polite">
+      {#if packaging || finishing}
+        {$t('Packaging…')}
+        {#if packageProgress === null}
+          <progress class="package-progress" aria-hidden="true"></progress>
+        {:else}
+          <progress class="package-progress" max="1" value={packageProgress} aria-hidden="true"
+          ></progress>
+        {/if}
+      {:else if loading && epubs.length === 0}
         {$t('Loading…')}
       {:else if latest}
         {$t('Packaged {when}', { when: relativeTime(latest.lastModified) })} · {formatSize(
@@ -441,8 +460,17 @@
   }
 
   .status-line {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
     margin: 0 0 var(--space-6);
     color: var(--color-text-secondary);
+  }
+
+  .package-progress {
+    inline-size: calc(var(--space-8) * 5);
+    block-size: var(--space-2);
+    accent-color: var(--color-interactive-primary);
   }
 
   .label {
