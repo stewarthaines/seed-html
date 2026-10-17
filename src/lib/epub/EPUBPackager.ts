@@ -32,7 +32,7 @@ export interface CompressionSettings {
   reason: string;
 }
 
-interface PackageProgress {
+export interface PackageProgress {
   phase: 'reading' | 'compressing' | 'writing' | 'complete';
   currentFile?: string;
   processedFiles: number;
@@ -185,7 +185,15 @@ export class EPUBPackager {
     const files: WorkspaceFile[] = [];
 
     // Process EPUB files normally
-    for (const path of epubFiles) {
+    for (const [i, path] of epubFiles.entries()) {
+      options.progressCallback?.({
+        phase: 'reading',
+        currentFile: path,
+        processedFiles: i,
+        totalFiles: epubFiles.length,
+        currentBytes: 0,
+        totalBytes: 0,
+      });
       try {
         const content = await this.fileStorage.readFile(workspaceId, path);
         files.push({

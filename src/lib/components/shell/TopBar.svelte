@@ -29,6 +29,7 @@
     onToggleAgent,
     onNavigate,
     onPackage,
+    packaging = false,
     onDuplicate,
     onDelete,
   }: {
@@ -46,6 +47,8 @@
     onToggleAgent?: () => void;
     onNavigate: (view: ViewType) => void;
     onPackage: () => void;
+    /** A package is being made; the button waits for it. */
+    packaging?: boolean;
     onDuplicate: () => void;
     onDelete: () => void;
   } = $props();
@@ -169,14 +172,15 @@
         type="button"
         class="btn btn-primary"
         onclick={onPackage}
-        disabled={readOnly}
+        disabled={readOnly || packaging}
+        aria-busy={packaging}
         title={readOnly
           ? $t("This EPUB wasn't created in the Simple EPUB Editor, so it can't be edited.")
           : $t('Package EPUB')}
         data-testid="package-epub"
       >
         <Package size={18} aria-hidden="true" />
-        <span class="text">{$t('Package EPUB')}</span>
+        <span class="text">{packaging ? $t('Packaging…') : $t('Package EPUB')}</span>
       </button>
     </div>
   </div>

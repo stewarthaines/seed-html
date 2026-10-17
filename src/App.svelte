@@ -76,7 +76,7 @@
   import { PublishService } from './lib/services/publish/publish.service.js';
   import { BlobURLManager } from './lib/blob-url/blob-url-manager.js';
   import { ExtensionManager } from './lib/extensions/extension-manager.js';
-  import { EPUBPackager } from './lib/epub/EPUBPackager.js';
+  import { EPUBPackager, type PackageProgress } from './lib/epub/EPUBPackager.js';
   import { EPUBUnpacker } from './lib/epub/EPUBUnpacker.js';
   import { generateEPUBTimestamp } from './lib/epub/opf-utils.js';
   import { ensureGeneratedNav } from './lib/outline/nav-coherence.js';
@@ -266,13 +266,25 @@
     }
   }
 
-  // The full package (with source) from the top bar or the Share page.
+  // The full package (with source) from the top bar or the Share page. Share opens
+  // first so the progress is visible while the package is made.
   let epubPackaging = $state(false);
+  // 0..1 while packaging: reading the files is the first half, compressing the second.
+  // Null while the date and the contents page are updated, before any file is read.
+  let packageProgress = $state<number | null>(null);
   async function packageCurrentBook(): Promise<void> {
     if (!currentWorkspaceState || epubPackaging) return;
     epubPackaging = true;
+    packageProgress = null;
+    navigationStore.navigateTo('publish');
     try {
-      await handlePackageRequest(currentWorkspaceState.id);
+      await handlePackageRequest(currentWorkspaceState.id, {
+        onProgress: ({ phase, processedFiles, totalFiles }) => {
+          const done = totalFiles > 0 ? processedFiles / totalFiles : 1;
+          packageProgress =
+            phase === 'reading' ? done / 2 : phase === 'compressing' ? 0.5 + done / 2 : 1;
+        },
+      });
     } catch (error) {
       showToast(error instanceof Error ? error.message : $t('Failed to package EPUB'), 'error');
     } finally {
@@ -1571,6 +1583,7 @@
       includeSource?: boolean;
       download?: boolean;
       format?: 'epub' | 'read-html' | 'seed-html';
+      onProgress?: (progress: PackageProgress) => void;
     }
   ) => {
     if (!currentWorkspaceState || isReadOnly) return;
@@ -1612,6 +1625,7 @@
             : (epubSettings?.include_seed_html_in_package ?? false),
         includeSource: opts?.includeSource,
         persistToPublish: download ? false : undefined,
+        progressCallback: opts?.onProgress,
       });
 
       if (result.success && result.blob && result.filename) {
@@ -1640,11 +1654,6 @@
         } catch (sidecarError) {
           console.warn('Failed to write publish sidecar:', sidecarError);
         }
-
-        // Take the user to the Publish view to see the newly packaged epub.
-        // (No-op if already there; its onMount load picks up the new file when
-        // navigating in fresh.)
-        navigationStore.navigateTo('publish');
 
         // Notify the Publish view (if already open) to refresh its list.
         window.dispatchEvent(new CustomEvent('epub-packaged'));
@@ -2061,6 +2070,7 @@
         onToggleAgent={toggleAgentBridge}
         onNavigate={view => navigationStore.navigateTo(view)}
         onPackage={packageCurrentBook}
+        packaging={epubPackaging}
         onDuplicate={() => (duplicateOpen = true)}
         onDelete={openDeleteDialog}
       />
@@ -2276,6 +2286,7 @@
           onOpen={openPluginTarget}
           onPackage={packageCurrentBook}
           packaging={epubPackaging}
+          {packageProgress}
           onGeneratePdf={canGeneratePdf ? handleGeneratePdf : undefined}
           {pdfGenerating}
           onPackageWithoutSource={handleExportPlainEpub}

@@ -175,6 +175,7 @@ describe('EPUBPackager', () => {
 
       await packager.packageEPUB(mockWorkspaceId, options);
 
+      expect(progressCallback).toHaveBeenCalledWith(expect.objectContaining({ phase: 'reading' }));
       expect(progressCallback).toHaveBeenCalledWith(
         expect.objectContaining({ phase: 'compressing' })
       );
