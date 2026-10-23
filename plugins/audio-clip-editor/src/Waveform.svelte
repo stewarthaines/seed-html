@@ -88,6 +88,11 @@
     // Manual stop/loop at the clip boundary — regions don't auto-stop.
     regions.on('region-out', (region: Region) => {
       if (region.id !== playingId) return;
+      // On play, wavesurfer re-emits its last media timeupdate, which can be a
+      // stale time outside the clip (seen in Chrome) and fires a false
+      // region-out; trust the media's actual position instead.
+      const t = instance.getCurrentTime();
+      if (t >= region.start - 0.05 && t < region.end - 0.02) return;
       if (loop) region.play();
       else stop();
     });
