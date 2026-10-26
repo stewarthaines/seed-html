@@ -29,6 +29,7 @@ Settled and declined items, one entry each, newest first within a section. Read 
 - **Core stays on Vite 6.** Storybook and vitest cap the toolchain (checked June 2026: every `@storybook/svelte-vite` caps at Vite 7 and Storybook 9 caps `vite-plugin-svelte` at 5). Plugins align down to the core toolchain rather than dragging the core up.
 - **Track changes is review-mode lock-down**, not structural diff (`process/BRIDGE_TRACK_CHANGES_SIGNAL.md` and the track-changes design).
 - **Chapter frontmatter** shipped in phases 1–4 (2026-09-09); both sample books migrated.
+- **Removing an extension leaves the files it added to the book** (2026-10-26). Removal deletes the extension's own copy under `SOURCE/extensions/`; assets it put in `OEBPS/` (a Bricks parts `.mpd`, a stylesheet) and their manifest items stay, for the author to remove if they want. Declined: cleaning them up on removal.
 
 ## Delivery
 
