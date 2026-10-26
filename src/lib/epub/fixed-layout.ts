@@ -37,3 +37,15 @@ export function parseFxlViewport(viewport: string | null | undefined): FxlViewpo
   if (width > 0 && height > 0) return { width, height };
   return { width: DEFAULT_FXL_VIEWPORT_WIDTH, height: DEFAULT_FXL_VIEWPORT_HEIGHT };
 }
+
+/**
+ * A publication's page size for transform scripts (`ctx.viewport`): its
+ * fixed-layout viewport, or null when the book is reflowable. A fixed-layout
+ * book without a usable viewport gets the defaults, as the preview does.
+ */
+export function bookViewport(
+  metadata: { renditionLayout?: string; renditionViewport?: string } | null | undefined
+): FxlViewport | null {
+  if (metadata?.renditionLayout !== 'pre-paginated') return null;
+  return parseFxlViewport(metadata.renditionViewport);
+}

@@ -45,18 +45,19 @@ Notes:
 
 Built per-invocation by `createTransformContext` in `src/assets/iframe/editor.js`. Shape:
 
-| Field                                   | Type              | Notes                                                                                                                           |
-| --------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `ctx.idref`                             | `string`          | Current spine item id.                                                                                                          |
-| `ctx.basePath`                          | `string`          | OPF content base path (e.g. `"OEBPS"`). Manifest hrefs are relative to this; you pass the bare href, the broker joins the base. |
-| `ctx.manifest`                          | `ManifestItem[]`  | The OPF manifest: `{ id, href, mediaType, properties?, fallback? }` per item. Read-only snapshot.                               |
-| `ctx.language`                          | `string`          | The book's primary `dc:language` tag, or `''` when the project has none.                                                        |
-| `ctx.spine`                             | `SpineItem[]`     | The OPF spine in reading order: `{ idref, linear }` per item. Walk it to combine per-chapter data.                              |
-| `ctx.frontmatter`                       | `unknown \| null` | The chapter's parsed frontmatter (see below), or `null` when it has none.                                                       |
-| `await ctx.readManifestText(href)`      | `Promise<string>` | Decoded UTF-8 text of a **declared** manifest item.                                                                             |
-| `await ctx.readManifestDataURL(href)`   | `Promise<string>` | `data:` URL of a manifest item — use for binary assets (images, fonts).                                                         |
-| `await ctx.readSourceText(path)`        | `Promise<string>` | Read a file from the editor's `SOURCE/` tree as text.                                                                           |
-| `await ctx.writeSourceText(path, text)` | `Promise<string>` | Persist text; **scoped to `SOURCE/data/`**. Returns the resolved path.                                                          |
+| Field                                   | Type                        | Notes                                                                                                                                   |
+| --------------------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `ctx.idref`                             | `string`                    | Current spine item id.                                                                                                                  |
+| `ctx.basePath`                          | `string`                    | OPF content base path (e.g. `"OEBPS"`). Manifest hrefs are relative to this; you pass the bare href, the broker joins the base.         |
+| `ctx.manifest`                          | `ManifestItem[]`            | The OPF manifest: `{ id, href, mediaType, properties?, fallback? }` per item. Read-only snapshot.                                       |
+| `ctx.language`                          | `string`                    | The book's primary `dc:language` tag, or `''` when the project has none.                                                                |
+| `ctx.spine`                             | `SpineItem[]`               | The OPF spine in reading order: `{ idref, linear }` per item. Walk it to combine per-chapter data.                                      |
+| `ctx.frontmatter`                       | `unknown \| null`           | The chapter's parsed frontmatter (see below), or `null` when it has none.                                                               |
+| `ctx.viewport`                          | `{ width, height } \| null` | A fixed-layout book's page size in CSS px (its `seedhtml:viewport`, or the defaults when it has none), or `null` for a reflowable book. |
+| `await ctx.readManifestText(href)`      | `Promise<string>`           | Decoded UTF-8 text of a **declared** manifest item.                                                                                     |
+| `await ctx.readManifestDataURL(href)`   | `Promise<string>`           | `data:` URL of a manifest item — use for binary assets (images, fonts).                                                                 |
+| `await ctx.readSourceText(path)`        | `Promise<string>`           | Read a file from the editor's `SOURCE/` tree as text.                                                                                   |
+| `await ctx.writeSourceText(path, text)` | `Promise<string>`           | Persist text; **scoped to `SOURCE/data/`**. Returns the resolved path.                                                                  |
 
 All four methods are async and reject (throw) on failure — wrap in `try/catch` and degrade gracefully (leave the DOM untouched) rather than letting the whole transform fail.
 

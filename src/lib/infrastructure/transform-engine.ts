@@ -40,6 +40,9 @@ export interface TransformBrokerContext {
    *  stripped from the text the transform receives); `null` when it has none.
    *  See src/lib/source/frontmatter.ts. */
   frontmatter?: unknown;
+  /** The page size of a fixed-layout book (`seedhtml:viewport`), or null for
+   *  a reflowable one; see bookViewport in src/lib/epub/fixed-layout.ts. */
+  viewport?: { width: number; height: number } | null;
 }
 
 /** Content equality for transform-script bundles (drives the send dedup). */
@@ -157,6 +160,7 @@ export class TransformEngine {
           language: brokerContext.language ?? '',
           spine: brokerContext.spine ?? [],
           frontmatter: brokerContext.frontmatter ?? null,
+          viewport: brokerContext.viewport ?? null,
         }
       : {
           idref,
@@ -165,6 +169,7 @@ export class TransformEngine {
           language: '',
           spine: [] as SpineItem[],
           frontmatter: null,
+          viewport: null,
         };
 
     // The transform may now await brokered file I/O, so the message round-trip can
@@ -210,6 +215,7 @@ export class TransformEngine {
       // A generator has no chapter text, so no block of its own; the invoking
       // chapter's record is readable from the store like any other's.
       frontmatter: brokerContext.frontmatter ?? null,
+      viewport: brokerContext.viewport ?? null,
     };
 
     // Options often arrive as a Svelte $state proxy, which postMessage can't
