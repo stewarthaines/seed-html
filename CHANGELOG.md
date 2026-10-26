@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.1] - 2026-10-26
+
+### Fixed
+
+- The drag handle on Bricks pages now shows in reading apps that read chapters as XHTML, such as READ.html.
+- On Bricks pages, the step number and part counts no longer shift slightly when the moving page replaces its still picture.
+
 ## [0.24.0] - 2026-10-26
 
 ### Added
