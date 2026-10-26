@@ -83,6 +83,7 @@ function setup(records: Record<string, string> = {}) {
       { id: 'stray', href: 'page05.mpd', mediaType: 'application/octet-stream' },
     ],
     spine: [{ idref: 'josh_o' }, { idref: 'josh' }, { idref: 'other' }],
+    viewport: { width: 320, height: 460 } as { width: number; height: number } | null,
     readManifestText: async (href: string) => {
       if (!(href in LIBRARIES)) throw new Error(`not declared: ${href}`);
       return LIBRARIES[href];
@@ -105,13 +106,15 @@ const block = (text: string) =>
 async function render(
   body: string,
   records?: Record<string, string>,
-  transform: DomTransform = transformBricks
+  transform: DomTransform = transformBricks,
+  viewport: { width: number; height: number } | null = { width: 320, height: 460 }
 ) {
   const doc = new DOMParser().parseFromString(
     `<!DOCTYPE html><html><body>${body}</body></html>`,
     'text/html'
   );
   const { ctx, written } = setup(records);
+  ctx.viewport = viewport;
   await transform(doc, 'josh_o', ctx);
   return { doc, written };
 }
@@ -137,6 +140,8 @@ describe('transformBricks', () => {
     const { doc } = await render(block(JOSH_O));
     expect(doc.querySelector('pre')).toBeNull();
     const stage = doc.querySelector('div.bricks')!;
+    expect(stage.getAttribute('data-width')).toBe('320');
+    expect(stage.getAttribute('data-height')).toBe('460');
     expect(stage.getAttribute('data-step')).toBe('1');
     expect(stage.getAttribute('data-color')).toBe('Yellow');
     // core for the colours and its parts, slopes for 3040b; not the minifig set
@@ -230,6 +235,16 @@ describe('transformBricks', () => {
       'Line 6: Plaid is not an LDraw colour.',
       'The model letter-j is also defined in other.',
     ]);
+  });
+
+  it('notes a reflowable book and draws no still there', async () => {
+    const { doc } = await render(block(JOSH_O), undefined, transformWithStills, null);
+    const stage = doc.querySelector('div.bricks')!;
+    expect(stage.hasAttribute('data-width')).toBe(false);
+    expect(stage.querySelector('.bricks-notes')!.textContent).toBe(
+      'Bricks pages need a fixed-layout book; this one is reflowable.'
+    );
+    expect(stage.querySelector('img')).toBeNull();
   });
 
   it('adds no still where the frame cannot draw', async () => {

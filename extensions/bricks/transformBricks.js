@@ -6,8 +6,8 @@
  * the book: a building step dragged together part by part, or a finished
  * model the reader turns.
  *
- *   <div class="bricks" data-step="1" data-color="Yellow" data-spin="90"
- *        data-scale="0.5" data-alt="…">
+ *   <div class="bricks" data-width="320" data-height="460" data-step="1"
+ *        data-color="Yellow" data-spin="90" data-scale="0.5" data-alt="…">
  *     <span class="bricks-library" data-src="../Misc/bricks/core.mpd" hidden>
  *     <p class="bricks-set" data-color="White">   one per section; a model's colour
  *       <span class="bricks-part" data-is="3005" data-color="Red"
@@ -18,6 +18,10 @@
  *     </div>
  *     <div class="bricks-notes"><p>Line 4: …</p></div>
  *   </div>
+ *
+ * The page size is the book's fixed-layout viewport (ctx.viewport); in a
+ * reflowable book a step is a note and is not drawn, since the drag and the
+ * fixed scale need a fixed page.
  *
  * A part with a from moves into place as the reader drags; a part without one
  * is there from the start. The first moving part of each step carries the
@@ -135,6 +139,12 @@ async function transformDOM(document, idref, ctx) {
     const notes = step.notes;
     const div = document.createElement('div');
     div.setAttribute('class', 'bricks');
+    if (ctx.viewport) {
+      div.setAttribute('data-width', String(ctx.viewport.width));
+      div.setAttribute('data-height', String(ctx.viewport.height));
+    } else {
+      notes.push('Bricks pages need a fixed-layout book; this one is reflowable.');
+    }
     const first = sections.find((s) => s.kind === 'step');
     div.setAttribute('data-step', String(first ? first.number : 1));
     if (header.color) {

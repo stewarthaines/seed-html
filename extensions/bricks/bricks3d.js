@@ -106,11 +106,21 @@ function readLibrary(text) {
 // setting up the page; done gets null when there is nothing to draw.
 function setupStage(stage, library, still) {
   var T = window.THREE;
-  var PAGE_W = 320, PAGE_H = 460;
+  // The page, from the book's fixed-layout viewport (the transform writes it
+  // on the step). The layout was drawn for a 320 × 460 page and scales with
+  // the page by U, fitting whichever of width and height is tighter.
+  var PAGE_W = Number(stage.getAttribute('data-width')), PAGE_H = Number(stage.getAttribute('data-height'));
+  if (!(PAGE_W > 0 && PAGE_H > 0)) {
+    if (still) still.done(null);
+    return;
+  }
+  var U = Math.min(PAGE_W / 320, PAGE_H / 460);
+  // The still is drawn at twice the page size, up to 1600 px on its long side.
+  var STILL = Math.min(2, 1600 / Math.max(PAGE_W, PAGE_H));
   var STUD = 20, PLATE = 8;             // LDraw units
   var TAG = 10000;                      // LDU between parts while parsing, to tell them apart
   // Drawing scale, kept from page04's isometric drawing (25 px per stud there).
-  var K = 25 / (STUD * Math.sqrt(2 / 3));
+  var K = U * 25 / (STUD * Math.sqrt(2 / 3));
   // The classic instruction view, measured from a 1970s sheet and a 2019 booklet:
   // the camera looks down at TILT degrees above the horizontal, from AROUND
   // degrees round from the x axis towards y, so edges along y lie flatter than
@@ -118,11 +128,12 @@ function setupStage(stage, library, still) {
   var TILT = 34, AROUND = 35;
   var e = TILT * Math.PI / 180, a = AROUND * Math.PI / 180;
   var VIEW = new T.Vector3(Math.cos(e) * Math.cos(a), Math.sin(e), Math.cos(e) * Math.sin(a));
-  var PICTURE = [160, 245];             // where the finished assembly's centre lands
+  var PICTURE = [PAGE_W / 2, PAGE_H * 245 / 460];   // where the finished assembly's centre lands
   var FRAMES = 392, LAND = 330;         // the Lottie pages' timeline, per moving part
-  var THUMB_W = 110, THUMB_LEFT = 55.2, THUMB_RIGHT = 264.2, THUMB_Y = 404.9;
+  var THUMB_W = 110 * U, THUMB_LEFT = 55.2 * U, THUMB_RIGHT = PAGE_W - 55.8 * U, THUMB_Y = PAGE_H - 55.1 * U;
+  var STRIP = PAGE_H - 80 * U;          // a drag starts below this line
   var FILL = 0.6, DROP = 3.2;           // the main scene's light: fill and shadow-casting
-  var CALLOUT = { x: 60, y: 22, h: 86, max: 246, k: 9.5 / (STUD * Math.sqrt(2 / 3)) };
+  var CALLOUT = { x: 60 * U, y: 22 * U, h: 86 * U, max: Math.min(246 * U, PAGE_W - 74 * U), k: U * 9.5 / (STUD * Math.sqrt(2 / 3)) };
 
   // The models this step uses, by name.
   var models = {};
@@ -245,7 +256,7 @@ function setupStage(stage, library, still) {
       if (group) group.count++;
       else s.groups.push({ is: part.is, code: part.code, count: 1, part: part });
     });
-    s.cellW = Math.min(s.groups.length === 1 ? 136 : 80, CALLOUT.max / s.groups.length);
+    s.cellW = Math.min((s.groups.length === 1 ? 136 : 80) * U, CALLOUT.max / s.groups.length);
   });
   var current = steps[0];
 
@@ -254,7 +265,7 @@ function setupStage(stage, library, still) {
     html += '<div class="bricks-callout" aria-hidden="true"' + (n ? ' hidden=""' : '') +
       ' style="width:' + s.cellW * s.groups.length + 'px">';
     s.groups.forEach(function (g, i) {
-      html += '<span class="bricks-count" style="left:' + (i * s.cellW + 8) + 'px">' + g.count + 'x</span>';
+      html += '<span class="bricks-count" style="left:' + (i * s.cellW + 8 * U) + 'px">' + g.count + 'x</span>';
     });
     html += '</div>';
   });
@@ -275,7 +286,7 @@ function setupStage(stage, library, still) {
   var opening = true;
 
   // Without WebGL 2 the renderer throws, and the page keeps its still.
-  var canvas = still ? new OffscreenCanvas(PAGE_W * 2, PAGE_H * 2) : document.createElement('canvas');
+  var canvas = still ? new OffscreenCanvas(Math.round(PAGE_W * STILL), Math.round(PAGE_H * STILL)) : document.createElement('canvas');
   var renderer;
   try {
     renderer = new T.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true, preserveDrawingBuffer: !!still });
@@ -405,7 +416,7 @@ function setupStage(stage, library, still) {
       var k = Math.min(CALLOUT.k,
         0.8 * cellW / (size.x * Math.sin(a) + size.z * Math.cos(a)),
         0.6 * CALLOUT.h / (Math.sin(e) * (size.x * Math.cos(a) + size.z * Math.sin(a)) + size.y * Math.cos(e)));
-      g.camera = isoCamera(k, cellW / 2, cellW / 2, CALLOUT.h / 2 - 4, CALLOUT.h / 2 + 4, box.getCenter(new T.Vector3()));
+      g.camera = isoCamera(k, cellW / 2, cellW / 2, CALLOUT.h / 2 - 4 * U, CALLOUT.h / 2 + 4 * U, box.getCenter(new T.Vector3()));
     }); });
 
     if (still) {
@@ -418,6 +429,8 @@ function setupStage(stage, library, still) {
     // The first frame is drawn before anything is added, so a page that
     // fails to draw shows only its still.
     show(movers.length ? 1 : 0);
+    // bricks.css sizes the step number, callout and handle in this unit.
+    stage.style.setProperty('--bricks-u', U + 'px');
     canvas.className = 'bricks-canvas';
     stage.appendChild(canvas);
     stage.insertAdjacentHTML('beforeend', html);
@@ -520,28 +533,28 @@ function setupStage(stage, library, still) {
   // The still image: the drawing over the step number and parts callout, as
   // bricks.css places them (the canvas lies above both on the page).
   function compose() {
-    var out = new OffscreenCanvas(PAGE_W * 2, PAGE_H * 2);
+    var out = new OffscreenCanvas(canvas.width, canvas.height);
     var c = out.getContext('2d');
-    c.scale(2, 2);
+    c.scale(canvas.width / PAGE_W, canvas.height / PAGE_H);
     var font = '"Helvetica Neue", Helvetica, Arial, sans-serif';
     c.fillStyle = '#1f2433';
-    c.font = 'bold 46px ' + font;
+    c.font = 'bold ' + 46 * U + 'px ' + font;
     c.textBaseline = 'top';
-    c.fillText((current && current.label) || step || '', 14, 16);
+    c.fillText((current && current.label) || step || '', 14 * U, 16 * U);
     if (current && current.groups.length) {
-      var w = current.cellW * current.groups.length;
+      var w = current.cellW * current.groups.length, line = 1.5 * U;
       c.beginPath();
-      c.roundRect(CALLOUT.x + 0.75, CALLOUT.y + 0.75, w - 1.5, CALLOUT.h - 1.5, 5.25);
+      c.roundRect(CALLOUT.x + line / 2, CALLOUT.y + line / 2, w - line, CALLOUT.h - line, 6 * U - line / 2);
       c.fillStyle = '#f5faff';
       c.fill();
-      c.lineWidth = 1.5;
+      c.lineWidth = line;
       c.strokeStyle = '#7399cc';
       c.stroke();
       c.fillStyle = '#1f2433';
-      c.font = 'bold 13px ' + font;
+      c.font = 'bold ' + 13 * U + 'px ' + font;
       c.textBaseline = 'bottom';
       current.groups.forEach(function (g, i) {
-        c.fillText(g.count + 'x', CALLOUT.x + 1.5 + i * current.cellW + 8, CALLOUT.y + CALLOUT.h - 1.5 - 6);
+        c.fillText(g.count + 'x', CALLOUT.x + line + i * current.cellW + 8 * U, CALLOUT.y + CALLOUT.h - line - 6 * U);
       });
     }
     c.drawImage(canvas, 0, 0, PAGE_W, PAGE_H);
@@ -550,7 +563,7 @@ function setupStage(stage, library, still) {
 
   function render() {
     if (!camera) return;
-    var s = still ? 2 : (window.devicePixelRatio || 1) * ((window.visualViewport && window.visualViewport.scale) || 1);
+    var s = still ? STILL : (window.devicePixelRatio || 1) * ((window.visualViewport && window.visualViewport.scale) || 1);
     if (renderer.getPixelRatio() !== s) renderer.setPixelRatio(s);
     renderer.setSize(PAGE_W, PAGE_H, false);
     renderer.setViewport(0, 0, PAGE_W, PAGE_H);
@@ -591,12 +604,12 @@ function setupStage(stage, library, still) {
   if (!movers.length && !spin) return;
 
   // Dragging in the bottom strip, as animation.js does for the Lottie pages:
-  // 210 px of travel runs the whole step, to the right on a build step (the
+  // the thumb's travel (210 px on a 320 px page) runs the whole step, to the right on a build step (the
   // Lottie pages go left, into a page turn) and to the left on a turning page.
   // On release the step stays where it is, and the next drag carries on.
   var startX = 0, startProgress = 0;
   stage.addEventListener('pointerdown', function (event) {
-    if (event.pageY <= 380) return;
+    if (event.pageY <= STRIP) return;
     event.preventDefault();
     startX = event.clientX;
     startProgress = opening ? 0 : progress;
@@ -611,7 +624,7 @@ function setupStage(stage, library, still) {
   var touching = false;
   stage.addEventListener('touchstart', function (event) {
     var touch = event.touches[0];
-    if (touch && touch.pageY > 380) {
+    if (touch && touch.pageY > STRIP) {
       touching = true;
       event.preventDefault();
     }

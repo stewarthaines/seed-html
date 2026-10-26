@@ -1,11 +1,13 @@
-/* Bricks steps (bricks3d.js). The page is a fixed 320×460 picture, so the
-   pieces are placed in pixels, as the runtime assumes. */
+/* Bricks steps (bricks3d.js). A step fills the fixed-layout page. The step
+   number, parts callout and handle were laid out for a 320 x 460 page, in
+   px; bricks3d.js sets --bricks-u to the page's scale against that, so they
+   grow with the page as the drawing does. */
 .bricks {
   position: absolute;
   top: 0;
+  right: 0;
+  bottom: 0;
   left: 0;
-  width: 320px;
-  height: 460px;
   overflow: hidden;
   background-color: #deebf7;
   touch-action: none;
@@ -13,55 +15,49 @@
   user-select: none;
 }
 
-.bricks-still {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 320px;
-  height: 460px;
-}
-
+.bricks-still,
 .bricks-canvas {
   position: absolute;
   top: 0;
   left: 0;
-  width: 320px;
-  height: 460px;
+  width: 100%;
+  height: 100%;
+}
+
+.bricks-canvas {
   z-index: 1;
 }
 
 .bricks-step-number {
   position: absolute;
-  left: 14px;
-  top: 16px;
-  font: bold 46px/1 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  left: calc(14 * var(--bricks-u, 1px));
+  top: calc(16 * var(--bricks-u, 1px));
+  font: bold calc(46 * var(--bricks-u, 1px)) / 1 "Helvetica Neue", Helvetica, Arial, sans-serif;
   color: #1f2433;
 }
 
 .bricks-callout {
   position: absolute;
-  left: 60px;
-  top: 22px;
-  width: 136px;
-  height: 86px;
+  left: calc(60 * var(--bricks-u, 1px));
+  top: calc(22 * var(--bricks-u, 1px));
+  height: calc(86 * var(--bricks-u, 1px));
   box-sizing: border-box;
-  border: 1.5px solid #7399cc;
-  border-radius: 6px;
+  border: calc(1.5 * var(--bricks-u, 1px)) solid #7399cc;
+  border-radius: calc(6 * var(--bricks-u, 1px));
   background-color: #f5faff;
 }
 
 .bricks-count {
   position: absolute;
-  left: 8px;
-  bottom: 6px;
-  font: bold 13px/1 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  bottom: calc(6 * var(--bricks-u, 1px));
+  font: bold calc(13 * var(--bricks-u, 1px)) / 1 "Helvetica Neue", Helvetica, Arial, sans-serif;
   color: #1f2433;
 }
 
 .bricks-thumb {
   position: absolute;
-  width: 110px;
-  height: 110px;
+  width: calc(110 * var(--bricks-u, 1px));
+  height: calc(110 * var(--bricks-u, 1px));
   z-index: 2;
 }
 
