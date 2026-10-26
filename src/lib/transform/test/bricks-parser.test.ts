@@ -137,6 +137,18 @@ describe('parseBricks', () => {
     ]);
   });
 
+  it('drops a step from 9 plates above when nothing gives a from', () => {
+    const { sections } = parseBricks(
+      'built\n3032 0 0 0\nstep\n3005 0 0 1\n3005 0 0 2 from 0 0 0\n'
+    );
+    expect(sections.flatMap(s => s.parts.map(p => p.from))).toEqual([null, [0, 0, 9], null]);
+  });
+
+  it('gives a turning page no default from', () => {
+    const { sections } = parseBricks('---\nspin: true\n---\nstep 5\n3005 0 0 0\n');
+    expect(sections[0].parts[0].from).toBeNull();
+  });
+
   it('accepts decimals, negatives and modifiers in either order', () => {
     const { sections, notes } = parseBricks('3024 Blue -0.5 .5 1.25 from 0 0 3 turn -90\n');
     expect(notes).toEqual([]);

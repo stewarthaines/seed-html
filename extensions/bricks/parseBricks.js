@@ -26,7 +26,9 @@
  * `#` starts a comment.
  *
  * Each part's `from` is resolved here (its own, else its step's, else the
- * header's; `from 0 0 0` means it does not move, given as null). Its colour
+ * header's, else 9 plates above; `from 0 0 0` means it does not move, given
+ * as null). Parts under `built`, and every part of a turning page, take no
+ * default. Its colour
  * is its own or null: a part without one takes the main colour (its model
  * section's color, else header.color) where it is drawn and stays colourless
  * in a model record.
@@ -45,6 +47,8 @@ function parseBricks(text) {
   const SECTIONS = ['built', 'step', 'model'];
   const MODIFIERS = ['turn', 'from'];
   const STYLES = ['classic'];
+  // Where a step's parts start when nothing says: 9 plates above.
+  const DROP = [0, 0, 9];
   const NUMBER = /^-?(\d+(\.\d*)?|\.\d+)$/;
   const isNumber = (token) => NUMBER.test(token);
 
@@ -139,7 +143,7 @@ function parseBricks(text) {
   }
 
   function resolveFrom(own, s) {
-    const from = own || (s.kind === 'built' ? null : s.from || header.from);
+    const from = own || (s.kind === 'built' ? null : s.from || header.from || (header.spin ? null : DROP));
     return from && from.some((n) => n !== 0) ? from : null;
   }
 

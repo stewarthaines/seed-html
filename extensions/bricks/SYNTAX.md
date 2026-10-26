@@ -9,7 +9,6 @@ Notes on the ` ```bricks ` fenced block as this extension draws it (transformBri
 ---
 model: letter-o
 color: Yellow
-from: [0, 0, 9]
 ---
 built
 3032 Green 0 -8 -1 turn 90
@@ -31,7 +30,7 @@ One block is one page: a building step the reader drags together part by part, o
 An optional YAML block between `---` lines, before any part line. Keys:
 
 - `color`: the main colour. Parts without a colour of their own take it, and stay colourless in the model's record, so a page that places the model can repaint them.
-- `from`: where moving parts start, as `[x, y, z]`, an offset from where each lands. `[0, 0, 9]` drops every part from 9 plates above.
+- `from`: where a step's parts start, as `[x, y, z]`, an offset from where each lands. Without it they drop from 9 plates above (`[0, 0, 9]`); `[0, 0, -9]` raises every part from below.
 - `model`: names everything the block builds outside `built`, so other pages can place it as one part.
 - `spin`: makes a turning page. `true` is a quarter turn; a number is degrees. A turning page has no moving parts, and no step number unless a step line on it gives one (`step 5`, the last step of a sheet, where the model is turned).
 - `scale`: a fraction of the house scale, for a model too big for the page (`0.5`).
@@ -66,7 +65,7 @@ Spellings are exact: `colour` is not accepted (it gets a note), and nothing else
 - Parts before any section line belong to a first step.
 - `built`, `step` and `model` cannot name a model.
 
-A part with no `from` anywhere (its own, its step's or the header's) is in place from the start, like a `built` part. `from 0 0 0` stops a part that would otherwise move.
+A part in a step that gets no `from` anywhere (its own, its step's or the header's) drops from 9 plates above. Parts under `built` never move, and nothing on a turning page does. `from 0 0 0` keeps a single part in place.
 
 ## Models across pages
 

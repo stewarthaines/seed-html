@@ -21,7 +21,6 @@ A page is one code block with the language `bricks`. This is the page that build
 ---
 model: letter-j
 color: Yellow
-from: [0, 0, 9]
 ---
 built
 3032 Green 0 -3 -1 turn 90
@@ -40,11 +39,11 @@ step   # the top
 ```
 ````
 
-The lines between the two `---` lines are settings for the whole page. Here, every part is yellow unless its line says otherwise, every part drops from 9 plates above where it lands, and the finished letter is saved under the name `letter-j`.
+The lines between the two `---` lines are settings for the whole page. Here, every part is yellow unless its line says otherwise, and the finished letter is saved under the name `letter-j`.
 
 Each other line is one part: its part number, an optional colour, then its position, in studs across and plates up. A brick is three plates high. `turn 90` turns a part a quarter turn. Anything after `#` is a note to yourself.
 
-The parts under `built` are already in place when the page opens. Each `step` starts the next step; its parts arrive in the order they are written as the reader drags. The step number counts up from 1, or from the number you write after `step`.
+The parts under `built` are already in place when the page opens. Each `step` starts the next step; its parts drop into place from above, in the order they are written, as the reader drags. The step number counts up from 1, or from the number you write after `step`.
 
 Colours use the names from the LDraw parts library, such as `Red`, `Light_Bluish_Grey` or `Dark_Tan`, with underscores in place of spaces.
 

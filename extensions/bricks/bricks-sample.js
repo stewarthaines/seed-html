@@ -43,9 +43,6 @@ function generateText(ctx, options) {
         '3003 Yellow 2 2 1',
       ]
     : [
-        '---',
-        'from: [0, 0, 9]   # parts drop from 9 plates above where they land',
-        '---',
         'built',
         '3032 Green 0 0 0',
         '',
