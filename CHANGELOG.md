@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A Bricks extension makes fixed-layout pages of building instructions: readers drag a handle to watch the parts drop into place step by step, or turn a finished model to see it from every side, and older devices show a picture of each step instead. A Bricks - Minifigs extension adds standing and seated spacemen.
+
+### Fixed
+
+- The preview no longer loses a book file that was written again during the session, such as one an extension adds when it is added a second time, until the browser is reloaded.
+
 ## [0.23.0] - 2026-10-06
 
 ### Added
