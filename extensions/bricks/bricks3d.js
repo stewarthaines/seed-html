@@ -129,6 +129,9 @@ function setupStage(stage, library, still) {
   var U = Math.min(PAGE_W / 320, PAGE_H / 460);
   // The still is drawn at twice the page size, up to 1600 px on its long side.
   var STILL = Math.min(2, 1600 / Math.max(PAGE_W, PAGE_H));
+  // The live canvas draws at most this many pixels, however far the page is
+  // enlarged.
+  var MAX_PIXELS = 2048 * 2048;
   var STUD = 20, PLATE = 8;             // LDraw units
   var TAG = 10000;                      // LDU between parts while parsing, to tell them apart
   // Drawing scale, kept from page04's isometric drawing (25 px per stud there).
@@ -587,7 +590,7 @@ function setupStage(stage, library, still) {
 
   function render() {
     if (!camera) return;
-    var s = still ? STILL : (window.devicePixelRatio || 1) * ((window.visualViewport && window.visualViewport.scale) || 1);
+    var s = still ? STILL : Math.min(displayScale(), Math.sqrt(MAX_PIXELS / (PAGE_W * PAGE_H)));
     if (renderer.getPixelRatio() !== s) renderer.setPixelRatio(s);
     renderer.setSize(PAGE_W, PAGE_H, false);
     renderer.setViewport(0, 0, PAGE_W, PAGE_H);
@@ -600,6 +603,23 @@ function setupStage(stage, library, still) {
       renderer.setScissor(CALLOUT.x + i * w, y, w, CALLOUT.h);
       renderer.render(g.scene, g.camera);
     });
+  }
+
+  // Canvas pixels per page pixel, as the page is shown. A reading system that
+  // zooms its web view to fit the page reports it in visualViewport.scale
+  // (Apple Books); one that fits it with a CSS transform on the page's iframe
+  // (READ.html, the SEED.html preview) gives the page no sign of it, and the
+  // canvas would be magnified as a bitmap, so each frame around the page
+  // that can be reached is measured. frameElement is null where the parent
+  // is from another origin, which then counts as unscaled.
+  function displayScale() {
+    var k = 1, w = window;
+    while (w.frameElement) {
+      var frame = w.frameElement;
+      if (frame.offsetWidth) k *= frame.getBoundingClientRect().width / frame.offsetWidth;
+      w = w.parent;
+    }
+    return (window.devicePixelRatio || 1) * k * ((w.visualViewport && w.visualViewport.scale) || 1);
   }
 
   // An orthographic camera looking along VIEW at `target`,
