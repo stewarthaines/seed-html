@@ -6,8 +6,9 @@
  * the book: a building step dragged together part by part, or a finished
  * model the reader turns.
  *
- *   <div class="bricks" data-src="../Misc/bricks/core.mpd" data-step="1"
- *        data-color="Yellow" data-spin="90" data-scale="0.5" data-alt="…">
+ *   <div class="bricks" data-step="1" data-color="Yellow" data-spin="90"
+ *        data-scale="0.5" data-alt="…">
+ *     <span class="bricks-library" data-src="../Misc/bricks/core.mpd" hidden>
  *     <p class="bricks-set" data-color="White">   one per section; a model's colour
  *       <span class="bricks-part" data-is="3005" data-color="Red"
  *             data-at="0 -4 3" data-turn="90" data-from="0 0 9" data-step="2">
@@ -26,7 +27,8 @@
  * read in manifest order: this extension's core.mpd, a set from each parts
  * extension installed, and the book's own. A step names only the libraries its
  * parts come from (with the one holding the colour table), so the reader's
- * device fetches no set the page does not use. Part and colour names are
+ * device fetches no set the page does not use: one span.bricks-library each,
+ * since the SEED.html preview resolves a data-src holding a single path. Part and colour names are
  * checked here, so mistakes show in the editor.
  *
  * MODELS. The header's `model:` names every part the block builds outside
@@ -192,7 +194,13 @@ async function transformDOM(document, idref, ctx) {
     libraries.filter((l) => l.error).forEach((l) => notes.push(`${l.href} could not be read: ${l.error}`));
 
     const base = chapter ? chapter.href.replace(/[^/]*$/, '') : '';
-    div.setAttribute('data-src', [...files].map((href) => bricksRelative(base, href)).join(' '));
+    for (const href of files) {
+      const library = document.createElement('span');
+      library.setAttribute('class', 'bricks-library');
+      library.setAttribute('data-src', bricksRelative(base, href));
+      library.setAttribute('hidden', 'hidden');
+      div.appendChild(library);
+    }
 
     for (const name of used) {
       const holder = document.createElement('div');

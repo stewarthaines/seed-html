@@ -81,6 +81,9 @@ async function render(body: string, records?: Record<string, string>) {
   return { doc, written };
 }
 
+const libraries = (stage: Element) =>
+  [...stage.querySelectorAll('span.bricks-library')].map(span => span.getAttribute('data-src'));
+
 const JOSH_O = `---
 model: letter-o
 color: Yellow
@@ -102,9 +105,8 @@ describe('transformBricks', () => {
     expect(stage.getAttribute('data-step')).toBe('1');
     expect(stage.getAttribute('data-color')).toBe('Yellow');
     // core for the colours and its parts, slopes for 3040b; not the minifig set
-    expect(stage.getAttribute('data-src')).toBe(
-      '../Misc/bricks/core.mpd ../Misc/bricks/slopes.mpd'
-    );
+    expect(libraries(stage)).toEqual(['../Misc/bricks/core.mpd', '../Misc/bricks/slopes.mpd']);
+    expect(stage.querySelector('span.bricks-library')!.hasAttribute('hidden')).toBe(true);
     const parts = [...stage.querySelectorAll('p.bricks-set span.bricks-part')];
     expect(
       parts.map(span => [
@@ -177,9 +179,7 @@ describe('transformBricks', () => {
       ['letter-j', 'Yellow'],
     ]);
     expect(models[1].querySelector('span.bricks-model-part')!.getAttribute('data-turn')).toBe('90');
-    expect(stage.getAttribute('data-src')).toBe(
-      '../Misc/bricks/core.mpd ../Misc/bricks/minifig.mpd'
-    );
+    expect(libraries(stage)).toEqual(['../Misc/bricks/core.mpd', '../Misc/bricks/minifig.mpd']);
   });
 
   it('notes unknown parts and colours, parse notes and duplicate models', async () => {

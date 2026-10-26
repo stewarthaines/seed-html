@@ -1,9 +1,9 @@
 // Bricks steps drawn by three.js (three-bricks.js), from the element the
 // extension's transformBricks.js makes of a ```bricks block: <div
-// class="bricks" data-src="../Misc/bricks/core.mpd …" data-step="1">, holding
-// one span.bricks-part per part line (data-is, data-color, data-at, data-turn,
-// and data-from on the parts that move). The step is built as LDraw against
-// the parts libraries data-src names, and dragging in the bottom strip moves
+// class="bricks" data-step="1">, holding a span.bricks-library for each parts
+// library the step uses (data-src) and one span.bricks-part per part line
+// (data-is, data-color, data-at, data-turn, and data-from on the parts that
+// move). The step is built as LDraw against those libraries, and dragging in the bottom strip moves
 // the parts into place one after another, in source order. A moving part with
 // its own data-step starts a new step on the same page; the step number and
 // parts callout change as its move begins.
@@ -32,8 +32,11 @@
 window.addEventListener('load', function () {
   if (!window.THREE || !window.THREE.LDrawLoader) return;
   var libraries = {};
-  Array.prototype.forEach.call(document.querySelectorAll('.bricks[data-src]'), function (stage) {
-    var hrefs = stage.getAttribute('data-src').trim().split(/\s+/).filter(Boolean);
+  Array.prototype.forEach.call(document.querySelectorAll('.bricks'), function (stage) {
+    var hrefs = Array.prototype.map.call(stage.querySelectorAll('.bricks-library[data-src]'), function (span) {
+      return span.getAttribute('data-src');
+    });
+    if (!hrefs.length) return;
     Promise.all(hrefs.map(function (href) {
       // Reading systems report book files with status 0, so the status is not checked.
       libraries[href] = libraries[href] || fetch(href).then(function (r) { return r.text(); }).then(readLibrary);
