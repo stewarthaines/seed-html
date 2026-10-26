@@ -39,10 +39,22 @@
 // The transform loads this file too, and calls setupStage with a `still`
 // option to draw that image: the step finished, as a reader first sees it,
 // into an OffscreenCanvas at twice the page size.
-window.addEventListener('load', function () {
+//
+// Pages start once the document is parsed and every script has run (this
+// file comes before three-bricks.js), on DOMContentLoaded rather than load:
+// the SEED.html preview writes each chapter into its frame, and Firefox does
+// not always fire load for a written document. load stays as a second
+// chance, and each page is set up once.
+document.addEventListener('DOMContentLoaded', startBricks);
+window.addEventListener('load', startBricks);
+if (document.readyState === 'complete') startBricks();
+
+function startBricks() {
   if (!window.THREE || !window.THREE.LDrawLoader) return;
   var libraries = {};
   Array.prototype.forEach.call(document.querySelectorAll('.bricks'), function (stage) {
+    if (stage.bricksStarted) return;
+    stage.bricksStarted = true;
     var hrefs = Array.prototype.map.call(stage.querySelectorAll('.bricks-library[data-src]'), function (span) {
       return span.getAttribute('data-src');
     });
@@ -53,7 +65,7 @@ window.addEventListener('load', function () {
       return libraries[href];
     })).then(function (found) { setupStage(stage, mergeLibraries(found)); });
   });
-});
+}
 
 // A step's libraries as one: the colour table and inventory from the first
 // that has colours, every part file, and the first definition of each part.
