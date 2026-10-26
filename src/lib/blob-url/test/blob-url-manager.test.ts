@@ -186,7 +186,26 @@ describe('BlobURLManager', () => {
 
       expect(url1).toBe(url2);
       expect(url1).toBe('blob:null/cached-url');
-      expect(mockFileStorage.getFile).toHaveBeenCalledTimes(1);
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+      expect(manager.getBlobURLCount()).toBe(1);
+    });
+
+    it('makes a fresh blob URL once the file behind a cached one is rewritten', async () => {
+      mockFileStorage.getFile.mockResolvedValue(
+        new File(['old'], 'parts.mpd', { lastModified: 1000 })
+      );
+      mockCreateObjectURL.mockReturnValueOnce('blob:null/first');
+      const first = await manager.createBlobURL('Misc/parts.mpd');
+
+      mockFileStorage.getFile.mockResolvedValue(
+        new File(['newer'], 'parts.mpd', { lastModified: 2000 })
+      );
+      mockCreateObjectURL.mockReturnValueOnce('blob:null/second');
+      const second = await manager.createBlobURL('Misc/parts.mpd');
+
+      expect(first).toBe('blob:null/first');
+      expect(second).toBe('blob:null/second');
+      expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:null/first');
       expect(manager.getBlobURLCount()).toBe(1);
     });
 
