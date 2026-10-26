@@ -284,8 +284,10 @@ function setupStage(stage, library, still) {
   if (movers.length || spin) {
     // The handle, after the arrows of 1970s building instructions: a pale yellow
     // panel with a solid-headed arrow pointing the way to drag, curved on a
-    // turning page as the sheets' turn-the-model arrow is.
-    html += '<svg class="bricks-thumb" viewBox="-55 -55 110 110" aria-hidden="true">' +
+    // turning page as the sheets' turn-the-model arrow is. The namespace is
+    // spelled out: in a page parsed as XHTML this markup is parsed as XML, and
+    // an svg without it is an unknown XHTML element that draws nothing.
+    html += '<svg xmlns="http://www.w3.org/2000/svg" class="bricks-thumb" viewBox="-55 -55 110 110" aria-hidden="true">' +
       '<rect class="bricks-thumb-panel" x="-51" y="-51" width="102" height="102"/>' +
       (spin ?
         '<path class="bricks-thumb-shaft" d="M 36 -3 A 34 22 0 0 1 -20 3" fill="none"/>' +
