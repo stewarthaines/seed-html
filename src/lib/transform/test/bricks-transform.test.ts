@@ -23,6 +23,37 @@ ${readFileSync('extensions/bricks/transformBricks.js', 'utf8')}
 return transformDOM;`
 )(jsyaml) as DomTransform;
 
+// The same transform where the frame can draw: bricks3d.js's setupStage and
+// the canvas are stubs that record what they were given.
+const drawn: { stage: Element; libraries: string[] }[] = [];
+const transformWithStills = new Function(
+  'jsyaml',
+  'setupStage',
+  'readLibrary',
+  'mergeLibraries',
+  'THREE',
+  'OffscreenCanvas',
+  `${readFileSync('extensions/bricks/parseBricks.js', 'utf8')}
+${readFileSync('extensions/bricks/transformBricks.js', 'utf8')}
+return transformDOM;`
+)(
+  jsyaml,
+  (
+    stage: Element,
+    library: { hrefs: string[] },
+    still: { done: (canvas: unknown, alt: string) => void }
+  ) => {
+    drawn.push({ stage, libraries: library.hrefs });
+    still.done({ convertToBlob: async () => new Blob(['png'], { type: 'image/png' }) }, 'A J.');
+  },
+  (text: string) => ({ text }),
+  (found: { text: string }[]) => ({
+    hrefs: found.map(f => Object.keys(LIBRARIES).find(href => LIBRARIES[href] === f.text)),
+  }),
+  {},
+  class OffscreenCanvas {}
+) as DomTransform;
+
 const library = (colours: string[], parts: string[]) =>
   [
     '0 LDraw.org Configuration File',
@@ -71,13 +102,17 @@ function setup(records: Record<string, string> = {}) {
 const block = (text: string) =>
   `<pre><code class="language-bricks">${text.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</code></pre>`;
 
-async function render(body: string, records?: Record<string, string>) {
+async function render(
+  body: string,
+  records?: Record<string, string>,
+  transform: DomTransform = transformBricks
+) {
   const doc = new DOMParser().parseFromString(
     `<!DOCTYPE html><html><body>${body}</body></html>`,
     'text/html'
   );
   const { ctx, written } = setup(records);
-  await transformBricks(doc, 'josh_o', ctx);
+  await transform(doc, 'josh_o', ctx);
   return { doc, written };
 }
 
@@ -195,6 +230,31 @@ describe('transformBricks', () => {
       'Line 6: Plaid is not an LDraw colour.',
       'The model letter-j is also defined in other.',
     ]);
+  });
+
+  it('adds no still where the frame cannot draw', async () => {
+    const { doc } = await render(block(JOSH_O));
+    expect(doc.querySelector('img')).toBeNull();
+  });
+
+  it('draws each step without notes a still, first in the step', async () => {
+    drawn.length = 0;
+    const { doc } = await render(
+      block(JOSH_O) + block('3005 Plaid 0 0 0'),
+      undefined,
+      transformWithStills
+    );
+    const [first, second] = [...doc.querySelectorAll('div.bricks')];
+    const img = first.firstElementChild!;
+    expect(img.localName).toBe('img');
+    expect(img.getAttribute('class')).toBe('bricks-still');
+    expect(img.getAttribute('src')).toMatch(/^data:image\/png;base64,/);
+    expect(img.getAttribute('alt')).toBe('A J.');
+    // the step it drew, from the libraries the step names
+    expect(drawn).toHaveLength(1);
+    expect(drawn[0].stage).toBe(first);
+    expect(drawn[0].libraries).toEqual(['Misc/bricks/core.mpd', 'Misc/bricks/slopes.mpd']);
+    expect(second.querySelector('img')).toBeNull();
   });
 
   it('finds Textile blocks', async () => {

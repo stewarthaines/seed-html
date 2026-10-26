@@ -46,11 +46,22 @@
  * once its chapter has rendered since the model last changed; packaging does
  * not render, so open a defining chapter after editing its model.
  *
+ * STILLS. Each step also gets an image of itself, drawn here while the page
+ * renders: <img class="bricks-still"> first in the step, a PNG data: URL at
+ * twice the page size, showing the step finished with its step number and
+ * parts callout, as a reader first sees it, and the description as its alt
+ * text. bricks3d.js draws it (setupStage with its still option, the same code
+ * that draws the page in the book) with three-bricks.js, both loaded here as
+ * scripts. The book's page hides it once the live model has drawn; a reading
+ * system without WebGL 2 shows only the image. A step with notes, or where
+ * the frame cannot draw (no OffscreenCanvas or WebGL 2), has no still.
+ *
  * Notes (malformed lines, unknown parts and colours, duplicate models) are
  * shown in the page, in English, for the author.
  *
- * Needs parseBricks (parseBricks.js) and jsyaml (js-yaml.min.js), this
- * extension's scripts.
+ * Needs parseBricks (parseBricks.js), jsyaml (js-yaml.min.js), and for the
+ * stills setupStage, readLibrary, mergeLibraries (bricks3d.js) and THREE
+ * (three-bricks.js): this extension's scripts.
  *
  * @param {Document} document - the chapter's rendered DOM (HTML)
  * @param {string} idref - spine item id for this chapter
@@ -69,7 +80,8 @@ async function transformDOM(document, idref, ctx) {
   for (const item of manifest) {
     if (!item.href.startsWith(FOLDER) || !/\.mpd$/i.test(item.href)) continue;
     try {
-      libraries.push(bricksReadLibrary(item.href, await ctx.readManifestText(item.href)));
+      const text = await ctx.readManifestText(item.href);
+      libraries.push(Object.assign(bricksReadLibrary(item.href, text), { text }));
     } catch (error) {
       libraries.push({ href: item.href, colours: {}, parts: {}, error: error.message });
     }
@@ -229,9 +241,38 @@ async function transformDOM(document, idref, ctx) {
       }
       div.appendChild(box);
     }
+    if (!notes.length) {
+      const drawn = await bricksStill(div, libraries.filter((l) => files.has(l.href)));
+      if (drawn) {
+        const img = document.createElement('img');
+        img.setAttribute('class', 'bricks-still');
+        img.setAttribute('src', drawn.src);
+        img.setAttribute('alt', drawn.alt);
+        div.insertBefore(img, div.firstChild);
+      }
+    }
     step.pre.replaceWith(div);
   }
   return document;
+}
+
+// A step's still image, { src, alt }, or null when this frame cannot draw it.
+async function bricksStill(div, used) {
+  if (typeof setupStage !== 'function' || typeof OffscreenCanvas === 'undefined' ||
+      typeof THREE === 'undefined' || !used.length) return null;
+  const library = mergeLibraries(used.map((l) => l.parsed || (l.parsed = readLibrary(l.text))));
+  const drawn = await new Promise((resolve) => {
+    setupStage(div, library, { done: (canvas, alt) => resolve(canvas && { canvas, alt }) });
+  });
+  if (!drawn) return null;
+  const blob = await drawn.canvas.convertToBlob({ type: 'image/png' });
+  const src = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+  return { src, alt: drawn.alt };
 }
 
 // What the transform needs of a library: its colour names and its parts and

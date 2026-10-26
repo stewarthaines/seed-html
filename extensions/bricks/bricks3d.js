@@ -29,6 +29,16 @@
 // colour of the line that places the model, else whatever colour is given
 // above that line, else the model's main colour: LDraw's colour 16, as the
 // library's spaceman does.
+//
+// The page shows nothing of the model until it has drawn a frame: the canvas,
+// step number, parts callout and handle are added then, and the still image
+// the transform drew into the step is hidden. A device that cannot draw
+// (no WebGL 2) keeps the still, which carries its own step number and parts
+// callout.
+//
+// The transform loads this file too, and calls setupStage with a `still`
+// option to draw that image: the step finished, as a reader first sees it,
+// into an OffscreenCanvas at twice the page size.
 window.addEventListener('load', function () {
   if (!window.THREE || !window.THREE.LDrawLoader) return;
   var libraries = {};
@@ -92,7 +102,9 @@ function readLibrary(text) {
   return library;
 }
 
-function setupStage(stage, library) {
+// still: { done(canvas, description) } to draw the still image instead of
+// setting up the page; done gets null when there is nothing to draw.
+function setupStage(stage, library, still) {
   var T = window.THREE;
   var PAGE_W = 320, PAGE_H = 460;
   var STUD = 20, PLATE = 8;             // LDraw units
@@ -201,7 +213,7 @@ function setupStage(stage, library) {
     notes.push('scale needs a number above 0.');
     scale = 1;
   }
-  if (notes.length) {
+  if (notes.length && !still) {
     var box = document.createElement('div');
     box.className = 'bricks-notes';
     notes.forEach(function (text) {
@@ -211,7 +223,10 @@ function setupStage(stage, library) {
     });
     stage.appendChild(box);
   }
-  if (!parts.length) return;
+  if (!parts.length) {
+    if (still) still.done(null);
+    return;
+  }
 
   // A page can run through several steps: a moving part with step= starts a
   // new one, and the parts after it belong to it until the next step=.
@@ -234,9 +249,6 @@ function setupStage(stage, library) {
   });
   var current = steps[0];
 
-  var canvas = document.createElement('canvas');
-  canvas.className = 'bricks-canvas';
-  stage.appendChild(canvas);
   var html = '<div class="bricks-step-number" aria-hidden="true"></div>';
   steps.forEach(function (s, n) {
     html += '<div class="bricks-callout" aria-hidden="true"' + (n ? ' hidden=""' : '') +
@@ -259,15 +271,19 @@ function setupStage(stage, library) {
         '<polygon class="bricks-thumb-head" points="38,0 14,-9 14,9"/>') +
       '</svg>';
   }
-  stage.insertAdjacentHTML('beforeend', html);
-  var number = stage.querySelector('.bricks-step-number');
-  var callouts = stage.querySelectorAll('.bricks-callout');
-  number.textContent = (current && current.label) || step || '';
-  var thumb = stage.querySelector('.bricks-thumb');
-  if (thumb) thumb.style.opacity = '0';
+  var number = null, callouts = [], thumb = null;
   var opening = true;
 
-  var renderer = new T.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+  // Without WebGL 2 the renderer throws, and the page keeps its still.
+  var canvas = still ? new OffscreenCanvas(PAGE_W * 2, PAGE_H * 2) : document.createElement('canvas');
+  var renderer;
+  try {
+    renderer = new T.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true, preserveDrawingBuffer: !!still });
+  } catch (error) {
+    if (still) still.done(null);
+    console.warn('bricks3d: ' + error);
+    return;
+  }
   renderer.setScissorTest(true);
   var scene = new T.Scene();
   addLights(scene, FILL);
@@ -392,6 +408,29 @@ function setupStage(stage, library) {
       g.camera = isoCamera(k, cellW / 2, cellW / 2, CALLOUT.h / 2 - 4, CALLOUT.h / 2 + 4, box.getCenter(new T.Vector3()));
     }); });
 
+    if (still) {
+      show(movers.length ? 1 : 0);
+      still.done(compose(), stage.getAttribute('data-alt') || describe());
+      renderer.dispose();
+      return;
+    }
+
+    // The first frame is drawn before anything is added, so a page that
+    // fails to draw shows only its still.
+    show(movers.length ? 1 : 0);
+    canvas.className = 'bricks-canvas';
+    stage.appendChild(canvas);
+    stage.insertAdjacentHTML('beforeend', html);
+    number = stage.querySelector('.bricks-step-number');
+    callouts = stage.querySelectorAll('.bricks-callout');
+    number.textContent = (current && current.label) || step || '';
+    Array.prototype.forEach.call(callouts, function (callout, n) { callout.hidden = steps[n] !== current; });
+    thumb = stage.querySelector('.bricks-thumb');
+    if (thumb) {
+      thumb.style.opacity = '0';
+      placeThumb();
+    }
+
     // The model replaces the still image, whose description it takes on;
     // the header's alt comes first.
     var img = stage.querySelector('img');
@@ -404,7 +443,6 @@ function setupStage(stage, library) {
     // drawn. So a step opens finished and without the handle, and after a
     // quarter of a second goes back to its start as the handle fades in; a
     // turning page just fades its handle in. (Tested on an iPad in Books 11.6.)
-    show(movers.length ? 1 : 0);
     setTimeout(function () {
       if (opening) show(0);            // unless the reader is already dragging
       opening = false;
@@ -414,6 +452,7 @@ function setupStage(stage, library) {
       }
     }, 250);
   }, function (error) {
+    if (still) still.done(null);
     console.warn('bricks3d: ' + error);
   });
 
@@ -465,19 +504,53 @@ function setupStage(stage, library) {
     // The step number and parts callout follow the part being placed.
     if (latest && latest !== current) {
       current = latest;
-      number.textContent = current.label || '';
+      if (number) number.textContent = current.label || '';
       Array.prototype.forEach.call(callouts, function (callout, n) { callout.hidden = steps[n] !== current; });
     }
-    if (thumb) {
-      thumb.style.left = (thumbFrom + (thumbTo - thumbFrom) * p - THUMB_W / 2) + 'px';
-      thumb.style.top = (THUMB_Y - THUMB_W / 2) + 'px';
-    }
+    placeThumb();
     render();
+  }
+
+  function placeThumb() {
+    if (!thumb) return;
+    thumb.style.left = (thumbFrom + (thumbTo - thumbFrom) * progress - THUMB_W / 2) + 'px';
+    thumb.style.top = (THUMB_Y - THUMB_W / 2) + 'px';
+  }
+
+  // The still image: the drawing over the step number and parts callout, as
+  // bricks.css places them (the canvas lies above both on the page).
+  function compose() {
+    var out = new OffscreenCanvas(PAGE_W * 2, PAGE_H * 2);
+    var c = out.getContext('2d');
+    c.scale(2, 2);
+    var font = '"Helvetica Neue", Helvetica, Arial, sans-serif';
+    c.fillStyle = '#1f2433';
+    c.font = 'bold 46px ' + font;
+    c.textBaseline = 'top';
+    c.fillText((current && current.label) || step || '', 14, 16);
+    if (current && current.groups.length) {
+      var w = current.cellW * current.groups.length;
+      c.beginPath();
+      c.roundRect(CALLOUT.x + 0.75, CALLOUT.y + 0.75, w - 1.5, CALLOUT.h - 1.5, 5.25);
+      c.fillStyle = '#f5faff';
+      c.fill();
+      c.lineWidth = 1.5;
+      c.strokeStyle = '#7399cc';
+      c.stroke();
+      c.fillStyle = '#1f2433';
+      c.font = 'bold 13px ' + font;
+      c.textBaseline = 'bottom';
+      current.groups.forEach(function (g, i) {
+        c.fillText(g.count + 'x', CALLOUT.x + 1.5 + i * current.cellW + 8, CALLOUT.y + CALLOUT.h - 1.5 - 6);
+      });
+    }
+    c.drawImage(canvas, 0, 0, PAGE_W, PAGE_H);
+    return out;
   }
 
   function render() {
     if (!camera) return;
-    var s = (window.devicePixelRatio || 1) * ((window.visualViewport && window.visualViewport.scale) || 1);
+    var s = still ? 2 : (window.devicePixelRatio || 1) * ((window.visualViewport && window.visualViewport.scale) || 1);
     if (renderer.getPixelRatio() !== s) renderer.setPixelRatio(s);
     renderer.setSize(PAGE_W, PAGE_H, false);
     renderer.setViewport(0, 0, PAGE_W, PAGE_H);
@@ -512,6 +585,7 @@ function setupStage(stage, library) {
     s.add(sun);
   }
 
+  if (still) return;
   window.addEventListener('pageshow', render);
   window.addEventListener('resize', render);
   if (!movers.length && !spin) return;
