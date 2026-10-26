@@ -13,17 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-
-- Bricks pages stay sharp when a reading app enlarges the page to fit the screen, as READ.html and the preview do.
-- Read, from Publish, opens books in READ.html 0.7.0, where Bricks pages draw sharply, and a trusted book can load the files its pages name.
-
-## [0.24.1] - 2026-10-26
+## [0.24.1] - 2026-10-27
 
 ### Fixed
 
 - The drag handle on Bricks pages now shows in reading apps that read chapters as XHTML, such as READ.html.
 - On Bricks pages, the step number and part counts no longer shift slightly when the moving page replaces its still picture.
+- Bricks pages stay sharp when a reading app enlarges the page to fit the screen, as READ.html and the preview do.
+- Read, from Publish, opens books in READ.html 0.7.0, where Bricks pages draw sharply, and a trusted book can load the files its pages name.
 
 ## [0.24.0] - 2026-10-26
 
