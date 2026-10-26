@@ -52,6 +52,10 @@ Colours use the names from the LDraw parts library, such as `Red`, `Light_Bluish
 
 A page with `spin: true` in its settings shows the model finished, and dragging turns it. This is how a book shows its result at the end of a sequence of steps. Lower `scale` to fit a large model on the page: `scale: 0.5` draws it at half size.
 
+### The look of a page
+
+Pages are drawn on pale blue with a rounded box for the parts. Add `style: classic` to a page's settings to draw it in the manner of a 1970s instruction sheet instead: off-white paper and a square, pale yellow box for the parts.
+
 ### Reuse what you built
 
 A page that names its model with `model:` can be placed as a single part on any other page. The name page of the book above places each letter in turn:
