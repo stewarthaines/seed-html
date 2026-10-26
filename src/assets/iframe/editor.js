@@ -314,6 +314,9 @@ class TransformExecutionEngine {
       // the app stripped from plainText before it got here — or null. Other
       // chapters' records: readSourceText('data/frontmatter/<idref>.json').
       frontmatter: data.frontmatter === undefined ? null : data.frontmatter,
+      // A fixed-layout book's page size ({ width, height } in CSS px), or null
+      // for a reflowable book.
+      viewport: data.viewport || null,
       // Read a manifest item (declared in the OPF) as decoded UTF-8 text.
       readManifestText: href => this.callBroker('readManifestText', { href }),
       // Read a manifest item as a data: URL (for binary assets like images).

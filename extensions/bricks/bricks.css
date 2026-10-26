@@ -1,0 +1,112 @@
+/* Bricks steps (bricks3d.js). A step fills the fixed-layout page. The step
+   number, parts callout and handle were laid out for a 320 x 460 page, in
+   px; bricks3d.js sets --bricks-u to the page's scale against that, so they
+   grow with the page as the drawing does. */
+.bricks {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+  background-color: #deebf7;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.bricks-still,
+.bricks-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.bricks-canvas {
+  z-index: 1;
+}
+
+.bricks-step-number {
+  position: absolute;
+  left: calc(14 * var(--bricks-u, 1px));
+  top: calc(16 * var(--bricks-u, 1px));
+  font: bold calc(46 * var(--bricks-u, 1px)) / 1 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #1f2433;
+}
+
+.bricks-callout {
+  position: absolute;
+  left: calc(60 * var(--bricks-u, 1px));
+  top: calc(22 * var(--bricks-u, 1px));
+  height: calc(86 * var(--bricks-u, 1px));
+  box-sizing: border-box;
+  border: calc(1.5 * var(--bricks-u, 1px)) solid #7399cc;
+  border-radius: calc(6 * var(--bricks-u, 1px));
+  background-color: #f5faff;
+}
+
+.bricks-count {
+  position: absolute;
+  bottom: calc(6 * var(--bricks-u, 1px));
+  font: bold calc(13 * var(--bricks-u, 1px)) / 1 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #1f2433;
+}
+
+.bricks-thumb {
+  position: absolute;
+  width: calc(110 * var(--bricks-u, 1px));
+  height: calc(110 * var(--bricks-u, 1px));
+  z-index: 2;
+}
+
+.bricks .bricks-set {
+  display: none;
+}
+
+.bricks-notes {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 96px;
+  z-index: 3;
+  padding: 6px 8px;
+  border: 1.5px solid #b40000;
+  border-radius: 6px;
+  background-color: #fff;
+  font: 12px/1.3 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #b40000;
+}
+
+.bricks-notes p {
+  margin: 0;
+}
+
+/* The handle, after the arrows of 1970s building instructions. */
+.bricks-thumb-panel {
+  fill: #efe7a3;
+  stroke: #222;
+  stroke-width: 2.5;
+}
+
+.bricks-thumb-shaft {
+  stroke: #111;
+  stroke-width: 3.5;
+}
+
+.bricks-thumb-head {
+  fill: #111;
+}
+
+/* style: classic, in the manner of a 1970s instruction sheet: off-white paper
+   and a square pale yellow parts panel with a thin dark rule. */
+.bricks[data-style="classic"] {
+  background-color: #ecebe6;
+}
+
+.bricks[data-style="classic"] .bricks-callout {
+  border-color: #222;
+  border-radius: 0;
+  background-color: #efe7a3;
+}

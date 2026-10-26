@@ -279,6 +279,7 @@ describe('executeTransform', () => {
         language: '',
         spine: [],
         frontmatter: null,
+        viewport: null,
       },
     });
 
@@ -301,9 +302,24 @@ describe('executeTransform', () => {
         language: 'de',
         spine: [{ idref: 'ch1', linear: true }],
         frontmatter: null,
+        viewport: null,
       },
     });
 
+    resolveLastRequest(harness, { success: true });
+    await promise;
+  });
+
+  it('forwards a fixed-layout page size in the ctx', async () => {
+    const harness = await makeInitializedEngine();
+    const promise = harness.engine.executeTransform('text', 2000, 'ch1', {
+      ...BROKER_CONTEXT,
+      viewport: { width: 320, height: 460 },
+    });
+    const payload = harness.posted[0].payload as {
+      transformCtx: { viewport: unknown };
+    };
+    expect(payload.transformCtx.viewport).toEqual({ width: 320, height: 460 });
     resolveLastRequest(harness, { success: true });
     await promise;
   });

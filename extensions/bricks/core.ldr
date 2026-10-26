@@ -1,0 +1,27 @@
+0 Bricks core parts set
+0 Name: core.ldr
+0 Author: Stewart Haines
+0 // One line per part the set offers; colour and position do not matter.
+0 // Pack with: node scripts/pack-bricks-library.mjs --ldraw <ldraw dir> extensions/bricks/core.ldr extensions/bricks/core.mpd
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 3001.dat
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 3003.dat
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 3004.dat
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 3005.dat
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 3010.dat
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 3020.dat
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 3022.dat
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 3024.dat
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 3031.dat
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 3032.dat
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 3034.dat
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 3068b.dat
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 3039.dat
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 3040b.dat
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 3660b.dat
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 3665a.dat
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 3023b.dat
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 3623.dat
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 3622.dat
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 3070b.dat
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 3069b.dat
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 63864.dat

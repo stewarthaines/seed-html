@@ -1,0 +1,14 @@
+{
+  "id": "bricks-minifigs",
+  "name": "Bricks - Minifigs",
+  "description": "Adds minifigures to Bricks pages: a standing and a seated spaceman, with their heads, helmets and air tanks.",
+  "category": "code-blocks",
+  "licenseName": "CC BY 4.0",
+  "license": "LICENSE.txt",
+  "scripts": [],
+  "domTransforms": [],
+  "textTransforms": [],
+  "assets": [
+    { "file": "minifigs.mpd", "target": "Misc/bricks/minifigs.mpd", "media": "application/octet-stream" }
+  ]
+}

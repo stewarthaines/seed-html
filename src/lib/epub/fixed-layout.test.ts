@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   parseFxlViewport,
+  bookViewport,
   DEFAULT_FXL_VIEWPORT,
   DEFAULT_FXL_VIEWPORT_WIDTH,
   DEFAULT_FXL_VIEWPORT_HEIGHT,
@@ -40,5 +41,23 @@ describe('parseFxlViewport', () => {
 
   it('rejects negative values (the sign breaks the digits-after-= match)', () => {
     expect(parseFxlViewport('width=-5, height=800')).toEqual(DEFAULTS);
+  });
+});
+
+describe('bookViewport', () => {
+  it('is the parsed viewport of a fixed-layout book', () => {
+    expect(
+      bookViewport({ renditionLayout: 'pre-paginated', renditionViewport: 'width=320, height=460' })
+    ).toEqual({ width: 320, height: 460 });
+  });
+
+  it('falls back to the defaults for a fixed-layout book without one', () => {
+    expect(bookViewport({ renditionLayout: 'pre-paginated' })).toEqual(DEFAULTS);
+  });
+
+  it('is null for a reflowable book', () => {
+    expect(bookViewport({ renditionViewport: 'width=320, height=460' })).toBeNull();
+    expect(bookViewport({ renditionLayout: 'reflowable' })).toBeNull();
+    expect(bookViewport(undefined)).toBeNull();
   });
 });

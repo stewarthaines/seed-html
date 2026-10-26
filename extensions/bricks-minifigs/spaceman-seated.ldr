@@ -1,0 +1,19 @@
+0 Spaceman Seated
+0 Name: spaceman-seated.ldr
+0 Author: Stewart Haines
+0 !FOOTPRINT 2 2
+0 // Origin: the centre of the 2 x 2 stud footprint under the hips and legs, at their base.
+0 // A Classic Space minifig, seated, legs forward, facing -Z. Torso, arms, hips, legs and
+0 // helmet are colour 16 and take the colour of the line that places it; the
+0 // head and hands are Yellow and the air tanks Light Grey.
+1 16 0 -52.75 10 1 0 0 0 1 0 0 0 1 973p90.dat
+1 16 -15.552 -43.75 10 0.985 -0.17 0 0.17 0.985 0 0 0 1 3818.dat
+1 16 15.552 -43.75 10 0.985 0.17 0 -0.17 0.985 0 0 0 1 3819.dat
+1 14 -23.69 -25.976 0.102 0.985 -0.12 0.12 0.17 0.696 -0.696 0 0.707 0.707 3820.dat
+1 14 23.69 -25.976 0.102 0.985 0.12 -0.12 -0.17 0.696 -0.696 0 0.707 0.707 3820.dat
+1 16 0 -20.75 10 1 0 0 0 1 0 0 0 1 3815b.dat
+1 16 0 -8.75 10 1 0 0 0 0 1 0 -1 0 3816c.dat
+1 16 0 -8.75 10 1 0 0 0 0 1 0 -1 0 3817c.dat
+1 14 0 -76.75 10 1 0 0 0 1 0 0 0 1 3626bp01.dat
+1 16 0 -76.75 10 1 0 0 0 1 0 0 0 1 3842a.dat
+1 7 0 -52.75 10 1 0 0 0 1 0 0 0 1 3838.dat

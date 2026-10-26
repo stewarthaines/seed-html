@@ -1,0 +1,9 @@
+minifigs.mpd is packed from the LDraw parts library and its colour table
+(LDConfig.ldr), by LDraw.org and its contributors, licensed under the
+Creative Commons Attribution 4.0 International licence (CC BY 4.0):
+https://creativecommons.org/licenses/by/4.0/
+The spaceman models (spaceman.ldr, spaceman-seated.ldr) assemble those parts
+and are offered under the same licence.
+LDraw is a trademark of the Estate of James Jessiman. The parts are
+unofficial representations; LEGO is a trademark of the LEGO Group, which
+does not sponsor, authorise or endorse this extension.

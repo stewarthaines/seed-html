@@ -86,6 +86,8 @@ Reframes the manual around three audiences from the project's own framing — au
 
 Describes actual workflows for various types of content, including ABC notation, audio clip resources, author/editor/proof-reader round trips, themeable (light/dark mode) SVG elements, language switching for accessibility, reading system diagnostics, neumes renderer, inline fleuron themeable. Cover text and DOM transforms, Generators and app features that might not be obvious.
 
+- Building instructions with Bricks (drafted, `Text/chapter08.md`) — fixed-layout pages that build a model part by part or turn it; adding the extension and parts sets, the Bricks Sample generator, the block notation through the letter J of "Josh in Bricks", the classic page style, reusing models, notes, and the still picture for devices that cannot draw. No screenshots yet: they need Storybook stories.
+
 ## Coming later
 
 These topics aren't covered yet:

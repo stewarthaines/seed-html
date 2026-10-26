@@ -20,7 +20,7 @@ import {
 } from './xhtml-template.js';
 import { primaryLanguage } from '../epub/opf-utils.js';
 import { manifestHrefToPath } from '../epub/path-utils.js';
-import { DEFAULT_FXL_VIEWPORT } from '../epub/fixed-layout.js';
+import { DEFAULT_FXL_VIEWPORT, bookViewport, type FxlViewport } from '../epub/fixed-layout.js';
 import { readChapterMeta } from '../spine/chapter-metadata.js';
 import type { ChapterSource } from '../spine/chapter-switch.service.js';
 import type { ExtensionManager } from '../extensions/extension-manager.js';
@@ -289,6 +289,7 @@ export class SpinePreviewManager {
       manifest: workspace.opf.manifest,
       language: primaryLanguage(workspace.opf.metadata),
       spine: workspace.opf.spine,
+      viewport: bookViewport(workspace.opf.metadata),
     });
   }
 
@@ -383,13 +384,20 @@ export class SpinePreviewManager {
       // items, read/write SOURCE/data/), plus the book's language for
       // locale-aware output.
       const brokerContext:
-        | { basePath: string; manifest: ManifestItem[]; language: string; spine: SpineItem[] }
+        | {
+            basePath: string;
+            manifest: ManifestItem[];
+            language: string;
+            spine: SpineItem[];
+            viewport: FxlViewport | null;
+          }
         | undefined = workspace
         ? {
             basePath: workspace.pathInfo.basePath,
             manifest: workspace.opf.manifest,
             language: primaryLanguage(workspace.opf.metadata),
             spine: workspace.opf.spine,
+            viewport: bookViewport(workspace.opf.metadata),
           }
         : undefined;
 
