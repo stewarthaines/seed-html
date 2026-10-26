@@ -36,6 +36,8 @@ Devices so far: an iPad mini (768×1024 points, `navigator.epubReadingSystem` re
 
 **Media must play inside the tap.** Reading systems use up a tap's permission to play media synchronously, so `play()` must be called inside the tap handler, not after a later event such as `seeked`. Variable-bit-rate mp3 files seek unreliably; encode audio at a constant bit rate. macOS Books, 2026-07-15 (audio-clips extension, `process/READING_SYSTEM_DEBUGGING.md`).
 
+**Older devices draw nothing from the three.js pages.** On the original iPad Air (MD793X/A) at iOS 12.5.8, its last update, the LEGO pages in "Picklets 2.0" showed no model, while the Lottie pages worked as designed. WebGL 2 alone rules it out: the three.js bundle (r186) asks only for a `webgl2` context (three.js dropped WebGL 1 in r163; Safari has WebGL 2 from iOS 15); and it is built for Safari 16 (`build.mjs`, esbuild `target: 'safari16'`), so it may use syntax an older Safari cannot parse, in which case it fails to load at all. iOS 12 also predates Pointer Events (Safari 13), which the LEGO pages' drag uses; the Lottie pages' `animation.js` uses touch events. A page must show its still image by default and replace it only once the model has drawn. Devices that stop at iOS 12 include the original iPad Air and iPad mini 2 and 3; iOS 15, the first with WebGL 2, needs an iPad Air 2, iPad mini 4 or iPad (5th generation) or later. 2026-10-26, the author's test.
+
 **Animation may run at 30 frames a second.** One iPhone run drew 421 frames in 14.4 s. Low Power Mode or Books throttling `requestAnimationFrame`; not yet checked. iOS 16.7.16, 2026-10-15.
 
 ## Layout, fonts and the store
@@ -59,4 +61,4 @@ Devices so far: an iPad mini (768×1024 points, `navigator.epubReadingSystem` re
 - Thumbnail timing in Books on the Mac, and on newer iOS and iPadOS releases.
 - Whether animation is throttled to 30 frames a second, and when.
 - Touch cancelling on the LEGO pages: written to the same pattern as the Lottie pages, not yet confirmed on a device (including multi-finger touches and swipes from the edge).
-- The no-WebGL fallback still image, designed but never exercised in Books.
+- The no-WebGL fallback still image, designed but never exercised in Books; now needed, since an older iPad draws nothing.

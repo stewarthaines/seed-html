@@ -1,6 +1,6 @@
 # Bricks block notation
 
-Drafted 2026-10-26. A building step is written as a fenced code block, `` ```bricks ``, in the style of the catalog's abc2svg, abcjs and mermaid extensions, instead of the Djot `::: lego` div of `:part:` spans prototyped in "Picklets 2.0" (`process/DJOT_LEGO_SYNTAX.md`). This supersedes the step container in `process/BRICK_STEPS_EXTENSION.md`; the rest of that plan (packaging, the runtime's page-size assumptions, the parts library, verification in Books) stands. The container, the keywords, the `ldraw` sibling and the retirement of the Djot route are decided, each in a dated paragraph; the still image drawn into the page is still to be decided.
+Drafted 2026-10-26. A building step is written as a fenced code block, `` ```bricks ``, in the style of the catalog's abc2svg, abcjs and mermaid extensions, instead of the Djot `::: lego` div of `:part:` spans prototyped in "Picklets 2.0" (`process/DJOT_LEGO_SYNTAX.md`). This supersedes the step container in `process/BRICK_STEPS_EXTENSION.md`; the rest of that plan (packaging, the runtime's page-size assumptions, the parts library, verification in Books) stands. The container, the keywords and the retirement of the Djot route are decided, each in a dated paragraph; the still image drawn into the page is still to be decided, and the `ldraw` sibling is parked.
 
 ## Decided: a fenced block (2026-10-26)
 
@@ -74,9 +74,9 @@ Lines that begin with a section keyword open a section. `built`: parts already i
 
 **No key for the parts library (2026-10-26).** A book has one parts library (decided 2026-10-24), so a per-block key could only repeat it or break that rule. The library is the extension's asset at a fixed href; a book that needs other parts replaces that file with its own build at the same href. This also retires the `lego-parts:` frontmatter key. Declined: `parts:`, which reads as the list of parts (as the first sketch of this block used it), and `library:`, a per-block setting for a per-book fact.
 
-## The `ldraw` sibling
+## The `ldraw` sibling (parked)
 
-**Pasted LDraw is just text (2026-10-26).** The same transform also takes `` ```ldraw `` blocks: LDraw text pasted from a CAD tool (LeoCAD, Bricksmith, LDCad, or BrickLink Studio's `.ldr`/`.mpd` export), as a lasting route rather than a one-time import, and with no additional context: no YAML header, no keywords of ours, nothing the CAD tool would not write. Positions are LDraw's own and are used as they are: no corner rule, no author units. `0 STEP` divides the steps, numbered from 1; the parts before the first `0 STEP` are built, and the rest drop by the house `from`, 9 plates, since LDraw has no motion. A multi-part document's first `0 FILE` is the step and the others are its submodels; the library still supplies the parts. The label is composed from the part names. A page that needs a turning display, a scale, a description or a model name is written as a `bricks` block.
+**Parked 2026-10-26.** Settled first as plain text with no header, then reopened the same day: `spin`, `scale`, `alt` and `model` may be useful on a pasted model too. The sketch as it stood: the same transform also takes `` ```ldraw `` blocks: LDraw text pasted from a CAD tool (LeoCAD, Bricksmith, LDCad, or BrickLink Studio's `.ldr`/`.mpd` export), as a lasting route rather than a one-time import, and with no additional context: no YAML header, no keywords of ours, nothing the CAD tool would not write. Positions are LDraw's own and are used as they are: no corner rule, no author units. `0 STEP` divides the steps, numbered from 1; the parts before the first `0 STEP` are built, and the rest drop by the house `from`, 9 plates, since LDraw has no motion. A multi-part document's first `0 FILE` is the step and the others are its submodels; the library still supplies the parts. The label is composed from the part names. A page that needs a turning display, a scale, a description or a model name is written as a `bricks` block.
 
 ## What the catalog pattern gives for free
 
@@ -84,7 +84,7 @@ Category `code-blocks`, a DOM transform at stage `blocks`, the runtime script, t
 
 ## To be decided: drawing the still image while rendering
 
-The interest (2026-10-26) is an inline image of some kind in the generated XHTML: the transform draws each step's finished state into the page itself, so every page carries its own still without a separate image file. Mermaid draws its SVG at transform time, so its pages need no script in the reading system. The transform runs in a browser frame, so three.js and LDrawLoader could load there as extension scripts and draw each step's finished state: an inline SVG through three.js's SVGRenderer (edge lines suit the instruction look) or a `data:` PNG, plus the composed alt text. That would give every page the no-WebGL fallback that is designed but never exercised, without the headless harness. `ctx` writes only source text, not manifest images, so the image must be inline; whether Books and epubcheck accept an inline `data:` image needs checking. Worth a test before deciding, not part of the first phase.
+The interest (2026-10-26) is an inline image of some kind in the generated XHTML: the transform draws each step's finished state into the page itself, so every page carries its own still without a separate image file. It became the planned route the same day: the original iPad Air at iOS 12.5.8 has no WebGL 2 and draws nothing, so every page needs a still, and stills rendered by the harness and added as image files were declined as too much authoring overhead. What remains to decide is the form, once tested. Mermaid draws its SVG at transform time, so its pages need no script in the reading system. The transform runs in a browser frame, so three.js and LDrawLoader could load there as extension scripts and draw each step's finished state: an inline SVG through three.js's SVGRenderer (edge lines suit the instruction look) or a `data:` PNG, plus the composed alt text. That would give every page the no-WebGL fallback that is designed but never exercised, without the headless harness. `ctx` writes only source text, not manifest images, so the image must be inline; whether Books and epubcheck accept an inline `data:` image needs checking. Worth a test before deciding, not part of the first phase.
 
 ## Migration
 
@@ -93,3 +93,4 @@ Mechanical, by the book-editor agent or a script, and the generators change the 
 ## Open questions
 
 - The still image drawn into the XHTML: inline SVG or a `data:` raster, once tested in Books and epubcheck.
+- The `ldraw` sibling, parked: whether a pasted model takes a header after all.
