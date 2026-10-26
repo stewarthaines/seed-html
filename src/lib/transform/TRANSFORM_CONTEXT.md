@@ -50,6 +50,8 @@ Built per-invocation by `createTransformContext` in `src/assets/iframe/editor.js
 | `ctx.idref`                             | `string`          | Current spine item id.                                                                                                          |
 | `ctx.basePath`                          | `string`          | OPF content base path (e.g. `"OEBPS"`). Manifest hrefs are relative to this; you pass the bare href, the broker joins the base. |
 | `ctx.manifest`                          | `ManifestItem[]`  | The OPF manifest: `{ id, href, mediaType, properties?, fallback? }` per item. Read-only snapshot.                               |
+| `ctx.language`                          | `string`          | The book's primary `dc:language` tag, or `''` when the project has none.                                                        |
+| `ctx.spine`                             | `SpineItem[]`     | The OPF spine in reading order: `{ idref, linear }` per item. Walk it to combine per-chapter data.                              |
 | `ctx.frontmatter`                       | `unknown \| null` | The chapter's parsed frontmatter (see below), or `null` when it has none.                                                       |
 | `await ctx.readManifestText(href)`      | `Promise<string>` | Decoded UTF-8 text of a **declared** manifest item.                                                                             |
 | `await ctx.readManifestDataURL(href)`   | `Promise<string>` | `data:` URL of a manifest item — use for binary assets (images, fonts).                                                         |
@@ -70,7 +72,7 @@ A chapter source may begin with a YAML block fenced by `---` on line 1 and a clo
 
 The frontmatter is a transport, not a schema: core imposes no keys. A transform validates the keys it owns and ignores the rest, so one block can carry nav metadata and, say, a person record for a family-history extension together. YAML comments never reach the store; a block that is only comments is `null`.
 
-Every chapter's record is also kept as JSON at `SOURCE/data/frontmatter/<idref>.json` (written by the app on render; deleted when the chapter loses its block, and never written for a chapter that has none), so a transform can read another chapter's record with `ctx.readSourceText('data/frontmatter/<idref>.json')` and combine records across the spine. Records exist for chapters that have rendered since the block was added — package the book once to fill the store for every chapter. Design: `process/CHAPTER_FRONTMATTER.md`.
+Every chapter's record is also kept as JSON at `SOURCE/data/frontmatter/<idref>.json` (written by the app on render; deleted when the chapter loses its block, and never written for a chapter that has none), so a transform can read another chapter's record with `ctx.readSourceText('data/frontmatter/<idref>.json')` and combine records across the spine. Records exist only for chapters that have rendered since the block was added; packaging does not render chapters, so it does not fill the store. A chapter whose record is missing or stale gets one when it is next opened in the preview. Design: `process/CHAPTER_FRONTMATTER.md`.
 
 ## How an extension delivers a file its transform reads
 
