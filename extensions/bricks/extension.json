@@ -1,0 +1,18 @@
+{
+  "id": "bricks",
+  "name": "Bricks",
+  "description": "Building-instruction pages for fixed-layout books: readers drag each step together part by part, or turn a finished model.",
+  "category": "code-blocks",
+  "licenseName": "MIT and CC BY 4.0",
+  "license": "LICENSE.txt",
+  "scripts": ["js-yaml.min.js", "parseBricks.js"],
+  "domTransforms": ["transformBricks.js"],
+  "stage": "blocks",
+  "textTransforms": [],
+  "assets": [
+    { "file": "bricks3d.js", "target": "Scripts/bricks3d.js", "media": "application/javascript" },
+    { "file": "three-bricks.js", "target": "Scripts/three-bricks.js", "media": "application/javascript" },
+    { "file": "bricks.css", "target": "Styles/bricks.css", "media": "text/css" },
+    { "file": "core.mpd", "target": "Misc/bricks/core.mpd", "media": "application/octet-stream" }
+  ]
+}

@@ -21,13 +21,15 @@
  *
  * A part line is `<part> [<colour>] <x> <y> <z> [turn <deg>] [from <x> <y> <z>]`.
  * Section lines are `built`, `step [<n>] [from <x> <y> <z>]` and
- * `model <name>`; parts before any section line belong to a first step.
+ * `model <name> [<colour>]`; parts before any section line belong to a first
+ * step.
  * `#` starts a comment.
  *
  * Each part's `from` is resolved here (its own, else its step's, else the
  * header's; `from 0 0 0` means it does not move, given as null). Its colour
- * is its own or null: a part without one takes the model's main colour
- * (header.color) where it is drawn and stays colourless in a model record.
+ * is its own or null: a part without one takes the main colour (its model
+ * section's color, else header.color) where it is drawn and stays colourless
+ * in a model record.
  *
  * Needs js-yaml as the global jsyaml (the extension's script).
  *
@@ -35,7 +37,7 @@
  * @returns {{header: {spin: number|null, scale: number, model: string|null,
  *   color: string|null, from: number[]|null, alt: string|null},
  *   sections: Array<{kind: 'built'|'step'|'model', line: number,
- *   number?: number, name?: string|null, parts: Array<{part: string,
+ *   number?: number, name?: string|null, color?: string|null, parts: Array<{part: string,
  *   color: string|null, at: number[], turn: number, from: number[]|null,
  *   line: number}>}>, notes: Array<{line: number, message: string}>}}
  */
@@ -98,13 +100,18 @@ function parseBricks(text) {
       section = open(step);
     } else if (word === 'model') {
       // A model without a usable name (null) is still drawn but recorded nowhere.
-      let name = tokens.length === 2 ? tokens[1] : null;
-      if (!name) note(line, 'a model line is model <name>');
+      let name = tokens.length === 2 || tokens.length === 3 ? tokens[1] : null;
+      let color = tokens.length === 3 ? tokens[2] : null;
+      if (!name) note(line, 'a model line is model <name> [<colour>]');
       else if (SECTIONS.includes(name.toLowerCase()) || isNumber(name)) {
         note(line, `${name} cannot name a model`);
         name = null;
       }
-      section = open({ kind: 'model', line, name });
+      if (color && isNumber(color)) {
+        note(line, `${color} is not a colour name`);
+        color = null;
+      }
+      section = open({ kind: 'model', line, name, color });
     } else {
       const part = readPart(tokens, line);
       if (!part) continue;

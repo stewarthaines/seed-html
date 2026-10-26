@@ -20,6 +20,7 @@ type Section = {
   line: number;
   number?: number;
   name?: string | null;
+  color?: string | null;
   parts: Part[];
 };
 type Parsed = {
@@ -147,13 +148,13 @@ describe('parseBricks', () => {
 
   it('reads model sections on a display page', () => {
     const { header, sections, notes } = parseBricks(
-      '---\nspin: true\n---\nmodel letter-a\n3005 0 0 0\nmodel letter-b\n3005 2 0 0\n'
+      '---\nspin: true\n---\nmodel letter-a\n3005 0 0 0\nmodel letter-b Yellow\n3005 2 0 0\n'
     );
     expect(notes).toEqual([]);
     expect(header.spin).toBe(90);
-    expect(sections.map(s => [s.kind, s.name])).toEqual([
-      ['model', 'letter-a'],
-      ['model', 'letter-b'],
+    expect(sections.map(s => [s.kind, s.name, s.color])).toEqual([
+      ['model', 'letter-a', null],
+      ['model', 'letter-b', 'Yellow'],
     ]);
   });
 
@@ -187,11 +188,30 @@ describe('parseBricks', () => {
 
   it('notes bad section lines', () => {
     const { sections, notes } = parseBricks(
-      'built red\n3032 0 0 0\nstep from 1\n3005 0 0 1\nmodel\n3005 0 0 2\nmodel step\n3005 0 0 3\nstep\n'
+      [
+        'built red',
+        '3032 0 0 0',
+        'step from 1',
+        '3005 0 0 1',
+        'model',
+        '3005 0 0 2',
+        'model step',
+        '3005 0 0 3',
+        'model letter-x 4',
+        '3005 0 0 4',
+        'model letter-y Red extra',
+        '3005 0 0 5',
+        'step',
+      ].join('\n')
     );
-    expect(notes.map(n => n.line)).toEqual([1, 3, 5, 7, 9]);
-    expect(notes[4].message).toMatch(/step has no parts/);
-    expect(sections.filter(s => s.kind === 'model').map(s => s.name)).toEqual([null, null]);
+    expect(notes.map(n => n.line)).toEqual([1, 3, 5, 7, 9, 11, 13]);
+    expect(notes[6].message).toMatch(/step has no parts/);
+    expect(sections.filter(s => s.kind === 'model').map(s => [s.name, s.color])).toEqual([
+      [null, null],
+      [null, null],
+      ['letter-x', null],
+      [null, null],
+    ]);
   });
 
   it('notes header problems and keeps the defaults', () => {
