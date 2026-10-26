@@ -14,7 +14,9 @@ LEGO is a trademark of the LEGO Group. A catalog extension in the public reposit
 
 ## The parts library
 
-The biggest open question. Today a book's parts come from one packed `.mpd` built outside the app with three.js's `packLDrawModel.mjs` from an inventory file, and adding a part means repacking and re-importing. The extension can ship a default library; the choice is how big. Options: a small library (the current 30 parts and the spaceman), with a documented command-line recipe for a book that needs others; a broad library of common bricks, plates, slopes and tiles, a few hundred parts, perhaps 2–4 MB uncompressed, so most books never repack; or later, an in-app parts generator that builds the library from the LDraw catalogue, which raises network and licence questions. Recommendation: a broad default plus the recipe. A book with its own library replaces the extension's file at the same href; there is no key for it (`process/BRICKS_BLOCK_NOTATION.md`, 2026-10-26).
+Before 2026-10-26 a book's parts came from one packed `.mpd` built outside the app with three.js's `packLDrawModel.mjs` from an inventory file, and adding a part meant repacking and re-importing; the options weighed were a small default library with a command-line recipe, a broad default of a few hundred parts (2–4 MB), or an in-app generator.
+
+**Layered libraries, in sets by family (2026-10-26).** A book's parts come from every `.mpd` in one folder of the book (`Misc/bricks/`), in manifest order: the core extension installs a small library there (`core.mpd`: the colour table and the common bricks, plates and tiles), parts extensions each install one more set beside it ("Bricks: Slopes" installs `slopes.mpd`; minifigures, Technic, wheels later), and a book's own parts, packed with the command-line recipe, go in the same folder. The file being there is the whole declaration: no setting, no key, no list. A parts extension is a single asset, with no transform or script, and carries the LDraw CC BY 4.0 attribution. Sets are families that do not overlap, so they add up, each stays small and a book installs only what it uses. The transform reads the libraries through `ctx.manifest` and `ctx.readManifestText`, and writes on each step only the files its parts come from, so the runtime fetches no set a page does not use. A part defined in two libraries gets a note, as duplicate models do; each set carries its own copies of the primitives its parts share (studs and the like), and identical copies are taken silently. Declined: tiers of increasing completeness ("basic", "complete"), which overlap, so a book would swap one for another and every pair would clash; and replacing the extension's library at the same href, decided earlier the same day. To check while building: whether the catalog lists an asset-only extension cleanly (perhaps a category of its own), what uninstalling does to the files installed in the book, and where the script that packs one set per inventory file lives (proposed: in the repo, reading a local LDraw download).
 
 Author models (`model=`) already let a book compose its own pieces without touching the library, so the library only needs to hold raw parts.
 
@@ -30,7 +32,7 @@ Model records move to `SOURCE/data/bricks/<idref>.json`. Two gaps found in use: 
 
 ## Still to verify before release
 
-Findings and open questions about Books itself are kept in `process/APPLE_BOOKS_BEHAVIOUR.md`. iPhone and iPad in Apple Books: the touch cancelling that stops the page swipe was written from earlier tests but never confirmed on these pages. The no-WebGL fallback (the still image) is designed but not exercised. Shadows have only been seen in Firefox on a Mac. Thumbnails are settled on the iPad: Books photographs each page shortly after it draws and nothing marks that view as a thumbnail, so a step opens finished without its handle, goes back to its start after 250 ms and fades the handle in (tested 2026-10-26; still to check on an iPhone and in Books on a Mac).
+Findings and open questions about Books itself are kept in `process/APPLE_BOOKS_BEHAVIOUR.md`. iPhone and iPad in Apple Books: the touch cancelling that stops the page swipe was written from earlier tests but never confirmed on these pages. The still image is settled: a PNG `data:` image drawn while rendering shows in Books on iOS 12, in the page and its thumbnail, and passes epubcheck (`process/BRICKS_BLOCK_NOTATION.md`, 2026-10-26). Shadows have only been seen in Firefox on a Mac. Thumbnails are settled on the iPad: Books photographs each page shortly after it draws and nothing marks that view as a thumbnail, so a step opens finished without its handle, goes back to its start after 250 ms and fades the handle in (tested 2026-10-26; still to check on an iPhone and in Books on a Mac).
 
 ## Documentation, copy and tests
 
@@ -40,14 +42,18 @@ Tests: the transform's rewrites, model records and colour resolution can be unit
 
 ## Phases
 
-1. Package what works: rename to Bricks, move the transform, runtime, bundle, stylesheet and library into `extensions/bricks/` with licences, and migrate "Picklets 2.0" onto it. No behaviour changes.
-2. Remove the 320×460 assumptions and add the duplicate-model report.
-3. Manual page, syntax file, unit tests.
-4. Settle and build the parts library, and whatever the Apple Books verification turns up.
+Revised 2026-10-26 for the fenced block and the drawn still, replacing the four phases drafted on 2026-10-25 (package the Djot version as it stood, then generalise). Work is on the `bricks-extension` branch, merged per shippable phase.
+
+1. The parser. A plain function from a block's text to a step: the YAML header (bundled js-yaml, the JSON schema), part lines, `built`, `step` and `model` sections, comments, and notes by line number for anything malformed. Unit tests from the notation doc's examples, loaded from the extension source as `src/lib/transform/test/list-of-figures.test.ts` loads its scripts. No drawing.
+2. The extension, drawing live. `extensions/bricks/` with `extension.json` (stage `blocks`, category `code-blocks`), `transformBricks.js` finding `pre.bricks, pre:has(code.language-bricks)` and replacing each with the element the runtime draws, the runtime and the three.js bundle as assets, the stylesheet, the core parts library (`Misc/bricks/core.mpd`) and the reading of every library in that folder, js-yaml as a transform script, and licences (three.js MIT, LDraw CC BY 4.0, js-yaml MIT). Model records at `SOURCE/data/bricks/<idref>.json`, with the duplicate-model report. Done when one converted "Josh in Bricks" page draws as it does now.
+3. The drawn still. The transform draws each step's finished state as a PNG `data:` image while rendering, from the test transform kept at `~/Projects/webgl-book-build/still/transformStill.js`, which needs THREE in the transform frame (a second bundle as a transform script). The runtime adds its canvas, step number, callout and handle only once it has drawn a frame; the still carries its own step number and parts list.
+4. Migration. Convert "Josh in Bricks" and then "Picklets 2.0", with the generators (`make_letters.py`, `make_alphabet.py`), checking each page's still against the harness's.
+5. The runtime's page size: remove the 320×460 assumptions.
+6. Manual page, `SYNTAX.md`, a sample generator, the catalog description in every locale; then the first parts extensions (which families, in what order) and the Apple Books checks still open.
 
 ## Open questions
 
-- The name "Bricks", and whether to accept `lego` as an alias.
-- The size of the default parts library.
-- Still image required on every step, or a translated composed label.
+- The name "Bricks" (the block is already `bricks`); the `lego` alias is moot, since pages are converted to the block.
+- Which families of parts to build as extensions first, and the exact contents of `core.mpd`.
+- The composed label in other languages: every step now has a still with alt text, so whether the label is translated or `alt` is required.
 - Whether the release behaviour of the Lottie pages (page04) matters to this extension at all (it does not ship Lottie).
