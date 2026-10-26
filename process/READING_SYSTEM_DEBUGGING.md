@@ -1,5 +1,7 @@
 # Reading-system ground truth: debug clip playback in Apple Books, build the durable harness
 
+Books behaviour found here is collected in `process/APPLE_BOOKS_BEHAVIOUR.md`, the reference for reading-system findings.
+
 ## Context
 
 Clip playback (audio-clips extension) works in the SEED preview (Chromium — permissive autoplay, blob URLs, forgiving media stack) but not in Apple Books on macOS, even after the static-audio-element rework. The preview can no longer tell us anything: we need instrumentation inside the actual reading system, plus a reusable way to probe reading systems that have no developer tools at all.
