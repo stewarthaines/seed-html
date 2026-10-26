@@ -1,0 +1,7 @@
+0 Bricks minifigs parts set
+0 Name: minifigs.ldr
+0 Author: Stewart Haines
+0 // One line per part the set offers; the models beside this file are packed as models/.
+0 // Pack with: node scripts/pack-bricks-library.mjs --ldraw <ldraw dir> --no-colours extensions/bricks-minifigs/minifigs.ldr extensions/bricks-minifigs/minifigs.mpd
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 spaceman.ldr
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 spaceman-seated.ldr

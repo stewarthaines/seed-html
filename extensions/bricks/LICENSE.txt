@@ -48,7 +48,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
-core.mpd is packed from the LDraw parts library and its colour table
+core.mpd is packed (scripts/pack-bricks-library.mjs, from core.ldr) from the LDraw parts library and its colour table
 (LDConfig.ldr), by LDraw.org and its contributors, licensed under the
 Creative Commons Attribution 4.0 International licence (CC BY 4.0):
 https://creativecommons.org/licenses/by/4.0/
