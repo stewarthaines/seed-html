@@ -551,10 +551,18 @@ function setupStage(stage, library, still) {
     var c = out.getContext('2d');
     c.scale(canvas.width / PAGE_W, canvas.height / PAGE_H);
     var font = '"Helvetica Neue", Helvetica, Arial, sans-serif';
+    // Text sits on the baseline CSS gives it: line-height 1 centres the font's
+    // ascent and descent on a line box one em tall. (Canvas's 'top' and
+    // 'bottom' anchor the em square instead, about 3px higher for the step
+    // number in Helvetica.)
+    c.textBaseline = 'alphabetic';
+    function baseline(top, size) {
+      var m = c.measureText('0');
+      return top + (size - m.fontBoundingBoxAscent - m.fontBoundingBoxDescent) / 2 + m.fontBoundingBoxAscent;
+    }
     c.fillStyle = '#1f2433';
     c.font = 'bold ' + 46 * U + 'px ' + font;
-    c.textBaseline = 'top';
-    c.fillText((current && current.label) || step || '', 14 * U, 16 * U);
+    c.fillText((current && current.label) || step || '', 14 * U, baseline(16 * U, 46 * U));
     if (current && current.groups.length) {
       var w = current.cellW * current.groups.length, line = 1.5 * U;
       c.beginPath();
@@ -568,9 +576,9 @@ function setupStage(stage, library, still) {
       c.stroke();
       c.fillStyle = '#1f2433';
       c.font = 'bold ' + 13 * U + 'px ' + font;
-      c.textBaseline = 'bottom';
+      var countY = baseline(CALLOUT.y + CALLOUT.h - line - 6 * U - 13 * U, 13 * U);
       current.groups.forEach(function (g, i) {
-        c.fillText(g.count + 'x', CALLOUT.x + line + i * current.cellW + 8 * U, CALLOUT.y + CALLOUT.h - line - 6 * U);
+        c.fillText(g.count + 'x', CALLOUT.x + line + i * current.cellW + 8 * U, countY);
       });
     }
     c.drawImage(canvas, 0, 0, PAGE_W, PAGE_H);
