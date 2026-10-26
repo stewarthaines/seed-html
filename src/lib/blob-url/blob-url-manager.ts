@@ -43,6 +43,12 @@ export class BlobURLManager {
   private basePath: string;
   private supportsDirectBlobs: boolean;
   private onCapacityReached?: () => void;
+  // A zero-copy blob is a snapshot of the OPFS file: once the file is
+  // rewritten (an extension added again, a file replaced over the bridge) the
+  // browser refuses to read it, and a fetch from the preview fails. Each such
+  // blob keeps its file's stamp, and a cached URL whose file has changed since
+  // is made afresh.
+  private snapshots = new Map<string, string>();
 
   constructor(config: BlobURLManagerConfig) {
     this.fileStorage = config.fileStorage;
@@ -123,8 +129,10 @@ export class BlobURLManager {
     }
 
     // Check if already cached
-    if (this.registry.urls.has(filePath)) {
-      return this.registry.urls.get(filePath)!;
+    const cached = this.registry.urls.get(filePath);
+    if (cached) {
+      if (!(await this.isStaleSnapshot(filePath))) return cached;
+      this.revokeBlobURL(cached);
     }
 
     if (!this.activeWorkspaceId) {
@@ -146,6 +154,7 @@ export class BlobURLManager {
         const mimeType = this.getMimeType(filePath);
         const correctedFile = new File([file], file.name, { type: mimeType });
         blobURL = URL.createObjectURL(correctedFile);
+        this.snapshots.set(filePath, snapshotStamp(file));
       } else {
         // IndexedDB approach OR CSS processing
         let content: ArrayBuffer;
@@ -282,6 +291,7 @@ export class BlobURLManager {
     // Clear registry
     this.registry.urls.clear();
     this.registry.created.clear();
+    this.snapshots.clear();
     this.registry.count = 0;
   }
 
@@ -520,6 +530,24 @@ export class BlobURLManager {
   /**
    * Add blob URL to registry for cleanup tracking
    */
+  /**
+   * Whether a cached zero-copy blob's file has changed (or gone) since the
+   * blob was made. Blobs made from a copy of the content never go stale.
+   */
+  private async isStaleSnapshot(filePath: string): Promise<boolean> {
+    const stamp = this.snapshots.get(filePath);
+    if (stamp === undefined || !this.activeWorkspaceId) return false;
+    try {
+      const file = await this.fileStorage.getFile(
+        this.activeWorkspaceId,
+        this.resolveManifestPath(filePath)
+      );
+      return snapshotStamp(file) !== stamp;
+    } catch {
+      return true;
+    }
+  }
+
   private addToRegistry(filePath: string, blobURL: string): void {
     this.registry.urls.set(filePath, blobURL);
     this.registry.created.set(filePath, new Date());
@@ -535,6 +563,7 @@ export class BlobURLManager {
       if (url === blobURL) {
         this.registry.urls.delete(filePath);
         this.registry.created.delete(filePath);
+        this.snapshots.delete(filePath);
         this.registry.count--;
         break;
       }
@@ -599,4 +628,9 @@ export class BlobURLManager {
   getLoadedGlobals(): Record<string, any> {
     return {};
   }
+}
+
+// What identifies one version of a stored file: its modification time and size.
+function snapshotStamp(file: File): string {
+  return `${file.lastModified}:${file.size}`;
 }

@@ -430,7 +430,7 @@ describe('Blob URL Manager Utilities', () => {
       expect(url1).toBe(url2);
       expect(url2).toBe(url3);
       expect(manager.getBlobURLCount()).toBe(1);
-      expect(mockFileStorage.getFile).toHaveBeenCalledTimes(1);
+      expect(global.URL.createObjectURL).toHaveBeenCalledTimes(1);
     });
   });
 });
