@@ -3,16 +3,88 @@
   "name": "Bricks",
   "description": "Building-instruction pages for fixed-layout books: readers drag each step together part by part, or turn a finished model.",
   "category": "code-blocks",
+  "url": "https://github.com/stewarthaines/seed-html/blob/main/extensions/bricks/SYNTAX.md",
   "licenseName": "MIT and CC BY 4.0",
   "license": "LICENSE.txt",
-  "scripts": ["js-yaml.min.js", "parseBricks.js", "three-bricks.js", "bricks3d.js"],
-  "domTransforms": ["transformBricks.js"],
+  "scripts": [
+    "js-yaml.min.js",
+    "parseBricks.js",
+    "three-bricks.js",
+    "bricks3d.js"
+  ],
+  "generators": [
+    {
+      "id": "bricks-sample",
+      "name": "Bricks Sample",
+      "description": "Insert a sample Bricks page: a building step or a turning model.",
+      "script": "bricks-sample.js",
+      "options": [
+        {
+          "type": "select",
+          "name": "format",
+          "label": "Plain text wrapper",
+          "default": "markdown",
+          "options": [
+            {
+              "value": "markdown",
+              "label": "Markdown"
+            },
+            {
+              "value": "textile",
+              "label": "Textile"
+            }
+          ]
+        },
+        {
+          "type": "select",
+          "name": "page",
+          "label": "Page",
+          "default": "step",
+          "options": [
+            {
+              "value": "step",
+              "label": "Building step"
+            },
+            {
+              "value": "turning",
+              "label": "Turning model"
+            }
+          ]
+        },
+        {
+          "type": "boolean",
+          "name": "spaceman",
+          "label": "Add a spaceman (needs Bricks - Minifigs)",
+          "default": true
+        }
+      ]
+    }
+  ],
+  "domTransforms": [
+    "transformBricks.js"
+  ],
   "stage": "blocks",
   "textTransforms": [],
   "assets": [
-    { "file": "bricks3d.js", "target": "Scripts/bricks3d.js", "media": "application/javascript" },
-    { "file": "three-bricks.js", "target": "Scripts/three-bricks.js", "media": "application/javascript" },
-    { "file": "bricks.css", "target": "Styles/bricks.css", "media": "text/css" },
-    { "file": "core.mpd", "target": "Misc/bricks/core.mpd", "media": "application/octet-stream" }
+    {
+      "file": "bricks3d.js",
+      "target": "Scripts/bricks3d.js",
+      "media": "application/javascript"
+    },
+    {
+      "file": "three-bricks.js",
+      "target": "Scripts/three-bricks.js",
+      "media": "application/javascript"
+    },
+    {
+      "file": "bricks.css",
+      "target": "Styles/bricks.css",
+      "media": "text/css"
+    },
+    {
+      "file": "core.mpd",
+      "target": "Misc/bricks/core.mpd",
+      "media": "application/octet-stream"
+    }
   ]
 }

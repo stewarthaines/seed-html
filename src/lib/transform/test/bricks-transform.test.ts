@@ -189,6 +189,7 @@ describe('transformBricks', () => {
     const { doc } = await render(block('---\nspin: 90\n---\nmodel letter-b Yellow\n3005 0 0 0\n'));
     const stage = doc.querySelector('div.bricks')!;
     expect(stage.getAttribute('data-spin')).toBe('90');
+    expect(stage.hasAttribute('data-step')).toBe(false);
     expect(stage.querySelector('p.bricks-set')!.getAttribute('data-color')).toBe('Yellow');
   });
 
