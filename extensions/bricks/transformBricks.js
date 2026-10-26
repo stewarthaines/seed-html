@@ -157,6 +157,7 @@ async function transformDOM(document, idref, ctx) {
     if (header.spin) div.setAttribute('data-spin', String(header.spin));
     if (header.scale !== 1) div.setAttribute('data-scale', String(header.scale));
     if (header.alt) div.setAttribute('data-alt', header.alt);
+    if (header.style) div.setAttribute('data-style', header.style);
 
     // The parts, a paragraph per section; the libraries and models they use.
     const used = [];

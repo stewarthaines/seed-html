@@ -200,6 +200,11 @@ describe('transformBricks', () => {
     expect(bare.doc.querySelector('div.bricks')!.hasAttribute('data-step')).toBe(false);
   });
 
+  it('carries the style to the page', async () => {
+    const { doc } = await render(block('---\nstyle: classic\n---\n3005 Red 0 0 0\n'));
+    expect(doc.querySelector('div.bricks')!.getAttribute('data-style')).toBe('classic');
+  });
+
   it('writes null once a chapter that had models has none, and leaves an unchanged record', async () => {
     const path = 'SOURCE/data/bricks/josh_o.json';
     const cleared = await render(block('3005 Yellow 0 0 0'), { [path]: '{"x":{"parts":[]}}' });

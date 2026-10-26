@@ -35,6 +35,7 @@ An optional YAML block between `---` lines, before any part line. Keys:
 - `model`: names everything the block builds outside `built`, so other pages can place it as one part.
 - `spin`: makes a turning page. `true` is a quarter turn; a number is degrees. A turning page has no moving parts, and no step number unless a step line on it gives one (`step 5`, the last step of a sheet, where the model is turned).
 - `scale`: a fraction of the house scale, for a model too big for the page (`0.5`).
+- `style`: the page's look. `classic` is a 1970s instruction sheet: off-white paper and a square, pale yellow parts panel. Without it, the page is pale blue with a rounded panel.
 - `alt`: what a reader hears in place of the drawing. Without it the description is composed from the part names, in English.
 
 Spellings are exact: `colour` is not accepted (it gets a note), and nothing else is a key.

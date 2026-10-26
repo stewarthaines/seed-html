@@ -31,6 +31,7 @@ type Parsed = {
     color: string | null;
     from: number[] | null;
     alt: string | null;
+    style: string | null;
   };
   sections: Section[];
   notes: { line: number; message: string }[];
@@ -74,6 +75,7 @@ describe('parseBricks', () => {
       color: 'Yellow',
       from: [0, 0, 9],
       alt: null,
+      style: null,
     });
     expect(sections.map(s => [s.kind, s.number])).toEqual([
       ['built', undefined],
@@ -164,6 +166,13 @@ describe('parseBricks', () => {
     );
     expect(notes).toEqual([]);
     expect(header).toMatchObject({ spin: 180, scale: 0.5, alt: 'A red chair.' });
+  });
+
+  it('reads style, and notes a style it does not know', () => {
+    expect(parseBricks('---\nstyle: Classic\n---\n3005 0 0 0\n').header.style).toBe('classic');
+    const { header, notes } = parseBricks('---\nstyle: modern\n---\n3005 0 0 0\n');
+    expect(header.style).toBeNull();
+    expect(notes).toEqual([{ line: 2, message: 'style is one of classic' }]);
   });
 
   it('notes malformed part lines by line number and keeps the rest', () => {

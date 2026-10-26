@@ -98,3 +98,15 @@
 .bricks-thumb-head {
   fill: #111;
 }
+
+/* style: classic, in the manner of a 1970s instruction sheet: off-white paper
+   and a square pale yellow parts panel with a thin dark rule. */
+.bricks[data-style="classic"] {
+  background-color: #ecebe6;
+}
+
+.bricks[data-style="classic"] .bricks-callout {
+  border-color: #222;
+  border-radius: 0;
+  background-color: #efe7a3;
+}

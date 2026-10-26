@@ -35,7 +35,7 @@
  *
  * @param {string} text - the block's content, without the fences
  * @returns {{header: {spin: number|null, scale: number, model: string|null,
- *   color: string|null, from: number[]|null, alt: string|null},
+ *   color: string|null, from: number[]|null, alt: string|null, style: string|null},
  *   sections: Array<{kind: 'built'|'step'|'model', line: number,
  *   number?: number, given?: boolean, name?: string|null, color?: string|null, parts: Array<{part: string,
  *   color: string|null, at: number[], turn: number, from: number[]|null,
@@ -44,12 +44,13 @@
 function parseBricks(text) {
   const SECTIONS = ['built', 'step', 'model'];
   const MODIFIERS = ['turn', 'from'];
+  const STYLES = ['classic'];
   const NUMBER = /^-?(\d+(\.\d*)?|\.\d+)$/;
   const isNumber = (token) => NUMBER.test(token);
 
   const notes = [];
   const note = (line, message) => notes.push({ line, message });
-  const header = { spin: null, scale: 1, model: null, color: null, from: null, alt: null };
+  const header = { spin: null, scale: 1, model: null, color: null, from: null, alt: null, style: null };
   const sections = [];
 
   const lines = text.replace(/\r\n?/g, '\n').split('\n');
@@ -220,6 +221,9 @@ function parseBricks(text) {
       } else if (key === 'alt') {
         if (typeof value === 'string' && value.trim()) header.alt = value.trim();
         else note(line, 'alt is a description');
+      } else if (key === 'style') {
+        if (typeof value === 'string' && STYLES.includes(value.trim().toLowerCase())) header.style = value.trim().toLowerCase();
+        else note(line, `style is one of ${STYLES.join(', ')}`);
       } else if (key === 'colour') {
         note(line, 'unknown key colour; did you mean color?');
       } else {

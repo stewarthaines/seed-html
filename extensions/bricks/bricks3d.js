@@ -556,11 +556,13 @@ function setupStage(stage, library, still) {
     if (current && current.groups.length) {
       var w = current.cellW * current.groups.length, line = 1.5 * U;
       c.beginPath();
-      c.roundRect(CALLOUT.x + line / 2, CALLOUT.y + line / 2, w - line, CALLOUT.h - line, 6 * U - line / 2);
-      c.fillStyle = '#f5faff';
+      // The callout as bricks.css draws it, square and yellow in the classic style.
+      var classic = stage.getAttribute('data-style') === 'classic';
+      c.roundRect(CALLOUT.x + line / 2, CALLOUT.y + line / 2, w - line, CALLOUT.h - line, classic ? 0 : 6 * U - line / 2);
+      c.fillStyle = classic ? '#efe7a3' : '#f5faff';
       c.fill();
       c.lineWidth = line;
-      c.strokeStyle = '#7399cc';
+      c.strokeStyle = classic ? '#222' : '#7399cc';
       c.stroke();
       c.fillStyle = '#1f2433';
       c.font = 'bold ' + 13 * U + 'px ' + font;
