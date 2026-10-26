@@ -37,7 +37,7 @@
  * @returns {{header: {spin: number|null, scale: number, model: string|null,
  *   color: string|null, from: number[]|null, alt: string|null},
  *   sections: Array<{kind: 'built'|'step'|'model', line: number,
- *   number?: number, name?: string|null, color?: string|null, parts: Array<{part: string,
+ *   number?: number, given?: boolean, name?: string|null, color?: string|null, parts: Array<{part: string,
  *   color: string|null, at: number[], turn: number, from: number[]|null,
  *   line: number}>}>, notes: Array<{line: number, message: string}>}}
  */
@@ -86,6 +86,7 @@ function parseBricks(text) {
       let rest = tokens.slice(1);
       if (rest.length && /^\d+$/.test(rest[0])) {
         stepNumber = Number(rest[0]);
+        step.given = true;
         if (stepNumber < 1) note(line, 'a step number starts at 1');
         rest = rest.slice(1);
       } else {

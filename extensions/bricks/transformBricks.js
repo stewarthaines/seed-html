@@ -146,8 +146,10 @@ async function transformDOM(document, idref, ctx) {
       notes.push('Bricks pages need a fixed-layout book; this one is reflowable.');
     }
     const first = sections.find((s) => s.kind === 'step');
-    // A turning page has no steps, so no step number.
+    // A turning page has no steps, so a step number only when its step line
+    // gives one (the last step of a sheet, where the model is turned).
     if (!header.spin) div.setAttribute('data-step', String(first ? first.number : 1));
+    else if (first && first.given) div.setAttribute('data-step', String(first.number));
     if (header.color) {
       if (colourKnown(header.color)) div.setAttribute('data-color', header.color);
       else notes.push(`The header's color, ${header.color}, is not an LDraw colour.`);

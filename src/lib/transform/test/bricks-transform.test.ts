@@ -193,6 +193,13 @@ describe('transformBricks', () => {
     expect(stage.querySelector('p.bricks-set')!.getAttribute('data-color')).toBe('Yellow');
   });
 
+  it('numbers a turning page only when its step line gives a number', async () => {
+    const numbered = await render(block('---\nspin: true\n---\nstep 5\n3005 Red 0 0 0\n'));
+    expect(numbered.doc.querySelector('div.bricks')!.getAttribute('data-step')).toBe('5');
+    const bare = await render(block('---\nspin: true\n---\nstep\n3005 Red 0 0 0\n'));
+    expect(bare.doc.querySelector('div.bricks')!.hasAttribute('data-step')).toBe(false);
+  });
+
   it('writes null once a chapter that had models has none, and leaves an unchanged record', async () => {
     const path = 'SOURCE/data/bricks/josh_o.json';
     const cleared = await render(block('3005 Yellow 0 0 0'), { [path]: '{"x":{"parts":[]}}' });

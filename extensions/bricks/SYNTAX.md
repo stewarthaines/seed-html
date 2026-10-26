@@ -33,7 +33,7 @@ An optional YAML block between `---` lines, before any part line. Keys:
 - `color`: the main colour. Parts without a colour of their own take it, and stay colourless in the model's record, so a page that places the model can repaint them.
 - `from`: where moving parts start, as `[x, y, z]`, an offset from where each lands. `[0, 0, 9]` drops every part from 9 plates above.
 - `model`: names everything the block builds outside `built`, so other pages can place it as one part.
-- `spin`: makes a turning page. `true` is a quarter turn; a number is degrees. A turning page has no moving parts.
+- `spin`: makes a turning page. `true` is a quarter turn; a number is degrees. A turning page has no moving parts, and no step number unless a step line on it gives one (`step 5`, the last step of a sheet, where the model is turned).
 - `scale`: a fraction of the house scale, for a model too big for the page (`0.5`).
 - `alt`: what a reader hears in place of the drawing. Without it the description is composed from the part names, in English.
 
