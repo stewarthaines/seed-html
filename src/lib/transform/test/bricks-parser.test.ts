@@ -32,6 +32,7 @@ type Parsed = {
     from: number[] | null;
     alt: string | null;
     style: string | null;
+    open: 'end' | number | null;
   };
   sections: Section[];
   notes: { line: number; message: string }[];
@@ -76,6 +77,7 @@ describe('parseBricks', () => {
       from: [0, 0, 9],
       alt: null,
       style: null,
+      open: null,
     });
     expect(sections.map(s => [s.kind, s.number])).toEqual([
       ['built', undefined],
@@ -185,6 +187,25 @@ describe('parseBricks', () => {
     const { header, notes } = parseBricks('---\nstyle: modern\n---\n3005 0 0 0\n');
     expect(header.style).toBeNull();
     expect(notes).toEqual([{ line: 2, message: 'style is one of classic' }]);
+  });
+
+  it('reads open as end or a step the block has', () => {
+    expect(parseBricks(`---\nopen: end\n---\n3005 0 0 0\n`).header.open).toBe('end');
+    const { header, notes } = parseBricks(JOSH_O.replace('from: [0, 0, 9]', 'open: 2'));
+    expect(notes).toEqual([]);
+    expect(header.open).toBe(2);
+  });
+
+  it('notes an open it cannot use, and ignores it', () => {
+    const bad = parseBricks('---\nopen: start\n---\n3005 0 0 0\n');
+    expect(bad.header.open).toBeNull();
+    expect(bad.notes).toEqual([{ line: 2, message: 'open is end or a step number' }]);
+    const missing = parseBricks(JOSH_O.replace('from: [0, 0, 9]', 'open: 3'));
+    expect(missing.header.open).toBeNull();
+    expect(missing.notes).toEqual([{ line: 4, message: 'this block has no step 3' }]);
+    const turning = parseBricks('---\nspin: true\nopen: end\n---\n3005 0 0 0\n');
+    expect(turning.header.open).toBeNull();
+    expect(turning.notes).toEqual([{ line: 3, message: 'a turning page has no steps to open at' }]);
   });
 
   it('notes malformed part lines by line number and keeps the rest', () => {

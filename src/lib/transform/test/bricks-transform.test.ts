@@ -205,6 +205,15 @@ describe('transformBricks', () => {
     expect(doc.querySelector('div.bricks')!.getAttribute('data-style')).toBe('classic');
   });
 
+  it('carries open to the page, and leaves it off when there is none', async () => {
+    const opened = await render(
+      block('---\nopen: 2\n---\nstep\n3005 Red 0 0 0\nstep\n3005 Red 0 0 3\n')
+    );
+    expect(opened.doc.querySelector('div.bricks')!.getAttribute('data-open')).toBe('2');
+    const plain = await render(block('3005 Red 0 0 0\n'));
+    expect(plain.doc.querySelector('div.bricks')!.hasAttribute('data-open')).toBe(false);
+  });
+
   it('writes null once a chapter that had models has none, and leaves an unchanged record', async () => {
     const path = 'SOURCE/data/bricks/josh_o.json';
     const cleared = await render(block('3005 Yellow 0 0 0'), { [path]: '{"x":{"parts":[]}}' });

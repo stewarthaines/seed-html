@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A Bricks page can open with a chosen step already built while you work on it, so each edit shows where its parts land without dragging the handle again.
+
 ## [0.24.1] - 2026-10-27
 
 ### Fixed

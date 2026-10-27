@@ -19,6 +19,10 @@
 // Every step draws at the same scale, so a part is the same size on every
 // page; data-scale="0.5" draws a model too big for the page smaller.
 //
+// data-open="end" (or a step number) opens a build page with that step
+// finished and the handle beside it, a working aid while a page is being
+// built: each edit re-renders the page, and it opens at that step again.
+//
 // A part may also be a model another page builds, which the transform copies
 // into the step as div.bricks-model holding its span.bricks-model-part
 // elements. The model's parts are placed in its own grid by the same corner
@@ -274,6 +278,16 @@ function setupStage(stage, library, still) {
     s.cellW = Math.min((s.groups.length === 1 ? 136 : 80) * U, CALLOUT.max / s.groups.length);
   });
   var current = steps[0];
+  // Where the page opens: data-open's step finished (the last of its parts
+  // seated, the next not yet shown), else at the start.
+  var openAt = null;
+  var openStep = stage.getAttribute('data-open');
+  if (openStep === 'end' && movers.length) openAt = 1;
+  else if (openStep) {
+    var last = -1;
+    movers.forEach(function (part, i) { if (part.step.label === openStep) last = i; });
+    if (last >= 0) openAt = Math.max(0, (last + 1) / movers.length - 1e-9);
+  }
 
   var html = '<div class="bricks-step-number" aria-hidden="true"></div>';
   steps.forEach(function (s, n) {
@@ -300,7 +314,7 @@ function setupStage(stage, library, still) {
       '</svg>';
   }
   var number = null, callouts = [], thumb = null;
-  var opening = true;
+  var opening = true;   // until the opening's return to the start, or the first drag
 
   // Without WebGL 2 the renderer throws, and the page keeps its still.
   var canvas = still ? new OffscreenCanvas(Math.round(PAGE_W * STILL), Math.round(PAGE_H * STILL)) : document.createElement('canvas');
@@ -444,8 +458,9 @@ function setupStage(stage, library, still) {
     }
 
     // The first frame is drawn before anything is added, so a page that
-    // fails to draw shows only its still.
-    show(movers.length ? 1 : 0);
+    // fails to draw shows only its still. A page with data-open stays there.
+    show(openAt !== null ? openAt : movers.length ? 1 : 0);
+    if (openAt !== null) opening = false;
     // bricks.css sizes the step number, callout and handle in this unit.
     stage.style.setProperty('--bricks-u', U + 'px');
     canvas.className = 'bricks-canvas';

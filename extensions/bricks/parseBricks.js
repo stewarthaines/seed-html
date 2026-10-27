@@ -37,7 +37,8 @@
  *
  * @param {string} text - the block's content, without the fences
  * @returns {{header: {spin: number|null, scale: number, model: string|null,
- *   color: string|null, from: number[]|null, alt: string|null, style: string|null},
+ *   color: string|null, from: number[]|null, alt: string|null, style: string|null,
+ *   open: 'end'|number|null},
  *   sections: Array<{kind: 'built'|'step'|'model', line: number,
  *   number?: number, given?: boolean, name?: string|null, color?: string|null, parts: Array<{part: string,
  *   color: string|null, at: number[], turn: number, from: number[]|null,
@@ -54,8 +55,9 @@ function parseBricks(text) {
 
   const notes = [];
   const note = (line, message) => notes.push({ line, message });
-  const header = { spin: null, scale: 1, model: null, color: null, from: null, alt: null, style: null };
+  const header = { spin: null, scale: 1, model: null, color: null, from: null, alt: null, style: null, open: null };
   const sections = [];
+  let openLine = 0;
 
   const lines = text.replace(/\r\n?/g, '\n').split('\n');
   let first = 0;
@@ -134,6 +136,16 @@ function parseBricks(text) {
     if (!s.parts.length) note(s.line, `this ${s.kind} has no parts`);
   });
   if (!sections.length && !notes.length) note(body + 1, 'the block has no parts');
+  // open: a working aid, so the page opens at a step finished while it is being built.
+  if (header.open !== null) {
+    if (header.spin) {
+      note(openLine, 'a turning page has no steps to open at');
+      header.open = null;
+    } else if (header.open !== 'end' && !sections.some((s) => s.kind === 'step' && s.number === header.open)) {
+      note(openLine, `this block has no step ${header.open}`);
+      header.open = null;
+    }
+  }
   return { header, sections, notes };
 
   function open(s) {
@@ -228,6 +240,10 @@ function parseBricks(text) {
       } else if (key === 'style') {
         if (typeof value === 'string' && STYLES.includes(value.trim().toLowerCase())) header.style = value.trim().toLowerCase();
         else note(line, `style is one of ${STYLES.join(', ')}`);
+      } else if (key === 'open') {
+        openLine = line;
+        if (value === 'end' || (Number.isInteger(value) && value > 0)) header.open = value;
+        else note(line, 'open is end or a step number');
       } else if (key === 'colour') {
         note(line, 'unknown key colour; did you mean color?');
       } else {

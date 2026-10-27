@@ -7,7 +7,8 @@
  * model the reader turns.
  *
  *   <div class="bricks" data-width="320" data-height="460" data-step="1"
- *        data-color="Yellow" data-spin="90" data-scale="0.5" data-alt="…">
+ *        data-color="Yellow" data-spin="90" data-scale="0.5" data-alt="…"
+ *        data-open="end">                     open: a step to open at, while authoring
  *     <span class="bricks-library" data-src="../Misc/bricks/core.mpd" hidden>
  *     <p class="bricks-set" data-color="White">   one per section; a model's colour
  *       <span class="bricks-part" data-is="3005" data-color="Red"
@@ -158,6 +159,7 @@ async function transformDOM(document, idref, ctx) {
     if (header.scale !== 1) div.setAttribute('data-scale', String(header.scale));
     if (header.alt) div.setAttribute('data-alt', header.alt);
     if (header.style) div.setAttribute('data-style', header.style);
+    if (header.open !== null) div.setAttribute('data-open', String(header.open));
 
     // The parts, a paragraph per section; the libraries and models they use.
     const used = [];
