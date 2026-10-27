@@ -44,11 +44,12 @@ Spellings are exact: `colour` is not accepted (it gets a note), and nothing else
 
 ## Part lines
 
-`<part> [<colour>] <x> <y> <z> [turn <degrees>] [from <x> <y> <z>]`
+`<part> [<colour>] <x> <y> <z> [turn <degrees>] [from <x> <y> <z>] [times <n> <x> <y> <z>]…`
 
 - The part is a part number from the installed libraries (`3005`, `3665a`) or a model name (`letter-o`, `spaceman`). Part numbers are often all digits, so the first word is always the part.
 - The colour is an LDraw colour name, as LDraw's colour table spells it, with underscores for spaces: `Light_Bluish_Grey`, not `light bluish grey`. Case does not matter. Colour numbers are not accepted, since a number there would be read as a position.
 - `turn` and `from` may come in either order, each once.
+- `times <n> <x> <y> <z>` makes n copies of the part, each that far on from the one before. A second `times` repeats everything the first made, so a floor of 4 × 6 plates five across and five deep is one line: `3032 Green 0 -1 -1 turn 90 times 5 4 0 0 times 5 0 6 0`. The copies are parts in their own right, row by row: in a step they drop one after another, a model records each, and the parts list counts each. At most 1000 copies a line.
 - `#` starts a comment, to the end of the line.
 
 ## Positions

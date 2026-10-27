@@ -246,6 +246,54 @@ describe('parseBricks', () => {
     expect(list.notes).toEqual([{ line: 2, message: 'a parts page has no count' }]);
   });
 
+  it('makes copies of a part with times, row by row', () => {
+    const { sections, notes } = parseBricks(
+      'built\n3032 Green 0 -1 -1 turn 90 times 5 4 0 0 times 5 0 6 0\n'
+    );
+    expect(notes).toEqual([]);
+    const parts = sections[0].parts;
+    expect(parts).toHaveLength(25);
+    expect(parts.slice(0, 2).map(p => p.at)).toEqual([
+      [0, -1, -1],
+      [4, -1, -1],
+    ]);
+    expect(parts[5].at).toEqual([0, 5, -1]);
+    expect(parts[24]).toEqual({
+      part: '3032',
+      color: 'Green',
+      at: [16, 23, -1],
+      turn: 90,
+      from: null,
+      line: 2,
+    });
+    // In a step every copy drops, from where the line says.
+    const step = parseBricks('step\n3005 0 0 0 from 0 0 3 times 3 0 0 3\n').sections[0].parts;
+    expect(step.map(p => [p.at[2], p.from])).toEqual([
+      [0, [0, 0, 3]],
+      [3, [0, 0, 3]],
+      [6, [0, 0, 3]],
+    ]);
+  });
+
+  it('notes a times it cannot use, and leaves the line out', () => {
+    const { sections, notes } = parseBricks(
+      [
+        '3005 0 0 0',
+        '3005 0 0 0 times 0 1 0 0',
+        '3005 0 0 0 times 2.5 1 0 0',
+        '3005 0 0 0 times 3 1 0',
+        '3005 0 0 0 times 40 1 0 0 times 40 0 1 0',
+      ].join('\n')
+    );
+    expect(sections[0].parts).toHaveLength(1);
+    expect(notes.map(n => [n.line, n.message.replace(/^.*: /, '')])).toEqual([
+      [2, 'times takes a whole number of copies, 1 or more'],
+      [3, 'times takes a whole number of copies, 1 or more'],
+      [4, 'times takes a count and three numbers'],
+      [5, 'times makes 1600 copies; at most 1000'],
+    ]);
+  });
+
   it('notes malformed part lines by line number and keeps the rest', () => {
     const { sections, notes } = parseBricks(
       [
