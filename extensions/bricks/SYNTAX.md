@@ -31,6 +31,7 @@ An optional YAML block between `---` lines, before any part line. Keys:
 
 - `color`: the main colour. Parts without a colour of their own take it, and stay colourless in the model's record, so a page that places the model can repaint them.
 - `from`: where a step's parts start, as `[x, y, z]`, an offset from where each lands. Without it they drop from 9 plates above (`[0, 0, 9]`); `[0, 0, -9]` raises every part from below.
+- `inventory`: `library` makes a parts page (below) instead of a step.
 - `model`: names everything the block builds outside `built`, so other pages can place it as one part.
 - `open`: `end`, or a step number, opens the page with that step finished and the handle beside it, instead of at the start: a working aid while you build a page, since it opens there again after each edit. Remove it before publishing; left in, the page opens at that step. A turning page has no steps to open at.
 - `spin`: makes a turning page. `true` is a quarter turn; a number is degrees. A turning page has no moving parts, and no step number unless a step line on it gives one (`step 5`, the last step of a sheet, where the model is turned).
@@ -75,6 +76,22 @@ A model is recorded when its page renders, in `SOURCE/data/bricks/<chapter>.json
 ## Parts libraries
 
 Every `.mpd` file in the book under `Misc/bricks/` is a parts library. Bricks installs `core.mpd`: the colour table and common bricks, plates, slopes and tiles (Brick 1 × 1, 1 × 2, 1 × 3, 1 × 4, 2 × 2, 2 × 4; Plate 1 × 1, 1 × 2, 1 × 3, 2 × 2, 2 × 4, 2 × 8, 4 × 4, 4 × 6; Tile 1 × 1, 1 × 2, 1 × 3, 2 × 2; Slope 45 2 × 1, 2 × 2, and their inverted forms). Parts extensions add a set each: Bricks - Minifigs adds `minifigs.mpd`, with the standing and seated spacemen (`spaceman`, `spaceman-seated`, which take the colour of the line that places them) and their parts. A book can add its own set, packed with `scripts/pack-bricks-library.mjs` from the SEED.html repository; it is found the same way. A page loads only the sets its parts come from.
+
+## Parts pages
+
+````
+``` bricks
+---
+inventory: library
+---
+```
+````
+
+A parts page draws every part the book's parts libraries offer, each in a cell with its part number beneath: a contact sheet to keep beside you while you write. It has no part lines; its header takes only `color` (the colour the parts are drawn in; without it, light bluish grey), `style` and `alt`. Each library's parts come in manifest order, sorted by name, without LDraw's `~` files (moved and alias parts).
+
+A page holds 4 × 5 parts, about 20, at any page size. When the libraries offer more, put the same block on more pages: the parts are dealt out across them in reading order, counted from each chapter's source, so the pages need not have rendered. The last parts page notes how many parts are left over; a spare one notes that nothing is left. A parts page is a working aid: keep it out of the reading order, or delete it before publishing.
+
+The Bricks Parts generator lists the same parts as text, for copying exact part numbers: `#` comment lines, set by set, to insert inside a block and delete when the page is done. It can add the colour names too.
 
 ## Where problems show
 

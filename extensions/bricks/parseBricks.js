@@ -38,7 +38,7 @@
  * @param {string} text - the block's content, without the fences
  * @returns {{header: {spin: number|null, scale: number, model: string|null,
  *   color: string|null, from: number[]|null, alt: string|null, style: string|null,
- *   open: 'end'|number|null},
+ *   open: 'end'|number|null, inventory: 'library'|null},
  *   sections: Array<{kind: 'built'|'step'|'model', line: number,
  *   number?: number, given?: boolean, name?: string|null, color?: string|null, parts: Array<{part: string,
  *   color: string|null, at: number[], turn: number, from: number[]|null,
@@ -48,6 +48,7 @@ function parseBricks(text) {
   const SECTIONS = ['built', 'step', 'model'];
   const MODIFIERS = ['turn', 'from'];
   const STYLES = ['classic'];
+  const INVENTORIES = ['library'];
   // Where a step's parts start when nothing says: 9 plates above.
   const DROP = [0, 0, 9];
   const NUMBER = /^-?(\d+(\.\d*)?|\.\d+)$/;
@@ -55,9 +56,10 @@ function parseBricks(text) {
 
   const notes = [];
   const note = (line, message) => notes.push({ line, message });
-  const header = { spin: null, scale: 1, model: null, color: null, from: null, alt: null, style: null, open: null };
+  const header = { spin: null, scale: 1, model: null, color: null, from: null, alt: null, style: null, open: null, inventory: null };
   const sections = [];
   let openLine = 0;
+  let inventoryLine = 0;
 
   const lines = text.replace(/\r\n?/g, '\n').split('\n');
   let first = 0;
@@ -135,7 +137,21 @@ function parseBricks(text) {
   sections.forEach((s) => {
     if (!s.parts.length) note(s.line, `this ${s.kind} has no parts`);
   });
-  if (!sections.length && !notes.length) note(body + 1, 'the block has no parts');
+  if (header.inventory) {
+    // A parts page draws the parts the book offers, not parts of its own.
+    if (sections.length) note(sections[0].line, 'a parts page has no part lines of its own');
+    sections.length = 0;
+    for (const key of ['spin', 'model', 'from', 'open']) {
+      if (header[key] !== null) {
+        note(inventoryLine, `a parts page has no ${key}`);
+        header[key] = null;
+      }
+    }
+    if (header.scale !== 1) {
+      note(inventoryLine, 'a parts page has no scale');
+      header.scale = 1;
+    }
+  } else if (!sections.length && !notes.length) note(body + 1, 'the block has no parts');
   // open: a working aid, so the page opens at a step finished while it is being built.
   if (header.open !== null) {
     if (header.spin) {
@@ -244,6 +260,10 @@ function parseBricks(text) {
         openLine = line;
         if (value === 'end' || (Number.isInteger(value) && value > 0)) header.open = value;
         else note(line, 'open is end or a step number');
+      } else if (key === 'inventory') {
+        inventoryLine = line;
+        if (typeof value === 'string' && INVENTORIES.includes(value.trim().toLowerCase())) header.inventory = value.trim().toLowerCase();
+        else note(line, `inventory is one of ${INVENTORIES.join(', ')}`);
       } else if (key === 'colour') {
         note(line, 'unknown key colour; did you mean color?');
       } else {

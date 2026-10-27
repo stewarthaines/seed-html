@@ -33,6 +33,7 @@ type Parsed = {
     alt: string | null;
     style: string | null;
     open: 'end' | number | null;
+    inventory: 'library' | null;
   };
   sections: Section[];
   notes: { line: number; message: string }[];
@@ -78,6 +79,7 @@ describe('parseBricks', () => {
       alt: null,
       style: null,
       open: null,
+      inventory: null,
     });
     expect(sections.map(s => [s.kind, s.number])).toEqual([
       ['built', undefined],
@@ -206,6 +208,29 @@ describe('parseBricks', () => {
     const turning = parseBricks('---\nspin: true\nopen: end\n---\n3005 0 0 0\n');
     expect(turning.header.open).toBeNull();
     expect(turning.notes).toEqual([{ line: 3, message: 'a turning page has no steps to open at' }]);
+  });
+
+  it('reads a parts page, which has no parts of its own', () => {
+    const { header, sections, notes } = parseBricks('---\ninventory: library\ncolor: Red\n---\n');
+    expect(notes).toEqual([]);
+    expect(header).toMatchObject({ inventory: 'library', color: 'Red' });
+    expect(sections).toEqual([]);
+  });
+
+  it('notes what a parts page cannot have, and drops it', () => {
+    const { header, sections, notes } = parseBricks(
+      '---\ninventory: library\nspin: true\nscale: 0.5\n---\n3005 0 0 0\n'
+    );
+    expect(sections).toEqual([]);
+    expect(header).toMatchObject({ inventory: 'library', spin: null, scale: 1 });
+    expect(notes).toEqual([
+      { line: 6, message: 'a parts page has no part lines of its own' },
+      { line: 2, message: 'a parts page has no spin' },
+      { line: 2, message: 'a parts page has no scale' },
+    ]);
+    expect(parseBricks('---\ninventory: book\n---\n3005 0 0 0\n').notes).toEqual([
+      { line: 2, message: 'inventory is one of library' },
+    ]);
   });
 
   it('notes malformed part lines by line number and keeps the rest', () => {

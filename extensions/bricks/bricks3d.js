@@ -23,6 +23,9 @@
 // finished and the handle beside it, a working aid while a page is being
 // built: each edit re-renders the page, and it opens at that step again.
 //
+// A parts page (data-inventory, with data-columns and data-rows) draws its
+// spans as a grid instead: each part alone in a cell, with its number beneath.
+//
 // A part may also be a model another page builds, which the transform copies
 // into the step as div.bricks-model holding its span.bricks-model-part
 // elements. The model's parts are placed in its own grid by the same corner
@@ -153,6 +156,12 @@ function setupStage(stage, library, still) {
   var STRIP = PAGE_H - 80 * U;          // a drag starts below this line
   var FILL = 0.6, DROP = 3.2;           // the main scene's light: fill and shadow-casting
   var CALLOUT = { x: 60 * U, y: 22 * U, h: 86 * U, max: Math.min(246 * U, PAGE_W - 74 * U), k: U * 9.5 / (STUD * Math.sqrt(2 / 3)) };
+
+  // A parts page (data-inventory) draws a grid of parts, not a step.
+  if (stage.hasAttribute('data-inventory')) {
+    inventory();
+    return;
+  }
 
   // The models this step uses, by name.
   var models = {};
@@ -635,6 +644,175 @@ function setupStage(stage, library, still) {
       w = w.parent;
     }
     return (window.devicePixelRatio || 1) * k * ((w.visualViewport && w.visualViewport.scale) || 1);
+  }
+
+  // A parts page: one cell per part, in the columns and rows the transform
+  // chose, each with the part drawn alone in the page's colour and its number
+  // beneath. Nothing moves; the page draws once and again on resize.
+  function inventory() {
+    var columns = Math.max(1, Number(stage.getAttribute('data-columns')) || 1);
+    var rows = Math.max(1, Number(stage.getAttribute('data-rows')) || 1);
+    var margin = 12 * U, inset = 3 * U, label = 18 * U;
+    var cellW = (PAGE_W - 2 * margin) / columns;
+    var cellH = Math.min(84 * U, (PAGE_H - 2 * margin) / rows);
+    var top = (PAGE_H - rows * cellH) / 2;
+    var code = colourCode((stage.getAttribute('data-color') || '').trim()) || colourCode('Light_Bluish_Grey') || '71';
+    var notes = [], cells = [];
+    Array.prototype.forEach.call(stage.querySelectorAll('.bricks-part'), function (span) {
+      var is = (span.getAttribute('data-is') || '').trim();
+      if (!library.names[is.toLowerCase()]) {
+        notes.push(is + ': not in the parts libraries.');
+        return;
+      }
+      if (cells.length >= columns * rows) return;
+      var n = cells.length, col = n % columns, row = Math.floor(n / columns);
+      cells.push({
+        is: is, name: library.names[is.toLowerCase()],
+        x: margin + col * cellW, y: top + row * cellH, w: cellW, h: cellH,
+      });
+    });
+    if (notes.length && !still) {
+      var box = document.createElement('div');
+      box.className = 'bricks-notes';
+      notes.forEach(function (text) {
+        var note = document.createElement('p');
+        note.textContent = text;
+        box.appendChild(note);
+      });
+      stage.appendChild(box);
+    }
+    if (!cells.length) {
+      if (still) still.done(null);
+      return;
+    }
+    // The part is drawn in the cell's panel, above its number.
+    cells.forEach(function (c) {
+      c.dx = c.x + inset;
+      c.dy = c.y + inset;
+      c.dw = c.w - 2 * inset;
+      c.dh = c.h - 2 * inset - label;
+    });
+
+    var canvas = still ? new OffscreenCanvas(Math.round(PAGE_W * STILL), Math.round(PAGE_H * STILL)) : document.createElement('canvas');
+    var renderer;
+    try {
+      renderer = new T.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true, preserveDrawingBuffer: !!still });
+    } catch (error) {
+      if (still) still.done(null);
+      console.warn('bricks3d: ' + error);
+      return;
+    }
+    renderer.setScissorTest(true);
+    // Clear to transparent, so the panels and numbers under the canvas show:
+    // three.js starts with opaque black until a render sets the colour.
+    renderer.setClearColor(0x000000, 0);
+    var drawn = false;
+
+    var lines = cells.map(function (c, i) {
+      return '1 ' + code + ' ' + i * TAG + ' 0 0 1 0 0 0 1 0 0 0 1 ' + library.paths[c.is.toLowerCase()];
+    });
+    var loader = new T.LDrawLoader();
+    loader.setConditionalLineMaterial(T.LDrawConditionalLineMaterial);
+    loader.parse(library.main + '\n' + lines.join('\n') + '\n' + library.files, function (model) {
+      model.children.filter(function (child) { return child.isGroup; }).forEach(function (child) {
+        var c = cells[Math.round(child.position.x / TAG)];
+        if (!c) return;
+        child.position.set(0, 0, 0);
+        // LDraw is −Y up; the part stands upright, alone, as small as it
+        // needs to be to fit, and no larger than a step's parts callout draws it.
+        var part = new T.Group();
+        part.rotation.x = Math.PI;
+        part.add(child);
+        c.scene = new T.Scene();
+        addLights(c.scene, 1);
+        c.scene.add(part);
+        part.updateMatrixWorld(true);
+        var box = new T.Box3().setFromObject(part);
+        var size = box.getSize(new T.Vector3());
+        var k = Math.min(CALLOUT.k * 1.3,
+          0.8 * c.dw / (size.x * Math.sin(a) + size.z * Math.cos(a)),
+          0.8 * c.dh / (Math.sin(e) * (size.x * Math.cos(a) + size.z * Math.sin(a)) + size.y * Math.cos(e)));
+        c.camera = isoCamera(k, c.dw / 2, c.dw / 2, c.dh / 2, c.dh / 2, box.getCenter(new T.Vector3()));
+      });
+      drawn = true;
+
+      if (still) {
+        draw();
+        still.done(composeCells(), stage.getAttribute('data-alt') || describeCells());
+        renderer.dispose();
+        return;
+      }
+      stage.style.setProperty('--bricks-u', U + 'px');
+      var html = '';
+      cells.forEach(function (c) {
+        html += '<div class="bricks-cell" aria-hidden="true" style="left:' + c.x + 'px;top:' + c.y + 'px;width:' + c.w + 'px;height:' + c.h + 'px">' +
+          '<span class="bricks-cell-number">' + c.is + '</span></div>';
+      });
+      stage.insertAdjacentHTML('beforeend', html);
+      canvas.className = 'bricks-canvas';
+      stage.appendChild(canvas);
+      stage.setAttribute('role', 'img');
+      var img = stage.querySelector('img');
+      stage.setAttribute('aria-label', stage.getAttribute('data-alt') || img && img.getAttribute('alt') || describeCells());
+      Array.prototype.forEach.call(stage.children, function (child) {
+        if (child.querySelector && (child.localName === 'img' || child.querySelector('img'))) child.hidden = true;
+      });
+      draw();
+    }, function (error) {
+      if (still) still.done(null);
+      console.warn('bricks3d: ' + error);
+    });
+
+    function draw() {
+      if (!drawn) return;
+      var s = still ? STILL : Math.min(displayScale(), Math.sqrt(MAX_PIXELS / (PAGE_W * PAGE_H)));
+      if (renderer.getPixelRatio() !== s) renderer.setPixelRatio(s);
+      renderer.setSize(PAGE_W, PAGE_H, false);
+      renderer.setViewport(0, 0, PAGE_W, PAGE_H);
+      renderer.setScissor(0, 0, PAGE_W, PAGE_H);
+      renderer.clear();
+      cells.forEach(function (c) {
+        if (!c.scene) return;
+        var y = PAGE_H - c.dy - c.dh;   // WebGL counts from the bottom
+        renderer.setViewport(c.dx, y, c.dw, c.dh);
+        renderer.setScissor(c.dx, y, c.dw, c.dh);
+        renderer.render(c.scene, c.camera);
+      });
+    }
+
+    function describeCells() {
+      return 'Parts: ' + cells.map(function (c) { return c.is + ', ' + c.name; }).join('; ') + '.';
+    }
+
+    // The still: the panels and numbers as bricks.css draws them, under the parts.
+    function composeCells() {
+      var out = new OffscreenCanvas(canvas.width, canvas.height);
+      var c = out.getContext('2d');
+      c.scale(canvas.width / PAGE_W, canvas.height / PAGE_H);
+      var classic = stage.getAttribute('data-style') === 'classic';
+      var line = 1.5 * U;
+      c.font = 'bold ' + 11 * U + 'px "Helvetica Neue", Helvetica, Arial, sans-serif';
+      c.textAlign = 'center';
+      c.textBaseline = 'alphabetic';
+      cells.forEach(function (cell) {
+        c.beginPath();
+        c.roundRect(cell.x + inset + line / 2, cell.y + inset + line / 2, cell.w - 2 * inset - line, cell.h - 2 * inset - line,
+          classic ? 0 : 6 * U - line / 2);
+        c.fillStyle = classic ? '#efe7a3' : '#f5faff';
+        c.fill();
+        c.lineWidth = line;
+        c.strokeStyle = classic ? '#222' : '#7399cc';
+        c.stroke();
+        c.fillStyle = '#1f2433';
+        c.fillText(cell.is, cell.x + cell.w / 2, cell.y + cell.h - inset - 7 * U);
+      });
+      c.drawImage(canvas, 0, 0, PAGE_W, PAGE_H);
+      return out;
+    }
+
+    if (still) return;
+    window.addEventListener('pageshow', draw);
+    window.addEventListener('resize', draw);
   }
 
   // An orthographic camera looking along VIEW at `target`,

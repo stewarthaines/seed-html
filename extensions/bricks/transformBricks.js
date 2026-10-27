@@ -51,6 +51,14 @@
  * once its chapter has rendered since the model last changed; packaging does
  * not render, so open a defining chapter after editing its model.
  *
+ * PARTS PAGES. A block whose header has `inventory: library` lists the parts
+ * the libraries offer instead of building anything: one span.bricks-part per
+ * part (data-is only), with data-inventory, data-columns and data-rows on the
+ * stage for bricks3d.js to lay out. The parts are dealt out across every such
+ * page in reading order, a page's worth each; the other chapters' pages are
+ * counted from their sources (SOURCE/text/<idref>.txt), so they need not have
+ * rendered.
+ *
  * STILLS. Each step also gets an image of itself, drawn here while the page
  * renders: <img class="bricks-still"> first in the step, a PNG data: URL at
  * twice the page size, showing the step finished with its step number and
@@ -135,6 +143,13 @@ async function transformDOM(document, idref, ctx) {
     }
   }
 
+  // Parts pages deal the parts the libraries offer out across themselves, in
+  // reading order: this chapter's take their turn after the other chapters'
+  // before it.
+  const inventories = steps.filter((step) => step.parsed.header.inventory === 'library');
+  const pages = inventories.length ? await bricksInventoryPages(ctx, idref, 'library') : null;
+  const offered = inventories.length ? bricksOffered(libraries) : [];
+
   for (const step of steps) {
     const { header, sections } = step.parsed;
     const notes = step.notes;
@@ -145,6 +160,42 @@ async function transformDOM(document, idref, ctx) {
       div.setAttribute('data-height', String(ctx.viewport.height));
     } else {
       notes.push('Bricks pages need a fixed-layout book; this one is reflowable.');
+    }
+    if (header.alt) div.setAttribute('data-alt', header.alt);
+    if (header.style) div.setAttribute('data-style', header.style);
+
+    if (header.inventory) {
+      // A parts page: its share of the parts, one cell each.
+      div.setAttribute('data-inventory', header.inventory);
+      const colour = header.color || 'Light_Bluish_Grey';
+      if (colourKnown(colour)) div.setAttribute('data-color', colour);
+      else if (header.color) notes.push(`The header's color, ${header.color}, is not an LDraw colour.`);
+      const files = new Set(coloured ? [coloured.href] : []);
+      if (ctx.viewport) {
+        const grid = bricksInventoryGrid(ctx.viewport);
+        div.setAttribute('data-columns', String(grid.columns));
+        div.setAttribute('data-rows', String(grid.rows));
+        const size = grid.columns * grid.rows;
+        const page = pages.before + inventories.indexOf(step);
+        const last = page === pages.before + inventories.length + pages.after - 1;
+        const share = offered.slice(page * size, (page + 1) * size);
+        const set = document.createElement('p');
+        set.setAttribute('class', 'bricks-set');
+        for (const part of share) {
+          const span = document.createElement('span');
+          span.setAttribute('class', 'bricks-part');
+          span.setAttribute('data-is', part.is);
+          set.appendChild(span);
+          files.add(part.href);
+        }
+        div.appendChild(set);
+        if (offered.length && !share.length) notes.push('Nothing left to list: the parts pages before this one hold every part.');
+        if (last && offered.length > (page + 1) * size) {
+          notes.push(`${offered.length - (page + 1) * size} more parts: add another parts page.`);
+        }
+      }
+      await finish(step, div, notes, files);
+      continue;
     }
     const first = sections.find((s) => s.kind === 'step');
     // A turning page has no steps, so a step number only when its step line
@@ -157,8 +208,6 @@ async function transformDOM(document, idref, ctx) {
     }
     if (header.spin) div.setAttribute('data-spin', String(header.spin));
     if (header.scale !== 1) div.setAttribute('data-scale', String(header.scale));
-    if (header.alt) div.setAttribute('data-alt', header.alt);
-    if (header.style) div.setAttribute('data-style', header.style);
     if (header.open !== null) div.setAttribute('data-open', String(header.open));
 
     // The parts, a paragraph per section; the libraries and models they use.
@@ -218,18 +267,6 @@ async function transformDOM(document, idref, ctx) {
         notes.push(`The model ${name} is also defined in ${definers[name].slice(1).join(', ')}.`);
       }
     }
-    if (!libraries.length) notes.push(`No parts library: nothing under ${FOLDER} in the manifest.`);
-    libraries.filter((l) => l.error).forEach((l) => notes.push(`${l.href} could not be read: ${l.error}`));
-
-    const base = chapter ? chapter.href.replace(/[^/]*$/, '') : '';
-    for (const href of files) {
-      const library = document.createElement('span');
-      library.setAttribute('class', 'bricks-library');
-      library.setAttribute('data-src', bricksRelative(base, href));
-      library.setAttribute('hidden', 'hidden');
-      div.appendChild(library);
-    }
-
     for (const name of used) {
       const holder = document.createElement('div');
       holder.setAttribute('class', 'bricks-model');
@@ -245,6 +282,26 @@ async function transformDOM(document, idref, ctx) {
         holder.appendChild(span);
       }
       div.appendChild(holder);
+    }
+    await finish(step, div, notes, files);
+  }
+  return document;
+
+  // The libraries a page names, its notes, its still image; then it takes the
+  // block's place.
+  async function finish(step, div, notes, files) {
+    if (!libraries.length) notes.push(`No parts library: nothing under ${FOLDER} in the manifest.`);
+    libraries.filter((l) => l.error).forEach((l) => notes.push(`${l.href} could not be read: ${l.error}`));
+
+    const base = chapter ? chapter.href.replace(/[^/]*$/, '') : '';
+    // The holders follow the parts: a library span goes before the first model.
+    const before = div.querySelector('.bricks-model');
+    for (const href of files) {
+      const library = document.createElement('span');
+      library.setAttribute('class', 'bricks-library');
+      library.setAttribute('data-src', bricksRelative(base, href));
+      library.setAttribute('hidden', 'hidden');
+      div.insertBefore(library, before);
     }
 
     if (notes.length) {
@@ -269,7 +326,6 @@ async function transformDOM(document, idref, ctx) {
     }
     step.pre.replaceWith(div);
   }
-  return document;
 }
 
 // A step's still image, { src, alt }, or null when this frame cannot draw it.
@@ -291,19 +347,73 @@ async function bricksStill(div, used) {
   return { src, alt: drawn.alt };
 }
 
-// What the transform needs of a library: its colour names and its parts and
-// models by bare name (parts/3001.dat, models/spaceman.ldr).
+// What the transform needs of a library: its colour names, and its parts and
+// models by bare name (parts/3001.dat, models/spaceman.ldr) with the name each
+// file's first line gives it ("Brick  1 x  1").
 function bricksReadLibrary(href, text) {
-  const library = { href, colours: {}, parts: {} };
+  const library = { href, colours: {}, parts: {}, names: {} };
   const split = text.search(/^0 FILE /m);
   const main = split < 0 ? text : text.slice(0, split);
   main.replace(/^0 !COLOUR\s+(\S+)\s+CODE\s+(\d+)/gm, (m, name) => {
     library.colours[name.toLowerCase()] = true;
   });
-  text.replace(/^0 FILE (?:parts|models)\/([^/\s]+)\.(?:dat|ldr)\s*$/gim, (m, name) => {
+  text.replace(/^0 FILE (?:parts|models)\/([^/\s]+)\.(?:dat|ldr)\s*\n(?:0 (.*))?/gim, (m, name, title) => {
     library.parts[name.toLowerCase()] = true;
+    library.names[name.toLowerCase()] = (title || name).replace(/\s+/g, ' ').trim();
   });
   return library;
+}
+
+// How many parts a parts page holds: the columns and rows of its grid, for a
+// 320 x 460 page 4 x 5, cells at least 72 x 84 px scaled with the page.
+// bricks3d.js lays the cells out from these.
+function bricksInventoryGrid(viewport) {
+  const u = Math.min(viewport.width / 320, viewport.height / 460);
+  return {
+    columns: Math.max(1, Math.floor((viewport.width - 24 * u) / (72 * u))),
+    rows: Math.max(1, Math.floor((viewport.height - 24 * u) / (84 * u))),
+  };
+}
+
+// The parts the libraries offer, for a parts page: each set in manifest order,
+// sorted by name (then number) within it, without LDraw's ~ files (moved and
+// alias parts).
+function bricksOffered(libraries) {
+  const offered = [];
+  const seen = new Set();
+  for (const library of libraries) {
+    if (library.error) continue;
+    const names = Object.keys(library.names)
+      .filter((is) => !library.names[is].startsWith('~'))
+      .sort((a, b) => library.names[a].localeCompare(library.names[b], 'en', { numeric: true }) ||
+        a.localeCompare(b, 'en', { numeric: true }));
+    for (const is of names) {
+      if (seen.has(is)) continue;
+      seen.add(is);
+      offered.push({ is, href: library.href });
+    }
+  }
+  return offered;
+}
+
+// How many parts pages of a kind the other chapters hold, before and after
+// this one in reading order: a chapter's source is read for its
+// `inventory: <kind>` header lines, so the count is current without the
+// chapter having rendered.
+async function bricksInventoryPages(ctx, idref, kind) {
+  let before = 0, after = 0, seen = false;
+  const line = new RegExp(`^\\s*inventory:\\s*${kind}\\s*$`, 'gim');
+  for (const other of ctx.spine || []) {
+    if (other.idref === idref) {
+      seen = true;
+      continue;
+    }
+    const text = await bricksReadText(ctx, 'SOURCE/text/' + other.idref + '.txt');
+    const n = text ? (text.match(line) || []).length : 0;
+    if (seen) after += n;
+    else before += n;
+  }
+  return { before, after };
 }
 
 // A model as recorded: its main colour and its parts where they end up.
