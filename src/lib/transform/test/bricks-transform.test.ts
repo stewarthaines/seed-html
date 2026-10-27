@@ -282,6 +282,59 @@ describe('transformBricks', () => {
     expect(written[path]).toBe('null');
   });
 
+  it('records the pictures line with the models, and puts it on every page', async () => {
+    const path = 'SOURCE/data/bricks/josh_o.json';
+    const LINE = 'Pictures only here.';
+    const { doc, written } = await render(
+      block(JOSH_O.replace('---\nbuilt', `pictures: ${LINE}\n---\nbuilt`)) +
+        block('3005 Yellow 0 0 0\n') +
+        block('---\ninventory: library\n---\n')
+    );
+    expect(JSON.parse(written[path])['pictures line']).toBe(LINE);
+    const lines = [...doc.querySelectorAll('div.bricks > p.bricks-pictures')];
+    expect(lines.map(p => p.textContent)).toEqual([LINE, LINE, LINE]);
+    expect(doc.querySelector('.bricks-notes')).toBeNull();
+    // Another chapter's line, read from its record; its key is not a model.
+    const later = await render(block('step\nletter-j Yellow 0 0 0\n'), {
+      'SOURCE/data/bricks/josh.json': `{"letter-j":{"parts":[{"is":"3005","at":"0 0 0"}]},"pictures line":"${LINE}"}`,
+    });
+    expect(later.doc.querySelector('p.bricks-pictures')!.textContent).toBe(LINE);
+    expect(later.doc.querySelector('.bricks-model[data-name="pictures line"]')).toBeNull();
+    // A book with no line has none.
+    const none = await render(block('3005 Yellow 0 0 0\n'));
+    expect(none.doc.querySelector('p.bricks-pictures')).toBeNull();
+  });
+
+  it('uses the first pictures line in reading order, and notes the others', async () => {
+    const own = (line: string) => block(`---\npictures: ${line}\n---\n3005 Yellow 0 0 0\n`);
+    // This chapter comes first in the spine: its line wins, and the later one is noted.
+    const first = await render(own('Ours.'), {
+      'SOURCE/data/bricks/josh.json': '{"pictures line":"Theirs."}',
+    });
+    expect(first.doc.querySelector('p.bricks-pictures')!.textContent).toBe('Ours.');
+    expect(first.doc.querySelector('.bricks-notes')!.textContent).toBe(
+      'pictures is also set in josh.'
+    );
+    // A second page in the same chapter.
+    const twice = await render(own('Ours.') + own('Again.'));
+    const stages = [...twice.doc.querySelectorAll('div.bricks')];
+    expect(stages.map(s => s.querySelector('p.bricks-pictures')!.textContent)).toEqual([
+      'Ours.',
+      'Ours.',
+    ]);
+    expect(stages[1].querySelector('.bricks-notes')!.textContent).toBe(
+      'pictures is set on an earlier page of this chapter; the first is used.'
+    );
+  });
+
+  it('clears the record of a chapter that has lost its blocks', async () => {
+    const path = 'SOURCE/data/bricks/josh_o.json';
+    const { written } = await render('<p>No bricks here.</p>', {
+      [path]: '{"pictures line":"Pictures only here."}',
+    });
+    expect(written[path]).toBe('null');
+  });
+
   it('lists the book’s parts: every chapter’s counts added up, by colour', async () => {
     const page = block('---\ninventory: book\n---\n');
     const { doc } = await render(page + block(JOSH_O), {

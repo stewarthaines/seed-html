@@ -56,6 +56,12 @@
           "name": "spaceman",
           "label": "Add a spaceman (needs Bricks - Minifigs)",
           "default": true
+        },
+        {
+          "type": "boolean",
+          "name": "pictures",
+          "label": "Add the line readers see when the pages are pictures",
+          "default": false
         }
       ]
     },

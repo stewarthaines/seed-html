@@ -83,6 +83,23 @@
   margin: 0;
 }
 
+/* The book's line for reading systems that show the pages as pictures:
+   over the foot of the still, where the handle would be. bricks3d.js hides
+   it where the page works, so it shows without the script. */
+.bricks-pictures {
+  position: absolute;
+  left: calc(14 * var(--bricks-u, 1px));
+  right: calc(14 * var(--bricks-u, 1px));
+  bottom: calc(14 * var(--bricks-u, 1px));
+  z-index: 2;
+  margin: 0;
+  padding: calc(6 * var(--bricks-u, 1px)) calc(8 * var(--bricks-u, 1px));
+  border-radius: calc(6 * var(--bricks-u, 1px));
+  background-color: rgba(255, 255, 255, 0.85);
+  font: calc(12 * var(--bricks-u, 1px)) / 1.3 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #1f2433;
+}
+
 /* A parts page (data-inventory): one panel per part, the part drawn over it
    by the canvas, its number beneath. bricks3d.js places each cell. */
 .bricks-cell {

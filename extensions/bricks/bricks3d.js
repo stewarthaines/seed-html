@@ -43,6 +43,11 @@
 // (no WebGL 2) keeps the still, which carries its own step number and parts
 // callout.
 //
+// A reading system that does not run this file shows the still and the
+// book's line about it (p.bricks-pictures, from the `pictures:` key): the
+// line is hidden as each page starts, before anything loads, so it never
+// shows where the page works, and shown again when the page cannot draw.
+//
 // The transform loads this file too, and calls setupStage with a `still`
 // option to draw that image: the step finished, as a reader first sees it,
 // into an OffscreenCanvas at twice the page size.
@@ -66,11 +71,22 @@ function startBricks() {
       return span.getAttribute('data-src');
     });
     if (!hrefs.length) return;
+    showPictures(stage, false);
     Promise.all(hrefs.map(function (href) {
       // Reading systems report book files with status 0, so the status is not checked.
       libraries[href] = libraries[href] || fetch(href).then(function (r) { return r.text(); }).then(readLibrary);
       return libraries[href];
-    })).then(function (found) { setupStage(stage, mergeLibraries(found)); });
+    })).then(function (found) { setupStage(stage, mergeLibraries(found)); }, function (error) {
+      showPictures(stage, true);
+      console.warn('bricks3d: ' + error);
+    });
+  });
+}
+
+// The book's line about pictures, hidden or shown again.
+function showPictures(stage, shown) {
+  Array.prototype.forEach.call(stage.querySelectorAll('.bricks-pictures'), function (line) {
+    line.style.display = shown ? '' : 'none';
   });
 }
 
@@ -325,13 +341,15 @@ function setupStage(stage, library, still) {
   var number = null, callouts = [], thumb = null;
   var opening = true;   // until the opening's return to the start, or the first drag
 
-  // Without WebGL 2 the renderer throws, and the page keeps its still.
+  // Without WebGL 2 the renderer throws, and the page keeps its still and
+  // shows the book's line about it.
   var canvas = still ? new OffscreenCanvas(Math.round(PAGE_W * STILL), Math.round(PAGE_H * STILL)) : document.createElement('canvas');
   var renderer;
   try {
     renderer = new T.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true, preserveDrawingBuffer: !!still });
   } catch (error) {
     if (still) still.done(null);
+    else showPictures(stage, true);
     console.warn('bricks3d: ' + error);
     return;
   }
@@ -705,6 +723,7 @@ function setupStage(stage, library, still) {
       renderer = new T.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true, preserveDrawingBuffer: !!still });
     } catch (error) {
       if (still) still.done(null);
+      else showPictures(stage, true);
       console.warn('bricks3d: ' + error);
       return;
     }
