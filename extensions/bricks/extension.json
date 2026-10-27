@@ -58,6 +58,20 @@
           "default": true
         }
       ]
+    },
+    {
+      "id": "bricks-parts",
+      "name": "Bricks Parts",
+      "description": "List the parts this book's parts sets offer, to copy part numbers from while you write.",
+      "script": "bricks-parts.js",
+      "options": [
+        {
+          "type": "boolean",
+          "name": "colours",
+          "label": "Include the colour names",
+          "default": false
+        }
+      ]
     }
   ],
   "domTransforms": [

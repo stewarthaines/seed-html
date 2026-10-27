@@ -205,6 +205,102 @@ describe('transformBricks', () => {
     expect(doc.querySelector('div.bricks')!.getAttribute('data-style')).toBe('classic');
   });
 
+  it('draws a parts page: every part the libraries offer, set by set, in a grid', async () => {
+    const { doc } = await render(block('---\ninventory: library\n---\n'));
+    const stage = doc.querySelector('div.bricks')!;
+    expect(stage.getAttribute('data-inventory')).toBe('library');
+    expect(stage.getAttribute('data-columns')).toBe('4');
+    expect(stage.getAttribute('data-rows')).toBe('5');
+    expect(stage.hasAttribute('data-step')).toBe(false);
+    expect(
+      [...stage.querySelectorAll('span.bricks-part')].map(s => s.getAttribute('data-is'))
+    ).toEqual(['3005', '3032', '3040b', 'spaceman']);
+    expect(libraries(stage)).toEqual([
+      '../Misc/bricks/core.mpd',
+      '../Misc/bricks/slopes.mpd',
+      '../Misc/bricks/minifig.mpd',
+    ]);
+    expect(stage.querySelector('.bricks-notes')).toBeNull();
+  });
+
+  it('deals the parts out across the parts pages in reading order', async () => {
+    const many = Array.from({ length: 45 }, (_, i) => `parts/${1000 + i}.dat`);
+    LIBRARIES['Misc/bricks/many.mpd'] = library([], many);
+    try {
+      const two = block('---\ninventory: library\n---\n').repeat(2);
+      // This chapter's two pages come first; a later chapter has a third.
+      const shared = await render(two, {
+        'SOURCE/text/josh.txt': '---\ninventory: library\n---\n',
+      });
+      const [first, second] = [...shared.doc.querySelectorAll('div.bricks')];
+      const ids = (stage: Element) =>
+        [...stage.querySelectorAll('span.bricks-part')].map(s => s.getAttribute('data-is'));
+      expect(ids(first)).toHaveLength(20);
+      expect(ids(first)[0]).toBe('3005');
+      expect(ids(second)).toHaveLength(20);
+      expect(second.querySelector('.bricks-notes')).toBeNull();
+      // Alone, the second page is the last, and 9 parts are left over.
+      const alone = await render(two);
+      const last = [...alone.doc.querySelectorAll('div.bricks')][1];
+      expect(last.querySelector('.bricks-notes')!.textContent).toBe(
+        '9 more parts: add another parts page.'
+      );
+      // A page with nothing left to list says so.
+      const spare = await render(block('---\ninventory: library\n---\n').repeat(4));
+      expect([...spare.doc.querySelectorAll('div.bricks')][3].textContent).toContain(
+        'Nothing left to list'
+      );
+    } finally {
+      delete LIBRARIES['Misc/bricks/many.mpd'];
+    }
+  });
+
+  it('records what a page counts towards the book’s parts list', async () => {
+    const path = 'SOURCE/data/bricks/josh_o.counts.json';
+    // By default the moving parts: not the built plate.
+    const steps = await render(block(JOSH_O));
+    expect(JSON.parse(steps.written[path])).toEqual({ '3005 yellow': 1, '3040b yellow': 1 });
+    // count: all adds the built plate; count: none counts nothing.
+    const all = await render(block(JOSH_O.replace('---\nbuilt', 'count: all\n---\nbuilt')));
+    expect(JSON.parse(all.written[path])).toEqual({
+      '3032 green': 1,
+      '3005 yellow': 1,
+      '3040b yellow': 1,
+    });
+    const none = await render(block(JOSH_O.replace('---\nbuilt', 'count: none\n---\nbuilt')));
+    expect(path in none.written).toBe(false);
+    // A model the book builds elsewhere is counted there; a minifig counts as one.
+    const placed = await render(block('step\nletter-j Yellow 0 0 0\nspaceman White 0 2 0\n'), {
+      'SOURCE/data/bricks/josh.json': '{"letter-j":{"parts":[{"is":"3005","at":"0 0 0"}]}}',
+    });
+    expect(JSON.parse(placed.written[path])).toEqual({ 'spaceman white': 1 });
+  });
+
+  it('clears the counts of a chapter that has lost its blocks', async () => {
+    const path = 'SOURCE/data/bricks/josh_o.counts.json';
+    const { written } = await render('<p>No bricks here.</p>', { [path]: '{"3005 yellow":2}' });
+    expect(written[path]).toBe('null');
+  });
+
+  it('lists the book’s parts: every chapter’s counts added up, by colour', async () => {
+    const page = block('---\ninventory: book\n---\n');
+    const { doc } = await render(page + block(JOSH_O), {
+      'SOURCE/data/bricks/josh.counts.json': '{"3005 yellow":3,"3032 green":1,"3040b white":2}',
+    });
+    const stage = doc.querySelector('div.bricks[data-inventory="book"]')!;
+    const cells = [...stage.querySelectorAll('span.bricks-part')].map(
+      s =>
+        `${s.getAttribute('data-count')} ${s.getAttribute('data-color')} ${s.getAttribute('data-is')}`
+    );
+    expect(cells).toEqual(['1 green 3032', '2 white 3040b', '4 yellow 3005', '1 yellow 3040b']);
+    expect(stage.hasAttribute('data-color')).toBe(false);
+    expect(stage.querySelector('.bricks-notes')).toBeNull();
+    const empty = await render(page);
+    expect(empty.doc.querySelector('.bricks-notes')!.textContent).toBe(
+      'Nothing counted yet: open the pages that build the book, then this one.'
+    );
+  });
+
   it('carries open to the page, and leaves it off when there is none', async () => {
     const opened = await render(
       block('---\nopen: 2\n---\nstep\n3005 Red 0 0 0\nstep\n3005 Red 0 0 3\n')

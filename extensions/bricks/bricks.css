@@ -83,6 +83,34 @@
   margin: 0;
 }
 
+/* A parts page (data-inventory): one panel per part, the part drawn over it
+   by the canvas, its number beneath. bricks3d.js places each cell. */
+.bricks-cell {
+  position: absolute;
+}
+
+.bricks-cell::before {
+  content: "";
+  position: absolute;
+  top: calc(3 * var(--bricks-u, 1px));
+  right: calc(3 * var(--bricks-u, 1px));
+  bottom: calc(3 * var(--bricks-u, 1px));
+  left: calc(3 * var(--bricks-u, 1px));
+  border: calc(1.5 * var(--bricks-u, 1px)) solid #7399cc;
+  border-radius: calc(6 * var(--bricks-u, 1px));
+  background-color: #f5faff;
+}
+
+.bricks-cell-number {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(10 * var(--bricks-u, 1px));
+  text-align: center;
+  font: bold calc(11 * var(--bricks-u, 1px)) / 1 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #1f2433;
+}
+
 /* The handle, after the arrows of 1970s building instructions. */
 .bricks-thumb-panel {
   fill: #efe7a3;
@@ -105,7 +133,8 @@
   background-color: #ecebe6;
 }
 
-.bricks[data-style="classic"] .bricks-callout {
+.bricks[data-style="classic"] .bricks-callout,
+.bricks[data-style="classic"] .bricks-cell::before {
   border-color: #222;
   border-radius: 0;
   background-color: #efe7a3;
