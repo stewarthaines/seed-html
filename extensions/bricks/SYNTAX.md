@@ -31,7 +31,8 @@ An optional YAML block between `---` lines, before any part line. Keys:
 
 - `color`: the main colour. Parts without a colour of their own take it, and stay colourless in the model's record, so a page that places the model can repaint them.
 - `from`: where a step's parts start, as `[x, y, z]`, an offset from where each lands. Without it they drop from 9 plates above (`[0, 0, 9]`); `[0, 0, -9]` raises every part from below.
-- `inventory`: `library` makes a parts page (below) instead of a step.
+- `count`: what the page adds to the book's parts list (below): `steps`, its moving parts (the default); `all`, every part, for a page whose base or `built` parts appear nowhere else; `none`, nothing.
+- `inventory`: `library` or `book` makes a parts page (below) instead of a step.
 - `model`: names everything the block builds outside `built`, so other pages can place it as one part.
 - `open`: `end`, or a step number, opens the page with that step finished and the handle beside it, instead of at the start: a working aid while you build a page, since it opens there again after each edit. Remove it before publishing; left in, the page opens at that step. A turning page has no steps to open at.
 - `spin`: makes a turning page. `true` is a quarter turn; a number is degrees. A turning page has no moving parts, and no step number unless a step line on it gives one (`step 5`, the last step of a sheet, where the model is turned).
@@ -82,16 +83,19 @@ Every `.mpd` file in the book under `Misc/bricks/` is a parts library. Bricks in
 ````
 ``` bricks
 ---
-inventory: library
+inventory: book
 ---
 ```
 ````
 
-A parts page draws every part the book's parts libraries offer, each in a cell with its part number beneath: a contact sheet to keep beside you while you write. It has no part lines; its header takes only `color` (the colour the parts are drawn in; without it, light bluish grey), `style` and `alt`. Each library's parts come in manifest order, sorted by name, without LDraw's `~` files (moved and alias parts).
+A parts page draws a list of parts as a grid of cells, each part drawn alone, about 20 to a page (4 × 5, at any page size). It has no part lines; its header takes only `color`, `style` and `alt`.
 
-A page holds 4 × 5 parts, about 20, at any page size. When the libraries offer more, put the same block on more pages: the parts are dealt out across them in reading order, counted from each chapter's source, so the pages need not have rendered. The last parts page notes how many parts are left over; a spare one notes that nothing is left. A parts page is a working aid: keep it out of the reading order, or delete it before publishing.
+- `inventory: book` is the book's parts list: every brick a reader needs to build everything in the book once, each part in its colour with how many beneath, sorted by colour. Each page adds what its `count` says: its moving parts by default. A model the book builds is counted on the page that builds it, not where it is placed; a model from a parts set (a minifig) counts as one. A page's count is as of its last render, as models are: open the pages you have changed before the parts list, and before packaging.
+- `inventory: library` is every part the book's parts libraries offer, each with its part number beneath, in one colour (`color`, else light bluish grey): a contact sheet to keep beside you while you write. Each library's parts come in manifest order, sorted by name, without LDraw's `~` files (moved and alias parts). Keep it out of the reading order, or delete it before publishing.
 
-The Bricks Parts generator lists the same parts as text, for copying exact part numbers: `#` comment lines, set by set, to insert inside a block and delete when the page is done. It can add the colour names too.
+When a list runs past one page, put the same block on more pages: the list is dealt out across them in reading order, counted from each chapter's source, so the pages need not have rendered. The last notes how many parts are left over; a spare one notes that nothing is left.
+
+The Bricks Parts generator lists the library's parts as text, for copying exact part numbers: `#` comment lines, set by set, to insert inside a block and delete when the page is done. It can add the colour names too.
 
 ## Where problems show
 

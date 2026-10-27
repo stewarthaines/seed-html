@@ -647,8 +647,10 @@ function setupStage(stage, library, still) {
   }
 
   // A parts page: one cell per part, in the columns and rows the transform
-  // chose, each with the part drawn alone in the page's colour and its number
-  // beneath. Nothing moves; the page draws once and again on resize.
+  // chose, each with the part drawn alone and a label beneath: on the book's
+  // list the part in its own colour (data-color) and how many (data-count),
+  // on the library page in the page's colour with its number. Nothing moves;
+  // the page draws once and again on resize.
   function inventory() {
     var columns = Math.max(1, Number(stage.getAttribute('data-columns')) || 1);
     var rows = Math.max(1, Number(stage.getAttribute('data-rows')) || 1);
@@ -666,8 +668,12 @@ function setupStage(stage, library, still) {
       }
       if (cells.length >= columns * rows) return;
       var n = cells.length, col = n % columns, row = Math.floor(n / columns);
+      var count = span.getAttribute('data-count');
       cells.push({
         is: is, name: library.names[is.toLowerCase()],
+        code: colourCode((span.getAttribute('data-color') || '').trim()) || code,
+        // The book's list shows how many; the library page, the part's number.
+        label: count ? count + 'x' : is, count: count,
         x: margin + col * cellW, y: top + row * cellH, w: cellW, h: cellH,
       });
     });
@@ -709,7 +715,7 @@ function setupStage(stage, library, still) {
     var drawn = false;
 
     var lines = cells.map(function (c, i) {
-      return '1 ' + code + ' ' + i * TAG + ' 0 0 1 0 0 0 1 0 0 0 1 ' + library.paths[c.is.toLowerCase()];
+      return '1 ' + c.code + ' ' + i * TAG + ' 0 0 1 0 0 0 1 0 0 0 1 ' + library.paths[c.is.toLowerCase()];
     });
     var loader = new T.LDrawLoader();
     loader.setConditionalLineMaterial(T.LDrawConditionalLineMaterial);
@@ -746,7 +752,7 @@ function setupStage(stage, library, still) {
       var html = '';
       cells.forEach(function (c) {
         html += '<div class="bricks-cell" aria-hidden="true" style="left:' + c.x + 'px;top:' + c.y + 'px;width:' + c.w + 'px;height:' + c.h + 'px">' +
-          '<span class="bricks-cell-number">' + c.is + '</span></div>';
+          '<span class="bricks-cell-number">' + c.label + '</span></div>';
       });
       stage.insertAdjacentHTML('beforeend', html);
       canvas.className = 'bricks-canvas';
@@ -781,7 +787,9 @@ function setupStage(stage, library, still) {
     }
 
     function describeCells() {
-      return 'Parts: ' + cells.map(function (c) { return c.is + ', ' + c.name; }).join('; ') + '.';
+      return 'Parts: ' + cells.map(function (c) {
+        return c.count ? c.count + ' ' + library.codes[c.code] + ' ' + c.name : c.is + ', ' + c.name;
+      }).join('; ') + '.';
     }
 
     // The still: the panels and numbers as bricks.css draws them, under the parts.
@@ -804,7 +812,7 @@ function setupStage(stage, library, still) {
         c.strokeStyle = classic ? '#222' : '#7399cc';
         c.stroke();
         c.fillStyle = '#1f2433';
-        c.fillText(cell.is, cell.x + cell.w / 2, cell.y + cell.h - inset - 7 * U);
+        c.fillText(cell.label, cell.x + cell.w / 2, cell.y + cell.h - inset - 7 * U);
       });
       c.drawImage(canvas, 0, 0, PAGE_W, PAGE_H);
       return out;

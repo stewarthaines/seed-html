@@ -255,6 +255,52 @@ describe('transformBricks', () => {
     }
   });
 
+  it('records what a page counts towards the book’s parts list', async () => {
+    const path = 'SOURCE/data/bricks/josh_o.counts.json';
+    // By default the moving parts: not the built plate.
+    const steps = await render(block(JOSH_O));
+    expect(JSON.parse(steps.written[path])).toEqual({ '3005 yellow': 1, '3040b yellow': 1 });
+    // count: all adds the built plate; count: none counts nothing.
+    const all = await render(block(JOSH_O.replace('---\nbuilt', 'count: all\n---\nbuilt')));
+    expect(JSON.parse(all.written[path])).toEqual({
+      '3032 green': 1,
+      '3005 yellow': 1,
+      '3040b yellow': 1,
+    });
+    const none = await render(block(JOSH_O.replace('---\nbuilt', 'count: none\n---\nbuilt')));
+    expect(path in none.written).toBe(false);
+    // A model the book builds elsewhere is counted there; a minifig counts as one.
+    const placed = await render(block('step\nletter-j Yellow 0 0 0\nspaceman White 0 2 0\n'), {
+      'SOURCE/data/bricks/josh.json': '{"letter-j":{"parts":[{"is":"3005","at":"0 0 0"}]}}',
+    });
+    expect(JSON.parse(placed.written[path])).toEqual({ 'spaceman white': 1 });
+  });
+
+  it('clears the counts of a chapter that has lost its blocks', async () => {
+    const path = 'SOURCE/data/bricks/josh_o.counts.json';
+    const { written } = await render('<p>No bricks here.</p>', { [path]: '{"3005 yellow":2}' });
+    expect(written[path]).toBe('null');
+  });
+
+  it('lists the book’s parts: every chapter’s counts added up, by colour', async () => {
+    const page = block('---\ninventory: book\n---\n');
+    const { doc } = await render(page + block(JOSH_O), {
+      'SOURCE/data/bricks/josh.counts.json': '{"3005 yellow":3,"3032 green":1,"3040b white":2}',
+    });
+    const stage = doc.querySelector('div.bricks[data-inventory="book"]')!;
+    const cells = [...stage.querySelectorAll('span.bricks-part')].map(
+      s =>
+        `${s.getAttribute('data-count')} ${s.getAttribute('data-color')} ${s.getAttribute('data-is')}`
+    );
+    expect(cells).toEqual(['1 green 3032', '2 white 3040b', '4 yellow 3005', '1 yellow 3040b']);
+    expect(stage.hasAttribute('data-color')).toBe(false);
+    expect(stage.querySelector('.bricks-notes')).toBeNull();
+    const empty = await render(page);
+    expect(empty.doc.querySelector('.bricks-notes')!.textContent).toBe(
+      'Nothing counted yet: open the pages that build the book, then this one.'
+    );
+  });
+
   it('carries open to the page, and leaves it off when there is none', async () => {
     const opened = await render(
       block('---\nopen: 2\n---\nstep\n3005 Red 0 0 0\nstep\n3005 Red 0 0 3\n')

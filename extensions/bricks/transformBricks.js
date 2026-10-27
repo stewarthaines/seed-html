@@ -51,13 +51,16 @@
  * once its chapter has rendered since the model last changed; packaging does
  * not render, so open a defining chapter after editing its model.
  *
- * PARTS PAGES. A block whose header has `inventory: library` lists the parts
- * the libraries offer instead of building anything: one span.bricks-part per
- * part (data-is only), with data-inventory, data-columns and data-rows on the
- * stage for bricks3d.js to lay out. The parts are dealt out across every such
- * page in reading order, a page's worth each; the other chapters' pages are
- * counted from their sources (SOURCE/text/<idref>.txt), so they need not have
- * rendered.
+ * PARTS PAGES. A block whose header has `inventory:` lists parts instead of
+ * building anything: one span.bricks-part per part, with data-inventory,
+ * data-columns and data-rows on the stage for bricks3d.js to lay out.
+ * `library` lists the parts the libraries offer (data-is only); `book` lists
+ * every chapter's counts added up (data-is, data-color, data-count), the
+ * counts a chapter records at SOURCE/data/bricks/<idref>.counts.json as it
+ * renders (see the counts below). A list is dealt out across every page of
+ * its kind in reading order, a page's worth each; the other chapters' pages
+ * are counted from their sources (SOURCE/text/<idref>.txt), so they need not
+ * have rendered.
  *
  * STILLS. Each step also gets an image of itself, drawn here while the page
  * renders: <img class="bricks-still"> first in the step, a PNG data: URL at
@@ -84,7 +87,14 @@
  */
 async function transformDOM(document, idref, ctx) {
   const blocks = [...document.querySelectorAll('pre.bricks, pre:has(code.language-bricks)')];
-  if (!blocks.length || !ctx) return document;
+  if (!ctx) return document;
+  const countsPath = 'SOURCE/data/bricks/' + idref + '.counts.json';
+  if (!blocks.length) {
+    // A chapter that has lost its blocks no longer adds to the book's parts list.
+    const stale = await bricksReadText(ctx, countsPath);
+    if (stale !== null && stale.trim() !== 'null') await ctx.writeSourceText(countsPath, 'null');
+    return document;
+  }
 
   const FOLDER = 'Misc/bricks/';
   const manifest = ctx.manifest || [];
@@ -143,12 +153,50 @@ async function transformDOM(document, idref, ctx) {
     }
   }
 
-  // Parts pages deal the parts the libraries offer out across themselves, in
-  // reading order: this chapter's take their turn after the other chapters'
-  // before it.
-  const inventories = steps.filter((step) => step.parsed.header.inventory === 'library');
-  const pages = inventories.length ? await bricksInventoryPages(ctx, idref, 'library') : null;
-  const offered = inventories.length ? bricksOffered(libraries) : [];
+  // This chapter's part counts, for the book's parts list: what a reader needs
+  // to build its pages, by part and colour, recorded at
+  // SOURCE/data/bricks/<idref>.counts.json as { "3005 yellow": 4, … } (null
+  // when nothing counts). A page counts its moving parts (count: steps, the
+  // default), every part (all) or nothing (none); a model the book builds is
+  // counted where it is built, not where it is placed, and a model from a
+  // parts set (a minifig) counts as one item.
+  const counts = {};
+  for (const { parsed } of steps) {
+    const { header, sections } = parsed;
+    const mode = header.count || 'steps';
+    if (header.inventory || mode === 'none') continue;
+    for (const s of sections) {
+      for (const part of s.parts) {
+        if (mode === 'steps' && !part.from) continue;
+        const name = part.part.toLowerCase();
+        if (name in models || !libraries.some((l) => name in l.parts)) continue;
+        const colour = part.color || s.color || header.color;
+        if (!colour || !colourKnown(colour)) continue;
+        const key = name + ' ' + colour.toLowerCase();
+        counts[key] = (counts[key] || 0) + 1;
+      }
+    }
+  }
+  const countsRecord = Object.keys(counts).length ? JSON.stringify(counts) : null;
+  const countsExisting = await bricksReadText(ctx, countsPath);
+  if (countsRecord !== null ? countsExisting !== countsRecord : countsExisting !== null && countsExisting.trim() !== 'null') {
+    await ctx.writeSourceText(countsPath, countsRecord === null ? 'null' : countsRecord);
+  }
+
+  // Parts pages deal their list out across themselves in reading order, each
+  // kind on its own: this chapter's take their turn after the other chapters'
+  // before it. The library list is every part the libraries offer; the book's
+  // is every chapter's counts added up.
+  const kinds = {};
+  for (const kind of ['library', 'book']) {
+    const own = steps.filter((step) => step.parsed.header.inventory === kind);
+    if (!own.length) continue;
+    kinds[kind] = {
+      own,
+      pages: await bricksInventoryPages(ctx, idref, kind),
+      list: kind === 'library' ? bricksOffered(libraries) : await bricksCounted(ctx, idref, counts, libraries),
+    };
+  }
 
   for (const step of steps) {
     const { header, sections } = step.parsed;
@@ -165,33 +213,44 @@ async function transformDOM(document, idref, ctx) {
     if (header.style) div.setAttribute('data-style', header.style);
 
     if (header.inventory) {
-      // A parts page: its share of the parts, one cell each.
+      // A parts page: its share of the list, one cell each.
+      const { own, pages, list } = kinds[header.inventory];
+      const book = header.inventory === 'book';
       div.setAttribute('data-inventory', header.inventory);
-      const colour = header.color || 'Light_Bluish_Grey';
-      if (colourKnown(colour)) div.setAttribute('data-color', colour);
-      else if (header.color) notes.push(`The header's color, ${header.color}, is not an LDraw colour.`);
+      if (!book) {
+        const colour = header.color || 'Light_Bluish_Grey';
+        if (colourKnown(colour)) div.setAttribute('data-color', colour);
+        else if (header.color) notes.push(`The header's color, ${header.color}, is not an LDraw colour.`);
+      }
       const files = new Set(coloured ? [coloured.href] : []);
       if (ctx.viewport) {
         const grid = bricksInventoryGrid(ctx.viewport);
         div.setAttribute('data-columns', String(grid.columns));
         div.setAttribute('data-rows', String(grid.rows));
         const size = grid.columns * grid.rows;
-        const page = pages.before + inventories.indexOf(step);
-        const last = page === pages.before + inventories.length + pages.after - 1;
-        const share = offered.slice(page * size, (page + 1) * size);
+        const page = pages.before + own.indexOf(step);
+        const last = page === pages.before + own.length + pages.after - 1;
+        const share = list.slice(page * size, (page + 1) * size);
         const set = document.createElement('p');
         set.setAttribute('class', 'bricks-set');
         for (const part of share) {
           const span = document.createElement('span');
           span.setAttribute('class', 'bricks-part');
           span.setAttribute('data-is', part.is);
+          if (book) {
+            span.setAttribute('data-color', part.colour);
+            span.setAttribute('data-count', String(part.count));
+          }
           set.appendChild(span);
           files.add(part.href);
         }
         div.appendChild(set);
-        if (offered.length && !share.length) notes.push('Nothing left to list: the parts pages before this one hold every part.');
-        if (last && offered.length > (page + 1) * size) {
-          notes.push(`${offered.length - (page + 1) * size} more parts: add another parts page.`);
+        if (book && !list.length) {
+          notes.push('Nothing counted yet: open the pages that build the book, then this one.');
+        }
+        if (list.length && !share.length) notes.push('Nothing left to list: the parts pages before this one hold every part.');
+        if (last && list.length > (page + 1) * size) {
+          notes.push(`${list.length - (page + 1) * size} more parts: add another parts page.`);
         }
       }
       await finish(step, div, notes, files);
@@ -394,6 +453,32 @@ function bricksOffered(libraries) {
     }
   }
   return offered;
+}
+
+// The book's parts list: every chapter's counts added up in reading order
+// (this chapter's fresh, the others' as of their last render), as
+// [{ is, colour, count, href }], sorted by colour, then by part name and
+// number. A counted part no library holds any more is left out.
+async function bricksCounted(ctx, idref, counts, libraries) {
+  const totals = {};
+  for (const other of ctx.spine || []) {
+    let found = counts;
+    if (other.idref !== idref) {
+      try { found = JSON.parse(await bricksReadText(ctx, 'SOURCE/data/bricks/' + other.idref + '.counts.json')); } catch (e) { found = null; }
+    }
+    if (!found || typeof found !== 'object') continue;
+    for (const key of Object.keys(found)) {
+      if (typeof found[key] === 'number') totals[key] = (totals[key] || 0) + found[key];
+    }
+  }
+  const list = [];
+  for (const key of Object.keys(totals)) {
+    const [is, colour] = key.split(' ');
+    const library = libraries.find((l) => !l.error && is in l.parts);
+    if (library) list.push({ is, colour, count: totals[key], href: library.href, name: library.names[is] || is });
+  }
+  return list.sort((a, b) => a.colour.localeCompare(b.colour) ||
+    a.name.localeCompare(b.name, 'en', { numeric: true }) || a.is.localeCompare(b.is, 'en', { numeric: true }));
 }
 
 // How many parts pages of a kind the other chapters hold, before and after

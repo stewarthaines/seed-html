@@ -1,6 +1,6 @@
 # Bricks parts lists (design, for review)
 
-Drafted 2026-10-27; the parts library page and the generator are built (below), the book's list is not. Two lists of parts drawn as pages of a fixed-layout book, from one drawing machine with two sources: the book's parts list, every brick a reader would need, for the end of the book; and the parts library, every part the book's loaded `.mpd` sets offer, as an aid while writing. A comment-listing generator complements the second. Builds on `process/BRICKS_BLOCK_NOTATION.md` and the Bricks extension (`extensions/bricks/`).
+Drafted 2026-10-27; both lists and the generator are built (below). Two lists of parts drawn as pages of a fixed-layout book, from one drawing machine with two sources: the book's parts list, every brick a reader would need, for the end of the book; and the parts library, every part the book's loaded `.mpd` sets offer, as an aid while writing. A comment-listing generator complements the second. Builds on `process/BRICKS_BLOCK_NOTATION.md` and the Bricks extension (`extensions/bricks/`).
 
 ## Decided: the book's list is every brick you'd need (2026-10-27)
 
@@ -54,6 +54,10 @@ A generator lists the same parts as text, for copying exact numbers: `#` comment
 ## Built: the library page and the generator (2026-10-27)
 
 On the `bricks-parts-list` branch. The parser takes `inventory: library` (only; `book` gets a note until it is built) and notes what a parts page cannot have: part lines, `spin`, `model`, `from`, `open`, `scale`. The transform lists each library's parts in manifest order, sorted by name then number, without `~` files, and deals them out in pages of `columns × rows` (`bricksInventoryGrid`: 4 × 5 at 320 × 460, cells at least 72 × 84 px scaled with the page). It counts the other chapters' parts pages from their sources (`SOURCE/text/<idref>.txt`, an `inventory: library` header line each), so they need not have rendered. The runtime lays the cells out from `data-columns` and `data-rows`, draws each part alone in the page's colour (`color:`, else Light_Bluish_Grey), no larger than a step's parts callout draws it, with its number beneath, and composes the still the same way. The library page sorts by set and name, not by colour as planned for the book's list: on the library page every part is the same colour. The generator is `bricks-parts.js` (Bricks Parts).
+
+## Built: the book's list (2026-10-27)
+
+On the `bricks-parts-list` branch. Each chapter records its counts as it renders, at `SOURCE/data/bricks/<idref>.counts.json`, `{ "3005 yellow": 4, … }` or `null`: a separate file from the models record, whose keys are model names. A part without a known colour, or in no library, is not counted (its own page notes it). A chapter that loses its blocks writes `null`, so it stops adding to the list; the models record does not do this yet. The book's list page reads every chapter's record in reading order (its own chapter's counts fresh), adds them up, and sorts by colour name, then part name and number; it is dealt out like the library page, and says "Nothing counted yet" when the records are empty. The runtime draws each cell in its own colour (`data-color`) with `12x` beneath (`data-count`), and composes the still and the description ("4 Green Plate 4 x 6; …") the same way.
 
 ## Open questions
 
