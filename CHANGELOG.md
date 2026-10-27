@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- One line on a Bricks page can now lay out a row, a floor or a stack of the same part, so a page of repeated bricks stays short to write.
+
 - A Bricks parts list shows every brick a reader needs to build your book, counted from its pages and drawn in their colours, across as many pages as it takes.
 - A Bricks parts page shows every part your book's parts sets offer, drawn with its part number, to keep beside you while you build pages; a Bricks Parts generator lists the same parts as text to copy numbers from.
 

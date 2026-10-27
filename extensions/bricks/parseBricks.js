@@ -19,7 +19,11 @@
  *   3665a 0 -5 0
  *   3665a 0 -7 0 turn 180
  *
- * A part line is `<part> [<colour>] <x> <y> <z> [turn <deg>] [from <x> <y> <z>]`.
+ * A part line is `<part> [<colour>] <x> <y> <z> [turn <deg>] [from <x> <y> <z>]
+ * [times <n> <x> <y> <z>]…`; `times` makes n copies, each that far on from the
+ * one before, and a later `times` repeats everything the earlier ones made
+ * (`times 5 4 0 0 times 5 0 6 0`: a row of 5, five rows). The copies are parts
+ * in their own right, row by row, each with the line's number.
  * Section lines are `built`, `step [<n>] [from <x> <y> <z>]` and
  * `model <name> [<colour>]`; parts before any section line belong to a first
  * step.
@@ -47,7 +51,9 @@
  */
 function parseBricks(text) {
   const SECTIONS = ['built', 'step', 'model'];
-  const MODIFIERS = ['turn', 'from'];
+  const MODIFIERS = ['turn', 'from', 'times'];
+  // The most copies one part line can make with times.
+  const MAX_COPIES = 1000;
   const STYLES = ['classic'];
   const INVENTORIES = ['library', 'book'];
   const COUNTS = ['steps', 'all', 'none'];
@@ -132,7 +138,7 @@ function parseBricks(text) {
         section = open({ kind: 'step', line, number: stepNumber });
       }
       part.from = resolveFrom(part.from, section);
-      section.parts.push(part);
+      section.parts.push(...copies(part));
     }
   }
 
@@ -177,9 +183,24 @@ function parseBricks(text) {
     return from && from.some((n) => n !== 0) ? from : null;
   }
 
-  // <part> [<colour>] <x> <y> <z> [turn <deg>] [from <x> <y> <z>]
+  // A part line's copies: the part itself without times, else every copy its
+  // times make, row by row (a later times repeats the copies before it).
+  function copies(part) {
+    let made = [part];
+    for (const [n, dx, dy, dz] of part.times || []) {
+      const next = [];
+      for (let i = 0; i < n; i++) {
+        for (const copy of made) next.push(Object.assign({}, copy, { at: [copy.at[0] + i * dx, copy.at[1] + i * dy, copy.at[2] + i * dz] }));
+      }
+      made = next;
+    }
+    for (const copy of made) delete copy.times;
+    return made;
+  }
+
+  // <part> [<colour>] <x> <y> <z> [turn <deg>] [from <x> <y> <z>] [times <n> <x> <y> <z>]…
   function readPart(tokens, line) {
-    const shape = `a part line is <part> [<colour>] <x> <y> <z> [turn <degrees>] [from <x> <y> <z>]`;
+    const shape = `a part line is <part> [<colour>] <x> <y> <z> [turn <degrees>] [from <x> <y> <z>] [times <n> <x> <y> <z>]`;
     const part = { part: tokens[0], color: null, at: null, turn: 0, from: null, line };
     // Part numbers are often all digits (3005), so the first token is always the part.
     let k = 1;
@@ -196,20 +217,38 @@ function parseBricks(text) {
     const seen = [];
     while (k < tokens.length) {
       const modifier = tokens[k].toLowerCase();
-      if (!MODIFIERS.includes(modifier) || seen.includes(modifier)) {
+      // turn and from once each; times as often as it is wanted.
+      if (!MODIFIERS.includes(modifier) || (modifier !== 'times' && seen.includes(modifier))) {
         note(line, `${tokens.join(' ')}: ${seen.includes(modifier) ? `${modifier} given twice` : shape}`);
         return null;
       }
       seen.push(modifier);
-      const count = modifier === 'turn' ? 1 : 3;
+      const count = modifier === 'turn' ? 1 : modifier === 'from' ? 3 : 4;
       const values = tokens.slice(k + 1, k + 1 + count);
       if (values.length < count || !values.every(isNumber)) {
-        note(line, `${tokens.join(' ')}: ${modifier === 'turn' ? 'turn takes a number of degrees' : 'from takes three numbers'}`);
+        note(line, `${tokens.join(' ')}: ${{
+          turn: 'turn takes a number of degrees',
+          from: 'from takes three numbers',
+          times: 'times takes a count and three numbers',
+        }[modifier]}`);
         return null;
       }
       if (modifier === 'turn') part.turn = Number(values[0]);
-      else part.from = values.map(Number);
+      else if (modifier === 'from') part.from = values.map(Number);
+      else {
+        const n = Number(values[0]);
+        if (!Number.isInteger(n) || n < 1) {
+          note(line, `${tokens.join(' ')}: times takes a whole number of copies, 1 or more`);
+          return null;
+        }
+        (part.times = part.times || []).push([n].concat(values.slice(1).map(Number)));
+      }
       k += 1 + count;
+    }
+    const made = (part.times || []).reduce((total, [n]) => total * n, 1);
+    if (made > MAX_COPIES) {
+      note(line, `${tokens.join(' ')}: times makes ${made} copies; at most ${MAX_COPIES}`);
+      return null;
     }
     return part;
   }

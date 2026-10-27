@@ -347,7 +347,7 @@ describe('transformBricks', () => {
     );
     const notes = [...doc.querySelectorAll('.bricks-notes p')].map(p => p.textContent);
     expect(notes).toEqual([
-      'Line 7: 3005 0 0: a part line is <part> [<colour>] <x> <y> <z> [turn <degrees>] [from <x> <y> <z>]',
+      'Line 7: 3005 0 0: a part line is <part> [<colour>] <x> <y> <z> [turn <degrees>] [from <x> <y> <z>] [times <n> <x> <y> <z>]',
       "The header's color, Mauve, is not an LDraw colour.",
       "Line 5: 9999 is not in the parts libraries or the book's models.",
       'Line 6: Plaid is not an LDraw colour.',
