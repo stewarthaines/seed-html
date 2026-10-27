@@ -18,6 +18,7 @@
  *       <span class="bricks-model-part" data-is=… data-color=… data-at=… data-turn=…>
  *     </div>
  *     <div class="bricks-notes"><p>Line 4: …</p></div>
+ *     <p class="bricks-pictures">Pictures only here. …</p>
  *   </div>
  *
  * The page size is the book's fixed-layout viewport (ctx.viewport); in a
@@ -72,6 +73,14 @@
  * system without WebGL 2 shows only the image. A step with notes, or where
  * the frame cannot draw (no OffscreenCanvas or WebGL 2), has no still.
  *
+ * THE PICTURES LINE. A reading system that does not run bricks3d.js shows
+ * only the stills. The book says so in its own words, once, with a
+ * `pictures:` key on any Bricks page; the first page in reading order that
+ * has one is used. Its chapter records the line with its models, under the
+ * key "pictures line" (no model name has a space), and every Bricks page
+ * carries it as p.bricks-pictures, which bricks3d.js hides where the page
+ * works. A book with no `pictures:` key has no line.
+ *
  * Notes (malformed lines, unknown parts and colours, duplicate models) are
  * shown in the page, in English, for the author.
  *
@@ -88,11 +97,15 @@
 async function transformDOM(document, idref, ctx) {
   const blocks = [...document.querySelectorAll('pre.bricks, pre:has(code.language-bricks)')];
   if (!ctx) return document;
+  const path = 'SOURCE/data/bricks/' + idref + '.json';
   const countsPath = 'SOURCE/data/bricks/' + idref + '.counts.json';
   if (!blocks.length) {
-    // A chapter that has lost its blocks no longer adds to the book's parts list.
-    const stale = await bricksReadText(ctx, countsPath);
-    if (stale !== null && stale.trim() !== 'null') await ctx.writeSourceText(countsPath, 'null');
+    // A chapter that has lost its blocks no longer defines models, sets the
+    // pictures line or adds to the book's parts list.
+    for (const record of [path, countsPath]) {
+      const stale = await bricksReadText(ctx, record);
+      if (stale !== null && stale.trim() !== 'null') await ctx.writeSourceText(record, 'null');
+    }
     return document;
   }
 
@@ -130,24 +143,38 @@ async function transformDOM(document, idref, ctx) {
     }
   }
 
-  // This chapter's record of the models it defines.
-  const path = 'SOURCE/data/bricks/' + idref + '.json';
+  // The pictures line this chapter sets: its first block's with the key.
+  const PICTURES = 'pictures line';
+  const saying = steps.filter((step) => step.parsed.header.pictures);
+  const said = saying.length ? saying[0].parsed.header.pictures : null;
+
+  // This chapter's record of the models it defines, and its pictures line.
   const existing = await bricksReadText(ctx, path);
-  const record = Object.keys(defined).length ? JSON.stringify(defined) : null;
+  const kept = said ? Object.assign({}, defined, { [PICTURES]: said }) : defined;
+  const record = Object.keys(kept).length ? JSON.stringify(kept) : null;
   if (record !== null ? existing !== record : existing !== null && existing.trim() !== 'null') {
     await ctx.writeSourceText(path, record === null ? 'null' : record);
   }
 
-  // Every model the book defines, this chapter's first, and who defines each.
+  // Every model the book defines, this chapter's first, and who defines each;
+  // the chapters that set a pictures line, in reading order.
   const models = Object.assign({}, defined);
   const definers = {};
   Object.keys(defined).forEach((name) => { definers[name] = [idref]; });
-  for (const other of ctx.spine || []) {
-    if (other.idref === idref) continue;
+  const sayers = [];
+  const spine = ctx.spine || [];
+  if (said && !spine.some((other) => other.idref === idref)) sayers.push({ idref, line: said });
+  for (const other of spine) {
+    if (other.idref === idref) {
+      if (said) sayers.push({ idref, line: said });
+      continue;
+    }
     let found = null;
     try { found = JSON.parse(await bricksReadText(ctx, 'SOURCE/data/bricks/' + other.idref + '.json')); } catch (e) { found = null; }
     if (!found || typeof found !== 'object') continue;
+    if (typeof found[PICTURES] === 'string' && found[PICTURES]) sayers.push({ idref: other.idref, line: found[PICTURES] });
     for (const name of Object.keys(found)) {
+      if (name === PICTURES) continue;
       (definers[name] = definers[name] || []).push(other.idref);
       if (!(name in models)) models[name] = found[name];
     }
@@ -198,9 +225,15 @@ async function transformDOM(document, idref, ctx) {
     };
   }
 
+  const pictures = sayers.length ? sayers[0].line : null;
   for (const step of steps) {
     const { header, sections } = step.parsed;
     const notes = step.notes;
+    if (header.pictures) {
+      if (step !== saying[0]) notes.push('pictures is set on an earlier page of this chapter; the first is used.');
+      else if (sayers[0].idref !== idref) notes.push(`pictures is set first in ${sayers[0].idref}; that line is used.`);
+      else if (sayers.length > 1) notes.push(`pictures is also set in ${sayers.slice(1).map((s) => s.idref).join(', ')}.`);
+    }
     const div = document.createElement('div');
     div.setAttribute('class', 'bricks');
     if (ctx.viewport) {
@@ -372,6 +405,12 @@ async function transformDOM(document, idref, ctx) {
         box.appendChild(p);
       }
       div.appendChild(box);
+    }
+    if (pictures) {
+      const line = document.createElement('p');
+      line.setAttribute('class', 'bricks-pictures');
+      line.textContent = pictures;
+      div.appendChild(line);
     }
     if (!notes.length) {
       const drawn = await bricksStill(div, libraries.filter((l) => files.has(l.href)));

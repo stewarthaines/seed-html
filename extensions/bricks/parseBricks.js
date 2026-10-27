@@ -43,7 +43,7 @@
  * @returns {{header: {spin: number|null, scale: number, model: string|null,
  *   color: string|null, from: number[]|null, alt: string|null, style: string|null,
  *   open: 'end'|number|null, inventory: 'library'|'book'|null,
- *   count: 'steps'|'all'|'none'|null},
+ *   count: 'steps'|'all'|'none'|null, pictures: string|null},
  *   sections: Array<{kind: 'built'|'step'|'model', line: number,
  *   number?: number, given?: boolean, name?: string|null, color?: string|null, parts: Array<{part: string,
  *   color: string|null, at: number[], turn: number, from: number[]|null,
@@ -64,7 +64,7 @@ function parseBricks(text) {
 
   const notes = [];
   const note = (line, message) => notes.push({ line, message });
-  const header = { spin: null, scale: 1, model: null, color: null, from: null, alt: null, style: null, open: null, inventory: null, count: null };
+  const header = { spin: null, scale: 1, model: null, color: null, from: null, alt: null, style: null, open: null, inventory: null, count: null, pictures: null };
   const sections = [];
   let openLine = 0;
   let inventoryLine = 0;
@@ -308,6 +308,9 @@ function parseBricks(text) {
       } else if (key === 'count') {
         if (typeof value === 'string' && COUNTS.includes(value.trim().toLowerCase())) header.count = value.trim().toLowerCase();
         else note(line, `count is one of ${COUNTS.join(', ')}`);
+      } else if (key === 'pictures') {
+        if (typeof value === 'string' && value.trim()) header.pictures = value.trim().replace(/\s+/g, ' ');
+        else note(line, 'pictures is a sentence for readers whose reading system shows the pages as pictures');
       } else if (key === 'colour') {
         note(line, 'unknown key colour; did you mean color?');
       } else {

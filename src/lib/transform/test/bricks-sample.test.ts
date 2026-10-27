@@ -68,6 +68,21 @@ describe('bricks-sample generator', () => {
     expect(parsed.sections.map(s => s.kind)).toEqual(['built', 'step', 'step']);
   });
 
+  it('adds the pictures line to the header only when ticked', () => {
+    type WithPictures = { header: { pictures: string | null }; notes: unknown[] };
+    for (const format of ['markdown', 'textile']) {
+      for (const page of ['step', 'turning']) {
+        const parsed = parseBricks(
+          body(generateText(WITHOUT, { format, page, pictures: true }))
+        ) as unknown as WithPictures;
+        expect(parsed.notes).toEqual([]);
+        expect(parsed.header.pictures).toMatch(/^Pictures only here\./);
+      }
+    }
+    const plain = parseBricks(body(generateText(WITHOUT, {}))) as unknown as WithPictures;
+    expect(plain.header.pictures).toBeNull();
+  });
+
   it('leaves the spaceman out without the minifigs set, or when unticked', () => {
     expect(parts(parseBricks(body(generateText(WITHOUT, { spaceman: true }))))).not.toContain(
       'spaceman'

@@ -35,6 +35,7 @@ type Parsed = {
     open: 'end' | number | null;
     inventory: 'library' | 'book' | null;
     count: 'steps' | 'all' | 'none' | null;
+    pictures: string | null;
   };
   sections: Section[];
   notes: { line: number; message: string }[];
@@ -82,6 +83,7 @@ describe('parseBricks', () => {
       open: null,
       inventory: null,
       count: null,
+      pictures: null,
     });
     expect(sections.map(s => [s.kind, s.number])).toEqual([
       ['built', undefined],
@@ -232,6 +234,23 @@ describe('parseBricks', () => {
     ]);
     expect(parseBricks('---\ninventory: shelf\n---\n').notes).toEqual([
       { line: 2, message: 'inventory is one of library, book' },
+    ]);
+  });
+
+  it('reads the pictures line as one line, and notes one that is not a sentence', () => {
+    const { header, notes } = parseBricks(
+      '---\npictures: >\n  Pictures only here.\n  This page is interactive.\n---\n3005 0 0 0\n'
+    );
+    expect(notes).toEqual([]);
+    expect(header.pictures).toBe('Pictures only here. This page is interactive.');
+    const bad = parseBricks('---\npictures: 3\n---\n3005 0 0 0\n');
+    expect(bad.header.pictures).toBeNull();
+    expect(bad.notes).toEqual([
+      {
+        line: 2,
+        message:
+          'pictures is a sentence for readers whose reading system shows the pages as pictures',
+      },
     ]);
   });
 

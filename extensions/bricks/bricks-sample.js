@@ -13,12 +13,14 @@
  * (the same bricks, finished, which the reader turns). With `spaceman` on, a
  * blue spaceman stands on the plate; it needs the Bricks - Minifigs parts set,
  * so the option does nothing unless Misc/bricks/minifigs.mpd is in the
- * manifest.
+ * manifest. With `pictures` on, the page's header carries the line readers
+ * see where the pages are pictures; a book needs it on one page only.
  *
  * Options:
  *   format (select)    — "markdown" | "textile" block wrapper
  *   page (select)      — "step" | "turning"
  *   spaceman (boolean) — add a spaceman when the minifigs set is installed
+ *   pictures (boolean) — add the pictures line to the header
  *
  * @param {object} ctx - generator context; its manifest shows which parts sets are installed
  * @param {object} options - values from the invocation form, keyed by option name
@@ -30,12 +32,16 @@ function generateText(ctx, options) {
   const turning = opts.page === 'turning';
   const minifigs = ((ctx && ctx.manifest) || []).some((item) => item.href === 'Misc/bricks/minifigs.mpd');
   const spaceman = opts.spaceman !== false && minifigs;
+  const pictures = opts.pictures === true
+    ? ['pictures: Pictures only here. In a reader that supports it, such as Apple Books, Lisa or Cantook, this page is interactive.']
+    : [];
 
   const lines = turning
     ? [
         '---',
         'spin: true',
         'alt: A red brick and two yellow bricks on a green plate' + (spaceman ? ', with a spaceman' : '') + ', turning.',
+        ...pictures,
         '---',
         '3032 Green 0 0 0',
         '3001 Red 0 0 1',
@@ -43,6 +49,7 @@ function generateText(ctx, options) {
         '3003 Yellow 2 2 1',
       ]
     : [
+        ...(pictures.length ? ['---', ...pictures, '---'] : []),
         'built',
         '3032 Green 0 0 0',
         '',

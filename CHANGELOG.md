@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A Bricks book can tell readers, in its own words, when their reading system shows its pages as still pictures, so nobody wonders why a page won't move.
+
 - One line on a Bricks page can now lay out a row, a floor or a stack of the same part, so a page of repeated bricks stays short to write.
 
 - A Bricks parts list shows every brick a reader needs to build your book, counted from its pages and drawn in their colours, across as many pages as it takes.
