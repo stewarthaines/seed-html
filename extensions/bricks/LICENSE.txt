@@ -1,8 +1,8 @@
 The Bricks extension's own files (transformBricks.js, parseBricks.js,
 bricks3d.js, bricks.css) are MIT licensed, as SEED.html is.
 
-three-bricks.js bundles parts of three.js (core, LDrawLoader and
-LDrawConditionalLineMaterial):
+three-bricks.js bundles parts of three.js (core, LDrawLoader,
+LDrawConditionalLineMaterial and RoomEnvironment):
 
 The MIT License
 

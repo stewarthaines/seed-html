@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Bricks pages draw their parts in a soft studio light with quieter edges, for a more modern look; a page in the classic style keeps the black-outlined instruction-sheet drawing.
+
 - A chapter is marked as running scripts only when it loads one, updated each time it renders, so a book passes validation when some pages carry no code.
 
 ## [0.24.1] - 2026-10-27
