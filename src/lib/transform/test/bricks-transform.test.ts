@@ -327,6 +327,24 @@ describe('transformBricks', () => {
     );
   });
 
+  it('leaves the pictures line off a page whose frontmatter does not load bricks3d.js', async () => {
+    const source = block('---\npictures: Pictures only here.\n---\n3005 Yellow 0 0 0\n');
+    const lines = async (frontmatter: unknown) => {
+      const doc = new DOMParser().parseFromString(
+        `<!DOCTYPE html><html><body>${source}</body></html>`,
+        'text/html'
+      );
+      const { ctx } = setup();
+      await transformBricks(doc, 'josh_o', { ...ctx, frontmatter });
+      return doc.querySelectorAll('p.bricks-pictures').length;
+    };
+    expect(await lines({ scripts: [] })).toBe(0);
+    expect(await lines({ scripts: ['three-bricks.js'] })).toBe(0);
+    expect(await lines({ scripts: ['Scripts/bricks3d.js', 'three-bricks.js'] })).toBe(1);
+    expect(await lines({ title: 'x' })).toBe(1);
+    expect(await lines(null)).toBe(1);
+  });
+
   it('clears the record of a chapter that has lost its blocks', async () => {
     const path = 'SOURCE/data/bricks/josh_o.json';
     const { written } = await render('<p>No bricks here.</p>', {

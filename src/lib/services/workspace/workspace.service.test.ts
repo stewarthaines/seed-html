@@ -470,183 +470,34 @@ describe('WorkspaceService Contract Tests', () => {
     });
   });
 
-  describe('Contract: Scripted Property Management', () => {
-    test('adds scripted property to chapter items when JavaScript file is added', async () => {
-      // Create workspace with chapter
+  describe('Contract: Manifest Items and Scripts', () => {
+    test('leaves chapter properties alone when a script is added, changed or removed', async () => {
+      // scripted follows each chapter's rendered <script> elements
+      // (deriveContentProperties), not the manifest's scripts.
       const workspace = await service.createWorkspace({
         title: 'Test',
         language: ['en'],
         identifier: 'test',
       });
-
-      // Add a chapter item
-      const workspaceWithChapter = await service.addManifestItem(workspace, {
+      const withChapter = await service.addManifestItem(workspace, {
         id: 'chapter1',
         href: 'Text/chapter1.xhtml',
         mediaType: 'application/xhtml+xml',
       });
-
-      // Verify chapter initially has no scripted property
-      const chapterItem = workspaceWithChapter.opf.manifest.find(item => item.id === 'chapter1');
-      expect(chapterItem?.properties).toBeFalsy();
-
-      // Add JavaScript file
-      const workspaceWithJS = await service.addManifestItem(workspaceWithChapter, {
+      const withJS = await service.addManifestItem(withChapter, {
         id: 'script',
         href: 'Scripts/app.js',
         mediaType: 'text/javascript',
       });
-
-      // CONTRACT: Chapter items should have scripted property when JavaScript exists
-      const updatedChapterItem = workspaceWithJS.opf.manifest.find(item => item.id === 'chapter1');
-      expect(updatedChapterItem?.properties).toContain('scripted');
-    });
-
-    test('removes scripted property from chapter items when last JavaScript file is removed', async () => {
-      // Create workspace and add chapter + JavaScript
-      const workspace = await service.createWorkspace({
-        title: 'Test',
-        language: ['en'],
-        identifier: 'test',
+      const chapter = (ws: typeof workspace) =>
+        ws.opf.manifest.find(item => item.id === 'chapter1');
+      expect(chapter(withJS)?.properties).toBeFalsy();
+      const retyped = await service.updateManifestItem(withJS, 'script', {
+        mediaType: 'text/plain',
       });
-      const workspaceWithChapter = await service.addManifestItem(workspace, {
-        id: 'chapter1',
-        href: 'Text/chapter1.xhtml',
-        mediaType: 'application/xhtml+xml',
-      });
-      const workspaceWithJS = await service.addManifestItem(workspaceWithChapter, {
-        id: 'script',
-        href: 'Scripts/app.js',
-        mediaType: 'text/javascript',
-      });
-
-      // Verify chapter has scripted property
-      let chapterItem = workspaceWithJS.opf.manifest.find(item => item.id === 'chapter1');
-      expect(chapterItem?.properties).toContain('scripted');
-
-      // Remove JavaScript file
-      const workspaceWithoutJS = await service.removeManifestItem(workspaceWithJS, 'script');
-
-      // CONTRACT: Chapter items should not have scripted property when no JavaScript exists
-      chapterItem = workspaceWithoutJS.opf.manifest.find(item => item.id === 'chapter1');
-      expect(chapterItem?.properties?.includes('scripted')).toBeFalsy();
-    });
-
-    test('preserves existing properties when adding scripted property', async () => {
-      // Create workspace with nav item (has nav property)
-      const workspace = await service.createWorkspace({
-        title: 'Test',
-        language: ['en'],
-        identifier: 'test',
-      });
-      const workspaceWithNav = await service.addManifestItem(workspace, {
-        id: 'nav',
-        href: 'nav.xhtml',
-        mediaType: 'application/xhtml+xml',
-        properties: ['nav'],
-      });
-
-      // Add JavaScript file
-      const workspaceWithJS = await service.addManifestItem(workspaceWithNav, {
-        id: 'script',
-        href: 'Scripts/app.js',
-        mediaType: 'text/javascript',
-      });
-
-      // CONTRACT: Nav item should NOT get scripted property (nav items are excluded)
-      const navItem = workspaceWithJS.opf.manifest.find(item => item.id === 'nav');
-      expect(navItem?.properties).toEqual(['nav']);
-      expect(navItem?.properties).not.toContain('scripted');
-    });
-
-    test('does not add scripted property to nav items', async () => {
-      // Create workspace with nav item
-      const workspace = await service.createWorkspace({
-        title: 'Test',
-        language: ['en'],
-        identifier: 'test',
-      });
-      const workspaceWithNav = await service.addManifestItem(workspace, {
-        id: 'nav',
-        href: 'nav.xhtml',
-        mediaType: 'application/xhtml+xml',
-        properties: ['nav'],
-      });
-
-      // Add JavaScript file
-      const workspaceWithJS = await service.addManifestItem(workspaceWithNav, {
-        id: 'script',
-        href: 'Scripts/app.js',
-        mediaType: 'text/javascript',
-      });
-
-      // CONTRACT: Nav items are excluded from scripted property management
-      const navItem = workspaceWithJS.opf.manifest.find(item => item.id === 'nav');
-      expect(navItem?.properties).toEqual(['nav']);
-      expect(navItem?.properties).not.toContain('scripted');
-    });
-
-    test('maintains scripted property when one of multiple JavaScript files is removed', async () => {
-      // Create workspace and add chapter + two JavaScript files
-      const workspace = await service.createWorkspace({
-        title: 'Test',
-        language: ['en'],
-        identifier: 'test',
-      });
-      const workspaceWithChapter = await service.addManifestItem(workspace, {
-        id: 'chapter1',
-        href: 'Text/chapter1.xhtml',
-        mediaType: 'application/xhtml+xml',
-      });
-      const workspaceWithJS1 = await service.addManifestItem(workspaceWithChapter, {
-        id: 'script1',
-        href: 'Scripts/app.js',
-        mediaType: 'text/javascript',
-      });
-      const workspaceWithJS2 = await service.addManifestItem(workspaceWithJS1, {
-        id: 'script2',
-        href: 'Scripts/lib.js',
-        mediaType: 'application/javascript',
-      });
-
-      // Remove one JavaScript file
-      const workspaceWithOneJS = await service.removeManifestItem(workspaceWithJS2, 'script1');
-
-      // CONTRACT: Scripted property should remain when other JavaScript files exist
-      const chapterItem = workspaceWithOneJS.opf.manifest.find(item => item.id === 'chapter1');
-      expect(chapterItem?.properties).toContain('scripted');
-    });
-
-    test('updates scripted property when media type changes to/from JavaScript', async () => {
-      // Create workspace with chapter and CSS file
-      const workspace = await service.createWorkspace({
-        title: 'Test',
-        language: ['en'],
-        identifier: 'test',
-      });
-      const workspaceWithChapter = await service.addManifestItem(workspace, {
-        id: 'chapter1',
-        href: 'Text/chapter1.xhtml',
-        mediaType: 'application/xhtml+xml',
-      });
-      const workspaceWithCSS = await service.addManifestItem(workspaceWithChapter, {
-        id: 'asset',
-        href: 'Styles/app.css',
-        mediaType: 'text/css',
-      });
-
-      // Verify no scripted property initially
-      let chapterItem = workspaceWithCSS.opf.manifest.find(item => item.id === 'chapter1');
-      expect(chapterItem?.properties?.includes('scripted')).toBeFalsy();
-
-      // Change CSS file to JavaScript file
-      const workspaceWithJS = await service.updateManifestItem(workspaceWithCSS, 'asset', {
-        mediaType: 'text/javascript',
-      });
-
-      // CONTRACT: Scripted property should be added when item becomes JavaScript
-      chapterItem = workspaceWithJS.opf.manifest.find(item => item.id === 'chapter1');
-      expect(chapterItem?.properties).toContain('scripted');
+      expect(chapter(retyped)?.properties).toBeFalsy();
+      const removed = await service.removeManifestItem(withJS, 'script');
+      expect(chapter(removed)?.properties).toBeFalsy();
     });
 
     test('deletes actual files when removing manifest items', async () => {

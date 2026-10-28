@@ -70,7 +70,7 @@ The book will be read in reading systems spanning modern WebKit/Blink down to an
 Scripts in EPUB are opt-in twice: the reading system must support scripting, and readers may refuse it per-book. **Everything must work as static content first**; scripts only enhance:
 
 - The chapter must read correctly — content, order, meaning — with scripting disabled. Controls that only work with JS should be added *by* the script at runtime, not present-but-dead in the markup.
-- Scripted chapters carry the `scripted` property in the manifest (the packager derives this — don't hand-edit the OPF).
+- Scripted chapters carry the `scripted` property in the manifest, derived from each chapter's rendered `<script>` elements when it renders — don't hand-edit the OPF. A chapter's frontmatter `scripts:` key lists the reading-system scripts its head loads (`scripts: []` for none); without it, every script in the manifest is loaded.
 - Feature-detect; never assume APIs. Target ES2017-ish syntax for breadth.
 
 ## The PDF path is a different target

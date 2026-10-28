@@ -91,7 +91,13 @@ export class SpineTransformPipeline {
       const context: TransformBrokerContext | undefined = brokerContext
         ? { workspaceId: this.workspaceId, ...brokerContext, frontmatter: frontmatter.data }
         : undefined;
-      return await this.transformEngine.executeTransform(frontmatter.body, timeout, idref, context);
+      const result = await this.transformEngine.executeTransform(
+        frontmatter.body,
+        timeout,
+        idref,
+        context
+      );
+      return { ...result, frontmatter: frontmatter.data };
     } catch (error) {
       return {
         success: false,

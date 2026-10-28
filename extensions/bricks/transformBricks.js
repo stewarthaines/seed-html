@@ -79,7 +79,9 @@
  * has one is used. Its chapter records the line with its models, under the
  * key "pictures line" (no model name has a space), and every Bricks page
  * carries it as p.bricks-pictures, which bricks3d.js hides where the page
- * works. A book with no `pictures:` key has no line.
+ * works. A book with no `pictures:` key has no line, and neither has a page
+ * whose chapter frontmatter leaves bricks3d.js out of its `scripts:`, which
+ * is a still picture by design.
  *
  * Notes (malformed lines, unknown parts and colours, duplicate models) are
  * shown in the page, in English, for the author.
@@ -406,7 +408,7 @@ async function transformDOM(document, idref, ctx) {
       }
       div.appendChild(box);
     }
-    if (pictures) {
+    if (pictures && bricksRuntimeLoads(ctx.frontmatter)) {
       const line = document.createElement('p');
       line.setAttribute('class', 'bricks-pictures');
       line.textContent = pictures;
@@ -564,6 +566,14 @@ function bricksRelative(base, href) {
     to.shift();
   }
   return '../'.repeat(from.length) + to.join('/');
+}
+
+// Whether the chapter's head loads bricks3d.js: yes unless its frontmatter
+// has a `scripts:` list without it (the app matches a file name or an href).
+function bricksRuntimeLoads(frontmatter) {
+  const scripts = frontmatter && typeof frontmatter === 'object' ? frontmatter.scripts : undefined;
+  if (!Array.isArray(scripts) || !scripts.every((name) => typeof name === 'string')) return true;
+  return scripts.some((name) => name.trim().split('/').pop() === 'bricks3d.js');
 }
 
 // A source file's text, or null when there is none.

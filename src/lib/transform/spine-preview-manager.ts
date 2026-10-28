@@ -22,6 +22,7 @@ import { primaryLanguage } from '../epub/opf-utils.js';
 import { manifestHrefToPath } from '../epub/path-utils.js';
 import { DEFAULT_FXL_VIEWPORT, bookViewport, type FxlViewport } from '../epub/fixed-layout.js';
 import { readChapterMeta } from '../spine/chapter-metadata.js';
+import { translate } from '../i18n/index.js';
 import type { ChapterSource } from '../spine/chapter-switch.service.js';
 import type { ExtensionManager } from '../extensions/extension-manager.js';
 import type { SettingsService } from '../services/settings/settings.service.js';
@@ -44,13 +45,55 @@ import type { ManifestItem, SpineItem } from '../epub/opf-utils.js';
 
 /**
  * Content-derived OPF manifest properties this app reconciles from a rendered
- * chapter, mapped to the CSS selector that detects them. `scripted` is NOT here:
- * it's owned by a separate blanket JS-file toggle (WorkspaceService), not content.
+ * chapter, mapped to the CSS selector that detects them. `scripted` follows the
+ * chapter's own <script> elements, so a chapter whose frontmatter loads no
+ * scripts is not flagged.
  */
 const CONTENT_DERIVED_PROPERTIES: ReadonlyArray<{ token: string; selector: string }> = [
   { token: 'svg', selector: 'svg' },
   { token: 'mathml', selector: 'math' },
+  { token: 'scripted', selector: 'script' },
 ];
+
+/**
+ * The scripts a chapter's <head> loads: every reading-system script in the
+ * manifest, unless the chapter's frontmatter has a `scripts:` key, a list of
+ * file names (`scripts: []` for none; `scripts: [bricks3d.js]`) matched against
+ * each script's file name or its whole manifest href. Manifest order is kept.
+ * Returns the hrefs, and the warnings for a malformed key or a name that
+ * matches no script.
+ */
+export function chapterScripts(
+  hrefs: string[],
+  frontmatter: unknown
+): { scripts: string[]; warnings: string[] } {
+  if (!frontmatter || typeof frontmatter !== 'object' || !('scripts' in frontmatter)) {
+    return { scripts: hrefs, warnings: [] };
+  }
+  const wanted = (frontmatter as { scripts: unknown }).scripts;
+  if (!Array.isArray(wanted) || !wanted.every(name => typeof name === 'string')) {
+    return {
+      scripts: hrefs,
+      warnings: [
+        translate(
+          'The frontmatter scripts key should be a list of script file names, so this page loads every script.'
+        ),
+      ],
+    };
+  }
+  const names = wanted.map(name => name.trim());
+  const matches = (href: string, name: string) => href === name || href.split('/').pop() === name;
+  return {
+    scripts: hrefs.filter(href => names.some(name => matches(href, name))),
+    warnings: names
+      .filter(name => !hrefs.some(href => matches(href, name)))
+      .map(name =>
+        translate('The frontmatter lists {name} under scripts, but the book has no such script.', {
+          name,
+        })
+      ),
+  };
+}
 
 /**
  * Given a chapter's rendered XHTML and its current manifest `properties`, return
@@ -419,6 +462,8 @@ export class SpinePreviewManager {
       // HTML (so the shared template wraps it consistently) AND its attributes
       // (so a class/data-* a DOM transform set on <body> survives).
       const metadata = await this.generateChapterMetadata(workspace);
+      const chosen = chapterScripts(metadata.scripts ?? [], transformResult.frontmatter);
+      metadata.scripts = chosen.scripts;
       const { content, bodyAttributes } = this.extractBody(transformResult.html || '');
       const xhtml = generateXHTMLDocument(content, metadata, bodyAttributes);
       if (epoch !== this.renderEpoch) return;
@@ -461,7 +506,7 @@ export class SpinePreviewManager {
       this.onPreviewUpdate({
         xhtml: processedXHTML,
         ...(persisted ? { persistedXhtml: xhtml } : {}),
-        warnings: transformResult.warnings || [],
+        warnings: [...(transformResult.warnings || []), ...chosen.warnings],
         executionTime: Math.round(executionTime),
         timestamp: Date.now(),
       });
