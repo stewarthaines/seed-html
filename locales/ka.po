@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-06\n"
-"PO-Revision-Date: 2026-10-06\n"
+"POT-Creation-Date: 2026-10-27\n"
+"PO-Revision-Date: 2026-10-27\n"
 "Language: ka\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -32,6 +32,7 @@ msgstr ""
 msgid "{count} accessibility issues"
 msgstr "{count} წვდომადობის პრობლემა"
 
+#: src/App.svelte
 #: src/lib/components/books/DeleteBookDialog.svelte
 msgid "{count} chapters"
 msgstr ""
@@ -45,6 +46,7 @@ msgstr "{count} დღის წინ"
 msgid "{count} errors"
 msgstr "{count} შეცდომა"
 
+#: src/App.svelte
 #: src/lib/components/manifest/MoveReviewDialog.svelte
 msgid "{count} files"
 msgstr ""
@@ -738,6 +740,7 @@ msgstr ""
 msgid "Book language"
 msgstr ""
 
+#: src/lib/components/shell/BookSidebar.svelte
 #: src/lib/components/shell/TopBar.svelte
 msgid "Book sections"
 msgstr ""
@@ -1180,6 +1183,7 @@ msgid "Content Type:"
 msgstr "შიგთავსის ტიპი:"
 
 #: src/lib/components/manifest/ManifestTable.svelte
+#: src/lib/components/shell/BookSidebar.svelte
 #: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Contents"
@@ -1279,6 +1283,7 @@ msgstr ""
 #: src/lib/components/manifest/ManifestPreview.svelte
 #: src/lib/components/manifest/ManifestTable.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/components/shell/BookSidebar.svelte
 #: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/CoverView.svelte
 #: src/lib/navigation/views/PublishView.svelte
@@ -1416,6 +1421,7 @@ msgstr "მუქი"
 msgid "Dark"
 msgstr "მუქი"
 
+#: src/App.svelte
 #: src/lib/navigation/views/CoverView.svelte
 msgid "Dark on light"
 msgstr ""
@@ -1560,6 +1566,7 @@ msgid "Destinations…"
 msgstr ""
 
 #: src/lib/components/metadata/MetadataEditor.svelte
+#: src/lib/components/shell/BookSidebar.svelte
 #: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/CoverView.svelte
 msgid "Details"
@@ -2388,6 +2395,7 @@ msgstr ""
 msgid "files"
 msgstr "ფაილი"
 
+#: src/lib/components/shell/BookSidebar.svelte
 #: src/lib/components/shell/TopBar.svelte
 msgid "Files"
 msgstr ""
@@ -3003,6 +3011,7 @@ msgstr "ღია"
 msgid "Light"
 msgstr "ღია"
 
+#: src/App.svelte
 #: src/lib/navigation/views/CoverView.svelte
 msgid "Light on dark"
 msgstr ""
@@ -3800,6 +3809,7 @@ msgstr ""
 msgid "Packaging"
 msgstr ""
 
+#: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Packaging…"
 msgstr "იფუთება…"
@@ -5004,6 +5014,14 @@ msgstr ""
 msgid "The file’s extension does not match the format."
 msgstr ""
 
+#: src/lib/transform/spine-preview-manager.ts
+msgid "The frontmatter lists {name} under scripts, but the book has no such script."
+msgstr "ფრონტმატერი scripts-ში ასახელებს {name}-ს, მაგრამ წიგნს ასეთი სკრიპტი არ აქვს."
+
+#: src/lib/transform/spine-preview-manager.ts
+msgid "The frontmatter scripts key should be a list of script file names, so this page loads every script."
+msgstr "ფრონტმატერის scripts გასაღები სკრიპტის ფაილების სახელების სია უნდა იყოს, ამიტომ ეს გვერდი ყველა სკრიპტს ჩატვირთავს."
+
 #: src/lib/components/SpineSidebar.svelte
 msgid "The linked folder isn't available — reconnect the drive or relink the folder."
 msgstr "მიბმული საქაღალდე მიუწვდომელია — ხელახლა შეაერთეთ დისკი ან ხელახლა მიაბით საქაღალდე."
@@ -5037,6 +5055,7 @@ msgstr "ეს ფაილები ემთხვევა მანიფე
 msgid "Third-Party Libraries"
 msgstr "მესამე მხარის ბიბლიოთეკები"
 
+#: src/lib/components/shell/BookSidebar.svelte
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "This book"
 msgstr ""
@@ -5111,6 +5130,7 @@ msgstr "ცარიელი მდგომარეობის გადა�
 msgid "Toggle orientation"
 msgstr "ორიენტაციის გადართვა"
 
+#: src/lib/components/shell/BookSidebar.svelte
 #: src/lib/components/shell/WriteSidebar.svelte
 msgid "Toggle sidebar"
 msgstr "გვერდითი პანელის გადართვა"

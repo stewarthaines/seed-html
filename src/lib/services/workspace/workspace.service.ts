@@ -595,14 +595,6 @@ export class WorkspaceService {
       },
     };
 
-    // Reconcile the blanket 'scripted' property on every add — not only when the
-    // added item is JS. Adding a JS file toggles it on for all chapters, AND a
-    // newly-added chapter must pick up 'scripted' when a reading-system JS already
-    // exists (otherwise it's order-dependent: chapters created after the JS never
-    // get flagged). The reconcile is idempotent, so a non-JS/non-chapter add is a
-    // cheap no-op.
-    updatedWorkspace = this.addScriptedPropertiesToChapters(updatedWorkspace);
-
     // Save to storage
     return await this.saveWorkspace(updatedWorkspace);
   }
@@ -618,9 +610,6 @@ export class WorkspaceService {
 
     // Get the manifest item before removing it
     const removedItem = workspace.opf.manifest[itemIndex];
-    const removingJavaScript =
-      removedItem.mediaType === 'text/javascript' ||
-      removedItem.mediaType === 'application/javascript';
 
     // Create updated workspace without the item
     let updatedWorkspace: WorkspaceState = {
@@ -635,11 +624,6 @@ export class WorkspaceService {
         },
       },
     };
-
-    // Update scripted properties if JavaScript file was removed
-    if (removingJavaScript) {
-      updatedWorkspace = this.addScriptedPropertiesToChapters(updatedWorkspace);
-    }
 
     // Persist the manifest change first, so a failure to delete the file can
     // never leave content.opf still listing an item whose file is gone.
@@ -712,12 +696,6 @@ export class WorkspaceService {
       }
     }
 
-    // Check if media type changed to/from JavaScript
-    const oldIsJS =
-      oldItem.mediaType === 'text/javascript' || oldItem.mediaType === 'application/javascript';
-    const newIsJS =
-      updates.mediaType === 'text/javascript' || updates.mediaType === 'application/javascript';
-
     // Update manifest item
     const updatedManifest = [...workspace.opf.manifest];
     updatedManifest[itemIndex] = {
@@ -752,11 +730,6 @@ export class WorkspaceService {
         },
       },
     };
-
-    // Update scripted properties if JavaScript status changed
-    if (oldIsJS !== newIsJS) {
-      updatedWorkspace = this.addScriptedPropertiesToChapters(updatedWorkspace);
-    }
 
     return await this.saveWorkspace(updatedWorkspace);
   }
@@ -1180,45 +1153,6 @@ export class WorkspaceService {
     // Language tags are NOT hard-validated here: the editor persists in-progress
     // tags and surfaces malformed ones as inline errors (see MetadataService
     // validateMetadata). Blocking the save would revert the user's input.
-  }
-
-  private addScriptedPropertiesToChapters(workspace: WorkspaceState): WorkspaceState {
-    const hasJavaScript = workspace.opf.manifest.some(
-      item => item.mediaType === 'text/javascript' || item.mediaType === 'application/javascript'
-    );
-
-    const updatedManifest = workspace.opf.manifest.map(item => {
-      // Only update chapter items (XHTML but NOT nav)
-      if (
-        item.mediaType === 'application/xhtml+xml' &&
-        item.id !== 'nav' &&
-        !item.properties?.includes('nav')
-      ) {
-        const properties = item.properties || [];
-        const hasScripted = properties.includes('scripted');
-
-        if (hasJavaScript && !hasScripted) {
-          // Add scripted property
-          return { ...item, properties: [...properties, 'scripted'] };
-        } else if (!hasJavaScript && hasScripted) {
-          // Remove scripted property
-          const filteredProperties = properties.filter(p => p !== 'scripted');
-          return {
-            ...item,
-            properties: filteredProperties.length > 0 ? filteredProperties : undefined,
-          };
-        }
-      }
-      return item;
-    });
-
-    return {
-      ...workspace,
-      opf: {
-        ...workspace.opf,
-        manifest: updatedManifest,
-      },
-    };
   }
 
   private generateManifestId(href: string, existingIds: Set<string>): string {

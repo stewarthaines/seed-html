@@ -19,6 +19,8 @@ export interface TransformResult {
   warnings?: string[];
   error?: TransformError;
   executionTime?: number;
+  /** The chapter's parsed frontmatter (null when it has none), for the head. */
+  frontmatter?: unknown;
 }
 
 /**

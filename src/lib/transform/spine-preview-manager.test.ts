@@ -1,9 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { deriveContentProperties, createSpinePreviewManager } from './spine-preview-manager.js';
+import {
+  deriveContentProperties,
+  chapterScripts,
+  createSpinePreviewManager,
+} from './spine-preview-manager.js';
 
 /**
  * Unit coverage for the content-derived manifest-property reconciliation
- * (`svg`, `mathml`) extracted from the render pipeline. Parsing uses text/html,
+ * (`svg`, `mathml`, `scripted`) extracted from the render pipeline. Parsing uses text/html,
  * which the unit env (happy-dom) handles for <svg>/<math> foreign content.
  */
 describe('deriveContentProperties', () => {
@@ -41,24 +45,55 @@ describe('deriveContentProperties', () => {
     expect(deriveContentProperties(xhtml, ['svg', 'mathml'])).toEqual(['svg']);
   });
 
-  it('preserves non-owned tokens (scripted, cover-image) untouched', () => {
+  it('preserves non-owned tokens (cover-image) untouched', () => {
     const xhtml = wrap('<svg><rect/></svg>');
-    // scripted (blanket toggle) and cover-image must survive; svg is added.
-    expect(deriveContentProperties(xhtml, ['scripted', 'cover-image'])).toEqual([
-      'scripted',
-      'cover-image',
-      'svg',
-    ]);
+    expect(deriveContentProperties(xhtml, ['cover-image'])).toEqual(['cover-image', 'svg']);
   });
 
   it('returns null when nothing changes and no owned tokens apply', () => {
     const xhtml = wrap('<p>plain text</p>');
-    expect(deriveContentProperties(xhtml, ['scripted'])).toBeNull();
+    expect(deriveContentProperties(xhtml, ['cover-image'])).toBeNull();
   });
 
-  it('keeps scripted while removing a now-absent svg', () => {
-    const xhtml = wrap('<p>plain</p>');
-    expect(deriveContentProperties(xhtml, ['scripted', 'svg'])).toEqual(['scripted']);
+  it('adds scripted when the chapter loads a script, and removes it when it does not', () => {
+    const scripted = `<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml"><head><title>t</title><script src="../Scripts/a.js"></script></head><body><p>x</p></body></html>`;
+    expect(deriveContentProperties(scripted, [])).toEqual(['scripted']);
+    expect(deriveContentProperties(scripted, ['scripted'])).toBeNull();
+    expect(deriveContentProperties(wrap('<p>plain</p>'), ['scripted', 'svg'])).toEqual([]);
+  });
+});
+
+describe('chapterScripts', () => {
+  const HREFS = ['Scripts/bricks3d.js', 'Scripts/three-bricks.js', 'Scripts/reader.js'];
+
+  it('loads every script without a scripts key', () => {
+    expect(chapterScripts(HREFS, null)).toEqual({ scripts: HREFS, warnings: [] });
+    expect(chapterScripts(HREFS, { title: 'x' })).toEqual({ scripts: HREFS, warnings: [] });
+  });
+
+  it('loads none for an empty list', () => {
+    expect(chapterScripts(HREFS, { scripts: [] })).toEqual({ scripts: [], warnings: [] });
+  });
+
+  it('loads the named scripts in manifest order, by file name or href', () => {
+    expect(
+      chapterScripts(HREFS, { scripts: ['three-bricks.js', 'Scripts/bricks3d.js'] }).scripts
+    ).toEqual(['Scripts/bricks3d.js', 'Scripts/three-bricks.js']);
+  });
+
+  it('warns about a name the book has no script for', () => {
+    const { scripts, warnings } = chapterScripts(HREFS, { scripts: ['missing.js'] });
+    expect(scripts).toEqual([]);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('missing.js');
+  });
+
+  it('loads every script, with a warning, when the key is not a list of names', () => {
+    for (const value of ['bricks3d.js', [1], null]) {
+      const { scripts, warnings } = chapterScripts(HREFS, { scripts: value });
+      expect(scripts).toEqual(HREFS);
+      expect(warnings).toHaveLength(1);
+    }
   });
 });
 

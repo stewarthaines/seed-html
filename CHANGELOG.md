@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A chapter can choose which reading-system scripts it loads, or load none, so a page of plain text in a scripted book stays plain.
+
 - A Bricks book can tell readers, in its own words, when their reading system shows its pages as still pictures, so nobody wonders why a page won't move.
 
 - One line on a Bricks page can now lay out a row, a floor or a stack of the same part, so a page of repeated bricks stays short to write.
@@ -23,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A Bricks parts page shows every part your book's parts sets offer, drawn with its part number, to keep beside you while you build pages; a Bricks Parts generator lists the same parts as text to copy numbers from.
 
 - A Bricks page can open with a chosen step already built while you work on it, so each edit shows where its parts land without dragging the handle again.
+
+### Changed
+
+- A chapter is marked as running scripts only when it loads one, updated each time it renders, so a book passes validation when some pages carry no code.
 
 ## [0.24.1] - 2026-10-27
 

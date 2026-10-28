@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-06\n"
-"PO-Revision-Date: 2026-10-06\n"
+"POT-Creation-Date: 2026-10-27\n"
+"PO-Revision-Date: 2026-10-27\n"
 "Language: ar\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -32,6 +32,7 @@ msgstr ""
 msgid "{count} accessibility issues"
 msgstr ""
 
+#: src/App.svelte
 #: src/lib/components/books/DeleteBookDialog.svelte
 msgid "{count} chapters"
 msgstr ""
@@ -45,6 +46,7 @@ msgstr ""
 msgid "{count} errors"
 msgstr ""
 
+#: src/App.svelte
 #: src/lib/components/manifest/MoveReviewDialog.svelte
 msgid "{count} files"
 msgstr ""
@@ -700,6 +702,7 @@ msgstr ""
 msgid "Book language"
 msgstr ""
 
+#: src/lib/components/shell/BookSidebar.svelte
 #: src/lib/components/shell/TopBar.svelte
 msgid "Book sections"
 msgstr ""
@@ -1142,6 +1145,7 @@ msgid "Content Type:"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestTable.svelte
+#: src/lib/components/shell/BookSidebar.svelte
 #: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Contents"
@@ -1241,6 +1245,7 @@ msgstr ""
 #: src/lib/components/manifest/ManifestPreview.svelte
 #: src/lib/components/manifest/ManifestTable.svelte
 #: src/lib/components/metadata/SimpleMetadataView.svelte
+#: src/lib/components/shell/BookSidebar.svelte
 #: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/CoverView.svelte
 #: src/lib/navigation/views/PublishView.svelte
@@ -1378,6 +1383,7 @@ msgstr ""
 msgid "Dark"
 msgstr ""
 
+#: src/App.svelte
 #: src/lib/navigation/views/CoverView.svelte
 msgid "Dark on light"
 msgstr ""
@@ -1522,6 +1528,7 @@ msgid "Destinations…"
 msgstr ""
 
 #: src/lib/components/metadata/MetadataEditor.svelte
+#: src/lib/components/shell/BookSidebar.svelte
 #: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/CoverView.svelte
 msgid "Details"
@@ -2350,6 +2357,7 @@ msgstr ""
 msgid "files"
 msgstr ""
 
+#: src/lib/components/shell/BookSidebar.svelte
 #: src/lib/components/shell/TopBar.svelte
 msgid "Files"
 msgstr ""
@@ -2965,6 +2973,7 @@ msgstr ""
 msgid "Light"
 msgstr ""
 
+#: src/App.svelte
 #: src/lib/navigation/views/CoverView.svelte
 msgid "Light on dark"
 msgstr ""
@@ -3762,6 +3771,7 @@ msgstr ""
 msgid "Packaging"
 msgstr ""
 
+#: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Packaging…"
 msgstr ""
@@ -4966,6 +4976,14 @@ msgstr ""
 msgid "The file’s extension does not match the format."
 msgstr ""
 
+#: src/lib/transform/spine-preview-manager.ts
+msgid "The frontmatter lists {name} under scripts, but the book has no such script."
+msgstr "تذكر المقدمة {name} ضمن scripts، لكن الكتاب لا يحتوي على هذا البرنامج النصي."
+
+#: src/lib/transform/spine-preview-manager.ts
+msgid "The frontmatter scripts key should be a list of script file names, so this page loads every script."
+msgstr "يجب أن يكون المفتاح scripts في المقدمة قائمة بأسماء ملفات البرامج النصية، لذا تحمّل هذه الصفحة كل البرامج النصية."
+
 #: src/lib/components/SpineSidebar.svelte
 msgid "The linked folder isn't available — reconnect the drive or relink the folder."
 msgstr ""
@@ -4999,6 +5017,7 @@ msgstr ""
 msgid "Third-Party Libraries"
 msgstr ""
 
+#: src/lib/components/shell/BookSidebar.svelte
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "This book"
 msgstr ""
@@ -5073,6 +5092,7 @@ msgstr ""
 msgid "Toggle orientation"
 msgstr ""
 
+#: src/lib/components/shell/BookSidebar.svelte
 #: src/lib/components/shell/WriteSidebar.svelte
 msgid "Toggle sidebar"
 msgstr ""
