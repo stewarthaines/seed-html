@@ -48,6 +48,13 @@
 // line is hidden as each page starts, before anything loads, so it never
 // shows where the page works, and shown again when the page cannot draw.
 //
+// The look: the parts reflect a soft studio light, neutral tone mapping
+// keeps their colours true, and each part's edges are drawn in a darker
+// shade of its own colour; the parts callout keeps black outlines, which
+// show a small part's shape better. data-style="classic" keeps the instruction
+// booklet's black outlines and plain light. A device that cannot draw the
+// studio light keeps the plain light, with the shaded edges.
+//
 // The transform loads this file too, and calls setupStage with a `still`
 // option to draw that image: the step finished, as a reader first sees it,
 // into an OffscreenCanvas at twice the page size.
@@ -171,6 +178,7 @@ function setupStage(stage, library, still) {
   var THUMB_W = 110 * U, THUMB_LEFT = 55.2 * U, THUMB_RIGHT = PAGE_W - 55.8 * U, THUMB_Y = PAGE_H - 55.1 * U;
   var STRIP = PAGE_H - 80 * U;          // a drag starts below this line
   var FILL = 0.6, DROP = 3.2;           // the main scene's light: fill and shadow-casting
+  var CLASSIC = stage.getAttribute('data-style') === 'classic';
   var CALLOUT = { x: 60 * U, y: 22 * U, h: 86 * U, max: Math.min(246 * U, PAGE_W - 74 * U), k: U * 9.5 / (STUD * Math.sqrt(2 / 3)) };
 
   // A parts page (data-inventory) draws a grid of parts, not a step.
@@ -354,8 +362,9 @@ function setupStage(stage, library, still) {
     return;
   }
   renderer.setScissorTest(true);
+  var studio = studioLight(renderer);
   var scene = new T.Scene();
-  addLights(scene, FILL);
+  addLights(scene, FILL, studio);
   var camera = null;
 
   // A light from straight above casts the moving part's shadow onto the parts
@@ -381,6 +390,7 @@ function setupStage(stage, library, still) {
   var loader = new T.LDrawLoader();
   loader.setConditionalLineMaterial(T.LDrawConditionalLineMaterial);
   loader.parse(library.main + '\n' + lines.join('\n') + '\n' + library.files, function (model) {
+    shadeEdges(model, loader);
     var loaded = [];
     model.children.filter(function (c) { return c.isGroup; }).forEach(function (child) {
       loaded[Math.round(child.position.x / TAG)] = child;
@@ -464,8 +474,9 @@ function setupStage(stage, library, still) {
     steps.forEach(function (s) { s.groups.forEach(function (g) {
       var cellW = s.cellW;
       g.scene = new T.Scene();
-      addLights(g.scene, 1);
+      addLights(g.scene, 1, studio);
       var copy = g.part.object.clone();
+      outline(copy);
       copy.position.set(0, 0, 0);
       g.scene.add(copy);
       copy.updateMatrixWorld(true);
@@ -612,12 +623,11 @@ function setupStage(stage, library, still) {
       var w = current.cellW * current.groups.length, line = 1.5 * U;
       c.beginPath();
       // The callout as bricks.css draws it, square and yellow in the classic style.
-      var classic = stage.getAttribute('data-style') === 'classic';
-      c.roundRect(CALLOUT.x + line / 2, CALLOUT.y + line / 2, w - line, CALLOUT.h - line, classic ? 0 : 6 * U - line / 2);
-      c.fillStyle = classic ? '#efe7a3' : '#f5faff';
+      c.roundRect(CALLOUT.x + line / 2, CALLOUT.y + line / 2, w - line, CALLOUT.h - line, CLASSIC ? 0 : 6 * U - line / 2);
+      c.fillStyle = CLASSIC ? '#efe7a3' : '#f5faff';
       c.fill();
       c.lineWidth = line;
-      c.strokeStyle = classic ? '#222' : '#7399cc';
+      c.strokeStyle = CLASSIC ? '#222' : '#7399cc';
       c.stroke();
       c.fillStyle = '#1f2433';
       c.font = 'bold ' + 13 * U + 'px ' + font;
@@ -731,6 +741,7 @@ function setupStage(stage, library, still) {
     // Clear to transparent, so the panels and numbers under the canvas show:
     // three.js starts with opaque black until a render sets the colour.
     renderer.setClearColor(0x000000, 0);
+    var studio = studioLight(renderer);
     var drawn = false;
 
     var lines = cells.map(function (c, i) {
@@ -739,6 +750,7 @@ function setupStage(stage, library, still) {
     var loader = new T.LDrawLoader();
     loader.setConditionalLineMaterial(T.LDrawConditionalLineMaterial);
     loader.parse(library.main + '\n' + lines.join('\n') + '\n' + library.files, function (model) {
+      shadeEdges(model, loader);
       model.children.filter(function (child) { return child.isGroup; }).forEach(function (child) {
         var c = cells[Math.round(child.position.x / TAG)];
         if (!c) return;
@@ -749,7 +761,7 @@ function setupStage(stage, library, still) {
         part.rotation.x = Math.PI;
         part.add(child);
         c.scene = new T.Scene();
-        addLights(c.scene, 1);
+        addLights(c.scene, 1, studio);
         c.scene.add(part);
         part.updateMatrixWorld(true);
         var box = new T.Box3().setFromObject(part);
@@ -816,7 +828,6 @@ function setupStage(stage, library, still) {
       var out = new OffscreenCanvas(canvas.width, canvas.height);
       var c = out.getContext('2d');
       c.scale(canvas.width / PAGE_W, canvas.height / PAGE_H);
-      var classic = stage.getAttribute('data-style') === 'classic';
       var line = 1.5 * U;
       c.font = 'bold ' + 11 * U + 'px "Helvetica Neue", Helvetica, Arial, sans-serif';
       c.textAlign = 'center';
@@ -824,11 +835,11 @@ function setupStage(stage, library, still) {
       cells.forEach(function (cell) {
         c.beginPath();
         c.roundRect(cell.x + inset + line / 2, cell.y + inset + line / 2, cell.w - 2 * inset - line, cell.h - 2 * inset - line,
-          classic ? 0 : 6 * U - line / 2);
-        c.fillStyle = classic ? '#efe7a3' : '#f5faff';
+          CLASSIC ? 0 : 6 * U - line / 2);
+        c.fillStyle = CLASSIC ? '#efe7a3' : '#f5faff';
         c.fill();
         c.lineWidth = line;
-        c.strokeStyle = classic ? '#222' : '#7399cc';
+        c.strokeStyle = CLASSIC ? '#222' : '#7399cc';
         c.stroke();
         c.fillStyle = '#1f2433';
         c.fillText(cell.label, cell.x + cell.w / 2, cell.y + cell.h - inset - 7 * U);
@@ -851,11 +862,63 @@ function setupStage(stage, library, still) {
     return cam;
   }
 
+  // Each part's edges in a darker shade of its own colour, without the lines
+  // that outline curved surfaces; a classic page keeps LDraw's black outlines.
+  function shadeEdges(model, loader) {
+    if (CLASSIC) return;
+    var shaded = [];
+    model.traverse(function (o) {
+      if (o.isConditionalLine) o.visible = false;
+      if (!o.isMesh) return;
+      [].concat(o.material).forEach(function (m) {
+        var edge = loader.edgeMaterialCache.get(m);
+        if (!edge || shaded.indexOf(edge) >= 0) return;
+        shaded.push(edge);
+        edge.userData.outline = edge.clone();
+        edge.color.copy(m.color).multiplyScalar(0.55);
+        edge.transparent = true;
+        edge.opacity = 0.7;
+      });
+    });
+  }
+
+  // A parts callout's copy of a part keeps LDraw's black outlines: drawn that
+  // small, the shaded edges are too soft to show the part's shape.
+  function outline(object) {
+    if (CLASSIC) return;
+    function outlined(m) { return m.userData.outline || m; }
+    object.traverse(function (o) {
+      if (o.isConditionalLine) o.visible = true;
+      else if (o.isLineSegments) o.material = Array.isArray(o.material) ? o.material.map(outlined) : outlined(o.material);
+    });
+  }
+
   function castShadow(part, on) {
     part.object.traverse(function (o) { if (o.isMesh) o.castShadow = on; });
   }
 
-  function addLights(s, k) {
+  // The studio light, as an environment for the scenes this renderer draws,
+  // or null for the plain light: on a classic page, and where the renderer
+  // cannot draw into the half-float targets the environment is made in.
+  function studioLight(renderer) {
+    if (CLASSIC) return null;
+    var gl = renderer.extensions;
+    if (!gl.has('EXT_color_buffer_float') && !gl.has('EXT_color_buffer_half_float')) return null;
+    var generator = new T.PMREMGenerator(renderer);
+    var map = generator.fromScene(new T.RoomEnvironment(), 0.04).texture;
+    generator.dispose();
+    renderer.toneMapping = T.NeutralToneMapping;
+    renderer.toneMappingExposure = 0.85;
+    return map;
+  }
+
+  // The plain light at k, or less of it under the studio light.
+  function addLights(s, k, studio) {
+    if (studio) {
+      s.environment = studio;
+      s.environmentIntensity = 0.5;
+      k *= 0.55;
+    }
     s.add(new T.HemisphereLight(0xffffff, 0x8899aa, 3.2 * k));
     var sun = new T.DirectionalLight(0xffffff, 2.4 * k);
     sun.position.set(1, 3, 0.4);
