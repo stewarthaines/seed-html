@@ -71,3 +71,19 @@ Plugin → main insertion uses the existing `insert` message (`{ type: 'insert',
 1. **Host wiring** — panel-plugin mount in `EditorPane` with handshake/fallback, `init` carrying the workspace-root handle, `isInsertMessage` handler. This is the reusable investment for any future editor-adjacent plugin.
 2. **Plugin v1** — waveform + regions + library persistence + insert.
 3. **Follow-ups (unscheduled)** — energy-based silence detection to auto-suggest regions (RMS thresholding on the decoded `AudioBuffer`; no WASM, no isolation requirements); "load from selection" parsing an existing directive back into a region (parse logic exists in `AudioClipEditor.svelte`); batch-insert all clips; optional single-threaded `onnxruntime-web` Silero VAD inside the plugin if RMS proves insufficient.
+
+## Automatic transcription (reference, 2026-10-28, parked)
+
+Candidate engine: Whistle from Cactus Compute (https://cactuscompute.com/blog/whistle), a 16.9 MB CPU speech-to-text model that returns text, detected language and optional per-word start, end and probability, with keyword biasing toward supplied phrases. It is reported as Whisper-base class or better on several benchmarks. Languages: English, German, French, Spanish, Italian, Dutch, Polish only — not Georgian or Japanese, so the script-learner and polyphony books are out of scope.
+
+Browser route: the community npm package `cactus-needle` (0.3.0, Apache-2.0, one maintainer, ~1.5 MB unpacked) runs Whistle as WebAssembly in a module worker. Its readme asks for HTTPS or localhost, WebAssembly and module workers, and does not mention SharedArrayBuffer or cross-origin isolation — the requirement that ruled out Cockatiel's VAD. Plugins are HTTP-only already, so the `file:` build loses nothing. Not yet verified by a prototype.
+
+Weights: by default the package downloads them from Hugging Face on first use. Neither the blog nor the code repository states a licence for the weights; settle that before choosing between fetching on demand (with the user's go-ahead) and hosting them ourselves. Either way they are cached locally, never bundled into the single-file plugin.
+
+Input: 16 kHz mono. The plugin already decodes audio through Web Audio, so a region can be resampled with an `OfflineAudioContext`; no extra resampler is needed.
+
+Possibilities, smallest first. (1) Transcribe a region into its label — the label is the text the reader sees in `:clip[label]`, so a Transcribe button fills it for the author to correct; the same works on a fresh recording, making record → transcribe → keep one loop. (2) Suggest regions for a whole file from the word timestamps, split at sentences or pauses, each arriving with its text; this supersedes the RMS silence-detection follow-up above. (3) A per-project keyword list in the plugin's data for names the model will otherwise miss. (4) Insert a transcribed passage as a run of clips, one per sentence, through the existing `insert` message. (5) Read-along highlighting via EPUB Media Overlays (SMIL), which word timestamps make possible but which is core app work — SMIL items in the OPF, the `media-overlay` attribute, a per-chapter timing source — and needs its own design record. (6) A full transcript offered as text to insert, as the text alternative for an audio-heavy chapter.
+
+Rules: every transcription result is a suggestion the author accepts; nothing is written into a chapter or the clip library without an explicit action. Pin the package version.
+
+Recommended first step when this resumes: (1) and (2) in the plugin, stored in `clips.json`, after a quick prototype on one of the user's own recordings to measure accuracy and speed.
