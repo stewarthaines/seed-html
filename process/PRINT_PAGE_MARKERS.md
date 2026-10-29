@@ -60,7 +60,13 @@ Whatever element the format produces (`span`, `em`), the output is always an emp
 
 `epub:type="pagebreak"` and `role="doc-pagebreak"` are written as above, and the `pagebreak` class is removed. Other classes the author put on the element are kept.
 
-The marker stays a `span`, with the label in `title`, because markers fall inside paragraphs, often mid-sentence, where an `<hr>` is not allowed.
+### Why a span, not an hr
+
+axe accepts `role="doc-pagebreak"` only on `<hr>` because the role is a kind of separator, but an `<hr>` can't carry a print page marker in practice. `<hr>` is flow content and isn't allowed inside a paragraph or any other phrasing context, and a print page boundary falls wherever the page ended: in *John, Paul, and George* all 216 markers sit inside running text, none between blocks. epubcheck would reject every one of them (RSC-005).
+
+An `<hr>` would also be the wrong thing in two smaller ways. It draws a rule unless the stylesheet hides it, and some reading systems drop or override the book's CSS, so a line could appear mid-sentence. And it means a thematic break, which a page boundary isn't. An empty `span` is invisible and says nothing to readers who don't need it; the EPUB accessibility techniques use it in their examples, as most published EPUBs do. The label goes in `title` so the span passes axe and stays valid.
+
+Writing `<hr>` for a marker that stands alone between blocks, and a span elsewhere, is not proposed: two outputs for one feature, for a case the real book doesn't have.
 
 ### Stage
 
