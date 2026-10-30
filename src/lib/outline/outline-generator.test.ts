@@ -86,7 +86,216 @@ describe('OutlineGenerator.generateFromSpine linear filtering', () => {
     expect(doc.xhtmlContent).toContain('href="intro.xhtml"');
     expect(doc.xhtmlContent).toContain('href="ch1.xhtml"');
     expect(doc.xhtmlContent).not.toContain('cover-aux.xhtml');
-    // The non-linear item's file is never read.
-    expect(ws.readFile).not.toHaveBeenCalledWith('ws-1', 'OEBPS/cover-aux.xhtml');
+    // (The non-linear item's file is still read, for page markers: a marker
+    // belongs in the page-list wherever it is in the spine.)
+  });
+});
+
+describe('OutlineGenerator.processUserContent nav blocks', () => {
+  const pathInfo = {
+    rootfilePath: 'OEBPS/content.opf',
+    basePath: 'OEBPS',
+    opfFileName: 'content.opf',
+  };
+  const navs = (xhtml: string) =>
+    Array.from(
+      new DOMParser().parseFromString(xhtml, 'application/xhtml+xml').getElementsByTagName('nav')
+    ).map(nav => ({
+      type: nav.getAttribute('epub:type'),
+      hidden: nav.hasAttribute('hidden'),
+      id: nav.getAttribute('id'),
+      links: Array.from(nav.getElementsByTagName('a')).map(a => a.getAttribute('href')),
+    }));
+
+  // A djot-rendered nav.txt with a toc block, a landmarks block and a page-list block.
+  const blocksHtml = `<div class="toc">
+<h1 id="Contents">Contents</h1>
+<ul>
+<li><p><a href="Text/foreword.xhtml">Foreword</a></p></li>
+<li><p><a href="Text/essay01.xhtml">Essay 1</a></p>
+<ul><li><a href="Text/essay01.xhtml#S">Section</a></li></ul>
+</li>
+</ul>
+</div>
+<div class="landmarks">
+<ul>
+<li><a href="nav.xhtml#toc" epub:type="toc">Contents</a></li>
+<li><a href="Text/foreword.xhtml" epub:type="bodymatter">Start reading</a></li>
+</ul>
+</div>
+<div class="page-list">
+<ul><li><a href="Text/foreword.xhtml#page7">7</a></li></ul>
+</div>`;
+
+  it('runs the text transform only', async () => {
+    const pipeline = mockPipeline(navBody);
+    await OutlineGenerator.processUserContent('x', pipeline, 'ws-1');
+    expect(pipeline.executeTransform).toHaveBeenCalledWith('x', 2000, 'nav', undefined, {
+      textOnly: true,
+    });
+  });
+
+  it('writes the toc and a hidden landmarks nav, and leaves an authored page-list out', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const doc = await OutlineGenerator.processUserContent('x', mockPipeline(blocksHtml), 'ws-1');
+    expect(navs(doc.xhtmlContent)).toEqual([
+      {
+        type: 'toc',
+        hidden: false,
+        id: 'toc',
+        links: ['Text/foreword.xhtml', 'Text/essay01.xhtml', 'Text/essay01.xhtml#S'],
+      },
+      {
+        type: 'landmarks',
+        hidden: true,
+        id: null,
+        links: ['nav.xhtml#toc', 'Text/foreword.xhtml'],
+      },
+    ]);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('page-list block is left out'));
+    warn.mockRestore();
+  });
+
+  it('lifts the paragraph out of a loose list item that has a nested list', async () => {
+    const doc = await OutlineGenerator.processUserContent('x', mockPipeline(blocksHtml), 'ws-1');
+    expect(doc.xhtmlContent).not.toMatch(/<li>\s*<p>/);
+    expect(doc.xhtmlContent).not.toContain('<ul');
+  });
+
+  it('builds the toc from the spine when nav.txt holds only landmarks', async () => {
+    const landmarksOnly = blocksHtml.slice(blocksHtml.indexOf('<div class="landmarks">'));
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const doc = await OutlineGenerator.processUserContent(
+      'x',
+      mockPipeline(landmarksOnly),
+      'ws-1',
+      {
+        spine: {
+          items: [spineItem('intro', true), spineItem('ch1', true)],
+          workspaceService: mockWorkspace(),
+          pathInfo,
+        },
+      }
+    );
+    const [toc, landmarks] = navs(doc.xhtmlContent);
+    expect(toc.links).toEqual(['intro.xhtml', 'ch1.xhtml']);
+    expect(landmarks.type).toBe('landmarks');
+    vi.restoreAllMocks();
+  });
+
+  it('adds a page-list from the chapters when given the spine', async () => {
+    const ws = {
+      readFile: vi.fn(async () =>
+        new TextEncoder().encode(
+          '<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml"><head><title>c</title></head><body><h1><span id="page1" role="doc-pagebreak" title="1"></span>One</h1></body></html>'
+        )
+      ),
+    } as unknown as WorkspaceService;
+    const doc = await OutlineGenerator.processUserContent('x', mockPipeline(navBody), 'ws-1', {
+      spine: { items: [spineItem('ch1', true)], workspaceService: ws, pathInfo },
+    });
+    expect(navs(doc.xhtmlContent).map(n => [n.type, n.hidden, n.links])).toEqual([
+      ['toc', false, ['ch1.xhtml']],
+      ['page-list', true, ['ch1.xhtml#page1']],
+    ]);
+  });
+});
+
+describe('OutlineGenerator.generateFromSpine page-list', () => {
+  const pathInfo = {
+    rootfilePath: 'OEBPS/content.opf',
+    basePath: 'OEBPS',
+    opfFileName: 'content.opf',
+  };
+
+  it('writes no page-list for a book without page markers', async () => {
+    const doc = await OutlineGenerator.generateFromSpine(
+      [spineItem('ch1', true)],
+      mockWorkspace(),
+      'ws-1',
+      pathInfo
+    );
+    expect(doc.xhtmlContent).not.toContain('page-list');
+    expect(doc.xhtmlContent).toContain('<nav epub:type="toc" role="doc-toc" id="toc">');
+  });
+});
+
+describe('OutlineGenerator start-reading landmarks', () => {
+  const pathInfo = {
+    rootfilePath: 'OEBPS/content.opf',
+    basePath: 'OEBPS',
+    opfFileName: 'content.opf',
+  };
+  const landmarks = (xhtml: string) => {
+    const nav = Array.from(
+      new DOMParser().parseFromString(xhtml, 'application/xhtml+xml').getElementsByTagName('nav')
+    ).find(n => n.getAttribute('epub:type') === 'landmarks');
+    return nav
+      ? Array.from(nav.getElementsByTagName('a')).map(a => [
+          a.getAttribute('epub:type'),
+          a.getAttribute('href'),
+          a.textContent,
+        ])
+      : null;
+  };
+  const spine = () => ({
+    items: [spineItem('intro', true), spineItem('ch1', true)],
+    workspaceService: mockWorkspace(),
+    pathInfo,
+  });
+
+  it('adds a bodymatter landmark to the generated nav, labelled from the book', async () => {
+    const doc = await OutlineGenerator.generateFromSpine(
+      [spineItem('intro', true), spineItem('ch1', true)],
+      mockWorkspace(),
+      'ws-1',
+      pathInfo,
+      undefined,
+      { startReading: 'ch1' }
+    );
+    expect(landmarks(doc.xhtmlContent)).toEqual([['bodymatter', 'ch1.xhtml', 'ch1']]);
+  });
+
+  it('writes no landmarks when nothing is chosen, or the chapter has left the spine', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    for (const startReading of [undefined, 'gone']) {
+      const doc = await OutlineGenerator.generateFromSpine(
+        [spineItem('ch1', true)],
+        mockWorkspace(),
+        'ws-1',
+        pathInfo,
+        undefined,
+        { startReading }
+      );
+      expect(landmarks(doc.xhtmlContent)).toBeNull();
+    }
+    expect(warn).toHaveBeenCalledOnce();
+    warn.mockRestore();
+  });
+
+  it('adds it to a hand-written nav', async () => {
+    const html = '<h1>Contents</h1><ol><li><a href="intro.xhtml">Intro</a></li></ol>';
+    const doc = await OutlineGenerator.processUserContent('x', mockPipeline(html), 'ws-1', {
+      spine: spine(),
+      startReading: 'intro',
+    });
+    expect(landmarks(doc.xhtmlContent)).toEqual([['bodymatter', 'intro.xhtml', 'intro']]);
+  });
+
+  it("keeps a hand-written nav's own landmarks block over the choice", async () => {
+    const html = `<div class="toc"><ol><li><a href="intro.xhtml">Intro</a></li></ol></div>
+<div class="landmarks"><ul><li><a href="ch1.xhtml" epub:type="bodymatter">Begin</a></li></ul></div>`;
+    const doc = await OutlineGenerator.processUserContent('x', mockPipeline(html), 'ws-1', {
+      spine: spine(),
+      startReading: 'intro',
+    });
+    expect(landmarks(doc.xhtmlContent)).toEqual([['bodymatter', 'ch1.xhtml', 'Begin']]);
+  });
+
+  it('refuses a nav.txt that did not transform, rather than writing an empty toc', async () => {
+    const failing = {
+      executeTransform: vi.fn(async () => ({ success: false, error: { message: 'boom' } })),
+    } as unknown as SpineTransformPipeline;
+    await expect(OutlineGenerator.processUserContent('x', failing, 'ws-1')).rejects.toThrow('boom');
   });
 });

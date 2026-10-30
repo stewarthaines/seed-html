@@ -49,19 +49,26 @@ export class SpineTransformPipeline {
 
   /**
    * Execute transform pipeline with text input
+   *
+   * `textOnly` runs the text transform and none of the DOM transforms: the nav
+   * document uses it, since layout and structure transforms are meaningless for
+   * a navigation document and can make it invalid.
    */
   async executeTransform(
     plainText: string,
     timeout = 3000,
     idref?: string,
-    brokerContext?: Omit<TransformBrokerContext, 'workspaceId'>
+    brokerContext?: Omit<TransformBrokerContext, 'workspaceId'>,
+    options: { textOnly?: boolean } = {}
   ): Promise<TransformResult> {
     // Script loading is storage work, not engine communication — label its
     // failures accordingly so debugging points at settings/SOURCE, not the
     // iframe engine.
     try {
       const scripts = await this.loadTransformScripts();
-      await this.transformEngine.setTransformScripts(scripts);
+      await this.transformEngine.setTransformScripts(
+        options.textOnly ? { ...scripts, domTransforms: [], domTransformNames: [] } : scripts
+      );
     } catch (error) {
       return {
         success: false,

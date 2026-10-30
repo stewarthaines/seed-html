@@ -69,10 +69,22 @@ static async processUserContent(
 
 **Processing Flow**:
 
-1. Transform user text through transform pipeline
-2. Validate resulting XHTML for navigation compliance
-3. Extract/generate navigation metadata
-4. Return complete navigation document
+1. Transform the user text through the project's text transform only (`executeTransform(…, { textOnly: true })`): DOM transforms are for chapters, and a layout wrapper inside `<nav>` is invalid.
+2. Split the result into nav blocks: a top-level `<nav epub:type="toc|landmarks">`, or a div with the class `toc` or `landmarks` (djot `::: toc`). With no blocks, the whole content is the toc.
+3. Normalise each block to its nav content model: `ul` → `ol`, and a `p`/`div` that opens an `li` (alone or before its nested list) is lifted into the `li`.
+4. Leave out, with a console warning: a `page-list` block (the page-list always comes from the chapters), content outside the blocks, and a second toc.
+5. With `options.spine`: build the toc from the spine when there is no toc block, and add the page-list from the chapters' page markers.
+6. Write the toc nav (`id="toc"`, so a landmark can link to it), a `hidden` landmarks nav, and a `hidden` page-list nav.
+
+### Page list (`page-list.ts`)
+
+The page-list is defined by the chapters' print page markers (`role="doc-pagebreak"` or `epub:type="pagebreak"` with an id) and always derived from them, for generated and hand-written navs alike (`process/NAV_LANDMARKS_AND_PAGE_LIST.md`).
+
+- `collectPageTargets(spineItems, workspaceService, workspaceId, basePath, navHref?)` — every marker in spine order (linear or not), as `{ href, label }` relative to the nav; the label is `title`, then `aria-label`, then text.
+- `pageListMarkup(targets)` — the `<nav epub:type="page-list" hidden="hidden">`, or `''` without targets.
+- `withPageList(navXhtml, targets)` — the nav document with its page-list replaced (or removed); unchanged input when it is already current.
+
+`ensureGeneratedNav` (`nav-coherence.ts`) runs at packaging: it regenerates an auto nav, and for a hand-written nav replaces only the page-list, so neither goes stale when a chapter changes.
 
 ## Data Types
 
@@ -145,6 +157,19 @@ interface ProcessingOptions {
 
   /** Navigation document title */
   documentTitle?: string;
+
+  /** The book's primary language, for xml:lang/lang and dir on <html> */
+  language?: string;
+
+  /** Brokered file-access context for the text transform's `ctx` */
+  brokerContext?: { basePath: string; manifest: ManifestItem[]; language?: string };
+
+  /** The spine, for the page-list and a toc when nav.txt has only landmarks */
+  spine?: {
+    items: SpineItemWithSource[];
+    workspaceService: WorkspaceService;
+    pathInfo: WorkspacePathInfo;
+  };
 }
 ```
 
@@ -163,12 +188,18 @@ The generated XHTML must follow EPUB 3.x navigation standards with a **flat list
     <meta charset="UTF-8" />
   </head>
   <body>
-    <nav epub:type="toc" role="navigation">
+    <nav epub:type="toc" role="doc-toc" id="toc">
       <h1>Table of Contents</h1>
       <ol>
         <li><a href="chapter01.xhtml">Chapter 1: Title</a></li>
         <li><a href="chapter02.xhtml">Chapter 2: Title</a></li>
         <li><a href="chapter03.xhtml">Chapter 3: Title</a></li>
+      </ol>
+    </nav>
+    <!-- only when the chapters carry print page markers -->
+    <nav epub:type="page-list" hidden="hidden">
+      <ol>
+        <li><a href="chapter01.xhtml#page1">1</a></li>
       </ol>
     </nav>
   </body>

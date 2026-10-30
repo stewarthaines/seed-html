@@ -10,7 +10,7 @@
     WorkspaceState,
   } from '../../services/workspace/workspace.service.js';
   import type { SpineService } from '../../services/spine/spine.service.js';
-  import { OutlineGenerator } from '../../outline/outline-generator.js';
+  import { OutlineGenerator, type NavSpineContext } from '../../outline/outline-generator.js';
   import { primaryLanguage } from '../../epub/opf-utils.js';
   import { manifestHrefToPath } from '../../epub/path-utils.js';
   import { ensureGeneratedNav } from '../../outline/nav-coherence.js';
@@ -115,7 +115,9 @@
       const navSourcePath = 'SOURCE/text/nav.txt';
       await workspaceService.writeFile(workspace.id, navSourcePath, '');
 
-      const result = await ensureGeneratedNav(workspace, spineService, workspaceService);
+      const result = await ensureGeneratedNav(workspace, spineService, workspaceService, {
+        startReading: await startReading(),
+      });
       workspace = result.workspace;
 
       if (result.xhtml !== null) {
@@ -128,6 +130,20 @@
       //   stage: 'generation',
       // });
     }
+  }
+
+  /** The chapter where reading starts (Book › Contents), for the landmarks nav. */
+  async function startReading(): Promise<string | undefined> {
+    return (await settingsService.loadEPUBSettings(workspace.id)).start_reading;
+  }
+
+  /** The spine a hand-written nav takes its page-list (and a missing toc) from. */
+  async function navSpineContext(): Promise<NavSpineContext> {
+    return {
+      items: await spineService.loadSpineItems(workspace),
+      workspaceService,
+      pathInfo: workspace.pathInfo,
+    };
   }
 
   async function processUserContent() {
@@ -161,7 +177,12 @@
         content,
         transformPipeline,
         workspace.id,
-        { brokerContext, language: bookLanguage }
+        {
+          brokerContext,
+          language: bookLanguage,
+          spine: await navSpineContext(),
+          startReading: await startReading(),
+        }
       );
 
       previewUpdate({
@@ -239,7 +260,8 @@
           workspaceService,
           workspace.id,
           workspace.pathInfo,
-          bookLanguage
+          bookLanguage,
+          { startReading: await startReading() }
         );
       } else if (transformPipeline) {
         // User content mode (only if transformPipeline is available)
@@ -247,7 +269,11 @@
           content,
           transformPipeline,
           workspace.id,
-          { language: bookLanguage }
+          {
+            language: bookLanguage,
+            spine: await navSpineContext(),
+            startReading: await startReading(),
+          }
         );
       } else {
         // Fallback to auto-generation if transformEngine not available
@@ -260,7 +286,8 @@
           workspaceService,
           workspace.id,
           workspace.pathInfo,
-          bookLanguage
+          bookLanguage,
+          { startReading: await startReading() }
         );
       }
 
