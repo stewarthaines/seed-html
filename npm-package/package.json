@@ -1,6 +1,6 @@
 {
   "name": "seed-html",
-  "version": "0.24.1",
+  "version": "0.25.0",
   "description": "SEED.html (Simple EPUB Editor) — the full app on a local server with one command: npx seed-html",
   "license": "MIT",
   "type": "module",
