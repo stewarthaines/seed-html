@@ -29,6 +29,10 @@
     onWorkspaceUpdate?: ((workspace: WorkspaceState) => void) | null;
     /** Opens the authored contents file (the Navigation view); shown as an Advanced link when given. */
     onEditContents?: (() => void) | null;
+    /** Spine idref of the chapter where reading starts (the `start_reading` setting), or null. */
+    startReading?: string | null;
+    /** Saves a new start-reading choice; the control is shown when given. */
+    onStartReadingChange?: ((idref: string | null) => void) | null;
   }
 
   let {
@@ -39,6 +43,8 @@
     readOnly = false,
     onWorkspaceUpdate = null,
     onEditContents = null,
+    startReading = null,
+    onStartReadingChange = null,
   }: Props = $props();
 
   // --- state ---------------------------------------------------------------
@@ -666,6 +672,27 @@
               {/each}
             </ol>
           {/if}
+          {#if onStartReadingChange}
+            <div class="form-group start-reading">
+              <label class="label" for="start-reading">{$t('Reading starts at')}</label>
+              <select
+                id="start-reading"
+                class="select"
+                value={startReading ?? ''}
+                disabled={readOnly}
+                aria-describedby="start-reading-hint"
+                onchange={event => onStartReadingChange?.(event.currentTarget.value || null)}
+              >
+                <option value="">{$t('Not chosen')}</option>
+                {#each contentsItems as item (item.id)}
+                  <option value={item.idref}>{label(item)}</option>
+                {/each}
+              </select>
+              <p id="start-reading-hint" class="start-reading-hint">
+                {$t('Reading apps open your book here the first time.')}
+              </p>
+            </div>
+          {/if}
           {#if onEditContents}
             <p class="contents-advanced">
               <button type="button" class="btn btn-link" onclick={onEditContents}>
@@ -884,6 +911,17 @@
     margin: 0;
     padding-inline-start: var(--space-6);
     line-height: 1.6;
+  }
+
+  .start-reading {
+    margin-block: var(--space-5) 0;
+    font-family: var(--font-sans);
+  }
+
+  .start-reading-hint {
+    margin: var(--space-1) 0 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
   }
 
   .contents-advanced {

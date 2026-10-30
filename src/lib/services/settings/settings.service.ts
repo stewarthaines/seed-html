@@ -150,6 +150,10 @@ export interface EPUBSettings {
       content (no structural or metadata changes) and edits are captured against a base
       snapshot under SOURCE/main. Travels with the EPUB so recipients inherit review mode. */
   track_changes?: boolean;
+  /** Spine idref of the chapter where reading starts (Book › Contents). When set,
+      the nav carries a landmarks nav with `bodymatter` → that chapter, unless a
+      hand-written nav.txt has its own landmarks block. */
+  start_reading?: string;
 }
 
 export interface SettingsValidation {
@@ -446,6 +450,10 @@ export class SettingsService {
         include_seed_html_in_package:
           settings.include_seed_html_in_package ?? defaults.include_seed_html_in_package,
         track_changes: settings.track_changes ?? defaults.track_changes,
+        start_reading:
+          typeof settings.start_reading === 'string' && settings.start_reading
+            ? settings.start_reading
+            : undefined,
         // Pass the cover block through as-is (carrying hue/mode and any legacy
         // fields) — we no longer fabricate vestigial template/colour defaults.
         cover: settings.cover ? { ...settings.cover } : undefined,

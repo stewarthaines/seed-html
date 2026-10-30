@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27\n"
-"PO-Revision-Date: 2026-10-27\n"
+"POT-Creation-Date: 2026-10-30\n"
+"PO-Revision-Date: 2026-10-30\n"
 "Language: \n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -3506,6 +3506,10 @@ msgstr ""
 msgid "Not checked"
 msgstr ""
 
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Not chosen"
+msgstr ""
+
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Not created in the Simple EPUB Editor — viewable but not editable."
 msgstr ""
@@ -4164,6 +4168,10 @@ msgstr ""
 msgid "Reader link (optional)"
 msgstr ""
 
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Reading apps open your book here the first time."
+msgstr ""
+
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Reading flow"
 msgstr ""
@@ -4178,6 +4186,10 @@ msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Reading preview settings"
+msgstr ""
+
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Reading starts at"
 msgstr ""
 
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
