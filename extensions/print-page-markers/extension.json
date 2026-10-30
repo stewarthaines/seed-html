@@ -1,0 +1,44 @@
+{
+  "id": "print-page-markers",
+  "name": "Print Page Markers",
+  "description": "Marks where each page of the print edition begins, so readers can follow along with the paperback.",
+  "category": "accessibility",
+  "url": "https://www.w3.org/TR/dpub-aria-1.1/#doc-pagebreak",
+  "licenseName": "MIT",
+  "scripts": [],
+  "domTransforms": [
+    "transformPageMarkers.js"
+  ],
+  "stage": "structure",
+  "textTransforms": [],
+  "generators": [
+    {
+      "id": "page-marker-sample",
+      "name": "Page marker",
+      "description": "Insert a sample print page marker in your text format's class syntax.",
+      "script": "generatePageMarker.js",
+      "options": [
+        {
+          "type": "select",
+          "name": "format",
+          "label": "Text format",
+          "default": "markdown",
+          "options": [
+            {
+              "value": "markdown",
+              "label": "Markdown"
+            },
+            {
+              "value": "djot",
+              "label": "Djot"
+            },
+            {
+              "value": "textile",
+              "label": "Textile"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

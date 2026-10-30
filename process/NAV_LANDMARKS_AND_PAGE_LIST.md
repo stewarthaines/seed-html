@@ -1,6 +1,6 @@
 # Landmarks and page-list in the EPUB nav
 
-Status: proposal, 2026-10-28. Un-parks the landmarks idea from 2026-09-27 (memory `nav-landmarks-parked`), whose trigger was "a store submission or an accessibility check needs landmarks". Both have now happened: the *John, Paul, and George* EPUB for Kindle (KDP) needs a chosen start position, and it carries print page markers that no reader can navigate because the book has no page-list.
+Status: proposal, 2026-10-28. Un-parks the landmarks idea from 2026-09-27 (memory `nav-landmarks-parked`), whose trigger was "a store submission or an accessibility check needs landmarks". Both have now happened: the _John, Paul, and George_ EPUB for Kindle (KDP) needs a chosen start position, and it carries print page markers that no reader can navigate because the book has no page-list.
 
 ## The problem
 
@@ -10,7 +10,7 @@ Every nav SEED writes is a single `<nav epub:type="toc">`. `OutlineGenerator.pro
 
 **The page-list** (`<nav epub:type="page-list">`) lists the print page markers, so a reader can go to page 87 of the paperback. A book can already contain the markers (`role="doc-pagebreak"` spans), and the Details form already offers the `pageBreakMarkers` and `pageNavigation` accessibility features. Without a page-list, an author can't truthfully claim `pageNavigation`, and the markers only help readers who stumble across them.
 
-There is a related defect on the same code path: a hand-written nav runs through every DOM transform, so a layout transform such as responsive's `div.sr-page` lands inside `<nav>` (RSC-005; memory `nav-pipeline-runs-dom-transforms`, open since 2026-08-07). *John, Paul, and George* works around it in its own `transformDom.js`.
+There is a related defect on the same code path: a hand-written nav runs through every DOM transform, so a layout transform such as responsive's `div.sr-page` lands inside `<nav>` (RSC-005; memory `nav-pipeline-runs-dom-transforms`, open since 2026-08-07). _John, Paul, and George_ works around it in its own `transformDom.js`.
 
 ## Proposal
 
@@ -39,7 +39,7 @@ A nav block is recognised in either form. In djot, a div whose class names the n
 :::
 ```
 
-Or raw HTML `<nav epub:type="…">` blocks, for authors who generate the nav with a script, as *John, Paul, and George* does.
+Or raw HTML `<nav epub:type="…">` blocks, for authors who generate the nav with a script, as _John, Paul, and George_ does.
 
 Each recognised block is normalised to what its nav type allows. The toc and page-list get an optional heading and one `ol`. Landmarks get one `ol` whose links each carry an `epub:type`. `ul` becomes `ol`, `section` is unwrapped, and a list item's paragraph is lifted into the `li`. That last step needs extending: today only a sole child paragraph is lifted, so djot's loose nested lists (`li > p + ol`) still produce an invalid `p` in the toc.
 
@@ -51,7 +51,7 @@ Checks before writing, reported in the checks panel rather than silently repaire
 
 ### 2. The nav runs the text transform only
 
-Layout and structure transforms are meaningless for a navigation document and can make it invalid. The nav build runs the project's text transform, then the normalisation above, and skips `dom_transforms`. This closes the 2026-08-07 bug and lets *John, Paul, and George* drop its `idref === 'nav'` workaround.
+Layout and structure transforms are meaningless for a navigation document and can make it invalid. The nav build runs the project's text transform, then the normalisation above, and skips `dom_transforms`. This closes the 2026-08-07 bug and lets _John, Paul, and George_ drop its `idref === 'nav'` workaround.
 
 If an author ever needs a DOM transform on the nav, that becomes an explicit opt-in (for example a `nav_dom_transforms` setting). It isn't the default.
 
@@ -79,13 +79,13 @@ A new project's initial `nav.xhtml` comes from `ContentService.generateNavigatio
 
 ## Phasing
 
-**Phase 1: hand-written multi-nav and the text-transform-only nav build (sections 1, 2).** This unblocks *John, Paul, and George*: landmarks with `bodymatter` → the Foreword, and the page-list from its 216 markers, both written by its generator script into `nav.txt`. It also removes the book's workaround.
+**Phase 1: hand-written multi-nav and the text-transform-only nav build (sections 1, 2).** This unblocks _John, Paul, and George_: landmarks with `bodymatter` → the Foreword, and the page-list from its 216 markers, both written by its generator script into `nav.txt`. It also removes the book's workaround.
 
 **Phase 2: generated landmarks and page-list (section 3), and the guide (section 4).** Adds "Start reading here" to Book › Contents and the marker scan to `generateFromSpine`.
 
 **The adjacent fix.** Small and independent; it can ship at any time.
 
-A related follow-on, not part of this proposal: generated-nav options for depth (chapters only, or chapters and `h2` sections), label source (chapter title, or `h1` with a separator after a label span; today "Essay 1John, Paul…"), and a "leave out of contents" flag for title and copyright pages. *John, Paul, and George* needed all three and wrote its nav by hand instead.
+A related follow-on, not part of this proposal: generated-nav options for depth (chapters only, or chapters and `h2` sections), label source (chapter title, or `h1` with a separator after a label span; today "Essay 1John, Paul…"), and a "leave out of contents" flag for title and copyright pages. _John, Paul, and George_ needed all three and wrote its nav by hand instead.
 
 ## Testing
 
@@ -93,10 +93,10 @@ Unit tests for the normalisation (each nav type, loose djot lists, raw HTML navs
 
 epubcheck on a sample with all three navs, on one with only a toc (unchanged output), and on one with a deliberately broken page-list href (reported, not written).
 
-On devices: Kindle Previewer for the start reading location, Apple Books for first open and page navigation, and Thorium for the page-list and landmarks menus. *John, Paul, and George* is the real-world case.
+On devices: Kindle Previewer for the start reading location, Apple Books for first open and page navigation, and Thorium for the page-list and landmarks menus. _John, Paul, and George_ is the real-world case.
 
 ## Open questions
 
 1. ~~Should a hand-written `nav.txt` be allowed to omit the toc block?~~ Decided 2026-10-28: yes, and SEED generates the toc (section 1).
 2. ~~Where does "Start reading here" live?~~ Decided 2026-10-28: Book › Contents, beside the chapter order (section 3).
-3. The guide reference type: EPUB 2's `text`, or Amazon's `start`? Reports say both work on Kindle. Left open by decision (2026-10-28) until Kindle Previewer has been run on *John, Paul, and George* with each value; the same run shows whether the guide is needed at all.
+3. The guide reference type: EPUB 2's `text`, or Amazon's `start`? Reports say both work on Kindle. Left open by decision (2026-10-28) until Kindle Previewer has been run on _John, Paul, and George_ with each value; the same run shows whether the guide is needed at all.
