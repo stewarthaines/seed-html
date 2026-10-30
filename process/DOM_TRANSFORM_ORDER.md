@@ -37,7 +37,7 @@ Pairwise `before`/`after` declarations were considered and rejected: they name e
 | Stage       | Work                                                              | Extensions                                                             |
 | ----------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | `blocks`    | replace code blocks and markers with rendered content             | prettier, abc2svg, abcjs, mermaid, neumes, katex, fleuron, audio-clips |
-| `structure` | turn authored markup into semantic elements                       | figures (new)                                                          |
+| `structure` | turn authored markup into semantic elements                       | figures (new), print-page-markers                                      |
 | `annotate`  | add to the structure that now exists                              | photo-regions                                                          |
 | `derive`    | read the chapter and the project, write panels, lists and records | family-history, list-of-figures, impressum, print-index                |
 | `language`  | stamp language attributes                                         | language-switching                                                     |

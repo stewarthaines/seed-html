@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Print page markers take one short mark each, so readers of your EPUB can find the same page as someone holding the paperback.
+
 - A chapter can choose which reading-system scripts it loads, or load none, so a page of plain text in a scripted book stays plain.
 
 - A Bricks book can tell readers, in its own words, when their reading system shows its pages as still pictures, so nobody wonders why a page won't move.
