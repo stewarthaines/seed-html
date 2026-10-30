@@ -98,7 +98,8 @@ describe('ensureGeneratedNav', () => {
       expect.anything(),
       'ws-1',
       expect.anything(),
-      'ar'
+      'ar',
+      { startReading: undefined }
     );
   });
 
@@ -113,5 +114,57 @@ describe('ensureGeneratedNav', () => {
     expect(workspaceService.writeFile).not.toHaveBeenCalled();
     expect(workspaceService.addManifestItem).not.toHaveBeenCalled();
     expect(result).toEqual({ workspace: ws, xhtml: null });
+  });
+
+  it('passes the start-reading choice to the generator', async () => {
+    await ensureGeneratedNav(makeWorkspace([]), makeSpineService(), makeWorkspaceService(null), {
+      startReading: 'ch1',
+    });
+    expect(vi.mocked(OutlineGenerator.generateFromSpine).mock.lastCall?.[5]).toEqual({
+      startReading: 'ch1',
+    });
+  });
+
+  it('manual mode: refreshes the page-list in nav.xhtml from the chapters, and writes nothing when it is current', async () => {
+    const manualNav = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
+<head><title>Contents</title></head>
+<body>
+  <nav epub:type="toc" role="doc-toc" id="toc"><ol><li><a href="ch1.xhtml">One</a></li></ol></nav>
+</body>
+</html>`;
+    const files: Record<string, string> = {
+      'SOURCE/text/nav.txt': '* Chapter 1',
+      'OEBPS/nav.xhtml': manualNav,
+      'OEBPS/ch1.xhtml':
+        '<html xmlns="http://www.w3.org/1999/xhtml"><body><p><span id="page1" role="doc-pagebreak" title="1"></span>One</p></body></html>',
+    };
+    const workspaceService = {
+      fileExists: vi.fn(async (_id: string, path: string) => path in files),
+      readFile: vi.fn(async (_id: string, path: string) => new TextEncoder().encode(files[path])),
+      writeFile: vi.fn(async (_id: string, path: string, text: string) => {
+        files[path] = text;
+      }),
+      addManifestItem: vi.fn(),
+    } as unknown as WorkspaceService;
+
+    vi.mocked(OutlineGenerator.generateFromSpine).mockClear();
+    const result = await ensureGeneratedNav(
+      makeWorkspace([]),
+      makeSpineService(),
+      workspaceService
+    );
+
+    expect(result.xhtml).toBeNull();
+    expect(OutlineGenerator.generateFromSpine).not.toHaveBeenCalled();
+    expect(workspaceService.writeFile).toHaveBeenCalledTimes(1);
+    expect(files['OEBPS/nav.xhtml']).toContain('<a href="ch1.xhtml">One</a>');
+    expect(files['OEBPS/nav.xhtml']).toMatch(
+      /epub:type="page-list"[^>]*>[\s\S]*href="ch1.xhtml#page1"/
+    );
+
+    await ensureGeneratedNav(makeWorkspace([]), makeSpineService(), workspaceService);
+    expect(workspaceService.writeFile).toHaveBeenCalledTimes(1);
   });
 });

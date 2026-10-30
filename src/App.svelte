@@ -81,6 +81,7 @@
   import { EPUBUnpacker } from './lib/epub/EPUBUnpacker.js';
   import { generateEPUBTimestamp } from './lib/epub/opf-utils.js';
   import { ensureGeneratedNav } from './lib/outline/nav-coherence.js';
+  import { SpineTransformPipeline } from './lib/transform/spine-transform-pipeline.js';
   import { createSpinePreviewManager } from './lib/transform/spine-preview-manager.js';
   import CreateProjectDialog, {
     type CreateProjectData,
@@ -1611,13 +1612,35 @@
         modifiedDate: generateEPUBTimestamp(),
       });
 
-      // Regenerate the auto-generated nav.xhtml from the current spine so the
-      // packaged EPUB always ships a coherent nav (a manual nav.txt is left
-      // untouched). Runs before packaging, which zips files straight from storage.
+      // Regenerate nav.xhtml so the packaged EPUB always ships a coherent nav:
+      // an auto nav from the current spine, a hand-written one re-rendered from
+      // nav.txt, both with the current page-list and start-reading landmarks.
+      // Runs before packaging, which zips files straight from storage.
+      const navPipeline =
+        transformEngine && extensionManager && blobURLManager && appState
+          ? new SpineTransformPipeline(
+              workspaceId,
+              fileStorage,
+              extensionManager,
+              blobURLManager,
+              transformEngine,
+              appState.getSettingsService()
+            )
+          : undefined;
+      // The nav's text transform needs the book's libraries (djot.js and the
+      // like) in the transform iframe; the Write view loads them, but packaging
+      // can run before it ever has.
+      if (navPipeline && transformEngine) {
+        await transformEngine.setWorkspaceExtensions(workspaceId);
+      }
       const { workspace: navWorkspace } = await ensureGeneratedNav(
         updatedWorkspace,
         spineService,
-        workspaceService
+        workspaceService,
+        {
+          startReading: appState?.epubSettings?.start_reading,
+          transformPipeline: navPipeline,
+        }
       );
 
       // Update the workspace state in appState
@@ -2301,6 +2324,9 @@
             onEditContents={advancedMode.current
               ? () => navigationStore.navigateTo('navigation')
               : null}
+            startReading={appState.epubSettings?.start_reading ?? null}
+            onStartReadingChange={idref =>
+              appState?.updateEPUBSettings({ start_reading: idref ?? undefined })}
           />
         {:else}
           <div class="view-loading">{$t('Loading project…')}</div>

@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27\n"
-"PO-Revision-Date: 2026-10-27\n"
+"POT-Creation-Date: 2026-10-30\n"
+"PO-Revision-Date: 2026-10-30\n"
 "Language: de\n"
 "Language-Team: \n"
 "Last-Translator: Claude (machine first pass)\n"
@@ -3525,6 +3525,10 @@ msgstr "In diesem Browser nicht verfügbar — zum Verknüpfen eines Ordners wir
 msgid "Not checked"
 msgstr "Nicht geprüft"
 
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Not chosen"
+msgstr ""
+
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Not created in the Simple EPUB Editor — viewable but not editable."
 msgstr "Nicht im Simple EPUB Editor erstellt — anzeigbar, aber nicht bearbeitbar."
@@ -4183,6 +4187,10 @@ msgstr "Lesemodus"
 msgid "Reader link (optional)"
 msgstr "Leselink (optional)"
 
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Reading apps open your book here the first time."
+msgstr ""
+
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Reading flow"
 msgstr "Lesefluss"
@@ -4198,6 +4206,10 @@ msgstr "Lesevorschau (Design und Schriftgröße)"
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Reading preview settings"
 msgstr "Einstellungen für die Lesevorschau"
+
+#: src/lib/navigation/views/ChaptersView.svelte
+msgid "Reading starts at"
+msgstr ""
 
 #: src/lib/components/settings/CustomMetaCatalogSettings.svelte
 msgid "Recognized fields are offered on every book you edit. The catalog is stored in this browser and does not travel with your EPUBs."

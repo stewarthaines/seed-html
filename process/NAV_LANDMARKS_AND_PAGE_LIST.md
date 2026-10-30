@@ -1,6 +1,6 @@
 # Landmarks and page-list in the EPUB nav
 
-Status: approved 2026-10-30, with the page-list always derived from the chapters (section 3) and no OPF guide (section 4). Proposed 2026-10-28. Un-parks the landmarks idea from 2026-09-27 (memory `nav-landmarks-parked`), whose trigger was "a store submission or an accessibility check needs landmarks". Both have now happened: the _John, Paul, and George_ EPUB for Kindle (KDP) needs a chosen start position, and it carries print page markers that no reader can navigate because the book has no page-list.
+Status: approved 2026-10-30, with the page-list always derived from the chapters and the start-reading choice applying to every nav (section 3), and no OPF guide (section 4). Phases 1 and 2 built 2026-10-30 on branch `nav-page-list`. Proposed 2026-10-28. Un-parks the landmarks idea from 2026-09-27 (memory `nav-landmarks-parked`), whose trigger was "a store submission or an accessibility check needs landmarks". Both have now happened: the _John, Paul, and George_ EPUB for Kindle (KDP) needs a chosen start position, and it carries print page markers that no reader can navigate because the book has no page-list.
 
 ## The problem
 
@@ -29,7 +29,6 @@ A nav block is recognised in either form. In djot, a div whose class names the n
 :::
 
 ::: landmarks
-- [Contents](nav.xhtml#toc){epub:type=toc}
 - [Start reading](Text/foreword.xhtml){epub:type=bodymatter}
 :::
 ```
@@ -54,7 +53,7 @@ If an author ever needs a DOM transform on the nav, that becomes an explicit opt
 
 The no-fallback rule means the generated nav adds nothing the author didn't ask for.
 
-**Start reading here.** A book-level choice in Book › Contents, beside the chapter order where the reading sequence is already shown (one chapter at most; decided 2026-10-28). When set, the generated nav carries a landmarks nav with `toc` → `nav.xhtml#toc` and `bodymatter` → that chapter. When unset, no landmarks nav is written, so existing books are unchanged.
+**Start reading here, for every nav.** A book-level choice in Book › Contents, beside the chapter order where the reading sequence is already shown (one chapter at most; decided 2026-10-28), stored as `start_reading` (a spine idref) in `SOURCE/settings.json`. When set, the nav carries a landmarks nav with `bodymatter` → that chapter, labelled with the chapter's title so the label is in the book's language. There is no `toc` landmark: the toc is in `nav.xhtml`, which is not in the spine, and epubcheck rejects a landmark that links outside the spine (RSC-011, found on _John, Paul, and George_ 2026-10-30). It applies to a hand-written nav as well as the generated one (decided 2026-10-30), and a `landmarks` block in `nav.txt` wins over it. At packaging a hand-written nav is re-rendered from `nav.txt` (text transform only), so the choice and the page-list are always current. When unset, no landmarks nav is written, so existing books are unchanged.
 
 **Page list, for every nav.** Derived from content, not invented, and the same for a generated and a hand-written nav (decided 2026-10-30: the page-list is defined by the chapter content, and authoring it by hand adds nothing). At packaging, and whenever the Navigation view writes the nav, SEED scans the chapters' XHTML for `[epub:type~="pagebreak"], [role="doc-pagebreak"]` elements with an id, in spine order. If there are any, it writes a page-list nav, replacing any page-list already in `nav.xhtml`, so it can't go stale when a chapter changes. The label comes from the marker's `title`, then `aria-label`, then its text. If there are none, no page-list is written. A `page-list` block in `nav.txt` is logged and left out, so there is never a second copy to drift. This is phase 3 of `process/PDF_PAGE_INDEX.md`, which planned exactly this nav.
 
@@ -76,7 +75,7 @@ A new project's initial `nav.xhtml` comes from `ContentService.generateNavigatio
 
 **Phase 1: hand-written multi-nav, the text-transform-only nav build, and the page-list for every nav (sections 1, 2 and the page-list half of 3).** This unblocks _John, Paul, and George_: its 216 markers become a page-list at packaging with no script change, its generator script can add landmarks with `bodymatter` → the Foreword to `nav.txt`, and the book's nav workaround goes.
 
-**Phase 2: generated landmarks (section 3).** Adds "Start reading here" to Book › Contents.
+**Phase 2: start-reading landmarks (section 3).** Adds "Start reading here" to Book › Contents, for generated and hand-written navs.
 
 **The adjacent fix.** Small and independent; it can ship at any time.
 
