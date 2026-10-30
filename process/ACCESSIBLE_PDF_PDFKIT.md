@@ -1,0 +1,121 @@
+# Accessible PDF with PDFKit, laid out by the browser
+
+Status: proposal for review, 2026-10-30. Nothing built.
+
+## The goal
+
+SEED.html becomes a single source for an accessible EPUB and an accessible PDF. The PDF is the same file whichever browser makes it: tagged, with bookmarks, page labels, a title and a language, aiming at PDF/UA-1.
+
+Today's PDF comes from the browser's Save as PDF (`src/lib/pdf/pdf-export.ts`). Chrome and Edge write tags and links but no bookmarks; Firefox writes neither; Safari differs again. No browser offers an API that returns the print output as a file, so the app can't finish what the browser started without a second step.
+
+## The approach
+
+The browser does the layout; PDFKit writes the file. Paged.js paginates the book exactly as it does now. The app then walks the paginated document, reads the position, font and size of every line of text and every image from the live layout, and replays them into a PDFKit document page by page. The tag structure comes from the DOM, not from the page geometry.
+
+Line breaks and positions are the browser's, so they can differ slightly between Chrome, Firefox and Safari: each draws text a little differently. That is the accepted compromise. What is uniform is everything else: the fonts (the book's own, embedded), the tags, the reading order, the bookmarks, the page labels and the metadata.
+
+## Why PDFKit
+
+PDFKit is the only mature JavaScript PDF writer that writes tags, and it runs in the browser. It embeds and subsets fonts through fontkit, which also shapes text (ligatures, Arabic and Hebrew joining). Its accessibility docs describe a PDF/UA mode (`tagged: true`, `subset: 'PDF/UA'`), a structure tree built from marked content, artifacts for decoration, and an outline API for bookmarks.
+
+The layout libraries built on PDFKit (pdfmake, @react-pdf/renderer) don't pass tags through, and using the browser's layout makes them unnecessary. Typst in the browser would mean a second rendering path without the book's CSS. krilla, the Rust writer inside Typst 0.14, is stricter about PDF/UA and worth watching, but its browser build is unconfirmed. Background: the survey in the conversation of 2026-10-30, sources at the end.
+
+## Where it lives
+
+A `view` plugin, under the plugin layer's rule (`src/lib/plugins/API.md`): PDFKit and fontkit are a heavy dependency, and the plugin is only offered when the app is served over HTTP. The core's Save as PDF stays as the working fallback when the plugin is off or unavailable, as the plugin contract requires of a `view`.
+
+The work splits in three, and the weight sits in the plugin.
+
+**The core paginates.** `buildPagedDocument` in `pdf-export.ts` builds the book and Paged.js paginates it, exactly as for Save as PDF and the PDF preview. There is one builder, so a change to print settings, `print.css` or an extension's layout reaches the PDF with no second copy to keep in step.
+
+**The core measures.** A walk over the paginated document records what is drawn where: each word's text, rectangle, font and colour; each image's rectangle and source; each box's background and borders; each margin box; and the structure tree, with every drawn item pointing at the structure element it belongs to. The result is a page description in plain data: pages, then items in drawing order, plus the tree. The walk needs no library and is a few hundred lines. It also finds the problems before any PDF exists: a font family with no font file in the book, glyphs the browser borrowed from another font, CSS the PDF can't draw.
+
+**The plugin writes.** The plugin receives the page description and the font and image files it names, and writes the PDF with PDFKit and fontkit: font embedding and subsetting, text shaping, width fitting, images, the structure tree, bookmarks, page labels and metadata. Every heavy dependency, and the PDF-specific knowledge, is in the plugin.
+
+The handover is data, not a live document, so it goes by `postMessage` like the rest of the plugin contract. It can be saved, compared between Chrome and Firefox, and unit-tested without a browser or PDFKit. The contract gains one message pair: the host sends the page description, and the plugin answers with the finished PDF or a list of errors.
+
+## From the layout to the page
+
+**Pages.** One PDF page per `.pagedjs_page`, at the page box size the print settings chose. Coordinates are read relative to the page box and converted from CSS pixels to PDF points.
+
+**Text.** Each text node is split into words with `Intl.Segmenter`. A `Range` over each word gives its rectangles through `getClientRects()`, and the computed style of the parent gives the font family, weight, style, size and colour. Words are drawn at their measured positions, so justification and the browser's line breaks come through unchanged. Where PDFKit's width for a word differs from the browser's, the word is fitted to the measured width with character spacing so nothing overlaps.
+
+**Hyphens.** A word whose rectangles fall on two lines was hyphenated by the browser. The visible hyphen is drawn as decoration and the word's text stays whole for search and screen readers (`ActualText`, or the hyphen marked as an artifact; the spike decides which PDFKit can do).
+
+**Fonts.** Each computed font family is matched to an `@font-face` in the book's stylesheets and loaded from the book's manifest. A family with no font file in the book is an error listed in the export, not a silent substitute: there is no system-font fallback. If the browser filled in a glyph from another font, fontkit shows it missing from the book's font, and the export lists the characters.
+
+**Images.** Each `img` is drawn at its measured rectangle. JPEG and PNG go in directly; WebP and other formats go through a canvas to PNG; SVG is drawn as vectors if a PDFKit SVG renderer proves good enough, otherwise rasterised at print resolution.
+
+**Boxes.** Backgrounds, borders and rules (`hr`, table borders, the borders of a sidebar) are drawn as rectangles and lines from the computed style, as artifacts. Gradients, shadows, transforms and filters are out of scope for the first version and listed when present.
+
+**Margin boxes.** Running heads and page numbers are drawn as pagination artifacts, never as content, so a screen reader doesn't read them on every page.
+
+## The tags
+
+The structure tree follows the DOM in reading order, not the visual order of the page, and Paged.js's page and area wrappers are skipped.
+
+| DOM | PDF structure |
+|---|---|
+| `section` from a chapter | `Sect` |
+| `h1`–`h6` | `H1`–`H6` |
+| `p` | `P` |
+| `ul`, `ol` / `li` | `L` / `LI`, with `Lbl` and `LBody` |
+| `blockquote` | `BlockQuote` |
+| `figure`, `img` | `Figure`, `Alt` from the `alt` text |
+| `figcaption` | `Caption` |
+| `table`, `tr`, `th`, `td` | `Table`, `TR`, `TH` (with scope), `TD` |
+| `aside`, notes | `Note` |
+| `a` | `Link` |
+| an element with its own `lang` | its structure element gets `Lang` |
+| `role="doc-pagebreak"` markers | nothing (see page labels) |
+
+A paragraph that Paged.js split across two pages is one `P` with content on both pages, joined back together from Paged.js's split markers (`data-split-from`). The same goes for lists and tables, whose repeated header rows on later pages are artifacts.
+
+Links are the known gap. PDFKit's docs limit tagging to marked content, while a link in PDF is an annotation that a `Link` structure element must reference. The spike checks whether PDFKit can make that reference; if not, it's the first patch to offer upstream.
+
+## What the file carries
+
+- Bookmarks from the book's contents (the toc nav), at each target's page.
+- Page labels that match the page numbers printed in the margins, including roman numerals for front matter where the book's CSS counts them that way. The print-edition markers (`doc-pagebreak`) belong to another edition's pages and are not this PDF's page labels.
+- Title, author and language from the OPF; the viewer shows the title, not the file name.
+- The PDF/UA identifier in the metadata only once a book passes veraPDF, never by default.
+
+## Matches what the author saw
+
+The PDF is drawn from the browser's own layout of the same paginated book the PDF preview shows, so it matches what the author saw in their browser: the same line breaks, page breaks, positions, sizes and fonts. A Firefox author gets a PDF that matches Firefox; a Chrome author, one that matches Chrome.
+
+Where it can't match, the export says so rather than drawing something else. A font with no file in the book, a glyph from another font, or CSS the PDF doesn't draw (gradients, shadows, transforms and filters in the first version) is listed before the PDF is written. Glyph edges can look slightly different in a PDF viewer, which draws text its own way, but nothing moves.
+
+Page numbers match the whole-book PDF preview, not the one-chapter preview, which numbers from 1; that is true of Save as PDF today.
+
+## Uniform, and what isn't
+
+The same book gives the same tags, fonts, bookmarks and metadata in every browser. Layout differences come from the browser's text drawing and its support for the book's CSS, and those differences stay. A book that relies on CSS one browser lacks will look different in that browser, as it does in the preview today.
+
+## Phases
+
+- **Phase 0, spike.** One chapter of Joseph's book: text, headings and paragraphs, with fonts embedded, tagged, and one paragraph split across a page. Pass it through veraPDF and PAC. Settle three things: whether one structure element can span pages in PDFKit, whether a `Link` can reference its annotation, and how to keep a hyphenated word whole.
+- **Phase 1, text and structure.** The whole book's text, headings, lists, blockquotes and notes, the font matching and its errors, margin boxes as artifacts, metadata.
+- **Phase 2, figures and tables.** Images with alt text and captions, tables with header scope and split tables.
+- **Phase 3, navigation.** Bookmarks, page labels, links.
+- **Phase 4, boxes and scripts.** Backgrounds, borders and rules; right-to-left text and its reading order, checked on a Hebrew or Arabic sample.
+
+## Decisions this touches
+
+`process/DECISIONS.md`, 2026-09-15: "PDF export stays single-pass … The app is for accessible EPUB". This proposal keeps one pass (one pagination, read once) but makes the PDF a goal rather than a by-product, so that entry needs rewording if this is approved.
+
+## Decided
+
+- The core paginates and measures; the plugin writes the PDF and holds every heavy dependency (2026-10-30).
+- Phase 0 runs on _John, Paul, and George_, in the localhost:5173 copy (2026-10-30).
+- Save as PDF is the fallback when the plugin isn't available; when the plugin is on, it takes the place of Save as PDF, as a `view` plugin does (2026-10-30).
+
+## Sources
+
+- PDFKit accessibility docs: https://pdfkit.org/docs/accessibility.html
+- PDFKit accessibility checklist: https://github.com/foliojs/pdfkit/blob/master/docs/accessibility.md
+- krilla: https://github.com/LaurenzV/krilla
+- Typst 0.14: https://typst.app/blog/2025/typst-0.14
+- pdfmake tagging gap (canada-ca/aia-eia-js #609): https://github.com/canada-ca/aia-eia-js/issues/609
+- Chrome tagged PDF: https://blog.chromium.org/2020/07/using-chrome-to-generate-more.html
+- WCAG PDF2, bookmarks: https://www.w3.org/WAI/WCAG22/Techniques/pdf/PDF2.html
