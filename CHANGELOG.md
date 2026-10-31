@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Contents you write yourself no longer take on chapter layout, so the book passes validation with a layout extension such as Responsive Layout.
+- The print preview and Save as PDF no longer lose a line at the foot of a page that ends in a word split across pages.
 
 ## [0.25.0] - 2026-10-30
 
