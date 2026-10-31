@@ -1,6 +1,6 @@
 # Accessible PDF with PDFKit, laid out by the browser
 
-Status: proposal for review, 2026-10-30. Nothing built.
+Status: approved 2026-10-31; phase 0 done on branch `accessible-pdf`.
 
 ## The goal
 
@@ -120,10 +120,11 @@ Run 2026-10-30 on Essay 1 of _John, Paul, and George_ (five pages at 143 × 205 
 
 ## Decisions this touches
 
-`process/DECISIONS.md`, 2026-09-15: "PDF export stays single-pass … The app is for accessible EPUB". This proposal keeps one pass (one pagination, read once) but makes the PDF a goal rather than a by-product, so that entry needs rewording if this is approved.
+`process/DECISIONS.md`: the 2026-09-15 entry ("PDF export stays single-pass … The app is for accessible EPUB") is replaced by 2026-10-31, "Accessible PDF is a goal of the app". Export stays single-pass: one pagination, read once.
 
 ## Decided
 
+- Accessible PDF output is a goal of the app, beside accessible EPUB (2026-10-31).
 - The core paginates and measures; the plugin writes the PDF and holds every heavy dependency (2026-10-30).
 - Phase 0 runs on _John, Paul, and George_, in the localhost:5173 copy (2026-10-30).
 - Save as PDF is the fallback when the plugin isn't available; when the plugin is on, it takes the place of Save as PDF, as a `view` plugin does (2026-10-30).
