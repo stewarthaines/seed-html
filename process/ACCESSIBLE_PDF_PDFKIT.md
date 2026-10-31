@@ -137,7 +137,7 @@ Run 2026-10-30 on Essay 1 of _John, Paul, and George_ (five pages at 143 × 205 
 
 **Text lost off the page edge (2026-10-31): a Paged.js bug, fixed.** On six pages of Joseph's book (11, 23, 119, 136, 185, 206) a paragraph's last line was missing from the preview, Save as PDF and the accessible PDF. Paged.js broke the page in the right place, but then typed its page-split hyphen into the text; on a tight justified line Chrome had fitted its own hyphen there, and the typed one is 4–5 px too wide, so the line rewrapped and the paragraph's last line fell into the clipped column off the page. The vendored Paged.js now hangs that hyphen in the margin in a zero-width box when it would rewrap the line (patch 2 in `patches/paged.polyfill.md`), and the measuring reads it as part of the word. The measuring still reports any text off the page (`overflowPages`) and the card names those pages; Joseph's book has none now.
 
-**Held back until their phases.** Links are plain text with no `Link` until they carry annotations, and the card lists them.
+**Held back until their phases.** Nothing now: images came in phase 2 and links in phase 3.
 
 ## Phase 2 progress
 
@@ -148,6 +148,14 @@ Run 2026-10-30 on Essay 1 of _John, Paul, and George_ (five pages at 143 × 205 
 **Tables.** `Table` with `Caption`, `THead`, `TBody` and `TFoot`; every `TH` has a scope (its `scope`, or a column header in `thead` or a row of headers, otherwise a row header), and spans are written as `RowSpan` and `ColSpan`. A table Paged.js splits is one `Table`, its body one `TBody` across the pages. Paged.js 0.4.3 doesn't repeat a table's header row on the next page, in the preview or Save as PDF, so there is no repeated row to mark as an artifact. Joseph's book has no tables; this was checked on a test page of 30 rows over two pages.
 
 **Not yet.** Borders and backgrounds (phase 4), so a table's rules aren't drawn; inline `svg`, `video`, `canvas` and the like are listed on the card.
+
+## Phase 3 progress
+
+**Links (2026-10-31).** A link is a `Link` holding its text and an annotation per box (a line of its text, an image in it), each with `Contents` from the link's text. A URL (`http`, `https`, `mailto`, `tel`, `ftp`) is a URI action. A link inside the book is `#id` by the time it reaches the PDF, since the whole-book builder points links between chapters at ids in the one document; it goes to a named destination at the target's top-left, on the page where the target first appears. A link that goes nowhere the PDF can reach (a missing id, a file outside the book) stays plain text.
+
+**PDFKit's page for the annotation.** PDFKit gives the annotation's object reference the page that is current when its `Link` is written, so the writer makes each page's part of a link its own `Link` and ends it on that page; a link Paged.js splits across a page break is two `Link` elements. The upstream fix is still worth offering.
+
+**Joseph's book.** 124 link annotations: 112 from the contents page to 84 destinations, which land on the right pages, and 12 DOI links in the references. Every annotation has `Contents` and a `StructParent`, and every object reference names the annotation's own page. Bookmarks and page labels were already in place from phase 1, so the card lists nothing missing for this book now.
 
 ## Decisions this touches
 
