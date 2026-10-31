@@ -21,6 +21,9 @@ import PDFDocument from 'pdfkit';
 export function writePdf(desc, fontFiles, info = {}) {
   const doc = new PDFDocument({
     autoFirstPage: false,
+    // No default Helvetica: the browser build doesn't bundle the standard
+    // fonts, and every word is drawn in one of the book's own.
+    font: null,
     pdfVersion: '1.7',
     tagged: true,
     ...(info.claimPdfUa ? { subset: 'PDF/UA' } : {}),
@@ -176,13 +179,23 @@ function drawWord(doc, item, withHyphen = false) {
   const visible = item.text.slice(0, item.visible) + hyphen;
   const natural = doc.widthOfString(visible);
   const glyphs = [...visible].length;
-  const characterSpacing = glyphs > 1 ? (item.width - natural) / (glyphs - 1) : 0;
+  // Spread over every glyph, not the gaps between them: the measured box
+  // includes CSS letter-spacing, which the browser adds after the last letter too.
+  const characterSpacing = glyphs > 0 ? (item.width - natural) / glyphs : 0;
   const text = visible + item.text.slice(item.visible);
+  // Visually hidden text is drawn in text render mode 3 (neither filled nor
+  // stroked): in the structure and readable, but not seen. PDFKit only writes
+  // a mode when it strokes, so the one set here holds for the word.
+  if (item.invisible) {
+    doc.save();
+    doc.addContent('3 Tr');
+  }
   doc.text(text, item.x, baseline(doc, item), {
     lineBreak: false,
     baseline: 'alphabetic',
     characterSpacing: Math.abs(characterSpacing) < 0.01 ? 0 : characterSpacing,
   });
+  if (item.invisible) doc.restore();
 }
 
 function drawMargin(doc, item) {

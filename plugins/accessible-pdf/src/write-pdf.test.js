@@ -3,6 +3,7 @@
 // Uint8Array), which drops the XMP metadata stream; the writer needs no DOM.
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
+import zlib from 'node:zlib';
 import { writePdf } from './write-pdf.js';
 
 const FONT = '/System/Library/Fonts/Supplemental/Times New Roman.ttf';
@@ -71,6 +72,25 @@ const description = {
   ],
 };
 
+/** Every content stream of a PDFKit file, inflated and joined. */
+function pageContent(pdf) {
+  const bytes = Buffer.from(pdf);
+  const out = [];
+  let at = 0;
+  for (;;) {
+    const start = bytes.indexOf('stream\n', at);
+    if (start < 0) break;
+    const end = bytes.indexOf('\nendstream', start);
+    try {
+      out.push(zlib.inflateSync(bytes.subarray(start + 7, end)).toString('latin1'));
+    } catch {
+      // not a deflated stream (font data, metadata)
+    }
+    at = end + 10;
+  }
+  return out.join('\n');
+}
+
 describe.skipIf(!hasFont)('writePdf', () => {
   it('writes a tagged PDF with the structure, a page-spanning paragraph and whole hyphenated words', async () => {
     const pdf = await writePdf(description, [fs.readFileSync(FONT)]);
@@ -86,6 +106,13 @@ describe.skipIf(!hasFont)('writePdf', () => {
     expect(text).toContain('/ActualText (recognized )');
     expect(text).toContain('/PageLabels');
     expect(text).not.toContain('pdfuaid');
+  });
+
+  it('draws visually hidden text in render mode 3', async () => {
+    const hidden = structuredClone(description);
+    hidden.pages[0].items[0].invisible = true;
+    const pdf = await writePdf(hidden, [fs.readFileSync(FONT)], {});
+    expect(pageContent(pdf)).toMatch(/q\n3 Tr\nq\n[^Q]*?BT[\s\S]*?ET\nQ\nQ/);
   });
 
   it('writes the PDF/UA identifier only when asked', async () => {

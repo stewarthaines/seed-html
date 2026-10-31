@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-30\n"
-"PO-Revision-Date: 2026-10-30\n"
+"POT-Creation-Date: 2026-10-31\n"
+"PO-Revision-Date: 2026-10-31\n"
 "Language: de\n"
 "Language-Team: \n"
 "Last-Translator: Claude (machine first pass)\n"
@@ -338,6 +338,10 @@ msgstr "Barrierefreiheitsmerkmale"
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Accessibility issues"
 msgstr "Barrierefreiheitsprobleme"
+
+#: plugins/accessible-pdf/src/App.svelte
+msgid "Accessible: tagged for screen readers, with bookmarks and the book’s own fonts."
+msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "acknowledgments"
@@ -712,6 +716,7 @@ msgstr "Zitatblock"
 msgid "Bold, emphasis and heading styles only."
 msgstr "Nur Fett-, Hervorhebungs- und Überschriftenstile."
 
+#: plugins/accessible-pdf/src/App.svelte
 #: src/lib/components/shell/BottomTabs.svelte
 #: src/lib/components/shell/TopBar.svelte
 msgid "Book"
@@ -1604,6 +1609,10 @@ msgstr "Herunterladen"
 msgid "Download failed — try again"
 msgstr "Download fehlgeschlagen — bitte erneut versuchen"
 
+#: plugins/accessible-pdf/src/App.svelte
+msgid "Download PDF"
+msgstr ""
+
 #: src/lib/components/shell/AboutDialog.svelte
 msgid "Download SEED.html"
 msgstr "SEED.html herunterladen"
@@ -2484,6 +2493,7 @@ msgstr "Coverbild erzeugen"
 msgid "Generate patchset"
 msgstr "Änderungssatz erzeugen"
 
+#: plugins/accessible-pdf/src/App.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Generate PDF"
 msgstr "PDF erstellen"
@@ -2953,6 +2963,10 @@ msgstr "Editor-Text vergrößern"
 msgid "Last synced: {time}"
 msgstr "Zuletzt synchronisiert: {time}"
 
+#: plugins/accessible-pdf/src/App.svelte
+msgid "Laying out the book…"
+msgstr ""
+
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Layout"
 msgstr "Layout"
@@ -3124,6 +3138,7 @@ msgstr "Hauptbereich"
 msgid "Main navigation"
 msgstr "Hauptnavigation"
 
+#: plugins/accessible-pdf/src/App.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Make a PDF"
 msgstr "PDF erstellen"
@@ -3131,6 +3146,10 @@ msgstr "PDF erstellen"
 #: src/lib/components/shell/AboutDialog.svelte
 msgid "Make ebooks anyone can read — right now in your browser."
 msgstr "Erstellen Sie E-Books, die jeder lesen kann — direkt in Ihrem Browser."
+
+#: plugins/accessible-pdf/src/App.svelte
+msgid "Make it again"
+msgstr ""
 
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Malformed XHTML"
@@ -3353,6 +3372,10 @@ msgstr "Keine Barrierefreiheitsprobleme gefunden"
 msgid "No audio files in this project."
 msgstr ""
 
+#: src/App.svelte
+msgid "No book is open."
+msgstr ""
+
 #: src/lib/components/books/BooksShelf.svelte
 msgid "No books yet."
 msgstr "Noch keine Bücher."
@@ -3540,6 +3563,10 @@ msgstr ""
 #: src/lib/components/SpineItem.svelte
 msgid "Not in the linear reading order"
 msgstr "Nicht in der linearen Lesereihenfolge"
+
+#: plugins/accessible-pdf/src/App.svelte
+msgid "Not in this PDF yet: {items}"
+msgstr ""
 
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Not made yet"
@@ -3883,10 +3910,12 @@ msgstr "Pfad"
 msgid "PDF"
 msgstr "PDF"
 
+#: plugins/accessible-pdf/src/App.svelte
 #: src/App.svelte
 msgid "PDF export failed: {message}"
 msgstr ""
 
+#: plugins/accessible-pdf/src/App.svelte
 #: src/App.svelte
 msgid "PDF is missing unreadable chapters: {chapters}"
 msgstr ""
@@ -4975,6 +5004,18 @@ msgstr "Schriftgröße"
 msgid "Text transform"
 msgstr "Texttransformation"
 
+#: plugins/accessible-pdf/src/host.ts
+msgid "The app did not answer."
+msgstr ""
+
+#: src/lib/pdf/accessible-pdf.ts
+msgid "The book could not be laid out."
+msgstr ""
+
+#: src/lib/pdf/accessible-pdf.ts
+msgid "The book took too long to lay out."
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 msgid "The catalog cannot be read right now."
 msgstr "Der Katalog kann gerade nicht gelesen werden."
@@ -5018,6 +5059,14 @@ msgstr "Der Frontmatter-Schlüssel scripts sollte eine Liste von Skript-Dateinam
 #: src/lib/components/SpineSidebar.svelte
 msgid "The linked folder isn't available — reconnect the drive or relink the folder."
 msgstr "Der verknüpfte Ordner ist nicht verfügbar — Laufwerk anschließen oder Ordner neu verknüpfen."
+
+#: plugins/accessible-pdf/src/App.svelte
+msgid "The PDF needs the font files of these fonts in the book: {fonts}"
+msgstr ""
+
+#: src/lib/navigation/views/PublishView.svelte
+msgid "The PDF plugin could not be loaded."
+msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "The plain text → XHTML step."
@@ -5438,6 +5487,10 @@ msgstr "Schreiben"
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Write the contents by hand"
 msgstr "Inhaltsverzeichnis von Hand schreiben"
+
+#: plugins/accessible-pdf/src/App.svelte
+msgid "Writing the PDF…"
+msgstr ""
 
 #: src/lib/components/spine/PreviewSurface.svelte
 msgid "XHTML Preview"
