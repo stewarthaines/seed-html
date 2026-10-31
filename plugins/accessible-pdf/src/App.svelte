@@ -19,6 +19,7 @@
         url: string;
         filename: string;
         problems: string[];
+        overflowPages: number[];
         skippedChapterIds: string[];
       };
 
@@ -42,6 +43,7 @@
         url: URL.createObjectURL(blob),
         filename: pdfFilename(book.description.title, book.author),
         problems: book.description.problems,
+        overflowPages: book.description.overflowPages,
         skippedChapterIds: book.skippedChapterIds,
       };
     } catch (error) {
@@ -79,6 +81,13 @@
       <p class="note warning">
         {$t('PDF is missing unreadable chapters: {chapters}', {
           chapters: status.skippedChapterIds.join(', '),
+        })}
+      </p>
+    {/if}
+    {#if status.overflowPages.length > 0}
+      <p class="note warning">
+        {$t('Some text runs off the edge of pages {pages}, in the preview too, so readers can’t see it.', {
+          pages: status.overflowPages.join(', '),
         })}
       </p>
     {/if}

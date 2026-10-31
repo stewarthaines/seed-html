@@ -4778,6 +4778,10 @@ msgstr ""
 msgid "Some images could not be loaded."
 msgstr ""
 
+#: plugins/accessible-pdf/src/App.svelte
+msgid "Some text runs off the edge of pages {pages}, in the preview too, so readers can’t see it."
+msgstr ""
+
 #: src/lib/components/metadata/CreatorRoleEditor.svelte
 #: src/lib/components/metadata/TitleEditor.svelte
 msgid "Sort as"

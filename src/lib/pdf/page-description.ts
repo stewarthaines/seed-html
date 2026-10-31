@@ -104,9 +104,18 @@ export interface PageDescription {
    * (`font-variant-caps: small-caps`, `img`), for the export to list.
    */
   problems: string[];
+  /**
+   * Page numbers with text laid out beyond the page edge, which no reader
+   * sees: Paged.js sometimes breaks a paragraph a line late (after a line
+   * ending in a hyphenated word) and the rest lands in a clipped overflow column.
+   */
+  overflowPages: number[];
 }
 
 const PX_TO_PT = 0.75;
+
+/** The hyphen Paged.js writes where it splits a word across pages (U+2011). */
+const PAGE_SPLIT_HYPHEN = '\u2011';
 
 /** Elements the PDF doesn't draw yet; each is listed as a problem. */
 const REPLACED_ELEMENTS = new Set(['img', 'svg', 'video', 'audio', 'canvas', 'iframe', 'object']);
@@ -160,8 +169,12 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
   const fonts: FontUse[] = [];
   const fontKeys = new Map<string, number>();
   const problems = new Set<string>();
+  const overflowPages: number[] = [];
   const structure: StructNode[] = [{ id: 0, type: 'Document', parent: null, children: [] }];
   const structByRef = new Map<string, number>();
+  // A word Paged.js split across a page break: its first part, by structure
+  // node, waiting for the rest on the next page.
+  const pageSplitWords = new Map<number, TextItem>();
   const segmenter = new Intl.Segmenter(lang || undefined, { granularity: 'word' });
 
   const fontIndex = (style: CSSStyleDeclaration): number => {
@@ -249,7 +262,10 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
     // is separate words: end the previous word with a space if it has none.
     const separate = () => {
       const last = page.items[page.items.length - 1];
-      if (last?.kind === 'text' && !/\s$/.test(last.text)) last.text += ' ';
+      // Not after the first part of a hyphenated word: the word goes on.
+      if (last?.kind === 'text' && !/\s$/.test(last.text) && last.hyphenated?.part !== 1) {
+        last.text += ' ';
+      }
     };
 
     const measureText = (text: Text, struct: number, hidden: boolean) => {
@@ -266,12 +282,22 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
         problems.add(`font-variant-caps: ${style.fontVariantCaps}`);
       }
       const invisible = hidden ? { invisible: true as const } : {};
+      // Paged.js ends a page's part of a paragraph it split mid-word with a
+      // non-breaking hyphen in the text itself (on a .pagedjs_hyphen element).
+      // It is drawn as the writer draws any line-end hyphen, and the word is
+      // joined with its rest on the next page.
+      const pageHyphen =
+        value.endsWith(PAGE_SPLIT_HYPHEN) && parent.closest('.pagedjs_hyphen') !== null;
+      const words = pageHyphen ? value.slice(0, -1) : value;
       const range = doc.createRange();
-      const segments = Array.from(segmenter.segment(value));
+      const segments = Array.from(segmenter.segment(words));
+      const lastWord = segments.findLastIndex(seg => seg.segment.trim() !== '');
       segments.forEach((seg, i) => {
         if (!seg.segment.trim()) return;
         const start = seg.index;
-        const end = start + seg.segment.length;
+        const splitHere = pageHyphen && i === lastWord;
+        // The box of the page's last word includes the hyphen.
+        const end = splitHere ? value.length : start + seg.segment.length;
         const next = segments[i + 1];
         const space = next && !next.segment.trim() ? next.segment.replace(/\s+/g, ' ') : '';
         range.setStart(text, start);
@@ -282,9 +308,9 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
         // glyph runs); only boxes on different lines mean a hyphenated word.
         const onOneLine = rects.every(r => !onAnotherLine(r, rects[0]));
         if (onOneLine) {
-          page.items.push({
+          const item: TextItem = {
             kind: 'text',
-            text: shown(seg.segment) + space,
+            text: shown(seg.segment) + (splitHere ? '' : space),
             visible: shown(seg.segment).length,
             ...box(union(rects)),
             font,
@@ -292,7 +318,18 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
             color,
             struct,
             ...invisible,
-          });
+          };
+          const firstPart = pageSplitWords.get(struct);
+          if (splitHere) {
+            item.hyphenated = { wholeWord: seg.segment, part: 1 };
+            pageSplitWords.set(struct, item);
+          } else if (firstPart?.hyphenated) {
+            const wholeWord = firstPart.hyphenated.wholeWord + seg.segment;
+            firstPart.hyphenated.wholeWord = wholeWord;
+            item.hyphenated = { wholeWord, part: 2 };
+            pageSplitWords.delete(struct);
+          }
+          page.items.push(item);
           return;
         }
         // The browser broke the word across lines (auto hyphens): find where.
@@ -355,6 +392,10 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
         color: cssColorToHex(after.color),
       });
     }
+    const off = page.items.some(
+      it => it.kind === 'text' && !it.invisible && (it.x >= page.width || it.y >= page.height)
+    );
+    if (off) overflowPages.push(page.number);
     return page;
   });
 
@@ -366,6 +407,7 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
     pages,
     structure,
     problems: Array.from(problems),
+    overflowPages,
   };
 }
 

@@ -159,11 +159,13 @@ function drawsSoftHyphen(font) {
     const layoutRun = font.layoutRun.bind(font);
     font.layoutRun = (text, features) => {
       const run = layoutRun(text, features);
-      const last = run.glyphs.length - 1;
-      if (text.endsWith(SOFT_HYPHEN) && last >= 0) {
-        run.glyphs[last] = soft;
-        run.positions[last].xAdvance = soft.advanceWidth * font.scale;
-        run.positions[last].advanceWidth = soft.advanceWidth * font.scale;
+      // The soft hyphen ends the word; spaces may follow it in the run.
+      const trailing = /\u00AD(\s*)$/.exec(text);
+      const at = trailing ? run.glyphs.length - 1 - trailing[1].length : -1;
+      if (at >= 0) {
+        run.glyphs[at] = soft;
+        run.positions[at].xAdvance = soft.advanceWidth * font.scale;
+        run.positions[at].advanceWidth = soft.advanceWidth * font.scale;
       }
       return run;
     };

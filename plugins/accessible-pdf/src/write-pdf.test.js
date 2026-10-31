@@ -37,6 +37,7 @@ const description = {
     { id: 3, type: 'P', parent: 1, children: [] },
   ],
   problems: [],
+  overflowPages: [],
   pages: [
     {
       width: 300,
