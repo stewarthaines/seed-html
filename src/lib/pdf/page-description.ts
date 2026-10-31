@@ -51,6 +51,8 @@ export interface TextItem {
    * `.visually-hidden` heading): in the structure, drawn invisibly.
    */
   invisible?: true;
+  /** The text in reading order, where `text` is drawn in another order (a right-to-left list marker). */
+  actual?: string;
 }
 
 /** Margin-box text (running heads, page numbers): always an artifact. */
@@ -166,8 +168,29 @@ export interface DecorationItem {
   offset?: number;
 }
 
+/**
+ * A bullet (disc, circle or square), which Chromium paints as a shape sized
+ * from the font, not as text: a layout artifact, since the list structure
+ * already says it's a list item. The writer places it from `x`, the edge it
+ * hangs from (the item's start, or its first text's for an inside marker).
+ */
+export interface SymbolItem {
+  kind: 'symbol';
+  shape: 'disc' | 'circle' | 'square';
+  x: number;
+  /** The first line's box, which sets the baseline. */
+  y: number;
+  height: number;
+  font: number;
+  size: number;
+  color: string;
+  /** Hangs to the right of `x`, in a right-to-left item. */
+  rtl?: true;
+}
+
 export type DrawItem =
   | TextItem
+  | SymbolItem
   | MarginItem
   | ImageItem
   | LinkItem
@@ -322,6 +345,9 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
   // node, waiting for the rest on the next page.
   const pageSplitWords = new Map<number, TextItem>();
   const segmenter = new Intl.Segmenter(lang || undefined, { granularity: 'word' });
+  // Measures list markers, which aren't in the DOM to take a range over; the
+  // document's canvas has the book's fonts.
+  const measure = doc.createElement('canvas').getContext('2d') as CanvasRenderingContext2D;
 
   const fontIndex = (style: CSSStyleDeclaration): number => {
     const use: FontUse = {
@@ -357,6 +383,24 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
     wrappers.add(p.id);
     return p.id;
   };
+
+  // A list item's label and body, by its `LI` node: the label (`Lbl`) first.
+  const listParts = new Map<number, { label?: number; body?: number }>();
+  const listPart = (li: number, type: 'Lbl' | 'LBody'): number => {
+    const parts = listParts.get(li) ?? {};
+    listParts.set(li, parts);
+    const key = type === 'Lbl' ? 'label' : 'body';
+    let id = parts[key];
+    if (id === undefined) {
+      id = structure.length;
+      structure.push({ id, type, parent: li, children: [] });
+      structure[li].children.push(id);
+      parts[key] = id;
+    }
+    return id;
+  };
+  const listLabelFor = (li: number) => listPart(li, 'Lbl');
+  const listBodyFor = (li: number) => listPart(li, 'LBody');
 
   /** The structure node for a book element, created the first time it's met. */
   const structFor = (el: Element, parent: number, as?: { type: string; alt?: string }): number => {
@@ -466,8 +510,128 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
       const block = !style.display.startsWith('inline') && style.display !== 'contents';
       const hiddenHere = hidden || isVisuallyHidden(style);
       if (block) separate();
-      for (const child of Array.from(el.childNodes)) walk(child, here, hiddenHere);
+      // A list item's marker is its label (`Lbl`); what follows is its body.
+      const listItem = style.display.includes('list-item');
+      const marker = listItem && !hiddenHere ? measureMarker(el, here) : null;
+      const inner = listItem && structure[here].type === 'LI' ? listBodyFor(here) : here;
+      const firstChildItem = page.items.length;
+      for (const child of Array.from(el.childNodes)) walk(child, inner, hiddenHere);
+      if (marker) placeMarker(marker, firstChildItem);
       if (block) separate();
+    };
+
+    /** A list item's marker, measured but not yet set on the line it labels. */
+    interface Marker {
+      item: TextItem | SymbolItem;
+      /** The marker's width with its trailing space, in points. */
+      full: number;
+      inside: boolean;
+      rtl: boolean;
+      /** The list item's border box. */
+      box: { x: number; y: number; width: number; height: number };
+      /** Fallback line height, in points, for a list item with no text on its first line. */
+      lineHeight: number;
+    }
+
+    const measureMarker = (el: Element, li: number): Marker | null => {
+      const style = win.getComputedStyle(el);
+      if (style.listStyleImage !== 'none') problems.add('list-style-image');
+      const ms = win.getComputedStyle(el, '::marker');
+      let text: string | null;
+      const normal = ms.content === 'normal' || ms.content === '';
+      const rtl = style.direction === 'rtl';
+      const shape = style.listStyleType;
+      if (normal && (shape === 'disc' || shape === 'circle' || shape === 'square')) {
+        return {
+          item: {
+            kind: 'symbol',
+            shape,
+            x: 0,
+            y: 0,
+            height: 0,
+            font: fontIndex(ms),
+            size: toPt(parseFloat(ms.fontSize) * scale),
+            color: cssColorToHex(ms.color),
+            ...(rtl ? { rtl: true as const } : {}),
+          },
+          full: 0,
+          inside: style.listStylePosition === 'inside',
+          rtl,
+          box: box(el.getBoundingClientRect()),
+          lineHeight: toPt((parseFloat(style.lineHeight) || parseFloat(ms.fontSize) * 1.2) * scale),
+        };
+      }
+      if (normal) {
+        text = markerText(style.listStyleType, ordinalOf(el));
+        if (text === null) problems.add(`list-style-type: ${style.listStyleType}`);
+      } else {
+        // A `::marker` with its own content: only a plain string is drawn.
+        const quoted = /^"((?:[^"\\]|\\.)*)"$/.exec(ms.content);
+        text = quoted ? quoted[1].replace(/\\(.)/g, '$1') : null;
+        if (text === null && ms.content !== 'none') problems.add(`::marker content: ${ms.content}`);
+      }
+      if (!text || !text.trim()) return null;
+      const visibleText = text.trimEnd();
+      measure.font = `${ms.fontStyle} ${ms.fontWeight} ${ms.fontSize} ${ms.fontFamily}`;
+      const pt = (px: number) => toPt(px * scale);
+      // In a right-to-left item the suffix reads first: "1." is seen as ".1".
+      const drawn = rtl ? rtlMarker(visibleText) : visibleText;
+      const size = toPt(parseFloat(ms.fontSize) * scale);
+      const lineHeight = parseFloat(style.lineHeight) || parseFloat(ms.fontSize) * 1.2;
+      return {
+        item: {
+          kind: 'text',
+          text: drawn,
+          visible: drawn.length,
+          x: 0,
+          y: 0,
+          width: pt(measure.measureText(visibleText).width),
+          height: 0,
+          font: fontIndex(ms),
+          size,
+          color: cssColorToHex(ms.color),
+          struct: structure[li].type === 'LI' ? listLabelFor(li) : null,
+          ...(drawn !== visibleText ? { actual: visibleText } : {}),
+        },
+        full: pt(measure.measureText(text).width),
+        inside: style.listStylePosition === 'inside',
+        rtl,
+        box: box(el.getBoundingClientRect()),
+        lineHeight: pt(lineHeight),
+      };
+    };
+
+    /**
+     * Set a marker on its list item's first line: beside the item outside it
+     * (list-style-position: outside), or before the first text inside it.
+     * The marker is drawn before the item's content, so it is its first child.
+     */
+    const placeMarker = (marker: Marker, from: number) => {
+      const first = page.items
+        .slice(from)
+        .find((it): it is TextItem => it.kind === 'text' && !it.invisible);
+      const { item, full, box: li } = marker;
+      item.y = first ? first.y : li.y;
+      item.height = first ? first.height : marker.lineHeight;
+      if (item.kind === 'symbol') {
+        const inside = marker.inside && first;
+        item.x = marker.rtl
+          ? inside
+            ? first.x + first.width
+            : li.x + li.width
+          : inside
+            ? first.x
+            : li.x;
+        page.items.splice(from, 0, item);
+        return;
+      }
+      const gap = full - item.width;
+      if (marker.inside && first) {
+        item.x = marker.rtl ? first.x + first.width + gap : first.x - full;
+      } else {
+        item.x = marker.rtl ? li.x + li.width + gap : li.x - full;
+      }
+      page.items.splice(from, 0, item);
     };
 
     /**
@@ -944,6 +1108,111 @@ export function textAlign(value: string, direction = 'ltr'): 'left' | 'center' |
   if (value === 'left') return 'left';
   const rtl = direction === 'rtl';
   return (value === 'end') !== rtl ? 'right' : 'left';
+}
+
+/**
+ * A list item's number as the browser counts it: from its list's `start`
+ * (which Paged.js sets on each page's part of a split list), stepping by one,
+ * or down in a `reversed` list, and taking any `value` an item sets.
+ */
+export function ordinalOf(li: Element): number {
+  const list = li.parentElement;
+  const ol = list?.localName === 'ol' ? (list as HTMLOListElement) : null;
+  const items = list ? Array.from(list.children).filter(c => c.localName === 'li') : [li];
+  const reversed = ol?.reversed ?? false;
+  let n = ol?.hasAttribute('start') ? ol.start : reversed ? items.length : 1;
+  for (const item of items) {
+    const value = item.getAttribute('value');
+    if (value !== null && !Number.isNaN(parseInt(value, 10))) n = parseInt(value, 10);
+    if (item === li) return n;
+    n += reversed ? -1 : 1;
+  }
+  return n;
+}
+
+const ROMAN: [number, string][] = [
+  [1000, 'm'],
+  [900, 'cm'],
+  [500, 'd'],
+  [400, 'cd'],
+  [100, 'c'],
+  [90, 'xc'],
+  [50, 'l'],
+  [40, 'xl'],
+  [10, 'x'],
+  [9, 'ix'],
+  [5, 'v'],
+  [4, 'iv'],
+  [1, 'i'],
+];
+
+function roman(n: number): string | null {
+  if (n < 1 || n > 3999) return null;
+  let out = '';
+  for (const [value, letters] of ROMAN) {
+    while (n >= value) {
+      out += letters;
+      n -= value;
+    }
+  }
+  return out;
+}
+
+function alphabetic(n: number, letters: string): string | null {
+  if (n < 1) return null;
+  const symbols = Array.from(letters);
+  let out = '';
+  for (; n > 0; n = Math.floor((n - 1) / symbols.length)) {
+    out = symbols[(n - 1) % symbols.length] + out;
+  }
+  return out;
+}
+
+/**
+ * The marker text for a `list-style-type` and an item's number, with the
+ * suffix and space the browser adds (CSS Counter Styles); null for a style
+ * the PDF doesn't draw yet, '' for `none`.
+ */
+export function markerText(type: string, n: number): string | null {
+  const quoted = /^"(.*)"$/.exec(type);
+  if (quoted) return quoted[1];
+  const numbered = (s: string | null) => (s === null ? null : `${s}. `);
+  switch (type) {
+    case 'none':
+      return '';
+    case 'disc':
+      return '\u2022 ';
+    case 'circle':
+      return '\u25E6 ';
+    case 'square':
+      return '\u25AA ';
+    case 'decimal':
+      return numbered(String(n));
+    case 'decimal-leading-zero':
+      return numbered(n >= 0 && n < 10 ? `0${n}` : String(n));
+    case 'lower-alpha':
+    case 'lower-latin':
+      return numbered(alphabetic(n, 'abcdefghijklmnopqrstuvwxyz'));
+    case 'upper-alpha':
+    case 'upper-latin':
+      return numbered(alphabetic(n, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'));
+    case 'lower-greek':
+      return numbered(alphabetic(n, 'αβγδεζηθικλμνξοπρστυφχψω'));
+    case 'lower-roman':
+      return numbered(roman(n));
+    case 'upper-roman':
+      return numbered(roman(n)?.toUpperCase() ?? null);
+    case 'arabic-indic':
+      return numbered(String(n).replace(/\d/g, d => String.fromCharCode(0x0660 + Number(d))));
+    default:
+      return null;
+  }
+}
+
+/** A marker as it is seen in a right-to-left item: its suffix ("1." → ".1") on the left. */
+export function rtlMarker(text: string): string {
+  const m = /^(.*?)([.)]+)$/.exec(text);
+  return m && m[1] ? m[2] + m[1] : text;
 }
 
 /** Painting the PDF doesn't draw: the property, its value when unused, and the card's name. */

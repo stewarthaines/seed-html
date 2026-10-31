@@ -5,6 +5,9 @@ import {
   cornerRadius,
   cssColor,
   cssColorToHex,
+  markerText,
+  ordinalOf,
+  rtlMarker,
   isVisuallyHidden,
   resolveMarginContent,
   placePicture,
@@ -210,5 +213,50 @@ describe('backgroundInset', () => {
     expect(backgroundInset(style, pt).top).toBe(0);
     expect(backgroundInset({ ...style, backgroundClip: 'padding-box' }, pt).top).toBe(2);
     expect(backgroundInset({ ...style, backgroundClip: 'content-box' }, pt).top).toBe(7);
+  });
+});
+
+describe('markerText', () => {
+  it('writes numbers, letters and numerals with the suffix and space', () => {
+    expect(markerText('decimal', 3)).toBe('3. ');
+    expect(markerText('decimal-leading-zero', 3)).toBe('03. ');
+    expect(markerText('lower-alpha', 28)).toBe('ab. ');
+    expect(markerText('upper-roman', 14)).toBe('XIV. ');
+    expect(markerText('arabic-indic', 12)).toBe('١٢. ');
+  });
+
+  it('writes symbols and strings as they are, and nothing for none', () => {
+    expect(markerText('disc', 1)).toBe('\u2022 ');
+    expect(markerText('"→ "', 1)).toBe('→ ');
+    expect(markerText('none', 1)).toBe('');
+  });
+
+  it('is null for a style it does not draw', () => {
+    expect(markerText('hebrew', 1)).toBeNull();
+    expect(markerText('lower-roman', 4000)).toBeNull();
+  });
+});
+
+describe('rtlMarker', () => {
+  it('puts the suffix on the left', () => {
+    expect(rtlMarker('12.')).toBe('.12');
+    expect(rtlMarker('\u2022')).toBe('\u2022');
+  });
+});
+
+describe('ordinalOf', () => {
+  const items = (html: string) => {
+    document.body.innerHTML = html;
+    return Array.from(document.querySelectorAll('li'));
+  };
+
+  it('counts from the list start, taking any value an item sets', () => {
+    const li = items('<ol start="4"><li>a</li><li>b</li><li value="10">c</li><li>d</li></ol>');
+    expect(li.map(ordinalOf)).toEqual([4, 5, 10, 11]);
+  });
+
+  it('counts down a reversed list from its length', () => {
+    const li = items('<ol reversed><li>a</li><li>b</li><li>c</li></ol>');
+    expect(li.map(ordinalOf)).toEqual([3, 2, 1]);
   });
 });
