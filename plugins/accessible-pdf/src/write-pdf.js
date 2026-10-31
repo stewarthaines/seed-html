@@ -169,7 +169,22 @@ export function writePdf(desc, files, info = {}) {
         const content = doc.markStructureContent('Figure');
         drawImage(item);
         doc.endMarkedContent();
-        elementFor(item.struct).add(content);
+        const figure = elementFor(item.struct);
+        figure.add(content);
+        // PDF/UA: a Figure gives the box it occupies on the page, in PDF space
+        // (origin bottom left); a cut picture occupies only its clip box, and
+        // a full-bleed one only the page.
+        const box = item.clip ?? item;
+        const left = Math.max(0, box.x);
+        const right = Math.min(page.width, box.x + box.width);
+        const top = Math.max(0, box.y);
+        const bottom = Math.min(page.height, box.y + box.height);
+        figure.dictionary.data.A = {
+          O: 'Layout',
+          // A Figure is inline unless it says otherwise.
+          ...(nodes[item.struct].placement ? { Placement: nodes[item.struct].placement } : {}),
+          BBox: [left, page.height - bottom, right, page.height - top],
+        };
         continue;
       }
       const node = nodes[item.struct];

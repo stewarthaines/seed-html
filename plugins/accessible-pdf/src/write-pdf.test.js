@@ -127,13 +127,22 @@ describe.skipIf(!hasFont)('writePdf', () => {
     const withImages = structuredClone(description);
     withImages.images = ['photo.png'];
     withImages.structure[1].children.push(4);
-    withImages.structure.push({ id: 4, type: 'Figure', parent: 1, children: [], alt: 'A red dot' });
+    withImages.structure.push({
+      id: 4,
+      type: 'Figure',
+      parent: 1,
+      children: [],
+      alt: 'A red dot',
+      placement: 'Block',
+    });
     const image = { kind: 'image', image: 0, x: 20, y: 100, width: 50, height: 50 };
     withImages.pages[0].items.push({ ...image, struct: 4 }, { ...image, y: 200, struct: null });
     const pdf = await writePdf(withImages, { fonts: [fs.readFileSync(FONT)], images: [RED_DOT] });
     const text = new TextDecoder('latin1').decode(pdf);
     expect(text).toContain('/S /Figure');
     expect(text).toContain('/Alt (A red dot)');
+    // A block, and its box on the 400pt page, measured from the foot.
+    expect(text).toMatch(/\/O \/Layout\s+\/Placement \/Block\s+\/BBox \[20 250 70 300\]/);
     // One image (with its alpha mask), drawn twice.
     expect(text.match(/\/SMask \d+ 0 R/g)).toHaveLength(1);
     const content = pageContent(pdf);
@@ -182,13 +191,19 @@ describe.skipIf(!hasFont)('writePdf', () => {
     expect(text).toContain('/Contents (Below)');
     expect(text).toMatch(/\/Dests/);
     // Each OBJR names the page its annotation is on, not the last page.
-    const pages = [...text.matchAll(/\/Type \/OBJR\n\/Obj \d+ 0 R\n\/Pg (\d+) 0 R/g)].map(m => m[1]);
+    const pages = [...text.matchAll(/\/Type \/OBJR\n\/Obj \d+ 0 R\n\/Pg (\d+) 0 R/g)].map(
+      m => m[1]
+    );
     expect(pages).toHaveLength(2);
     expect(new Set(pages).size).toBe(2);
   });
 
   it('writes the PDF/UA identifier only when asked', async () => {
-    const pdf = await writePdf(description, { fonts: [fs.readFileSync(FONT)] }, { claimPdfUa: true });
+    const pdf = await writePdf(
+      description,
+      { fonts: [fs.readFileSync(FONT)] },
+      { claimPdfUa: true }
+    );
     expect(new TextDecoder('latin1').decode(pdf)).toContain('<pdfuaid:part>1</pdfuaid:part>');
   });
 });
