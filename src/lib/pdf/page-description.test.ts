@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
+  backgroundInset,
+  boxSides,
+  cornerRadius,
+  cssColor,
   cssColorToHex,
   isVisuallyHidden,
   resolveMarginContent,
@@ -117,5 +121,94 @@ describe('tableCellAttributes', () => {
   it('records spans over one cell', () => {
     const t = table('<tbody><tr><td colspan="3" rowspan="1">All</td></tr></tbody>');
     expect(tableCellAttributes(t.querySelector('td')!)).toEqual({ colSpan: 3 });
+  });
+});
+
+// A computed style with nothing set, in CSS pixels; `pt` here is 1:1.
+const plain = {
+  borderTopWidth: '0px',
+  borderRightWidth: '0px',
+  borderBottomWidth: '0px',
+  borderLeftWidth: '0px',
+  borderTopStyle: 'none',
+  borderRightStyle: 'none',
+  borderBottomStyle: 'none',
+  borderLeftStyle: 'none',
+  borderTopColor: 'rgb(0, 0, 0)',
+  borderRightColor: 'rgb(0, 0, 0)',
+  borderBottomColor: 'rgb(0, 0, 0)',
+  borderLeftColor: 'rgb(0, 0, 0)',
+  paddingTop: '0px',
+  paddingRight: '0px',
+  paddingBottom: '0px',
+  paddingLeft: '0px',
+  borderTopLeftRadius: '0px',
+  borderTopRightRadius: '0px',
+  borderBottomRightRadius: '0px',
+  borderBottomLeftRadius: '0px',
+  backgroundClip: 'border-box',
+};
+const pt = (v: string) => parseFloat(v) || 0;
+
+describe('cssColor', () => {
+  it('gives the colour and any opacity, or null when transparent', () => {
+    expect(cssColor('rgb(255, 0, 0)')).toEqual({ color: '#ff0000' });
+    expect(cssColor('rgba(0, 0, 255, 0.25)')).toEqual({ color: '#0000ff', opacity: 0.25 });
+    expect(cssColor('rgba(0, 0, 0, 0)')).toBeNull();
+  });
+});
+
+describe('boxSides', () => {
+  it('keeps the sides the browser draws', () => {
+    const sides = boxSides(
+      {
+        ...plain,
+        borderBottomWidth: '2px',
+        borderBottomStyle: 'dashed',
+        borderBottomColor: 'rgb(0, 128, 0)',
+        borderLeftWidth: '3px',
+        borderLeftStyle: 'hidden',
+        borderTopWidth: '1px',
+        borderTopStyle: 'solid',
+        borderTopColor: 'rgba(0, 0, 0, 0)',
+      },
+      pt
+    );
+    expect(sides).toEqual([null, null, { width: 2, style: 'dashed', color: '#008000' }, null]);
+  });
+});
+
+describe('cornerRadius', () => {
+  it('is 0 for square corners and the radius when all four share one', () => {
+    expect(cornerRadius(plain, pt)).toBe(0);
+    const round = {
+      ...plain,
+      borderTopLeftRadius: '6px',
+      borderTopRightRadius: '6px',
+      borderBottomRightRadius: '6px',
+      borderBottomLeftRadius: '6px',
+    };
+    expect(cornerRadius(round, pt)).toBe(6);
+  });
+
+  it('is null for corners it does not draw', () => {
+    expect(cornerRadius({ ...plain, borderTopLeftRadius: '6px' }, pt)).toBeNull();
+    const elliptical = {
+      ...plain,
+      borderTopLeftRadius: '6px 3px',
+      borderTopRightRadius: '6px 3px',
+      borderBottomRightRadius: '6px 3px',
+      borderBottomLeftRadius: '6px 3px',
+    };
+    expect(cornerRadius(elliptical, pt)).toBeNull();
+  });
+});
+
+describe('backgroundInset', () => {
+  it('follows background-clip', () => {
+    const style = { ...plain, borderTopWidth: '2px', borderTopStyle: 'solid', paddingTop: '5px' };
+    expect(backgroundInset(style, pt).top).toBe(0);
+    expect(backgroundInset({ ...style, backgroundClip: 'padding-box' }, pt).top).toBe(2);
+    expect(backgroundInset({ ...style, backgroundClip: 'content-box' }, pt).top).toBe(7);
   });
 });

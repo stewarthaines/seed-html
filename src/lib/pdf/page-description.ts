@@ -63,6 +63,8 @@ export interface MarginItem {
   width: number;
   height: number;
   align: 'left' | 'center' | 'right';
+  /** The margin box's direction, which orders a mix of right-to-left and other words. */
+  direction?: 'rtl';
   font: number;
   size: number;
   color: string;
@@ -107,7 +109,71 @@ export interface AnchorItem {
   y: number;
 }
 
-export type DrawItem = TextItem | MarginItem | ImageItem | LinkItem | AnchorItem;
+/** One side of a border, as the browser drew it. */
+export interface BorderSide {
+  width: number;
+  style: 'solid' | 'dashed' | 'dotted' | 'double' | 'groove' | 'ridge' | 'inset' | 'outset';
+  color: string;
+  /** Below 1 for a translucent colour. */
+  opacity?: number;
+}
+
+/**
+ * An element's background and border, drawn under its content: always an
+ * artifact. The box is the border box (one per line for an inline element).
+ */
+export interface BoxItem {
+  kind: 'box';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  /** The painted area, which `background-clip` may set inside the border box. */
+  background?: {
+    color: string;
+    opacity?: number;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  border?: { top?: BorderSide; right?: BorderSide; bottom?: BorderSide; left?: BorderSide };
+  /** Corner radius, when all four corners share one. */
+  radius?: number;
+  /** A collapsed table border, centred on the box's edge rather than inside it. */
+  collapsed?: true;
+  /** A margin box's own background or border: a pagination artifact. */
+  pagination?: true;
+}
+
+/** A text decoration line under, over or through one line of an inline element. */
+export interface DecorationItem {
+  kind: 'decoration';
+  line: 'underline' | 'overline' | 'line-through';
+  /** The element's box on that line; the writer finds the baseline in it. */
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  /** The decorating element's font, whose metrics place the line. */
+  font: number;
+  size: number;
+  color: string;
+  style: 'solid' | 'double' | 'dotted' | 'dashed' | 'wavy';
+  /** Points; absent for the font's own thickness. */
+  thickness?: number;
+  /** `text-underline-offset` in points, when set. */
+  offset?: number;
+}
+
+export type DrawItem =
+  | TextItem
+  | MarginItem
+  | ImageItem
+  | LinkItem
+  | AnchorItem
+  | BoxItem
+  | DecorationItem;
 
 export interface PageBox {
   /** Page size in points. */
@@ -147,6 +213,8 @@ export interface PageDescription {
   version: typeof PAGE_DESCRIPTION_VERSION;
   title: string;
   lang: string;
+  /** The book's direction; `rtl` turns its pages right to left. */
+  direction: 'ltr' | 'rtl';
   fonts: FontUse[];
   /** The URL of each image the pages draw, as the paginated document loaded it. */
   images: string[];
@@ -369,6 +437,7 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
         problems.add(el.localName);
         return;
       }
+      decorate(el, style);
       if (el.localName === 'img') {
         measureImage(el as HTMLImageElement, struct, style);
         return;
@@ -399,6 +468,103 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
       if (block) separate();
       for (const child of Array.from(el.childNodes)) walk(child, here, hiddenHere);
       if (block) separate();
+    };
+
+    /**
+     * An element's background, border and text decoration, before its content
+     * so they're drawn under it, and what of its painting the PDF doesn't draw.
+     */
+    const decorate = (
+      el: Element,
+      style: CSSStyleDeclaration,
+      from: 'book' | 'page' | 'margin' = 'book'
+    ) => {
+      // Paged.js's page wrappers carry the preview's own look (a shadow round
+      // each page), which isn't the book's.
+      if (from !== 'page') {
+        for (const [property, none, name] of UNDRAWN) {
+          if (style.getPropertyValue(property) !== none) problems.add(name);
+        }
+        if (parseFloat(style.opacity) < 1) problems.add('opacity');
+        if (style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0) {
+          problems.add('outline');
+        }
+      }
+      if (style.display === 'contents') return;
+      const inline = style.display === 'inline';
+      const rects = inline ? Array.from(el.getClientRects()) : [el.getBoundingClientRect()];
+      const pt = (v: string) => toPt((parseFloat(v) || 0) * scale);
+      const sides = boxSides(style, pt);
+      const fill = cssColor(style.backgroundColor);
+      const radius = cornerRadius(style, pt);
+      const collapsed = style.borderCollapse === 'collapse' && style.display.startsWith('table');
+      if (fill || sides.some(Boolean)) {
+        if (radius === null) problems.add('border-radius');
+        // A line of an inline element has its start border on the first line
+        // and its end border on the last (box-decoration-break: slice).
+        const rtl = style.direction === 'rtl';
+        rects.forEach((r, i) => {
+          if (r.width === 0 && r.height === 0) return;
+          const [top, right, bottom, left] = sides;
+          const firstLine = i === 0;
+          const lastLine = i === rects.length - 1;
+          const border = {
+            ...(top ? { top } : {}),
+            ...(bottom ? { bottom } : {}),
+            ...(right && (!inline || (rtl ? firstLine : lastLine)) ? { right } : {}),
+            ...(left && (!inline || (rtl ? lastLine : firstLine)) ? { left } : {}),
+          };
+          const b = box(r);
+          const item: BoxItem = { kind: 'box', ...b };
+          if (fill) {
+            const inset = backgroundInset(style, pt);
+            item.background = {
+              ...fill,
+              x: b.x + inset.left,
+              y: b.y + inset.top,
+              width: b.width - inset.left - inset.right,
+              height: b.height - inset.top - inset.bottom,
+            };
+          }
+          if (Object.keys(border).length > 0) item.border = border;
+          if (radius) item.radius = radius;
+          if (collapsed) item.collapsed = true;
+          if (from === 'margin') item.pagination = true;
+          page.items.push(item);
+        });
+      }
+      const lines = style.textDecorationLine;
+      if (lines === 'none') return;
+      if (!inline) {
+        problems.add('text-decoration on a block');
+        return;
+      }
+      const decorationStyle = DECORATION_STYLES.has(style.textDecorationStyle)
+        ? (style.textDecorationStyle as DecorationItem['style'])
+        : 'solid';
+      const thickness = /px$/.test(style.textDecorationThickness)
+        ? { thickness: pt(style.textDecorationThickness) }
+        : {};
+      const offset = /px$/.test(style.textUnderlineOffset)
+        ? { offset: pt(style.textUnderlineOffset) }
+        : {};
+      for (const line of lines.split(/\s+/)) {
+        if (line !== 'underline' && line !== 'overline' && line !== 'line-through') continue;
+        for (const r of rects) {
+          if (r.width === 0) continue;
+          page.items.push({
+            kind: 'decoration',
+            line,
+            ...box(r),
+            font: fontIndex(style),
+            size: toPt(parseFloat(style.fontSize) * scale),
+            color: cssColorToHex(style.textDecorationColor),
+            style: decorationStyle,
+            ...thickness,
+            ...(line === 'underline' ? offset : {}),
+          });
+        }
+      }
     };
 
     // Text either side of a block boundary (a label above a heading's title)
@@ -578,6 +744,16 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
       });
     };
 
+    // The page's own background (`@page { background }`), then the margin
+    // boxes' (a rule under a running head), under everything else.
+    const pagebox = pageEl.querySelector('.pagedjs_pagebox');
+    for (const el of [pageEl, ...(pagebox ? [pagebox] : [])]) {
+      decorate(el, win.getComputedStyle(el), 'page');
+    }
+    for (const margin of Array.from(pageEl.querySelectorAll('.pagedjs_margin'))) {
+      decorate(margin, win.getComputedStyle(margin), 'margin');
+    }
+
     const content = pageEl.querySelector('.pagedjs_page_content');
     if (content) walk(content, 0);
 
@@ -596,7 +772,8 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
         kind: 'margin',
         text,
         ...box(marginContent.getBoundingClientRect()),
-        align: textAlign(after.textAlign),
+        align: textAlign(after.textAlign, after.direction),
+        ...(after.direction === 'rtl' ? { direction: 'rtl' as const } : {}),
         font: fontIndex(after),
         size: toPt(parseFloat(after.fontSize) * scale),
         color: cssColorToHex(after.color),
@@ -613,6 +790,8 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
     version: PAGE_DESCRIPTION_VERSION,
     title: book.title,
     lang,
+    direction:
+      win.getComputedStyle(doc.body ?? doc.documentElement).direction === 'rtl' ? 'rtl' : 'ltr',
     fonts,
     images,
     pages,
@@ -758,10 +937,101 @@ function textTransformer(value: string): (s: string) => string {
   return s => s;
 }
 
-function textAlign(value: string): 'left' | 'center' | 'right' {
+/** A computed `text-align` as a side, `start` and `end` by the text's direction. */
+export function textAlign(value: string, direction = 'ltr'): 'left' | 'center' | 'right' {
   if (value === 'center') return 'center';
-  if (value === 'right' || value === 'end') return 'right';
-  return 'left';
+  if (value === 'right') return 'right';
+  if (value === 'left') return 'left';
+  const rtl = direction === 'rtl';
+  return (value === 'end') !== rtl ? 'right' : 'left';
+}
+
+/** Painting the PDF doesn't draw: the property, its value when unused, and the card's name. */
+const UNDRAWN: [string, string, string][] = [
+  ['background-image', 'none', 'background-image'],
+  ['box-shadow', 'none', 'box-shadow'],
+  ['text-shadow', 'none', 'text-shadow'],
+  ['transform', 'none', 'transform'],
+  ['filter', 'none', 'filter'],
+  ['backdrop-filter', 'none', 'backdrop-filter'],
+  ['mix-blend-mode', 'normal', 'mix-blend-mode'],
+  ['border-image-source', 'none', 'border-image'],
+];
+
+const BORDER_STYLES = new Set([
+  'solid',
+  'dashed',
+  'dotted',
+  'double',
+  'groove',
+  'ridge',
+  'inset',
+  'outset',
+]);
+const DECORATION_STYLES = new Set(['solid', 'double', 'dotted', 'dashed', 'wavy']);
+
+/** A computed colour as `#rrggbb` and its opacity, or null when it's fully transparent. */
+export function cssColor(value: string): { color: string; opacity?: number } | null {
+  const m = value.match(/rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)(?:\s*[,/]\s*([\d.]+%?))?/);
+  if (!m) return null;
+  const alpha = m[4] === undefined ? 1 : parseFloat(m[4]) / (m[4].endsWith('%') ? 100 : 1);
+  if (alpha <= 0) return null;
+  return { color: cssColorToHex(value), ...(alpha < 1 ? { opacity: alpha } : {}) };
+}
+
+type BoxStyle = Pick<
+  CSSStyleDeclaration,
+  | `border${'Top' | 'Right' | 'Bottom' | 'Left'}${'Width' | 'Style' | 'Color'}`
+  | `padding${'Top' | 'Right' | 'Bottom' | 'Left'}`
+  | `border${'TopLeft' | 'TopRight' | 'BottomRight' | 'BottomLeft'}Radius`
+  | 'backgroundClip'
+>;
+
+/** The four border sides (top, right, bottom, left) the browser draws; null where none. */
+export function boxSides(
+  style: BoxStyle,
+  pt: (v: string) => number
+): [BorderSide | null, BorderSide | null, BorderSide | null, BorderSide | null] {
+  const side = (name: 'Top' | 'Right' | 'Bottom' | 'Left'): BorderSide | null => {
+    const kind = style[`border${name}Style`];
+    const width = pt(style[`border${name}Width`]);
+    const color = cssColor(style[`border${name}Color`]);
+    if (!BORDER_STYLES.has(kind) || width <= 0 || !color) return null;
+    return { width, style: kind as BorderSide['style'], ...color };
+  };
+  return [side('Top'), side('Right'), side('Bottom'), side('Left')];
+}
+
+/**
+ * The corner radius when all four corners share one round radius (0 when
+ * square); null when they differ or are elliptical, which the PDF doesn't draw.
+ */
+export function cornerRadius(style: BoxStyle, pt: (v: string) => number): number | null {
+  const corners = [
+    style.borderTopLeftRadius,
+    style.borderTopRightRadius,
+    style.borderBottomRightRadius,
+    style.borderBottomLeftRadius,
+  ];
+  if (corners.every(c => parseFloat(c) === 0 || c === '')) return 0;
+  if (corners.some(c => !/^[\d.]+px$/.test(c)) || new Set(corners).size > 1) return null;
+  return pt(corners[0]);
+}
+
+/** How far inside the border box the background is painted (`background-clip`). */
+export function backgroundInset(
+  style: BoxStyle,
+  pt: (v: string) => number
+): { top: number; right: number; bottom: number; left: number } {
+  const clip = style.backgroundClip;
+  const inset = (name: 'Top' | 'Right' | 'Bottom' | 'Left') => {
+    if (clip !== 'padding-box' && clip !== 'content-box') return 0;
+    const border = BORDER_STYLES.has(style[`border${name}Style`])
+      ? pt(style[`border${name}Width`])
+      : 0;
+    return border + (clip === 'content-box' ? pt(style[`padding${name}`]) : 0);
+  };
+  return { top: inset('Top'), right: inset('Right'), bottom: inset('Bottom'), left: inset('Left') };
 }
 
 /** `rgb(r, g, b)` or `rgba(…)` → `#rrggbb`. */
