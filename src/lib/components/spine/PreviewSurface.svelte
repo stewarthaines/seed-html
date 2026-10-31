@@ -1385,7 +1385,7 @@
     if (!iframeDoc.querySelector('style[data-seed-proofs]')) {
       const style = iframeDoc.createElement('style');
       style.setAttribute('data-seed-proofs', '');
-      style.textContent = PROOFS_CSS;
+      style.textContent = PROOFS_CSS + rulesThroughProofsCells(iframeDoc);
       iframeDoc.head.appendChild(style);
     }
 
@@ -1417,6 +1417,33 @@
       const page = cell.querySelector<HTMLElement>('.pagedjs_page');
       if (page) page.style.transform = `scale(${zoom})`;
     }
+  }
+
+  /**
+   * Paged.js's rules that reach a page as a direct child of `.pagedjs_pages`
+   * (the reset that keeps a paragraph continued from the last page from
+   * indenting again, among others), rewritten to reach it through the proofs
+   * cell the page now sits in.
+   */
+  function rulesThroughProofsCells(iframeDoc: Document): string {
+    const chain = '.pagedjs_pages > .pagedjs_page';
+    const rules: string[] = [];
+    for (const sheet of Array.from(iframeDoc.styleSheets)) {
+      let cssRules: CSSRuleList;
+      try {
+        cssRules = sheet.cssRules;
+      } catch {
+        continue; // a cross-origin sheet; Paged.js's own are inline
+      }
+      for (const rule of Array.from(cssRules)) {
+        if (rule.cssText.includes(chain)) {
+          rules.push(
+            rule.cssText.replaceAll(chain, '.pagedjs_pages > .seed-proofs-cell > .pagedjs_page')
+          );
+        }
+      }
+    }
+    return '\n' + rules.join('\n');
   }
 
   function fitPrintToWidth(): void {
