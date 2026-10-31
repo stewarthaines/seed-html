@@ -149,12 +149,13 @@ export function writePdf(desc, files, info = {}) {
         else doc.goTo(item.x, item.y, item.width, item.height, link.dest, options);
         continue;
       }
-      if (item.kind === 'box' || item.kind === 'decoration') {
+      if (item.kind === 'box' || item.kind === 'decoration' || item.kind === 'symbol') {
         closeRun();
         doc.markContent('Artifact', {
           type: item.kind === 'box' && item.pagination ? 'Pagination' : 'Layout',
         });
         if (item.kind === 'box') drawBox(doc, item);
+        else if (item.kind === 'symbol') drawSymbol(doc, item);
         else drawDecoration(doc, item);
         doc.endMarkedContent();
         continue;
@@ -231,10 +232,12 @@ export function writePdf(desc, files, info = {}) {
         continue;
       }
       runFor(element, node.type, `${keyFor(item.struct)}`);
-      if (RIGHT_TO_LEFT.test(item.text)) {
-        // fontkit lays a right-to-left word out in visual order; its text in
+      const actual = item.actual ?? (RIGHT_TO_LEFT.test(item.text) ? item.text : null);
+      if (actual !== null) {
+        // fontkit lays a right-to-left word out in visual order (and a
+        // right-to-left list marker is drawn suffix first); its text in
         // reading order goes with it, for search, copying and screen readers.
-        doc.markContent('Span', { actual: item.text });
+        doc.markContent('Span', { actual });
         drawWord(doc, item);
         doc.endMarkedContent();
       } else {
@@ -535,6 +538,37 @@ function drawSide(doc, name, side, outer, inner) {
     }
     default:
       fill(outer, inner, side.color);
+  }
+  doc.restore();
+}
+
+/** Chromium's gap between a bullet and the text it marks, in CSS pixels (kCMarkerPaddingPx). */
+const MARKER_PADDING_PX = 7;
+const PX = 0.75;
+
+/**
+ * A disc, circle or square bullet, sized and placed as Chromium paints it
+ * (ListMarker): two thirds of the font's ascent set the bullet's room, half
+ * that its size, and it sits that far above the baseline, in whole pixels.
+ */
+function drawSymbol(doc, item) {
+  doc.font(`f${item.font}`).fontSize(item.size);
+  const ascent = Math.round(((doc._font.ascender / 1000) * item.size) / PX);
+  const offset = Math.floor((ascent * 2) / 3);
+  const side = Math.floor((offset + 1) / 2) * PX;
+  const reach = (offset + MARKER_PADDING_PX) * PX;
+  const x = item.rtl ? item.x + reach - side : item.x - reach;
+  const y = baseline(doc, item) - ascent * PX + Math.floor((3 * (ascent - offset)) / 2) * PX;
+  doc.save();
+  if (item.shape === 'square') {
+    doc.rect(x, y, side, side).fill(item.color);
+  } else if (item.shape === 'circle') {
+    doc
+      .lineWidth(PX)
+      .circle(x + side / 2, y + side / 2, (side - PX) / 2)
+      .stroke(item.color);
+  } else {
+    doc.circle(x + side / 2, y + side / 2, side / 2).fill(item.color);
   }
   doc.restore();
 }
