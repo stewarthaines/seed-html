@@ -10,6 +10,9 @@
  * Coordinates are PDF points from the page box's top-left corner.
  */
 
+import { markerText } from './counter-styles.js';
+import { materializeGeneratedContent, renderedChildNodes } from './generated-content.js';
+
 /** Version of the page description format. */
 export const PAGE_DESCRIPTION_VERSION = 1;
 
@@ -331,13 +334,28 @@ const INLINE_TYPES = new Set(['Span', 'Link']);
  * own `<title>` is the preview's label or a chapter's, not the book's.
  */
 export function describePages(doc: Document, book: { title: string }): PageDescription {
-  const win = doc.defaultView;
-  if (!win) throw new Error('describePages: the document has no window');
+  if (!doc.defaultView) throw new Error('describePages: the document has no window');
+  // Generated content (`::before`, `::after`) is measured as spans that stand
+  // in for it while the pages are read; the document is put back after.
+  const problems = new Set<string>();
+  const restore = materializeGeneratedContent(doc, problems);
+  try {
+    return describeLaidOut(doc, book, problems);
+  } finally {
+    restore();
+  }
+}
+
+function describeLaidOut(
+  doc: Document,
+  book: { title: string },
+  problems: Set<string>
+): PageDescription {
+  const win = doc.defaultView as Window & typeof globalThis;
   const lang = doc.documentElement.getAttribute('lang') ?? '';
   const fonts: FontUse[] = [];
   const fontKeys = new Map<string, number>();
   const images: string[] = [];
-  const problems = new Set<string>();
   const overflowPages: number[] = [];
   const structure: StructNode[] = [{ id: 0, type: 'Document', parent: null, children: [] }];
   const structByRef = new Map<string, number>();
@@ -515,7 +533,7 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
       const marker = listItem && !hiddenHere ? measureMarker(el, here) : null;
       const inner = listItem && structure[here].type === 'LI' ? listBodyFor(here) : here;
       const firstChildItem = page.items.length;
-      for (const child of Array.from(el.childNodes)) walk(child, inner, hiddenHere);
+      for (const child of renderedChildNodes(el)) walk(child, inner, hiddenHere);
       if (marker) placeMarker(marker, firstChildItem);
       if (block) separate();
     };
@@ -796,6 +814,9 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
 
     const measureText = (text: Text, group: number, hidden: boolean) => {
       const value = text.data;
+      // A space that starts a text node ("<strong>rivalry</strong> – …") ends
+      // the word before it, which is in another node.
+      if (/^\s/.test(value)) separate();
       if (!value.trim()) return;
       const parent = text.parentElement;
       if (!parent) return;
@@ -1128,85 +1149,6 @@ export function ordinalOf(li: Element): number {
     n += reversed ? -1 : 1;
   }
   return n;
-}
-
-const ROMAN: [number, string][] = [
-  [1000, 'm'],
-  [900, 'cm'],
-  [500, 'd'],
-  [400, 'cd'],
-  [100, 'c'],
-  [90, 'xc'],
-  [50, 'l'],
-  [40, 'xl'],
-  [10, 'x'],
-  [9, 'ix'],
-  [5, 'v'],
-  [4, 'iv'],
-  [1, 'i'],
-];
-
-function roman(n: number): string | null {
-  if (n < 1 || n > 3999) return null;
-  let out = '';
-  for (const [value, letters] of ROMAN) {
-    while (n >= value) {
-      out += letters;
-      n -= value;
-    }
-  }
-  return out;
-}
-
-function alphabetic(n: number, letters: string): string | null {
-  if (n < 1) return null;
-  const symbols = Array.from(letters);
-  let out = '';
-  for (; n > 0; n = Math.floor((n - 1) / symbols.length)) {
-    out = symbols[(n - 1) % symbols.length] + out;
-  }
-  return out;
-}
-
-/**
- * The marker text for a `list-style-type` and an item's number, with the
- * suffix and space the browser adds (CSS Counter Styles); null for a style
- * the PDF doesn't draw yet, '' for `none`.
- */
-export function markerText(type: string, n: number): string | null {
-  const quoted = /^"(.*)"$/.exec(type);
-  if (quoted) return quoted[1];
-  const numbered = (s: string | null) => (s === null ? null : `${s}. `);
-  switch (type) {
-    case 'none':
-      return '';
-    case 'disc':
-      return '\u2022 ';
-    case 'circle':
-      return '\u25E6 ';
-    case 'square':
-      return '\u25AA ';
-    case 'decimal':
-      return numbered(String(n));
-    case 'decimal-leading-zero':
-      return numbered(n >= 0 && n < 10 ? `0${n}` : String(n));
-    case 'lower-alpha':
-    case 'lower-latin':
-      return numbered(alphabetic(n, 'abcdefghijklmnopqrstuvwxyz'));
-    case 'upper-alpha':
-    case 'upper-latin':
-      return numbered(alphabetic(n, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'));
-    case 'lower-greek':
-      return numbered(alphabetic(n, 'αβγδεζηθικλμνξοπρστυφχψω'));
-    case 'lower-roman':
-      return numbered(roman(n));
-    case 'upper-roman':
-      return numbered(roman(n)?.toUpperCase() ?? null);
-    case 'arabic-indic':
-      return numbered(String(n).replace(/\d/g, d => String.fromCharCode(0x0660 + Number(d))));
-    default:
-      return null;
-  }
 }
 
 /** A marker as it is seen in a right-to-left item: its suffix ("1." → ".1") on the left. */
