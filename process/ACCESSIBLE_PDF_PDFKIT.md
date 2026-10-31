@@ -81,7 +81,7 @@ Links are the known gap. PDFKit's docs limit tagging to marked content, while a 
 - Bookmarks from the book's contents (the toc nav), at each target's page.
 - Page labels that match the page numbers printed in the margins, including roman numerals for front matter where the book's CSS counts them that way. The print-edition markers (`doc-pagebreak`) belong to another edition's pages and are not this PDF's page labels.
 - Title, author and language from the OPF; the viewer shows the title, not the file name.
-- The PDF/UA identifier in the metadata only once a book passes veraPDF, never by default.
+- No PDF/UA identifier in the metadata, for now (`process/DECISIONS.md`, 2026-10-31).
 
 ## Matches what the author saw
 
@@ -121,7 +121,7 @@ Run 2026-10-30 on Essay 1 of _John, Paul, and George_ (five pages at 143 × 205 
 
 **Text extraction (2026-10-31).** Apple's PDFKit (Preview) and pypdf read Essay 1 in reading order, a paragraph at a time, but both ignore ActualText: at first they gave "rec- ognized". Tagged PDF marks a hyphen the line break added as a soft hyphen (ISO 32000-1, 14.8.2.2.3), so the writer now draws the font's own U+00AD glyph, which looks like a hyphen and reads back as a soft hyphen; extractors that follow the spec join the word. fontkit's shaping hides U+00AD as a zero-width space, so the writer puts the glyph back. A font whose soft hyphen shares the hyphen's glyph (Times New Roman does; Liberation Serif doesn't) still gets a plain hyphen, and only ActualText keeps the word whole. Apple's extraction adds a space at every line end, which no tagging changes.
 
-**The PDF/UA identifier is off by default (2026-10-31).** PDFKit writes it whenever `subset: 'PDF/UA'` is set; the writer now sets it only when asked (`claimPdfUa`). A validator checking a file without it may report the identifier missing (Matterhorn 06-002) rather than judging conformance, so validation runs on a file written with the claim, and the author decides whether a passing book carries it.
+**The PDF/UA identifier is off by default (2026-10-31).** PDFKit writes it whenever `subset: 'PDF/UA'` is set; the writer now sets it only when asked (`claimPdfUa`). A validator checking a file without it may report the identifier missing (Matterhorn 06-002) rather than judging conformance, so validation runs on a file written with the claim, and no book the app makes carries it for now (`process/DECISIONS.md`, 2026-10-31).
 
 **Still to do in phase 0.** A screen reader on the file.
 
@@ -156,6 +156,8 @@ Run 2026-10-30 on Essay 1 of _John, Paul, and George_ (five pages at 143 × 205 
 **PDFKit's page for the annotation.** PDFKit gives the annotation's object reference the page that is current when its `Link` is written, so the writer makes each page's part of a link its own `Link` and ends it on that page; a link Paged.js splits across a page break is two `Link` elements. The upstream fix is still worth offering.
 
 **Joseph's book.** 124 link annotations: 112 from the contents page to 84 destinations, which land on the right pages, and 12 DOI links in the references. Every annotation has `Contents` and a `StructParent`, and every object reference names the annotation's own page. Bookmarks and page labels were already in place from phase 1, so the card lists nothing missing for this book now.
+
+**Validation after phases 2 and 3 (2026-10-31).** axesCheck on the whole book found one error kind: every `Figure` lacked a `BBox` (15). It is now a `Layout` attribute from the drawn box, cut to the clip and the page. Two warnings followed. A `Figure` in a group of blocks (a `figure`'s `Div`, a section) needs `Placement /Block`, since a Figure is inline unless it says otherwise (15). Text and inline elements sat directly in a `Caption`, which ISO 32000-1 counts with `Div` and `Sect` as grouping blocks: the 19 hyphenated-word `Span` elements in captions were flagged. The core now puts inline content that is directly inside a grouping element into a `P` of its own, one per run between blocks, and marks such a Figure as a block. Rechecked: no errors and no warnings apart from the PDF/UA identifier, which the app leaves out; WCAG passes every check.
 
 ## Decisions this touches
 
