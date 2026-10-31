@@ -130,6 +130,10 @@ Run 2026-10-30 on Essay 1 of _John, Paul, and George_ (five pages at 143 × 205 
 
 **Visually hidden text (2026-10-31).** The copyright page's heading is hidden with the usual clip recipe so axe passes. It was drawn in the PDF; now it is in the structure but drawn in text render mode 3, neither filled nor stroked, so screen readers and copy get it and the page doesn't show it.
 
+**Words Paged.js splits across pages (2026-10-31).** Where a paragraph breaks mid-word at a page end, Paged.js writes a non-breaking hyphen (U+2011) into the text of a `.pagedjs_hyphen` element. Liberation Serif has no U+2011, so Chrome drew it from a fallback font and the PDF lost it ("rem" / "ained"). The measuring now treats it as a hyphenated word across the pages: the writer draws a soft hyphen and one `Span` with the whole word ("remained") spans both pages. Joseph's book has 24 such words, some split at odd points ("writi-ng", "somet-hing"); that is Paged.js's split, the same in the preview.
+
+**Text lost off the page edge (2026-10-31): a Paged.js bug.** On six pages of Joseph's book (11, 23, 119, 136, 185, 206) the last visible line ends in a word the browser hyphenated, and Paged.js counts the following line as fitting too: it splits the paragraph a line late and that line lands in its clipped overflow column, off the page's right edge. The line is missing from the preview and from Save as PDF as well. The measuring reports these pages (`overflowPages`) and the plugin's card names them. The fix belongs in the vendored Paged.js, not here.
+
 **Held back until their phases.** Figures are a `Div` with a `P` caption until images are drawn (a `Figure` with no image and no alt fails PDF/UA), and links are plain text with no `Link` until they carry annotations; both are listed on the card. The cover page is blank for the same reason.
 
 ## Decisions this touches
