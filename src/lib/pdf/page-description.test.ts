@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cssColorToHex, resolveMarginContent } from './page-description.js';
+import { cssColorToHex, isVisuallyHidden, resolveMarginContent } from './page-description.js';
 
 // describePages measures a live layout, which happy-dom doesn't compute; it is
 // exercised in the browser (process/ACCESSIBLE_PDF_PDFKIT.md, phase 0).
@@ -33,5 +33,27 @@ describe('cssColorToHex', () => {
 
   it('falls back to black for a value it cannot read', () => {
     expect(cssColorToHex('color(display-p3 1 0 0)')).toBe('#000000');
+  });
+});
+
+describe('isVisuallyHidden', () => {
+  const style = (over: Partial<Record<string, string>>) => ({
+    clipPath: 'none',
+    clip: 'auto',
+    overflow: 'visible',
+    width: '200px',
+    height: '20px',
+    ...over,
+  });
+
+  it('recognises the visually-hidden recipe', () => {
+    expect(isVisuallyHidden(style({ clipPath: 'inset(50%)' }))).toBe(true);
+    expect(isVisuallyHidden(style({ clip: 'rect(0px, 0px, 0px, 0px)' }))).toBe(true);
+    expect(isVisuallyHidden(style({ overflow: 'hidden', width: '1px', height: '1px' }))).toBe(true);
+  });
+
+  it('leaves ordinary text visible', () => {
+    expect(isVisuallyHidden(style({}))).toBe(false);
+    expect(isVisuallyHidden(style({ overflow: 'hidden' }))).toBe(false);
   });
 });

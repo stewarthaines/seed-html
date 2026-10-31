@@ -135,6 +135,14 @@ Sent once the plugin has posted `plugin-ready`. Provides:
 
 Inserts a string at the cursor position in the currently active textarea. The content is always a plain string — HTML, markdown, or plain text — assembled by the plugin. The main app performs the insertion without interpreting the format. Used by `panel` plugins.
 
+### Plugin → Main → Plugin (describing the book for a PDF)
+
+```json
+{ "type": "describe-book", "requestId": "string" }
+```
+
+The accessible-pdf plugin asks for the open book laid out and measured. The host builds the same paginated document as Save as PDF, lays it out with Paged.js in a frame off screen, measures it into a page description (`src/lib/pdf/page-description.ts`) and gathers the book's font files from its `@font-face` rules (`src/lib/pdf/accessible-pdf.ts`). It answers with `{ "type": "book-described", "requestId", "description", "fonts": [ArrayBuffer], "author", "missingFonts": [string], "skippedChapterIds": [string] }`, or `{ "type": "book-described", "requestId", "error" }`. The plugin writes the PDF itself; the host never sees it.
+
 ### Plugin → Main → Plugin (adding a media file)
 
 ```json
@@ -222,12 +230,13 @@ Enabled state is persisted via the settings service.
 | ----------------- | ------------ | --------------------------- | ------------- |
 | Audio Clip Editor | panel        | wavesurfer.js, LAME (WASM)  | insert, add-media → main |
 | Publish           | view         | epubcheck-ts, R2/GDrive SDK | OPFS / handle |
+| Accessible PDF    | view         | PDFKit, fontkit             | describe-book → main |
 
 The Publish plugin combines remote publishing (S3-compatible, Google Drive, Dropbox, WebDAV, USB e-readers), OPDS catalog generation and EPUB validation in one artifact, rendered as three surfaces.
 
 ### Possible future plugins
 
-Not committed — recorded only as candidates should the need arise: PDF Export, OPDS Import, Version Control. Each would be scoped (presentation mode, dependencies, storage) at the time it is actually built.
+Not committed — recorded only as candidates should the need arise: OPDS Import, Version Control. Each would be scoped (presentation mode, dependencies, storage) at the time it is actually built.
 
 ---
 
@@ -237,7 +246,7 @@ These do not need to be resolved before implementation begins.
 
 - **Enabled-state scope** — per-project vs global. The enablement UI lives under Project Settings, but the persisted scope is undecided.
 - **Shared output directory name/path** — referred to here as the "output dir"; exact name (e.g. `/publish`) to be fixed during implementation.
-- **Generalized `view` extension points** — the publish plugin's three surfaces are hardcoded for now; a registry is deferred until a second `view` plugin exists.
+- **Generalized `view` extension points** — the publish plugin's three surfaces and the accessible-pdf plugin's one (`pdf`, in the Make a PDF card's place on Share, with Save as PDF as its fallback) are hardcoded; a registry is still deferred.
 
 ## Proposed plugin.d.ts
 

@@ -46,6 +46,11 @@ export interface TextItem {
    * is `wholeWord`.
    */
   hyphenated?: { wholeWord: string; part: 1 | 2 };
+  /**
+   * Text the book hides visually but keeps for screen readers (a
+   * `.visually-hidden` heading): in the structure, drawn invisibly.
+   */
+  invisible?: true;
 }
 
 /** Margin-box text (running heads, page numbers): always an artifact. */
@@ -94,11 +99,17 @@ export interface PageDescription {
   pages: PageBox[];
   /** Node 0 is the `Document` root. */
   structure: StructNode[];
-  /** What the writer can't reproduce, for the export to list. */
+  /**
+   * What the PDF can't reproduce yet, each as the CSS or element concerned
+   * (`font-variant-caps: small-caps`, `img`), for the export to list.
+   */
   problems: string[];
 }
 
 const PX_TO_PT = 0.75;
+
+/** Elements the PDF doesn't draw yet; each is listed as a problem. */
+const REPLACED_ELEMENTS = new Set(['img', 'svg', 'video', 'audio', 'canvas', 'iframe', 'object']);
 
 /** HTML element → PDF structure type; elements not listed are transparent. */
 const STRUCT_TYPES: Record<string, string> = {
@@ -120,13 +131,16 @@ const STRUCT_TYPES: Record<string, string> = {
   ul: 'L',
   ol: 'L',
   li: 'LI',
-  figure: 'Figure',
-  figcaption: 'Caption',
+  // A figure is a `Div` and its caption a `P` until images are drawn (phase 2):
+  // a `Figure` with no image and no alt text fails PDF/UA.
+  figure: 'Div',
+  figcaption: 'P',
   table: 'Table',
   tr: 'TR',
   th: 'TH',
   td: 'TD',
-  a: 'Link',
+  // No `Link` until links carry their annotations (phase 3): the text stays,
+  // the link is listed as a problem.
 };
 
 /**
@@ -207,9 +221,9 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
       items: [],
     };
 
-    const walk = (node: Node, struct: number) => {
+    const walk = (node: Node, struct: number, hidden = false) => {
       if (node.nodeType === Node.TEXT_NODE) {
-        measureText(node as Text, struct);
+        measureText(node as Text, struct, hidden);
         return;
       }
       if (node.nodeType !== Node.ELEMENT_NODE) return;
@@ -217,10 +231,17 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
       if (el.getAttribute('aria-hidden') === 'true') return;
       const style = win.getComputedStyle(el);
       if (style.display === 'none' || style.visibility === 'hidden') return;
+      // Images and drawings come in phase 2 (process/ACCESSIBLE_PDF_PDFKIT.md).
+      if (REPLACED_ELEMENTS.has(el.localName)) {
+        problems.add(el.localName);
+        return;
+      }
+      if (el.localName === 'a' && el.hasAttribute('href')) problems.add('a[href]');
       const here = el.hasAttribute('data-ref') ? structFor(el, struct) : struct;
       const block = !style.display.startsWith('inline') && style.display !== 'contents';
+      const hiddenHere = hidden || isVisuallyHidden(style);
       if (block) separate();
-      for (const child of Array.from(el.childNodes)) walk(child, here);
+      for (const child of Array.from(el.childNodes)) walk(child, here, hiddenHere);
       if (block) separate();
     };
 
@@ -231,7 +252,7 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
       if (last?.kind === 'text' && !/\s$/.test(last.text)) last.text += ' ';
     };
 
-    const measureText = (text: Text, struct: number) => {
+    const measureText = (text: Text, struct: number, hidden: boolean) => {
       const value = text.data;
       if (!value.trim()) return;
       const parent = text.parentElement;
@@ -242,8 +263,9 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
       const color = cssColorToHex(style.color);
       const shown = textTransformer(style.textTransform);
       if (style.fontVariantCaps !== 'normal') {
-        problems.add(`font-variant-caps: ${style.fontVariantCaps} is drawn as normal text`);
+        problems.add(`font-variant-caps: ${style.fontVariantCaps}`);
       }
+      const invisible = hidden ? { invisible: true as const } : {};
       const range = doc.createRange();
       const segments = Array.from(segmenter.segment(value));
       segments.forEach((seg, i) => {
@@ -269,6 +291,7 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
             size,
             color,
             struct,
+            ...invisible,
           });
           return;
         }
@@ -290,6 +313,7 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
           size,
           color,
           struct,
+          ...invisible,
           hyphenated: { wholeWord: seg.segment, part: 1 },
         });
         page.items.push({
@@ -301,6 +325,7 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
           size,
           color,
           struct,
+          ...invisible,
           hyphenated: { wholeWord: seg.segment, part: 2 },
         });
       });
@@ -316,7 +341,7 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
       const text = resolveMarginContent(after.content, page.number);
       if (text === null) {
         if (after.content !== 'none' && after.content !== 'normal') {
-          problems.add(`margin content "${after.content}" is not drawn`);
+          problems.add(`content: ${after.content}`);
         }
         continue;
       }
@@ -342,6 +367,21 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
     structure,
     problems: Array.from(problems),
   };
+}
+
+/**
+ * Whether an element is hidden from sight but not from screen readers, by the
+ * usual visually-hidden recipe: clipped to nothing, or a 1px box that hides
+ * its overflow.
+ */
+export function isVisuallyHidden(
+  style: Pick<CSSStyleDeclaration, 'clipPath' | 'clip' | 'overflow' | 'width' | 'height'>
+): boolean {
+  if (style.clipPath === 'inset(50%)') return true;
+  if (/^rect\(0(px)?,? 0(px)?,? 0(px)?,? 0(px)?\)$/.test(style.clip)) return true;
+  return (
+    style.overflow === 'hidden' && parseFloat(style.width) <= 1 && parseFloat(style.height) <= 1
+  );
 }
 
 /** Whether two boxes of one word sit on different lines (at any preview scale). */

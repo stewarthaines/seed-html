@@ -4,6 +4,7 @@
   import type { PublishService, PublishedEpub } from '$lib/services/publish/publish.service.js';
   import type { OpenMessage } from '$lib/plugins/contract';
   import PluginFrame from '$lib/components/plugins/PluginFrame.svelte';
+  import type { BookDescription } from '$lib/pdf/accessible-pdf';
   import { isHttpContext, openEpubInReader, openEpubUrlInReader } from '$lib/reader/open-in-reader';
 
   interface Props {
@@ -24,6 +25,12 @@
     /** The other outputs a book can be shared as; each is shown only when passed. */
     onGeneratePdf?: () => void;
     pdfGenerating?: boolean;
+    /**
+     * The accessible-pdf plugin, which takes the Make a PDF card's place when on
+     * (process/ACCESSIBLE_PDF_PDFKIT.md); null keeps the card's Save as PDF.
+     */
+    pdfPluginUrl?: string | null;
+    onDescribeBook?: () => Promise<BookDescription>;
     onPackageWithoutSource?: () => void;
     packagingWithoutSource?: boolean;
     onPackageAsReadHtml?: () => void;
@@ -45,6 +52,8 @@
     packageProgress = null,
     onGeneratePdf,
     pdfGenerating = false,
+    pdfPluginUrl = null,
+    onDescribeBook,
     onPackageWithoutSource,
     packagingWithoutSource = false,
     onPackageAsReadHtml,
@@ -323,7 +332,7 @@
         </article>
       {/if}
 
-      {#if onGeneratePdf}
+      {#snippet savePdfCard()}
         <article class="card">
           <h3>{$t('Make a PDF')}</h3>
           <p>{$t('For printing.')}</p>
@@ -338,6 +347,23 @@
             </button>
           </div>
         </article>
+      {/snippet}
+
+      {#if pdfPluginUrl && onDescribeBook}
+        <div class="card-slot">
+          <PluginFrame
+            pluginUrl={pdfPluginUrl}
+            surface="pdf"
+            {projectId}
+            getDirHandle={() => publishService.getOutputDirectoryHandle()}
+            title={$t('Make a PDF')}
+            {onDescribeBook}
+            failureText={$t('The PDF plugin could not be loaded.')}
+            fallback={onGeneratePdf ? savePdfCard : undefined}
+          />
+        </div>
+      {:else if onGeneratePdf}
+        {@render savePdfCard()}
       {/if}
     </div>
 
@@ -541,6 +567,13 @@
     color: var(--color-text-secondary);
     font-size: var(--text-sm);
     overflow-wrap: anywhere;
+  }
+
+  /* The PDF plugin draws its own card; the slot only holds its grid cell. */
+  .card-slot {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
   }
 
   .card-actions {
