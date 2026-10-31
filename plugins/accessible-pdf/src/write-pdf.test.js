@@ -4,10 +4,11 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import zlib from 'node:zlib';
-import { writePdf } from './write-pdf.js';
+import { writePdf, visualOrder } from './write-pdf.js';
 
 const FONT = '/System/Library/Fonts/Supplemental/Times New Roman.ttf';
 const hasFont = fs.existsSync(FONT);
+const ARIAL = '/System/Library/Fonts/Supplemental/Arial.ttf';
 
 /** A 1×1 red PNG. */
 const RED_DOT = Buffer.from(
@@ -198,6 +199,74 @@ describe.skipIf(!hasFont)('writePdf', () => {
     expect(new Set(pages).size).toBe(2);
   });
 
+  it('draws backgrounds, borders and decorations as artifacts, under the text', async () => {
+    const boxes = structuredClone(description);
+    const solid = { width: 1, style: 'solid', color: '#000000' };
+    boxes.pages[0].items.unshift(
+      {
+        kind: 'box',
+        x: 10,
+        y: 10,
+        width: 100,
+        height: 40,
+        background: { color: '#ffff00', opacity: 0.5, x: 10, y: 10, width: 100, height: 40 },
+        border: {
+          top: solid,
+          bottom: { ...solid, style: 'dashed' },
+          left: { ...solid, style: 'inset', color: '#808080' },
+        },
+        collapsed: true,
+      },
+      {
+        kind: 'box',
+        x: 0,
+        y: 0,
+        width: 300,
+        height: 20,
+        border: { bottom: solid },
+        pagination: true,
+      },
+      {
+        kind: 'decoration',
+        line: 'underline',
+        x: 20,
+        y: 20,
+        width: 40,
+        height: 14,
+        font: 0,
+        size: 12,
+        color: '#0000ff',
+        style: 'solid',
+      }
+    );
+    const pdf = await writePdf(boxes, { fonts: [fs.readFileSync(FONT)] });
+    const content = pageContent(pdf);
+    // The yellow background, half opaque, in a layout artifact before any text.
+    expect(content).toMatch(
+      /^[\s\S]*?\/Artifact <<[^>]*\/Layout[^>]*>> BDC[\s\S]*?\/Gs\d+ gs[\s\S]*?1 1 0 scn[\s\S]*?EMC[\s\S]*BT/
+    );
+    // Inset: the shadowed left side in Chromium's darker shade of grey.
+    expect(content).toMatch(/0\.172\d* 0\.172\d* 0\.172\d* scn/);
+    // The dashed side is stroked with a dash pattern.
+    expect(content).toMatch(/\[3 3\] 0 d/);
+    expect(content).toMatch(/\/Artifact <<[^>]*\/Pagination[^>]*>> BDC/);
+    // The underline is a filled blue rectangle.
+    expect(content).toMatch(/re\n\/DeviceRGB cs\n0 0 1 scn\nf/);
+  });
+
+  it('keeps right-to-left words in reading order and Arabic letters joined', async () => {
+    const rtl = structuredClone(description);
+    rtl.direction = 'rtl';
+    rtl.pages[0].items.push(word('שלום ', 200, 3), word('مرحبا', 150, 3));
+    const pdf = await writePdf(rtl, { fonts: [fs.readFileSync(ARIAL)] });
+    const content = pageContent(pdf);
+    // Each word's text in reading order, as UTF-16 (the byte-order mark).
+    expect(content.match(/\/Span <<\n\/ActualText \(\u00fe\u00ff/g)).toHaveLength(2);
+    // Arabic is fitted by scaling, which keeps its letters joined; Hebrew by spacing.
+    expect(content.match(/[\d.]+ Tz/g)).toHaveLength(1);
+    expect(new TextDecoder('latin1').decode(pdf)).toMatch(/\/Direction \/R2L/);
+  });
+
   it('writes the PDF/UA identifier only when asked', async () => {
     const pdf = await writePdf(
       description,
@@ -205,5 +274,22 @@ describe.skipIf(!hasFont)('writePdf', () => {
       { claimPdfUa: true }
     );
     expect(new TextDecoder('latin1').decode(pdf)).toContain('<pdfuaid:part>1</pdfuaid:part>');
+  });
+});
+
+describe('visualOrder', () => {
+  it('reverses right-to-left words, keeping a left-to-right run in its order', () => {
+    expect(visualOrder(['ספר', 'בדיקה'], true)).toEqual(['בדיקה', 'ספר']);
+    expect(visualOrder(['פרק', 'Hey', 'Jude', 'שני'], true)).toEqual(['שני', 'Hey', 'Jude', 'פרק']);
+    expect(visualOrder(['עמוד', '12'], true)).toEqual(['12', 'עמוד']);
+  });
+
+  it('keeps a left-to-right line in order, reversing only its right-to-left runs', () => {
+    expect(visualOrder(['Chapter', 'שלום', 'עולם', 'one'], false)).toEqual([
+      'Chapter',
+      'עולם',
+      'שלום',
+      'one',
+    ]);
   });
 });

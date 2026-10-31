@@ -149,6 +149,16 @@ export function writePdf(desc, files, info = {}) {
         else doc.goTo(item.x, item.y, item.width, item.height, link.dest, options);
         continue;
       }
+      if (item.kind === 'box' || item.kind === 'decoration') {
+        closeRun();
+        doc.markContent('Artifact', {
+          type: item.kind === 'box' && item.pagination ? 'Pagination' : 'Layout',
+        });
+        if (item.kind === 'box') drawBox(doc, item);
+        else drawDecoration(doc, item);
+        doc.endMarkedContent();
+        continue;
+      }
       if (item.kind === 'margin') {
         closeRun();
         doc.markContent('Artifact', { type: 'Pagination' });
@@ -221,13 +231,22 @@ export function writePdf(desc, files, info = {}) {
         continue;
       }
       runFor(element, node.type, `${keyFor(item.struct)}`);
-      drawWord(doc, item);
+      if (RIGHT_TO_LEFT.test(item.text)) {
+        // fontkit lays a right-to-left word out in visual order; its text in
+        // reading order goes with it, for search, copying and screen readers.
+        doc.markContent('Span', { actual: item.text });
+        drawWord(doc, item);
+        doc.endMarkedContent();
+      } else {
+        drawWord(doc, item);
+      }
     }
     closeRun();
     for (const link of pageLinks) link.end();
     pageLinks = [];
   }
 
+  if (desc.direction === 'rtl') doc._root.data.ViewerPreferences.data.Direction = 'R2L';
   const firstNumber = desc.pages[0]?.number || 1;
   doc._root.data.PageLabels = { Nums: [0, { S: 'D', St: firstNumber }] };
   doc.end();
@@ -235,6 +254,16 @@ export function writePdf(desc, files, info = {}) {
 }
 
 const SOFT_HYPHEN = '\u00AD';
+
+/** Scripts written right to left. */
+const RIGHT_TO_LEFT =
+  /[\p{Script=Hebrew}\p{Script=Arabic}\p{Script=Syriac}\p{Script=Thaana}\p{Script=Nko}\p{Script=Samaritan}\p{Script=Mandaic}\p{Script=Adlam}\p{Script=Hanifi_Rohingya}]/u;
+/**
+ * Scripts whose letters join, which letter spacing would pull apart: a word
+ * in one is fitted to its measured width by scaling it instead.
+ */
+const JOINED =
+  /[\p{Script=Arabic}\p{Script=Syriac}\p{Script=Nko}\p{Script=Mongolian}\p{Script=Mandaic}\p{Script=Adlam}\p{Script=Hanifi_Rohingya}\p{Script=Devanagari}\p{Script=Bengali}\p{Script=Gurmukhi}]/u;
 
 /**
  * Make a PDFKit font draw a word-final soft hyphen with the font's own U+00AD
@@ -277,8 +306,14 @@ function drawWord(doc, item, withHyphen = false) {
   const glyphs = [...visible].length;
   // Spread over every glyph, not the gaps between them: the measured box
   // includes CSS letter-spacing, which the browser adds after the last letter too.
-  const characterSpacing = glyphs > 0 ? (item.width - natural) / glyphs : 0;
-  const text = visible + item.text.slice(item.visible);
+  const spacing = glyphs > 0 ? (item.width - natural) / glyphs : 0;
+  const fit =
+    JOINED.test(visible) && natural > 0
+      ? { horizontalScaling: (item.width / natural) * 100 }
+      : { characterSpacing: Math.abs(spacing) < 0.01 ? 0 : spacing };
+  // fontkit puts a right-to-left word's trailing space on its left, which
+  // would push the word off its measured place; the space is in its ActualText.
+  const text = RIGHT_TO_LEFT.test(visible) ? visible : visible + item.text.slice(item.visible);
   // Visually hidden text is drawn in text render mode 3 (neither filled nor
   // stroked): in the structure and readable, but not seen. PDFKit only writes
   // a mode when it strokes, so the one set here holds for the word.
@@ -289,21 +324,339 @@ function drawWord(doc, item, withHyphen = false) {
   doc.text(text, item.x, baseline(doc, item), {
     lineBreak: false,
     baseline: 'alphabetic',
-    characterSpacing: Math.abs(characterSpacing) < 0.01 ? 0 : characterSpacing,
+    ...fit,
   });
   if (item.invisible) doc.restore();
 }
 
+/** An element's background and border, as the browser paints them. */
+function drawBox(doc, item) {
+  const background = item.background;
+  if (background) {
+    doc.save();
+    if (background.opacity !== undefined) doc.fillOpacity(background.opacity);
+    // A background inside the border has the border's corner, less the border.
+    const inset = Math.min(background.x - item.x, background.y - item.y);
+    const radius = Math.max(0, (item.radius ?? 0) - inset);
+    const { x, y, width, height } = background;
+    (radius > 0
+      ? doc.roundedRect(x, y, width, height, radius)
+      : doc.rect(x, y, width, height)
+    ).fill(background.color);
+    doc.restore();
+  }
+  if (!item.border) return;
+  const { top, right, bottom, left } = item.border;
+  const w = {
+    top: top?.width ?? 0,
+    right: right?.width ?? 0,
+    bottom: bottom?.width ?? 0,
+    left: left?.width ?? 0,
+  };
+  // A collapsed table border is centred on the edge; any other is inside it.
+  const out = item.collapsed ? 0.5 : 0;
+  const outer = {
+    x0: item.x - w.left * out,
+    y0: item.y - w.top * out,
+    x1: item.x + item.width + w.right * out,
+    y1: item.y + item.height + w.bottom * out,
+  };
+  const inner = {
+    x0: outer.x0 + w.left,
+    y0: outer.y0 + w.top,
+    x1: outer.x1 - w.right,
+    y1: outer.y1 - w.bottom,
+  };
+  const sides = [top, right, bottom, left].filter(Boolean);
+  if (
+    item.radius &&
+    sides.length === 4 &&
+    sides.every(s => sameLook(s, top) && s.style === 'solid')
+  ) {
+    // A round box with one border all round: a stroke down its middle.
+    doc.save();
+    if (top.opacity !== undefined) doc.strokeOpacity(top.opacity);
+    const half = top.width / 2;
+    doc
+      .lineWidth(top.width)
+      .roundedRect(
+        outer.x0 + half,
+        outer.y0 + half,
+        outer.x1 - outer.x0 - top.width,
+        outer.y1 - outer.y0 - top.width,
+        Math.max(0, item.radius - half)
+      )
+      .stroke(top.color);
+    doc.restore();
+    return;
+  }
+  for (const [name, side] of Object.entries(item.border)) drawSide(doc, name, side, outer, inner);
+}
+
+function sameLook(a, b) {
+  return (
+    a.width === b.width && a.style === b.style && a.color === b.color && a.opacity === b.opacity
+  );
+}
+
+/** The part of a border between two of its edge rectangles, mitred at the corners. */
+function band(name, a, b) {
+  switch (name) {
+    case 'top':
+      return [
+        [a.x0, a.y0],
+        [a.x1, a.y0],
+        [b.x1, b.y0],
+        [b.x0, b.y0],
+      ];
+    case 'right':
+      return [
+        [a.x1, a.y0],
+        [a.x1, a.y1],
+        [b.x1, b.y1],
+        [b.x1, b.y0],
+      ];
+    case 'bottom':
+      return [
+        [a.x1, a.y1],
+        [a.x0, a.y1],
+        [b.x0, b.y1],
+        [b.x1, b.y1],
+      ];
+    default:
+      return [
+        [a.x0, a.y1],
+        [a.x0, a.y0],
+        [b.x0, b.y0],
+        [b.x0, b.y1],
+      ];
+  }
+}
+
+/** The rectangle a fraction `t` of the way from the outer edge to the inner. */
+function between(a, b, t) {
+  return {
+    x0: a.x0 + (b.x0 - a.x0) * t,
+    y0: a.y0 + (b.y0 - a.y0) * t,
+    x1: a.x1 + (b.x1 - a.x1) * t,
+    y1: a.y1 + (b.y1 - a.y1) * t,
+  };
+}
+
+/**
+ * The shade Chromium paints a side of an inset, outset, groove or ridge border:
+ * the shadowed sides darker, the lit ones lighter, unless the colour is
+ * already near black or white (CalculateBorderStyleColor, Color::Dark/Light).
+ */
+function shade(hex, darken) {
+  const rgb = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+  const distance = to => rgb.reduce((sum, c, i) => sum + (c - to[i]) ** 2, 0);
+  const [r, g, b] = rgb.map(c => c / 255);
+  const v = Math.max(r, g, b);
+  let k;
+  if (darken) {
+    if (distance([0, 0, 0]) <= 3 * 32 ** 2) return hex;
+    if (r === 1 && g === 1 && b === 1) return '#ababab';
+    k = Math.max(0, (v - 0.33) / v);
+  } else {
+    if (distance([255, 255, 255]) <= 3 * 20 ** 2) return hex;
+    if (v === 0) return '#545454';
+    k = Math.min(1, v + 0.33) / v;
+  }
+  return (
+    '#' +
+    [r, g, b]
+      .map(c =>
+        Math.floor(c * k * 255.99)
+          .toString(16)
+          .padStart(2, '0')
+      )
+      .join('')
+  );
+}
+
+/** The colour of a side drawn as inset or outset (a groove or ridge is one of each). */
+function bevel(color, name, style) {
+  const shadowed = name === 'top' || name === 'left';
+  return shade(color, shadowed === (style === 'inset'));
+}
+
+function drawSide(doc, name, side, outer, inner) {
+  const fill = (a, b, color) => doc.polygon(...band(name, a, b)).fill(color);
+  doc.save();
+  if (side.opacity !== undefined) doc.fillOpacity(side.opacity).strokeOpacity(side.opacity);
+  const mid = between(outer, inner, 0.5);
+  switch (side.style) {
+    case 'double':
+      fill(outer, between(outer, inner, 1 / 3), side.color);
+      fill(between(outer, inner, 2 / 3), inner, side.color);
+      break;
+    case 'inset':
+    case 'outset':
+      fill(outer, inner, bevel(side.color, name, side.style));
+      break;
+    case 'groove':
+    case 'ridge':
+      // A groove is inset outside and outset inside; a ridge the reverse.
+      fill(outer, mid, bevel(side.color, name, side.style === 'groove' ? 'inset' : 'outset'));
+      fill(mid, inner, bevel(side.color, name, side.style === 'groove' ? 'outset' : 'inset'));
+      break;
+    case 'dashed':
+    case 'dotted': {
+      const wd = side.width;
+      const [from, to] = {
+        top: [
+          [outer.x0, mid.y0],
+          [outer.x1, mid.y0],
+        ],
+        right: [
+          [mid.x1, outer.y0],
+          [mid.x1, outer.y1],
+        ],
+        bottom: [
+          [outer.x0, mid.y1],
+          [outer.x1, mid.y1],
+        ],
+        left: [
+          [mid.x0, outer.y0],
+          [mid.x0, outer.y1],
+        ],
+      }[name];
+      doc.lineWidth(wd);
+      if (side.style === 'dashed') doc.dash(wd * 3, { space: wd * 3 });
+      else if (wd < 3) doc.dash(wd, { space: wd });
+      else doc.lineCap('round').dash(0.001, { space: wd * 2 });
+      doc
+        .moveTo(...from)
+        .lineTo(...to)
+        .stroke(side.color);
+      doc.undash();
+      break;
+    }
+    default:
+      fill(outer, inner, side.color);
+  }
+  doc.restore();
+}
+
+/** An underline, overline or line-through on one line of an inline element. */
+function drawDecoration(doc, item) {
+  doc.font(`f${item.font}`).fontSize(item.size);
+  const font = doc._font;
+  const metrics = font.font;
+  const em = metrics?.unitsPerEm || 1000;
+  const units = v => (v / em) * item.size;
+  const base = baseline(doc, item);
+  const thickness = item.thickness ?? Math.max(units(metrics?.underlineThickness || em / 14), 0.25);
+  let top;
+  if (item.line === 'underline') {
+    top =
+      item.offset !== undefined
+        ? base + item.offset
+        : base - units(metrics?.underlinePosition ?? -em / 10);
+  } else if (item.line === 'line-through') {
+    const os2 = metrics?.['OS/2'];
+    top =
+      base -
+      (os2?.yStrikeoutPosition
+        ? units(os2.yStrikeoutPosition)
+        : units(metrics?.xHeight || em / 2) / 2);
+  } else {
+    top = base - (font.ascender / 1000) * item.size;
+  }
+  const { x, width } = item;
+  doc.save();
+  switch (item.style) {
+    case 'double':
+      doc
+        .rect(x, top, width, thickness)
+        .rect(x, top + thickness * 2, width, thickness)
+        .fill(item.color);
+      break;
+    case 'dotted':
+    case 'dashed': {
+      const y = top + thickness / 2;
+      doc.lineWidth(thickness);
+      if (item.style === 'dashed') doc.dash(thickness * 3, { space: thickness * 3 });
+      else doc.dash(thickness, { space: thickness });
+      doc
+        .moveTo(x, y)
+        .lineTo(x + width, y)
+        .stroke(item.color);
+      doc.undash();
+      break;
+    }
+    case 'wavy': {
+      const amplitude = Math.max(thickness, 0.75);
+      const step = amplitude * 2;
+      const y = top + amplitude;
+      doc.lineWidth(thickness).moveTo(x, y);
+      for (let at = x, up = true; at < x + width; at += step, up = !up) {
+        doc.quadraticCurveTo(
+          at + step / 2,
+          y + (up ? -amplitude : amplitude) * 2,
+          Math.min(at + step, x + width),
+          y
+        );
+      }
+      doc.stroke(item.color);
+      break;
+    }
+    default:
+      doc.rect(x, top, width, thickness).fill(item.color);
+  }
+  doc.restore();
+}
+
 function drawMargin(doc, item) {
   doc.font(`f${item.font}`).fontSize(item.size).fillColor(item.color);
-  const width = doc.widthOfString(item.text);
-  const x =
+  const y = baseline(doc, item);
+  const place = width =>
     item.align === 'center'
       ? item.x + (item.width - width) / 2
       : item.align === 'right'
         ? item.x + item.width - width
         : item.x;
-  doc.text(item.text, x, baseline(doc, item), { lineBreak: false, baseline: 'alphabetic' });
+  if (!RIGHT_TO_LEFT.test(item.text)) {
+    doc.text(item.text, place(doc.widthOfString(item.text)), y, {
+      lineBreak: false,
+      baseline: 'alphabetic',
+    });
+    return;
+  }
+  // PDFKit lays a string out a word at a time in reading order, which reverses
+  // right-to-left words against each other: draw them one by one, in the order
+  // they're seen.
+  const words = visualOrder(item.text.trim().split(/\s+/), item.direction === 'rtl');
+  const space = doc.widthOfString(' ');
+  const widths = words.map(w => doc.widthOfString(w));
+  let x = place(widths.reduce((sum, w) => sum + w, 0) + space * (words.length - 1));
+  words.forEach((w, i) => {
+    doc.text(w, x, y, { lineBreak: false, baseline: 'alphabetic' });
+    x += widths[i] + space;
+  });
+}
+
+/**
+ * Words in the order they're seen, left to right: a simple form of the
+ * Unicode bidirectional algorithm for a line of words. Runs of right-to-left
+ * words read right to left; in a right-to-left line, so do the runs.
+ */
+export function visualOrder(words, rtlLine) {
+  const runs = [];
+  for (const word of words) {
+    // Digits and punctuation take the direction of the run they're in.
+    const rtl = RIGHT_TO_LEFT.test(word) ? true : /\p{L}/u.test(word) ? false : null;
+    const last = runs[runs.length - 1];
+    if (last && (rtl === null || last.rtl === rtl || last.rtl === null)) {
+      last.words.push(word);
+      if (last.rtl === null) last.rtl = rtl;
+    } else {
+      runs.push({ rtl, words: [word] });
+    }
+  }
+  const ordered = rtlLine ? runs.reverse() : runs;
+  return ordered.flatMap(run => ((run.rtl ?? rtlLine) ? [...run.words].reverse() : run.words));
 }
 
 /**
