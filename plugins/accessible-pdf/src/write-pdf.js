@@ -6,6 +6,7 @@
  * boxes are pagination artifacts. A word the browser hyphenated is a `Span`
  * whose ActualText is the whole word, so search and screen readers get it whole.
  * An image is a `Figure` with its alt text, or an artifact when decorative.
+ * A link is a `Link` holding its text and its annotations, one `Link` per page.
  *
  * Runs in the browser (the plugin) and in Node (tests and the phase 0 spike).
  */
@@ -75,8 +76,21 @@ export function writePdf(desc, files, info = {}) {
   const root = doc.struct(nodes[0].type);
   doc.addStructure(root);
   elements.set(0, root);
+  // PDFKit gives a link annotation's object reference the page that is current
+  // when its `Link` is written, so each page's part of a link is its own `Link`,
+  // ended on that page, and so is anything inside it.
+  const inLink = new Map();
+  const isInLink = id => {
+    if (id === null) return false;
+    if (!inLink.has(id)) inLink.set(id, nodes[id].type === 'Link' || isInLink(nodes[id].parent));
+    return inLink.get(id);
+  };
+  let pageIndex = 0;
+  let pageLinks = [];
+  const keyFor = id => (isInLink(id) ? `${id}@${pageIndex}` : id);
   const elementFor = id => {
-    let el = elements.get(id);
+    const key = keyFor(id);
+    let el = elements.get(key);
     if (el) return el;
     const node = nodes[id];
     const options = {};
@@ -93,8 +107,9 @@ export function writePdf(desc, files, info = {}) {
         ...(colSpan ? { ColSpan: colSpan } : {}),
       };
     }
-    elements.set(id, el);
+    elements.set(key, el);
     elementFor(node.parent ?? 0).add(el);
+    if (node.type === 'Link') pageLinks.push(el);
     return el;
   };
 
@@ -114,9 +129,26 @@ export function writePdf(desc, files, info = {}) {
   const hyphenSpans = new Map();
   const outlined = new Set();
 
-  for (const page of desc.pages) {
+  for (const [index, page] of desc.pages.entries()) {
+    pageIndex = index;
     doc.addPage({ size: [page.width, page.height], margin: 0 });
     for (const item of page.items) {
+      if (item.kind === 'anchor') {
+        doc.addNamedDestination(item.name, 'XYZ', item.x, item.y, null);
+        continue;
+      }
+      if (item.kind === 'link') {
+        closeRun();
+        const { link } = nodes[item.struct];
+        const options = {
+          structParent: elementFor(item.struct),
+          // PDF/UA: a link annotation describes itself; its text does.
+          Contents: new String(textWithin(desc, item.struct)),
+        };
+        if ('uri' in link) doc.link(item.x, item.y, item.width, item.height, link.uri, options);
+        else doc.goTo(item.x, item.y, item.width, item.height, link.dest, options);
+        continue;
+      }
       if (item.kind === 'margin') {
         closeRun();
         doc.markContent('Artifact', { type: 'Pagination' });
@@ -144,11 +176,14 @@ export function writePdf(desc, files, info = {}) {
       const element = elementFor(item.struct);
       if (/^H[1-2]$/.test(node.type) && !outlined.has(item.struct)) {
         outlined.add(item.struct);
-        doc.outline.addItem(headingText(desc, item.struct));
+        doc.outline.addItem(textWithin(desc, item.struct));
       }
       if (item.hyphenated) {
         const key = `${item.struct}:${item.hyphenated.wholeWord}`;
         let span = hyphenSpans.get(key);
+        // A word split across pages inside a link: its Span ended with the
+        // first page's Link, so the rest gets a Span of its own.
+        if (span?._ended) span = undefined;
         if (!span) {
           const trailing = item.text.endsWith(' ') ? ' ' : '';
           span = doc.struct('Span', { actual: item.hyphenated.wholeWord + trailing });
@@ -170,10 +205,12 @@ export function writePdf(desc, files, info = {}) {
         }
         continue;
       }
-      runFor(element, node.type, `${item.struct}`);
+      runFor(element, node.type, `${keyFor(item.struct)}`);
       drawWord(doc, item);
     }
     closeRun();
+    for (const link of pageLinks) link.end();
+    pageLinks = [];
   }
 
   const firstNumber = desc.pages[0]?.number || 1;
@@ -265,7 +302,8 @@ function baseline(doc, item) {
   return item.y + (item.height - (ascent + descent)) / 2 + ascent;
 }
 
-function headingText(desc, structId) {
+/** The text of a structure node and everything in it, across pages. */
+function textWithin(desc, structId) {
   // Text from different elements (a label span and the title) gets a space.
   let text = '';
   let last = null;

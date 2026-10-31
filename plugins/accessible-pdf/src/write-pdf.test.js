@@ -157,6 +157,36 @@ describe.skipIf(!hasFont)('writePdf', () => {
     expect(text).toMatch(/\/A <<\n\/O \/Table\n\/ColSpan 2\n>>/);
   });
 
+  it('ties each link annotation to its Link, on the page it is on', async () => {
+    const links = structuredClone(description);
+    links.structure[1].children.push(4, 5);
+    links.structure.push(
+      { id: 4, type: 'Link', parent: 1, children: [], link: { uri: 'https://example.com/' } },
+      { id: 5, type: 'Link', parent: 1, children: [], link: { dest: 'end' } }
+    );
+    const box = { x: 20, y: 200, width: 60, height: 14 };
+    links.pages[0].items.push(
+      { kind: 'link', struct: 4, ...box },
+      word('Example', 20, 4, { y: 200 })
+    );
+    links.pages[1].items.push(
+      { kind: 'link', struct: 5, ...box },
+      word('Below', 20, 5, { y: 200 }),
+      { kind: 'anchor', name: 'end', x: 20, y: 300 }
+    );
+    const pdf = await writePdf(links, { fonts: [fs.readFileSync(FONT)] });
+    const text = new TextDecoder('latin1').decode(pdf);
+    expect(text).toContain('/URI (https://example.com/)');
+    expect(text).toMatch(/\/S \/GoTo\n\/D \(end\)/);
+    expect(text).toContain('/Contents (Example)');
+    expect(text).toContain('/Contents (Below)');
+    expect(text).toMatch(/\/Dests/);
+    // Each OBJR names the page its annotation is on, not the last page.
+    const pages = [...text.matchAll(/\/Type \/OBJR\n\/Obj \d+ 0 R\n\/Pg (\d+) 0 R/g)].map(m => m[1]);
+    expect(pages).toHaveLength(2);
+    expect(new Set(pages).size).toBe(2);
+  });
+
   it('writes the PDF/UA identifier only when asked', async () => {
     const pdf = await writePdf(description, { fonts: [fs.readFileSync(FONT)] }, { claimPdfUa: true });
     expect(new TextDecoder('latin1').decode(pdf)).toContain('<pdfuaid:part>1</pdfuaid:part>');
