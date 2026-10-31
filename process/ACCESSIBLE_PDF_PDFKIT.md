@@ -116,7 +116,11 @@ Run 2026-10-30 on Essay 1 of _John, Paul, and George_ (five pages at 143 × 205 
 
 **Validation: passes.** axesCheck (check.axes4.com, 2026-10-31) reports PDF/UA and WCAG fulfilled for every machine-verifiable requirement. It also showed the title as "Print preview", the preview document's `<title>`; `describePages` now takes the book title from its caller, which has the OPF.
 
-**Still to do in phase 0.** Check text extraction and a screen reader on the file. Check the PDFKit default that writes the PDF/UA identifier, which the proposal says should wait for a passing validation.
+**Text extraction (2026-10-31).** Apple's PDFKit (Preview) and pypdf read Essay 1 in reading order, a paragraph at a time, but both ignore ActualText: at first they gave "rec- ognized". Tagged PDF marks a hyphen the line break added as a soft hyphen (ISO 32000-1, 14.8.2.2.3), so the writer now draws the font's own U+00AD glyph, which looks like a hyphen and reads back as a soft hyphen; extractors that follow the spec join the word. fontkit's shaping hides U+00AD as a zero-width space, so the writer puts the glyph back. A font whose soft hyphen shares the hyphen's glyph (Times New Roman does; Liberation Serif doesn't) still gets a plain hyphen, and only ActualText keeps the word whole. Apple's extraction adds a space at every line end, which no tagging changes.
+
+**The PDF/UA identifier is off by default (2026-10-31).** PDFKit writes it whenever `subset: 'PDF/UA'` is set; the writer now sets it only when asked (`claimPdfUa`). A validator checking a file without it may report the identifier missing (Matterhorn 06-002) rather than judging conformance, so validation runs on a file written with the claim, and the author decides whether a passing book carries it.
+
+**Still to do in phase 0.** A screen reader on the file.
 
 ## Decisions this touches
 
