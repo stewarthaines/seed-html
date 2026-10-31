@@ -132,6 +132,8 @@ export interface StructNode {
   table?: TableCellAttributes;
   /** Where a `Link` goes: a URL, or an anchor in the book. */
   link?: { uri: string } | { dest: string };
+  /** A `Figure` standing as a block of its own, not in a line of text. */
+  placement?: 'Block';
 }
 
 export interface TableCellAttributes {
@@ -212,6 +214,22 @@ const STRUCT_TYPES: Record<string, string> = {
 };
 
 /**
+ * Structure types that group blocks (ISO 32000-1, 14.8.4.2). Text and inline
+ * elements directly inside one (a `figcaption`'s words) go in a `P` of their
+ * own, which checkers expect.
+ */
+export const GROUPING_TYPES = new Set([
+  'Document',
+  'Part',
+  'Art',
+  'Sect',
+  'Div',
+  'BlockQuote',
+  'Caption',
+]);
+const INLINE_TYPES = new Set(['Span', 'Link']);
+
+/**
  * Describe the pages of a document Paged.js has paginated.
  *
  * Book elements carry Paged.js's `data-ref`, which a split element's pieces
@@ -257,6 +275,21 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
     return index;
   };
 
+  // The `P` holding inline content directly inside a grouping element, while
+  // it's the group's last child: a block in between starts another.
+  const wrappers = new Set<number>();
+  const inlineParent = (struct: number): number => {
+    const group = structure[struct];
+    if (!GROUPING_TYPES.has(group.type)) return struct;
+    const last = group.children[group.children.length - 1];
+    if (last !== undefined && wrappers.has(last)) return last;
+    const p: StructNode = { id: structure.length, type: 'P', parent: struct, children: [] };
+    structure.push(p);
+    group.children.push(p.id);
+    wrappers.add(p.id);
+    return p.id;
+  };
+
   /** The structure node for a book element, created the first time it's met. */
   const structFor = (el: Element, parent: number, as?: { type: string; alt?: string }): number => {
     const ref = el.getAttribute('data-ref');
@@ -267,6 +300,7 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
     const elLang = el.getAttribute('lang') ?? el.getAttribute('xml:lang');
     if (!type && elLang && elLang !== lang) type = 'Span';
     if (!type) return parent;
+    if (INLINE_TYPES.has(type)) parent = inlineParent(parent);
     const node: StructNode = { id: structure.length, type, parent, children: [] };
     if (elLang && elLang !== lang) node.lang = elLang;
     if (as?.alt) node.alt = as.alt;
@@ -419,15 +453,23 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
         ...(clipped ? { clip: box(contentBox) } : {}),
         // alt="" marks a decorative image; no alt at all is still a figure,
         // which a checker reports as missing its alt text.
-        struct: alt === '' ? null : structFor(img, struct, { type: 'Figure', alt: alt?.trim() }),
+        struct: alt === '' ? null : figureFor(img, struct, alt),
       });
     };
 
-    const measureText = (text: Text, struct: number, hidden: boolean) => {
+    const figureFor = (img: HTMLImageElement, struct: number, alt: string | null): number => {
+      const figure = structFor(img, struct, { type: 'Figure', alt: alt?.trim() });
+      // In a group of blocks (a `figure`, a section) the image is a block.
+      if (GROUPING_TYPES.has(structure[struct].type)) structure[figure].placement = 'Block';
+      return figure;
+    };
+
+    const measureText = (text: Text, group: number, hidden: boolean) => {
       const value = text.data;
       if (!value.trim()) return;
       const parent = text.parentElement;
       if (!parent) return;
+      const struct = inlineParent(group);
       const style = win.getComputedStyle(parent);
       const font = fontIndex(style);
       const size = toPt(parseFloat(style.fontSize) * scale);
