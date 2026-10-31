@@ -54,20 +54,20 @@ The handover is data, not a live document, so it goes by `postMessage` like the 
 
 The structure tree follows the DOM in reading order, not the visual order of the page, and Paged.js's page and area wrappers are skipped.
 
-| DOM | PDF structure |
-|---|---|
-| `section` from a chapter | `Sect` |
-| `h1`–`h6` | `H1`–`H6` |
-| `p` | `P` |
-| `ul`, `ol` / `li` | `L` / `LI`, with `Lbl` and `LBody` |
-| `blockquote` | `BlockQuote` |
-| `figure`, `img` | `Figure`, `Alt` from the `alt` text |
-| `figcaption` | `Caption` |
-| `table`, `tr`, `th`, `td` | `Table`, `TR`, `TH` (with scope), `TD` |
-| `aside`, notes | `Note` |
-| `a` | `Link` |
-| an element with its own `lang` | its structure element gets `Lang` |
-| `role="doc-pagebreak"` markers | nothing (see page labels) |
+| DOM                            | PDF structure                          |
+| ------------------------------ | -------------------------------------- |
+| `section` from a chapter       | `Sect`                                 |
+| `h1`–`h6`                      | `H1`–`H6`                              |
+| `p`                            | `P`                                    |
+| `ul`, `ol` / `li`              | `L` / `LI`, with `Lbl` and `LBody`     |
+| `blockquote`                   | `BlockQuote`                           |
+| `figure`, `img`                | `Figure`, `Alt` from the `alt` text    |
+| `figcaption`                   | `Caption`                              |
+| `table`, `tr`, `th`, `td`      | `Table`, `TR`, `TH` (with scope), `TD` |
+| `aside`, notes                 | `Note`                                 |
+| `a`                            | `Link`                                 |
+| an element with its own `lang` | its structure element gets `Lang`      |
+| `role="doc-pagebreak"` markers | nothing (see page labels)              |
 
 A paragraph that Paged.js split across two pages is one `P` with content on both pages, joined back together from Paged.js's split markers (`data-split-from`). The same goes for lists and tables, whose repeated header rows on later pages are artifacts.
 
@@ -94,11 +94,29 @@ The same book gives the same tags, fonts, bookmarks and metadata in every browse
 
 ## Phases
 
-- **Phase 0, spike.** One chapter of Joseph's book: text, headings and paragraphs, with fonts embedded, tagged, and one paragraph split across a page. Pass it through veraPDF and PAC. Settle three things: whether one structure element can span pages in PDFKit, whether a `Link` can reference its annotation, and how to keep a hyphenated word whole.
+- **Phase 0, spike.** One chapter of Joseph's book: text, headings and paragraphs, with fonts embedded, tagged, and one paragraph split across a page. Check it with a PDF/UA validator (veraPDF is not installed; how to validate is still to be worked out). Settle three things: whether one structure element can span pages in PDFKit, whether a `Link` can reference its annotation, and how to keep a hyphenated word whole.
 - **Phase 1, text and structure.** The whole book's text, headings, lists, blockquotes and notes, the font matching and its errors, margin boxes as artifacts, metadata.
 - **Phase 2, figures and tables.** Images with alt text and captions, tables with header scope and split tables.
 - **Phase 3, navigation.** Bookmarks, page labels, links.
 - **Phase 4, boxes and scripts.** Backgrounds, borders and rules; right-to-left text and its reading order, checked on a Hebrew or Arabic sample.
+
+## Phase 0 findings
+
+Run 2026-10-30 on Essay 1 of _John, Paul, and George_ (five pages at 143 × 205 mm) in Chrome, from the in-app PDF preview. The core's measuring is `src/lib/pdf/page-description.ts`; the plugin's writer is `plugins/accessible-pdf/src/write-pdf.js`. No validator has been run yet.
+
+**It works.** Measuring the five pages takes about 60 ms and gives a 230 KB description. The PDF matches the preview line for line: the same breaks, hyphenation, justification, indents, bold italic and page numbers. It has an embedded subset of each font with a ToUnicode map, `Lang`, `DisplayDocTitle`, `MarkInfo` marked, tab order by structure, page labels, and bookmarks for the H1 and H2.
+
+**One element across pages: yes.** PDFKit writes content on a later page as a marked-content reference, so the two paragraphs Paged.js split are each one `P` with content on both pages. Paged.js gives a split element's pieces the same `data-ref`, which is how the measuring knows they are one element.
+
+**Hyphenated words: a `Span` with ActualText.** The browser's hyphen is drawn, and the `Span` holding both parts carries the whole word, so search and screen readers get "recognized", not "rec-" and "ognized". Chrome misreports the line of a one-character range at a hyphenation point, so the break is found from growing prefixes of the word instead.
+
+**Links: yes, with two fixes owed.** PDFKit can tie a link annotation to its `Link` element (an object reference), but it records the page current when the element is closed, not the annotation's page, and it writes no `Contents` for the annotation. The writer can close each `Link` on its own page; the page reference is a small patch to offer upstream. Essay 1 has no links, so this was checked on a test file.
+
+**Fonts.** The book named system fonts (Times New Roman for the text, the app's `system-ui` for page numbers), which a web page can't read; the first run took the macOS font files from disk. Only Chrome and Edge can read installed font files (`queryLocalFonts()`, behind a permission prompt); Firefox and Safari can't, and a system font differs between computers anyway. So the rule stands: the book carries its fonts. The book now carries Liberation Serif (SIL OFL, Times New Roman's widths) for print and the page numbers, and all 116 lines of Essay 1 break exactly as they did in Times New Roman (2026-10-31).
+
+**Validation: passes.** axesCheck (check.axes4.com, 2026-10-31) reports PDF/UA and WCAG fulfilled for every machine-verifiable requirement. It also showed the title as "Print preview", the preview document's `<title>`; `describePages` now takes the book title from its caller, which has the OPF.
+
+**Still to do in phase 0.** Check text extraction and a screen reader on the file. Check the PDFKit default that writes the PDF/UA identifier, which the proposal says should wait for a passing validation.
 
 ## Decisions this touches
 
