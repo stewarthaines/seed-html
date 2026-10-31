@@ -116,6 +116,11 @@ const PX_TO_PT = 0.75;
 
 /** The hyphen Paged.js writes where it splits a word across pages (U+2011). */
 const PAGE_SPLIT_HYPHEN = '\u2011';
+/**
+ * Where that hyphen would push the line over, the vendored Paged.js hangs it
+ * in a zero-width box after the text instead (patches/paged.polyfill.md).
+ */
+const HANGING_HYPHEN_CLASS = 'pagedjs_hyphen_hang';
 
 /** Elements the PDF doesn't draw yet; each is listed as a problem. */
 const REPLACED_ELEMENTS = new Set(['img', 'svg', 'video', 'audio', 'canvas', 'iframe', 'object']);
@@ -242,6 +247,8 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
       if (node.nodeType !== Node.ELEMENT_NODE) return;
       const el = node as Element;
       if (el.getAttribute('aria-hidden') === 'true') return;
+      // Measured with the text before it.
+      if (el.classList.contains(HANGING_HYPHEN_CLASS)) return;
       const style = win.getComputedStyle(el);
       if (style.display === 'none' || style.visibility === 'hidden') return;
       // Images and drawings come in phase 2 (process/ACCESSIBLE_PDF_PDFKIT.md).
@@ -285,10 +292,17 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
       // Paged.js ends a page's part of a paragraph it split mid-word with a
       // non-breaking hyphen in the text itself (on a .pagedjs_hyphen element).
       // It is drawn as the writer draws any line-end hyphen, and the word is
-      // joined with its rest on the next page.
+      // joined with its rest on the next page. A hanging hyphen follows the
+      // text in its own box.
+      const hanging =
+        text.nextSibling instanceof win.Element &&
+        text.nextSibling.classList.contains(HANGING_HYPHEN_CLASS)
+          ? text.nextSibling
+          : null;
       const pageHyphen =
-        value.endsWith(PAGE_SPLIT_HYPHEN) && parent.closest('.pagedjs_hyphen') !== null;
-      const words = pageHyphen ? value.slice(0, -1) : value;
+        hanging !== null ||
+        (value.endsWith(PAGE_SPLIT_HYPHEN) && parent.closest('.pagedjs_hyphen') !== null);
+      const words = pageHyphen && !hanging ? value.slice(0, -1) : value;
       const range = doc.createRange();
       const segments = Array.from(segmenter.segment(words));
       const lastWord = segments.findLastIndex(seg => seg.segment.trim() !== '');
@@ -304,6 +318,12 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
         range.setEnd(text, end);
         const rects = Array.from(range.getClientRects()).filter(r => r.width > 0);
         if (rects.length === 0) return;
+        if (splitHere && hanging) {
+          // The glyph, not its zero-width box.
+          const glyph = doc.createRange();
+          glyph.selectNodeContents(hanging);
+          rects.push(glyph.getBoundingClientRect());
+        }
         // A word can come back as several boxes on one line (Chrome splits at
         // glyph runs); only boxes on different lines mean a hyphenated word.
         const onOneLine = rects.every(r => !onAnotherLine(r, rects[0]));
