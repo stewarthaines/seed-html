@@ -181,6 +181,18 @@ Run 2026-10-30 on Essay 1 of _John, Paul, and George_ (five pages at 143 × 205 
 
 **Checked.** A test page of bullets, nested circles, a list from 3 with a `value`, Roman numerals, an inside bullet, a dash `::marker`, a padded item, a numbered list split across two pages, and a Hebrew numbered list and square bullet matches Chrome; its text extracts with the numbers. Joseph's book now has its 18 bullets (pages 81–85) and its numbered stages (page 161), which earlier PDFs left out.
 
+## Generated content
+
+**Text from `::before` and `::after` (2026-10-31).** Generated text isn't in the DOM, and before this the PDF left it out without saying so. Now a pass over the paginated document in tree order works it out: strings, `attr()`, `counter()` and `counters()` (CSS counters counted as CSS Lists 3 defines them, from the computed `counter-reset`, `counter-increment` and `counter-set`, which already carry Paged.js's own handling of counters across pages), and quotation marks by nesting depth (`quotes`, or the language's own for `auto`; a `q` gets its quotes this way). Then a span with that text and the pseudo-element's style stands in for each pseudo-element while the pages are read, and the pseudo-element is hidden. The span lays out as the pseudo-element did, so its words are measured, linked, hyphenated and tagged like any others, and an empty `content: ""` box gets its border or background drawn.
+
+**Keeping the layout.** The span carries only what the pseudo-element sets apart from a plain span in its place; a copied font size, rounded when written out, shaped the span apart from its neighbours and lost their kerning. On an element that can host a shadow root (a blockquote, paragraph, heading, section, div), the spans go in one, around a slot, so the book's own children keep `:first-child` and `:last-child` rules that a span among them would break; the shadow root stays, holding only its slot, which renders the element as before. Everywhere else (`q`, `a`, `li`, `td`) the span goes among the children. Either way the element and its first text are measured before and after, and if anything moved the pseudo-element is put back and listed.
+
+**What the card lists.** `content` the PDF doesn't draw (`url()` images, gradients, other functions), counter styles not written yet, `quotes: auto` in a language without a table entry, and a pseudo-element whose span moved the layout.
+
+**Spaces at the start of a text node.** A text node's leading space ended the word before it only on screen: "<strong>rivalry</strong> – …" gave "rivalry–" to anything reading the text. The space now goes on the word before it, as a block boundary's does.
+
+**Checked.** A test page (a chapter label with an upper-roman counter over two pages, section numbers with `counters()`, nested `q`, a blockquote's quotation mark beside a `:first-child` rule, `attr()`, a link's arrow, an empty rule, a nested `counters()` list, a `url()` image) matches Chrome and lists only the image. Joseph's book is unchanged apart from the restored spaces; it builds in 9.5 seconds with the PDF written.
+
 ## Decisions this touches
 
 `process/DECISIONS.md`: the 2026-09-15 entry ("PDF export stays single-pass … The app is for accessible EPUB") is replaced by 2026-10-31, "Accessible PDF is a goal of the app". Export stays single-pass: one pagination, read once.
