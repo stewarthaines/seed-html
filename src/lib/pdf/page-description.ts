@@ -87,7 +87,27 @@ export interface ImageItem {
   struct: number | null;
 }
 
-export type DrawItem = TextItem | MarginItem | ImageItem;
+/** One box of a link (a line of its text, an image in it): a link annotation. */
+export interface LinkItem {
+  kind: 'link';
+  /** The `Link` structure node, which says where the link goes. */
+  struct: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/** Where a link inside the book lands: a named destination. */
+export interface AnchorItem {
+  kind: 'anchor';
+  /** The target's id, which the `Link` nodes going there name as `dest`. */
+  name: string;
+  x: number;
+  y: number;
+}
+
+export type DrawItem = TextItem | MarginItem | ImageItem | LinkItem | AnchorItem;
 
 export interface PageBox {
   /** Page size in points. */
@@ -110,6 +130,8 @@ export interface StructNode {
   alt?: string;
   /** A table cell's attributes (the `Table` attribute owner). */
   table?: TableCellAttributes;
+  /** Where a `Link` goes: a URL, or an anchor in the book. */
+  link?: { uri: string } | { dest: string };
 }
 
 export interface TableCellAttributes {
@@ -186,8 +208,7 @@ const STRUCT_TYPES: Record<string, string> = {
   tr: 'TR',
   th: 'TH',
   td: 'TD',
-  // No `Link` until links carry their annotations (phase 3): the text stays,
-  // the link is listed as a problem.
+  // `a` becomes a `Link` only when it goes somewhere the PDF can reach.
 };
 
 /**
@@ -260,6 +281,25 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
   };
 
   const pageEls = Array.from(doc.querySelectorAll<HTMLElement>('.pagedjs_page'));
+
+  // The whole-book builder points links between chapters at ids in the one
+  // document (`#…`). Each linked id gets an anchor where it first appears;
+  // Paged.js keeps an id it moves as `data-id`.
+  const linkTargetOf = (href: string): StructNode['link'] | null => {
+    if (href.startsWith('#')) {
+      const id = decodeURIComponent(href.slice(1));
+      if (!id) return null;
+      const sel = `[id="${CSS.escape(id)}"], [data-id="${CSS.escape(id)}"]`;
+      return pageEls.some(p => p.querySelector(sel)) ? { dest: id } : null;
+    }
+    return /^(https?|mailto|tel|ftp):/i.test(href) ? { uri: href } : null;
+  };
+  const linkedIds = new Set<string>();
+  for (const a of Array.from(doc.querySelectorAll('.pagedjs_page a[href^="#"]'))) {
+    const target = linkTargetOf(a.getAttribute('href') ?? '');
+    if (target && 'dest' in target) linkedIds.add(target.dest);
+  }
+  const anchored = new Set<string>();
   const pages = pageEls.map(pageEl => {
     const pageRect = pageEl.getBoundingClientRect();
     // The preview may scale the pages; offsetWidth is the unscaled CSS width.
@@ -290,7 +330,7 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
       if (el.classList.contains(HANGING_HYPHEN_CLASS)) return;
       const style = win.getComputedStyle(el);
       if (style.display === 'none' || style.visibility === 'hidden') return;
-      // Images and drawings come in phase 2 (process/ACCESSIBLE_PDF_PDFKIT.md).
+      // Drawings, video and other embedded content aren't drawn yet.
       if (REPLACED_ELEMENTS.has(el.localName)) {
         problems.add(el.localName);
         return;
@@ -299,8 +339,27 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
         measureImage(el as HTMLImageElement, struct, style);
         return;
       }
-      if (el.localName === 'a' && el.hasAttribute('href')) problems.add('a[href]');
-      const here = el.hasAttribute('data-ref') ? structFor(el, struct) : struct;
+      const anchorId = el.id || el.getAttribute('data-id');
+      if (anchorId && linkedIds.has(anchorId) && !anchored.has(anchorId)) {
+        anchored.add(anchorId);
+        const { x, y } = box(el.getBoundingClientRect());
+        page.items.push({ kind: 'anchor', name: anchorId, x, y });
+      }
+      const link = el.localName === 'a' ? linkTargetOf(el.getAttribute('href') ?? '') : null;
+      const here = link
+        ? structFor(el, struct, { type: 'Link' })
+        : el.hasAttribute('data-ref')
+          ? structFor(el, struct)
+          : struct;
+      if (link) {
+        structure[here].link = link;
+        // A box per line of the link on this page, and any image in it.
+        const rects = [
+          ...Array.from(el.getClientRects()),
+          ...Array.from(el.querySelectorAll('img'), img => img.getBoundingClientRect()),
+        ].filter(r => r.width > 0 && r.height > 0);
+        for (const r of rects) page.items.push({ kind: 'link', struct: here, ...box(r) });
+      }
       const block = !style.display.startsWith('inline') && style.display !== 'contents';
       const hiddenHere = hidden || isVisuallyHidden(style);
       if (block) separate();
