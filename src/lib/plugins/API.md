@@ -141,7 +141,7 @@ Inserts a string at the cursor position in the currently active textarea. The co
 { "type": "describe-book", "requestId": "string" }
 ```
 
-The accessible-pdf plugin asks for the open book laid out and measured. The host builds the same paginated document as Save as PDF, lays it out with Paged.js in a frame off screen, measures it into a page description (`src/lib/pdf/page-description.ts`) and gathers the book's font files from its `@font-face` rules (`src/lib/pdf/accessible-pdf.ts`). It answers with `{ "type": "book-described", "requestId", "description", "fonts": [ArrayBuffer], "author", "missingFonts": [string], "skippedChapterIds": [string] }`, or `{ "type": "book-described", "requestId", "error" }`. The plugin writes the PDF itself; the host never sees it.
+The accessible-pdf plugin asks for the open book laid out and measured. The host builds the same paginated document as Save as PDF, lays it out with Paged.js in a frame off screen, measures it into a page description (`src/lib/pdf/page-description.ts`) and gathers the book's font files from its `@font-face` rules and its image files, JPEG and PNG as they are and other formats as PNG (`src/lib/pdf/accessible-pdf.ts`). It answers with `{ "type": "book-described", "requestId", "description", "fonts": [ArrayBuffer], "images": [ArrayBuffer], "author", "missingFonts": [string], "skippedChapterIds": [string] }`, or `{ "type": "book-described", "requestId", "error" }`. The plugin writes the PDF itself; the host never sees it.
 
 ### Plugin → Main → Plugin (adding a media file)
 

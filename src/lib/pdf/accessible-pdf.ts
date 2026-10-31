@@ -1,8 +1,8 @@
 /**
  * The core's half of the accessible PDF (process/ACCESSIBLE_PDF_PDFKIT.md): lay
  * out the whole book with Paged.js, exactly as Save as PDF does, in a frame off
- * screen; measure it into a page description; and gather the book's font files
- * for it. The accessible-pdf plugin writes the PDF from what this returns.
+ * screen; measure it into a page description; and gather the book's font and
+ * image files for it. The accessible-pdf plugin writes the PDF from what this returns.
  */
 import { BlobURLManager } from '../blob-url/blob-url-manager.js';
 import type { FileStorageAPI } from '../storage/index.js';
@@ -11,6 +11,7 @@ import type { PrintSettings } from '../services/settings/settings.service.js';
 import { buildBookDocument } from './pdf-export.js';
 import { describePages, type PageDescription } from './page-description.js';
 import { collectFontFaces, loadFontFiles } from './font-files.js';
+import { loadImageFiles } from './image-files.js';
 import { translate } from '../i18n/index.js';
 
 const DONE_MESSAGE = 'accessible-pdf-paged';
@@ -21,6 +22,8 @@ export interface BookDescription {
   description: PageDescription;
   /** One file per `description.fonts` entry, in order. */
   fonts: ArrayBuffer[];
+  /** One JPEG or PNG file per `description.images` entry, in order. */
+  images: ArrayBuffer[];
   author?: string;
   /** Font families with no face in the book; the PDF can't be written without them. */
   missingFonts: string[];
@@ -28,7 +31,7 @@ export interface BookDescription {
   skippedChapterIds: string[];
 }
 
-/** Lay out the book, measure it and gather its fonts. */
+/** Lay out the book, measure it and gather its fonts and images. */
 export async function describeBook(
   workspace: WorkspaceState,
   fileStorage: FileStorageAPI,
@@ -75,9 +78,12 @@ export async function describeBook(
 
     const description = describePages(frameDoc, { title: meta.title?.trim() || '' });
     const { files, missing } = await loadFontFiles(collectFontFaces(frameDoc), description.fonts);
+    // Before the cleanup below: the images are the frame's blob URLs.
+    const images = await loadImageFiles(description);
     return {
       description,
       fonts: files,
+      images,
       author: meta.creator?.[0]?.name?.trim() || undefined,
       missingFonts: missing,
       skippedChapterIds,

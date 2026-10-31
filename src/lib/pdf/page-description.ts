@@ -68,7 +68,26 @@ export interface MarginItem {
   color: string;
 }
 
-export type DrawItem = TextItem | MarginItem;
+/**
+ * An image drawn where the browser drew it. A Figure carrying its alt text,
+ * or an artifact when the book marks it decorative (`alt=""`).
+ */
+export interface ImageItem {
+  kind: 'image';
+  /** Index into `PageDescription.images`. */
+  image: number;
+  /** The whole picture, placed by `object-fit` and `object-position`. */
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  /** The element's content box, when the picture overflows it (`object-fit: cover`). */
+  clip?: { x: number; y: number; width: number; height: number };
+  /** The `Figure` structure node, or null for a decorative image. */
+  struct: number | null;
+}
+
+export type DrawItem = TextItem | MarginItem | ImageItem;
 
 export interface PageBox {
   /** Page size in points. */
@@ -89,6 +108,15 @@ export interface StructNode {
   children: number[];
   lang?: string;
   alt?: string;
+  /** A table cell's attributes (the `Table` attribute owner). */
+  table?: TableCellAttributes;
+}
+
+export interface TableCellAttributes {
+  /** Which cells a `TH` heads; PDF/UA requires it of every header cell. */
+  scope?: 'Row' | 'Column' | 'Both';
+  rowSpan?: number;
+  colSpan?: number;
 }
 
 export interface PageDescription {
@@ -96,6 +124,8 @@ export interface PageDescription {
   title: string;
   lang: string;
   fonts: FontUse[];
+  /** The URL of each image the pages draw, as the paginated document loaded it. */
+  images: string[];
   pages: PageBox[];
   /** Node 0 is the `Document` root. */
   structure: StructNode[];
@@ -106,8 +136,7 @@ export interface PageDescription {
   problems: string[];
   /**
    * Page numbers with text laid out beyond the page edge, which no reader
-   * sees: Paged.js sometimes breaks a paragraph a line late (after a line
-   * ending in a hyphenated word) and the rest lands in a clipped overflow column.
+   * sees: content Paged.js let overflow lands in a clipped column off the page.
    */
   overflowPages: number[];
 }
@@ -123,7 +152,7 @@ const PAGE_SPLIT_HYPHEN = '\u2011';
 const HANGING_HYPHEN_CLASS = 'pagedjs_hyphen_hang';
 
 /** Elements the PDF doesn't draw yet; each is listed as a problem. */
-const REPLACED_ELEMENTS = new Set(['img', 'svg', 'video', 'audio', 'canvas', 'iframe', 'object']);
+const REPLACED_ELEMENTS = new Set(['svg', 'video', 'audio', 'canvas', 'iframe', 'object']);
 
 /** HTML element → PDF structure type; elements not listed are transparent. */
 const STRUCT_TYPES: Record<string, string> = {
@@ -145,11 +174,15 @@ const STRUCT_TYPES: Record<string, string> = {
   ul: 'L',
   ol: 'L',
   li: 'LI',
-  // A figure is a `Div` and its caption a `P` until images are drawn (phase 2):
-  // a `Figure` with no image and no alt text fails PDF/UA.
+  // The `Figure` is the image, which carries the alt text: a screen reader
+  // reads a Figure's alt in place of its content, so the caption stays outside.
   figure: 'Div',
-  figcaption: 'P',
+  figcaption: 'Caption',
   table: 'Table',
+  caption: 'Caption',
+  thead: 'THead',
+  tbody: 'TBody',
+  tfoot: 'TFoot',
   tr: 'TR',
   th: 'TH',
   td: 'TD',
@@ -173,6 +206,7 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
   const lang = doc.documentElement.getAttribute('lang') ?? '';
   const fonts: FontUse[] = [];
   const fontKeys = new Map<string, number>();
+  const images: string[] = [];
   const problems = new Set<string>();
   const overflowPages: number[] = [];
   const structure: StructNode[] = [{ id: 0, type: 'Document', parent: null, children: [] }];
@@ -203,17 +237,22 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
   };
 
   /** The structure node for a book element, created the first time it's met. */
-  const structFor = (el: Element, parent: number): number => {
+  const structFor = (el: Element, parent: number, as?: { type: string; alt?: string }): number => {
     const ref = el.getAttribute('data-ref');
     const existing = ref ? structByRef.get(ref) : undefined;
     if (existing !== undefined) return existing;
     const tag = el.localName;
-    let type = STRUCT_TYPES[tag];
+    let type = as?.type ?? STRUCT_TYPES[tag];
     const elLang = el.getAttribute('lang') ?? el.getAttribute('xml:lang');
     if (!type && elLang && elLang !== lang) type = 'Span';
     if (!type) return parent;
     const node: StructNode = { id: structure.length, type, parent, children: [] };
     if (elLang && elLang !== lang) node.lang = elLang;
+    if (as?.alt) node.alt = as.alt;
+    if (tag === 'th' || tag === 'td') {
+      const table = tableCellAttributes(el);
+      if (Object.keys(table).length > 0) node.table = table;
+    }
     structure.push(node);
     structure[parent].children.push(node.id);
     if (ref) structByRef.set(ref, node.id);
@@ -256,6 +295,10 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
         problems.add(el.localName);
         return;
       }
+      if (el.localName === 'img') {
+        measureImage(el as HTMLImageElement, struct, style);
+        return;
+      }
       if (el.localName === 'a' && el.hasAttribute('href')) problems.add('a[href]');
       const here = el.hasAttribute('data-ref') ? structFor(el, struct) : struct;
       const block = !style.display.startsWith('inline') && style.display !== 'contents';
@@ -273,6 +316,52 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
       if (last?.kind === 'text' && !/\s$/.test(last.text) && last.hyphenated?.part !== 1) {
         last.text += ' ';
       }
+    };
+
+    const measureImage = (img: HTMLImageElement, struct: number, style: CSSStyleDeclaration) => {
+      const url = img.currentSrc || img.src;
+      // A broken image draws nothing the PDF could copy.
+      if (!url || img.naturalWidth === 0) {
+        problems.add('img');
+        return;
+      }
+      // The content box, inside any border and padding.
+      const px = (v: string) => (parseFloat(v) || 0) * scale;
+      const r = img.getBoundingClientRect();
+      const left = px(style.borderLeftWidth) + px(style.paddingLeft);
+      const top = px(style.borderTopWidth) + px(style.paddingTop);
+      const right = px(style.borderRightWidth) + px(style.paddingRight);
+      const bottom = px(style.borderBottomWidth) + px(style.paddingBottom);
+      const contentBox = new DOMRect(
+        r.left + left,
+        r.top + top,
+        r.width - left - right,
+        r.height - top - bottom
+      );
+      const picture = placePicture(
+        contentBox,
+        { width: img.naturalWidth * scale, height: img.naturalHeight * scale },
+        style.objectFit,
+        style.objectPosition,
+        scale
+      );
+      const clipped =
+        picture.left < contentBox.left - 0.5 ||
+        picture.top < contentBox.top - 0.5 ||
+        picture.right > contentBox.right + 0.5 ||
+        picture.bottom > contentBox.bottom + 0.5;
+      let image = images.indexOf(url);
+      if (image < 0) image = images.push(url) - 1;
+      const alt = img.getAttribute('alt');
+      page.items.push({
+        kind: 'image',
+        image,
+        ...box(picture),
+        ...(clipped ? { clip: box(contentBox) } : {}),
+        // alt="" marks a decorative image; no alt at all is still a figure,
+        // which a checker reports as missing its alt text.
+        struct: alt === '' ? null : structFor(img, struct, { type: 'Figure', alt: alt?.trim() }),
+      });
     };
 
     const measureText = (text: Text, struct: number, hidden: boolean) => {
@@ -424,6 +513,7 @@ export function describePages(doc: Document, book: { title: string }): PageDescr
     title: book.title,
     lang,
     fonts,
+    images,
     pages,
     structure,
     problems: Array.from(problems),
@@ -443,6 +533,71 @@ export function isVisuallyHidden(
   if (/^rect\(0(px)?,? 0(px)?,? 0(px)?,? 0(px)?\)$/.test(style.clip)) return true;
   return (
     style.overflow === 'hidden' && parseFloat(style.width) <= 1 && parseFloat(style.height) <= 1
+  );
+}
+
+/**
+ * A table cell's PDF attributes from its HTML: the header scope of a `th`
+ * (its `scope`, or else a column header in `thead` or in a row of headers, and
+ * a row header otherwise) and any row or column span.
+ */
+export function tableCellAttributes(cell: Element): TableCellAttributes {
+  const out: TableCellAttributes = {};
+  if (cell.localName === 'th') {
+    const scope = cell.getAttribute('scope')?.toLowerCase();
+    const row = cell.parentElement;
+    const inHead = cell.closest('thead') !== null;
+    const allHeaders = row !== null && Array.from(row.children).every(c => c.localName === 'th');
+    out.scope =
+      scope === 'row' || scope === 'rowgroup'
+        ? 'Row'
+        : scope === 'col' || scope === 'colgroup'
+          ? 'Column'
+          : inHead || allHeaders
+            ? 'Column'
+            : 'Row';
+  }
+  const rowSpan = Number(cell.getAttribute('rowspan'));
+  const colSpan = Number(cell.getAttribute('colspan'));
+  if (rowSpan > 1) out.rowSpan = rowSpan;
+  if (colSpan > 1) out.colSpan = colSpan;
+  return out;
+}
+
+/**
+ * Where an image's picture goes in its content box under `object-fit` and
+ * `object-position` (CSS Images 3, 5.5 and 5.6). `natural` is the picture's
+ * own size in the same units as the box; `scale` turns the CSS pixels of a
+ * length in `position` into those units.
+ */
+export function placePicture(
+  content: DOMRect,
+  natural: { width: number; height: number },
+  fit: string,
+  position: string,
+  scale = 1
+): DOMRect {
+  if (fit === 'fill' || !natural.width || !natural.height) return content;
+  const contain = Math.min(content.width / natural.width, content.height / natural.height);
+  const cover = Math.max(content.width / natural.width, content.height / natural.height);
+  const ratio =
+    fit === 'contain'
+      ? contain
+      : fit === 'cover'
+        ? cover
+        : fit === 'scale-down'
+          ? Math.min(1, contain)
+          : 1; // none
+  const width = natural.width * ratio;
+  const height = natural.height * ratio;
+  const [px = '50%', py = '50%'] = position.split(/\s+/);
+  const offset = (value: string, free: number) =>
+    value.endsWith('%') ? (parseFloat(value) / 100) * free : (parseFloat(value) || 0) * scale;
+  return new DOMRect(
+    content.left + offset(px, content.width - width),
+    content.top + offset(py, content.height - height),
+    width,
+    height
   );
 }
 

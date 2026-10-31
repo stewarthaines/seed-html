@@ -5001,6 +5001,10 @@ msgstr ""
 msgid "The book took too long to lay out."
 msgstr ""
 
+#: src/lib/pdf/image-files.ts
+msgid "An image in the book could not be read."
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 msgid "The catalog cannot be read right now."
 msgstr ""

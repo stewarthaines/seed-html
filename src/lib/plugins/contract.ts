@@ -378,7 +378,7 @@ export function isOpenMessage(value: unknown): value is OpenMessage {
 
 /**
  * plugin → main, asks the host to lay out the open book with Paged.js, measure
- * it and gather its font files (src/lib/pdf/accessible-pdf.ts). The host
+ * it and gather its font and image files (src/lib/pdf/accessible-pdf.ts). The host
  * answers with `book-described` carrying the same `requestId`.
  */
 export interface DescribeBookMessage {
@@ -388,8 +388,9 @@ export interface DescribeBookMessage {
 
 /**
  * main → plugin, the answer to `describe-book`: the page description
- * (src/lib/pdf/page-description.ts), one font file per description font, the
- * author, and what is missing; or why the book could not be described.
+ * (src/lib/pdf/page-description.ts), one font file per description font and
+ * one image file per description image, the author, and what is missing; or
+ * why the book could not be described.
  */
 export type BookDescribedMessage =
   | {
@@ -397,6 +398,8 @@ export type BookDescribedMessage =
       requestId: string;
       description: unknown;
       fonts: ArrayBuffer[];
+      /** One JPEG or PNG file per description image. */
+      images: ArrayBuffer[];
       author?: string;
       missingFonts: string[];
       skippedChapterIds: string[];
