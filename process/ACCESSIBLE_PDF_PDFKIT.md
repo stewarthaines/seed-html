@@ -32,7 +32,7 @@ The work splits in three, and the weight sits in the plugin.
 
 **The plugin writes.** The plugin receives the page description and the font and image files it names, and writes the PDF with PDFKit and fontkit: font embedding and subsetting, text shaping, width fitting, images, the structure tree, bookmarks, page labels and metadata. Every heavy dependency, and the PDF-specific knowledge, is in the plugin.
 
-The handover is data, not a live document, so it goes by `postMessage` like the rest of the plugin contract. It can be saved, compared between Chrome and Firefox, and unit-tested without a browser or PDFKit. The contract gains one message pair: the host sends the page description, and the plugin answers with the finished PDF or a list of errors.
+The handover is data, not a live document, so it goes by `postMessage` like the rest of the plugin contract. It can be saved, compared between Chrome and Firefox, and unit-tested without a browser or PDFKit. The contract gains one message pair, asked by the plugin: `describe-book`, answered with the page description and the book's font files (`book-described`). The plugin owns the card on the Share page, writes the PDF and offers it to save.
 
 ## From the layout to the page
 
@@ -121,6 +121,16 @@ Run 2026-10-30 on Essay 1 of _John, Paul, and George_ (five pages at 143 × 205 
 **The PDF/UA identifier is off by default (2026-10-31).** PDFKit writes it whenever `subset: 'PDF/UA'` is set; the writer now sets it only when asked (`claimPdfUa`). A validator checking a file without it may report the identifier missing (Matterhorn 06-002) rather than judging conformance, so validation runs on a file written with the claim, and the author decides whether a passing book carries it.
 
 **Still to do in phase 0.** A screen reader on the file.
+
+## Phase 1 progress
+
+**In the app (2026-10-31).** With the plugin on, the Share page's Make a PDF card is the plugin's; Save as PDF is its fallback. Generate PDF lays out the whole book off screen with the same builder as Save as PDF (`buildBookDocument`), measures it, matches each font to the book's `@font-face` rules (`src/lib/pdf/font-files.ts`) and hands the plugin the description and the font files; the plugin writes the PDF and offers Download PDF. A font with no file in the book stops it and names the font. What the PDF doesn't draw yet is listed on the card (`img`, `a[href]`).
+
+**Joseph's book, whole (2026-10-31).** 225 pages laid out, measured and written in about 7 seconds in Chrome. Title, author, language, page labels, 87 bookmarks; 105 `Sect`, 20 `H1`, 67 `H2`, 957 `P`, 16 lists; only Liberation Serif embedded. Two fixes it showed: CSS letter-spacing is now spread over every glyph (the browser adds it after the last letter too), and PDFKit's browser build has no standard fonts, so the writer sets no default font.
+
+**Visually hidden text (2026-10-31).** The copyright page's heading is hidden with the usual clip recipe so axe passes. It was drawn in the PDF; now it is in the structure but drawn in text render mode 3, neither filled nor stroked, so screen readers and copy get it and the page doesn't show it.
+
+**Held back until their phases.** Figures are a `Div` with a `P` caption until images are drawn (a `Figure` with no image and no alt fails PDF/UA), and links are plain text with no `Link` until they carry annotations; both are listed on the card. The cover page is blank for the same reason.
 
 ## Decisions this touches
 
