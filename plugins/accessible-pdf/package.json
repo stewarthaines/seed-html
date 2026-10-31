@@ -1,0 +1,16 @@
+{
+  "name": "accessible-pdf",
+  "version": "0.0.1",
+  "description": "Write a tagged PDF from the page description SEED.html measures from its PDF layout",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "pdfkit": "^0.20.2"
+  },
+  "seedhtmlPlugin": {
+    "id": "accessible-pdf",
+    "name": "Accessible PDF",
+    "presentation": "view",
+    "buildEntry": "dist/plugin.html"
+  }
+}
