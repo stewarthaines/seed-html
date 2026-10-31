@@ -1,3 +1,6 @@
+// @vitest-environment node
+// PDFKit under jsdom mixes realms (its TextEncoder output isn't jsdom's
+// Uint8Array), which drops the XMP metadata stream; the writer needs no DOM.
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import { writePdf } from './write-pdf.js';
@@ -82,5 +85,11 @@ describe.skipIf(!hasFont)('writePdf', () => {
     expect(text).toContain('/Type /MCR');
     expect(text).toContain('/ActualText (recognized )');
     expect(text).toContain('/PageLabels');
+    expect(text).not.toContain('pdfuaid');
+  });
+
+  it('writes the PDF/UA identifier only when asked', async () => {
+    const pdf = await writePdf(description, [fs.readFileSync(FONT)], { claimPdfUa: true });
+    expect(new TextDecoder('latin1').decode(pdf)).toContain('<pdfuaid:part>1</pdfuaid:part>');
   });
 });

@@ -13,7 +13,9 @@ import PDFDocument from 'pdfkit';
 /**
  * @param {import('../../../src/lib/pdf/page-description').PageDescription} desc
  * @param {(Uint8Array|ArrayBuffer)[]} fontFiles one font file per `desc.fonts` entry
- * @param {{ author?: string }} [info]
+ * @param {{ author?: string, claimPdfUa?: boolean }} [info] `claimPdfUa` writes the
+ *   PDF/UA identifier into the metadata; off unless the author asks for it, since
+ *   it claims conformance only a validator can confirm.
  * @returns {Promise<Uint8Array>}
  */
 export function writePdf(desc, fontFiles, info = {}) {
@@ -21,7 +23,7 @@ export function writePdf(desc, fontFiles, info = {}) {
     autoFirstPage: false,
     pdfVersion: '1.7',
     tagged: true,
-    subset: 'PDF/UA',
+    ...(info.claimPdfUa ? { subset: 'PDF/UA' } : {}),
     lang: desc.lang || undefined,
     displayTitle: true,
     info: { Title: desc.title, ...(info.author ? { Author: info.author } : {}) },
@@ -135,11 +137,43 @@ export function writePdf(desc, fontFiles, info = {}) {
   return done;
 }
 
+const SOFT_HYPHEN = '\u00AD';
+
+/**
+ * Make a PDFKit font draw a word-final soft hyphen with the font's own U+00AD
+ * glyph, when it has one apart from the hyphen's. Tagged PDF marks a hyphen
+ * the line break added as a soft hyphen (ISO 32000-1, 14.8.2.2.3), and its
+ * ToUnicode entry is what lets search and copy join the word. fontkit's
+ * shaping hides U+00AD as a zero-width space, so the glyph is put back here.
+ * Returns whether the font draws it; otherwise the caller draws '-'.
+ */
+function drawsSoftHyphen(font) {
+  if (font._softHyphen !== undefined) return font._softHyphen;
+  const soft = font.font?.glyphForCodePoint?.(0xad);
+  const hard = font.font?.glyphForCodePoint?.(0x2d);
+  font._softHyphen = Boolean(soft && soft.id !== 0 && soft.id !== hard?.id);
+  if (font._softHyphen) {
+    const layoutRun = font.layoutRun.bind(font);
+    font.layoutRun = (text, features) => {
+      const run = layoutRun(text, features);
+      const last = run.glyphs.length - 1;
+      if (text.endsWith(SOFT_HYPHEN) && last >= 0) {
+        run.glyphs[last] = soft;
+        run.positions[last].xAdvance = soft.advanceWidth * font.scale;
+        run.positions[last].advanceWidth = soft.advanceWidth * font.scale;
+      }
+      return run;
+    };
+  }
+  return font._softHyphen;
+}
+
 /** Draw one word at its measured box, fitted to the measured width. */
 function drawWord(doc, item, withHyphen = false) {
   doc.font(`f${item.font}`).fontSize(item.size).fillColor(item.color);
   // The measured box of a hyphenated word's first part includes the hyphen.
-  const visible = item.text.slice(0, item.visible) + (withHyphen ? '-' : '');
+  const hyphen = withHyphen ? (drawsSoftHyphen(doc._font) ? SOFT_HYPHEN : '-') : '';
+  const visible = item.text.slice(0, item.visible) + hyphen;
   const natural = doc.widthOfString(visible);
   const glyphs = [...visible].length;
   const characterSpacing = glyphs > 1 ? (item.width - natural) / (glyphs - 1) : 0;
