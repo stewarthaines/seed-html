@@ -54,20 +54,23 @@ The handover is data, not a live document, so it goes by `postMessage` like the 
 
 The structure tree follows the DOM in reading order, not the visual order of the page, and Paged.js's page and area wrappers are skipped.
 
-| DOM                            | PDF structure                          |
-| ------------------------------ | -------------------------------------- |
-| `section` from a chapter       | `Sect`                                 |
-| `h1`–`h6`                      | `H1`–`H6`                              |
-| `p`                            | `P`                                    |
-| `ul`, `ol` / `li`              | `L` / `LI`, with `Lbl` and `LBody`     |
-| `blockquote`                   | `BlockQuote`                           |
-| `figure`, `img`                | `Figure`, `Alt` from the `alt` text    |
-| `figcaption`                   | `Caption`                              |
-| `table`, `tr`, `th`, `td`      | `Table`, `TR`, `TH` (with scope), `TD` |
-| `aside`, notes                 | `Note`                                 |
-| `a`                            | `Link`                                 |
-| an element with its own `lang` | its structure element gets `Lang`      |
-| `role="doc-pagebreak"` markers | nothing (see page labels)              |
+| DOM                                | PDF structure                        |
+| ---------------------------------- | ------------------------------------ |
+| `section` from a chapter           | `Sect`                               |
+| `h1`–`h6`                          | `H1`–`H6`                            |
+| `p`                                | `P`                                  |
+| `ul`, `ol` / `li`                  | `L` / `LI`, with `Lbl` and `LBody`   |
+| `blockquote`                       | `BlockQuote`                         |
+| `figure`                           | `Div`                                |
+| `img`                              | `Figure`, `Alt` from the `alt` text  |
+| `img alt=""`                       | an artifact                          |
+| `figcaption`, table `caption`      | `Caption`                            |
+| `table`, `thead`, `tbody`, `tfoot` | `Table`, `THead`, `TBody`, `TFoot`   |
+| `tr`, `th`, `td`                   | `TR`, `TH` (with scope), `TD`, spans |
+| `aside`, notes                     | `Note`                               |
+| `a`                                | `Link`                               |
+| an element with its own `lang`     | its structure element gets `Lang`    |
+| `role="doc-pagebreak"` markers     | nothing (see page labels)            |
 
 A paragraph that Paged.js split across two pages is one `P` with content on both pages, joined back together from Paged.js's split markers (`data-split-from`). The same goes for lists and tables, whose repeated header rows on later pages are artifacts.
 
@@ -134,7 +137,17 @@ Run 2026-10-30 on Essay 1 of _John, Paul, and George_ (five pages at 143 × 205 
 
 **Text lost off the page edge (2026-10-31): a Paged.js bug, fixed.** On six pages of Joseph's book (11, 23, 119, 136, 185, 206) a paragraph's last line was missing from the preview, Save as PDF and the accessible PDF. Paged.js broke the page in the right place, but then typed its page-split hyphen into the text; on a tight justified line Chrome had fitted its own hyphen there, and the typed one is 4–5 px too wide, so the line rewrapped and the paragraph's last line fell into the clipped column off the page. The vendored Paged.js now hangs that hyphen in the margin in a zero-width box when it would rewrap the line (patch 2 in `patches/paged.polyfill.md`), and the measuring reads it as part of the word. The measuring still reports any text off the page (`overflowPages`) and the card names those pages; Joseph's book has none now.
 
-**Held back until their phases.** Figures are a `Div` with a `P` caption until images are drawn (a `Figure` with no image and no alt fails PDF/UA), and links are plain text with no `Link` until they carry annotations; both are listed on the card. The cover page is blank for the same reason.
+**Held back until their phases.** Links are plain text with no `Link` until they carry annotations, and the card lists them.
+
+## Phase 2 progress
+
+**Images (2026-10-31).** Each `img` is drawn where the browser drew it, by `object-fit` and `object-position`, and cut to its box when it overflows (the cover is `object-fit: cover`). An image is a `Figure` with the `alt` text as `Alt`; `alt=""` makes it a drawn artifact. The core gathers the image files with the fonts (`src/lib/pdf/image-files.ts`): JPEG and PNG go in as they are, anything else the browser shows goes through a canvas to PNG, and SVG is drawn at 300 dpi for the largest box it fills. Each file is embedded once however often it's drawn.
+
+**Figures and captions.** A `figure` is a `Div` holding the image's `Figure` and the `Caption`. The caption stays outside the `Figure` because a screen reader reads a Figure's alt in place of its content. Joseph's book: the cover and 14 photographs, 15 `Figure` with alt and 14 `Caption`; the PDF is 5.3 MB.
+
+**Tables.** `Table` with `Caption`, `THead`, `TBody` and `TFoot`; every `TH` has a scope (its `scope`, or a column header in `thead` or a row of headers, otherwise a row header), and spans are written as `RowSpan` and `ColSpan`. A table Paged.js splits is one `Table`, its body one `TBody` across the pages. Paged.js 0.4.3 doesn't repeat a table's header row on the next page, in the preview or Save as PDF, so there is no repeated row to mark as an artifact. Joseph's book has no tables; this was checked on a test page of 30 rows over two pages.
+
+**Not yet.** Borders and backgrounds (phase 4), so a table's rules aren't drawn; inline `svg`, `video`, `canvas` and the like are listed on the card.
 
 ## Decisions this touches
 
