@@ -9,6 +9,12 @@ import { writePdf } from './write-pdf.js';
 const FONT = '/System/Library/Fonts/Supplemental/Times New Roman.ttf';
 const hasFont = fs.existsSync(FONT);
 
+/** A 1×1 red PNG. */
+const RED_DOT = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==',
+  'base64'
+);
+
 const word = (text, x, struct, extra = {}) => ({
   kind: 'text',
   text,
@@ -36,6 +42,7 @@ const description = {
     { id: 2, type: 'H1', parent: 1, children: [] },
     { id: 3, type: 'P', parent: 1, children: [] },
   ],
+  images: [],
   problems: [],
   overflowPages: [],
   pages: [
@@ -94,7 +101,7 @@ function pageContent(pdf) {
 
 describe.skipIf(!hasFont)('writePdf', () => {
   it('writes a tagged PDF with the structure, a page-spanning paragraph and whole hyphenated words', async () => {
-    const pdf = await writePdf(description, [fs.readFileSync(FONT)]);
+    const pdf = await writePdf(description, { fonts: [fs.readFileSync(FONT)] });
     const text = new TextDecoder('latin1').decode(pdf);
 
     expect(text.startsWith('%PDF-1.7')).toBe(true);
@@ -112,12 +119,46 @@ describe.skipIf(!hasFont)('writePdf', () => {
   it('draws visually hidden text in render mode 3', async () => {
     const hidden = structuredClone(description);
     hidden.pages[0].items[0].invisible = true;
-    const pdf = await writePdf(hidden, [fs.readFileSync(FONT)], {});
+    const pdf = await writePdf(hidden, { fonts: [fs.readFileSync(FONT)] }, {});
     expect(pageContent(pdf)).toMatch(/q\n3 Tr\nq\n[^Q]*?BT[\s\S]*?ET\nQ\nQ/);
   });
 
+  it('draws an image as a Figure with its alt text, and a decorative one as an artifact', async () => {
+    const withImages = structuredClone(description);
+    withImages.images = ['photo.png'];
+    withImages.structure[1].children.push(4);
+    withImages.structure.push({ id: 4, type: 'Figure', parent: 1, children: [], alt: 'A red dot' });
+    const image = { kind: 'image', image: 0, x: 20, y: 100, width: 50, height: 50 };
+    withImages.pages[0].items.push({ ...image, struct: 4 }, { ...image, y: 200, struct: null });
+    const pdf = await writePdf(withImages, { fonts: [fs.readFileSync(FONT)], images: [RED_DOT] });
+    const text = new TextDecoder('latin1').decode(pdf);
+    expect(text).toContain('/S /Figure');
+    expect(text).toContain('/Alt (A red dot)');
+    // One image (with its alpha mask), drawn twice.
+    expect(text.match(/\/SMask \d+ 0 R/g)).toHaveLength(1);
+    const content = pageContent(pdf);
+    expect(content).toMatch(/\/Figure <<[^>]*\/MCID \d+[^>]*>> BDC[\s\S]*?\/I\d+ Do[\s\S]*?EMC/);
+    expect(content).toMatch(/\/Artifact <<[^>]*\/Layout[^>]*>> BDC[\s\S]*?\/I\d+ Do[\s\S]*?EMC/);
+  });
+
+  it('gives table cells their header scope and spans', async () => {
+    const table = structuredClone(description);
+    table.structure[1].children.push(4);
+    table.structure.push(
+      { id: 4, type: 'Table', parent: 1, children: [5] },
+      { id: 5, type: 'TR', parent: 4, children: [6, 7] },
+      { id: 6, type: 'TH', parent: 5, children: [], table: { scope: 'Column' } },
+      { id: 7, type: 'TD', parent: 5, children: [], table: { colSpan: 2 } }
+    );
+    table.pages[1].items.push(word('Song', 20, 6), word('1965', 80, 7));
+    const pdf = await writePdf(table, { fonts: [fs.readFileSync(FONT)] });
+    const text = new TextDecoder('latin1').decode(pdf);
+    expect(text).toMatch(/\/A <<\n\/O \/Table\n\/Scope \/Column\n>>/);
+    expect(text).toMatch(/\/A <<\n\/O \/Table\n\/ColSpan 2\n>>/);
+  });
+
   it('writes the PDF/UA identifier only when asked', async () => {
-    const pdf = await writePdf(description, [fs.readFileSync(FONT)], { claimPdfUa: true });
+    const pdf = await writePdf(description, { fonts: [fs.readFileSync(FONT)] }, { claimPdfUa: true });
     expect(new TextDecoder('latin1').decode(pdf)).toContain('<pdfuaid:part>1</pdfuaid:part>');
   });
 });

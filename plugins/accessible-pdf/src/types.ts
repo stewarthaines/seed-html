@@ -20,6 +20,7 @@ export interface DescribeBookMessage {
 export interface DescribedBook {
   description: PageDescription;
   fonts: ArrayBuffer[];
+  images: ArrayBuffer[];
   author?: string;
   missingFonts: string[];
   skippedChapterIds: string[];

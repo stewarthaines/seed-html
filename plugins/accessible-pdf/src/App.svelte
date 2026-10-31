@@ -36,7 +36,11 @@
         return;
       }
       status = { state: 'writing' };
-      const pdf = await writePdf(book.description, book.fonts, { author: book.author });
+      const pdf = await writePdf(
+        book.description,
+        { fonts: book.fonts, images: book.images },
+        { author: book.author }
+      );
       const blob = new Blob([pdf as BlobPart], { type: 'application/pdf' });
       status = {
         state: 'done',

@@ -5,6 +5,7 @@
  * the structure tree comes from the description, in reading order. Margin
  * boxes are pagination artifacts. A word the browser hyphenated is a `Span`
  * whose ActualText is the whole word, so search and screen readers get it whole.
+ * An image is a `Figure` with its alt text, or an artifact when decorative.
  *
  * Runs in the browser (the plugin) and in Node (tests and the phase 0 spike).
  */
@@ -12,13 +13,14 @@ import PDFDocument from 'pdfkit';
 
 /**
  * @param {import('../../../src/lib/pdf/page-description').PageDescription} desc
- * @param {(Uint8Array|ArrayBuffer)[]} fontFiles one font file per `desc.fonts` entry
+ * @param {{ fonts: (Uint8Array|ArrayBuffer)[], images?: (Uint8Array|ArrayBuffer)[] }} files
+ *   one font file per `desc.fonts` entry and one JPEG or PNG file per `desc.images` entry
  * @param {{ author?: string, claimPdfUa?: boolean }} [info] `claimPdfUa` writes the
  *   PDF/UA identifier into the metadata; off unless the author asks for it, since
  *   it claims conformance only a validator can confirm.
  * @returns {Promise<Uint8Array>}
  */
-export function writePdf(desc, fontFiles, info = {}) {
+export function writePdf(desc, files, info = {}) {
   const doc = new PDFDocument({
     autoFirstPage: false,
     // No default Helvetica: the browser build doesn't bundle the standard
@@ -39,11 +41,32 @@ export function writePdf(desc, fontFiles, info = {}) {
   });
 
   desc.fonts.forEach((_, i) => {
-    const file = fontFiles[i];
+    const file = files.fonts[i];
     // A Uint8Array of this realm whatever arrives (an ArrayBuffer, a Buffer,
     // or a typed array from another frame), which is what PDFKit recognises.
     doc.registerFont(`f${i}`, new Uint8Array(file));
   });
+
+  // Each image file is embedded once, however often it's drawn.
+  const opened = new Map();
+  const imageFor = index => {
+    let image = opened.get(index);
+    if (!image) {
+      // PDFKit takes an ArrayBuffer of this realm (or a Buffer); copy into one.
+      image = doc.openImage(new Uint8Array(files.images[index]).slice().buffer);
+      opened.set(index, image);
+    }
+    return image;
+  };
+  const drawImage = item => {
+    // A picture larger than its box (object-fit: cover) is cut to the box.
+    if (item.clip) {
+      doc.save();
+      doc.rect(item.clip.x, item.clip.y, item.clip.width, item.clip.height).clip();
+    }
+    doc.image(imageFor(item.image), item.x, item.y, { width: item.width, height: item.height });
+    if (item.clip) doc.restore();
+  };
 
   // Structure elements, attached to their parents the first time their content
   // is drawn, so each parent's children are in reading order.
@@ -60,6 +83,16 @@ export function writePdf(desc, fontFiles, info = {}) {
     if (node.lang) options.lang = node.lang;
     if (node.alt) options.alt = node.alt;
     el = doc.struct(node.type, options);
+    if (node.table) {
+      // Strings become PDF names here (Scope /Column); numbers stay numbers.
+      const { scope, rowSpan, colSpan } = node.table;
+      el.dictionary.data.A = {
+        O: 'Table',
+        ...(scope ? { Scope: scope } : {}),
+        ...(rowSpan ? { RowSpan: rowSpan } : {}),
+        ...(colSpan ? { ColSpan: colSpan } : {}),
+      };
+    }
     elements.set(id, el);
     elementFor(node.parent ?? 0).add(el);
     return el;
@@ -94,8 +127,17 @@ export function writePdf(desc, fontFiles, info = {}) {
       if (item.struct === null) {
         closeRun();
         doc.markContent('Artifact', { type: 'Layout' });
-        drawWord(doc, item);
+        if (item.kind === 'image') drawImage(item);
+        else drawWord(doc, item);
         doc.endMarkedContent();
+        continue;
+      }
+      if (item.kind === 'image') {
+        closeRun();
+        const content = doc.markStructureContent('Figure');
+        drawImage(item);
+        doc.endMarkedContent();
+        elementFor(item.struct).add(content);
         continue;
       }
       const node = nodes[item.struct];
