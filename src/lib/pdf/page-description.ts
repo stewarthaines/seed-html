@@ -363,6 +363,7 @@ function describeLaidOut(
   // node, waiting for the rest on the next page.
   const pageSplitWords = new Map<number, TextItem>();
   const segmenter = new Intl.Segmenter(lang || undefined, { granularity: 'word' });
+  for (const pseudo of stylesFirstLetterOrLine(doc)) problems.add(pseudo);
   // Measures list markers, which aren't in the DOM to take a range over; the
   // document's canvas has the book's fonts.
   const measure = doc.createElement('canvas').getContext('2d') as CanvasRenderingContext2D;
@@ -1155,6 +1156,51 @@ export function ordinalOf(li: Element): number {
 export function rtlMarker(text: string): string {
   const m = /^(.*?)([.)]+)$/.exec(text);
   return m && m[1] ? m[2] + m[1] : text;
+}
+
+/**
+ * Whether the book styles a first letter or first line (a drop cap, small
+ * caps on an opening line) of anything on the pages: the PDF draws that text
+ * in its element's own style. Paged.js's own rules (which undo a first letter
+ * on a part continued from the last page) are left out.
+ */
+export function stylesFirstLetterOrLine(doc: Document): ('::first-letter' | '::first-line')[] {
+  const found = new Set<'::first-letter' | '::first-line'>();
+  const pseudo = /::?first-(letter|line)\b/gi;
+  const visit = (rules: CSSRuleList) => {
+    for (const rule of Array.from(rules)) {
+      // By shape, not class: the rules belong to the paginated document's realm.
+      if ('cssRules' in rule && !('selectorText' in rule)) {
+        visit((rule as CSSGroupingRule).cssRules);
+        continue;
+      }
+      const selectorText = (rule as CSSStyleRule).selectorText;
+      if (!selectorText || selectorText.includes('pagedjs')) continue;
+      for (const part of selectorText.split(',')) {
+        const kinds = [...part.matchAll(pseudo)].map(m =>
+          m[1].toLowerCase() === 'letter' ? ('::first-letter' as const) : ('::first-line' as const)
+        );
+        if (kinds.length === 0) continue;
+        try {
+          const base = part.replace(pseudo, '').trim() || '*';
+          const matched = Array.from(doc.querySelectorAll(base)).some(el =>
+            el.closest('.pagedjs_page_content')
+          );
+          if (matched) kinds.forEach(k => found.add(k));
+        } catch {
+          // a selector querySelectorAll can't read
+        }
+      }
+    }
+  };
+  for (const sheet of Array.from(doc.styleSheets)) {
+    try {
+      visit(sheet.cssRules);
+    } catch {
+      // a cross-origin sheet
+    }
+  }
+  return [...found];
 }
 
 /** Painting the PDF doesn't draw: the property, its value when unused, and the card's name. */
