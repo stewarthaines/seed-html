@@ -199,6 +199,10 @@ Run 2026-10-30 on Essay 1 of _John, Paul, and George_ (five pages at 143 × 205 
 
 **First letters and lines.** A `::first-letter` or `::first-line` rule (a drop cap, small caps on an opening line) changes text the PDF draws in its element's own style. The card lists it when the book's CSS has such a rule matching something on the pages. Comparing computed styles didn't work: Chrome's `::first-letter` inherits sometimes from the element its letter is in and sometimes from the block.
 
+## Validation of the whole book (2026-11-01)
+
+axesCheck on Joseph's book with boxes, list markers and generated content found two error kinds. The PDF was "unparsable" on the nine pages with a bullet or a link underline: PDFKit's `fill(color)` and `stroke(color)` write the colour after the path has started, which ISO 32000 doesn't allow, so the writer sets the colour first. Twelve asterisks failed the contrast check: the scene break is `hr::after` text in the browser's default `hr` grey (#808080, 3.9:1). A rule is decoration, so the core makes an `hr` and anything drawn in it an artifact; it isn't read out, and the contrast check skips it. Rechecked: PDF/UA fulfilled apart from the identifier the app leaves out, WCAG 100.
+
 ## Later, for other books
 
 Joseph's book drives what is built; these are what other books may need, each already listed on the card when a book hits it.
