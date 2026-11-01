@@ -193,6 +193,24 @@ Run 2026-10-30 on Essay 1 of _John, Paul, and George_ (five pages at 143 × 205 
 
 **Checked.** A test page (a chapter label with an upper-roman counter over two pages, section numbers with `counters()`, nested `q`, a blockquote's quotation mark beside a `:first-child` rule, `attr()`, a link's arrow, an empty rule, a nested `counters()` list, a `url()` image) matches Chrome and lists only the image. Joseph's book is unchanged apart from the restored spaces; it builds in 9.5 seconds with the PDF written.
 
+## Missing glyphs and first letters
+
+**Missing glyphs (2026-10-31).** Where a book font has no glyph for a character, the browser draws it from a font outside the book, which a page can't read and the PDF can't embed. The writer now checks each character against the font it draws it with and the card lists them by font ("Liberation Serif: ↗"); in the PDF the character is the font's empty box, and its text is still there for search and screen readers. Joseph's book has none: no page of its PDF draws glyph 0.
+
+**First letters and lines.** A `::first-letter` or `::first-line` rule (a drop cap, small caps on an opening line) changes text the PDF draws in its element's own style. The card lists it when the book's CSS has such a rule matching something on the pages. Comparing computed styles didn't work: Chrome's `::first-letter` inherits sometimes from the element its letter is in and sometimes from the block.
+
+## Later, for other books
+
+Joseph's book drives what is built; these are what other books may need, each already listed on the card when a book hits it.
+
+- **Fallback through the book's own fonts.** A family list naming two book fonts, or an `@font-face` with `unicode-range` (a symbols font, a second script), has the browser take each character from the first font that has it. The core resolves a word to one font file; it would pass the file for every family in the list, and the writer would split a word into runs by font.
+- **Running heads with `string()`.** A chapter title carried into a margin box by `string-set`; Paged.js resolves it, and the core would read its value per page.
+- **Drop caps and styled first lines.** Measure the first letter's own box and style (its range is already exact; the font size is the gap).
+- **Counter styles.** Hebrew, Armenian, Georgian, CJK and the rest of CSS Counter Styles, and `@counter-style` rules.
+- **Images in generated content and lists.** `content: url()` and `list-style-image`.
+- **Inline `svg`, `canvas`, `video`.** SVG as vectors or rasterised at print resolution, as `img` SVG is now.
+- **Shadows, gradients, transforms, filters, opacity.**
+
 ## Decisions this touches
 
 `process/DECISIONS.md`: the 2026-09-15 entry ("PDF export stays single-pass … The app is for accessible EPUB") is replaced by 2026-10-31, "Accessible PDF is a goal of the app". Export stays single-pass: one pagination, read once.
