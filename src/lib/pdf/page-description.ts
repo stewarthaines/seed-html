@@ -536,6 +536,12 @@ function describeLaidOut(
       const firstChildItem = page.items.length;
       for (const child of renderedChildNodes(el)) walk(child, inner, hiddenHere);
       if (marker) placeMarker(marker, firstChildItem);
+      // A rule is decoration, whatever it draws (asterisks, a fleuron): an artifact.
+      if (el.localName === 'hr') {
+        for (const item of page.items.slice(firstChildItem)) {
+          if (item.kind === 'text') item.struct = null;
+        }
+      }
       if (block) separate();
     };
 
