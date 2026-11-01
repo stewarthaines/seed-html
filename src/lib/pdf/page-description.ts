@@ -574,7 +574,9 @@ function describeLaidOut(
             x: 0,
             y: 0,
             height: 0,
-            font: fontIndex(ms),
+            // The bullet is a shape; its font only sizes it. The item's, since
+            // Firefox gives a bullet marker its own (-moz-bullet-font).
+            font: fontIndex(style),
             size: toPt(parseFloat(ms.fontSize) * scale),
             color: cssColorToHex(ms.color),
             ...(rtl ? { rtl: true as const } : {}),
