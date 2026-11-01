@@ -1,7 +1,7 @@
 # Local patch: `public/paged.polyfill.js` (Paged.js v0.4.3)
 
-The vendored Paged.js polyfill has **two local modifications**. If you ever
-re-download / upgrade `public/paged.polyfill.js`, re-apply both (there is
+The vendored Paged.js polyfill has **three local modifications**. If you ever
+re-download / upgrade `public/paged.polyfill.js`, re-apply all three (there is
 also a banner comment at the top of that file pointing here).
 
 ## Patch 1: the print paper size
@@ -101,3 +101,29 @@ The accessible PDF's measuring (`src/lib/pdf/page-description.ts`) reads the han
 - The check measures the word's last letter, not the hyphen: a break before U+2011 isn't allowed, so the word moves with it.
 - Paged.js's `findEndToken` steps back over the span (it has no `data-ref`), so resize checks still find the text.
 - Verify after re-applying: in Joseph's book, essay08's page that ends "meta-analys-" keeps that line, and the accessible-pdf card shows no warning about text off the page edge.
+
+## Patch 3: empty margin grids
+
+### The change
+
+Paged.js lays each page margin out as a three-track grid sized from its boxes' `max-width` (top, bottom) or `max-height` (left, right). Its last branch, for a margin with nothing in the first two boxes, reads the third box's size without checking the third box has content; that size is then `undefined`, and Paged.js writes `1fr 0 undefined`. The browser drops it, Chrome silently and Firefox with a console warning for every margin of every page. The patch checks the third box's content flag first (`c` for the right box of a top or bottom margin, `p` for the bottom box of a left or right margin), so an empty margin gets `0 0 1fr`, which is what the dropped value left it with anyway.
+
+Re-apply with:
+
+```bash
+python3 - <<'PY'
+p = "public/paged.polyfill.js"
+s = open(p, encoding="utf-8").read()
+cols_old = 'else i.style["grid-template-columns"]="none"!==a&&"auto"!==a?"1fr 0 "+a:"0 0 1fr"'
+cols_new = 'else i.style["grid-template-columns"]=c&&"none"!==a&&"auto"!==a?"1fr 0 "+a:"0 0 1fr"'
+rows_old = '"1fr 0 1fr":"1fr 0 0":"none"!==a&&"auto"!==a?"1fr 0 "+a:"0 0 1fr"'
+rows_new = '"1fr 0 1fr":"1fr 0 0":p&&"none"!==a&&"auto"!==a?"1fr 0 "+a:"0 0 1fr"'
+assert s.count(cols_old) == 1 and s.count(rows_old) == 1
+s = s.replace(cols_old, cols_new).replace(rows_old, rows_new)
+open(p, "w", encoding="utf-8").write(s)
+PY
+```
+
+### Why
+
+Layout is unchanged; the point is the console. In Firefox a whole-book layout (the accessible PDF, the whole-book preview) logged hundreds of these warnings, which slows Firefox down while the console is open and hides real messages.
