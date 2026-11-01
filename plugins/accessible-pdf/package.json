@@ -1,0 +1,29 @@
+{
+  "name": "accessible-pdf",
+  "version": "0.1.0",
+  "description": "Writes a tagged, accessible PDF from the book as the browser laid it out",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 8003",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "pdfkit": "^0.20.2"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5.0.3",
+    "svelte": "^5.55.9",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5",
+    "vite-plugin-singlefile": "^2.3.3"
+  },
+  "seedhtmlPlugin": {
+    "id": "accessible-pdf",
+    "name": "Accessible PDF",
+    "presentation": "view",
+    "buildEntry": "dist/plugin.html"
+  },
+  "license": "MIT"
+}

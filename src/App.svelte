@@ -93,6 +93,7 @@
     type CoverMode,
   } from './lib/epub/cover-generator.js';
   import { exportPdf, exportChapterPdf } from './lib/pdf/pdf-export.js';
+  import { describeBook } from './lib/pdf/accessible-pdf.js';
   import { previewDataPath } from './lib/preview/preview-data.js';
   import { isHttpContext, readerOverlayUrl } from './lib/reader/open-in-reader.js';
   import { packageEpubAsReadHtml } from './lib/reader/package-as-read.js';
@@ -201,6 +202,9 @@
   // item editor when available + enabled. No built-in equivalent, so the panel
   // is simply absent otherwise.
   const PHOTO_PLUGIN_ID = 'photo-regions';
+  // The accessible-pdf `view` plugin: takes the Make a PDF card's place on Share
+  // when available + enabled; Save as PDF stays as the fallback.
+  const PDF_PLUGIN_ID = 'accessible-pdf';
   let availablePlugins = $state<PluginManifestEntry[]>([]);
   let enabledPluginIds = $state<string[]>([]);
   // HTTP-delivered extensions catalog (extensions/manifest.json), importable per project.
@@ -215,6 +219,12 @@
   });
   let photoPluginUrl = $derived.by(() => {
     const entry = findActivePlugin(availablePlugins, enabledPluginIds, PHOTO_PLUGIN_ID);
+    return entry ? resolvePluginEntryUrl(entry) : null;
+  });
+  let pdfPluginUrl = $derived.by(() => {
+    // Paged.js is fetched from the app origin, as for Save as PDF.
+    if (!isHttpContext()) return null;
+    const entry = findActivePlugin(availablePlugins, enabledPluginIds, PDF_PLUGIN_ID);
     return entry ? resolvePluginEntryUrl(entry) : null;
   });
 
@@ -1497,6 +1507,18 @@
     }
   };
 
+  // Lay out and measure the whole book for the accessible-pdf plugin, which
+  // writes the PDF itself (process/ACCESSIBLE_PDF_PDFKIT.md).
+  const describeBookForPdf = () => {
+    if (!currentWorkspaceState) return Promise.reject(new Error($t('No book is open.')));
+    return describeBook(
+      currentWorkspaceState,
+      fileStorage,
+      workspaceService,
+      appState?.epubSettings?.print
+    );
+  };
+
   // Generate a PDF of just the currently-previewed chapter (spine preview's PDF
   // device banner). Same window/flow as the full export, minus the cover.
   let chapterPdfGenerating = $state(false);
@@ -2343,6 +2365,8 @@
           {packageProgress}
           onGeneratePdf={canGeneratePdf ? handleGeneratePdf : undefined}
           {pdfGenerating}
+          {pdfPluginUrl}
+          onDescribeBook={describeBookForPdf}
           onPackageWithoutSource={handleExportPlainEpub}
           packagingWithoutSource={plainEpubExporting}
           onPackageAsReadHtml={canPackageReadHtml ? handleExportReadHtml : undefined}

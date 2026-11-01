@@ -26,6 +26,9 @@
  *   - add-media (plugin → main) / media-added (main → plugin): add a media file
  *     the plugin made (a recording) to the open book's manifest; the host
  *     replies with where it landed.
+ *   - describe-book (plugin → main) / book-described (main → plugin): the
+ *     accessible-pdf plugin asks for the open book laid out and measured; the
+ *     host replies with the page description and the book's font files.
  *
  * This mirrors the wire shapes implemented by plugins/publish-to-remote/src
  * (its src/types.ts + src/index.ts). The ./API.md spec predates the
@@ -39,9 +42,10 @@ export type PluginPresentation = 'panel' | 'view';
  * Which of its surfaces a multi-surface plugin should render. The publish
  * plugin has three: the Send band on Share, the Published page, and the
  * Destinations section of Settings (process/PUBLISH_REWORK.md). Absent →
- * the plugin's default surface (`send`).
+ * the plugin's default surface (`send`). The accessible-pdf plugin has one,
+ * `pdf`, in place of the Share page's Make a PDF card.
  */
-export type PluginSurface = 'send' | 'published' | 'destinations';
+export type PluginSurface = 'send' | 'published' | 'destinations' | 'pdf';
 
 /**
  * One entry in the build-generated `plugins/manifest.json`. Mirrors the schema
@@ -369,5 +373,45 @@ export function isOpenMessage(value: unknown): value is OpenMessage {
     (value as { type?: unknown }).type === 'open' &&
     typeof (value as { target?: unknown }).target === 'string' &&
     OPEN_TARGETS.has((value as { target: string }).target)
+  );
+}
+
+/**
+ * plugin → main, asks the host to lay out the open book with Paged.js, measure
+ * it and gather its font and image files (src/lib/pdf/accessible-pdf.ts). The host
+ * answers with `book-described` carrying the same `requestId`.
+ */
+export interface DescribeBookMessage {
+  type: 'describe-book';
+  requestId: string;
+}
+
+/**
+ * main → plugin, the answer to `describe-book`: the page description
+ * (src/lib/pdf/page-description.ts), one font file per description font and
+ * one image file per description image, the author, and what is missing; or
+ * why the book could not be described.
+ */
+export type BookDescribedMessage =
+  | {
+      type: 'book-described';
+      requestId: string;
+      description: unknown;
+      fonts: ArrayBuffer[];
+      /** One JPEG or PNG file per description image. */
+      images: ArrayBuffer[];
+      author?: string;
+      missingFonts: string[];
+      skippedChapterIds: string[];
+    }
+  | { type: 'book-described'; requestId: string; error: string };
+
+/** Runtime guard: is this a `describe-book` request? */
+export function isDescribeBookMessage(value: unknown): value is DescribeBookMessage {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    (value as { type?: unknown }).type === 'describe-book' &&
+    typeof (value as { requestId?: unknown }).requestId === 'string'
   );
 }

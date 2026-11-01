@@ -1,6 +1,6 @@
 # Accessible PDF with PDFKit, laid out by the browser
 
-Status: proposal for review, 2026-10-30. Nothing built.
+Status: approved 2026-10-31; phase 0 done on branch `accessible-pdf`.
 
 ## The goal
 
@@ -32,7 +32,7 @@ The work splits in three, and the weight sits in the plugin.
 
 **The plugin writes.** The plugin receives the page description and the font and image files it names, and writes the PDF with PDFKit and fontkit: font embedding and subsetting, text shaping, width fitting, images, the structure tree, bookmarks, page labels and metadata. Every heavy dependency, and the PDF-specific knowledge, is in the plugin.
 
-The handover is data, not a live document, so it goes by `postMessage` like the rest of the plugin contract. It can be saved, compared between Chrome and Firefox, and unit-tested without a browser or PDFKit. The contract gains one message pair: the host sends the page description, and the plugin answers with the finished PDF or a list of errors.
+The handover is data, not a live document, so it goes by `postMessage` like the rest of the plugin contract. It can be saved, compared between Chrome and Firefox, and unit-tested without a browser or PDFKit. The contract gains one message pair, asked by the plugin: `describe-book`, answered with the page description and the book's font files (`book-described`). The plugin owns the card on the Share page, writes the PDF and offers it to save.
 
 ## From the layout to the page
 
@@ -54,20 +54,23 @@ The handover is data, not a live document, so it goes by `postMessage` like the 
 
 The structure tree follows the DOM in reading order, not the visual order of the page, and Paged.js's page and area wrappers are skipped.
 
-| DOM | PDF structure |
-|---|---|
-| `section` from a chapter | `Sect` |
-| `h1`–`h6` | `H1`–`H6` |
-| `p` | `P` |
-| `ul`, `ol` / `li` | `L` / `LI`, with `Lbl` and `LBody` |
-| `blockquote` | `BlockQuote` |
-| `figure`, `img` | `Figure`, `Alt` from the `alt` text |
-| `figcaption` | `Caption` |
-| `table`, `tr`, `th`, `td` | `Table`, `TR`, `TH` (with scope), `TD` |
-| `aside`, notes | `Note` |
-| `a` | `Link` |
-| an element with its own `lang` | its structure element gets `Lang` |
-| `role="doc-pagebreak"` markers | nothing (see page labels) |
+| DOM                                | PDF structure                        |
+| ---------------------------------- | ------------------------------------ |
+| `section` from a chapter           | `Sect`                               |
+| `h1`–`h6`                          | `H1`–`H6`                            |
+| `p`                                | `P`                                  |
+| `ul`, `ol` / `li`                  | `L` / `LI`, with `Lbl` and `LBody`   |
+| `blockquote`                       | `BlockQuote`                         |
+| `figure`                           | `Div`                                |
+| `img`                              | `Figure`, `Alt` from the `alt` text  |
+| `img alt=""`                       | an artifact                          |
+| `figcaption`, table `caption`      | `Caption`                            |
+| `table`, `thead`, `tbody`, `tfoot` | `Table`, `THead`, `TBody`, `TFoot`   |
+| `tr`, `th`, `td`                   | `TR`, `TH` (with scope), `TD`, spans |
+| `aside`, notes                     | `Note`                               |
+| `a`                                | `Link`                               |
+| an element with its own `lang`     | its structure element gets `Lang`    |
+| `role="doc-pagebreak"` markers     | nothing (see page labels)            |
 
 A paragraph that Paged.js split across two pages is one `P` with content on both pages, joined back together from Paged.js's split markers (`data-split-from`). The same goes for lists and tables, whose repeated header rows on later pages are artifacts.
 
@@ -78,7 +81,7 @@ Links are the known gap. PDFKit's docs limit tagging to marked content, while a 
 - Bookmarks from the book's contents (the toc nav), at each target's page.
 - Page labels that match the page numbers printed in the margins, including roman numerals for front matter where the book's CSS counts them that way. The print-edition markers (`doc-pagebreak`) belong to another edition's pages and are not this PDF's page labels.
 - Title, author and language from the OPF; the viewer shows the title, not the file name.
-- The PDF/UA identifier in the metadata only once a book passes veraPDF, never by default.
+- No PDF/UA identifier in the metadata, for now (`process/DECISIONS.md`, 2026-10-31).
 
 ## Matches what the author saw
 
@@ -94,18 +97,145 @@ The same book gives the same tags, fonts, bookmarks and metadata in every browse
 
 ## Phases
 
-- **Phase 0, spike.** One chapter of Joseph's book: text, headings and paragraphs, with fonts embedded, tagged, and one paragraph split across a page. Pass it through veraPDF and PAC. Settle three things: whether one structure element can span pages in PDFKit, whether a `Link` can reference its annotation, and how to keep a hyphenated word whole.
+- **Phase 0, spike.** One chapter of Joseph's book: text, headings and paragraphs, with fonts embedded, tagged, and one paragraph split across a page. Check it with a PDF/UA validator (veraPDF is not installed; how to validate is still to be worked out). Settle three things: whether one structure element can span pages in PDFKit, whether a `Link` can reference its annotation, and how to keep a hyphenated word whole.
 - **Phase 1, text and structure.** The whole book's text, headings, lists, blockquotes and notes, the font matching and its errors, margin boxes as artifacts, metadata.
 - **Phase 2, figures and tables.** Images with alt text and captions, tables with header scope and split tables.
 - **Phase 3, navigation.** Bookmarks, page labels, links.
 - **Phase 4, boxes and scripts.** Backgrounds, borders and rules; right-to-left text and its reading order, checked on a Hebrew or Arabic sample.
 
+## Phase 0 findings
+
+Run 2026-10-30 on Essay 1 of _John, Paul, and George_ (five pages at 143 × 205 mm) in Chrome, from the in-app PDF preview. The core's measuring is `src/lib/pdf/page-description.ts`; the plugin's writer is `plugins/accessible-pdf/src/write-pdf.js`. No validator has been run yet.
+
+**It works.** Measuring the five pages takes about 60 ms and gives a 230 KB description. The PDF matches the preview line for line: the same breaks, hyphenation, justification, indents, bold italic and page numbers. It has an embedded subset of each font with a ToUnicode map, `Lang`, `DisplayDocTitle`, `MarkInfo` marked, tab order by structure, page labels, and bookmarks for the H1 and H2.
+
+**One element across pages: yes.** PDFKit writes content on a later page as a marked-content reference, so the two paragraphs Paged.js split are each one `P` with content on both pages. Paged.js gives a split element's pieces the same `data-ref`, which is how the measuring knows they are one element.
+
+**Hyphenated words: a `Span` with ActualText.** The browser's hyphen is drawn, and the `Span` holding both parts carries the whole word, so search and screen readers get "recognized", not "rec-" and "ognized". Chrome misreports the line of a one-character range at a hyphenation point, so the break is found from growing prefixes of the word instead.
+
+**Links: yes, with two fixes owed.** PDFKit can tie a link annotation to its `Link` element (an object reference), but it records the page current when the element is closed, not the annotation's page, and it writes no `Contents` for the annotation. The writer can close each `Link` on its own page; the page reference is a small patch to offer upstream. Essay 1 has no links, so this was checked on a test file.
+
+**Fonts.** The book named system fonts (Times New Roman for the text, the app's `system-ui` for page numbers), which a web page can't read; the first run took the macOS font files from disk. Only Chrome and Edge can read installed font files (`queryLocalFonts()`, behind a permission prompt); Firefox and Safari can't, and a system font differs between computers anyway. So the rule stands: the book carries its fonts. The book now carries Liberation Serif (SIL OFL, Times New Roman's widths) for print and the page numbers, and all 116 lines of Essay 1 break exactly as they did in Times New Roman (2026-10-31).
+
+**Validation: passes.** axesCheck (check.axes4.com, 2026-10-31) reports PDF/UA and WCAG fulfilled for every machine-verifiable requirement. It also showed the title as "Print preview", the preview document's `<title>`; `describePages` now takes the book title from its caller, which has the OPF.
+
+**Text extraction (2026-10-31).** Apple's PDFKit (Preview) and pypdf read Essay 1 in reading order, a paragraph at a time, but both ignore ActualText: at first they gave "rec- ognized". Tagged PDF marks a hyphen the line break added as a soft hyphen (ISO 32000-1, 14.8.2.2.3), so the writer now draws the font's own U+00AD glyph, which looks like a hyphen and reads back as a soft hyphen; extractors that follow the spec join the word. fontkit's shaping hides U+00AD as a zero-width space, so the writer puts the glyph back. A font whose soft hyphen shares the hyphen's glyph (Times New Roman does; Liberation Serif doesn't) still gets a plain hyphen, and only ActualText keeps the word whole. Apple's extraction adds a space at every line end, which no tagging changes.
+
+**The PDF/UA identifier is off by default (2026-10-31).** PDFKit writes it whenever `subset: 'PDF/UA'` is set; the writer now sets it only when asked (`claimPdfUa`). A validator checking a file without it may report the identifier missing (Matterhorn 06-002) rather than judging conformance, so validation runs on a file written with the claim, and no book the app makes carries it for now (`process/DECISIONS.md`, 2026-10-31).
+
+**Still to do in phase 0.** A screen reader on the file.
+
+## Phase 1 progress
+
+**In the app (2026-10-31).** With the plugin on, the Share page's Make a PDF card is the plugin's; Save as PDF is its fallback. Generate PDF lays out the whole book off screen with the same builder as Save as PDF (`buildBookDocument`), measures it, matches each font to the book's `@font-face` rules (`src/lib/pdf/font-files.ts`) and hands the plugin the description and the font files; the plugin writes the PDF and offers Download PDF. A font with no file in the book stops it and names the font. What the PDF doesn't draw yet is listed on the card (`img`, `a[href]`).
+
+**Joseph's book, whole (2026-10-31).** 225 pages laid out, measured and written in about 7 seconds in Chrome. Title, author, language, page labels, 87 bookmarks; 105 `Sect`, 20 `H1`, 67 `H2`, 957 `P`, 16 lists; only Liberation Serif embedded. Two fixes it showed: CSS letter-spacing is now spread over every glyph (the browser adds it after the last letter too), and PDFKit's browser build has no standard fonts, so the writer sets no default font.
+
+**Visually hidden text (2026-10-31).** The copyright page's heading is hidden with the usual clip recipe so axe passes. It was drawn in the PDF; now it is in the structure but drawn in text render mode 3, neither filled nor stroked, so screen readers and copy get it and the page doesn't show it.
+
+**Words Paged.js splits across pages (2026-10-31).** Where a paragraph breaks mid-word at a page end, Paged.js writes a non-breaking hyphen (U+2011) into the text of a `.pagedjs_hyphen` element. Liberation Serif has no U+2011, so Chrome drew it from a fallback font and the PDF lost it ("rem" / "ained"). The measuring now treats it as a hyphenated word across the pages: the writer draws a soft hyphen and one `Span` with the whole word ("remained") spans both pages. Joseph's book has 24 such words, some split at odd points ("writi-ng", "somet-hing"); that is Paged.js's split, the same in the preview.
+
+**Text lost off the page edge (2026-10-31): a Paged.js bug, fixed.** On six pages of Joseph's book (11, 23, 119, 136, 185, 206) a paragraph's last line was missing from the preview, Save as PDF and the accessible PDF. Paged.js broke the page in the right place, but then typed its page-split hyphen into the text; on a tight justified line Chrome had fitted its own hyphen there, and the typed one is 4–5 px too wide, so the line rewrapped and the paragraph's last line fell into the clipped column off the page. The vendored Paged.js now hangs that hyphen in the margin in a zero-width box when it would rewrap the line (patch 2 in `patches/paged.polyfill.md`), and the measuring reads it as part of the word. The measuring still reports any text off the page (`overflowPages`) and the card names those pages; Joseph's book has none now.
+
+**Held back until their phases.** Nothing now: images came in phase 2 and links in phase 3.
+
+## Phase 2 progress
+
+**Images (2026-10-31).** Each `img` is drawn where the browser drew it, by `object-fit` and `object-position`, and cut to its box when it overflows (the cover is `object-fit: cover`). An image is a `Figure` with the `alt` text as `Alt`; `alt=""` makes it a drawn artifact. The core gathers the image files with the fonts (`src/lib/pdf/image-files.ts`): JPEG and PNG go in as they are, anything else the browser shows goes through a canvas to PNG, and SVG is drawn at 300 dpi for the largest box it fills. Each file is embedded once however often it's drawn.
+
+**Figures and captions.** A `figure` is a `Div` holding the image's `Figure` and the `Caption`. The caption stays outside the `Figure` because a screen reader reads a Figure's alt in place of its content. Joseph's book: the cover and 14 photographs, 15 `Figure` with alt and 14 `Caption`; the PDF is 5.3 MB.
+
+**Tables.** `Table` with `Caption`, `THead`, `TBody` and `TFoot`; every `TH` has a scope (its `scope`, or a column header in `thead` or a row of headers, otherwise a row header), and spans are written as `RowSpan` and `ColSpan`. A table Paged.js splits is one `Table`, its body one `TBody` across the pages. Paged.js 0.4.3 doesn't repeat a table's header row on the next page, in the preview or Save as PDF, so there is no repeated row to mark as an artifact. Joseph's book has no tables; this was checked on a test page of 30 rows over two pages.
+
+**Not yet.** Borders and backgrounds (phase 4), so a table's rules aren't drawn; inline `svg`, `video`, `canvas` and the like are listed on the card.
+
+## Phase 3 progress
+
+**Links (2026-10-31).** A link is a `Link` holding its text and an annotation per box (a line of its text, an image in it), each with `Contents` from the link's text. A URL (`http`, `https`, `mailto`, `tel`, `ftp`) is a URI action. A link inside the book is `#id` by the time it reaches the PDF, since the whole-book builder points links between chapters at ids in the one document; it goes to a named destination at the target's top-left, on the page where the target first appears. A link that goes nowhere the PDF can reach (a missing id, a file outside the book) stays plain text.
+
+**PDFKit's page for the annotation.** PDFKit gives the annotation's object reference the page that is current when its `Link` is written, so the writer makes each page's part of a link its own `Link` and ends it on that page; a link Paged.js splits across a page break is two `Link` elements. The upstream fix is still worth offering.
+
+**Joseph's book.** 124 link annotations: 112 from the contents page to 84 destinations, which land on the right pages, and 12 DOI links in the references. Every annotation has `Contents` and a `StructParent`, and every object reference names the annotation's own page. Bookmarks and page labels were already in place from phase 1, so the card lists nothing missing for this book now.
+
+**Validation after phases 2 and 3 (2026-10-31).** axesCheck on the whole book found one error kind: every `Figure` lacked a `BBox` (15). It is now a `Layout` attribute from the drawn box, cut to the clip and the page. Two warnings followed. A `Figure` in a group of blocks (a `figure`'s `Div`, a section) needs `Placement /Block`, since a Figure is inline unless it says otherwise (15). Text and inline elements sat directly in a `Caption`, which ISO 32000-1 counts with `Div` and `Sect` as grouping blocks: the 19 hyphenated-word `Span` elements in captions were flagged. The core now puts inline content that is directly inside a grouping element into a `P` of its own, one per run between blocks, and marks such a Figure as a block. Rechecked: no errors and no warnings apart from the PDF/UA identifier, which the app leaves out; WCAG passes every check.
+
+## Phase 4 progress
+
+**Boxes (2026-10-31).** Every element's background and border is drawn from its computed style under its content, as a layout artifact; a margin box's (a rule under a running head) is a pagination artifact, and so is the page's own background. Borders are drawn the way Chromium paints them: each side a band mitred at the corners; solid, double, dashed, dotted, and inset, outset, groove and ridge in Chromium's darker and lighter shades; a collapsed table border centred on the cell edge, any other inside the box. One radius on all four corners draws a round box. An inline element gets a box per line, with its start border on the first line and its end border on the last. `background-clip` sets where the background stops.
+
+**Text decoration.** Underline, overline and line-through on an inline element are drawn per line of it from the decorating element's font (its underline and strikeout metrics), in its colour, thickness, style and `text-underline-offset`. Chrome leaves gaps in an underline around descenders; the PDF's underline runs through, a difference in glyph edges only. Joseph's book had no visible decoration but its 12 DOI links, which the browser underlines by default: the PDF now draws those underlines too.
+
+**What the card lists.** Background images and gradients, shadows (`box-shadow`, `text-shadow`), `transform`, `filter`, `backdrop-filter`, `mix-blend-mode`, `border-image`, `opacity` below 1, outlines, corners of different or elliptical radii, and text decoration set on a block rather than an inline element.
+
+**Right-to-left text.** fontkit shapes Arabic and lays a right-to-left word out in visual order, so each right-to-left word carries its text in reading order as `ActualText`; its trailing space is in the `ActualText` only, since fontkit would draw it on the word's left. A word in a script whose letters join (Arabic, Syriac, N'Ko, Mongolian, Devanagari, Bengali, Gurmukhi) is fitted to its measured width by horizontal scaling, not letter spacing, which would pull the letters apart. A right-to-left book's viewer preference turns pages right to left. Margin text is drawn word by word in the order it is seen: PDFKit lays a string out a word at a time in reading order, which reverses right-to-left words against each other. `start` and `end` alignment follow the margin box's direction.
+
+**Checked on test pages.** A box page (rule, highlight across two lines, underlined link, line-through, collapsed table with a header background, a rounded sidebar, double, dotted, dashed and padding-box borders, a ruled running head) and a Hebrew page with an Arabic section (a highlight, a number and an English word inside a Hebrew sentence, a start-side border, a Hebrew running head) look as Chrome drew them. Text from the Hebrew page comes out in reading order, the running head included.
+
+## List markers
+
+**Numbers and strings (2026-10-31).** A list item's marker isn't in the DOM, so the core writes it: its number counted as the browser counts it, from the list's `start` (which Paged.js sets on each page's part of a split list), stepping by one or down a `reversed` list, taking any item's `value`; then the counter style with its suffix (decimal, leading zero, Latin and Greek letters, Roman numerals, Arabic-Indic digits, or a string `list-style-type`), or a plain string `::marker` content. It is measured with the document's canvas in the marker's own font and set on the item's first line: ending where the item starts (outside), or before its first text (inside). The marker is the `LI`'s `Lbl` and its content the `LBody`. In a right-to-left item the suffix is seen first (".1") and the number goes in `ActualText` in reading order.
+
+**Bullets.** Chromium paints disc, circle and square as shapes, not text, sized and placed from the font's ascent in whole pixels (ListMarker: two thirds of the ascent for the bullet's room, half that for its size, 7px of padding). The writer draws them that way, as layout artifacts; a bulleted item is an `LI` with only an `LBody`, since the list structure already says what the bullet would.
+
+**What the card lists.** `list-style-image`, counter styles not written yet (Hebrew, Armenian, Georgian, CJK and others), and `::marker` content other than a string (a `counter()`).
+
+**Checked.** A test page of bullets, nested circles, a list from 3 with a `value`, Roman numerals, an inside bullet, a dash `::marker`, a padded item, a numbered list split across two pages, and a Hebrew numbered list and square bullet matches Chrome; its text extracts with the numbers. Joseph's book now has its 18 bullets (pages 81–85) and its numbered stages (page 161), which earlier PDFs left out.
+
+## Generated content
+
+**Text from `::before` and `::after` (2026-10-31).** Generated text isn't in the DOM, and before this the PDF left it out without saying so. Now a pass over the paginated document in tree order works it out: strings, `attr()`, `counter()` and `counters()` (CSS counters counted as CSS Lists 3 defines them, from the computed `counter-reset`, `counter-increment` and `counter-set`, which already carry Paged.js's own handling of counters across pages), and quotation marks by nesting depth (`quotes`, or the language's own for `auto`; a `q` gets its quotes this way). Then a span with that text and the pseudo-element's style stands in for each pseudo-element while the pages are read, and the pseudo-element is hidden. The span lays out as the pseudo-element did, so its words are measured, linked, hyphenated and tagged like any others, and an empty `content: ""` box gets its border or background drawn.
+
+**Keeping the layout.** The span carries only what the pseudo-element sets apart from a plain span in its place; a copied font size, rounded when written out, shaped the span apart from its neighbours and lost their kerning. On an element that can host a shadow root (a blockquote, paragraph, heading, section, div), the spans go in one, around a slot, so the book's own children keep `:first-child` and `:last-child` rules that a span among them would break; the shadow root stays, holding only its slot, which renders the element as before. Everywhere else (`q`, `a`, `li`, `td`) the span goes among the children. Either way the element and its first text are measured before and after, and if anything moved the pseudo-element is put back and listed.
+
+**What the card lists.** `content` the PDF doesn't draw (`url()` images, gradients, other functions), counter styles not written yet, `quotes: auto` in a language without a table entry, and a pseudo-element whose span moved the layout.
+
+**Spaces at the start of a text node.** A text node's leading space ended the word before it only on screen: "<strong>rivalry</strong> – …" gave "rivalry–" to anything reading the text. The space now goes on the word before it, as a block boundary's does.
+
+**Checked.** A test page (a chapter label with an upper-roman counter over two pages, section numbers with `counters()`, nested `q`, a blockquote's quotation mark beside a `:first-child` rule, `attr()`, a link's arrow, an empty rule, a nested `counters()` list, a `url()` image) matches Chrome and lists only the image. Joseph's book is unchanged apart from the restored spaces; it builds in 9.5 seconds with the PDF written.
+
+## Missing glyphs and first letters
+
+**Missing glyphs (2026-10-31).** Where a book font has no glyph for a character, the browser draws it from a font outside the book, which a page can't read and the PDF can't embed. The writer now checks each character against the font it draws it with and the card lists them by font ("Liberation Serif: ↗"); in the PDF the character is the font's empty box, and its text is still there for search and screen readers. Joseph's book has none: no page of its PDF draws glyph 0.
+
+**First letters and lines.** A `::first-letter` or `::first-line` rule (a drop cap, small caps on an opening line) changes text the PDF draws in its element's own style. The card lists it when the book's CSS has such a rule matching something on the pages. Comparing computed styles didn't work: Chrome's `::first-letter` inherits sometimes from the element its letter is in and sometimes from the block.
+
+## Validation of the whole book (2026-11-01)
+
+axesCheck on Joseph's book with boxes, list markers and generated content found two error kinds. The PDF was "unparsable" on the nine pages with a bullet or a link underline: PDFKit's `fill(color)` and `stroke(color)` write the colour after the path has started, which ISO 32000 doesn't allow, so the writer sets the colour first. Twelve asterisks failed the contrast check: the scene break is `hr::after` text in the browser's default `hr` grey (#808080, 3.9:1). A rule is decoration, so the core makes an `hr` and anything drawn in it an artifact; it isn't read out, and the contrast check skips it. Rechecked: PDF/UA fulfilled apart from the identifier the app leaves out, WCAG 100.
+
+## Later, for other books
+
+Joseph's book drives what is built; these are what other books may need, each already listed on the card when a book hits it.
+
+- **Fallback through the book's own fonts.** A family list naming two book fonts, or an `@font-face` with `unicode-range` (a symbols font, a second script), has the browser take each character from the first font that has it. The core resolves a word to one font file; it would pass the file for every family in the list, and the writer would split a word into runs by font.
+- **Running heads with `string()`.** A chapter title carried into a margin box by `string-set`; Paged.js resolves it, and the core would read its value per page.
+- **Drop caps and styled first lines.** Measure the first letter's own box and style (its range is already exact; the font size is the gap).
+- **Counter styles.** Hebrew, Armenian, Georgian, CJK and the rest of CSS Counter Styles, and `@counter-style` rules.
+- **Images in generated content and lists.** `content: url()` and `list-style-image`.
+- **Inline `svg`, `canvas`, `video`.** SVG as vectors or rasterised at print resolution, as `img` SVG is now.
+- **Shadows, gradients, transforms, filters, opacity.**
+
+## Later: the PDF carries its SEED EPUB
+
+Not started; recorded 2026-11-01 for after the branch merges. The idea: the accessible PDF embeds the book's SEED EPUB as an attachment, so a PDF imported into SEED.html opens as an editable project, as a SEED EPUB does. It fits "SEED.html edits the EPUBs it made": the PDF is one more container for that EPUB.
+
+Embed the whole EPUB, not `SEED.zip`. `SEED.zip` holds only `SOURCE/`; the images, fonts and OPF are in `OEBPS/`, so it can't rebuild the project alone. With the EPUB inside, the import takes it out and hands it to `EPUBUnpacker`, which already finds `SEED.zip` and decides editable or read-only. Readers get a working EPUB too, in the viewer's attachments panel. `SEED.html` comes along when the project's "Add SEED.html to package" is on.
+
+Writing it is small. PDFKit's `doc.file(bytes, { name, type: 'application/epub+zip', relationship: 'Source', description })` writes the `F` and `UF` keys PDF/UA asks of an embedded file, and a description; the writer takes an optional `attachments` option.
+
+Getting the EPUB to the plugin is the design question. Packaging is in the core, at Share; the plugin asks only for the laid-out book (`describe-book`). The packaged EPUB would ride in the `book-described` reply rather than a new message pair, since plugins vary the contract by payload (DECISIONS, Architecture). Packaging at the same moment as the layout keeps the PDF and its EPUB the same state of the book; a stale attachment would be worse than none.
+
+Reading it back: the library import accepts `.pdf`, finds the `EmbeddedFiles` entry, inflates the stream (`DecompressionStream`) and passes the bytes on. PDFKit writes a plain cross-reference table and no object streams, so a small reader handles our own PDFs. A PDF re-saved by Acrobat or Preview usually has compressed cross-references and object streams, which needs a real parser (pdf-lib, in the plugin or the core). Start with our own PDFs, and have the import say plainly when it finds no book rather than guess.
+
+Costs. Images and fonts are stored twice (Joseph's PDF is 5.4 MB before the attachment). Print services that want PDF/X don't allow embedded files, so the attachment is a choice on the card, not always on. Acrobat shows attachments; Preview and browser viewers mostly don't, which matters to readers but not to re-import. One axesCheck run should confirm a described attachment passes PDF/UA and WCAG. Rough effort: a day for the writer, the payload and the minimal import; more if re-saved PDFs must work.
+
 ## Decisions this touches
 
-`process/DECISIONS.md`, 2026-09-15: "PDF export stays single-pass … The app is for accessible EPUB". This proposal keeps one pass (one pagination, read once) but makes the PDF a goal rather than a by-product, so that entry needs rewording if this is approved.
+`process/DECISIONS.md`: the 2026-09-15 entry ("PDF export stays single-pass … The app is for accessible EPUB") is replaced by 2026-10-31, "Accessible PDF is a goal of the app". Export stays single-pass: one pagination, read once.
 
 ## Decided
 
+- Accessible PDF output is a goal of the app, beside accessible EPUB (2026-10-31).
 - The core paginates and measures; the plugin writes the PDF and holds every heavy dependency (2026-10-30).
 - Phase 0 runs on _John, Paul, and George_, in the localhost:5173 copy (2026-10-30).
 - Save as PDF is the fallback when the plugin isn't available; when the plugin is on, it takes the place of Save as PDF, as a `view` plugin does (2026-10-30).

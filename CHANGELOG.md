@@ -18,10 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Readers can go to any page of the print edition from their reading app's page menu, in a book whose chapters carry print page markers.
 - Contents you write yourself can also name the book's landmarks, such as where reading starts.
 - You can choose the chapter where reading starts, so reading apps open your book there the first time.
+- You can make an accessible PDF from the Share page: tagged for screen readers, with bookmarks, page numbers and the book’s own fonts, laid out as your print preview shows it.
 
 ### Fixed
 
 - Contents you write yourself no longer take on chapter layout, so the book passes validation with a layout extension such as Responsive Layout.
+- The print preview and Save as PDF no longer lose a line at the foot of a page that ends in a word split across pages.
+- In Chrome, the print preview and PDFs no longer split a word across pages at the wrong letter.
 
 ## [0.25.0] - 2026-10-30
 

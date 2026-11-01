@@ -513,6 +513,95 @@ async function writePaginatedDocument(
 }
 
 /**
+ * Build the whole book's paginated document: the linear chapters in spine
+ * order, each starting on a new page, with cross-chapter links rewritten to
+ * internal ones and the cover first when the print settings ask for it. Shared
+ * by Save as PDF and the accessible PDF, so both lay out the same book. Returns
+ * the ids of chapters that could not be parsed and were left out.
+ */
+export async function buildBookDocument(
+  workspace: WorkspaceState,
+  workspaceService: WorkspaceService,
+  print: PrintSettings | undefined,
+  after: { afterMode: 'message'; doneMessage: string } | { afterMode: 'print-button' }
+): Promise<{
+  master: string;
+  skippedChapterIds: string[];
+  meta: WorkspaceState['opf']['metadata'];
+}> {
+  const chapters = await workspaceService.loadAllLinearChapterContents(workspace);
+  if (chapters.length === 0) throw new Error(translate('No chapters to export.'));
+
+  // First pass: map each chapter's file name to its section anchor and count
+  // element ids across the book, so cross-chapter hrefs can be rewritten to
+  // same-document fragments (internal PDF links) with a safe fallback when a
+  // fragment id repeats between chapters. Parses each chapter a second time —
+  // negligible next to the export's asset pass.
+  const manifestHrefById = new Map(workspace.opf.manifest.map(m => [m.id, m.href]));
+  const anchorByFile = new Map<string, string>();
+  const idCounts = new Map<string, number>();
+  for (const chapter of chapters) {
+    const href = manifestHrefById.get(chapter.id) ?? `${chapter.id}.xhtml`;
+    const file = href.split('/').pop();
+    if (file) anchorByFile.set(file, pdfChapterAnchor(chapter.id));
+    for (const id of collectChapterIds(chapter.xhtmlContent)) {
+      idCounts.set(id, (idCounts.get(id) ?? 0) + 1);
+    }
+  }
+  const links: InternalLinkMap = {
+    anchorByFile,
+    uniqueIds: new Set([...idCounts].filter(([, n]) => n === 1).map(([id]) => id)),
+  };
+
+  // Concatenate each chapter's <body> (wrapped so it starts on a new page) and
+  // collect the stylesheet links the chapters reference (deduped) so the book's
+  // own styling carries through — works for app-created and imported EPUBs.
+  const stylesheetHrefs = new Set<string>();
+  const sections: string[] = [];
+  const skippedChapterIds: string[] = [];
+  for (const chapter of chapters) {
+    const wrapped = chapterToSection(chapter.xhtmlContent, chapter.id, links);
+    if (!wrapped) {
+      // Malformed chapter / no <body> — excluded from the PDF, reported back.
+      skippedChapterIds.push(chapter.id);
+      continue;
+    }
+    wrapped.hrefs.forEach(href => stylesheetHrefs.add(href));
+    sections.push(wrapped.section);
+  }
+  if (sections.length === 0) throw new Error(translate('No readable chapter content.'));
+
+  const meta = workspace.opf.metadata;
+
+  // Prepend the project's cover image as a full-bleed first page (Print setting,
+  // default on). The cover's relative href is resolved to a blob URL by the asset
+  // pass below alongside the chapter images.
+  const coverHref = coverImageHref(workspace.opf.manifest, print);
+  if (coverHref) {
+    // The cover's text alternative is the book title (its own language, so no i18n) —
+    // a cover isn't decorative: it carries the book's identity, and a generated cover
+    // renders the title as image text that's otherwise invisible to assistive tech.
+    const coverAlt = meta.title?.trim() || 'Cover';
+    sections.unshift(
+      `<section class="pdf-cover"><img src="${xmlEscape(coverHref)}" alt="${xmlEscape(coverAlt)}" /></section>`
+    );
+  }
+
+  // The print dialog suggests "<document title>.pdf", so name it after the book.
+  const author = meta.creator?.[0]?.name;
+  const docTitle = [meta.title?.trim() || 'Book', author?.trim()].filter(Boolean).join(' - ');
+
+  const master = buildPagedDocument(sections, {
+    title: docTitle,
+    stylesheetHrefs: [...stylesheetHrefs],
+    lang: meta.language?.[0],
+    print,
+    ...after,
+  });
+  return { master, skippedChapterIds, meta };
+}
+
+/**
  * Build the combined, paginated document and trigger the print → Save as PDF
  * flow. Resolves once the document is handed to the print window. Returns the
  * ids of chapters that could not be parsed and were left out of the PDF — the
@@ -527,75 +616,12 @@ export async function exportPdf(
 ): Promise<{ skippedChapterIds: string[] }> {
   const win = openPdfWindow();
   try {
-    const chapters = await workspaceService.loadAllLinearChapterContents(workspace);
-    if (chapters.length === 0) throw new Error(translate('No chapters to export.'));
-
-    // First pass: map each chapter's file name to its section anchor and count
-    // element ids across the book, so cross-chapter hrefs can be rewritten to
-    // same-document fragments (internal PDF links) with a safe fallback when a
-    // fragment id repeats between chapters. Parses each chapter a second time —
-    // negligible next to the export's asset pass.
-    const manifestHrefById = new Map(workspace.opf.manifest.map(m => [m.id, m.href]));
-    const anchorByFile = new Map<string, string>();
-    const idCounts = new Map<string, number>();
-    for (const chapter of chapters) {
-      const href = manifestHrefById.get(chapter.id) ?? `${chapter.id}.xhtml`;
-      const file = href.split('/').pop();
-      if (file) anchorByFile.set(file, pdfChapterAnchor(chapter.id));
-      for (const id of collectChapterIds(chapter.xhtmlContent)) {
-        idCounts.set(id, (idCounts.get(id) ?? 0) + 1);
-      }
-    }
-    const links: InternalLinkMap = {
-      anchorByFile,
-      uniqueIds: new Set([...idCounts].filter(([, n]) => n === 1).map(([id]) => id)),
-    };
-
-    // Concatenate each chapter's <body> (wrapped so it starts on a new page) and
-    // collect the stylesheet links the chapters reference (deduped) so the book's
-    // own styling carries through — works for app-created and imported EPUBs.
-    const stylesheetHrefs = new Set<string>();
-    const sections: string[] = [];
-    const skippedChapterIds: string[] = [];
-    for (const chapter of chapters) {
-      const wrapped = chapterToSection(chapter.xhtmlContent, chapter.id, links);
-      if (!wrapped) {
-        // Malformed chapter / no <body> — excluded from the PDF, reported back.
-        skippedChapterIds.push(chapter.id);
-        continue;
-      }
-      wrapped.hrefs.forEach(href => stylesheetHrefs.add(href));
-      sections.push(wrapped.section);
-    }
-    if (sections.length === 0) throw new Error(translate('No readable chapter content.'));
-
-    const meta = workspace.opf.metadata;
-
-    // Prepend the project's cover image as a full-bleed first page (Print setting,
-    // default on). The cover's relative href is resolved to a blob URL by the asset
-    // pass below alongside the chapter images.
-    const coverHref = coverImageHref(workspace.opf.manifest, print);
-    if (coverHref) {
-      // The cover's text alternative is the book title (its own language, so no i18n) —
-      // a cover isn't decorative: it carries the book's identity, and a generated cover
-      // renders the title as image text that's otherwise invisible to assistive tech.
-      const coverAlt = meta.title?.trim() || 'Cover';
-      sections.unshift(
-        `<section class="pdf-cover"><img src="${xmlEscape(coverHref)}" alt="${xmlEscape(coverAlt)}" /></section>`
-      );
-    }
-
-    // The print dialog suggests "<document title>.pdf", so name it after the book.
-    const author = meta.creator?.[0]?.name;
-    const docTitle = [meta.title?.trim() || 'Book', author?.trim()].filter(Boolean).join(' - ');
-
-    const master = buildPagedDocument(sections, {
-      title: docTitle,
-      stylesheetHrefs: [...stylesheetHrefs],
-      lang: meta.language?.[0],
+    const { master, skippedChapterIds } = await buildBookDocument(
+      workspace,
+      workspaceService,
       print,
-      afterMode: 'print-button',
-    });
+      { afterMode: 'print-button' }
+    );
 
     await writePaginatedDocument(win, master, {
       fileStorage,

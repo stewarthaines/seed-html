@@ -21,11 +21,14 @@
     isReadEpubMessage,
     isImportEpubMessage,
     isOpenMessage,
+    isDescribeBookMessage,
     workspaceOpfsPath,
+    type BookDescribedMessage,
     type PluginSurface,
     type OpenMessage,
   } from '$lib/plugins/contract';
   import { PUBLISH_WORKSPACE_ID } from '$lib/workspace/types';
+  import type { BookDescription } from '$lib/pdf/accessible-pdf';
 
   interface Props {
     /** Resolved iframe src for the plugin (from resolvePluginEntryUrl). */
@@ -50,6 +53,10 @@
     onReadEpub?: (source: { filename?: string; url?: string }) => void;
     onImportEpub?: (filename: string, bytes: ArrayBuffer) => void;
     onOpen?: (target: OpenMessage['target']) => void;
+    /** Lay out and measure the open book for the accessible-pdf plugin. */
+    onDescribeBook?: () => Promise<BookDescription>;
+    /** Said when the plugin fails to come alive; the publishing wording by default. */
+    failureText?: string;
     /** Rendered instead of the iframe when the plugin fails to come alive. */
     fallback?: Snippet;
   }
@@ -68,6 +75,8 @@
     onReadEpub,
     onImportEpub,
     onOpen,
+    onDescribeBook,
+    failureText,
     fallback,
   }: Props = $props();
 
@@ -114,6 +123,8 @@
         onImportEpub?.(data.filename, data.bytes);
       } else if (isOpenMessage(data)) {
         onOpen?.(data.target);
+      } else if (isDescribeBookMessage(data) && onDescribeBook) {
+        void replyWithBook(data.requestId);
       }
     };
     window.addEventListener('message', handler);
@@ -141,6 +152,23 @@
         targetOrigin
       );
     }
+  }
+
+  async function replyWithBook(requestId: string): Promise<void> {
+    let reply: BookDescribedMessage;
+    try {
+      const book = await onDescribeBook!();
+      reply = { type: 'book-described', requestId, ...book };
+    } catch (error) {
+      reply = {
+        type: 'book-described',
+        requestId,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+    const frameWindow = pluginFrame?.contentWindow;
+    if (!frameWindow) return;
+    frameWindow.postMessage(reply, new URL(pluginUrl, window.location.href).origin);
   }
 
   function sendPluginContext(): void {
@@ -215,7 +243,7 @@
 {#if pluginFailed}
   <div class="plugin-fallback" role="status">
     <p class="plugin-fallback-text">
-      {$t('The publishing plugin could not be loaded — you may be offline.')}
+      {failureText ?? $t('The publishing plugin could not be loaded — you may be offline.')}
     </p>
     <button type="button" class="btn btn-secondary btn-sm" onclick={retryPlugin}>
       {$t('Retry plugin')}

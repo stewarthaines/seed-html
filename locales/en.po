@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-30\n"
-"PO-Revision-Date: 2026-10-30\n"
+"POT-Creation-Date: 2026-10-31\n"
+"PO-Revision-Date: 2026-10-31\n"
 "Language: en\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -320,6 +320,10 @@ msgstr ""
 msgid "Accessibility issues"
 msgstr ""
 
+#: plugins/accessible-pdf/src/App.svelte
+msgid "Accessible: tagged for screen readers, with bookmarks and the book’s own fonts."
+msgstr ""
+
 #: src/lib/components/spine/sr-walk.ts
 msgid "acknowledgments"
 msgstr ""
@@ -493,6 +497,10 @@ msgstr ""
 
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Also in this chapter"
+msgstr ""
+
+#: src/lib/pdf/image-files.ts
+msgid "An image in the book could not be read."
 msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
@@ -693,6 +701,7 @@ msgstr ""
 msgid "Bold, emphasis and heading styles only."
 msgstr ""
 
+#: plugins/accessible-pdf/src/App.svelte
 #: src/lib/components/shell/BottomTabs.svelte
 #: src/lib/components/shell/TopBar.svelte
 msgid "Book"
@@ -1585,6 +1594,10 @@ msgstr ""
 msgid "Download failed — try again"
 msgstr ""
 
+#: plugins/accessible-pdf/src/App.svelte
+msgid "Download PDF"
+msgstr ""
+
 #: src/lib/components/shell/AboutDialog.svelte
 msgid "Download SEED.html"
 msgstr ""
@@ -2465,6 +2478,7 @@ msgstr ""
 msgid "Generate patchset"
 msgstr ""
 
+#: plugins/accessible-pdf/src/App.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Generate PDF"
 msgstr ""
@@ -2934,6 +2948,10 @@ msgstr ""
 msgid "Last synced: {time}"
 msgstr ""
 
+#: plugins/accessible-pdf/src/App.svelte
+msgid "Laying out the book…"
+msgstr ""
+
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Layout"
 msgstr ""
@@ -3105,12 +3123,17 @@ msgstr ""
 msgid "Main navigation"
 msgstr ""
 
+#: plugins/accessible-pdf/src/App.svelte
 #: src/lib/navigation/views/PublishView.svelte
 msgid "Make a PDF"
 msgstr ""
 
 #: src/lib/components/shell/AboutDialog.svelte
 msgid "Make ebooks anyone can read — right now in your browser."
+msgstr ""
+
+#: plugins/accessible-pdf/src/App.svelte
+msgid "Make it again"
 msgstr ""
 
 #: src/stories/preview/ContentPreviewDemo.svelte
@@ -3334,6 +3357,10 @@ msgstr ""
 msgid "No audio files in this project."
 msgstr ""
 
+#: src/App.svelte
+msgid "No book is open."
+msgstr ""
+
 #: src/lib/components/books/BooksShelf.svelte
 msgid "No books yet."
 msgstr ""
@@ -3520,6 +3547,10 @@ msgstr ""
 
 #: src/lib/components/SpineItem.svelte
 msgid "Not in the linear reading order"
+msgstr ""
+
+#: plugins/accessible-pdf/src/App.svelte
+msgid "Not in this PDF yet: {items}"
 msgstr ""
 
 #: src/lib/navigation/views/PublishView.svelte
@@ -3864,10 +3895,12 @@ msgstr ""
 msgid "PDF"
 msgstr ""
 
+#: plugins/accessible-pdf/src/App.svelte
 #: src/App.svelte
 msgid "PDF export failed: {message}"
 msgstr ""
 
+#: plugins/accessible-pdf/src/App.svelte
 #: src/App.svelte
 msgid "PDF is missing unreadable chapters: {chapters}"
 msgstr ""
@@ -4749,6 +4782,10 @@ msgstr ""
 msgid "Some images could not be loaded."
 msgstr ""
 
+#: plugins/accessible-pdf/src/App.svelte
+msgid "Some text runs off the edge of pages {pages}, in the preview too, so readers can’t see it."
+msgstr ""
+
 #: src/lib/components/metadata/CreatorRoleEditor.svelte
 #: src/lib/components/metadata/TitleEditor.svelte
 msgid "Sort as"
@@ -4956,6 +4993,18 @@ msgstr ""
 msgid "Text transform"
 msgstr ""
 
+#: plugins/accessible-pdf/src/host.ts
+msgid "The app did not answer."
+msgstr ""
+
+#: src/lib/pdf/accessible-pdf.ts
+msgid "The book could not be laid out."
+msgstr ""
+
+#: src/lib/pdf/accessible-pdf.ts
+msgid "The book took too long to lay out."
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 msgid "The catalog cannot be read right now."
 msgstr ""
@@ -4998,6 +5047,14 @@ msgstr ""
 
 #: src/lib/components/SpineSidebar.svelte
 msgid "The linked folder isn't available — reconnect the drive or relink the folder."
+msgstr ""
+
+#: plugins/accessible-pdf/src/App.svelte
+msgid "The PDF needs the font files of these fonts in the book: {fonts}"
+msgstr ""
+
+#: src/lib/navigation/views/PublishView.svelte
+msgid "The PDF plugin could not be loaded."
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -5418,6 +5475,10 @@ msgstr ""
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Write the contents by hand"
+msgstr ""
+
+#: plugins/accessible-pdf/src/App.svelte
+msgid "Writing the PDF…"
 msgstr ""
 
 #: src/lib/components/spine/PreviewSurface.svelte
