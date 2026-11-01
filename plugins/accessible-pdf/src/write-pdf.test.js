@@ -251,7 +251,9 @@ describe.skipIf(!hasFont)('writePdf', () => {
     expect(content).toMatch(/\[3 3\] 0 d/);
     expect(content).toMatch(/\/Artifact <<[^>]*\/Pagination[^>]*>> BDC/);
     // The underline is a filled blue rectangle.
-    expect(content).toMatch(/re\n\/DeviceRGB cs\n0 0 1 scn\nf/);
+    expect(content).toMatch(/0 0 1 scn\n(?:[^\n]* (?:CS|SCN)\n)*[\d. -]+ re\nf/);
+    // No colour is set inside a path, which PDF doesn't allow.
+    expect(content).not.toMatch(/(re|[mlch])\n[^\n]*\b(cs|CS|scn|SCN)\n/);
   });
 
   it('keeps right-to-left words in reading order and Arabic letters joined', async () => {

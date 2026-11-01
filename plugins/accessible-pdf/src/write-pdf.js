@@ -365,10 +365,13 @@ function drawBox(doc, item) {
     const inset = Math.min(background.x - item.x, background.y - item.y);
     const radius = Math.max(0, (item.radius ?? 0) - inset);
     const { x, y, width, height } = background;
+    // Colours are set before a path starts: PDFKit's fill(color) writes the
+    // colour inside the path, which PDF doesn't allow.
+    doc.fillColor(background.color);
     (radius > 0
       ? doc.roundedRect(x, y, width, height, radius)
       : doc.rect(x, y, width, height)
-    ).fill(background.color);
+    ).fill();
     doc.restore();
   }
   if (!item.border) return;
@@ -405,6 +408,7 @@ function drawBox(doc, item) {
     const half = top.width / 2;
     doc
       .lineWidth(top.width)
+      .strokeColor(top.color)
       .roundedRect(
         outer.x0 + half,
         outer.y0 + half,
@@ -412,7 +416,7 @@ function drawBox(doc, item) {
         outer.y1 - outer.y0 - top.width,
         Math.max(0, item.radius - half)
       )
-      .stroke(top.color);
+      .stroke();
     doc.restore();
     return;
   }
@@ -508,7 +512,11 @@ function bevel(color, name, style) {
 }
 
 function drawSide(doc, name, side, outer, inner) {
-  const fill = (a, b, color) => doc.polygon(...band(name, a, b)).fill(color);
+  const fill = (a, b, color) =>
+    doc
+      .fillColor(color)
+      .polygon(...band(name, a, b))
+      .fill();
   doc.save();
   if (side.opacity !== undefined) doc.fillOpacity(side.opacity).strokeOpacity(side.opacity);
   const mid = between(outer, inner, 0.5);
@@ -553,9 +561,10 @@ function drawSide(doc, name, side, outer, inner) {
       else if (wd < 3) doc.dash(wd, { space: wd });
       else doc.lineCap('round').dash(0.001, { space: wd * 2 });
       doc
+        .strokeColor(side.color)
         .moveTo(...from)
         .lineTo(...to)
-        .stroke(side.color);
+        .stroke();
       doc.undash();
       break;
     }
@@ -582,16 +591,16 @@ function drawSymbol(doc, item) {
   const reach = (offset + MARKER_PADDING_PX) * PX;
   const x = item.rtl ? item.x + reach - side : item.x - reach;
   const y = baseline(doc, item) - ascent * PX + Math.floor((3 * (ascent - offset)) / 2) * PX;
-  doc.save();
+  doc.save().fillColor(item.color).strokeColor(item.color);
   if (item.shape === 'square') {
-    doc.rect(x, y, side, side).fill(item.color);
+    doc.rect(x, y, side, side).fill();
   } else if (item.shape === 'circle') {
     doc
       .lineWidth(PX)
       .circle(x + side / 2, y + side / 2, (side - PX) / 2)
-      .stroke(item.color);
+      .stroke();
   } else {
-    doc.circle(x + side / 2, y + side / 2, side / 2).fill(item.color);
+    doc.circle(x + side / 2, y + side / 2, side / 2).fill();
   }
   doc.restore();
 }
@@ -622,13 +631,13 @@ function drawDecoration(doc, item) {
     top = base - (font.ascender / 1000) * item.size;
   }
   const { x, width } = item;
-  doc.save();
+  doc.save().fillColor(item.color).strokeColor(item.color);
   switch (item.style) {
     case 'double':
       doc
         .rect(x, top, width, thickness)
         .rect(x, top + thickness * 2, width, thickness)
-        .fill(item.color);
+        .fill();
       break;
     case 'dotted':
     case 'dashed': {
@@ -639,7 +648,7 @@ function drawDecoration(doc, item) {
       doc
         .moveTo(x, y)
         .lineTo(x + width, y)
-        .stroke(item.color);
+        .stroke();
       doc.undash();
       break;
     }
@@ -656,11 +665,11 @@ function drawDecoration(doc, item) {
           y
         );
       }
-      doc.stroke(item.color);
+      doc.stroke();
       break;
     }
     default:
-      doc.rect(x, top, width, thickness).fill(item.color);
+      doc.rect(x, top, width, thickness).fill();
   }
   doc.restore();
 }
