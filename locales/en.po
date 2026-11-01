@@ -499,6 +499,10 @@ msgstr ""
 msgid "Also in this chapter"
 msgstr ""
 
+#: src/lib/pdf/image-files.ts
+msgid "An image in the book could not be read."
+msgstr ""
+
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Announce"
 msgstr ""
@@ -4999,10 +5003,6 @@ msgstr ""
 
 #: src/lib/pdf/accessible-pdf.ts
 msgid "The book took too long to lay out."
-msgstr ""
-
-#: src/lib/pdf/image-files.ts
-msgid "An image in the book could not be read."
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/PublishedSurface.svelte
