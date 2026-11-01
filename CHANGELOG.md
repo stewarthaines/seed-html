@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Readers can go to any page of the print edition from their reading app's page menu, in a book whose chapters carry print page markers.
 - Contents you write yourself can also name the book's landmarks, such as where reading starts.
 - You can choose the chapter where reading starts, so reading apps open your book there the first time.
+- You can make an accessible PDF from the Share page: tagged for screen readers, with bookmarks, page numbers and the book’s own fonts, laid out as your print preview shows it.
 
 ### Fixed
 
