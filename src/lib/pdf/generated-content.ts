@@ -149,6 +149,9 @@ interface Counter {
 
 type Which = 'before' | 'after';
 
+/** Elements whose content is drawn from outside the document, with no pseudo-elements. */
+const REPLACED = new Set(['img', 'video', 'audio', 'canvas', 'iframe', 'object', 'embed']);
+
 interface Generated {
   el: Element;
   which: Which;
@@ -271,6 +274,9 @@ export function materializeGeneratedContent(doc: Document, problems: Set<string>
     parent: Counter[],
     sibling: Counter[] | null
   ): Counter[] | null => {
+    // A replaced element draws no ::before or ::after (Firefox still reports
+    // `content: -moz-alt-content` on an image's).
+    if (REPLACED.has(el.localName)) return null;
     const style = win.getComputedStyle(el, `::${which}`);
     if (style.content === 'none' || style.content === 'normal' || style.display === 'none') {
       return null;
