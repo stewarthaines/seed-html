@@ -267,6 +267,14 @@ describe.skipIf(!hasFont)('writePdf', () => {
     expect(new TextDecoder('latin1').decode(pdf)).toMatch(/\/Direction \/R2L/);
   });
 
+  it('collects the characters its font has no glyph for', async () => {
+    const symbols = structuredClone(description);
+    symbols.pages[0].items.push(word('out\u2197 ', 200, 3));
+    const missingGlyphs = new Map();
+    await writePdf(symbols, { fonts: [fs.readFileSync(FONT)] }, { missingGlyphs });
+    expect([...missingGlyphs]).toEqual([['Times New Roman', new Set(['\u2197'])]]);
+  });
+
   it('writes the PDF/UA identifier only when asked', async () => {
     const pdf = await writePdf(
       description,

@@ -36,17 +36,22 @@
         return;
       }
       status = { state: 'writing' };
+      const missingGlyphs = new Map<string, Set<string>>();
       const pdf = await writePdf(
         book.description,
         { fonts: book.fonts, images: book.images },
-        { author: book.author }
+        { author: book.author, missingGlyphs }
       );
       const blob = new Blob([pdf as BlobPart], { type: 'application/pdf' });
       status = {
         state: 'done',
         url: URL.createObjectURL(blob),
         filename: pdfFilename(book.description.title, book.author),
-        problems: book.description.problems,
+        // Characters no book font has, by the font that lacks them.
+        problems: [
+          ...book.description.problems,
+          ...Array.from(missingGlyphs, ([family, chars]) => `${family}: ${[...chars].join(' ')}`),
+        ],
         overflowPages: book.description.overflowPages,
         skippedChapterIds: book.skippedChapterIds,
       };
@@ -62,7 +67,10 @@
 
   /** A family list as the author wrote it, first name only: `"Times New Roman"`. */
   function familyName(family: string): string {
-    return family.split(',')[0].trim().replace(/^["']|["']$/g, '');
+    return family
+      .split(',')[0]
+      .trim()
+      .replace(/^["']|["']$/g, '');
   }
 </script>
 
@@ -90,9 +98,12 @@
     {/if}
     {#if status.overflowPages.length > 0}
       <p class="note warning">
-        {$t('Some text runs off the edge of pages {pages}, in the preview too, so readers can’t see it.', {
-          pages: status.overflowPages.join(', '),
-        })}
+        {$t(
+          'Some text runs off the edge of pages {pages}, in the preview too, so readers can’t see it.',
+          {
+            pages: status.overflowPages.join(', '),
+          }
+        )}
       </p>
     {/if}
     {#if status.problems.length > 0}

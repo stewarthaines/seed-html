@@ -16,9 +16,12 @@ import PDFDocument from 'pdfkit';
  * @param {import('../../../src/lib/pdf/page-description').PageDescription} desc
  * @param {{ fonts: (Uint8Array|ArrayBuffer)[], images?: (Uint8Array|ArrayBuffer)[] }} files
  *   one font file per `desc.fonts` entry and one JPEG or PNG file per `desc.images` entry
- * @param {{ author?: string, claimPdfUa?: boolean }} [info] `claimPdfUa` writes the
- *   PDF/UA identifier into the metadata; off unless the author asks for it, since
- *   it claims conformance only a validator can confirm.
+ * @param {{ author?: string, claimPdfUa?: boolean, missingGlyphs?: Map<string, Set<string>> }} [info]
+ *   `claimPdfUa` writes the PDF/UA identifier into the metadata; off unless the
+ *   author asks for it, since it claims conformance only a validator can confirm.
+ *   `missingGlyphs` collects, by font family, the characters a book font has no
+ *   glyph for (the browser drew them from a font outside the book); they draw
+ *   as the font's empty box, and their text is still in the PDF.
  * @returns {Promise<Uint8Array>}
  */
 export function writePdf(desc, files, info = {}) {
@@ -148,6 +151,9 @@ export function writePdf(desc, files, info = {}) {
         if ('uri' in link) doc.link(item.x, item.y, item.width, item.height, link.uri, options);
         else doc.goTo(item.x, item.y, item.width, item.height, link.dest, options);
         continue;
+      }
+      if ((item.kind === 'text' || item.kind === 'margin') && info.missingGlyphs) {
+        noteMissingGlyphs(doc, desc, item, info.missingGlyphs);
       }
       if (item.kind === 'box' || item.kind === 'decoration' || item.kind === 'symbol') {
         closeRun();
@@ -297,6 +303,23 @@ function drawsSoftHyphen(font) {
     };
   }
   return font._softHyphen;
+}
+
+/** Record the characters of a word or margin text its font has no glyph for. */
+function noteMissingGlyphs(doc, desc, item, missing) {
+  doc.font(`f${item.font}`);
+  const font = doc._font.font;
+  if (!font?.hasGlyphForCodePoint) return;
+  for (const char of item.kind === 'text' ? item.text.slice(0, item.visible) : item.text) {
+    const code = char.codePointAt(0);
+    if (/\s/.test(char) || code === 0xad || font.hasGlyphForCodePoint(code)) continue;
+    const family = desc.fonts[item.font].family
+      .split(',')[0]
+      .trim()
+      .replace(/^["']|["']$/g, '');
+    if (!missing.has(family)) missing.set(family, new Set());
+    missing.get(family).add(char);
+  }
 }
 
 /** Draw one word at its measured box, fitted to the measured width. */
