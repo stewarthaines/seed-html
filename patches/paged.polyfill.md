@@ -1,7 +1,7 @@
 # Local patch: `public/paged.polyfill.js` (Paged.js v0.4.3)
 
-The vendored Paged.js polyfill has **three local modifications**. If you ever
-re-download / upgrade `public/paged.polyfill.js`, re-apply all three (there is
+The vendored Paged.js polyfill has **four local modifications**. If you ever
+re-download / upgrade `public/paged.polyfill.js`, re-apply all four (there is
 also a banner comment at the top of that file pointing here).
 
 ## Patch 1: the print paper size
@@ -127,3 +127,39 @@ PY
 ### Why
 
 Layout is unchanged; the point is the console. In Firefox a whole-book layout (the accessible PDF, the whole-book preview) logged hundreds of these warnings, which slows Firefox down while the console is open and hides real messages.
+
+## Patch 4: where a word splits across pages, in Chrome
+
+### The change
+
+When a word runs past the page, `textBreak` steps through it a letter at a time and splits before the first letter the browser reports on the next page (the next column of Paged.js's page area). The patch measures from the start of the word to the end of each letter, and takes that range's last box, instead of measuring the letter alone.
+
+```diff
+- for(;!r&&(t=o.next(),e=t.value,r=t.done,e);)if(l=P(e),c=Math.floor(l.left),…
++ const g=document.createRange();for(;!r&&(t=o.next(),e=t.value,r=t.done,e);){g.setStart(i.startContainer,i.startOffset),g.setEnd(e.endContainer,e.endOffset);const f=Array.from(g.getClientRects()).filter(e=>e.width>0);if(l=f[f.length-1]||P(e),c=Math.floor(l.left),…}
+```
+
+Re-apply with:
+
+```bash
+python3 - <<'PY'
+p = "public/paged.polyfill.js"
+s = open(p, encoding="utf-8").read()
+old = 'if(u>n||h>a){let e,t,r,o=te(i);for(;!r&&(t=o.next(),e=t.value,r=t.done,e);)if(l=P(e),c=Math.floor(l.left),m=Math.floor(l.top),c>=n||m>=a){d=e.startOffset,s=!0;break}}'
+new = ('if(u>n||h>a){let e,t,r,o=te(i);const g=document.createRange();'
+       'for(;!r&&(t=o.next(),e=t.value,r=t.done,e);){g.setStart(i.startContainer,i.startOffset),g.setEnd(e.endContainer,e.endOffset);'
+       'const f=Array.from(g.getClientRects()).filter(e=>e.width>0);'
+       'if(l=f[f.length-1]||P(e),c=Math.floor(l.left),m=Math.floor(l.top),c>=n||m>=a){d=e.startOffset,s=!0;break}}}')
+assert s.count(old) == 1
+open(p, "w", encoding="utf-8").write(s.replace(old, new))
+PY
+```
+
+### Why
+
+Chrome misreports the box of a single letter just after an automatic hyphenation point (the accessible PDF's measuring met the same thing). So in Chrome Paged.js split a word one or more letters after the point where Chrome had hyphenated the line, and the page showed the word broken where no hyphen belongs: in Joseph Jordania's book "mechan‑isms", "tog‑ether", "trave‑l", "indefinitel‑y", 29 splits in all, nearly every one wrong, in the preview, Save as PDF and the accessible PDF. A range from the word's start is reported correctly, a box per line. Firefox was right before and is unchanged (its 42 splits in that book are the same).
+
+### Scope / caveats
+
+- Each split is now where the browser hyphenated the line, so Chrome and Firefox still split some words differently: each hyphenates with its own dictionary.
+- Verify after re-applying: in Joseph's book in Chrome, page 11 ends "mecha‑" and page 12 starts "nisms".
