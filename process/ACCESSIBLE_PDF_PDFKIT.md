@@ -211,6 +211,20 @@ Joseph's book drives what is built; these are what other books may need, each al
 - **Inline `svg`, `canvas`, `video`.** SVG as vectors or rasterised at print resolution, as `img` SVG is now.
 - **Shadows, gradients, transforms, filters, opacity.**
 
+## Later: the PDF carries its SEED EPUB
+
+Not started; recorded 2026-11-01 for after the branch merges. The idea: the accessible PDF embeds the book's SEED EPUB as an attachment, so a PDF imported into SEED.html opens as an editable project, as a SEED EPUB does. It fits "SEED.html edits the EPUBs it made": the PDF is one more container for that EPUB.
+
+Embed the whole EPUB, not `SEED.zip`. `SEED.zip` holds only `SOURCE/`; the images, fonts and OPF are in `OEBPS/`, so it can't rebuild the project alone. With the EPUB inside, the import takes it out and hands it to `EPUBUnpacker`, which already finds `SEED.zip` and decides editable or read-only. Readers get a working EPUB too, in the viewer's attachments panel. `SEED.html` comes along when the project's "Add SEED.html to package" is on.
+
+Writing it is small. PDFKit's `doc.file(bytes, { name, type: 'application/epub+zip', relationship: 'Source', description })` writes the `F` and `UF` keys PDF/UA asks of an embedded file, and a description; the writer takes an optional `attachments` option.
+
+Getting the EPUB to the plugin is the design question. Packaging is in the core, at Share; the plugin asks only for the laid-out book (`describe-book`). The packaged EPUB would ride in the `book-described` reply rather than a new message pair, since plugins vary the contract by payload (DECISIONS, Architecture). Packaging at the same moment as the layout keeps the PDF and its EPUB the same state of the book; a stale attachment would be worse than none.
+
+Reading it back: the library import accepts `.pdf`, finds the `EmbeddedFiles` entry, inflates the stream (`DecompressionStream`) and passes the bytes on. PDFKit writes a plain cross-reference table and no object streams, so a small reader handles our own PDFs. A PDF re-saved by Acrobat or Preview usually has compressed cross-references and object streams, which needs a real parser (pdf-lib, in the plugin or the core). Start with our own PDFs, and have the import say plainly when it finds no book rather than guess.
+
+Costs. Images and fonts are stored twice (Joseph's PDF is 5.4 MB before the attachment). Print services that want PDF/X don't allow embedded files, so the attachment is a choice on the card, not always on. Acrobat shows attachments; Preview and browser viewers mostly don't, which matters to readers but not to re-import. One axesCheck run should confirm a described attachment passes PDF/UA and WCAG. Rough effort: a day for the writer, the payload and the minimal import; more if re-saved PDFs must work.
+
 ## Decisions this touches
 
 `process/DECISIONS.md`: the 2026-09-15 entry ("PDF export stays single-pass … The app is for accessible EPUB") is replaced by 2026-10-31, "Accessible PDF is a goal of the app". Export stays single-pass: one pagination, read once.
