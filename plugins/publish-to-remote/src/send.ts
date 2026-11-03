@@ -138,6 +138,7 @@ export async function sendPackage(
       sidecars,
       catalog.identity,
       catalog.file,
+      catalog.entries,
     );
     if (!written.success) {
       announceContentChanged(remote.id);
@@ -179,6 +180,7 @@ export async function setInCatalog(
     sidecarMap(packages),
     catalog.identity,
     catalog.file,
+    catalog.entries,
   );
   announceContentChanged(remote.id);
   if (!written.success) return { success: false, error: written.error };

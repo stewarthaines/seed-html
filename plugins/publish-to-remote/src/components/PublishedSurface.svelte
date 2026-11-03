@@ -207,6 +207,7 @@
         sidecarMap(packages),
         identity,
         file,
+        from.entries,
       );
       if (!result.success) {
         showStatus(result.error || translate('Catalog update failed'), 'error');
@@ -339,6 +340,7 @@
             sidecarMap(packages),
             feed.identity,
             feed.file,
+            feed.entries,
           );
         }
       }

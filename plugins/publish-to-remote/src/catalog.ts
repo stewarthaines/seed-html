@@ -158,6 +158,24 @@ export function keysForEntries(
   objects: S3Object[],
   entries: CatalogEntry[],
 ): { keys: Set<string>; missingHrefs: string[] } {
+  const { byKey, missingHrefs } = matchEntries(remote, objects, entries);
+  return { keys: new Set(byKey.keys()), missingHrefs };
+}
+
+/** Each feed entry against the object key it describes (see keysForEntries). */
+export function entriesByKey(
+  remote: RemoteConfig,
+  objects: S3Object[],
+  entries: CatalogEntry[],
+): Map<string, CatalogEntry> {
+  return matchEntries(remote, objects, entries).byKey;
+}
+
+function matchEntries(
+  remote: RemoteConfig,
+  objects: S3Object[],
+  entries: CatalogEntry[],
+): { byKey: Map<string, CatalogEntry>; missingHrefs: string[] } {
   const byHref = new Map<string, string>();
   const byName = new Set<string>();
   for (const o of objects) {
@@ -166,19 +184,19 @@ export function keysForEntries(
     if (url) byHref.set(url, o.key);
     byName.add(o.key);
   }
-  const keys = new Set<string>();
+  const byKey = new Map<string, CatalogEntry>();
   const missingHrefs: string[] = [];
   for (const entry of entries) {
     const key = byHref.get(entry.href);
     if (key) {
-      keys.add(key);
+      byKey.set(key, entry);
       continue;
     }
     const name = hrefBasename(entry.href);
-    if (name && byName.has(name)) keys.add(name);
+    if (name && byName.has(name)) byKey.set(name, entry);
     else missingHrefs.push(entry.href);
   }
-  return { keys, missingHrefs };
+  return { byKey, missingHrefs };
 }
 
 /** Read a feed's text, through the cache when the listing gives it a stamp. */
@@ -279,9 +297,17 @@ export async function loadCatalogs(
 }
 
 /**
- * Write the feed listing `keys`, enriched from the local sidecars (matched by
- * filename) with each cover thumbnail hosted beside its EPUB. The whole file
- * is regenerated; nothing is merged.
+ * Write the feed listing `keys`. The destination is a shelf several browsers
+ * send to, and each owns only the books it packaged (process/DECISIONS.md,
+ * 2026-11-03):
+ *
+ * - a book with a sidecar here is described from the sidecar, its cover
+ *   uploaded beside the EPUB (always: a regenerated cover must replace the old);
+ * - any other book keeps what the feed already says (`feedEntries`, the feed as
+ *   read), so a browser that never packaged it does not flatten it to a
+ *   filename;
+ * - a book still without a cover links the `<base>.thumb.png` beside its EPUB
+ *   when the destination has one.
  */
 export async function writeCatalog(
   remote: CatalogRemoteConfig,
@@ -290,10 +316,12 @@ export async function writeCatalog(
   sidecars: Map<string, CatalogEntryMeta>,
   identity: CatalogIdentity,
   file: string,
+  feedEntries: CatalogEntry[],
 ): Promise<{ success: boolean; url?: string; error?: string }> {
   const format = formatForKey(file);
   const feedUrl = feedUrlFor(remote, file);
   const present = new Set(objects.map((o) => o.key));
+  const fromFeed = entriesByKey(remote, objects, feedEntries);
   // A Dropbox feed links to shared URLs: look them up now, only for the
   // books and thumbnails the feed will carry.
   if (remote.type === 'dropbox') {
@@ -304,20 +332,30 @@ export async function writeCatalog(
     objects = await resolveDropboxLinks(remote, objects, linked);
   }
   const metaByKey = new Map<string, CatalogEntryMeta>();
-  for (const [key, meta] of sidecars) {
-    if (!keys.has(key) || !present.has(key)) continue;
-    const entry = { ...meta };
-    if (entry.thumbnailBytes) {
-      // Host the thumbnail so readers can show it (most ignore data: URIs).
-      // Always re-upload: a regenerated cover must replace the old image.
-      const thumbKey = `${key.replace(/\.epub$/i, '')}.thumb.png`;
-      const blob = new Blob([entry.thumbnailBytes], { type: 'image/png' });
-      const res = await uploadFile(remote, thumbKey, blob, 'image/png');
-      if (res.success)
-        entry.thumbnailUrl = res.url || getPublicUrl(remote, thumbKey);
+  for (const key of keys) {
+    if (!present.has(key)) continue;
+    const thumbKey = `${key.replace(/\.epub$/i, '')}.thumb.png`;
+    const sidecar = sidecars.get(key);
+    let entry: CatalogEntryMeta;
+    if (sidecar) {
+      entry = { ...sidecar };
+      if (entry.thumbnailBytes) {
+        // Host the thumbnail so readers can show it (most ignore data: URIs).
+        const blob = new Blob([entry.thumbnailBytes], { type: 'image/png' });
+        const res = await uploadFile(remote, thumbKey, blob, 'image/png');
+        if (res.success)
+          entry.thumbnailUrl = res.url || getPublicUrl(remote, thumbKey);
+      }
+      delete entry.thumbnailBytes;
+    } else {
+      entry = { ...(fromFeed.get(key)?.meta ?? {}) };
     }
-    delete entry.thumbnailBytes;
-    metaByKey.set(key, entry);
+    if (!entry.thumbnailUrl) {
+      const thumb = objects.find((o) => o.key === thumbKey);
+      const url = thumb ? getPublicUrl(remote, thumbKey, thumb.fileId) : '';
+      if (url) entry.thumbnailUrl = url;
+    }
+    if (Object.keys(entry).length) metaByKey.set(key, entry);
   }
   const generate = format === 'opds2' ? generateOpds2Feed : generateOpdsFeed;
   const body = generate(remote, objects, feedUrl, metaByKey, keys, identity);

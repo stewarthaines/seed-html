@@ -317,11 +317,13 @@ describe('generateOpdsFeed', () => {
           href: 'https://s3.example.com/my-bucket/book1.epub',
           identifier: 'urn:uuid:one',
           title: 'Book One',
+          meta: { title: 'Book One', identifier: 'urn:uuid:one' },
         },
         {
           href: 'https://s3.example.com/my-bucket/book2.epub',
           identifier: undefined,
           title: 'book2',
+          meta: { title: 'book2' },
         },
       ]);
     });

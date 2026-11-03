@@ -10,7 +10,11 @@ import {
   hrefBasename,
   keysForEntries,
 } from './catalog.js';
+import { generateOpds2Feed, parseOpds2Feed } from './opds2.js';
+import { generateOpdsFeed, parseOpdsFeed } from './opds.js';
 import type {
+  CatalogEntry,
+  CatalogEntryMeta,
   DropboxRemoteConfig,
   GoogleDriveRemoteConfig,
   S3Object,
@@ -186,5 +190,137 @@ describe('loadCatalog on a failing read', () => {
     expect(info.error).toBeUndefined();
     expect(spy).toHaveBeenCalledTimes(2);
     spy.mockRestore();
+  });
+});
+
+describe('writeCatalog on a shelf several browsers send to', () => {
+  const shelf: S3RemoteConfig = { ...s3, publicUrlBase: 'https://books.example.com' };
+  const at = '2026-11-01T00:00:00.000Z';
+  const objects: S3Object[] = [
+    { key: 'firefox-book.epub', size: 1, lastModified: at },
+    { key: 'firefox-book.thumb.png', size: 1, lastModified: at },
+    { key: 'chrome-book.epub', size: 1, lastModified: at },
+    { key: 'flattened.epub', size: 1, lastModified: at },
+    { key: 'flattened.thumb.png', size: 1, lastModified: at },
+  ];
+  const keys = new Set(['firefox-book.epub', 'chrome-book.epub', 'flattened.epub']);
+
+  // Everything the packaging sidecar of the Firefox book carries.
+  const firefoxMeta: CatalogEntryMeta = {
+    title: 'Walking the Coast',
+    authors: ['Ada Lovelace', 'Grace Hopper'],
+    identifier: 'urn:uuid:1111',
+    language: 'en-AU',
+    publisher: 'Ibis',
+    issued: '2026-09-01',
+    description: 'A walk.',
+    subjects: ['Travel', 'Coast'],
+    accessibility: {
+      accessMode: ['textual', 'visual'],
+      accessModeSufficient: ['textual', 'textual,visual'],
+      feature: ['alternativeText', 'tableOfContents'],
+      hazard: ['none'],
+      summary: 'Fully described images.',
+      conformsTo: 'EPUB Accessibility 1.1 - WCAG 2.1 Level AA',
+      certifiedBy: 'Self',
+    },
+    thumbnailUrl: 'https://books.example.com/firefox-book.thumb.png',
+  };
+  const chromeSidecar: CatalogEntryMeta = {
+    title: 'Liner Notes',
+    authors: ['Stewart Haines'],
+    thumbnailBytes: new Uint8Array([137, 80, 78, 71]).buffer,
+  };
+
+  /** The feed as Firefox last wrote it: its book in full, the flattened one bare. */
+  function previousFeed(format: 'opds1' | 'opds2'): CatalogEntry[] {
+    const meta = new Map([['firefox-book.epub', { ...firefoxMeta }]]);
+    const prior = objects.filter((o) => o.key !== 'chrome-book.epub');
+    return format === 'opds2'
+      ? parseOpds2Feed(generateOpds2Feed(shelf, prior, 'https://books.example.com/catalog.json', meta)).entries
+      : parseOpdsFeed(generateOpdsFeed(shelf, prior, 'https://books.example.com/catalog.xml', meta)).entries;
+  }
+
+  async function write(file: string, feedEntries: CatalogEntry[]) {
+    const remoteOps = await import('./remote-ops.js');
+    const uploads: string[] = [];
+    const up = vi.spyOn(remoteOps, 'uploadFile').mockImplementation(async (_r, key) => {
+      uploads.push(key);
+      return { success: true };
+    });
+    let body = '';
+    const text = vi.spyOn(remoteOps, 'uploadTextFile').mockImplementation(async (_r, _k, b) => {
+      body = b;
+      return { success: true };
+    });
+    const { writeCatalog } = await import('./catalog.js');
+    const result = await writeCatalog(
+      shelf,
+      objects,
+      keys,
+      new Map([['chrome-book.epub', chromeSidecar]]),
+      {},
+      file,
+      feedEntries,
+    );
+    up.mockRestore();
+    text.mockRestore();
+    expect(result.success).toBe(true);
+    return { body, uploads };
+  }
+
+  it('keeps a book this browser never packaged exactly as the OPDS 2 feed had it', async () => {
+    const { body } = await write('catalog.json', previousFeed('opds2'));
+    const after = new Map(parseOpds2Feed(body).entries.map((e) => [hrefBasename(e.href), e.meta]));
+    expect(after.get('firefox-book.epub')).toEqual(firefoxMeta);
+  });
+
+  it('keeps a book this browser never packaged exactly as the OPDS 1 feed had it', async () => {
+    const { body } = await write('catalog.xml', previousFeed('opds1'));
+    const after = new Map(parseOpdsFeed(body).entries.map((e) => [hrefBasename(e.href), e.meta]));
+    expect(after.get('firefox-book.epub')).toEqual(firefoxMeta);
+  });
+
+  it('describes its own book from the sidecar and uploads its cover', async () => {
+    const { body, uploads } = await write('catalog.json', previousFeed('opds2'));
+    const chrome = parseOpds2Feed(body).entries.find((e) => e.href.endsWith('/chrome-book.epub'));
+    expect(chrome?.meta).toEqual({
+      title: 'Liner Notes',
+      authors: ['Stewart Haines'],
+      thumbnailUrl: 'https://books.example.com/chrome-book.thumb.png',
+    });
+    // Only its own cover is uploaded; the others' stay as they are.
+    expect(uploads).toEqual(['chrome-book.thumb.png']);
+  });
+
+  it('lets a sidecar here win over what the feed says', async () => {
+    const remoteOps = await import('./remote-ops.js');
+    let body = '';
+    const text = vi.spyOn(remoteOps, 'uploadTextFile').mockImplementation(async (_r, _k, b) => {
+      body = b;
+      return { success: true };
+    });
+    const { writeCatalog } = await import('./catalog.js');
+    await writeCatalog(
+      shelf,
+      objects,
+      new Set(['firefox-book.epub']),
+      new Map([['firefox-book.epub', { title: 'Walking the Coast, revised' }]]),
+      {},
+      'catalog.json',
+      previousFeed('opds2'),
+    );
+    text.mockRestore();
+    expect(parseOpds2Feed(body).entries[0].meta).toEqual({
+      title: 'Walking the Coast, revised',
+      thumbnailUrl: 'https://books.example.com/firefox-book.thumb.png',
+    });
+  });
+
+  it('links the cover beside an EPUB the feed had lost it for', async () => {
+    const { body } = await write('catalog.json', previousFeed('opds2'));
+    const flat = parseOpds2Feed(body).entries.find((e) => e.href.endsWith('/flattened.epub'));
+    expect(flat?.meta?.thumbnailUrl).toBe('https://books.example.com/flattened.thumb.png');
+    expect(flat?.title).toBe('flattened');
   });
 });

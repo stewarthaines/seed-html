@@ -229,6 +229,73 @@ function directChild(parent: Element, localName: string): Element | null {
   return null;
 }
 
+/** Direct children by local name and namespace, as trimmed non-empty text. */
+function childTexts(parent: Element, localName: string, ns: string): string[] {
+  return Array.from(parent.children)
+    .filter((c) => c.localName === localName && c.namespaceURI === ns)
+    .map((c) => c.textContent?.trim() ?? '')
+    .filter(Boolean);
+}
+
+/** What an Atom entry says about its book, in sidecar form: the inverse of
+ *  generateOpdsFeed, so an entry carried forward is written back unchanged. */
+function entryMeta(entry: Element): CatalogEntryMeta {
+  const meta: CatalogEntryMeta = {};
+  const title = childTexts(entry, 'title', ATOM_NS)[0];
+  if (title) meta.title = title;
+  const authors = Array.from(entry.children)
+    .filter((c) => c.localName === 'author' && c.namespaceURI === ATOM_NS)
+    .map((a) => childTexts(a, 'name', ATOM_NS)[0])
+    .filter((n): n is string => !!n);
+  if (authors.length) meta.authors = authors;
+  const description = childTexts(entry, 'summary', ATOM_NS)[0];
+  if (description) meta.description = description;
+  const language = childTexts(entry, 'language', DC_NS)[0];
+  if (language) meta.language = language;
+  const publisher = childTexts(entry, 'publisher', DC_NS)[0];
+  if (publisher) meta.publisher = publisher;
+  const issued = childTexts(entry, 'issued', DC_NS)[0];
+  if (issued) meta.issued = issued;
+  const identifier = childTexts(entry, 'identifier', DC_NS)[0];
+  if (identifier) meta.identifier = identifier;
+  const subjects = Array.from(entry.children)
+    .filter((c) => c.localName === 'category' && c.namespaceURI === ATOM_NS)
+    .map((c) => c.getAttribute('term')?.trim() ?? '')
+    .filter(Boolean);
+  if (subjects.length) meta.subjects = subjects;
+
+  const a11y: NonNullable<CatalogEntryMeta['accessibility']> = {};
+  const list = (name: string) => {
+    const v = childTexts(entry, name, SCHEMA_NS);
+    return v.length ? v : undefined;
+  };
+  const accessMode = list('accessMode');
+  if (accessMode) a11y.accessMode = accessMode;
+  const sufficient = list('accessModeSufficient');
+  if (sufficient) a11y.accessModeSufficient = sufficient;
+  const feature = list('accessibilityFeature');
+  if (feature) a11y.feature = feature;
+  const hazard = list('accessibilityHazard');
+  if (hazard) a11y.hazard = hazard;
+  const summary = list('accessibilitySummary')?.[0];
+  if (summary) a11y.summary = summary;
+  const conformsTo = childTexts(entry, 'conformsTo', DC_NS)[0];
+  if (conformsTo) a11y.conformsTo = conformsTo;
+  const certifiedBy = list('certifiedBy')?.[0];
+  if (certifiedBy) a11y.certifiedBy = certifiedBy;
+  if (Object.keys(a11y).length) meta.accessibility = a11y;
+
+  const links = Array.from(entry.children).filter(
+    (c) => c.localName === 'link' && c.namespaceURI === ATOM_NS,
+  );
+  const image =
+    links.find((l) => l.getAttribute('rel') === 'http://opds-spec.org/image') ??
+    links.find((l) => l.getAttribute('rel') === 'http://opds-spec.org/image/thumbnail');
+  const imageHref = image?.getAttribute('href')?.trim();
+  if (imageHref) meta.thumbnailUrl = imageHref;
+  return meta;
+}
+
 /**
  * Parse an existing OPDS feed back into its editable identity (the feed-level
  * author name/uri) and the set of epub acquisition hrefs it lists. Used when a
@@ -245,14 +312,12 @@ export function parseOpdsFeed(xml: string): ParsedOpdsFeed {
     );
     const href = link?.getAttribute('href');
     if (!href) continue;
-    const identifier = Array.from(entry.children).find(
-      (c) => c.localName === 'identifier' && c.namespaceURI === DC_NS,
-    )?.textContent?.trim();
-    const title = directChild(entry, 'title')?.textContent?.trim();
+    const meta = entryMeta(entry);
     entries.push({
       href,
-      identifier: identifier || undefined,
-      title: title || undefined,
+      identifier: meta.identifier,
+      title: meta.title ?? (directChild(entry, 'title')?.textContent?.trim() || undefined),
+      meta,
     });
   }
   const epubHrefs = new Set(entries.map((e) => e.href));

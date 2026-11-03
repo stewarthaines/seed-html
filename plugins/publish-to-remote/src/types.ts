@@ -196,6 +196,9 @@ export interface CatalogEntry {
   href: string;
   identifier?: string;
   title?: string;
+  /** Everything the feed says about the book, in sidecar form. A write carries
+   *  this forward for books this browser holds no sidecar for. */
+  meta?: CatalogEntryMeta;
 }
 
 export interface S3Credentials {
