@@ -1,85 +1,76 @@
 /**
- * Hosted docs build — spike (process/DOCS_SITE.md, phase 1).
+ * Hosted docs build (process/DOCS_SITE.md).
  *
- * Renders the user manual's chapter files to web pages through the app's own
- * MarkdownIt text transform (extensions/markdown-it/transformMarkdown.js), so
- * the web page and the EPUB chapter come out of the same code.
+ * The manuals' chapter files in docs/user/<book>/Text/ become web pages at
+ * /docs/<language>/<book>/<chapter>/, rendered by the app's own MarkdownIt
+ * transform (lib/markdown.js) so the web page and the EPUB chapter come out of
+ * the same code.
  *
- * Run from the repo root:
- *   npx @11ty/eleventy --config=docs/site/eleventy.config.js
- *   npx @11ty/eleventy --config=docs/site/eleventy.config.js --serve
+ *   npm run build:docs   → dist/docs/
+ *   npm run dev:docs     → the same, served with live reload
  */
 
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
-import vm from 'node:vm';
-
-const EXTENSION_DIR = 'extensions/markdown-it';
-
-/** Book folders under docs/user and their URL slugs (fuller book titles). */
-const BOOKS = [{ folder: 'seed.html-user-manual', slug: 'user-manual' }];
+import { transformText } from './lib/markdown.js';
+import { BOOKS, SOURCE_ROOT, findChapter, loadBooks } from './lib/books.js';
+import { bookPage, entryPage, homePage } from './pages.js';
 
 const LANGUAGE = 'en';
 
-/**
- * Load the app's markdown transform in a sandbox that stands in for the
- * transform iframe: the vendored UMD bundles attach `markdownit` and
- * `markdownItAttrs` to the global, and `window` is that same global.
- */
-function loadAppTransform() {
-  const sandbox = { console };
-  sandbox.window = sandbox;
-  vm.createContext(sandbox);
-  for (const file of [
-    'markdown-it.min.js',
-    'markdown-it-attrs.browser.min.js',
-    'transformMarkdown.js',
-  ]) {
-    const filename = path.join(EXTENSION_DIR, file);
-    vm.runInContext(readFileSync(filename, 'utf8'), sandbox, { filename });
-  }
-  return sandbox.transformText;
-}
-
 export default function (eleventyConfig) {
-  const transformText = loadAppTransform();
   eleventyConfig.setLibrary('md', { render: source => transformText(source) });
 
   // Chapters are book content, not templates: no Liquid pass over them.
-  eleventyConfig.setTemplateFormats(['md']);
+  eleventyConfig.setTemplateFormats(['md', '11ty.js']);
   eleventyConfig.setUseGitIgnore(false);
-  // Ignore globs are relative to the repo root, not the input folder.
-  eleventyConfig.ignores.add('docs/user/*.md');
-  eleventyConfig.ignores.add('docs/user/*/outline.md');
-  eleventyConfig.ignores.add('docs/user/seed.html-advanced-reference/**');
+  // Only chapter files are pages. Ignore globs are relative to the repo root.
+  eleventyConfig.ignores.add(`${SOURCE_ROOT}/*.md`);
+  eleventyConfig.ignores.add(`${SOURCE_ROOT}/*/outline.md`);
 
+  // Chapter order is read at build time; re-read when an outline or chapter changes.
+  eleventyConfig.addWatchTarget(`${SOURCE_ROOT}/*/outline.md`);
+  const books = () => loadBooks(LANGUAGE);
+  eleventyConfig.addGlobalData('books', books);
+  eleventyConfig.addGlobalData('language', LANGUAGE);
+
+  eleventyConfig.addPassthroughCopy({
+    'docs/site/assets/site.css': 'docs/assets/site.css',
+    'src/styles/tokens': 'docs/assets/styles/tokens',
+    'src/styles/themes': 'docs/assets/styles/themes',
+    'src/styles/utilities/forms.css': 'docs/assets/styles/utilities/forms.css',
+  });
   for (const book of BOOKS) {
     const out = `docs/${LANGUAGE}/${book.slug}`;
     eleventyConfig.addPassthroughCopy({
-      [`docs/user/${book.folder}/Images`]: `${out}/Images`,
-      [`docs/user/${book.folder}/Styles`]: `${out}/Styles`,
+      [`${SOURCE_ROOT}/${book.folder}/Images`]: `${out}/Images`,
+      [`${SOURCE_ROOT}/${book.folder}/Styles`]: `${out}/Styles`,
     });
   }
 
-  eleventyConfig.addGlobalData('layout', 'chapter.11ty.js');
-  eleventyConfig.addGlobalData('language', LANGUAGE);
+  // Chapter pages.
   eleventyConfig.addGlobalData('eleventyComputed', {
-    book: data => BOOKS.find(b => data.page.inputPath.includes(`/${b.folder}/`)),
-    // The page sits one level below its book folder, as Text/ does in the
-    // EPUB, so the chapter's ../Images/ and book.css's url(../Images/…)
-    // resolve unchanged.
+    layout: data => (data.page.inputPath.endsWith('.md') ? 'chapter.11ty.js' : undefined),
+    docsBook: data => findChapter(data.books, data.page.inputPath)?.book,
+    docsChapter: data => findChapter(data.books, data.page.inputPath)?.chapter,
     permalink: data => {
-      const book = BOOKS.find(b => data.page.inputPath.includes(`/${b.folder}/`));
-      return `/docs/${LANGUAGE}/${book.slug}/${data.page.fileSlug}/`;
+      if (!data.page.inputPath.endsWith('.md')) return data.permalink;
+      return findChapter(data.books, data.page.inputPath).chapter.url;
     },
-    // The chapter's # heading, read from the source's first heading line.
-    title: data => /^# (.+)$/m.exec(data.page.rawInput ?? '')?.[1] ?? data.page.fileSlug,
+  });
+
+  // Generated pages.
+  eleventyConfig.addTemplate('docs-entry.11ty.js', entryPage, { permalink: '/docs/' });
+  eleventyConfig.addTemplate('docs-home.11ty.js', homePage, {
+    permalink: `/docs/${LANGUAGE}/`,
+  });
+  eleventyConfig.addTemplate('docs-book.11ty.js', data => bookPage({ ...data, book: data.book }), {
+    pagination: { data: 'books', size: 1, alias: 'book' },
+    permalink: data => data.book.url,
   });
 
   return {
     markdownTemplateEngine: false,
     dir: {
-      input: 'docs/user',
+      input: SOURCE_ROOT,
       includes: '../site/_includes',
       output: 'dist',
     },
