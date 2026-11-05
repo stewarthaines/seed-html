@@ -138,3 +138,19 @@ Preview deploy (the user runs deploys): `npm run build && npm run build:docs && 
 - `npm run deploy` runs `build:docs` before uploading, so local deploys and the dormant Forgejo workflow both ship docs matching the app (`docs/DEPLOYMENT.md`, Docs Site).
 - RTL: with `dir="rtl"` forced on a chapter page the layout mirrors (book navigation right, "On this page" left, the try-it rule on the right) with no sideways scroll. Each language's chrome strings carry a `dir`, set on `<html>`.
 - Dark mode follows the system, as in phase 2. No theme toggle yet.
+
+## Phase 4 (2026-11-06)
+
+- Chapter files are named for their URL slugs (`make-a-book.md`, `text-pipeline.md`, …). The file name is also the EPUB chapter id, so both outlines and `docs/user/CLAUDE.md` say to rename only on purpose. The in-app projects take the new names at their next folder sync: the old files arrive as removes (tick them; removes default to skip) and the spine needs putting back in order once.
+- The docs build clears `dist/docs/` before every build. Eleventy never deletes output, so the renamed chapters' old pages were still being checked and indexed. Only `dist/docs/` is cleared; the app build shares `dist/`.
+- The advanced reference's `Styles/book.css`, `Styles/highlight.css` and the ten icon SVGs its `book.css` names came into the repo from the in-app project (read over the seed-bridge). Its `book.css` differs slightly from the user manual's (pill weight, screenshot margin, a `.fleuron` block) and its header comment still says "User Manual"; both kept as they are.
+- Chapter pages link every stylesheet in the book's `Styles/`, as an EPUB chapter links every stylesheet in its manifest.
+- Extensions: a book lists the DOM-transform extensions its project installs (`extensions` in `docs/site/lib/books.js`). `docs/site/lib/extensions.js` loads each from `extensions/<id>/` into its own `node:vm` sandbox, scripts first and then transforms, as the app loads them into its transform iframe, and runs them on the chapter's happy-dom document before the web-only touches. Text-transform extensions stop the build; none are needed yet. The advanced reference lists `highlight`; the user manual stays plain by choice, although its Workflows chapter has code blocks.
+- A highlighted code block keeps the site's frame and shows only the theme's background, instead of a box inside a box.
+- Chapter splits were declined; the user is doing a content pass instead.
+
+Findings:
+
+- The repo still can't rebuild the advanced reference EPUB on its own. The in-app project also has `page.css` (code font, `.thumbnail`, the responsive `.half` figure), the Noto Sans Mono font, the impressum and prettier extensions, the code-block and figure-list generators, and its own `transformText.js` and `transformDom.js` (figure data, `<hr>` to fleuron). `page.css` stays off the web on purpose: its body and heading fonts and italic blockquotes would fight the site's typography. So the one `.thumbnail` and one `.half` figure are unstyled on the web.
+- The in-app advanced reference is in Firefox, where folder sync isn't available; syncing it from the repo means moving it to Chrome or Edge.
+- For the content pass: cross-reference targets want explicit `{#id}` (generated ids change when a heading is reworded); "Try it" callouts and self-references ("this book is software") assume the reader is in the app.
