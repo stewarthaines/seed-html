@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The user manual and the advanced reference are now online at readitinabook.com/docs, with search, and About SEED.html links to them.
+
 ### Fixed
 
 - Sending a book to a shared catalog from another browser or device keeps the covers and details of the books already there.
