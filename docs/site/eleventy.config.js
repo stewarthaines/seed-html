@@ -10,6 +10,8 @@
  *   npm run dev:docs     → the same into dist-docs-dev/, served with live reload
  */
 
+import { rmSync } from 'node:fs';
+import path from 'node:path';
 import { transformText } from './lib/markdown.js';
 import { BOOKS, SOURCE_ROOT, findChapter, loadBooks } from './lib/books.js';
 import { bookPage, entryPage, homePage, searchPage } from './pages.js';
@@ -70,6 +72,13 @@ export default function (eleventyConfig) {
 
   eleventyConfig.addTemplate('docs-search.11ty.js', searchPage, {
     permalink: `/docs/${LANGUAGE}/search/`,
+  });
+
+  // Eleventy never deletes output, so a renamed or removed chapter would leave
+  // its old page behind, still checked and indexed. Clear the docs folder (only
+  // that; the app build shares dist/) before every build.
+  eleventyConfig.on('eleventy.before', ({ directories }) => {
+    rmSync(path.join(directories.output, 'docs'), { recursive: true, force: true });
   });
 
   // Index the built chapters for search after every build, dev server included.
