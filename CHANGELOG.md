@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Link a folder and Import from files in Contents work again, and so does adding a chapter on a phone.
 - Sending a book to a shared catalog from another browser or device keeps the covers and details of the books already there.
 
 ## [0.26.0] - 2026-11-02
