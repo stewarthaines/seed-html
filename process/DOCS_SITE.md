@@ -154,3 +154,10 @@ Findings:
 - The repo still can't rebuild the advanced reference EPUB on its own. The in-app project also has `page.css` (code font, `.thumbnail`, the responsive `.half` figure), the Noto Sans Mono font, the impressum and prettier extensions, the code-block and figure-list generators, and its own `transformText.js` and `transformDom.js` (figure data, `<hr>` to fleuron). `page.css` stays off the web on purpose: its body and heading fonts and italic blockquotes would fight the site's typography. So the one `.thumbnail` and one `.half` figure are unstyled on the web.
 - The in-app advanced reference is in Firefox, where folder sync isn't available; syncing it from the repo means moving it to Chrome or Edge.
 - For the content pass: cross-reference targets want explicit `{#id}` (generated ids change when a heading is reworded); "Try it" callouts and self-references ("this book is software") assume the reader is in the app.
+
+## Phase 5 (2026-11-06)
+
+- About SEED.html links to `https://readitinabook.com/docs/` ("Documentation", next to the source link). It is absolute because the app also runs from `file://` and from inside an EPUB. The link goes nowhere useful until a production deploy ships the docs.
+- The docs link back with "Open SEED.html" in every page header (since phase 2).
+- The app has no in-app copy of the manuals to link from. They reach readers as samples in the sample catalog, whose descriptions come from each book project's details when it is sent; pointing those at the web pages is an edit in the projects, not the repo.
+- Changelog: one Added line under Unreleased.
