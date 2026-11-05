@@ -46,9 +46,12 @@
     "knip": "knip",
     "translate:demo": "node scripts/auto-translate.js",
     "translate:populate": "node scripts/populate-demo-translations.js",
-    "analyze": "ANALYZE=1 vite build && open dist/stats.html"
+    "analyze": "ANALYZE=1 vite build && open dist/stats.html",
+    "build:docs": "eleventy --config=docs/site/eleventy.config.js",
+    "dev:docs": "eleventy --config=docs/site/eleventy.config.js --serve"
   },
   "devDependencies": {
+    "@11ty/eleventy": "^3.1.8",
     "@axe-core/playwright": "^4.11.3",
     "@cfworker/json-schema": "^4.1.1",
     "@chromatic-com/storybook": "^4.0.0",
