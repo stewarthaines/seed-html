@@ -7,6 +7,7 @@
 
 export const STRINGS = {
   en: {
+    dir: 'ltr',
     siteTitle: 'SEED.html documentation',
     skipToContent: 'Skip to content',
     openApp: 'Open SEED.html',
@@ -17,6 +18,8 @@ export const STRINGS = {
     next: 'Next',
     chapters: 'Chapters',
     table: 'Table',
+    search: 'Search',
+    searchLabel: 'Search the manuals',
     homeIntro:
       'Two manuals: one for making books, one for extending them with code.',
   },
@@ -71,12 +74,25 @@ ${items}
  * @param {string} options.main - the main column's HTML
  * @param {string} [options.aside] - the right-hand column's HTML
  * @param {string[]} [options.stylesheets] - extra stylesheet hrefs (the book's own)
+ * @param {string} [options.head] - extra markup for the end of <head>
+ * @param {string} [options.query] - the search field's value
  */
-export function shell({ language, title, main, aside = '', stylesheets = [], books, currentBook, currentChapter }) {
+export function shell({
+  language,
+  title,
+  main,
+  aside = '',
+  stylesheets = [],
+  head = '',
+  query = '',
+  books,
+  currentBook,
+  currentChapter,
+}) {
   const t = STRINGS[language];
   const links = stylesheets.map(href => `<link rel="stylesheet" href="${href}">`).join('\n');
   return `<!doctype html>
-<html lang="${language}">
+<html lang="${language}" dir="${t.dir}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -93,11 +109,15 @@ export function shell({ language, title, main, aside = '', stylesheets = [], boo
 </script>
 <link rel="stylesheet" href="/docs/assets/site.css">
 ${links}
+${head}
 </head>
 <body>
 <a class="docs-skip" href="#content">${t.skipToContent}</a>
 <header class="docs-header">
 <a class="docs-brand" href="/docs/${language}/">${t.siteTitle}</a>
+<form class="docs-search-form" role="search" action="/docs/${language}/search/">
+<input type="search" name="q" value="${escape(query)}" aria-label="${t.searchLabel}" placeholder="${t.search}">
+</form>
 <a class="btn btn-secondary" href="/SEED.html">${t.openApp}</a>
 </header>
 <div class="docs-layout">

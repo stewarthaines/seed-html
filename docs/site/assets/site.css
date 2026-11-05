@@ -307,3 +307,47 @@ a:hover {
 .docs-cards h2 {
   margin-block-end: var(--space-1);
 }
+
+/* --- Search ------------------------------------------------------------- */
+
+.docs-search-form {
+  flex: 1;
+  max-inline-size: 20rem;
+  margin-inline-start: auto;
+}
+
+.docs-search-form input {
+  inline-size: 100%;
+  padding-block: var(--space-1);
+  padding-inline: var(--space-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-input);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font: inherit;
+}
+
+@media (max-width: 40rem) {
+  .docs-header {
+    flex-wrap: wrap;
+  }
+
+  .docs-search-form {
+    order: 3;
+    flex-basis: 100%;
+    max-inline-size: none;
+  }
+}
+
+/* Pagefind's UI, coloured by the app's tokens. */
+#docs-search {
+  --pagefind-ui-scale: 0.8;
+  --pagefind-ui-primary: var(--color-text-link);
+  --pagefind-ui-text: var(--color-text-primary);
+  --pagefind-ui-background: var(--color-bg-primary);
+  --pagefind-ui-border: var(--color-border-strong);
+  --pagefind-ui-tag: var(--color-bg-tertiary);
+  --pagefind-ui-border-width: 1px;
+  --pagefind-ui-border-radius: var(--radius-lg);
+  --pagefind-ui-font: var(--font-sans);
+}

@@ -7,12 +7,13 @@
  * the same code.
  *
  *   npm run build:docs   → dist/docs/
- *   npm run dev:docs     → the same, served with live reload
+ *   npm run dev:docs     → the same into dist-docs-dev/, served with live reload
  */
 
 import { transformText } from './lib/markdown.js';
 import { BOOKS, SOURCE_ROOT, findChapter, loadBooks } from './lib/books.js';
-import { bookPage, entryPage, homePage } from './pages.js';
+import { bookPage, entryPage, homePage, searchPage } from './pages.js';
+import { buildSearchIndex } from './lib/search.js';
 
 const LANGUAGE = 'en';
 
@@ -65,6 +66,15 @@ export default function (eleventyConfig) {
   eleventyConfig.addTemplate('docs-book.11ty.js', data => bookPage({ ...data, book: data.book }), {
     pagination: { data: 'books', size: 1, alias: 'book' },
     permalink: data => data.book.url,
+  });
+
+  eleventyConfig.addTemplate('docs-search.11ty.js', searchPage, {
+    permalink: `/docs/${LANGUAGE}/search/`,
+  });
+
+  // Index the built chapters for search after every build, dev server included.
+  eleventyConfig.on('eleventy.after', async ({ directories }) => {
+    await buildSearchIndex({ siteDir: directories.output.replace(/\/$/, '') });
   });
 
   return {

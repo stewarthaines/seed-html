@@ -1,6 +1,6 @@
 # Quality gates
 
-A change is done when `npm run validate` passes. It runs the four gates below; run it before saying a task is complete, and run the individual commands while you work.
+A change is done when `npm run validate` passes. It runs the gates below; run it before saying a task is complete, and run the individual commands while you work.
 
 | Gate | Command | Passes when |
 | --- | --- | --- |
@@ -8,6 +8,7 @@ A change is done when `npm run validate` passes. It runs the four gates below; r
 | Lint | `npm run lint` | zero errors and warnings under the `--max-warnings` cap |
 | Tests | `npm test` | all unit tests pass |
 | Build | `npm run build` | the single-file build succeeds |
+| Docs | `npm run check:docs` | the docs site builds and its internal links, anchors and image alt text check out |
 
 `npm run format` (Prettier) keeps formatting consistent; run it before committing.
 

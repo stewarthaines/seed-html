@@ -46,7 +46,7 @@ export default function (data) {
     // The page sits one level below its book folder, as Text/ does in the
     // EPUB, so this and the chapter's ../Images/ paths resolve unchanged.
     stylesheets: docsBook.hasStylesheet ? ['../Styles/book.css'] : [],
-    main: `<article class="docs-chapter">
+    main: `<article class="docs-chapter" data-pagefind-body>
 ${html}
 </article>
 ${pager(docsChapter, t)}`,

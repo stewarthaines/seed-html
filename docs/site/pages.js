@@ -3,6 +3,7 @@
  */
 
 import { escape, shell, STRINGS } from './lib/shell.js';
+import { SEARCH_BUNDLE } from './lib/search.js';
 
 export function homePage({ language, books }) {
   const t = STRINGS[language];
@@ -38,6 +39,41 @@ export function bookPage({ language, books, book }) {
 <ol class="docs-chapter-list">
 ${chapters}
 </ol>`,
+  });
+}
+
+/**
+ * The search page. The header's search form submits here with ?q=; Pagefind's
+ * UI runs the query against this language's index.
+ */
+export function searchPage({ language, books }) {
+  const t = STRINGS[language];
+  return shell({
+    language,
+    title: t.search,
+    books,
+    head: `<link rel="stylesheet" href="${SEARCH_BUNDLE}pagefind-ui.css">
+<script src="${SEARCH_BUNDLE}pagefind-ui.js"></script>`,
+    main: `<h1>${t.search}</h1>
+<div id="docs-search"></div>
+<script>
+  (() => {
+    const ui = new PagefindUI({
+      element: '#docs-search',
+      bundlePath: '${SEARCH_BUNDLE}',
+      // Indexed URLs are already site-root paths (/docs/en/…); without this
+      // Pagefind prefixes its own folder's parent and doubles /docs/.
+      baseUrl: '/',
+      showSubResults: true,
+      showImages: false,
+      autofocus: true,
+    });
+    const query = new URLSearchParams(location.search).get('q');
+    if (query) ui.triggerSearch(query);
+    // The header field and the page's own field are one search here.
+    document.querySelector('.docs-search-form').hidden = true;
+  })();
+</script>`,
   });
 }
 

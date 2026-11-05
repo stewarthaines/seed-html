@@ -6,11 +6,12 @@ This guide covers building and deploying SEED.html for various distribution meth
 
 1. [Building for Production](#building-for-production)
 2. [Web Server Deployment](#web-server-deployment)
-3. [Standalone Distribution](#standalone-distribution)
-4. [npm Package](#npm-package)
-5. [EPUB Embedding](#epub-embedding)
-6. [Version Management](#version-management)
-7. [Security Considerations](#security-considerations)
+3. [Docs Site](#docs-site)
+4. [Standalone Distribution](#standalone-distribution)
+5. [npm Package](#npm-package)
+6. [EPUB Embedding](#epub-embedding)
+7. [Version Management](#version-management)
+8. [Security Considerations](#security-considerations)
 
 ## Building for Production
 
@@ -202,6 +203,15 @@ npm run build:i18n && npm run build:plugins && npm run deploy
 > falls back to direct requests (which require server-side CORS). The proxy is
 > also unavailable in the standalone single-file and Active-EPUB (`file://`)
 > modes.
+
+## Docs Site
+
+The user manual and advanced reference are also published as web pages under `/docs/<language>/<book>/`, built from the same chapter files in `docs/user/` by Eleventy through the app's own markdown-it transform (design: `process/DOCS_SITE.md`).
+
+- `npm run build:docs` writes `dist/docs/` and its Pagefind search index; `npm run dev:docs` serves it at http://localhost:8080/docs/ with live reload, building into its own `dist-docs-dev/` so a running dev server and a build or validate never write the same files.
+- `npm run check:docs` builds and checks internal links, anchors and image alt text; `npm run validate` runs it.
+- `npm run deploy` builds the docs before uploading, so every production deploy ships docs matching the app. `vite build` empties `dist/`, so the docs build always runs after the app build — `deploy` takes care of that.
+- Preview without touching production: `npm run build && npm run build:docs && npx wrangler pages deploy dist --project-name readitinabook --branch docs-site`, then `https://docs-site.readitinabook.pages.dev/docs/`.
 
 ## Standalone Distribution
 

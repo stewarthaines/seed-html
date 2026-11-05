@@ -1,5 +1,6 @@
 # Build outputs
 dist/
+dist-docs-dev/
 build/
 .svelte-kit/
 storybook-static/
