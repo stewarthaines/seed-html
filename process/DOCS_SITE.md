@@ -108,6 +108,23 @@ It works. `docs/site/eleventy.config.js` loads the three files from `extensions/
 Spike notes for phase 2:
 
 - Eleventy ignore globs are relative to the repo root, not the input folder.
-- The page title is read from the source's first `# ` line; phase 2 should take it from the rendered heading.
 - URLs still use the `chapterNN` file names until the slug renames in phase 4.
 - The advanced reference is left out of the spike; it should build the same way.
+
+## Phase 2 (2026-11-05)
+
+Both books build: 15 chapter pages, an index page per book, the docs home at `/docs/en/`, and `/docs/` sending the reader to `/docs/en/` with a meta refresh (no `_redirects` file, so nothing touches the site root's edge redirect).
+
+- Chapter order comes from each `outline.md`, matched to chapter files by heading text. Both outlines and markdown sources are read with the app's own markdown-it (token stream, no regular expressions). Outline progress marks after two spaces ("Extensions  (drafted)") are dropped. Outline sections with no chapter yet are skipped; a chapter the outline doesn't name stops the build.
+- The layout parses the rendered chapter with happy-dom to give every h2/h3 an id (keeping any `{#id}` from the source), build "On this page", take the page title from the rendered `h1`, and wrap tables in a keyboard-focusable scroll region. Nothing else in the chapter markup changes.
+- Three columns on wide screens (book navigation, chapter, "On this page"), two below 80rem, one below 64rem, where the book navigation becomes a closed "Contents" disclosure. Previous/next links end each chapter. No page scrolls sideways at phone width; long code lines and wide tables scroll inside their own block.
+- Site CSS uses only the app's tokens, themes and `.btn` utilities, copied into `dist/docs/assets/styles/` at build time.
+- The site sets `data-theme` from the system preference with a small head script, as the app sets it explicitly. The theme files' fallback for pages without the attribute (`:root:not([data-theme])` in `dark.css`) covers only part of the palette: it has no button tokens, so a `.btn-secondary` rendered white on white, and its link colour is the one the explicit dark block notes fails AA. That is an app-side gap worth closing separately.
+
+Findings:
+
+- The advanced reference uses `{.ui .icon-gear}`, `{.figure}`, `{.caption}` and other classes, but the repo holds no `Styles/` for it and none of its icon SVGs. Its stylesheet presumably lives only in the browser copy of the project, so the repo isn't yet the whole source of that book. Its web pages link a stylesheet only when the book has one; they currently render unstyled pills and tables.
+- Site chrome strings ("On this page", "Contents", …) are in a per-language table in `docs/site/lib/shell.js`, not in the `.po` catalogs. Fine while only English exists; a translated manual would want them in the catalogs.
+- The build takes about 2 s, most of it happy-dom.
+
+Preview deploy (the user runs deploys): `npm run build && npm run build:docs && npx wrangler pages deploy dist --project-name readitinabook --branch docs-site`, then `https://docs-site.readitinabook.pages.dev/docs/`. `vite build` empties `dist/`, so the docs build always runs after it.
