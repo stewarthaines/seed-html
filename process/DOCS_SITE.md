@@ -115,7 +115,7 @@ Spike notes for phase 2:
 
 Both books build: 15 chapter pages, an index page per book, the docs home at `/docs/en/`, and `/docs/` sending the reader to `/docs/en/` with a meta refresh (no `_redirects` file, so nothing touches the site root's edge redirect).
 
-- Chapter order comes from each `outline.md`, matched to chapter files by heading text. Both outlines and markdown sources are read with the app's own markdown-it (token stream, no regular expressions). Outline progress marks after two spaces ("Extensions  (drafted)") are dropped. Outline sections with no chapter yet are skipped; a chapter the outline doesn't name stops the build.
+- Chapter order comes from each `outline.md`, matched to chapter files by heading text. Both outlines and markdown sources are read with the app's own markdown-it (token stream, no regular expressions). Outline progress marks after two spaces ("Extensions (drafted)") are dropped. Outline sections with no chapter yet are skipped; a chapter the outline doesn't name stops the build.
 - The layout parses the rendered chapter with happy-dom to give every h2/h3 an id (keeping any `{#id}` from the source), build "On this page", take the page title from the rendered `h1`, and wrap tables in a keyboard-focusable scroll region. Nothing else in the chapter markup changes.
 - Three columns on wide screens (book navigation, chapter, "On this page"), two below 80rem, one below 64rem, where the book navigation becomes a closed "Contents" disclosure. Previous/next links end each chapter. No page scrolls sideways at phone width; long code lines and wide tables scroll inside their own block.
 - Site CSS uses only the app's tokens, themes and `.btn` utilities, copied into `dist/docs/assets/styles/` at build time.
@@ -128,3 +128,13 @@ Findings:
 - The build takes about 2 s, most of it happy-dom.
 
 Preview deploy (the user runs deploys): `npm run build && npm run build:docs && npx wrangler pages deploy dist --project-name readitinabook --branch docs-site`, then `https://docs-site.readitinabook.pages.dev/docs/`. `vite build` empties `dist/`, so the docs build always runs after it.
+
+## Phase 3 (2026-11-05)
+
+- Search: Pagefind 1.5.2 (pinned; 1.6.0 was four days old), run through its Node API at the end of every Eleventy build, dev server included. Only chapter articles are indexed (`data-pagefind-body`); one index per `<html lang>`. The header has a plain search form that submits to `/docs/en/search/?q=…`, where Pagefind's UI runs the query, with results grouped by chapter and section. Its colours come from the app's tokens.
+- Pagefind's UI prefixes result URLs with its bundle folder's parent (`/docs/`), and the index already stores site-root paths, which doubled `/docs/docs/`. `baseUrl: '/'` fixes it. Cloudflare Pages does no URL mapping of its own: it serves `dist/` as built, exactly as the dev server does.
+- `npm run dev:docs` builds into its own `dist-docs-dev/` (gitignored, and ignored by Prettier and ESLint). With both writing to `dist/`, a running dev server and a build or validate could write the search index at the same time; one run left `pagefind-entry.json` empty.
+- `npm run check:docs` builds the site and checks the built pages: internal links, images, stylesheets and scripts resolve; every `#fragment` names an id on its target page; every image has alt text (empty alt only on a `.icon`). It runs in `npm run validate` (`docs/QUALITY.md`).
+- `npm run deploy` runs `build:docs` before uploading, so local deploys and the dormant Forgejo workflow both ship docs matching the app (`docs/DEPLOYMENT.md`, Docs Site).
+- RTL: with `dir="rtl"` forced on a chapter page the layout mirrors (book navigation right, "On this page" left, the try-it rule on the right) with no sideways scroll. Each language's chrome strings carry a `dir`, set on `<html>`.
+- Dark mode follows the system, as in phase 2. No theme toggle yet.
