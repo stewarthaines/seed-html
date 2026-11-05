@@ -27,11 +27,16 @@ function slugify(text) {
 
 /**
  * @param {string} html - the chapter body as rendered by the app's transform
- * @param {{ tableLabel: string }} options - accessible name for table scroll regions
- * @returns {{ html: string, title: string, toc: Array<{id: string, text: string, children: Array<{id: string, text: string}>}> }}
+ * @param {object} options
+ * @param {string} options.tableLabel - accessible name for table scroll regions
+ * @param {string} options.idref - the chapter's EPUB id, passed to the book's DOM transforms
+ * @param {(doc: Document, idref: string) => Promise<void>} [options.transform] - the book's
+ *   extension DOM transforms (lib/extensions.js), run before the web-only touches
+ * @returns {Promise<{ html: string, title: string, toc: Array<{id: string, text: string, children: Array<{id: string, text: string}>}> }>}
  */
-export function processChapter(html, { tableLabel }) {
+export async function processChapter(html, { tableLabel, idref, transform }) {
   const doc = parser.parseFromString(`<!doctype html><body>${html}</body>`, 'text/html');
+  if (transform) await transform(doc, idref);
   const used = new Set([...doc.querySelectorAll('[id]')].map(el => el.id));
 
   const uniqueId = base => {

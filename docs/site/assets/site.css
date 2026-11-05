@@ -252,6 +252,19 @@ a:hover {
   font-size: var(--text-sm);
 }
 
+/* A highlighted block brings its own background (the book's highlight.css):
+   the frame stays, and the code fills it instead of sitting in a second box. */
+.docs-chapter pre:has(> code.hljs) {
+  overflow: hidden;
+  padding: 0;
+  background: none;
+}
+
+.docs-chapter pre > code.hljs {
+  overflow-x: auto;
+  padding: var(--space-3);
+}
+
 .docs-table {
   overflow-x: auto;
 }

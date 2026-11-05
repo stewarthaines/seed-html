@@ -1,0 +1,64 @@
+html { color-scheme: light dark; }   /* tell the reader the block supports both */
+
+pre code.hljs { display: block; }
+
+/* Light palette (default) + adaptive base */
+.hljs {
+  --hljs-bg: rgba(128, 128, 128, 0.12);  /* faint, works on any page bg */
+  --hljs-comment: #697070;
+  --hljs-red: #884444;        /* strings, numbers, types, titles */
+  --hljs-rust: #ab5656;       /* operators, variables, regex */
+  --hljs-green: #397300;      /* built_in, addition */
+  --hljs-literal: #669955;
+  --hljs-meta: #1f7199;
+  --hljs-meta-string: #3388aa;
+  --hljs-punct: rgba(68, 68, 68, 0.67);
+
+  background: var(--hljs-bg);
+  color: inherit;             /* base text follows the reader's text colour */
+  font-weight: 400;
+}
+
+/* Dark palette */
+@media (prefers-color-scheme: dark) {
+  .hljs {
+    --hljs-comment: #8c9a9a;
+    --hljs-red: #ea6868;
+    --hljs-rust: #d8a3a3;
+    --hljs-green: #a5d6a7;
+    --hljs-literal: #aed581;
+    --hljs-meta: #6fb6d6;
+    --hljs-meta-string: #82aaff;
+    --hljs-punct: rgba(220, 220, 220, 0.55);
+  }
+}
+
+.hljs-comment { color: var(--hljs-comment); }
+.hljs-punctuation,
+.hljs-tag { color: var(--hljs-punct); }
+.hljs-tag .hljs-attr,
+.hljs-tag .hljs-name { color: inherit; }
+
+.hljs-attribute, .hljs-doctag, .hljs-keyword,
+.hljs-meta .hljs-keyword, .hljs-name,
+.hljs-selector-tag { font-weight: 500; }
+
+.hljs-deletion, .hljs-number, .hljs-quote,
+.hljs-selector-class, .hljs-selector-id, .hljs-string,
+.hljs-template-tag, .hljs-type { color: var(--hljs-red); }
+
+.hljs-section,
+.hljs-title { color: var(--hljs-red); font-weight: 600; }
+
+.hljs-link, .hljs-operator, .hljs-regexp,
+.hljs-selector-attr, .hljs-selector-pseudo, .hljs-symbol,
+.hljs-template-variable, .hljs-variable { color: var(--hljs-rust); }
+
+.hljs-literal { color: var(--hljs-literal); }
+.hljs-addition, .hljs-built_in, .hljs-bullet,
+.hljs-code { color: var(--hljs-green); }
+.hljs-meta { color: var(--hljs-meta); }
+.hljs-meta .hljs-string { color: var(--hljs-meta-string); }
+
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: bold; }

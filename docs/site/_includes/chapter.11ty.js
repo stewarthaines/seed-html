@@ -4,6 +4,7 @@
  */
 
 import { processChapter } from '../lib/chapter-html.js';
+import { domTransforms } from '../lib/extensions.js';
 import { escape, shell, STRINGS } from '../lib/shell.js';
 
 function pageToc(toc, t) {
@@ -33,10 +34,14 @@ ${link(chapter.next, 'next', t.next)}
 </nav>`;
 }
 
-export default function (data) {
+export default async function (data) {
   const { content, language, books, docsBook, docsChapter } = data;
   const t = STRINGS[language];
-  const { html, title, toc } = processChapter(content, { tableLabel: t.table });
+  const { html, title, toc } = await processChapter(content, {
+    tableLabel: t.table,
+    idref: docsChapter.slug,
+    transform: domTransforms(docsBook.extensions),
+  });
   return shell({
     language,
     title: title || docsChapter.title,
@@ -44,8 +49,8 @@ export default function (data) {
     currentBook: docsBook,
     currentChapter: docsChapter,
     // The page sits one level below its book folder, as Text/ does in the
-    // EPUB, so this and the chapter's ../Images/ paths resolve unchanged.
-    stylesheets: docsBook.hasStylesheet ? ['../Styles/book.css'] : [],
+    // EPUB, so these and the chapter's ../Images/ paths resolve unchanged.
+    stylesheets: docsBook.stylesheets.map(name => `../Styles/${name}`),
     main: `<article class="docs-chapter" data-pagefind-body>
 ${html}
 </article>

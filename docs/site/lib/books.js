@@ -14,7 +14,11 @@ import { headingTexts } from './markdown.js';
 
 export const SOURCE_ROOT = 'docs/user';
 
-/** Book folders under docs/user, their URL slugs (the fuller book titles) and names. */
+/**
+ * Book folders under docs/user, their URL slugs (the fuller book titles) and
+ * names, and the DOM-transform extensions their EPUB projects install
+ * (extensions/<id>/), which the web pages run too.
+ */
 export const BOOKS = [
   {
     folder: 'seed.html-user-manual',
@@ -28,6 +32,7 @@ export const BOOKS = [
     title: 'Advanced Reference',
     description:
       'How to extend a book with scripts, extensions and generators, for readers who know JavaScript and EPUB.',
+    extensions: ['highlight'],
   },
 ];
 
@@ -76,10 +81,15 @@ function loadBook(book, language) {
     chapter.next = chapters[i + 1] ?? null;
   });
 
-  // The book's own stylesheet, when the repo holds one, styles its pages.
-  const hasStylesheet = existsSync(path.join(bookDir, 'Styles', 'book.css'));
+  // The book's own stylesheets style its pages, as every chapter links them in the EPUB.
+  const stylesDir = path.join(bookDir, 'Styles');
+  const stylesheets = existsSync(stylesDir)
+    ? readdirSync(stylesDir)
+        .filter(name => name.endsWith('.css'))
+        .sort()
+    : [];
 
-  return { ...book, url, chapters, hasStylesheet };
+  return { ...book, extensions: book.extensions ?? [], url, chapters, stylesheets };
 }
 
 export function loadBooks(language) {
