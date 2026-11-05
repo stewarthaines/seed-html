@@ -1,0 +1,366 @@
+/*
+ * Docs site chrome. Colours, sizes and radii come from the app's tokens and
+ * themes (copied beside this file at build time), so the site follows the
+ * app's light and dark themes. Chapter content is styled by each book's own
+ * book.css, as in the EPUB.
+ */
+
+@import './styles/tokens/index.css';
+@import './styles/themes/index.css';
+@import './styles/utilities/forms.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-body-md);
+  line-height: var(--leading-normal);
+}
+
+a {
+  color: var(--color-text-link);
+}
+
+a:hover {
+  color: var(--color-text-link-hover);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+.docs-skip {
+  position: absolute;
+  inset-inline-start: var(--space-2);
+  inset-block-start: -10rem;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+
+.docs-skip:focus {
+  inset-block-start: var(--space-2);
+}
+
+/* --- Header ------------------------------------------------------------ */
+
+.docs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-block: var(--space-3);
+  padding-inline: var(--space-4);
+  border-block-end: 1px solid var(--color-border-default);
+  background: var(--color-bg-secondary);
+}
+
+.docs-brand {
+  color: var(--color-text-primary);
+  font-weight: var(--font-semibold);
+  text-decoration: none;
+}
+
+.docs-header .btn {
+  text-decoration: none;
+}
+
+/* --- Three columns, narrowing to one ------------------------------------ */
+
+.docs-layout {
+  display: grid;
+  grid-template-columns: 16rem minmax(0, 46rem) 14rem;
+  justify-content: center;
+  gap: var(--space-8);
+  padding-inline: var(--space-4);
+}
+
+.docs-main {
+  min-width: 0;
+  padding-block: var(--space-6) var(--space-8);
+}
+
+.docs-main:focus {
+  outline: none;
+}
+
+.docs-nav,
+.docs-aside {
+  padding-block: var(--space-6);
+}
+
+@media (min-width: 64.01rem) {
+  .docs-nav,
+  .docs-aside {
+    position: sticky;
+    inset-block-start: 0;
+    align-self: start;
+    max-block-size: 100vh;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 80rem) {
+  .docs-layout {
+    grid-template-columns: 15rem minmax(0, 46rem);
+  }
+
+  .docs-aside {
+    display: none;
+  }
+}
+
+@media (max-width: 64rem) {
+  .docs-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .docs-nav {
+    padding-block-end: 0;
+  }
+}
+
+/* --- Book navigation ----------------------------------------------------- */
+
+.docs-nav ul,
+.docs-nav ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.docs-nav-toggle > summary {
+  cursor: pointer;
+  font-weight: var(--font-semibold);
+}
+
+@media (min-width: 64.01rem) {
+  .docs-nav-toggle[open] > summary {
+    display: none;
+  }
+}
+
+@media (max-width: 64rem) {
+  .docs-nav-toggle {
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-lg);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .docs-nav-toggle[open] > summary {
+    margin-block-end: var(--space-2);
+  }
+}
+
+.docs-books > li + li {
+  margin-block-start: var(--space-4);
+}
+
+.docs-books summary {
+  cursor: pointer;
+  font-weight: var(--font-semibold);
+  padding-block: var(--space-1);
+}
+
+.docs-books summary a {
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.docs-books ol {
+  margin-block-start: var(--space-1);
+  border-inline-start: 1px solid var(--color-border-default);
+}
+
+.docs-books ol a {
+  display: block;
+  padding-block: var(--space-1);
+  padding-inline: var(--space-3) var(--space-2);
+  margin-inline-start: -1px;
+  border-inline-start: 2px solid transparent;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: var(--text-sm);
+}
+
+.docs-books ol a:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-hover);
+}
+
+.docs-books ol a[aria-current='page'] {
+  border-inline-start-color: var(--color-text-link);
+  color: var(--color-text-primary);
+  font-weight: var(--font-semibold);
+}
+
+/* --- On this page ------------------------------------------------------- */
+
+.docs-toc h2 {
+  margin-block: 0 var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-secondary);
+}
+
+.docs-toc ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+}
+
+.docs-toc ul ul {
+  padding-inline-start: var(--space-3);
+}
+
+.docs-toc a {
+  display: block;
+  padding-block: var(--space-1);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+
+.docs-toc a:hover {
+  color: var(--color-text-primary);
+}
+
+/* --- Content ------------------------------------------------------------ */
+
+.docs-chapter h2,
+.docs-chapter h3 {
+  scroll-margin-block-start: var(--space-4);
+}
+
+/* Long code lines scroll inside their block, never the page. */
+.docs-chapter pre {
+  overflow-x: auto;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-secondary);
+  font-size: var(--text-sm);
+}
+
+/* A highlighted block brings its own background (the book's highlight.css):
+   the frame stays, and the code fills it instead of sitting in a second box. */
+.docs-chapter pre:has(> code.hljs) {
+  overflow: hidden;
+  padding: 0;
+  background: none;
+}
+
+.docs-chapter pre > code.hljs {
+  overflow-x: auto;
+  padding: var(--space-3);
+}
+
+.docs-table {
+  overflow-x: auto;
+}
+
+.docs-chapter code {
+  font-family: var(--font-mono);
+}
+
+.docs-chapter img {
+  max-inline-size: 100%;
+  block-size: auto;
+}
+
+.docs-pager {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-block-start: var(--space-8);
+  padding-block-start: var(--space-4);
+  border-block-start: 1px solid var(--color-border-default);
+}
+
+.docs-pager a {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+}
+
+.docs-pager span {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.docs-pager-next {
+  margin-inline-start: auto;
+  text-align: end;
+}
+
+.docs-cards,
+.docs-chapter-list {
+  padding-inline-start: 0;
+  list-style-position: inside;
+}
+
+.docs-cards {
+  list-style: none;
+}
+
+.docs-cards li {
+  padding-block: var(--space-2);
+}
+
+.docs-cards h2 {
+  margin-block-end: var(--space-1);
+}
+
+/* --- Search ------------------------------------------------------------- */
+
+.docs-search-form {
+  flex: 1;
+  max-inline-size: 20rem;
+  margin-inline-start: auto;
+}
+
+.docs-search-form input {
+  inline-size: 100%;
+  padding-block: var(--space-1);
+  padding-inline: var(--space-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-input);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font: inherit;
+}
+
+@media (max-width: 40rem) {
+  .docs-header {
+    flex-wrap: wrap;
+  }
+
+  .docs-search-form {
+    order: 3;
+    flex-basis: 100%;
+    max-inline-size: none;
+  }
+}
+
+/* Pagefind's UI, coloured by the app's tokens. */
+#docs-search {
+  --pagefind-ui-scale: 0.8;
+  --pagefind-ui-primary: var(--color-text-link);
+  --pagefind-ui-text: var(--color-text-primary);
+  --pagefind-ui-background: var(--color-bg-primary);
+  --pagefind-ui-border: var(--color-border-strong);
+  --pagefind-ui-tag: var(--color-bg-tertiary);
+  --pagefind-ui-border-width: 1px;
+  --pagefind-ui-border-radius: var(--radius-lg);
+  --pagefind-ui-font: var(--font-sans);
+}

@@ -160,6 +160,7 @@ export default [
   {
     ignores: [
       'dist/',
+      'dist-docs-dev/',
       'build/',
       '.svelte-kit/',
       'node_modules/',

@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-31\n"
-"PO-Revision-Date: 2026-10-31\n"
+"POT-Creation-Date: 2026-11-05\n"
+"PO-Revision-Date: 2026-11-05\n"
 "Language: en\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -1583,6 +1583,10 @@ msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
 msgid "document"
+msgstr ""
+
+#: src/lib/components/shell/AboutDialog.svelte
+msgid "Documentation"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestPreview.svelte

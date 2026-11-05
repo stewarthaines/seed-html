@@ -2,7 +2,7 @@
 
 For readers who want to extend a SEED.html book with code. It assumes familiarity with JavaScript and with EPUB, and introduces the ways a project can be extended with scripts at different points in the publishing workflow.
 
-The throughline: every feature in this book is revealed by enabling **Advanced Mode** in App Settings. Each `##` section becomes its own chapter file as we draft it (e.g. "Before you begin" → `chapter01.md`).
+The throughline: every feature in this book is revealed by enabling **Advanced Mode** in App Settings. Each `##` section becomes its own chapter file as we draft it named for its URL slug on the docs site (e.g. "Before you begin" → `before-you-begin.md`, served at `/docs/en/advanced-reference/before-you-begin/`). The file name is the chapter id in the EPUB too, so rename only on purpose.
 
 Production notes:
 

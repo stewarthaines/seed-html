@@ -38,4 +38,4 @@ OPDS is to publications what RSS is to podcasts — an open feed a reading app c
 
 ![The same catalogue in Cantook on iOS — the four sample-book covers in a phone layout.](../Images/screenshot-cantook-ios-opds.jpeg){.figure}
 
-![SEED.html's Import from Catalog dialog browsing the same catalogue by URL, listing the same sample books.](../Images/screenshot-seed.html-opds.png){.figure}
+![SEED.html's Import from Catalog dialog browsing the same catalogue by URL, listing the same sample books.](../Images/screenshot-seed-html-opds.png){.figure}

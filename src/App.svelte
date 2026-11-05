@@ -53,6 +53,7 @@
     type ExtensionCatalogEntry,
   } from './lib/extensions/extension-catalog';
   import SpineSidebar from './lib/components/SpineSidebar.svelte';
+  import ChapterActions from './lib/components/ChapterActions.svelte';
   import ManifestContainer from './lib/components/manifest/ManifestContainer.svelte';
   import ManifestPreview from './lib/components/manifest/ManifestPreview.svelte';
   import OutlineView from './lib/components/outline/OutlineView.svelte';
@@ -411,7 +412,8 @@
     navigationStore.navigateTo('workspace');
   }
 
-  // The chapter column's + button: SpineSidebar listens for this event.
+  // The chapter column's + button (and the phone chapter strip's): ChapterActions
+  // listens for this event.
   function appendSpineItem() {
     window.dispatchEvent(new CustomEvent('append-spine-item', { bubbles: true }));
   }
@@ -2171,8 +2173,6 @@
             {isExpanded}
             readOnly={structureLocked}
             advancedMode={advancedMode.current}
-            settingsService={appState ? appState.getSettingsService() : null}
-            {workspaceService}
             onWorkspaceUpdate={updatedWorkspace => {
               if (appState) appState.workspace = updatedWorkspace;
             }}
@@ -2532,6 +2532,22 @@
       onClose={() => (showCreateDialog = false)}
     />
   {/if}
+{/if}
+
+<!-- Adding chapters (new, imported, folder sync) answers its buttons in every
+     view, so it is mounted for the open book rather than inside one view. -->
+{#if initialized && currentWorkspaceState && appState}
+  <ChapterActions
+    workspace={currentWorkspaceState}
+    {spineService}
+    selectedItemId={selectedSpineItemId ?? null}
+    readOnly={structureLocked}
+    settingsService={appState.getSettingsService()}
+    {workspaceService}
+    onWorkspaceUpdate={updatedWorkspace => {
+      if (appState) appState.workspace = updatedWorkspace;
+    }}
+  />
 {/if}
 
 <!-- App-wide toast host for fleeting notifications (see Toast.svelte). -->

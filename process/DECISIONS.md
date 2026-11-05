@@ -17,6 +17,7 @@ Settled and declined items, one entry each, newest first within a section. Read 
 
 ## Declined or parked
 
+- **2026-11-04 — No toc.ncx, for now.** EPUB 2 reading systems (Kobo's RMSDK renderer for plain .epub files, Adobe Digital Editions) build their contents menu only from an NCX, so SEED books show none there; the kepub renderer and EPUB 3 readers use the nav. An NCX generated from the nav at packaging was proposed (allowed in EPUB 3 as a fallback) and left out for now. Seen on the Kobo with *John, Paul, and George*.
 - **2026-10-30 — No OPF guide; SEED stays EPUB 3 only.** `<guide>` is EPUB 2's; the landmarks nav replaces it. Reopened only if Kindle Previewer shows the start position needs it. `process/NAV_LANDMARKS_AND_PAGE_LIST.md` section 4.
 - **2026-10-30 — No hand-written page-list.** The page-list is defined by the chapters' print page markers and always derived from them at packaging, for generated and hand-written navs alike; a `page-list` block in `nav.txt` is logged and left out. Authoring it by hand adds nothing and can only drift. `process/NAV_LANDMARKS_AND_PAGE_LIST.md` section 3.
 - **2026-10-28 — No app-originated checks of metadata.** The checks panel reports what axe and epubcheck find, triaged; SEED adds no checks of its own on metadata, such as accessibility claims against content (`pageNavigation` without a page-list). Keeping claims truthful is the author's job. Declined while drafting `process/NAV_LANDMARKS_AND_PAGE_LIST.md`.

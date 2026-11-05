@@ -26,6 +26,9 @@
 
   const VERSION = __VERSION__;
 
+  // The hosted manuals (process/DOCS_SITE.md); /docs/ sends the reader on to a language.
+  const DOCS_URL = 'https://readitinabook.com/docs/';
+
   // Download the running app as a single file, with the user's cached locale
   // catalogs spliced in (the same transformation as embedding SEED.html into
   // an EPUB) — a plain <a download> would save the hosted English base build.
@@ -329,6 +332,10 @@
           rel="noopener noreferrer"
         >
           {$t('Source on GitHub')}
+        </a>
+        <!-- Absolute: the app also runs from file:// and from inside an EPUB. -->
+        <a href={DOCS_URL} target="_blank" rel="noopener noreferrer" data-testid="about-docs">
+          {$t('Documentation')}
         </a>
         {#if canFetchSelfHtml()}
           <a

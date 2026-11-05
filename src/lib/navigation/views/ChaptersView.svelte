@@ -420,8 +420,8 @@
   }
 
   // --- import & folder-sync (relocated from the sidebar) -------------------
-  // These buttons only dispatch the same bubbling window events the sidebar
-  // used; the always-mounted SpineSidebar orchestrates the actual work.
+  // These buttons only dispatch window events; ChapterActions, mounted for the
+  // open book in every view, does the work.
   let textFileInput = $state<HTMLInputElement | null>(null);
   const folderSyncSupported = isFolderSyncSupported();
   let folderSyncStatus = $state<FolderSyncStatus>('not-linked');
@@ -460,7 +460,7 @@
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       // One selection may mix text and images (fixed layout only); each kind
-      // goes to its own import pipeline in SpineSidebar.
+      // goes to its own import pipeline in ChapterActions.
       const files = Array.from(input.files);
       const isImage = (f: File) =>
         f.type.startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/i.test(f.name);

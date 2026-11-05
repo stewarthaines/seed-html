@@ -1,6 +1,6 @@
 # SEED.html User Manual — Outline
 
-This is the master plan-of-record for the whole manual. Each `##` section becomes its own chapter file as we draft it (e.g. "Get started" → `chapter01.md`).
+This is the master plan-of-record for the whole manual. Each `##` section becomes its own chapter file as we draft it named for its URL slug on the docs site (e.g. "Get started" → `get-started.md`, served at `/docs/en/user-manual/get-started/`). The file name is the chapter id in the EPUB too, so rename only on purpose.
 
 Conventions: no hard-wrapping — one line per paragraph (list items stay one line each). Chapters are reviewed in Obsidian and diffed in git.
 
@@ -86,7 +86,7 @@ Reframes the manual around three audiences from the project's own framing — au
 
 Describes actual workflows for various types of content, including ABC notation, audio clip resources, author/editor/proof-reader round trips, themeable (light/dark mode) SVG elements, language switching for accessibility, reading system diagnostics, neumes renderer, inline fleuron themeable. Cover text and DOM transforms, Generators and app features that might not be obvious.
 
-- Building instructions with Bricks (drafted, `Text/chapter08.md`) — fixed-layout pages that build a model part by part or turn it; adding the extension and parts sets, the Bricks Sample generator, the block notation through the letter J of "Josh in Bricks", the classic page style, reusing models, notes, and the still picture for devices that cannot draw. No screenshots yet: they need Storybook stories.
+- Building instructions with Bricks (drafted, `Text/workflows.md`) — fixed-layout pages that build a model part by part or turn it; adding the extension and parts sets, the Bricks Sample generator, the block notation through the letter J of "Josh in Bricks", the classic page style, reusing models, notes, and the still picture for devices that cannot draw. No screenshots yet: they need Storybook stories.
 
 ## Coming later
 

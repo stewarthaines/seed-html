@@ -1,0 +1,158 @@
+/*
+ * book.css — SEED.html User Manual
+ *
+ * Affordance styles for the manual when it is read as a SEED EPUB *inside* the
+ * SEED.html app. Add this file to the EPUB manifest as a `text/css` item
+ * (Manifest panel → Load File → lands at Styles/book.css); the editor then
+ * links it into every chapter's <head> automatically.
+ *
+ * Authoring convention: clean Markdown + markdown-it-attrs only — no raw HTML.
+ * Keep everything reading-system-safe and legible in light and dark.
+ */
+
+/* --- Inline UI icon glyphs -------------------------------------------------
+ * Authored as a class on the control name, so the source stays a single token:
+ *   the _Projects_{.ui .icon-house} panel
+ * The glyph is a CSS ::before (decorative — the text label is what a screen reader
+ * announces). The SVG is a manifest item under Images/ with a fixed neutral grey baked in
+ * (a background-image SVG can't inherit text colour); the app rewrites url() to a blob for
+ * the live preview, and it resolves directly in the packaged EPUB.
+ *
+ * Icon class namespace is `icon-<phosphor-name>`. To add one: drop the SVG in Images/ and
+ * add a `.icon-<name>::before { background-image: ... }` line below. */
+[class*='icon-']::before {
+  content: '';
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-inline-end: 0.3em;
+  vertical-align: -0.15em;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.icon-house::before {
+  background-image: url(../Images/icon-house.svg);
+}
+.icon-info::before {
+  background-image: url(../Images/icon-info.svg);
+}
+.icon-export::before {
+  background-image: url(../Images/icon-export.svg);
+}
+.icon-gear::before {
+  background-image: url(../Images/icon-gear.svg);
+}
+.icon-article::before {
+  background-image: url(../Images/icon-article.svg);
+}
+.icon-list-bullets::before {
+  background-image: url(../Images/icon-list-bullets.svg);
+}
+.icon-book-open::before {
+  background-image: url(../Images/icon-book-open.svg);
+}
+.icon-file-arrow-up::before {
+  background-image: url(../Images/icon-file-arrow-up.svg);
+}
+.icon-plus::before {
+  background-image: url(../Images/icon-plus.svg);
+}
+.icon-package::before {
+  background-image: url(../Images/icon-package.svg);
+}
+
+/* --- Names of on-screen controls -------------------------------------------
+ * Authored with underscores so the source stays light: _Projects_{.ui}
+ * (`_..._` compiles to <em>, hence font-style: normal to keep the pill upright). */
+.ui {
+  font-weight: 500;
+  font-style: normal;
+  padding: 0.05em 0.35em;
+  border-radius: 0.35em;
+  background: rgba(0, 0, 0, 0.06);
+  white-space: nowrap;
+}
+
+/* --- "Try it" callout ------------------------------------------------------
+ * A blockquote carrying a class (attrs on the line after the quote):
+ *   > **Try it.** Open the Projects panel in the sidebar.
+ *   {.try-it}                                                              */
+blockquote.try-it {
+  margin: 1.5em 0;
+  padding: 0.75em 1em;
+  border-inline-start: 4px solid #2563eb;
+  background: rgba(37, 99, 235, 0.07);
+  border-radius: 0.25em;
+  font-style: normal;
+}
+blockquote.try-it > :first-child {
+  margin-top: 0;
+}
+blockquote.try-it > :last-child {
+  margin-bottom: 0;
+}
+
+/* --- Figures & captions ----------------------------------------------------
+ * A classed Markdown image, optionally followed by a classed caption paragraph:
+ *   ![alt text](../Images/diagram-reach.svg){.figure}
+ *   Make it once — read it anywhere.
+ *   {.caption}                                                             */
+img.figure {
+  display: block;
+  height: auto;
+  margin: 1.5em auto 0;
+}
+.caption {
+  margin: 0.5em 0 1.5em;
+  text-align: center;
+  font-size: 0.85em;
+  font-style: italic;
+  color: #595959;
+}
+
+/* Cropped UI screenshots (raster PNGs). Combine with .figure for layout:
+ *   ![alt](../Images/screen-new-project.png){.figure .screenshot} */
+img.screenshot {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  margin-left: 1em;
+}
+
+.fleuron {
+  display: block;
+  width: auto;
+  text-align: center;
+  clear: both;
+  break-before: avoid;
+  page-break-before: avoid;   /* legacy alias — broader EPUB-reader support */
+}
+
+p:has(+ .fleuron) {
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+.fleuron svg {
+  width: 6em;
+  margin: 1em auto 1em;
+}
+
+/* --- Dark-mode adjustments ------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  .ui {
+    background: rgba(255, 255, 255, 0.13);
+  }
+  blockquote.try-it {
+    background: rgba(96, 165, 250, 0.12);
+    border-inline-start-color: #60a5fa;
+  }
+  .caption {
+    color: #a3a3a3;
+  }
+  img.screenshot {
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: none;
+  }
+}
