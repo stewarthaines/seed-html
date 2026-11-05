@@ -26,7 +26,7 @@ Extra instructions for writing documentation intended for a general audience of 
 ## Format and mechanics
 
 - one line per paragraph — never hard-wrap prose (reviews happen in Obsidian; diffs stay one-change-per-paragraph)
-- each book project is itself a SEED project: `outline.md` is its plan of record (each `##` section becomes a `Text/chapterNN` file); update the outline when you add or move a section
+- each book project is itself a SEED project: `outline.md` is its plan of record (each `##` section becomes a `Text/<slug>.md` file, the slug being the chapter's docs-site URL); update the outline when you add or move a section
 - match the format of the book you're editing — the existing user manual and advanced reference are markdown with inline attributes (`{.ui}`, `{.figure}`); sample-novel is plain `.txt`. Djot is the default only for new projects
 - UI references use inline attributes: `_Projects_{.ui .icon-house}`. Icon SVGs live in the book's `Images/` (fill `#6b7280`, viewBox `0 0 256 256`, `role="img"` + `aria-label`), copied from the app's Phosphor subset in `src/lib/icons/generated/` — add the SVG when you document a new control. Watch the map: Projects is `House`, not a folder
 - figures: `![real alt text](../Images/name){.figure}`, plus `.screenshot` for app captures; every image gets meaningful alt text, no exceptions
