@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-05\n"
-"PO-Revision-Date: 2026-11-05\n"
+"POT-Creation-Date: 2026-11-06\n"
+"PO-Revision-Date: 2026-11-06\n"
 "Language: de\n"
 "Language-Team: \n"
 "Last-Translator: Claude (machine first pass)\n"
@@ -2423,6 +2423,10 @@ msgstr "Filter"
 msgid "Filter by ID, path, or media type..."
 msgstr "Nach ID, Pfad oder Medientyp filtern..."
 
+#: src/lib/components/books/BooksShelf.svelte
+msgid "Filter by title or author"
+msgstr ""
+
 #: src/lib/components/metadata/BasicInfoFields.svelte
 msgid "Flow"
 msgstr "Seitenfluss"
@@ -3390,6 +3394,10 @@ msgstr ""
 
 #: src/App.svelte
 msgid "No book is open."
+msgstr ""
+
+#: src/lib/components/books/BooksShelf.svelte
+msgid "No books match “{query}”."
 msgstr ""
 
 #: src/lib/components/books/BooksShelf.svelte

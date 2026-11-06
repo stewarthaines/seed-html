@@ -2,6 +2,7 @@
   import { t } from '../../i18n';
   import BookCover from './BookCover.svelte';
   import BookMenu from './BookMenu.svelte';
+  import { filterBooks } from './filter-books';
 
   interface Book {
     id: string;
@@ -65,6 +66,17 @@
     ];
   }
 
+  // Narrow the shelf by title or author (filter-books.ts).
+  let query = $state('');
+  const shownBooks = $derived(filterBooks(books, query));
+
+  function handleFilterKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape' && query) {
+      event.preventDefault();
+      query = '';
+    }
+  }
+
   function handleMenuSelect(bookId: string, actionId: string) {
     if (actionId === 'open') onOpen(bookId);
     else if (actionId === 'duplicate') onDuplicate(bookId);
@@ -72,7 +84,20 @@
   }
 </script>
 
-<p class="label">{$t('Your books')}</p>
+<div class="shelf-head">
+  <p class="label">{$t('Your books')}</p>
+  {#if !isLoading && books.length > 0}
+    <input
+      type="search"
+      class="input shelf-filter"
+      bind:value={query}
+      onkeydown={handleFilterKeydown}
+      placeholder={$t('Filter by title or author')}
+      aria-label={$t('Filter by title or author')}
+      data-testid="books-filter"
+    />
+  {/if}
+</div>
 
 {#if isLoading}
   <div class="books-grid">
@@ -82,9 +107,11 @@
   </div>
 {:else if books.length === 0}
   <p class="books-empty">{$t('No books yet.')}</p>
+{:else if shownBooks.length === 0}
+  <p class="books-empty" role="status">{$t('No books match “{query}”.', { query })}</p>
 {:else}
   <div class="books-grid">
-    {#each books as book (book.id)}
+    {#each shownBooks as book (book.id)}
       <article class="book">
         <button
           type="button"
@@ -121,8 +148,30 @@
 {/if}
 
 <style>
+  .shelf-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    margin-block-end: var(--space-4);
+  }
+
+  .shelf-filter {
+    inline-size: auto;
+    flex: 0 1 16rem;
+    min-inline-size: 0;
+  }
+
+  /* Phone: the filter takes its own full-width line under the heading. */
+  @media (max-width: 480px) {
+    .shelf-filter {
+      flex-basis: 100%;
+    }
+  }
+
   .label {
-    margin: 0 0 var(--space-4) 0;
+    margin: 0;
     font-size: var(--text-xs);
     font-weight: var(--font-bold);
     letter-spacing: 0.12em;
