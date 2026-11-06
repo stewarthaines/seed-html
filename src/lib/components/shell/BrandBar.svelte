@@ -1,6 +1,7 @@
 <!--
   BrandBar — the bar above the Books screen: the mark and the app name, then
-  About (a dialog), Settings (a sheet) and the theme toggle. Inside a book the TopBar
+  Published, Docs (the hosted manuals, in a new tab), About (a dialog),
+  Settings (a sheet) and the theme toggle. On a phone the mark stands alone. Inside a book the TopBar
   takes its place.
 -->
 <script lang="ts">
@@ -8,6 +9,8 @@
   import type { ViewType } from '../../navigation/types';
   import ThemeToggle from '../../ThemeToggle.svelte';
   import ReaditInaBookMark from '../icons/ReaditInaBookMark.svelte';
+  import { ArrowSquareOut } from 'phosphor-svelte';
+  import { DOCS_URL } from '../../docs/docs-url.js';
 
   let {
     currentView,
@@ -56,6 +59,18 @@
         {$t('Published')}
       </button>
     {/if}
+    <!-- The one item here that leaves the app: an icon shows it, and the
+         accessible name says so. -->
+    <a
+      class="link"
+      href={DOCS_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      data-testid="nav-docs"
+    >
+      {$t('Docs')}<ArrowSquareOut size={14} aria-hidden="true" />
+      <span class="sr-only">{$t('(opens in a new tab)')}</span>
+    </a>
     <button
       type="button"
       class="link"
@@ -109,6 +124,7 @@
   }
 
   .mark {
+    flex-shrink: 0;
     display: inline-flex;
     color: var(--color-text-primary);
   }
@@ -129,6 +145,13 @@
     font-size: var(--text-base);
     color: var(--color-text-link);
     cursor: pointer;
+  }
+
+  a.link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    text-decoration: none;
   }
 
   .link:hover {
@@ -153,6 +176,27 @@
   @media (max-width: 720px) {
     .text {
       display: none;
+    }
+
+    /* Phones: the 16px gutter, tighter gaps, and the mark alone (it is the home
+       button; the name stays for screen readers), so every link fits at 360px. */
+    .brand-bar {
+      gap: var(--space-3);
+      padding-inline: var(--space-4);
+    }
+
+    .links {
+      gap: var(--space-3);
+    }
+
+    .name {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip: var(--sr-only-clip);
+      white-space: nowrap;
     }
 
     .phone-only {

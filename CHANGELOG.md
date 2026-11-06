@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- The user manual and the advanced reference are now online at readitinabook.com/docs, with search, and About SEED.html links to them.
+- The user manual and the advanced reference are now online at readitinabook.com/docs, with search, and a Docs link above the Books screen opens them.
 
 ### Fixed
 

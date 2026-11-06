@@ -20,14 +20,12 @@
     SEED_HTML_NAME,
   } from '$lib/epub/seed-html.js';
   import { FileStorageAPI } from '$lib/storage/index.js';
+  import { DOCS_URL } from '$lib/docs/docs-url.js';
   import LICENSE_TEXT from '../../../../LICENSE.txt?raw';
 
   let { onClose }: { onClose: () => void } = $props();
 
   const VERSION = __VERSION__;
-
-  // The hosted manuals (process/DOCS_SITE.md); /docs/ sends the reader on to a language.
-  const DOCS_URL = 'https://readitinabook.com/docs/';
 
   // Download the running app as a single file, with the user's cached locale
   // catalogs spliced in (the same transformation as embedding SEED.html into
@@ -333,7 +331,6 @@
         >
           {$t('Source on GitHub')}
         </a>
-        <!-- Absolute: the app also runs from file:// and from inside an EPUB. -->
         <a href={DOCS_URL} target="_blank" rel="noopener noreferrer" data-testid="about-docs">
           {$t('Documentation')}
         </a>

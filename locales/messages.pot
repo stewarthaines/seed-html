@@ -28,6 +28,10 @@ msgstr ""
 msgid "“{title}” is already a project in this browser. OK opens it; Cancel imports a fresh copy."
 msgstr ""
 
+#: src/lib/components/shell/BrandBar.svelte
+msgid "(opens in a new tab)"
+msgstr ""
+
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "{count} accessibility issues"
 msgstr ""
@@ -1581,6 +1585,10 @@ msgstr ""
 msgid "Dismiss"
 msgstr ""
 
+#: src/lib/components/shell/BrandBar.svelte
+msgid "Docs"
+msgstr ""
+
 #: src/lib/components/spine/sr-walk.ts
 msgid "document"
 msgstr ""
@@ -2404,7 +2412,7 @@ msgstr ""
 msgid "folder"
 msgstr ""
 
-#: src/lib/components/SpineSidebar.svelte
+#: src/lib/components/ChapterActions.svelte
 msgid "Folder access was not granted."
 msgstr ""
 
@@ -2416,11 +2424,11 @@ msgstr ""
 msgid "Folder selected:"
 msgstr ""
 
-#: src/lib/components/SpineSidebar.svelte
+#: src/lib/components/ChapterActions.svelte
 msgid "Folder sync: {added} added, {updated} updated, {removed} removed."
 msgstr ""
 
-#: src/lib/components/SpineSidebar.svelte
+#: src/lib/components/ChapterActions.svelte
 msgid "Folder unlinked. Chapters were not changed."
 msgstr ""
 
@@ -3609,7 +3617,7 @@ msgstr ""
 msgid "Nothing to fix"
 msgstr ""
 
-#: src/lib/components/SpineSidebar.svelte
+#: src/lib/components/ChapterActions.svelte
 #: src/lib/components/manifest/ManifestContainer.svelte
 msgid "Nothing to import — the file(s) already match the existing content."
 msgstr ""
@@ -5049,7 +5057,7 @@ msgstr ""
 msgid "The frontmatter scripts key should be a list of script file names, so this page loads every script."
 msgstr ""
 
-#: src/lib/components/SpineSidebar.svelte
+#: src/lib/components/ChapterActions.svelte
 msgid "The linked folder isn't available — reconnect the drive or relink the folder."
 msgstr ""
 
