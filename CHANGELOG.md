@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The user manual and the advanced reference are now online at readitinabook.com/docs, with search, and a Docs link above the Books screen opens them.
 - Filter your books by title or author from the Books screen.
+- The reader shows a linked book's download progress, and while it is open its address can be copied to share the book.
 
 ### Fixed
 
