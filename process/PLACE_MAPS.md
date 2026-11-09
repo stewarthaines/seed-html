@@ -1,6 +1,6 @@
 # Place maps — locator maps beside birthplaces
 
-Status: PHASES 1 AND 2 BUILT on branch `place-maps` (phase 1 committed; phase 2 uncommitted); phase 3 (the plugin) to come. A family-history feature made of a panel plugin and a family-history extension change; the core app gains no new view.
+Status: ALL THREE PHASES BUILT on branch `place-maps` (phases 1–2 committed; phase 3 uncommitted). Tint and outline tuning deferred. A family-history feature made of a panel plugin and a family-history extension change; the core app gains no new view.
 
 ## Problem
 
@@ -165,7 +165,15 @@ Geometry: Natural Earth 50m countries for the frame, 10m admin-1 for the state, 
 
 1. **family-history shows maps** — built 2026-11-09. `map=` on `:family:`, the `:map:` directive, reading the register, writing the per-chapter places list, styles in `family.css`, four tests in `src/lib/transform/test/family-history.test.ts`. Tried in the Pattenden Family book (user's Chrome, localhost:5173) with hand-made maps for Ballarat, Albany WA, Weston (Natal), Burwash and Coatdyke and a hand-written register.
 2. **Core** — built 2026-11-09. `add-media` accepts `image/svg+xml` and `image/png` beside audio, with an optional `folder` (one plain segment, refused otherwise) placing the file at `Images/<folder>/<name>`; `importFileToManifest` takes the subfolder. A third panel slot: `place-maps` resolved in `App.svelte` like photo-regions, threaded through SpineView to EditorPane, offered as "Place Maps" in the Insert menu whenever a text pane is active (no images needed), with insert, add-media and the active chapter. `place_map_template` beside `photo_region_template`: default `:map:{place="<place>"}`, `<place>` required, a text format may override it as `templates.placeMap`, editable under Settings → Format. Generalising panel binding was left for its own refactor. family-history now strips scripts, foreign content, event handlers and links from a map before inlining it, since plugins can add SVG and books arrive from others.
-3. **The place-maps plugin** — outline data build step (simplify and split Natural Earth per country), the panel, Nominatim, the renderer.
+3. **The place-maps plugin** — built 2026-11-09 in `plugins/place-maps/`. Outline data in `geo/` (2.05 MB, one file per country plus `index.json`), built by `scripts/build-geo.mjs` from Natural Earth with mapshaper (pinned, via npx) and committed; Vite copies it to `dist/geo/` beside the single-file `plugin.html` (89 KB). Modules: `register.ts` (the register contract), `render.ts` (the two-level map, view box cropped to the country), `nominatim.ts` (search on request only, one a second), `geo.ts` (country and region lookup), `workspace.ts` and `host.ts` (OPFS and host messages), `App.svelte` (the panel). Unit tests in `src/lib/plugins/test/place-maps.test.ts`; the plugin joins the no-hardcoded-colours guard. Tried end to end in the Pattenden Family book: Bermondsey located through Nominatim, two candidates shown as map thumbnails, the map added at `Images/maps/bermondsey.svg` (4.4 KB) through add-media, the register written, the directive inserted and rendered; placing Southwark by hand (United Kingdom, England) previews a tinted map with no dot.
+
+### Phase 3 findings
+
+- **Winding.** mapshaper writes polygons in the RFC 7946 winding (counter-clockwise); d3-geo reads polygons on the sphere and takes such a ring as everything except the country (Australia came out at 163 steradians, the whole sphere less Australia). The build rewinds any polygon d3 would read as more than a hemisphere; every one of the 4,587 geometries checks clean.
+- **Outlines dissolved from their own states.** Percentage-simplified 50m country outlines lost a small country's coast and did not meet the 10m states at their borders. Each country's outline is now dissolved from its own simplified states (the UK from its four nations, 10m), so coast and tinted state share their lines exactly; the countries layer is the fallback for a country with no states.
+- **Specks stretch the frame.** Outlying islands too small to draw (Macquarie Island) widened the fitted frame; the renderer fits twice, the second time to what it draws. Maps came out 2.5–6.6 KB, cropped to each country's shape.
+- **Shared country codes put Australian places on a reef.** Natural Earth's fallback code field gave AU to Ashmore and Cartier Islands and to the Indian Ocean Territories as well as Australia; the lookup took the first by name, so Scarsdale and Albany were drawn on Ashmore and Cartier (a four-sided speck filling the frame). The build now uses the fallback code only when no country holds it outright, and the lookup lets containment decide, the geocoder's code only ordering the search. A test asserts no code is shared.
+- **Plugin code tested from the app suite** loads by a path TypeScript does not resolve (the plugin is its own package, outside the app's TypeScript project).
 
 ### Phase 1 findings
 

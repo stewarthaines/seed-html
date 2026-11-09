@@ -22,7 +22,7 @@ import { dirname, join } from 'node:path';
  * but fixing that means feeding the library themed values, not a lint rule.
  */
 const PLUGINS_DIR = join(dirname(fileURLToPath(import.meta.url)), '../../../../plugins');
-const GUARDED = ['publish-to-remote', 'photo-regions'];
+const GUARDED = ['publish-to-remote', 'photo-regions', 'place-maps'];
 
 // A hex colour literal (#rgb … #rrggbbaa) or a named colour used as a CSS value.
 // rgba()/rgb() lines (shadows, overlays) are theme-agnostic and allowed.

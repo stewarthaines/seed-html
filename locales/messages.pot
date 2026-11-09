@@ -59,6 +59,10 @@ msgstr ""
 msgid "{count} files cannot move"
 msgstr ""
 
+#: plugins/place-maps/src/App.svelte
+msgid "{count} maps in the book"
+msgstr ""
+
 #: src/lib/components/manifest/MoveReviewDialog.svelte
 msgid "{count} references updated"
 msgstr ""
@@ -195,6 +199,10 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 msgid "{path} (line {line})"
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "{place} now shares the map of {other}."
 msgstr ""
 
 #: src/lib/components/track-changes/PatchsetReviewDialog.svelte
@@ -416,6 +424,10 @@ msgstr ""
 
 #: src/lib/components/metadata/LanguageEditor.svelte
 msgid "Add Language"
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "Add map"
 msgstr ""
 
 #: src/lib/components/settings/GeneratorSettings.svelte
@@ -1180,6 +1192,10 @@ msgstr ""
 msgid "Control methods"
 msgstr ""
 
+#: plugins/place-maps/src/App.svelte
+msgid "Coordinates (optional)"
+msgstr ""
+
 #: src/lib/components/spine/GeneratorPanel.svelte
 msgid "Copied"
 msgstr ""
@@ -1200,6 +1216,10 @@ msgstr ""
 #: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 #: plugins/publish-to-remote/src/components/SendSurface.svelte
 msgid "Copy reader link"
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "Could not add the map: {message}"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -1238,6 +1258,10 @@ msgstr ""
 msgid "Could not read the project: {error}"
 msgstr ""
 
+#: plugins/place-maps/src/App.svelte
+msgid "Could not read this book: {message}"
+msgstr ""
+
 #: plugins/audio-clip-editor/src/Recorder.svelte
 msgid "Could not record: {error}"
 msgstr ""
@@ -1248,6 +1272,10 @@ msgstr ""
 
 #: plugins/photo-regions/src/App.svelte
 msgid "Could not save the regions: {error}"
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "Country"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
@@ -2763,6 +2791,10 @@ msgstr ""
 msgid "Insert clip directive at cursor position"
 msgstr ""
 
+#: plugins/place-maps/src/App.svelte
+msgid "Insert map"
+msgstr ""
+
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Insert panel"
 msgstr ""
@@ -3168,8 +3200,24 @@ msgstr ""
 msgid "Manifest"
 msgstr ""
 
+#: plugins/place-maps/src/App.svelte
+msgid "Map"
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "Map added for {place}."
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "Maps no chapter uses: {places}"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Margin"
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "Matches"
 msgstr ""
 
 #: src/lib/components/settings/TrackChangesPanel.svelte
@@ -3471,6 +3519,10 @@ msgstr ""
 msgid "No manifest items found"
 msgstr ""
 
+#: plugins/place-maps/src/App.svelte
+msgid "No matches found."
+msgstr ""
+
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 msgid "No matching file in the folder"
 msgstr ""
@@ -3489,6 +3541,10 @@ msgstr ""
 
 #: src/lib/components/settings/TrackChangesPanel.svelte
 msgid "No patchsets yet."
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "No places recorded here yet."
 msgstr ""
 
 #: src/App.svelte
@@ -3575,6 +3631,10 @@ msgstr ""
 
 #: plugins/accessible-pdf/src/App.svelte
 msgid "Not in this PDF yet: {items}"
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "Not located"
 msgstr ""
 
 #: src/lib/navigation/views/PublishView.svelte
@@ -3953,12 +4013,24 @@ msgstr ""
 msgid "Photo Regions"
 msgstr ""
 
+#: plugins/place-maps/src/App.svelte
+msgid "Place it by hand"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Place Map Directive"
 msgstr ""
 
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Place Maps"
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "Place name"
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "Place to search for"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
@@ -3987,6 +4059,10 @@ msgstr ""
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Placement cancelled"
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "Places to show"
 msgstr ""
 
 #: src/lib/navigation/views/ChaptersView.svelte
@@ -4394,6 +4470,10 @@ msgstr ""
 msgid "Rendition Properties"
 msgstr ""
 
+#: plugins/place-maps/src/App.svelte
+msgid "Replace map"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/SendSurface.svelte
 msgid "Report"
 msgstr ""
@@ -4515,6 +4595,10 @@ msgstr ""
 msgid "S3-Compatible Storage"
 msgstr ""
 
+#: plugins/place-maps/src/App.svelte
+msgid "Same place as"
+msgstr ""
+
 #: src/lib/content/types.ts
 msgid "Sample Author"
 msgstr ""
@@ -4592,12 +4676,24 @@ msgstr ""
 msgid "search"
 msgstr ""
 
+#: plugins/place-maps/src/App.svelte
+msgid "Search"
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "Search failed: {message}"
+msgstr ""
+
 #: src/lib/components/workspace/WorkspaceList.svelte
 msgid "Search projects"
 msgstr ""
 
 #: src/lib/components/workspace/WorkspaceList.svelte
 msgid "Search projects…"
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "Searching…"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
@@ -4890,6 +4986,10 @@ msgstr ""
 msgid "Start typing in the editor to see your XHTML preview here."
 msgstr ""
 
+#: plugins/place-maps/src/App.svelte
+msgid "State or region"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 msgid "Status:"
 msgstr ""
@@ -5127,6 +5227,7 @@ msgstr ""
 msgid "This book"
 msgstr ""
 
+#: plugins/place-maps/src/App.svelte
 #: src/lib/components/spine/ChapterValidationPanel.svelte
 #: src/lib/components/spine/EditorPane.svelte
 msgid "This chapter"
@@ -5363,6 +5464,10 @@ msgstr ""
 msgid "Use my own image…"
 msgstr ""
 
+#: plugins/place-maps/src/App.svelte
+msgid "Use that map"
+msgstr ""
+
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "Use the download button to access the file"
 msgstr ""
@@ -5490,6 +5595,10 @@ msgstr ""
 
 #: src/lib/components/settings/TrackChangesPanel.svelte
 msgid "While locked, you can edit existing chapters, styles and scripts; structural changes are disabled."
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "Whole book"
 msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte

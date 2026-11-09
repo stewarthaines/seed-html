@@ -1,0 +1,37 @@
+{
+  "name": "place-maps",
+  "version": "0.1.0",
+  "description": "Locate the places a chapter names and add a small locator map for each to the book",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 8003",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "build:geo": "node scripts/build-geo.mjs"
+  },
+  "dependencies": {
+    "d3-geo": "^3.1.1"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5.0.3",
+    "@types/d3-geo": "^3.1.0",
+    "svelte": "^5.55.9",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5",
+    "vite-plugin-singlefile": "^2.3.3"
+  },
+  "seedhtmlPlugin": {
+    "id": "place-maps",
+    "name": "Place Maps",
+    "presentation": "panel",
+    "buildEntry": "dist/plugin.html"
+  },
+  "keywords": [
+    "epub",
+    "maps",
+    "family-history",
+    "opfs",
+    "plugin"
+  ],
+  "license": "MIT"
+}
