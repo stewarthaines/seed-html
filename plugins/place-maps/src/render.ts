@@ -106,8 +106,8 @@ export function renderMap(input: MapInput): string {
     const projected = projection(input.point);
     if (projected) {
       const [x, y] = projected.map(round);
-      parts.push(`<circle class="pm-halo" cx="${x}" cy="${y}" r="6"/>`);
-      parts.push(`<circle class="pm-dot" cx="${x}" cy="${y}" r="3.6"/>`);
+      parts.push(`<circle class="pm-halo" cx="${x}" cy="${y}" r="4.5"/>`);
+      parts.push(`<circle class="pm-dot" cx="${x}" cy="${y}" r="2.6"/>`);
     }
   }
   const title = escapeXml(`Map: ${input.name}`);

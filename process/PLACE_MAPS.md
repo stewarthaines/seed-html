@@ -1,6 +1,6 @@
 # Place maps — locator maps beside birthplaces
 
-Status: ALL THREE PHASES BUILT on branch `place-maps` (phases 1–2 committed; phase 3 uncommitted). Tint and outline tuning deferred. A family-history feature made of a panel plugin and a family-history extension change; the core app gains no new view.
+Status: ALL THREE PHASES BUILT on branch `place-maps` (all committed, not merged). Default styling set 2026-11-10. A family-history feature made of a panel plugin and a family-history extension change; the core app gains no new view.
 
 ## Problem
 
@@ -152,10 +152,11 @@ Settled 2026-11-09 after three rounds of mockups (Ballarat, Ludchurch, Weston, N
 
 **Rejected in the mockups:** the state alone (KwaZulu-Natal's outline means nothing to most readers); the state with faded neighbouring land (reads as a smudge); a full globe as the whole map (the state disappears); a globe inset beside the two-level map (see above); neighbouring countries faded around the two-level map (adds weight without placing the country).
 
-Styling, all from the book's CSS, nothing coloured in the file. Tint and outline strengths are to be tuned later; being CSS, tuning them never means regenerating a map.
+Styling, all from the book's CSS, nothing coloured in the file. Being CSS, tuning it never means regenerating a map. The defaults below were set 2026-11-10 in family.css and mirrored in the plugin's preview styles.
 
-- Land: `currentColor`, fill opacity about 0.07, hairline stroke at about 0.2. Highlighted state: the accent colour at about 0.35 fill with a solid accent stroke. Dot: accent, on a halo in the paper colour so it reads over the tint.
-- The dot's radius is set in CSS (`r` is a CSS geometry property in SVG 2): larger in the panel (about 9 units of a 200-unit box), smaller in prose (about 3.6), so it stays visible at 5em without swamping the large map. The file carries a sensible default `r` for reading systems that ignore the CSS.
+- Land: `currentColor`, fill opacity about 0.07, stroke at 0.5 opacity, 0.7 wide (stronger than the first 0.2, so the coast holds at 5em; being currentColor it is dark on a light page and light on a dark one). Highlighted state: the accent colour at about 0.35 fill with a solid accent stroke. Dot: accent, on a halo in the paper colour so it reads over the tint.
+- The dot's radius is set in CSS (`r` is a CSS geometry property in SVG 2): larger in the panel (6 units, halo 9), smaller in prose (2.6, halo 4.5), so it stays visible at 5em without swamping the large map. The file carries a sensible default `r` for reading systems that ignore the CSS.
+- **Event signs** (added 2026-11-10). A map reached through an event (`:family:{map=…}`, or `:map:` by person and event) marks the place with the genealogical sign for that event instead of the dot: `*` born (six arms), `†` died, `⚭` married. This is the European genealogical convention (*genealogische Zeichen*), readable without translation. family-history swaps the dot for the sign as it inlines the map, so the map file and the register stay event-neutral and one map serves a birth and a death. A `place=` map keeps the dot. The signs are SVG paths on a unit box, not text, because `⚭` is missing from many reading-system fonts; CSS sets their size (`transform: scale(…)`, 4 in prose, 7 in the panel) and the stroke scales with them.
 - No labels inside the map; the place name is the adjacent text, and the accessible name gives the full resolved place.
 - Dark mode needed no changes in the mockup: everything derives from `currentColor`, the paper colour and the accent.
 
@@ -180,7 +181,7 @@ Geometry: Natural Earth 50m countries for the frame, 10m admin-1 for the state, 
 - **djot rejects a dot in a bare attribute value**, so `of=esther_blake.death` never became a carrier. Settled by giving `:map:` its own `event=` and `place=` attributes and keeping `of=` a person, like every other family directive.
 - **The responsive extension lays captioned figures side by side** at wide container sizes (`.sr-figure figure:has(figcaption)` → flex), which squeezed the map and its caption into two columns. `family.css` out-ranks it for `.place-map-figure` only.
 - **Square files leave empty space** above and below a wide country (Australia) in the prose figure. The renderer should crop the viewBox to the frame's projected bounds plus padding, so each map takes its country's aspect.
-- **At panel size the dot (r 9 of 200) covers a small state's tint** (Victoria). Part of the deferred tint and outline tuning.
+- **At panel size the dot covered a small state's tint** (Victoria) at r 9; reduced to 6 on 2026-11-10.
 - **The UK maps are 24–29 KB** with 10m map units; the outline build step should use 50m for the nations.
 - **The places list is compared with the stored file before writing**, not with a remembered write: one transform iframe renders chapters of whichever book is open, so a remembered write could wrongly skip a chapter id two books share.
 - The panel map floats beside the dates (`float: inline-end`), and the inline SVG takes the book's colours; dark mode not yet checked in the book.

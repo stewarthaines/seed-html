@@ -116,8 +116,8 @@ select {
   fill: currentColor;
   fill-opacity: 0.08;
   stroke: currentColor;
-  stroke-opacity: 0.25;
-  stroke-width: 0.6;
+  stroke-opacity: 0.5;
+  stroke-width: 0.7;
 }
 
 .place-map .pm-region {
