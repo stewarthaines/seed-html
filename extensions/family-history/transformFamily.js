@@ -57,7 +57,9 @@
  * panel (map=death / married); `:map:` places one in prose — of= a person
  * (default the chapter's), event= birth / death / married (default birth),
  * or place= a register key as written; bare `:map:` is the chapter person's
- * birthplace. Going the other
+ * birthplace. A map reached through an event marks the place with that
+ * event's genealogical sign (* born, † died, ⚭ married) instead of the
+ * dot; a place= map keeps the dot. Going the other
  * way, every render writes the place strings this chapter's records use to
  * SOURCE/data/places/<idref>.json as [{ text, label }], the neutral list
  * the plugin reads — it never reads these records itself. Soft dependency
@@ -1359,12 +1361,52 @@ function placeOfEvent(personId, event) {
 }
 
 /**
+ * The genealogical sign for each event, drawn on a unit box (about ±1) so
+ * CSS can scale it: * born (six arms), † died, ⚭ married (two linked
+ * rings). Paths rather than text, since ⚭ is missing from many
+ * reading-system fonts.
+ */
+const EVENT_SIGNS = {
+  birth: 'M0-1V1M-.87-.5L.87.5M-.87.5L.87-.5',
+  death: 'M0-1.05V1.05M-.6-.4H.6',
+  married: 'M.13 0a.55.55 0 1 1-1.1 0a.55.55 0 1 1 1.1 0M.97 0a.55.55 0 1 1-1.1 0a.55.55 0 1 1 1.1 0',
+};
+
+/**
+ * Swap the map's dot for the event's sign at the same point: a group placed
+ * there, holding the sign scaled by CSS (`.pm-sign`); the `transform`
+ * attribute is the size for a reading system that ignores the CSS. The halo
+ * stays behind it. The map file itself never changes: one map serves a
+ * birth and a death.
+ */
+function markEvent(document, svg, event) {
+  const d = EVENT_SIGNS[event];
+  const dot = svg.querySelector('circle.pm-dot');
+  if (!d || !dot) return;
+  const cx = Number(dot.getAttribute('cx'));
+  const cy = Number(dot.getAttribute('cy'));
+  if (!Number.isFinite(cx) || !Number.isFinite(cy)) return;
+  const ns = 'http://www.w3.org/2000/svg';
+  const mark = document.createElementNS(ns, 'g');
+  mark.setAttribute('class', 'pm-mark pm-' + event);
+  mark.setAttribute('transform', `translate(${cx} ${cy})`);
+  const sign = document.createElementNS(ns, 'path');
+  sign.setAttribute('class', 'pm-sign');
+  sign.setAttribute('d', d);
+  sign.setAttribute('transform', 'scale(4)');
+  mark.appendChild(sign);
+  dot.replaceWith(mark);
+  svg.querySelectorAll('circle.pm-halo').forEach(halo => halo.classList.add('pm-marked'));
+}
+
+/**
  * The inline SVG for a place string, or null: the register entry's file read
  * from the manifest, its own <title> replaced by an accessible name giving
  * the full resolved place, so a screen reader hears "Map: Ballarat,
- * Victoria, Australia" whatever the file said.
+ * Victoria, Australia" whatever the file said. Given the event the place
+ * came from, the dot becomes that event's sign.
  */
-async function mapElement(document, ctx, register, place) {
+async function mapElement(document, ctx, register, place, event) {
   const entry = registerEntry(register, place);
   if (!entry) return null;
   if (!ctx || typeof ctx.readManifestText !== 'function') return null;
@@ -1401,6 +1443,7 @@ async function mapElement(document, ctx, register, place) {
   const classes = (svg.getAttribute('class') || '').split(/\s+/).filter(Boolean);
   if (!classes.includes('place-map')) classes.push('place-map');
   svg.setAttribute('class', classes.join(' '));
+  if (event) markEvent(document, svg, event);
   return { svg, name };
 }
 
@@ -1408,7 +1451,7 @@ async function mapElement(document, ctx, register, place) {
 async function addPanelMap(document, ctx, register, anchor) {
   if (!anchor.map) return;
   const place = PLACE_EVENTS.includes(anchor.map) ? placeOfEvent(anchor.of, anchor.map) : null;
-  const map = place && (await mapElement(document, ctx, register, place));
+  const map = place && (await mapElement(document, ctx, register, place, anchor.map));
   if (!map) return;
   const holder = document.createElement('div');
   holder.setAttribute('class', 'family-map');
@@ -1424,10 +1467,11 @@ async function mapsSetup(document, ctx, register, idref) {
     for (const span of set.children) {
       const personId = span.getAttribute('data-of') || idref;
       const event = span.getAttribute('data-event') || 'birth';
+      const named = span.getAttribute('data-place');
       const place =
-        span.getAttribute('data-place') ||
-        (PLACE_EVENTS.includes(event) ? placeOfEvent(personId, event) : null);
-      const map = place && (await mapElement(document, ctx, register, place));
+        named || (PLACE_EVENTS.includes(event) ? placeOfEvent(personId, event) : null);
+      // A place named outright is no event's: it keeps the plain dot.
+      const map = place && (await mapElement(document, ctx, register, place, named ? null : event));
       if (!map) {
         console.warn('family-history: no map for', place || `${personId} ${event}`);
         continue;

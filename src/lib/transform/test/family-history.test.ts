@@ -527,7 +527,12 @@ describe('family-history: place maps', () => {
     expect(svg.getAttribute('role')).toBe('img');
     expect(svg.getAttribute('aria-label')).toBe('Map: Norwich, England, United Kingdom');
     expect(svg.querySelector('title')).toBeNull();
-    expect(svg.querySelector('.pm-dot')).not.toBeNull();
+    // The birthplace is marked with the birth sign where the dot was.
+    expect(svg.querySelector('.pm-dot')).toBeNull();
+    const mark = svg.querySelector('g.pm-mark.pm-birth')!;
+    expect(mark.getAttribute('transform')).toBe('translate(5 5)');
+    expect(mark.querySelector('path.pm-sign')).not.toBeNull();
+    expect(svg.querySelector('.pm-halo')!.classList.contains('pm-marked')).toBe(true);
     // The dates still read as before.
     expect(texts(doc, 'div.family > p')[0]).toBe('b. 2 May 1831, Norwich');
   });
@@ -547,6 +552,11 @@ describe('family-history: place maps', () => {
       'Norwich, England, United Kingdom',
       'Norwich, England, United Kingdom',
     ]);
+    // An event's map carries its sign; a place named outright keeps the dot.
+    expect(figures[0].querySelector('.pm-mark.pm-birth')).not.toBeNull();
+    expect(figures[1].querySelector('.pm-mark.pm-married')).not.toBeNull();
+    expect(figures[2].querySelector('.pm-mark')).toBeNull();
+    expect(figures[2].querySelector('.pm-dot')).not.toBeNull();
   });
 
   it('leaves nothing behind for a place without a map or a map file not in the book', async () => {
