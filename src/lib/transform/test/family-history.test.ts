@@ -565,6 +565,28 @@ describe('family-history: place maps', () => {
     expect(doc.querySelector('p.map-set')).toBeNull();
   });
 
+  it('strips anything that could run from a map before inlining it', async () => {
+    const hostile =
+      '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ' +
+      'class="place-map" viewBox="0 0 10 10" onload="alert(1)">' +
+      '<script>alert(2)</script><foreignObject><div>x</div></foreignObject>' +
+      '<a href="javascript:alert(3)"><path class="pm-land" d="M0 0h1v1z" onclick="alert(4)"/></a>' +
+      '<use xlink:href="https://example.com/x.svg#a"/></svg>';
+    const { ctx } = book({
+      chapters: ASHBYS,
+      open: 'harriet_ashby',
+      source: { 'SOURCE/plugins/place-maps/places.json': REGISTER },
+      manifestFiles: { 'Images/maps/norwich.svg': hostile },
+    });
+    const doc = parse('<p class="family-set"><span class="family" data-map="birth"></span></p>');
+    await transformDOM(doc, 'harriet_ashby', ctx);
+    const svg = doc.querySelector('.family-map svg')!;
+    expect(svg).not.toBeNull();
+    expect(svg.querySelector('script, foreignObject, use')).toBeNull();
+    expect(svg.outerHTML).not.toMatch(/onload|onclick|javascript:|example\.com/);
+    expect(svg.querySelector('.pm-land')).not.toBeNull();
+  });
+
   it('writes the chapter’s places as a neutral list, only when it changes', async () => {
     const { ctx, writes } = book({ chapters: ASHBYS, open: 'edwin_ashby' });
     await transformDOM(parse('<p>Prose only.</p>'), 'edwin_ashby', ctx);

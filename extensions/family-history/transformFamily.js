@@ -1381,6 +1381,18 @@ async function mapElement(document, ctx, register, place) {
     console.warn('family-history: map file is not SVG', entry.href);
     return null;
   }
+  // A map is shapes and classes. Drop anything that could run or reach out —
+  // scripts, foreign content, event handlers, external or javascript: links —
+  // since a book (and its maps) may come from someone else.
+  root.querySelectorAll('script, foreignObject, iframe, image, use').forEach(el => el.remove());
+  for (const el of [root, ...root.querySelectorAll('*')]) {
+    for (const attr of [...el.attributes]) {
+      const name = attr.name.toLowerCase();
+      if (name.startsWith('on') || name === 'href' || name.endsWith(':href')) {
+        el.removeAttribute(attr.name);
+      }
+    }
+  }
   const svg = document.importNode(root, true);
   svg.querySelectorAll('title').forEach(el => el.remove());
   const name = entry.name || place;
