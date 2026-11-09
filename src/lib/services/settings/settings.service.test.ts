@@ -269,6 +269,7 @@ describe('SettingsService Contract Tests', () => {
       expect(result).toEqual({
         ...mockSettings,
         photo_region_template: ':region:{at="<at>" of=<of> as="<as>" row="<row>" badge="<badge>"}',
+        place_map_template: ':map:{place="<place>"}',
         image_template: '![<alt>](<href>)',
         video_template: '<video src="<href>" controls="controls"></video>',
         preview: {
@@ -291,6 +292,7 @@ describe('SettingsService Contract Tests', () => {
         spine_basename: 'chapter',
         audio_clip_template: ':clip[<label>]{src=<href> begin=<begin> end=<end>}',
         photo_region_template: ':region:{at="<at>" of=<of> as="<as>" row="<row>" badge="<badge>"}',
+        place_map_template: ':map:{place="<place>"}',
         image_template: '![<alt>](<href>)',
         video_template: '<video src="<href>" controls="controls"></video>',
         filename_template: '<title>-<author>-<date>',
@@ -555,6 +557,15 @@ describe('SettingsService Contract Tests', () => {
         photo_region_template: ':region:{at="<at>"}',
       });
       expect(valid.isValid).toBe(true);
+    });
+
+    test('validateEPUBSettings requires <place> in the place map template', () => {
+      const invalid = service.validateEPUBSettings({ place_map_template: ':map:{of=x}' });
+      expect(invalid.isValid).toBe(false);
+      expect(invalid.errors).toContain('Place map template missing required placeholder: <place>');
+      expect(
+        service.validateEPUBSettings({ place_map_template: ':map:{place="<place>"}' }).isValid
+      ).toBe(true);
     });
   });
 

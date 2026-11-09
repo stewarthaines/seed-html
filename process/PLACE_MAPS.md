@@ -1,6 +1,6 @@
 # Place maps — locator maps beside birthplaces
 
-Status: PHASE 1 BUILT on branch `place-maps` (family-history side, uncommitted); phases 2 (core) and 3 (plugin) to come. A family-history feature made of a panel plugin and a family-history extension change; the core app gains no new view.
+Status: PHASES 1 AND 2 BUILT on branch `place-maps` (phase 1 committed; phase 2 uncommitted); phase 3 (the plugin) to come. A family-history feature made of a panel plugin and a family-history extension change; the core app gains no new view.
 
 ## Problem
 
@@ -164,7 +164,7 @@ Geometry: Natural Earth 50m countries for the frame, 10m admin-1 for the state, 
 ## Phases
 
 1. **family-history shows maps** — built 2026-11-09. `map=` on `:family:`, the `:map:` directive, reading the register, writing the per-chapter places list, styles in `family.css`, four tests in `src/lib/transform/test/family-history.test.ts`. Tried in the Pattenden Family book (user's Chrome, localhost:5173) with hand-made maps for Ballarat, Albany WA, Weston (Natal), Burwash and Coatdyke and a hand-written register.
-2. **Core** — `add-media` accepts SVG and PNG into a subfolder; mount the panel; `place_map_template` as a settings field beside `photo_region_template` (it is per text format, so the djot extension supplies it, as it does `templates.photoRegion`).
+2. **Core** — built 2026-11-09. `add-media` accepts `image/svg+xml` and `image/png` beside audio, with an optional `folder` (one plain segment, refused otherwise) placing the file at `Images/<folder>/<name>`; `importFileToManifest` takes the subfolder. A third panel slot: `place-maps` resolved in `App.svelte` like photo-regions, threaded through SpineView to EditorPane, offered as "Place Maps" in the Insert menu whenever a text pane is active (no images needed), with insert, add-media and the active chapter. `place_map_template` beside `photo_region_template`: default `:map:{place="<place>"}`, `<place>` required, a text format may override it as `templates.placeMap`, editable under Settings → Format. Generalising panel binding was left for its own refactor. family-history now strips scripts, foreign content, event handlers and links from a map before inlining it, since plugins can add SVG and books arrive from others.
 3. **The place-maps plugin** — outline data build step (simplify and split Natural Earth per country), the panel, Nominatim, the renderer.
 
 ### Phase 1 findings

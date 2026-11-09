@@ -101,6 +101,7 @@
     generatorRunner = null,
     audioPluginUrl = null,
     photoPluginUrl = null,
+    placeMapsPluginUrl = null,
     chapterId = null,
     onWorkspaceUpdate,
   }: {
@@ -161,7 +162,10 @@
     audioPluginUrl?: string | null;
     /** photo-regions plugin entry, when available + enabled; null hides the panel. */
     photoPluginUrl?: string | null;
-    /** Spine item id of the open chapter — the photo-regions panel scopes to it. */
+    /** place-maps plugin entry, when available + enabled; null hides the panel. */
+    placeMapsPluginUrl?: string | null;
+    /** Spine item id of the open chapter — the photo-regions and place-maps
+        panels scope to it. */
     chapterId?: string | null;
     /** Report a manifest change (drop-to-insert media import) back to app state —
         without it the next full-OPF save clobbers the added item. */
@@ -296,16 +300,18 @@
     textarea.focus();
   }
 
-  // A recording from the audio plugin joins the manifest like a dropped file;
-  // the plugin inserts its own clip directive once it knows the href.
+  // A recording from the audio plugin, or a map from the place-maps plugin,
+  // joins the manifest like a dropped file; the plugin inserts its own
+  // directive once it knows the href.
   async function addPluginMediaFile(
     filename: string,
     mediaType: string,
-    bytes: ArrayBuffer
+    bytes: ArrayBuffer,
+    folder?: string
   ): Promise<string> {
     if (!workspace || !workspaceService) throw new Error('No book is open');
     const imported = await addPluginMedia(
-      { filename, mediaType, bytes },
+      { filename, mediaType, bytes, folder },
       workspace,
       workspaceService
     );
@@ -726,11 +732,12 @@
   // Insert panels (audio clip editor / images / generators): one active at a
   // time. The per-panel `…Visible` names survive as deriveds so the render
   // blocks read as before.
-  type InsertPanelId = 'audio' | 'images' | 'regions' | 'generators';
+  type InsertPanelId = 'audio' | 'images' | 'regions' | 'places' | 'generators';
   let activeInsertPanel = $state<InsertPanelId | null>(null);
   const audioEditorVisible = $derived(activeInsertPanel === 'audio');
   const mediaBrowserVisible = $derived(activeInsertPanel === 'images');
   const photoRegionsVisible = $derived(activeInsertPanel === 'regions');
+  const placeMapsVisible = $derived(activeInsertPanel === 'places');
   const generatorPanelVisible = $derived(activeInsertPanel === 'generators');
 
   let textareaSelection = $state<{ start: number; end: number } | null>(null);
@@ -774,6 +781,10 @@
     // fallback for it.
     if (textPaneActive && hasImageFiles && workspace && photoPluginUrl) {
       list.push({ id: 'regions', label: $t('Photo Regions') });
+    }
+    // Plugin-only too. Offered without any images: it makes the map files.
+    if (textPaneActive && workspace && placeMapsPluginUrl) {
+      list.push({ id: 'places', label: $t('Place Maps') });
     }
     if (textPaneActive && hasGenerators) {
       list.push({ id: 'generators', label: $t('Generators') });
@@ -1270,6 +1281,23 @@
         onInsert={insertClipDirective}
         activeChapterId={chapterId ?? undefined}
         title={$t('Photo Regions')}
+      />
+    </div>
+  {/if}
+
+  <!-- Place maps: locate the places this chapter names and add a small
+       locator map for each. Plugin-only, like photo regions. -->
+  {#if placeMapsVisible && placeMapsPluginUrl && textPaneActive && workspace}
+    <div class="insert-panel-host">
+      {@render insertPanelClose($t('Place Maps'))}
+      <PluginPanel
+        pluginUrl={placeMapsPluginUrl}
+        projectId={workspace.id}
+        getDirHandle={getWorkspaceDirHandle}
+        onInsert={insertClipDirective}
+        onAddMedia={addPluginMediaFile}
+        activeChapterId={chapterId ?? undefined}
+        title={$t('Place Maps')}
       />
     </div>
   {/if}

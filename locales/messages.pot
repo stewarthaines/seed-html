@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06\n"
-"PO-Revision-Date: 2026-11-06\n"
+"POT-Creation-Date: 2026-11-09\n"
+"PO-Revision-Date: 2026-11-09\n"
 "Language: \n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -2807,6 +2807,10 @@ msgstr ""
 msgid "Invalid photo region template"
 msgstr ""
 
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Invalid place map template"
+msgstr ""
+
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "iPad Air (820×1180)"
 msgstr ""
@@ -3950,7 +3954,19 @@ msgid "Photo Regions"
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
+msgid "Place Map Directive"
+msgstr ""
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Place Maps"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
 msgid "Placeholder: <href>."
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Placeholder: <place> required."
 msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte

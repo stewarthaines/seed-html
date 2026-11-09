@@ -115,10 +115,15 @@ export async function importFileToManifest(
   workspace: WorkspaceState,
   workspaceService: WorkspaceService,
   file: File,
-  mediaType: string = reliableMediaType(file)
+  mediaType: string = reliableMediaType(file),
+  subfolder?: string
 ): Promise<ImportedMediaFile> {
+  const generated = generateEPUBPath(file.name, mediaType);
+  // A subfolder goes between the media type's folder and the file name
+  // (Images/ballarat.svg → Images/maps/ballarat.svg); callers validate it.
+  const placed = subfolder ? generated.replace(/([^/]+)$/, `${subfolder}/$1`) : generated;
   const href = ensureUniqueHref(
-    generateEPUBPath(file.name, mediaType),
+    placed,
     workspace.opf.manifest.map(m => m.href)
   );
   let updated = await workspaceService.addManifestItem(workspace, { href, mediaType });

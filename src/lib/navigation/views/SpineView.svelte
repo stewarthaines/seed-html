@@ -75,6 +75,7 @@
     advancedMode = false,
     audioPluginUrl = null,
     photoPluginUrl = null,
+    placeMapsPluginUrl = null,
     onPreviewUpdate,
     onWorkspaceUpdate,
   }: {
@@ -96,6 +97,8 @@
         built-in audio clip editor when set). */
     audioPluginUrl?: string | null;
     photoPluginUrl?: string | null;
+    /** place-maps plugin entry, when available + enabled; null hides its panel. */
+    placeMapsPluginUrl?: string | null;
     onPreviewUpdate?: (detail: {
       xhtmlContent: string;
       /** The XHTML as written to the workspace this render (no blob URLs).
@@ -1689,6 +1692,7 @@
       {generatorRunner}
       {audioPluginUrl}
       {photoPluginUrl}
+      {placeMapsPluginUrl}
       chapterId={selectedItemId}
       onWorkspaceUpdate={ws => onWorkspaceUpdate?.(ws)}
     />
