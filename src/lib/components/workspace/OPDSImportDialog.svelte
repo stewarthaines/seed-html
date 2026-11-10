@@ -167,7 +167,7 @@
     onclick={event => event.stopPropagation()}
   >
     <header class="opds-header">
-      <h2 id="opds-dialog-title">{$t('Import from Catalog')}</h2>
+      <h2 id="opds-dialog-title">{$t('Sample books')}</h2>
       <button type="button" class="btn btn-icon" onclick={onClose} aria-label={$t('Close')}
         ><X size={16} aria-hidden="true" /></button
       >

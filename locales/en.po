@@ -248,6 +248,10 @@ msgstr ""
 msgid "✓ Catalog matches the switches below"
 msgstr ""
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "1 accessibility issue"
+msgstr ""
+
 #: src/lib/components/books/BooksShelf.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "1 day ago"
@@ -2673,7 +2677,6 @@ msgstr ""
 msgid "Import an existing EPUB file for editing"
 msgstr ""
 
-#: src/lib/components/workspace/OPDSImportDialog.svelte
 #: src/lib/components/workspace/WorkspaceActionBar.svelte
 msgid "Import from Catalog"
 msgstr ""
@@ -4598,6 +4601,10 @@ msgstr ""
 
 #: src/lib/content/types.ts
 msgid "Sample Author"
+msgstr ""
+
+#: src/lib/components/workspace/OPDSImportDialog.svelte
+msgid "Sample books"
 msgstr ""
 
 #: src/lib/navigation/views/BooksView.svelte

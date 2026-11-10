@@ -1787,7 +1787,9 @@
         <strong>
           {a11yViolations.length === 0
             ? $t('No accessibility issues found')
-            : $t('{count} accessibility issues', { count: a11yViolations.length })}
+            : a11yViolations.length === 1
+              ? $t('1 accessibility issue')
+              : $t('{count} accessibility issues', { count: a11yViolations.length })}
         </strong>
         <button
           type="button"

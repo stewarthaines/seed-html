@@ -267,6 +267,10 @@ msgstr "+ Ziel…"
 msgid "✓ Catalog matches the switches below"
 msgstr "✓ Der Katalog entspricht den Schaltern unten"
 
+#: src/lib/components/spine/PreviewPane.svelte
+msgid "1 accessibility issue"
+msgstr ""
+
 #: src/lib/components/books/BooksShelf.svelte
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "1 day ago"
@@ -2692,7 +2696,6 @@ msgstr "Ein EPUB von einer Katalog-URL importieren"
 msgid "Import an existing EPUB file for editing"
 msgstr "Eine vorhandene EPUB-Datei zur Bearbeitung importieren"
 
-#: src/lib/components/workspace/OPDSImportDialog.svelte
 #: src/lib/components/workspace/WorkspaceActionBar.svelte
 msgid "Import from Catalog"
 msgstr "Aus Katalog importieren"
@@ -4618,6 +4621,10 @@ msgstr ""
 #: src/lib/content/types.ts
 msgid "Sample Author"
 msgstr "Beispielautor"
+
+#: src/lib/components/workspace/OPDSImportDialog.svelte
+msgid "Sample books"
+msgstr ""
 
 #: src/lib/navigation/views/BooksView.svelte
 msgid "Sample books…"
