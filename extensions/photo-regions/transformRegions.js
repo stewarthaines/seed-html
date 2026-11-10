@@ -45,8 +45,12 @@
  *
  *   [{ "href": "Images/team.jpg", "at": "5.2,17.7,11.4,21.9",
  *      "of": "roger_king", "as": "Roger King", "row": "Back",
- *      "size": { "w": 1600, "h": 1067 } }, …]
+ *      "id": "photo-ch1-team", "size": { "w": 1600, "h": 1067 } }, …]
  *
+ * id is the figure's link target, so another chapter can link to the
+ * photograph itself: the author's id on the figure or its image when there
+ * is one, else photo-<idref>-<image base name>, numbered past any id the
+ * chapter already uses and set on the figure.
  * href is the image's OPF-relative manifest href (the chapter-relative src
  * resolved against the chapter's own href). size is the image's pixel size
  * — what a crop of the region needs to know its aspect — copied from the
@@ -222,6 +226,23 @@ async function transformDOM(htmlDocument, idref, ctx) {
     });
   };
 
+  /** The figure's link target: an id the author gave the figure (or its
+   *  image) is kept; otherwise one is made from the chapter id and the
+   *  image's base name, numbered past any id already in the chapter, and
+   *  set on the figure. The chapter id keeps it unique across the book, for
+   *  the PDF path that joins every chapter into one document. */
+  const figureId = (figure, img, href) => {
+    const own = figure.getAttribute('id') || img.getAttribute('id');
+    if (own) return own;
+    const slug = value => String(value || '').replace(/[^\p{L}\p{N}_-]+/gu, '-');
+    const base = (href.split('/').pop() || 'image').replace(/\.[^.]*$/, '');
+    const stem = `photo-${slug(idref || 'chapter')}-${slug(base)}`;
+    let id = stem;
+    for (let n = 2; htmlDocument.getElementById(id); n++) id = `${stem}-${n}`;
+    figure.setAttribute('id', id);
+    return id;
+  };
+
   /** Chapter href for a person id, relative to this chapter — or null. */
   const chapterHref = of => {
     if (!of || of === idref || !ctx || !Array.isArray(ctx.manifest)) return null;
@@ -274,8 +295,9 @@ async function transformDOM(htmlDocument, idref, ctx) {
     figure.classList.add('name-faces');
 
     const href = imageHref(img.getAttribute('src') || '');
+    const id = figureId(figure, img, href);
     for (const region of regions) {
-      records.push({ href, at: region.at, of: region.of, as: region.as, row: region.row });
+      records.push({ href, at: region.at, of: region.of, as: region.as, row: region.row, id });
     }
 
     // Positioning context exactly matching the image's box.

@@ -404,6 +404,7 @@ describe('transformRegions (regions record)', () => {
       of: 'roger_king',
       as: 'Roger King',
       row: 'Back',
+      id: 'photo-ch1-team',
       size: { w: 1600, h: 1067 },
     });
     expect(record[2].row).toBe('Front');
@@ -429,6 +430,30 @@ describe('transformRegions (regions record)', () => {
     });
     await transformDOM(parse(figureAndCarrier), 'ch1', other.ctx);
     expect(JSON.parse(other.files[RECORD])[0].size).toBeUndefined();
+  });
+
+  it('gives the figure an id to link to — the author’s if any, else derived and numbered — and records it', async () => {
+    const store = sourceStore();
+    const doc = parse(
+      figureAndCarrier +
+        '<p id="photo-ch1-team-2">An id already in use.</p>' +
+        '<p><img src="../Images/team.jpg"/></p>' +
+        carrier +
+        '<figure id="wedding"><img src="../Images/team.jpg"/></figure>' +
+        carrier +
+        '<figure><img id="own" src="../Images/team.jpg"/></figure>' +
+        carrier
+    );
+    await transformDOM(doc, 'ch1', store.ctx);
+    const figures = [...doc.querySelectorAll('figure')];
+    expect(figures.map(f => f.getAttribute('id'))).toEqual([
+      'photo-ch1-team',
+      'photo-ch1-team-3',
+      'wedding',
+      null,
+    ]);
+    const ids = JSON.parse(store.files[RECORD]).map((r: { id: string }) => r.id);
+    expect([...new Set(ids)]).toEqual(['photo-ch1-team', 'photo-ch1-team-3', 'wedding', 'own']);
   });
 
   it('does not rewrite an unchanged record', async () => {
