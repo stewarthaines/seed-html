@@ -18,11 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The user manual and the advanced reference are now online at readitinabook.com/docs, with search, and a Docs link above the Books screen opens them.
 - Filter your books by title or author from the Books screen.
 - The reader shows a linked book's download progress, and while it is open its address can be copied to share the book.
+- The reader's settings show which version of the reader you are using.
 
 ### Fixed
 
 - Link a folder and Import from files in Contents work again, and so does adding a chapter on a phone.
 - Sending a book to a shared catalog from another browser or device keeps the covers and details of the books already there.
+- In the reader, the arrow keys turn pages straight after closing its settings or contents, without clicking the book first.
 
 ## [0.26.0] - 2026-11-02
 
