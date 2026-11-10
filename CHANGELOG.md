@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The user manual and the advanced reference are now online at readitinabook.com/docs, with search, and a Docs link above the Books screen opens them.
 - Filter your books by title or author from the Books screen.
 - The reader shows a linked book's download progress, and while it is open its address can be copied to share the book.
+- Family History: a small locator map beside a birthplace, death place or marriage place, marked with the genealogical sign for the event; the Place Maps panel makes each map once from a place name.
+- Family History: portraits now link to the photograph they were cut from, and a `:portrait:` line picks one person's face from a chosen photograph, so several lines side by side make a row such as four generations.
 
 ### Fixed
 
