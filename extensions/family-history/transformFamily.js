@@ -29,7 +29,7 @@
  * without a panel.
  *
  * MARKERS, each a paragraph of its own. Written bare — `:family:`,
- * `:family-index:`, `:portraits:`, `:lifeline:`, `:tree:` — a marker is a
+ * `:family-index:`, `:portraits:`, `:portrait:`, `:lifeline:`, `:tree:` — a marker is a
  * symbol with no attributes, which djot renders as literal text and
  * Markdown never parses; it is matched here by paragraph text and means
  * "this chapter's person". With attributes — `:portraits:{of=…}`,
@@ -48,6 +48,13 @@
  * resolved against the records here; one that matches no record is a
  * finding. Soft dependency by path only: no regions data, no portraits,
  * nothing errors. Naming the faces IN a photograph is photo-regions' job.
+ * `:portraits:{of=…}` is a strip of every photograph of one person;
+ * `:portrait:{of=… src=… as=…}` is one chosen crop, captioned with the
+ * name and years (or as=), and consecutive lines make one row — four
+ * generations side by side. src= picks the photograph by the end of its
+ * href (a file name, quoted); without it, the person's first. Every crop
+ * links to the photograph itself through the figure id photo-regions
+ * records.
  *
  * PLACE MAPS read the register a place-maps plugin keeps at
  * SOURCE/plugins/place-maps/places.json — place string → { name, href,
@@ -656,7 +663,7 @@ function extraClasses(el, ...drop) {
   return (el.getAttribute('class') || '').split(/\s+/).filter(cls => cls && !drop.includes(cls));
 }
 
-const BARE_CARRIERS = ['portraits', 'lifeline', 'tree', 'map'];
+const BARE_CARRIERS = ['portraits', 'portrait', 'lifeline', 'tree', 'map'];
 
 /**
  * A bare `:portraits:` / `:lifeline:` / `:tree:` paragraph (literal text —
@@ -922,6 +929,105 @@ function portraitsSetup(document, idref) {
     }
     if (strips.length) set.replaceWith(...strips);
     else set.remove();
+  }
+}
+
+/** "1859–1939" · "b. 1908" · "d. 1939" · "" — lifespanOf without the brackets. */
+function yearsOf(id) {
+  return lifespanOf(id).trim().replace(/^\(|\)$/g, '');
+}
+
+/**
+ * The crop a `:portrait:` line asks for: the person's first portrait in
+ * spine order, or with src= the one whose image href ends with it (a file
+ * name is enough). Only crops with a known pixel size can render. Each miss
+ * is a console warning naming what to fix.
+ */
+function chosenCrop(personId, src) {
+  if (!(personId in people)) {
+    console.warn('family-history: portrait of', personId, '— no such person record');
+    return null;
+  }
+  let crops = portraits[personId] || [];
+  if (src) {
+    const want = src.replace(/^(\.\.?\/)+/, '');
+    crops = crops.filter(crop => crop.href === want || crop.href.endsWith('/' + want));
+    if (crops.length > 1) {
+      console.warn(
+        'family-history: portrait of',
+        personId,
+        `— src="${src}" matches ${crops.length} photographs; using the first. Give more of the path.`
+      );
+    }
+  }
+  const crop = crops[0];
+  if (!crop) {
+    console.warn(
+      'family-history: portrait of',
+      personId,
+      src ? `— no region for them on a photograph matching "${src}"` : '— no region for them on any photograph'
+    );
+    return null;
+  }
+  if (!crop.size) {
+    console.warn(
+      'family-history: portrait of',
+      personId,
+      '— the photograph’s pixel size is unknown; open it once in the Photo Regions panel'
+    );
+    return null;
+  }
+  return crop;
+}
+
+/**
+ * `:portrait:{of=… src=… as=…}` sets → one row per set (consecutive lines),
+ * a captioned figure per line: the crop (same element and link as a strip's)
+ * over the person's name and years, or as= in their place. The name links to
+ * the person's chapter, except from that chapter. Nothing found, nothing
+ * rendered.
+ */
+function portraitSetup(document, idref) {
+  for (const set of carrierSets(document, 'portrait')) {
+    const figures = [];
+    for (const span of set.children) {
+      const personId = span.getAttribute('data-of') || idref;
+      const crop = chosenCrop(personId, span.getAttribute('data-src') || '');
+      if (!crop) continue;
+      const figure = document.createElement('figure');
+      figure.setAttribute('class', 'portrait-figure');
+      figure.appendChild(portraitElement(document, crop, personId, idref));
+      const caption = document.createElement('figcaption');
+      const as = span.getAttribute('data-as');
+      if (as) {
+        caption.textContent = as;
+      } else {
+        // The name links to the person's chapter, but not from that chapter.
+        let name = personLink(document, personId);
+        if (personId === idref && name.tagName === 'A') {
+          name = document.createElement('span');
+          name.setAttribute('class', 'person-name');
+          name.textContent = idToName(personId);
+        }
+        caption.appendChild(name);
+        const years = yearsOf(personId);
+        if (years) {
+          const yearsEl = document.createElement('span');
+          yearsEl.setAttribute('class', 'portrait-years');
+          yearsEl.textContent = years;
+          caption.appendChild(document.createTextNode(' '));
+          caption.appendChild(yearsEl);
+        }
+      }
+      figure.appendChild(caption);
+      figures.push(figure);
+    }
+    if (figures.length) {
+      const row = document.createElement('div');
+      row.setAttribute('class', ['portrait-row', ...extraClasses(set, 'portrait-set')].join(' '));
+      figures.forEach(figure => row.appendChild(figure));
+      set.replaceWith(row);
+    } else set.remove();
   }
 }
 
@@ -1509,7 +1615,7 @@ async function transformDOM(document, idref, ctx) {
     const wanted =
       anchors.length > 0 ||
       wantsMaps ||
-      document.querySelector('p.portraits-set, p.lifeline-set, p.tree-set') !== null;
+      document.querySelector('p.portraits-set, p.portrait-set, p.lifeline-set, p.tree-set') !== null;
     if (!wanted) return document;
 
     await loadFamily(ctx, idref);
@@ -1521,6 +1627,7 @@ async function transformDOM(document, idref, ctx) {
       } else renderIndex(document, anchor.el);
     }
     portraitsSetup(document, idref);
+    portraitSetup(document, idref);
     lifelinesSetup(document, idref);
     treesSetup(document, idref);
     await mapsSetup(document, ctx, register, idref);

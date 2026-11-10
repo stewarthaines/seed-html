@@ -1,6 +1,6 @@
 # Portraits: links to the photograph, and a single `:portrait:`
 
-Status: Part 1 BUILT 2026-11-10 on branch `portrait-links`; Part 2 designed, not built. Two changes to the family-history extension, the first also touching photo-regions. No core app change.
+Status: Parts 1 and 2 BUILT 2026-11-10 on branch `portrait-links`. Two changes to the family-history extension, the first also touching photo-regions. No core app change.
 
 ## Problem
 
@@ -56,11 +56,11 @@ Fragment links to an element id are plain EPUB navigation; every reading system 
 </div>
 ```
 
-The crop is the same element a strip uses (same code, same link from Part 1), at the same fixed height, so faces line up whatever each region's aspect. The caption is the person's name, linked to their chapter when they have one (not the current chapter), with birth and death years when known, in the book's language. `as=` replaces the name and years. Classes carried on the marker reach the row, as for the other markers.
+The crop is the same element a strip uses (same code, same link from Part 1), at the same fixed height, so faces line up whatever each region's aspect. The caption is the person's name, linked to their chapter when they have one (not the current chapter), with their years in the form the panel's relative lists use (`1859–1939`, `b. 1908`), on a line of their own. `as=` replaces the name and years. Classes carried on the marker reach the row, as for the other markers.
 
 **CSS** (family.css): the row is a flex row with a gap, wrapping on a narrow column and centred; each figure is as wide as its crop, the caption small and centred beneath; `break-inside: avoid` on the row for print, and the same `print-color-adjust` as the strip. Four portrait-shaped crops at 7em fit a phone column.
 
-**Nothing found, nothing rendered.** An unknown person, no regions for them, a `src=` matching none of their photographs, or a photograph whose pixel size is unknown drops that figure and adds a finding (for the size, the existing hint to open the photograph once in the Photo Regions panel). A `src=` matching more than one of the person's photographs takes the first in spine order and adds a finding asking for more of the name. A row with no figures left disappears.
+**Nothing found, nothing rendered.** An unknown person, no regions for them, a `src=` matching none of their photographs, or a photograph whose pixel size is unknown drops that figure with a console warning naming what to fix (for the size, the existing hint to open the photograph once in the Photo Regions panel). A `src=` matching more than one of the person's photographs takes the first in spine order and warns, asking for more of the path. A row with no figures left disappears. These are console warnings, as for strips and maps, not panel findings: findings are gathered when the records load, before any marker renders.
 
 **A marker of its own, not an option on `:portraits:`.** A strip is "every photograph of one person", uncaptioned; a row is "one photograph each of several people", captioned. They share the crop code, not the grammar.
 
