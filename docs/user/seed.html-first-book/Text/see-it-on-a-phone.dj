@@ -7,6 +7,8 @@ People will read your book on phones, tablets and e-readers. The buttons above t
 3. Use [Previous chapter]{.ui} and [Next chapter]{.ui} to move between your two chapters.
 4. Click [Reader]{.ui} to try the controls a reading app gives your readers, such as a dark theme and larger text.
 
+![The preview in the Phone view, with the chapter on a narrow page.](../Images/screen-phone.png){.figure .screenshot}
+
 Click [Fill]{.ui} to go back to a preview that fills its half of the screen.
 
 You do not lay out pages for each screen. Your text flows to fit whatever screen it is read on.

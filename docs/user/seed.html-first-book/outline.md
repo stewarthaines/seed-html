@@ -34,16 +34,9 @@ The reader makes a two-chapter book of their own. The example title (The Lightho
 
 `package-and-read-it` — Package EPUB, the Share tab, Read (in the browser) and Download (for a reading app); package again after changes; where to go next.
 
-## Screenshots owed
+## Screenshots
 
-Each needs a Storybook story in `src/stories/manual-shots/` and an entry in `scripts/manual-shots.json`, cropped, not full-app:
-
-- the Books screen's Start row (New book)
-- the New Project window filled in
-- the editor and preview side by side, the first chapter rewritten
-- the Chapters list with two chapters and the Append Item button
-- the preview in the Phone view
-- the Share tab's "Download the EPUB" card after packaging
+Each is a story in `src/stories/manual-shots/FirstBook.stories.svelte` with an entry in `scripts/manual-shots.json`; regenerate with `npm run manual-shots -- first-book` (Storybook running). The Download card shows the packaged file name, which carries the date, so it changes on every capture.
 
 ## Findings from the walk-through (app, not manual)
 
@@ -51,3 +44,4 @@ Each needs a Storybook story in `src/stories/manual-shots/` and an entry in `scr
 - Chapter names: the chapter list shows the ID, which the author works with (family-history books key on it). The packaged contents use the first heading. The Edit chapter box's Title sets the XHTML `<title>`, which Apple Books shows for the chapter and can differ from the heading. All three stay as they are (decided 2026-11-10). The tutorial teaches the heading and leaves the box for the manual.
 - The djot starter chapter explained djot syntax: now a heading and one line to replace.
 - The cover colour changed the preview at once but was kept only after Update cover: the view now says when the picture is a preview, and Update cover is disabled when there is nothing to update.
+- At 1280 px wide the preview's view switch cuts READ.html off to "RE" (seen in the editor screenshot): not fixed.

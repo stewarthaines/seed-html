@@ -1,5 +1,5 @@
 {
-  "$comment": "Manual screenshot manifest: output image path -> the Storybook story that produces the state, the element to clip to, and the app mode the shot documents. Regenerate with `npm run manual-shots` (Storybook must be running). Stories live in src/stories/manual-shots/.",
+  "$comment": "Manual screenshot manifest: output image path -> the Storybook story that produces the state, the element to clip to, the app mode the shot documents, and optionally a viewport ({ width, height }, default 1280x800) so the layout fits the crop. Regenerate with `npm run manual-shots` (Storybook must be running). Stories live in src/stories/manual-shots/.",
   "shots": {
     "docs/user/seed.html-user-manual/Images/screen-new-project.png": {
       "story": "manual-shots-user-manual--new-project-dialog-basic-mode",
@@ -15,6 +15,48 @@
       "story": "manual-shots-advanced-reference--epub-settings-transform-pipeline",
       "clip": ".transform-pipeline-settings",
       "mode": "advanced"
+    },
+    "docs/user/seed.html-first-book/Images/screen-books.png": {
+      "story": "manual-shots-first-book--books-screen",
+      "clip": ".app-shell",
+      "mode": "basic",
+      "viewport": {
+        "width": 800,
+        "height": 300
+      }
+    },
+    "docs/user/seed.html-first-book/Images/screen-new-book.png": {
+      "story": "manual-shots-first-book--new-book-dialog",
+      "clip": ".create-dialog",
+      "mode": "basic"
+    },
+    "docs/user/seed.html-first-book/Images/screen-write.png": {
+      "story": "manual-shots-first-book--write-and-preview",
+      "clip": ".app-body",
+      "mode": "basic",
+      "viewport": {
+        "width": 1280,
+        "height": 380
+      }
+    },
+    "docs/user/seed.html-first-book/Images/screen-chapters.png": {
+      "story": "manual-shots-first-book--two-chapters",
+      "clip": ".write-sidebar",
+      "mode": "basic",
+      "viewport": {
+        "width": 1280,
+        "height": 240
+      }
+    },
+    "docs/user/seed.html-first-book/Images/screen-phone.png": {
+      "story": "manual-shots-first-book--phone-view",
+      "clip": ".preview-pane-container",
+      "mode": "basic"
+    },
+    "docs/user/seed.html-first-book/Images/screen-download.png": {
+      "story": "manual-shots-first-book--packaged",
+      "clip": ".card.primary",
+      "mode": "basic"
     }
   }
 }
