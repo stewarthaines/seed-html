@@ -2,9 +2,8 @@
 
 The screen has two halves. You write on the left, and the right shows the page as a reader will see it.
 
-1. Select all the sample text on the left and delete it.
-2. Type a heading on the first line, starting with `#` and a space.
-3. Leave a blank line, then write a paragraph or two.
+1. On the first line, replace `Chapter One` with your chapter's name. Keep the `#` and the space after it: they make the line a heading.
+2. Replace the line below it with a paragraph or two of your own.
 
 For example:
 

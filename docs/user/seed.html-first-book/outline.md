@@ -47,7 +47,7 @@ Each needs a Storybook story in `src/stories/manual-shots/` and an entry in `scr
 
 ## Findings from the walk-through (app, not manual)
 
-- The New book button opens a window headed "New Project".
-- The Edit chapter box's Title is saved but shown nowhere a new author looks: the Chapters list and the Contents view show the ID (`chapter01`), and the packaged contents use the chapter's first heading, falling back to the ID. The tutorial teaches the heading and skips the box.
-- The starter chapter's text explains djot and links to its syntax page; for a reader of this tutorial it is text to delete.
-- The cover hue slider changes the preview at once but is kept only after Update cover; the Cover summary in the sidebar keeps the old hue until then.
+- The New book button opened a window headed "New Project": now "New book".
+- Chapter names: the chapter list shows the ID, which the author works with (family-history books key on it). The packaged contents use the first heading. The Edit chapter box's Title sets the XHTML `<title>`, which Apple Books shows for the chapter and can differ from the heading. All three stay as they are (decided 2026-11-10). The tutorial teaches the heading and leaves the box for the manual.
+- The djot starter chapter explained djot syntax: now a heading and one line to replace.
+- The cover colour changed the preview at once but was kept only after Update cover: the view now says when the picture is a preview, and Update cover is disabled when there is nothing to update.

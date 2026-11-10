@@ -13,8 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Your First Book, a short tutorial at readitinabook.com/docs, takes you from a new book to an EPUB open in your reading app.
+
 ### Changed
 
+- A new book starts with a heading and one line to replace, instead of a page about djot syntax.
 - The cover view says when the picture is only a preview, so you know to click Update cover to keep a new colour or an edited title.
 
 ## [0.27.0] - 2026-11-10
