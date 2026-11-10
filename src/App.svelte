@@ -66,6 +66,7 @@
   import { t, currentLocale } from './lib/i18n';
   import { EnhancedAppState } from './lib/app-state-enhanced.svelte.js';
   import { FileStorageAPI } from './lib/storage/index.js';
+  import { requestPersistentStorage } from './lib/storage/persist.js';
   import { TransformExecutor } from './lib/transform/transform-executor.js';
   import { TransformEngine } from './lib/infrastructure/transform-engine.js';
   import { i18nService } from './lib/i18n/index.js';
@@ -295,6 +296,8 @@
   let packageProgress = $state<number | null>(null);
   async function packageCurrentBook(): Promise<void> {
     if (!currentWorkspaceState || epubPackaging) return;
+    // Before any await, so the request carries this click's activation.
+    requestPersistentStorage();
     epubPackaging = true;
     packageProgress = null;
     navigationStore.navigateTo('publish');

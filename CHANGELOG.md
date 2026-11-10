@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Link a folder and Import from files in Contents work again, and so does adding a chapter on a phone.
 - Sending a book to a shared catalog from another browser or device keeps the covers and details of the books already there.
 - In the reader, the arrow keys turn pages straight after closing its settings or contents, without clicking the book first.
+- Packaging a book asks the browser to keep your books when the disk fills up, instead of clearing them; Firefox asks you to allow it.
 
 ## [0.26.0] - 2026-11-02
 
