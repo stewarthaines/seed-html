@@ -7,7 +7,8 @@ import * as path from 'path';
  *
  * scripts/manual-shots.json maps each image path (inside a manual's Images/
  * directory) to the story that produces the state, the element to clip to,
- * and the app mode the shot documents. Stories live under
+ * the app mode the shot documents, and optionally a viewport
+ * ({ width, height }, default 1280×800). Stories live under
  * src/stories/manual-shots/ and end on the exact state to photograph.
  *
  * Images are written in place — review the resulting docs diff like any
@@ -39,8 +40,10 @@ async function captureManualShots() {
     // A fresh context per shot: clean localStorage keeps each recipe's app-mode
     // loader deterministic (no leakage from a prior shot), and avoids the
     // slowdown of an accumulated context tipping heavy recipes over the wait.
+    // A shot may set a smaller viewport so the app's layout fits the crop
+    // (a short window keeps an editor shot from being mostly empty space).
     const context = await browser.newContext({
-      viewport: { width: 1280, height: 800 },
+      viewport: shot.viewport ?? { width: 1280, height: 800 },
       deviceScaleFactor: 2,
     });
     const page = await context.newPage();

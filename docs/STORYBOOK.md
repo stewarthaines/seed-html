@@ -2,12 +2,12 @@
 
 ## Overview
 
-This project uses Storybook for component development, testing, and documentation. Beyond traditional UI components, we use Storybook to demonstrate and test backend features that don't have their own dedicated UI.
+This project uses Storybook for component development, testing, and documentation. Beyond component demos, it runs seeded end-to-end author workflows and produces the manuals' screenshots. Backend behaviour is covered by unit tests, not stories (see the coverage policy below).
 
 ## Documentation Structure
 
 - **📖 [STORYBOOK.md](./STORYBOOK.md)** (this file) - Main patterns, organization, and quick reference
-- **🔧 [Advanced patterns](#advanced-patterns)** (below) - Backend integration, complex patterns, and troubleshooting
+- **🔧 [Advanced patterns](#advanced-patterns)** (below) - component separation, accessibility, performance and troubleshooting
 
 ## Global Features
 
@@ -48,17 +48,17 @@ Individual UI components with various states and props.
 
 **Use for**: Buttons, forms, cards, modals - reusable UI components
 
-### Backend Stories: `title: 'Backend/FeatureName'`
+### Workflow Stories: `title: 'Workflows/Name'`
 
-Non-UI features that need demonstration and testing.
+A seeded real project, the full app, and a `play()` that drives an author workflow and asserts the outcome through storage. See Workflow stories, below.
 
-**Use for**: APIs, file systems, data processing, storage systems
+**Use for**: new user-facing behaviour with an assertable outcome
 
-### Feature Stories: `title: 'Features/FeatureName'`
+### Manual Shots: `title: 'Manual Shots/Book'`
 
-Development-focused stories for building and testing new features.
+State recipes for the manuals' screenshots, one story per image, each listed in `scripts/manual-shots.json`. See Manual screenshots, below.
 
-**Use for**: Work-in-progress features, integration testing, accessibility development
+**Use for**: every app screenshot in `docs/user/`
 
 ## Development Workflow
 
@@ -73,7 +73,7 @@ src/stories/FeatureNameDemo.svelte
 
 - **Simple components**: Use args with controls
 - **Complex features**: Use a demo component plus a play function
-- **Backend features**: Use the backend demo pattern with real APIs
+- **Backend features**: write a unit test, not a story (see the coverage policy below)
 - **Author workflows**: Seed a project and mount the full app (see Workflow stories, below)
 
 ### 3. **Test and Capture**
@@ -126,7 +126,7 @@ Keep testids **sparse** — they are Testing Library's explicit last resort (the
 
 | `data-testid`            | Element                           | Where                                                                                       |
 | ------------------------ | --------------------------------- | ------------------------------------------------------------------------------------------- |
-| `nav-<sectionId>`        | Shell navigation controls         | `src/lib/components/shell/TopBar.svelte` inside a book: `nav-workspace` (← Books), `nav-write`, `nav-book`, `nav-publish` (Share), `nav-settings`, and the Book sections `nav-cover`, `nav-chapters`, `nav-metadata`, `nav-manifest` (rendered only while the Book tab is active; the Navigation view is reached from Contents in Advanced mode); `src/lib/components/shell/BrandBar.svelte` on the Books screen: `nav-workspace`, `nav-published` (while the publish plugin is on), `nav-about` |
+| `nav-<sectionId>`        | Shell navigation controls         | `src/lib/components/shell/TopBar.svelte` inside a book: `nav-workspace` (← Books), `nav-write`, `nav-book`, `nav-publish` (Share), `nav-settings`, and the Book sections `nav-cover`, `nav-chapters` (Contents), `nav-metadata` (Details), `nav-manifest` (Files) (rendered only while the Book tab is active; the Navigation view is reached from Contents in Advanced mode); `src/lib/components/shell/WriteSidebar.svelte` on the Write tab: `nav-chapters` is also the Chapters heading, which opens Contents; `src/lib/components/shell/BrandBar.svelte` on the Books screen: `nav-workspace`, `nav-published` (while the publish plugin is on), `nav-docs` (an external link), `nav-about`, `nav-settings` |
 | `create-project`         | New-book button                   | `src/lib/navigation/views/BooksView.svelte`                                                 |
 | `import-from-catalog`    | Sample-books button               | `src/lib/navigation/views/BooksView.svelte`                                                 |
 | `package-epub`           | Package-EPUB button               | `src/lib/components/shell/TopBar.svelte`                                                    |
@@ -155,7 +155,7 @@ Adding a hook: prefer a stable, non-localized suffix (a section/chapter **id**, 
 <script lang="ts">
   import MyComponent from './MyComponent.svelte';
 
-  let message = '';
+  let message = $state('');
   const handleAction = () => {
     message = 'Clicked!';
   };
@@ -245,7 +245,7 @@ npm run test:stories  # Run Storybook tests with Vitest
 
 ### **Problem: Story category doesn't match functionality**
 
-**Solution**: Use correct title prefix - `Application/`, `Components/`, `Backend/`, or `Features/`.
+**Solution**: Use the title prefix in use: `Application/` (full-app states), `Components/` (component demos), `Workflows/` (seeded author workflows) or `Manual Shots/` (screenshot recipes). `Backend/` and `Features/` stories were retired by the workflow-first policy below.
 
 ## Development Checklist
 
@@ -306,7 +306,7 @@ Unit tests in `src/lib/**/*.test.ts` remain the coverage of record for backend b
 
 ## Manual screenshots (docs illustrations)
 
-The manuals' app screenshots are regenerated from stories. `scripts/manual-shots.json` maps each image path under `docs/*/Images/` to a story in `src/stories/manual-shots/` (the state recipe: seed, navigate, open the dialog/pane), the element to clip to, and the app **mode** the shot documents — every recipe forces Basic or Advanced Mode explicitly, since the manual illustrates both. `npm run manual-shots` (with Storybook running) rewrites the images in place at a fixed viewport and 2× scale; review the docs diff like any other change. The capture script picks stories by id from the manifest (`node scripts/capture-manual-shots.js <substring>` to regenerate a subset).
+The manuals' app screenshots are regenerated from stories. The capture script and `test:stories` launch Playwright's own browser builds, which must match the installed `playwright` version: after a Playwright upgrade, or if the cache has been cleared, run `npx playwright install chromium firefox` (the error names the missing build). `scripts/manual-shots.json` maps each image path under `docs/*/Images/` to a story in `src/stories/manual-shots/` (the state recipe: seed, navigate, open the dialog/pane), the element to clip to, and the app **mode** the shot documents — every recipe forces Basic or Advanced Mode explicitly, since the manual illustrates both. `npm run manual-shots` (with Storybook running) rewrites the images in place at a fixed viewport and 2× scale; review the docs diff like any other change. The capture script picks stories by id from the manifest (`node scripts/capture-manual-shots.js <substring>` to regenerate a subset).
 
 Recipes run in `test:stories` too, so a locally-producible screenshot that breaks fails loudly instead of going stale — **except** shots that depend on the network (e.g. Import from Catalog fetches the live `sample.readitinabook.com` feed). The isolated `test:stories` browser can't reach external hosts, so those stories are tagged `tags={['!test']}` to opt out of the suite; they're still captured by `npm run manual-shots` (which runs a real browser) and fail loudly there if the feed is unreachable.
 
@@ -363,10 +363,6 @@ Notes:
 ## Advanced patterns
 
 The earlier revision of this section taught Svelte-4-era idioms (`new Component({ target })` render functions, `on:click`, `export let`) that no longer run in this project. The guidance below is the current-form distillation; for working code, read the reference examples listed above.
-
-### Backend feature demos
-
-Backend features with no dedicated UI (storage, packaging, transforms) get a **demo component** that exercises the real implementation and renders its state — buttons to trigger operations, a log pane for results. The story renders the demo component like any other; `play()` can drive it for the docs page. Prefer the real backend over mocks (the Storybook browser has working IndexedDB/OPFS); reach for `src/stories/utils/mock-storage-factory.ts` only when a story needs deterministic in-memory behaviour.
 
 ### Component separation
 
