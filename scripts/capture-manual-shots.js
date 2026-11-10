@@ -58,7 +58,20 @@ async function captureManualShots() {
       await page.waitForTimeout(1000);
 
       fs.mkdirSync(path.dirname(out), { recursive: true });
-      await target.screenshot({ path: out });
+      // Round the crop inward: an element at a fractional position (a centred
+      // dialog) would otherwise take a row of whatever is behind it.
+      await target.scrollIntoViewIfNeeded();
+      const box = await target.boundingBox();
+      if (!box) throw new Error(`${shot.clip} has no layout box`);
+      const x = Math.ceil(box.x);
+      const y = Math.ceil(box.y);
+      const clip = {
+        x,
+        y,
+        width: Math.floor(box.x + box.width) - x,
+        height: Math.floor(box.y + box.height) - y,
+      };
+      await page.screenshot({ path: out, clip });
       console.log(`✅ Wrote ${out}`);
     } catch (error) {
       failures += 1;
