@@ -31,6 +31,7 @@ Extra instructions for writing documentation intended for a general audience of 
 - new books are djot (`.dj`). The user manual and advanced reference are markdown with inline attributes and are likely to be retired; match their format when editing them. sample-novel is plain `.txt`
 - UI references use inline attributes: in djot `[Projects]{.ui .icon-house}`, in markdown `_Projects_{.ui .icon-house}`. Icon SVGs live in the book's `Images/` (fill `#6b7280`, viewBox `0 0 256 256`, `role="img"` + `aria-label`), copied from the app's Phosphor subset in `src/lib/icons/generated/` — add the SVG when you document a new control. Watch the map: Projects is `House`, not a folder
 - figures: `![real alt text](../Images/name){.figure}`, plus `.screenshot` for app captures; every image gets meaningful alt text, no exceptions
+- shots are captured at 2×. A shot of one control or panel (a dialog, a card, a sidebar) is shown at its on-screen size: give it `width=` its CSS width, which is half the PNG's pixel width (`{.figure .screenshot width=544}`), and update it when a recapture changes the PNG's size. Wide shots of the app fill the column and need no width
 - screenshots are reproducible-only: each one is a Storybook story in `src/stories/manual-shots/` plus an entry in `scripts/manual-shots.json` — never a hand capture. Capturing needs Storybook running; ask the user, who usually has it up
 
 ## Reading context

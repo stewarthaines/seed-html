@@ -36,7 +36,7 @@ The reader makes a two-chapter book of their own. The example title (The Lightho
 
 ## Screenshots
 
-Each is a story in `src/stories/manual-shots/FirstBook.stories.svelte` with an entry in `scripts/manual-shots.json`; regenerate with `npm run manual-shots -- first-book` (Storybook running). The Download card shows the packaged file name, which carries the date, so it changes on every capture.
+Each is a story in `src/stories/manual-shots/FirstBook.stories.svelte` with an entry in `scripts/manual-shots.json`; regenerate with `npm run manual-shots -- first-book` (Storybook running). The Download card shows the packaged file name, which carries the date, so it changes on every capture. The New book window, the chapter list, the Phone view and the Download card are shown at their on-screen size through a `width` attribute (half the PNG's pixel width); check it after a recapture.
 
 ## Findings from the walk-through (app, not manual)
 
