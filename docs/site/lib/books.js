@@ -39,6 +39,12 @@ export const BOOKS = [
     description: 'Make a short book of your own and open it in a reading app, in about ten minutes.',
   },
   {
+    folder: 'seed.html-how-to',
+    slug: 'how-to',
+    title: 'How-to Guides',
+    description: 'Short steps for one task at a time, from adding a picture to saving a PDF.',
+  },
+  {
     folder: 'seed.html-user-manual',
     slug: 'user-manual',
     title: 'User Manual',

@@ -44,4 +44,3 @@ Each is a story in `src/stories/manual-shots/FirstBook.stories.svelte` with an e
 - Chapter names: the chapter list shows the ID, which the author works with (family-history books key on it). The packaged contents use the first heading. The Edit chapter box's Title sets the XHTML `<title>`, which Apple Books shows for the chapter and can differ from the heading. All three stay as they are (decided 2026-11-10). The tutorial teaches the heading and leaves the box for the manual.
 - The djot starter chapter explained djot syntax: now a heading and one line to replace.
 - The cover colour changed the preview at once but was kept only after Update cover: the view now says when the picture is a preview, and Update cover is disabled when there is nothing to update.
-- At 1280 px wide the preview's view switch cuts READ.html off to "RE" (seen in the editor screenshot): not fixed.

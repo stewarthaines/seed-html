@@ -1,0 +1,12 @@
+# Save as a PDF
+
+A PDF of your book has fixed pages, ready to print or to send to someone who does not use a reading app.
+
+1. Click the [Share]{.ui} tab.
+2. Under [Make a PDF]{.ui}, click [Generate PDF]{.ui}. A new window opens with the whole book laid out in pages.
+3. Click [Save as PDF]{.ui}. Your device's print dialog opens.
+4. Choose to save as a PDF instead of printing, and save the file. In Chrome and Edge, set *Destination* to *Save as PDF*. In Safari, click *PDF* and choose *Save as PDF*.
+
+Click [Close]{.ui} to close the window and return to SEED.html.
+
+To see the pages before you make the PDF, click [Print]{.ui} above the preview.

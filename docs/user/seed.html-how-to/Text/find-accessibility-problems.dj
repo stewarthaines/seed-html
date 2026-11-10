@@ -1,0 +1,10 @@
+# Find accessibility problems
+
+SEED.html can check the chapter you are working on for problems that make a book hard to use with a screen reader or other assistive technology, such as a picture with no description or headings that skip a level.
+
+1. Click the check button above the preview, beside [Reader]{.ui}. The [Accessibility]{.ui} panel opens above the preview and checks the chapter, with one line for each problem.
+2. Read a problem. Click [learn more]{.ui} for a full explanation and how to fix it.
+3. In the preview, the part of the page with the problem has a red outline. Click it to find the same place in the editor.
+4. Fix the text. While the panel is open, the check runs again as you type.
+
+The button shows how many problems the last check found. Each chapter is checked on its own: open each chapter in turn, with the panel open, before you package the book.

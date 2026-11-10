@@ -1,0 +1,19 @@
+# Change how your book looks
+
+The look of your book, such as its fonts, colours and spacing, comes from a stylesheet. Every book starts with one, called `page.css`, which every chapter uses.
+
+1. In the [Write]{.ui} tab, click [Also in this chapter]{.ui} above the editor.
+2. Under [Every chapter]{.ui}, click [page.css]{.ui}. The editor shows the stylesheet.
+3. Change a rule, or add one at the end. For example, to make every chapter heading dark blue:
+
+``` css
+h1 {
+  color: #1d4e89;
+}
+```
+
+The preview changes as you type. Use [Previous chapter]{.ui} and [Next chapter]{.ui} to check other chapters.
+
+To go back to your chapter, click [Also in this chapter]{.ui} and click the chapter's file name under [This chapter]{.ui}.
+
+Reading apps let readers choose their own font, text size and theme, and some of your rules may give way to their choice. Keep the stylesheet to a few gentle changes, and check the result in [Reader]{.ui}.

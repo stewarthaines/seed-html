@@ -1,0 +1,19 @@
+# Add a picture
+
+Put a photograph, drawing or diagram in a chapter.
+
+1. In the editor, put the cursor on an empty line where the picture should go, with a blank line above it.
+2. Drag the picture file from your computer onto the editor.
+3. A line like `![lighthouse](../Images/lighthouse.png)` appears. The word in square brackets is selected: type a short description of the picture to replace it.
+
+``` djot
+![The lighthouse at dusk, its lamp lit.](../Images/lighthouse.png)
+```
+
+The preview shows the picture as soon as you drop it.
+
+The description is read aloud to readers who cannot see the picture, and shown if the picture cannot load. Say what the picture shows, in a sentence.
+
+To use the same picture again, choose [Images]{.ui} from the [Insert]{.ui} list above the editor, put the cursor where you want it, and click the picture.
+
+Use JPEG or PNG files for photographs and drawings, and SVG for diagrams. Every reading app can show them.

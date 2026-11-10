@@ -1,0 +1,12 @@
+# Open an EPUB you already have
+
+Open an EPUB file to keep working on a book you made with SEED.html, or to look inside any other EPUB.
+
+1. On the [Books]{.ui} screen, click [Open an EPUB…]{.ui}.
+2. Choose the EPUB file on your device.
+
+The book opens and appears under [Your books]{.ui}.
+
+A book made with SEED.html carries its own source text, so it opens ready to edit. Any other EPUB opens read-only: you can read every chapter in the preview and check it for accessibility problems, but you cannot change it.
+
+An EPUB packaged without its source also opens read-only. To edit a book later, keep the file that [Package EPUB]{.ui} makes.
