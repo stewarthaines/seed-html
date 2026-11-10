@@ -1,0 +1,60 @@
+/*
+ * book.css — Your First Book
+ *
+ * The User Manual's affordance styles (seed.html-user-manual/Styles/book.css),
+ * less its icon glyphs and the "Try it" callout, which this book does not use.
+ * Keep the shared rules in step with that file.
+ */
+
+/* --- Names of on-screen controls -------------------------------------------
+ * A djot span, [Projects]{.ui}, or in markdown an emphasis, _Projects_{.ui}
+ * (which compiles to <em>, hence font-style: normal to keep the pill upright). */
+.ui {
+  font-weight: 600;
+  font-style: normal;
+  padding: 0.05em 0.35em;
+  border-radius: 0.35em;
+  background: rgba(0, 0, 0, 0.06);
+  white-space: nowrap;
+}
+
+/* --- Figures & captions ----------------------------------------------------
+ * A classed Markdown image, optionally followed by a classed caption paragraph:
+ *   ![alt text](../Images/diagram-reach.svg){.figure}
+ *   Make it once — read it anywhere.
+ *   {.caption}                                                             */
+img.figure {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.5em auto 0;
+}
+.caption {
+  margin: 0.5em 0 1.5em;
+  text-align: center;
+  font-size: 0.85em;
+  font-style: italic;
+  color: #595959;
+}
+
+/* Cropped UI screenshots (raster PNGs). Combine with .figure for layout:
+ *   ![alt](../Images/screen-new-project.png){.figure .screenshot} */
+img.screenshot {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* --- Dark-mode adjustments ------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  .ui {
+    background: rgba(255, 255, 255, 0.13);
+  }
+  .caption {
+    color: #a3a3a3;
+  }
+  img.screenshot {
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: none;
+  }
+}

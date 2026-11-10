@@ -1,0 +1,23 @@
+# Write the first chapter
+
+The screen has two halves. You write on the left, and the right shows the page as a reader will see it.
+
+1. Select all the sample text on the left and delete it.
+2. Type a heading on the first line, starting with `#` and a space.
+3. Leave a blank line, then write a paragraph or two.
+
+For example:
+
+``` djot
+# The Storm
+
+The wind rose after dark, and by midnight the waves were breaking over the rocks.
+
+Anna climbed the stairs to light the lamp.
+```
+
+The preview changes as you type. The heading becomes the chapter's name in the book's contents, so give every chapter one.
+
+A blank line starts a new paragraph. To make a word _italic_, put underscores around it: `_italic_`. For *bold*, use asterisks: `*bold*`.
+
+There is no Save button. SEED.html saves the chapter as you write.

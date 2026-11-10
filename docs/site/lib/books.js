@@ -33,6 +33,12 @@ export function formatOf(file) {
  */
 export const BOOKS = [
   {
+    folder: 'seed.html-first-book',
+    slug: 'first-book',
+    title: 'Your First Book',
+    description: 'Make a short book of your own and open it in a reading app, in about ten minutes.',
+  },
+  {
     folder: 'seed.html-user-manual',
     slug: 'user-manual',
     title: 'User Manual',

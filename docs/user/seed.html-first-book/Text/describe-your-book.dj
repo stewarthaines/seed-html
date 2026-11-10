@@ -1,0 +1,11 @@
+# Describe your book
+
+Reading apps and online catalogs show a book's cover and a short description beside its title. Both are in the [Book]{.ui} tab at the top of the screen.
+
+1. Click [Book]{.ui}.
+2. Click [Details]{.ui}. The title and author you typed at the start are here.
+3. Under [Description]{.ui}, write a sentence or two about your book.
+
+Click [Cover]{.ui} to see the cover SEED.html made for you. To change its colour, drag *Cover background hue* and click [Update cover]{.ui}. Or click [Use my own image…]{.ui} to use a picture instead.
+
+Click [Write]{.ui} to go back to your chapters.

@@ -1,0 +1,15 @@
+# Add a second chapter
+
+Your chapters are listed on the left, under [Chapters]{.ui}.
+
+1. Click [Append Item]{.ui}, the plus button beside [Chapters]{.ui}. A new chapter appears below the first, and the editor opens it.
+2. Delete the placeholder text.
+3. Write a heading and a paragraph, as you did in the first chapter.
+
+``` djot
+# Morning
+
+By morning the sea was calm again.
+```
+
+The order of the list is the order a reader moves through the book. To change it, point at a chapter and use its up and down arrows.
