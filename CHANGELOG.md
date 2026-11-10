@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The cover view says when the picture is only a preview, so you know to click Update cover to keep a new colour or an edited title.
+
 ## [0.27.0] - 2026-11-10
 
 ### Added

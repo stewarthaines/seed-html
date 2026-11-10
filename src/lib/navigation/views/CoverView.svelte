@@ -64,6 +64,14 @@
       (storedAuthor !== null && currentAuthor !== storedAuthor)
   );
   const isDirty = $derived(hasDraft || textDrift);
+  // Why the picture differs from the stored cover, shown beside Update cover so
+  // the author knows the change is not kept until they click it.
+  const pendingNote = $derived.by(() => {
+    if (!hasCover) return '';
+    if (hasDraft) return $t('This is a preview. Update the cover to keep it.');
+    if (textDrift) return $t('The title or author has changed. Update the cover to match.');
+    return '';
+  });
 
   const coverItem = $derived(
     workspace?.opf?.manifest?.find(m => m.properties?.includes('cover-image')) ?? null
@@ -229,7 +237,7 @@
             <button
               type="button"
               class="btn btn-primary"
-              disabled={generating || readOnly || !onGenerateCover}
+              disabled={generating || readOnly || !onGenerateCover || (hasCover && !isDirty)}
               onclick={handleGenerate}
             >
               {#if generating}
@@ -249,6 +257,7 @@
               </button>
             {/if}
           </div>
+          <p class="pending" role="status">{pendingNote}</p>
         {:else}
           <p class="from"><span class="muted">{$t('Your own image')}</span> · {coverItem?.href}</p>
         {/if}
@@ -389,6 +398,17 @@
     display: flex;
     gap: var(--space-2);
     align-items: center;
+  }
+
+  .pending {
+    margin: var(--space-2) 0 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+  }
+
+  /* Kept in the tree while empty so the status is announced when it appears. */
+  .pending:empty {
+    margin: 0;
   }
 
   .own {

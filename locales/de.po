@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-09\n"
-"PO-Revision-Date: 2026-11-09\n"
+"POT-Creation-Date: 2026-11-10\n"
+"PO-Revision-Date: 2026-11-10\n"
 "Language: de\n"
 "Language-Team: \n"
 "Last-Translator: Claude (machine first pass)\n"
@@ -3396,6 +3396,7 @@ msgstr "Berechtigung nötig"
 msgid "New"
 msgstr "Neu"
 
+#: src/lib/components/workspace/CreateProjectDialog.svelte
 #: src/lib/navigation/views/BooksView.svelte
 msgid "New book"
 msgstr "Neues Buch"
@@ -3415,10 +3416,6 @@ msgstr "Neues Kapitel"
 #: src/lib/components/workspace/WorkspaceList.svelte
 msgid "New here? Import from Catalog to browse sample books."
 msgstr "Neu hier? Öffnen Sie „Aus Katalog importieren“, um Beispielbücher zu durchsuchen."
-
-#: src/lib/components/workspace/CreateProjectDialog.svelte
-msgid "New Project"
-msgstr "Neues Projekt"
 
 #: src/lib/components/shell/ChapterStrip.svelte
 #: src/lib/components/spine/PreviewPane.svelte
@@ -5224,6 +5221,10 @@ msgstr ""
 msgid "The publishing plugin could not be loaded — you may be offline."
 msgstr "Das Veröffentlichungs-Plugin konnte nicht geladen werden — vielleicht bist du offline."
 
+#: src/lib/navigation/views/CoverView.svelte
+msgid "The title or author has changed. Update the cover to match."
+msgstr ""
+
 #: src/lib/components/spine/PreviewPane.svelte
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Theme"
@@ -5275,6 +5276,10 @@ msgstr "Diese Datei hat keinen öffentlichen Link"
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "This file is empty."
 msgstr "Diese Datei ist leer."
+
+#: src/lib/navigation/views/CoverView.svelte
+msgid "This is a preview. Update the cover to keep it."
+msgstr ""
 
 #: src/lib/content/types.ts
 msgid "This is a sample EPUB book created for demonstration purposes. It showcases the basic structure and content of an EPUB publication."
