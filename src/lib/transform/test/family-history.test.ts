@@ -130,6 +130,7 @@ const ASHBY_REGIONS = {
       of: 'edwin_ashby',
       as: 'Ned',
       row: 'Back',
+      id: 'photo-harriet_ashby-family',
       size: { w: 1000, h: 800 },
     },
     {
@@ -138,6 +139,7 @@ const ASHBY_REGIONS = {
       of: 'harriet_ashby',
       as: '',
       row: 'Front',
+      id: 'photo-harriet_ashby-family',
       size: { w: 1000, h: 800 },
     },
   ],
@@ -354,7 +356,7 @@ describe('family-history: findings', () => {
 });
 
 describe('family-history: portraits', () => {
-  it('crops every photograph naming the person from the regions records, linking the chapter that shows it', async () => {
+  it('crops every photograph naming the person from the regions records, linking the photograph itself', async () => {
     const { ctx } = book({ chapters: ASHBYS, open: 'edwin_ashby', regions: ASHBY_REGIONS });
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const doc = parse(
@@ -370,7 +372,7 @@ describe('family-history: portraits', () => {
     expect(crops.length).toBe(1);
     const crop = crops[0];
     expect(crop.tagName).toBe('A');
-    expect(crop.getAttribute('href')).toBe('harriet_ashby.xhtml');
+    expect(crop.getAttribute('href')).toBe('harriet_ashby.xhtml#photo-harriet_ashby-family');
     expect(crop.getAttribute('aria-label')).toBe('Edwin Ashby in a photograph in Harriet Ashby');
     const style = crop.getAttribute('style')!;
     // 20% × 1000 wide by 30% × 800 high → aspect 200/240; 7em tall.
@@ -380,8 +382,37 @@ describe('family-history: portraits', () => {
     expect(style).toContain('background-position:12.5% 14.29%');
   });
 
-  it('renders the chapter’s own photograph as a plain image and removes an empty strip', async () => {
+  it('links the chapter’s own photograph down the page, and removes an empty strip', async () => {
     const { ctx } = book({ chapters: ASHBYS, open: 'harriet_ashby', regions: ASHBY_REGIONS });
+    const doc = parse(
+      '<p class="portraits-set"><span class="portraits" data-of="harriet_ashby"></span></p>' +
+        '<p class="portraits-set"><span class="portraits" data-of="robert_bell"></span></p>'
+    );
+    await transformDOM(doc, 'harriet_ashby', ctx);
+    const crops = doc.querySelectorAll('.portrait');
+    expect(crops.length).toBe(1);
+    expect(crops[0].tagName).toBe('A');
+    expect(crops[0].getAttribute('href')).toBe('#photo-harriet_ashby-family');
+    expect(crops[0].getAttribute('role')).toBeNull();
+    expect(crops[0].getAttribute('aria-label')).toBe(
+      'Harriet Ashby in a photograph in this chapter'
+    );
+    expect(doc.querySelectorAll('.portrait-strip').length).toBe(1);
+    expect(doc.querySelector('p.portraits-set')).toBeNull();
+  });
+
+  it('falls back for a record without an id: the chapter from elsewhere, a plain image here', async () => {
+    const regions = {
+      harriet_ashby: ASHBY_REGIONS.harriet_ashby.map(({ id: _id, ...rest }) => rest),
+    };
+    const away = book({ chapters: ASHBYS, open: 'edwin_ashby', regions });
+    const awayDoc = parse(
+      '<p class="portraits-set"><span class="portraits" data-of="edwin_ashby"></span></p>'
+    );
+    await transformDOM(awayDoc, 'edwin_ashby', away.ctx);
+    expect(awayDoc.querySelector('.portrait')!.getAttribute('href')).toBe('harriet_ashby.xhtml');
+
+    const { ctx } = book({ chapters: ASHBYS, open: 'harriet_ashby', regions });
     const doc = parse(
       '<p class="portraits-set"><span class="portraits" data-of="harriet_ashby"></span></p>' +
         '<p class="portraits-set"><span class="portraits" data-of="robert_bell"></span></p>'

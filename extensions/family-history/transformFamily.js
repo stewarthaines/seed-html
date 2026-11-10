@@ -138,7 +138,7 @@ let recordChapter = {}; // id → chapter whose block defined the record
 let chapterIds = new Set(); // manifest chapter ids — a person links iff present
 let chapterHrefs = {}; // chapter idref → OPF manifest href
 let chapterOrder = {}; // chapter idref → spine position
-let portraits = {}; // person id → [{ href, at, size, chapterId }]
+let portraits = {}; // person id → [{ href, at, size, chapterId, id }]
 let findings = []; // { where, id, message }
 let labels = LABELS.en;
 let language = 'en';
@@ -415,9 +415,10 @@ async function loadFamily(ctx, idref) {
         region.size && Number(region.size.w) > 0 && Number(region.size.h) > 0
           ? { w: Number(region.size.w), h: Number(region.size.h) }
           : null;
+      const id = typeof region.id === 'string' && region.id ? region.id : null;
       const list = portraits[of] || (portraits[of] = []);
       if (!list.some(crop => crop.href === region.href)) {
-        list.push({ href: region.href, at, size, chapterId });
+        list.push({ href: region.href, at, size, chapterId, id });
       }
     }
   }
@@ -853,7 +854,10 @@ function relativeHref(targetHref, fromHref) {
  * region fills the box — background-size `(10000/w)% auto` makes the region
  * as wide as the box, and background-position P% aligns the P% point of the
  * image with the P% point of the box, hence the /(100−w) form. Links to
- * the chapter showing the photograph, except the chapter being rendered.
+ * the photograph itself — its chapter plus the figure id photo-regions
+ * recorded — or, from a record without an id, to the chapter. In the
+ * chapter being rendered it links down the page to the photograph, and
+ * without an id it is not a link.
  */
 function portraitElement(document, crop, personId, idref) {
   const round2 = value => Math.round(value * 100) / 100;
@@ -863,8 +867,14 @@ function portraitElement(document, crop, personId, idref) {
   const posY = h >= 100 ? 0 : (y / (100 - h)) * 100;
   const src = relativeHref(crop.href, chapterHrefs[idref] || '').replace(/'/g, "\\'");
 
-  const linked = crop.chapterId !== idref && chapterIds.has(crop.chapterId);
-  const el = document.createElement(linked ? 'a' : 'span');
+  const here = crop.chapterId === idref;
+  const fragment = crop.id ? '#' + crop.id : '';
+  const target = here
+    ? fragment || null
+    : chapterIds.has(crop.chapterId)
+      ? crop.chapterId + '.xhtml' + fragment
+      : null;
+  const el = document.createElement(target ? 'a' : 'span');
   el.setAttribute('class', 'portrait');
   el.setAttribute(
     'style',
@@ -873,19 +883,16 @@ function portraitElement(document, crop, personId, idref) {
       `background-position:${round2(posX)}% ${round2(posY)}%;`
   );
   const name = idToName(personId);
-  if (linked) {
-    el.setAttribute('href', crop.chapterId + '.xhtml');
-    el.setAttribute(
-      'aria-label',
-      t('inPhotographIn', { name, chapter: idToName(crop.chapterId) })
-    );
-  } else {
-    el.setAttribute('role', 'img');
-    el.setAttribute(
-      'aria-label',
-      crop.chapterId === idref ? t('inPhotographHere', { name }) : t('inPhotograph', { name })
-    );
-  }
+  if (target) el.setAttribute('href', target);
+  else el.setAttribute('role', 'img');
+  el.setAttribute(
+    'aria-label',
+    here
+      ? t('inPhotographHere', { name })
+      : target
+        ? t('inPhotographIn', { name, chapter: idToName(crop.chapterId) })
+        : t('inPhotograph', { name })
+  );
   return el;
 }
 
