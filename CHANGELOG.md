@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-11-10
+
 ### Added
 
 - The user manual and the advanced reference are now online at readitinabook.com/docs, with search, and a Docs link above the Books screen opens them.
