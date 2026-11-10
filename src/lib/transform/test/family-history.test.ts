@@ -36,6 +36,10 @@ function book(options: {
   regions?: Record<string, unknown[]>;
   language?: string;
   open?: string;
+  /** Extra SOURCE/ files (a place-maps register). */
+  source?: Record<string, string>;
+  /** Extra manifest items with their text (map SVGs). */
+  manifestFiles?: Record<string, string>;
 }) {
   const files: Record<string, string> = {
     'SOURCE/extensions/family-history/person.schema.json': SCHEMA,
@@ -46,14 +50,22 @@ function book(options: {
   for (const [id, regions] of Object.entries(options.regions ?? {})) {
     files[`SOURCE/data/regions/${id}.json`] = JSON.stringify(regions);
   }
+  Object.assign(files, options.source ?? {});
+  const manifestFiles = options.manifestFiles ?? {};
   const ids = Object.keys(options.chapters);
   const reads: string[] = [];
+  const writes: Record<string, string> = {};
   const ctx = {
     language: options.language ?? 'en-AU',
     manifest: [
       { id: 'nav', href: 'nav.xhtml', mediaType: 'application/xhtml+xml', properties: 'nav' },
       ...ids.map(id => ({ id, href: `Text/${id}.xhtml`, mediaType: 'application/xhtml+xml' })),
       { id: 'family-jpg', href: 'Images/family.jpg', mediaType: 'image/jpeg' },
+      ...Object.keys(manifestFiles).map((href, i) => ({
+        id: `map-${i}`,
+        href,
+        mediaType: 'image/svg+xml',
+      })),
     ],
     spine: ids.map(idref => ({ idref, linear: true })),
     frontmatter: options.open ? (options.chapters[options.open] ?? null) : null,
@@ -62,8 +74,17 @@ function book(options: {
       if (!(path in files)) throw new Error(`Missing: ${path}`);
       return files[path];
     }),
+    readManifestText: vi.fn(async (href: string) => {
+      if (!(href in manifestFiles)) throw new Error(`Not in manifest: ${href}`);
+      return manifestFiles[href];
+    }),
+    writeSourceText: vi.fn(async (path: string, text: string) => {
+      writes[path] = text;
+      files[path] = text;
+      return path;
+    }),
   };
-  return { ctx, files, reads };
+  return { ctx, files, reads, writes };
 }
 
 const ASHBYS: Record<string, Rec> = {
@@ -172,7 +193,7 @@ describe('family-history: the kinship panel', () => {
     );
   });
 
-  it('uses ctx.frontmatter for the open chapter, the store for the rest, and reads nothing without a marker', async () => {
+  it('uses ctx.frontmatter for the open chapter, the store for the rest, and reads only its places list without a marker', async () => {
     const fresh = book({ chapters: ASHBYS, open: 'edwin_ashby' });
     fresh.ctx.frontmatter = { ...(ASHBYS.edwin_ashby as object), nickname: 'Fresh' };
     const doc = parse('<p>:family-index:</p>');
@@ -183,7 +204,7 @@ describe('family-history: the kinship panel', () => {
 
     const idle = book({ chapters: ASHBYS });
     await transformDOM(parse('<p>Just prose with :family: inside.</p>'), 'edwin_ashby', idle.ctx);
-    expect(idle.reads).toEqual([]);
+    expect(idle.reads).toEqual(['SOURCE/data/places/edwin_ashby.json']);
   });
 
   it('accepts the attributed carrier form of the anchors', async () => {
@@ -471,5 +492,122 @@ describe('family-history: trees', () => {
     expect(chains[0].textContent).toContain('Clara Bell');
     expect(chains[0].textContent).toContain('Rose Ashby');
     expect(chains[1].textContent).toContain('Tom Moore');
+  });
+});
+
+describe('family-history: place maps', () => {
+  const SVG =
+    '<svg xmlns="http://www.w3.org/2000/svg" class="place-map" viewBox="0 0 200 200">' +
+    '<title>old title</title><path class="pm-land" d="M0 0h10v10z"/>' +
+    '<path class="pm-region" d="M2 2h4v4z"/><circle class="pm-halo" cx="5" cy="5" r="6"/>' +
+    '<circle class="pm-dot" cx="5" cy="5" r="3.6"/></svg>';
+  const REGISTER = JSON.stringify({
+    version: 1,
+    places: {
+      Norwich: { name: 'Norwich, England, United Kingdom', href: 'Images/maps/norwich.svg' },
+      'Norwich, Norfolk': { alias: 'Norwich' },
+      Ipswich: { name: 'Ipswich, England, United Kingdom', href: 'Images/maps/missing.svg' },
+    },
+  });
+  const withMaps = (open: string) =>
+    book({
+      chapters: ASHBYS,
+      open,
+      source: { 'SOURCE/plugins/place-maps/places.json': REGISTER },
+      manifestFiles: { 'Images/maps/norwich.svg': SVG },
+    });
+
+  it('puts the birthplace map in the panel with an accessible name from the register', async () => {
+    const { ctx } = withMaps('harriet_ashby');
+    const doc = parse('<p class="family-set"><span class="family" data-map="birth"></span></p>');
+    await transformDOM(doc, 'harriet_ashby', ctx);
+    const holder = doc.querySelector('div.family > .family-map')!;
+    expect(holder).not.toBeNull();
+    const svg = holder.querySelector('svg')!;
+    expect(svg.getAttribute('role')).toBe('img');
+    expect(svg.getAttribute('aria-label')).toBe('Map: Norwich, England, United Kingdom');
+    expect(svg.querySelector('title')).toBeNull();
+    // The birthplace is marked with the birth sign where the dot was.
+    expect(svg.querySelector('.pm-dot')).toBeNull();
+    const mark = svg.querySelector('g.pm-mark.pm-birth')!;
+    expect(mark.getAttribute('transform')).toBe('translate(5 5)');
+    expect(mark.querySelector('path.pm-sign')).not.toBeNull();
+    expect(svg.querySelector('.pm-halo')!.classList.contains('pm-marked')).toBe(true);
+    // The dates still read as before.
+    expect(texts(doc, 'div.family > p')[0]).toBe('b. 2 May 1831, Norwich');
+  });
+
+  it('places a captioned figure for :map:, by person and event, and by register place through an alias', async () => {
+    const { ctx } = withMaps('edwin_ashby');
+    const doc = parse(
+      '<p class="map-set"><span class="map" data-of="harriet_ashby"></span></p>' +
+        '<p class="map-set"><span class="map" data-of="harriet_ashby" data-event="married"></span></p>' +
+        '<p class="map-set"><span class="map" data-place="Norwich, Norfolk"></span></p>'
+    );
+    await transformDOM(doc, 'edwin_ashby', ctx);
+    const figures = [...doc.querySelectorAll('figure.place-map-figure')];
+    expect(figures).toHaveLength(3);
+    expect(figures.map(f => f.querySelector('figcaption')!.textContent)).toEqual([
+      'Norwich, England, United Kingdom',
+      'Norwich, England, United Kingdom',
+      'Norwich, England, United Kingdom',
+    ]);
+    // An event's map carries its sign; a place named outright keeps the dot.
+    expect(figures[0].querySelector('.pm-mark.pm-birth')).not.toBeNull();
+    expect(figures[1].querySelector('.pm-mark.pm-married')).not.toBeNull();
+    expect(figures[2].querySelector('.pm-mark')).toBeNull();
+    expect(figures[2].querySelector('.pm-dot')).not.toBeNull();
+  });
+
+  it('leaves nothing behind for a place without a map or a map file not in the book', async () => {
+    const { ctx } = withMaps('edwin_ashby');
+    const doc = parse(
+      '<p class="family-set"><span class="family" data-map="death"></span></p>' +
+        '<p>:map:</p>' +
+        '<p class="map-set"><span class="map" data-event="married"></span></p>' +
+        '<p class="map-set"><span class="map" data-place="Atlantis"></span></p>'
+    );
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await transformDOM(doc, 'edwin_ashby', ctx);
+    warn.mockRestore();
+    expect(doc.querySelector('.family-map')).toBeNull();
+    expect(doc.querySelector('figure')).toBeNull();
+    expect(doc.querySelector('p.map-set')).toBeNull();
+  });
+
+  it('strips anything that could run from a map before inlining it', async () => {
+    const hostile =
+      '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ' +
+      'class="place-map" viewBox="0 0 10 10" onload="alert(1)">' +
+      '<script>alert(2)</script><foreignObject><div>x</div></foreignObject>' +
+      '<a href="javascript:alert(3)"><path class="pm-land" d="M0 0h1v1z" onclick="alert(4)"/></a>' +
+      '<use xlink:href="https://example.com/x.svg#a"/></svg>';
+    const { ctx } = book({
+      chapters: ASHBYS,
+      open: 'harriet_ashby',
+      source: { 'SOURCE/plugins/place-maps/places.json': REGISTER },
+      manifestFiles: { 'Images/maps/norwich.svg': hostile },
+    });
+    const doc = parse('<p class="family-set"><span class="family" data-map="birth"></span></p>');
+    await transformDOM(doc, 'harriet_ashby', ctx);
+    const svg = doc.querySelector('.family-map svg')!;
+    expect(svg).not.toBeNull();
+    expect(svg.querySelector('script, foreignObject, use')).toBeNull();
+    expect(svg.outerHTML).not.toMatch(/onload|onclick|javascript:|example\.com/);
+    expect(svg.querySelector('.pm-land')).not.toBeNull();
+  });
+
+  it('writes the chapter’s places as a neutral list, only when it changes', async () => {
+    const { ctx, writes } = book({ chapters: ASHBYS, open: 'edwin_ashby' });
+    await transformDOM(parse('<p>Prose only.</p>'), 'edwin_ashby', ctx);
+    expect(JSON.parse(writes['SOURCE/data/places/edwin_ashby.json'])).toEqual([
+      { text: 'Ipswich', label: 'Edwin Ashby, married' },
+    ]);
+    await transformDOM(parse('<p>Prose only.</p>'), 'edwin_ashby', ctx);
+    expect(ctx.writeSourceText).toHaveBeenCalledTimes(1);
+
+    const none = book({ chapters: { plain: { display: 'Plain Person' } }, open: 'plain' });
+    await transformDOM(parse('<p>Prose.</p>'), 'plain', none.ctx);
+    expect(none.ctx.writeSourceText).not.toHaveBeenCalled();
   });
 });

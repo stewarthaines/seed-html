@@ -34,7 +34,12 @@
     onInsert?: (content: string) => void;
     /** Adds a file the plugin made to the book and resolves to its href;
      *  answers the plugin's `add-media`. Omit to refuse every request. */
-    onAddMedia?: (filename: string, mediaType: string, bytes: ArrayBuffer) => Promise<string>;
+    onAddMedia?: (
+      filename: string,
+      mediaType: string,
+      bytes: ArrayBuffer,
+      folder?: string
+    ) => Promise<string>;
     /** Accessible iframe title. */
     title: string;
     /** Spine item id of the open chapter, passed through in `context` so a
@@ -108,12 +113,14 @@
   // landed (or why it could not be added), matched by request id.
   async function answerAddMedia(
     requestId: string,
-    file: { filename: string; mediaType: string; bytes: ArrayBuffer }
+    file: { filename: string; mediaType: string; bytes: ArrayBuffer; folder?: string }
   ): Promise<void> {
     let result: { href: string } | { error: string };
     try {
       if (!onAddMedia) throw new Error('This panel cannot add files');
-      result = { href: await onAddMedia(file.filename, file.mediaType, file.bytes) };
+      result = {
+        href: await onAddMedia(file.filename, file.mediaType, file.bytes, file.folder),
+      };
     } catch (err) {
       result = { error: err instanceof Error ? err.message : String(err) };
     }

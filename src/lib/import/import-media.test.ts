@@ -1,5 +1,10 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import type {
+  WorkspaceService,
+  WorkspaceState,
+} from '$lib/services/workspace/workspace.service.js';
 import {
+  importFileToManifest,
   reliableMediaType,
   filenameStem,
   formatImageSnippet,
@@ -48,5 +53,43 @@ describe('snippet formatting', () => {
         href: 'Video/clip.mp4',
       })
     ).toBe('<video src="Video/clip.mp4" controls="controls"></video>');
+  });
+});
+
+describe('importFileToManifest', () => {
+  function fakeBook(hrefs: string[]) {
+    const workspace = {
+      id: 'ws1',
+      opf: {
+        manifest: hrefs.map((href, i) => ({ id: `i${i}`, href, mediaType: 'image/svg+xml' })),
+      },
+      pathInfo: { basePath: 'OEBPS' },
+    } as unknown as WorkspaceState;
+    const service = {
+      addManifestItem: vi.fn(
+        async (ws: WorkspaceState, item: { href: string; mediaType: string }) => ({
+          ...ws,
+          opf: { ...ws.opf, manifest: [...ws.opf.manifest, { id: 'new', ...item }] },
+        })
+      ),
+      writeFile: vi.fn(async () => {}),
+      writeBinaryFile: vi.fn(async () => {}),
+    } as unknown as WorkspaceService;
+    return { workspace, service };
+  }
+
+  it('places a file in the requested subfolder of its media folder, kept unique', async () => {
+    const { workspace, service } = fakeBook(['Images/maps/ballarat.svg']);
+    const file = new File(['<svg/>'], 'ballarat.svg', { type: 'image/svg+xml' });
+    const result = await importFileToManifest(workspace, service, file, 'image/svg+xml', 'maps');
+    expect(result.href).toMatch(/^Images\/maps\/ballarat.+\.svg$/);
+    expect(result.href).not.toBe('Images/maps/ballarat.svg');
+  });
+
+  it('keeps the media folder alone without a subfolder', async () => {
+    const { workspace, service } = fakeBook([]);
+    const file = new File(['<svg/>'], 'albany.svg', { type: 'image/svg+xml' });
+    const result = await importFileToManifest(workspace, service, file, 'image/svg+xml');
+    expect(result.href).toBe('Images/albany.svg');
   });
 });

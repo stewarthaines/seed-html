@@ -322,6 +322,36 @@
     }
   }
 
+  async function handlePlaceMapTemplateChange(event: Event): Promise<void> {
+    if (!workspaceId || !epubSettings) return;
+
+    const target = event.target as HTMLInputElement;
+    const newTemplate = target.value.trim();
+
+    const validation = settingsService.validateEPUBSettings({
+      place_map_template: newTemplate,
+    });
+    if (!validation.isValid) {
+      error = validation.errors[0] || $t('Invalid place map template');
+      return;
+    }
+
+    const previous = epubSettings.place_map_template;
+    const updatedSettings: EPUBSettings = {
+      ...epubSettings,
+      place_map_template: newTemplate,
+    };
+    epubSettings = updatedSettings;
+
+    try {
+      await settingsService.saveEPUBSettings(workspaceId, updatedSettings);
+      onSettingsChanged?.();
+    } catch (err) {
+      error = err instanceof Error ? err.message : $t('Failed to save EPUB settings');
+      epubSettings = { ...epubSettings, place_map_template: previous };
+    }
+  }
+
   // Persist a drop-to-insert media template (image/video). Validated (<href>
   // required); cleared → the built-in default applies.
   async function handleMediaTemplateChange(
@@ -637,6 +667,7 @@
       video_template: templates?.video ?? defaults.video_template,
       audio_clip_template: templates?.audioClip ?? defaults.audio_clip_template,
       photo_region_template: templates?.photoRegion ?? defaults.photo_region_template,
+      place_map_template: templates?.placeMap ?? defaults.place_map_template,
     };
     epubSettings = updatedSettings;
 
@@ -1521,6 +1552,25 @@
               />
               <p class="setting-description">
                 {$t('Placeholders: <at> required; <of>, <as>, <row>, <badge> optional.')}
+              </p>
+            </div>
+
+            <div class="setting-group">
+              <label for="place-map-template" class="setting-label-text">
+                {$t('Place Map Directive')}
+              </label>
+              <!-- i18n-ignore: literal directive template, not prose -->
+              <input
+                id="place-map-template"
+                type="text"
+                class="template-input"
+                value={epubSettings?.place_map_template || ''}
+                placeholder=":map:{'{'}place=&quot;&lt;place&gt;&quot;{'}'}"
+                onblur={handlePlaceMapTemplateChange}
+                disabled={epubLoading}
+              />
+              <p class="setting-description">
+                {$t('Placeholder: <place> required.')}
               </p>
             </div>
 

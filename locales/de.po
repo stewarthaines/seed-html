@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06\n"
-"PO-Revision-Date: 2026-11-06\n"
+"POT-Creation-Date: 2026-11-09\n"
+"PO-Revision-Date: 2026-11-09\n"
 "Language: de\n"
 "Language-Team: \n"
 "Last-Translator: Claude (machine first pass)\n"
@@ -58,6 +58,10 @@ msgstr "{count} Dateien"
 #: src/lib/components/manifest/MoveReviewDialog.svelte
 msgid "{count} files cannot move"
 msgstr "{count} Dateien können nicht verschoben werden"
+
+#: plugins/place-maps/src/App.svelte
+msgid "{count} maps in the book"
+msgstr ""
 
 #: src/lib/components/manifest/MoveReviewDialog.svelte
 msgid "{count} references updated"
@@ -196,6 +200,10 @@ msgstr "{path} (Zeile {line}, Spalte {col})"
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 msgid "{path} (line {line})"
 msgstr "{path} (Zeile {line})"
+
+#: plugins/place-maps/src/App.svelte
+msgid "{place} now shares the map of {other}."
+msgstr ""
 
 #: src/lib/components/track-changes/PatchsetReviewDialog.svelte
 msgid "{sel}/{total}"
@@ -436,6 +444,10 @@ msgstr "Dateien hinzufügen…"
 #: src/lib/components/metadata/LanguageEditor.svelte
 msgid "Add Language"
 msgstr "Sprache hinzufügen"
+
+#: plugins/place-maps/src/App.svelte
+msgid "Add map"
+msgstr ""
 
 #: src/lib/components/settings/GeneratorSettings.svelte
 msgid "Add option"
@@ -1199,6 +1211,10 @@ msgstr "Mitwirkende"
 msgid "Control methods"
 msgstr "Steuerungsmethoden"
 
+#: plugins/place-maps/src/App.svelte
+msgid "Coordinates (optional)"
+msgstr ""
+
 #: src/lib/components/spine/GeneratorPanel.svelte
 msgid "Copied"
 msgstr "Kopiert"
@@ -1220,6 +1236,10 @@ msgstr "Link kopieren"
 #: plugins/publish-to-remote/src/components/SendSurface.svelte
 msgid "Copy reader link"
 msgstr "Leselink kopieren"
+
+#: plugins/place-maps/src/App.svelte
+msgid "Could not add the map: {message}"
+msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Could not capture the editor"
@@ -1257,6 +1277,10 @@ msgstr ""
 msgid "Could not read the project: {error}"
 msgstr ""
 
+#: plugins/place-maps/src/App.svelte
+msgid "Could not read this book: {message}"
+msgstr ""
+
 #: plugins/audio-clip-editor/src/Recorder.svelte
 msgid "Could not record: {error}"
 msgstr "Aufnahme nicht möglich: {error}"
@@ -1267,6 +1291,10 @@ msgstr "Die Aufnahme konnte nicht gespeichert werden: {error}"
 
 #: plugins/photo-regions/src/App.svelte
 msgid "Could not save the regions: {error}"
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "Country"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts
@@ -2782,6 +2810,10 @@ msgstr "Clip-Direktive einfügen"
 msgid "Insert clip directive at cursor position"
 msgstr "Clip-Direktive an der Cursorposition einfügen"
 
+#: plugins/place-maps/src/App.svelte
+msgid "Insert map"
+msgstr ""
+
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Insert panel"
 msgstr ""
@@ -2824,6 +2856,10 @@ msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Invalid photo region template"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Invalid place map template"
 msgstr ""
 
 #: src/stories/preview/ContentPreviewDemo.svelte
@@ -3183,9 +3219,25 @@ msgstr "Kapitelreihenfolge verwalten"
 msgid "Manifest"
 msgstr "Manifest"
 
+#: plugins/place-maps/src/App.svelte
+msgid "Map"
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "Map added for {place}."
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "Maps no chapter uses: {places}"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Margin"
 msgstr "Rand"
+
+#: plugins/place-maps/src/App.svelte
+msgid "Matches"
+msgstr ""
 
 #: src/lib/components/settings/TrackChangesPanel.svelte
 msgid "matches this project"
@@ -3486,6 +3538,10 @@ msgstr "Keine Elemente entsprechen Ihrem Filter"
 msgid "No manifest items found"
 msgstr "Keine Manifest-Elemente gefunden"
 
+#: plugins/place-maps/src/App.svelte
+msgid "No matches found."
+msgstr ""
+
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 msgid "No matching file in the folder"
 msgstr "Keine passende Datei im Ordner"
@@ -3505,6 +3561,10 @@ msgstr "Noch keine gepackten EPUBs."
 #: src/lib/components/settings/TrackChangesPanel.svelte
 msgid "No patchsets yet."
 msgstr "Noch keine Änderungssätze."
+
+#: plugins/place-maps/src/App.svelte
+msgid "No places recorded here yet."
+msgstr ""
 
 #: src/App.svelte
 #: src/lib/components/SpineSidebar.svelte
@@ -3590,6 +3650,10 @@ msgstr "Nicht in der linearen Lesereihenfolge"
 
 #: plugins/accessible-pdf/src/App.svelte
 msgid "Not in this PDF yet: {items}"
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "Not located"
 msgstr ""
 
 #: src/lib/navigation/views/PublishView.svelte
@@ -3968,9 +4032,33 @@ msgstr ""
 msgid "Photo Regions"
 msgstr ""
 
+#: plugins/place-maps/src/App.svelte
+msgid "Place it by hand"
+msgstr ""
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Place Map Directive"
+msgstr ""
+
+#: src/lib/components/spine/EditorPane.svelte
+msgid "Place Maps"
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "Place name"
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "Place to search for"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Placeholder: <href>."
 msgstr "Platzhalter: <href>."
+
+#: src/lib/navigation/views/SettingsView.svelte
+msgid "Placeholder: <place> required."
+msgstr ""
 
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Placeholders: <at> required; <of>, <as>, <row>, <badge> optional."
@@ -3991,6 +4079,10 @@ msgstr "Platzhalter: <title>, <author>, <date>."
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Placement cancelled"
 msgstr "Platzierung abgebrochen"
+
+#: plugins/place-maps/src/App.svelte
+msgid "Places to show"
+msgstr ""
 
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Placing {count} chapters. Arrow keys to choose, Enter to confirm, Escape to cancel."
@@ -4397,6 +4489,10 @@ msgstr "{name} entfernt"
 msgid "Rendition Properties"
 msgstr "Rendition-Eigenschaften"
 
+#: plugins/place-maps/src/App.svelte
+msgid "Replace map"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/SendSurface.svelte
 msgid "Report"
 msgstr "Bericht"
@@ -4518,6 +4614,10 @@ msgstr "S3-kompatibel"
 msgid "S3-Compatible Storage"
 msgstr "S3-kompatibler Speicher"
 
+#: plugins/place-maps/src/App.svelte
+msgid "Same place as"
+msgstr ""
+
 #: src/lib/content/types.ts
 msgid "Sample Author"
 msgstr "Beispielautor"
@@ -4595,6 +4695,14 @@ msgstr "Gescrollt (pro Dokument)"
 msgid "search"
 msgstr ""
 
+#: plugins/place-maps/src/App.svelte
+msgid "Search"
+msgstr ""
+
+#: plugins/place-maps/src/App.svelte
+msgid "Search failed: {message}"
+msgstr ""
+
 #: src/lib/components/workspace/WorkspaceList.svelte
 msgid "Search projects"
 msgstr "Projekte durchsuchen"
@@ -4602,6 +4710,10 @@ msgstr "Projekte durchsuchen"
 #: src/lib/components/workspace/WorkspaceList.svelte
 msgid "Search projects…"
 msgstr "Projekte durchsuchen…"
+
+#: plugins/place-maps/src/App.svelte
+msgid "Searching…"
+msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Secret Access Key"
@@ -4893,6 +5005,10 @@ msgstr "Startzeit"
 msgid "Start typing in the editor to see your XHTML preview here."
 msgstr "Beginnen Sie im Editor zu tippen, um hier Ihre XHTML-Vorschau zu sehen."
 
+#: plugins/place-maps/src/App.svelte
+msgid "State or region"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/ValidationModal.svelte
 msgid "Status:"
 msgstr "Status:"
@@ -5130,6 +5246,7 @@ msgstr "Bibliotheken von Drittanbietern"
 msgid "This book"
 msgstr "Dieses Buch"
 
+#: plugins/place-maps/src/App.svelte
 #: src/lib/components/spine/ChapterValidationPanel.svelte
 #: src/lib/components/spine/EditorPane.svelte
 msgid "This chapter"
@@ -5366,6 +5483,10 @@ msgstr "Als Cover verwenden"
 msgid "Use my own image…"
 msgstr "Eigenes Bild verwenden…"
 
+#: plugins/place-maps/src/App.svelte
+msgid "Use that map"
+msgstr ""
+
 #: src/lib/components/manifest/ManifestPreview.svelte
 msgid "Use the download button to access the file"
 msgstr "Verwenden Sie die Schaltfläche „Herunterladen“, um auf die Datei zuzugreifen"
@@ -5494,6 +5615,10 @@ msgstr "Wohin „Senden“ ein Buch bringt. Deine Ziele, nicht die des Buchs."
 #: src/lib/components/settings/TrackChangesPanel.svelte
 msgid "While locked, you can edit existing chapters, styles and scripts; structural changes are disabled."
 msgstr "Solange gesperrt, können Sie bestehende Kapitel, Stile und Skripte bearbeiten; strukturelle Änderungen sind deaktiviert."
+
+#: plugins/place-maps/src/App.svelte
+msgid "Whole book"
+msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Whole chapter"

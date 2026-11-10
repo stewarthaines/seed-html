@@ -1,5 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
-import { addPluginMedia, isPluginMediaTypeAllowed, pluginMediaFilename } from './add-media.js';
+import {
+  addPluginMedia,
+  isPluginMediaTypeAllowed,
+  pluginMediaFilename,
+  pluginMediaFolder,
+} from './add-media.js';
 import type {
   WorkspaceService,
   WorkspaceState,
@@ -9,7 +14,7 @@ const workspace = { id: 'ws1' } as unknown as WorkspaceState;
 const service = {} as WorkspaceService;
 
 function fakeImport() {
-  return vi.fn(async (ws: WorkspaceState, _svc: WorkspaceService, file: File, mediaType?: string) => ({
+  return vi.fn(async (ws: WorkspaceState, _svc: WorkspaceService, file: File, mediaType?: string, _folder?: string) => ({
     workspace: ws,
     href: `Audio/${file.name}`,
     mediaType: mediaType ?? file.type,
@@ -33,7 +38,36 @@ describe('addPluginMedia', () => {
     expect(new Uint8Array(await file.arrayBuffer())).toEqual(new Uint8Array([1, 2, 3]));
   });
 
-  it('refuses anything but audio', async () => {
+  it('imports an SVG map into the subfolder it asks for', async () => {
+    const importFile = fakeImport();
+    await addPluginMedia(
+      { filename: 'ballarat.svg', mediaType: 'image/svg+xml', bytes: new ArrayBuffer(8), folder: 'maps' },
+      workspace,
+      service,
+      importFile
+    );
+    const [, , file, mediaType, folder] = importFile.mock.calls[0];
+    expect(file.name).toBe('ballarat.svg');
+    expect(mediaType).toBe('image/svg+xml');
+    expect(folder).toBe('maps');
+  });
+
+  it('refuses a subfolder that is not one plain name', async () => {
+    const importFile = fakeImport();
+    for (const folder of ['../Text', 'maps/old', 'a.b']) {
+      await expect(
+        addPluginMedia(
+          { filename: 'x.svg', mediaType: 'image/svg+xml', bytes: new ArrayBuffer(4), folder },
+          workspace,
+          service,
+          importFile
+        )
+      ).rejects.toThrow(/Not a folder name/);
+    }
+    expect(importFile).not.toHaveBeenCalled();
+  });
+
+  it('refuses anything but audio, SVG or PNG', async () => {
     const importFile = fakeImport();
     await expect(
       addPluginMedia(
@@ -70,8 +104,20 @@ describe('pluginMediaFilename', () => {
 });
 
 describe('isPluginMediaTypeAllowed', () => {
-  it('allows audio types only', () => {
+  it('allows audio, SVG and PNG only', () => {
     expect(isPluginMediaTypeAllowed('audio/mpeg')).toBe(true);
-    expect(isPluginMediaTypeAllowed('image/png')).toBe(false);
+    expect(isPluginMediaTypeAllowed('image/svg+xml')).toBe(true);
+    expect(isPluginMediaTypeAllowed('image/png')).toBe(true);
+    expect(isPluginMediaTypeAllowed('image/jpeg')).toBe(false);
+    expect(isPluginMediaTypeAllowed('application/xhtml+xml')).toBe(false);
+  });
+});
+
+describe('pluginMediaFolder', () => {
+  it('passes one plain name, treats blank as none, refuses the rest', () => {
+    expect(pluginMediaFolder('maps')).toBe('maps');
+    expect(pluginMediaFolder(undefined)).toBe('');
+    expect(pluginMediaFolder('  ')).toBe('');
+    expect(() => pluginMediaFolder('../x')).toThrow();
   });
 });

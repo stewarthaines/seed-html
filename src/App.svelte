@@ -203,6 +203,10 @@
   // item editor when available + enabled. No built-in equivalent, so the panel
   // is simply absent otherwise.
   const PHOTO_PLUGIN_ID = 'photo-regions';
+  // The place-maps `panel` plugin: locates the places a chapter names and adds
+  // a small locator map for each to the book (process/PLACE_MAPS.md). No
+  // built-in equivalent, so the panel is simply absent otherwise.
+  const PLACE_MAPS_PLUGIN_ID = 'place-maps';
   // The accessible-pdf `view` plugin: takes the Make a PDF card's place on Share
   // when available + enabled; Save as PDF stays as the fallback.
   const PDF_PLUGIN_ID = 'accessible-pdf';
@@ -220,6 +224,10 @@
   });
   let photoPluginUrl = $derived.by(() => {
     const entry = findActivePlugin(availablePlugins, enabledPluginIds, PHOTO_PLUGIN_ID);
+    return entry ? resolvePluginEntryUrl(entry) : null;
+  });
+  let placeMapsPluginUrl = $derived.by(() => {
+    const entry = findActivePlugin(availablePlugins, enabledPluginIds, PLACE_MAPS_PLUGIN_ID);
     return entry ? resolvePluginEntryUrl(entry) : null;
   });
   let pdfPluginUrl = $derived.by(() => {
@@ -1455,6 +1463,7 @@
         video_template: entry.templates?.video ?? defaults.video_template,
         audio_clip_template: entry.templates?.audioClip ?? defaults.audio_clip_template,
         photo_region_template: entry.templates?.photoRegion ?? defaults.photo_region_template,
+        place_map_template: entry.templates?.placeMap ?? defaults.place_map_template,
       };
     }
     if (next !== epub) {
@@ -2324,6 +2333,7 @@
             advancedMode={advancedMode.current}
             {audioPluginUrl}
             {photoPluginUrl}
+            {placeMapsPluginUrl}
             onPreviewUpdate={handleSpinePreviewUpdate}
             onWorkspaceUpdate={updatedWorkspace => {
               if (appState) appState.workspace = updatedWorkspace;

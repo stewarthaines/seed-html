@@ -332,6 +332,8 @@ export interface AddMediaMessage {
   filename: string;
   mediaType: string;
   bytes: ArrayBuffer;
+  /** Optional single subfolder inside the media type's folder, e.g. 'maps'. */
+  folder?: string;
 }
 
 /**
@@ -351,7 +353,9 @@ export function isAddMediaMessage(value: unknown): value is AddMediaMessage {
     typeof (value as { requestId?: unknown }).requestId === 'string' &&
     typeof (value as { filename?: unknown }).filename === 'string' &&
     typeof (value as { mediaType?: unknown }).mediaType === 'string' &&
-    (value as { bytes?: unknown }).bytes instanceof ArrayBuffer
+    (value as { bytes?: unknown }).bytes instanceof ArrayBuffer &&
+    ((value as { folder?: unknown }).folder === undefined ||
+      typeof (value as { folder?: unknown }).folder === 'string')
   );
 }
 

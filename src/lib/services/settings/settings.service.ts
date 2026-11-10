@@ -119,6 +119,9 @@ export interface EPUBSettings {
       Placeholders: <at> required; <of>, <as>, <row>, <badge> optional — an
       optional attribute whose value is empty is omitted whole. */
   photo_region_template?: string;
+  /** Place-map directive the place-maps plugin inserts for a located place.
+      Placeholder: <place> (the place string, a key of the plugin's register). */
+  place_map_template?: string;
   /** Inserted when an image is dropped into a chapter. Placeholders: <href>, <alt>. */
   image_template?: string;
   /** Inserted when a video is dropped into a chapter. Placeholder: <href>. */
@@ -444,6 +447,7 @@ export class SettingsService {
         spine_basename: settings.spine_basename ?? defaults.spine_basename,
         audio_clip_template: settings.audio_clip_template ?? defaults.audio_clip_template,
         photo_region_template: settings.photo_region_template ?? defaults.photo_region_template,
+        place_map_template: settings.place_map_template ?? defaults.place_map_template,
         image_template: settings.image_template ?? defaults.image_template,
         video_template: settings.video_template ?? defaults.video_template,
         filename_template: settings.filename_template ?? defaults.filename_template,
@@ -525,6 +529,8 @@ export class SettingsService {
       // Region values force quoting (commas, spaces), so unlike the clip
       // template this one quoted form is valid in both markdown and djot.
       photo_region_template: ':region:{at="<at>" of=<of> as="<as>" row="<row>" badge="<badge>"}',
+      // Place strings carry commas and spaces, so the value is quoted, as above.
+      place_map_template: ':map:{place="<place>"}',
       // Valid in both markdown and djot; textile projects set e.g. `!<href>!`.
       image_template: '![<alt>](<href>)',
       // Raw XHTML passes through markdown-it (html:true); djot projects wrap it
@@ -777,6 +783,12 @@ export class SettingsService {
     if (settings.photo_region_template !== undefined && settings.photo_region_template) {
       if (!settings.photo_region_template.includes('<at>')) {
         errors.push('Photo region template missing required placeholder: <at>');
+      }
+    }
+
+    if (settings.place_map_template !== undefined && settings.place_map_template) {
+      if (!settings.place_map_template.includes('<place>')) {
+        errors.push('Place map template missing required placeholder: <place>');
       }
     }
 

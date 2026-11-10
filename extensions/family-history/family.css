@@ -226,3 +226,116 @@
 .tree-more {
   font-style: italic;
 }
+
+/* Place maps: locator maps inlined from the place-maps register — the
+   country, the state or nation tinted, a dot for the place. The SVG carries
+   shapes and classes only; every colour is set here from currentColor and
+   two custom properties a book's page.css may override, so the map follows
+   the reading system's theme. The dot's size is CSS (`r` is a geometry
+   property): larger in the small panel map so it stays visible, smaller in
+   the prose figure. The outline follows currentColor, so it is dark on a
+   light page and light on a dark one. */
+.place-map {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.place-map .pm-land {
+  fill: currentColor;
+  fill-opacity: 0.07;
+  stroke: currentColor;
+  stroke-opacity: 0.5;
+  stroke-width: 0.7;
+  stroke-linejoin: round;
+}
+
+.place-map .pm-region {
+  fill: var(--place-map-accent, #b4462f);
+  fill-opacity: 0.35;
+  stroke: var(--place-map-accent, #b4462f);
+  stroke-width: 0.8;
+  stroke-linejoin: round;
+}
+
+.place-map .pm-halo {
+  fill: var(--place-map-paper, Canvas);
+  r: 4.5px;
+}
+
+.place-map .pm-dot {
+  fill: var(--place-map-accent, #b4462f);
+  r: 2.6px;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* A map reached through an event marks the place with the event's sign
+   (* born, † died, ⚭ married) in place of the dot. The sign is drawn on a
+   unit box; its size is this scale, and its stroke width is in that unit
+   box, so it scales with it. */
+.place-map .pm-sign {
+  fill: none;
+  stroke: var(--place-map-accent, #b4462f);
+  stroke-width: 0.34;
+  stroke-linecap: round;
+  transform: scale(4);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.place-map .pm-halo.pm-marked {
+  r: 6px;
+}
+
+/* In the :family: panel: a small map beside the dates. */
+.family-map {
+  float: inline-end;
+  width: 5em;
+  margin-inline-start: 1em;
+  margin-block-end: 0.5em;
+}
+
+.family-map .pm-dot {
+  r: 6px;
+}
+
+.family-map .pm-halo {
+  r: 9px;
+}
+
+.family-map .pm-sign {
+  transform: scale(7);
+}
+
+.family-map .pm-halo.pm-marked {
+  r: 10px;
+}
+
+.family::after {
+  content: '';
+  display: block;
+  clear: both;
+}
+
+/* `:map:` in prose: a captioned figure, map above caption. Display is set
+   outright, out-ranking the responsive extension's side-by-side layout for
+   captioned figures (`.sr-figure figure:has(figcaption)`, flex at wide
+   container sizes), which suits photographs but squeezes a small map. */
+.place-map-figure,
+.sr-figure .place-map-figure.place-map-figure {
+  display: block;
+  width: 12em;
+  max-width: 100%;
+  margin: 1em auto;
+  text-align: center;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.place-map-figure figcaption {
+  display: block;
+  font-size: 0.875em;
+  margin-top: 0.25em;
+}

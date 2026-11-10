@@ -130,6 +130,8 @@ export interface ExtensionTemplates {
   audioClip?: string;
   /** Photo region directive. Placeholders: <at>, <of>, <as>, <row>, <badge>. */
   photoRegion?: string;
+  /** Place map directive. Placeholder: <place>. */
+  placeMap?: string;
 }
 
 /**
@@ -305,6 +307,7 @@ export function asTemplates(value: unknown): ExtensionTemplates | undefined {
   if (typeof t.video === 'string' && t.video) out.video = t.video;
   if (typeof t.audioClip === 'string' && t.audioClip) out.audioClip = t.audioClip;
   if (typeof t.photoRegion === 'string' && t.photoRegion) out.photoRegion = t.photoRegion;
+  if (typeof t.placeMap === 'string' && t.placeMap) out.placeMap = t.placeMap;
   return Object.keys(out).length > 0 ? out : undefined;
 }
 

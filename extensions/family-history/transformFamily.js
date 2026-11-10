@@ -49,6 +49,22 @@
  * finding. Soft dependency by path only: no regions data, no portraits,
  * nothing errors. Naming the faces IN a photograph is photo-regions' job.
  *
+ * PLACE MAPS read the register a place-maps plugin keeps at
+ * SOURCE/plugins/place-maps/places.json — place string → { name, href,
+ * … } or { alias } — and inline the map file it names (a declared manifest
+ * item, read with ctx.readManifestText) so it takes the book's colours.
+ * `:family:{map=birth}` puts the chapter person's birthplace map in the
+ * panel (map=death / married); `:map:` places one in prose — of= a person
+ * (default the chapter's), event= birth / death / married (default birth),
+ * or place= a register key as written; bare `:map:` is the chapter person's
+ * birthplace. A map reached through an event marks the place with that
+ * event's genealogical sign (* born, † died, ⚭ married) instead of the
+ * dot; a place= map keeps the dot. Going the other
+ * way, every render writes the place strings this chapter's records use to
+ * SOURCE/data/places/<idref>.json as [{ text, label }], the neutral list
+ * the plugin reads — it never reads these records itself. Soft dependency
+ * both ways: no register, no maps; no plugin, a list nobody reads.
+ *
  * LABELS follow ctx.language (en, de); dates format through Intl in the
  * book's language, so day/month order is metadata, not code.
  *
@@ -84,6 +100,7 @@ const LABELS = {
     inPhotograph: '{name} in a photograph',
     inPhotographIn: '{name} in a photograph in {chapter}',
     inPhotographHere: '{name} in a photograph in this chapter',
+    mapOf: 'Map: {place}',
   },
   de: {
     parents: 'Eltern',
@@ -108,6 +125,7 @@ const LABELS = {
     inPhotograph: '{name} auf einer Fotografie',
     inPhotographIn: '{name} auf einer Fotografie in {chapter}',
     inPhotographHere: '{name} auf einer Fotografie in diesem Kapitel',
+    mapOf: 'Karte: {place}',
   },
 };
 
@@ -286,6 +304,11 @@ function parseAt(value) {
   return { x: parts[0], y: parts[1], w: parts[2], h: parts[3] };
 }
 
+function setLanguage(ctx) {
+  language = (ctx && ctx.language) || 'en';
+  labels = LABELS[language] || LABELS[String(language).split('-')[0]] || LABELS.en;
+}
+
 async function loadFamily(ctx, idref) {
   people = {};
   recordChapter = {};
@@ -295,8 +318,7 @@ async function loadFamily(ctx, idref) {
   portraits = {};
   findings = [];
   schemaChecked = false;
-  language = (ctx && ctx.language) || 'en';
-  labels = LABELS[language] || LABELS[String(language).split('-')[0]] || LABELS.en;
+  setLanguage(ctx);
 
   const chapters = chapterList(ctx);
   const validator = await loadValidator(ctx);
@@ -633,7 +655,7 @@ function extraClasses(el, ...drop) {
   return (el.getAttribute('class') || '').split(/\s+/).filter(cls => cls && !drop.includes(cls));
 }
 
-const BARE_CARRIERS = ['portraits', 'lifeline', 'tree'];
+const BARE_CARRIERS = ['portraits', 'lifeline', 'tree', 'map'];
 
 /**
  * A bare `:portraits:` / `:lifeline:` / `:tree:` paragraph (literal text —
@@ -677,7 +699,12 @@ function anchorSetup(document, idref) {
       const div = document.createElement('div');
       div.setAttribute('class', cls);
       set.replaceWith(div);
-      targets.push({ el: div, cls, of: span.getAttribute('data-of') || idref });
+      targets.push({
+        el: div,
+        cls,
+        of: span.getAttribute('data-of') || idref,
+        map: span.getAttribute('data-map') || null,
+      });
     }
   }
   return targets;
@@ -1250,25 +1277,246 @@ function treesSetup(document, idref) {
   }
 }
 
+/* ---- Place maps --------------------------------------------------------- */
+
+const REGISTER_PATH = 'SOURCE/plugins/place-maps/places.json';
+const PLACE_EVENTS = ['birth', 'death', 'married'];
+
+/**
+ * The place strings this chapter's own records use (its record and its
+ * `others:`), as [{ text, label }] in record order. Read from ctx.frontmatter
+ * alone — no other chapter, no store read — so it costs nothing to run on
+ * every render. The label is prose for the plugin's list, never parsed.
+ */
+function placesUsed(record, idref) {
+  if (!record || typeof record !== 'object' || Array.isArray(record)) return [];
+  const { others, ...self } = record;
+  const entries = [];
+  const add = (text, who, what) => {
+    if (typeof text !== 'string' || !text.trim()) return;
+    entries.push({ text: text.trim(), label: `${who}, ${what}` });
+  };
+  const visit = (id, person) => {
+    if (!person || typeof person !== 'object' || Array.isArray(person)) return;
+    const who = person.display || idToName(id);
+    add(person.birthplace, who, t('born'));
+    add(person.deathplace, who, t('died'));
+    partnersDeclared(person).forEach(p => add(p.place, who, t('married')));
+  };
+  if (Object.keys(self).length > 0) visit(idref, self);
+  if (others && typeof others === 'object') {
+    for (const [id, stub] of Object.entries(others)) visit(id, stub);
+  }
+  return entries;
+}
+
+/**
+ * Write SOURCE/data/places/<idref>.json when it differs from what is there —
+ * compared with the stored file, not a remembered write, since one iframe
+ * renders chapters of whichever book is open.
+ */
+async function writePlacesList(ctx, idref) {
+  if (!ctx || typeof ctx.writeSourceText !== 'function' || ctx.frontmatter === undefined) return;
+  const path = 'SOURCE/data/places/' + idref + '.json';
+  const entries = placesUsed(ctx.frontmatter, idref);
+  const text = JSON.stringify(entries, null, 2);
+  let stored = null;
+  try {
+    stored = await ctx.readSourceText(path);
+  } catch (error) {
+    stored = null;
+  }
+  // Nothing to say and nothing said before: no file for a chapter without places.
+  if (stored === null && entries.length === 0) return;
+  if (stored === text) return;
+  try {
+    await ctx.writeSourceText(path, text);
+  } catch (error) {
+    console.warn('family-history: could not write the places list', error);
+  }
+}
+
+/** The register's entry for a place string, following aliases; null if none. */
+function registerEntry(register, key) {
+  const places = register && typeof register.places === 'object' ? register.places : null;
+  if (!places || typeof key !== 'string') return null;
+  let entry = places[key];
+  for (let hops = 0; entry && typeof entry.alias === 'string' && hops < 5; hops++) {
+    entry = places[entry.alias];
+  }
+  return entry && typeof entry.href === 'string' ? entry : null;
+}
+
+/** The place string an event names: birthplace, deathplace, first marriage place. */
+function placeOfEvent(personId, event) {
+  const person = people[personId];
+  if (!person) return null;
+  if (event === 'birth') return person.birthplace || null;
+  if (event === 'death') return person.deathplace || null;
+  if (event === 'married') {
+    const withPlace = partnershipsOf(personId).find(p => p.place);
+    return withPlace ? withPlace.place : null;
+  }
+  return null;
+}
+
+/**
+ * The genealogical sign for each event, drawn on a unit box (about ±1) so
+ * CSS can scale it: * born (six arms), † died, ⚭ married (two linked
+ * rings). Paths rather than text, since ⚭ is missing from many
+ * reading-system fonts.
+ */
+const EVENT_SIGNS = {
+  birth: 'M0-1V1M-.87-.5L.87.5M-.87.5L.87-.5',
+  death: 'M0-1.05V1.05M-.6-.4H.6',
+  married: 'M.13 0a.55.55 0 1 1-1.1 0a.55.55 0 1 1 1.1 0M.97 0a.55.55 0 1 1-1.1 0a.55.55 0 1 1 1.1 0',
+};
+
+/**
+ * Swap the map's dot for the event's sign at the same point: a group placed
+ * there, holding the sign scaled by CSS (`.pm-sign`); the `transform`
+ * attribute is the size for a reading system that ignores the CSS. The halo
+ * stays behind it. The map file itself never changes: one map serves a
+ * birth and a death.
+ */
+function markEvent(document, svg, event) {
+  const d = EVENT_SIGNS[event];
+  const dot = svg.querySelector('circle.pm-dot');
+  if (!d || !dot) return;
+  const cx = Number(dot.getAttribute('cx'));
+  const cy = Number(dot.getAttribute('cy'));
+  if (!Number.isFinite(cx) || !Number.isFinite(cy)) return;
+  const ns = 'http://www.w3.org/2000/svg';
+  const mark = document.createElementNS(ns, 'g');
+  mark.setAttribute('class', 'pm-mark pm-' + event);
+  mark.setAttribute('transform', `translate(${cx} ${cy})`);
+  const sign = document.createElementNS(ns, 'path');
+  sign.setAttribute('class', 'pm-sign');
+  sign.setAttribute('d', d);
+  sign.setAttribute('transform', 'scale(4)');
+  mark.appendChild(sign);
+  dot.replaceWith(mark);
+  svg.querySelectorAll('circle.pm-halo').forEach(halo => halo.classList.add('pm-marked'));
+}
+
+/**
+ * The inline SVG for a place string, or null: the register entry's file read
+ * from the manifest, its own <title> replaced by an accessible name giving
+ * the full resolved place, so a screen reader hears "Map: Ballarat,
+ * Victoria, Australia" whatever the file said. Given the event the place
+ * came from, the dot becomes that event's sign.
+ */
+async function mapElement(document, ctx, register, place, event) {
+  const entry = registerEntry(register, place);
+  if (!entry) return null;
+  if (!ctx || typeof ctx.readManifestText !== 'function') return null;
+  let text;
+  try {
+    text = await ctx.readManifestText(entry.href);
+  } catch (error) {
+    console.warn('family-history: map file not in the book', entry.href);
+    return null;
+  }
+  const parsed = new DOMParser().parseFromString(text, 'image/svg+xml');
+  const root = parsed.documentElement;
+  if (!root || root.localName !== 'svg' || parsed.querySelector('parsererror')) {
+    console.warn('family-history: map file is not SVG', entry.href);
+    return null;
+  }
+  // A map is shapes and classes. Drop anything that could run or reach out —
+  // scripts, foreign content, event handlers, external or javascript: links —
+  // since a book (and its maps) may come from someone else.
+  root.querySelectorAll('script, foreignObject, iframe, image, use').forEach(el => el.remove());
+  for (const el of [root, ...root.querySelectorAll('*')]) {
+    for (const attr of [...el.attributes]) {
+      const name = attr.name.toLowerCase();
+      if (name.startsWith('on') || name === 'href' || name.endsWith(':href')) {
+        el.removeAttribute(attr.name);
+      }
+    }
+  }
+  const svg = document.importNode(root, true);
+  svg.querySelectorAll('title').forEach(el => el.remove());
+  const name = entry.name || place;
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', t('mapOf', { place: name }));
+  const classes = (svg.getAttribute('class') || '').split(/\s+/).filter(Boolean);
+  if (!classes.includes('place-map')) classes.push('place-map');
+  svg.setAttribute('class', classes.join(' '));
+  if (event) markEvent(document, svg, event);
+  return { svg, name };
+}
+
+/** `:family:{map=…}` → the map at the head of the panel, below any findings. */
+async function addPanelMap(document, ctx, register, anchor) {
+  if (!anchor.map) return;
+  const place = PLACE_EVENTS.includes(anchor.map) ? placeOfEvent(anchor.of, anchor.map) : null;
+  const map = place && (await mapElement(document, ctx, register, place, anchor.map));
+  if (!map) return;
+  const holder = document.createElement('div');
+  holder.setAttribute('class', 'family-map');
+  holder.appendChild(map.svg);
+  const findingsEl = [...anchor.el.children].find(el => el.classList.contains('family-findings'));
+  anchor.el.insertBefore(holder, findingsEl ? findingsEl.nextSibling : anchor.el.firstChild);
+}
+
+/** `:map:` sets → one figure per marker, captioned; nothing for no map. */
+async function mapsSetup(document, ctx, register, idref) {
+  for (const set of carrierSets(document, 'map')) {
+    const figures = [];
+    for (const span of set.children) {
+      const personId = span.getAttribute('data-of') || idref;
+      const event = span.getAttribute('data-event') || 'birth';
+      const named = span.getAttribute('data-place');
+      const place =
+        named || (PLACE_EVENTS.includes(event) ? placeOfEvent(personId, event) : null);
+      // A place named outright is no event's: it keeps the plain dot.
+      const map = place && (await mapElement(document, ctx, register, place, named ? null : event));
+      if (!map) {
+        console.warn('family-history: no map for', place || `${personId} ${event}`);
+        continue;
+      }
+      const figure = document.createElement('figure');
+      figure.setAttribute('class', ['place-map-figure', ...extraClasses(set, 'map-set')].join(' '));
+      figure.appendChild(map.svg);
+      const caption = document.createElement('figcaption');
+      caption.textContent = map.name;
+      figure.appendChild(caption);
+      figures.push(figure);
+    }
+    if (figures.length) set.replaceWith(...figures);
+    else set.remove();
+  }
+}
+
 /* ---- Entry -------------------------------------------------------------- */
 
 async function transformDOM(document, idref, ctx) {
   try {
+    setLanguage(ctx);
+    await writePlacesList(ctx, idref);
     bareMarkerSetup(document);
     const anchors = anchorSetup(document, idref);
+    const wantsMaps =
+      anchors.some(anchor => anchor.map) || document.querySelector('p.map-set') !== null;
     const wanted =
       anchors.length > 0 ||
+      wantsMaps ||
       document.querySelector('p.portraits-set, p.lifeline-set, p.tree-set') !== null;
     if (!wanted) return document;
 
     await loadFamily(ctx, idref);
+    const register = wantsMaps ? await readJSON(ctx, REGISTER_PATH) : null;
     for (const anchor of anchors) {
-      if (anchor.cls === 'family') renderPersonPanel(document, anchor.of, anchor.el);
-      else renderIndex(document, anchor.el);
+      if (anchor.cls === 'family') {
+        renderPersonPanel(document, anchor.of, anchor.el);
+        await addPanelMap(document, ctx, register, anchor);
+      } else renderIndex(document, anchor.el);
     }
     portraitsSetup(document, idref);
     lifelinesSetup(document, idref);
     treesSetup(document, idref);
+    await mapsSetup(document, ctx, register, idref);
   } catch (error) {
     console.error('family-history:', error);
   }
