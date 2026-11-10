@@ -26,9 +26,10 @@ Extra instructions for writing documentation intended for a general audience of 
 ## Format and mechanics
 
 - one line per paragraph — never hard-wrap prose (reviews happen in Obsidian; diffs stay one-change-per-paragraph)
-- each book project is itself a SEED project: `outline.md` is its plan of record (each `##` section becomes a `Text/<slug>.md` file, the slug being the chapter's docs-site URL); update the outline when you add or move a section
-- match the format of the book you're editing — the existing user manual and advanced reference are markdown with inline attributes (`{.ui}`, `{.figure}`); sample-novel is plain `.txt`. Djot is the default only for new projects
-- UI references use inline attributes: `_Projects_{.ui .icon-house}`. Icon SVGs live in the book's `Images/` (fill `#6b7280`, viewBox `0 0 256 256`, `role="img"` + `aria-label`), copied from the app's Phosphor subset in `src/lib/icons/generated/` — add the SVG when you document a new control. Watch the map: Projects is `House`, not a folder
+- each book project is itself a SEED project: `outline.md` is its plan of record (each `##` section becomes a `Text/<slug>.dj` or `Text/<slug>.md` file, the slug being the chapter's docs-site URL, its `#` heading matching the section title); update the outline when you add or move a section
+- the docs site (`npm run dev:docs`) builds every book registered in `BOOKS` in `docs/site/lib/books.js`, rendering `.dj` with the app's djot transform and `.md` with its markdown-it transform; register a new book there
+- new books are djot (`.dj`). The user manual and advanced reference are markdown with inline attributes and are likely to be retired; match their format when editing them. sample-novel is plain `.txt`
+- UI references use inline attributes: in djot `[Projects]{.ui .icon-house}`, in markdown `_Projects_{.ui .icon-house}`. Icon SVGs live in the book's `Images/` (fill `#6b7280`, viewBox `0 0 256 256`, `role="img"` + `aria-label`), copied from the app's Phosphor subset in `src/lib/icons/generated/` — add the SVG when you document a new control. Watch the map: Projects is `House`, not a folder
 - figures: `![real alt text](../Images/name){.figure}`, plus `.screenshot` for app captures; every image gets meaningful alt text, no exceptions
 - screenshots are reproducible-only: each one is a Storybook story in `src/stories/manual-shots/` plus an entry in `scripts/manual-shots.json` — never a hand capture. Capturing needs Storybook running; ask the user, who usually has it up
 

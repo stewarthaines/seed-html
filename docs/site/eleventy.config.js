@@ -2,9 +2,10 @@
  * Hosted docs build (process/DOCS_SITE.md).
  *
  * The manuals' chapter files in docs/user/<book>/Text/ become web pages at
- * /docs/<language>/<book>/<chapter>/, rendered by the app's own MarkdownIt
- * transform (lib/markdown.js) so the web page and the EPUB chapter come out of
- * the same code.
+ * /docs/<language>/<book>/<chapter>/, rendered by the app's own transform for
+ * their format — MarkdownIt for .md (lib/markdown.js), Djot for .dj
+ * (lib/djot.js) — so the web page and the EPUB chapter come out of the same
+ * code.
  *
  *   npm run build:docs   → dist/docs/
  *   npm run dev:docs     → the same into dist-docs-dev/, served with live reload
@@ -12,18 +13,20 @@
 
 import { rmSync } from 'node:fs';
 import path from 'node:path';
-import { transformText } from './lib/markdown.js';
-import { BOOKS, SOURCE_ROOT, findChapter, loadBooks } from './lib/books.js';
+import * as djot from './lib/djot.js';
+import * as markdown from './lib/markdown.js';
+import { BOOKS, SOURCE_ROOT, findChapter, formatOf, loadBooks } from './lib/books.js';
 import { bookPage, entryPage, homePage, searchPage } from './pages.js';
 import { buildSearchIndex } from './lib/search.js';
 
 const LANGUAGE = 'en';
 
 export default function (eleventyConfig) {
-  eleventyConfig.setLibrary('md', { render: source => transformText(source) });
+  eleventyConfig.setLibrary('md', { render: source => markdown.transformText(source) });
+  eleventyConfig.addExtension('dj', { compile: source => () => djot.transformText(source) });
 
   // Chapters are book content, not templates: no Liquid pass over them.
-  eleventyConfig.setTemplateFormats(['md', '11ty.js']);
+  eleventyConfig.setTemplateFormats(['md', 'dj', '11ty.js']);
   eleventyConfig.setUseGitIgnore(false);
   // Only chapter files are pages. Ignore globs are relative to the repo root.
   eleventyConfig.ignores.add(`${SOURCE_ROOT}/*.md`);
@@ -51,11 +54,11 @@ export default function (eleventyConfig) {
 
   // Chapter pages.
   eleventyConfig.addGlobalData('eleventyComputed', {
-    layout: data => (data.page.inputPath.endsWith('.md') ? 'chapter.11ty.js' : undefined),
+    layout: data => (formatOf(data.page.inputPath) ? 'chapter.11ty.js' : undefined),
     docsBook: data => findChapter(data.books, data.page.inputPath)?.book,
     docsChapter: data => findChapter(data.books, data.page.inputPath)?.chapter,
     permalink: data => {
-      if (!data.page.inputPath.endsWith('.md')) return data.permalink;
+      if (!formatOf(data.page.inputPath)) return data.permalink;
       return findChapter(data.books, data.page.inputPath).chapter.url;
     },
   });

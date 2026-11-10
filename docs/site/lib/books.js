@@ -10,9 +10,21 @@
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { headingTexts } from './markdown.js';
+import * as djot from './djot.js';
+import * as markdown from './markdown.js';
 
 export const SOURCE_ROOT = 'docs/user';
+
+/**
+ * Chapter source formats by file extension, each rendered by the app's own
+ * transform for that format. A book may mix them; outlines are always Markdown.
+ */
+export const FORMATS = { '.md': markdown, '.dj': djot };
+
+/** The format module for a chapter source path, or null if it is not a chapter. */
+export function formatOf(file) {
+  return FORMATS[path.extname(file)] ?? null;
+}
 
 /**
  * Book folders under docs/user, their URL slugs (the fuller book titles) and
@@ -49,17 +61,18 @@ function outlineTitle(text) {
 function loadBook(book, language) {
   const bookDir = path.join(SOURCE_ROOT, book.folder);
   const textDir = path.join(bookDir, 'Text');
-  const files = readdirSync(textDir).filter(name => name.endsWith('.md'));
+  const files = readdirSync(textDir).filter(name => formatOf(name));
 
   const byTitle = new Map();
   for (const file of files) {
-    const [title] = headingTexts(readFileSync(path.join(textDir, file), 'utf8'), 1);
+    const source = readFileSync(path.join(textDir, file), 'utf8');
+    const [title] = formatOf(file).headingTexts(source, 1);
     if (!title) throw new Error(`${textDir}/${file} has no # heading`);
     byTitle.set(title, file);
   }
 
   const outline = readFileSync(path.join(bookDir, 'outline.md'), 'utf8');
-  const order = headingTexts(outline, 2).map(outlineTitle);
+  const order = markdown.headingTexts(outline, 2).map(outlineTitle);
   const unplaced = [...byTitle.keys()].filter(title => !order.includes(title));
   if (unplaced.length > 0) {
     throw new Error(
@@ -72,7 +85,7 @@ function loadBook(book, language) {
     .filter(title => byTitle.has(title))
     .map(title => {
       const file = byTitle.get(title);
-      const slug = path.basename(file, '.md');
+      const slug = path.basename(file, path.extname(file));
       return { title, slug, inputPath: path.join(textDir, file), url: `${url}${slug}/` };
     });
 
