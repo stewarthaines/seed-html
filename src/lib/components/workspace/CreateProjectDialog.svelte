@@ -84,7 +84,7 @@
     creating = true;
     error = null;
     try {
-      // Remember these for the next New Project dialog (persist before onCreate,
+      // Remember these for the next New book dialog (persist before onCreate,
       // which navigates into the project and unmounts this dialog).
       author.current = author.current.trim();
       await onCreate({
@@ -127,7 +127,7 @@
     onclick={event => event.stopPropagation()}
   >
     <header class="create-header">
-      <h2 id="create-dialog-title">{$t('New Project')}</h2>
+      <h2 id="create-dialog-title">{$t('New book')}</h2>
       <button type="button" class="btn btn-icon" onclick={onClose} aria-label={$t('Close')}>
         <X size={16} aria-hidden="true" />
       </button>
