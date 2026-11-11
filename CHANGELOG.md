@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Your First Book, a short tutorial at readitinabook.com/docs, takes you from a new book to an EPUB open in your reading app.
+- Responsive layout: a `::: beside` block keeps a heading, its text and its figures together, with the figures beside the text, or below it on a narrow page.
 
 ### Changed
 

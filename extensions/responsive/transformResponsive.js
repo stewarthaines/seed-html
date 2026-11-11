@@ -11,7 +11,17 @@
  *   2. Each <figure> is wrapped in <div class="sr-figure"> — the container-query
  *      container. The figure itself must stay a *descendant* of the container so
  *      @container rules can restyle it; an element cannot query its own size.
- *   3. An element whose direct children carry the conventional width-alternative
+ *   3. A `::: beside` block — a heading, its text and one or more figures,
+ *      written in reading order — is split into <div class="beside-text">
+ *      (everything that is not a figure) followed by <div class="beside-figures">
+ *      (the figures), each in source order. The stylesheet lays the two out as
+ *      one wrapping flex row: figures at the inline end beside the text, below
+ *      it when the column is too narrow. Floats were rejected for this:
+ *      paginated reading systems push a float across a page break, where it
+ *      lands beside the wrong text. Grouping also keeps a heading on the same
+ *      page as its text and figures. A block with no figures, or nothing but
+ *      figures, is left as written.
+ *   4. An element whose direct children carry the conventional width-alternative
  *      classes — [Narrow]{.narrow}[Wide]{.wide}[Full]{.full} in the source —
  *      is stamped sr-switch, making it the query container its child spans
  *      display against. .narrow plus at least one other variant is required
@@ -25,7 +35,7 @@
  * column-paginated reading systems (content clips instead of flowing to the next
  * page), so containment is applied only to the small .sr-figure wrappers, in CSS.
  *
- * Both wraps are idempotent — re-running the pipeline over already-transformed
+ * All of these are idempotent — re-running the pipeline over already-transformed
  * content changes nothing.
  *
  * @param {Document} htmlDocument - the chapter's rendered DOM (HTML)
@@ -45,7 +55,32 @@ async function transformDOM(htmlDocument, idref, ctx) {
     body.appendChild(page);
   }
 
-  // 2. Figure containers (skip figures already inside one).
+  // 2. Beside blocks. Runs before the figure containers so each figure is
+  //    wrapped where it ends up; a figure already wrapped (a re-run) counts too.
+  for (const block of [...htmlDocument.querySelectorAll('div.beside')]) {
+    if ([...block.children].some(c => c.classList.contains('beside-text'))) continue;
+    const text = [];
+    const figures = [];
+    for (const node of [...block.childNodes]) {
+      if (node.nodeType === 3 && !node.textContent.trim()) continue;
+      const isFigure =
+        node.nodeType === 1 &&
+        (node.localName === 'figure' || node.classList.contains('sr-figure'));
+      (isFigure ? figures : text).push(node);
+    }
+    if (figures.length === 0 || text.length === 0) continue;
+    const textBox = htmlDocument.createElementNS(XHTMLNS, 'div');
+    textBox.setAttribute('class', 'beside-text');
+    for (const node of text) textBox.appendChild(node);
+    const figureBox = htmlDocument.createElementNS(XHTMLNS, 'div');
+    figureBox.setAttribute('class', 'beside-figures');
+    for (const node of figures) figureBox.appendChild(node);
+    while (block.firstChild) block.removeChild(block.firstChild);
+    block.appendChild(textBox);
+    block.appendChild(figureBox);
+  }
+
+  // 3. Figure containers (skip figures already inside one).
   for (const figure of [...htmlDocument.querySelectorAll('figure')]) {
     if (figure.parentElement && figure.parentElement.classList.contains('sr-figure')) continue;
     const wrapper = htmlDocument.createElementNS(XHTMLNS, 'div');
@@ -54,7 +89,7 @@ async function transformDOM(htmlDocument, idref, ctx) {
     wrapper.appendChild(figure);
   }
 
-  // 3. Inline width alternatives (classList.add is idempotent). Spans only:
+  // 4. Inline width alternatives (classList.add is idempotent). Spans only:
   //    the block variant systems (abc2svg / abcjs / prettier) name their
   //    variant DIVS with the same narrow/wide/full convention and carry their
   //    own complete ladders — stamping their containers would double-drive

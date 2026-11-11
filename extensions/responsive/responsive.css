@@ -90,6 +90,85 @@
   margin-top: 0.5em;
 }
 
+/* ---- Beside blocks: text and its figures as one unit ----
+   The transform splits a `::: beside` block into .beside-text and
+   .beside-figures. One wrapping flex row, no floats and no queries: the
+   figures sit at the inline end beside the text, and drop below it, centred,
+   when the column cannot hold both. The measure applies to the whole unit,
+   text and figures together, so its text starts at the same edge as the
+   prose around it.
+
+   A book sets the figure width with --beside-figure-width (default 12em). The
+   width goes on the .sr-figure wrapper itself: its inline-size containment
+   gives it no content width, so in a content-sized flex column it would
+   otherwise shrink to nothing. Space above the unit is the block's own
+   margin; the heading's top margin is dropped so the figures line up with it. */
+.beside {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.5em 1.25em;
+  margin: 1.5em 0 1em;
+}
+
+.sr-page .beside {
+  max-width: 36em;
+  max-width: 36rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.beside-text {
+  flex: 1 1 16em;
+  min-width: 0;
+}
+
+.sr-page .beside-text p,
+.sr-page .beside-text h1,
+.sr-page .beside-text h2,
+.sr-page .beside-text h3,
+.sr-page .beside-text h4,
+.sr-page .beside-text h5,
+.sr-page .beside-text h6,
+.sr-page .beside-text ul,
+.sr-page .beside-text ol,
+.sr-page .beside-text dl {
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.beside-text > :first-child {
+  margin-top: 0;
+}
+
+.beside-text > :last-child {
+  margin-bottom: 0;
+}
+
+.beside-figures {
+  flex: 0 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75em;
+  max-width: 100%;
+}
+
+.beside-figures > .sr-figure {
+  width: 12em;
+  width: var(--beside-figure-width, 12em);
+  max-width: 100%;
+  margin: 0;
+}
+
+/* Out-ranks extension rules that centre a figure with vertical margins
+   (family-history's place maps use 0,3,0). */
+.beside .beside-figures > .sr-figure > figure {
+  margin: 0;
+}
+
 /* ---- Layer 2 (last so it wins): e-ink ---- */
 
 @media (monochrome) {
@@ -104,7 +183,8 @@
   .sr-page ul,
   .sr-page ol,
   .sr-page dl,
-  .sr-page blockquote {
+  .sr-page blockquote,
+  .sr-page .beside {
     max-width: 100%;
   }
 }
@@ -257,6 +337,19 @@
   }
   .sr-switch.no-full.no-wide > .narrow {
     display: inline !important;
+  }
+
+  /* Beside blocks in print: Paged.js fragments flex rows poorly, so the text
+     runs as normal blocks and the figures follow as a centred row, kept whole. */
+  .beside.beside {
+    display: block;
+  }
+  .beside .beside-figures {
+    justify-content: center;
+    gap: 1em;
+    margin: 1em 0 0;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }
 
