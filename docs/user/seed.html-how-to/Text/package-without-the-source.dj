@@ -1,0 +1,8 @@
+# Package without the source
+
+Every EPUB that SEED.html makes also carries the book's source text, so you or anyone you send it to can open it in SEED.html and keep editing. Package without the source when you want a smaller file for readers only.
+
+1. Click the [Share]{.ui} tab.
+2. Under [Download the EPUB]{.ui}, click [Package EPUB without source]{.ui}. The file downloads.
+
+The file reads the same in every reading app. It opens read-only in SEED.html, so keep an EPUB with its source as well.

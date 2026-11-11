@@ -1,0 +1,12 @@
+# Describe your book's accessibility
+
+A book can say how accessible it is: for example, that every picture has a description and the text can be read aloud. Online stores and reading apps show this to readers who need it before they buy or open the book.
+
+These fields are in Advanced Mode.
+
+1. Click [Settings]{.ui}, then [General]{.ui}, and tick [Advanced mode]{.ui}. Close the settings.
+2. Click the [Book]{.ui} tab, then [Details]{.ui}.
+3. Click [Advanced details]{.ui}.
+4. Under [Accessibility]{.ui}, fill in the fields that describe your book. Start with the *Summary*, a sentence or two in plain words, then choose the *Accessibility features* the book has and any *Hazards*, such as flashing images.
+
+Describe the book as it is, not as you mean it to be. Check it first, as described in Find accessibility problems.

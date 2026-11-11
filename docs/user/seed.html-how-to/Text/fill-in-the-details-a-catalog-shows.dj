@@ -1,0 +1,13 @@
+# Fill in the details a catalog shows
+
+Reading apps and online catalogs show a book's title, author, language and description. You set them in one place.
+
+1. Click the [Book]{.ui} tab, then [Details]{.ui}.
+2. Check the *Title*.
+3. Under *Creators*, check each name and its role, such as [Author]{.ui} or [Illustrator]{.ui}. Click [Add Another Creator]{.ui} to add a name.
+4. Check the language under *Languages*. It tells reading apps how to hyphenate the text and which voice to read it with.
+5. Write a *Description* of a sentence or two.
+
+Each change is saved when you leave the field. Package the book again to put the new details in the EPUB.
+
+The publisher, rights and subjects are in Advanced Mode, under [Advanced details]{.ui}. To turn it on, click [Settings]{.ui}, then [General]{.ui}, and tick [Advanced mode]{.ui}.

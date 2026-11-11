@@ -1,0 +1,9 @@
+# Delete a book
+
+Delete a book you no longer need, to keep your list of books short.
+
+1. On the [Books]{.ui} screen, point at the book and click the `···` button beside its title.
+2. Click [Delete…]{.ui}.
+3. Check that the window shows the right book, then click [Delete]{.ui}.
+
+The book is removed from this browser and cannot be brought back. EPUB files you downloaded earlier are not affected, and you can open one again with [Open an EPUB…]{.ui}.

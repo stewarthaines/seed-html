@@ -1,0 +1,10 @@
+# Make a copy of a book
+
+Make a copy to try out a big change, or to start a new book from one you have already set up.
+
+1. On the [Books]{.ui} screen, point at the book and click the `···` button beside its title.
+2. Click [Duplicate]{.ui}.
+3. Type a *Title* for the copy, or keep the one suggested.
+4. Click [Duplicate]{.ui}.
+
+The copy appears under [Your books]{.ui}. Changes to one book do not affect the other.

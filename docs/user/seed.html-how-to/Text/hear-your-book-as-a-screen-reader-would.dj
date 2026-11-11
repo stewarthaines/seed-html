@@ -1,0 +1,12 @@
+# Hear your book as a screen reader would
+
+A screen reader turns the page into speech for readers who cannot see it. SEED.html can show what one would announce, so you can check that headings, lists and picture descriptions come across.
+
+1. Click the check button above the preview, beside [Reader]{.ui}.
+2. Click [Screen reader]{.ui}.
+3. Point at a part of the page in the preview and click [Announce]{.ui}. The announcements appear in a box at the bottom of the preview: for example, "image" followed by the picture's description.
+4. To hear them, tick [Speak announcements aloud]{.ui}. Choose a *Voice* and a *Rate* if you like.
+
+To hear the whole chapter from the start, click [Read whole chapter]{.ui}.
+
+This is a preview. Real screen readers word things in their own way, but the order and the content are the same.

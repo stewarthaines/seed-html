@@ -1,0 +1,15 @@
+# Reorder, rename or delete chapters
+
+The chapter list in the [Write]{.ui} tab shows every chapter in reading order. Point at a chapter to see its buttons.
+
+To move a chapter, click its up or down arrow. The order of the list is the order a reader moves through the book.
+
+To rename a chapter:
+
+1. Click its pencil button. The [Edit chapter]{.ui} window opens.
+2. Change the *ID*. This is the chapter's name in the list and its file name in the book. Start it with a letter, and use only letters, numbers, hyphens and underscores.
+3. Click [Save]{.ui}.
+
+The name readers see in the book's contents is the chapter's first heading, so change the heading to change that name.
+
+To delete a chapter, click its bin button and confirm. The chapter and its text are deleted and cannot be brought back. A book always keeps at least one chapter.

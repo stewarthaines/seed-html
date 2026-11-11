@@ -1,0 +1,14 @@
+# Move a book to another browser or computer
+
+SEED.html keeps your books in the browser you use. To work on a book somewhere else, take its EPUB with you.
+
+1. Click [Package EPUB]{.ui}.
+2. In the [Share]{.ui} tab, click [Download]{.ui}.
+3. Move the file to the other computer, for example by email or a USB drive.
+4. There, open SEED.html, click [Open an EPUB…]{.ui} on the [Books]{.ui} screen, and choose the file.
+
+The book opens ready to edit, with its chapters, pictures, cover and details.
+
+The book in the first browser stays where it was. The two copies do not stay in step, so carry on in one place.
+
+This is also a good way to keep a backup: download the EPUB from time to time and keep it somewhere safe.
