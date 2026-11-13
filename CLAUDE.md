@@ -19,6 +19,7 @@ The user is the architect and runs the dev server, Storybook and deploys. Read t
 - **Plans and design records** go in `process/` as markdown, one line per paragraph (the user reviews in Obsidian). Decisions already taken are in `process/DECISIONS.md`; read it before proposing something that may have been declined.
 - **Branches and commits.** Multi-phase or structural work goes on a feature branch and merges per shippable phase; `main` is what ships. One commit per concern, staging named files only; the working tree carries long-standing untracked noise that stays out of every commit. Commit only when asked.
 - **Changelog** lines say what the user will notice, one line each; the mechanism belongs in the commit message.
+- **Release metrics.** After the version bump, `npm run metrics` runs validate and the builds and appends a line to `metrics.jsonl`; commit it with the release, and read its printed changes for anything that slipped.
 - **Delegation.** Mechanical, fully specified work (scaffolding, bulk edits, transcription) can go to a cheaper-model agent with the conventions in the prompt; review its output before committing. Judgment stays in the main context.
 - **Book content over the seed-bridge** is edited with the `book-editor` agent, which has no shell, network or browser by design; the bridge's authoring guide is the contract for that work.
 - **User manuals** follow `docs/user/CLAUDE.md`.

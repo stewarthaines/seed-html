@@ -360,6 +360,8 @@ async function embedEditor(epubPath, editorPath) {
    npm run build
    ```
 
+   For a release, run `npm run metrics` instead: it runs validate and every build (app, plugins, docs), appends that release's durations, sizes, test counts, coverage and translation counts to `metrics.jsonl`, and prints what changed since the previous release. Commit the line with the release.
+
 3. **Version Identification**
    - Version embedded in HTML meta tag
    - Accessible via Help → About

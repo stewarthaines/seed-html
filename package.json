@@ -51,7 +51,8 @@
     "dev:docs": "eleventy --config=docs/site/eleventy.config.js --serve --output=dist-docs-dev",
     "check:docs": "npm run build:docs && node docs/site/check.js",
     "readme:extensions": "node scripts/readme-extensions.mjs",
-    "check:readme": "node scripts/readme-extensions.mjs --check"
+    "check:readme": "node scripts/readme-extensions.mjs --check",
+    "metrics": "node scripts/metrics.mjs"
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.1.8",
