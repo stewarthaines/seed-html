@@ -1,7 +1,7 @@
 {
   "id": "katex",
   "name": "KaTeX",
-  "description": "The fastest math typesetting library for the web.",
+  "description": "Typesets mathematics in code blocks as MathML, so formulas display without any script in the book.",
   "licenseName": "MIT",
   "category": "code-blocks",
   "license": "LICENSE.txt",

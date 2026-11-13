@@ -1,7 +1,7 @@
 {
   "id": "bricks",
   "name": "Bricks",
-  "description": "Building-instruction pages for fixed-layout books: readers drag each step together part by part, or turn a finished model.",
+  "description": "Building-instruction pages for fixed-layout books, where readers put each step together part by part or turn the finished model.",
   "category": "code-blocks",
   "url": "https://github.com/stewarthaines/seed-html/blob/main/extensions/bricks/SYNTAX.md",
   "licenseName": "MIT and CC BY 4.0",

@@ -1,7 +1,7 @@
 {
   "id": "impressum",
   "name": "Impressum",
-  "description": "Replaces a []{.autology} marker with a self-describing summary of the EPUB's extensions (name, description, link, license) and embedded fonts — compiled automatically at render time.",
+  "description": "Adds a colophon to the book listing its extensions and embedded fonts, kept up to date automatically.",
   "category": "chapter-content",
   "url": "https://github.com/stewarthaines/seed-html",
   "licenseName": "MIT",

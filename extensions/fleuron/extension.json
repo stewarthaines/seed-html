@@ -1,7 +1,7 @@
 {
   "id": "fleuron",
   "name": "Fleuron",
-  "description": "Replace thematic breaks with a centred fleuron ornament that inherits the text colour.",
+  "description": "Shows thematic breaks as a centred fleuron ornament in the text colour.",
   "category": "typesetting",
   "url": "https://en.wikipedia.org/wiki/Fleuron_(typography)",
   "licenseName": "MIT",

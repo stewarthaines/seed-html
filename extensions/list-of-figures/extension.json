@@ -1,7 +1,7 @@
 {
   "id": "list-of-figures",
   "name": "List of Figures",
-  "description": "Records the images used in each chapter and adds a generator that inserts a list of figures.",
+  "description": "Adds a list of figures to the book, built from the images in each chapter.",
   "licenseName": "MIT",
   "category": "chapter-content",
   "scripts": [],

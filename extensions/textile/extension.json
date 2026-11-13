@@ -1,7 +1,7 @@
 {
   "id": "textile",
   "name": "Textile",
-  "description": "Textile is a concise wiki-style markup from the blogging and CMS world. Rendered by textile.js.",
+  "description": "Write chapters in Textile, a concise wiki-style markup from the blogging and CMS world. Rendered by textile.js.",
   "url": "https://textile-lang.com/",
   "licenseName": "MIT",
   "license": "LICENSE.txt",

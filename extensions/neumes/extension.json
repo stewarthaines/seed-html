@@ -1,7 +1,7 @@
 {
   "id": "neumes",
   "name": "Neumes",
-  "description": "Neumes turns paired lines of direction marks (/ and \\) and syllables in code blocks into manuscript-style singing notation.",
+  "description": "Turns lines of direction marks and syllables in code blocks into manuscript-style singing notation.",
   "category": "code-blocks",
   "url": "https://en.wikipedia.org/wiki/Neume",
   "licenseName": "MIT",

@@ -1,7 +1,7 @@
 {
   "id": "prism",
   "name": "Prism",
-  "description": "Syntax highlighting for code blocks via Prism.",
+  "description": "Colours the syntax of code blocks, using Prism.",
   "licenseName": "MIT",
   "category": "typesetting",
   "license": "LICENSE.txt",

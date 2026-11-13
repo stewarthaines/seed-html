@@ -1,7 +1,7 @@
 {
   "id": "photo-regions",
-  "name": "PhotoRegions",
-  "description": "Names the faces in a photograph. Exploring the caption lights up the matching face, and named people link to their chapters. A detail shows one drawn region on its own — a line of a record, a face in a crowd — linked to the full image.",
+  "name": "Photo Regions",
+  "description": "Names the faces in a photograph: exploring the caption lights up each face, named people link to their chapters, and a detail shows one region on its own, linked to the full image.",
   "licenseName": "MIT",
   "category": "chapter-content",
   "scripts": [],

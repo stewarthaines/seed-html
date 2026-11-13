@@ -1,7 +1,7 @@
 {
   "name": "accessible-pdf",
   "version": "0.1.0",
-  "description": "Writes a tagged, accessible PDF from the book as the browser laid it out",
+  "description": "Writes a tagged, accessible PDF of the book as the browser lays it out.",
   "private": true,
   "type": "module",
   "scripts": {

@@ -1,7 +1,7 @@
 {
   "id": "fountain",
   "name": "Fountain",
-  "description": "Fountain is the plain-text format for screenplays — scene headings, dialogue and transitions. Rendered by Fountain.js.",
+  "description": "Write screenplays in Fountain, with scene headings, dialogue and transitions laid out as a script. Rendered by Fountain.js.",
   "url": "https://fountain.io/",
   "licenseName": "MIT",
   "license": "LICENSE.txt",

@@ -1,7 +1,7 @@
 {
   "id": "family-history",
   "name": "Family History",
-  "description": "Turns each chapter's record of a person — dates, parents, partners — into a kinship panel, a surname index, portrait strips, lifelines and family trees, and checks the facts as you write.",
+  "description": "Turns each chapter's record of a person into a kinship panel, family trees, lifelines, portrait strips and a surname index, and checks the facts as you write.",
   "category": "chapter-content",
   "url": "https://github.com/stewarthaines/seed-html",
   "licenseName": "MIT",

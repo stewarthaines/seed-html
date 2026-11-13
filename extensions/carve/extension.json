@@ -1,7 +1,7 @@
 {
   "id": "carve",
   "name": "Carve",
-  "description": "Carve is a Markdown-like markup with a formatter, linter and migration tooling, suited to long-lived books. Rendered by carve-js.",
+  "description": "Write chapters in Carve, a Markdown-like markup with a formatter, linter and migration tools, suited to books that live a long time. Rendered by carve-js.",
   "url": "https://github.com/markup-carve/carve-js",
   "licenseName": "MIT",
   "license": "LICENSE.txt",

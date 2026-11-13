@@ -1,7 +1,7 @@
 {
   "id": "print-index",
   "name": "Print Index",
-  "description": "Page numbers for a PDF contents or index — captured from the print preview, shown only in the PDF, hidden in the EPUB.",
+  "description": "Page numbers for a PDF's contents or index, taken from the print preview and shown only in the PDF.",
   "licenseName": "MIT",
   "category": "typesetting",
   "scripts": [],

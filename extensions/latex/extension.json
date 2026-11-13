@@ -1,7 +1,7 @@
 {
   "id": "latex",
   "name": "LaTeX",
-  "description": "LaTeX is the classic typesetting language for structured and mathematical writing. Rendered by LaTeX.js.",
+  "description": "Write chapters in LaTeX, the classic language for structured and mathematical writing. Rendered by LaTeX.js.",
   "url": "https://latex.js.org/",
   "licenseName": "MIT",
   "license": "LICENSE.txt",

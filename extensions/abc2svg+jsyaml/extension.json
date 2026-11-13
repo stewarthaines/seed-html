@@ -1,7 +1,7 @@
 {
   "id": "abc2svg+jsyaml",
-  "name": "abc2svg+jsyaml",
-  "description": "Render ABC music notation code blocks as SVG scores with abc2svg, engraved with the Bravura font; js-yaml reads each block's frontmatter options. Pre-rendered scale variants switch to fit the reading column.",
+  "name": "ABC Music (abc2svg)",
+  "description": "Engraves ABC music notation as SVG scores in the Bravura font, sized to fit the reading column.",
   "category": "code-blocks",
   "url": "https://chiselapp.com/user/moinejf/repository/abc2svg/doc/trunk/README.md",
   "licenseName": "LGPL-3.0-or-later and MIT",

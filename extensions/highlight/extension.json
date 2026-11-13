@@ -1,7 +1,7 @@
 {
   "id": "highlight",
   "name": "highlight.js",
-  "description": "Syntax highlighting for code blocks via highlight.js.",
+  "description": "Colours the syntax of code blocks, using highlight.js.",
   "licenseName": "BSD-3-Clause",
   "category": "typesetting",
   "license": "LICENSE.txt",

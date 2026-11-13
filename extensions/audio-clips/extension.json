@@ -1,7 +1,7 @@
 {
   "id": "audio-clips",
-  "name": "AudioClips",
-  "description": "Tap-to-play audio clips in packaged EPUBs, created with the :clip directive. Play and progress indicators are selectable per clip.",
+  "name": "Audio Clips",
+  "description": "Tap-to-play audio clips in the book, with a choice of play and progress indicators for each clip.",
   "licenseName": "MIT",
   "category": "chapter-content",
   "scripts": [],

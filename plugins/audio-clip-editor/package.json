@@ -1,7 +1,7 @@
 {
   "name": "audio-clip-editor",
   "version": "0.1.0",
-  "description": "Waveform-based audio clip editor panel plugin for the spine item editor",
+  "description": "Records or picks audio, marks clips on its waveform, and inserts them into the chapter being edited.",
   "type": "module",
   "scripts": {
     "dev": "vite --port 8001",

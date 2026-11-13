@@ -1,7 +1,7 @@
 {
   "id": "prettier",
   "name": "Prettier",
-  "description": "Reformat JavaScript code blocks at narrow/wide/full widths with Prettier.",
+  "description": "Reformats JavaScript code blocks to fit narrow, wide and full-width reading columns, using Prettier.",
   "category": "typesetting",
   "url": "https://prettier.io/",
   "licenseName": "MIT",

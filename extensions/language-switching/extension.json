@@ -1,7 +1,7 @@
 {
   "id": "language-switching",
-  "name": "LanguageSwitching",
-  "description": "Promote lang-* classes to lang / xml:lang attributes for correct multilingual rendering. Ships a sample generator and a copyable preview flag overlay.",
+  "name": "Language Switching",
+  "description": "Marks passages in another language so reading systems and screen readers pronounce and render them correctly.",
   "category": "accessibility",
   "url": "https://www.w3.org/International/questions/qa-html-language-declarations",
   "licenseName": "MIT",

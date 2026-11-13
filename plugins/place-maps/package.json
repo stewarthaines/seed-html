@@ -1,7 +1,7 @@
 {
   "name": "place-maps",
   "version": "0.1.0",
-  "description": "Locate the places a chapter names and add a small locator map for each to the book",
+  "description": "Finds the places a chapter names and adds a small locator map for each to the book.",
   "type": "module",
   "scripts": {
     "dev": "vite --port 8003",
