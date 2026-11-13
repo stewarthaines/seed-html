@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - A book updated from a catalog in the reader no longer keeps offering the same update.
+- In the reader and the READ.html preview, scrolling past the end of a book or chapter no longer stops page turns and the contents from working.
 
 ## [0.27.0] - 2026-11-10
 
