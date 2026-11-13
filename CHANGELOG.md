@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Responsive layout: a `::: beside` block keeps a heading, its text and its figures together, with the figures beside the text, or below it on a narrow page.
 - The reader's contents show the book's cover, title and author, mark the chapter you are reading, and on a wide screen can be pinned beside the book.
 - Buttons beside the reader's font size slider make the text larger or smaller one step at a time.
+- In the reader, books from a catalog show a badge on their cover when the catalog has a newer version, and the reader's settings offer to update the book.
 
 ### Changed
 
