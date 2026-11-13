@@ -17,11 +17,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Your First Book, a short tutorial at readitinabook.com/docs, takes you from a new book to an EPUB open in your reading app.
 - Responsive layout: a `::: beside` block keeps a heading, its text and its figures together, with the figures beside the text, or below it on a narrow page.
+- The reader's contents show the book's cover, title and author, mark the chapter you are reading, and on a wide screen can be pinned beside the book.
+- Buttons beside the reader's font size slider make the text larger or smaller one step at a time.
 
 ### Changed
 
 - A new book starts with a heading and one line to replace, instead of a page about djot syntax.
 - The cover view says when the picture is only a preview, so you know to click Update cover to keep a new colour or an edited title.
+- In the reader, choosing a chapter leaves the contents open, and downloading from a catalog turns the button to Open instead of opening the book, so you can download several first.
+
+### Fixed
+
+- A book updated from a catalog in the reader no longer keeps offering the same update.
 
 ## [0.27.0] - 2026-11-10
 
