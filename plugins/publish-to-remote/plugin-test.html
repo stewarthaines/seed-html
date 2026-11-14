@@ -54,7 +54,10 @@
           });
         }
 
-        const opfsRoot = await navigator.storage.getDirectory();
+        // The plugin's project directory: a folder, so WebKit (which cannot
+        // clone handles into iframes) can be sent its path instead.
+        const opfsRoot = await (await navigator.storage.getDirectory())
+          .getDirectoryHandle('plugin-test', { create: true });
 
         if (selectedFile) {
           showStatus(`Writing "${selectedFile.name}" to OPFS...`);
@@ -68,11 +71,19 @@
 
         // Send the OPFS root directory to the plugin
         const pluginFrame = document.getElementById('pluginFrame');
-        pluginFrame.contentWindow.postMessage({
+        const init = {
           type: 'init',
           projectId: 'test-project',
-          opfsDirHandle: opfsRoot,
-        }, window.origin);
+          opfsDirPath: ['plugin-test'],
+          // ?surface=destinations|published opens that surface (default: send).
+          surface: new URLSearchParams(location.search).get('surface') || undefined,
+        };
+        try {
+          pluginFrame.contentWindow.postMessage({ ...init, opfsDirHandle: opfsRoot }, window.origin);
+        } catch (err) {
+          if (err.name !== 'DataCloneError') throw err;
+          pluginFrame.contentWindow.postMessage(init, window.origin);
+        }
 
         pluginInitialized = true;
         showStatus(selectedFile ? `Plugin initialized with "${selectedFile.name}"` : 'Plugin initialized with OPFS directory');

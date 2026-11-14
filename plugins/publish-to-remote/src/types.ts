@@ -158,6 +158,26 @@ export interface WebDAVRemoteConfig {
   readerLink?: string;
 }
 
+export interface SolidRemoteConfig {
+  id: string;
+  name: string;
+  type: 'solid';
+  /** The Solid provider the account signs in with, e.g. https://solidcommunity.net/ */
+  oidcIssuer: string;
+  /** Who the destination writes as. The sign-in itself (tokens, DPoP key)
+   * lives in the plugin's IndexedDB, keyed by issuer + WebID, not here. */
+  webId: string;
+  /** The pod folder (an LDP container, slash-terminated) books are sent to. */
+  containerUrl: string;
+  /** OPDS catalog filename. Unset → catalog.json (OPDS 2.0), falling back to
+   * an existing catalog.xml (OPDS 1.2). */
+  catalogFilename?: string;
+  /** Web reader address with a `{url}` placeholder for an EPUB's public
+   * link, e.g. https://readitinabook.com/READ.html?book={url}. Unset → no
+   * reader link is offered. */
+  readerLink?: string;
+}
+
 export interface DeviceRemoteConfig {
   id: string;
   name: string;
@@ -177,6 +197,7 @@ export type RemoteConfig =
   | GoogleDriveRemoteConfig
   | DropboxRemoteConfig
   | WebDAVRemoteConfig
+  | SolidRemoteConfig
   | DeviceRemoteConfig;
 
 export interface RemotesStore {
@@ -189,7 +210,8 @@ export interface RemotesStore {
 export type CatalogRemoteConfig =
   | S3RemoteConfig
   | DropboxRemoteConfig
-  | WebDAVRemoteConfig;
+  | WebDAVRemoteConfig
+  | SolidRemoteConfig;
 
 /** A catalog entry as read back from a destination's feed. */
 export interface CatalogEntry {

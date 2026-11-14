@@ -59,6 +59,8 @@ Still open: whether to adopt a Client ID Document later (it must be at a public 
 
 ## Phase 1: a public pod destination
 
+Progress (2026-11-14): the remote type, the relay sign-in (`solid-auth.ts`), the pod operations (`solid-upload.ts`, folder listing from the pod's expanded JSON-LD), dispatch, catalog, status and reconnect, and the add form (provider, sign in, folder chooser with a new-folder field, "Make this folder public") are built and tested; the form works against the test pod in Chrome, Firefox and Safari. Next: send a book, its catalog, and READ.html opening it.
+
 The remote type and its operations:
 
 - `SolidRemoteConfig` in `types.ts`: `type: 'solid'`, `name`, `oidcIssuer`, `webId` (from the session), `containerUrl` (the folder to publish into, e.g. `…/family-history/books/`), `catalogFilename?`, `readerLink?`. No secrets in `remotes.json`: the session lives in the library's storage.

@@ -13,6 +13,15 @@
     saveDeviceHandle,
     isDeviceSupported,
   } from '../device-upload.js';
+  import { isSignedIn, signInWithSolid } from '../solid-auth.js';
+  import {
+    createSolidFolder,
+    folderName,
+    isFolderPublic,
+    listSolidFolders,
+    makeFolderPublic,
+    readProfile,
+  } from '../solid-upload.js';
   import { ArrowLeft } from 'phosphor-svelte';
   import type { RemoteConfig, DropboxRemoteConfig } from '../types.js';
 
@@ -41,6 +50,7 @@
     | 'google-drive'
     | 'dropbox'
     | 'webdav'
+    | 'solid'
     | 'device';
 
   let {
@@ -125,6 +135,34 @@
       routeViaProxy = proxyAvailable;
     }
   });
+
+  // Solid: pick a provider, sign in (solid-auth.ts keeps the tokens), then
+  // choose a folder in one of the pods the profile names.
+  const SOLID_PROVIDERS = [
+    { issuer: 'https://pods.solidcommunity.au/', label: 'solidcommunity.au' },
+    { issuer: 'https://solidcommunity.net/', label: 'solidcommunity.net' },
+    { issuer: 'https://login.inrupt.com/', label: 'Inrupt PodSpaces' },
+  ];
+  let solidProvider = $state(SOLID_PROVIDERS[0].issuer);
+  let solidOtherIssuer = $state('');
+  const solidIssuer = $derived(
+    solidProvider === 'other' ? solidOtherIssuer.trim() : solidProvider,
+  );
+  let solidWebId = $state('');
+  let solidSignedInHere = $state(false);
+  let solidSigningIn = $state(false);
+  let solidPersonName = $state('');
+  let solidStorages: string[] = $state([]);
+  let solidFolder = $state('');
+  let solidFolderAddress = $state('');
+  let solidBrowsing = $state(false);
+  let solidBrowsePath = $state('');
+  let solidFolders: string[] = $state([]);
+  let solidLoading = $state(false);
+  let solidBrowseError: string | null = $state(null);
+  let solidNewFolder = $state('');
+  let solidPublic: boolean | undefined = $state(undefined);
+  let solidSharing = $state(false);
 
   let dbxBrowserPath: string = $state('');
   let dbxBrowserFolders: { name: string; path: string }[] = $state([]);
@@ -264,6 +302,20 @@
         catalogFilename: remote.catalogFilename || '',
       };
       routeViaProxy = remote.routeViaProxy !== false;
+    } else if (remote.type === 'solid') {
+      remoteType = 'solid';
+      form.name = remote.name;
+      form.catalogFilename = remote.catalogFilename || '';
+      const known = SOLID_PROVIDERS.some((p) => p.issuer === remote.oidcIssuer);
+      solidProvider = known ? remote.oidcIssuer : 'other';
+      solidOtherIssuer = known ? '' : remote.oidcIssuer;
+      solidWebId = remote.webId;
+      solidFolder = remote.containerUrl;
+      void loadSolidAccount(remote.webId);
+      void isSignedIn({ oidcIssuer: remote.oidcIssuer, webId: remote.webId }).then(
+        (yes) => (solidSignedInHere = yes),
+      );
+      void checkSolidPublic();
     }
   }
 
@@ -301,6 +353,14 @@
     };
     pickedFolderName = null;
     readerLink = '';
+    solidWebId = '';
+    solidSignedInHere = false;
+    solidPersonName = '';
+    solidStorages = [];
+    solidFolder = '';
+    solidFolderAddress = '';
+    solidBrowsing = false;
+    solidPublic = undefined;
     pickedDeviceHandle = null;
     deviceKind = 'generic';
     deviceVolumeLabel = '';
@@ -450,6 +510,99 @@
     if (!form.name) form.name = displayName;
   }
 
+  async function loadSolidAccount(webId: string) {
+    const profile = await readProfile(webId);
+    solidPersonName = profile.name ?? '';
+    solidStorages = profile.storages;
+  }
+
+  // Straight from the click: the sign-in window opens before any await.
+  async function onSolidSignIn() {
+    const issuer = solidIssuer;
+    if (!issuer) {
+      onStatus(translate('Please fill all required fields'), 'error');
+      return;
+    }
+    solidSigningIn = true;
+    try {
+      const account = await signInWithSolid(issuer);
+      solidWebId = account.webId;
+      solidSignedInHere = true;
+      await loadSolidAccount(account.webId);
+      if (!solidFolder && solidStorages[0]) openSolidBrowser(solidStorages[0]);
+    } catch (error) {
+      onStatus(
+        translate('Authorization failed: {error}', {
+          error: error instanceof Error ? error.message : String(error),
+        }),
+        'error',
+      );
+    } finally {
+      solidSigningIn = false;
+    }
+  }
+
+  const solidAccount = () => ({ oidcIssuer: solidIssuer, webId: solidWebId });
+
+  async function openSolidBrowser(url: string) {
+    solidBrowsing = true;
+    solidBrowsePath = url;
+    solidLoading = true;
+    solidBrowseError = null;
+    const result = await listSolidFolders(solidAccount(), url);
+    solidFolders = result.folders;
+    solidBrowseError = result.error ?? null;
+    solidLoading = false;
+  }
+
+  /** The folder above, unless `url` is the top of a pod. */
+  function solidParent(url: string): string | null {
+    if (solidStorages.includes(url)) return null;
+    const parent = new URL('..', url).href;
+    return parent === url ? null : parent;
+  }
+
+  async function onCreateSolidFolder() {
+    const name = solidNewFolder.trim().replace(/\/+/g, '');
+    if (!name) return;
+    const url = `${solidBrowsePath}${encodeURIComponent(name)}/`;
+    const result = await createSolidFolder(solidAccount(), url);
+    if (!result.success) {
+      onStatus(result.error ?? translate('Please fill all required fields'), 'error');
+      return;
+    }
+    solidNewFolder = '';
+    await openSolidBrowser(url);
+  }
+
+  function onSelectSolidFolder(url: string) {
+    solidFolder = url;
+    solidBrowsing = false;
+    if (!form.name) form.name = folderName(url);
+    void checkSolidPublic();
+  }
+
+  async function checkSolidPublic() {
+    solidPublic = undefined;
+    if (!solidFolder) return;
+    const result = await isFolderPublic({ ...solidAccount(), containerUrl: solidFolder });
+    solidPublic = result.public;
+  }
+
+  async function onMakeSolidFolderPublic() {
+    solidSharing = true;
+    const result = await makeFolderPublic({
+      ...solidAccount(),
+      containerUrl: solidFolder,
+    });
+    solidSharing = false;
+    if (!result.success) {
+      onStatus(result.error ?? '', 'error');
+      return;
+    }
+    await checkSolidPublic();
+  }
+
   function parentOf(path: string): string {
     const lastSlash = path.lastIndexOf('/');
     return lastSlash <= 0 ? '' : path.slice(0, lastSlash);
@@ -533,6 +686,21 @@
         readerLink: readerLink.trim() || undefined,
         routeViaProxy,
       };
+    } else if (remoteType === 'solid') {
+      if (!solidWebId || !solidFolder) {
+        onStatus(translate('Please select a folder and authorize first'), 'error');
+        return null;
+      }
+      return {
+        id: editingRemote?.id || crypto.randomUUID(),
+        name: form.name.trim() || folderName(solidFolder),
+        type: 'solid',
+        oidcIssuer: solidIssuer,
+        webId: solidWebId,
+        containerUrl: solidFolder,
+        catalogFilename: form.catalogFilename.trim() || undefined,
+        readerLink: readerLink.trim() || undefined,
+      };
     } else if (remoteType === 'device') {
       if (!pickedDeviceHandle && !editingRemote) {
         onStatus(translate('Choose a device first'), 'error');
@@ -594,6 +762,9 @@
         </button>
         <button class="btn-type" onclick={() => (remoteType = 'webdav')}>
           {$t('WebDAV')}
+        </button>
+        <button class="btn-type" onclick={() => (remoteType = 'solid')}>
+          {$t('Solid pod')}
         </button>
       </div>
       <p class="type-cluster-label">{$t('Device')}</p>
@@ -947,6 +1118,189 @@
       </div>
 
       {@render readerLinkField('db-reader-link')}
+
+      <div class="form-actions">
+        <button onclick={handleSave} class="btn btn-primary"
+          >{$t('Save & Connect')}</button
+        >
+        <button onclick={onCancel} class="btn btn-secondary"
+          >{$t('Cancel')}</button
+        >
+      </div>
+    {/if}
+  {:else if remoteType === 'solid'}
+    <div class="form-header">
+      <button class="btn btn-link" onclick={() => (remoteType = 'none')}>
+        <ArrowLeft size={16} aria-hidden="true" />
+        {$t('Back')}
+      </button>
+      <h3>{$t('Solid pod')}</h3>
+    </div>
+
+    {#if !solidWebId}
+      <div class="form-group">
+        <label for="solid-provider">{$t('Provider')}</label>
+        <select id="solid-provider" bind:value={solidProvider}>
+          {#each SOLID_PROVIDERS as provider (provider.issuer)}
+            <!-- i18n-ignore -->
+            <option value={provider.issuer}>{provider.label}</option>
+          {/each}
+          <option value="other">{$t('Another provider')}</option>
+        </select>
+      </div>
+      {#if solidProvider === 'other'}
+        <div class="form-group">
+          <label for="solid-issuer">{$t('Provider address')}</label>
+          <!-- i18n-ignore -->
+          <input
+            id="solid-issuer"
+            type="url"
+            placeholder="https://"
+            bind:value={solidOtherIssuer}
+          />
+        </div>
+      {/if}
+      <div class="form-actions">
+        <button
+          class="btn btn-primary"
+          onclick={onSolidSignIn}
+          disabled={solidSigningIn}
+        >
+          {solidSigningIn ? $t('Signing in…') : $t('Sign in with Solid')}
+        </button>
+      </div>
+    {:else if solidBrowsing}
+      <div class="folder-browser">
+        <div class="browser-path">
+          {$t('Location:')}
+          <strong>{solidBrowsePath}</strong>
+        </div>
+
+        {#if solidLoading}
+          <div class="browser-loading">{$t('Loading folders...')}</div>
+        {:else if solidBrowseError}
+          <div class="browser-error">{solidBrowseError}</div>
+          <button
+            class="btn btn-secondary"
+            onclick={() => openSolidBrowser(solidBrowsePath)}
+          >
+            {$t('Retry')}
+          </button>
+        {:else}
+          {@const parent = solidParent(solidBrowsePath)}
+          <div class="folder-list">
+            {#if parent}
+              <button
+                class="folder-item folder-item--up"
+                onclick={() => openSolidBrowser(parent)}
+              >
+                {$t('.. (up)')}
+              </button>
+            {/if}
+            {#each solidFolders as folder (folder)}
+              <button class="folder-item" onclick={() => openSolidBrowser(folder)}>
+                {folderName(folder)}
+              </button>
+            {/each}
+            {#if solidFolders.length === 0}
+              <p class="empty-message">{$t('No subfolders here')}</p>
+            {/if}
+          </div>
+          <div class="form-group">
+            <label for="solid-new-folder">{$t('New folder')}</label>
+            <input id="solid-new-folder" type="text" bind:value={solidNewFolder} />
+            <button
+              class="btn btn-secondary btn-sm"
+              onclick={onCreateSolidFolder}
+              disabled={!solidNewFolder.trim()}
+            >
+              {$t('Create')}
+            </button>
+          </div>
+          <div class="browser-actions">
+            <button
+              class="btn btn-primary"
+              onclick={() => onSelectSolidFolder(solidBrowsePath)}
+            >
+              {$t('Select This Folder')}
+            </button>
+          </div>
+        {/if}
+      </div>
+    {:else if !solidFolder}
+      <div class="form-group">
+        <label for="solid-folder-address">{$t('Folder address')}</label>
+        <!-- i18n-ignore -->
+        <input
+          id="solid-folder-address"
+          type="url"
+          placeholder="https://"
+          bind:value={solidFolderAddress}
+        />
+      </div>
+      <div class="form-actions">
+        <button
+          class="btn btn-primary"
+          disabled={!solidFolderAddress.trim()}
+          onclick={() =>
+            openSolidBrowser(
+              solidFolderAddress.trim().replace(/\/?$/, '/'),
+            )}
+        >
+          {$t('Change Folder')}
+        </button>
+      </div>
+    {:else}
+      <div class="form-group folder-selected">
+        <p>{$t('Signed in as {name}', { name: solidPersonName || solidWebId })}</p>
+        <p><strong>{$t('Folder selected:')}</strong> {solidFolder}</p>
+        {#if solidSignedInHere}
+          <button
+            class="btn btn-secondary btn-sm"
+            onclick={() => openSolidBrowser(solidFolder)}
+          >
+            {$t('Change Folder')}
+          </button>
+        {:else}
+          <button
+            class="btn btn-secondary btn-sm"
+            onclick={onSolidSignIn}
+            disabled={solidSigningIn}
+          >
+            {solidSigningIn ? $t('Signing in…') : $t('Sign in with Solid')}
+          </button>
+        {/if}
+        {#if solidPublic === true}
+          <small class="field-note">
+            {$t('Anyone with the link can read the books here.')}
+          </small>
+        {:else if solidPublic === false}
+          <small class="field-note">
+            {$t('Only you can read the books here.')}
+          </small>
+          {#if solidSignedInHere}
+            <button
+              class="btn btn-secondary btn-sm"
+              onclick={onMakeSolidFolderPublic}
+              disabled={solidSharing}
+            >
+              {$t('Make this folder public')}
+            </button>
+          {/if}
+        {/if}
+      </div>
+
+      <div class="form-group">
+        <label for="solid-name">{$t('Remote Name (optional)')}</label>
+        <input
+          id="solid-name"
+          type="text"
+          placeholder={$t('Auto-filled from folder name')}
+          bind:value={form.name}
+        />
+      </div>
+
+      {@render readerLinkField('solid-reader-link')}
 
       <div class="form-actions">
         <button onclick={handleSave} class="btn btn-primary"

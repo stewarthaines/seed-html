@@ -36,7 +36,7 @@
     type CatalogInfo,
   } from '../catalog.js';
   import { sendPackage, setInCatalog } from '../send.js';
-  import { reconnectGoogle, reconnectDevice } from '../reconnect.js';
+  import { reconnectGoogle, reconnectSolid, reconnectDevice } from '../reconnect.js';
   import { deleteFile, downloadFile } from '../remote-ops.js';
   import { showStatus } from '../status.js';
   import {
@@ -422,6 +422,8 @@
     try {
       if (remote.type === 'google-drive') {
         await reconnectGoogle(remote);
+      } else if (remote.type === 'solid') {
+        await reconnectSolid(remote);
       } else if (remote.type === 'device') {
         const ok = await reconnectDevice(remote);
         if (!ok) {

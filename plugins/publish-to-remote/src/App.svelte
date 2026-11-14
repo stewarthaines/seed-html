@@ -1,7 +1,8 @@
 <!--
   The plugin's root: reads the destinations once, then renders the surface the
-  host named in `init` (process/PUBLISH_REWORK.md). The Dropbox OAuth callback
-  lands on this same document in a popup and posts the code back to its opener.
+  host named in `init` (process/PUBLISH_REWORK.md). An OAuth callback (Dropbox,
+  a Solid provider) lands on this same document in a popup and posts the code,
+  or the provider's refusal, back to its opener.
 -->
 <script lang="ts">
   import { onMount } from 'svelte';
@@ -18,12 +19,18 @@
 
   onMount(async () => {
     const params = new URLSearchParams(window.location.search);
-    if (window.opener && params.has('code') && params.has('state')) {
+    if (
+      window.opener &&
+      params.has('state') &&
+      (params.has('code') || params.has('error'))
+    ) {
       window.opener.postMessage(
         {
-          type: 'dropbox-auth',
+          type: 'oauth-callback',
           code: params.get('code'),
           state: params.get('state'),
+          error: params.get('error'),
+          errorDescription: params.get('error_description'),
         },
         window.location.origin,
       );

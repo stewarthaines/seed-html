@@ -25,7 +25,7 @@
   } from '../remote-status.js';
   import { hasCatalog, loadCatalogs, type CatalogInfo } from '../catalog.js';
   import { sendPackage, setInCatalog } from '../send.js';
-  import { reconnectGoogle, reconnectDevice } from '../reconnect.js';
+  import { reconnectGoogle, reconnectSolid, reconnectDevice } from '../reconnect.js';
   import { showStatus } from '../status.js';
   import { canShareLinks, copyShareLink, readerLinkTemplate } from '../share-links.js';
   import { formatFileSize, relativeTime } from '../format.js';
@@ -291,6 +291,8 @@
     try {
       if (remote.type === 'google-drive') {
         await reconnectGoogle(remote);
+      } else if (remote.type === 'solid') {
+        await reconnectSolid(remote);
       } else if (remote.type === 'device') {
         const ok = await reconnectDevice(remote);
         if (!ok) {

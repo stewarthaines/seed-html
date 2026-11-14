@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-10\n"
-"PO-Revision-Date: 2026-11-10\n"
+"POT-Creation-Date: 2026-11-14\n"
+"PO-Revision-Date: 2026-11-14\n"
 "Language: de\n"
 "Language-Team: \n"
 "Last-Translator: Claude (machine first pass)\n"
@@ -555,6 +555,14 @@ msgid "Announcing…"
 msgstr "Ansage läuft …"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Another provider"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Anyone with the link can read the books here."
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "API Key"
 msgstr "API-Schlüssel"
 
@@ -665,6 +673,7 @@ msgstr "Name des Autors"
 msgid "Authority (e.g. BISAC)"
 msgstr "Klassifikation (z. B. BISAC)"
 
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 #: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
 #: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 #: plugins/publish-to-remote/src/components/SendSurface.svelte
@@ -1333,6 +1342,7 @@ msgid "Coverage"
 msgstr "Abdeckung"
 
 #: plugins/publish-to-remote/src/components/CatalogIdentityForm.svelte
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "Create"
 msgstr "Erstellen"
@@ -2472,6 +2482,10 @@ msgid "Folder access was not granted."
 msgstr "Ordnerzugriff wurde nicht gewährt."
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Folder address"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Folder on device"
 msgstr "Ordner auf dem Gerät"
 
@@ -3210,6 +3224,10 @@ msgstr "Erstellen Sie E-Books, die jeder lesen kann — direkt in Ihrem Browser.
 msgid "Make it again"
 msgstr ""
 
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Make this folder public"
+msgstr ""
+
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Malformed XHTML"
 msgstr "Fehlerhaftes XHTML"
@@ -3415,6 +3433,10 @@ msgstr "Neuer Katalog…"
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 msgid "New chapter"
 msgstr "Neues Kapitel"
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "New folder"
+msgstr ""
 
 #: src/lib/components/workspace/WorkspaceList.svelte
 msgid "New here? Import from Catalog to browse sample books."
@@ -3761,6 +3783,10 @@ msgstr "Eine Seite, keine App nötig."
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Only needed if the saved connection stops working."
 msgstr "Nur nötig, wenn die gespeicherte Verbindung nicht mehr funktioniert."
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Only you can read the books here."
+msgstr ""
 
 #: src/lib/components/books/BooksShelf.svelte
 msgid "Open"
@@ -4233,6 +4259,14 @@ msgstr "Prolog"
 #. The chapter-proofs preview option — a grid of small print pages
 msgid "Proofs"
 msgstr "Seitenübersicht"
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Provider"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Provider address"
+msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Public URL Base (optional)"
@@ -4895,9 +4929,21 @@ msgstr ""
 msgid "Sign in needed"
 msgstr "Anmeldung nötig"
 
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Sign in with Solid"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
 msgid "Sign out error: {error}"
 msgstr "Fehler beim Abmelden: {error}"
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Signed in as {name}"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Signing in…"
+msgstr ""
 
 #: src/lib/components/shell/AboutDialog.svelte
 msgid "Simple EPUB Editor"
@@ -4928,6 +4974,11 @@ msgstr "Übersprungene Dateien"
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Smaller editor text"
 msgstr "Editor-Text verkleinern"
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
+msgid "Solid pod"
+msgstr ""
 
 #: src/lib/components/manifest/ManifestContainer.svelte
 msgid "Some files failed to upload - see console for details"

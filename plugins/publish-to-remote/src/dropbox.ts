@@ -49,12 +49,16 @@ export async function authorizeDropbox(
     const handleMessage = (event: MessageEvent) => {
       if (event.origin !== actualRedirectUri.split('/').slice(0, 3).join('/'))
         return;
-      if (event.data.type !== 'dropbox-auth') return;
+      if (event.data.type !== 'oauth-callback') return;
 
       window.removeEventListener('message', handleMessage);
 
       if (event.data.state !== state) {
         reject(new Error('State mismatch in OAuth response'));
+        return;
+      }
+      if (event.data.error) {
+        reject(new Error(event.data.errorDescription || event.data.error));
         return;
       }
 

@@ -1,5 +1,6 @@
 import { getPublicUrl } from './s3-upload.js';
 import { getWebDAVPublicUrl } from './webdav-upload.js';
+import { getSolidPublicUrl } from './solid-upload.js';
 import { getGoogleDrivePublicUrl } from './google-drive-upload.js';
 import type {
   RemoteConfig,
@@ -52,6 +53,8 @@ export function acquisitionUrl(creds: RemoteConfig, o: S3Object): string {
     return o.fileId || '';
   } else if (creds.type === 'webdav') {
     return getWebDAVPublicUrl(creds, o.key);
+  } else if (creds.type === 'solid') {
+    return getSolidPublicUrl(creds, o.key);
   }
   return '';
 }

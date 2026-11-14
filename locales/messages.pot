@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-10\n"
-"PO-Revision-Date: 2026-11-10\n"
+"POT-Creation-Date: 2026-11-14\n"
+"PO-Revision-Date: 2026-11-14\n"
 "Language: \n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -536,6 +536,14 @@ msgid "Announcing…"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Another provider"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Anyone with the link can read the books here."
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "API Key"
 msgstr ""
 
@@ -646,6 +654,7 @@ msgstr ""
 msgid "Authority (e.g. BISAC)"
 msgstr ""
 
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 #: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
 #: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 #: plugins/publish-to-remote/src/components/SendSurface.svelte
@@ -1314,6 +1323,7 @@ msgid "Coverage"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/CatalogIdentityForm.svelte
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 #: src/lib/components/workspace/CreateProjectDialog.svelte
 msgid "Create"
 msgstr ""
@@ -2453,6 +2463,10 @@ msgid "Folder access was not granted."
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Folder address"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Folder on device"
 msgstr ""
 
@@ -3191,6 +3205,10 @@ msgstr ""
 msgid "Make it again"
 msgstr ""
 
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Make this folder public"
+msgstr ""
+
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Malformed XHTML"
 msgstr ""
@@ -3395,6 +3413,10 @@ msgstr ""
 
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 msgid "New chapter"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "New folder"
 msgstr ""
 
 #: src/lib/components/workspace/WorkspaceList.svelte
@@ -3741,6 +3763,10 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Only needed if the saved connection stops working."
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Only you can read the books here."
 msgstr ""
 
 #: src/lib/components/books/BooksShelf.svelte
@@ -4213,6 +4239,14 @@ msgstr ""
 #: src/lib/components/spine/PreviewPane.svelte
 #. The chapter-proofs preview option — a grid of small print pages
 msgid "Proofs"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Provider"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Provider address"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
@@ -4876,8 +4910,20 @@ msgstr ""
 msgid "Sign in needed"
 msgstr ""
 
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Sign in with Solid"
+msgstr ""
+
 #: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
 msgid "Sign out error: {error}"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Signed in as {name}"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Signing in…"
 msgstr ""
 
 #: src/lib/components/shell/AboutDialog.svelte
@@ -4908,6 +4954,11 @@ msgstr ""
 
 #: src/lib/components/spine/EditorPane.svelte
 msgid "Smaller editor text"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
+msgid "Solid pod"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestContainer.svelte

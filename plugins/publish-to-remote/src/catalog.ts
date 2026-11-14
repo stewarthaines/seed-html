@@ -52,7 +52,8 @@ export function hasCatalog(
   return (
     remote.type === 's3-compatible' ||
     remote.type === 'dropbox' ||
-    remote.type === 'webdav'
+    remote.type === 'webdav' ||
+    remote.type === 'solid'
   );
 }
 
