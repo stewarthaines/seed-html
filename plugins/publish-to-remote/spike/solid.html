@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solid sign-in spike (frame)</title>
+  <style>
+    body { font-family: system-ui; padding: 12px; margin: 0; font-size: 14px; }
+    button { padding: 6px 12px; margin: 2px; }
+    input { width: 32em; padding: 4px; }
+    #mode { font-weight: bold; }
+    pre { background: #f4f4f4; padding: 8px; white-space: pre-wrap; max-height: 320px; overflow: auto; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <p>Mode: <span id="mode"></span> · Session: <span id="who">-</span></p>
+  <p>
+    Issuer <input id="issuer" value="https://pods.solidcommunity.au/"><br>
+    Folder <input id="folder" value="https://pods.solidcommunity.au/family-history/seed-spike/">
+  </p>
+  <p>
+    <button id="popup">1. Sign in in a popup</button>
+    <button id="restore">2. Restore in this frame (silent)</button>
+    <button id="inframe">3. Sign in in this frame (full redirect)</button>
+  </p>
+  <p>
+    <button id="relay">4. Popup fetches a code, this frame keeps the tokens</button>
+    <button id="relayRestore">5. Restore from the stored token (no redirect)</button>
+    <button id="makePublic">Make the folder public</button>
+  </p>
+  <p>
+    <button id="write">Write a test file</button>
+    <button id="list">List the folder</button>
+    <button id="clientid">Publish a Client ID Document</button>
+    <label><input type="checkbox" id="useClientId" style="width:auto"> sign in with it</label>
+    <button id="logout">Sign out</button>
+    <button id="clear">Clear log</button>
+  </p>
+  <pre id="log"></pre>
+  <script type="module" src="./solid.ts"></script>
+</body>
+</html>

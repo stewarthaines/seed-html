@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solid sign-in spike (host)</title>
+  <style>
+    body { font-family: system-ui; padding: 16px; }
+    iframe { border: 2px solid #888; width: 100%; height: 640px; }
+    pre { background: #eef; padding: 8px; font-size: 12px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Solid sign-in spike</h1>
+  <p>The frame below plays the plugin: same origin, unsandboxed, as SEED.html frames publish-to-remote.</p>
+  <button onclick="document.getElementById('f').src = './solid.html'">Reload the frame</button>
+  <iframe id="f" src="./solid.html"></iframe>
+  <h2>Messages the host received</h2>
+  <pre id="hostlog"></pre>
+  <script>
+    window.addEventListener('message', (e) => {
+      if (e.origin !== location.origin) return
+      document.getElementById('hostlog').textContent += new Date().toISOString().slice(11, 19) + ' ' + JSON.stringify(e.data) + '\n'
+    })
+  </script>
+</body>
+</html>
