@@ -17,6 +17,7 @@ import {
   createDpopHeader,
   generateDpopKeyPair,
 } from '@inrupt/solid-client-authn-core';
+import { OAUTH_CHANNEL } from './oauth-channel.js';
 
 /** Error message for "this account must sign in again" (maps to reach 'sign-in'). */
 export const SOLID_AUTH_REQUIRED = 'SOLID_AUTH_REQUIRED';
@@ -290,32 +291,55 @@ async function completeSignIn(
 const expiresAt = (tokens: TokenResponse) =>
   Date.now() + (tokens.expires_in ?? 300) * 1000;
 
-/** Resolves with the code App.svelte relays from the popup; rejects if it closes. */
+/**
+ * How long to keep listening once the popup reads as closed. The popup posts
+ * its answer and then closes, and in a multi-process browser the close can be
+ * seen before the message arrives.
+ */
+const CLOSED_GRACE_MS = 3000;
+
+/**
+ * Resolves with the code App.svelte relays from the popup, by postMessage or
+ * the broadcast channel; rejects when the popup has closed with no answer.
+ */
 function waitForCode(state: string, popup: Window): Promise<string> {
   return new Promise((resolve, reject) => {
+    let channel: BroadcastChannel | undefined;
+    let giveUp: ReturnType<typeof setTimeout> | undefined;
     const done = () => {
       window.removeEventListener('message', onMessage);
+      channel?.close();
       clearInterval(watch);
+      clearTimeout(giveUp);
     };
-    const onMessage = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return;
-      if (event.data?.type !== 'oauth-callback' || event.data.state !== state)
-        return;
+    const answer = (data: Record<string, unknown> | undefined) => {
+      if (data?.type !== 'oauth-callback' || data.state !== state) return;
       done();
-      if (event.data.error) {
-        reject(new Error(event.data.errorDescription || event.data.error));
+      if (data.error) {
+        reject(new Error(String(data.errorDescription || data.error)));
       } else {
-        resolve(event.data.code as string);
+        resolve(data.code as string);
       }
     };
-    // A closed popup with no answer: the person gave up.
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin === window.location.origin) answer(event.data);
+    };
+    // A closed popup with no answer, after a grace period: the person gave up.
     const watch = setInterval(() => {
-      if (popup.closed) {
-        done();
-        reject(new Error('The sign-in window was closed.'));
+      if (popup.closed && !giveUp) {
+        giveUp = setTimeout(() => {
+          done();
+          reject(new Error('The sign-in window was closed.'));
+        }, CLOSED_GRACE_MS);
       }
     }, 500);
     window.addEventListener('message', onMessage);
+    try {
+      channel = new BroadcastChannel(OAUTH_CHANNEL);
+      channel.onmessage = (event) => answer(event.data);
+    } catch {
+      // no BroadcastChannel: postMessage alone
+    }
   });
 }
 
