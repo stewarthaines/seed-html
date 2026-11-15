@@ -11,6 +11,8 @@ import {
   solidFetch,
   type SolidAccount,
 } from './solid-auth.js';
+import type { Term } from 'n3';
+import Parser from 'n3/src/N3Parser.js';
 import type { S3Object, SolidRemoteConfig } from './types.js';
 
 interface SolidResult {
@@ -224,65 +226,113 @@ export async function uploadTextToSolid(
   );
 }
 
-type JsonLdNode = Record<string, unknown> & { '@id'?: string };
+/**
+ * A request for a document as Turtle. `no-store` keeps the browser from
+ * answering with a copy cached in another format: a server that does not vary
+ * its cache key on Accept would otherwise revalidate an earlier JSON-LD
+ * response and the browser would hand that back.
+ */
+const TURTLE_REQUEST: RequestInit = {
+  headers: { Accept: 'text/turtle' },
+  cache: 'no-store',
+};
 
-function literal(node: JsonLdNode | undefined, predicate: string): string {
-  const values = node?.[predicate];
-  if (!Array.isArray(values) || !values.length) return '';
-  const first = values[0] as { '@value'?: unknown };
-  return first?.['@value'] === undefined ? '' : String(first['@value']);
-}
-
-/** Expanded JSON-LD nodes (a bare array or an @graph), merged by @id. */
-function jsonLdNodes(json: unknown): Map<string, JsonLdNode> {
-  const list = Array.isArray(json)
-    ? json
-    : Array.isArray((json as { '@graph'?: unknown })?.['@graph'])
-      ? (json as { '@graph': unknown[] })['@graph']
-      : [];
-  const nodes = new Map<string, JsonLdNode>();
-  for (const raw of list as JsonLdNode[]) {
-    const id = raw?.['@id'];
-    if (typeof id !== 'string') continue;
-    nodes.set(id, { ...nodes.get(id), ...raw });
+/** The body of a Turtle response; names what came instead when it is not Turtle. */
+async function turtleText(response: Response): Promise<string> {
+  const type = (response.headers.get('Content-Type') ?? '').toLowerCase();
+  if (type && !type.includes('turtle')) {
+    throw new Error(`The pod sent ${type.split(';')[0]} instead of Turtle.`);
   }
-  return nodes;
-}
-
-function ids(node: JsonLdNode | undefined, predicate: string): string[] {
-  const values = node?.[predicate];
-  if (!Array.isArray(values)) return [];
-  return (values as JsonLdNode[])
-    .map((v) => v?.['@id'])
-    .filter((id): id is string => typeof id === 'string');
+  return response.text();
 }
 
 /**
- * The files directly inside a container, from its expanded JSON-LD
- * description (the form Community Solid Server returns). Sub-folders are left
- * out. Nodes describing one resource may be split; they are merged by @id.
+ * Solid servers must serve their RDF as Turtle (Solid Protocol), so listings
+ * and profiles are read as Turtle and parsed with N3.js. Relative IRIs resolve
+ * against the document's own URL.
  */
-export function parseContainerJsonLd(
+function readGraph(turtle: string, baseIRI: string) {
+  const quads = new Parser({ baseIRI, format: 'text/turtle' }).parse(turtle);
+  const bySubjectPredicate = new Map<string, Term[]>();
+  for (const quad of quads) {
+    const key = `${quad.subject.value} ${quad.predicate.value}`;
+    const list = bySubjectPredicate.get(key) ?? [];
+    list.push(quad.object);
+    bySubjectPredicate.set(key, list);
+  }
+  const objects = (subject: string, predicate: string) =>
+    bySubjectPredicate.get(`${subject} ${predicate}`) ?? [];
+  return {
+    /** The IRIs a subject points to through a predicate. */
+    iris: (subject: string, predicate: string) =>
+      objects(subject, predicate)
+        .filter((term) => term.termType === 'NamedNode')
+        .map((term) => term.value),
+    /** The first literal value, or ''. */
+    literal: (subject: string, predicate: string) =>
+      objects(subject, predicate).find((term) => term.termType === 'Literal')
+        ?.value ?? '',
+  };
+}
+
+/**
+ * The files directly inside a container, from its Turtle description.
+ * Sub-folders are left out. Size and date are read where the server gives
+ * them (Community Solid Server does, Inrupt's does not).
+ */
+export function parseContainerListing(
   containerUrl: string,
-  json: unknown,
+  turtle: string,
 ): S3Object[] {
-  const nodes = jsonLdNodes(json);
+  const folder = withSlash(containerUrl);
+  const graph = readGraph(turtle, folder);
   const objects: S3Object[] = [];
-  for (const id of ids(nodes.get(withSlash(containerUrl)), LDP_CONTAINS)) {
+  for (const id of graph.iris(folder, LDP_CONTAINS)) {
     if (id.endsWith('/')) continue;
     const key = decodeURIComponent(id.split('/').pop() ?? '');
     if (!key) continue;
-    const node = nodes.get(id);
-    const mtime = literal(node, POSIX_MTIME);
+    const mtime = graph.literal(id, POSIX_MTIME);
     objects.push({
       key,
-      size: parseInt(literal(node, POSIX_SIZE) || '0', 10) || 0,
+      size: parseInt(graph.literal(id, POSIX_SIZE) || '0', 10) || 0,
       lastModified:
-        literal(node, DC_MODIFIED) ||
+        graph.literal(id, DC_MODIFIED) ||
         (mtime ? new Date(Number(mtime) * 1000).toISOString() : ''),
     });
   }
   return objects;
+}
+
+/**
+ * Fill in the size and date a listing left out (Inrupt's listings give
+ * neither) from each file's own headers. A file that cannot be asked keeps
+ * what the listing gave.
+ */
+async function withFileStats(
+  remote: SolidRemoteConfig,
+  objects: S3Object[],
+): Promise<S3Object[]> {
+  return Promise.all(
+    objects.map(async (object) => {
+      if (object.lastModified) return object;
+      try {
+        const head = await solidFetch(account(remote), resourceUrl(remote, object.key), {
+          method: 'HEAD',
+          cache: 'no-store',
+        });
+        if (!head.ok) return object;
+        const modified = Date.parse(head.headers.get('Last-Modified') ?? '');
+        const size = parseInt(head.headers.get('Content-Length') ?? '', 10);
+        return {
+          ...object,
+          size: object.size || (Number.isFinite(size) ? size : 0),
+          lastModified: Number.isFinite(modified) ? new Date(modified).toISOString() : '',
+        };
+      } catch {
+        return object;
+      }
+    }),
+  );
 }
 
 export async function listSolidFiles(
@@ -292,7 +342,7 @@ export async function listSolidFiles(
     const response = await solidFetch(
       account(remote),
       withSlash(remote.containerUrl),
-      { headers: { Accept: 'application/ld+json' }, cache: 'no-cache' },
+      TURTLE_REQUEST,
     );
     // Not there yet: the first send creates it.
     if (response.status === 404) return { objects: [] };
@@ -303,7 +353,10 @@ export async function listSolidFiles(
       };
     }
     return {
-      objects: parseContainerJsonLd(remote.containerUrl, await response.json()),
+      objects: await withFileStats(
+        remote,
+        parseContainerListing(remote.containerUrl, await turtleText(response)),
+      ),
     };
   } catch (error) {
     return { objects: [], error: errorText(error) };
@@ -376,10 +429,11 @@ export async function getSolidBlob(
 /** The sub-folders directly inside a container (slash-terminated URLs). */
 export function parseContainerFolders(
   containerUrl: string,
-  json: unknown,
+  turtle: string,
 ): string[] {
-  const nodes = jsonLdNodes(json);
-  return ids(nodes.get(withSlash(containerUrl)), LDP_CONTAINS)
+  const folder = withSlash(containerUrl);
+  return readGraph(turtle, folder)
+    .iris(folder, LDP_CONTAINS)
     .filter((id) => id.endsWith('/'))
     .sort((a, b) => a.localeCompare(b));
 }
@@ -396,17 +450,14 @@ export async function listSolidFolders(
   url: string,
 ): Promise<{ folders: string[]; error?: string }> {
   try {
-    const response = await solidFetch(account, withSlash(url), {
-      headers: { Accept: 'application/ld+json' },
-      cache: 'no-cache',
-    });
+    const response = await solidFetch(account, withSlash(url), TURTLE_REQUEST);
     if (!response.ok) {
       return {
         folders: [],
         error: httpError('List', response.status, response.statusText),
       };
     }
-    return { folders: parseContainerFolders(url, await response.json()) };
+    return { folders: parseContainerFolders(url, await turtleText(response)) };
   } catch (error) {
     return { folders: [], error: errorText(error) };
   }
@@ -436,67 +487,109 @@ const PIM_STORAGE = 'http://www.w3.org/ns/pim/space#storage';
 const FOAF_NAME = 'http://xmlns.com/foaf/0.1/name';
 const VCARD_FN = 'http://www.w3.org/2006/vcard/ns#fn';
 
-/** What a WebID profile says about its owner: a name and the pods they keep. */
+/**
+ * What a WebID profile says about its owner: a name and the pods they keep
+ * (`pim:storage`). `documentUrl` is where the profile was read from, which
+ * relative IRIs resolve against; it defaults to the WebID.
+ */
 export function parseProfile(
   webId: string,
-  json: unknown,
+  turtle: string,
+  documentUrl = webId,
 ): { name?: string; storages: string[] } {
-  const me = jsonLdNodes(json).get(webId);
-  const name = literal(me, FOAF_NAME) || literal(me, VCARD_FN) || undefined;
-  return { name, storages: ids(me, PIM_STORAGE) };
+  const graph = readGraph(turtle, documentUrl);
+  const name =
+    graph.literal(webId, FOAF_NAME) || graph.literal(webId, VCARD_FN) || undefined;
+  return { name, storages: graph.iris(webId, PIM_STORAGE) };
 }
 
-/** Read a WebID profile (public). Empty when it cannot be read as JSON-LD. */
+/** Read a WebID profile (public). Empty when it cannot be read. */
 export async function readProfile(
   webId: string,
 ): Promise<{ name?: string; storages: string[] }> {
   try {
-    const response = await fetch(webId, {
-      headers: { Accept: 'application/ld+json' },
-    });
+    const response = await fetch(webId, TURTLE_REQUEST);
     if (!response.ok) return { storages: [] };
-    return parseProfile(webId, await response.json());
+    return parseProfile(webId, await turtleText(response), response.url || webId);
   } catch {
     return { storages: [] };
   }
 }
 
-/** The modes a WAC-Allow header grants one group (`public`, `user`). */
-export function wacModes(header: string | null, group: string): string[] {
-  const match = header?.match(new RegExp(`${group}\\s*=\\s*"([^"]*)"`));
-  return match ? match[1].split(/\s+/).filter(Boolean) : [];
-}
-
-/** True when anyone can read the folder's books without signing in. */
+/**
+ * True when anyone can read the folder's books without signing in: the
+ * folder answers an anonymous request. That is the reader's own experience,
+ * so it holds whatever access system the pod uses and whatever its WAC-Allow
+ * header claims. `no-store` keeps a cached answer from before a change out.
+ */
 export async function isFolderPublic(
   remote: SolidPlace,
 ): Promise<{ public?: boolean; error?: string }> {
   try {
-    // Ask anonymously: the answer that matters is what a reader gets.
     const response = await fetch(withSlash(remote.containerUrl), {
       method: 'HEAD',
-      cache: 'no-cache',
+      cache: 'no-store',
     });
-    if (response.status === 404) return { public: false };
-    const header = response.headers.get('WAC-Allow');
-    if (header !== null) {
-      return { public: wacModes(header, 'public').includes('read') };
-    }
     return { public: response.ok };
   } catch (error) {
     return { error: errorText(error) };
   }
 }
 
-/** The folder's access-control resource, from its `Link: <…>; rel="acl"`. */
-function aclUrlFrom(linkHeader: string | null, base: string): string | null {
+/** The targets of a `Link` header's entries with the given `rel`, resolved against `base`. */
+function linkTargets(linkHeader: string | null, rel: string, base: string): string[] {
+  const targets: string[] = [];
   for (const part of (linkHeader ?? '').split(',')) {
     const match = part.match(/<([^>]*)>\s*;(.*)/);
-    if (match && /rel\s*=\s*"?acl"?/.test(match[2])) {
-      return new URL(match[1], base).href;
-    }
+    if (!match) continue;
+    const rels = match[2].match(/rel\s*=\s*"([^"]*)"|rel\s*=\s*([^;\s]+)/);
+    const names = (rels?.[1] ?? rels?.[2] ?? '').split(/\s+/);
+    if (names.includes(rel)) targets.push(new URL(match[1], base).href);
   }
-  return null;
+  return targets;
+}
+
+const ACP_ACR = 'http://www.w3.org/ns/solid/acp#AccessControlResource';
+
+/**
+ * Which access-control system governs a resource. Both are in the Solid
+ * specifications and both are advertised with `Link: <…>; rel="acl"`: Web
+ * Access Control (Community Solid Server, a `.acl` document) and Access
+ * Control Policies (Inrupt's server, an access control resource that says so
+ * with `rel="type"` acp:AccessControlResource).
+ */
+async function accessSystem(remote: SolidPlace, aclUrl: string): Promise<'acp' | 'wac'> {
+  const head = await solidFetch(account(remote), aclUrl, {
+    method: 'HEAD',
+    cache: 'no-store',
+  });
+  return linkTargets(head.headers.get('Link'), 'type', aclUrl).includes(ACP_ACR)
+    ? 'acp'
+    : 'wac';
+}
+
+/**
+ * A SPARQL Update adding public read to an access control resource (Access
+ * Control Policies): one policy allowing Read to acp:PublicAgent, applied to
+ * the folder itself and to its members. The owner's existing policies are
+ * left as they are, which is why this patches rather than replaces.
+ */
+export function publicReadPatch(acrUrl: string): string {
+  const id = (name: string) => `<${acrUrl}#${name}>`;
+  return `PREFIX acp: <http://www.w3.org/ns/solid/acp#>
+PREFIX acl: <http://www.w3.org/ns/auth/acl#>
+INSERT DATA {
+  <${acrUrl}> acp:accessControl ${id('seedhtml-public')};
+    acp:memberAccessControl ${id('seedhtml-public')}.
+  ${id('seedhtml-public')} a acp:AccessControl;
+    acp:apply ${id('seedhtml-public-policy')}.
+  ${id('seedhtml-public-policy')} a acp:Policy;
+    acp:allow acl:Read;
+    acp:anyOf ${id('seedhtml-public-matcher')}.
+  ${id('seedhtml-public-matcher')} a acp:Matcher;
+    acp:agent acp:PublicAgent.
+}
+`;
 }
 
 /** Access rules for a public folder: the owner keeps control, everyone may read. */
@@ -519,7 +612,8 @@ export function publicFolderAcl(webId: string): string {
 }
 
 /**
- * Let anyone read the folder and everything in it (Web Access Control). The
+ * Let anyone read the folder and everything in it, with whichever access
+ * system the pod uses (Web Access Control or Access Control Policies). The
  * folder is created first if nothing has been sent yet.
  */
 export async function makeFolderPublic(
@@ -541,22 +635,34 @@ export async function makeFolderPublic(
       }
       head = await solidFetch(account(remote), folder, { method: 'HEAD' });
     }
-    const aclUrl = aclUrlFrom(head.headers.get('Link'), folder);
+    const [aclUrl] = linkTargets(head.headers.get('Link'), 'acl', folder);
     if (!aclUrl) {
       return {
         success: false,
         error: 'This pod does not offer access rules for the folder.',
       };
     }
-    const put = await solidFetch(account(remote), aclUrl, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'text/turtle' },
-      body: publicFolderAcl(remote.webId),
-    });
-    if (!put.ok) {
+    const write =
+      (await accessSystem(remote, aclUrl)) === 'acp'
+        ? await solidFetch(account(remote), aclUrl, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/sparql-update' },
+            body: publicReadPatch(aclUrl),
+          })
+        : await solidFetch(account(remote), aclUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'text/turtle' },
+            body: publicFolderAcl(remote.webId),
+          });
+    if (!write.ok) {
       return {
         success: false,
-        error: httpError('Sharing', put.status, put.statusText),
+        error: httpError(
+          'Sharing',
+          write.status,
+          write.statusText,
+          serverMessage(await write.text().catch(() => '')),
+        ),
       };
     }
     return { success: true };

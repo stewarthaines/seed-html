@@ -595,12 +595,22 @@
       ...solidAccount(),
       containerUrl: solidFolder,
     });
-    solidSharing = false;
     if (!result.success) {
+      solidSharing = false;
       onStatus(result.error ?? '', 'error');
       return;
     }
-    await checkSolidPublic();
+    // Some pods (Inrupt's) take a moment to apply a new access policy: keep
+    // asking for a few seconds before showing the folder as still private.
+    const place = { ...solidAccount(), containerUrl: solidFolder };
+    for (let attempt = 0; attempt < 8; attempt++) {
+      if ((await isFolderPublic(place)).public) {
+        solidPublic = true;
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    solidSharing = false;
   }
 
   function parentOf(path: string): string {
