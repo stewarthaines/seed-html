@@ -10,8 +10,8 @@ import { showStatus } from './status.js';
 import { translate } from './i18n.js';
 import type { RemoteConfig, S3Object } from './types.js';
 
-/** The reader link offered as the example in a destination's form. */
-export const READER_LINK_EXAMPLE = 'https://readitinabook.com/READ.html?book={url}';
+/** The reader link a new destination starts with: READ.html on readitinabook.com. */
+export const DEFAULT_READER_LINK = 'https://readitinabook.com/READ.html?book={url}';
 
 /** Whether files on a destination have an address to share. */
 export function canShareLinks(remote: RemoteConfig): boolean {

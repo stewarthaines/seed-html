@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   catalogFilenamesFor,
+  allowsSeveralCatalogs,
   catalogFilesOn,
   unusedCatalogFile,
   feedUrlFor,
@@ -19,6 +20,7 @@ import type {
   GoogleDriveRemoteConfig,
   S3Object,
   S3RemoteConfig,
+  SolidRemoteConfig,
 } from './types.js';
 
 const s3: S3RemoteConfig = {
@@ -135,6 +137,21 @@ describe('several catalogs on one destination', () => {
     ];
     expect(catalogFilesOn(s3, legacy)).toEqual(['catalog.xml', 'family.json', 'samples.xml']);
     expect(catalogFilesOn(s3, [])).toEqual([]);
+  });
+
+  it('reads only its own feed in a Solid folder, which is one shelf', () => {
+    const pod: SolidRemoteConfig = {
+      id: 'pod',
+      name: 'Pod',
+      type: 'solid',
+      oidcIssuer: 'https://login.example/',
+      webId: 'https://pod.example/profile/card#me',
+      containerUrl: 'https://pod.example/books/',
+    };
+    expect(allowsSeveralCatalogs(pod)).toBe(false);
+    expect(allowsSeveralCatalogs(s3)).toBe(true);
+    expect(catalogFilesOn(pod, objects)).toEqual(['catalog.json']);
+    expect(catalogFilesOn(pod, objects.filter((o) => o.key !== 'catalog.json'))).toEqual([]);
   });
 
   it('names a new catalog file that is not already there', () => {

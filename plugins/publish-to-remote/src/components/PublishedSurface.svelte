@@ -33,6 +33,7 @@
     formatLabel,
     emptyCatalog,
     unusedCatalogFile,
+    allowsSeveralCatalogs,
     type CatalogInfo,
   } from '../catalog.js';
   import { sendPackage, setInCatalog } from '../send.js';
@@ -146,6 +147,7 @@
 
   function startNewCatalog() {
     if (!selected || !listing || !hasCatalog(selected)) return;
+    if (!allowsSeveralCatalogs(selected)) return;
     editingIdentity = false;
     creatingCatalog = emptyCatalog(
       selected,
@@ -534,13 +536,15 @@
                 >
                   {$t('Edit…')}
                 </button>
-                <button
-                  type="button"
-                  class="btn btn-secondary btn-sm"
-                  onclick={startNewCatalog}
-                >
-                  {$t('New catalog…')}
-                </button>
+                {#if allowsSeveralCatalogs(selected)}
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    onclick={startNewCatalog}
+                  >
+                    {$t('New catalog…')}
+                  </button>
+                {/if}
                 {#if catalog.exists}
                   {#if confirmDeleteCatalog}
                     <span class="confirm">

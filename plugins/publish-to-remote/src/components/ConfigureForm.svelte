@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
   import { t, translate } from '../i18n.js';
-  import { READER_LINK_EXAMPLE } from '../share-links.js';
+  import { DEFAULT_READER_LINK } from '../share-links.js';
   import {
     loadGoogleScripts,
     authorizeGoogleDrive,
@@ -352,7 +352,7 @@
       catalogFilename: '',
     };
     pickedFolderName = null;
-    readerLink = '';
+    readerLink = DEFAULT_READER_LINK;
     solidWebId = '';
     solidSignedInHere = false;
     solidPersonName = '';
@@ -749,7 +749,7 @@
       {id}
       type="text"
       inputmode="url"
-      placeholder={READER_LINK_EXAMPLE}
+      placeholder="https://"
       bind:value={readerLink}
     />
   </div>

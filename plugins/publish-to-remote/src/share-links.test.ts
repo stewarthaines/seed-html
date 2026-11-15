@@ -11,7 +11,7 @@ vi.mock('./dropbox-upload.js', async (importOriginal) => ({
 }));
 
 const {
-  READER_LINK_EXAMPLE,
+  DEFAULT_READER_LINK,
   canShareLinks,
   publicLinkFor,
   readerLinkFor,
@@ -33,7 +33,7 @@ const s3: S3RemoteConfig = {
   accessKeyId: 'k',
   secretAccessKey: 's',
   publicUrlBase: 'https://sample.readitinabook.com',
-  readerLink: READER_LINK_EXAMPLE,
+  readerLink: DEFAULT_READER_LINK,
 };
 
 const webdav: WebDAVRemoteConfig = {
@@ -70,7 +70,7 @@ const device: DeviceRemoteConfig = {
 describe('readerLinkFor', () => {
   it('puts the encoded address in place of {url}', () => {
     expect(
-      readerLinkFor(READER_LINK_EXAMPLE, 'https://sample.readitinabook.com/My%20Book.epub'),
+      readerLinkFor(DEFAULT_READER_LINK, 'https://sample.readitinabook.com/My%20Book.epub'),
     ).toBe(
       'https://readitinabook.com/READ.html?book=https%3A%2F%2Fsample.readitinabook.com%2FMy%2520Book.epub',
     );
@@ -84,14 +84,14 @@ describe('readerLinkFor', () => {
 
   it('gives nothing without a template or an address', () => {
     expect(readerLinkFor('', 'https://a.example/b.epub')).toBe('');
-    expect(readerLinkFor(READER_LINK_EXAMPLE, '')).toBe('');
+    expect(readerLinkFor(DEFAULT_READER_LINK, '')).toBe('');
   });
 });
 
 describe('readerLinkTemplate', () => {
   it('reads the destination’s reader link, trimmed', () => {
-    expect(readerLinkTemplate({ ...s3, readerLink: `  ${READER_LINK_EXAMPLE} ` })).toBe(
-      READER_LINK_EXAMPLE,
+    expect(readerLinkTemplate({ ...s3, readerLink: `  ${DEFAULT_READER_LINK} ` })).toBe(
+      DEFAULT_READER_LINK,
     );
     expect(readerLinkTemplate(webdav)).toBe('');
     expect(readerLinkTemplate(device)).toBe('');
