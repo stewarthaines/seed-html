@@ -45,12 +45,42 @@ function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function httpError(op: string, status: number, statusText: string): string {
+function httpError(
+  op: string,
+  status: number,
+  statusText: string,
+  detail = '',
+): string {
   if (status === 401) return SOLID_AUTH_REQUIRED;
   if (status === 403) {
     return `${op} failed: this account may not write to the folder (403).`;
   }
-  return `${op} failed: ${status} ${statusText}`;
+  const base = `${op} failed: ${status} ${statusText}`.trim();
+  return detail ? `${base}: ${detail}` : base;
+}
+
+/**
+ * The reason a pod gave for an error, from its response body: the `message`
+ * of Community Solid Server's JSON error, or a short plain-text body. Empty
+ * when there is nothing readable (an HTML page, say).
+ */
+export function serverMessage(body: string): string {
+  const text = body.trim();
+  if (!text) return '';
+  try {
+    const json = JSON.parse(text) as { message?: unknown };
+    if (typeof json?.message === 'string') return json.message.trim();
+  } catch {
+    // not JSON
+  }
+  return text.startsWith('<') || text.length > 300 ? '' : text;
+}
+
+interface PutResponse {
+  ok: boolean;
+  status: number;
+  statusText: string;
+  body: string;
 }
 
 /** PUT via XHR so upload progress can be reported; one retry after a 401. */
@@ -60,33 +90,84 @@ async function xhrPut(
   blob: Blob,
   contentType: string,
   onProgress: (percent: number) => void,
-): Promise<{ ok: boolean; status: number; statusText: string }> {
+): Promise<PutResponse> {
   const attempt = async (force: boolean) => {
     const auth = await solidAuthHeaders(account(remote), url, 'PUT', force);
-    return new Promise<{ ok: boolean; status: number; statusText: string }>(
-      (resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('PUT', url);
-        xhr.setRequestHeader('Content-Type', contentType);
-        Object.entries(auth).forEach(([k, v]) => xhr.setRequestHeader(k, v));
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) {
-            onProgress(Math.round((e.loaded / e.total) * 100));
-          }
-        };
-        xhr.onload = () =>
-          resolve({
-            ok: xhr.status >= 200 && xhr.status < 300,
-            status: xhr.status,
-            statusText: xhr.statusText,
-          });
-        xhr.onerror = () => reject(new Error('XHR network error'));
-        xhr.send(blob);
-      },
-    );
+    return new Promise<PutResponse>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', url);
+      xhr.setRequestHeader('Content-Type', contentType);
+      Object.entries(auth).forEach(([k, v]) => xhr.setRequestHeader(k, v));
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+      xhr.onload = () =>
+        resolve({
+          ok: xhr.status >= 200 && xhr.status < 300,
+          status: xhr.status,
+          statusText: xhr.statusText,
+          body: xhr.responseText,
+        });
+      xhr.onerror = () => reject(new Error('XHR network error'));
+      xhr.send(blob);
+    });
   };
   const first = await attempt(false);
   return first.status === 401 ? attempt(true) : first;
+}
+
+async function fetchPut(
+  remote: SolidRemoteConfig,
+  url: string,
+  blob: Blob,
+  contentType: string,
+): Promise<PutResponse> {
+  const response = await solidFetch(account(remote), url, {
+    method: 'PUT',
+    headers: { 'Content-Type': contentType },
+    body: blob,
+  });
+  return {
+    ok: response.ok,
+    status: response.status,
+    statusText: response.statusText,
+    body: response.ok ? '' : await response.text().catch(() => ''),
+  };
+}
+
+/** How long before the upload began a resource may have been written and still count as ours. */
+const CLOCK_SLACK_MS = 60_000;
+
+/**
+ * After a failed PUT, remove what the pod kept of it. Community Solid Server
+ * can abort a slow upload part-way (its write lock expires) and leave the
+ * bytes that had arrived, which would then be served as a broken book. Only
+ * a resource written during this upload and not the size that was sent is
+ * removed, so an earlier good copy is left alone when the failure came
+ * before any write.
+ */
+async function removePartialWrite(
+  remote: SolidRemoteConfig,
+  url: string,
+  sentBytes: number,
+  startedAt: number,
+): Promise<boolean> {
+  try {
+    const head = await solidFetch(account(remote), url, { method: 'HEAD' });
+    if (!head.ok) return false;
+    const size = Number(head.headers.get('Content-Length') ?? NaN);
+    if (size === sentBytes) return false;
+    const modified = Date.parse(head.headers.get('Last-Modified') ?? '');
+    if (!Number.isFinite(modified) || modified < startedAt - CLOCK_SLACK_MS) {
+      return false;
+    }
+    const removed = await solidFetch(account(remote), url, { method: 'DELETE' });
+    return removed.ok || removed.status === 404;
+  } catch {
+    return false;
+  }
 }
 
 /** Write a file into the folder; the pod creates the folder on first use. */
@@ -98,23 +179,34 @@ export async function uploadToSolid(
   onProgress?: (percent: number) => void,
 ): Promise<SolidResult> {
   const url = resourceUrl(remote, objectKey);
+  const startedAt = Date.now();
+  const failed = async (error: string) => {
+    const removed = await removePartialWrite(remote, url, blob.size, startedAt);
+    return {
+      success: false,
+      error: removed
+        ? `${error.replace(/\.?$/, '.')} The incomplete copy was removed.`
+        : error,
+    };
+  };
   try {
     const response = onProgress
       ? await xhrPut(remote, url, blob, contentType, onProgress)
-      : await solidFetch(account(remote), url, {
-          method: 'PUT',
-          headers: { 'Content-Type': contentType },
-          body: blob,
-        });
+      : await fetchPut(remote, url, blob, contentType);
     if (!response.ok) {
-      return {
-        success: false,
-        error: httpError('Upload', response.status, response.statusText),
-      };
+      const error = httpError(
+        'Upload',
+        response.status,
+        response.statusText,
+        serverMessage(response.body),
+      );
+      // Only a server failure can have left part of the file behind.
+      return response.status >= 500 ? failed(error) : { success: false, error };
     }
     return { success: true, url };
   } catch (error) {
-    return { success: false, error: errorText(error) };
+    const text = errorText(error);
+    return text === SOLID_AUTH_REQUIRED ? { success: false, error: text } : failed(text);
   }
 }
 

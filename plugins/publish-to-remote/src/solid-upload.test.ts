@@ -18,6 +18,7 @@ import {
   parseContainerFolders,
   parseContainerJsonLd,
   parseProfile,
+  serverMessage,
   uploadToSolid,
   wacModes,
 } from './solid-upload.js';
@@ -126,6 +127,62 @@ describe('uploadToSolid', () => {
     const result = await uploadToSolid(remote, 'a.epub', new Blob(['x']));
     expect(result.success).toBe(false);
     expect(result.error).toContain('403');
+  });
+
+  it('gives the pod\'s reason and removes the part it kept of a failed upload', async () => {
+    fetchAs
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ name: 'InternalServerError', message: 'Lock expired after 6000ms on x' }),
+          { status: 500, statusText: 'Internal Server Error' },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(null, {
+          headers: { 'Content-Length': '3', 'Last-Modified': new Date().toUTCString() },
+        }),
+      )
+      .mockResolvedValueOnce(new Response(null, { status: 205 }));
+
+    const result = await uploadToSolid(remote, 'a.epub', new Blob(['12345678']));
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe(
+      'Upload failed: 500 Internal Server Error: Lock expired after 6000ms on x. The incomplete copy was removed.',
+    );
+    expect(fetchAs.mock.calls.map(([, , init]) => init?.method)).toEqual([
+      'PUT',
+      'HEAD',
+      'DELETE',
+    ]);
+  });
+
+  it('leaves an earlier copy alone when the failed upload wrote nothing', async () => {
+    fetchAs
+      .mockResolvedValueOnce(new Response('', { status: 500, statusText: 'Internal Server Error' }))
+      .mockResolvedValueOnce(
+        new Response(null, {
+          headers: { 'Content-Length': '3', 'Last-Modified': 'Mon, 02 Nov 2026 01:00:00 GMT' },
+        }),
+      );
+
+    const result = await uploadToSolid(remote, 'a.epub', new Blob(['12345678']));
+
+    expect(result.error).toBe('Upload failed: 500 Internal Server Error');
+    expect(fetchAs.mock.calls.map(([, , init]) => init?.method)).toEqual(['PUT', 'HEAD']);
+  });
+
+  it('does not look for a partial copy after a refused write', async () => {
+    fetchAs.mockResolvedValue(new Response('', { status: 403, statusText: 'Forbidden' }));
+    await uploadToSolid(remote, 'a.epub', new Blob(['x']));
+    expect(fetchAs).toHaveBeenCalledTimes(1);
+  });
+
+  it('reads a plain-text reason and ignores an HTML error page', () => {
+    expect(serverMessage('{"message":" Quota exceeded "}')).toBe('Quota exceeded');
+    expect(serverMessage('Disk full')).toBe('Disk full');
+    expect(serverMessage('<html><body>Bad gateway</body></html>')).toBe('');
+    expect(serverMessage('')).toBe('');
   });
 
   it('reports a 401 that survived the retry as SOLID_AUTH_REQUIRED', async () => {
