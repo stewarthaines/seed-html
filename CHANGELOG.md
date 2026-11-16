@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-11-17
+
 ### Added
 
 - Send books to a Solid pod: sign in with your Solid provider, choose a folder, and make it public so anyone with a book's link can read it, without the folder listing your books.
