@@ -40,6 +40,15 @@ import {
   getWebDAVText,
   getWebDAVBlob,
 } from './webdav-upload.js';
+import {
+  uploadToSolid,
+  listSolidFiles,
+  deleteSolidFile,
+  getSolidPublicUrl,
+  uploadTextToSolid,
+  getSolidText,
+  getSolidBlob,
+} from './solid-upload.js';
 
 export async function uploadFile(
   remote: RemoteConfig,
@@ -62,6 +71,8 @@ export async function uploadFile(
     return uploadToDropbox(remote, objectKey, blob, contentType, onProgress);
   } else if (remote.type === 'webdav') {
     return uploadToWebDAV(remote, objectKey, blob, contentType, onProgress);
+  } else if (remote.type === 'solid') {
+    return uploadToSolid(remote, objectKey, blob, contentType, onProgress);
   } else if (remote.type === 'device') {
     return uploadToDevice(remote, objectKey, blob, onProgress);
   }
@@ -79,6 +90,8 @@ export async function listFiles(
     return listDropboxFiles(remote);
   } else if (remote.type === 'webdav') {
     return listWebDAVFiles(remote);
+  } else if (remote.type === 'solid') {
+    return listSolidFiles(remote);
   } else if (remote.type === 'device') {
     return listDeviceFiles(remote);
   }
@@ -97,6 +110,8 @@ export async function deleteFile(
     return deleteDropboxFile(remote, objectKey);
   } else if (remote.type === 'webdav') {
     return deleteWebDAVFile(remote, objectKey);
+  } else if (remote.type === 'solid') {
+    return deleteSolidFile(remote, objectKey);
   } else if (remote.type === 'device') {
     return deleteDeviceFile(remote, objectKey);
   }
@@ -116,6 +131,8 @@ export function getPublicUrl(
     return getDropboxPublicUrl(remote, fileId);
   } else if (remote.type === 'webdav') {
     return getWebDAVPublicUrl(remote, objectKey);
+  } else if (remote.type === 'solid') {
+    return getSolidPublicUrl(remote, objectKey);
   }
   // 'device': files on a reader's filesystem have no URL.
   return '';
@@ -151,6 +168,8 @@ export async function downloadTextFile(
     return getS3ObjectText(remote, objectKey);
   } else if (remote.type === 'webdav') {
     return getWebDAVText(remote, objectKey);
+  } else if (remote.type === 'solid') {
+    return getSolidText(remote, objectKey);
   } else if (remote.type === 'dropbox') {
     const blob = await downloadDropboxFile(remote, objectKey);
     return blob ? blob.text() : null;
@@ -173,6 +192,8 @@ export async function downloadFile(
       return { blob: await getS3ObjectBlob(remote, objectKey) };
     } else if (remote.type === 'webdav') {
       return { blob: await getWebDAVBlob(remote, objectKey) };
+    } else if (remote.type === 'solid') {
+      return { blob: await getSolidBlob(remote, objectKey) };
     } else if (remote.type === 'dropbox') {
       return { blob: await downloadDropboxFile(remote, objectKey) };
     } else if (remote.type === 'google-drive') {
@@ -203,6 +224,8 @@ export async function uploadTextFile(
     return uploadTextToDropbox(remote, objectKey, text, contentType);
   } else if (remote.type === 'webdav') {
     return uploadTextToWebDAV(remote, objectKey, text, contentType);
+  } else if (remote.type === 'solid') {
+    return uploadTextToSolid(remote, objectKey, text, contentType);
   }
   // 'device': no OPDS catalog on a reader's filesystem.
   return { success: false, error: 'Unknown remote type' };

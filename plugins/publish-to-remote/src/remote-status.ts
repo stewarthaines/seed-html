@@ -9,6 +9,7 @@ import {
   DEVICE_RECONNECT_REQUIRED,
   DEVICE_NOT_CONNECTED,
 } from './device-upload.js';
+import { SOLID_AUTH_REQUIRED } from './solid-auth.js';
 import { acquisitionUrl } from './opds.js';
 import { latestPackageFor, latestPerBook, type LocalPackage } from './local-packages.js';
 import type { CatalogEntry, RemoteConfig, S3Object } from './types.js';
@@ -25,7 +26,10 @@ export interface RemoteListing {
 export async function listRemote(remote: RemoteConfig): Promise<RemoteListing> {
   const result = await listFiles(remote);
   if (!result.error) return { reach: 'ok', objects: result.objects };
-  if (result.error === 'GOOGLE_AUTH_REQUIRED')
+  if (
+    result.error === 'GOOGLE_AUTH_REQUIRED' ||
+    result.error === SOLID_AUTH_REQUIRED
+  )
     return { reach: 'sign-in', objects: [] };
   if (result.error === DEVICE_RECONNECT_REQUIRED)
     return { reach: 'reconnect', objects: [] };
@@ -45,6 +49,8 @@ export function typeLabel(remote: RemoteConfig): string {
       return 'Dropbox';
     case 'webdav':
       return 'WebDAV';
+    case 'solid':
+      return 'Solid';
     case 'device':
       return 'USB';
   }

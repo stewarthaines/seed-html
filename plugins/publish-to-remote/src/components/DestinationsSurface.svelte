@@ -17,7 +17,7 @@
   } from '../remotes.js';
   import { listRemote, type Reach } from '../remote-status.js';
   import { catalogFilenamesFor, formatForKey, formatLabel, hasCatalog } from '../catalog.js';
-  import { reconnectGoogle, reconnectDevice } from '../reconnect.js';
+  import { reconnectGoogle, reconnectDevice, reconnectSolid } from '../reconnect.js';
   import { deleteDeviceHandle, isDeviceSupported } from '../device-upload.js';
   import { showStatus } from '../status.js';
   import type { RemoteConfig } from '../types.js';
@@ -31,6 +31,7 @@
     { type: 'google-drive', label: () => translate('Google Drive') },
     { type: 'dropbox', label: () => translate('Dropbox') },
     { type: 'webdav', label: () => translate('WebDAV') },
+    { type: 'solid', label: () => translate('Solid pod') },
     { type: 'device', label: () => translate('USB e-reader') },
   ];
   const deviceSupported = isDeviceSupported();
@@ -77,6 +78,8 @@
         return remote.folderPath || '/';
       case 'webdav':
         return remote.url;
+      case 'solid':
+        return remote.containerUrl;
       case 'device':
         return [remote.volumeLabel, remote.detail].filter(Boolean).join(' · ');
     }
@@ -131,8 +134,9 @@
 
   async function reconnect(remote: RemoteConfig) {
     try {
-      if (remote.type === 'google-drive') {
-        await reconnectGoogle(remote);
+      if (remote.type === 'google-drive' || remote.type === 'solid') {
+        if (remote.type === 'solid') await reconnectSolid(remote);
+        else await reconnectGoogle(remote);
         const current = $remotesStore.remotes.find((r) => r.id === remote.id) ?? remote;
         await check(current);
       } else if (remote.type === 'device') {
@@ -183,7 +187,7 @@
           <div class="acts">
             {#if state === 'sign-in' || state === 'reconnect'}
               <button type="button" class="btn btn-link" onclick={() => reconnect(remote)}>
-                {$t('Reconnect')}
+                {state === 'sign-in' ? $t('Connect') : $t('Reconnect')}
               </button>
             {/if}
             <button type="button" class="btn btn-link" onclick={() => startEdit(remote)}>

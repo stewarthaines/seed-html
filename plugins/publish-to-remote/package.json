@@ -14,7 +14,9 @@
     "format": "prettier --write src"
   },
   "devDependencies": {
+    "@inrupt/solid-client-authn-browser": "^5.0.3",
     "@sveltejs/vite-plugin-svelte": "^5.0.3",
+    "@types/n3": "^1.26.6",
     "jsdom": "^29.1.1",
     "prettier": "^3.8.3",
     "prettier-plugin-svelte": "^4.0.1",
@@ -41,8 +43,10 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@inrupt/solid-client-authn-core": "^5.0.3",
     "@likecoin/epubcheck-ts": "^0.3.0",
     "aws4fetch": "^1.0.20",
+    "n3": "^2.13.12",
     "phosphor-svelte": "^3.1.0"
   }
 }

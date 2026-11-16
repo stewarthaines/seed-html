@@ -33,10 +33,11 @@
     formatLabel,
     emptyCatalog,
     unusedCatalogFile,
+    allowsSeveralCatalogs,
     type CatalogInfo,
   } from '../catalog.js';
   import { sendPackage, setInCatalog } from '../send.js';
-  import { reconnectGoogle, reconnectDevice } from '../reconnect.js';
+  import { reconnectGoogle, reconnectSolid, reconnectDevice } from '../reconnect.js';
   import { deleteFile, downloadFile } from '../remote-ops.js';
   import { showStatus } from '../status.js';
   import {
@@ -146,6 +147,7 @@
 
   function startNewCatalog() {
     if (!selected || !listing || !hasCatalog(selected)) return;
+    if (!allowsSeveralCatalogs(selected)) return;
     editingIdentity = false;
     creatingCatalog = emptyCatalog(
       selected,
@@ -422,6 +424,8 @@
     try {
       if (remote.type === 'google-drive') {
         await reconnectGoogle(remote);
+      } else if (remote.type === 'solid') {
+        await reconnectSolid(remote);
       } else if (remote.type === 'device') {
         const ok = await reconnectDevice(remote);
         if (!ok) {
@@ -532,13 +536,15 @@
                 >
                   {$t('Edit…')}
                 </button>
-                <button
-                  type="button"
-                  class="btn btn-secondary btn-sm"
-                  onclick={startNewCatalog}
-                >
-                  {$t('New catalog…')}
-                </button>
+                {#if allowsSeveralCatalogs(selected)}
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    onclick={startNewCatalog}
+                  >
+                    {$t('New catalog…')}
+                  </button>
+                {/if}
                 {#if catalog.exists}
                   {#if confirmDeleteCatalog}
                     <span class="confirm">

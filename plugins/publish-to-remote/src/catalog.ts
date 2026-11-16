@@ -52,7 +52,8 @@ export function hasCatalog(
   return (
     remote.type === 's3-compatible' ||
     remote.type === 'dropbox' ||
-    remote.type === 'webdav'
+    remote.type === 'webdav' ||
+    remote.type === 'solid'
   );
 }
 
@@ -93,10 +94,19 @@ export function isCatalogKey(key: string): boolean {
 }
 
 /**
+ * Whether a destination can carry several feeds. A Solid folder is also where
+ * access is set, so it is one shelf with one feed: a different audience means
+ * a different folder (process/SOLID_DESTINATION.md).
+ */
+export function allowsSeveralCatalogs(remote: CatalogRemoteConfig): boolean {
+  return remote.type !== 'solid';
+}
+
+/**
  * Every catalog file on the destination, the destination's own (the
  * configured name, else catalog.json, else catalog.xml) first and the rest
  * by name. A destination can carry several feeds — one per shelf of books —
- * and each is read and written on its own.
+ * and each is read and written on its own; a Solid folder has only its own.
  */
 export function catalogFilesOn(
   remote: CatalogRemoteConfig,
@@ -105,6 +115,7 @@ export function catalogFilesOn(
   const present = objects.map((o) => o.key).filter(isCatalogKey);
   const candidates = catalogFilenamesFor(remote);
   const first = candidates.find((c) => present.includes(c));
+  if (!allowsSeveralCatalogs(remote)) return first ? [first] : [];
   const rest = present
     .filter((k) => k !== first)
     .sort((a, b) => a.localeCompare(b));
