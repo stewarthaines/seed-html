@@ -104,23 +104,27 @@ The question: is a Solid pod a simpler bring-your-own storage for other writers 
 
 Sources: the official list (https://solidproject.org/users/get-a-pod, 15 providers; the old /for-users/get-a-pod is gone), each provider's own pages and terms, and anonymous requests from Melbourne (connect and first-byte times are three-request averages to the root). Inrupt's terms and Private Data Pod's plans were re-checked on their own pages; the rest is from the research pass and marked where not found.
 
-| Provider | Software | Quota / limit | Where | Terms | First byte |
-|---|---|---|---|---|---|
-| privatedatapod.com (Pod42 LLC, since Mar 2026) | CSS | 1 GB free, 10 GB at $9.99/mo; file limit not found | AWS, US | Commercial, real use | not timed |
-| TrinPod (Graphmetrix) | TwinPod 3.6 | not found | US, EU | not found | 0.98 s |
-| Inrupt PodSpaces | ESS | 100 MB per file | US/EU (Frankfurt), AP (Singapore) | Developer Preview, not for production | 0.6–1.0 s |
-| solidcommunity.net (ODI) | CSS behind Cloudflare | not found | UK (Cloudflare edge) | Developers only, no personal or commercial data | 0.48 s |
-| solidcommunity.au (Togaware/ANU) | CSS 7.0.2 | 6 s write lock | Sydney | Experimental | 0.14 s |
-| solidweb.org | NSS 6.0.0 | 50 MB per pod | Strasbourg | Experimental, volunteers | 1.49 s |
-| solidweb.me / teamid.live / solidweb.app (same operator) | CSS 7.2 / Pivot / JSS | 50 / 70 / 100 MB per pod | Strasbourg | Prototype | 1.5–2.0 s |
-| solid.redpencil.io | CSS | 7 MB per pod | Nuremberg | not stated | 1.67 s |
-| Data Pod (iGrant.io) | NSS 5.7.4 | not found | EU | Public alpha | 1.03 s |
-| inrupt.net | — | — | — | Shut down 31 Mar 2025 | — |
-| use.id | — | — | — | Unreachable, still listed | — |
+| Provider                                                 | Software              | Quota / limit                                      | Where                             | Terms                                           | First byte |
+| -------------------------------------------------------- | --------------------- | -------------------------------------------------- | --------------------------------- | ----------------------------------------------- | ---------- |
+| privatedatapod.com (Pod42 LLC, since Mar 2026)           | CSS                   | 1 GB free, 10 GB at $9.99/mo; file limit not found | AWS, US                           | Commercial, real use                            | not timed  |
+| TrinPod (Graphmetrix)                                    | TwinPod 3.6           | not found                                          | US, EU                            | not found                                       | 0.98 s     |
+| Inrupt PodSpaces                                         | ESS                   | 100 MB per file                                    | US/EU (Frankfurt), AP (Singapore) | Developer Preview, not for production           | 0.6–1.0 s  |
+| solidcommunity.net (ODI)                                 | CSS behind Cloudflare | not found                                          | UK (Cloudflare edge)              | Developers only, no personal or commercial data | 0.48 s     |
+| solidcommunity.au (Togaware/ANU)                         | CSS 7.0.2             | 6 s write lock                                     | Sydney                            | Experimental                                    | 0.14 s     |
+| solidweb.org                                             | NSS 6.0.0             | 50 MB per pod                                      | Strasbourg                        | Experimental, volunteers                        | 1.49 s     |
+| solidweb.me / teamid.live / solidweb.app (same operator) | CSS 7.2 / Pivot / JSS | 50 / 70 / 100 MB per pod                           | Strasbourg                        | Prototype                                       | 1.5–2.0 s  |
+| solid.redpencil.io                                       | CSS                   | 7 MB per pod                                       | Nuremberg                         | not stated                                      | 1.67 s     |
+| Data Pod (iGrant.io)                                     | NSS 5.7.4             | not found                                          | EU                                | Public alpha                                    | 1.03 s     |
+| inrupt.net                                               | —                     | —                                                  | —                                 | Shut down 31 Mar 2025                           | —          |
+| use.id                                                   | —                     | —                                                  | —                                 | Unreachable, still listed                       | —          |
 
 Findings. Every free host but one calls itself experimental, a prototype, a preview or developers-only, and the volunteer hosts cap a whole pod at 7–100 MB, which is one to a handful of books. The one host offering real use with room for a shelf is Private Data Pod, eight months old and run by one small company. No host has been shown to serve a book fast: Inrupt managed about 67 KB/s, and download speed on the others can only be measured with an account. solidcommunity.net now fronts CSS with Cloudflare, which may buffer uploads and so avoid the 6 s lock that stops solidcommunity.au, but that needs an account to test, and its terms rule out a writer's real use anyway.
 
 Conclusion so far: Solid has the setup a writer would want and, in 2026, no free host fit to publish from. The one candidate worth a real test is Private Data Pod's free tier (an account from the author): send a 20 MB book, time the upload and an anonymous download, and check the size header, the public-access path (CSS uses WAC, which the plugin already handles) and CORS.
+
+Private Data Pod, first contact (2026-11-16): sign-in works (CSS, dynamic registration), but the pod's top address (`https://<name>.privatedatapod.com/`) is answered by the host's own Express web page, as HTML, whatever the request asks for, signed in or not; every path below it reaches CSS. The storage root a profile names cannot be listed, so no Solid app can browse the pod from the top, and the folder chooser stopped there with "The pod sent text/html instead of Turtle." The host should route a request asking for Turtle (or any authenticated request) to CSS. The plugin now names the address in that error, and a failed listing keeps the new-folder field and offers "Enter a folder address", so a folder below the top can still be made or chosen. Also seen: the host's sign-up puts the account email in the public profile (`foaf:mbox`).
+
+Private Data Pod, the publishing test (2026-11-16): the 23.8 MB Haines book sent into `books/`, made public, and served anonymously from AWS in Ashburn, Virginia: `application/epub+zip`, Content-Length, `Accept-Ranges: bytes` (a range request returns 206), an ETag, and CORS for readitinabook.com. Two downloads from Melbourne took 30 s and 38 s (630–800 KB/s, first byte 0.8–1.0 s), about ten times Inrupt's speed, and the file unzips cleanly. It is the first Solid host that does everything the publishing path needs: large uploads, public folders, size and resume for readers, and a reasonable speed. Its weak points are its age (launched March 2026, one small company) and the HTML at the pod's top address.
 
 ## UX questions to answer along the way
 
