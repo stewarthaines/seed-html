@@ -138,7 +138,10 @@
 
   // Solid: pick a provider, sign in (solid-auth.ts keeps the tokens), then
   // choose a folder in one of the pods the profile names.
+  // Private Data Pod first: the one host shown fit to publish from
+  // (process/SOLID_DESTINATION.md, 2026-11-16).
   const SOLID_PROVIDERS = [
+    { issuer: 'https://privatedatapod.com/', label: 'Private Data Pod' },
     { issuer: 'https://pods.solidcommunity.au/', label: 'solidcommunity.au' },
     { issuer: 'https://solidcommunity.net/', label: 'solidcommunity.net' },
     { issuer: 'https://login.inrupt.com/', label: 'Inrupt PodSpaces' },
