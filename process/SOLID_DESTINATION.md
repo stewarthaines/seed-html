@@ -88,6 +88,8 @@ Tests mirror `webdav-upload.test.ts`: a stubbed `fetch` that answers container T
 
 ## Phase 2: private sharing (exploration)
 
+Decision (2026-11-16): unlisted is enough for a family book, and R2 and S3 links already give it, so private sharing is not needed for that case. The reader-side cost is why: a relative with no pod must choose a provider, create an account, find and send back a WebID, wait to be added, then sign in and approve a consent screen, before seeing a page. The open question for Solid moves to whether it is a simpler bring-your-own storage for other writers and publishers (see below). The notes that follow stay as the record of what private sharing would involve.
+
 What the reader of a private book needs is the question, more than what the publisher does. The pieces to try:
 
 - Per-book or per-folder readers: a "Who can read this" list of WebIDs on a book or a shelf. Each change rewrites that resource's `.acl` (owner control; named agents read). Show who has access from the `.acl`, not from a local record, since the pod is the truth (the same rule as the catalog).
@@ -95,6 +97,30 @@ What the reader of a private book needs is the question, more than what the publ
 - The reader's side: READ.html opening a book that needs a sign-in. Options to compare: READ.html gains "Sign in with Solid" and fetches with the session (the honest Solid model; READ.html then carries the library too); or SEED offers a time-limited link instead (not Solid's model, and CSS has no such thing). Expect this to be the most interesting finding.
 - Inviting someone who has no pod: the realistic family-history case. What does the invitation say, and which provider should they join?
 - Copy rules for the interface: who can read is the user's gain; never show `.acl`, WAC or WebID jargon in the app's strings (CLAUDE.md, in-app copy).
+
+## Solid as bring-your-own storage for writers (survey, 2026-11-16)
+
+The question: is a Solid pod a simpler bring-your-own storage for other writers and publishers than R2/S3, Dropbox, Google Drive or WebDAV? On setup it is: provider, sign in, folder, make public, with no developer console, keys or secrets, because Solid apps register themselves (Dropbox and Google Drive both need the writer to register a developer app first). The survey asks whether any public host is fit to publish from.
+
+Sources: the official list (https://solidproject.org/users/get-a-pod, 15 providers; the old /for-users/get-a-pod is gone), each provider's own pages and terms, and anonymous requests from Melbourne (connect and first-byte times are three-request averages to the root). Inrupt's terms and Private Data Pod's plans were re-checked on their own pages; the rest is from the research pass and marked where not found.
+
+| Provider | Software | Quota / limit | Where | Terms | First byte |
+|---|---|---|---|---|---|
+| privatedatapod.com (Pod42 LLC, since Mar 2026) | CSS | 1 GB free, 10 GB at $9.99/mo; file limit not found | AWS, US | Commercial, real use | not timed |
+| TrinPod (Graphmetrix) | TwinPod 3.6 | not found | US, EU | not found | 0.98 s |
+| Inrupt PodSpaces | ESS | 100 MB per file | US/EU (Frankfurt), AP (Singapore) | Developer Preview, not for production | 0.6–1.0 s |
+| solidcommunity.net (ODI) | CSS behind Cloudflare | not found | UK (Cloudflare edge) | Developers only, no personal or commercial data | 0.48 s |
+| solidcommunity.au (Togaware/ANU) | CSS 7.0.2 | 6 s write lock | Sydney | Experimental | 0.14 s |
+| solidweb.org | NSS 6.0.0 | 50 MB per pod | Strasbourg | Experimental, volunteers | 1.49 s |
+| solidweb.me / teamid.live / solidweb.app (same operator) | CSS 7.2 / Pivot / JSS | 50 / 70 / 100 MB per pod | Strasbourg | Prototype | 1.5–2.0 s |
+| solid.redpencil.io | CSS | 7 MB per pod | Nuremberg | not stated | 1.67 s |
+| Data Pod (iGrant.io) | NSS 5.7.4 | not found | EU | Public alpha | 1.03 s |
+| inrupt.net | — | — | — | Shut down 31 Mar 2025 | — |
+| use.id | — | — | — | Unreachable, still listed | — |
+
+Findings. Every free host but one calls itself experimental, a prototype, a preview or developers-only, and the volunteer hosts cap a whole pod at 7–100 MB, which is one to a handful of books. The one host offering real use with room for a shelf is Private Data Pod, eight months old and run by one small company. No host has been shown to serve a book fast: Inrupt managed about 67 KB/s, and download speed on the others can only be measured with an account. solidcommunity.net now fronts CSS with Cloudflare, which may buffer uploads and so avoid the 6 s lock that stops solidcommunity.au, but that needs an account to test, and its terms rule out a writer's real use anyway.
+
+Conclusion so far: Solid has the setup a writer would want and, in 2026, no free host fit to publish from. The one candidate worth a real test is Private Data Pod's free tier (an account from the author): send a 20 MB book, time the upload and an anonymous download, and check the size header, the public-access path (CSS uses WAC, which the plugin already handles) and CORS.
 
 ## UX questions to answer along the way
 
