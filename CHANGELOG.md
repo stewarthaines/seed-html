@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Send books to a Solid pod: sign in with your Solid provider, choose a folder, and make it public so anyone with a book's link can read it, without the folder listing your books.
+- In the reader, tap a picture to see it fullscreen and zoom in; a Back button returns from a link or chapter jump; links can open a book at a chapter or picture; and the contents start pinned beside the book on a wide screen.
 
 ### Changed
 
