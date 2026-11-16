@@ -187,7 +187,7 @@
           <div class="acts">
             {#if state === 'sign-in' || state === 'reconnect'}
               <button type="button" class="btn btn-link" onclick={() => reconnect(remote)}>
-                {$t('Reconnect')}
+                {state === 'sign-in' ? $t('Connect') : $t('Reconnect')}
               </button>
             {/if}
             <button type="button" class="btn btn-link" onclick={() => startEdit(remote)}>

@@ -1129,6 +1129,7 @@ msgstr ""
 msgid "Conformance level"
 msgstr ""
 
+#: plugins/publish-to-remote/src/components/DestinationsSurface.svelte
 #: plugins/publish-to-remote/src/components/PublishedSurface.svelte
 #: plugins/publish-to-remote/src/components/SendSurface.svelte
 msgid "Connect"
