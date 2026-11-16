@@ -17,7 +17,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, '..');
 
-const locales = ['en', 'de', 'ka', 'ar', 'he', 'zh-Hant', 'ja'];
+// Catalogs merged with the template on every extract: the shipping locales.
+// The others are frozen while nobody is translating them, so an extract does
+// not churn them with untranslated stubs and new dates. Set
+// I18N_ALL_LOCALES=1 to merge them too when translation work resumes.
+const shippingLocales = ['en', 'de'];
+const frozenLocales = ['ka', 'ar', 'he', 'zh-Hant', 'ja'];
+const locales = process.env.I18N_ALL_LOCALES
+  ? [...shippingLocales, ...frozenLocales]
+  : shippingLocales;
 
 /** Day-only stamp (YYYY-MM-DD) for .po headers — avoids per-build timestamp churn. */
 const dayStamp = () => new Date().toISOString().slice(0, 10);

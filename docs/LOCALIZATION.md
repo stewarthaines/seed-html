@@ -203,7 +203,7 @@ The `Plural-Forms` header in each `.po` is stamped by the extractor and not pres
 ### Adding New Translatable Strings
 
 1. **Add strings to code**: use `$t('Your new string')` in Svelte components
-2. **Extract strings**: run `npm run i18n:extract`
+2. **Extract strings**: run `npm run i18n:extract`. It merges new strings into `messages.pot` and the shipping catalogs (`en.po`, `de.po`) only; the other catalogs (ka, ar, he, zh-Hant, ja) are frozen while they are not being translated. Run `I18N_ALL_LOCALES=1 npm run i18n:extract` to merge those too.
 3. **Update translations**: translate the new strings in the `.po` files
 4. **Compile**: run `npm run i18n:convert`
 
