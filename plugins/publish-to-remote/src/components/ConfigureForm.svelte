@@ -162,6 +162,8 @@
   let solidBrowseError: string | null = $state(null);
   let solidNewFolder = $state('');
   let solidPublic: boolean | undefined = $state(undefined);
+  // Public folders made before 2026-11-16 also let anyone list the books.
+  let solidListed = $state(false);
   let solidSharing = $state(false);
 
   let dbxBrowserPath: string = $state('');
@@ -361,6 +363,7 @@
     solidFolderAddress = '';
     solidBrowsing = false;
     solidPublic = undefined;
+    solidListed = false;
     pickedDeviceHandle = null;
     deviceKind = 'generic';
     deviceVolumeLabel = '';
@@ -584,9 +587,11 @@
 
   async function checkSolidPublic() {
     solidPublic = undefined;
+    solidListed = false;
     if (!solidFolder) return;
     const result = await isFolderPublic({ ...solidAccount(), containerUrl: solidFolder });
     solidPublic = result.public;
+    solidListed = result.listed ?? false;
   }
 
   async function onMakeSolidFolderPublic() {
@@ -604,8 +609,10 @@
     // asking for a few seconds before showing the folder as still private.
     const place = { ...solidAccount(), containerUrl: solidFolder };
     for (let attempt = 0; attempt < 8; attempt++) {
-      if ((await isFolderPublic(place)).public) {
+      const check = await isFolderPublic(place);
+      if (check.public && !check.listed) {
         solidPublic = true;
+        solidListed = false;
         break;
       }
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -1296,7 +1303,19 @@
         {#if solidPublic === true}
           <small class="field-note">
             {$t('Anyone with the link can read the books here.')}
+            {#if solidListed}
+              {$t('Anyone can also see the list of books.')}
+            {/if}
           </small>
+          {#if solidListed && solidSignedInHere}
+            <button
+              class="btn btn-secondary btn-sm"
+              onclick={onMakeSolidFolderPublic}
+              disabled={solidSharing}
+            >
+              {$t('Hide the list')}
+            </button>
+          {/if}
         {:else if solidPublic === false}
           <small class="field-note">
             {$t('Only you can read the books here.')}

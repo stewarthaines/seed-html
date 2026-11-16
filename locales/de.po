@@ -559,6 +559,10 @@ msgid "Another provider"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Anyone can also see the list of books."
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Anyone with the link can read the books here."
 msgstr ""
 
@@ -2645,6 +2649,10 @@ msgstr ""
 #: src/lib/components/spine/PreviewPane.svelte
 msgid "Hide preview"
 msgstr "Vorschau ausblenden"
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Hide the list"
+msgstr ""
 
 #: src/lib/components/spine/PreviewPane.svelte
 #. Device category for tablet reading in comfortable home settings

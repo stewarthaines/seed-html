@@ -522,21 +522,33 @@ export async function readProfile(
   }
 }
 
+/** A name no book has: asking for it anonymously shows whether the public may
+ *  read the folder's contents without asking for the folder itself. */
+const PUBLIC_PROBE = '.seedhtml-public-check';
+
 /**
- * True when anyone can read the folder's books without signing in: the
- * folder answers an anonymous request. That is the reader's own experience,
- * so it holds whatever access system the pod uses and whatever its WAC-Allow
- * header claims. `no-store` keeps a cached answer from before a change out.
+ * Whether anyone can read the folder's books without signing in, and whether
+ * they can also list the folder. Both are asked anonymously, which is the
+ * reader's own experience whatever access system the pod uses or its
+ * WAC-Allow header claims. A missing file answers 404 where the public may
+ * read the folder's contents and 401 or 403 where it may not (Community Solid
+ * Server and Inrupt's server alike, checked 2026-11-16). `no-store` keeps a
+ * cached answer from before a change out.
  */
 export async function isFolderPublic(
   remote: SolidPlace,
-): Promise<{ public?: boolean; error?: string }> {
+): Promise<{ public?: boolean; listed?: boolean; error?: string }> {
+  const folder = withSlash(remote.containerUrl);
+  const ask = (url: string) => fetch(url, { method: 'HEAD', cache: 'no-store' });
   try {
-    const response = await fetch(withSlash(remote.containerUrl), {
-      method: 'HEAD',
-      cache: 'no-store',
-    });
-    return { public: response.ok };
+    const [member, listing] = await Promise.all([
+      ask(`${folder}${PUBLIC_PROBE}`),
+      ask(folder),
+    ]);
+    return {
+      public: member.ok || member.status === 404,
+      listed: listing.ok,
+    };
   } catch (error) {
     return { error: errorText(error) };
   }
@@ -577,16 +589,21 @@ async function accessSystem(remote: SolidPlace, aclUrl: string): Promise<'acp' |
 /**
  * A SPARQL Update adding public read to an access control resource (Access
  * Control Policies): one policy allowing Read to acp:PublicAgent, applied to
- * the folder itself and to its members. The owner's existing policies are
- * left as they are, which is why this patches rather than replaces.
+ * the folder's members but not the folder, so a book opens from its link
+ * while the folder's list of books stays private. It first takes back the
+ * policy's hold on the folder itself, which an earlier version applied. The
+ * owner's existing policies are left as they are, which is why this patches
+ * rather than replaces.
  */
 export function publicReadPatch(acrUrl: string): string {
   const id = (name: string) => `<${acrUrl}#${name}>`;
   return `PREFIX acp: <http://www.w3.org/ns/solid/acp#>
 PREFIX acl: <http://www.w3.org/ns/auth/acl#>
+DELETE DATA {
+  <${acrUrl}> acp:accessControl ${id('seedhtml-public')}.
+};
 INSERT DATA {
-  <${acrUrl}> acp:accessControl ${id('seedhtml-public')};
-    acp:memberAccessControl ${id('seedhtml-public')}.
+  <${acrUrl}> acp:memberAccessControl ${id('seedhtml-public')}.
   ${id('seedhtml-public')} a acp:AccessControl;
     acp:apply ${id('seedhtml-public-policy')}.
   ${id('seedhtml-public-policy')} a acp:Policy;
@@ -598,7 +615,9 @@ INSERT DATA {
 `;
 }
 
-/** Access rules for a public folder: the owner keeps control, everyone may read. */
+/** Access rules for a public folder: the owner keeps control, and everyone may
+ *  read what is in it (`acl:default`) but not the folder's own list of books
+ *  (no `acl:accessTo` for the public). */
 export function publicFolderAcl(webId: string): string {
   return `@prefix acl: <http://www.w3.org/ns/auth/acl#>.
 @prefix foaf: <http://xmlns.com/foaf/0.1/>.
@@ -611,14 +630,14 @@ export function publicFolderAcl(webId: string): string {
 
 <#public> a acl:Authorization;
   acl:agentClass foaf:Agent;
-  acl:accessTo <./>;
   acl:default <./>;
   acl:mode acl:Read.
 `;
 }
 
 /**
- * Let anyone read the folder and everything in it, with whichever access
+ * Let anyone read the books in the folder from their links, without listing
+ * the folder, with whichever access
  * system the pod uses (Web Access Control or Access Control Policies). The
  * folder is created first if nothing has been sent yet.
  */

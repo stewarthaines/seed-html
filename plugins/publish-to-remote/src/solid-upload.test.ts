@@ -250,20 +250,26 @@ describe('reads, deletes and links', () => {
 });
 
 describe('public access', () => {
-  it('counts the folder public when an anonymous request succeeds', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+  it('counts the books public when a missing file answers 404, and the list apart', async () => {
+    const answers: Record<string, number[]> = {
+      [`${FOLDER}.seedhtml-public-check`]: [401, 404, 404],
+      [FOLDER]: [401, 401, 200],
+    };
+    const fetchMock = vi.fn(async (url: string) =>
       // A WAC-Allow header that says otherwise does not override the answer.
-      .mockResolvedValueOnce(
-        new Response(null, { headers: { 'WAC-Allow': 'user="read",public=""' } }),
-      );
+      new Response(null, {
+        status: answers[url].shift(),
+        headers: { 'WAC-Allow': 'user="read",public=""' },
+      }),
+    );
     vi.stubGlobal('fetch', fetchMock);
-    expect(await isFolderPublic(remote)).toEqual({ public: false });
-    expect(await isFolderPublic(remote)).toEqual({ public: true });
-    expect(fetchMock.mock.calls[0][0]).toBe(FOLDER);
-    expect(fetchMock.mock.calls[0][1]?.headers).toBeUndefined();
-    expect(fetchMock.mock.calls[0][1]?.cache).toBe('no-store');
+    expect(await isFolderPublic(remote)).toEqual({ public: false, listed: false });
+    expect(await isFolderPublic(remote)).toEqual({ public: true, listed: false });
+    expect(await isFolderPublic(remote)).toEqual({ public: true, listed: true });
+    for (const [, init] of fetchMock.mock.calls as unknown as [string, RequestInit][]) {
+      expect(init.headers).toBeUndefined();
+      expect(init.cache).toBe('no-store');
+    }
   });
 
   it('writes public-read rules to the access resource the folder names', async () => {
@@ -284,7 +290,12 @@ describe('public access', () => {
     expect(url).toBe(`${FOLDER}.acl`);
     expect(init?.method).toBe('PUT');
     expect(String(init?.body)).toContain(`acl:agent <${remote.webId}>`);
-    expect(String(init?.body)).toContain('acl:agentClass foaf:Agent');
+    const body = String(init?.body);
+    expect(body).toContain('acl:agentClass foaf:Agent');
+    // The public reads what is in the folder, not the folder's own list.
+    const publicRule = body.slice(body.indexOf('<#public>'));
+    expect(publicRule).toContain('acl:default <./>');
+    expect(publicRule).not.toContain('acl:accessTo');
   });
 
   it('creates the folder first when nothing has been sent yet', async () => {
@@ -328,9 +339,11 @@ describe('public access', () => {
     expect(init?.method).toBe('PATCH');
     expect(new Headers(init?.headers).get('Content-Type')).toBe('application/sparql-update');
     const body = String(init?.body);
-    expect(body).toContain('INSERT DATA');
-    expect(body).toContain(`<${acr}> acp:accessControl <${acr}#seedhtml-public>`);
-    expect(body).toContain(`acp:memberAccessControl <${acr}#seedhtml-public>`);
+    // Members only, taking back the hold on the folder an earlier version added.
+    const [removed, added] = body.split('INSERT DATA');
+    expect(removed).toContain(`DELETE DATA {\n  <${acr}> acp:accessControl <${acr}#seedhtml-public>.`);
+    expect(added).toContain(`<${acr}> acp:memberAccessControl <${acr}#seedhtml-public>`);
+    expect(added).not.toContain('acp:accessControl <');
     expect(body).toContain('acp:agent acp:PublicAgent');
     expect(body).toContain('acp:allow acl:Read');
   });
