@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-14\n"
-"PO-Revision-Date: 2026-11-14\n"
+"POT-Creation-Date: 2026-11-16\n"
+"PO-Revision-Date: 2026-11-16\n"
 "Language: en\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -2132,6 +2132,10 @@ msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Endpoint URL"
+msgstr ""
+
+#: plugins/publish-to-remote/src/components/ConfigureForm.svelte
+msgid "Enter a folder address"
 msgstr ""
 
 #: src/lib/components/metadata/IdentifierEditor.svelte

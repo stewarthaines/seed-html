@@ -742,6 +742,20 @@
   }
 </script>
 
+{#snippet solidNewFolderField()}
+  <div class="form-group">
+    <label for="solid-new-folder">{$t('New folder')}</label>
+    <input id="solid-new-folder" type="text" bind:value={solidNewFolder} />
+    <button
+      class="btn btn-secondary btn-sm"
+      onclick={onCreateSolidFolder}
+      disabled={!solidNewFolder.trim()}
+    >
+      {$t('Create')}
+    </button>
+  </div>
+{/snippet}
+
 {#snippet readerLinkField(id: string)}
   <div class="form-group">
     <label for={id}>{$t('Reader link (optional)')}</label>
@@ -1190,12 +1204,21 @@
           <div class="browser-loading">{$t('Loading folders...')}</div>
         {:else if solidBrowseError}
           <div class="browser-error">{solidBrowseError}</div>
-          <button
-            class="btn btn-secondary"
-            onclick={() => openSolidBrowser(solidBrowsePath)}
-          >
-            {$t('Retry')}
-          </button>
+          <div class="browser-actions">
+            <button
+              class="btn btn-secondary"
+              onclick={() => openSolidBrowser(solidBrowsePath)}
+            >
+              {$t('Retry')}
+            </button>
+            <button
+              class="btn btn-secondary"
+              onclick={() => (solidBrowsing = false)}
+            >
+              {$t('Enter a folder address')}
+            </button>
+          </div>
+          {@render solidNewFolderField()}
         {:else}
           {@const parent = solidParent(solidBrowsePath)}
           <div class="folder-list">
@@ -1216,17 +1239,7 @@
               <p class="empty-message">{$t('No subfolders here')}</p>
             {/if}
           </div>
-          <div class="form-group">
-            <label for="solid-new-folder">{$t('New folder')}</label>
-            <input id="solid-new-folder" type="text" bind:value={solidNewFolder} />
-            <button
-              class="btn btn-secondary btn-sm"
-              onclick={onCreateSolidFolder}
-              disabled={!solidNewFolder.trim()}
-            >
-              {$t('Create')}
-            </button>
-          </div>
+          {@render solidNewFolderField()}
           <div class="browser-actions">
             <button
               class="btn btn-primary"

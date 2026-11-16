@@ -237,11 +237,14 @@ const TURTLE_REQUEST: RequestInit = {
   cache: 'no-store',
 };
 
-/** The body of a Turtle response; names what came instead when it is not Turtle. */
-async function turtleText(response: Response): Promise<string> {
+/** The body of a Turtle response; names what came instead, and from where,
+ *  when it is not Turtle (a host can put a web page in front of a pod path). */
+async function turtleText(response: Response, url: string): Promise<string> {
   const type = (response.headers.get('Content-Type') ?? '').toLowerCase();
   if (type && !type.includes('turtle')) {
-    throw new Error(`The pod sent ${type.split(';')[0]} instead of Turtle.`);
+    throw new Error(
+      `The pod sent ${type.split(';')[0]} instead of Turtle for ${url}`,
+    );
   }
   return response.text();
 }
@@ -355,7 +358,10 @@ export async function listSolidFiles(
     return {
       objects: await withFileStats(
         remote,
-        parseContainerListing(remote.containerUrl, await turtleText(response)),
+        parseContainerListing(
+          remote.containerUrl,
+          await turtleText(response, remote.containerUrl),
+        ),
       ),
     };
   } catch (error) {
@@ -457,7 +463,7 @@ export async function listSolidFolders(
         error: httpError('List', response.status, response.statusText),
       };
     }
-    return { folders: parseContainerFolders(url, await turtleText(response)) };
+    return { folders: parseContainerFolders(url, await turtleText(response, withSlash(url))) };
   } catch (error) {
     return { folders: [], error: errorText(error) };
   }
@@ -510,7 +516,7 @@ export async function readProfile(
   try {
     const response = await fetch(webId, TURTLE_REQUEST);
     if (!response.ok) return { storages: [] };
-    return parseProfile(webId, await turtleText(response), response.url || webId);
+    return parseProfile(webId, await turtleText(response, webId), response.url || webId);
   } catch {
     return { storages: [] };
   }

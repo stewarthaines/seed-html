@@ -134,7 +134,7 @@ describe('listSolidFiles', () => {
       new Response('{"@graph":[]}', { headers: { 'Content-Type': 'application/ld+json' } }),
     );
     expect((await listSolidFiles(remote)).error).toBe(
-      'The pod sent application/ld+json instead of Turtle.',
+      `The pod sent application/ld+json instead of Turtle for ${remote.containerUrl}`,
     );
   });
 
