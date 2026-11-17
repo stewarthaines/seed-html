@@ -22,12 +22,16 @@
     isImportEpubMessage,
     isOpenMessage,
     isDescribeBookMessage,
+    isValidatedMessage,
     workspaceOpfsPath,
     type BookDescribedMessage,
+    type ValidateMessage,
     type PluginSurface,
     type OpenMessage,
   } from '$lib/plugins/contract';
   import { PUBLISH_WORKSPACE_ID } from '$lib/workspace/types';
+  import { setPackageValidator } from '$lib/plugins/package-validator';
+  import type { ValidationReport } from '$lib/plugins/validation-report';
   import type { BookDescription } from '$lib/pdf/accessible-pdf';
 
   interface Props {
@@ -212,6 +216,41 @@
       if (pluginReady && !pluginFailed) void sendPluginInit();
     });
   });
+
+  // The Send surface carries epubcheck: while it is alive, the agent bridge's
+  // seed_validate can ask it for the same check its Validate button runs.
+  $effect(() => {
+    if (surface !== 'send' || !pluginReady || pluginFailed) return;
+    return setPackageValidator(requestValidation);
+  });
+
+  function requestValidation(): Promise<ValidationReport> {
+    const frameWindow = pluginFrame?.contentWindow;
+    if (!frameWindow) return Promise.reject(new Error('the publish plugin is not loaded'));
+    const requestId = crypto.randomUUID();
+    return new Promise((resolve, reject) => {
+      const finish = (): void => {
+        clearTimeout(timer);
+        window.removeEventListener('message', onMessage);
+      };
+      const onMessage = (event: MessageEvent): void => {
+        if (event.source !== frameWindow || event.origin !== window.location.origin) return;
+        const data = event.data;
+        if (!isValidatedMessage(data) || data.requestId !== requestId) return;
+        finish();
+        if ('error' in data) reject(new Error(data.error));
+        else resolve(data.report);
+      };
+      // Long enough for epubcheck on a large book; the bridge waits longer.
+      const timer = setTimeout(() => {
+        finish();
+        reject(new Error('the publish plugin did not answer within 150 seconds'));
+      }, 150_000);
+      window.addEventListener('message', onMessage);
+      const message: ValidateMessage = { type: 'validate', requestId };
+      frameWindow.postMessage(message, new URL(pluginUrl, window.location.href).origin);
+    });
+  }
 
   // Liveness is the handshake: `onerror` never fires for a failed navigation.
   $effect(() => {

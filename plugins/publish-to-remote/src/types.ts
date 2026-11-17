@@ -1,3 +1,4 @@
+import type { ValidationReport } from './epub-validation.js';
 // Message types for main app <-> plugin communication
 
 export type InitMessage = {
@@ -65,12 +66,23 @@ export type OpenMessage = {
   target: 'published' | 'destinations';
 };
 
-export type MainToPlugin = InitMessage | ContextMessage;
+// main → plugin (Send surface): run epubcheck on the open book's latest
+// package, as the Validate button does, and answer with the report. Mirrors
+// `ValidateMessage` in the host's src/lib/plugins/contract.ts.
+export type ValidateMessage = { type: 'validate'; requestId: string };
+
+// plugin → main: the answer to `validate`.
+export type ValidatedMessage =
+  | { type: 'validated'; requestId: string; report: ValidationReport }
+  | { type: 'validated'; requestId: string; error: string };
+
+export type MainToPlugin = InitMessage | ContextMessage | ValidateMessage;
 export type PluginToMain =
   | NavigateMessage
   | ReadEpubMessage
   | ImportEpubMessage
-  | OpenMessage;
+  | OpenMessage
+  | ValidatedMessage;
 
 // Remote Configuration and Objects
 

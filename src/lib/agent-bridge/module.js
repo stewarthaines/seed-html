@@ -21,8 +21,22 @@
 import { play, setEnabled } from './cuelume.js';
 
 const FEED_LIMIT = 100;
+/**
+ * How long the overlay keeps showing "working" after the last tool call
+ * finishes. The bridge sees only tool calls — MCP does not say when the
+ * agent's turn starts or ends — so activity is a call in flight or one just
+ * finished, and the grace keeps the ring steady through a burst of calls
+ * instead of flickering between them.
+ */
+const ACTIVE_GRACE_MS = 15_000;
 /** Decoded byte cap for binary overwrites riding base64 through JSON-RPC. */
 const WRITE_SIZE_LIMIT = 2 * 1024 * 1024;
+/**
+ * Decoded byte cap for media the bridge reads from an allowed folder: large
+ * enough for a scan or a song, small enough that a mistaken path cannot pull a
+ * film into the book.
+ */
+const MEDIA_SIZE_LIMIT = 25 * 1024 * 1024;
 /**
  * An unanswered consent prompt times out before the bridge's tool-call timeout
  * fires. A timeout is not a refusal: it usually means the author is away, so it
@@ -197,6 +211,7 @@ export function start(ctx) {
     // by whether a connection ever opened — never overwritten by close.
     // A prompt the agent is no longer waiting on must not stay actionable.
     ui.cancelPrompts('disconnected');
+    clearActivity();
     if (!stopped) {
       setStatus(
         'disconnected',
@@ -215,6 +230,7 @@ export function start(ctx) {
       return;
     }
     if (!request || typeof request.id !== 'number' || typeof request.tool !== 'string') return;
+    beginActivity(request.tool, request.params);
     try {
       const result = await handleTool(ctx, session, ui, request.tool, request.params ?? {});
       ui.addAction(describeAction(request.tool, request.params, result));
@@ -228,13 +244,36 @@ export function start(ctx) {
       // stale hash, an open editor, a verification mismatch.
       if (request.tool === 'write_file' && !error?.denied && !error?.unanswered) play('error');
       send(JSON.stringify({ id: request.id, ok: false, error: String(error?.message ?? error) }));
+    } finally {
+      endActivity();
     }
   };
+
+  // Activity: calls in flight, then ACTIVE_GRACE_MS of "working" after the last.
+  let inFlight = 0;
+  let idleTimer = null;
+  function beginActivity(tool, params) {
+    inFlight += 1;
+    clearTimeout(idleTimer);
+    ui.setWorking(true, describeActivity(tool, params));
+  }
+  function endActivity() {
+    inFlight = Math.max(0, inFlight - 1);
+    if (inFlight > 0) return;
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => ui.setWorking(false), ACTIVE_GRACE_MS);
+  }
+  function clearActivity() {
+    inFlight = 0;
+    clearTimeout(idleTimer);
+    ui.setWorking(false);
+  }
 
   function stop() {
     // Deliberate teardown (toggle off): close and remove the overlay.
     stopped = true;
     ui.cancelPrompts('disconnected');
+    clearActivity();
     try {
       socket?.close();
     } catch {
@@ -380,6 +419,40 @@ async function handleTool(ctx, session, ui, tool, params) {
     }
     case 'write_file':
       return writeFile(ctx, session, ui, params);
+    case 'create_chapter':
+      return createChapter(ctx, session, ui, params);
+    // Render, package and validate (process/BRIDGE_HANDOVER_TOOLS.md, section
+    // 3): no prompt — they regenerate outputs the app owns, or read — but each
+    // lands in the feed, since the author sees the preview or the view move.
+    case 'show_chapter':
+      if (typeof params.id !== 'string' || !params.id) throw new Error('id required');
+      return ctx.showChapter(params.id);
+    case 'render': {
+      const ids = params.ids;
+      if (ids !== undefined && (!Array.isArray(ids) || !ids.every(id => typeof id === 'string'))) {
+        throw new Error('ids must be a list of chapter ids');
+      }
+      const chapters = await ctx.renderChapters(ids?.length ? ids : undefined);
+      return { chapters };
+    }
+    case 'package':
+      return ctx.packageBook();
+    case 'validate': {
+      const report = await ctx.validatePackage();
+      // The report's own fields, without the plugin's display-only extras.
+      return {
+        filename: report.filename,
+        timestamp: report.timestamp,
+        isValid: report.isValid,
+        errorCount: report.errorCount,
+        warningCount: report.warningCount,
+        messages: report.messages,
+      };
+    }
+    case 'allow_media_folder':
+      return allowMediaFolder(ui, params);
+    case 'add_media':
+      return addMedia(ctx, session, ui, params);
     default:
       throw new Error('unknown tool: ' + tool);
   }
@@ -452,8 +525,8 @@ async function reviewCodeWrite(ctx, ui, request) {
  */
 const BASE_PREFIX = 'SOURCE/main/';
 
-function denied() {
-  const error = new Error('the author denied this write');
+function denied(message = 'the author denied this write') {
+  const error = new Error(message);
   error.denied = true;
   return error;
 }
@@ -465,11 +538,11 @@ function denied() {
  * and the same write is welcome once they are back. Flagged so the error cue
  * stays silent: the reminder cue has already sounded.
  */
-function unanswered(reason) {
+function unanswered(reason, what = 'write') {
   const error = new Error(
     reason === 'timeout'
-      ? `no answer to the write prompt within ${CONSENT_TIMEOUT_MS / 1000} seconds — the author is probably away, not refusing. Nothing was written; send the same write again once they reply`
-      : 'the bridge connection closed before the author answered — nothing was written'
+      ? `no answer to the ${what} prompt within ${CONSENT_TIMEOUT_MS / 1000} seconds — the author is probably away, not refusing. Nothing was changed; send the same ${what} again once they reply`
+      : 'the bridge connection closed before the author answered — nothing was changed'
   );
   error.unanswered = true;
   return error;
@@ -610,6 +683,176 @@ async function writeFile(ctx, session, ui, params) {
   };
 }
 
+// --- create_chapter (process/BRIDGE_HANDOVER_TOOLS.md, section 1) ---------------
+
+/**
+ * Add a chapter to the spine with its source, through the app's own spine
+ * service (manifest, spine and OPF stay consistent and the sidebar updates).
+ *
+ * Prose tier: a session grant covers it, otherwise one prompt. Refused while
+ * track changes is on, because review mode locks the spine; the agent is told
+ * so it can ask the author. A taken or unusable id is an error rather than a
+ * renamed chapter, so the agent's links to the id stay right.
+ */
+async function createChapter(ctx, session, ui, params) {
+  const { id, title, after, linear, text } = params;
+  if (typeof id !== 'string' || !id) throw new Error('id required');
+  if (title !== undefined && typeof title !== 'string') throw new Error('title must be a string');
+  if (after !== undefined && typeof after !== 'string')
+    throw new Error('after must be a chapter id');
+  if (linear !== undefined && typeof linear !== 'boolean')
+    throw new Error('linear must be true or false');
+  if (text !== undefined && typeof text !== 'string') throw new Error('text must be a string');
+  const size = typeof text === 'string' ? new TextEncoder().encode(text).length : 0;
+  if (size > WRITE_SIZE_LIMIT) {
+    throw new Error(`text of ${size} bytes exceeds the ${WRITE_SIZE_LIMIT} byte limit`);
+  }
+  const requestWorkspaceId = ctx.getProjectInfo().workspaceId;
+  if (!requestWorkspaceId) throw new Error('no project open');
+
+  // Same order as writeFile: validate, ask, validate again (the prompt can sit
+  // open while the author edits the spine, turns on track changes or switches
+  // projects), then act.
+  const request = { id, title, after, linear: linear ?? true, text: text ?? '' };
+  const validate = async () => {
+    if (ctx.getProjectInfo().workspaceId !== requestWorkspaceId) {
+      throw new Error('the open project changed while the request was pending');
+    }
+    if (ctx.getProjectInfo().reviewMode === true) {
+      throw new Error(
+        'track changes is on, and it locks the chapter list — ask the author to turn it off to add chapters'
+      );
+    }
+    return ctx.checkNewChapter(request);
+  };
+  const plan = await validate();
+  if (session.grant === 'session' && session.workspaceId !== requestWorkspaceId) {
+    setGrant(session, ui, null);
+  }
+  if (session.grant !== 'session') {
+    const where = plan.after ? `after ${plan.after}` : 'at the start';
+    const choice = await ui.promptConsent(
+      `agent wants to add chapter ${plan.id} ${where}${plan.linear ? '' : ' (outside the reading order)'} (${size} bytes)`,
+      `add chapter ${plan.id}`
+    );
+    if (choice === 'deny') throw denied('the author refused this chapter');
+    if (choice === 'timeout' || choice === 'disconnected') throw unanswered(choice, 'request');
+    if (choice === 'session') setGrant(session, ui, requestWorkspaceId);
+    await validate();
+  }
+  const created = await ctx.createChapter(request, requestWorkspaceId);
+  return { created: true, ...created };
+}
+
+// --- media from disk (process/BRIDGE_HANDOVER_TOOLS.md, section 2) ---------------
+
+const ALLOW_DENY = [
+  ['Allow', 'once'],
+  ['Deny', 'deny'],
+];
+
+/**
+ * The author lets the bridge read media from a folder on their disk. The
+ * bridge process does the reading and keeps the list; this is the author's
+ * answer. Always asked, whatever the write grant says: it is access to their
+ * files, not a change to the book.
+ */
+async function allowMediaFolder(ui, params) {
+  const { path, name } = params;
+  if (typeof path !== 'string' || !path) throw new Error('path required');
+  const choice = await ui.promptConsent(
+    `agent wants to add media from the folder ${typeof name === 'string' && name ? name : path} (${path})`,
+    `media from ${path}`,
+    ALLOW_DENY
+  );
+  if (choice === 'deny') throw denied('the author did not allow this folder');
+  if (choice === 'timeout' || choice === 'disconnected') throw unanswered(choice, 'request');
+  return { allowed: true, path };
+}
+
+/**
+ * Add a file the bridge read from an allowed folder to the book's manifest.
+ * A new file is prose-tier (a session grant covers it). Identical bytes under
+ * the same name change nothing and need no answer. Different bytes under the
+ * same name are refused unless the agent asks to overwrite, and an overwrite
+ * is asked every time: it replaces something the book already shows.
+ */
+async function addMedia(ctx, session, ui, params) {
+  const { filename, base64, folder, overwrite, source } = params;
+  if (typeof filename !== 'string' || !filename) throw new Error('filename required');
+  if (typeof base64 !== 'string') throw new Error('file content missing');
+  if (folder !== undefined && typeof folder !== 'string') throw new Error('folder must be a name');
+  const bytes = base64ToBytes(base64);
+  if (bytes.length > MEDIA_SIZE_LIMIT) {
+    throw new Error(`the file is ${bytes.length} bytes, over the ${MEDIA_SIZE_LIMIT} byte limit`);
+  }
+  const requestWorkspaceId = ctx.getProjectInfo().workspaceId;
+  if (!requestWorkspaceId) throw new Error('no project open');
+  const request = { filename, bytes, folder };
+  const validate = async () => {
+    if (ctx.getProjectInfo().workspaceId !== requestWorkspaceId) {
+      throw new Error('the open project changed while the request was pending');
+    }
+    if (ctx.getProjectInfo().reviewMode === true) {
+      throw new Error(
+        'track changes is on, and it locks the book’s file list — ask the author to turn it off to add media'
+      );
+    }
+    return ctx.checkMedia(request);
+  };
+  const plan = await validate();
+  if (plan.status === 'identical') {
+    return {
+      href: plan.href,
+      mediaType: plan.mediaType,
+      status: 'unchanged',
+      fromChapter: plan.fromChapter,
+    };
+  }
+  if (plan.status === 'changed' && overwrite !== true) {
+    throw new Error(
+      `${plan.href} already exists with different content — pass overwrite: true to replace it (the author is asked every time), or use another file name`
+    );
+  }
+  if (session.grant === 'session' && session.workspaceId !== requestWorkspaceId) {
+    setGrant(session, ui, null);
+  }
+  const from = typeof source === 'string' ? ` from ${source}` : '';
+  if (plan.status === 'changed') {
+    const choice = await ui.promptConsent(
+      `agent wants to REPLACE ${plan.href}${from} (${bytes.length} bytes)`,
+      `replace ${plan.href}`,
+      [
+        ['Replace', 'once'],
+        ['Deny', 'deny'],
+      ]
+    );
+    if (choice === 'deny') throw denied('the author refused to replace this file');
+    if (choice === 'timeout' || choice === 'disconnected') throw unanswered(choice, 'request');
+  } else if (session.grant !== 'session') {
+    const choice = await ui.promptConsent(
+      `agent wants to add ${plan.href}${from} (${bytes.length} bytes)`,
+      `add ${plan.href}`
+    );
+    if (choice === 'deny') throw denied('the author refused this file');
+    if (choice === 'timeout' || choice === 'disconnected') throw unanswered(choice, 'request');
+    if (choice === 'session') setGrant(session, ui, requestWorkspaceId);
+  }
+  // The book may have changed while the prompt was open: the answer was to the
+  // add that was shown, so anything else is refused.
+  const recheck = await validate();
+  if (recheck.href !== plan.href || recheck.status !== plan.status) {
+    throw new Error('the book changed while the request was pending — nothing was added');
+  }
+  const added = await ctx.addMedia(request, requestWorkspaceId);
+  return {
+    href: added.href,
+    mediaType: plan.mediaType,
+    status: plan.status === 'changed' ? 'replaced' : 'added',
+    fromChapter: added.fromChapter,
+  };
+}
+
 function base64ToBytes(base64) {
   const raw = atob(base64);
   const bytes = new Uint8Array(raw.length);
@@ -637,6 +880,56 @@ async function resolveFile(root, path) {
   return dir.getFileHandle(parts[parts.length - 1]);
 }
 
+/**
+ * What the agent is doing, in the present tense, shown while a call runs —
+ * so a long render or a validation reads as work in progress, not a stall,
+ * and a move the agent makes is named as it happens.
+ */
+function describeActivity(tool, params) {
+  const path = typeof params?.path === 'string' ? params.path : null;
+  switch (tool) {
+    case 'read_file':
+      return path ? `reading ${path}…` : 'reading a file…';
+    case 'write_file':
+      return path ? `writing ${path}…` : 'writing a file…';
+    case 'list_files':
+      return 'listing project files…';
+    case 'project_info':
+    case 'project_setup':
+      return 'reading the project setup…';
+    case 'get_rendered_xhtml':
+      return 'reading the rendered chapter…';
+    case 'get_selection':
+      return 'reading your last click…';
+    case 'get_checks':
+      return 'running checks…';
+    case 'inspect_elements':
+      return 'measuring the preview…';
+    case 'create_chapter':
+      return typeof params?.id === 'string' ? `adding chapter ${params.id}…` : 'adding a chapter…';
+    case 'allow_media_folder':
+      return 'asking about a media folder…';
+    case 'add_media':
+      return typeof params?.filename === 'string' ? `adding ${params.filename}…` : 'adding media…';
+    case 'show_chapter':
+      return typeof params?.id === 'string'
+        ? `moving to chapter ${params.id}…`
+        : 'moving to a chapter…';
+    case 'render': {
+      const count = Array.isArray(params?.ids) && params.ids.length ? params.ids.length : null;
+      return count
+        ? `rendering ${count} chapter${count === 1 ? '' : 's'}…`
+        : 'rendering every chapter…';
+    }
+    case 'package':
+      return 'packaging the book…';
+    case 'validate':
+      return 'validating on Share…';
+    default:
+      return `${tool}…`;
+  }
+}
+
 function describeAction(tool, params, result) {
   if (tool === 'read_file' && params && typeof params.path === 'string')
     return `read ${params.path}`;
@@ -657,10 +950,56 @@ function describeAction(tool, params, result) {
     return `measured ${selectors || 'elements'} in the preview`;
   }
   if (tool === 'project_info') return 'read project info';
+  if (tool === 'show_chapter') {
+    return result ? `showed chapter ${result.chapterId}` : `show chapter ${params?.id ?? ''}`;
+  }
+  if (tool === 'render') {
+    if (!result) return 'render chapters';
+    const failed = result.chapters.filter(c => c.status === 'failed').length;
+    const rendered = result.chapters.filter(c => c.status === 'rendered').length;
+    return (
+      `rendered ${rendered} chapter${rendered === 1 ? '' : 's'}` +
+      (failed ? `, ${failed} failed` : '')
+    );
+  }
+  if (tool === 'package') return result ? `packaged ${result.filename}` : 'package the book';
+  if (tool === 'validate') {
+    return result
+      ? `validated ${result.filename}: ${result.errorCount} errors, ${result.warningCount} warnings`
+      : 'validate the latest package';
+  }
+  if (tool === 'allow_media_folder') {
+    return result
+      ? `allowed media from ${result.path}`
+      : `allow media from ${params?.path ?? 'a folder'}`;
+  }
+  if (tool === 'add_media') {
+    if (!result) return `add ${params?.filename ?? 'media'}`;
+    return `${result.status} ${result.href}`;
+  }
+  if (tool === 'create_chapter' && typeof params?.id === 'string') {
+    if (!result) return `add chapter ${params.id}`;
+    return (
+      `created chapter ${result.id}` + (result.after ? ` after ${result.after}` : ' at the start')
+    );
+  }
   return tool;
 }
 
 // --- overlay (module-owned; sr-caption family: dark in both themes) -------------
+
+const IDLE_SHADOW = '0 4px 16px rgba(0, 0, 0, 0.3)';
+/**
+ * The activity ring around the overlay, collapsed or expanded: two bands, a
+ * light one inside a dark one, drawn as box-shadows so they take no layout
+ * space. Two tones rather than one so the state reads without colour — idle
+ * has no ring at all — and the waiting ring differs from the working one in
+ * colour and is the only state with a prompt open in the panel. No animation.
+ */
+const RINGS = {
+  working: ['#90caf9', '#1565c0'],
+  waiting: ['#ffe082', '#b26a00'],
+};
 
 function buildOverlay(mountEl, onDisconnect, onGrantToggle) {
   mountEl.textContent = '';
@@ -678,9 +1017,10 @@ function buildOverlay(mountEl, onDisconnect, onGrantToggle) {
     background: 'rgba(20, 20, 22, 0.9)',
     border: '1px solid rgba(255, 255, 255, 0.25)',
     borderRadius: '8px',
-    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
+    boxShadow: IDLE_SHADOW,
     maxInlineSize: 'min(90vw, 480px)',
   });
+  root.dataset.activity = 'idle';
 
   const pill = document.createElement('button');
   pill.type = 'button';
@@ -824,9 +1164,35 @@ function buildOverlay(mountEl, onDisconnect, onGrantToggle) {
   mountEl.appendChild(root);
 
   let lastAction = '';
+  let working = false;
   // Live consent prompts, cancellable when the connection or module goes away.
   const pendingPrompts = new Set();
+  const paintRing = () => {
+    const state = pendingPrompts.size > 0 ? 'waiting' : working ? 'working' : 'idle';
+    root.dataset.activity = state;
+    const ring = RINGS[state];
+    root.style.boxShadow = ring
+      ? `0 0 0 2px ${ring[0]}, 0 0 0 4px ${ring[1]}, ${IDLE_SHADOW}`
+      : IDLE_SHADOW;
+  };
+  const addPrompt = finish => {
+    pendingPrompts.add(finish);
+    paintRing();
+  };
+  const removePrompt = finish => {
+    pendingPrompts.delete(finish);
+    paintRing();
+  };
   return {
+    /**
+     * Show or end the working state. `text`, when given, is the present-tense
+     * activity shown in the pill until the call's own feed line replaces it.
+     */
+    setWorking(on, text) {
+      working = on;
+      if (on && text) label.textContent = `agent: ${text}`;
+      paintRing();
+    },
     /** Close every open prompt without an answer: 'disconnected' by default. */
     cancelPrompts(reason = 'disconnected') {
       for (const finish of [...pendingPrompts]) finish(reason);
@@ -837,8 +1203,8 @@ function buildOverlay(mountEl, onDisconnect, onGrantToggle) {
      * Returns its unregister.
      */
     trackPrompt(cancel) {
-      pendingPrompts.add(cancel);
-      return () => pendingPrompts.delete(cancel);
+      addPrompt(cancel);
+      return () => removePrompt(cancel);
     },
     /** Repaint the write-permission toggle (the grant itself lives in start()). */
     setGrant(allowed) {
@@ -871,21 +1237,39 @@ function buildOverlay(mountEl, onDisconnect, onGrantToggle) {
      * hears back cleanly), or 'disconnected' when cancelled.
      */
     promptWrite(path, size, stat) {
+      // Line counts, not just a byte total: "+2 −1" and "+400 −380" are the
+      // difference between a tweak and a rewrite, and the byte count alone
+      // cannot tell them apart.
+      const scale = stat ? ` +${stat.added} −${stat.removed} lines` : '';
+      return this.promptConsent(
+        `agent wants to write ${path} (${size} bytes${scale})`,
+        `write ${path}`
+      );
+    },
+    /**
+     * The same inline prompt for any prose-tier change: `question` is shown
+     * while it is open, `subject` after it closes ("allowed: <subject>").
+     */
+    promptConsent(
+      questionText,
+      subject,
+      choices = [
+        ['Allow once', 'once'],
+        ['Allow this session', 'session'],
+        ['Deny', 'deny'],
+      ]
+    ) {
       panel.hidden = false;
       pill.setAttribute('aria-expanded', 'true');
       return new Promise(resolve => {
         const li = document.createElement('li');
         Object.assign(li.style, { padding: '4px 12px', overflowWrap: 'anywhere' });
         const question = document.createElement('div');
-        // Line counts, not just a byte total: "+2 −1" and "+400 −380" are the
-        // difference between a tweak and a rewrite, and the byte count alone
-        // cannot tell them apart.
-        const scale = stat ? ` +${stat.added} −${stat.removed} lines` : '';
-        question.textContent = `agent wants to write ${path} (${size} bytes${scale})`;
+        question.textContent = questionText;
         const row = document.createElement('div');
         Object.assign(row.style, { display: 'flex', gap: '6px', marginBlockStart: '4px' });
         const finish = choice => {
-          pendingPrompts.delete(finish);
+          removePrompt(finish);
           clearTimeout(timer);
           clearTimeout(reminder);
           row.remove();
@@ -895,18 +1279,14 @@ function buildOverlay(mountEl, onDisconnect, onGrantToggle) {
               timeout: 'timed out, no answer',
               disconnected: 'cancelled, connection closed',
             }[choice] ?? 'allowed';
-          question.textContent = `${outcome}: write ${path}`;
+          question.textContent = `${outcome}: ${subject}`;
           resolve(choice);
         };
-        pendingPrompts.add(finish);
+        addPrompt(finish);
         const timer = setTimeout(() => finish('timeout'), CONSENT_TIMEOUT_MS);
         const reminder = setTimeout(() => play('whisper'), CONSENT_REMINDER_MS);
         play('chime');
-        for (const [labelText, choice] of [
-          ['Allow once', 'once'],
-          ['Allow this session', 'session'],
-          ['Deny', 'deny'],
-        ]) {
+        for (const [labelText, choice] of choices) {
           const button = document.createElement('button');
           button.type = 'button';
           button.textContent = labelText;

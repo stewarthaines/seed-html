@@ -157,6 +157,41 @@ function makeContext(overrides: Record<string, unknown> = {}) {
     isFileDirty: vi.fn(() => false),
     reviewWrite: vi.fn(async (_request: Record<string, unknown>) => 'accept' as const),
     diffStat: vi.fn(() => ({ added: 1, removed: 1 })),
+    showChapter: vi.fn(async (id: string) => ({ chapterId: id, rendered: true, warnings: [] })),
+    renderChapters: vi.fn(async (ids?: string[]) =>
+      (ids ?? ['chapter01', 'chapter02']).map(id => ({ id, status: 'rendered' }))
+    ),
+    packageBook: vi.fn(async () => ({ filename: 'bulletin.epub' })),
+    validatePackage: vi.fn(async () => ({
+      filename: 'bulletin.epub',
+      timestamp: 1,
+      isValid: false,
+      errorCount: 1,
+      warningCount: 0,
+      messages: [{ level: 'error', id: 'RSC-007', message: 'missing file' }],
+      surface: 'display-only',
+    })),
+    checkMedia: vi.fn(async (request: { filename: string }) => ({
+      href: `Images/${request.filename}`,
+      mediaType: 'image/jpeg',
+      status: 'new',
+      fromChapter: `../Images/${request.filename}`,
+    })),
+    addMedia: vi.fn(async (request: { filename: string }) => ({
+      href: `Images/${request.filename}`,
+      fromChapter: `../Images/${request.filename}`,
+    })),
+    checkNewChapter: vi.fn(async (request: { id: string; after?: string; linear: boolean }) => ({
+      id: request.id,
+      after: request.after ?? 'chapter02',
+      linear: request.linear,
+    })),
+    createChapter: vi.fn(async (request: { id: string; after?: string; linear: boolean }) => ({
+      id: request.id,
+      after: request.after ?? 'chapter02',
+      linear: request.linear,
+      sourcePath: `SOURCE/text/${request.id}.txt`,
+    })),
     ...overrides,
   };
   return {
@@ -1114,6 +1149,408 @@ describe('agent bridge module', () => {
       'ws-1'
     );
     expect(ctx.writeTextFile).not.toHaveBeenCalled();
+  });
+
+  describe('create_chapter', () => {
+    const buttons = (ctx: { mountEl: HTMLElement }, label: string) =>
+      [...ctx.mountEl.querySelectorAll('button')].filter(b => b.textContent === label);
+
+    it('asks, then adds the chapter through the app with the request as given', async () => {
+      const { ctx } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const reply = socket.receive({
+        id: 1,
+        tool: 'create_chapter',
+        params: { id: 'emma-arrival', title: 'Emma', after: 'chapter01', text: 'Emma came.' },
+      });
+      await waitFor(() => buttons(ctx, 'Allow once').length === 1);
+      expect(ctx.mountEl.textContent).toContain(
+        'agent wants to add chapter emma-arrival after chapter01'
+      );
+      expect(ctx.createChapter).not.toHaveBeenCalled();
+      buttons(ctx, 'Allow once')[0].click();
+      expect(await reply).toMatchObject({
+        id: 1,
+        ok: true,
+        result: {
+          created: true,
+          id: 'emma-arrival',
+          after: 'chapter01',
+          sourcePath: 'SOURCE/text/emma-arrival.txt',
+        },
+      });
+      expect(ctx.createChapter).toHaveBeenCalledWith(
+        { id: 'emma-arrival', title: 'Emma', after: 'chapter01', linear: true, text: 'Emma came.' },
+        'ws-1'
+      );
+      const items = [...ctx.mountEl.querySelectorAll('li')].map(li => li.textContent);
+      expect(items).toContain('created chapter emma-arrival after chapter01');
+    });
+
+    it('a session grant covers it, as it covers prose writes', async () => {
+      const { ctx } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      buttons(ctx, 'Writes: ask')[0].click();
+      const reply = await socket.receive({
+        id: 1,
+        tool: 'create_chapter',
+        params: { id: 'notes', linear: false },
+      });
+      expect(reply).toMatchObject({ ok: true, result: { id: 'notes', linear: false } });
+      expect(buttons(ctx, 'Allow once')).toHaveLength(0);
+    });
+
+    it('is refused without a prompt while track changes is on', async () => {
+      const { ctx, setReviewMode } = makeContext();
+      setReviewMode(true);
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const reply = await socket.receive({ id: 1, tool: 'create_chapter', params: { id: 'x' } });
+      expect(reply).toMatchObject({ ok: false });
+      expect((reply as { error: string }).error).toContain('track changes is on');
+      expect(ctx.checkNewChapter).not.toHaveBeenCalled();
+      expect(buttons(ctx, 'Allow once')).toHaveLength(0);
+    });
+
+    it("passes the app's refusal back without a prompt", async () => {
+      const { ctx } = makeContext({
+        checkNewChapter: vi.fn(async () => {
+          throw new Error('the id "chapter01" is already used in this book — choose another');
+        }),
+      });
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const reply = await socket.receive({
+        id: 1,
+        tool: 'create_chapter',
+        params: { id: 'chapter01' },
+      });
+      expect((reply as { error: string }).error).toContain('already used');
+      expect(buttons(ctx, 'Allow once')).toHaveLength(0);
+      expect(ctx.createChapter).not.toHaveBeenCalled();
+    });
+
+    it('rejects a missing id before asking the app', async () => {
+      const { ctx } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const reply = await socket.receive({ id: 1, tool: 'create_chapter', params: { text: 'x' } });
+      expect((reply as { error: string }).error).toBe('id required');
+      expect(ctx.checkNewChapter).not.toHaveBeenCalled();
+    });
+
+    it('a denial adds nothing', async () => {
+      const { ctx } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const reply = socket.receive({ id: 1, tool: 'create_chapter', params: { id: 'x' } });
+      await waitFor(() => buttons(ctx, 'Deny').length === 1);
+      buttons(ctx, 'Deny')[0].click();
+      expect((await reply) as { error: string }).toMatchObject({
+        ok: false,
+        error: 'the author refused this chapter',
+      });
+      expect(ctx.createChapter).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('activity ring', () => {
+    const ring = (ctx: { mountEl: HTMLElement }) =>
+      (ctx.mountEl.firstElementChild as HTMLElement).dataset.activity;
+    const pill = (ctx: { mountEl: HTMLElement }) =>
+      ctx.mountEl.querySelector('button')!.textContent;
+
+    it('shows working, with the action in the present tense, until 15 s after the last call', async () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'], shouldAdvanceTime: true });
+      try {
+        let release!: () => void;
+        const gate = new Promise<void>(resolve => (release = resolve));
+        const { ctx } = makeContext({
+          getChecks: async () => {
+            await gate;
+            return { chapterId: 'ch-1' };
+          },
+        });
+        start(ctx);
+        const socket = FakeWebSocket.last!;
+        socket.open();
+        expect(ring(ctx)).toBe('idle');
+        const reply = socket.receive({ id: 1, tool: 'get_checks', params: {} });
+        expect(ring(ctx)).toBe('working');
+        expect(pill(ctx)).toContain('agent: running checks…');
+        release();
+        await reply;
+        expect(pill(ctx)).toContain('agent: read validation checks');
+        expect(ring(ctx)).toBe('working');
+        vi.advanceTimersByTime(14_000);
+        expect(ring(ctx)).toBe('working');
+        vi.advanceTimersByTime(1_500);
+        expect(ring(ctx)).toBe('idle');
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('shows waiting while a prompt is open, and clears on disconnect', async () => {
+      const { ctx } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      socket.onmessage?.({
+        data: JSON.stringify({ id: 1, tool: 'create_chapter', params: { id: 'x' } }),
+      });
+      await waitFor(() => ring(ctx) === 'waiting');
+      expect(pill(ctx)).toContain('agent: adding chapter x…');
+      socket.close();
+      expect(ring(ctx)).toBe('idle');
+    });
+  });
+
+  describe('show, render, package, validate', () => {
+    async function connected(overrides: Record<string, unknown> = {}) {
+      const made = makeContext(overrides);
+      start(made.ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      return { ...made, socket };
+    }
+
+    it('shows a chapter without a prompt and logs it', async () => {
+      const { ctx, socket } = await connected();
+      const reply = await socket.receive({
+        id: 1,
+        tool: 'show_chapter',
+        params: { id: 'chapter02' },
+      });
+      expect(reply).toMatchObject({ ok: true, result: { chapterId: 'chapter02', rendered: true } });
+      expect(ctx.mountEl.textContent).toContain('showed chapter chapter02');
+      const missing = await socket.receive({ id: 2, tool: 'show_chapter', params: {} });
+      expect(missing).toMatchObject({ ok: false, error: 'id required' });
+    });
+
+    it('renders all chapters, or the ids given, and counts failures in the feed', async () => {
+      const { ctx, socket } = await connected({
+        renderChapters: vi.fn(async () => [
+          { id: 'a', status: 'rendered' },
+          { id: 'b', status: 'failed', error: 'text: boom' },
+        ]),
+      });
+      const all = await socket.receive({ id: 1, tool: 'render', params: {} });
+      expect(ctx.renderChapters).toHaveBeenCalledWith(undefined);
+      expect(all).toMatchObject({
+        ok: true,
+        result: { chapters: [{ id: 'a' }, { id: 'b', error: 'text: boom' }] },
+      });
+      expect(ctx.mountEl.textContent).toContain('rendered 1 chapter, 1 failed');
+      await socket.receive({ id: 2, tool: 'render', params: { ids: ['b'] } });
+      expect(ctx.renderChapters).toHaveBeenLastCalledWith(['b']);
+      const bad = await socket.receive({ id: 3, tool: 'render', params: { ids: 'b' } });
+      expect(bad).toMatchObject({ ok: false, error: 'ids must be a list of chapter ids' });
+    });
+
+    it('packages and returns the filename', async () => {
+      const { socket } = await connected();
+      const reply = await socket.receive({ id: 1, tool: 'package', params: {} });
+      expect(reply).toMatchObject({ ok: true, result: { filename: 'bulletin.epub' } });
+    });
+
+    it("validates and returns the report's own fields", async () => {
+      const { ctx, socket } = await connected();
+      const reply = (await socket.receive({ id: 1, tool: 'validate', params: {} })) as {
+        result: Record<string, unknown>;
+      };
+      expect(reply.result).toEqual({
+        filename: 'bulletin.epub',
+        timestamp: 1,
+        isValid: false,
+        errorCount: 1,
+        warningCount: 0,
+        messages: [{ level: 'error', id: 'RSC-007', message: 'missing file' }],
+      });
+      expect(ctx.mountEl.textContent).toContain('validated bulletin.epub: 1 errors, 0 warnings');
+    });
+
+    it('passes the plugin-off refusal through', async () => {
+      const { socket } = await connected({
+        validatePackage: vi.fn(async () => {
+          throw new Error('validation needs the publishing plugin, which is off');
+        }),
+      });
+      const reply = await socket.receive({ id: 1, tool: 'validate', params: {} });
+      expect(reply).toMatchObject({
+        ok: false,
+        error: 'validation needs the publishing plugin, which is off',
+      });
+    });
+  });
+
+  describe('media from disk', () => {
+    const buttons = (ctx: { mountEl: HTMLElement }, label: string) =>
+      [...ctx.mountEl.querySelectorAll('button')].filter(b => b.textContent === label);
+    const jpeg = btoa(String.fromCharCode(0xff, 0xd8, 0xff));
+
+    it('a folder is allowed only by the author, and the write grant does not cover it', async () => {
+      const { ctx } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      buttons(ctx, 'Writes: ask')[0].click();
+      const reply = socket.receive({
+        id: 1,
+        tool: 'allow_media_folder',
+        params: { path: '/Users/a/portraits', name: 'portraits' },
+      });
+      await waitFor(() => buttons(ctx, 'Allow').length === 1);
+      expect(ctx.mountEl.textContent).toContain(
+        'add media from the folder portraits (/Users/a/portraits)'
+      );
+      expect(buttons(ctx, 'Allow this session')).toHaveLength(0);
+      buttons(ctx, 'Allow')[0].click();
+      expect(await reply).toMatchObject({
+        ok: true,
+        result: { allowed: true, path: '/Users/a/portraits' },
+      });
+    });
+
+    it('a refused folder is an error the agent sees', async () => {
+      const { ctx } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const reply = socket.receive({ id: 1, tool: 'allow_media_folder', params: { path: '/x' } });
+      await waitFor(() => buttons(ctx, 'Deny').length === 1);
+      buttons(ctx, 'Deny')[0].click();
+      expect(await reply).toMatchObject({
+        ok: false,
+        error: 'the author did not allow this folder',
+      });
+    });
+
+    it('asks before adding a new file, then reports where it landed', async () => {
+      const { ctx } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const reply = socket.receive({
+        id: 1,
+        tool: 'add_media',
+        params: { filename: 'emma.jpg', base64: jpeg, source: '/Users/a/portraits/emma.jpg' },
+      });
+      await waitFor(() => buttons(ctx, 'Allow once').length === 1);
+      expect(ctx.mountEl.textContent).toContain(
+        'agent wants to add Images/emma.jpg from /Users/a/portraits/emma.jpg (3 bytes)'
+      );
+      buttons(ctx, 'Allow once')[0].click();
+      expect(await reply).toMatchObject({
+        ok: true,
+        result: { href: 'Images/emma.jpg', status: 'added', fromChapter: '../Images/emma.jpg' },
+      });
+      const [request, workspaceId] = (ctx.addMedia as ReturnType<typeof vi.fn>).mock.calls[0];
+      expect(workspaceId).toBe('ws-1');
+      expect([...(request as { bytes: Uint8Array }).bytes]).toEqual([0xff, 0xd8, 0xff]);
+    });
+
+    it('identical bytes are reported unchanged with no prompt and no add', async () => {
+      const { ctx } = makeContext({
+        checkMedia: vi.fn(async () => ({
+          href: 'Images/emma.jpg',
+          mediaType: 'image/jpeg',
+          status: 'identical',
+          fromChapter: '../Images/emma.jpg',
+        })),
+      });
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const reply = await socket.receive({
+        id: 1,
+        tool: 'add_media',
+        params: { filename: 'emma.jpg', base64: jpeg },
+      });
+      expect(reply).toMatchObject({
+        ok: true,
+        result: { status: 'unchanged', href: 'Images/emma.jpg' },
+      });
+      expect(ctx.addMedia).not.toHaveBeenCalled();
+    });
+
+    it('different bytes need overwrite, and an overwrite is asked even under a session grant', async () => {
+      const changed = vi.fn(async () => ({
+        href: 'Images/emma.jpg',
+        mediaType: 'image/jpeg',
+        status: 'changed',
+        fromChapter: '../Images/emma.jpg',
+      }));
+      const { ctx } = makeContext({ checkMedia: changed });
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      buttons(ctx, 'Writes: ask')[0].click();
+      const refused = await socket.receive({
+        id: 1,
+        tool: 'add_media',
+        params: { filename: 'emma.jpg', base64: jpeg },
+      });
+      expect((refused as { error: string }).error).toContain('pass overwrite: true');
+      const reply = socket.receive({
+        id: 2,
+        tool: 'add_media',
+        params: { filename: 'emma.jpg', base64: jpeg, overwrite: true },
+      });
+      await waitFor(() => buttons(ctx, 'Replace').length === 1);
+      buttons(ctx, 'Replace')[0].click();
+      expect(await reply).toMatchObject({ ok: true, result: { status: 'replaced' } });
+    });
+
+    it('is refused without a prompt while track changes is on', async () => {
+      const { ctx, setReviewMode } = makeContext();
+      setReviewMode(true);
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const reply = await socket.receive({
+        id: 1,
+        tool: 'add_media',
+        params: { filename: 'a.jpg', base64: jpeg },
+      });
+      expect((reply as { error: string }).error).toContain('track changes is on');
+      expect(ctx.checkMedia).not.toHaveBeenCalled();
+    });
+
+    it('refuses when the book changed while the prompt was open', async () => {
+      let calls = 0;
+      const { ctx } = makeContext({
+        checkMedia: vi.fn(async () => ({
+          href: calls++ === 0 ? 'Images/emma.jpg' : 'Images/emma-1.jpg',
+          mediaType: 'image/jpeg',
+          status: 'new',
+          fromChapter: '',
+        })),
+      });
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const reply = socket.receive({
+        id: 1,
+        tool: 'add_media',
+        params: { filename: 'emma.jpg', base64: jpeg },
+      });
+      await waitFor(() => buttons(ctx, 'Allow once').length === 1);
+      buttons(ctx, 'Allow once')[0].click();
+      expect((await reply) as { error: string }).toMatchObject({
+        ok: false,
+        error: 'the book changed while the request was pending — nothing was added',
+      });
+      expect(ctx.addMedia).not.toHaveBeenCalled();
+    });
   });
 
   it('parks at disconnected on an unexpected close — no reconnect attempt', () => {

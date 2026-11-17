@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-16\n"
-"PO-Revision-Date: 2026-11-16\n"
+"POT-Creation-Date: 2026-11-17\n"
+"PO-Revision-Date: 2026-11-17\n"
 "Language: \n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -25,7 +25,7 @@ msgid "· validated {ago}"
 msgstr ""
 
 #: src/App.svelte
-msgid "“{title}” is already a project in this browser. OK opens it; Cancel imports a fresh copy."
+msgid "“{title}” is already a project in this browser."
 msgstr ""
 
 #: src/lib/components/shell/BrandBar.svelte
@@ -781,6 +781,7 @@ msgstr ""
 #: plugins/publish-to-remote/src/components/ImportDialog.svelte
 #: src/lib/components/EditSpineItemDialog.svelte
 #: src/lib/components/books/DeleteBookDialog.svelte
+#: src/lib/components/confirm/ConfirmDialog.svelte
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
 #: src/lib/components/manifest/MoveReviewDialog.svelte
@@ -1482,7 +1483,10 @@ msgid "definition"
 msgstr ""
 
 #: plugins/audio-clip-editor/src/App.svelte
+#: src/App.svelte
+#: src/lib/components/SpineSidebar.svelte
 #: src/lib/components/books/DeleteBookDialog.svelte
+#: src/lib/components/manifest/ManifestContainer.svelte
 #: src/lib/components/manifest/ManifestPreview.svelte
 #: src/lib/components/settings/TrackChangesPanel.svelte
 #: src/lib/components/settings/TranslationsPanel.svelte
@@ -2696,6 +2700,10 @@ msgstr ""
 msgid "Import {title}?"
 msgstr ""
 
+#: src/App.svelte
+msgid "Import a fresh copy"
+msgstr ""
+
 #: src/lib/components/workspace/WorkspaceActionBar.svelte
 msgid "Import an EPUB from a catalog URL"
 msgstr ""
@@ -3806,6 +3814,10 @@ msgstr ""
 msgid "Open an EPUB…"
 msgstr ""
 
+#: src/App.svelte
+msgid "Open it"
+msgstr ""
+
 #: src/lib/components/workspace/WorkspaceItem.svelte
 msgid "Open project: {title}"
 msgstr ""
@@ -3872,6 +3884,7 @@ msgstr ""
 
 #: src/lib/components/folder-sync/FolderSyncReviewDialog.svelte
 #: src/lib/components/import/ImportReviewDialog.svelte
+#: src/lib/components/spine/EditorPane.svelte
 msgid "Overwrite"
 msgstr ""
 
@@ -3974,14 +3987,6 @@ msgstr ""
 
 #: src/lib/components/spine/PreviewSurface.svelte
 msgid "Paginating…"
-msgstr ""
-
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Pane 1 content"
-msgstr ""
-
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Pane 2 content"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts

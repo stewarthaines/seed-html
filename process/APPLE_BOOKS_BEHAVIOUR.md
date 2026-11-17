@@ -48,6 +48,8 @@ Devices so far: an iPad mini (768×1024 points, `navigator.epubReadingSystem` re
 
 **Samples for fixed layout need landmarks or a custom sample.** Books cuts a fixed-layout book's store sample from the landmarks nav (bodymatter); SEED.html emits no landmarks nav, so such a book needs a custom sample uploaded with it. From the Books Asset Guide; a landmarks proposal is parked (2026-09-27).
 
+**Non-linear documents open in a pop-up at the default text size.** A link into a `linear="no"` spine item opens it in a pop-up window over the book, and the reader's Aa text size does not apply there: changing it while the pop-up is open leaves the text unchanged, so the page reads smaller than the chapters when the book is enlarged. Nothing in the book's CSS causes it. iPad, 2026-11-17 ("Coming Out" research chapters); the user accepted it as-is.
+
 ## Testing in Books
 
 **Re-imports can be stale.** Re-importing a book with the same title can open the cached copy, especially on the Mac: delete the book and quit Books before importing again. The iPad and iPhone made fresh thumbnails on every re-import on 2026-10-26; on macOS with iCloud sync the clearable render caches are under `~/Library/Containers/com.apple.iBooksX/Data/Library/Caches/`. 2026-07-15 and 2026-08-08.

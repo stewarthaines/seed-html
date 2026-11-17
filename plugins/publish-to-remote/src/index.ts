@@ -14,6 +14,7 @@ import {
   activeIdentifier,
   knownIdentifiers,
   surface,
+  validateRequests,
 } from './store.js';
 import { setPluginMessages } from './i18n.js';
 import type { ContextMessage, InitMessage, MainToPlugin } from './types.js';
@@ -30,6 +31,12 @@ function handleMessage(event: MessageEvent) {
     handleInit(message);
   } else if (message.type === 'context') {
     handleContext(message);
+  } else if (
+    message.type === 'validate' &&
+    typeof message.requestId === 'string'
+  ) {
+    const { requestId } = message;
+    validateRequests.update((queue) => [...queue, requestId]);
   }
 }
 
@@ -79,12 +86,18 @@ async function handleInit(message: InitMessage) {
       dirHandle.set(dir);
       return;
     } catch (error) {
-      console.error('Failed to resolve OPFS dir from path:', opfsDirPath, error);
+      console.error(
+        'Failed to resolve OPFS dir from path:',
+        opfsDirPath,
+        error,
+      );
       return;
     }
   }
 
-  console.error('Invalid init message: no opfsDirHandle and no usable opfsDirPath');
+  console.error(
+    'Invalid init message: no opfsDirHandle and no usable opfsDirPath',
+  );
 }
 
 function initPlugin() {

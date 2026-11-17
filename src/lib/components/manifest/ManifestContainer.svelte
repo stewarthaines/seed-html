@@ -1,6 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { t } from '../../i18n';
+  import { confirmDialog } from '$lib/components/confirm/confirm.svelte';
   import { manifestSignature } from '../../manifest/signatures.js';
   import ManifestTable from './ManifestTable.svelte';
   import ImportReviewDialog from '../import/ImportReviewDialog.svelte';
@@ -196,7 +197,11 @@
   const handleItemDelete = async (detail: { itemId: string }) => {
     if (!workspace || readOnly) return;
 
-    const confirmed = confirm($t('Are you sure you want to delete this item?'));
+    const confirmed = await confirmDialog({
+      message: $t('Are you sure you want to delete this item?'),
+      confirmLabel: $t('Delete'),
+      danger: true,
+    });
     if (!confirmed) return;
 
     try {

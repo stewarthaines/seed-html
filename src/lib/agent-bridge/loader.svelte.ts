@@ -89,6 +89,91 @@ export interface AgentBridgeModuleContext {
    * jsdiff lives there and the overlay is dependency-free imperative DOM.
    */
   diffStat: (current: string | null, incoming: string | null) => { added: number; removed: number };
+  /**
+   * Check a new-chapter request against the open book without changing it, so
+   * the consent prompt can name the real position. Rejects with the refusal
+   * (id taken or not usable as given, a stray source file already at its path,
+   * unknown `after`, read-only project).
+   * `after` in the result is the chapter the new one will follow, null when it
+   * will be first.
+   */
+  checkNewChapter: (request: NewChapterRequest) => Promise<{
+    id: string;
+    after: string | null;
+    linear: boolean;
+  }>;
+  /**
+   * Add the chapter through the spine service and hand the updated workspace
+   * to app state. Re-checks first; refused if the open project changed.
+   */
+  createChapter: (
+    request: NewChapterRequest,
+    workspaceId: string
+  ) => Promise<{ id: string; after: string | null; sourcePath: string; linear: boolean }>;
+  /**
+   * Where a media file from disk would land and whether that is new, a no-op
+   * (identical bytes) or a replacement, without changing the book. Rejects
+   * with the refusal (not a picture, sound, video or font; empty; bad folder;
+   * read-only project).
+   */
+  checkMedia: (request: AgentMediaFileRequest) => Promise<AgentMediaFilePlan>;
+  /**
+   * Move the Write view's preview to chapter `id` and resolve once its render
+   * has settled: whether it rendered, the transform error if not, and its
+   * warnings. The author sees their preview move.
+   */
+  showChapter: (id: string) => Promise<{
+    chapterId: string;
+    rendered: boolean;
+    error?: string;
+    warnings: string[];
+  }>;
+  /**
+   * Render chapters' XHTML through the transforms and save it, all of them or
+   * the ids given, without moving the preview.
+   */
+  renderChapters: (ids?: string[]) => Promise<AgentChapterRender[]>;
+  /** Package the open book as the Share view's Package button does. */
+  packageBook: () => Promise<{ filename: string }>;
+  /**
+   * Run the publish plugin's epubcheck on the latest package, switching the
+   * app to Share so the plugin is loaded. Rejects when the plugin is off.
+   */
+  validatePackage: () => Promise<Record<string, unknown>>;
+  /** Add or replace the file through the manifest import path and update app state. */
+  addMedia: (
+    request: AgentMediaFileRequest,
+    workspaceId: string
+  ) => Promise<{ href: string; fromChapter: string }>;
+}
+
+export type AgentChapterRender =
+  | { id: string; status: 'rendered' }
+  | { id: string; status: 'failed'; error: string }
+  | { id: string; status: 'no-source' };
+
+export interface AgentMediaFileRequest {
+  /** File name as it was on disk. */
+  filename: string;
+  bytes: Uint8Array;
+  /** Optional single subfolder inside the media type's folder. */
+  folder?: string;
+}
+
+export interface AgentMediaFilePlan {
+  href: string;
+  mediaType: string;
+  status: 'new' | 'identical' | 'changed';
+  /** `href` as a chapter's markup references it. */
+  fromChapter: string;
+}
+
+export interface NewChapterRequest {
+  id: string;
+  title?: string;
+  after?: string;
+  linear: boolean;
+  text: string;
 }
 
 interface AgentBridgeHandle {

@@ -11,10 +11,12 @@
   any per-language rules.
 */
 
+/* Named faces before the generic: Apple Books renders a bare `serif` in its
+   sans-serif system face, so the stack leads with serifs it ships. */
 body {
   line-height: 1.6;
   hyphens: auto;
-  font-family: serif;
+  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
 }
 
 h1,

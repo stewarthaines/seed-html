@@ -143,6 +143,14 @@ Inserts a string at the cursor position in the currently active textarea. The co
 
 The accessible-pdf plugin asks for the open book laid out and measured. The host builds the same paginated document as Save as PDF, lays it out with Paged.js in a frame off screen, measures it into a page description (`src/lib/pdf/page-description.ts`) and gathers the book's font files from its `@font-face` rules and its image files, JPEG and PNG as they are and other formats as PNG (`src/lib/pdf/accessible-pdf.ts`). It answers with `{ "type": "book-described", "requestId", "description", "fonts": [ArrayBuffer], "images": [ArrayBuffer], "author", "missingFonts": [string], "skippedChapterIds": [string] }`, or `{ "type": "book-described", "requestId", "error" }`. The plugin writes the PDF itself; the host never sees it.
 
+### Main → Plugin → Main (validating the latest package)
+
+```json
+{ "type": "validate", "requestId": "string" }
+```
+
+The host asks the publish plugin's Send surface to run epubcheck on the open book's latest package, exactly as its Validate button does: the report is saved and published to the host the same way, and the report dialog opens when there are findings. Sent for the agent bridge's `seed_validate` (process/BRIDGE_HANDOVER_TOOLS.md); the host switches to the Share view first so the surface is mounted, and `PluginFrame` registers the request with `src/lib/plugins/package-validator.ts` while the plugin is alive. The plugin answers `{ "type": "validated", "requestId", "report" }` (the `ValidationReport` shape `validation-report.ts` reads), or `{ "type": "validated", "requestId", "error" }` when there is no package yet or epubcheck failed.
+
 ### Plugin → Main → Plugin (adding a media file)
 
 ```json
@@ -229,7 +237,7 @@ Enabled state is persisted via the settings service.
 | Plugin            | Presentation | Key Dependency              | Direction     |
 | ----------------- | ------------ | --------------------------- | ------------- |
 | Audio Clip Editor | panel        | wavesurfer.js, LAME (WASM)  | insert, add-media → main |
-| Publish           | view         | epubcheck-ts, R2/GDrive SDK | OPFS / handle |
+| Publish           | view         | epubcheck-ts, R2/GDrive SDK | OPFS / handle, validate ← main |
 | Accessible PDF    | view         | PDFKit, fontkit             | describe-book → main |
 
 The Publish plugin combines remote publishing (S3-compatible, Google Drive, Dropbox, WebDAV, USB e-readers), OPDS catalog generation and EPUB validation in one artifact, rendered as three surfaces.

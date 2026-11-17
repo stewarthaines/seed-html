@@ -17,6 +17,7 @@ Djot looks like Markdown and is not. Every item below is a real divergence from 
 - **Hard line break is a backslash** at end of line (not two trailing spaces).
 - **Non-breaking space is a backslash** with a trailing space.
 - **Headings need a preceding blank line**, and there are no Setext (underlined) headings.
+- **A heading's id goes on the line above it**, as a block attribute: `{#emma-arrival}` then `## Emma's arrival`. A trailing `## Emma's arrival {#emma-arrival}` is not djot and is silently dropped. Without an explicit id the section gets one made from the heading text (`Emma-s-arrival`).
 - **Continuation blocks in a list item** (a second paragraph, a code block) must be indented to the item's content column after a blank line. A bare unindented line directly under an item joins its paragraph — fine for prose, but it will not start a new block.
 - **Comments exist**: `{% like this %}` — removed from output.
 - **Smart punctuation is on by default**: quotes and dashes are transformed; use `\"` to force a literal.

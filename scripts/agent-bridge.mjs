@@ -15,10 +15,15 @@
 import { WebSocketServer } from 'ws';
 import { createInterface } from 'node:readline';
 import { readFileSync } from 'node:fs';
+import { readFile, realpath, stat } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { basename, dirname, isAbsolute, join, sep } from 'node:path';
+import { homedir } from 'node:os';
 
 const PORT = 8747;
+
+/** Media read from disk for seed_add_media is capped like the app caps it. */
+const MEDIA_SIZE_LIMIT = 25 * 1024 * 1024;
 
 // The authoring guide is knowledge, not project state: served straight from
 // the repo by the bridge process itself, so it works before a tab connects.
@@ -33,6 +38,64 @@ try {
   guideText = readFileSync(GUIDE_PATH, 'utf8');
 } catch {
   guideText = 'authoring guide missing at ' + GUIDE_PATH;
+}
+
+// --- media folders ----------------------------------------------------------------
+
+/**
+ * Folders seed_add_media may read from (process/BRIDGE_HANDOVER_TOOLS.md,
+ * section 2). The agent can already read local files with its own tools; the
+ * point of the list is that a book-editing agent with no shell, or one following
+ * text planted in a book, cannot pull arbitrary local files into the EPUB. A
+ * folder joins only through the author's answer in the app
+ * (seed_allow_media_folder) or the --media-root flag the author wrote into the
+ * bridge's start-up command. Answered folders last as long as the tab
+ * connection, like the write grant; the flag's folder lasts the process.
+ * Entries are real paths, so a symlink cannot lead outside them.
+ */
+const sessionFolders = new Set();
+let presetFolder = null;
+
+function flagValue(name) {
+  const index = process.argv.indexOf(name);
+  if (index >= 0) return process.argv[index + 1] ?? null;
+  const prefixed = process.argv.find(arg => arg.startsWith(name + '='));
+  return prefixed ? prefixed.slice(name.length + 1) : null;
+}
+
+/** A local path as the agent gave it: absolute, or starting with ~. */
+function expandPath(path) {
+  if (typeof path !== 'string' || !path.trim()) throw new Error('path required');
+  const trimmed = path.trim();
+  const expanded =
+    trimmed === '~' || trimmed.startsWith('~/') ? join(homedir(), trimmed.slice(1)) : trimmed;
+  if (!isAbsolute(expanded)) {
+    throw new Error(`use an absolute path (or one starting with ~), not ${trimmed}`);
+  }
+  return expanded;
+}
+
+const insideFolder = (path, folder) => path === folder || path.startsWith(folder + sep);
+
+function allowedFolderFor(realPath) {
+  for (const folder of [presetFolder, ...sessionFolders]) {
+    if (folder && insideFolder(realPath, folder)) return folder;
+  }
+  return null;
+}
+
+const mediaRootFlag = flagValue('--media-root') ?? process.env.SEED_MEDIA_ROOT ?? null;
+if (mediaRootFlag) {
+  try {
+    const real = await realpath(expandPath(mediaRootFlag));
+    if (!(await stat(real)).isDirectory()) throw new Error('not a folder');
+    presetFolder = real;
+    process.stderr.write(`[bridge] media folder from start-up: ${real}\n`);
+  } catch (error) {
+    process.stderr.write(
+      `[bridge] --media-root ${mediaRootFlag} ignored: ${error?.message ?? error}\n`
+    );
+  }
 }
 
 // --- tab side -----------------------------------------------------------------
@@ -82,6 +145,7 @@ wss.on('error', error => {
 wss.on('connection', socket => {
   tab?.close();
   tab = socket;
+  sessionFolders.clear();
   socket.on('message', raw => {
     let message;
     try {
@@ -105,12 +169,14 @@ wss.on('connection', socket => {
     if (tab === socket) {
       tab = null;
       tabProject = null;
+      // Folder answers were given to that connection, like the write grant.
+      sessionFolders.clear();
       process.stderr.write('[bridge] tab disconnected\n');
     }
   });
 });
 
-function callTab(tool, params) {
+function callTab(tool, params, timeoutMs = 120000) {
   if (bindError) return Promise.reject(new Error(bindError));
   if (!tab || tab.readyState !== 1) {
     return Promise.reject(
@@ -123,8 +189,8 @@ function callTab(tool, params) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       pending.delete(id);
-      reject(new Error('tab did not answer within 120s'));
-    }, 120000);
+      reject(new Error(`tab did not answer within ${timeoutMs / 1000}s`));
+    }, timeoutMs);
     pending.set(id, { resolve, reject, timer });
     tab.send(JSON.stringify({ id, tool, params }));
   });
@@ -230,6 +296,104 @@ const TOOLS = [
       required: ['path', 'expected_hash'],
     },
   },
+  {
+    name: 'seed_create_chapter',
+    description:
+      "Add a new chapter to the book: a spine entry, its generated XHTML and its source SOURCE/text/<id>.txt holding `text` exactly as given (frontmatter block included, if the project uses one). Same preconditions as a chapter-source write: seed_get_authoring_guide, seed_get_project_setup, and a seed_read_file of every transform script it lists. The id is used as given — it must be lowercase letters, digits, '-' or '_', starting with a letter, and not already in use; a taken id is refused rather than renamed, so links to it stay right. Placed after the chapter named by `after`, or at the end of the book. The author approves it in the app like a prose write (a session approval covers it). Refused while track changes is on, because review mode locks the chapter list: tell the author and ask. The new chapter's XHTML is a plain placeholder render until the chapter is next rendered through the project's transforms; the author's open chapter does not change.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'the new chapter id, e.g. "emma-arrival"' },
+        title: {
+          type: 'string',
+          description: 'title for the placeholder XHTML; the id when omitted',
+        },
+        after: {
+          type: 'string',
+          description: 'id of the chapter to place it after; end of the book when omitted',
+        },
+        linear: {
+          type: 'boolean',
+          description: 'false keeps it out of the reading order (notes, research); default true',
+        },
+        text: { type: 'string', description: 'the chapter source, as the file will hold it' },
+      },
+      required: ['id'],
+    },
+  },
+  {
+    name: 'seed_show_chapter',
+    description:
+      "Move the author's Write view to a chapter and wait until its preview has rendered. Returns whether it rendered, the transform error if not, and the transform warnings. Afterwards seed_get_rendered_xhtml, seed_inspect_elements and the axe half of seed_get_checks describe that chapter. The author sees their preview move, so say why before you do it during their session.",
+    inputSchema: {
+      type: 'object',
+      properties: { id: { type: 'string', description: 'chapter id' } },
+      required: ['id'],
+    },
+  },
+  {
+    name: 'seed_render',
+    description:
+      "Render chapters through the project's transforms and save their XHTML, without moving the author's preview: all chapters, or the ids given. Use after editing sources of chapters that are not open, after seed_create_chapter (whose XHTML is a placeholder until rendered), or before seed_package, since packaging zips the XHTML as last saved. Returns per chapter: rendered, failed (with the error), or no-source (hand-authored XHTML, left alone).",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        ids: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'chapter ids; all when omitted',
+        },
+      },
+    },
+  },
+  {
+    name: 'seed_package',
+    description:
+      "Package the open book as an EPUB, as the Share view's Package button does (the nav is regenerated first). Chapters are packaged as last rendered — run seed_render first if sources changed since. Returns the package filename.",
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'seed_validate',
+    description:
+      "Run epubcheck on the book's latest package and return the report (validity, counts, messages with locations). Runs in the publishing plugin, so the app switches to the Share view while it works; when the plugin is off, this is refused and the author can turn it on in Settings. Package first (seed_package) — the report is about the latest package, whose filename and timestamp it carries. seed_get_checks shows the same report afterwards.",
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'seed_allow_media_folder',
+    description:
+      'Ask the author to let you add media from a folder on their computer. Call it with the folder the author named (an absolute path, or one starting with ~); the app shows them the folder and its full path, and only their answer allows it. Do not ask for folders the author did not mention. An allowed folder, and everything under it, stays allowed until the app disconnects from the bridge. Needed before seed_add_media.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'the folder, e.g. "~/research/portraits"' },
+      },
+      required: ['path'],
+    },
+  },
+  {
+    name: 'seed_add_media',
+    description:
+      "Add a picture, audio, video or font file from an allowed folder (seed_allow_media_folder) to the book. The bridge reads the file itself — its bytes never pass through you — and the app files it in the media type's folder under its file-name rules (spaces become '-', the extension is lowercased). Use the returned href in the manifest and fromChapter (the path relative to a chapter) in chapter markup, never your own guess at the name. A file already in the book with identical content is reported unchanged. Different content under the same name is refused unless overwrite is true, and an overwrite is put to the author every time. New files are approved like prose writes (a session approval covers them). Refused while track changes is on. Limit 25 MB.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'string',
+          description: 'absolute path of the file, inside an allowed folder',
+        },
+        folder: {
+          type: 'string',
+          description:
+            'optional single subfolder inside the media type\'s folder, e.g. "portraits" for Images/portraits/',
+        },
+        overwrite: {
+          type: 'boolean',
+          description: 'replace a different file already in the book under the same name',
+        },
+      },
+      required: ['path'],
+    },
+  },
 ];
 
 /**
@@ -280,6 +444,32 @@ let guideServed = false;
 let setupTransforms = null; // transformScripts from the last project_setup
 const readPaths = new Set();
 
+/**
+ * The preconditions for changing chapter sources, shared by seed_write_file
+ * (on SOURCE/text/) and seed_create_chapter. Throws the refusal naming what is
+ * still missing.
+ */
+function requireChapterContext() {
+  if (!guideServed) {
+    throw new Error(
+      'call seed_get_authoring_guide first — writes require the authoring contract in context (EPUB CSS fallbacks, generated-file boundaries, per-project transforms)'
+    );
+  }
+  // Chapter markup is the transforms' output; editing sources without the
+  // pipeline in context is how agents apply the wrong syntax.
+  if (!setupTransforms) {
+    throw new Error(
+      'editing chapter sources requires the project pipeline in context — call seed_get_project_setup, then seed_read_file each transform script it lists, then retry'
+    );
+  }
+  const unread = setupTransforms.filter(path => !readPaths.has(path));
+  if (unread.length > 0) {
+    throw new Error(
+      `read the configured transform scripts before editing chapter sources — chapter markup is their output. Still unread: ${unread.join(', ')}`
+    );
+  }
+}
+
 async function handleToolCall(name, args) {
   switch (name) {
     case 'seed_get_authoring_guide':
@@ -322,25 +512,83 @@ async function handleToolCall(name, args) {
         );
       }
       if (typeof args?.path === 'string' && args.path.startsWith('SOURCE/text/')) {
-        // Chapter markup is the transforms' output; editing sources without
-        // the pipeline in context is how agents apply the wrong syntax.
-        if (!setupTransforms) {
-          throw new Error(
-            'editing chapter sources requires the project pipeline in context — call seed_get_project_setup, then seed_read_file each transform script it lists, then retry'
-          );
-        }
-        const unread = setupTransforms.filter(path => !readPaths.has(path));
-        if (unread.length > 0) {
-          throw new Error(
-            `read the configured transform scripts before editing chapter sources — chapter markup is their output. Still unread: ${unread.join(', ')}`
-          );
-        }
+        requireChapterContext();
       }
       return callTab('write_file', {
         path: args?.path,
         text: args?.text,
         base64: args?.base64,
         expectedHash: args?.expected_hash,
+      });
+    case 'seed_show_chapter':
+      return callTab('show_chapter', { id: args?.id });
+    case 'seed_render':
+      // A whole book through the transforms can take a while.
+      return callTab('render', { ids: args?.ids }, 300000);
+    case 'seed_package':
+      return callTab('package', {}, 300000);
+    case 'seed_validate':
+      // The plugin load plus epubcheck; the app gives up at 30s + 150s.
+      return callTab('validate', {}, 200000);
+    case 'seed_allow_media_folder': {
+      const expanded = expandPath(args?.path);
+      let real;
+      try {
+        real = await realpath(expanded);
+      } catch {
+        throw new Error(`no folder at ${expanded}`);
+      }
+      if (!(await stat(real)).isDirectory()) throw new Error(`${real} is a file, not a folder`);
+      if (allowedFolderFor(real)) return { allowed: true, path: real, already: true };
+      const answer = await callTab('allow_media_folder', { path: real, name: basename(real) });
+      sessionFolders.add(real);
+      return answer;
+    }
+    case 'seed_add_media': {
+      if (!guideServed) {
+        throw new Error(
+          'call seed_get_authoring_guide first — adding media changes the book, and needs the authoring contract in context'
+        );
+      }
+      if (!presetFolder && sessionFolders.size === 0) {
+        throw new Error(
+          'no media folder is allowed yet — ask the author which folder holds the media, then call seed_allow_media_folder with it'
+        );
+      }
+      const expanded = expandPath(args?.path);
+      let real;
+      try {
+        real = await realpath(expanded);
+      } catch {
+        throw new Error(`no file at ${expanded}`);
+      }
+      if (!allowedFolderFor(real)) {
+        throw new Error(
+          `${real} is not inside a folder the author allowed — ask them, then call seed_allow_media_folder`
+        );
+      }
+      const info = await stat(real);
+      if (!info.isFile()) throw new Error(`${real} is not a file`);
+      if (info.size > MEDIA_SIZE_LIMIT) {
+        throw new Error(`${real} is ${info.size} bytes, over the ${MEDIA_SIZE_LIMIT} byte limit`);
+      }
+      const bytes = await readFile(real);
+      return callTab('add_media', {
+        filename: basename(real),
+        base64: bytes.toString('base64'),
+        folder: args?.folder,
+        overwrite: args?.overwrite === true,
+        source: real,
+      });
+    }
+    case 'seed_create_chapter':
+      requireChapterContext();
+      return callTab('create_chapter', {
+        id: args?.id,
+        title: args?.title,
+        after: args?.after,
+        linear: args?.linear,
+        text: args?.text,
       });
     default:
       throw new Error('unknown tool: ' + name);

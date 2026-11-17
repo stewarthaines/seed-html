@@ -180,6 +180,10 @@
       register = withEntry(register, selected, { ...chosen.entry, href });
       await writeRegister(root, $dirPath, register);
       status = translate('Map added for {place}.', { place: selected });
+      // This place is done: let go of it, so the next search starts a new
+      // place rather than offering to replace the map just added.
+      selected = null;
+      query = '';
       candidates = [];
       chosen = null;
       manual = false;
@@ -197,6 +201,8 @@
     await writeRegister(root, $dirPath, register);
     status = translate('{place} now shares the map of {other}.', { place: selected, other: aliasOf });
     aliasOf = '';
+    selected = null;
+    query = '';
   }
 
   async function insert(text: string): Promise<void> {

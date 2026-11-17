@@ -9,7 +9,7 @@
   import { untrack } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
   import { t, translate } from '../i18n.js';
-  import { dirHandle, activeIdentifier } from '../store.js';
+  import { dirHandle, activeIdentifier, validateRequests } from '../store.js';
   import { remotesStore, remotesLoaded, contentVersions } from '../remotes.js';
   import {
     loadLocalPackages,
@@ -25,9 +25,17 @@
   } from '../remote-status.js';
   import { hasCatalog, loadCatalogs, type CatalogInfo } from '../catalog.js';
   import { sendPackage, setInCatalog } from '../send.js';
-  import { reconnectGoogle, reconnectSolid, reconnectDevice } from '../reconnect.js';
+  import {
+    reconnectGoogle,
+    reconnectSolid,
+    reconnectDevice,
+  } from '../reconnect.js';
   import { showStatus } from '../status.js';
-  import { canShareLinks, copyShareLink, readerLinkTemplate } from '../share-links.js';
+  import {
+    canShareLinks,
+    copyShareLink,
+    readerLinkTemplate,
+  } from '../share-links.js';
   import { formatFileSize, relativeTime } from '../format.js';
   import {
     validateEpub,
@@ -39,7 +47,12 @@
     summarizeReport,
     type ValidationReport,
   } from '../epub-validation.js';
-  import type { NavigateMessage, OpenMessage, RemoteConfig } from '../types.js';
+  import type {
+    NavigateMessage,
+    OpenMessage,
+    RemoteConfig,
+    ValidatedMessage,
+  } from '../types.js';
   import DestinationBadge from './DestinationBadge.svelte';
   import Switch from './Switch.svelte';
   import ValidationModal from './ValidationModal.svelte';
@@ -89,24 +102,84 @@
     })();
   });
 
-  async function validate() {
-    if (!latest) return;
+  /** Check `pkg`, keep the report where the host reads it, and show it. */
+  async function runValidation(pkg: LocalPackage): Promise<ValidationReport> {
     validating = true;
     try {
-      const result = await validateEpub(latest.file, latest.identifier);
+      const result = await validateEpub(pkg.file, pkg.identifier);
       await saveValidationReport(result);
       publishLatestReport(result);
       report = result;
       if (result.errorCount > 0 || result.warningCount > 0) showReport = true;
+      return result;
+    } finally {
+      validating = false;
+    }
+  }
+
+  async function validate() {
+    if (!latest) return;
+    try {
+      await runValidation(latest);
     } catch (error) {
       showStatus(
         translate('Validation failed: {error}', { error: String(error) }),
         'error',
       );
-    } finally {
-      validating = false;
     }
   }
+
+  // The host asks for the same check the button runs (the agent bridge's
+  // seed_validate, process/BRIDGE_HANDOVER_TOOLS.md). The request can arrive
+  // straight after the handshake, before the directory hand-over has loaded
+  // this book's packages, so wait for those first.
+  async function answerValidate(requestId: string) {
+    let reply: ValidatedMessage;
+    try {
+      const dir = await waitForDirHandle();
+      if (!dir) throw new Error('The packages folder was not handed over.');
+      await reloadPackages(dir);
+      if (!latest) throw new Error('This book has no package yet.');
+      reply = {
+        type: 'validated',
+        requestId,
+        report: await runValidation(latest),
+      };
+    } catch (error) {
+      reply = {
+        type: 'validated',
+        requestId,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+    window.parent.postMessage(reply, window.origin);
+  }
+
+  function waitForDirHandle(): Promise<FileSystemDirectoryHandle | null> {
+    return new Promise((resolve) => {
+      let unsubscribe = () => {};
+      const timer = setTimeout(() => {
+        unsubscribe();
+        resolve(null);
+      }, 10_000);
+      unsubscribe = dirHandle.subscribe((dir) => {
+        if (!dir) return;
+        clearTimeout(timer);
+        queueMicrotask(() => unsubscribe());
+        resolve(dir);
+      });
+    });
+  }
+
+  // Answer queued requests (the entry point queues them; see store.ts).
+  $effect(() => {
+    const queue = $validateRequests;
+    if (queue.length === 0) return;
+    untrack(() => {
+      validateRequests.set([]);
+      for (const requestId of queue) void answerValidate(requestId);
+    });
+  });
 
   function openReport() {
     if (!report) return;
@@ -380,7 +453,9 @@
         {@const state = stateFor(remote, row)}
         {@const reach = row.listing?.reach ?? null}
         {@const linkKey =
-          state && state.kind !== 'not-sent' && canShareLinks(remote) ? state.key : null}
+          state && state.kind !== 'not-sent' && canShareLinks(remote)
+            ? state.key
+            : null}
         <li class="row">
           <DestinationBadge {remote} />
           <div class="text">
@@ -392,7 +467,12 @@
                   class="btn btn-link"
                   title={linkKey}
                   onclick={() =>
-                    copyShareLink(remote, linkKey, row.listing?.objects ?? [], 'file')}
+                    copyShareLink(
+                      remote,
+                      linkKey,
+                      row.listing?.objects ?? [],
+                      'file',
+                    )}
                 >
                   {$t('Copy link')}
                 </button>
@@ -402,7 +482,12 @@
                     class="btn btn-link"
                     title={linkKey}
                     onclick={() =>
-                      copyShareLink(remote, linkKey, row.listing?.objects ?? [], 'reader')}
+                      copyShareLink(
+                        remote,
+                        linkKey,
+                        row.listing?.objects ?? [],
+                        'reader',
+                      )}
                   >
                     {$t('Copy reader link')}
                   </button>
@@ -443,7 +528,9 @@
                   label={row.catalogs.length > 1
                     ? $t('In {catalog}', { catalog: catalog.identity.title })
                     : $t('In the catalog')}
-                  disabled={!state || state.kind === 'not-sent' || !!catalog.error}
+                  disabled={!state ||
+                    state.kind === 'not-sent' ||
+                    !!catalog.error}
                   busy={row.toggling === catalog.file}
                   title={catalog.error
                     ? catalog.error

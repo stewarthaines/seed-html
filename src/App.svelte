@@ -5,6 +5,9 @@
   import { workspaceOpfsPath } from './lib/plugins/contract.js';
   import { primaryLanguage } from './lib/epub/opf-utils.js';
   import { readValidationReport } from './lib/plugins/validation-report.js';
+  import { addAgentMedia, checkAgentMedia } from './lib/import/agent-media.js';
+  import { waitForPackageValidator } from './lib/plugins/package-validator.js';
+  import { convertManifestPathToXHTMLPath, manifestHrefToPath } from './lib/epub/path-utils.js';
   import { buildEpubcheckSection } from './lib/checks/epubcheck-section.js';
   import {
     addTranslation,
@@ -13,7 +16,7 @@
     swapMetadataUpdates,
     translationMetaFrom,
   } from './lib/translations/editions.js';
-  import type { AgentBridge } from './lib/agent-bridge/loader.svelte.js';
+  import type { AgentBridge, NewChapterRequest } from './lib/agent-bridge/loader.svelte.js';
   import LayoutManager from './lib/LayoutManager.svelte';
   import TopBar from './lib/components/shell/TopBar.svelte';
   import BrandBar from './lib/components/shell/BrandBar.svelte';
@@ -25,6 +28,8 @@
   import { navigationStore } from './lib/navigation';
   import type { ViewType } from './lib/navigation/types';
   import AboutDialog from './lib/components/shell/AboutDialog.svelte';
+  import ConfirmDialog from './lib/components/confirm/ConfirmDialog.svelte';
+  import { confirmDialog } from './lib/components/confirm/confirm.svelte';
   import BottomTabs, { type PhoneTab } from './lib/components/shell/BottomTabs.svelte';
   import ChapterStrip from './lib/components/shell/ChapterStrip.svelte';
   import { viewport } from './lib/stores/viewport.svelte.js';
@@ -776,6 +781,100 @@
   // restored startup view never records an entry.
   let lastRecordedView: ViewType | null = null;
 
+  /**
+   * Show chapter `id` in the Write view for the bridge's seed_show_chapter and
+   * wait for its render to settle (a fresh preview update for that chapter
+   * that is no longer transforming), so the agent's next measurement or check
+   * describes it rather than the chapter before.
+   */
+  async function showChapterForAgent(id: string): Promise<{
+    chapterId: string;
+    rendered: boolean;
+    error?: string;
+    warnings: string[];
+  }> {
+    const workspace = currentWorkspaceState;
+    if (!workspace) throw new Error('no project open');
+    if (!workspace.opf.spine.some(item => item.idref === id)) {
+      throw new Error(`no chapter "${id}" in the book`);
+    }
+    const before = spinePreviewData;
+    const alreadyShown =
+      currentView === 'spine' && before.spineItemId === id && !before.isTransforming;
+    if (!alreadyShown) {
+      window.dispatchEvent(new CustomEvent('select-spine-item', { detail: { itemId: id } }));
+    }
+    const deadline = Date.now() + 30_000;
+    for (;;) {
+      const data = spinePreviewData;
+      const settled =
+        data.spineItemId === id &&
+        !data.isTransforming &&
+        (alreadyShown || data !== before) &&
+        (data.xhtmlContent !== '' || data.transformError);
+      if (settled) {
+        const error = data.transformError
+          ? String(data.transformError.message ?? data.transformError)
+          : undefined;
+        return {
+          chapterId: id,
+          rendered: !error,
+          ...(error ? { error } : {}),
+          warnings: [...data.transformWarnings],
+        };
+      }
+      if (Date.now() > deadline) {
+        throw new Error(`chapter "${id}" did not finish rendering within 30 seconds`);
+      }
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  }
+
+  /**
+   * Check an agent's new-chapter request against the open book (the bridge's
+   * create_chapter tool). The id is taken as given: a renamed chapter would
+   * break the links the agent writes to it.
+   */
+  async function checkNewChapter(request: NewChapterRequest): Promise<{
+    id: string;
+    after: string | null;
+    linear: boolean;
+  }> {
+    const workspace = currentWorkspaceState;
+    if (!workspace) throw new Error('no project open');
+    if (structureLocked) {
+      throw new Error(
+        reviewMode
+          ? 'track changes is on, and it locks the chapter list — ask the author to turn it off to add chapters'
+          : 'this project is read-only'
+      );
+    }
+    const id = request.id;
+    if (!/^[a-z][a-z0-9_-]*$/.test(id)) {
+      throw new Error(
+        `"${id}" cannot be used as a chapter id — use lowercase letters, digits, "-" or "_", starting with a letter`
+      );
+    }
+    if (workspace.opf.manifest.some(item => item.id === id)) {
+      throw new Error(`the id "${id}" is already used in this book — choose another`);
+    }
+    const sourcePath = `SOURCE/text/${id}.txt`;
+    if (await workspaceService.fileExists(workspace.id, sourcePath)) {
+      throw new Error(
+        `${sourcePath} already exists but is not a chapter in the book — choose another id, or ask the author`
+      );
+    }
+    const spine = workspace.opf.spine;
+    let after: string | null = spine.length ? spine[spine.length - 1].idref : null;
+    if (request.after !== undefined) {
+      if (!spine.some(item => item.idref === request.after)) {
+        throw new Error(`no chapter "${request.after}" in the book to place it after`);
+      }
+      after = request.after;
+    }
+    return { id, after, linear: request.linear };
+  }
+
   async function toggleAgentBridge(): Promise<void> {
     if (!agentBridgeAvailable) return;
     if (!agentBridge) {
@@ -895,6 +994,104 @@
           }
           return { added, removed };
         },
+        checkNewChapter: request => checkNewChapter(request),
+        createChapter: async (request, workspaceId) => {
+          if (currentWorkspaceState?.id !== workspaceId) {
+            throw new Error('the open project changed — chapter not added');
+          }
+          const plan = await checkNewChapter(request);
+          const workspace = currentWorkspaceState;
+          const index = plan.after
+            ? workspace.opf.spine.findIndex(item => item.idref === plan.after) + 1
+            : 0;
+          const result = await spineService.addChapter(workspace, {
+            title: request.title || plan.id,
+            baseName: plan.id,
+            linear: plan.linear,
+            createSourceFile: true,
+            sourceText: request.text,
+            insertIndex: index,
+          });
+          // The service derives a unique id from the base name; checkNewChapter
+          // made sure the name was free, so a different id means the book
+          // changed underneath — say so rather than report the wrong id.
+          if (result.newChapter.id !== plan.id) {
+            throw new Error(`chapter was added as ${result.newChapter.id}, not ${plan.id}`);
+          }
+          if (appState) appState.workspace = result.updatedWorkspace;
+          return {
+            id: plan.id,
+            after: plan.after,
+            linear: plan.linear,
+            sourcePath: result.newChapter.sourcePath ?? `SOURCE/text/${plan.id}.txt`,
+          };
+        },
+        showChapter: id => showChapterForAgent(id),
+        renderChapters: async ids => {
+          const workspaceId = currentWorkspaceState?.id;
+          if (!workspaceId) throw new Error('no project open');
+          if (isReadOnly) throw new Error('this project is read-only');
+          if (ids) {
+            const known = new Set(currentWorkspaceState!.opf.spine.map(item => item.idref));
+            const unknown = ids.filter(id => !known.has(id));
+            if (unknown.length) throw new Error(`not chapters in the book: ${unknown.join(', ')}`);
+          }
+          return renderChapters(workspaceId, ids);
+        },
+        packageBook: async () => {
+          const workspaceId = currentWorkspaceState?.id;
+          if (!workspaceId) throw new Error('no project open');
+          if (isReadOnly) throw new Error('this project is read-only');
+          const filename = await handlePackageRequest(workspaceId);
+          if (!filename) throw new Error('packaging produced no file');
+          return { filename };
+        },
+        validatePackage: async () => {
+          if (!currentWorkspaceState) throw new Error('no project open');
+          if (!publishPluginUrl) {
+            throw new Error(
+              'validation needs the publishing plugin, which is off — the author can turn it on in Settings'
+            );
+          }
+          navigationStore.navigateTo('publish');
+          const validator = await waitForPackageValidator(30_000);
+          return { ...(await validator()) };
+        },
+        checkMedia: async request => {
+          const workspace = currentWorkspaceState;
+          if (!workspace) throw new Error('no project open');
+          if (structureLocked) {
+            throw new Error(
+              reviewMode
+                ? 'track changes is on, and it locks the book’s file list — ask the author to turn it off to add media'
+                : 'this project is read-only'
+            );
+          }
+          const plan = await checkAgentMedia(request, workspace, workspaceService);
+          return { ...plan, fromChapter: convertManifestPathToXHTMLPath(plan.href) };
+        },
+        addMedia: async (request, workspaceId) => {
+          const workspace = currentWorkspaceState;
+          if (!workspace || workspace.id !== workspaceId) {
+            throw new Error('the open project changed — nothing was added');
+          }
+          const plan = await checkAgentMedia(request, workspace, workspaceService);
+          const added = await addAgentMedia(request, plan, workspace, workspaceService);
+          // Hand the manifest change to app state before anything else, or the
+          // next OPF save drops it.
+          if (appState && added.workspace !== workspace) appState.workspace = added.workspace;
+          window.dispatchEvent(
+            new CustomEvent('seed:source-files-changed', {
+              detail: {
+                paths: [manifestHrefToPath(workspace.pathInfo.basePath, added.href)],
+              },
+            })
+          );
+          if (added.href !== plan.href) {
+            throw new Error(`the file was added as ${added.href}, not ${plan.href}`);
+          }
+          return { href: added.href, fromChapter: convertManifestPathToXHTMLPath(added.href) };
+        },
         isFileDirty: (path, diskText) => {
           if (diskText === null) return false;
           let dirty = false;
@@ -919,11 +1116,14 @@
   const handleManifestItemDelete = async (detail: { itemIds: string[] }) => {
     if (!currentWorkspaceState || !appState || isReadOnly || detail.itemIds.length === 0) return;
 
-    const confirmed = confirm(
-      detail.itemIds.length === 1
-        ? $t('Are you sure you want to delete this item?')
-        : $t('Delete {count} items? This cannot be undone.', { count: detail.itemIds.length })
-    );
+    const confirmed = await confirmDialog({
+      message:
+        detail.itemIds.length === 1
+          ? $t('Are you sure you want to delete this item?')
+          : $t('Delete {count} items? This cannot be undone.', { count: detail.itemIds.length }),
+      confirmLabel: $t('Delete'),
+      danger: true,
+    });
     if (!confirmed) return;
 
     try {
@@ -961,7 +1161,12 @@
     if (!currentWorkspaceState || isReadOnly) return;
 
     const name = detail.path.split('/').pop() || detail.path;
-    if (!confirm($t('Delete {name}? This cannot be undone.', { name }))) return;
+    const confirmed = await confirmDialog({
+      message: $t('Delete {name}? This cannot be undone.', { name }),
+      confirmLabel: $t('Delete'),
+      danger: true,
+    });
+    if (!confirmed) return;
 
     try {
       if (detail.path.startsWith('SOURCE/')) {
@@ -1188,11 +1393,36 @@
   // source are touched, so hand-authored XHTML without a SOURCE/text/*.txt is
   // never overwritten with an empty render.
   async function regenerateAllChapters(workspaceId: string): Promise<void> {
-    if (!transformEngine || !extensionManager) return;
+    await renderChapters(workspaceId);
+  }
+
+  /** One chapter's outcome from {@link renderChapters}. */
+  type ChapterRenderResult =
+    | { id: string; status: 'rendered' }
+    | { id: string; status: 'failed'; error: string }
+    | { id: string; status: 'no-source' };
+
+  /**
+   * Render chapters' stored XHTML through the project's transforms and save it,
+   * without moving the visible preview: every chapter in spine order, or the
+   * `ids` given (in spine order). The pass behind regenerateAllChapters and the
+   * bridge's seed_render. A chapter with no text source is reported and left
+   * alone, so hand-authored XHTML is never replaced by an empty render.
+   */
+  async function renderChapters(
+    workspaceId: string,
+    ids?: string[]
+  ): Promise<ChapterRenderResult[]> {
+    if (!transformEngine || !extensionManager) return [];
 
     const workspace = await workspaceService.loadWorkspace(workspaceId);
-    const spine = workspace.opf.spine ?? [];
-    if (spine.length === 0) return;
+    const wanted = ids ? new Set(ids) : null;
+    const spine = (workspace.opf.spine ?? []).filter(item => !wanted || wanted.has(item.idref));
+    if (spine.length === 0) return [];
+    const results: ChapterRenderResult[] = [];
+    // The manager reports each render through these callbacks; the loop below
+    // reads what the current chapter's render said.
+    let lastError: string | null = null;
 
     const settingsService = appState!.getSettingsService();
     // A throwaway blob manager so this pass's blob URLs are separable from the
@@ -1219,8 +1449,11 @@
       () => {
         /* preview output unused — this pass only persists regenerated XHTML */
       },
-      () => {
-        /* render errors are non-fatal here; a bad chapter just isn't relinked */
+      event => {
+        // Non-fatal for the pass: a bad chapter just isn't relinked, and the
+        // caller hears which one and why.
+        const where = event.error?.scriptName ? ` (${event.error.scriptName})` : '';
+        lastError = `${event.stage}: ${event.error?.message ?? 'render failed'}${where}`;
       }
     );
 
@@ -1228,11 +1461,21 @@
       await manager.initialize();
       for (const item of spine) {
         const hasText = await fileStorage.fileExists(workspaceId, `SOURCE/text/${item.idref}.txt`);
-        if (!hasText) continue;
+        if (!hasText) {
+          results.push({ id: item.idref, status: 'no-source' });
+          continue;
+        }
         // switchToSpineItem (re)loads the chapter's text; force a synchronous
         // render that persists the regenerated XHTML to the manifest.
+        lastError = null;
         await manager.switchToSpineItem(item.idref);
         await manager.forcePreviewUpdate();
+        const error = lastError as string | null;
+        results.push(
+          error
+            ? { id: item.idref, status: 'failed', error }
+            : { id: item.idref, status: 'rendered' }
+        );
       }
     } finally {
       manager.cleanup();
@@ -1248,6 +1491,7 @@
     if (appState) {
       appState.workspace = await workspaceService.loadWorkspace(workspaceId);
     }
+    return results;
   }
 
   // The new-project dialog is owned here so any view can open it (the Projects
@@ -1733,6 +1977,7 @@
 
         // Notify the Publish view (if already open) to refresh its list.
         window.dispatchEvent(new CustomEvent('epub-packaged'));
+        return result.filename;
       } else {
         throw new Error(result.error || 'Unknown packaging error');
       }
@@ -1829,14 +2074,13 @@
         identity.identifier
       );
       if (existing) {
-        const openExisting = confirm(
-          $t(
-            '“{title}” is already a project in this browser. OK opens it; Cancel imports a fresh copy.',
-            {
-              title: identity.title || $t('Untitled'),
-            }
-          )
-        );
+        const openExisting = await confirmDialog({
+          message: $t('“{title}” is already a project in this browser.', {
+            title: identity.title || $t('Untitled'),
+          }),
+          confirmLabel: $t('Open it'),
+          cancelLabel: $t('Import a fresh copy'),
+        });
         if (openExisting) {
           await appState.loadWorkspace(existing);
           const firstSpineItem = appState.workspace?.opf?.spine?.[0];
@@ -2498,6 +2742,8 @@
   {#if aboutOpen}
     <AboutDialog onClose={() => closeOverlay('nav-about')} />
   {/if}
+
+  <ConfirmDialog />
 
   {#if settingsOpen && appState}
     <SettingsView
