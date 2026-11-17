@@ -5,6 +5,8 @@
   import { workspaceOpfsPath } from './lib/plugins/contract.js';
   import { primaryLanguage } from './lib/epub/opf-utils.js';
   import { readValidationReport } from './lib/plugins/validation-report.js';
+  import { addAgentMedia, checkAgentMedia } from './lib/import/agent-media.js';
+  import { convertManifestPathToXHTMLPath, manifestHrefToPath } from './lib/epub/path-utils.js';
   import { buildEpubcheckSection } from './lib/checks/epubcheck-section.js';
   import {
     addTranslation,
@@ -973,6 +975,41 @@
             linear: plan.linear,
             sourcePath: result.newChapter.sourcePath ?? `SOURCE/text/${plan.id}.txt`,
           };
+        },
+        checkMedia: async request => {
+          const workspace = currentWorkspaceState;
+          if (!workspace) throw new Error('no project open');
+          if (structureLocked) {
+            throw new Error(
+              reviewMode
+                ? 'track changes is on, and it locks the book’s file list — ask the author to turn it off to add media'
+                : 'this project is read-only'
+            );
+          }
+          const plan = await checkAgentMedia(request, workspace, workspaceService);
+          return { ...plan, fromChapter: convertManifestPathToXHTMLPath(plan.href) };
+        },
+        addMedia: async (request, workspaceId) => {
+          const workspace = currentWorkspaceState;
+          if (!workspace || workspace.id !== workspaceId) {
+            throw new Error('the open project changed — nothing was added');
+          }
+          const plan = await checkAgentMedia(request, workspace, workspaceService);
+          const added = await addAgentMedia(request, plan, workspace, workspaceService);
+          // Hand the manifest change to app state before anything else, or the
+          // next OPF save drops it.
+          if (appState && added.workspace !== workspace) appState.workspace = added.workspace;
+          window.dispatchEvent(
+            new CustomEvent('seed:source-files-changed', {
+              detail: {
+                paths: [manifestHrefToPath(workspace.pathInfo.basePath, added.href)],
+              },
+            })
+          );
+          if (added.href !== plan.href) {
+            throw new Error(`the file was added as ${added.href}, not ${plan.href}`);
+          }
+          return { href: added.href, fromChapter: convertManifestPathToXHTMLPath(added.href) };
         },
         isFileDirty: (path, diskText) => {
           if (diskText === null) return false;

@@ -15,10 +15,15 @@
 import { WebSocketServer } from 'ws';
 import { createInterface } from 'node:readline';
 import { readFileSync } from 'node:fs';
+import { readFile, realpath, stat } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { basename, dirname, isAbsolute, join, sep } from 'node:path';
+import { homedir } from 'node:os';
 
 const PORT = 8747;
+
+/** Media read from disk for seed_add_media is capped like the app caps it. */
+const MEDIA_SIZE_LIMIT = 25 * 1024 * 1024;
 
 // The authoring guide is knowledge, not project state: served straight from
 // the repo by the bridge process itself, so it works before a tab connects.
@@ -33,6 +38,64 @@ try {
   guideText = readFileSync(GUIDE_PATH, 'utf8');
 } catch {
   guideText = 'authoring guide missing at ' + GUIDE_PATH;
+}
+
+// --- media folders ----------------------------------------------------------------
+
+/**
+ * Folders seed_add_media may read from (process/BRIDGE_HANDOVER_TOOLS.md,
+ * section 2). The agent can already read local files with its own tools; the
+ * point of the list is that a book-editing agent with no shell, or one following
+ * text planted in a book, cannot pull arbitrary local files into the EPUB. A
+ * folder joins only through the author's answer in the app
+ * (seed_allow_media_folder) or the --media-root flag the author wrote into the
+ * bridge's start-up command. Answered folders last as long as the tab
+ * connection, like the write grant; the flag's folder lasts the process.
+ * Entries are real paths, so a symlink cannot lead outside them.
+ */
+const sessionFolders = new Set();
+let presetFolder = null;
+
+function flagValue(name) {
+  const index = process.argv.indexOf(name);
+  if (index >= 0) return process.argv[index + 1] ?? null;
+  const prefixed = process.argv.find(arg => arg.startsWith(name + '='));
+  return prefixed ? prefixed.slice(name.length + 1) : null;
+}
+
+/** A local path as the agent gave it: absolute, or starting with ~. */
+function expandPath(path) {
+  if (typeof path !== 'string' || !path.trim()) throw new Error('path required');
+  const trimmed = path.trim();
+  const expanded =
+    trimmed === '~' || trimmed.startsWith('~/') ? join(homedir(), trimmed.slice(1)) : trimmed;
+  if (!isAbsolute(expanded)) {
+    throw new Error(`use an absolute path (or one starting with ~), not ${trimmed}`);
+  }
+  return expanded;
+}
+
+const insideFolder = (path, folder) => path === folder || path.startsWith(folder + sep);
+
+function allowedFolderFor(realPath) {
+  for (const folder of [presetFolder, ...sessionFolders]) {
+    if (folder && insideFolder(realPath, folder)) return folder;
+  }
+  return null;
+}
+
+const mediaRootFlag = flagValue('--media-root') ?? process.env.SEED_MEDIA_ROOT ?? null;
+if (mediaRootFlag) {
+  try {
+    const real = await realpath(expandPath(mediaRootFlag));
+    if (!(await stat(real)).isDirectory()) throw new Error('not a folder');
+    presetFolder = real;
+    process.stderr.write(`[bridge] media folder from start-up: ${real}\n`);
+  } catch (error) {
+    process.stderr.write(
+      `[bridge] --media-root ${mediaRootFlag} ignored: ${error?.message ?? error}\n`
+    );
+  }
 }
 
 // --- tab side -----------------------------------------------------------------
@@ -82,6 +145,7 @@ wss.on('error', error => {
 wss.on('connection', socket => {
   tab?.close();
   tab = socket;
+  sessionFolders.clear();
   socket.on('message', raw => {
     let message;
     try {
@@ -105,6 +169,8 @@ wss.on('connection', socket => {
     if (tab === socket) {
       tab = null;
       tabProject = null;
+      // Folder answers were given to that connection, like the write grant.
+      sessionFolders.clear();
       process.stderr.write('[bridge] tab disconnected\n');
     }
   });
@@ -255,6 +321,42 @@ const TOOLS = [
       required: ['id'],
     },
   },
+  {
+    name: 'seed_allow_media_folder',
+    description:
+      'Ask the author to let you add media from a folder on their computer. Call it with the folder the author named (an absolute path, or one starting with ~); the app shows them the folder and its full path, and only their answer allows it. Do not ask for folders the author did not mention. An allowed folder, and everything under it, stays allowed until the app disconnects from the bridge. Needed before seed_add_media.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'the folder, e.g. "~/research/portraits"' },
+      },
+      required: ['path'],
+    },
+  },
+  {
+    name: 'seed_add_media',
+    description:
+      "Add a picture, audio, video or font file from an allowed folder (seed_allow_media_folder) to the book. The bridge reads the file itself — its bytes never pass through you — and the app files it in the media type's folder under its file-name rules (spaces become '-', the extension is lowercased). Use the returned href in the manifest and fromChapter (the path relative to a chapter) in chapter markup, never your own guess at the name. A file already in the book with identical content is reported unchanged. Different content under the same name is refused unless overwrite is true, and an overwrite is put to the author every time. New files are approved like prose writes (a session approval covers them). Refused while track changes is on. Limit 25 MB.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'string',
+          description: 'absolute path of the file, inside an allowed folder',
+        },
+        folder: {
+          type: 'string',
+          description:
+            'optional single subfolder inside the media type\'s folder, e.g. "portraits" for Images/portraits/',
+        },
+        overwrite: {
+          type: 'boolean',
+          description: 'replace a different file already in the book under the same name',
+        },
+      },
+      required: ['path'],
+    },
+  },
 ];
 
 /**
@@ -381,6 +483,57 @@ async function handleToolCall(name, args) {
         base64: args?.base64,
         expectedHash: args?.expected_hash,
       });
+    case 'seed_allow_media_folder': {
+      const expanded = expandPath(args?.path);
+      let real;
+      try {
+        real = await realpath(expanded);
+      } catch {
+        throw new Error(`no folder at ${expanded}`);
+      }
+      if (!(await stat(real)).isDirectory()) throw new Error(`${real} is a file, not a folder`);
+      if (allowedFolderFor(real)) return { allowed: true, path: real, already: true };
+      const answer = await callTab('allow_media_folder', { path: real, name: basename(real) });
+      sessionFolders.add(real);
+      return answer;
+    }
+    case 'seed_add_media': {
+      if (!guideServed) {
+        throw new Error(
+          'call seed_get_authoring_guide first — adding media changes the book, and needs the authoring contract in context'
+        );
+      }
+      if (!presetFolder && sessionFolders.size === 0) {
+        throw new Error(
+          'no media folder is allowed yet — ask the author which folder holds the media, then call seed_allow_media_folder with it'
+        );
+      }
+      const expanded = expandPath(args?.path);
+      let real;
+      try {
+        real = await realpath(expanded);
+      } catch {
+        throw new Error(`no file at ${expanded}`);
+      }
+      if (!allowedFolderFor(real)) {
+        throw new Error(
+          `${real} is not inside a folder the author allowed — ask them, then call seed_allow_media_folder`
+        );
+      }
+      const info = await stat(real);
+      if (!info.isFile()) throw new Error(`${real} is not a file`);
+      if (info.size > MEDIA_SIZE_LIMIT) {
+        throw new Error(`${real} is ${info.size} bytes, over the ${MEDIA_SIZE_LIMIT} byte limit`);
+      }
+      const bytes = await readFile(real);
+      return callTab('add_media', {
+        filename: basename(real),
+        base64: bytes.toString('base64'),
+        folder: args?.folder,
+        overwrite: args?.overwrite === true,
+        source: real,
+      });
+    }
     case 'seed_create_chapter':
       requireChapterContext();
       return callTab('create_chapter', {

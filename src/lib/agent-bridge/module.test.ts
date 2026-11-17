@@ -157,6 +157,16 @@ function makeContext(overrides: Record<string, unknown> = {}) {
     isFileDirty: vi.fn(() => false),
     reviewWrite: vi.fn(async (_request: Record<string, unknown>) => 'accept' as const),
     diffStat: vi.fn(() => ({ added: 1, removed: 1 })),
+    checkMedia: vi.fn(async (request: { filename: string }) => ({
+      href: `Images/${request.filename}`,
+      mediaType: 'image/jpeg',
+      status: 'new',
+      fromChapter: `../Images/${request.filename}`,
+    })),
+    addMedia: vi.fn(async (request: { filename: string }) => ({
+      href: `Images/${request.filename}`,
+      fromChapter: `../Images/${request.filename}`,
+    })),
     checkNewChapter: vi.fn(async (request: { id: string; after?: string; linear: boolean }) => ({
       id: request.id,
       after: request.after ?? 'chapter02',
@@ -1235,6 +1245,167 @@ describe('agent bridge module', () => {
         error: 'the author refused this chapter',
       });
       expect(ctx.createChapter).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('media from disk', () => {
+    const buttons = (ctx: { mountEl: HTMLElement }, label: string) =>
+      [...ctx.mountEl.querySelectorAll('button')].filter(b => b.textContent === label);
+    const jpeg = btoa(String.fromCharCode(0xff, 0xd8, 0xff));
+
+    it('a folder is allowed only by the author, and the write grant does not cover it', async () => {
+      const { ctx } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      buttons(ctx, 'Writes: ask')[0].click();
+      const reply = socket.receive({
+        id: 1,
+        tool: 'allow_media_folder',
+        params: { path: '/Users/a/portraits', name: 'portraits' },
+      });
+      await waitFor(() => buttons(ctx, 'Allow').length === 1);
+      expect(ctx.mountEl.textContent).toContain(
+        'add media from the folder portraits (/Users/a/portraits)'
+      );
+      expect(buttons(ctx, 'Allow this session')).toHaveLength(0);
+      buttons(ctx, 'Allow')[0].click();
+      expect(await reply).toMatchObject({
+        ok: true,
+        result: { allowed: true, path: '/Users/a/portraits' },
+      });
+    });
+
+    it('a refused folder is an error the agent sees', async () => {
+      const { ctx } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const reply = socket.receive({ id: 1, tool: 'allow_media_folder', params: { path: '/x' } });
+      await waitFor(() => buttons(ctx, 'Deny').length === 1);
+      buttons(ctx, 'Deny')[0].click();
+      expect(await reply).toMatchObject({
+        ok: false,
+        error: 'the author did not allow this folder',
+      });
+    });
+
+    it('asks before adding a new file, then reports where it landed', async () => {
+      const { ctx } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const reply = socket.receive({
+        id: 1,
+        tool: 'add_media',
+        params: { filename: 'emma.jpg', base64: jpeg, source: '/Users/a/portraits/emma.jpg' },
+      });
+      await waitFor(() => buttons(ctx, 'Allow once').length === 1);
+      expect(ctx.mountEl.textContent).toContain(
+        'agent wants to add Images/emma.jpg from /Users/a/portraits/emma.jpg (3 bytes)'
+      );
+      buttons(ctx, 'Allow once')[0].click();
+      expect(await reply).toMatchObject({
+        ok: true,
+        result: { href: 'Images/emma.jpg', status: 'added', fromChapter: '../Images/emma.jpg' },
+      });
+      const [request, workspaceId] = (ctx.addMedia as ReturnType<typeof vi.fn>).mock.calls[0];
+      expect(workspaceId).toBe('ws-1');
+      expect([...(request as { bytes: Uint8Array }).bytes]).toEqual([0xff, 0xd8, 0xff]);
+    });
+
+    it('identical bytes are reported unchanged with no prompt and no add', async () => {
+      const { ctx } = makeContext({
+        checkMedia: vi.fn(async () => ({
+          href: 'Images/emma.jpg',
+          mediaType: 'image/jpeg',
+          status: 'identical',
+          fromChapter: '../Images/emma.jpg',
+        })),
+      });
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const reply = await socket.receive({
+        id: 1,
+        tool: 'add_media',
+        params: { filename: 'emma.jpg', base64: jpeg },
+      });
+      expect(reply).toMatchObject({
+        ok: true,
+        result: { status: 'unchanged', href: 'Images/emma.jpg' },
+      });
+      expect(ctx.addMedia).not.toHaveBeenCalled();
+    });
+
+    it('different bytes need overwrite, and an overwrite is asked even under a session grant', async () => {
+      const changed = vi.fn(async () => ({
+        href: 'Images/emma.jpg',
+        mediaType: 'image/jpeg',
+        status: 'changed',
+        fromChapter: '../Images/emma.jpg',
+      }));
+      const { ctx } = makeContext({ checkMedia: changed });
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      buttons(ctx, 'Writes: ask')[0].click();
+      const refused = await socket.receive({
+        id: 1,
+        tool: 'add_media',
+        params: { filename: 'emma.jpg', base64: jpeg },
+      });
+      expect((refused as { error: string }).error).toContain('pass overwrite: true');
+      const reply = socket.receive({
+        id: 2,
+        tool: 'add_media',
+        params: { filename: 'emma.jpg', base64: jpeg, overwrite: true },
+      });
+      await waitFor(() => buttons(ctx, 'Replace').length === 1);
+      buttons(ctx, 'Replace')[0].click();
+      expect(await reply).toMatchObject({ ok: true, result: { status: 'replaced' } });
+    });
+
+    it('is refused without a prompt while track changes is on', async () => {
+      const { ctx, setReviewMode } = makeContext();
+      setReviewMode(true);
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const reply = await socket.receive({
+        id: 1,
+        tool: 'add_media',
+        params: { filename: 'a.jpg', base64: jpeg },
+      });
+      expect((reply as { error: string }).error).toContain('track changes is on');
+      expect(ctx.checkMedia).not.toHaveBeenCalled();
+    });
+
+    it('refuses when the book changed while the prompt was open', async () => {
+      let calls = 0;
+      const { ctx } = makeContext({
+        checkMedia: vi.fn(async () => ({
+          href: calls++ === 0 ? 'Images/emma.jpg' : 'Images/emma-1.jpg',
+          mediaType: 'image/jpeg',
+          status: 'new',
+          fromChapter: '',
+        })),
+      });
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const reply = socket.receive({
+        id: 1,
+        tool: 'add_media',
+        params: { filename: 'emma.jpg', base64: jpeg },
+      });
+      await waitFor(() => buttons(ctx, 'Allow once').length === 1);
+      buttons(ctx, 'Allow once')[0].click();
+      expect((await reply) as { error: string }).toMatchObject({
+        ok: false,
+        error: 'the book changed while the request was pending — nothing was added',
+      });
+      expect(ctx.addMedia).not.toHaveBeenCalled();
     });
   });
 

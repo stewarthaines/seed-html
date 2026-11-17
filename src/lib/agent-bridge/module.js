@@ -24,6 +24,12 @@ const FEED_LIMIT = 100;
 /** Decoded byte cap for binary overwrites riding base64 through JSON-RPC. */
 const WRITE_SIZE_LIMIT = 2 * 1024 * 1024;
 /**
+ * Decoded byte cap for media the bridge reads from an allowed folder: large
+ * enough for a scan or a song, small enough that a mistaken path cannot pull a
+ * film into the book.
+ */
+const MEDIA_SIZE_LIMIT = 25 * 1024 * 1024;
+/**
  * An unanswered consent prompt times out before the bridge's tool-call timeout
  * fires. A timeout is not a refusal: it usually means the author is away, so it
  * reaches the agent as its own error (see unanswered()), not as a denial.
@@ -382,6 +388,10 @@ async function handleTool(ctx, session, ui, tool, params) {
       return writeFile(ctx, session, ui, params);
     case 'create_chapter':
       return createChapter(ctx, session, ui, params);
+    case 'allow_media_folder':
+      return allowMediaFolder(ui, params);
+    case 'add_media':
+      return addMedia(ctx, session, ui, params);
     default:
       throw new Error('unknown tool: ' + tool);
   }
@@ -673,6 +683,115 @@ async function createChapter(ctx, session, ui, params) {
   return { created: true, ...created };
 }
 
+// --- media from disk (process/BRIDGE_HANDOVER_TOOLS.md, section 2) ---------------
+
+const ALLOW_DENY = [
+  ['Allow', 'once'],
+  ['Deny', 'deny'],
+];
+
+/**
+ * The author lets the bridge read media from a folder on their disk. The
+ * bridge process does the reading and keeps the list; this is the author's
+ * answer. Always asked, whatever the write grant says: it is access to their
+ * files, not a change to the book.
+ */
+async function allowMediaFolder(ui, params) {
+  const { path, name } = params;
+  if (typeof path !== 'string' || !path) throw new Error('path required');
+  const choice = await ui.promptConsent(
+    `agent wants to add media from the folder ${typeof name === 'string' && name ? name : path} (${path})`,
+    `media from ${path}`,
+    ALLOW_DENY
+  );
+  if (choice === 'deny') throw denied('the author did not allow this folder');
+  if (choice === 'timeout' || choice === 'disconnected') throw unanswered(choice, 'request');
+  return { allowed: true, path };
+}
+
+/**
+ * Add a file the bridge read from an allowed folder to the book's manifest.
+ * A new file is prose-tier (a session grant covers it). Identical bytes under
+ * the same name change nothing and need no answer. Different bytes under the
+ * same name are refused unless the agent asks to overwrite, and an overwrite
+ * is asked every time: it replaces something the book already shows.
+ */
+async function addMedia(ctx, session, ui, params) {
+  const { filename, base64, folder, overwrite, source } = params;
+  if (typeof filename !== 'string' || !filename) throw new Error('filename required');
+  if (typeof base64 !== 'string') throw new Error('file content missing');
+  if (folder !== undefined && typeof folder !== 'string') throw new Error('folder must be a name');
+  const bytes = base64ToBytes(base64);
+  if (bytes.length > MEDIA_SIZE_LIMIT) {
+    throw new Error(`the file is ${bytes.length} bytes, over the ${MEDIA_SIZE_LIMIT} byte limit`);
+  }
+  const requestWorkspaceId = ctx.getProjectInfo().workspaceId;
+  if (!requestWorkspaceId) throw new Error('no project open');
+  const request = { filename, bytes, folder };
+  const validate = async () => {
+    if (ctx.getProjectInfo().workspaceId !== requestWorkspaceId) {
+      throw new Error('the open project changed while the request was pending');
+    }
+    if (ctx.getProjectInfo().reviewMode === true) {
+      throw new Error(
+        'track changes is on, and it locks the book’s file list — ask the author to turn it off to add media'
+      );
+    }
+    return ctx.checkMedia(request);
+  };
+  const plan = await validate();
+  if (plan.status === 'identical') {
+    return {
+      href: plan.href,
+      mediaType: plan.mediaType,
+      status: 'unchanged',
+      fromChapter: plan.fromChapter,
+    };
+  }
+  if (plan.status === 'changed' && overwrite !== true) {
+    throw new Error(
+      `${plan.href} already exists with different content — pass overwrite: true to replace it (the author is asked every time), or use another file name`
+    );
+  }
+  if (session.grant === 'session' && session.workspaceId !== requestWorkspaceId) {
+    setGrant(session, ui, null);
+  }
+  const from = typeof source === 'string' ? ` from ${source}` : '';
+  if (plan.status === 'changed') {
+    const choice = await ui.promptConsent(
+      `agent wants to REPLACE ${plan.href}${from} (${bytes.length} bytes)`,
+      `replace ${plan.href}`,
+      [
+        ['Replace', 'once'],
+        ['Deny', 'deny'],
+      ]
+    );
+    if (choice === 'deny') throw denied('the author refused to replace this file');
+    if (choice === 'timeout' || choice === 'disconnected') throw unanswered(choice, 'request');
+  } else if (session.grant !== 'session') {
+    const choice = await ui.promptConsent(
+      `agent wants to add ${plan.href}${from} (${bytes.length} bytes)`,
+      `add ${plan.href}`
+    );
+    if (choice === 'deny') throw denied('the author refused this file');
+    if (choice === 'timeout' || choice === 'disconnected') throw unanswered(choice, 'request');
+    if (choice === 'session') setGrant(session, ui, requestWorkspaceId);
+  }
+  // The book may have changed while the prompt was open: the answer was to the
+  // add that was shown, so anything else is refused.
+  const recheck = await validate();
+  if (recheck.href !== plan.href || recheck.status !== plan.status) {
+    throw new Error('the book changed while the request was pending — nothing was added');
+  }
+  const added = await ctx.addMedia(request, requestWorkspaceId);
+  return {
+    href: added.href,
+    mediaType: plan.mediaType,
+    status: plan.status === 'changed' ? 'replaced' : 'added',
+    fromChapter: added.fromChapter,
+  };
+}
+
 function base64ToBytes(base64) {
   const raw = atob(base64);
   const bytes = new Uint8Array(raw.length);
@@ -720,6 +839,15 @@ function describeAction(tool, params, result) {
     return `measured ${selectors || 'elements'} in the preview`;
   }
   if (tool === 'project_info') return 'read project info';
+  if (tool === 'allow_media_folder') {
+    return result
+      ? `allowed media from ${result.path}`
+      : `allow media from ${params?.path ?? 'a folder'}`;
+  }
+  if (tool === 'add_media') {
+    if (!result) return `add ${params?.filename ?? 'media'}`;
+    return `${result.status} ${result.href}`;
+  }
   if (tool === 'create_chapter' && typeof params?.id === 'string') {
     if (!result) return `add chapter ${params.id}`;
     return (
@@ -953,7 +1081,15 @@ function buildOverlay(mountEl, onDisconnect, onGrantToggle) {
      * The same inline prompt for any prose-tier change: `question` is shown
      * while it is open, `subject` after it closes ("allowed: <subject>").
      */
-    promptConsent(questionText, subject) {
+    promptConsent(
+      questionText,
+      subject,
+      choices = [
+        ['Allow once', 'once'],
+        ['Allow this session', 'session'],
+        ['Deny', 'deny'],
+      ]
+    ) {
       panel.hidden = false;
       pill.setAttribute('aria-expanded', 'true');
       return new Promise(resolve => {
@@ -981,11 +1117,7 @@ function buildOverlay(mountEl, onDisconnect, onGrantToggle) {
         const timer = setTimeout(() => finish('timeout'), CONSENT_TIMEOUT_MS);
         const reminder = setTimeout(() => play('whisper'), CONSENT_REMINDER_MS);
         play('chime');
-        for (const [labelText, choice] of [
-          ['Allow once', 'once'],
-          ['Allow this session', 'session'],
-          ['Deny', 'deny'],
-        ]) {
+        for (const [labelText, choice] of choices) {
           const button = document.createElement('button');
           button.type = 'button';
           button.textContent = labelText;

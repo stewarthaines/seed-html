@@ -110,6 +110,34 @@ export interface AgentBridgeModuleContext {
     request: NewChapterRequest,
     workspaceId: string
   ) => Promise<{ id: string; after: string | null; sourcePath: string; linear: boolean }>;
+  /**
+   * Where a media file from disk would land and whether that is new, a no-op
+   * (identical bytes) or a replacement, without changing the book. Rejects
+   * with the refusal (not a picture, sound, video or font; empty; bad folder;
+   * read-only project).
+   */
+  checkMedia: (request: AgentMediaFileRequest) => Promise<AgentMediaFilePlan>;
+  /** Add or replace the file through the manifest import path and update app state. */
+  addMedia: (
+    request: AgentMediaFileRequest,
+    workspaceId: string
+  ) => Promise<{ href: string; fromChapter: string }>;
+}
+
+export interface AgentMediaFileRequest {
+  /** File name as it was on disk. */
+  filename: string;
+  bytes: Uint8Array;
+  /** Optional single subfolder inside the media type's folder. */
+  folder?: string;
+}
+
+export interface AgentMediaFilePlan {
+  href: string;
+  mediaType: string;
+  status: 'new' | 'identical' | 'changed';
+  /** `href` as a chapter's markup references it. */
+  fromChapter: string;
 }
 
 export interface NewChapterRequest {

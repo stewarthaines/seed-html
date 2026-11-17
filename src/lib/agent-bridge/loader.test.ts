@@ -41,6 +41,13 @@ const buildContext = () => ({
   isFileDirty: () => false,
   reviewWrite: async () => 'deny' as const,
   diffStat: () => ({ added: 0, removed: 0 }),
+  checkMedia: async () => ({
+    href: 'Images/x.jpg',
+    mediaType: 'image/jpeg',
+    status: 'new' as const,
+    fromChapter: '../Images/x.jpg',
+  }),
+  addMedia: async () => ({ href: 'Images/x.jpg', fromChapter: '../Images/x.jpg' }),
   checkNewChapter: async () => ({ id: 'x', after: null, linear: true }),
   createChapter: async () => ({
     id: 'x',
