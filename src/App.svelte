@@ -6,6 +6,7 @@
   import { primaryLanguage } from './lib/epub/opf-utils.js';
   import { readValidationReport } from './lib/plugins/validation-report.js';
   import { addAgentMedia, checkAgentMedia } from './lib/import/agent-media.js';
+  import { waitForPackageValidator } from './lib/plugins/package-validator.js';
   import { convertManifestPathToXHTMLPath, manifestHrefToPath } from './lib/epub/path-utils.js';
   import { buildEpubcheckSection } from './lib/checks/epubcheck-section.js';
   import {
@@ -781,6 +782,55 @@
   let lastRecordedView: ViewType | null = null;
 
   /**
+   * Show chapter `id` in the Write view for the bridge's seed_show_chapter and
+   * wait for its render to settle (a fresh preview update for that chapter
+   * that is no longer transforming), so the agent's next measurement or check
+   * describes it rather than the chapter before.
+   */
+  async function showChapterForAgent(id: string): Promise<{
+    chapterId: string;
+    rendered: boolean;
+    error?: string;
+    warnings: string[];
+  }> {
+    const workspace = currentWorkspaceState;
+    if (!workspace) throw new Error('no project open');
+    if (!workspace.opf.spine.some(item => item.idref === id)) {
+      throw new Error(`no chapter "${id}" in the book`);
+    }
+    const before = spinePreviewData;
+    const alreadyShown =
+      currentView === 'spine' && before.spineItemId === id && !before.isTransforming;
+    if (!alreadyShown) {
+      window.dispatchEvent(new CustomEvent('select-spine-item', { detail: { itemId: id } }));
+    }
+    const deadline = Date.now() + 30_000;
+    for (;;) {
+      const data = spinePreviewData;
+      const settled =
+        data.spineItemId === id &&
+        !data.isTransforming &&
+        (alreadyShown || data !== before) &&
+        (data.xhtmlContent !== '' || data.transformError);
+      if (settled) {
+        const error = data.transformError
+          ? String(data.transformError.message ?? data.transformError)
+          : undefined;
+        return {
+          chapterId: id,
+          rendered: !error,
+          ...(error ? { error } : {}),
+          warnings: [...data.transformWarnings],
+        };
+      }
+      if (Date.now() > deadline) {
+        throw new Error(`chapter "${id}" did not finish rendering within 30 seconds`);
+      }
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  }
+
+  /**
    * Check an agent's new-chapter request against the open book (the bridge's
    * create_chapter tool). The id is taken as given: a renamed chapter would
    * break the links the agent writes to it.
@@ -975,6 +1025,37 @@
             linear: plan.linear,
             sourcePath: result.newChapter.sourcePath ?? `SOURCE/text/${plan.id}.txt`,
           };
+        },
+        showChapter: id => showChapterForAgent(id),
+        renderChapters: async ids => {
+          const workspaceId = currentWorkspaceState?.id;
+          if (!workspaceId) throw new Error('no project open');
+          if (isReadOnly) throw new Error('this project is read-only');
+          if (ids) {
+            const known = new Set(currentWorkspaceState!.opf.spine.map(item => item.idref));
+            const unknown = ids.filter(id => !known.has(id));
+            if (unknown.length) throw new Error(`not chapters in the book: ${unknown.join(', ')}`);
+          }
+          return renderChapters(workspaceId, ids);
+        },
+        packageBook: async () => {
+          const workspaceId = currentWorkspaceState?.id;
+          if (!workspaceId) throw new Error('no project open');
+          if (isReadOnly) throw new Error('this project is read-only');
+          const filename = await handlePackageRequest(workspaceId);
+          if (!filename) throw new Error('packaging produced no file');
+          return { filename };
+        },
+        validatePackage: async () => {
+          if (!currentWorkspaceState) throw new Error('no project open');
+          if (!publishPluginUrl) {
+            throw new Error(
+              'validation needs the publishing plugin, which is off — the author can turn it on in Settings'
+            );
+          }
+          navigationStore.navigateTo('publish');
+          const validator = await waitForPackageValidator(30_000);
+          return { ...(await validator()) };
         },
         checkMedia: async request => {
           const workspace = currentWorkspaceState;
@@ -1312,11 +1393,36 @@
   // source are touched, so hand-authored XHTML without a SOURCE/text/*.txt is
   // never overwritten with an empty render.
   async function regenerateAllChapters(workspaceId: string): Promise<void> {
-    if (!transformEngine || !extensionManager) return;
+    await renderChapters(workspaceId);
+  }
+
+  /** One chapter's outcome from {@link renderChapters}. */
+  type ChapterRenderResult =
+    | { id: string; status: 'rendered' }
+    | { id: string; status: 'failed'; error: string }
+    | { id: string; status: 'no-source' };
+
+  /**
+   * Render chapters' stored XHTML through the project's transforms and save it,
+   * without moving the visible preview: every chapter in spine order, or the
+   * `ids` given (in spine order). The pass behind regenerateAllChapters and the
+   * bridge's seed_render. A chapter with no text source is reported and left
+   * alone, so hand-authored XHTML is never replaced by an empty render.
+   */
+  async function renderChapters(
+    workspaceId: string,
+    ids?: string[]
+  ): Promise<ChapterRenderResult[]> {
+    if (!transformEngine || !extensionManager) return [];
 
     const workspace = await workspaceService.loadWorkspace(workspaceId);
-    const spine = workspace.opf.spine ?? [];
-    if (spine.length === 0) return;
+    const wanted = ids ? new Set(ids) : null;
+    const spine = (workspace.opf.spine ?? []).filter(item => !wanted || wanted.has(item.idref));
+    if (spine.length === 0) return [];
+    const results: ChapterRenderResult[] = [];
+    // The manager reports each render through these callbacks; the loop below
+    // reads what the current chapter's render said.
+    let lastError: string | null = null;
 
     const settingsService = appState!.getSettingsService();
     // A throwaway blob manager so this pass's blob URLs are separable from the
@@ -1343,8 +1449,11 @@
       () => {
         /* preview output unused — this pass only persists regenerated XHTML */
       },
-      () => {
-        /* render errors are non-fatal here; a bad chapter just isn't relinked */
+      event => {
+        // Non-fatal for the pass: a bad chapter just isn't relinked, and the
+        // caller hears which one and why.
+        const where = event.error?.scriptName ? ` (${event.error.scriptName})` : '';
+        lastError = `${event.stage}: ${event.error?.message ?? 'render failed'}${where}`;
       }
     );
 
@@ -1352,11 +1461,21 @@
       await manager.initialize();
       for (const item of spine) {
         const hasText = await fileStorage.fileExists(workspaceId, `SOURCE/text/${item.idref}.txt`);
-        if (!hasText) continue;
+        if (!hasText) {
+          results.push({ id: item.idref, status: 'no-source' });
+          continue;
+        }
         // switchToSpineItem (re)loads the chapter's text; force a synchronous
         // render that persists the regenerated XHTML to the manifest.
+        lastError = null;
         await manager.switchToSpineItem(item.idref);
         await manager.forcePreviewUpdate();
+        const error = lastError as string | null;
+        results.push(
+          error
+            ? { id: item.idref, status: 'failed', error }
+            : { id: item.idref, status: 'rendered' }
+        );
       }
     } finally {
       manager.cleanup();
@@ -1372,6 +1491,7 @@
     if (appState) {
       appState.workspace = await workspaceService.loadWorkspace(workspaceId);
     }
+    return results;
   }
 
   // The new-project dialog is owned here so any view can open it (the Projects
@@ -1857,6 +1977,7 @@
 
         // Notify the Publish view (if already open) to refresh its list.
         window.dispatchEvent(new CustomEvent('epub-packaged'));
+        return result.filename;
       } else {
         throw new Error(result.error || 'Unknown packaging error');
       }

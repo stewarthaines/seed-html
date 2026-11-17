@@ -1,6 +1,6 @@
 # Bridge — tools for a whole-book hand-over
 
-Status: design agreed 2026-11-18 (review questions answered below); building on branch `agent-ergonomics` in section order. Covers the first three gaps in `process/AGENTIC_AUTHORING.md` proposal 1 (order agreed 2026-11-17): create a chapter, add media from disk, and render / package / validate on request. Builds on `process/AGENT_BRIDGE.md` (design of record), `BRIDGE_WRITE_REVIEW.md` (code vs prose tiers) and `BRIDGE_PREAPPROVED_WRITES.md` (session grant).
+Status: design agreed and all three sections built on branch `agent-ergonomics`, 2026-11-18 (`npm run validate` green; unit-tested, not yet tried against a live bridge, which needs a restart to list the new tools). Covers the first three gaps in `process/AGENTIC_AUTHORING.md` proposal 1 (order agreed 2026-11-17): create a chapter, add media from disk, and render / package / validate on request. Builds on `process/AGENT_BRIDGE.md` (design of record), `BRIDGE_WRITE_REVIEW.md` (code vs prose tiers) and `BRIDGE_PREAPPROVED_WRITES.md` (session grant).
 
 ## Shape of the change
 
@@ -38,7 +38,7 @@ Arguments: `id`. Moves the Write view's preview to that chapter and returns when
 
 ### `seed_render`
 
-Arguments: `ids` (chapter ids; all when omitted). Renders each chapter through the same pipeline and writes its XHTML (`spine-preview-manager.ts` writes it at line ~581 today), without moving the visible preview. Returns per chapter: rendered, failed (with the transform error), or unchanged. Read tier: it only regenerates outputs the app owns. This deliberately does not decide staleness; review question 3 (when packaging should re-render) is for the next session, and an explicit render keeps that question open.
+Arguments: `ids` (chapter ids; all when omitted). Renders each chapter through the same pipeline and writes its XHTML (`spine-preview-manager.ts` writes it at line ~581 today), without moving the visible preview. Returns per chapter: rendered, failed (with the transform error), or no-source (hand-authored XHTML, left alone). Built 2026-11-18 by giving `regenerateAllChapters` in `App.svelte` an id list and per-chapter results (`renderChapters`); it does not tell an unchanged render from a changed one. Read tier: it only regenerates outputs the app owns. This deliberately does not decide staleness; review question 3 (when packaging should re-render) is for the next session, and an explicit render keeps that question open.
 
 ### `seed_package`
 

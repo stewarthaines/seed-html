@@ -39,7 +39,13 @@
     summarizeReport,
     type ValidationReport,
   } from '../epub-validation.js';
-  import type { NavigateMessage, OpenMessage, RemoteConfig } from '../types.js';
+  import type {
+    NavigateMessage,
+    OpenMessage,
+    RemoteConfig,
+    ValidateMessage,
+    ValidatedMessage,
+  } from '../types.js';
   import DestinationBadge from './DestinationBadge.svelte';
   import Switch from './Switch.svelte';
   import ValidationModal from './ValidationModal.svelte';
@@ -89,24 +95,81 @@
     })();
   });
 
-  async function validate() {
-    if (!latest) return;
+  /** Check `pkg`, keep the report where the host reads it, and show it. */
+  async function runValidation(pkg: LocalPackage): Promise<ValidationReport> {
     validating = true;
     try {
-      const result = await validateEpub(latest.file, latest.identifier);
+      const result = await validateEpub(pkg.file, pkg.identifier);
       await saveValidationReport(result);
       publishLatestReport(result);
       report = result;
       if (result.errorCount > 0 || result.warningCount > 0) showReport = true;
+      return result;
+    } finally {
+      validating = false;
+    }
+  }
+
+  async function validate() {
+    if (!latest) return;
+    try {
+      await runValidation(latest);
     } catch (error) {
       showStatus(
         translate('Validation failed: {error}', { error: String(error) }),
         'error',
       );
-    } finally {
-      validating = false;
     }
   }
+
+  // The host asks for the same check the button runs (the agent bridge's
+  // seed_validate, process/BRIDGE_HANDOVER_TOOLS.md). The request can arrive
+  // straight after the handshake, before the directory hand-over has loaded
+  // this book's packages, so wait for those first.
+  async function answerValidate(requestId: string) {
+    let reply: ValidatedMessage;
+    try {
+      const dir = await waitForDirHandle();
+      if (!dir) throw new Error('The packages folder was not handed over.');
+      await reloadPackages(dir);
+      if (!latest) throw new Error('This book has no package yet.');
+      reply = { type: 'validated', requestId, report: await runValidation(latest) };
+    } catch (error) {
+      reply = {
+        type: 'validated',
+        requestId,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+    window.parent.postMessage(reply, window.origin);
+  }
+
+  function waitForDirHandle(): Promise<FileSystemDirectoryHandle | null> {
+    return new Promise((resolve) => {
+      let unsubscribe = () => {};
+      const timer = setTimeout(() => {
+        unsubscribe();
+        resolve(null);
+      }, 10_000);
+      unsubscribe = dirHandle.subscribe((dir) => {
+        if (!dir) return;
+        clearTimeout(timer);
+        queueMicrotask(() => unsubscribe());
+        resolve(dir);
+      });
+    });
+  }
+
+  $effect(() => {
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== window.origin || event.source !== window.parent) return;
+      const data = event.data as Partial<ValidateMessage> | null;
+      if (data?.type !== 'validate' || typeof data.requestId !== 'string') return;
+      void answerValidate(data.requestId);
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  });
 
   function openReport() {
     if (!report) return;

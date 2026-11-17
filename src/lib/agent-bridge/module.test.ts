@@ -157,6 +157,20 @@ function makeContext(overrides: Record<string, unknown> = {}) {
     isFileDirty: vi.fn(() => false),
     reviewWrite: vi.fn(async (_request: Record<string, unknown>) => 'accept' as const),
     diffStat: vi.fn(() => ({ added: 1, removed: 1 })),
+    showChapter: vi.fn(async (id: string) => ({ chapterId: id, rendered: true, warnings: [] })),
+    renderChapters: vi.fn(async (ids?: string[]) =>
+      (ids ?? ['chapter01', 'chapter02']).map(id => ({ id, status: 'rendered' }))
+    ),
+    packageBook: vi.fn(async () => ({ filename: 'bulletin.epub' })),
+    validatePackage: vi.fn(async () => ({
+      filename: 'bulletin.epub',
+      timestamp: 1,
+      isValid: false,
+      errorCount: 1,
+      warningCount: 0,
+      messages: [{ level: 'error', id: 'RSC-007', message: 'missing file' }],
+      surface: 'display-only',
+    })),
     checkMedia: vi.fn(async (request: { filename: string }) => ({
       href: `Images/${request.filename}`,
       mediaType: 'image/jpeg',
@@ -1245,6 +1259,84 @@ describe('agent bridge module', () => {
         error: 'the author refused this chapter',
       });
       expect(ctx.createChapter).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('show, render, package, validate', () => {
+    async function connected(overrides: Record<string, unknown> = {}) {
+      const made = makeContext(overrides);
+      start(made.ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      return { ...made, socket };
+    }
+
+    it('shows a chapter without a prompt and logs it', async () => {
+      const { ctx, socket } = await connected();
+      const reply = await socket.receive({
+        id: 1,
+        tool: 'show_chapter',
+        params: { id: 'chapter02' },
+      });
+      expect(reply).toMatchObject({ ok: true, result: { chapterId: 'chapter02', rendered: true } });
+      expect(ctx.mountEl.textContent).toContain('showed chapter chapter02');
+      const missing = await socket.receive({ id: 2, tool: 'show_chapter', params: {} });
+      expect(missing).toMatchObject({ ok: false, error: 'id required' });
+    });
+
+    it('renders all chapters, or the ids given, and counts failures in the feed', async () => {
+      const { ctx, socket } = await connected({
+        renderChapters: vi.fn(async () => [
+          { id: 'a', status: 'rendered' },
+          { id: 'b', status: 'failed', error: 'text: boom' },
+        ]),
+      });
+      const all = await socket.receive({ id: 1, tool: 'render', params: {} });
+      expect(ctx.renderChapters).toHaveBeenCalledWith(undefined);
+      expect(all).toMatchObject({
+        ok: true,
+        result: { chapters: [{ id: 'a' }, { id: 'b', error: 'text: boom' }] },
+      });
+      expect(ctx.mountEl.textContent).toContain('rendered 1 chapter, 1 failed');
+      await socket.receive({ id: 2, tool: 'render', params: { ids: ['b'] } });
+      expect(ctx.renderChapters).toHaveBeenLastCalledWith(['b']);
+      const bad = await socket.receive({ id: 3, tool: 'render', params: { ids: 'b' } });
+      expect(bad).toMatchObject({ ok: false, error: 'ids must be a list of chapter ids' });
+    });
+
+    it('packages and returns the filename', async () => {
+      const { socket } = await connected();
+      const reply = await socket.receive({ id: 1, tool: 'package', params: {} });
+      expect(reply).toMatchObject({ ok: true, result: { filename: 'bulletin.epub' } });
+    });
+
+    it("validates and returns the report's own fields", async () => {
+      const { ctx, socket } = await connected();
+      const reply = (await socket.receive({ id: 1, tool: 'validate', params: {} })) as {
+        result: Record<string, unknown>;
+      };
+      expect(reply.result).toEqual({
+        filename: 'bulletin.epub',
+        timestamp: 1,
+        isValid: false,
+        errorCount: 1,
+        warningCount: 0,
+        messages: [{ level: 'error', id: 'RSC-007', message: 'missing file' }],
+      });
+      expect(ctx.mountEl.textContent).toContain('validated bulletin.epub: 1 errors, 0 warnings');
+    });
+
+    it('passes the plugin-off refusal through', async () => {
+      const { socket } = await connected({
+        validatePackage: vi.fn(async () => {
+          throw new Error('validation needs the publishing plugin, which is off');
+        }),
+      });
+      const reply = await socket.receive({ id: 1, tool: 'validate', params: {} });
+      expect(reply).toMatchObject({
+        ok: false,
+        error: 'validation needs the publishing plugin, which is off',
+      });
     });
   });
 

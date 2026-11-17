@@ -176,7 +176,7 @@ wss.on('connection', socket => {
   });
 });
 
-function callTab(tool, params) {
+function callTab(tool, params, timeoutMs = 120000) {
   if (bindError) return Promise.reject(new Error(bindError));
   if (!tab || tab.readyState !== 1) {
     return Promise.reject(
@@ -189,8 +189,8 @@ function callTab(tool, params) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       pending.delete(id);
-      reject(new Error('tab did not answer within 120s'));
-    }, 120000);
+      reject(new Error(`tab did not answer within ${timeoutMs / 1000}s`));
+    }, timeoutMs);
     pending.set(id, { resolve, reject, timer });
     tab.send(JSON.stringify({ id, tool, params }));
   });
@@ -320,6 +320,43 @@ const TOOLS = [
       },
       required: ['id'],
     },
+  },
+  {
+    name: 'seed_show_chapter',
+    description:
+      "Move the author's Write view to a chapter and wait until its preview has rendered. Returns whether it rendered, the transform error if not, and the transform warnings. Afterwards seed_get_rendered_xhtml, seed_inspect_elements and the axe half of seed_get_checks describe that chapter. The author sees their preview move, so say why before you do it during their session.",
+    inputSchema: {
+      type: 'object',
+      properties: { id: { type: 'string', description: 'chapter id' } },
+      required: ['id'],
+    },
+  },
+  {
+    name: 'seed_render',
+    description:
+      "Render chapters through the project's transforms and save their XHTML, without moving the author's preview: all chapters, or the ids given. Use after editing sources of chapters that are not open, after seed_create_chapter (whose XHTML is a placeholder until rendered), or before seed_package, since packaging zips the XHTML as last saved. Returns per chapter: rendered, failed (with the error), or no-source (hand-authored XHTML, left alone).",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        ids: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'chapter ids; all when omitted',
+        },
+      },
+    },
+  },
+  {
+    name: 'seed_package',
+    description:
+      "Package the open book as an EPUB, as the Share view's Package button does (the nav is regenerated first). Chapters are packaged as last rendered — run seed_render first if sources changed since. Returns the package filename.",
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'seed_validate',
+    description:
+      "Run epubcheck on the book's latest package and return the report (validity, counts, messages with locations). Runs in the publishing plugin, so the app switches to the Share view while it works; when the plugin is off, this is refused and the author can turn it on in Settings. Package first (seed_package) — the report is about the latest package, whose filename and timestamp it carries. seed_get_checks shows the same report afterwards.",
+    inputSchema: { type: 'object', properties: {} },
   },
   {
     name: 'seed_allow_media_folder',
@@ -483,6 +520,16 @@ async function handleToolCall(name, args) {
         base64: args?.base64,
         expectedHash: args?.expected_hash,
       });
+    case 'seed_show_chapter':
+      return callTab('show_chapter', { id: args?.id });
+    case 'seed_render':
+      // A whole book through the transforms can take a while.
+      return callTab('render', { ids: args?.ids }, 300000);
+    case 'seed_package':
+      return callTab('package', {}, 300000);
+    case 'seed_validate':
+      // The plugin load plus epubcheck; the app gives up at 30s + 150s.
+      return callTab('validate', {}, 200000);
     case 'seed_allow_media_folder': {
       const expanded = expandPath(args?.path);
       let real;

@@ -388,6 +388,34 @@ async function handleTool(ctx, session, ui, tool, params) {
       return writeFile(ctx, session, ui, params);
     case 'create_chapter':
       return createChapter(ctx, session, ui, params);
+    // Render, package and validate (process/BRIDGE_HANDOVER_TOOLS.md, section
+    // 3): no prompt — they regenerate outputs the app owns, or read — but each
+    // lands in the feed, since the author sees the preview or the view move.
+    case 'show_chapter':
+      if (typeof params.id !== 'string' || !params.id) throw new Error('id required');
+      return ctx.showChapter(params.id);
+    case 'render': {
+      const ids = params.ids;
+      if (ids !== undefined && (!Array.isArray(ids) || !ids.every(id => typeof id === 'string'))) {
+        throw new Error('ids must be a list of chapter ids');
+      }
+      const chapters = await ctx.renderChapters(ids?.length ? ids : undefined);
+      return { chapters };
+    }
+    case 'package':
+      return ctx.packageBook();
+    case 'validate': {
+      const report = await ctx.validatePackage();
+      // The report's own fields, without the plugin's display-only extras.
+      return {
+        filename: report.filename,
+        timestamp: report.timestamp,
+        isValid: report.isValid,
+        errorCount: report.errorCount,
+        warningCount: report.warningCount,
+        messages: report.messages,
+      };
+    }
     case 'allow_media_folder':
       return allowMediaFolder(ui, params);
     case 'add_media':
@@ -839,6 +867,24 @@ function describeAction(tool, params, result) {
     return `measured ${selectors || 'elements'} in the preview`;
   }
   if (tool === 'project_info') return 'read project info';
+  if (tool === 'show_chapter') {
+    return result ? `showed chapter ${result.chapterId}` : `show chapter ${params?.id ?? ''}`;
+  }
+  if (tool === 'render') {
+    if (!result) return 'render chapters';
+    const failed = result.chapters.filter(c => c.status === 'failed').length;
+    const rendered = result.chapters.filter(c => c.status === 'rendered').length;
+    return (
+      `rendered ${rendered} chapter${rendered === 1 ? '' : 's'}` +
+      (failed ? `, ${failed} failed` : '')
+    );
+  }
+  if (tool === 'package') return result ? `packaged ${result.filename}` : 'package the book';
+  if (tool === 'validate') {
+    return result
+      ? `validated ${result.filename}: ${result.errorCount} errors, ${result.warningCount} warnings`
+      : 'validate the latest package';
+  }
   if (tool === 'allow_media_folder') {
     return result
       ? `allowed media from ${result.path}`

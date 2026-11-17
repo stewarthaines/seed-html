@@ -29,11 +29,16 @@
  *   - describe-book (plugin → main) / book-described (main → plugin): the
  *     accessible-pdf plugin asks for the open book laid out and measured; the
  *     host replies with the page description and the book's font files.
+ *   - validate (main → plugin) / validated (plugin → main): the host asks the
+ *     publish plugin's Send surface to run epubcheck on the latest package,
+ *     for the agent bridge; the plugin replies with the report.
  *
  * This mirrors the wire shapes implemented by plugins/publish-to-remote/src
  * (its src/types.ts + src/index.ts). The ./API.md spec predates the
  * plugin and omits `plugin-ready`/`projectId`; this module is the source of truth.
  */
+
+import type { ValidationReport } from './validation-report.js';
 
 /** Presentation surface a plugin binds to. */
 export type PluginPresentation = 'panel' | 'view';
@@ -416,6 +421,36 @@ export function isDescribeBookMessage(value: unknown): value is DescribeBookMess
     typeof value === 'object' &&
     value !== null &&
     (value as { type?: unknown }).type === 'describe-book' &&
+    typeof (value as { requestId?: unknown }).requestId === 'string'
+  );
+}
+
+/**
+ * main → plugin (the publish plugin's Send surface): run epubcheck on the open
+ * book's latest package, as its Validate button does, saving and publishing
+ * the report the same way. Sent for the agent bridge's `seed_validate`
+ * (process/BRIDGE_HANDOVER_TOOLS.md). Answered with `validated`.
+ */
+export interface ValidateMessage {
+  type: 'validate';
+  requestId: string;
+}
+
+/**
+ * plugin → main, the answer to `validate`: the report (the shape
+ * `validation-report.ts` reads), or why there is none (no package yet,
+ * epubcheck failed).
+ */
+export type ValidatedMessage =
+  | { type: 'validated'; requestId: string; report: ValidationReport }
+  | { type: 'validated'; requestId: string; error: string };
+
+/** Runtime guard: is this a `validated` answer? */
+export function isValidatedMessage(value: unknown): value is ValidatedMessage {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    (value as { type?: unknown }).type === 'validated' &&
     typeof (value as { requestId?: unknown }).requestId === 'string'
   );
 }

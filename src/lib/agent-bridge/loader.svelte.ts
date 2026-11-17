@@ -117,12 +117,40 @@ export interface AgentBridgeModuleContext {
    * read-only project).
    */
   checkMedia: (request: AgentMediaFileRequest) => Promise<AgentMediaFilePlan>;
+  /**
+   * Move the Write view's preview to chapter `id` and resolve once its render
+   * has settled: whether it rendered, the transform error if not, and its
+   * warnings. The author sees their preview move.
+   */
+  showChapter: (id: string) => Promise<{
+    chapterId: string;
+    rendered: boolean;
+    error?: string;
+    warnings: string[];
+  }>;
+  /**
+   * Render chapters' XHTML through the transforms and save it, all of them or
+   * the ids given, without moving the preview.
+   */
+  renderChapters: (ids?: string[]) => Promise<AgentChapterRender[]>;
+  /** Package the open book as the Share view's Package button does. */
+  packageBook: () => Promise<{ filename: string }>;
+  /**
+   * Run the publish plugin's epubcheck on the latest package, switching the
+   * app to Share so the plugin is loaded. Rejects when the plugin is off.
+   */
+  validatePackage: () => Promise<Record<string, unknown>>;
   /** Add or replace the file through the manifest import path and update app state. */
   addMedia: (
     request: AgentMediaFileRequest,
     workspaceId: string
   ) => Promise<{ href: string; fromChapter: string }>;
 }
+
+export type AgentChapterRender =
+  | { id: string; status: 'rendered' }
+  | { id: string; status: 'failed'; error: string }
+  | { id: string; status: 'no-source' };
 
 export interface AgentMediaFileRequest {
   /** File name as it was on disk. */
