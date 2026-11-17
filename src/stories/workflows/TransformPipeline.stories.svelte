@@ -170,10 +170,10 @@ function transformDOM(htmlDocument) {
         await canvas.findByTestId('spine-item-chapter01', {}, { timeout: 30000 })
       );
       // Advanced Mode shows a chapter-title textbox too — target the content
-      // pane by its accessible name.
+      // pane by its accessible name, which is the file it holds.
       const editor = await canvas.findByRole(
         'textbox',
-        { name: 'Pane 1 content' },
+        { name: 'chapter01.txt' },
         { timeout: 60000 }
       );
       await userEvent.click(editor);
@@ -234,7 +234,7 @@ function transformDOM(htmlDocument) {
       // The pane loads the script from storage; wait until it's in the editor.
       const editor = await canvas.findByRole(
         'textbox',
-        { name: 'Pane 1 content' },
+        { name: 'transformMarker.js' },
         { timeout: 30000 }
       );
       await waitFor(

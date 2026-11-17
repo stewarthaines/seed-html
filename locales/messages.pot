@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-16\n"
-"PO-Revision-Date: 2026-11-16\n"
+"POT-Creation-Date: 2026-11-17\n"
+"PO-Revision-Date: 2026-11-17\n"
 "Language: \n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -3974,14 +3974,6 @@ msgstr ""
 
 #: src/lib/components/spine/PreviewSurface.svelte
 msgid "Paginating…"
-msgstr ""
-
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Pane 1 content"
-msgstr ""
-
-#: src/lib/components/spine/EditorPane.svelte
-msgid "Pane 2 content"
 msgstr ""
 
 #: src/lib/components/spine/sr-walk.ts

@@ -31,7 +31,7 @@ Use the Playwright MCP browser tools only (browser_navigate, browser_evaluate, b
 5. For each chapter in order, one evaluate call per chapter:
    - First chapter: rename chapter01. Others: click the previous chapter's spine item, wait 0.6 s, click the button whose aria-label is "Append Item" (it has no text), wait 1.2 s, find the new spine item id by diffing [data-testid^="spine-item-"] before and after.
    - Rename: click button[aria-label="Edit <id>"], wait 0.5 s, set #edit-spine-id to the new id, click the button with text "Save", wait 1.2 s, confirm the new id is in the spine list.
-   - Fill: click [data-testid="spine-item-<newid>"], wait 1 s, set input[aria-label="Chapter title"], confirm an option of select[aria-label="Select file for pane 1"] contains "<newid>.txt", set textarea[aria-label="Pane 1 content"] to the source, wait 1.8 s (autosave).
+   - Fill: click [data-testid="spine-item-<newid>"], wait 1 s, set input[aria-label="Chapter title"], confirm the first span.file-current reads "<newid>.txt", set textarea[aria-labelledby$="-pane1-file"] (whose accessible name is that file name) to the source, wait 1.8 s (autosave).
 6. Click every chapter once more in order (1.5 s each) so each stored render sees the others' records.
 7. Click "Metadata", set the input whose aria-label is "Language tag" to en-GB (autosaves; no Save button). This makes dates day-first.
 8. Verify: open the first chapter; in the preview iframe (the iframe whose contentDocument has a .family element) read .family-findings li — it must be empty — and .family, .tree, .lifeline-row text. Open the index chapter and read its h3 list. Report these.

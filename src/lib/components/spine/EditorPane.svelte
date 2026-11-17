@@ -214,6 +214,11 @@
   }
   const filesMenuItems = $derived(filesMenuItemsFor(1));
   const filesMenuItems2 = $derived(filesMenuItemsFor(2));
+  // Each editor's accessible name is the file it holds (the visible
+  // file-current label), not its pane number: a pane can stay on a stylesheet
+  // or script while chapters switch, and a screen reader or an agent reading
+  // the accessibility tree must know which file it is about to edit.
+  const uid = $props.id();
   const pane1FileLabel = $derived(
     availableFiles1.find(f => f.value === pane1SelectedFile)?.label ?? pane1SelectedFile
   );
@@ -1024,7 +1029,7 @@
 <!-- Pane 1's file picker. Lives in the header row in single-pane mode; moves
      into pane 1's own header in dual mode (next to its editor). -->
 {#snippet pane1FileSelector()}
-  <span class="file-current" title={pane1FileLabel}>{pane1FileLabel}</span>
+  <span class="file-current" id="{uid}-pane1-file" title={pane1FileLabel}>{pane1FileLabel}</span>
   {@render readOnlyBadge(1)}
   <BookMenu
     label={$t('Files for this chapter')}
@@ -1317,7 +1322,9 @@
         <div class="editor-pane pane-2">
           <div class="pane-header">
             <div class="pane-header-content">
-              <span class="file-current" title={pane2FileLabel}>{pane2FileLabel}</span>
+              <span class="file-current" id="{uid}-pane2-file" title={pane2FileLabel}
+                >{pane2FileLabel}</span
+              >
               {@render readOnlyBadge(2)}
               <BookMenu
                 label={$t('Files for this chapter')}
@@ -1360,7 +1367,7 @@
                 spellcheck={pane2SelectedFile === 'text'}
                 autocomplete="off"
                 autocapitalize="off"
-                aria-label={$t('Pane 2 content')}
+                aria-labelledby="{uid}-pane2-file"
                 dir={paneDir(pane2SelectedFile)}
               ></textarea>
             {/if}
@@ -1417,7 +1424,7 @@
               spellcheck={pane1SelectedFile === 'text'}
               autocomplete="off"
               autocapitalize="off"
-              aria-label={$t('Pane 1 content')}
+              aria-labelledby="{uid}-pane1-file"
               dir={paneDir(pane1SelectedFile)}
             ></textarea>
           {/if}
