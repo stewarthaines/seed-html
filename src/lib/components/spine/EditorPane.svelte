@@ -34,6 +34,7 @@
   import { primaryLanguage } from '$lib/epub/opf-utils.js';
   import { convertManifestPathToXHTMLPath } from '$lib/epub/path-utils.js';
   import { t } from '$lib/i18n';
+  import { confirmDialog } from '$lib/components/confirm/confirm.svelte';
   import { RowsIcon, SquareIcon, ArrowUUpLeft, X, Lock } from 'phosphor-svelte';
   import { onMount } from 'svelte';
   import { FileStorageAPI } from '$lib/storage/index.js';
@@ -383,11 +384,13 @@
         if (collision?.identical) {
           href = collision.existingHref;
         } else if (collision) {
-          const overwrite = confirm(
-            $t('{href} already exists with different content. Overwrite it?', {
+          const overwrite = await confirmDialog({
+            message: $t('{href} already exists with different content. Overwrite it?', {
               href: collision.existingHref,
-            })
-          );
+            }),
+            confirmLabel: $t('Overwrite'),
+            danger: true,
+          });
           if (!overwrite) continue;
           await overwriteManifestFile(
             ws,

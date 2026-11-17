@@ -25,6 +25,8 @@
   import { navigationStore } from './lib/navigation';
   import type { ViewType } from './lib/navigation/types';
   import AboutDialog from './lib/components/shell/AboutDialog.svelte';
+  import ConfirmDialog from './lib/components/confirm/ConfirmDialog.svelte';
+  import { confirmDialog } from './lib/components/confirm/confirm.svelte';
   import BottomTabs, { type PhoneTab } from './lib/components/shell/BottomTabs.svelte';
   import ChapterStrip from './lib/components/shell/ChapterStrip.svelte';
   import { viewport } from './lib/stores/viewport.svelte.js';
@@ -919,11 +921,14 @@
   const handleManifestItemDelete = async (detail: { itemIds: string[] }) => {
     if (!currentWorkspaceState || !appState || isReadOnly || detail.itemIds.length === 0) return;
 
-    const confirmed = confirm(
-      detail.itemIds.length === 1
-        ? $t('Are you sure you want to delete this item?')
-        : $t('Delete {count} items? This cannot be undone.', { count: detail.itemIds.length })
-    );
+    const confirmed = await confirmDialog({
+      message:
+        detail.itemIds.length === 1
+          ? $t('Are you sure you want to delete this item?')
+          : $t('Delete {count} items? This cannot be undone.', { count: detail.itemIds.length }),
+      confirmLabel: $t('Delete'),
+      danger: true,
+    });
     if (!confirmed) return;
 
     try {
@@ -961,7 +966,12 @@
     if (!currentWorkspaceState || isReadOnly) return;
 
     const name = detail.path.split('/').pop() || detail.path;
-    if (!confirm($t('Delete {name}? This cannot be undone.', { name }))) return;
+    const confirmed = await confirmDialog({
+      message: $t('Delete {name}? This cannot be undone.', { name }),
+      confirmLabel: $t('Delete'),
+      danger: true,
+    });
+    if (!confirmed) return;
 
     try {
       if (detail.path.startsWith('SOURCE/')) {
@@ -1829,14 +1839,13 @@
         identity.identifier
       );
       if (existing) {
-        const openExisting = confirm(
-          $t(
-            '“{title}” is already a project in this browser. OK opens it; Cancel imports a fresh copy.',
-            {
-              title: identity.title || $t('Untitled'),
-            }
-          )
-        );
+        const openExisting = await confirmDialog({
+          message: $t('“{title}” is already a project in this browser.', {
+            title: identity.title || $t('Untitled'),
+          }),
+          confirmLabel: $t('Open it'),
+          cancelLabel: $t('Import a fresh copy'),
+        });
         if (openExisting) {
           await appState.loadWorkspace(existing);
           const firstSpineItem = appState.workspace?.opf?.spine?.[0];
@@ -2498,6 +2507,8 @@
   {#if aboutOpen}
     <AboutDialog onClose={() => closeOverlay('nav-about')} />
   {/if}
+
+  <ConfirmDialog />
 
   {#if settingsOpen && appState}
     <SettingsView

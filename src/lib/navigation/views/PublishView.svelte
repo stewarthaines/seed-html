@@ -1,5 +1,6 @@
 <script lang="ts">
   import { t, currentLocale } from '$lib/i18n';
+  import { confirmDialog } from '$lib/components/confirm/confirm.svelte';
   import { saveBlob } from '$lib/zip/index.js';
   import type { PublishService, PublishedEpub } from '$lib/services/publish/publish.service.js';
   import type { OpenMessage } from '$lib/plugins/contract';
@@ -164,7 +165,12 @@
   }
 
   async function handleDelete(filename: string) {
-    if (!confirm($t('Delete {filename}? This cannot be undone.', { filename }))) return;
+    const confirmed = await confirmDialog({
+      message: $t('Delete {filename}? This cannot be undone.', { filename }),
+      confirmLabel: $t('Delete'),
+      danger: true,
+    });
+    if (!confirmed) return;
     try {
       await publishService.deletePublishedEpub(filename);
       await load();

@@ -6,6 +6,7 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { t } from '../i18n';
+  import { confirmDialog } from '$lib/components/confirm/confirm.svelte';
   import { spineSignature } from '../manifest/signatures.js';
   import SpineItem from './SpineItem.svelte';
   import EditSpineItemDialog from './EditSpineItemDialog.svelte';
@@ -263,12 +264,14 @@
     // remaining item; guard here too so no other caller can empty the spine.
     if (spineItems.length <= 1) return;
 
-    const confirmed = window.confirm(
-      $t(
+    const confirmed = await confirmDialog({
+      message: $t(
         "Are you sure you want to delete chapter '{name}'? This will permanently delete the chapter and its source file.",
         { name: itemId }
-      )
-    );
+      ),
+      confirmLabel: $t('Delete'),
+      danger: true,
+    });
 
     if (!confirmed) return;
 
