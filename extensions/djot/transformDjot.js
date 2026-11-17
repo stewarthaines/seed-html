@@ -9,7 +9,30 @@ function transformText(text, idref) {
   djot.applyFilter(ast, clipFilter);
   djot.applyFilter(ast, symbolFilter);
   djot.applyFilter(ast, idFilter);
-  return djot.renderHTML(ast);
+  return djot.renderHTML(ast, { overrides: { footnote_reference: repeatedNoteRef() } });
+}
+
+/**
+ * Renderer override: a footnote cited more than once gets a distinct id on
+ * each repeat reference.
+ *
+ * djot renders every reference to the same note as `<a id="fnrefN">`, so a
+ * note cited twice puts two identical ids in the chapter and epubcheck rejects
+ * it (RSC-005). The first reference keeps `fnrefN`, which the note's backlink
+ * targets; repeats become `fnrefN-2`, `fnrefN-3`. The markup is djot's own —
+ * only the id of a repeat changes.
+ */
+function repeatedNoteRef() {
+  const seen = {};
+  return (node, renderer) => {
+    const html = renderer.renderAstNodeDefault(node);
+    const match = /^<a id="(fnref\d+)"/.exec(html);
+    if (!match) return html;
+    const id = match[1];
+    seen[id] = (seen[id] || 0) + 1;
+    if (seen[id] === 1) return html;
+    return `<a id="${id}-${seen[id]}"` + html.slice(match[0].length);
+  };
 }
 
 /**
@@ -29,6 +52,12 @@ function transformText(text, idref) {
  * `#fragment` link destinations go through the same slug function. An author
  * linking to djot's generated id still resolves, because the heading text and
  * djot's id differ only in the characters this function normalises anyway.
+ *
+ * An id the author chose — the block attribute above the heading,
+ * `{#emma-arrival}` then `## Emma's arrival` — is kept: djot puts it in the
+ * section's `attributes.id`, while a generated one sits in `autoAttributes.id`.
+ * It is only passed through the same slug, so an illegal character in it is
+ * normalised exactly as a link to it is.
  */
 function idFilter() {
   const slug = raw => {
@@ -63,6 +92,13 @@ function idFilter() {
   return {
     section: {
       enter: node => {
+        const explicit = node.attributes && node.attributes.id;
+        if (explicit) {
+          const id = slug(explicit);
+          taken.add(id);
+          node.attributes = { ...node.attributes, id };
+          return;
+        }
         const heading = (node.children || []).find(child => child.tag === 'heading');
         if (!heading) return;
         const base = slug(textOf(heading));
