@@ -380,6 +380,8 @@ async function handleTool(ctx, session, ui, tool, params) {
     }
     case 'write_file':
       return writeFile(ctx, session, ui, params);
+    case 'create_chapter':
+      return createChapter(ctx, session, ui, params);
     default:
       throw new Error('unknown tool: ' + tool);
   }
@@ -452,8 +454,8 @@ async function reviewCodeWrite(ctx, ui, request) {
  */
 const BASE_PREFIX = 'SOURCE/main/';
 
-function denied() {
-  const error = new Error('the author denied this write');
+function denied(message = 'the author denied this write') {
+  const error = new Error(message);
   error.denied = true;
   return error;
 }
@@ -465,11 +467,11 @@ function denied() {
  * and the same write is welcome once they are back. Flagged so the error cue
  * stays silent: the reminder cue has already sounded.
  */
-function unanswered(reason) {
+function unanswered(reason, what = 'write') {
   const error = new Error(
     reason === 'timeout'
-      ? `no answer to the write prompt within ${CONSENT_TIMEOUT_MS / 1000} seconds — the author is probably away, not refusing. Nothing was written; send the same write again once they reply`
-      : 'the bridge connection closed before the author answered — nothing was written'
+      ? `no answer to the ${what} prompt within ${CONSENT_TIMEOUT_MS / 1000} seconds — the author is probably away, not refusing. Nothing was changed; send the same ${what} again once they reply`
+      : 'the bridge connection closed before the author answered — nothing was changed'
   );
   error.unanswered = true;
   return error;
@@ -610,6 +612,67 @@ async function writeFile(ctx, session, ui, params) {
   };
 }
 
+// --- create_chapter (process/BRIDGE_HANDOVER_TOOLS.md, section 1) ---------------
+
+/**
+ * Add a chapter to the spine with its source, through the app's own spine
+ * service (manifest, spine and OPF stay consistent and the sidebar updates).
+ *
+ * Prose tier: a session grant covers it, otherwise one prompt. Refused while
+ * track changes is on, because review mode locks the spine; the agent is told
+ * so it can ask the author. A taken or unusable id is an error rather than a
+ * renamed chapter, so the agent's links to the id stay right.
+ */
+async function createChapter(ctx, session, ui, params) {
+  const { id, title, after, linear, text } = params;
+  if (typeof id !== 'string' || !id) throw new Error('id required');
+  if (title !== undefined && typeof title !== 'string') throw new Error('title must be a string');
+  if (after !== undefined && typeof after !== 'string')
+    throw new Error('after must be a chapter id');
+  if (linear !== undefined && typeof linear !== 'boolean')
+    throw new Error('linear must be true or false');
+  if (text !== undefined && typeof text !== 'string') throw new Error('text must be a string');
+  const size = typeof text === 'string' ? new TextEncoder().encode(text).length : 0;
+  if (size > WRITE_SIZE_LIMIT) {
+    throw new Error(`text of ${size} bytes exceeds the ${WRITE_SIZE_LIMIT} byte limit`);
+  }
+  const requestWorkspaceId = ctx.getProjectInfo().workspaceId;
+  if (!requestWorkspaceId) throw new Error('no project open');
+
+  // Same order as writeFile: validate, ask, validate again (the prompt can sit
+  // open while the author edits the spine, turns on track changes or switches
+  // projects), then act.
+  const request = { id, title, after, linear: linear ?? true, text: text ?? '' };
+  const validate = async () => {
+    if (ctx.getProjectInfo().workspaceId !== requestWorkspaceId) {
+      throw new Error('the open project changed while the request was pending');
+    }
+    if (ctx.getProjectInfo().reviewMode === true) {
+      throw new Error(
+        'track changes is on, and it locks the chapter list — ask the author to turn it off to add chapters'
+      );
+    }
+    return ctx.checkNewChapter(request);
+  };
+  const plan = await validate();
+  if (session.grant === 'session' && session.workspaceId !== requestWorkspaceId) {
+    setGrant(session, ui, null);
+  }
+  if (session.grant !== 'session') {
+    const where = plan.after ? `after ${plan.after}` : 'at the start';
+    const choice = await ui.promptConsent(
+      `agent wants to add chapter ${plan.id} ${where}${plan.linear ? '' : ' (outside the reading order)'} (${size} bytes)`,
+      `add chapter ${plan.id}`
+    );
+    if (choice === 'deny') throw denied('the author refused this chapter');
+    if (choice === 'timeout' || choice === 'disconnected') throw unanswered(choice, 'request');
+    if (choice === 'session') setGrant(session, ui, requestWorkspaceId);
+    await validate();
+  }
+  const created = await ctx.createChapter(request, requestWorkspaceId);
+  return { created: true, ...created };
+}
+
 function base64ToBytes(base64) {
   const raw = atob(base64);
   const bytes = new Uint8Array(raw.length);
@@ -657,6 +720,12 @@ function describeAction(tool, params, result) {
     return `measured ${selectors || 'elements'} in the preview`;
   }
   if (tool === 'project_info') return 'read project info';
+  if (tool === 'create_chapter' && typeof params?.id === 'string') {
+    if (!result) return `add chapter ${params.id}`;
+    return (
+      `created chapter ${result.id}` + (result.after ? ` after ${result.after}` : ' at the start')
+    );
+  }
   return tool;
 }
 
@@ -871,17 +940,27 @@ function buildOverlay(mountEl, onDisconnect, onGrantToggle) {
      * hears back cleanly), or 'disconnected' when cancelled.
      */
     promptWrite(path, size, stat) {
+      // Line counts, not just a byte total: "+2 −1" and "+400 −380" are the
+      // difference between a tweak and a rewrite, and the byte count alone
+      // cannot tell them apart.
+      const scale = stat ? ` +${stat.added} −${stat.removed} lines` : '';
+      return this.promptConsent(
+        `agent wants to write ${path} (${size} bytes${scale})`,
+        `write ${path}`
+      );
+    },
+    /**
+     * The same inline prompt for any prose-tier change: `question` is shown
+     * while it is open, `subject` after it closes ("allowed: <subject>").
+     */
+    promptConsent(questionText, subject) {
       panel.hidden = false;
       pill.setAttribute('aria-expanded', 'true');
       return new Promise(resolve => {
         const li = document.createElement('li');
         Object.assign(li.style, { padding: '4px 12px', overflowWrap: 'anywhere' });
         const question = document.createElement('div');
-        // Line counts, not just a byte total: "+2 −1" and "+400 −380" are the
-        // difference between a tweak and a rewrite, and the byte count alone
-        // cannot tell them apart.
-        const scale = stat ? ` +${stat.added} −${stat.removed} lines` : '';
-        question.textContent = `agent wants to write ${path} (${size} bytes${scale})`;
+        question.textContent = questionText;
         const row = document.createElement('div');
         Object.assign(row.style, { display: 'flex', gap: '6px', marginBlockStart: '4px' });
         const finish = choice => {
@@ -895,7 +974,7 @@ function buildOverlay(mountEl, onDisconnect, onGrantToggle) {
               timeout: 'timed out, no answer',
               disconnected: 'cancelled, connection closed',
             }[choice] ?? 'allowed';
-          question.textContent = `${outcome}: write ${path}`;
+          question.textContent = `${outcome}: ${subject}`;
           resolve(choice);
         };
         pendingPrompts.add(finish);

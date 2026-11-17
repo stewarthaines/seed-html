@@ -157,6 +157,17 @@ function makeContext(overrides: Record<string, unknown> = {}) {
     isFileDirty: vi.fn(() => false),
     reviewWrite: vi.fn(async (_request: Record<string, unknown>) => 'accept' as const),
     diffStat: vi.fn(() => ({ added: 1, removed: 1 })),
+    checkNewChapter: vi.fn(async (request: { id: string; after?: string; linear: boolean }) => ({
+      id: request.id,
+      after: request.after ?? 'chapter02',
+      linear: request.linear,
+    })),
+    createChapter: vi.fn(async (request: { id: string; after?: string; linear: boolean }) => ({
+      id: request.id,
+      after: request.after ?? 'chapter02',
+      linear: request.linear,
+      sourcePath: `SOURCE/text/${request.id}.txt`,
+    })),
     ...overrides,
   };
   return {
@@ -1114,6 +1125,117 @@ describe('agent bridge module', () => {
       'ws-1'
     );
     expect(ctx.writeTextFile).not.toHaveBeenCalled();
+  });
+
+  describe('create_chapter', () => {
+    const buttons = (ctx: { mountEl: HTMLElement }, label: string) =>
+      [...ctx.mountEl.querySelectorAll('button')].filter(b => b.textContent === label);
+
+    it('asks, then adds the chapter through the app with the request as given', async () => {
+      const { ctx } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const reply = socket.receive({
+        id: 1,
+        tool: 'create_chapter',
+        params: { id: 'emma-arrival', title: 'Emma', after: 'chapter01', text: 'Emma came.' },
+      });
+      await waitFor(() => buttons(ctx, 'Allow once').length === 1);
+      expect(ctx.mountEl.textContent).toContain(
+        'agent wants to add chapter emma-arrival after chapter01'
+      );
+      expect(ctx.createChapter).not.toHaveBeenCalled();
+      buttons(ctx, 'Allow once')[0].click();
+      expect(await reply).toMatchObject({
+        id: 1,
+        ok: true,
+        result: {
+          created: true,
+          id: 'emma-arrival',
+          after: 'chapter01',
+          sourcePath: 'SOURCE/text/emma-arrival.txt',
+        },
+      });
+      expect(ctx.createChapter).toHaveBeenCalledWith(
+        { id: 'emma-arrival', title: 'Emma', after: 'chapter01', linear: true, text: 'Emma came.' },
+        'ws-1'
+      );
+      const items = [...ctx.mountEl.querySelectorAll('li')].map(li => li.textContent);
+      expect(items).toContain('created chapter emma-arrival after chapter01');
+    });
+
+    it('a session grant covers it, as it covers prose writes', async () => {
+      const { ctx } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      buttons(ctx, 'Writes: ask')[0].click();
+      const reply = await socket.receive({
+        id: 1,
+        tool: 'create_chapter',
+        params: { id: 'notes', linear: false },
+      });
+      expect(reply).toMatchObject({ ok: true, result: { id: 'notes', linear: false } });
+      expect(buttons(ctx, 'Allow once')).toHaveLength(0);
+    });
+
+    it('is refused without a prompt while track changes is on', async () => {
+      const { ctx, setReviewMode } = makeContext();
+      setReviewMode(true);
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const reply = await socket.receive({ id: 1, tool: 'create_chapter', params: { id: 'x' } });
+      expect(reply).toMatchObject({ ok: false });
+      expect((reply as { error: string }).error).toContain('track changes is on');
+      expect(ctx.checkNewChapter).not.toHaveBeenCalled();
+      expect(buttons(ctx, 'Allow once')).toHaveLength(0);
+    });
+
+    it("passes the app's refusal back without a prompt", async () => {
+      const { ctx } = makeContext({
+        checkNewChapter: vi.fn(async () => {
+          throw new Error('the id "chapter01" is already used in this book — choose another');
+        }),
+      });
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const reply = await socket.receive({
+        id: 1,
+        tool: 'create_chapter',
+        params: { id: 'chapter01' },
+      });
+      expect((reply as { error: string }).error).toContain('already used');
+      expect(buttons(ctx, 'Allow once')).toHaveLength(0);
+      expect(ctx.createChapter).not.toHaveBeenCalled();
+    });
+
+    it('rejects a missing id before asking the app', async () => {
+      const { ctx } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const reply = await socket.receive({ id: 1, tool: 'create_chapter', params: { text: 'x' } });
+      expect((reply as { error: string }).error).toBe('id required');
+      expect(ctx.checkNewChapter).not.toHaveBeenCalled();
+    });
+
+    it('a denial adds nothing', async () => {
+      const { ctx } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      const reply = socket.receive({ id: 1, tool: 'create_chapter', params: { id: 'x' } });
+      await waitFor(() => buttons(ctx, 'Deny').length === 1);
+      buttons(ctx, 'Deny')[0].click();
+      expect((await reply) as { error: string }).toMatchObject({
+        ok: false,
+        error: 'the author refused this chapter',
+      });
+      expect(ctx.createChapter).not.toHaveBeenCalled();
+    });
   });
 
   it('parks at disconnected on an unexpected close — no reconnect attempt', () => {

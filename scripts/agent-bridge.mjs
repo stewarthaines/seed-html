@@ -230,6 +230,31 @@ const TOOLS = [
       required: ['path', 'expected_hash'],
     },
   },
+  {
+    name: 'seed_create_chapter',
+    description:
+      "Add a new chapter to the book: a spine entry, its generated XHTML and its source SOURCE/text/<id>.txt holding `text` exactly as given (frontmatter block included, if the project uses one). Same preconditions as a chapter-source write: seed_get_authoring_guide, seed_get_project_setup, and a seed_read_file of every transform script it lists. The id is used as given — it must be lowercase letters, digits, '-' or '_', starting with a letter, and not already in use; a taken id is refused rather than renamed, so links to it stay right. Placed after the chapter named by `after`, or at the end of the book. The author approves it in the app like a prose write (a session approval covers it). Refused while track changes is on, because review mode locks the chapter list: tell the author and ask. The new chapter's XHTML is a plain placeholder render until the chapter is next rendered through the project's transforms; the author's open chapter does not change.",
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'the new chapter id, e.g. "emma-arrival"' },
+        title: {
+          type: 'string',
+          description: 'title for the placeholder XHTML; the id when omitted',
+        },
+        after: {
+          type: 'string',
+          description: 'id of the chapter to place it after; end of the book when omitted',
+        },
+        linear: {
+          type: 'boolean',
+          description: 'false keeps it out of the reading order (notes, research); default true',
+        },
+        text: { type: 'string', description: 'the chapter source, as the file will hold it' },
+      },
+      required: ['id'],
+    },
+  },
 ];
 
 /**
@@ -280,6 +305,32 @@ let guideServed = false;
 let setupTransforms = null; // transformScripts from the last project_setup
 const readPaths = new Set();
 
+/**
+ * The preconditions for changing chapter sources, shared by seed_write_file
+ * (on SOURCE/text/) and seed_create_chapter. Throws the refusal naming what is
+ * still missing.
+ */
+function requireChapterContext() {
+  if (!guideServed) {
+    throw new Error(
+      'call seed_get_authoring_guide first — writes require the authoring contract in context (EPUB CSS fallbacks, generated-file boundaries, per-project transforms)'
+    );
+  }
+  // Chapter markup is the transforms' output; editing sources without the
+  // pipeline in context is how agents apply the wrong syntax.
+  if (!setupTransforms) {
+    throw new Error(
+      'editing chapter sources requires the project pipeline in context — call seed_get_project_setup, then seed_read_file each transform script it lists, then retry'
+    );
+  }
+  const unread = setupTransforms.filter(path => !readPaths.has(path));
+  if (unread.length > 0) {
+    throw new Error(
+      `read the configured transform scripts before editing chapter sources — chapter markup is their output. Still unread: ${unread.join(', ')}`
+    );
+  }
+}
+
 async function handleToolCall(name, args) {
   switch (name) {
     case 'seed_get_authoring_guide':
@@ -322,25 +373,22 @@ async function handleToolCall(name, args) {
         );
       }
       if (typeof args?.path === 'string' && args.path.startsWith('SOURCE/text/')) {
-        // Chapter markup is the transforms' output; editing sources without
-        // the pipeline in context is how agents apply the wrong syntax.
-        if (!setupTransforms) {
-          throw new Error(
-            'editing chapter sources requires the project pipeline in context — call seed_get_project_setup, then seed_read_file each transform script it lists, then retry'
-          );
-        }
-        const unread = setupTransforms.filter(path => !readPaths.has(path));
-        if (unread.length > 0) {
-          throw new Error(
-            `read the configured transform scripts before editing chapter sources — chapter markup is their output. Still unread: ${unread.join(', ')}`
-          );
-        }
+        requireChapterContext();
       }
       return callTab('write_file', {
         path: args?.path,
         text: args?.text,
         base64: args?.base64,
         expectedHash: args?.expected_hash,
+      });
+    case 'seed_create_chapter':
+      requireChapterContext();
+      return callTab('create_chapter', {
+        id: args?.id,
+        title: args?.title,
+        after: args?.after,
+        linear: args?.linear,
+        text: args?.text,
       });
     default:
       throw new Error('unknown tool: ' + name);

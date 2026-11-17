@@ -89,6 +89,35 @@ export interface AgentBridgeModuleContext {
    * jsdiff lives there and the overlay is dependency-free imperative DOM.
    */
   diffStat: (current: string | null, incoming: string | null) => { added: number; removed: number };
+  /**
+   * Check a new-chapter request against the open book without changing it, so
+   * the consent prompt can name the real position. Rejects with the refusal
+   * (id taken or not usable as given, a stray source file already at its path,
+   * unknown `after`, read-only project).
+   * `after` in the result is the chapter the new one will follow, null when it
+   * will be first.
+   */
+  checkNewChapter: (request: NewChapterRequest) => Promise<{
+    id: string;
+    after: string | null;
+    linear: boolean;
+  }>;
+  /**
+   * Add the chapter through the spine service and hand the updated workspace
+   * to app state. Re-checks first; refused if the open project changed.
+   */
+  createChapter: (
+    request: NewChapterRequest,
+    workspaceId: string
+  ) => Promise<{ id: string; after: string | null; sourcePath: string; linear: boolean }>;
+}
+
+export interface NewChapterRequest {
+  id: string;
+  title?: string;
+  after?: string;
+  linear: boolean;
+  text: string;
 }
 
 interface AgentBridgeHandle {

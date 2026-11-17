@@ -13,7 +13,7 @@
     swapMetadataUpdates,
     translationMetaFrom,
   } from './lib/translations/editions.js';
-  import type { AgentBridge } from './lib/agent-bridge/loader.svelte.js';
+  import type { AgentBridge, NewChapterRequest } from './lib/agent-bridge/loader.svelte.js';
   import LayoutManager from './lib/LayoutManager.svelte';
   import TopBar from './lib/components/shell/TopBar.svelte';
   import BrandBar from './lib/components/shell/BrandBar.svelte';
@@ -778,6 +778,51 @@
   // restored startup view never records an entry.
   let lastRecordedView: ViewType | null = null;
 
+  /**
+   * Check an agent's new-chapter request against the open book (the bridge's
+   * create_chapter tool). The id is taken as given: a renamed chapter would
+   * break the links the agent writes to it.
+   */
+  async function checkNewChapter(request: NewChapterRequest): Promise<{
+    id: string;
+    after: string | null;
+    linear: boolean;
+  }> {
+    const workspace = currentWorkspaceState;
+    if (!workspace) throw new Error('no project open');
+    if (structureLocked) {
+      throw new Error(
+        reviewMode
+          ? 'track changes is on, and it locks the chapter list — ask the author to turn it off to add chapters'
+          : 'this project is read-only'
+      );
+    }
+    const id = request.id;
+    if (!/^[a-z][a-z0-9_-]*$/.test(id)) {
+      throw new Error(
+        `"${id}" cannot be used as a chapter id — use lowercase letters, digits, "-" or "_", starting with a letter`
+      );
+    }
+    if (workspace.opf.manifest.some(item => item.id === id)) {
+      throw new Error(`the id "${id}" is already used in this book — choose another`);
+    }
+    const sourcePath = `SOURCE/text/${id}.txt`;
+    if (await workspaceService.fileExists(workspace.id, sourcePath)) {
+      throw new Error(
+        `${sourcePath} already exists but is not a chapter in the book — choose another id, or ask the author`
+      );
+    }
+    const spine = workspace.opf.spine;
+    let after: string | null = spine.length ? spine[spine.length - 1].idref : null;
+    if (request.after !== undefined) {
+      if (!spine.some(item => item.idref === request.after)) {
+        throw new Error(`no chapter "${request.after}" in the book to place it after`);
+      }
+      after = request.after;
+    }
+    return { id, after, linear: request.linear };
+  }
+
   async function toggleAgentBridge(): Promise<void> {
     if (!agentBridgeAvailable) return;
     if (!agentBridge) {
@@ -896,6 +941,38 @@
             else removed += lines.length;
           }
           return { added, removed };
+        },
+        checkNewChapter: request => checkNewChapter(request),
+        createChapter: async (request, workspaceId) => {
+          if (currentWorkspaceState?.id !== workspaceId) {
+            throw new Error('the open project changed — chapter not added');
+          }
+          const plan = await checkNewChapter(request);
+          const workspace = currentWorkspaceState;
+          const index = plan.after
+            ? workspace.opf.spine.findIndex(item => item.idref === plan.after) + 1
+            : 0;
+          const result = await spineService.addChapter(workspace, {
+            title: request.title || plan.id,
+            baseName: plan.id,
+            linear: plan.linear,
+            createSourceFile: true,
+            sourceText: request.text,
+            insertIndex: index,
+          });
+          // The service derives a unique id from the base name; checkNewChapter
+          // made sure the name was free, so a different id means the book
+          // changed underneath — say so rather than report the wrong id.
+          if (result.newChapter.id !== plan.id) {
+            throw new Error(`chapter was added as ${result.newChapter.id}, not ${plan.id}`);
+          }
+          if (appState) appState.workspace = result.updatedWorkspace;
+          return {
+            id: plan.id,
+            after: plan.after,
+            linear: plan.linear,
+            sourcePath: result.newChapter.sourcePath ?? `SOURCE/text/${plan.id}.txt`,
+          };
         },
         isFileDirty: (path, diskText) => {
           if (diskText === null) return false;

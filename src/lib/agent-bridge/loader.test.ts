@@ -41,6 +41,13 @@ const buildContext = () => ({
   isFileDirty: () => false,
   reviewWrite: async () => 'deny' as const,
   diffStat: () => ({ added: 0, removed: 0 }),
+  checkNewChapter: async () => ({ id: 'x', after: null, linear: true }),
+  createChapter: async () => ({
+    id: 'x',
+    after: null,
+    linear: true,
+    sourcePath: 'SOURCE/text/x.txt',
+  }),
 });
 
 describe('agent bridge loader', () => {
