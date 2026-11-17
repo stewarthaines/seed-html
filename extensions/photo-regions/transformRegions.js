@@ -55,8 +55,9 @@
  * resolved against the chapter's own href). size is the image's pixel size
  * — what a crop of the region needs to know its aspect — copied from the
  * photo-regions panel's library (SOURCE/plugins/photo-regions/regions.json,
- * which stamps it whenever the image is opened there) and simply absent when
- * the library does not know it. Breadcrumbed sets are not recorded. A chapter
+ * which stamps it whenever the image is opened there); when the library does
+ * not know it, kept from this chapter's earlier record, else read once from
+ * the image itself, and absent only when the image cannot be read. Breadcrumbed sets are not recorded. A chapter
  * with no bound regions writes `null` over a record it used to have and never
  * gains a file otherwise; an unchanged record is not rewritten. Reading it
  * back: ctx.readSourceText('data/regions/<idref>.json') — `null` or missing
@@ -178,12 +179,30 @@ async function transformDOM(htmlDocument, idref, ctx) {
       } catch {
         library = {};
       }
+      let previous = [];
+      try {
+        const parsed = existing ? JSON.parse(existing) : null;
+        if (Array.isArray(parsed)) previous = parsed;
+      } catch {
+        previous = [];
+      }
+      const validSize = size =>
+        size && Number(size.w) > 0 && Number(size.h) > 0
+          ? { w: Number(size.w), h: Number(size.h) }
+          : undefined;
+      const measured = new Map();
       for (const record of records) {
         const entry = library[record.href];
-        const size = entry && !Array.isArray(entry) ? entry.size : undefined;
-        if (size && Number(size.w) > 0 && Number(size.h) > 0) {
-          record.size = { w: Number(size.w), h: Number(size.h) };
+        let size = validSize(entry && !Array.isArray(entry) ? entry.size : undefined);
+        if (!size) {
+          const earlier = previous.find(item => item && item.href === record.href);
+          size = validSize(earlier && earlier.size);
         }
+        if (!size) {
+          if (!measured.has(record.href)) measured.set(record.href, measureImage(record.href));
+          size = await measured.get(record.href);
+        }
+        if (size) record.size = size;
       }
       const text = JSON.stringify(records);
       if (existing !== text) await ctx.writeSourceText(path, text);
@@ -191,6 +210,28 @@ async function transformDOM(htmlDocument, idref, ctx) {
       console.error('photo-regions: failed to record regions', error);
     }
   };
+
+  /** The image's pixel size read from the image itself — the fallback when
+   *  neither the panel's library nor this chapter's earlier record knows it
+   *  (regions written as text never pass through the panel). Read once per
+   *  image: the size then lives in the record, and the next render finds it
+   *  there. Undefined when the image cannot be read or decoded. */
+  async function measureImage(href) {
+    if (typeof ctx.readManifestDataURL !== 'function' || typeof Image !== 'function') {
+      return undefined;
+    }
+    try {
+      const url = await ctx.readManifestDataURL(href);
+      const image = new Image();
+      image.src = url;
+      await image.decode();
+      return image.naturalWidth > 0 && image.naturalHeight > 0
+        ? { w: image.naturalWidth, h: image.naturalHeight }
+        : undefined;
+    } catch {
+      return undefined;
+    }
+  }
 
   if (carriers.length === 0 && detailCarriers.length === 0) {
     await persistRecord();

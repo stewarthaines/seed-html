@@ -7,7 +7,7 @@
  * hover pairing itself is CSS (regions.css) and is exercised in the browser,
  * not here.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { readFileSync } from 'fs';
 
 const src = readFileSync('extensions/photo-regions/transformRegions.js', 'utf8');
@@ -430,6 +430,75 @@ describe('transformRegions (regions record)', () => {
     });
     await transformDOM(parse(figureAndCarrier), 'ch1', other.ctx);
     expect(JSON.parse(other.files[RECORD])[0].size).toBeUndefined();
+  });
+
+  describe('when the library does not know the size', () => {
+    afterEach(() => vi.unstubAllGlobals());
+
+    /** An Image whose decode reports the given size for any data URL. */
+    const stubImage = (w: number, h: number) => {
+      vi.stubGlobal(
+        'Image',
+        class {
+          src = '';
+          naturalWidth = 0;
+          naturalHeight = 0;
+          async decode() {
+            this.naturalWidth = w;
+            this.naturalHeight = h;
+          }
+        }
+      );
+    };
+
+    it('reads it from the image once and records it', async () => {
+      stubImage(1023, 1856);
+      const store = sourceStore();
+      const reads: string[] = [];
+      const ctx = {
+        ...store.ctx,
+        readManifestDataURL: async (href: string) => {
+          reads.push(href);
+          return 'data:image/jpeg;base64,AAAA';
+        },
+      };
+      await transformDOM(parse(figureAndCarrier + figureAndCarrier), 'ch1', ctx);
+      const record = JSON.parse(store.files[RECORD]);
+      expect(
+        record.every((r: { size: unknown }) => JSON.stringify(r.size) === '{"w":1023,"h":1856}')
+      ).toBe(true);
+      expect(reads).toEqual(['Images/team.jpg']);
+    });
+
+    it('keeps the size from the chapter’s earlier record without reading the image', async () => {
+      stubImage(1, 1);
+      const earlier = [{ href: 'Images/team.jpg', at: '1,1,1,1', size: { w: 640, h: 480 } }];
+      const store = sourceStore({ [RECORD]: JSON.stringify(earlier) });
+      const reads: string[] = [];
+      const ctx = {
+        ...store.ctx,
+        readManifestDataURL: async (href: string) => {
+          reads.push(href);
+          return 'data:image/jpeg;base64,AAAA';
+        },
+      };
+      await transformDOM(parse(figureAndCarrier), 'ch1', ctx);
+      expect(JSON.parse(store.files[RECORD])[0].size).toEqual({ w: 640, h: 480 });
+      expect(reads).toEqual([]);
+    });
+
+    it('omits the size when the image cannot be read', async () => {
+      stubImage(10, 10);
+      const store = sourceStore();
+      const ctx = {
+        ...store.ctx,
+        readManifestDataURL: async () => {
+          throw new Error('Missing');
+        },
+      };
+      await transformDOM(parse(figureAndCarrier), 'ch1', ctx);
+      expect(JSON.parse(store.files[RECORD])[0].size).toBeUndefined();
+    });
   });
 
   it('gives the figure an id to link to — the author’s if any, else derived and numbered — and records it', async () => {
