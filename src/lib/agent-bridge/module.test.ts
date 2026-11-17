@@ -1262,6 +1262,58 @@ describe('agent bridge module', () => {
     });
   });
 
+  describe('activity ring', () => {
+    const ring = (ctx: { mountEl: HTMLElement }) =>
+      (ctx.mountEl.firstElementChild as HTMLElement).dataset.activity;
+    const pill = (ctx: { mountEl: HTMLElement }) =>
+      ctx.mountEl.querySelector('button')!.textContent;
+
+    it('shows working, with the action in the present tense, until 15 s after the last call', async () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'], shouldAdvanceTime: true });
+      try {
+        let release!: () => void;
+        const gate = new Promise<void>(resolve => (release = resolve));
+        const { ctx } = makeContext({
+          getChecks: async () => {
+            await gate;
+            return { chapterId: 'ch-1' };
+          },
+        });
+        start(ctx);
+        const socket = FakeWebSocket.last!;
+        socket.open();
+        expect(ring(ctx)).toBe('idle');
+        const reply = socket.receive({ id: 1, tool: 'get_checks', params: {} });
+        expect(ring(ctx)).toBe('working');
+        expect(pill(ctx)).toContain('agent: running checks…');
+        release();
+        await reply;
+        expect(pill(ctx)).toContain('agent: read validation checks');
+        expect(ring(ctx)).toBe('working');
+        vi.advanceTimersByTime(14_000);
+        expect(ring(ctx)).toBe('working');
+        vi.advanceTimersByTime(1_500);
+        expect(ring(ctx)).toBe('idle');
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('shows waiting while a prompt is open, and clears on disconnect', async () => {
+      const { ctx } = makeContext();
+      start(ctx);
+      const socket = FakeWebSocket.last!;
+      socket.open();
+      socket.onmessage?.({
+        data: JSON.stringify({ id: 1, tool: 'create_chapter', params: { id: 'x' } }),
+      });
+      await waitFor(() => ring(ctx) === 'waiting');
+      expect(pill(ctx)).toContain('agent: adding chapter x…');
+      socket.close();
+      expect(ring(ctx)).toBe('idle');
+    });
+  });
+
   describe('show, render, package, validate', () => {
     async function connected(overrides: Record<string, unknown> = {}) {
       const made = makeContext(overrides);

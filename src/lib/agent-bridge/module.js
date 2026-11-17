@@ -21,6 +21,14 @@
 import { play, setEnabled } from './cuelume.js';
 
 const FEED_LIMIT = 100;
+/**
+ * How long the overlay keeps showing "working" after the last tool call
+ * finishes. The bridge sees only tool calls — MCP does not say when the
+ * agent's turn starts or ends — so activity is a call in flight or one just
+ * finished, and the grace keeps the ring steady through a burst of calls
+ * instead of flickering between them.
+ */
+const ACTIVE_GRACE_MS = 15_000;
 /** Decoded byte cap for binary overwrites riding base64 through JSON-RPC. */
 const WRITE_SIZE_LIMIT = 2 * 1024 * 1024;
 /**
@@ -203,6 +211,7 @@ export function start(ctx) {
     // by whether a connection ever opened — never overwritten by close.
     // A prompt the agent is no longer waiting on must not stay actionable.
     ui.cancelPrompts('disconnected');
+    clearActivity();
     if (!stopped) {
       setStatus(
         'disconnected',
@@ -221,6 +230,7 @@ export function start(ctx) {
       return;
     }
     if (!request || typeof request.id !== 'number' || typeof request.tool !== 'string') return;
+    beginActivity(request.tool, request.params);
     try {
       const result = await handleTool(ctx, session, ui, request.tool, request.params ?? {});
       ui.addAction(describeAction(request.tool, request.params, result));
@@ -234,13 +244,36 @@ export function start(ctx) {
       // stale hash, an open editor, a verification mismatch.
       if (request.tool === 'write_file' && !error?.denied && !error?.unanswered) play('error');
       send(JSON.stringify({ id: request.id, ok: false, error: String(error?.message ?? error) }));
+    } finally {
+      endActivity();
     }
   };
+
+  // Activity: calls in flight, then ACTIVE_GRACE_MS of "working" after the last.
+  let inFlight = 0;
+  let idleTimer = null;
+  function beginActivity(tool, params) {
+    inFlight += 1;
+    clearTimeout(idleTimer);
+    ui.setWorking(true, describeActivity(tool, params));
+  }
+  function endActivity() {
+    inFlight = Math.max(0, inFlight - 1);
+    if (inFlight > 0) return;
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => ui.setWorking(false), ACTIVE_GRACE_MS);
+  }
+  function clearActivity() {
+    inFlight = 0;
+    clearTimeout(idleTimer);
+    ui.setWorking(false);
+  }
 
   function stop() {
     // Deliberate teardown (toggle off): close and remove the overlay.
     stopped = true;
     ui.cancelPrompts('disconnected');
+    clearActivity();
     try {
       socket?.close();
     } catch {
@@ -847,6 +880,56 @@ async function resolveFile(root, path) {
   return dir.getFileHandle(parts[parts.length - 1]);
 }
 
+/**
+ * What the agent is doing, in the present tense, shown while a call runs —
+ * so a long render or a validation reads as work in progress, not a stall,
+ * and a move the agent makes is named as it happens.
+ */
+function describeActivity(tool, params) {
+  const path = typeof params?.path === 'string' ? params.path : null;
+  switch (tool) {
+    case 'read_file':
+      return path ? `reading ${path}…` : 'reading a file…';
+    case 'write_file':
+      return path ? `writing ${path}…` : 'writing a file…';
+    case 'list_files':
+      return 'listing project files…';
+    case 'project_info':
+    case 'project_setup':
+      return 'reading the project setup…';
+    case 'get_rendered_xhtml':
+      return 'reading the rendered chapter…';
+    case 'get_selection':
+      return 'reading your last click…';
+    case 'get_checks':
+      return 'running checks…';
+    case 'inspect_elements':
+      return 'measuring the preview…';
+    case 'create_chapter':
+      return typeof params?.id === 'string' ? `adding chapter ${params.id}…` : 'adding a chapter…';
+    case 'allow_media_folder':
+      return 'asking about a media folder…';
+    case 'add_media':
+      return typeof params?.filename === 'string' ? `adding ${params.filename}…` : 'adding media…';
+    case 'show_chapter':
+      return typeof params?.id === 'string'
+        ? `moving to chapter ${params.id}…`
+        : 'moving to a chapter…';
+    case 'render': {
+      const count = Array.isArray(params?.ids) && params.ids.length ? params.ids.length : null;
+      return count
+        ? `rendering ${count} chapter${count === 1 ? '' : 's'}…`
+        : 'rendering every chapter…';
+    }
+    case 'package':
+      return 'packaging the book…';
+    case 'validate':
+      return 'validating on Share…';
+    default:
+      return `${tool}…`;
+  }
+}
+
 function describeAction(tool, params, result) {
   if (tool === 'read_file' && params && typeof params.path === 'string')
     return `read ${params.path}`;
@@ -905,6 +988,19 @@ function describeAction(tool, params, result) {
 
 // --- overlay (module-owned; sr-caption family: dark in both themes) -------------
 
+const IDLE_SHADOW = '0 4px 16px rgba(0, 0, 0, 0.3)';
+/**
+ * The activity ring around the overlay, collapsed or expanded: two bands, a
+ * light one inside a dark one, drawn as box-shadows so they take no layout
+ * space. Two tones rather than one so the state reads without colour — idle
+ * has no ring at all — and the waiting ring differs from the working one in
+ * colour and is the only state with a prompt open in the panel. No animation.
+ */
+const RINGS = {
+  working: ['#90caf9', '#1565c0'],
+  waiting: ['#ffe082', '#b26a00'],
+};
+
 function buildOverlay(mountEl, onDisconnect, onGrantToggle) {
   mountEl.textContent = '';
   const root = document.createElement('div');
@@ -921,9 +1017,10 @@ function buildOverlay(mountEl, onDisconnect, onGrantToggle) {
     background: 'rgba(20, 20, 22, 0.9)',
     border: '1px solid rgba(255, 255, 255, 0.25)',
     borderRadius: '8px',
-    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
+    boxShadow: IDLE_SHADOW,
     maxInlineSize: 'min(90vw, 480px)',
   });
+  root.dataset.activity = 'idle';
 
   const pill = document.createElement('button');
   pill.type = 'button';
@@ -1067,9 +1164,35 @@ function buildOverlay(mountEl, onDisconnect, onGrantToggle) {
   mountEl.appendChild(root);
 
   let lastAction = '';
+  let working = false;
   // Live consent prompts, cancellable when the connection or module goes away.
   const pendingPrompts = new Set();
+  const paintRing = () => {
+    const state = pendingPrompts.size > 0 ? 'waiting' : working ? 'working' : 'idle';
+    root.dataset.activity = state;
+    const ring = RINGS[state];
+    root.style.boxShadow = ring
+      ? `0 0 0 2px ${ring[0]}, 0 0 0 4px ${ring[1]}, ${IDLE_SHADOW}`
+      : IDLE_SHADOW;
+  };
+  const addPrompt = finish => {
+    pendingPrompts.add(finish);
+    paintRing();
+  };
+  const removePrompt = finish => {
+    pendingPrompts.delete(finish);
+    paintRing();
+  };
   return {
+    /**
+     * Show or end the working state. `text`, when given, is the present-tense
+     * activity shown in the pill until the call's own feed line replaces it.
+     */
+    setWorking(on, text) {
+      working = on;
+      if (on && text) label.textContent = `agent: ${text}`;
+      paintRing();
+    },
     /** Close every open prompt without an answer: 'disconnected' by default. */
     cancelPrompts(reason = 'disconnected') {
       for (const finish of [...pendingPrompts]) finish(reason);
@@ -1080,8 +1203,8 @@ function buildOverlay(mountEl, onDisconnect, onGrantToggle) {
      * Returns its unregister.
      */
     trackPrompt(cancel) {
-      pendingPrompts.add(cancel);
-      return () => pendingPrompts.delete(cancel);
+      addPrompt(cancel);
+      return () => removePrompt(cancel);
     },
     /** Repaint the write-permission toggle (the grant itself lives in start()). */
     setGrant(allowed) {
@@ -1146,7 +1269,7 @@ function buildOverlay(mountEl, onDisconnect, onGrantToggle) {
         const row = document.createElement('div');
         Object.assign(row.style, { display: 'flex', gap: '6px', marginBlockStart: '4px' });
         const finish = choice => {
-          pendingPrompts.delete(finish);
+          removePrompt(finish);
           clearTimeout(timer);
           clearTimeout(reminder);
           row.remove();
@@ -1159,7 +1282,7 @@ function buildOverlay(mountEl, onDisconnect, onGrantToggle) {
           question.textContent = `${outcome}: ${subject}`;
           resolve(choice);
         };
-        pendingPrompts.add(finish);
+        addPrompt(finish);
         const timer = setTimeout(() => finish('timeout'), CONSENT_TIMEOUT_MS);
         const reminder = setTimeout(() => play('whisper'), CONSENT_REMINDER_MS);
         play('chime');
