@@ -9,7 +9,7 @@
   import { untrack } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
   import { t, translate } from '../i18n.js';
-  import { dirHandle, activeIdentifier } from '../store.js';
+  import { dirHandle, activeIdentifier, validateRequests } from '../store.js';
   import { remotesStore, remotesLoaded, contentVersions } from '../remotes.js';
   import {
     loadLocalPackages,
@@ -25,9 +25,17 @@
   } from '../remote-status.js';
   import { hasCatalog, loadCatalogs, type CatalogInfo } from '../catalog.js';
   import { sendPackage, setInCatalog } from '../send.js';
-  import { reconnectGoogle, reconnectSolid, reconnectDevice } from '../reconnect.js';
+  import {
+    reconnectGoogle,
+    reconnectSolid,
+    reconnectDevice,
+  } from '../reconnect.js';
   import { showStatus } from '../status.js';
-  import { canShareLinks, copyShareLink, readerLinkTemplate } from '../share-links.js';
+  import {
+    canShareLinks,
+    copyShareLink,
+    readerLinkTemplate,
+  } from '../share-links.js';
   import { formatFileSize, relativeTime } from '../format.js';
   import {
     validateEpub,
@@ -43,7 +51,6 @@
     NavigateMessage,
     OpenMessage,
     RemoteConfig,
-    ValidateMessage,
     ValidatedMessage,
   } from '../types.js';
   import DestinationBadge from './DestinationBadge.svelte';
@@ -133,7 +140,11 @@
       if (!dir) throw new Error('The packages folder was not handed over.');
       await reloadPackages(dir);
       if (!latest) throw new Error('This book has no package yet.');
-      reply = { type: 'validated', requestId, report: await runValidation(latest) };
+      reply = {
+        type: 'validated',
+        requestId,
+        report: await runValidation(latest),
+      };
     } catch (error) {
       reply = {
         type: 'validated',
@@ -160,15 +171,14 @@
     });
   }
 
+  // Answer queued requests (the entry point queues them; see store.ts).
   $effect(() => {
-    const onMessage = (event: MessageEvent) => {
-      if (event.origin !== window.origin || event.source !== window.parent) return;
-      const data = event.data as Partial<ValidateMessage> | null;
-      if (data?.type !== 'validate' || typeof data.requestId !== 'string') return;
-      void answerValidate(data.requestId);
-    };
-    window.addEventListener('message', onMessage);
-    return () => window.removeEventListener('message', onMessage);
+    const queue = $validateRequests;
+    if (queue.length === 0) return;
+    untrack(() => {
+      validateRequests.set([]);
+      for (const requestId of queue) void answerValidate(requestId);
+    });
   });
 
   function openReport() {
@@ -443,7 +453,9 @@
         {@const state = stateFor(remote, row)}
         {@const reach = row.listing?.reach ?? null}
         {@const linkKey =
-          state && state.kind !== 'not-sent' && canShareLinks(remote) ? state.key : null}
+          state && state.kind !== 'not-sent' && canShareLinks(remote)
+            ? state.key
+            : null}
         <li class="row">
           <DestinationBadge {remote} />
           <div class="text">
@@ -455,7 +467,12 @@
                   class="btn btn-link"
                   title={linkKey}
                   onclick={() =>
-                    copyShareLink(remote, linkKey, row.listing?.objects ?? [], 'file')}
+                    copyShareLink(
+                      remote,
+                      linkKey,
+                      row.listing?.objects ?? [],
+                      'file',
+                    )}
                 >
                   {$t('Copy link')}
                 </button>
@@ -465,7 +482,12 @@
                     class="btn btn-link"
                     title={linkKey}
                     onclick={() =>
-                      copyShareLink(remote, linkKey, row.listing?.objects ?? [], 'reader')}
+                      copyShareLink(
+                        remote,
+                        linkKey,
+                        row.listing?.objects ?? [],
+                        'reader',
+                      )}
                   >
                     {$t('Copy reader link')}
                   </button>
@@ -506,7 +528,9 @@
                   label={row.catalogs.length > 1
                     ? $t('In {catalog}', { catalog: catalog.identity.title })
                     : $t('In the catalog')}
-                  disabled={!state || state.kind === 'not-sent' || !!catalog.error}
+                  disabled={!state ||
+                    state.kind === 'not-sent' ||
+                    !!catalog.error}
                   busy={row.toggling === catalog.file}
                   title={catalog.error
                     ? catalog.error
