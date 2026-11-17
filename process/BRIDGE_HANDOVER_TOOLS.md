@@ -1,6 +1,6 @@
 # Bridge — tools for a whole-book hand-over
 
-Status: design agreed and all three sections built on branch `agent-ergonomics`, 2026-11-18 (`npm run validate` green; unit-tested, not yet tried against a live bridge, which needs a restart to list the new tools). Covers the first three gaps in `process/AGENTIC_AUTHORING.md` proposal 1 (order agreed 2026-11-17): create a chapter, add media from disk, and render / package / validate on request. Builds on `process/AGENT_BRIDGE.md` (design of record), `BRIDGE_WRITE_REVIEW.md` (code vs prose tiers) and `BRIDGE_PREAPPROVED_WRITES.md` (session grant).
+Status: design agreed and all three sections built on branch `agent-ergonomics`, 2026-11-18 (`npm run validate` green). First live run 2026-11-18 on a scratch project in Firefox: every tool worked end to end once the plugin queued validate requests that arrive before the Send surface mounts (787c10d). The page must be reloaded after the bridge gains tools, because the app keeps the bridge module it loaded on the first Allow click. Covers the first three gaps in `process/AGENTIC_AUTHORING.md` proposal 1 (order agreed 2026-11-17): create a chapter, add media from disk, and render / package / validate on request. Builds on `process/AGENT_BRIDGE.md` (design of record), `BRIDGE_WRITE_REVIEW.md` (code vs prose tiers) and `BRIDGE_PREAPPROVED_WRITES.md` (session grant).
 
 ## Shape of the change
 
