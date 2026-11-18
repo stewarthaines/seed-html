@@ -14,15 +14,21 @@
  *   id, which is why a page holds one game. A second block on a page stays a
  *   code block with a note.
  *
+ * In a fixed-layout book (ctx.viewport set) the game takes the whole page
+ * (div.puzzlescript-page); in a reflowable one it is a box in the text.
+ *
  * The still uses the default palette (arnecolors) and the first object of an
  * `or` legend entry; colours it cannot read are drawn transparent. Notes
  * (no levels, an unknown glyph) are shown in the page, in English, for the
  * author.
  *
  * @param {Document} document - the chapter's rendered DOM (HTML)
+ * @param {string} idref - spine item id for this chapter
+ * @param {object} [ctx] - transform context; only its viewport is read
  * @returns {Document} the transformed document
  */
-function transformDOM(document) {
+function transformDOM(document, idref, ctx) {
+  const fixedLayout = Boolean(ctx && ctx.viewport);
   const blocks = [
     ...document.querySelectorAll('pre.puzzlescript, pre:has(> code.language-puzzlescript)'),
   ];
@@ -34,7 +40,7 @@ function transformDOM(document) {
     const source = pre.textContent.replace(/\n$/, '');
     const game = parseGame(source);
     const root = document.createElement('div');
-    root.className = 'puzzlescript';
+    root.className = fixedLayout ? 'puzzlescript puzzlescript-page' : 'puzzlescript';
 
     const toolbar = document.createElement('header');
     toolbar.className = 'player-toolbar';

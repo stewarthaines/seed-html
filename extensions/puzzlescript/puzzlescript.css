@@ -226,6 +226,14 @@ body.player-shell:not(.touch-enabled) #homepagelink { font-size: 16px; line-heig
   border-radius: 0.5em;
   background: var(--player-bg);
 }
+.puzzlescript-page.puzzlescript-live {
+  block-size: 100vh;
+  margin: 0;
+  border-radius: 0;
+}
+.puzzlescript-page .puzzlescript-still {
+  max-block-size: 100vh;
+}
 .puzzlescript-live .puzzlescript-still {
   display: none;
 }
