@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-17\n"
-"PO-Revision-Date: 2026-11-17\n"
+"POT-Creation-Date: 2026-11-18\n"
+"PO-Revision-Date: 2026-11-18\n"
 "Language: \n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -4318,6 +4318,10 @@ msgstr ""
 msgid "Raw"
 msgstr ""
 
+#: src/lib/navigation/views/PublishView.svelte
+msgid "Re-render every chapter first"
+msgstr ""
+
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Re-render the preview live as you edit."
 msgstr ""
@@ -5285,6 +5289,10 @@ msgstr ""
 #: src/lib/components/spine/PreviewPane.svelte
 #: src/lib/navigation/views/SettingsView.svelte
 msgid "Theme"
+msgstr ""
+
+#: src/App.svelte
+msgid "These chapters could not be re-rendered and keep their last version: {ids}"
 msgstr ""
 
 #: src/lib/components/import/ImportReviewDialog.svelte

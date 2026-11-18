@@ -334,7 +334,7 @@ const TOOLS = [
   {
     name: 'seed_render',
     description:
-      "Render chapters through the project's transforms and save their XHTML, without moving the author's preview: all chapters, or the ids given. Use after editing sources of chapters that are not open, after seed_create_chapter (whose XHTML is a placeholder until rendered), or before seed_package, since packaging zips the XHTML as last saved. Returns per chapter: rendered, failed (with the error), or no-source (hand-authored XHTML, left alone).",
+      "Render chapters through the project's transforms and save their XHTML, without moving the author's preview: all chapters, or the ids given. Use after editing sources of chapters that are not open, after seed_create_chapter (whose XHTML is a placeholder until rendered), or before seed_package, since packaging zips the XHTML as last saved. Returns per chapter: rendered or failed (with the error), each with its render time in ms, or no-source (hand-authored XHTML, left alone). A whole book takes from seconds to about a minute.",
     inputSchema: {
       type: 'object',
       properties: {
@@ -349,7 +349,7 @@ const TOOLS = [
   {
     name: 'seed_package',
     description:
-      "Package the open book as an EPUB, as the Share view's Package button does (the nav is regenerated first). Chapters are packaged as last rendered — run seed_render first if sources changed since. Returns the package filename.",
+      "Package the open book as an EPUB, as the Share view's Package button does (the nav is regenerated first). Chapters are packaged as last rendered — run seed_render first: the chapters whose sources you changed without opening them, or every chapter (no ids) after changing a transform script, settings.json or the extensions, since those change every chapter's output and nothing re-renders them for you. Returns the package filename.",
     inputSchema: { type: 'object', properties: {} },
   },
   {
