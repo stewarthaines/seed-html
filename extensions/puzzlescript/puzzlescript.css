@@ -1,5 +1,5 @@
 /* PuzzleScript player styles (src/css/player.css, https://github.com/increpare/PuzzleScript),
-   Copyright (c) 2013 Stephen Lavelle, MIT License; the html rule dropped. Book overrides follow. */
+   Copyright (c) 2013 Stephen Lavelle, MIT License; the html rule dropped, the title an element of its own rather than an h1. Book overrides follow. */
 .player-shell {
     --player-bg: black;
     --player-fg: lightblue;
@@ -30,7 +30,7 @@ body.player-shell { height: 100dvh; }
     -webkit-user-select: none;
 }
 .player-identity { position: relative; min-width: 0; min-height: 44px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
-.player-toolbar h1 {
+.player-toolbar #gametitle {
     min-width: 0;
     margin: 0;
     font-size: 20px;
@@ -49,7 +49,7 @@ body.player-shell:not(.touch-enabled) > .player-toolbar {
     padding: 12px 16px 8px;
 }
 body.player-shell:not(.touch-enabled) .player-identity { align-items: center; gap: 4px; }
-body.player-shell:not(.touch-enabled) .player-toolbar h1 { max-width: 100%; font-size: clamp(24px, 2.5vw, 32px); line-height: 1.2; }
+body.player-shell:not(.touch-enabled) .player-toolbar #gametitle { max-width: 100%; font-size: clamp(24px, 2.5vw, 32px); line-height: 1.2; }
 body.player-shell:not(.touch-enabled) #homepagelink { font-size: 16px; line-height: 22px; }
 .player-controls { display: flex; align-items: center; min-height: 44px; }
 .player-controls:last-child { justify-content: flex-end; }
@@ -170,7 +170,7 @@ body.player-shell:not(.touch-enabled) #homepagelink { font-size: 16px; line-heig
 }
 .disable-select { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 @media (max-width: 400px) {
-    .player-toolbar h1 { font-size: 18px; }
+    .player-toolbar #gametitle { font-size: 18px; }
 }
 @media (orientation: landscape) {
     .movement-surface-portrait { display: none; }

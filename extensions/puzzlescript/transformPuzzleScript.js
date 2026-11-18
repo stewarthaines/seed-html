@@ -14,8 +14,9 @@
  *   id, which is why a page holds one game. A second block on a page stays a
  *   code block with a note.
  *
- * In a fixed-layout book (ctx.viewport set) the game takes the whole page
- * (div.puzzlescript-page); in a reflowable one it is a box in the text.
+ * In a fixed-layout book (ctx.viewport set) the game takes the rest of the
+ * page below whatever comes before it (div.puzzlescript-page; puzzlescript.js
+ * sizes it); in a reflowable one it is a box in the text.
  *
  * The still uses the default palette (arnecolors) and the first object of an
  * `or` legend entry; colours it cannot read are drawn transparent. Notes
@@ -47,7 +48,8 @@ function transformDOM(document, idref, ctx) {
     toolbar.id = 'playerToolbar';
     const identity = document.createElement('div');
     identity.className = 'player-identity';
-    const title = document.createElement('h1');
+    // Not a heading: the page has its own, and the player only needs the id.
+    const title = document.createElement('p');
     title.id = 'gametitle';
     title.textContent = game.title;
     identity.append(title);

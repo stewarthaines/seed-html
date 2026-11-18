@@ -63,6 +63,11 @@
       : fetch(ENGINE).then(function (response) { return response.text(); }).then(runEngine);
     loaded.then(function () {
       game.classList.add('puzzlescript-live', 'player-shell');
+      // On a fixed-layout page the game takes what is left below the text.
+      if (game.classList.contains('puzzlescript-page')) {
+        var top = game.getBoundingClientRect().top + window.scrollY;
+        game.style.blockSize = Math.max(240, window.innerHeight - top) + 'px';
+      }
       // The player sizes its canvas to the box, which is laid out only now.
       compile(['restart'], source.textContent);
       if (typeof canvasResize === 'function') canvasResize();
