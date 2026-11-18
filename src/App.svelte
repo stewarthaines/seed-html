@@ -41,7 +41,7 @@
   import MetadataEditor from './lib/components/metadata/MetadataEditor.svelte';
   import SpineView from './lib/navigation/views/SpineView.svelte';
   import ChaptersView from './lib/navigation/views/ChaptersView.svelte';
-  import PublishView from './lib/navigation/views/PublishView.svelte';
+  import PublishView, { type PackageOptions } from './lib/navigation/views/PublishView.svelte';
   import PublishedView from './lib/navigation/views/PublishedView.svelte';
   import { settingsSection } from './lib/stores/settings-section.js';
   import { listWorkspaceIdentifiers } from './lib/import/boot-payload.js';
@@ -299,19 +299,27 @@
   // 0..1 while packaging: reading the files is the first half, compressing the second.
   // Null while the date and the contents page are updated, before any file is read.
   let packageProgress = $state<number | null>(null);
-  async function packageCurrentBook(): Promise<void> {
+  async function packageCurrentBook(options?: PackageOptions): Promise<void> {
     if (!currentWorkspaceState || epubPackaging) return;
     // Before any await, so the request carries this click's activation.
     requestPersistentStorage();
     epubPackaging = true;
     packageProgress = null;
     navigationStore.navigateTo('publish');
+    // A re-render takes the first half of the bar: it is most of the time.
+    const rerender = options?.rerender ?? false;
+    const packStart = rerender ? 0.5 : 0;
     try {
       await handlePackageRequest(currentWorkspaceState.id, {
+        rerender,
+        onRenderProgress: (done, total) => {
+          packageProgress = total > 0 ? (done / total) * 0.5 : 0.5;
+        },
         onProgress: ({ phase, processedFiles, totalFiles }) => {
           const done = totalFiles > 0 ? processedFiles / totalFiles : 1;
-          packageProgress =
+          const share =
             phase === 'reading' ? done / 2 : phase === 'compressing' ? 0.5 + done / 2 : 1;
+          packageProgress = packStart + share * (1 - packStart);
         },
       });
     } catch (error) {
@@ -1398,8 +1406,8 @@
 
   /** One chapter's outcome from {@link renderChapters}. */
   type ChapterRenderResult =
-    | { id: string; status: 'rendered' }
-    | { id: string; status: 'failed'; error: string }
+    | { id: string; status: 'rendered'; ms: number }
+    | { id: string; status: 'failed'; error: string; ms: number }
     | { id: string; status: 'no-source' };
 
   /**
@@ -1411,7 +1419,8 @@
    */
   async function renderChapters(
     workspaceId: string,
-    ids?: string[]
+    ids?: string[],
+    onProgress?: (done: number, total: number) => void
   ): Promise<ChapterRenderResult[]> {
     if (!transformEngine || !extensionManager) return [];
 
@@ -1463,19 +1472,23 @@
         const hasText = await fileStorage.fileExists(workspaceId, `SOURCE/text/${item.idref}.txt`);
         if (!hasText) {
           results.push({ id: item.idref, status: 'no-source' });
+          onProgress?.(results.length, spine.length);
           continue;
         }
         // switchToSpineItem (re)loads the chapter's text; force a synchronous
         // render that persists the regenerated XHTML to the manifest.
         lastError = null;
+        const started = performance.now();
         await manager.switchToSpineItem(item.idref);
         await manager.forcePreviewUpdate();
+        const ms = Math.round(performance.now() - started);
         const error = lastError as string | null;
         results.push(
           error
-            ? { id: item.idref, status: 'failed', error }
-            : { id: item.idref, status: 'rendered' }
+            ? { id: item.idref, status: 'failed', error, ms }
+            : { id: item.idref, status: 'rendered', ms }
         );
+        onProgress?.(results.length, spine.length);
       }
     } finally {
       manager.cleanup();
@@ -1881,12 +1894,31 @@
       includeSource?: boolean;
       download?: boolean;
       format?: 'epub' | 'read-html' | 'seed-html';
+      /** Render every chapter first, so the package carries current output. */
+      rerender?: boolean;
+      onRenderProgress?: (done: number, total: number) => void;
       onProgress?: (progress: PackageProgress) => void;
     }
   ) => {
     if (!currentWorkspaceState || isReadOnly) return;
 
     try {
+      if (opts?.rerender) {
+        // A chapter that fails keeps its last saved XHTML; the author hears which.
+        const results = await renderChapters(workspaceId, undefined, opts.onRenderProgress);
+        const failed = results.filter(result => result.status === 'failed').map(r => r.id);
+        if (failed.length > 0) {
+          showToast(
+            $t('These chapters could not be re-rendered and keep their last version: {ids}', {
+              ids: failed.join(', '),
+            }),
+            'error',
+            10000
+          );
+        }
+        if (!currentWorkspaceState) return;
+      }
+
       // Update metadata.modifiedDate first
       const updatedWorkspace = await workspaceService.updateMetadata(currentWorkspaceState, {
         modifiedDate: generateEPUBTimestamp(),
@@ -1989,11 +2021,12 @@
 
   // Plain "destination format" EPUB: no SEED.zip / SEED.html, downloaded directly.
   let plainEpubExporting = $state(false);
-  const handleExportPlainEpub = async () => {
+  const handleExportPlainEpub = async (options?: PackageOptions) => {
     if (!currentWorkspaceState || plainEpubExporting) return;
     plainEpubExporting = true;
     try {
       await handlePackageRequest(currentWorkspaceState.id, {
+        rerender: options?.rerender ?? false,
         includeSource: false,
         download: true,
       });
@@ -2010,11 +2043,12 @@
   // READ.html destination format: the plain EPUB wrapped in the vendored reader,
   // one double-clickable file. HTTP-only (the shell fetch), like Read and PDF.
   let readHtmlExporting = $state(false);
-  const handleExportReadHtml = async () => {
+  const handleExportReadHtml = async (options?: PackageOptions) => {
     if (!currentWorkspaceState || readHtmlExporting) return;
     readHtmlExporting = true;
     try {
       await handlePackageRequest(currentWorkspaceState.id, {
+        rerender: options?.rerender ?? false,
         includeSource: false,
         download: true,
         format: 'read-html',
@@ -2033,11 +2067,12 @@
   // editor) wrapped in the app's own document — the double-clickable
   // self-editing book (process/SEED_HTML_PACKAGE.md). HTTP-only, like PDF.
   let seedHtmlExporting = $state(false);
-  const handleExportSeedHtml = async () => {
+  const handleExportSeedHtml = async (options?: PackageOptions) => {
     if (!currentWorkspaceState || seedHtmlExporting) return;
     seedHtmlExporting = true;
     try {
       await handlePackageRequest(currentWorkspaceState.id, {
+        rerender: options?.rerender ?? false,
         download: true,
         format: 'seed-html',
       });

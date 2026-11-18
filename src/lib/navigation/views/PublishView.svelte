@@ -1,3 +1,11 @@
+<script lang="ts" module>
+  /** What the author chose alongside a package action. */
+  export interface PackageOptions {
+    /** Render every chapter first, so the package carries current output. */
+    rerender: boolean;
+  }
+</script>
+
 <script lang="ts">
   import { t, currentLocale } from '$lib/i18n';
   import { confirmDialog } from '$lib/components/confirm/confirm.svelte';
@@ -19,7 +27,7 @@
     /** The plugin asks for the Published page or the Destinations settings. */
     onOpen?: (target: OpenMessage['target']) => void;
     /** Package the open book as a SEED EPUB (kept in this browser, listed below). */
-    onPackage?: () => void;
+    onPackage?: (options: PackageOptions) => void;
     packaging?: boolean;
     /** 0..1 while `packaging`; null until the files are being read. */
     packageProgress?: number | null;
@@ -32,11 +40,11 @@
      */
     pdfPluginUrl?: string | null;
     onDescribeBook?: () => Promise<BookDescription>;
-    onPackageWithoutSource?: () => void;
+    onPackageWithoutSource?: (options: PackageOptions) => void;
     packagingWithoutSource?: boolean;
-    onPackageAsReadHtml?: () => void;
+    onPackageAsReadHtml?: (options: PackageOptions) => void;
     readHtmlPackaging?: boolean;
-    onPackageAsSeedHtml?: () => void;
+    onPackageAsSeedHtml?: (options: PackageOptions) => void;
     seedHtmlPackaging?: boolean;
     /** The open book is read-only (not a SEED EPUB): it cannot be repackaged. */
     isReadOnly?: boolean;
@@ -63,6 +71,19 @@
     seedHtmlPackaging = false,
     isReadOnly = false,
   }: Props = $props();
+
+  // One choice for every package action on the page; it unticks after each
+  // package, so a slow whole-book render never becomes the habit by accident.
+  let rerender = $state(false);
+  const anyPackaging = $derived(
+    packaging || packagingWithoutSource || readHtmlPackaging || seedHtmlPackaging
+  );
+  function packageWith(action: ((options: PackageOptions) => void) | undefined): void {
+    if (!action) return;
+    const options = { rerender };
+    rerender = false;
+    action(options);
+  }
 
   let epubs = $state<PublishedEpub[]>([]);
   let loading = $state(true);
@@ -214,7 +235,7 @@
     <button
       type="button"
       class={primary ? 'btn btn-primary' : 'btn btn-link'}
-      onclick={onPackage}
+      onclick={() => packageWith(onPackage)}
       disabled={packaging || isReadOnly}
     >
       {packaging ? $t('Packaging…') : primary ? $t('Package EPUB') : $t('Package again')}
@@ -250,6 +271,12 @@
     {/if}
 
     <h2 class="label">{$t('Get the book')}</h2>
+    {#if onPackage}
+      <label class="rerender-option">
+        <input type="checkbox" bind:checked={rerender} disabled={anyPackaging || isReadOnly} />
+        {$t('Re-render every chapter first')}
+      </label>
+    {/if}
     <div class="cards">
       <article class="card primary">
         <h3>{$t('Download the EPUB')}</h3>
@@ -280,7 +307,7 @@
               <button
                 type="button"
                 class="btn btn-link"
-                onclick={onPackageWithoutSource}
+                onclick={() => packageWith(onPackageWithoutSource)}
                 disabled={packagingWithoutSource || isReadOnly}
               >
                 {packagingWithoutSource ? $t('Packaging…') : $t('Package EPUB without source')}
@@ -297,7 +324,7 @@
               <button
                 type="button"
                 class="btn btn-link"
-                onclick={onPackageWithoutSource}
+                onclick={() => packageWith(onPackageWithoutSource)}
                 disabled={packagingWithoutSource || isReadOnly}
               >
                 {packagingWithoutSource ? $t('Packaging…') : $t('Package EPUB without source')}
@@ -316,7 +343,7 @@
               <button
                 type="button"
                 class="btn btn-secondary"
-                onclick={onPackageAsReadHtml}
+                onclick={() => packageWith(onPackageAsReadHtml)}
                 disabled={readHtmlPackaging || isReadOnly}
               >
                 {readHtmlPackaging ? $t('Packaging…') : $t('Package as READ.html')}
@@ -328,7 +355,7 @@
               <button
                 type="button"
                 class="btn btn-link"
-                onclick={onPackageAsSeedHtml}
+                onclick={() => packageWith(onPackageAsSeedHtml)}
                 disabled={seedHtmlPackaging || isReadOnly}
               >
                 {seedHtmlPackaging ? $t('Packaging…') : $t('Package as SEED.html')}
@@ -530,6 +557,19 @@
   .status.error {
     margin-block-end: var(--space-4);
     color: var(--color-error-text, var(--color-text-primary));
+  }
+
+  .rerender-option {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-block-end: var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+  }
+
+  .rerender-option input {
+    accent-color: var(--color-interactive-primary);
   }
 
   /* Outcome cards */
