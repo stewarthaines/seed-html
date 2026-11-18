@@ -148,8 +148,8 @@ export interface AgentBridgeModuleContext {
 }
 
 export type AgentChapterRender =
-  | { id: string; status: 'rendered' }
-  | { id: string; status: 'failed'; error: string }
+  | { id: string; status: 'rendered'; ms: number }
+  | { id: string; status: 'failed'; error: string; ms: number }
   | { id: string; status: 'no-source' };
 
 export interface AgentMediaFileRequest {

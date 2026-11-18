@@ -1398,8 +1398,8 @@
 
   /** One chapter's outcome from {@link renderChapters}. */
   type ChapterRenderResult =
-    | { id: string; status: 'rendered' }
-    | { id: string; status: 'failed'; error: string }
+    | { id: string; status: 'rendered'; ms: number }
+    | { id: string; status: 'failed'; error: string; ms: number }
     | { id: string; status: 'no-source' };
 
   /**
@@ -1468,13 +1468,15 @@
         // switchToSpineItem (re)loads the chapter's text; force a synchronous
         // render that persists the regenerated XHTML to the manifest.
         lastError = null;
+        const started = performance.now();
         await manager.switchToSpineItem(item.idref);
         await manager.forcePreviewUpdate();
+        const ms = Math.round(performance.now() - started);
         const error = lastError as string | null;
         results.push(
           error
-            ? { id: item.idref, status: 'failed', error }
-            : { id: item.idref, status: 'rendered' }
+            ? { id: item.idref, status: 'failed', error, ms }
+            : { id: item.idref, status: 'rendered', ms }
         );
       }
     } finally {

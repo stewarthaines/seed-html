@@ -159,7 +159,7 @@ function makeContext(overrides: Record<string, unknown> = {}) {
     diffStat: vi.fn(() => ({ added: 1, removed: 1 })),
     showChapter: vi.fn(async (id: string) => ({ chapterId: id, rendered: true, warnings: [] })),
     renderChapters: vi.fn(async (ids?: string[]) =>
-      (ids ?? ['chapter01', 'chapter02']).map(id => ({ id, status: 'rendered' }))
+      (ids ?? ['chapter01', 'chapter02']).map(id => ({ id, status: 'rendered', ms: 5 }))
     ),
     packageBook: vi.fn(async () => ({ filename: 'bulletin.epub' })),
     validatePackage: vi.fn(async () => ({
@@ -1339,7 +1339,7 @@ describe('agent bridge module', () => {
     it('renders all chapters, or the ids given, and counts failures in the feed', async () => {
       const { ctx, socket } = await connected({
         renderChapters: vi.fn(async () => [
-          { id: 'a', status: 'rendered' },
+          { id: 'a', status: 'rendered', ms: 5 },
           { id: 'b', status: 'failed', error: 'text: boom' },
         ]),
       });
