@@ -75,9 +75,13 @@ Which agent: a hand-over with image work needs a shell (cropping, size checks), 
 
 Transforms and extensions report through `ctx` to one place in app state (decided 2026-11-17: findings are app state, not a file in the book), which the Write view and the bridge both read: family-history findings, photo-regions crops skipped and why, maps with no register entry, unresolved `of=` ids. The Write view shows a count; the agent reads the list through `seed_get_checks` (`BRIDGE_CHECKS.md`), widened to extension findings.
 
-### 3. Stale output is never packaged
+### 3. Re-render on request when packaging
 
-Packaging re-renders any chapter whose source, transforms or stylesheets changed since its XHTML was written (or refuses and says which). A "Re-render all" action exists for the author too.
+Decided 2026-11-18: no staleness detection. Packaging still zips the chapters as last saved by default, because normal use is editing chapter content, and saving a chapter already renders it. A "Re-render all chapters first" checkbox in the Share view's package card applies to every package action there (EPUB, without sources, READ.html, SEED.html). Ticking it is the author's call: the app does not tick it after a transform or settings change, since transform work is a design phase the author knows they are in. The agent gets the same through `seed_render` before `seed_package` (and the authoring guide says so after transform or settings edits).
+
+Measured 2026-11-18 with `seed_render` (per-chapter timing, dd3cc8b) in Firefox: about 0.2 s per chapter as a floor, about 1.2 s (up to 1.8 s) for a family-history person chapter, about 2 s (up to 3.3 s) for a Bricks page. Whole book: "Coming Out" 28 chapters 20 s, Haines 49 chapters 48 s, "hello, world!" 16 chapters 29 s. The render pass belongs inside the package progress bar.
+
+Considered and set aside: per-chapter staleness by timestamps, by edit events, or by fingerprinting each render's inputs (the broker sees every `ctx` read); the fingerprint was the best of them but its cost in design and false-stale edge cases outweighed an author-ticked full render.
 
 ### 4. Fixes and defaults from the list above
 
@@ -119,6 +123,6 @@ The survey's guidance on trust, carried over from how coding tools treat reposit
 
 1. Bridge parity order: agreed 2026-11-17 — create chapter, add media from disk, then render/package/validate.
 2. Findings: decided 2026-11-17 — app state.
-3. Packaging stale chapters: for the next session. The author does not want the cost of re-rendering chapters falsely flagged as stale, so the staleness test itself needs designing first.
+3. Packaging stale chapters: decided 2026-11-18 — no staleness test; an author-ticked "Re-render all chapters first" checkbox on packaging (section 3).
 4. A book's `SOURCE/AGENTS.md`: conventions the agent follows within the task the author gave, once the project is trusted (agreed in principle 2026-11-17); parked for now.
 5. Figures: for the next session. Useful beyond family history and beyond djot, so the question is where it belongs as a general feature, not which project type gets it.
