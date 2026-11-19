@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Reader choices extension: let readers choose servings, measures or a reading level, and the book shows the matching text, remembered next time they open it.
 - PuzzleScript extension: playable puzzle games in the page, with a picture of the first level where a reading app runs no scripts.
-- When you package a book, tick *Re-render every chapter first* in the Share view so every chapter follows your latest transforms, settings and extensions.
+- When you package a book, tick _Re-render every chapter first_ in the Share view so every chapter follows your latest transforms, settings and extensions.
 - An agent working on your book over the bridge can add chapters, add pictures and audio from a folder you allow, and render, package and validate the book.
 - In the reader, click the blank margin either side of the book to turn the page.
 
