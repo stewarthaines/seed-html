@@ -21,5 +21,7 @@ The author tried the test page on both devices and asked for the problems to be 
 
 Fixes in `puzzlescript.js`: touch events on the game cancelled in the capture phase, except in the game menu (its controls act on click); the fixed-layout height taken from the viewport meta and refitted on `pageshow`, `resize`, `visualViewport` resize and the first touch; the first-level still held 250 ms before the engine loads, so it is the thumbnail. Checked in Chromium with touch emulation: every touch on the game cancelled, buttons and swipes move the player, the menu opens and closes, the page's own text keeps its touches.
 
-Not fixed, for the next device test: the canvas backing store ignores `devicePixelRatio × visualViewport.scale` (sharp but uneven pixels, soft message text); the player's controls are 56 CSS px, about 34 points on an iPhone; landscape spreads halve the page. The general rules are in the touch checklist in `process/APPLE_BOOKS_BEHAVIOUR.md`.
+Confirmed by the author on the iPad and iPhone, 2026-11-19: the swipe turning the page, double-tap and pinch zoom, and taps toggling Books' controls were seen before the fix and are gone after it. The finger sliding off a button and the wrong size on a preloaded page were not seen; the thumbnail was not checked. The author set `rendition:spread none`, so landscape shows one page.
+
+Not fixed, for the next device test: the canvas backing store ignores `devicePixelRatio × visualViewport.scale` (sharp but uneven pixels, soft message text); the player's controls are 56 CSS px, about 34 points on an iPhone. The general rules are in the touch checklist in `process/APPLE_BOOKS_BEHAVIOUR.md`.
 
