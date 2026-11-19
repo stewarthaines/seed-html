@@ -82,6 +82,7 @@ Extensions give a book its source format, its richer content and its layout. Eac
 - **[Impressum](extensions/impressum/)**: Adds a colophon to the book listing its extensions and embedded fonts, kept up to date automatically.
 - **[List of Figures](extensions/list-of-figures/)**: Adds a list of figures to the book, built from the images in each chapter.
 - **[Photo Regions](extensions/photo-regions/)**: Names the faces in a photograph: exploring the caption lights up each face, named people link to their chapters, and a detail shows one region on its own, linked to the full image.
+- **[Reader choices](extensions/reader-choices/)**: Lets readers choose servings, measures or a reading level, and shows the matching text.
 
 #### Typesetting and layout
 

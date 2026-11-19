@@ -33,6 +33,8 @@ export interface TransformBrokerContext {
   manifest: ManifestItem[];
   /** The book's primary dc:language tag (empty/absent when the OPF has none). */
   language?: string;
+  /** The package's unique identifier (dc:identifier; empty/absent when unknown). */
+  identifier?: string;
   /** The OPF spine in reading order (idref + linear), so a transform can walk
    *  chapters in order and combine per-chapter data (e.g. a page index). */
   spine?: SpineItem[];
@@ -158,6 +160,7 @@ export class TransformEngine {
           basePath: brokerContext.basePath,
           manifest: brokerContext.manifest,
           language: brokerContext.language ?? '',
+          identifier: brokerContext.identifier ?? '',
           spine: brokerContext.spine ?? [],
           frontmatter: brokerContext.frontmatter ?? null,
           viewport: brokerContext.viewport ?? null,
@@ -167,6 +170,7 @@ export class TransformEngine {
           basePath: '',
           manifest: [] as ManifestItem[],
           language: '',
+          identifier: '',
           spine: [] as SpineItem[],
           frontmatter: null,
           viewport: null,
@@ -211,6 +215,7 @@ export class TransformEngine {
       basePath: brokerContext.basePath,
       manifest: brokerContext.manifest,
       language: brokerContext.language ?? '',
+      identifier: brokerContext.identifier ?? '',
       spine: brokerContext.spine ?? [],
       // A generator has no chapter text, so no block of its own; the invoking
       // chapter's record is readable from the store like any other's.

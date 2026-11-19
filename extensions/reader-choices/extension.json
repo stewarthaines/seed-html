@@ -1,0 +1,23 @@
+{
+  "id": "reader-choices",
+  "name": "Reader choices",
+  "description": "Lets readers choose servings, measures or a reading level, and shows the matching text.",
+  "category": "chapter-content",
+  "licenseName": "MIT",
+  "scripts": [],
+  "domTransforms": ["transformReaderChoices.js"],
+  "stage": "blocks",
+  "textTransforms": [],
+  "assets": [
+    {
+      "file": "reader-choices.js",
+      "target": "Scripts/reader-choices.js",
+      "media": "application/javascript"
+    },
+    {
+      "file": "reader-choices.css",
+      "target": "Styles/reader-choices.css",
+      "media": "text/css"
+    }
+  ]
+}

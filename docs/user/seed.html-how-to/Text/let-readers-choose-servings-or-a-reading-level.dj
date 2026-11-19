@@ -1,0 +1,62 @@
+# Let readers choose servings or a reading level
+
+In a recipe book, readers can choose how many people they are cooking for and which measures they use, and the quantities change to match. In a language course, readers can choose a level, and the text they do not need stays hidden until they tap it. This works in books written in Djot, in reading apps that run a book's scripts.
+
+This feature is in Advanced Mode.
+
+1. Click [Settings]{.ui}, then [General]{.ui}, and tick [Advanced mode]{.ui}.
+2. Click [Content transforms]{.ui}. Find [Reader choices]{.ui} and click [Add to project]{.ui}. Close the settings.
+3. At the very top of your first chapter, list the choices between two lines of three hyphens. Give each choice a label and its values, in order. Every reader starts on the first value.
+
+``` yaml
+---
+choices:
+  measure:
+    label: Measures
+    values: [metric, imperial, volume]
+    split: "/"
+  serves:
+    label: Serves
+    values: [1x, 2x, 4x]
+    split: "|"
+---
+```
+
+4. Where the reader should choose, write a line like this one. It becomes a row of buttons.
+
+```
+:choose:{of=measure}
+```
+
+5. Mark text that belongs to one value with `when=`. A word or phrase goes in square brackets, followed by its value. A paragraph gets its value on the line above it.
+
+```
+Add [500 ml]{when=measure:metric}[1 pint]{when=measure:imperial}[2 cups]{when=measure:volume} of water.
+
+{when=measure:imperial}
+Ounces are by weight.
+```
+
+Click the buttons in the preview to check that the text changes. The book remembers each reader's choices the next time they open it. In a reading app that does not run scripts, and in a PDF, the book shows the first value of each choice.
+
+## Recipes
+
+Put each recipe in a `recipe` block, with its own labels for the servings. Inside it, write each quantity between backticks: `|` between servings and `/` between measures, with a space on each side.
+
+```
+{serves="4–6 | 8–12 | 16–24"}
+::: recipe
+## Lobio
+
+:choose:{of=serves}
+
+- `350g | 700g | 1.4kg / 12 oz | 1½ lb | 3 lb / 2 cups | 4 cups | 8 cups` dried beans
+- `1 tsp | 2 tsp | 4 tsp` ground coriander
+:::
+```
+
+A quantity without `/` is the same in every measure. Each recipe remembers its own servings. If a line has the wrong number of quantities, a note at the top of the preview shows it.
+
+## Hide text for practice
+
+For a choice such as a reading level, add `mode: cover`. Text for the other levels is then blanked instead of removed, and the reader taps it to see it. Choosing a new level hides it again. To show a paragraph at more than one level, list the levels: `{when="level:english,transliteration"}`.

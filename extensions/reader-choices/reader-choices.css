@@ -1,0 +1,79 @@
+/*
+ * Reader choices — the rules the transform and Scripts/reader-choices.js rely
+ * on. The book's own page.css may restyle the controls; the hiding rules are
+ * !important so a book rule that sets display on a variant (a grid paragraph,
+ * say) cannot bring back text the reader didn't choose.
+ */
+
+/* A variant written for a value the reader hasn't chosen. */
+.rc-off {
+  display: none !important;
+}
+
+/* Cover mode: blanked in place, keeping its size, until the reader taps it.
+   Descendants too, so a link or coloured emphasis can't show through. */
+.rc-covered,
+.rc-covered * {
+  color: transparent !important;
+  text-decoration-color: transparent !important;
+  text-shadow: none !important;
+}
+
+.rc-covered {
+  background-color: rgba(128, 128, 128, 0.2);
+  border-radius: 0.25em;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.rc-covered img,
+.rc-covered svg {
+  visibility: hidden;
+}
+
+/* Controls: one choice per line; buttons appear only where the script runs. */
+.rc-choose-set > .rc-choose {
+  display: block;
+}
+
+.rc-choose [hidden] {
+  display: none !important;
+}
+
+.rc-label {
+  font-variant: small-caps;
+  margin-inline-end: 0.25em;
+}
+
+.rc-option {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 1em;
+  padding: 0.05em 0.6em;
+  margin-block: 0.15em;
+  cursor: pointer;
+}
+
+.rc-option[aria-pressed='true'] {
+  background-color: #333;
+  border-color: #333;
+  color: #fff;
+}
+
+/* Findings the transform prints at the top of the page while editing. */
+.rc-findings {
+  list-style: none;
+  margin: 0 0 1em;
+  padding: 0.5em 0.75em;
+  border-inline-start: 3px solid #c8a200;
+  background: #fff8dc;
+  color: #333;
+  font-size: 0.875em;
+}
+
+.rc-findings li + li {
+  margin-top: 0.25em;
+}

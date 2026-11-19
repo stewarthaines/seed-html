@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Reader choices extension: let readers choose servings, measures or a reading level, and the book shows the matching text, remembered next time they open it.
+
 ## [0.29.0] - 2026-11-17
 
 ### Added

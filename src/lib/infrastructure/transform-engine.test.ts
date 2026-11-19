@@ -258,6 +258,7 @@ const BROKER_CONTEXT: TransformBrokerContext = {
   basePath: 'OEBPS',
   manifest: MANIFEST,
   language: 'de',
+  identifier: 'urn:uuid:book-1',
   spine: [{ idref: 'ch1', linear: true }],
 };
 
@@ -277,6 +278,7 @@ describe('executeTransform', () => {
         basePath: '',
         manifest: [],
         language: '',
+        identifier: '',
         spine: [],
         frontmatter: null,
         viewport: null,
@@ -300,6 +302,7 @@ describe('executeTransform', () => {
         basePath: 'OEBPS',
         manifest: MANIFEST,
         language: 'de',
+        identifier: 'urn:uuid:book-1',
         spine: [{ idref: 'ch1', linear: true }],
         frontmatter: null,
         viewport: null,
