@@ -1,0 +1,18 @@
+{
+  "id": "puzzlescript",
+  "name": "PuzzleScript",
+  "description": "Playable puzzle games in the page, written in PuzzleScript, with a picture of the first level where a reading app runs no scripts.",
+  "category": "code-blocks",
+  "url": "https://www.puzzlescript.net/Documentation/documentation.html",
+  "licenseName": "MIT",
+  "license": "LICENSE.txt",
+  "scripts": [],
+  "domTransforms": ["transformPuzzleScript.js"],
+  "stage": "blocks",
+  "textTransforms": [],
+  "assets": [
+    { "file": "puzzlescript.js", "target": "Scripts/puzzlescript.js", "media": "application/javascript" },
+    { "file": "puzzlescript-engine.txt", "target": "Misc/puzzlescript/engine.txt", "media": "text/plain" },
+    { "file": "puzzlescript.css", "target": "Styles/puzzlescript.css", "media": "text/css" }
+  ]
+}

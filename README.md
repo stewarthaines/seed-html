@@ -74,6 +74,7 @@ Extensions give a book its source format, its richer content and its layout. Eac
 - **[KaTeX](extensions/katex/)**: Typesets mathematics in code blocks as MathML, so formulas display without any script in the book.
 - **[Mermaid](extensions/mermaid/)**: Turns Mermaid code blocks into self-contained SVG diagrams: flowcharts, sequence, class and state diagrams, pie charts and Gantt charts.
 - **[Neumes](extensions/neumes/)**: Turns lines of direction marks and syllables in code blocks into manuscript-style singing notation.
+- **[PuzzleScript](extensions/puzzlescript/)**: Playable puzzle games in the page, written in PuzzleScript, with a picture of the first level where a reading app runs no scripts.
 
 #### Chapter content
 
