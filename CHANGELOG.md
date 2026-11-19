@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Reader choices extension: let readers choose servings, measures or a reading level, and the book shows the matching text, remembered next time they open it.
+- In the reader, click the blank margin either side of the book to turn the page.
+
+### Changed
+
+- In the reader, a page that uses the arrow keys itself, such as a puzzle game, keeps them.
 
 ## [0.29.0] - 2026-11-17
 
