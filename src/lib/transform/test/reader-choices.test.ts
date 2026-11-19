@@ -83,6 +83,35 @@ const GRID_RECIPE = `{serves="4–6 | 8–12 | 16–24"}
 Outside: \`a | b | c\`
 `;
 
+const LEVELS = {
+  level: {
+    label: 'Level',
+    mode: 'cover',
+    values: [
+      { english: 'English' },
+      { transliteration: 'Transliteration' },
+      { georgian: 'ქართული' },
+    ],
+  },
+  measure: CHOICES.measure,
+};
+
+const LESSON = `:choose:{of=level}
+:choose:{of=measure}
+
+{.georgian}
+თამაზი: გამარჯობათ.
+
+{when="level:english,transliteration"}
+Tamazi: gamarjobat.
+
+{when=level:english}
+Tamazi: Hello.
+
+{when="level:english measure:imperial"}
+A line for imperial English readers.
+`;
+
 function makeStore(files: Record<string, string> = {}) {
   const writes: string[] = [];
   return {
@@ -356,6 +385,23 @@ describe('reader-choices transform', () => {
     expect(texts(doc, '.h-recipe code')).toEqual(['1 | 2', 'a / b']);
   });
 
+  it('stamps cover mode, leaving covered text on the built page', async () => {
+    const store = makeStore();
+    const doc = await render(
+      LESSON.replace(/level:english measure:imperial/, 'level:georgian'),
+      store.ctx('ch1', { choices: { ...LEVELS, other: { values: ['x'], mode: 'hide' } } })
+    );
+    expect(JSON.parse(doc.body.getAttribute('data-rc-choices')!).level).toEqual({
+      values: ['english', 'transliteration', 'georgian'],
+      default: 'english',
+      mode: 'cover',
+    });
+    // A cover-mode miss is never rc-off: without the script it reads plainly.
+    expect(doc.querySelector('.rc-off')).toBeNull();
+    expect(doc.querySelector('.rc-covered')).toBeNull();
+    expect(texts(doc, '.rc-findings li')).toEqual(['⚠ choice "other": mode is remove or cover']);
+  });
+
   it('leaves a page without choices alone', async () => {
     const store = makeStore();
     await render('Intro.\n', store.ctx('ch1', { choices: CHOICES }));
@@ -455,5 +501,66 @@ describe('reader-choices reading-system script', () => {
     expect([...document.querySelectorAll('[aria-pressed="true"]')].map(b => b.textContent)).toEqual(
       ['8–12', '16–24', '8']
     );
+  });
+
+  describe('cover mode', () => {
+    async function lesson(): Promise<void> {
+      const store = makeStore();
+      const doc = await render(LESSON, store.ctx('ch1', { choices: LEVELS }));
+      document.body.innerHTML = doc.body.innerHTML;
+      for (const attr of ['data-rc-book', 'data-rc-choices']) {
+        document.body.setAttribute(attr, doc.body.getAttribute(attr)!);
+      }
+      new Function(runtimeSource)();
+    }
+    const covered = () => texts(document, '.rc-covered');
+    const line = (text: string) =>
+      [...document.querySelectorAll('.rc-variant')].find(
+        el => el.textContent === text
+      ) as HTMLElement;
+    const press = (value: string) =>
+      (document.querySelector(`[data-rc-value="${value}"]`) as HTMLElement).click();
+
+    it('covers by level, as value sets that add up', async () => {
+      await lesson();
+      expect(covered()).toEqual([]);
+      press('transliteration');
+      expect(covered()).toEqual(['Tamazi: Hello.']);
+      press('georgian');
+      expect(covered()).toEqual(['Tamazi: gamarjobat.', 'Tamazi: Hello.']);
+      // Covered, not removed, and still in the accessibility tree.
+      const hello = line('Tamazi: Hello.');
+      expect(hello.classList.contains('rc-off')).toBe(false);
+      expect(hello.hasAttribute('aria-hidden')).toBe(false);
+      expect(hello.getAttribute('tabindex')).toBe('0');
+    });
+
+    it('reveals a passage by tap or keyboard, and covers again when the level changes', async () => {
+      await lesson();
+      press('georgian');
+      line('Tamazi: Hello.').click();
+      expect(covered()).toEqual(['Tamazi: gamarjobat.']);
+      expect(line('Tamazi: Hello.').hasAttribute('tabindex')).toBe(false);
+
+      const translit = line('Tamazi: gamarjobat.');
+      translit.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      expect(covered()).toEqual([]);
+
+      press('transliteration');
+      expect(covered()).toEqual(['Tamazi: Hello.']);
+    });
+
+    it('removes before it covers when a variant names both kinds of choice', async () => {
+      await lesson();
+      const imperial = 'A line for imperial English readers.';
+      expect(line(imperial).classList.contains('rc-off')).toBe(true);
+      press('imperial');
+      expect(line(imperial).classList.contains('rc-off')).toBe(false);
+      press('georgian');
+      expect(line(imperial).classList.contains('rc-covered')).toBe(true);
+      press('metric');
+      expect(line(imperial).classList.contains('rc-off')).toBe(true);
+      expect(line(imperial).classList.contains('rc-covered')).toBe(false);
+    });
   });
 });

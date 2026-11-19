@@ -10,6 +10,28 @@
   display: none !important;
 }
 
+/* Cover mode: blanked in place, keeping its size, until the reader taps it.
+   Descendants too, so a link or coloured emphasis can't show through. */
+.rc-covered,
+.rc-covered * {
+  color: transparent !important;
+  text-decoration-color: transparent !important;
+  text-shadow: none !important;
+}
+
+.rc-covered {
+  background-color: rgba(128, 128, 128, 0.2);
+  border-radius: 0.25em;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.rc-covered img,
+.rc-covered svg {
+  visibility: hidden;
+}
+
 /* Controls: one choice per line; buttons appear only where the script runs. */
 .rc-choose-set > .rc-choose {
   display: block;

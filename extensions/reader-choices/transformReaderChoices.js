@@ -40,6 +40,15 @@
  * system without scripts (and print, which carries no scripts) shows one
  * consistent version. No `when` attribute survives into the XHTML.
  *
+ * COVER MODE. A choice declared with `mode: cover` blanks the text it
+ * doesn't match instead of removing it, and the reader reveals a passage by
+ * tapping it (flashcards); changing the choice covers everything again. Only
+ * the reading-system script covers, so without it covered text shows plainly.
+ * Levels that add up are value sets:
+ *
+ *   level: { mode: cover, values: [english, transliteration, georgian] }
+ *   {when="level:english,transliteration"}   ← shown at both levels
+ *
  * SCOPES. A block with an attribute named after a choice owns that choice:
  * its controls and variants follow their own value, remembered per block.
  * The attribute labels the book's values in order:
@@ -124,6 +133,7 @@ async function transformDOM(document, idref, ctx) {
     const stamp = {};
     for (const [name, choice] of Object.entries(declaration)) {
       stamp[name] = { values: choice.values.map(v => v.id), default: choice.default };
+      if (choice.mode === 'cover') stamp[name].mode = 'cover';
     }
     document.body.setAttribute('data-rc-book', ctx.identifier || '');
     document.body.setAttribute('data-rc-choices', JSON.stringify(stamp));
@@ -142,7 +152,7 @@ const RESERVED_NAMES = new Set([
   'id', 'class', 'style', 'title', 'lang', 'dir', 'hidden', 'role', 'when',
   'href', 'src', 'alt', 'width', 'height', 'name', 'value', 'type', 'for',
 ]);
-const CHOICE_KEYS = new Set(['label', 'values', 'default', 'split']);
+const CHOICE_KEYS = new Set(['label', 'values', 'default', 'split', 'mode']);
 // A grid's separators, outermost first; each needs a space on either side.
 const SPLITS = ['/', '|'];
 
@@ -237,6 +247,10 @@ function normalizeDeclaration(raw, findings) {
     const label =
       typeof spec.label === 'string' || typeof spec.label === 'number' ? String(spec.label) : name;
     declaration[name] = { label, values, default: fallback };
+    if (spec.mode === 'cover') declaration[name].mode = 'cover';
+    else if (spec.mode !== undefined && spec.mode !== null && spec.mode !== 'remove') {
+      findings.push(`choice "${name}": mode is remove or cover`);
+    }
     if (spec.split !== undefined && spec.split !== null) {
       const split = String(spec.split);
       const taken = Object.keys(declaration).find(
@@ -464,7 +478,11 @@ function stampVariant(el, declaration, findings) {
   if (!conditions) return;
   el.setAttribute('data-rc-when', conditions.map(c => `${c.name}:${c.values.join(',')}`).join(' '));
   el.classList.add('rc-variant');
-  const showsByDefault = conditions.every(c => c.values.includes(declaration[c.name].default));
+  // Only remove-mode choices take text off the built page: covering needs the
+  // script to reveal, so without it (and in print) covered text shows plainly.
+  const showsByDefault = conditions.every(
+    c => declaration[c.name].mode === 'cover' || c.values.includes(declaration[c.name].default)
+  );
   el.classList.toggle('rc-off', !showsByDefault);
 }
 

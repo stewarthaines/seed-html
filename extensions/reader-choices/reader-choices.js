@@ -21,6 +21,11 @@
  * touched starts from the book's value; one without a key lasts as long as
  * the page.
  *
+ * A choice with mode 'cover' blanks the variants it doesn't match (class
+ * rc-covered, focusable) instead of removing them; a tap, Enter or Space
+ * reveals one, and any change of choice covers them all again. Covered text
+ * stays in the accessibility tree: a listener hears the whole passage.
+ *
  * localStorage may be missing or throw (private modes, some reading systems):
  * the choice then lasts as long as the page.
  *
@@ -141,6 +146,8 @@
       var conditions = parseWhen(found[v].getAttribute('data-rc-when'));
       for (var c = 0; c < conditions.length; c++) {
         conditions[c].store = storeFor(found[v], conditions[c].name);
+        var spec = declaration[conditions[c].name];
+        conditions[c].cover = !!spec && spec.mode === 'cover';
       }
       variants.push({ el: found[v], conditions: conditions });
     }
@@ -154,15 +161,45 @@
       foundButtons[b].rcButton = buttons[buttons.length - 1];
     }
 
+    function setCovered(el, covered) {
+      if (covered) {
+        el.classList.add('rc-covered');
+        if (!el.hasAttribute('tabindex')) {
+          el.setAttribute('tabindex', '0');
+          el.rcTabindex = true;
+        }
+      } else {
+        el.classList.remove('rc-covered');
+        if (el.rcTabindex) {
+          el.removeAttribute('tabindex');
+          el.rcTabindex = false;
+        }
+      }
+    }
+
+    function coveredFrom(node) {
+      for (; node && node !== document; node = node.parentNode) {
+        if (node.classList && node.classList.contains('rc-covered')) return node;
+      }
+      return null;
+    }
+
     function apply() {
+      // A remove-mode miss takes the variant off the page; otherwise a
+      // cover-mode miss blanks it until tapped. Every apply covers afresh, so
+      // changing a choice hides whatever the reader had revealed.
       for (var i = 0; i < variants.length; i++) {
-        var shows = true;
+        var removed = false;
+        var covered = false;
         var list = variants[i].conditions;
         for (var k = 0; k < list.length; k++) {
-          if (!contains(list[k].values, list[k].store.state[list[k].name])) shows = false;
+          if (contains(list[k].values, list[k].store.state[list[k].name])) continue;
+          if (list[k].cover) covered = true;
+          else removed = true;
         }
-        if (shows) variants[i].el.classList.remove('rc-off');
-        else variants[i].el.classList.add('rc-off');
+        if (removed) variants[i].el.classList.add('rc-off');
+        else variants[i].el.classList.remove('rc-off');
+        setCovered(variants[i].el, covered && !removed);
       }
       for (var n = 0; n < buttons.length; n++) {
         var pressed = buttons[n].store.state[buttons[n].name] === buttons[n].el.getAttribute('data-rc-value');
@@ -182,7 +219,15 @@
     document.addEventListener('click', function (event) {
       var target = event.target;
       while (target && target !== document && !target.rcButton) target = target.parentNode;
-      if (!target || target === document) return;
+      if (!target || target === document) {
+        // A tap on covered text reveals it (and doesn't follow a link in it).
+        var hidden = coveredFrom(event.target);
+        if (hidden) {
+          event.preventDefault();
+          setCovered(hidden, false);
+        }
+        return;
+      }
       var button = target.rcButton;
       var value = target.getAttribute('data-rc-value');
       if (!valid(button.name, value)) return;
@@ -190,6 +235,15 @@
       button.store.state[button.name] = value;
       if (button.store.key) writeStore(button.store.key, button.name, value);
       apply();
+    });
+
+    document.addEventListener('keydown', function (event) {
+      var key = event.key;
+      if (key !== 'Enter' && key !== ' ' && key !== 'Spacebar') return;
+      var target = event.target;
+      if (!target || !target.classList || !target.classList.contains('rc-covered')) return;
+      event.preventDefault();
+      setCovered(target, false);
     });
 
     // Another page of the same book open beside this one (a spread).
