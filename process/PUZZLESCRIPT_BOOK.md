@@ -25,3 +25,9 @@ Confirmed by the author on the iPad and iPhone, 2026-11-19: the swipe turning th
 
 Not fixed, for the next device test: the canvas backing store ignores `devicePixelRatio × visualViewport.scale` (sharp but uneven pixels, soft message text); the player's controls are 56 CSS px, about 34 points on an iPhone. The general rules are in the touch checklist in `process/APPLE_BOOKS_BEHAVIOUR.md`.
 
+
+## The demo book (2026-11-19)
+
+Seven pages in the author's Firefox copy: an introduction ("Five Small Gardens", chapter01), "How to Play", then five puzzle pages that each add one idea, three levels each, all original and checked with `check-levels.mjs` (fewest moves in brackets): Moss and Stones, push (5, 8, 22); Rows of Stones, a row pushes as one (4, 11, 20); The Rope, pull only (7, 12, 10); Ponds, a stone fills a pond to make a bridge, reach the gate (6, 7, 15); Two Gardeners, two players move together (10, 15, 11). The games share one sprite set; I designed and checked them, created the chapters with `seed_create_chapter` (the book-editor agent has no create tool), and the book-editor agent wrote the prose and copied the games in, verified afterwards by hashing each chapter source against the checked game. Rendered, packaged and epubcheck-clean (0 errors, 0 warnings). The game sources were drafted in a scratch folder; the book holds the copies.
+
+Noted, not acted on: the text-only pages load `Scripts/puzzlescript.js` too (no `scripts:` frontmatter); it does nothing there.
