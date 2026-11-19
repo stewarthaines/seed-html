@@ -53,6 +53,33 @@
     document.head.appendChild(script);
   }
 
+  // A page that finds the engine already loaded is a new document in the same
+  // window: SEED.html's preview opens each chapter in the window it already
+  // has, which keeps every script's names but drops the page's elements and
+  // event listeners. (A reading system loads each page afresh, and
+  // re-running the engine there would redeclare its names.) So redo what the
+  // engine's files did for their page when they first ran: find the canvas
+  // (graphics.js), listen for input (inputoutput.js; removing first keeps
+  // this from doubling up if the listeners did survive) and build the
+  // player's controls (mobile.js).
+  function reattachEngine() {
+    canvas = document.getElementById('gameCanvas');
+    ctx = canvas.getContext('2d');
+    var inputs = [
+      [document, 'touchstart', onMouseDown], [document, 'touchmove', mouseMove],
+      [document, 'touchend', onMouseUp], [document, 'mousedown', onMouseDown],
+      [document, 'mouseup', onMouseUp], [document, 'keydown', onKeyDown],
+      [document, 'keyup', onKeyUp], [window, 'focus', onMyFocus], [window, 'blur', onMyBlur],
+    ];
+    inputs.forEach(function (entry) {
+      entry[0].removeEventListener(entry[1], entry[2], false);
+      entry[0].addEventListener(entry[1], entry[2], false);
+    });
+    Mobile._instance = null;
+    Mobile.setupPlayerControls();
+    Mobile.enable();
+  }
+
   // The page height a fixed-layout page declares (its viewport meta), which
   // holds even on a page Books has loaded but not yet laid out; else the window.
   function pageHeight() {
@@ -111,9 +138,8 @@
     // level rather than the player's black title screen.
     var hold = new Promise(function (resolve) { setTimeout(resolve, HOLD_MS); });
     var loaded = hold.then(function () {
-      return typeof compile === 'function'
-        ? null
-        : fetch(ENGINE).then(function (response) { return response.text(); }).then(runEngine);
+      if (typeof compile === 'function') return reattachEngine();
+      return fetch(ENGINE).then(function (response) { return response.text(); }).then(runEngine);
     });
     loaded.then(function () {
       game.classList.add('puzzlescript-live', 'player-shell');
