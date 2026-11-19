@@ -38,6 +38,10 @@ Groups (the docs site lists chapters flat, in this order): Start, Write, Describ
 
 `change-how-your-book-looks` — page.css under Also in this chapter; one example rule; the preview follows.
 
+## Let readers choose servings or a reading level
+
+`let-readers-choose-servings-or-a-reading-level` — Advanced Mode, Settings › Content transforms › Reader choices; frontmatter `choices:`, `:choose:{of=…}`, `when=`; recipe blocks with the quantity shorthand; `mode: cover` for practice.
+
 ## Use your own cover image
 
 `use-your-own-cover-image` — Book › Cover › Use my own image….
