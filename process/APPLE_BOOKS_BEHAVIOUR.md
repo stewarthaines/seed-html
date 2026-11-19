@@ -40,6 +40,23 @@ Devices so far: an iPad mini (768×1024 points, `navigator.epubReadingSystem` re
 
 **Animation may run at 30 frames a second.** One iPhone run drew 421 frames in 14.4 s. Low Power Mode or Books throttling `requestAnimationFrame`; not yet checked. iOS 16.7.16, 2026-10-15.
 
+## Touch on an interactive page: the checklist
+
+The notes above, gathered for anyone building a touch interaction (a drawing pad, a drag, a game) so it does not rediscover them. Items marked "inferred" follow from the notes and from code reading, written 2026-11-19 for the PuzzleScript prototype (`process/PUZZLESCRIPT_BOOK.md`, `extensions/puzzlescript/puzzlescript.js`) and not yet confirmed on a device; upgrade or correct them when tested.
+
+1. **Claim touches with touch events, not Pointer Events.** `preventDefault` on `touchstart`, `touchmove` and `touchend` over the interactive area is what stops Books' page swipe in fixed layout (confirmed, iPhone 2026-10-24); a cancelled `pointerdown` does not, and `touch-action: none` alone is not enough. Pointer Events are fine for the movement itself. Libraries written for the web usually cancel only pointer events: check before relying on one.
+2. **Register with `{ passive: false }` on the element, not on window, document or body.** Safari makes touch listeners on those three passive by default, so their `preventDefault` is ignored (web platform behaviour since iOS 11.3).
+3. **Use the capture phase.** Libraries stop `touchstart` propagating from their own controls; a bubbling listener on a container then never sees touches that start on a button, and those still swipe or zoom the page. A capturing listener on the container runs first.
+4. **Leave click-driven controls out.** A cancelled `touchend` sends no `click`. Buttons should act on `pointerup` (which also covers the Apple Pencil, whose tap sends no `click`, confirmed 2026-09-16) and keep `click` for the keyboard; anything that only listens for `click` (menus, selects, checkboxes) must sit outside the claimed area.
+5. **Double tap and pinch zoom the page; inferred: cancelled touches stop both.** In fixed layout Books zooms on a double tap or a pinch, so quick repeated taps on a control zoom the page instead of repeating. Cancelling `touchstart` should stop both, as it does in WebKit generally.
+6. **A tap shows or hides Books' own controls; inferred: cancelled touches stop it.** The Georgian practice book cancels touches on its buttons for this reason (2026-09-17), not yet confirmed on a device.
+7. **Leave the reader a way to turn the page.** Claim touches on the interactive area only, so a swipe on the page's text or margins still turns it. A page that is all interaction traps the reader.
+8. **Paginated reflowable books cannot claim drags at all** (confirmed, iPadOS 18.6): design touch interaction for fixed layout, and make reflowable versions button-first.
+9. **Size from what the page declares, and measure again.** A preloaded fixed-layout page is measured before layout (a canvas measured 0, confirmed 2026-09-16). Take the page size from the viewport meta, and re-measure on `pageshow`, `resize`, `visualViewport` resize and the first pointerdown.
+10. **Pinch-zoomed canvases magnify their bitmap.** A canvas whose backing store is its CSS size is enlarged by `devicePixelRatio × visualViewport.scale`; Bricks sizes its backing store by that product (`displayScale` in `extensions/bricks/bricks3d.js`). Pixel art with `image-rendering: pixelated` stays sharp but uneven; text drawn into the canvas blurs.
+11. **Plan the thumbnail.** Draw the state the thumbnail should show, hold it 250 ms, then start (confirmed 2026-10-26). A game shows a still of its first level rather than a black title screen.
+12. **In landscape, fixed-layout pages come in pairs at half size** unless the book sets `rendition:spread none`, so controls shrink with them (confirmed 2026-09-16). On an iPhone a 600-wide page is shown at about 0.6, so a 56 px control is about 34 points: size controls for the smallest device the page is shown on.
+
 ## Layout, fonts and the store
 
 **Generic font families render in Books' own face.** With `ibooks:specified-fonts` set and "Original" chosen, a bare `font-family: serif` still renders in San Francisco: Books honours named families only. Lead with named faces present on Apple devices, generic last (`"Iowan Old Style", Palatino, Georgia, serif`). macOS Books, 2026-08-08 (Bulletin 39). SEED.html's starter `page.css` still ships a bare `serif`.
