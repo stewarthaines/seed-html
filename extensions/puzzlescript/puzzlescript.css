@@ -231,8 +231,11 @@ body.player-shell:not(.touch-enabled) #homepagelink { font-size: 16px; line-heig
   margin: 0;
   border-radius: 0;
 }
+/* puzzlescript.js gives a fixed-layout game its height before it starts, so the
+   still fills the same box (and the thumbnail Books takes then). */
 .puzzlescript-page .puzzlescript-still {
-  max-block-size: 100vh;
+  block-size: 100%;
+  max-block-size: none;
 }
 .puzzlescript-live .puzzlescript-still {
   display: none;
