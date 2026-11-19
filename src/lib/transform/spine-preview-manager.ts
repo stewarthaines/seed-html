@@ -331,6 +331,7 @@ export class SpinePreviewManager {
       basePath: workspace.pathInfo.basePath,
       manifest: workspace.opf.manifest,
       language: primaryLanguage(workspace.opf.metadata),
+      identifier: workspace.opf.metadata.identifier ?? '',
       spine: workspace.opf.spine,
       viewport: bookViewport(workspace.opf.metadata),
     });
@@ -431,6 +432,7 @@ export class SpinePreviewManager {
             basePath: string;
             manifest: ManifestItem[];
             language: string;
+            identifier: string;
             spine: SpineItem[];
             viewport: FxlViewport | null;
           }
@@ -439,6 +441,7 @@ export class SpinePreviewManager {
             basePath: workspace.pathInfo.basePath,
             manifest: workspace.opf.manifest,
             language: primaryLanguage(workspace.opf.metadata),
+            identifier: workspace.opf.metadata.identifier ?? '',
             spine: workspace.opf.spine,
             viewport: bookViewport(workspace.opf.metadata),
           }

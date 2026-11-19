@@ -296,7 +296,7 @@ class TransformExecutionEngine {
 
   /**
    * Build the `ctx` object passed as the third argument to transform functions.
-   * Data fields (idref, basePath, manifest, language) come from the parent; the
+   * Data fields (idref, basePath, manifest, language, …) come from the parent; the
    * methods are async capabilities brokered through the parent (see callBroker).
    */
   createTransformContext(transformCtx) {
@@ -307,6 +307,9 @@ class TransformExecutionEngine {
       manifest: Array.isArray(data.manifest) ? data.manifest : [],
       // The book's primary dc:language tag ('' when the project has none).
       language: data.language || '',
+      // The package's unique identifier (dc:identifier), '' when unknown — a
+      // stable key for anything a reading-system script stores per book.
+      identifier: data.identifier || '',
       // The OPF spine in reading order ({ idref, linear }[]) — walk chapters in
       // order and combine per-chapter data (e.g. a page index).
       spine: Array.isArray(data.spine) ? data.spine : [],
