@@ -93,8 +93,17 @@
   // pageshow, resize and the first touch, and the player refits its canvas.
   function fit(game) {
     if (game.classList.contains('puzzlescript-page')) {
-      var top = game.getBoundingClientRect().top + window.scrollY;
-      game.style.blockSize = Math.max(240, pageHeight() - top) + 'px';
+      var box = game.getBoundingClientRect();
+      var top = box.top + window.scrollY;
+      // What follows the game on the page (the text shown once it is won)
+      // keeps its room below it.
+      var last = game.parentNode.lastElementChild;
+      var tail = 0;
+      if (last && last !== game) {
+        tail = last.getBoundingClientRect().bottom - box.bottom +
+          (parseFloat(getComputedStyle(last).marginBottom) || 0);
+      }
+      game.style.blockSize = Math.max(240, pageHeight() - top - Math.max(0, tail)) + 'px';
     }
     if (game.classList.contains('puzzlescript-live') && typeof canvasResize === 'function') {
       canvasResize();
@@ -116,6 +125,45 @@
     ['touchstart', 'touchmove', 'touchend'].forEach(function (type) {
       // Capture: the player's toolbar and buttons stop touchstart bubbling.
       game.addEventListener(type, claim, { passive: false, capture: true });
+    });
+  }
+
+  // The level a reader had reached in a game of several levels, as the player
+  // itself records it (under the page's address).
+  function savedLevel() {
+    try {
+      var saved = parseInt(localStorage.getItem(document.URL), 10);
+      return saved > 0 ? saved : 0;
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  // Winning the last level sends the player back to its title screen. A page
+  // that has something to show then (an element classed when-solved: a link
+  // to the next page, say) shows that and keeps the solved level on screen.
+  // The player's nextLevel is wrapped once per window; the page is looked up
+  // when it runs, since SEED.html's preview keeps the window between pages.
+  function watchForWin() {
+    if (nextLevel.bookWrapped) return;
+    var playerNextLevel = nextLevel;
+    nextLevel = function () {
+      var reveal = document.querySelector('.when-solved');
+      var last = !titleScreen && state && state.levels && curlevel >= state.levels.length - 1;
+      if (!reveal || !last) return playerNextLevel.apply(this, arguments);
+      try { localStorage.removeItem(document.URL); } catch (error) { /* no storage */ }
+      document.body.classList.add('puzzlescript-solved');
+      var link = reveal.querySelector('a[href]');
+      if (link) link.focus({ preventScroll: true });
+    };
+    nextLevel.bookWrapped = true;
+  }
+
+  // Enter on a link in the revealed text follows the link; the game, which
+  // hears every key on the page, is not told.
+  function keepEnter(reveal) {
+    reveal.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') event.stopPropagation();
     });
   }
 
@@ -143,9 +191,17 @@
     });
     loaded.then(function () {
       game.classList.add('puzzlescript-live', 'player-shell');
+      document.body.classList.add('puzzlescript-playing');
+      Array.prototype.forEach.call(document.querySelectorAll('.when-solved'), keepEnter);
+      watchForWin();
       fit(game);
       // The player sizes its canvas to the box, which is laid out only now.
-      compile(['restart'], source.textContent);
+      // Straight into the level: the page has already said what the game is.
+      compile(['loadLevel', 0], source.textContent);
+      var saved = savedLevel();
+      if (saved && state && state.levels && saved < state.levels.length) {
+        compile(['loadLevel', saved], source.textContent);
+      }
       fit(game);
     }).catch(function (error) {
       game.removeAttribute('data-started');
