@@ -256,3 +256,14 @@ body.player-shell:not(.touch-enabled) #homepagelink { font-size: 16px; line-heig
   font-family: monospace;
   color: #b00020;
 }
+/* Text the page shows once the game is won. It keeps its place while hidden,
+   and where scripts don't run it is simply there. */
+.puzzlescript-playing .when-solved {
+  visibility: hidden;
+}
+.puzzlescript-playing.puzzlescript-solved .when-solved {
+  visibility: visible;
+}
+.puzzlescript-page ~ .when-solved {
+  margin-block: 0.5em;
+}

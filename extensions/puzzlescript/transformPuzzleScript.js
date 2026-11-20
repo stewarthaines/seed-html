@@ -18,6 +18,16 @@
  * page below whatever comes before it (div.puzzlescript-page; puzzlescript.js
  * sizes it); in a reflowable one it is a box in the text.
  *
+ * A block with no OBJECTS section is a level on its own: its first line names
+ * the chapter that holds the game (`game moss`), an optional `title` line
+ * renames it, and the rest is the level. The objects, legend and rules come
+ * from the first puzzlescript block in that chapter's source, so a book can
+ * give each level its own page and write the game once.
+ *
+ * What the page shows once the game is won is the author's: an element
+ * classed `when-solved` (a link to the next page, say), which puzzlescript.js
+ * hides until then. Where scripts don't run it is simply there.
+ *
  * The still uses the default palette (arnecolors) and the first object of an
  * `or` legend entry; colours it cannot read are drawn transparent. Notes
  * (no levels, an unknown glyph) are shown in the page, in English, for the
@@ -25,20 +35,26 @@
  *
  * @param {Document} document - the chapter's rendered DOM (HTML)
  * @param {string} idref - spine item id for this chapter
- * @param {object} [ctx] - transform context; only its viewport is read
- * @returns {Document} the transformed document
+ * @param {object} [ctx] - transform context: its viewport, and readSourceText
+ *   for a level that names its game
+ * @returns {Promise<Document>} the transformed document
  */
-function transformDOM(document, idref, ctx) {
+async function transformDOM(document, idref, ctx) {
   const fixedLayout = Boolean(ctx && ctx.viewport);
   const blocks = [
     ...document.querySelectorAll('pre.puzzlescript, pre:has(> code.language-puzzlescript)'),
   ];
-  blocks.forEach((pre, index) => {
+  for (const [index, pre] of blocks.entries()) {
     if (index > 0) {
       pre.before(note(document, 'Only one PuzzleScript game fits on a page; this one stays as code.'));
-      return;
+      continue;
     }
-    const source = pre.textContent.replace(/\n$/, '');
+    const composed = await composeGame(pre.textContent.replace(/\n$/, ''), ctx);
+    if (composed.note) {
+      pre.before(note(document, composed.note));
+      continue;
+    }
+    const source = composed.source;
     const game = parseGame(source);
     const root = document.createElement('div');
     root.className = fixedLayout ? 'puzzlescript puzzlescript-page' : 'puzzlescript';
@@ -76,8 +92,85 @@ function transformDOM(document, idref, ctx) {
     root.append(container, message, held);
     for (const text of [...game.notes, ...still.notes]) root.append(note(document, text));
     pre.replaceWith(root);
-  });
+  }
   return document;
+}
+
+function hasSection(source, name) {
+  return stripComments(source)
+    .split('\n')
+    .some(line => line.trim().toLowerCase() === name);
+}
+
+/** The first fenced puzzlescript block in a chapter's source text, or null. */
+function fencedGame(text) {
+  const lines = text.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const open = lines[i].match(/^\s*(`{3,}|~{3,})\s*puzzlescript\s*$/);
+    if (!open) continue;
+    const body = [];
+    for (let j = i + 1; j < lines.length; j++) {
+      const line = lines[j].trim();
+      const closes =
+        line.length >= open[1].length && line === open[1][0].repeat(line.length);
+      if (closes) break;
+      body.push(lines[j]);
+    }
+    return body.join('\n');
+  }
+  return null;
+}
+
+/**
+ * The whole game a block stands for. A block with an OBJECTS section is the
+ * game as written. Without one it is a level for the game another chapter
+ * holds: that game's source up to its LEVELS, then this block's level.
+ * Returns { source } or { note } when the game cannot be put together.
+ */
+async function composeGame(written, ctx) {
+  if (hasSection(written, 'objects')) return { source: written };
+  const lines = written.split('\n');
+  const header = {};
+  let start = 0;
+  for (; start < lines.length; start++) {
+    const line = lines[start].trim();
+    const match = line.match(/^(game|title)\s+(.+)$/i);
+    if (match) header[match[1].toLowerCase()] = match[2].trim();
+    else if (line && !/^=+$/.test(line) && line.toLowerCase() !== 'levels') break;
+  }
+  if (!header.game) {
+    return { note: 'This block has no OBJECTS section. A level on its own starts with "game" and the id of the chapter that holds the game.' };
+  }
+  if (!/^[A-Za-z][A-Za-z0-9_-]*$/.test(header.game)) {
+    return { note: `"${header.game}" is not a chapter id.` };
+  }
+  let chapter = null;
+  try {
+    if (ctx && typeof ctx.readSourceText === 'function') {
+      chapter = await ctx.readSourceText('SOURCE/text/' + header.game + '.txt');
+    }
+  } catch {
+    chapter = null;
+  }
+  const game = typeof chapter === 'string' ? fencedGame(chapter) : null;
+  if (game === null || !hasSection(game, 'objects')) {
+    return { note: `The chapter "${header.game}" holds no PuzzleScript game for this level to use.` };
+  }
+  const kept = [];
+  for (const line of game.split('\n')) {
+    if (line.trim().toLowerCase() === 'levels') break;
+    kept.push(line);
+  }
+  while (kept.length && (/^=+$/.test(kept[kept.length - 1].trim()) || !kept[kept.length - 1].trim())) {
+    kept.pop();
+  }
+  if (header.title) {
+    const at = kept.findIndex(line => /^\s*title\s/i.test(line));
+    if (at >= 0) kept[at] = 'title ' + header.title;
+    else kept.unshift('title ' + header.title);
+  }
+  const level = lines.slice(start).join('\n').replace(/\s+$/, '');
+  return { source: kept.join('\n') + '\n\n=======\nLEVELS\n=======\n\n' + level };
 }
 
 function note(document, text) {
