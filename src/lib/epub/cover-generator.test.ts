@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generateCoverSvg, titleHue } from './cover-generator.js';
+import { generateCoverSvg, layoutTitle, titleHue, titleLineEm } from './cover-generator.js';
 
 describe('generateCoverSvg', () => {
   it('produces well-formed SVG with declared inkscape/sodipodi namespaces', () => {
@@ -21,6 +21,33 @@ describe('generateCoverSvg', () => {
       expect(tspan).toContain('sodipodi:role="line"');
       expect(tspan).toContain('x="300"'); // each line stays centered independently
     }
+  });
+
+  it('keeps half an em clear each side of every title line', () => {
+    const titles = [
+      'hello, world! in Bricks',
+      'Coming Out',
+      'maps demo',
+      'Georgian Recipes Demo',
+      'Australian McColl Family',
+      'Supercalifragilistic',
+      'A Sample Screenplay Handbook For Working Writers',
+    ];
+    for (const title of titles) {
+      const { lines, fontSize } = layoutTitle(title);
+      for (const line of lines) {
+        expect(titleLineEm(line) * fontSize + fontSize).toBeLessThanOrEqual(600);
+      }
+    }
+  });
+
+  it('breaks a short title when breaking allows bigger type', () => {
+    expect(layoutTitle('maps demo').lines).toEqual(['maps', 'demo']);
+    expect(layoutTitle('Coming Out').lines).toEqual(['Coming', 'Out']);
+  });
+
+  it('keeps a single word on one line', () => {
+    expect(layoutTitle('Bulletin').lines).toEqual(['Bulletin']);
   });
 
   it('derives a stable hue from the title', () => {

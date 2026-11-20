@@ -3,8 +3,8 @@
  * Hue is derived deterministically from the title so each project gets a
  * distinct but stable colour.
  *
- * Font size is driven by the longest wrapped line so that text fills most
- * of the cover width — making it readable even at thumbnail scale.
+ * The title takes whichever line breaks allow the biggest type, with half an
+ * em clear each side of the widest line — readable even at thumbnail scale.
  */
 
 /** Deterministic hue (0–359) from a title string — the default cover hue. */
@@ -91,32 +91,194 @@ function xmlEscape(s: string): string {
     .replace(/"/g, '&quot;');
 }
 
-function wordWrap(text: string, maxChars: number): string[] {
-  const words = text.split(/\s+/).filter(Boolean);
-  if (words.length === 0) return [text];
-  const lines: string[] = [];
-  let current = '';
-  for (const word of words) {
-    if (!current) {
-      current = word;
-    } else if ((current + ' ' + word).length <= maxChars) {
-      current += ' ' + word;
-    } else {
-      lines.push(current);
-      current = word;
-    }
+// Georgia Regular advance widths in thousandths of an em, read from the font's
+// hmtx table for printable ASCII. Measuring with a fixed table (not canvas
+// measureText) keeps the cover identical on every machine; a reader that falls
+// back to Times gets narrower text, so the margin only grows.
+const GEORGIA_WIDTHS: Record<string, number> = {
+  ' ': 241,
+  '!': 331,
+  '"': 412,
+  '#': 643,
+  $: 610,
+  '%': 817,
+  '&': 710,
+  "'": 215,
+  '(': 375,
+  ')': 375,
+  '*': 472,
+  '+': 643,
+  ',': 270,
+  '-': 374,
+  '.': 270,
+  '/': 469,
+  '0': 614,
+  '1': 430,
+  '2': 559,
+  '3': 552,
+  '4': 565,
+  '5': 528,
+  '6': 566,
+  '7': 502,
+  '8': 596,
+  '9': 566,
+  ':': 312,
+  ';': 312,
+  '<': 643,
+  '=': 643,
+  '>': 643,
+  '?': 479,
+  '@': 929,
+  A: 671,
+  B: 654,
+  C: 642,
+  D: 749,
+  E: 653,
+  F: 599,
+  G: 725,
+  H: 815,
+  I: 390,
+  J: 518,
+  K: 694,
+  L: 604,
+  M: 927,
+  N: 767,
+  O: 744,
+  P: 610,
+  Q: 744,
+  R: 702,
+  S: 561,
+  T: 619,
+  U: 756,
+  V: 667,
+  W: 976,
+  X: 710,
+  Y: 615,
+  Z: 602,
+  '[': 375,
+  '\\': 469,
+  ']': 375,
+  '^': 643,
+  _: 643,
+  '`': 500,
+  a: 504,
+  b: 560,
+  c: 454,
+  d: 574,
+  e: 483,
+  f: 325,
+  g: 509,
+  h: 582,
+  i: 293,
+  j: 292,
+  k: 536,
+  l: 286,
+  m: 881,
+  n: 591,
+  o: 539,
+  p: 571,
+  q: 560,
+  r: 410,
+  s: 432,
+  t: 345,
+  u: 575,
+  v: 497,
+  w: 737,
+  x: 505,
+  y: 492,
+  z: 444,
+  '{': 430,
+  '|': 375,
+  '}': 430,
+  '~': 643,
+};
+
+/** Estimated width of a line in ems when set in Georgia. */
+export function titleLineEm(line: string): number {
+  let total = 0;
+  for (const ch of line) {
+    const known = GEORGIA_WIDTHS[ch];
+    if (known !== undefined) total += known;
+    // Unknown characters: full width for CJK and beyond, a wide lowercase otherwise.
+    else total += (ch.codePointAt(0) ?? 0) >= 0x2e80 ? 1000 : 620;
   }
-  if (current) lines.push(current);
-  return lines;
+  return total / 1000;
 }
 
-/** Wrap greedily, widening maxChars until ≤ 5 lines (or truncate at that point). */
-function fitLines(text: string): string[] {
-  for (const max of [10, 13, 16, 20]) {
-    const ls = wordWrap(text, max);
-    if (ls.length <= 5) return ls;
+/** Every way to break the words into 1..maxLines contiguous lines. */
+function lineSplits(words: string[], maxLines: number): string[][] {
+  const results: string[][] = [];
+  const walk = (start: number, acc: string[]) => {
+    if (start === words.length) {
+      results.push(acc);
+      return;
+    }
+    if (acc.length === maxLines) return;
+    for (let end = start + 1; end <= words.length; end++) {
+      walk(end, [...acc, words.slice(start, end).join(' ')]);
+    }
+  };
+  walk(0, []);
+  return results;
+}
+
+/** Greedy wraps at every character budget — used when a title has too many words to try every split. */
+function greedySplits(words: string[], maxLines: number): string[][] {
+  const results: string[][] = [];
+  const total = words.join(' ').length;
+  for (let max = 1; max <= total; max++) {
+    const lines: string[] = [];
+    for (const word of words) {
+      const last = lines[lines.length - 1];
+      if (last !== undefined && (last + ' ' + word).length <= max) {
+        lines[lines.length - 1] = last + ' ' + word;
+      } else {
+        lines.push(word);
+      }
+    }
+    if (lines.length <= maxLines) results.push(lines);
   }
-  return wordWrap(text, 20).slice(0, 5);
+  return results;
+}
+
+/** The largest title font (viewBox px) at which these lines fit the title zone. */
+function fontForLines(lines: string[]): number {
+  const widest = Math.max(...lines.map(titleLineEm));
+  // Width: the widest line plus TITLE_SIDE_MARGIN_EM each side spans the cover.
+  const widthFont = COVER_WIDTH / (widest + 2 * TITLE_SIDE_MARGIN_EM);
+  // Height: the visual block ≈ the baseline spans plus one line's cap-height +
+  // descender (~0.9·font); solving that ≤ the zone height gives the largest fit.
+  const zoneHeight = TITLE_ZONE_BOTTOM - TITLE_ZONE_TOP;
+  const heightFont = zoneHeight / ((lines.length - 1) * LINE_RATIO + 0.9);
+  return Math.floor(Math.min(widthFont, heightFont, FONT_CAP));
+}
+
+/**
+ * Break the title into lines and size it: try every split into at most
+ * MAX_TITLE_LINES lines and keep the one that allows the biggest type, so a
+ * title breaks when breaking makes it larger and shrinks when it does not.
+ * A split with fewer lines wins when its type is within FEWER_LINES_LEAN of the best.
+ */
+export function layoutTitle(text: string): { lines: string[]; fontSize: number } {
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return { lines: [text], fontSize: FONT_FLOOR };
+  const candidates =
+    words.length <= EXHAUSTIVE_WORD_LIMIT
+      ? lineSplits(words, MAX_TITLE_LINES)
+      : greedySplits(words, MAX_TITLE_LINES);
+
+  let best = { lines: [words.join(' ')], fontSize: 0 };
+  for (const lines of candidates) {
+    const fontSize = fontForLines(lines);
+    if (fontSize > best.fontSize) best = { lines, fontSize };
+  }
+  const threshold = best.fontSize * (1 - FEWER_LINES_LEAN);
+  for (const lines of candidates) {
+    if (lines.length >= best.lines.length) continue;
+    const fontSize = fontForLines(lines);
+    if (fontSize >= threshold) best = { lines, fontSize };
+  }
+  return { lines: best.lines, fontSize: clamp(best.fontSize, FONT_FLOOR, FONT_CAP) };
 }
 
 /**
@@ -169,8 +331,13 @@ export async function generateCoverPng(svgString: string, maxDim = 512): Promise
 const TITLE_ZONE_TOP = 95;
 const TITLE_ZONE_BOTTOM = 540;
 const LINE_RATIO = 1.38; // looser than the old 1.3 so multi-line titles breathe
-const TITLE_WIDTH_TARGET = 540; // px the longest line aims to fill (90% of 600)
+const COVER_WIDTH = 600;
+const TITLE_SIDE_MARGIN_EM = 0.5; // clear space each side of the widest line, in title ems
+const MAX_TITLE_LINES = 5;
+const EXHAUSTIVE_WORD_LIMIT = 24; // above this, greedy wraps instead of every split
+const FEWER_LINES_LEAN = 0.03; // fewer lines win when their type is within 3% of the best
 const FONT_CAP = 160; // absolute title font ceiling
+const FONT_FLOOR = 40; // smallest title font, even if a very long title then overflows
 const LOGO_CENTER_Y = 648;
 const LOGO_TARGET_H = 140;
 const AUTHOR_BASELINE_Y = 838;
@@ -198,23 +365,7 @@ export function generateCoverSvg(
   const theme = COVER_THEMES[mode];
   const bg = coverBackgroundColor(hue ?? titleHue(safeTitle), mode);
 
-  const lines = fitLines(safeTitle);
-  const longestLine = lines.reduce((a, b) => (a.length >= b.length ? a : b), '');
-
-  // Font size is constrained by BOTH the width (longest line fills ~87% of the 600 px
-  // viewBox; 0.52 ≈ Georgia's average char-width ratio at large sizes) and the title
-  // zone's height (so a tall multi-line title can't overflow upward).
-  const widthFont = clamp(
-    Math.round(TITLE_WIDTH_TARGET / (longestLine.length * 0.52)),
-    44,
-    FONT_CAP
-  );
-  const zoneHeight = TITLE_ZONE_BOTTOM - TITLE_ZONE_TOP;
-  // Cap by height too. The visual block height ≈ the baseline spans plus one line's
-  // cap-height + descender (~0.9·font), so solving that ≤ zoneHeight gives the largest
-  // font that fits — accurate enough to fill the zone without overflowing.
-  const heightFont = Math.floor(zoneHeight / ((lines.length - 1) * LINE_RATIO + 0.9));
-  const fontSize = clamp(Math.min(widthFont, heightFont), 40, FONT_CAP);
+  const { lines, fontSize } = layoutTitle(safeTitle);
   const lineHeight = Math.round(fontSize * LINE_RATIO);
 
   // Centre the visual block in its zone. The +0.25·fontSize shifts the first baseline
