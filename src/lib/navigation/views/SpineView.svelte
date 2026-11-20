@@ -1540,7 +1540,7 @@
         if (path.startsWith('OEBPS/') && blobURLManager) {
           blobURLManager.revokeFileBlob(path.slice('OEBPS/'.length));
         }
-        if (path.startsWith('SOURCE/scripts/')) {
+        if (path.startsWith('SOURCE/scripts/') || path.startsWith('SOURCE/extensions/')) {
           previewManager?.invalidateTransformScripts();
         }
         needsForcedUpdate = true;

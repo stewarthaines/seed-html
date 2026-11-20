@@ -722,6 +722,21 @@
       const assets = await extensionManager.importCatalogExtension(workspaceId, entry);
       onWorkspaceFilesChanged?.(workspaceId);
       await transformEngine.setWorkspaceExtensions(workspaceId);
+      // Adding an extension the project already has rewrites its files under
+      // an unchanged settings list, so the open preview is told which ones:
+      // it holds the old transform scripts and the old assets' blob URLs.
+      window.dispatchEvent(
+        new CustomEvent('seed:source-files-changed', {
+          detail: {
+            paths: [
+              ...[...entry.domTransforms, ...entry.textTransforms].map(
+                file => `SOURCE/extensions/${entry.id}/${file}`
+              ),
+              ...assets.map(asset => `OEBPS/${asset.target}`),
+            ],
+          },
+        })
+      );
       extensions = await extensionManager.listWorkspaceExtensions(workspaceId);
       availableTransforms = await settingsService.getAvailableTransforms(workspaceId);
       availableTextTransforms = await settingsService.getAvailableTextTransforms(workspaceId);
