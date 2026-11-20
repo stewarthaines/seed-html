@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- PuzzleScript extension: give each level its own page and write the game once, and show text of your own, such as a link to the next page, when a level is won.
+
+### Changed
+
+- A PuzzleScript game opens on its level, without the title screen.
+
 ## [0.30.0] - 2026-11-19
 
 ### Added
