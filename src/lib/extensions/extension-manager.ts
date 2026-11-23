@@ -13,7 +13,7 @@ import type {
   CachingSummary,
   ValidationResult,
 } from './types.js';
-import type { TransformOption } from '../services/settings/settings.service.js';
+import type { EPUBSettings, TransformOption } from '../services/settings/settings.service.js';
 import {
   resolveExtensionFileUrl,
   asTemplates,
@@ -922,6 +922,41 @@ export class ExtensionManager {
     };
     const paths = entry.domTransforms.map(file => `SOURCE/extensions/${entry.id}/${file}`);
     return insertByStage(list, paths, entry.stage, stageOf);
+  }
+
+  /**
+   * Add an extension's DOM transforms to the project's saved transform list,
+   * placed by stage, and return the settings as saved.
+   *
+   * The list is read from settings.json at the moment of placing, never from a
+   * caller's copy: a Settings dialog opened while another install was still
+   * running holds settings from before that install's write, and saving its copy
+   * would silently drop the other extension's transform.
+   *
+   * @param settings - the settings service (load and save only)
+   * @returns the saved settings; the loaded object unchanged when every
+   *   transform was already listed (nothing is written)
+   */
+  async addDomTransformsToSettings(
+    workspaceId: string,
+    entry: ExtensionCatalogEntry,
+    catalog: ExtensionCatalogEntry[],
+    settings: {
+      loadEPUBSettings(workspaceId: string): Promise<EPUBSettings>;
+      saveEPUBSettings(workspaceId: string, settings: EPUBSettings): Promise<void>;
+    }
+  ): Promise<EPUBSettings> {
+    const current = await settings.loadEPUBSettings(workspaceId);
+    const dom_transforms = await this.placeDomTransforms(
+      workspaceId,
+      current.dom_transforms,
+      entry,
+      catalog
+    );
+    if (dom_transforms === current.dom_transforms) return current;
+    const next = { ...current, dom_transforms };
+    await settings.saveEPUBSettings(workspaceId, next);
+    return next;
   }
 
   /**

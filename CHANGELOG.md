@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A PuzzleScript game opens on its level, without the title screen.
 - Djot footnotes open in a pop-up in Apple Books and close back to your place; other reading apps still list them at the end of the chapter.
 
+### Fixed
+
+- An extension added from Settings is always switched on, even when you reopen Settings and add another while the first is still being added.
+
 ## [0.30.0] - 2026-11-19
 
 ### Added

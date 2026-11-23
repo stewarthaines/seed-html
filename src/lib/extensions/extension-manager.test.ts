@@ -496,3 +496,59 @@ describe('ExtensionManager.placeDomTransforms', () => {
     expect(next).toEqual([path('legacy'), path('figures')]);
   });
 });
+
+describe('ExtensionManager.addDomTransformsToSettings', () => {
+  const entry = (id: string, stage?: ExtensionCatalogEntry['stage']): ExtensionCatalogEntry => ({
+    id,
+    name: id,
+    scripts: [],
+    domTransforms: ['transform.js'],
+    stage,
+    textTransforms: [],
+    generators: [],
+    assets: [],
+    licenses: [],
+  });
+  const path = (id: string) => `SOURCE/extensions/${id}/transform.js`;
+  const PROJECT = 'SOURCE/scripts/transformDom.js';
+
+  // A settings service reduced to load and save over the fake storage's settings.json.
+  const settingsOver = (files: Map<string, Uint8Array>) => ({
+    loadEPUBSettings: vi.fn(async () => JSON.parse(dec.decode(files.get('SOURCE/settings.json')))),
+    saveEPUBSettings: vi.fn(async (_ws: string, settings: object) => {
+      files.set('SOURCE/settings.json', enc.encode(JSON.stringify(settings)));
+    }),
+  });
+  const savedList = (files: Map<string, Uint8Array>) =>
+    JSON.parse(dec.decode(files.get('SOURCE/settings.json'))).dom_transforms;
+
+  it('keeps a transform another install saved after the caller loaded its settings', async () => {
+    const { api, files } = makeFileStorage({
+      'SOURCE/settings.json': JSON.stringify({ text_transform: 'x', dom_transforms: [PROJECT] }),
+    });
+    const settings = settingsOver(files);
+    const manager = new ExtensionManager(api);
+    // A dialog reopened mid-install has this copy, from before the first install saved.
+    const staleCopy = await settings.loadEPUBSettings();
+    // The first install (photo regions) then saves its transform.
+    await manager.addDomTransformsToSettings('ws', entry('photo-regions'), [], settings);
+
+    await manager.addDomTransformsToSettings('ws', entry('figures'), [], settings);
+
+    expect(staleCopy.dom_transforms).toEqual([PROJECT]);
+    expect(savedList(files)).toEqual([PROJECT, path('photo-regions'), path('figures')]);
+  });
+
+  it('writes nothing when the transform is already listed', async () => {
+    const { api, files } = makeFileStorage({
+      'SOURCE/settings.json': JSON.stringify({ dom_transforms: [PROJECT, path('figures')] }),
+    });
+    const settings = settingsOver(files);
+    const manager = new ExtensionManager(api);
+
+    await manager.addDomTransformsToSettings('ws', entry('figures', 'structure'), [], settings);
+
+    expect(settings.saveEPUBSettings).not.toHaveBeenCalled();
+    expect(savedList(files)).toEqual([PROJECT, path('figures')]);
+  });
+});
