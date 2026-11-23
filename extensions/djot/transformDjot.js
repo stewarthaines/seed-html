@@ -9,29 +9,77 @@ function transformText(text, idref) {
   djot.applyFilter(ast, clipFilter);
   djot.applyFilter(ast, symbolFilter);
   djot.applyFilter(ast, idFilter);
-  return djot.renderHTML(ast, { overrides: { footnote_reference: repeatedNoteRef() } });
+  return djot.renderHTML(ast, {
+    overrides: { footnote_reference: repeatedNoteRef(), doc: popupNotes() },
+  });
 }
 
 /**
- * Renderer override: a footnote cited more than once gets a distinct id on
- * each repeat reference.
+ * Renderer override: footnote references Apple Books opens as pop-ups, and a
+ * footnote cited more than once gets a distinct id on each repeat reference.
+ *
+ * Books shows a note in a pop-up only when the reference carries
+ * `epub:type="noteref"`; djot's `role="doc-noteref"` alone is an ordinary link
+ * to the end of the chapter. Both are kept.
  *
  * djot renders every reference to the same note as `<a id="fnrefN">`, so a
  * note cited twice puts two identical ids in the chapter and epubcheck rejects
  * it (RSC-005). The first reference keeps `fnrefN`, which the note's backlink
- * targets; repeats become `fnrefN-2`, `fnrefN-3`. The markup is djot's own —
- * only the id of a repeat changes.
+ * targets; repeats become `fnrefN-2`, `fnrefN-3`.
  */
 function repeatedNoteRef() {
   const seen = {};
   return (node, renderer) => {
-    const html = renderer.renderAstNodeDefault(node);
+    const html = renderer
+      .renderAstNodeDefault(node)
+      .replace(' role="doc-noteref"', ' role="doc-noteref" epub:type="noteref"');
     const match = /^<a id="(fnref\d+)"/.exec(html);
     if (!match) return html;
     const id = match[1];
     seen[id] = (seen[id] || 0) + 1;
     if (seen[id] === 1) return html;
     return `<a id="${id}-${seen[id]}"` + html.slice(match[0].length);
+  };
+}
+
+/**
+ * Renderer override: the chapter's notes, shaped for Apple Books' pop-ups.
+ *
+ * Books shows the whole element a reference points to, so djot's own list
+ * item would put the backlink in the pop-up, where it does nothing. Each
+ * note's text goes in a `div` that is the reference's target and carries
+ * `epub:type="footnote"`; the list number and the backlink stay outside it,
+ * in the list item, so reading systems without pop-ups still show the
+ * numbered list with its return links:
+ *
+ *   <li><div id="fn1" epub:type="footnote"><p>The note.</p></div><a href="#fnref1" role="doc-backlink">↩︎</a></li>
+ *
+ * Otherwise the same as djot's renderNotes: every note is rendered first
+ * (rendering one can number another it cites), then listed in the order the
+ * chapter first cites them. footnotes.css keeps the backlink on the note's
+ * line.
+ */
+function popupNotes() {
+  return (node, renderer) => {
+    let html = renderer.renderChildren(node);
+    if (renderer.nextFootnoteIndex <= 1) return html;
+
+    const rendered = {};
+    for (const label in node.footnotes) {
+      rendered[label] = renderer.renderChildren(node.footnotes[label]);
+    }
+    const ordered = [];
+    for (const label in renderer.footnoteIndex) {
+      const n = renderer.footnoteIndex[label];
+      if (n) ordered[n] = rendered[label];
+    }
+
+    html += '<section role="doc-endnotes">\n<hr>\n<ol>\n';
+    for (let n = 1; n < ordered.length; n++) {
+      html += `<li><div id="fn${n}" epub:type="footnote">\n${ordered[n] || ''}</div>`;
+      html += `<a href="#fnref${n}" role="doc-backlink">↩︎</a></li>\n`;
+    }
+    return html + '</ol>\n</section>\n';
   };
 }
 

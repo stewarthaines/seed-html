@@ -1,0 +1,7 @@
+/* Djot footnotes: each note's text sits in a div, the target Apple Books shows
+   in a pop-up, with its return link after the div in the list item. Keep the
+   link on the note's last line. */
+section[role="doc-endnotes"] li > div,
+section[role="doc-endnotes"] li > div > p:last-child {
+  display: inline;
+}

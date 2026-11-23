@@ -13,6 +13,13 @@
   "textTransforms": [
     "transformDjot.js"
   ],
+  "assets": [
+    {
+      "file": "footnotes.css",
+      "target": "Styles/footnotes.css",
+      "media": "text/css"
+    }
+  ],
   "templates": {
     "image": "![<alt>](<href>)",
     "video": "`<video src=\"<href>\" controls=\"controls\"></video>`{=html}",
