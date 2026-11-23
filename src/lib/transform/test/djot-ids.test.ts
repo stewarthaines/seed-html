@@ -57,4 +57,47 @@ describe('djot footnote references', () => {
     expect(refIds).toEqual(['fnref1', 'fnref1-2', 'fnref2', 'fnref1-3']);
     expect(html).toContain('href="#fnref1" role="doc-backlink"');
   });
+
+  it('marks every reference for Apple Books pop-ups, repeats included', () => {
+    const html = transformText('One[^a] and again[^a].\n\n[^a]: The note.');
+    const refs = [...html.matchAll(/<a id="fnref[^"]*"[^>]*>/g)].map(m => m[0]);
+    expect(refs).toHaveLength(2);
+    for (const ref of refs) {
+      expect(ref).toContain('role="doc-noteref"');
+      expect(ref).toContain('epub:type="noteref"');
+    }
+  });
+});
+
+describe('djot footnotes', () => {
+  const doc = (html: string) => new DOMParser().parseFromString(html, 'text/html');
+
+  it('puts each note in a footnote div, with the backlink outside it', () => {
+    const notes = doc(transformText('A claim.[^a]\n\n[^a]: The source.'));
+    const item = notes.querySelector('section[role="doc-endnotes"] li');
+    const [note, back] = [...(item?.children ?? [])];
+    expect(item?.hasAttribute('id')).toBe(false);
+    expect(note?.tagName).toBe('DIV');
+    expect(note?.id).toBe('fn1');
+    expect(note?.getAttribute('epub:type')).toBe('footnote');
+    expect(note?.textContent?.trim()).toBe('The source.');
+    expect(note?.querySelector('a[role="doc-backlink"]')).toBeNull();
+    expect(back?.getAttribute('role')).toBe('doc-backlink');
+    expect(back?.getAttribute('href')).toBe('#fnref1');
+  });
+
+  it('lists notes in the order they are first cited, as djot does', () => {
+    const notes = doc(transformText('First[^b], second[^a].\n\n[^a]: Note a.\n\n[^b]: Note b.'));
+    const divs = [...notes.querySelectorAll('section[role="doc-endnotes"] li > div')];
+    expect(divs.every(div => div.getAttribute('epub:type') === 'footnote')).toBe(true);
+    const listed = divs.map(div => [div.id, div.textContent?.trim()]);
+    expect(listed).toEqual([
+      ['fn1', 'Note b.'],
+      ['fn2', 'Note a.'],
+    ]);
+  });
+
+  it('renders no notes section for a chapter without footnotes', () => {
+    expect(transformText('No notes here.')).not.toContain('doc-endnotes');
+  });
 });

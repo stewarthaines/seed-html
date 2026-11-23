@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - A PuzzleScript game opens on its level, without the title screen.
+- Djot footnotes open in a pop-up in Apple Books and close back to your place; other reading apps still list them at the end of the chapter.
 
 ## [0.30.0] - 2026-11-19
 
