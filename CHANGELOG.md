@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A PuzzleScript game opens on its level, without the title screen.
 
+### Fixed
+
+- An extension added from Settings is always switched on, even when you reopen Settings and add another while the first is still being added.
+
 ## [0.30.0] - 2026-11-19
 
 ### Added

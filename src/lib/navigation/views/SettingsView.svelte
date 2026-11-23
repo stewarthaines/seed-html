@@ -741,24 +741,25 @@
       availableTransforms = await settingsService.getAvailableTransforms(workspaceId);
       availableTextTransforms = await settingsService.getAvailableTextTransforms(workspaceId);
 
-      // Register any EPUB assets (e.g. a CSS theme) in the manifest and re-link
-      // them into existing chapters — owned by App (needs the workspace + engine).
-      if (assets.length > 0) {
-        await onExtensionAssets?.(assets);
-      }
+      // Settings come next, built on settings.json as it is now rather than on
+      // this dialog's copy: a dialog reopened while another install was still
+      // running loaded its copy before that install saved, and writing the copy
+      // back would drop the other extension's transform.
+      epubSettings = await settingsService.loadEPUBSettings(workspaceId);
 
       // Auto-enable the extension's DOM transforms — installing an extension
       // should wire up its transforms, not leave the user to enable each by hand.
       // Placed by the extension's stage; the existing order is never re-sorted.
-      if (entry.domTransforms.length > 0 && epubSettings) {
-        const next = await extensionManager.placeDomTransforms(
+      if (entry.domTransforms.length > 0) {
+        const placed = await extensionManager.addDomTransformsToSettings(
           workspaceId,
-          epubSettings.dom_transforms,
           entry,
-          availableExtensions
+          availableExtensions,
+          settingsService
         );
-        if (next !== epubSettings.dom_transforms) {
-          await persistDomTransforms(next);
+        if (placed !== epubSettings) {
+          epubSettings = placed;
+          onSettingsChanged?.();
         }
       }
 
@@ -773,6 +774,13 @@
         await persistTextTransform(`SOURCE/extensions/${entry.id}/${entry.textTransforms[0]}`);
       } else {
         onSettingsChanged?.();
+      }
+
+      // Register any EPUB assets (e.g. a CSS theme) in the manifest and re-link
+      // them into existing chapters — owned by App (needs the workspace + engine).
+      // After the settings, so the chapters it re-renders run the new transforms.
+      if (assets.length > 0) {
+        await onExtensionAssets?.(assets);
       }
     } catch (err) {
       console.error('Failed to add extension:', err);
@@ -1226,10 +1234,10 @@
           ? $t('Open a project to add extensions')
           : undefined}
     >
-      {installed
-        ? $t('Added')
-        : importingExtensionId === ext.id
-          ? $t('Adding…')
+      {importingExtensionId === ext.id
+        ? $t('Adding…')
+        : installed
+          ? $t('Added')
           : $t('Add to project')}
     </button>
   </div>
