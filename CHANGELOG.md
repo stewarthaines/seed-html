@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-11-25
+
 ### Added
 
 - Follow new releases of SEED.html in any feed reader by subscribing to readitinabook.com.
