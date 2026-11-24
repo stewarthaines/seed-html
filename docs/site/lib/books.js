@@ -45,6 +45,13 @@ export const BOOKS = [
     description: 'Short steps for one task at a time, from adding a picture to saving a PDF.',
   },
   {
+    folder: 'seed.html-recipes',
+    slug: 'recipes',
+    title: 'Book Recipes',
+    description:
+      'How extensions combine in one kind of book, starting with family histories: records, trees, lifelines and named faces in photographs.',
+  },
+  {
     folder: 'seed.html-user-manual',
     slug: 'user-manual',
     title: 'User Manual',

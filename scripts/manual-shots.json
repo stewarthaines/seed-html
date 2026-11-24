@@ -57,6 +57,116 @@
       "story": "manual-shots-first-book--packaged",
       "clip": ".card.primary",
       "mode": "basic"
+    },
+    "docs/user/seed.html-recipes/Images/screen-family-finished.png": {
+      "story": "manual-shots-family-history--finished-chapter",
+      "clip": "iframe.preview-iframe",
+      "mode": "basic",
+      "viewport": {
+        "width": 1300,
+        "height": 900
+      },
+      "ready": "body[data-shot-ready]"
+    },
+    "docs/user/seed.html-recipes/Images/screen-family-panel.png": {
+      "story": "manual-shots-family-history--record-and-panel",
+      "clip": ".main-content",
+      "mode": "basic",
+      "viewport": {
+        "width": 1300,
+        "height": 900
+      },
+      "ready": "body[data-shot-ready]"
+    },
+    "docs/user/seed.html-recipes/Images/screen-family-tree.png": {
+      "story": "manual-shots-family-history--family-tree",
+      "clip": ".main-content",
+      "mode": "basic",
+      "viewport": {
+        "width": 1300,
+        "height": 900
+      },
+      "ready": "body[data-shot-ready]"
+    },
+    "docs/user/seed.html-recipes/Images/screen-family-path.png": {
+      "story": "manual-shots-family-history--path-tree",
+      "clip": ".main-content",
+      "mode": "basic",
+      "viewport": {
+        "width": 1300,
+        "height": 900
+      },
+      "ready": "body[data-shot-ready]"
+    },
+    "docs/user/seed.html-recipes/Images/screen-family-lifelines.png": {
+      "story": "manual-shots-family-history--lifelines",
+      "clip": ".main-content",
+      "mode": "basic",
+      "viewport": {
+        "width": 1300,
+        "height": 900
+      },
+      "ready": "body[data-shot-ready]"
+    },
+    "docs/user/seed.html-recipes/Images/screen-family-photo.png": {
+      "story": "manual-shots-family-history--photograph-with-faces",
+      "clip": ".main-content",
+      "mode": "basic",
+      "viewport": {
+        "width": 1300,
+        "height": 900
+      },
+      "ready": "body[data-shot-ready]"
+    },
+    "docs/user/seed.html-recipes/Images/screen-family-regions-panel.png": {
+      "story": "manual-shots-family-history--photo-regions-panel",
+      "clip": ".insert-panel-host",
+      "mode": "basic",
+      "viewport": {
+        "width": 1300,
+        "height": 1800
+      },
+      "ready": "body[data-shot-ready]"
+    },
+    "docs/user/seed.html-recipes/Images/screen-family-portraits.png": {
+      "story": "manual-shots-family-history--portraits",
+      "clip": ".main-content",
+      "mode": "basic",
+      "viewport": {
+        "width": 1300,
+        "height": 900
+      },
+      "ready": "body[data-shot-ready]"
+    },
+    "docs/user/seed.html-recipes/Images/screen-family-index.png": {
+      "story": "manual-shots-family-history--index-of-people",
+      "clip": ".main-content",
+      "mode": "basic",
+      "viewport": {
+        "width": 1300,
+        "height": 900
+      },
+      "ready": "body[data-shot-ready]"
+    },
+    "docs/user/seed.html-recipes/Images/screen-family-finding.png": {
+      "story": "manual-shots-family-history--record-problem",
+      "clip": ".main-content",
+      "mode": "basic",
+      "viewport": {
+        "width": 1300,
+        "height": 900
+      },
+      "ready": "body[data-shot-ready]"
+    },
+    "docs/user/seed.html-recipes/Images/screen-family-chapters.png": {
+      "story": "manual-shots-family-history--chapter-list",
+      "clip": ".write-sidebar",
+      "mode": "basic",
+      "ready": "body[data-shot-ready]",
+      "viewport": {
+        "width": 1000,
+        "height": 640
+      }
     }
   }
 }
