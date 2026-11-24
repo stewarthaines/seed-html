@@ -20,10 +20,12 @@ For a project whose transforms include `SOURCE/extensions/family-history/`. It d
 
 - A person with a chapter of their own: the chapter id is their person id (lowercase, `_` between words). Other chapters, regions and links refer to it, so never rename it.
 - The record is the chapter's YAML frontmatter. Keys: `display`, `nickname`, `birth`, `death`, `birthplace`, `deathplace`, `parents: [id, id]`, `partner`, `married`, `married_place`, `others`. `partner` is one id, with the record's own `married` and `married_place`, or a list of ids or `{ id, married, married_place }`. With a list, `married` beside it is an error.
-- Dates are EDTF or bare years: `1874-06-13`, `1838~` (about), `1839-02-28?` (uncertain), `187X`.
+- Dates are EDTF or bare years: `1874-06-13`, `1838~` (about), `1839-02-28?` (uncertain). Give a range of possible years as one approximate year (`1840~` for census ages pointing to 1838–1842) and keep the reasoning in a frontmatter comment and the research chapter. A range (`1838/1842`) shows in full only in the person's own panel, with trees and lifelines showing its first year, and `187X` is read aloud as a guessed year.
+- Dates format in the book's language: `en` gives "March 12, 1828", `en-GB` gives "12 March 1828". The language is set in Details, which the bridge cannot change, so tell the author when it does not suit the book.
 - People with no chapter are records under `others:` in the chapter they belong with, in the same shape. Define each id once: a chapter's own record beats a stub with that id, and a second stub is an error. A stub with no parents, partner or children is reported as an orphan.
 - Children and siblings are derived from `parents:`. Never list them.
-- Each chapter's record is copied to `SOURCE/data/frontmatter/<chapter>.json` when that chapter renders, and other chapters read that copy. After changing a record, render its chapter, then the chapters that show the person: panels, trees and the index chapter.
+- Each chapter's record is copied to `SOURCE/data/frontmatter/<chapter>.json` when that chapter renders, and other chapters read that copy. After changing a record, render its chapter, then the chapters that show the person: panels, trees and the index chapter. After adding several person chapters at once, render the whole book twice: the first pass writes every record copy, the second lets each panel and tree read them all.
+- Marker attributes: `:tree:{depth=2}` shows two generations down from the person. `:tree:{to=id via=id}` draws the path between two blood relatives through their shared ancestor `via`; the target must descend from that ancestor, so someone with no `parents:`, such as a second wife, cannot be the target. Target a blood relative instead: the ancestor's node shows all of their marriages. `:lifeline:{of=id as=Name}` lines that follow one another share one time scale; bare `:lifeline:` is the chapter's person.
 - Comments (`# …`) in the frontmatter are kept in the source and never rendered; they are the place for a record's sources and doubts.
 
 ## Photographs
@@ -51,6 +53,8 @@ For a project whose transforms include `SOURCE/extensions/family-history/`. It d
 
 ## Editing over the bridge
 
+- Create a person chapter with `seed_create_chapter`: the person id as the chapter id, the frontmatter at the head of `text`, placed with `after`. Its XHTML is a placeholder until it is rendered.
+- Check chapters that are not open by rendering them and reading `OEBPS/Text/<id>.xhtml` with `seed_read_file`: a `:family:` panel with problems in its records opens with their list.
 - `seed_write_file` replaces the whole file. After writing a long chapter, check that its size changed by exactly the bytes inserted minus the bytes replaced; anything else means text was lost or altered in the rewrite.
 - Add images with `seed_add_media` from a folder the author has allowed, under descriptive names (`allen_hattie_marg_jim.jpg`), and use the `fromChapter` path it returns in the markup.
 - Render with `seed_render`, which does not move the author's preview, after editing chapters that are not open.
