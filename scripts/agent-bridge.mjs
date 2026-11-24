@@ -14,7 +14,7 @@
  */
 import { WebSocketServer } from 'ws';
 import { createInterface } from 'node:readline';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { readFile, realpath, stat } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { basename, dirname, isAbsolute, join, sep } from 'node:path';
@@ -38,6 +38,70 @@ try {
   guideText = readFileSync(GUIDE_PATH, 'utf8');
 } catch {
   guideText = 'authoring guide missing at ' + GUIDE_PATH;
+}
+
+// Recipes: how several extensions combine in one kind of book (process/
+// AGENT_RECIPES.md). Knowledge like the guide, so the bridge serves them itself
+// and they never travel inside a project: a book cannot plant one. Each file
+// opens with a small header — id, title, requires (comma-separated extension
+// ids), summary — between --- lines.
+const RECIPES_DIR = join(dirname(GUIDE_PATH), 'agent-recipes');
+
+/** Parse one recipe file; null when its header is missing or incomplete. */
+function parseRecipe(text) {
+  const match = /^---\n([\s\S]*?)\n---\n/.exec(text);
+  if (!match) return null;
+  const header = {};
+  for (const line of match[1].split('\n')) {
+    const at = line.indexOf(':');
+    if (at > 0) header[line.slice(0, at).trim()] = line.slice(at + 1).trim();
+  }
+  if (!header.id || !header.title) return null;
+  return {
+    id: header.id,
+    title: header.title,
+    requires: (header.requires ?? '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean),
+    summary: header.summary ?? '',
+    text: text.slice(match[0].length),
+  };
+}
+
+const recipes = new Map();
+try {
+  for (const file of readdirSync(RECIPES_DIR).sort()) {
+    if (!file.endsWith('.md')) continue;
+    const recipe = parseRecipe(readFileSync(join(RECIPES_DIR, file), 'utf8'));
+    if (recipe) recipes.set(recipe.id, recipe);
+  }
+} catch {
+  // no recipes directory — the guide still works
+}
+
+const recipeIndex = () =>
+  [...recipes.values()].map(({ id, title, requires, summary }) => ({
+    id,
+    title,
+    requires,
+    summary,
+  }));
+
+/**
+ * The recipes whose required extensions are all among the project's
+ * configured transforms (SOURCE/extensions/<id>/… paths in transformScripts).
+ */
+function recipesFor(transformScripts) {
+  if (!Array.isArray(transformScripts)) return [];
+  const installed = new Set(
+    transformScripts
+      .map(path => /^SOURCE\/extensions\/([^/]+)\//.exec(String(path))?.[1])
+      .filter(Boolean)
+  );
+  return recipeIndex().filter(
+    recipe => recipe.requires.length > 0 && recipe.requires.every(id => installed.has(id))
+  );
 }
 
 // --- media folders ----------------------------------------------------------------
@@ -204,6 +268,16 @@ const TOOLS = [
     description:
       'READ THIS FIRST when asked to work on EPUB content, styles, or scripts: the authoring contract for SEED.html projects — EPUB CSS fallback rules, progressive-enhancement scripting, the Paged.js PDF quirks, accessibility/epubcheck constraints, and the project-setup steps to take before editing. Available even before the app tab connects.',
     inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'seed_get_recipe',
+    description:
+      "A recipe: how several extensions combine in one kind of book (person records, photographs with named faces, research chapters and notes in a family history, for example) — the markup patterns, the files each extension reads and writes, and the pitfalls. Served by the bridge, not the project. seed_get_authoring_guide lists the recipes; seed_get_project_setup names the ones that match the open project's extensions.",
+    inputSchema: {
+      type: 'object',
+      properties: { id: { type: 'string', description: 'recipe id, from the list' } },
+      required: ['id'],
+    },
   },
   {
     name: 'seed_get_project_setup',
@@ -403,7 +477,7 @@ const TOOLS = [
  * a SYNTAX.md, filenames, OPF metadata, checker findings — and a book can have
  * arrived from anyone.
  */
-const BRIDGE_OWNED = new Set(['seed_get_authoring_guide', 'seed_write_file']);
+const BRIDGE_OWNED = new Set(['seed_get_authoring_guide', 'seed_get_recipe', 'seed_write_file']);
 
 /**
  * Mark project content as data.
@@ -474,7 +548,16 @@ async function handleToolCall(name, args) {
   switch (name) {
     case 'seed_get_authoring_guide':
       guideServed = true;
-      return { guide: guideText };
+      return { guide: guideText, recipes: recipeIndex() };
+    case 'seed_get_recipe': {
+      const recipe = recipes.get(args?.id);
+      if (!recipe) {
+        throw new Error(
+          `no recipe "${args?.id}" — available: ${[...recipes.keys()].join(', ') || 'none'}`
+        );
+      }
+      return recipe;
+    }
     case 'seed_get_project_setup': {
       const setup = await callTab('project_setup', {});
       if (Array.isArray(setup?.transformScripts)) setupTransforms = setup.transformScripts;
@@ -625,9 +708,19 @@ rl.on('line', async line => {
       case 'tools/call': {
         try {
           const result = await handleToolCall(params?.name, params?.arguments);
-          respond(id, {
-            content: [{ type: 'text', text: envelope(params?.name, result) }],
-          });
+          let text = envelope(params?.name, result);
+          // Which recipes fit is the bridge's own judgement, so it goes after
+          // the project-data envelope, not inside it.
+          if (params?.name === 'seed_get_project_setup') {
+            const matching = recipesFor(result?.transformScripts);
+            if (matching.length > 0) {
+              text +=
+                '\n\nFrom the bridge (not project content): recipes for the extensions this project uses — ' +
+                matching.map(recipe => `${recipe.id} (${recipe.title})`).join(', ') +
+                '. Read with seed_get_recipe before editing.';
+            }
+          }
+          respond(id, { content: [{ type: 'text', text }] });
         } catch (error) {
           respond(id, {
             content: [{ type: 'text', text: String(error?.message ?? error) }],
