@@ -209,6 +209,7 @@ npm run build:i18n && npm run build:plugins && npm run deploy
 The user manual and advanced reference are also published as web pages under `/docs/<language>/<book>/`, built from the same chapter files in `docs/user/` by Eleventy through the app's own markdown-it transform (design: `process/DOCS_SITE.md`).
 
 - `npm run build:docs` writes `dist/docs/` and its Pagefind search index; `npm run dev:docs` serves it at http://localhost:8080/docs/ with live reload, building into its own `dist-docs-dev/` so a running dev server and a build or validate never write the same files.
+- The docs build also writes the release feed, `dist/releases.xml`, from the newest releases in `CHANGELOG.md` (design: `process/RELEASE_FEED.md`). It fails when a release heading is malformed, a published release has no list items, or the newest release is not the `package.json` version, so cut the changelog section with the version bump. Push to Codeberg before deploying: feed entries link to the changelog on the GitHub mirror.
 - `npm run check:docs` builds and checks internal links, anchors and image alt text; `npm run validate` runs it.
 - `npm run deploy` builds the docs before uploading, so every production deploy ships docs matching the app. `vite build` empties `dist/`, so the docs build always runs after the app build — `deploy` takes care of that.
 - Preview without touching production: `npm run build && npm run build:docs && npx wrangler pages deploy dist --project-name readitinabook --branch docs-site`, then `https://docs-site.readitinabook.pages.dev/docs/`.

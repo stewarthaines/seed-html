@@ -53,6 +53,16 @@ export default defineConfig({
           include: ['plugins/*/src/**/*.{test,spec}.{js,ts}'],
         },
       },
+      {
+        extends: true,
+        test: {
+          // The hosted docs build's own modules (the release feed); jsdom for
+          // its namespaced XML parsing.
+          name: 'docs-site',
+          environment: 'jsdom',
+          include: ['docs/site/**/*.{test,spec}.js'],
+        },
+      },
     ],
     // Runs in validate via npm run test:coverage; the thresholds below are the
     // coverage ratchet (ARCHITECTURE_HEALTH workstream 3).

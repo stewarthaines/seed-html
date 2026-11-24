@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Follow new releases of SEED.html in any feed reader by subscribing to readitinabook.com.
 - PuzzleScript extension: give each level its own page and write the game once, and show text of your own, such as a link to the next page, when a level is won.
 
 ### Changed
