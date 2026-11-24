@@ -7,7 +7,8 @@ import * as path from 'path';
  *
  * scripts/manual-shots.json maps each image path (inside a manual's Images/
  * directory) to the story that produces the state, the element to clip to,
- * the app mode the shot documents, and optionally a viewport
+ * the app mode the shot documents, optionally a `ready` selector the story
+ * sets once it has reached its end state, and optionally a viewport
  * ({ width, height }, default 1280×800). Stories live under
  * src/stories/manual-shots/ and end on the exact state to photograph.
  *
@@ -50,7 +51,11 @@ async function captureManualShots() {
     try {
       console.log(`Capturing ${out} (${shot.mode} mode)...`);
       await page.goto(`${SB_URL}/iframe.html?id=${shot.story}&viewMode=story`);
-      await page.waitForLoadState('networkidle');
+      // Network idle can never arrive (a 404 whose body nobody reads stays
+      // in flight for Playwright), so it only bounds the wait. A shot whose
+      // story sets its own end marker names it as `ready`.
+      await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+      if (shot.ready) await page.locator(shot.ready).first().waitFor({ timeout: 120000 });
       // The story's play() drives to the end state; wait for the clip target
       // and give the final render a beat to settle (fonts, focus rings).
       const target = page.locator(shot.clip).first();

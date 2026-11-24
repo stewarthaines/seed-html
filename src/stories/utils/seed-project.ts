@@ -21,6 +21,7 @@ import { SpineService } from '../../lib/services/spine/spine.service';
 import { ExtensionManager } from '../../lib/extensions/extension-manager';
 import { loadExtensionCatalog } from '../../lib/extensions/extension-catalog';
 import { addTransform } from '../../lib/settings/dom-transforms';
+import { splitFrontmatter, frontmatterStorePath } from '../../lib/source/frontmatter';
 import pageCSS from '../../assets/universal/page.css?raw';
 import transformTextJS from '../../assets/universal/transformText.js?raw';
 import transformDomJS from '../../assets/universal/transformDom.js?raw';
@@ -33,6 +34,11 @@ const BASE_DOM_TRANSFORM = 'SOURCE/scripts/transformDom.js';
 
 export interface SeedChapter {
   title: string;
+  /**
+   * The chapter id (and file name), e.g. a person id for a family-history
+   * book. Without it the chapter is numbered chapter01, chapter02, ….
+   */
+  id?: string;
   /** Plain-text chapter source; the app transforms it when the chapter opens. */
   sourceText: string;
 }
@@ -53,11 +59,22 @@ export interface SeedProjectOptions {
    * files are fetched from the same-origin `/extensions/` the app uses, so this
    * works in Storybook and in test:stories.
    *
-   * Note: EPUB assets an extension carries (e.g. a Prism theme CSS) are not yet
-   * registered into the manifest here — enough for the settings form and for
-   * transforms that highlight structurally, not for asset-dependent styling.
+   * EPUB assets an extension carries (e.g. a stylesheet) are registered in
+   * the manifest, as installing from the app does.
    */
   extensions?: string[];
+  /**
+   * Media files for the book: `href` is the OPF-relative path (e.g.
+   * 'Images/photo.jpg'), `url` where the story can fetch the bytes (a Vite
+   * `?url` import).
+   */
+  media?: { href: string; url: string; mediaType: string }[];
+  /**
+   * Extra workspace files written as given, keyed by workspace path (e.g.
+   * 'SOURCE/data/regions/ch1.json'): data a render would otherwise have to
+   * write first.
+   */
+  sourceFiles?: Record<string, string>;
 }
 
 export interface SeededProject {
@@ -122,8 +139,34 @@ export async function seedProject(options: SeedProjectOptions = {}): Promise<See
       sourceText: chapter.sourceText,
       createSourceFile: true,
       linear: true,
+      ...(chapter.id ? { baseName: chapter.id } : {}),
     });
     workspace = result.updatedWorkspace;
+
+    // The record copy a render would write, so other chapters can read this
+    // chapter's frontmatter before it has been opened.
+    const { data } = splitFrontmatter(chapter.sourceText);
+    if (data !== null) {
+      await fileStorage.writeTextFile(
+        workspace.id,
+        frontmatterStorePath(result.newChapter.idref),
+        JSON.stringify(data, null, 2) + '\n'
+      );
+    }
+  }
+
+  for (const item of options.media ?? []) {
+    const response = await fetch(item.url);
+    if (!response.ok) throw new Error(`seedProject: could not fetch ${item.url}`);
+    await fileStorage.writeFile(workspace.id, `OEBPS/${item.href}`, await response.arrayBuffer());
+    workspace = await workspaceService.addManifestItem(workspace, {
+      href: item.href,
+      mediaType: item.mediaType,
+    });
+  }
+
+  for (const [path, text] of Object.entries(options.sourceFiles ?? {})) {
+    await fileStorage.writeTextFile(workspace.id, path, text);
   }
 
   // Extensions need the project's structural base (the default transform
@@ -148,7 +191,16 @@ export async function seedProject(options: SeedProjectOptions = {}): Promise<See
     for (const id of extensions) {
       const entry = catalog.find(e => e.id === id);
       if (!entry) throw new Error(`seedProject: extension '${id}' not in the catalog`);
-      await extensionManager.importCatalogExtension(wsId, entry);
+      const assets = await extensionManager.importCatalogExtension(wsId, entry);
+      // An extension's stylesheet reaches chapters through the manifest, as
+      // App.handleExtensionAssets registers it.
+      for (const asset of assets) {
+        if (workspace.opf.manifest.some(item => item.href === asset.target)) continue;
+        workspace = await workspaceService.addManifestItem(workspace, {
+          href: asset.target,
+          mediaType: asset.media,
+        });
+      }
       for (const file of entry.domTransforms) {
         domTransforms = addTransform(domTransforms, `SOURCE/extensions/${id}/${file}`);
       }

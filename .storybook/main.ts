@@ -1,8 +1,22 @@
 import type { StorybookConfig } from '@storybook/svelte-vite';
+import fs from 'fs';
 import path from 'path';
+
+// Each workspace plugin's built page at plugins/<id>/plugin.html, the address
+// the host resolves from plugins/manifest.json. The dev server serves plugin
+// sources from the project root; Storybook serves the single-file builds, so
+// stories can open plugin panels (run the plugin's build after changing it).
+const pluginsRoot = path.resolve(__dirname, '../plugins');
+const pluginStaticDirs = fs.existsSync(pluginsRoot)
+  ? fs
+      .readdirSync(pluginsRoot)
+      .filter(name => fs.existsSync(path.join(pluginsRoot, name, 'dist', 'plugin.html')))
+      .map(name => ({ from: `../plugins/${name}/dist`, to: `/plugins/${name}` }))
+  : [];
 
 const config: StorybookConfig = {
   stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|ts|svelte)'],
+  staticDirs: pluginStaticDirs,
   addons: [
     '@storybook/addon-svelte-csf',
     '@chromatic-com/storybook',
