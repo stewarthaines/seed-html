@@ -21,7 +21,7 @@ The user is the architect and runs the dev server, Storybook and deploys. Read t
 - **Changelog** lines say what the user will notice, one line each; the mechanism belongs in the commit message.
 - **Release metrics.** After the version bump, `npm run metrics` runs validate and the builds and appends a line to `metrics.jsonl`; commit it with the release, and read its printed changes for anything that slipped.
 - **Delegation.** Mechanical, fully specified work (scaffolding, bulk edits, transcription) can go to a cheaper-model agent with the conventions in the prompt; review its output before committing. Judgment stays in the main context.
-- **Book content over the seed-bridge** is edited with the `book-editor` agent, which has no shell, network or browser by design; the bridge's authoring guide is the contract for that work.
+- **Book content over the seed-bridge** is edited by the main agent; the bridge's authoring guide is the contract for that work. The `book-editor` agent (no shell, network or browser) is for bulky edits that would flood the main context, for testing whether the guide and recipes suffice on their own, and for a book the author says came from someone else, in which case the main agent stays off the bridge.
 - **User manuals** follow `docs/user/CLAUDE.md`.
 
 ## Where things are
