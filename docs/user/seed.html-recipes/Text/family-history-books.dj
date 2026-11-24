@@ -13,9 +13,20 @@ The examples on this page come from a sample book about an invented family, the 
 New books are written in Djot, which this needs. The extensions are in Advanced Mode.
 
 1. Click [Settings]{.ui}, then [General]{.ui}, and tick [Advanced mode]{.ui}.
-2. Click [Content transforms]{.ui}. Click [Add to project]{.ui} for [Figures]{.ui}, then [Photo Regions]{.ui}, then [Family History]{.ui}.
+
+2. Click [Content transforms]{.ui}. Under [Catalog]{.ui}, the extensions are listed in groups. Click [Add to project]{.ui} for each of these, in this order:
+
+   - [Figures]{.ui}, under [Accessibility features]{.ui}, near the end of the list.
+   - [Photo Regions]{.ui}, under [Chapter content generation]{.ui}.
+   - [Family History]{.ui}, also under [Chapter content generation]{.ui}.
+
 3. Click [Plugins]{.ui} and tick [Photo Regions]{.ui}. This adds a panel for marking the faces in a photograph. Close the settings.
+
 4. Check the book's language in [Book]{.ui} › [Details]{.ui}. Dates are written in the book's language: English (United Kingdom) gives "12 March 1828", and English (United States) gives "March 12, 1828".
+
+Each extension you add in step 2 puts a script in the list under [Page transforms]{.ui}, at the top of the [Content transforms]{.ui} page. The scripts run from top to bottom. Check that the three are in this order, and use the arrows to move one if they are not:
+
+![The list under Page transforms: transformDom.js, then transformFigures.js from figures, transformRegions.js from photo-regions and transformFamily.js from family-history, each with up, down and remove buttons.](../Images/screen-family-transforms.png){.figure .screenshot width=542}
 
 ## Start with two people
 

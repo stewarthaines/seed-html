@@ -158,6 +158,16 @@
       },
       "ready": "body[data-shot-ready]"
     },
+    "docs/user/seed.html-recipes/Images/screen-family-transforms.png": {
+      "story": "manual-shots-family-history--page-transforms",
+      "clip": ".dom-transform-list",
+      "mode": "advanced",
+      "viewport": {
+        "width": 1300,
+        "height": 900
+      },
+      "ready": "body[data-shot-ready]"
+    },
     "docs/user/seed.html-recipes/Images/screen-family-chapters.png": {
       "story": "manual-shots-family-history--chapter-list",
       "clip": ".write-sidebar",

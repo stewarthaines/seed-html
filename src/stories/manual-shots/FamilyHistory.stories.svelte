@@ -40,11 +40,12 @@
 
   /**
    * Seed the family with `demo` as the chapter to open. `plugins` lists the
-   * plugin ids to switch on; every other story runs with none.
+   * plugin ids to switch on; every other story runs with none. `advanced`
+   * turns on Advanced Mode, for shots of the settings it reveals.
    */
-  function seedWith(id, title, sourceText, { plugins = [] } = {}) {
+  function seedWith(id, title, sourceText, { plugins = [], advanced = false } = {}) {
     return async () => {
-      advancedMode.current = false;
+      advancedMode.current = advanced;
       // Start from the default preview: a device or setting chosen in an
       // earlier story persists in this browser.
       for (const key of Object.keys(localStorage)) {
@@ -360,6 +361,29 @@ married: 1879-04-22
   }}
   play={async ({ canvas, userEvent }) => {
     await openChapter(canvas, userEvent, 'thomas_beckwith', '.family-findings');
+  }}
+>
+  <App />
+</Story>
+
+<Story
+  name="Page Transforms"
+  loaders={[seedWith(undefined, undefined, undefined, { advanced: true })]}
+  parameters={{
+    docs: {
+      description: {
+        story:
+          "Produces docs/user/seed.html-recipes/Images/screen-family-transforms.png: Settings › Content transforms, with the book's page transforms in order after adding Figures, Photo Regions and Family History.",
+      },
+    },
+  }}
+  play={async ({ canvas, userEvent }) => {
+    await canvas.findByTestId('spine-item-about', {}, { timeout: 60000 });
+    await userEvent.click(await canvas.findByTestId('nav-settings', {}, { timeout: 20000 }));
+    await userEvent.click(await canvas.findByRole('button', { name: /Content transforms/ }));
+    await waitInFrames('.dom-transform-list li:nth-child(4)');
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    document.body.dataset.shotReady = 'true';
   }}
 >
   <App />
