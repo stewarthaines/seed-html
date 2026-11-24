@@ -20,11 +20,10 @@ The human reader gets a separate page in the hosted docs, written to `docs/user/
 - `seed_get_authoring_guide` returns the guide and the list of recipes.
 - `seed_get_project_setup` appends, after the project-data envelope, the recipes whose required extensions are all among the project's configured transforms (`SOURCE/extensions/<id>/` paths).
 - `seed_get_recipe {id}` returns the recipe text, bridge-owned.
-- The npm package ships the directory beside the guide (`npm-package/sync-assets.mjs`); the book-editor agent has the new tool.
+- The npm package ships the directory beside the guide (`npm-package/sync-assets.mjs`); the book-editor agent has the new tool. From 2026-11-24 it also has `seed_render`, `seed_allow_media_folder` and `seed_add_media`, so it can render the chapters it edits and add staged images itself; staging (copying, cropping, naming) stays with an agent that has a shell.
 - Like the guide, a recipe is read when the bridge starts: after editing one, restart the bridge (`/mcp` reconnect).
 
 ## Still to do
 
 - The hosted docs page for family history books, with illustrations from a sample book rather than family material.
 - A check, by hand or in a test, that each recipe's header parses and its `requires` names a real extension.
-- The book-editor agent has no `seed_render` or `seed_add_media`; it reported it could not render after its edits. Whether to give it render is a separate question.
