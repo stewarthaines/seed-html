@@ -28,6 +28,7 @@ for (const [from, to] of [
   [dist, join(pkgDir, 'dist')],
   [join(repo, 'scripts', 'agent-bridge.mjs'), join(pkgDir, 'scripts', 'agent-bridge.mjs')],
   [join(repo, 'docs', 'AGENT_AUTHORING.md'), join(pkgDir, 'docs', 'AGENT_AUTHORING.md')],
+  [join(repo, 'docs', 'agent-recipes'), join(pkgDir, 'docs', 'agent-recipes')],
 ]) {
   rmSync(to, { recursive: true, force: true });
   cpSync(from, to, { recursive: true });

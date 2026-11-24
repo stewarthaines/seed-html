@@ -27,6 +27,7 @@ The user is the architect and runs the dev server, Storybook and deploys. Read t
 ## Where things are
 
 - `docs/ARCHITECTURE.md` — how the app fits together; `docs/DEVELOPMENT.md` — feature workflow and API doc standards; `docs/TESTING.md`, `docs/LINTING.md`, `docs/STORYBOOK.md`, `docs/DEPLOYMENT.md`, `docs/EPUB_EMBEDDING.md`.
+- `docs/AGENT_AUTHORING.md` and `docs/agent-recipes/` — what the seed-bridge serves agents: the authoring contract, and recipes for kinds of book (`process/AGENT_RECIPES.md`). When a convention in a recipe changes, update its hosted docs page in the same commit.
 - `src/styles/DESIGN_SYSTEM.md` — tokens, utilities, themes. `src/lib/*/API.md` — module contracts. `src/lib/zip/API.md` — the ZIP library used for `SEED.zip`.
 - Pipeline: plain text → `transformText.js` → `transformDom.js` → XHTML → preview. Parse XML and HTML with `DOMParser` and `querySelector`, not regular expressions.
 - Storage is OPFS with an IndexedDB fallback, one project per id; browser-reload state follows the `navigationStore` pattern (`src/lib/navigation/navigation-store.ts`).
