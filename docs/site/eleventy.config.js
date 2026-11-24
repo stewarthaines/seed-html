@@ -18,6 +18,7 @@ import * as markdown from './lib/markdown.js';
 import { BOOKS, SOURCE_ROOT, findChapter, formatOf, loadBooks } from './lib/books.js';
 import { bookPage, entryPage, homePage, searchPage } from './pages.js';
 import { buildSearchIndex } from './lib/search.js';
+import { releaseFeed } from './lib/release-feed.js';
 
 const LANGUAGE = 'en';
 
@@ -76,6 +77,12 @@ export default function (eleventyConfig) {
   eleventyConfig.addTemplate('docs-search.11ty.js', searchPage, {
     permalink: `/docs/${LANGUAGE}/search/`,
   });
+
+  // The release feed (process/RELEASE_FEED.md). Built here because the docs
+  // build is the one step that runs after the app build in every path that
+  // ships; an unreadable changelog throws and fails the build.
+  eleventyConfig.addTemplate('releases.11ty.js', releaseFeed, { permalink: '/releases.xml' });
+  eleventyConfig.addWatchTarget('CHANGELOG.md');
 
   // Eleventy never deletes output, so a renamed or removed chapter would leave
   // its old page behind, still checked and indexed. Clear the docs folder (only

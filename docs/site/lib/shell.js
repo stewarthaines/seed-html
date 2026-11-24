@@ -108,6 +108,7 @@ export function shell({
   })();
 </script>
 <link rel="stylesheet" href="/docs/assets/site.css">
+<link rel="alternate" type="application/atom+xml" title="SEED.html releases" href="https://readitinabook.com/releases.xml">
 ${links}
 ${head}
 </head>

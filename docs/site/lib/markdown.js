@@ -30,6 +30,12 @@ const sandbox = loadSandbox();
 /** The app's transform: chapter source → HTML. */
 export const transformText = source => sandbox.transformText(source);
 
+/**
+ * Plain markdown-it, with none of the app's book plugins and raw HTML off, for
+ * text that is not book content (the release feed renders CHANGELOG.md).
+ */
+export const plainMarkdown = sandbox.markdownit();
+
 /** A parser with the same attrs plugin, for reading structure from sources. */
 const parser = sandbox.markdownit().use(sandbox.markdownItAttrs);
 
