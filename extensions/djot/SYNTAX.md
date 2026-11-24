@@ -19,6 +19,7 @@ Djot looks like Markdown and is not. Every item below is a real divergence from 
 - **Headings need a preceding blank line**, and there are no Setext (underlined) headings.
 - **A heading's id goes on the line above it**, as a block attribute: `{#emma-arrival}` then `## Emma's arrival`. A trailing `## Emma's arrival {#emma-arrival}` is not djot and is silently dropped. Without an explicit id the section gets one made from the heading text (`Emma-s-arrival`).
 - **Continuation blocks in a list item** (a second paragraph, a code block) must be indented to the item's content column after a blank line. A bare unindented line directly under an item joins its paragraph — fine for prose, but it will not start a new block.
+- **Footnotes**: `[^label]` straight after the word or punctuation it annotates (no space), and the note as its own block anywhere in the chapter: `[^label]: The note.` Notes are numbered in order of first citation and listed at the end of the chapter; Apple Books opens them as pop-ups. A pop-up ignores the book's styles and Books picks its size, sometimes a scrolling box, so keep a note to a sentence or two of plain text and put longer discussion in a research chapter that the note links to.
 - **Comments exist**: `{% like this %}` — removed from output.
 - **Smart punctuation is on by default**: quotes and dashes are transformed; use `\"` to force a literal.
 - **Raw output escape**: `` `<video …></video>`{=html} `` passes HTML through verbatim — this is how the project's video template works.
