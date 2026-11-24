@@ -1039,17 +1039,17 @@ function lifelineEventsOf(personId, include) {
   const events = [];
   if (include.includes('birth')) {
     const year = yearOf(person.birth);
-    if (year) events.push({ kind: 'birth', year, label: yearText(person.birth) });
+    if (year) events.push({ kind: 'birth', year, text: yearText(person.birth) });
   }
   if (include.includes('marriage')) {
     partnershipsOf(personId).forEach(partnership => {
       const year = yearOf(partnership.married);
-      if (year) events.push({ kind: 'marriage', year, label: `${t('m')} ${yearText(partnership.married)}` });
+      if (year) events.push({ kind: 'marriage', year, text: yearText(partnership.married) });
     });
   }
   if (include.includes('death')) {
     const year = yearOf(person.death);
-    if (year) events.push({ kind: 'death', year, label: yearText(person.death) });
+    if (year) events.push({ kind: 'death', year, text: yearText(person.death) });
   }
   return events.sort((a, b) => a.year - b.year);
 }
@@ -1071,15 +1071,11 @@ function lifelineRow(document, row, x, idref) {
 
   const summary = document.createElement('span');
   summary.setAttribute('class', 'visually-hidden');
+  // The year as written (c. 1840, 188X, 1855?), not event.year: that number
+  // only places the dot, and 188X places it mid-decade.
+  const verbs = { birth: 'born', marriage: 'married', death: 'died' };
   summary.textContent =
-    ': ' +
-    row.events
-      .map(event =>
-        event.kind === 'marriage'
-          ? `${t('married')} ${event.year}`
-          : `${t(event.kind === 'birth' ? 'born' : 'died')} ${event.year}`
-      )
-      .join(', ');
+    ': ' + row.events.map(event => `${t(verbs[event.kind])} ${event.text}`).join(', ');
   div.appendChild(summary);
 
   const track = document.createElement('span');
@@ -1100,7 +1096,7 @@ function lifelineRow(document, row, x, idref) {
     mark.appendChild(dot);
     const label = document.createElement('span');
     label.setAttribute('class', 'lifeline-date');
-    label.textContent = event.label;
+    label.textContent = event.kind === 'marriage' ? `${t('m')} ${event.text}` : event.text;
     mark.appendChild(label);
     track.appendChild(mark);
   });

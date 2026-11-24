@@ -584,6 +584,37 @@ describe('family-history: lifelines', () => {
     expect(parseFloat(walterBirth.style.left)).toBeLessThan(parseFloat(harrietBirth.style.left));
     expect(rows[1].querySelector('a')).toBeNull(); // Walter has no chapter
   });
+
+  it('speaks each date as written, not the year its dot is placed at', async () => {
+    const edwin = ASHBYS.edwin_ashby!;
+    const others = edwin.others as Record<string, Rec>;
+    const chapters = {
+      ...ASHBYS,
+      edwin_ashby: {
+        ...edwin,
+        others: { ...others, rose_ashby: { ...others.rose_ashby, birth: '188X' } },
+      },
+    };
+    const { ctx } = book({ chapters, open: 'edwin_ashby' });
+    const doc = parse(
+      '<p class="lifeline-set">' +
+        '<span class="lifeline" data-of="edwin_ashby"></span>' +
+        '<span class="lifeline" data-of="clara_bell"></span>' +
+        '<span class="lifeline" data-of="rose_ashby"></span>' +
+        '</p>'
+    );
+    await transformDOM(doc, 'edwin_ashby', ctx);
+
+    const rows = [...doc.querySelectorAll('.lifeline-row')];
+    const spoken = rows.map(row => row.querySelector('.visually-hidden')!.textContent);
+    expect(spoken).toEqual([
+      ': born 1857, married 1880, died c. 1930',
+      ': born 1859?, married 1880',
+      ': born 188X',
+    ]);
+    const labels = [...rows[0].querySelectorAll('.lifeline-date')].map(el => el.textContent);
+    expect(labels).toEqual(['1857', 'm. 1880', 'c. 1930']);
+  });
 });
 
 describe('family-history: trees', () => {
