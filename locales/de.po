@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-18\n"
-"PO-Revision-Date: 2026-11-18\n"
+"POT-Creation-Date: 2026-11-25\n"
+"PO-Revision-Date: 2026-11-25\n"
 "Language: de\n"
 "Language-Team: \n"
 "Last-Translator: Claude (machine first pass)\n"
@@ -934,7 +934,9 @@ msgid "Chapter PDF"
 msgstr "Kapitel-PDF"
 
 #: src/App.svelte
+#: src/lib/components/shell/BookSidebar.svelte
 #: src/lib/components/shell/ChapterStrip.svelte
+#: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Chapters"
 msgstr "Kapitel"
@@ -1208,11 +1210,19 @@ msgid "Content Type:"
 msgstr "Inhaltstyp:"
 
 #: src/lib/components/manifest/ManifestTable.svelte
+#: src/lib/components/outline/OutlineView.svelte
 #: src/lib/components/shell/BookSidebar.svelte
 #: src/lib/components/shell/TopBar.svelte
-#: src/lib/navigation/views/ChaptersView.svelte
 msgid "Contents"
 msgstr "Inhalt"
+
+#: src/lib/components/outline/OutlineView.svelte
+msgid "Contents editor"
+msgstr ""
+
+#: src/App.svelte
+msgid "Contents preview"
+msgstr ""
 
 #: src/lib/components/settings/TranslationsPanel.svelte
 msgid "Continue"
@@ -2577,10 +2587,6 @@ msgstr "Änderungssatz erzeugen"
 msgid "Generate PDF"
 msgstr "PDF erstellen"
 
-#: src/App.svelte
-msgid "Generating navigation from chapters..."
-msgstr "Navigation wird aus Kapiteln erzeugt..."
-
 #: src/lib/components/settings/TrackChangesPanel.svelte
 #: src/lib/components/spine/GeneratorPanel.svelte
 #: src/lib/navigation/views/CoverView.svelte
@@ -3249,6 +3255,10 @@ msgstr ""
 msgid "Make this folder public"
 msgstr ""
 
+#: src/App.svelte
+msgid "Making the contents from your chapters…"
+msgstr ""
+
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Malformed XHTML"
 msgstr "Fehlerhaftes XHTML"
@@ -3404,25 +3414,9 @@ msgstr "Navigation"
 msgid "Navigation (TOC)"
 msgstr "Navigation (Inhaltsverzeichnis)"
 
-#: src/lib/components/outline/OutlineView.svelte
-msgid "Navigation Content"
-msgstr "Navigationsinhalt"
-
 #: src/lib/components/outline/OutlineEditor.svelte
 msgid "Navigation content editor"
 msgstr "Navigationsinhalts-Editor"
-
-#: src/lib/components/outline/OutlineView.svelte
-msgid "Navigation content will be auto-generated from your chapters..."
-msgstr "Der Navigationsinhalt wird automatisch aus Ihren Kapiteln generiert..."
-
-#: src/lib/components/outline/OutlineView.svelte
-msgid "Navigation editor"
-msgstr "Navigations-Editor"
-
-#: src/App.svelte
-msgid "Navigation Preview"
-msgstr "Navigationsvorschau"
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
 msgid "Needed once after the app gains a permission."
@@ -3675,7 +3669,7 @@ msgstr "In diesem Browser nicht verfügbar — zum Verknüpfen eines Ordners wir
 msgid "Not checked"
 msgstr "Nicht geprüft"
 
-#: src/lib/navigation/views/ChaptersView.svelte
+#: src/lib/components/outline/OutlineView.svelte
 msgid "Not chosen"
 msgstr ""
 
@@ -4376,8 +4370,8 @@ msgid "Read-only chapter"
 msgstr "Schreibgeschütztes Kapitel"
 
 #: src/lib/components/outline/OutlineView.svelte
-msgid "Read-only navigation"
-msgstr "Schreibgeschützte Navigation"
+msgid "Read-only contents"
+msgstr ""
 
 #: src/lib/components/reader/ReaderOverlay.svelte
 #: src/lib/components/spine/PreviewPane.svelte
@@ -4388,7 +4382,7 @@ msgstr "Lesemodus"
 msgid "Reader link (optional)"
 msgstr "Leselink (optional)"
 
-#: src/lib/navigation/views/ChaptersView.svelte
+#: src/lib/components/outline/OutlineView.svelte
 msgid "Reading apps open your book here the first time."
 msgstr ""
 
@@ -4408,7 +4402,7 @@ msgstr "Lesevorschau (Design und Schriftgröße)"
 msgid "Reading preview settings"
 msgstr "Einstellungen für die Lesevorschau"
 
-#: src/lib/navigation/views/ChaptersView.svelte
+#: src/lib/components/outline/OutlineView.svelte
 msgid "Reading starts at"
 msgstr ""
 
@@ -5261,6 +5255,10 @@ msgstr "Die Kapitel-ID kollidiert mit {label}; es wird unter einer neuen ID hinz
 msgid "The chapter title at the top of each page."
 msgstr "Der Kapiteltitel oben auf jeder Seite."
 
+#: src/lib/components/outline/OutlineView.svelte
+msgid "The contents are made from your chapters until you write your own."
+msgstr ""
+
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "the end"
 msgstr "das Ende"
@@ -5725,10 +5723,6 @@ msgstr ""
 #: src/lib/components/shell/TopBar.svelte
 msgid "Write"
 msgstr "Schreiben"
-
-#: src/lib/navigation/views/ChaptersView.svelte
-msgid "Write the contents by hand"
-msgstr "Inhaltsverzeichnis von Hand schreiben"
 
 #: plugins/accessible-pdf/src/App.svelte
 msgid "Writing the PDF…"

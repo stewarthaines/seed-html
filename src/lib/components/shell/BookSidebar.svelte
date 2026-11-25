@@ -1,6 +1,6 @@
 <!--
   BookSidebar — the column beside the Book tab's screens, in the place the
-  chapter column takes in Write: Cover, Contents, Details and Files, each with
+  chapter column takes in Write: Cover, Chapters, Contents, Details and Files, each with
   a line saying where that part of the book stands. It shares Write's collapse
   state: collapsed, it is a 48px rail of the toggle and one icon per section.
 -->
@@ -8,7 +8,7 @@
   import { t } from '../../i18n';
   import type { BookSection } from '../../stores/book-section.js';
   import type { Component } from 'svelte';
-  import { CaretLeft, CaretRight, Image, ListNumbers, Info, Files } from 'phosphor-svelte';
+  import { CaretLeft, CaretRight, Image, Rows, ListNumbers, Info, Files } from 'phosphor-svelte';
 
   let {
     currentView,
@@ -27,7 +27,8 @@
 
   const sections = $derived<{ id: BookSection; label: string; icon: Component }[]>([
     { id: 'cover', label: $t('Cover'), icon: Image },
-    { id: 'chapters', label: $t('Contents'), icon: ListNumbers },
+    { id: 'chapters', label: $t('Chapters'), icon: Rows },
+    { id: 'navigation', label: $t('Contents'), icon: ListNumbers },
     { id: 'metadata', label: $t('Details'), icon: Info },
     { id: 'manifest', label: $t('Files'), icon: Files },
   ]);

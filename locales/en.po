@@ -5,8 +5,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: SEED.html\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-18\n"
-"PO-Revision-Date: 2026-11-18\n"
+"POT-Creation-Date: 2026-11-25\n"
+"PO-Revision-Date: 2026-11-25\n"
 "Language: en\n"
 "Language-Team: \n"
 "Last-Translator: \n"
@@ -915,7 +915,9 @@ msgid "Chapter PDF"
 msgstr ""
 
 #: src/App.svelte
+#: src/lib/components/shell/BookSidebar.svelte
 #: src/lib/components/shell/ChapterStrip.svelte
+#: src/lib/components/shell/TopBar.svelte
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "Chapters"
 msgstr ""
@@ -1189,10 +1191,18 @@ msgid "Content Type:"
 msgstr ""
 
 #: src/lib/components/manifest/ManifestTable.svelte
+#: src/lib/components/outline/OutlineView.svelte
 #: src/lib/components/shell/BookSidebar.svelte
 #: src/lib/components/shell/TopBar.svelte
-#: src/lib/navigation/views/ChaptersView.svelte
 msgid "Contents"
+msgstr ""
+
+#: src/lib/components/outline/OutlineView.svelte
+msgid "Contents editor"
+msgstr ""
+
+#: src/App.svelte
+msgid "Contents preview"
 msgstr ""
 
 #: src/lib/components/settings/TranslationsPanel.svelte
@@ -2558,10 +2568,6 @@ msgstr ""
 msgid "Generate PDF"
 msgstr ""
 
-#: src/App.svelte
-msgid "Generating navigation from chapters..."
-msgstr ""
-
 #: src/lib/components/settings/TrackChangesPanel.svelte
 #: src/lib/components/spine/GeneratorPanel.svelte
 #: src/lib/navigation/views/CoverView.svelte
@@ -3230,6 +3236,10 @@ msgstr ""
 msgid "Make this folder public"
 msgstr ""
 
+#: src/App.svelte
+msgid "Making the contents from your chapters…"
+msgstr ""
+
 #: src/stories/preview/ContentPreviewDemo.svelte
 msgid "Malformed XHTML"
 msgstr ""
@@ -3385,24 +3395,8 @@ msgstr ""
 msgid "Navigation (TOC)"
 msgstr ""
 
-#: src/lib/components/outline/OutlineView.svelte
-msgid "Navigation Content"
-msgstr ""
-
 #: src/lib/components/outline/OutlineEditor.svelte
 msgid "Navigation content editor"
-msgstr ""
-
-#: src/lib/components/outline/OutlineView.svelte
-msgid "Navigation content will be auto-generated from your chapters..."
-msgstr ""
-
-#: src/lib/components/outline/OutlineView.svelte
-msgid "Navigation editor"
-msgstr ""
-
-#: src/App.svelte
-msgid "Navigation Preview"
 msgstr ""
 
 #: plugins/publish-to-remote/src/components/ConfigureForm.svelte
@@ -3656,7 +3650,7 @@ msgstr ""
 msgid "Not checked"
 msgstr ""
 
-#: src/lib/navigation/views/ChaptersView.svelte
+#: src/lib/components/outline/OutlineView.svelte
 msgid "Not chosen"
 msgstr ""
 
@@ -4357,7 +4351,7 @@ msgid "Read-only chapter"
 msgstr ""
 
 #: src/lib/components/outline/OutlineView.svelte
-msgid "Read-only navigation"
+msgid "Read-only contents"
 msgstr ""
 
 #: src/lib/components/reader/ReaderOverlay.svelte
@@ -4369,7 +4363,7 @@ msgstr ""
 msgid "Reader link (optional)"
 msgstr ""
 
-#: src/lib/navigation/views/ChaptersView.svelte
+#: src/lib/components/outline/OutlineView.svelte
 msgid "Reading apps open your book here the first time."
 msgstr ""
 
@@ -4389,7 +4383,7 @@ msgstr ""
 msgid "Reading preview settings"
 msgstr ""
 
-#: src/lib/navigation/views/ChaptersView.svelte
+#: src/lib/components/outline/OutlineView.svelte
 msgid "Reading starts at"
 msgstr ""
 
@@ -5242,6 +5236,10 @@ msgstr ""
 msgid "The chapter title at the top of each page."
 msgstr ""
 
+#: src/lib/components/outline/OutlineView.svelte
+msgid "The contents are made from your chapters until you write your own."
+msgstr ""
+
 #: src/lib/navigation/views/ChaptersView.svelte
 msgid "the end"
 msgstr ""
@@ -5705,10 +5703,6 @@ msgstr ""
 #: src/lib/components/shell/BottomTabs.svelte
 #: src/lib/components/shell/TopBar.svelte
 msgid "Write"
-msgstr ""
-
-#: src/lib/navigation/views/ChaptersView.svelte
-msgid "Write the contents by hand"
 msgstr ""
 
 #: plugins/accessible-pdf/src/App.svelte

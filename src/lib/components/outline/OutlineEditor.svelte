@@ -7,7 +7,7 @@
   // Props interface matching API specification
   let {
     editorStore,
-    placeholder = 'Navigation content will be auto-generated from your chapters...',
+    placeholder = '',
     onContentChanged,
   }: {
     editorStore: TextEditorStore;

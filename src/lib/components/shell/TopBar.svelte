@@ -78,7 +78,8 @@
 
   const sections = $derived<{ id: BookSection; label: string }[]>([
     { id: 'cover', label: $t('Cover') },
-    { id: 'chapters', label: $t('Contents') },
+    { id: 'chapters', label: $t('Chapters') },
+    { id: 'navigation', label: $t('Contents') },
     { id: 'metadata', label: $t('Details') },
     { id: 'manifest', label: $t('Files') },
   ]);

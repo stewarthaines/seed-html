@@ -10,6 +10,7 @@
     WorkspaceState,
   } from '../../services/workspace/workspace.service.js';
   import type { SpineService } from '../../services/spine/spine.service.js';
+  import type { SpineItemWithSource } from '../../spine/types';
   import { OutlineGenerator, type NavSpineContext } from '../../outline/outline-generator.js';
   import { primaryLanguage } from '../../epub/opf-utils.js';
   import { manifestHrefToPath } from '../../epub/path-utils.js';
@@ -38,6 +39,12 @@
     ready?: any;
     /** Read-only EPUB: preview the existing nav.xhtml; never regenerate or save. */
     readOnly?: boolean;
+    /** The book's structure is locked (review mode): the reading-start choice can't change. */
+    structureLocked?: boolean;
+    /** Spine idref of the chapter where reading starts (the `start_reading` setting), or null. */
+    startReading?: string | null;
+    /** Saves a new start-reading choice; the control is shown when given. */
+    onStartReadingChange?: ((idref: string | null) => Promise<void>) | null;
   }
   let {
     workspace,
@@ -51,6 +58,9 @@
     blobURLManager,
     settingsService,
     readOnly = false,
+    structureLocked = false,
+    startReading = null,
+    onStartReadingChange = null,
   }: Props = $props();
 
   // Create internal store for this outline editor instance with unique ID
@@ -116,7 +126,7 @@
       await workspaceService.writeFile(workspace.id, navSourcePath, '');
 
       const result = await ensureGeneratedNav(workspace, spineService, workspaceService, {
-        startReading: await startReading(),
+        startReading: startReading ?? undefined,
       });
       workspace = result.workspace;
 
@@ -132,9 +142,27 @@
     }
   }
 
-  /** The chapter where reading starts (Book › Contents), for the landmarks nav. */
-  async function startReading(): Promise<string | undefined> {
-    return (await settingsService.loadEPUBSettings(workspace.id)).start_reading;
+  // The chapters reading can start at: the linear ones, in order. Reloaded when
+  // spine membership, order or linearity changes.
+  let readingItems = $state<SpineItemWithSource[]>([]);
+  const spineSignature = $derived(
+    workspace.opf.spine.map(s => s.idref + (s.linear === false ? '-' : '+')).join(',')
+  );
+  $effect(() => {
+    void spineSignature;
+    if (readOnly || !onStartReadingChange) return;
+    untrack(() => {
+      spineService
+        .loadSpineItems(workspace)
+        .then(items => (readingItems = items.filter(item => item.linear !== false)))
+        .catch(e => console.warn('Contents: failed to load spine items', e));
+    });
+  });
+
+  /** Saves the reading-start choice, then re-renders the nav so its landmark follows. */
+  async function handleStartReadingChange(idref: string | null): Promise<void> {
+    await onStartReadingChange?.(idref);
+    if (contentLoaded) await handleContentChange($outlineStore.isEmpty);
   }
 
   /** The spine a hand-written nav takes its page-list (and a missing toc) from. */
@@ -181,7 +209,7 @@
           brokerContext,
           language: bookLanguage,
           spine: await navSpineContext(),
-          startReading: await startReading(),
+          startReading: startReading ?? undefined,
         }
       );
 
@@ -261,7 +289,7 @@
           workspace.id,
           workspace.pathInfo,
           bookLanguage,
-          { startReading: await startReading() }
+          { startReading: startReading ?? undefined }
         );
       } else if (transformPipeline) {
         // User content mode (only if transformPipeline is available)
@@ -272,7 +300,7 @@
           {
             language: bookLanguage,
             spine: await navSpineContext(),
-            startReading: await startReading(),
+            startReading: startReading ?? undefined,
           }
         );
       } else {
@@ -287,7 +315,7 @@
           workspace.id,
           workspace.pathInfo,
           bookLanguage,
-          { startReading: await startReading() }
+          { startReading: startReading ?? undefined }
         );
       }
 
@@ -477,7 +505,7 @@
 <div
   class="outline-view"
   role="group"
-  aria-label={$t('Navigation editor')}
+  aria-label={$t('Contents editor')}
   onkeydown={handleKeyboardSave}
 >
   <!-- Screen reader announcements -->
@@ -493,15 +521,37 @@
        encourages custom navigation content. One entry for now. -->
   <PaneHeader>
     <select class="file-selector" aria-label={$t('Select navigation file')} disabled={readOnly}>
-      <option value="nav">{$t('Navigation Content')}</option>
+      <option value="nav">{$t('Contents')}</option>
     </select>
   </PaneHeader>
+
+  {#if onStartReadingChange && !readOnly}
+    <div class="form-group start-reading">
+      <label class="label" for="start-reading">{$t('Reading starts at')}</label>
+      <select
+        id="start-reading"
+        class="select"
+        value={startReading ?? ''}
+        disabled={structureLocked}
+        aria-describedby="start-reading-hint"
+        onchange={event => void handleStartReadingChange(event.currentTarget.value || null)}
+      >
+        <option value="">{$t('Not chosen')}</option>
+        {#each readingItems as item (item.id)}
+          <option value={item.idref}>{item.title ?? item.id}</option>
+        {/each}
+      </select>
+      <p id="start-reading-hint" class="start-reading-hint">
+        {$t('Reading apps open your book here the first time.')}
+      </p>
+    </div>
+  {/if}
 
   <div class="outline-body">
     {#if readOnly}
       <div class="readonly-notice">
         <div class="readonly-icon" aria-hidden="true"><Lock size={40} aria-hidden="true" /></div>
-        <h3>{$t('Read-only navigation')}</h3>
+        <h3>{$t('Read-only contents')}</h3>
         <p>
           {$t("This EPUB wasn't created in the Simple EPUB Editor, so it can't be edited.")}
         </p>
@@ -509,7 +559,7 @@
     {:else}
       <OutlineEditor
         editorStore={outlineStore}
-        placeholder={$t('Navigation content will be auto-generated from your chapters...')}
+        placeholder={$t('The contents are made from your chapters until you write your own.')}
         onContentChanged={handleEditorContentChanged}
       />
     {/if}
@@ -539,6 +589,19 @@
     color: var(--color-text-primary);
     font-size: var(--text-sm);
     cursor: pointer;
+  }
+
+  .start-reading {
+    flex-shrink: 0;
+    margin: 0;
+    padding: var(--space-3);
+    border-block-end: 1px solid var(--color-border-default);
+  }
+
+  .start-reading-hint {
+    margin: var(--space-1) 0 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
   }
 
   .readonly-notice {

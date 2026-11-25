@@ -2434,7 +2434,7 @@
 
     {#snippet bookSidebar()}
       <BookSidebar
-        currentView={contentView === 'navigation' ? 'chapters' : contentView}
+        currentView={contentView}
         summaries={bookSummaries}
         {isExpanded}
         onToggle={() => layoutStore.toggleSidebar()}
@@ -2595,6 +2595,11 @@
             {blobURLManager}
             {fileStorage}
             readOnly={isReadOnly}
+            {structureLocked}
+            startReading={appState.epubSettings?.start_reading ?? null}
+            onStartReadingChange={idref =>
+              appState?.updateEPUBSettings({ start_reading: idref ?? undefined }) ??
+              Promise.resolve()}
             previewUpdate={handleNavigationPreviewUpdate}
           />
         {:else}
@@ -2635,12 +2640,6 @@
             onWorkspaceUpdate={updatedWorkspace => {
               if (appState) appState.workspace = updatedWorkspace;
             }}
-            onEditContents={advancedMode.current
-              ? () => navigationStore.navigateTo('navigation')
-              : null}
-            startReading={appState.epubSettings?.start_reading ?? null}
-            onStartReadingChange={idref =>
-              appState?.updateEPUBSettings({ start_reading: idref ?? undefined })}
           />
         {:else}
           <div class="view-loading">{$t('Loading project…')}</div>
@@ -2713,7 +2712,7 @@
       {:else if contentView === 'navigation'}
         <div class="nav-preview-pane">
           <PaneHeader>
-            <span class="pane-title">{$t('Navigation Preview')}</span>
+            <span class="pane-title">{$t('Contents preview')}</span>
           </PaneHeader>
           {#if navigationPreviewContent}
             <ContentPreview
@@ -2723,8 +2722,8 @@
             />
           {:else}
             <div class="placeholder-content">
-              <h3>{$t('Navigation Preview')}</h3>
-              <p>{$t('Generating navigation from chapters...')}</p>
+              <h3>{$t('Contents preview')}</h3>
+              <p>{$t('Making the contents from your chapters…')}</p>
             </div>
           {/if}
         </div>

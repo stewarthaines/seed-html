@@ -453,7 +453,7 @@ interface OutlineEditorEvents {
 
 <OutlineEditor
   editorStore={outlineStore}
-  placeholder="Navigation content will be auto-generated from your chapters..."
+  placeholder="The contents are made from your chapters until you write your own."
   on:contentChanged={handleContentChanged}
 />
 ```
@@ -499,16 +499,26 @@ interface OutlineEditorEvents {
 
 **File:** `src/lib/components/outline/OutlineView.svelte`
 
-Coordination component that manages the relationship between OutlineEditor, preview updates, and workspace file operations.
+Coordination component that manages the relationship between OutlineEditor, preview updates, and workspace file operations. It is the Book tab's Contents section, and holds the "Reading starts at" choice, since that choice writes the nav's landmarks.
 
 #### Props
 
 ```typescript
 interface OutlineViewProps {
-  workspaceId: string; // Required: Active workspace identifier
-  workspaceManager: IWorkspaceManager; // Required: Workspace file operations
-  spineItemManager: SpineItemManager; // Required: Spine management
-  transformPipeline: TransformPipeline; // Required: Content transformation
+  workspace: WorkspaceState;
+  workspaceService: WorkspaceService;
+  spineService: SpineService;
+  transformEngine: TransformEngine;
+  fileStorage: FileStorageAPI;
+  blobURLManager: BlobURLManager;
+  extensionManager: ExtensionManager;
+  settingsService: SettingsService;
+  previewUpdate?: (detail: { xhtml: string }) => void;
+  readOnly?: boolean; // Read-only EPUB: preview the existing nav.xhtml; never regenerate or save
+  structureLocked?: boolean; // Review mode: the reading-start choice is disabled
+  startReading?: string | null; // Spine idref where reading starts (start_reading), or null
+  // Saves a new choice; the view then re-renders the nav. The control shows when given.
+  onStartReadingChange?: ((idref: string | null) => Promise<void>) | null;
 }
 ```
 
@@ -655,7 +665,7 @@ The OutlineView component creates and manages its own TextEditorStore internally
 
 <OutlineEditor
   editorStore={outlineStore}
-  placeholder="Navigation content will be auto-generated from your chapters..."
+  placeholder="The contents are made from your chapters until you write your own."
   on:contentChanged={handleContentChange}
 />
 ```

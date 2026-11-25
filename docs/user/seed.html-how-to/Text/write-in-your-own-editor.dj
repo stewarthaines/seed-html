@@ -3,7 +3,7 @@
 If you prefer to write in another app, link a folder on your computer to your book. Each text file in the folder becomes a chapter, and one click brings your changes in. This needs Chrome or Edge.
 
 1. Put your chapters in one folder, one text file each, such as `chapter01.txt`. Files ending in `.txt` or `.md` are used.
-2. In SEED.html, click the [Book]{.ui} tab, then [Contents]{.ui}.
+2. In SEED.html, click the [Book]{.ui} tab, then [Chapters]{.ui}.
 3. Click [Link a folder]{.ui} and choose the folder.
 4. A window lists what will change: new chapters, and chapters whose text is different. Click [Apply]{.ui}.
 
