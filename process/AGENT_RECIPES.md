@@ -25,7 +25,7 @@ The human reader gets a separate page in the hosted docs, written to `docs/user/
 
 ## Done
 
-- The hosted docs page: Book Recipes › Family history books (docs/user/seed.html-recipes/), illustrated from the invented Fairweather family, with the sample book at https://sample.readitinabook.com/Fairweathers-of-Norwich.epub.
+- The hosted docs page: Book Recipes › Family history books (docs/user/seed.html-recipes/), illustrated from the invented McInnes family of Carlton, with the sample book at https://sample.readitinabook.com/McInnes-Family-of-Carlton.epub.
 
 ## Still to do
 

@@ -1,12 +1,10 @@
 # Family history books
 
-A family history book gives each person a chapter. At the top of the chapter you write down what the records say about them: when they were born, married and died, and who their parents were. From those records the book draws each person's family, family trees, lines of years that compare lives, and an index of everyone in the book. Faces in old photographs can be named, and each name links to that person's chapter.
+This guide helps you set up a family history book, where each significant person get a chapter. That person's record at the top of their chapter identifies when they were born, married and died, and who their parents were. Family relationship panels, trees, timelines and an index of people are populated from those records, and faces in old photographs can be named and linked to each person's chapter. When you add information to that record the rest of the book can make use of it without you manually maintaining each other chapter that references them.
 
-![Henry Fairweather's chapter on a phone: his birth year and birthplace, his parents Walter and Margaret, each linked to their chapter, and a family photograph from about 1892 whose caption names the four people in it, linked to their chapters.](../Images/screen-family-finished.png){.figure .screenshot width=378}
+![Ewen Kerr's chapter on a phone: his birth year and birthplace, his parents Thomas and Margaret, each linked to their chapter, and a family photograph from about 1910 whose caption names the people in it, linked to their chapters.](../Images/screen-family-finished.png){.figure .screenshot width=378}
 
-You write each fact once. When you correct a date, every page that shows it changes too.
-
-The examples on this page come from a sample book about an invented family, the Fairweathers of Norwich. To see how every chapter is written, [download the sample book](https://sample.readitinabook.com/Fairweathers-of-Norwich.epub), then open it with [Open an EPUB…]{.ui} on the [Books]{.ui} screen.
+The examples come from a sample book about an invented family, the McInneses of Carlton: a tailor from Inverness-shire, his wife from Glasgow, and their children and grandchildren in Melbourne's inner north. The photographs are of real but unidentified sitters, from the Los Angeles County Museum of Art and the Rijksmuseum. To see every chapter's source, [download the sample book](https://sample.readitinabook.com/McInnes-Family-of-Carlton.epub) and open it with [Open an EPUB…]{.ui} on the [Books]{.ui} screen.
 
 ## Set up the book
 
@@ -22,126 +20,120 @@ New books are written in Djot, which this needs. The extensions are in Advanced 
 
 3. Click [Plugins]{.ui} and tick [Photo Regions]{.ui}. This adds a panel for marking the faces in a photograph. Close the settings.
 
-4. Check the book's language in [Book]{.ui} › [Details]{.ui}. Dates are written in the book's language: English (United Kingdom) gives "12 March 1828", and English (United States) gives "March 12, 1828".
+4. Check the book's language in [Book]{.ui} › [Details]{.ui}. Dates are written in the book's language: `en-AU` and `en-GB` give "12 March 1828", and `en-US` gives "March 12, 1828".
 
-Each extension you add in step 2 puts a script in the list under [Page transforms]{.ui}, at the top of the [Content transforms]{.ui} page. The scripts run from top to bottom. Check that the three are in this order, and use the arrows to move one if they are not:
+Each extension you add puts a script in the list under [Page transforms]{.ui}, at the top of the [Content transforms]{.ui} page. The scripts run from top to bottom, so check that the three are in this order, and use the arrows to move one that is not:
 
 ![The list under Page transforms: transformDom.js, then transformFigures.js from figures, transformRegions.js from photo-regions and transformFamily.js from family-history, each with up, down and remove buttons.](../Images/screen-family-transforms.png){.figure .screenshot width=542}
 
 ## Start with two people
 
-The book becomes useful once it has two people in it, because each chapter then links to the other. Try it with a husband and wife.
+Try it first with a husband and wife.
 
-1. Click [Append Item]{.ui}, the plus button beside [Chapters]{.ui}. Click the new chapter's pencil button, change the *ID* to `alice_fairweather`, and click [Save]{.ui}.
+1. Click [Append Item]{.ui}, the plus button beside [Chapters]{.ui}. Click the new chapter's pencil button, change the *ID* to `isabella_ross`, and click [Save]{.ui}.
 2. Replace the chapter's text with this:
 
    ``` djot
    ---
-   display: Alice Fairweather
-   birth: 1830~
+   display: Isabella McInnes
+   birth: 1836~
    ---
 
-   # Alice Fairweather
+   # Isabella McInnes
 
    :family:
    ```
 
-3. Add a second chapter in the same way, with the ID `edmund_fairweather`, and this text:
+3. Add a second chapter in the same way, with the ID `ewen_mcinnes`, and this text:
 
    ``` djot
    ---
-   display: Edmund Fairweather
-   birth: 1828-03-12
-   partner: alice_fairweather
-   married: 1852-06-01
+   display: Ewen McInnes
+   birth: 1822-04-02
+   partner: isabella_ross
+   married: 1858-09-02
    ---
 
-   # Edmund Fairweather
+   # Ewen McInnes
 
    :family:
    ```
 
-4. Click Alice's chapter again.
+4. Click Isabella's chapter again.
 
-Edmund's panel names Alice as his partner, and Alice's panel names Edmund, each with a link to the other's chapter. You wrote the marriage only in Edmund's record: the book found it for Alice too.
-
-The rest of this page explains each part.
+Each panel names the other person as partner, with a link to their chapter, although the marriage is written only in Ewen's record.
 
 ## Give each person a chapter
 
-Each person's chapter has an id, such as `walter_fairweather`: lowercase, with `_` between the words. Other chapters use this id to refer to the person, so choose it once and do not change it. To set a chapter's id, click its pencil button in the chapter list and change the *ID*.
+Each person's chapter has an id, such as `margaret_mcinnes`: lowercase, with `_` between the words. Other chapters use the id to refer to the person, so choose it once and keep it. Many family historians use a woman's birth surname in her id, so that the id stays the same whether a record calls her by her maiden or her married name. To set a chapter's id, click its pencil button in the chapter list and change the *ID*.
 
-![The chapter list of the sample book: a chapter called about, one called family, one chapter for each person named with their id, such as edmund_fairweather and beatrice_beckwith, then people for the index and research for the notes.](../Images/screen-family-chapters.png){.figure .screenshot width=240}
+![The chapter list of the sample book: a chapter called about, one called family, one chapter for each person named with their id, such as ewen_mcinnes and isabella_ross, then people for the index and research for the notes.](../Images/screen-family-chapters.png){.figure .screenshot width=240}
 
 Chapters that are not about one person, such as the introduction and the research notes, can have any id.
 
 ## Write a record
 
-The person's record goes at the very top of their chapter, between two lines of three hyphens. Where their family should appear, write `:family:` on a line of its own.
+The record goes at the very top of the chapter, between two lines of three hyphens. Write `:family:` on a line of its own where the person's family should appear.
 
-In the example below, the record on the left gives Walter's parents and his marriage. The panel on the right lists his parents, his sister and his wife, each linked to their chapter.
+Margaret McInnes's record gives her parents and her marriage. Her panel lists her parents, her brother and her husband, each linked to their chapter. Her brother is not in her record: he is found because his record names the same parents.
 
-![Walter Fairweather's chapter in the editor, with his record at the top: his name, birth year and birthplace, his parents, his wife and their marriage. Beside it, the preview shows his chapter heading and a family panel listing his dates, his parents, his sister and his wife, with links to their chapters.](../Images/screen-family-panel.png){.figure .screenshot}
+![Margaret McInnes's chapter in the editor, with her record at the top: her name, birth date and birthplace, her parents, her husband and their marriage. Beside it, the preview shows her chapter heading and a family panel listing her dates, her parents, her brother and her husband, with links to their chapters.](../Images/screen-family-panel.png){.figure .screenshot}
 
 Each line of a record follows the same rules:
 
-- A line is a name, a colon, a space, and then the value: `birthplace: Norwich`.
-- Put quotation marks around a value that contains a comma or a colon: `married_place: "St Peter Mancroft, Norwich"`.
-- Square brackets hold a list, with commas between the items: `parents: [edmund_fairweather, alice_fairweather]`.
+- A line is a name, a colon, a space, and then the value: `birthplace: Carlton`.
+- Put quotation marks around a value that contains a comma or a colon: `married_place: "Lygon Street, Carlton"`.
+- Square brackets hold a list, with commas between the items: `parents: [ewen_mcinnes, isabella_ross]`.
 - A line that belongs to the line above it starts with two spaces.
-- A line that starts with `#` is a comment. Comments never appear in the book, so they are a good place to note where a fact came from, or why you doubt it.
+- A line that starts with `#` is a comment. Comments never appear in the book, which makes them the place to note where a fact came from, or why you doubt it.
 
-A record can have these lines. Leave out any line you do not know.
-
-- `display`: the person's name as it should appear.
-- `nickname`: a name they were known by. The index shows it after their name.
-- `birth`, `death`: dates. Also `birthplace` and `deathplace`.
-- `parents`: the ids of the person's parents, in square brackets.
-- `partner`: the id of the person they married, with `married` (the date) and `married_place`.
-
-Never list children or brothers and sisters. The book works them out from everyone's `parents`.
+Leave out any line you do not know. The table at the end of this page lists every line a record can have. Never list a person's children or brothers and sisters: they are worked out from everyone's `parents`.
 
 ### More than one marriage
 
-When a person married more than once, list each marriage under `partner`, in order. Each marriage goes on its own line, starting with a hyphen, with its date inside the curly brackets:
+John McInnes's first wife died four years after their wedding, and he married again. When a person married more than once, list each marriage under `partner`, in order, each on its own line starting with a hyphen, with its date inside the curly brackets:
 
 ``` yaml
 partner:
-  - { id: alice_fairweather, married: 1852-06-01 }
-  - { id: constance_judd, married: 1874 }
+  - { id: mary_doyle, married: 1884-03-12 }
+  - { id: emily_barnes, married: 1892 }
 ```
 
-With a list of partners, do not write a separate `married` line. The book cannot tell which marriage it belongs to.
+With a list of partners, leave out the separate `married` line, since it cannot be matched to one of the marriages.
 
 ## Write dates
 
-Write dates as year, month and day, joined by hyphens: `1877-09-14`. A month and year (`1877-09`) or a year alone (`1877`) also work.
+Write dates as year, month and day, joined by hyphens: `1890-04-09`. A month and year (`1890-04`) or a year alone (`1890`) also work.
 
-- For a date you know only roughly, add `~` after it: `1840~` appears as "c. 1840".
-- For a date the records give but you doubt, add `?`: `1855?` appears as "1855?".
+- For a date you know only roughly, add `~` after it: `1836~` appears as "c. 1836".
+- For a date the records give but you doubt, add `?`: `1862?` appears as "1862?".
 
-When the records point to a range of years, such as census ages that suggest 1838 to 1842, choose the middle year as an approximate date, `1840~`. Explain the range in a comment in the record and in your research notes.
+Ages in records seldom agree. Isabella McInnes was 20 on her marriage certificate in 1858, 42 on her son's birth certificate in 1878 and 79 on her death certificate in 1913, which points to any year from 1834 to 1838. Choose the middle year as an approximate date, `1836~`, and give the ages and their sources in a comment and in your research notes.
 
 ## Record people without a chapter
 
-Not everyone needs a chapter. Record the others under `others:` in the chapter they belong with, using the same lines as a record. Edmund Fairweather's second wife has no chapter of her own, so her record is in his.
+Not everyone needs a chapter. Record the others under `others:` in the chapter they belong with, using the same lines as a record. Neither of John McInnes's wives has a chapter, so both records are in his.
 
 ``` yaml
 partner:
-  - { id: alice_fairweather, married: 1852-06-01 }
-  - { id: constance_judd, married: 1874 }
+  - { id: mary_doyle, married: 1884-03-12 }
+  - { id: emily_barnes, married: 1892 }
 others:
-  constance_judd:
-    display: Constance Fairweather
-    birth: 1840~
-    birthplace: Diss
+  mary_doyle:
+    display: Mary McInnes
+    birth: 1863
+    death: 1888-07-21
+  emily_barnes:
+    display: Emily McInnes
+    birth: 1865~
+    birthplace: Ballarat
 ```
 
-Her id, `constance_judd`, works everywhere a chapter's id does, except that her name is not a link.
+An id under `others:` works everywhere a chapter's id does, except that the name is not a link.
 
-## How the book learns about people
+## When panels and trees catch up
 
-A person's record is read when their chapter is shown in the preview, and the book remembers it. The other chapters use what it remembers. So a panel or a tree can leave out someone you have just added, until you open that person's chapter once.
+A person's record is read when their chapter is shown in the preview, and the other chapters use the copy saved then. A panel or a tree can therefore leave out someone you have just added, until you open that person's chapter once.
 
 When you package the book, tick [Re-render every chapter first]{.ui} on the [Share]{.ui} page, so that every chapter shows everyone. After adding several people at once, open each new chapter before you package.
 
@@ -149,7 +141,7 @@ When you package the book, tick [Re-render every chapter first]{.ui} on the [Sha
 
 Trees, lifelines, portraits and the index are added with markers. A marker is a word between colons, on a line of its own, such as `:tree:`.
 
-Some markers take settings in curly brackets straight after the marker: `:tree:{of=edmund_fairweather depth=2}`. Put spaces between the settings, and put quotation marks around a value that contains a space: `as="Uncle Ted"`.
+Some markers take settings in curly brackets straight after the marker: `:tree:{of=ewen_mcinnes depth=2}`. Put spaces between the settings, and put quotation marks around a value that contains a space: `as="Uncle Jack"`.
 
 Without `of=`, a marker is about the chapter's own person. With `of=`, it is about the person with that id, so you can put it in any chapter.
 
@@ -157,51 +149,51 @@ Without `of=`, a marker is about the chapter's own person. With `of=`, it is abo
 
 `:tree:` draws the person's descendants. `depth=2` shows two generations below them.
 
-![The editor with a heading and one line, a tree marker for Edmund Fairweather with a depth of two. The preview shows Edmund and his first wife Alice at the top, their children Walter and Eleanor with their partners below them, each grandchild under their parents, and his second wife Constance at the bottom.](../Images/screen-family-tree.png){.figure .screenshot}
+![The editor with a heading and one line, a tree marker for Ewen McInnes with a depth of two. The preview shows Ewen and Isabella at the top, their children John, Margaret and Robert below them with John's two wives and Margaret's husband, and each grandchild under their parents.](../Images/screen-family-tree.png){.figure .screenshot}
 
-To show how two relatives are connected, draw the path between them through the ancestor they share: `to=` names one relative and `via=` names the ancestor. Both relatives must be descended from that ancestor. Here the cousins Beatrice and Henry meet at their grandfather Edmund.
+To show how two relatives are connected, draw the path between them through the ancestor they share: `to=` names one relative and `via=` names the ancestor. Both relatives must be descended from that ancestor. The cousins Catherine McInnes and Ewen Kerr meet at their grandfather, Ewen McInnes.
 
-![The editor with a tree marker from Beatrice Beckwith to Henry Fairweather, through Edmund Fairweather. The preview shows Edmund and both his wives at the top, then two branches: Eleanor with her daughter Beatrice, and Walter with his son Henry.](../Images/screen-family-path.png){.figure .screenshot}
+![The editor with a tree marker from Catherine McInnes to Ewen Kerr, through Ewen McInnes. The preview shows Ewen and Isabella at the top, then two branches: John with his daughter Catherine, and Margaret with her son Ewen.](../Images/screen-family-path.png){.figure .screenshot}
 
 ### Compare lives with lifelines
 
-A lifeline shows one person's birth, marriages and death along a line of years. Lifelines written on lines one after another share one scale, so you can see whose lives overlapped. `as=` gives the label at the start of each line.
+A lifeline shows one person's birth, marriages and death along a line of years. Lifelines written on consecutive lines share one scale, so you can see whose lives overlapped. `as=` gives the label at the start of each line.
 
-![The editor with three lifeline lines, for Edmund, Alice and Constance. The preview shows three lines of years on one scale: Edmund from 1828 to 1901, Alice from about 1830 to 1869, and Constance from about 1840, with their marriages marked.](../Images/screen-family-lifelines.png){.figure .screenshot}
+![The editor with three lifeline lines, for Ewen McInnes, his wife Isabella and their daughter Margaret. The preview shows three lines of years on one scale: Ewen from 1822 to 1890, Isabella from about 1836 to 1913, and Margaret from 1866, with the marriages marked.](../Images/screen-family-lifelines.png){.figure .screenshot}
 
 ### Make an index of people
 
 `:family-index:` lists everyone in the records under their surname, with a link for each person who has a chapter. Put it in a chapter of its own at the back of the book, so that readers can find it from the contents.
 
-![The editor with a heading and the index line. The preview lists the Beckwiths and then the Fairweathers by first name, each linked to their chapter, except Constance, who has no chapter.](../Images/screen-family-index.png){.figure .screenshot}
+![The editor with a heading and the index line. The preview lists the Kerrs, the McInneses and the Rosses by first name, with links for those who have a chapter.](../Images/screen-family-index.png){.figure .screenshot}
 
 ## Name the faces in a photograph
 
-First add the photograph to the chapter, as in [Add a picture](https://readitinabook.com/docs/en/how-to/add-a-picture/). Then make it a figure with a caption, by adding `{.figure title="…"}` straight after it. The title is the caption shown under the photograph. The description in square brackets is for readers who cannot see it.
+First add the photograph to the chapter, as in [Add a picture](https://readitinabook.com/docs/en/how-to/add-a-picture/). Then make it a figure with a caption, by adding `{.figure title="…"}` straight after it. The title is the caption shown under the photograph, and the description in square brackets is for readers who cannot see it.
 
 ``` djot
-![A wedding portrait of a young woman in a dark dress, standing beside a seated young man.](../Images/fairweather_walter_margaret_1877.jpg){.figure title="Margaret and Walter Fairweather on their wedding day, 1877"}
+![A studio portrait of a seated man with spectacles and a moustache, and a young woman in a dark flowered dress standing beside him with her hand in his.](../Images/kerr_thomas_margaret_1890.jpg){.figure title="Thomas and Margaret Kerr, about 1890"}
 ```
 
-Leave one blank line after the photograph. On the next line, add one `:region:` line for each face, one after another, with no blank lines between them. The caption then names the people in the photograph, each linked to their chapter.
+Leave one blank line after the photograph, then add one `:region:` line for each face, one after another, with no blank lines between them. The caption then names the people in the photograph, each linked to their chapter.
 
-![The editor with the wedding photograph's figure line, a blank line, and two region lines, for Margaret and Walter. The preview shows the photograph with its caption, and the names Margaret and Walter, each linked to their chapter.](../Images/screen-family-photo.png){.figure .screenshot}
+![The editor with the photograph's figure line, a blank line, and two region lines, for Thomas and Margaret. The preview shows the photograph with its caption, and the names Thomas and Margaret, each linked to their chapter.](../Images/screen-family-photo.png){.figure .screenshot}
 
-Readers can explore the photograph from its caption: each name lights up its face. If anything comes between the photograph and its regions, the regions appear as plain text instead.
+Readers can explore the photograph from its caption, where each name lights up its face. If anything comes between the photograph and its regions, the regions appear as plain text instead.
 
 ### Mark the faces in the Photo Regions panel
-
-The panel writes the region lines for you.
 
 1. Put the cursor on the line after the blank line below the photograph.
 2. Choose [Photo Regions]{.ui} from the [Insert]{.ui} list above the editor. The panel opens with the chapter's photograph.
 3. Drag a box around each face. Each box gets a number, and a row for it appears below the photograph.
 4. In each row, type the person's id, or a name for someone with no record. Add the name to show in the caption, and a row such as "Standing" or "Seated" to group the names.
-5. Click [Insert]{.ui}.
+5. Click [Insert]{.ui}, and the panel writes the region lines.
 
-![The Photo Regions panel with the family photograph of about 1892. Four faces have numbered boxes around them. Below the photograph, one row for each box gives the person's id, the name to show and the row: Henry, Margaret and Beatrice standing, and Edmund seated. The Clear and Insert buttons are at the bottom.](../Images/screen-family-regions-panel.png){.figure .screenshot width=612}
+![The Photo Regions panel with the family photograph of about 1910. Seven faces have boxes around them, and the six with a person's id are numbered. Below the photograph, one row for each box gives the person's id, the name to show and the row: George Bell, Jessie and Ewen standing, Isabella, Margaret and Thomas seated, and Annie in front. The Clear and Insert buttons are at the bottom.](../Images/screen-family-regions-panel.png){.figure .screenshot width=612}
 
 The panel keeps the boxes. To change them later, open the panel again, change the boxes, then delete the old region lines and click [Insert]{.ui}.
+
+The young man standing at the left of that photograph is named only on the back of the print, as George Bell. He has no record, so his region gives only a name.
 
 ### What a region line says
 
@@ -216,9 +208,9 @@ You can also write or correct region lines yourself. In each region:
 
 `:portraits:` shows every face that has been named for a person, cropped from all the photographs in the book. Each portrait links to the photograph it came from.
 
-![The editor with a portraits line for Margaret Fairweather. The preview shows two portraits of Margaret side by side: one from her wedding photograph of 1877, and one from the family group of about 1892.](../Images/screen-family-portraits.png){.figure .screenshot}
+![The editor with a portraits line for Thomas Kerr. The preview shows two portraits of Thomas side by side: one from the studio portrait of about 1890, and one from the family group of about 1910.](../Images/screen-family-portraits.png){.figure .screenshot}
 
-As with records, a photograph's faces reach the portraits once the photograph's own chapter has been shown in the preview. If a portrait is missing, open the chapter that holds the photograph, then come back.
+A photograph's faces reach the portraits once the photograph's own chapter has been shown in the preview. If a portrait is missing, open the chapter that holds the photograph, then come back.
 
 ## Keep research notes
 
@@ -227,29 +219,42 @@ Put your research notes in chapters at the back of the book, in the reading orde
 To link to one section of the notes, put an id on the line above its heading:
 
 ```
-{#edmund-yard}
-## Edmund Fairweather's yard
+{#tailoring-firm}
+## Ewen McInnes's tailoring firm
 ```
 
-Then link to it from any chapter as `[the research notes](research.xhtml#edmund-yard)`. An id you write yourself does not change when you reword the heading.
+Then link to it from any chapter as `[the research notes](research.xhtml#tailoring-firm)`. An id you write yourself stays the same when you reword the heading.
 
-For a short citation, use a footnote. Write `[^yard]` where the note belongs, and the note itself on a line of its own at the end of the chapter: `[^yard]: Trade directories, 1858.` Keep each note to a sentence or two, and link on to the research notes for more.
+For a short citation, use a footnote. Write `[^firm]` where the note belongs, and the note itself on a line of its own at the end of the chapter: `[^firm]: Sands & McDougall's directories, 1875–1885.` Keep each note to a sentence or two, and link to the research notes for more.
 
 ## Find problems in the records
 
-Problems with the records, such as a misspelled id or a record in the wrong shape, are listed at the top of every family panel. They appear in the preview as you type, and the editor lists them below the text. Here Thomas's record has a list of partners and a separate `married` line.
+Problems with the records, such as a misspelled id or a record in the wrong shape, are listed at the top of every family panel. They appear in the preview as you type, and the editor lists them below the text. Thomas Kerr's record here has a list of partners and a separate `married` line.
 
-![The editor with Thomas Beckwith's record, in which a marriage date sits beside a list of partners. The preview shows a warning above his family panel that explains the mistake, and the editor lists the same warning below the text.](../Images/screen-family-finding.png){.figure .screenshot}
+![The editor with Thomas Kerr's record, in which a marriage date sits beside a list of partners. The preview shows a warning above his family panel that explains the mistake, and the editor lists the same warning below the text.](../Images/screen-family-finding.png){.figure .screenshot}
 
 ## Before you share the book
 
 Family history books often name living relatives. Ask them before you share a book that includes them.
 
-## All the markers
+## Record lines
+
+| Line | What it holds |
+|---|---|
+| `display` | The person's name as it should appear |
+| `nickname` | A name they were known by, shown after their name in the index |
+| `birth`, `death` | Dates |
+| `birthplace`, `deathplace` | Places |
+| `parents` | The ids of the person's parents, in square brackets |
+| `partner` | The id of the person they married, or a list of marriages |
+| `married`, `married_place` | The date and place of a single marriage |
+| `others` | Records of people who have no chapter |
+
+## Markers
 
 | Marker | What it shows | Settings |
 |---|---|---|
-| `:family:` | The person's dates, parents, brothers and sisters, and partners | |
+| `:family:` | The person's dates, parents, brothers and sisters, and partners | `of=` |
 | `:tree:` | The person's descendants | `of=`, `depth=`, `to=` with `via=` |
 | `:lifeline:` | The person's life along a line of years | `of=`, `as=` |
 | `:portraits:` | Every named face of the person | `of=` |

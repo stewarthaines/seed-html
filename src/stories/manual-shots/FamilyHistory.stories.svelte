@@ -4,11 +4,11 @@
   import App from '../../App.svelte';
   import { advancedMode } from '../../lib/stores/advanced-mode';
   import { seedProject } from '../utils/seed-project';
-  import { familyHistoryBook, photoMarkup, WALTER_RECORD } from './family-history-book';
+  import { familyHistoryBook, photoMarkup, MARGARET_RECORD } from './family-history-book';
 
   // Screenshot recipes for Book Recipes › Family history books
   // (docs/user/seed.html-recipes/Text/family-history-books.dj). Each story
-  // seeds the invented Fairweather family (family-history-book.ts), opens
+  // seeds the invented McInnes family (family-history-book.ts), opens
   // one chapter whose source is the markup the shot illustrates, and waits
   // for the preview to render it; scripts/capture-manual-shots.js then
   // photographs the editor and preview side by side (.main-content).
@@ -129,33 +129,33 @@
     document.body.dataset.shotReady = 'true';
   }
 
-  const PANEL = `${WALTER_RECORD}
+  const PANEL = `${MARGARET_RECORD}
 
-# Walter Fairweather
+# Margaret McInnes
 
 :family:`;
 
-  const TREE = `# The Fairweathers
+  const TREE = `# The McInneses
 
-:tree:{of=edmund_fairweather depth=2}`;
+:tree:{of=ewen_mcinnes depth=2}`;
 
   const PATH = `# Cousins
 
-:tree:{of=beatrice_beckwith to=henry_fairweather via=edmund_fairweather}`;
+:tree:{of=catherine_mcinnes to=ewen_kerr via=ewen_mcinnes}`;
 
-  const LIFELINES = `# Edmund and his wives
+  const LIFELINES = `# Ewen, Isabella and Margaret
 
-:lifeline:{of=edmund_fairweather as=Edmund}
-:lifeline:{of=alice_fairweather as=Alice}
-:lifeline:{of=constance_judd as=Constance}`;
+:lifeline:{of=ewen_mcinnes as=Ewen}
+:lifeline:{of=isabella_ross as=Isabella}
+:lifeline:{of=margaret_mcinnes as=Margaret}`;
 
-  const PHOTO = `# The wedding
+  const PHOTO = `# Thomas and Margaret
 
-${photoMarkup('walter_fairweather')}`;
+${photoMarkup('margaret_mcinnes')}`;
 
-  const PORTRAITS = `# Margaret
+  const PORTRAITS = `# Thomas
 
-:portraits:{of=margaret_fairweather}`;
+:portraits:{of=thomas_kerr}`;
 
   const INDEX = `# Index of people
 
@@ -163,13 +163,13 @@ ${photoMarkup('walter_fairweather')}`;
 
   // A married date beside a list of partners: a mistake the panel reports.
   const FINDING = `---
-display: Thomas Beckwith
-birth: 1850~
-partner: [eleanor_beckwith]
-married: 1879-04-22
+display: Thomas Kerr
+birth: 1862~
+partner: [margaret_mcinnes]
+married: 1890-04-09
 ---
 
-# Thomas Beckwith
+# Thomas Kerr
 
 :family:`;
 </script>
@@ -181,12 +181,12 @@ married: 1879-04-22
     docs: {
       description: {
         story:
-          "Produces docs/user/seed.html-recipes/Images/screen-family-finished.png: Henry's chapter as a reader sees it, with his family panel and the named group photograph.",
+          "Produces docs/user/seed.html-recipes/Images/screen-family-finished.png: Ewen Kerr's chapter as a reader sees it, with his family panel and the named group photograph.",
       },
     },
   }}
   play={async ({ canvas, userEvent }) => {
-    await openChapter(canvas, userEvent, 'henry_fairweather', '.fc-overlay');
+    await openChapter(canvas, userEvent, 'ewen_kerr', '.fc-overlay');
   }}
 >
   <App />
@@ -194,17 +194,17 @@ married: 1879-04-22
 
 <Story
   name="Record and Panel"
-  loaders={[seedWith('walter_fairweather', 'Walter Fairweather', PANEL)]}
+  loaders={[seedWith('margaret_mcinnes', 'Margaret McInnes', PANEL)]}
   parameters={{
     docs: {
       description: {
         story:
-          "Produces docs/user/seed.html-recipes/Images/screen-family-panel.png: Walter's record and the family panel drawn from it.",
+          "Produces docs/user/seed.html-recipes/Images/screen-family-panel.png: Margaret's record and the family panel drawn from it.",
       },
     },
   }}
   play={async ({ canvas, userEvent }) => {
-    await openChapter(canvas, userEvent, 'walter_fairweather', '.family :is(a, li, dl, table)');
+    await openChapter(canvas, userEvent, 'margaret_mcinnes', '.family :is(a, li, dl, table)');
   }}
 >
   <App />
@@ -217,7 +217,7 @@ married: 1879-04-22
     docs: {
       description: {
         story:
-          'Produces docs/user/seed.html-recipes/Images/screen-family-tree.png: two generations down from Edmund.',
+          'Produces docs/user/seed.html-recipes/Images/screen-family-tree.png: two generations down from Ewen McInnes.',
       },
     },
   }}
@@ -235,7 +235,7 @@ married: 1879-04-22
     docs: {
       description: {
         story:
-          'Produces docs/user/seed.html-recipes/Images/screen-family-path.png: the path between the cousins Beatrice and Henry through their grandfather Edmund.',
+          'Produces docs/user/seed.html-recipes/Images/screen-family-path.png: the path between the cousins Catherine McInnes and Ewen Kerr through their grandfather Ewen McInnes.',
       },
     },
   }}
@@ -253,7 +253,7 @@ married: 1879-04-22
     docs: {
       description: {
         story:
-          'Produces docs/user/seed.html-recipes/Images/screen-family-lifelines.png: Edmund and his two wives on one time scale.',
+          'Produces docs/user/seed.html-recipes/Images/screen-family-lifelines.png: Ewen, Isabella and their daughter Margaret on one time scale.',
       },
     },
   }}
@@ -266,17 +266,17 @@ married: 1879-04-22
 
 <Story
   name="Photograph with Faces"
-  loaders={[seedWith('wedding', 'The wedding', PHOTO)]}
+  loaders={[seedWith('kerrs', 'Thomas and Margaret', PHOTO)]}
   parameters={{
     docs: {
       description: {
         story:
-          'Produces docs/user/seed.html-recipes/Images/screen-family-photo.png: the wedding photograph with Margaret and Walter named.',
+          'Produces docs/user/seed.html-recipes/Images/screen-family-photo.png: the 1890 portrait with Thomas and Margaret named.',
       },
     },
   }}
   play={async ({ canvas, userEvent }) => {
-    await openChapter(canvas, userEvent, 'wedding', '.fc-overlay');
+    await openChapter(canvas, userEvent, 'kerrs', '.fc-overlay');
   }}
 >
   <App />
@@ -289,21 +289,17 @@ married: 1879-04-22
     docs: {
       description: {
         story:
-          'Produces docs/user/seed.html-recipes/Images/screen-family-regions-panel.png: the Photo Regions panel open on the 1892 group photograph, with its four faces boxed and named. Needs the plugin built (plugins/photo-regions/dist).',
+          'Produces docs/user/seed.html-recipes/Images/screen-family-regions-panel.png: the Photo Regions panel open on the 1910 garden group, with its seven faces boxed and named. Needs the plugin built (plugins/photo-regions/dist).',
       },
     },
   }}
   play={async ({ canvas, userEvent }) => {
-    const chapter = await canvas.findByTestId(
-      'spine-item-henry_fairweather',
-      {},
-      { timeout: 60000 }
-    );
+    const chapter = await canvas.findByTestId('spine-item-ewen_kerr', {}, { timeout: 60000 });
     await userEvent.click(chapter);
     const insert = await canvas.findByLabelText('Insert panel', {}, { timeout: 30000 });
     await userEvent.selectOptions(insert, 'regions');
     // The panel reopens the photograph with the boxes its library holds.
-    await waitInFrames('.regions li:nth-child(4)');
+    await waitInFrames('.regions li:nth-child(7)');
     await waitInFrames('.canvas img');
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     document.body.dataset.shotReady = 'true';
@@ -319,7 +315,7 @@ married: 1879-04-22
     docs: {
       description: {
         story:
-          'Produces docs/user/seed.html-recipes/Images/screen-family-portraits.png: Margaret cropped from the 1877 and 1892 photographs.',
+          'Produces docs/user/seed.html-recipes/Images/screen-family-portraits.png: Thomas Kerr cropped from the 1890 and 1910 photographs.',
       },
     },
   }}
@@ -350,7 +346,7 @@ married: 1879-04-22
 
 <Story
   name="Record Problem"
-  loaders={[seedWith('thomas_beckwith', 'Thomas Beckwith', FINDING)]}
+  loaders={[seedWith('thomas_kerr', 'Thomas Kerr', FINDING)]}
   parameters={{
     docs: {
       description: {
@@ -360,7 +356,7 @@ married: 1879-04-22
     },
   }}
   play={async ({ canvas, userEvent }) => {
-    await openChapter(canvas, userEvent, 'thomas_beckwith', '.family-findings');
+    await openChapter(canvas, userEvent, 'thomas_kerr', '.family-findings');
   }}
 >
   <App />
