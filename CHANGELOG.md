@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.1] - 2026-11-25
+
+### Changed
+
+- The Book tab lists Chapters and Contents separately, and anyone can write the book's contents by hand from Contents, without turning on Advanced mode.
+
 ## [0.31.0] - 2026-11-25
 
 ### Added
